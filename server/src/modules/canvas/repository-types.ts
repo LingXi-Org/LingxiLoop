@@ -1,4 +1,4 @@
-import type { CanvasActorKind, CanvasAssignmentExecutionRole, CanvasAssignmentStatus, CanvasEvidenceRef, CanvasFrameType, CanvasReportVerdict, CanvasWorkspaceStatus } from './contracts.js'
+import type { CanvasActorKind, CanvasAssignmentExecutionRole, CanvasAssignmentStatus, CanvasFrameType, CanvasReportVerdict, CanvasWorkspaceStatus } from './contracts.js'
 
 export interface FrameRow {
   id: string; canvas_id: string; type: CanvasFrameType; title: string
@@ -27,7 +27,7 @@ export interface AssignmentRow {
 export interface ReportRow {
   id: string; canvas_id: string; assignment_id: string | null; author_agent_id: string
   execution_role: 'specialist' | 'verifier' | 'reporter'; schema_version: 'learning_report_v1'
-  finding: string; evidence_refs: CanvasEvidenceRef[]; confidence: number | string; unresolved: string[]
+  finding: string; evidence_id: string; source_evidence_ids: string[]; confidence: number | string; unresolved: string[]
   next_step: string | null; verifies_report_id: string | null; disconfirming_checks: string[]
   verdict: CanvasReportVerdict | null; consumed_report_ids: string[]; conflict_resolution: unknown[]; created_at: string
 }

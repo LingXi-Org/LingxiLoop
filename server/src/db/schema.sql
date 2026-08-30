@@ -4586,7 +4586,8 @@ CREATE TABLE public.canvas_assignment_reports (
     execution_role text NOT NULL,
     schema_version text DEFAULT 'learning_report_v1'::text NOT NULL,
     finding text NOT NULL,
-    evidence_refs jsonb DEFAULT '[]'::jsonb NOT NULL,
+    evidence_id text NOT NULL,
+    source_evidence_ids jsonb DEFAULT '[]'::jsonb NOT NULL,
     confidence double precision NOT NULL,
     unresolved jsonb DEFAULT '[]'::jsonb NOT NULL,
     next_step text,
@@ -4601,6 +4602,8 @@ CREATE TABLE public.canvas_assignment_reports (
     CONSTRAINT canvas_assignment_reports_schema_version_check
       CHECK (schema_version = 'learning_report_v1'::text),
     CONSTRAINT canvas_assignment_reports_confidence_check CHECK ((confidence >= 0) AND (confidence <= 1)),
+    CONSTRAINT canvas_assignment_reports_source_evidence_check
+      CHECK (jsonb_typeof(source_evidence_ids) = 'array' AND jsonb_array_length(source_evidence_ids) <= 64),
     CONSTRAINT canvas_assignment_reports_verdict_check
       CHECK ((verdict IS NULL) OR (verdict = ANY (ARRAY['supported'::text, 'rejected'::text, 'inconclusive'::text]))),
     CONSTRAINT canvas_assignment_reports_canvas_company_fkey
@@ -5073,6 +5076,10 @@ ALTER TABLE ONLY public.learning_attempts
     ADD CONSTRAINT learning_attempts_evidence_fkey
     FOREIGN KEY (company_id, project_id, evidence_id)
     REFERENCES public.evidence_records(company_id, project_id, id);
+
+ALTER TABLE ONLY public.canvas_assignment_reports
+    ADD CONSTRAINT canvas_assignment_reports_evidence_fkey
+    FOREIGN KEY (evidence_id) REFERENCES public.evidence_records(id);
 
 CREATE TABLE public.learning_states (
     project_id text NOT NULL,

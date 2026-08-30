@@ -21,7 +21,7 @@ export interface CanvasPresence {
 export interface CanvasAssignmentReport {
   id: string; canvasId: string; assignmentId: string | null; authorAgentId: string
   executionRole: Exclude<AgentExecutionRole, 'coordinator'>; schemaVersion: 'learning_report_v1'
-  finding: string; evidenceRefs: Array<{ kind: 'frame' | 'message' | 'document' | 'source' | 'attempt' | 'report'; id: string }>
+  finding: string; evidenceId: string; sourceEvidenceIds: string[]
   confidence: number; unresolved: string[]; nextStep: string | null; verifiesReportId: string | null
   disconfirmingChecks: string[]; verdict: 'supported' | 'rejected' | 'inconclusive' | null
   consumedReportIds: string[]; conflictResolution: unknown[]; createdAt: string

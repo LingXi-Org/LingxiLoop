@@ -63,6 +63,7 @@ const FORBIDDEN_V1_COLUMNS = [
   ['learning_activities', 'type'],
   ['learning_attempts', 'course_id'],
   ['learning_attempts', 'evidence'],
+  ['canvas_assignment_reports', 'evidence_refs'],
   ['learning_missions', 'course_id'],
   ['learning_missions', 'mission_kind'],
   ['learning_mission_steps', 'objective_id'],
@@ -82,6 +83,8 @@ const REQUIRED_V1_COLUMNS = [
   ['agent_work_items', 'authorization_user_id'],
   ['agent_os_approvals', 'scope'],
   ['canvas_agent_assignments', 'verifies_assignment_id'],
+  ['canvas_assignment_reports', 'evidence_id'],
+  ['canvas_assignment_reports', 'source_evidence_ids'],
   ['canvases', 'authorization_user_id'],
   ['llm_calls', 'company_id'],
   ['llm_calls', 'purpose'],
@@ -170,6 +173,8 @@ const REQUIRED_V1_COLUMNS = [
 ] as const
 
 const REQUIRED_V1_NOT_NULL_COLUMNS = [
+  ['canvas_assignment_reports', 'evidence_id', null],
+  ['canvas_assignment_reports', 'source_evidence_ids', "'[]'::jsonb"],
   ['message_reactions', 'company_id', null],
   ['agent_climate', 'company_id', null],
   ['calendar_events', 'project_id', null],
@@ -269,6 +274,8 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['llm_calls', 'llm_calls_tokens_check', 'c'],
   ['participants', 'participants_agent_bloub_only', 'c'],
   ['canvases', 'canvases_authorization_user_id_fkey', 'f'],
+  ['canvas_assignment_reports', 'canvas_assignment_reports_evidence_fkey', 'f'],
+  ['canvas_assignment_reports', 'canvas_assignment_reports_source_evidence_check', 'c'],
   ['document_mention_deliveries', 'document_mention_deliveries_recipients_check', 'c'],
   ['document_mention_deliveries', 'document_mention_deliveries_status_check', 'c'],
   ['domain_events', 'domain_events_idempotency_key', 'u'],

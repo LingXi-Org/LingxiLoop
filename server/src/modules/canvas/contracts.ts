@@ -23,7 +23,8 @@ export interface CanvasAssignmentReport {
   executionRole: Exclude<AgentExecutionRole, 'coordinator'>
   schemaVersion: 'learning_report_v1'
   finding: string
-  evidenceRefs: CanvasEvidenceRef[]
+  evidenceId: string
+  sourceEvidenceIds: string[]
   confidence: number
   unresolved: string[]
   nextStep: string | null

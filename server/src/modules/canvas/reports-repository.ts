@@ -37,9 +37,15 @@ export async function missingEvidenceRefs(db: Queryable, args: {
 export async function lockReportWork(db: Queryable, args: {
   workId: string; companyId: string; agentId: string; canvasId: string
 }) {
-  const { rows } = await db.query<{ canvas_assignment_id: string | null; execution_role: 'specialist' | 'verifier' | 'reporter' }>(
-    `SELECT canvas_assignment_id,execution_role FROM agent_work_items
-      WHERE id=$1 AND company_id=$2 AND agent_id=$3 AND canvas_id=$4 FOR UPDATE`,
+  const { rows } = await db.query<{
+    canvas_assignment_id: string | null
+    execution_role: 'specialist' | 'verifier' | 'reporter'
+    project_id: string | null
+  }>(
+    `SELECT work.canvas_assignment_id,work.execution_role,canvas.project_id
+       FROM agent_work_items work
+       JOIN canvases canvas ON canvas.id=work.canvas_id AND canvas.company_id=work.company_id
+      WHERE work.id=$1 AND work.company_id=$2 AND work.agent_id=$3 AND work.canvas_id=$4 FOR UPDATE`,
     [args.workId, args.companyId, args.agentId, args.canvasId],
   )
   return rows[0] ?? null
@@ -73,17 +79,18 @@ export async function existingReportIds(db: Queryable, companyId: string, canvas
 
 export async function insertReport(db: Queryable, args: {
   id: string; companyId: string; canvasId: string; assignmentId: string | null; agentId: string
-  executionRole: 'specialist' | 'verifier' | 'reporter'; finding: string; evidenceRefs: CanvasEvidenceRef[]
+  executionRole: 'specialist' | 'verifier' | 'reporter'; finding: string; evidenceId: string
+  sourceEvidenceIds: string[]
   confidence: number; unresolved: string[]; nextStep: string | null; verifiesReportId: string | null
   disconfirmingChecks: string[]; verdict: CanvasReportVerdict | null; consumedReportIds: string[]; conflictResolution: unknown[]
 }) {
   const { rows } = await db.query<ReportRow>(
     `INSERT INTO canvas_assignment_reports(id,company_id,canvas_id,assignment_id,author_agent_id,execution_role,
-       finding,evidence_refs,confidence,unresolved,next_step,verifies_report_id,disconfirming_checks,verdict,consumed_report_ids,conflict_resolution)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10::jsonb,$11,$12,$13::jsonb,$14,$15::jsonb,$16::jsonb)
+       finding,evidence_id,source_evidence_ids,confidence,unresolved,next_step,verifies_report_id,disconfirming_checks,verdict,consumed_report_ids,conflict_resolution)
+     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11::jsonb,$12,$13,$14::jsonb,$15,$16::jsonb,$17::jsonb)
      ON CONFLICT(id) DO UPDATE SET id=canvas_assignment_reports.id RETURNING *`,
     [args.id, args.companyId, args.canvasId, args.assignmentId, args.agentId, args.executionRole, args.finding,
-      JSON.stringify(args.evidenceRefs), args.confidence, JSON.stringify(args.unresolved), args.nextStep,
+      args.evidenceId, JSON.stringify(args.sourceEvidenceIds), args.confidence, JSON.stringify(args.unresolved), args.nextStep,
       args.verifiesReportId, JSON.stringify(args.disconfirmingChecks), args.verdict,
       JSON.stringify(args.consumedReportIds), JSON.stringify(args.conflictResolution)],
   )
