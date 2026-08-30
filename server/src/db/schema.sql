@@ -5269,8 +5269,9 @@ CREATE TABLE public.evidence_claims (
     CONSTRAINT evidence_claims_subject_user_fkey
       FOREIGN KEY (company_id, project_id, subject_user_id)
       REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE,
-    CONSTRAINT evidence_claims_reviewer_company_fkey
-      FOREIGN KEY (reviewed_by, company_id) REFERENCES public.users(id, company_id)
+    CONSTRAINT evidence_claims_reviewer_project_fkey
+      FOREIGN KEY (company_id, project_id, reviewed_by)
+      REFERENCES public.project_memberships(company_id, project_id, user_id)
 );
 
 CREATE INDEX idx_evidence_claims_review
@@ -5651,7 +5652,7 @@ CREATE TABLE public.domain_events (
     CONSTRAINT domain_events_aggregate_sequence_key
       UNIQUE (company_id, aggregate_type, aggregate_id, aggregate_sequence),
     CONSTRAINT domain_events_project_company_fkey
-      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE RESTRICT,
+      FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE RESTRICT,
     CONSTRAINT domain_events_actor_company_fkey
       FOREIGN KEY (actor_id, company_id) REFERENCES public.participants(id, company_id) ON DELETE RESTRICT,
     CONSTRAINT domain_events_identity_check CHECK (
@@ -5720,8 +5721,8 @@ CREATE TABLE public.attention_items (
       FOREIGN KEY (company_id, project_id, teacher_user_id)
       REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE,
     CONSTRAINT attention_items_source_event_fkey
-      FOREIGN KEY (company_id, project_id, source_event_sequence)
-      REFERENCES public.domain_events(company_id, project_id, sequence) ON DELETE RESTRICT
+      FOREIGN KEY (source_event_sequence)
+      REFERENCES public.domain_events(sequence) ON DELETE RESTRICT
 );
 
 CREATE UNIQUE INDEX uniq_attention_items_open
@@ -5740,8 +5741,8 @@ CREATE TABLE public.attention_projection_events (
     CONSTRAINT attention_projection_events_pkey
       PRIMARY KEY (company_id, project_id, source_event_sequence),
     CONSTRAINT attention_projection_events_source_fkey
-      FOREIGN KEY (company_id, project_id, source_event_sequence)
-      REFERENCES public.domain_events(company_id, project_id, sequence) ON DELETE CASCADE
+      FOREIGN KEY (source_event_sequence)
+      REFERENCES public.domain_events(sequence) ON DELETE CASCADE
 );
 
 CREATE TABLE public.teacher_briefings (

@@ -12,6 +12,7 @@ test('Project Transfer requires every independent confirmation and target condit
     targetMembershipActive: true,
     targetSeatActive: true,
     policyEnabled: true,
+    policyVersionConfigured: true,
     legalBasisConfigured: true,
   }
   assert.equal(projectTransferConditionsReady(ready), true)

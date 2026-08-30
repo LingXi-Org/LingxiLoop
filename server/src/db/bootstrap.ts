@@ -456,6 +456,7 @@ const REQUIRED_V1_CONSTRAINTS = [
   ['evidence_claims', 'evidence_claims_human_review_check', 'c'],
   ['evidence_claims', 'evidence_claims_status_check', 'c'],
   ['evidence_claims', 'evidence_claims_project_company_fkey', 'f'],
+  ['evidence_claims', 'evidence_claims_reviewer_project_fkey', 'f'],
   ['evidence_links', 'evidence_links_identity_key', 'u'],
   ['evidence_links', 'evidence_links_record_fkey', 'f'],
   ['evidence_links', 'evidence_links_target_level_check', 'c'],

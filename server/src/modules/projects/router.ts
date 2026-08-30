@@ -27,8 +27,6 @@ function execute(command: ProjectLifecycleCommand) {
 projectsRouter.post('/projects/:id/activate', execute('ACTIVATE'))
 projectsRouter.post('/projects/:id/end', execute('END'))
 projectsRouter.post('/projects/:id/enter-read-only', execute('ENTER_READ_ONLY'))
-projectsRouter.post('/projects/:id/request-transfer', execute('REQUEST_TRANSFER'))
-projectsRouter.post('/projects/:id/cancel-transfer', execute('CANCEL_TRANSFER'))
 projectsRouter.post('/projects/:id/enter-retention', execute('ENTER_RETENTION'))
 projectsRouter.post('/projects/:id/archive', execute('ARCHIVE'))
 projectsRouter.delete('/projects/:id', execute('DELETE'))

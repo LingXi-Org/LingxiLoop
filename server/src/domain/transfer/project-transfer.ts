@@ -49,6 +49,7 @@ export function projectTransferConditionsReady(input: {
   targetMembershipActive: boolean
   targetSeatActive: boolean
   policyEnabled: boolean
+  policyVersionConfigured: boolean
   legalBasisConfigured: boolean
 }): boolean {
   return Object.values(input).every(Boolean)

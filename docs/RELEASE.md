@@ -67,6 +67,13 @@ The M17 Personal Plus cutover is reset-only. It adds canonical personal
 subscriptions and the append-only subscription usage ledger; environments
 created before this cutover must reset before startup.
 
+The M18–M21 Education cutover is reset-only. It adds Contract and Seat-backed
+Education Companies, Institutional Courses, and the durable Project Transfer
+contract. Transfer completion changes the existing Project and its mutable
+tenant-owned children in one transaction; historical Event, Audit, and L4
+ledgers keep their original tenant provenance. Environments created before this
+cutover must reset before startup; there is no in-place ownership backfill.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

@@ -9,6 +9,7 @@ export {
 } from './application.js'
 
 export async function applySystemProjectLifecycleInTransaction(db: Queryable, input: {
+  actorUserId?: string
   companyId: string
   projectId: string
   kind: ProjectKind

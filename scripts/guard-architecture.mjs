@@ -76,6 +76,7 @@ const controlledProjectWriters = new Set([
   'server/src/modules/learning/courses-repository.ts',
 ])
 const projectLifecycleWriter = 'server/src/modules/projects/repository.ts'
+const projectTransferWriter = 'server/src/modules/transfers/repository.ts'
 const companyLifecycleWriter = 'server/src/modules/companies/lifecycle-repository.ts'
 for (const file of [...server, ...frontend]) {
   const fileName = name(file)
@@ -105,10 +106,11 @@ for (const file of [...server, ...frontend]) {
       violations.push(`${fileName}: every production Project INSERT must write an explicit lifecycle status`)
     }
   }
-  if (/UPDATE\s+projects\s+SET[\s\S]{0,300}\bkind\s*=/i.test(source)) {
+  if (fileName !== projectTransferWriter
+    && /UPDATE\s+projects\s+SET[\s\S]{0,300}\bkind\s*=/i.test(source)) {
     violations.push(`${fileName}: ProjectKind is immutable outside a future transfer workflow`)
   }
-  if (fileName !== projectLifecycleWriter
+  if (fileName !== projectLifecycleWriter && fileName !== projectTransferWriter
     && /UPDATE\s+projects(?:\s+\w+)?\s+SET[\s\S]{0,240}\bstatus\s*=/i.test(source)) {
     violations.push(`${fileName}: Project status writes must use the Projects lifecycle application`)
   }
@@ -157,6 +159,7 @@ const legacyMembershipSqlAllowlist = new Set([
   'server/src/modules/learning/teacher-provisioning-repository.ts',
   'server/src/modules/learning/teacher-reporting-repository.ts',
   'server/src/modules/learning/teacher-runtime-repository.ts',
+  'server/src/modules/transfers/repository.ts',
   'server/src/ws.ts',
 ])
 for (const file of server) {
@@ -463,7 +466,11 @@ for (const file of server) {
     violations.push(`${fileName}: generic SQL conversation sequence counters are forbidden`)
   }
   if (/\bemail_sequence_counters\b/.test(source)
-    && !new Set(['server/src/db/bootstrap.ts', 'server/src/modules/email/message-repository.ts']).has(fileName)) {
+    && !new Set([
+      'server/src/db/bootstrap.ts',
+      'server/src/modules/email/message-repository.ts',
+      'server/src/modules/transfers/repository.ts',
+    ]).has(fileName)) {
     violations.push(`${fileName}: email sequence counters must stay inside the email persistence boundary`)
   }
   if (/\bpoll_votes\b/.test(source)) {

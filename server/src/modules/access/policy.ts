@@ -31,6 +31,7 @@ const COMPANY_MANAGERS = ['OWNER', 'ADMIN'] as const satisfies readonly CompanyR
 const ALL_PROJECT_ROLES = ['OWNER', 'TEACHER', 'TA', 'STUDENT', 'OBSERVER'] as const satisfies readonly ProjectRole[]
 const PROJECT_WRITERS = ['OWNER', 'TEACHER', 'TA', 'STUDENT'] as const satisfies readonly ProjectRole[]
 const PROJECT_MANAGERS = ['OWNER', 'TEACHER'] as const satisfies readonly ProjectRole[]
+const PROJECT_OWNERS = ['OWNER'] as const satisfies readonly ProjectRole[]
 const PROJECT_LISTERS = ['OWNER', 'TEACHER', 'TA'] as const satisfies readonly ProjectRole[]
 const LEARNERS = ['STUDENT'] as const satisfies readonly ProjectRole[]
 
@@ -71,8 +72,12 @@ export const PERMISSION_POLICIES = {
   'project:activate': projectManage('project.core'),
   'project:end': projectManage('project.core'),
   'project:enter_read_only': projectManage('project.core'),
-  'project:request_transfer': projectManage('project.core'),
-  'project:cancel_transfer': projectManage('project.core'),
+  'project:request_transfer': {
+    scope: 'project', entitlement: 'project.core', projectRoles: PROJECT_OWNERS, resource: 'none',
+  },
+  'project:cancel_transfer': {
+    scope: 'project', entitlement: 'project.core', projectRoles: PROJECT_OWNERS, resource: 'none',
+  },
   'project:enter_retention': projectManage('project.core'),
   'project:archive': projectManage('project.core'),
   'project:delete': projectManage('project.core'),

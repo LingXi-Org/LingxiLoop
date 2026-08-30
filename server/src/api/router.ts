@@ -21,6 +21,7 @@ import { observabilityRouter } from '../modules/observability/router.js'
 import { platformRouter } from '../modules/platform/router.js'
 import { pollsRouter } from '../modules/polls/router.js'
 import { projectsRouter } from '../modules/projects/router.js'
+import { projectTransfersRouter } from '../modules/transfers/router.js'
 
 export const api = Router()
 
@@ -31,6 +32,7 @@ api.use('/im', imRouter)
 api.use(companiesRouter)
 api.use(educationRouter)
 api.use(projectsRouter)
+api.use(projectTransfersRouter)
 api.use(canvasRouter)
 api.use(learningRouter)
 api.use(knowledgeRouter)
