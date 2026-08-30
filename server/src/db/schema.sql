@@ -4963,6 +4963,112 @@ CREATE INDEX idx_learning_evaluations_review
     ON public.learning_evaluations USING btree (company_id, project_id, status, created_at)
     WHERE (status = 'PENDING'::text);
 
+CREATE TABLE public.evidence_records (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    level text NOT NULL,
+    derivation text NOT NULL,
+    kind text NOT NULL,
+    subject_user_id text,
+    summary jsonb NOT NULL,
+    created_by_type text NOT NULL,
+    created_by_id text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT evidence_records_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT evidence_records_level_check CHECK (level = ANY (ARRAY['L1'::text, 'L2'::text])),
+    CONSTRAINT evidence_records_derivation_check
+      CHECK (derivation = ANY (ARRAY['OBSERVED'::text, 'COMPUTED'::text, 'RUBRIC'::text])),
+    CONSTRAINT evidence_records_kind_check CHECK (char_length(kind) BETWEEN 1 AND 100),
+    CONSTRAINT evidence_records_summary_check
+      CHECK (jsonb_typeof(summary) = 'object' AND octet_length(summary::text) <= 32768),
+    CONSTRAINT evidence_records_actor_check CHECK (
+      (created_by_type = 'SYSTEM' AND created_by_id IS NULL)
+      OR (created_by_type = ANY (ARRAY['USER'::text, 'AGENT'::text])) AND created_by_id IS NOT NULL
+    ),
+    CONSTRAINT evidence_records_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT evidence_records_subject_user_fkey
+      FOREIGN KEY (company_id, project_id, subject_user_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_evidence_records_subject
+    ON public.evidence_records USING btree (company_id, project_id, subject_user_id, created_at DESC);
+
+CREATE TABLE public.evidence_links (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    evidence_id text NOT NULL,
+    relation text NOT NULL,
+    target_level text NOT NULL,
+    target_kind text NOT NULL,
+    target_id text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT evidence_links_identity_key
+      UNIQUE (company_id, project_id, evidence_id, relation, target_kind, target_id),
+    CONSTRAINT evidence_links_relation_check
+      CHECK (relation = ANY (ARRAY['SOURCE'::text, 'DERIVED_FROM'::text, 'CORROBORATES'::text])),
+    CONSTRAINT evidence_links_target_level_check
+      CHECK (target_level = ANY (ARRAY['L0'::text, 'L1'::text, 'L2'::text, 'L3'::text, 'L4'::text])),
+    CONSTRAINT evidence_links_target_check
+      CHECK (char_length(target_kind) BETWEEN 1 AND 100 AND char_length(target_id) BETWEEN 1 AND 200),
+    CONSTRAINT evidence_links_record_fkey
+      FOREIGN KEY (company_id, project_id, evidence_id)
+      REFERENCES public.evidence_records(company_id, project_id, id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_evidence_links_target
+    ON public.evidence_links USING btree (company_id, project_id, target_kind, target_id);
+
+CREATE TABLE public.evidence_claims (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    subject_user_id text,
+    claim_type text NOT NULL,
+    statement text NOT NULL,
+    model_run_id text NOT NULL REFERENCES public.agent_runs(id),
+    human_review_required boolean DEFAULT true NOT NULL,
+    status text DEFAULT 'PENDING'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    reviewed_at timestamp with time zone,
+    reviewed_by text,
+    CONSTRAINT evidence_claims_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT evidence_claims_type_check CHECK (char_length(claim_type) BETWEEN 1 AND 100),
+    CONSTRAINT evidence_claims_statement_check CHECK (char_length(statement) BETWEEN 1 AND 10000),
+    CONSTRAINT evidence_claims_human_review_check CHECK (human_review_required),
+    CONSTRAINT evidence_claims_status_check
+      CHECK (status = ANY (ARRAY['PENDING'::text, 'APPROVED'::text, 'REJECTED'::text])),
+    CONSTRAINT evidence_claims_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT evidence_claims_subject_user_fkey
+      FOREIGN KEY (company_id, project_id, subject_user_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT evidence_claims_reviewer_company_fkey
+      FOREIGN KEY (reviewed_by, company_id) REFERENCES public.users(id, company_id)
+);
+
+CREATE INDEX idx_evidence_claims_review
+    ON public.evidence_claims USING btree (company_id, project_id, status, created_at)
+    WHERE (status = 'PENDING'::text);
+
+CREATE TABLE public.evidence_claim_evidence (
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    claim_id text NOT NULL,
+    evidence_id text NOT NULL,
+    CONSTRAINT evidence_claim_evidence_pkey
+      PRIMARY KEY (company_id, project_id, claim_id, evidence_id),
+    CONSTRAINT evidence_claim_evidence_claim_fkey
+      FOREIGN KEY (company_id, project_id, claim_id)
+      REFERENCES public.evidence_claims(company_id, project_id, id) ON DELETE CASCADE,
+    CONSTRAINT evidence_claim_evidence_record_fkey
+      FOREIGN KEY (company_id, project_id, evidence_id)
+      REFERENCES public.evidence_records(company_id, project_id, id) ON DELETE CASCADE
+);
+
 CREATE TABLE public.learning_states (
     project_id text NOT NULL,
     user_id text NOT NULL,

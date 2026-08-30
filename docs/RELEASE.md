@@ -34,6 +34,10 @@ The M7 event-foundation cutover is also reset-only. A database created before
 constraints, and append-only trigger must be dropped and recreated; no runtime
 upgrade or backfill path exists.
 
+The M8 evidence-foundation cutover is reset-only as well. It introduces the
+canonical L1/L2 Evidence, provenance-link, and human-reviewed Claim relations;
+databases created before these relations exist must be dropped and recreated.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

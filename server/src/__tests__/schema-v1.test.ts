@@ -220,6 +220,37 @@ test('M7 domain events are bounded, ordered, tenant-owned and database append-on
   assert.match(bootstrap, /'idx_domain_events_project_cursor'/)
 })
 
+test('M8 Evidence keeps L1/L2 facts canonical and inferred Claims reviewable', () => {
+  const relation = (name: string) => (
+    schema.match(new RegExp(`CREATE TABLE public\\.${name} \\(([\\s\\S]*?)\\n\\);`))?.[1] ?? ''
+  )
+  const records = relation('evidence_records')
+  const links = relation('evidence_links')
+  const claims = relation('evidence_claims')
+
+  assert.match(records, /level text NOT NULL/)
+  assert.match(records, /'L1'.*'L2'/s)
+  assert.doesNotMatch(records, /'L3'|'L4'/)
+  assert.match(records, /'OBSERVED'.*'COMPUTED'.*'RUBRIC'/s)
+  assert.match(records, /jsonb_typeof\(summary\) = 'object'/)
+  assert.match(records, /octet_length\(summary::text\) <= 32768/)
+  assert.match(records, /evidence_records_project_company_fkey/)
+  assert.match(records, /evidence_records_subject_user_fkey/)
+
+  assert.match(links, /evidence_links_record_fkey/)
+  assert.match(links, /'L0'.*'L1'.*'L2'.*'L3'.*'L4'/s)
+  assert.match(links, /target_kind text NOT NULL[\s\S]*target_id text NOT NULL/)
+
+  assert.match(claims, /model_run_id text NOT NULL REFERENCES public\.agent_runs\(id\)/)
+  assert.match(claims, /human_review_required boolean DEFAULT true NOT NULL/)
+  assert.match(claims, /evidence_claims_human_review_check CHECK \(human_review_required\)/)
+  assert.match(claims, /'PENDING'.*'APPROVED'.*'REJECTED'/s)
+  assert.match(schema, /evidence_claim_evidence_pkey[\s\S]*?claim_id, evidence_id/)
+  assert.match(schema, /evidence_claim_evidence_record_fkey/)
+  assert.match(bootstrap, /'evidence_records'/)
+  assert.match(bootstrap, /'idx_evidence_claims_review'/)
+})
+
 test('Plan and Entitlement are independent and accept JSON scalar values only', () => {
   assert.match(schema, /plans_code_key UNIQUE \(code\)/)
   assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)
