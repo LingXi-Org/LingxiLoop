@@ -1,26 +1,44 @@
 import type { Queryable } from '../../db/queryable.js'
+import type { ProjectKind, ProjectStatus } from '../../domain/public.js'
 import type { LearningAgentRoomScope } from './contracts.js'
 import type { LearningMission, LearningMissionStep } from './types.js'
 
 interface LearningMissionRow {
-  id: string; course_id: string; learner_id: string; conversation_id: string; trigger_client_msg_no: string
-  goal: string; success_criteria: string; status: LearningMission['status']; mission_kind: LearningMission['missionKind']
-  coordinator_agent_id: string; created_at: string; updated_at: string
+  id: string
+  project_id: string
+  learner_id: string
+  conversation_id: string
+  trigger_client_msg_no: string
+  goal: string
+  success_criteria: string
+  status: LearningMission['status']
+  kind: LearningMission['kind']
+  coordinator_agent_id: string
+  created_at: string
+  updated_at: string
 }
 
 interface LearningMissionStepRow {
-  id: string; mission_id: string; type: LearningMissionStep['type']; description: string; success_criteria: string
-  objective_id: string | null; status: LearningMissionStep['status']; position: number; outcome: string | null
-  completion_report_id: string | null; completion_attempt_id: string | null
+  id: string
+  mission_id: string
+  kind: LearningMissionStep['kind']
+  description: string
+  success_criteria: string
+  knowledge_unit_id: string | null
+  status: LearningMissionStep['status']
+  position: number
+  outcome: string | null
+  completion_report_id: string | null
+  completion_attempt_id: string | null
 }
 
 function mapLearningMissionStep(step: LearningMissionStepRow): LearningMissionStep {
   return {
     id: step.id,
-    type: step.type,
+    kind: step.kind,
     description: step.description,
     successCriteria: step.success_criteria,
-    ...(step.objective_id ? { objectiveId: step.objective_id } : {}),
+    ...(step.knowledge_unit_id ? { knowledgeUnitId: step.knowledge_unit_id } : {}),
     status: step.status,
     position: Number(step.position),
     ...(step.outcome ? { outcome: step.outcome } : {}),
@@ -32,13 +50,13 @@ function mapLearningMissionStep(step: LearningMissionStepRow): LearningMissionSt
 function mapLearningMission(row: LearningMissionRow, steps: LearningMissionStepRow[]): LearningMission {
   return {
     id: row.id,
-    courseId: row.course_id,
+    projectId: row.project_id,
     learnerId: row.learner_id,
     conversationId: row.conversation_id,
     triggerClientMsgNo: row.trigger_client_msg_no,
     goal: row.goal,
     successCriteria: row.success_criteria,
-    missionKind: row.mission_kind,
+    kind: row.kind,
     coordinatorAgentId: row.coordinator_agent_id,
     status: row.status,
     steps: steps.map(mapLearningMissionStep),
@@ -47,25 +65,25 @@ function mapLearningMission(row: LearningMissionRow, steps: LearningMissionStepR
   }
 }
 
-const learningMissionColumns = `mission.id,mission.course_id,mission.learner_id,mission.conversation_id,
-  mission.trigger_client_msg_no,mission.goal,mission.success_criteria,mission.status,mission.mission_kind,
+const learningMissionColumns = `mission.id,mission.project_id,mission.learner_id,mission.conversation_id,
+  mission.trigger_client_msg_no,mission.goal,mission.success_criteria,mission.status,mission.kind,
   mission.coordinator_agent_id,mission.created_at,mission.updated_at`
 
 async function learningMissionSteps(
   db: Queryable,
   companyId: string,
-  courseId: string,
+  projectId: string,
   missionIds: string[],
 ): Promise<LearningMissionStepRow[]> {
   if (!missionIds.length) return []
   const { rows } = await db.query<LearningMissionStepRow>(
-    `SELECT step.id,step.mission_id,step.type,step.description,step.success_criteria,step.objective_id,
-            step.status,step.position,step.outcome,step.completion_report_id,step.completion_attempt_id
+    `SELECT step.id,step.mission_id,step.kind,step.description,step.success_criteria,
+            step.knowledge_unit_id,step.status,step.position,step.outcome,
+            step.completion_report_id,step.completion_attempt_id
        FROM learning_mission_steps step
-       JOIN learning_missions mission ON mission.id=step.mission_id
-      WHERE mission.company_id=$1 AND mission.course_id=$2 AND mission.id=ANY($3::text[])
+      WHERE step.company_id=$1 AND step.project_id=$2 AND step.mission_id=ANY($3::text[])
       ORDER BY step.mission_id,step.position,step.created_at`,
-    [companyId,courseId,missionIds],
+    [companyId,projectId,missionIds],
   )
   return rows
 }
@@ -73,29 +91,29 @@ async function learningMissionSteps(
 export async function findLearningMission(
   db: Queryable,
   companyId: string,
-  courseId: string,
+  projectId: string,
   missionId: string,
 ): Promise<LearningMission | null> {
   const { rows } = await db.query<LearningMissionRow>(
     `SELECT ${learningMissionColumns} FROM learning_missions mission
-      WHERE mission.company_id=$1 AND mission.course_id=$2 AND mission.id=$3`,
-    [companyId,courseId,missionId],
+      WHERE mission.company_id=$1 AND mission.project_id=$2 AND mission.id=$3`,
+    [companyId,projectId,missionId],
   )
   if (!rows[0]) return null
-  return mapLearningMission(rows[0], await learningMissionSteps(db, companyId, courseId, [missionId]))
+  return mapLearningMission(rows[0], await learningMissionSteps(db, companyId, projectId, [missionId]))
 }
 
 export async function listLearningMissions(
   db: Queryable,
-  args: { companyId: string; courseId: string; userId: string; includeAllLearners: boolean },
+  args: { companyId: string; projectId: string; userId: string; includeAllLearners: boolean },
 ): Promise<LearningMission[]> {
   const { rows } = await db.query<LearningMissionRow>(
     `SELECT ${learningMissionColumns} FROM learning_missions mission
-      WHERE mission.company_id=$1 AND mission.course_id=$2 AND ($3::boolean OR mission.learner_id=$4)
+      WHERE mission.company_id=$1 AND mission.project_id=$2 AND ($3::boolean OR mission.learner_id=$4)
       ORDER BY mission.updated_at DESC LIMIT 100`,
-    [args.companyId,args.courseId,args.includeAllLearners,args.userId],
+    [args.companyId,args.projectId,args.includeAllLearners,args.userId],
   )
-  const steps = await learningMissionSteps(db, args.companyId, args.courseId, rows.map((row) => row.id))
+  const steps = await learningMissionSteps(db, args.companyId, args.projectId, rows.map((row) => row.id))
   const byMission = new Map<string, LearningMissionStepRow[]>()
   for (const step of steps) {
     const bucket = byMission.get(step.mission_id)
@@ -107,32 +125,28 @@ export async function listLearningMissions(
 
 export async function updateLearningMissionCoordinator(
   db: Queryable,
-  args: { companyId: string; courseId: string; missionId: string; teacherId: string; agentId: string },
+  args: { companyId: string; projectId: string; missionId: string; agentId: string },
 ): Promise<boolean> {
   const result = await db.query(
     `UPDATE learning_missions mission SET coordinator_agent_id=agent.id,updated_at=NOW()
        FROM participants agent,conversations conversation
-      WHERE mission.company_id=$1 AND mission.course_id=$2 AND mission.id=$3
+      WHERE mission.company_id=$1 AND mission.project_id=$2 AND mission.id=$3
         AND conversation.id=mission.conversation_id AND conversation.company_id=mission.company_id
-        AND agent.id=$5 AND agent.company_id=mission.company_id AND agent.kind='agent' AND agent.departed_at IS NULL
-        AND agent.capabilities @> '["canvas","learning"]'::jsonb AND conversation.members ? agent.id
-        AND EXISTS(SELECT 1 FROM courses course
-          JOIN project_memberships teacher
-            ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
-           AND teacher.status='ACTIVE'
-          WHERE course.company_id=mission.company_id AND course.id=mission.course_id
-            AND teacher.user_id=$4 AND teacher.role IN ('OWNER','TEACHER'))`,
-    [args.companyId,args.courseId,args.missionId,args.teacherId,args.agentId],
+        AND conversation.project_id=mission.project_id
+        AND agent.id=$4 AND agent.company_id=mission.company_id AND agent.kind='agent' AND agent.departed_at IS NULL
+        AND agent.capabilities @> '["canvas","learning"]'::jsonb AND conversation.members ? agent.id`,
+    [args.companyId,args.projectId,args.missionId,args.agentId],
   )
   return Boolean(result.rowCount)
 }
 
 export interface LearningRoomState {
   companyId: string
-  courseId: string
   projectId: string
-  courseTitle: string
-  courseStatus: 'ACTIVE' | 'ARCHIVED'
+  projectKind: ProjectKind
+  projectTitle: string
+  projectStatus: ProjectStatus
+  courseId?: string
   purpose: 'study' | 'lab' | 'discussion'
 }
 
@@ -141,79 +155,111 @@ export async function findLearningRoomState(
   scope: LearningAgentRoomScope,
 ): Promise<LearningRoomState | null> {
   const { rows } = await db.query<{
-    company_id: string; course_id: string; project_id: string; title: string
-    status: LearningRoomState['courseStatus']; purpose: LearningRoomState['purpose']
+    company_id: string
+    project_id: string
+    project_kind: ProjectKind
+    project_title: string
+    project_status: ProjectStatus
+    course_id: string | null
+    purpose: LearningRoomState['purpose']
   }>(
-    `SELECT course.company_id,course.id AS course_id,course.project_id,project.name AS title,project.status,
-            CASE WHEN course.study_room_conversation_id=$1 THEN 'study'::text ELSE room.purpose END AS purpose
-       FROM courses course
-       JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
+    `SELECT conversation.company_id,project.id AS project_id,project.kind AS project_kind,
+            project.name AS project_title,project.status AS project_status,course.id AS course_id,
+            CASE WHEN course.study_room_conversation_id=conversation.id THEN 'study'::text
+                 ELSE COALESCE(room.purpose,'study'::text) END AS purpose
+       FROM conversations conversation
+       JOIN projects project
+         ON project.id=conversation.project_id AND project.company_id=conversation.company_id
+       LEFT JOIN courses course
+         ON course.project_id=project.id AND course.company_id=project.company_id
+        AND project.kind IN ('TEACHING','INSTITUTIONAL_COURSE')
        LEFT JOIN learning_course_rooms room
-         ON room.course_id=course.id AND room.company_id=course.company_id AND room.conversation_id=$1
-      WHERE course.company_id=$2 AND project.status='ACTIVE'
-        AND (course.study_room_conversation_id=$1 OR room.conversation_id=$1)
+         ON room.course_id=course.id AND room.company_id=course.company_id
+        AND room.conversation_id=conversation.id
+      WHERE conversation.id=$1 AND conversation.company_id=$2
       LIMIT 1`,
     [scope.channelId,scope.companyId],
   )
   const row = rows[0]
   return row ? {
     companyId: row.company_id,
-    courseId: row.course_id,
     projectId: row.project_id,
-    courseTitle: row.title,
-    courseStatus: row.status,
+    projectKind: row.project_kind,
+    projectTitle: row.project_title,
+    projectStatus: row.project_status,
+    ...(row.course_id ? { courseId: row.course_id } : {}),
     purpose: row.purpose,
   } : null
 }
 
 export async function lockLearningMission(
   db: Queryable,
-  args: LearningAgentRoomScope & { courseId: string; missionId: string; statuses: LearningMission['status'][] },
+  args: LearningAgentRoomScope & { projectId: string; missionId: string; statuses: LearningMission['status'][] },
 ): Promise<boolean> {
   const { rows } = await db.query(
     `SELECT 1 FROM learning_missions
-      WHERE company_id=$1 AND course_id=$2 AND conversation_id=$3 AND id=$4 AND status=ANY($5::text[])
+      WHERE company_id=$1 AND project_id=$2 AND conversation_id=$3 AND id=$4 AND status=ANY($5::text[])
       FOR UPDATE`,
-    [args.companyId,args.courseId,args.channelId,args.missionId,args.statuses],
+    [args.companyId,args.projectId,args.channelId,args.missionId,args.statuses],
   )
   return Boolean(rows[0])
 }
 
-export async function countLearningMissionSteps(db: Queryable, missionId: string): Promise<number> {
+interface MissionScope {
+  companyId: string
+  projectId: string
+  missionId: string
+}
+
+export async function countLearningMissionSteps(db: Queryable, scope: MissionScope): Promise<number> {
   const { rows } = await db.query<{ count: number }>(
-    `SELECT COUNT(*)::int AS count FROM learning_mission_steps WHERE mission_id=$1`,
-    [missionId],
+    `SELECT COUNT(*)::int AS count FROM learning_mission_steps
+      WHERE company_id=$1 AND project_id=$2 AND mission_id=$3`,
+    [scope.companyId,scope.projectId,scope.missionId],
   )
   return Number(rows[0]?.count ?? 0)
 }
 
 export async function insertLearningMissionStep(
   db: Queryable,
-  args: {
-    id: string; missionId: string; type: LearningMissionStep['type']; description: string
-    successCriteria: string; objectiveId?: string; position: number
+  args: MissionScope & {
+    id: string
+    kind: LearningMissionStep['kind']
+    description: string
+    successCriteria: string
+    knowledgeUnitId?: string
+    position: number
   },
 ): Promise<boolean> {
   const result = await db.query(
-    `INSERT INTO learning_mission_steps(id,mission_id,type,description,success_criteria,objective_id,position)
-     SELECT $1,$2,$3,$4,$5,$6,$7
-      WHERE NOT EXISTS(SELECT 1 FROM learning_mission_steps step
-        WHERE step.mission_id=$2 AND lower(step.description)=lower($4))`,
-    [args.id,args.missionId,args.type,args.description,args.successCriteria,args.objectiveId ?? null,args.position],
+    `INSERT INTO learning_mission_steps
+       (id,company_id,project_id,mission_id,kind,description,success_criteria,knowledge_unit_id,position)
+     SELECT $1,mission.company_id,mission.project_id,mission.id,$5,$6,$7,unit.id,$9
+       FROM learning_missions mission
+       LEFT JOIN learning_knowledge_units unit
+         ON unit.company_id=mission.company_id AND unit.project_id=mission.project_id AND unit.id=$8
+      WHERE mission.company_id=$2 AND mission.project_id=$3 AND mission.id=$4
+        AND ($8::text IS NULL OR unit.id IS NOT NULL)
+        AND NOT EXISTS(SELECT 1 FROM learning_mission_steps step
+          WHERE step.company_id=$2 AND step.project_id=$3 AND step.mission_id=$4
+            AND lower(step.description)=lower($6))`,
+    [args.id,args.companyId,args.projectId,args.missionId,args.kind,args.description,args.successCriteria,
+      args.knowledgeUnitId ?? null,args.position],
   )
   return Boolean(result.rowCount)
 }
 
 export async function learningMissionPlanningSummary(
   db: Queryable,
-  missionId: string,
+  scope: MissionScope,
 ): Promise<{ total: number; checks: number; reflections: number }> {
   const { rows } = await db.query<{ total: number; checks: number; reflections: number }>(
     `SELECT COUNT(*)::int AS total,
-            COUNT(*) FILTER (WHERE type='check')::int AS checks,
-            COUNT(*) FILTER (WHERE type='reflect')::int AS reflections
-       FROM learning_mission_steps WHERE mission_id=$1`,
-    [missionId],
+            COUNT(*) FILTER (WHERE kind='CHECK')::int AS checks,
+            COUNT(*) FILTER (WHERE kind='REFLECT')::int AS reflections
+       FROM learning_mission_steps
+      WHERE company_id=$1 AND project_id=$2 AND mission_id=$3`,
+    [scope.companyId,scope.projectId,scope.missionId],
   )
   return {
     total: Number(rows[0]?.total ?? 0),
@@ -222,41 +268,47 @@ export async function learningMissionPlanningSummary(
   }
 }
 
-export async function activateLearningMission(db: Queryable, missionId: string): Promise<boolean> {
+export async function activateLearningMission(db: Queryable, scope: MissionScope): Promise<boolean> {
   const result = await db.query(
-    `UPDATE learning_missions SET status='active',updated_at=NOW() WHERE id=$1 AND status='planning'`,
-    [missionId],
+    `UPDATE learning_missions SET status='ACTIVE',updated_at=NOW()
+      WHERE company_id=$1 AND project_id=$2 AND id=$3 AND status='PLANNING'`,
+    [scope.companyId,scope.projectId,scope.missionId],
   )
   return Boolean(result.rowCount)
 }
 
 export async function updateLearningMissionStepRecord(
   db: Queryable,
-  args: {
-    companyId: string; courseId: string; channelId: string; missionId: string; stepId: string
-    status: LearningMissionStep['status']; outcome?: string; sourceReportId?: string; attemptId?: string
+  args: LearningAgentRoomScope & MissionScope & {
+    stepId: string
+    status: LearningMissionStep['status']
+    outcome?: string
+    sourceReportId?: string
+    attemptId?: string
   },
 ): Promise<boolean> {
   const result = await db.query(
     `UPDATE learning_mission_steps step
         SET status=$6,outcome=$7,
-            completion_report_id=(SELECT report.id FROM canvas_assignment_reports report
-              WHERE report.id=$8 AND report.company_id=$1),
-            completion_attempt_id=(SELECT attempt.id FROM learning_attempts attempt
-              JOIN learning_missions owning_mission ON owning_mission.id=$4
-              WHERE attempt.id=$9 AND attempt.company_id=$1 AND attempt.course_id=$2
-                AND attempt.learner_id=owning_mission.learner_id),
+            completion_report_id=COALESCE((SELECT report.id FROM canvas_assignment_reports report
+              JOIN canvases canvas ON canvas.id=report.canvas_id AND canvas.company_id=report.company_id
+              WHERE report.id=$8 AND report.company_id=$1 AND canvas.project_id=$2),step.completion_report_id),
+            completion_attempt_id=COALESCE((SELECT attempt.id FROM learning_attempts attempt
+              WHERE attempt.id=$9 AND attempt.company_id=$1 AND attempt.project_id=$2
+                AND attempt.learner_id=mission.learner_id),step.completion_attempt_id),
             updated_at=NOW()
        FROM learning_missions mission
-      WHERE step.id=$5 AND step.mission_id=$4 AND mission.id=step.mission_id
-        AND mission.company_id=$1 AND mission.course_id=$2 AND mission.conversation_id=$3
-        AND ($6<>'completed'
+      WHERE step.company_id=$1 AND step.project_id=$2 AND step.id=$5 AND step.mission_id=$4
+        AND mission.company_id=step.company_id AND mission.project_id=step.project_id AND mission.id=step.mission_id
+        AND mission.conversation_id=$3
+        AND ($6<>'COMPLETED'
           OR ($8 IS NOT NULL AND EXISTS(SELECT 1 FROM canvas_assignment_reports report
-            WHERE report.id=$8 AND report.company_id=$1))
+            JOIN canvases canvas ON canvas.id=report.canvas_id AND canvas.company_id=report.company_id
+            WHERE report.id=$8 AND report.company_id=$1 AND canvas.project_id=$2))
           OR ($9 IS NOT NULL AND EXISTS(SELECT 1 FROM learning_attempts attempt
-            WHERE attempt.id=$9 AND attempt.company_id=$1 AND attempt.course_id=$2
+            WHERE attempt.id=$9 AND attempt.company_id=$1 AND attempt.project_id=$2
               AND attempt.learner_id=mission.learner_id)))`,
-    [args.companyId,args.courseId,args.channelId,args.missionId,args.stepId,args.status,
+    [args.companyId,args.projectId,args.channelId,args.missionId,args.stepId,args.status,
       args.outcome?.trim() ?? null,args.sourceReportId ?? null,args.attemptId ?? null],
   )
   return Boolean(result.rowCount)
@@ -264,13 +316,14 @@ export async function updateLearningMissionStepRecord(
 
 export async function learningMissionCompletionSummary(
   db: Queryable,
-  missionId: string,
+  scope: MissionScope,
 ): Promise<{ unresolved: number; reflections: number }> {
   const { rows } = await db.query<{ unresolved: number; reflections: number }>(
-    `SELECT COUNT(*) FILTER (WHERE status IN ('open','in_progress'))::int AS unresolved,
-            COUNT(*) FILTER (WHERE type='reflect' AND status='completed')::int AS reflections
-       FROM learning_mission_steps WHERE mission_id=$1`,
-    [missionId],
+    `SELECT COUNT(*) FILTER (WHERE status IN ('OPEN','IN_PROGRESS'))::int AS unresolved,
+            COUNT(*) FILTER (WHERE kind='REFLECT' AND status='COMPLETED')::int AS reflections
+       FROM learning_mission_steps
+      WHERE company_id=$1 AND project_id=$2 AND mission_id=$3`,
+    [scope.companyId,scope.projectId,scope.missionId],
   )
   return {
     unresolved: Number(rows[0]?.unresolved ?? 0),
@@ -278,28 +331,29 @@ export async function learningMissionCompletionSummary(
   }
 }
 
-export async function completeLearningMissionRecord(db: Queryable, missionId: string): Promise<boolean> {
+export async function completeLearningMissionRecord(db: Queryable, scope: MissionScope): Promise<boolean> {
   const result = await db.query(
-    `UPDATE learning_missions SET status='completed',completed_at=NOW(),updated_at=NOW()
-      WHERE id=$1 AND status IN ('active','paused')`,
-    [missionId],
+    `UPDATE learning_missions SET status='COMPLETED',completed_at=NOW(),updated_at=NOW()
+      WHERE company_id=$1 AND project_id=$2 AND id=$3 AND status IN ('ACTIVE','PAUSED')`,
+    [scope.companyId,scope.projectId,scope.missionId],
   )
   return Boolean(result.rowCount)
 }
 
 export async function findEligibleLearningMissionCoordinator(
   db: Queryable,
-  args: { companyId: string; channelId: string; preferredPreset: string; currentAgentId: string },
+  args: { companyId: string; projectId: string; channelId: string; preferredPreset: string; currentAgentId: string },
 ): Promise<string | null> {
   const { rows } = await db.query<{ id: string }>(
     `SELECT participant.id FROM participants participant
-       JOIN conversations conversation ON conversation.id=$2 AND conversation.company_id=$1
+       JOIN conversations conversation
+         ON conversation.id=$3 AND conversation.company_id=$1 AND conversation.project_id=$2
       WHERE participant.company_id=$1 AND participant.kind='agent' AND participant.departed_at IS NULL
         AND participant.capabilities @> '["canvas","learning"]'::jsonb
         AND conversation.members ? participant.id
-      ORDER BY CASE WHEN participant.preset_key=$3 THEN 0 WHEN participant.preset_key='nova' THEN 1
-        WHEN participant.id=$4 THEN 2 ELSE 3 END,participant.id LIMIT 1`,
-    [args.companyId,args.channelId,args.preferredPreset,args.currentAgentId],
+      ORDER BY CASE WHEN participant.preset_key=$4 THEN 0 WHEN participant.preset_key='nova' THEN 1
+        WHEN participant.id=$5 THEN 2 ELSE 3 END,participant.id LIMIT 1`,
+    [args.companyId,args.projectId,args.channelId,args.preferredPreset,args.currentAgentId],
   )
   return rows[0]?.id ?? null
 }
@@ -307,31 +361,44 @@ export async function findEligibleLearningMissionCoordinator(
 export async function upsertLearningMission(
   db: Queryable,
   args: {
-    id: string; companyId: string; courseId: string; learnerId: string; channelId: string
-    triggerClientMsgNo: string; goal: string; successCriteria: string; missionKind: LearningMission['missionKind']
-    coordinatorAgentId: string; createdBy: string
+    id: string
+    companyId: string
+    projectId: string
+    learnerId: string
+    channelId: string
+    triggerClientMsgNo: string
+    goal: string
+    successCriteria: string
+    kind: LearningMission['kind']
+    coordinatorAgentId: string
+    createdBy: string
   },
 ): Promise<{ id: string; inserted: boolean }> {
   const { rows } = await db.query<{ id: string; inserted: boolean }>(
     `INSERT INTO learning_missions
-       (id,course_id,company_id,learner_id,conversation_id,trigger_client_msg_no,goal,success_criteria,
-        mission_kind,coordinator_agent_id,created_by)
-     SELECT $1,course.id,course.company_id,$4,$5,$6,$7,$8,$9,$10,$11
-       FROM courses course WHERE course.id=$2 AND course.company_id=$3
-     ON CONFLICT(course_id,learner_id,conversation_id,trigger_client_msg_no)
+       (id,company_id,project_id,learner_id,conversation_id,trigger_client_msg_no,goal,success_criteria,
+        kind,coordinator_agent_id,created_by)
+     SELECT $1,project.company_id,project.id,$4,$5,$6,$7,$8,$9,$10,$11
+       FROM projects project WHERE project.company_id=$2 AND project.id=$3
+     ON CONFLICT(company_id,project_id,learner_id,conversation_id,trigger_client_msg_no)
      DO UPDATE SET updated_at=learning_missions.updated_at RETURNING id,(xmax=0) AS inserted`,
-    [args.id,args.courseId,args.companyId,args.learnerId,args.channelId,args.triggerClientMsgNo,args.goal,
-      args.successCriteria,args.missionKind,args.coordinatorAgentId,args.createdBy],
+    [args.id,args.companyId,args.projectId,args.learnerId,args.channelId,args.triggerClientMsgNo,args.goal,
+      args.successCriteria,args.kind,args.coordinatorAgentId,args.createdBy],
   )
-  if (!rows[0]) throw new Error('course not found')
+  if (!rows[0]) throw new Error('project not found')
   return rows[0]
 }
 
 export async function enqueueLearningMissionCoordinatorWork(
   db: Queryable,
   args: {
-    id: string; companyId: string; coordinatorAgentId: string; channelId: string
-    threadRootClientMsgNo: string; missionId: string; authorizationUserId: string
+    id: string
+    companyId: string
+    coordinatorAgentId: string
+    channelId: string
+    threadRootClientMsgNo: string
+    missionId: string
+    authorizationUserId: string
   },
 ): Promise<void> {
   await db.query(
