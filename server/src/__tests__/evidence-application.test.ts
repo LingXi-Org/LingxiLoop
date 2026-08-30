@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
-import { createEvidenceClaim, createEvidenceRecord } from '../modules/evidence/public.js'
+import { createEvidenceClaim, createEvidenceRecord, readProductEvidenceChain } from '../modules/evidence/public.js'
 
 const input = {
   id: 'evidence-1',
@@ -110,4 +110,38 @@ test('Inferred Claims require a same-tenant model run and scoped Evidence IDs', 
     }),
     /require between 1 and 64 Evidence IDs/,
   )
+})
+
+test('Product Evidence queries cap records and links by layer and fail closed for L4', async () => {
+  let values: readonly unknown[] | undefined
+  let queries = 0
+  const db: Queryable = {
+    query: async (_text, params) => {
+      queries += 1
+      values = params
+      return { rows: [{
+        ...recordRow(),
+        links: [{
+          relation: 'SOURCE', targetLevel: 'L2', targetKind: 'LEARNING_ATTEMPT', targetId: 'attempt-1',
+        }],
+      }], rowCount: 1 } as never
+    },
+  }
+
+  const records = await readProductEvidenceChain(db, {
+    companyId: 'company-1', projectId: 'project-1', subjectUserId: 'learner-1',
+    maximumLevel: 'L2', limit: 20,
+  })
+
+  assert.equal(records[0]?.id, 'evidence-1')
+  assert.deepEqual(values, [
+    'company-1', 'project-1', 'learner-1', ['L1', 'L2'], ['L0', 'L1', 'L2'], 20,
+  ])
+  assert.deepEqual(await readProductEvidenceChain(db, {
+    companyId: 'company-1', projectId: 'project-1', maximumLevel: 'L0',
+  }), [])
+  assert.equal(queries, 1)
+  assert.throws(() => readProductEvidenceChain(db, {
+    companyId: 'company-1', projectId: 'project-1', maximumLevel: 'L4',
+  } as never), /L4 Evidence is unavailable/)
 })

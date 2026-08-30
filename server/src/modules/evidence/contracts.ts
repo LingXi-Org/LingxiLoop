@@ -46,6 +46,12 @@ export interface EvidenceLinkInput {
   targetId: string
 }
 
+export type EvidenceLink = EvidenceLinkInput
+
+export interface EvidenceChainRecord extends EvidenceRecord {
+  links: EvidenceLink[]
+}
+
 export interface CreateEvidenceClaimInput {
   id: string
   companyId: string

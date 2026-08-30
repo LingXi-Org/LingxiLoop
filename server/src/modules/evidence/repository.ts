@@ -3,6 +3,7 @@ import type {
   CreateEvidenceClaimInput,
   CreateEvidenceRecordInput,
   EvidenceLinkInput,
+  EvidenceChainRecord,
   EvidenceRecord,
 } from './contracts.js'
 import type { JsonObject } from '../events/public.js'
@@ -136,4 +137,38 @@ export async function insertEvidenceClaim(db: Queryable, input: CreateEvidenceCl
      SELECT $1,$2,$3,evidence_id FROM unnest($4::text[]) evidence_id`,
     [input.companyId, input.projectId, input.id, input.evidenceIds],
   )
+}
+
+export async function listEvidenceChainRecords(
+  db: Queryable,
+  input: {
+    companyId: string
+    projectId: string
+    subjectUserId?: string
+    recordLevels: EvidenceRecord['level'][]
+    linkLevels: string[]
+    limit: number
+  },
+): Promise<EvidenceChainRecord[]> {
+  if (input.recordLevels.length === 0) return []
+  const { rows } = await db.query<EvidenceRecordRow & { links: EvidenceChainRecord['links'] }>(
+    `SELECT record.*,
+            COALESCE(jsonb_agg(jsonb_build_object(
+              'relation',link.relation,'targetLevel',link.target_level,
+              'targetKind',link.target_kind,'targetId',link.target_id
+            ) ORDER BY link.created_at) FILTER(WHERE link.id IS NOT NULL),'[]'::jsonb) AS links
+       FROM evidence_records record
+       LEFT JOIN evidence_links link
+         ON link.company_id=record.company_id AND link.project_id=record.project_id
+        AND link.evidence_id=record.id AND link.target_level=ANY($5::text[])
+      WHERE record.company_id=$1 AND record.project_id=$2
+        AND ($3::text IS NULL OR record.subject_user_id=$3)
+        AND record.level=ANY($4::text[])
+      GROUP BY record.id
+      ORDER BY record.created_at DESC
+      LIMIT $6`,
+    [input.companyId, input.projectId, input.subjectUserId ?? null,
+      input.recordLevels, input.linkLevels, input.limit],
+  )
+  return rows.map((row) => ({ ...mapEvidenceRecord(row), links: row.links ?? [] }))
 }
