@@ -6,7 +6,7 @@ import {
   onboardCompanyStarterWorkspace,
   provisionPersonalWorkspace,
 } from '../src/modules/companies/public.js'
-import { reconcileLearningChannels } from '../src/im/reconcile.js'
+import { reconcileImChannels } from '../src/im/reconcile.js'
 import { wukongClient } from '../src/im/wukong.js'
 import type { LingxiMessageV1 } from '../src/agent-os/types.js'
 
@@ -39,7 +39,7 @@ async function seed(): Promise<{ channelId: string; agentId: string }> {
   })
   companyId = provisioned.companyId
   await onboardCompanyStarterWorkspace(companyId)
-  const synced = await reconcileLearningChannels()
+  const synced = await reconcileImChannels()
   if (synced.failures > 0) throw new Error(`WuKong reconciliation had ${synced.failures} failures`)
   const { rows } = await pool.query<{ channel_id: string; leader_agent_id: string }>(
     `SELECT channel_id, leader_agent_id FROM im_channel_bindings
