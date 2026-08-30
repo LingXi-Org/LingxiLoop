@@ -146,7 +146,7 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
     missionId: textArg(args, 'missionId'), stepId: textArg(args, 'stepId'),
     status: closedArg(args, 'status', STEP_STATUSES) as LearningStepStatus,
     ...(typeof args.outcome === 'string' ? { outcome: args.outcome } : {}),
-    ...(typeof args.sourceReportId==='string'?{sourceReportId:args.sourceReportId}:{}),
+    ...(typeof args.sourceEvidenceId==='string'?{sourceEvidenceId:args.sourceEvidenceId}:{}),
     ...(typeof args.attemptId==='string'?{attemptId:args.attemptId}:{}),
   }) }
   if (method === 'complete_mission') return { ok: true, value: await completeMission(work, textArg(args, 'missionId')) }
@@ -193,8 +193,8 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
     attemptId: textArg(args, 'attemptId'), demonstratedLevel: Number(args.demonstratedLevel), confidence: Number(args.confidence),
     ...(Array.isArray(args.rubricResults) ? { rubricResults: args.rubricResults } : {}),
     ...(typeof args.feedback === 'string' ? { feedback: args.feedback } : {}),
-    ...(typeof args.sourceReportId === 'string' ? { sourceReportId: args.sourceReportId } : {}),
-    ...(typeof args.verifierReportId === 'string' ? { verifierReportId: args.verifierReportId } : {}),
+    ...(typeof args.sourceEvidenceId === 'string' ? { sourceEvidenceId: args.sourceEvidenceId } : {}),
+    ...(typeof args.verifierEvidenceId === 'string' ? { verifierEvidenceId: args.verifierEvidenceId } : {}),
   }) }
   throw new Error(`unsupported learning action: ${method}`)
 }

@@ -83,7 +83,7 @@ function boundedMission(mission: LearningMission): LearningMission {
       successCriteria: contextText(step.successCriteria, 320),
       ...(step.knowledgeUnitId ? { knowledgeUnitId: contextText(step.knowledgeUnitId, 96) } : {}),
       ...(step.outcome ? { outcome: contextText(step.outcome, 320) } : {}),
-      ...(step.completionReportId ? { completionReportId: contextText(step.completionReportId, 96) } : {}),
+      ...(step.completionEvidenceId ? { completionEvidenceId: contextText(step.completionEvidenceId, 96) } : {}),
       ...(step.completionAttemptId ? { completionAttemptId: contextText(step.completionAttemptId, 96) } : {}),
     })),
     createdAt: contextText(mission.createdAt, 64),

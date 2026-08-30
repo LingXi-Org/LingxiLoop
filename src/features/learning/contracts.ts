@@ -118,7 +118,7 @@ export interface LearningMissionStep {
   status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
   position: number
   outcome?: string
-  completionReportId?: string
+  completionEvidenceId?: string
   completionAttemptId?: string
 }
 
@@ -166,8 +166,8 @@ export interface LearningReview {
   demonstrated_level: number
   confidence: number
   feedback: string
-  source_report_id: string | null
-  verifier_report_id: string | null
+  source_evidence_id: string | null
+  verifier_evidence_id: string | null
   builder_agent_id: string | null
   verifier_agent_id: string | null
   verifier_verdict: 'supported' | 'rejected' | 'inconclusive' | null

@@ -20,6 +20,7 @@ import {
   lockLearningMission,
   updateLearningMissionCoordinator,
   updateLearningMissionStepRecord,
+  verifyIndependentLearningReport,
 } from '../modules/learning/repository.js'
 
 function queryable(
@@ -102,7 +103,7 @@ test('mission lookup binds mission and step reads to the same tenant and project
     return text.includes('FROM learning_mission_steps') ? { rows: [{
       id: 'step-1', mission_id: 'mission-1', kind: 'CHECK', description: 'Explain',
       success_criteria: 'Correct invariant', knowledge_unit_id: null, status: 'OPEN', position: 0,
-      outcome: null, completion_report_id: null, completion_attempt_id: null,
+      outcome: null, completion_evidence_id: null, completion_attempt_id: null,
     }] } : { rows: [missionRow] }
   })
 
@@ -365,7 +366,7 @@ test('Personal project context needs no Course and hard-bounds every model-visib
     status: 'OPEN',
     position: index,
     outcome: long,
-    completion_report_id: `report-${long}`,
+    completion_evidence_id: `evidence-${long}`,
     completion_attempt_id: `attempt-${long}`,
   }))
   const db = queryable((text) => {
@@ -448,6 +449,29 @@ test('agent evaluation proposal commits its project state after the evaluation l
   assert.ok(statements.some((text) => text.includes("UPDATE learning_attempts SET status='EVALUATED'")))
   assert.ok(statements.every((text) => !text.includes('learning_mastery')))
   assert.ok(metrics.includes('learning.evaluation.proposed'))
+})
+
+test('independent Canvas verification resolves canonical Evidence IDs in one Project', async () => {
+  let statement = ''
+  let values: readonly unknown[] | undefined
+  const db = queryable((text, params) => {
+    statement = text
+    values = params
+    return { rows: [{
+      source_report_id: 'report-source', source_author: 'builder', verifier_author: 'verifier',
+      verifies_report_id: 'report-source', verdict: 'supported',
+    }] }
+  })
+
+  const verdict = await verifyIndependentLearningReport(db, {
+    companyId: 'company-1', projectId: 'project-1',
+    sourceEvidenceId: 'evidence-source', verifierEvidenceId: 'evidence-verifier',
+  })
+
+  assert.equal(verdict, 'supported')
+  assert.deepEqual(values, ['evidence-source', 'evidence-verifier', 'company-1', 'project-1'])
+  assert.match(statement, /source\.evidence_id=source_evidence\.id/)
+  assert.match(statement, /verifier\.evidence_id=verifier_evidence\.id/)
 })
 
 test('Personal owner can reject a project evaluation and still finalize the attempt', async () => {

@@ -200,25 +200,31 @@ export async function learningStateLevels(
 
 export async function verifyIndependentLearningReport(
   db: Queryable,
-  args: { companyId: string; projectId: string; sourceReportId: string; verifierReportId: string },
+  args: { companyId: string; projectId: string; sourceEvidenceId: string; verifierEvidenceId: string },
 ): Promise<'supported'|'unsupported'|null> {
   const { rows } = await db.query<{
     source_author: string
+    source_report_id: string
     verifier_author: string
     verifies_report_id: string | null
     verdict: string | null
   }>(
-    `SELECT source.author_agent_id AS source_author,verifier.author_agent_id AS verifier_author,
+    `SELECT source.id AS source_report_id,source.author_agent_id AS source_author,verifier.author_agent_id AS verifier_author,
             verifier.verifies_report_id,verifier.verdict
-       FROM canvas_assignment_reports source
+       FROM evidence_records source_evidence
+       JOIN canvas_assignment_reports source ON source.evidence_id=source_evidence.id
        JOIN canvases canvas
          ON canvas.id=source.canvas_id AND canvas.company_id=source.company_id AND canvas.project_id=$4
+       JOIN evidence_records verifier_evidence
+         ON verifier_evidence.id=$2 AND verifier_evidence.company_id=source_evidence.company_id
+        AND verifier_evidence.project_id=source_evidence.project_id
        JOIN canvas_assignment_reports verifier
-         ON verifier.id=$2 AND verifier.canvas_id=source.canvas_id AND verifier.company_id=source.company_id
-      WHERE source.id=$1 AND source.company_id=$3`,
-    [args.sourceReportId,args.verifierReportId,args.companyId,args.projectId],
+         ON verifier.evidence_id=verifier_evidence.id AND verifier.canvas_id=source.canvas_id
+        AND verifier.company_id=source.company_id
+      WHERE source_evidence.id=$1 AND source_evidence.company_id=$3 AND source_evidence.project_id=$4`,
+    [args.sourceEvidenceId,args.verifierEvidenceId,args.companyId,args.projectId],
   )
   const row = rows[0]
-  if (!row || row.verifies_report_id !== args.sourceReportId || row.source_author === row.verifier_author) return null
+  if (!row || row.verifies_report_id !== row.source_report_id || row.source_author === row.verifier_author) return null
   return row.verdict === 'supported' ? 'supported' : 'unsupported'
 }

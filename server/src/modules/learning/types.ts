@@ -91,7 +91,7 @@ export interface LearningMissionStep {
   status: LearningStepStatus
   position: number
   outcome?: string
-  completionReportId?: string
+  completionEvidenceId?: string
   completionAttemptId?: string
 }
 

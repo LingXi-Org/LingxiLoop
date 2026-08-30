@@ -169,8 +169,8 @@ export interface ProposeLearningEvaluationCommand extends LearningAgentRoomScope
   confidence: number
   rubricResults?: unknown[]
   feedback?: string
-  sourceReportId?: string
-  verifierReportId?: string
+  sourceEvidenceId?: string
+  verifierEvidenceId?: string
 }
 
 export interface LearningScope { userId: string; companyId: string }

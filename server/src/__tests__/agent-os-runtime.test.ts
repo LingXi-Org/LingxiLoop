@@ -59,6 +59,14 @@ test('Canvas contract tells agents to autonomously decide and start via IPython'
   assert.match(contract, /"id":"sage"/)
 })
 
+test('Learning runtime contract requires canonical Evidence IDs', async () => {
+  const { learningContextContract } = await import('../agent-os/runtime.js')
+  const contract = learningContextContract()
+  assert.match(contract, /sourceEvidenceId/)
+  assert.match(contract, /verifierEvidenceId/)
+  assert.doesNotMatch(contract, /sourceReportId|verifierReportId/)
+})
+
 test('Agent OS runs multi-hop IPython and keeps the channel session across work items', async () => {
   const first = work('w1', 'm1')
   const second = work('w2', 'm2')

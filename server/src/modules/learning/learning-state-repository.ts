@@ -20,14 +20,14 @@ export async function insertLearningEvaluation(
     feedback: string
     evaluatorId: string
     status: 'PENDING' | 'ACCEPTED'
-    sourceReportId?: string
-    verifierReportId?: string
+    sourceEvidenceId?: string
+    verifierEvidenceId?: string
   },
 ): Promise<boolean> {
   const result = await db.query(
     `INSERT INTO learning_evaluations
        (id,company_id,project_id,attempt_id,demonstrated_level,confidence,rubric_results,feedback,
-        evaluator_id,evaluator_kind,status,source_report_id,verifier_report_id)
+        evaluator_id,evaluator_kind,status,source_evidence_id,verifier_evidence_id)
      SELECT $1,attempt.company_id,attempt.project_id,attempt.id,$5,$6,$7::jsonb,$8,$9,'AGENT',$10,$11,$12
        FROM learning_attempts attempt
       WHERE attempt.id=$4 AND attempt.company_id=$2 AND attempt.project_id=$3`,
@@ -42,8 +42,8 @@ export async function insertLearningEvaluation(
       args.feedback,
       args.evaluatorId,
       args.status,
-      args.sourceReportId ?? null,
-      args.verifierReportId ?? null,
+      args.sourceEvidenceId ?? null,
+      args.verifierEvidenceId ?? null,
     ],
   )
   return Boolean(result.rowCount)

@@ -113,7 +113,7 @@ export function updateMissionStep(
     stepId: string
     status: 'OPEN'|'IN_PROGRESS'|'COMPLETED'|'CANCELLED'
     outcome?: string
-    sourceReportId?: string
+    sourceEvidenceId?: string
     attemptId?: string
   },
 ) {
@@ -279,8 +279,8 @@ export function proposeEvaluation(
     confidence: number
     rubricResults?: unknown[]
     feedback?: string
-    sourceReportId?: string
-    verifierReportId?: string
+    sourceEvidenceId?: string
+    verifierEvidenceId?: string
   },
 ) {
   return proposeLearningEvaluation(pool, (run) => withTransaction(pool, run), inc, {

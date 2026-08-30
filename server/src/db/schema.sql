@@ -4861,7 +4861,7 @@ CREATE TABLE public.learning_mission_steps (
     status text DEFAULT 'OPEN'::text NOT NULL,
     position double precision DEFAULT 0 NOT NULL,
     outcome text,
-    completion_report_id text REFERENCES public.canvas_assignment_reports(id) ON DELETE SET NULL,
+    completion_evidence_id text,
     completion_attempt_id text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -4943,8 +4943,8 @@ CREATE TABLE public.learning_evaluations (
     feedback text DEFAULT ''::text NOT NULL,
     evaluator_id text NOT NULL,
     evaluator_kind text NOT NULL,
-    source_report_id text REFERENCES public.canvas_assignment_reports(id) ON DELETE SET NULL,
-    verifier_report_id text REFERENCES public.canvas_assignment_reports(id) ON DELETE SET NULL,
+    source_evidence_id text,
+    verifier_evidence_id text,
     status text DEFAULT 'PENDING'::text NOT NULL,
     review_reason text,
     reviewed_by text,
@@ -5080,6 +5080,20 @@ ALTER TABLE ONLY public.learning_attempts
 ALTER TABLE ONLY public.canvas_assignment_reports
     ADD CONSTRAINT canvas_assignment_reports_evidence_fkey
     FOREIGN KEY (evidence_id) REFERENCES public.evidence_records(id);
+
+ALTER TABLE ONLY public.learning_mission_steps
+    ADD CONSTRAINT learning_mission_steps_completion_evidence_fkey
+    FOREIGN KEY (company_id, project_id, completion_evidence_id)
+    REFERENCES public.evidence_records(company_id, project_id, id)
+    ON DELETE SET NULL (completion_evidence_id);
+
+ALTER TABLE ONLY public.learning_evaluations
+    ADD CONSTRAINT learning_evaluations_source_evidence_fkey
+    FOREIGN KEY (company_id, project_id, source_evidence_id)
+    REFERENCES public.evidence_records(company_id, project_id, id),
+    ADD CONSTRAINT learning_evaluations_verifier_evidence_fkey
+    FOREIGN KEY (company_id, project_id, verifier_evidence_id)
+    REFERENCES public.evidence_records(company_id, project_id, id);
 
 CREATE TABLE public.learning_states (
     project_id text NOT NULL,

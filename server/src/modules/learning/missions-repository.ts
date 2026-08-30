@@ -28,7 +28,7 @@ interface LearningMissionStepRow {
   status: LearningMissionStep['status']
   position: number
   outcome: string | null
-  completion_report_id: string | null
+  completion_evidence_id: string | null
   completion_attempt_id: string | null
 }
 
@@ -42,7 +42,7 @@ function mapLearningMissionStep(step: LearningMissionStepRow): LearningMissionSt
     status: step.status,
     position: Number(step.position),
     ...(step.outcome ? { outcome: step.outcome } : {}),
-    ...(step.completion_report_id ? { completionReportId: step.completion_report_id } : {}),
+    ...(step.completion_evidence_id ? { completionEvidenceId: step.completion_evidence_id } : {}),
     ...(step.completion_attempt_id ? { completionAttemptId: step.completion_attempt_id } : {}),
   }
 }
@@ -79,7 +79,7 @@ async function learningMissionSteps(
   const { rows } = await db.query<LearningMissionStepRow>(
     `SELECT step.id,step.mission_id,step.kind,step.description,step.success_criteria,
             step.knowledge_unit_id,step.status,step.position,step.outcome,
-            step.completion_report_id,step.completion_attempt_id
+            step.completion_evidence_id,step.completion_attempt_id
        FROM learning_mission_steps step
       WHERE step.company_id=$1 AND step.project_id=$2 AND step.mission_id=ANY($3::text[])
       ORDER BY step.mission_id,step.position,step.created_at`,
@@ -283,16 +283,15 @@ export async function updateLearningMissionStepRecord(
     stepId: string
     status: LearningMissionStep['status']
     outcome?: string
-    sourceReportId?: string
+    sourceEvidenceId?: string
     attemptId?: string
   },
 ): Promise<boolean> {
   const result = await db.query(
     `UPDATE learning_mission_steps step
         SET status=$6,outcome=$7,
-            completion_report_id=COALESCE((SELECT report.id FROM canvas_assignment_reports report
-              JOIN canvases canvas ON canvas.id=report.canvas_id AND canvas.company_id=report.company_id
-              WHERE report.id=$8 AND report.company_id=$1 AND canvas.project_id=$2),step.completion_report_id),
+            completion_evidence_id=COALESCE((SELECT evidence.id FROM evidence_records evidence
+              WHERE evidence.id=$8 AND evidence.company_id=$1 AND evidence.project_id=$2),step.completion_evidence_id),
             completion_attempt_id=COALESCE((SELECT attempt.id FROM learning_attempts attempt
               WHERE attempt.id=$9 AND attempt.company_id=$1 AND attempt.project_id=$2
                 AND attempt.learner_id=mission.learner_id),step.completion_attempt_id),
@@ -302,14 +301,13 @@ export async function updateLearningMissionStepRecord(
         AND mission.company_id=step.company_id AND mission.project_id=step.project_id AND mission.id=step.mission_id
         AND mission.conversation_id=$3
         AND ($6<>'COMPLETED'
-          OR ($8 IS NOT NULL AND EXISTS(SELECT 1 FROM canvas_assignment_reports report
-            JOIN canvases canvas ON canvas.id=report.canvas_id AND canvas.company_id=report.company_id
-            WHERE report.id=$8 AND report.company_id=$1 AND canvas.project_id=$2))
+          OR ($8 IS NOT NULL AND EXISTS(SELECT 1 FROM evidence_records evidence
+            WHERE evidence.id=$8 AND evidence.company_id=$1 AND evidence.project_id=$2))
           OR ($9 IS NOT NULL AND EXISTS(SELECT 1 FROM learning_attempts attempt
             WHERE attempt.id=$9 AND attempt.company_id=$1 AND attempt.project_id=$2
               AND attempt.learner_id=mission.learner_id)))`,
     [args.companyId,args.projectId,args.channelId,args.missionId,args.stepId,args.status,
-      args.outcome?.trim() ?? null,args.sourceReportId ?? null,args.attemptId ?? null],
+      args.outcome?.trim() ?? null,args.sourceEvidenceId ?? null,args.attemptId ?? null],
   )
   return Boolean(result.rowCount)
 }

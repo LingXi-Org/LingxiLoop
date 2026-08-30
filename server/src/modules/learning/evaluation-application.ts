@@ -135,18 +135,18 @@ export async function proposeLearningEvaluation(
   const suggestedDowngrade = stateLevels.some((level) => level > demonstratedLevel)
   let verified = false
   if (demonstratedLevel >= 3 || suggestedDowngrade) {
-    if (!input.sourceReportId) {
+    if (!input.sourceEvidenceId) {
       throw new LearningApplicationError(
         'invalid',
-        'L3+, transfer, and downgrade evaluations require a persisted source report',
+        'L3+, transfer, and downgrade evaluations require persisted source Evidence',
       )
     }
-    if (input.verifierReportId) {
+    if (input.verifierEvidenceId) {
       const verdict = await verifyIndependentLearningReport(db, {
         companyId: room.companyId,
         projectId: room.projectId,
-        sourceReportId: input.sourceReportId,
-        verifierReportId: input.verifierReportId,
+        sourceEvidenceId: input.sourceEvidenceId,
+        verifierEvidenceId: input.verifierEvidenceId,
       })
       if (verdict === null) {
         throw new LearningApplicationError(
@@ -176,8 +176,8 @@ export async function proposeLearningEvaluation(
       feedback: input.feedback?.trim() ?? '',
       evaluatorId: input.agentId,
       status,
-      ...(input.sourceReportId ? { sourceReportId: input.sourceReportId } : {}),
-      ...(input.verifierReportId ? { verifierReportId: input.verifierReportId } : {}),
+      ...(input.sourceEvidenceId ? { sourceEvidenceId: input.sourceEvidenceId } : {}),
+      ...(input.verifierEvidenceId ? { verifierEvidenceId: input.verifierEvidenceId } : {}),
     })) {
       throw new LearningApplicationError('not_found', 'attempt not found')
     }

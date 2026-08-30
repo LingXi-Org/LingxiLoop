@@ -122,14 +122,14 @@ export async function updateLearningMissionStep(
     stepId: string
     status: 'OPEN'|'IN_PROGRESS'|'COMPLETED'|'CANCELLED'
     outcome?: string
-    sourceReportId?: string
+    sourceEvidenceId?: string
     attemptId?: string
   },
 ) {
   if (input.status === 'COMPLETED' && !input.outcome?.trim()) {
     throw new LearningApplicationError('invalid', 'completed mission steps require an outcome')
   }
-  if (input.status === 'COMPLETED' && !input.sourceReportId && !input.attemptId) {
+  if (input.status === 'COMPLETED' && !input.sourceEvidenceId && !input.attemptId) {
     throw new LearningApplicationError('invalid', 'completed mission steps require a persisted report or learner attempt')
   }
   const room = await requireLearningRoomState(db, scope)
