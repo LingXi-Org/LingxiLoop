@@ -46,29 +46,31 @@ function isQuiet(time: string, start: string | null, end: string | null): boolea
 async function candidates(now: Date): Promise<DigestCandidate[]> {
   const { rows } = await pool.query<DigestCandidate>(
     `WITH learner AS (
-       SELECT course.company_id,mastery.learner_id AS user_id,mastery.course_id,
+       SELECT course.company_id,state.user_id,course.id AS course_id,
               project.name AS course_title,'review_due'::text AS kind,COUNT(*)::int AS item_count
-         FROM learning_mastery mastery
-         JOIN courses course ON course.id=mastery.course_id AND course.company_id=mastery.company_id
+         FROM learning_states state
+         JOIN courses course ON course.project_id=state.project_id AND course.company_id=state.company_id
          JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
          JOIN project_memberships member
            ON member.project_id=course.project_id AND member.company_id=course.company_id
-          AND member.user_id=mastery.learner_id AND member.status='ACTIVE'
+          AND member.user_id=state.user_id AND member.status='ACTIVE'
           AND member.role IN ('STUDENT','OBSERVER')
-        WHERE project.status='ACTIVE' AND mastery.next_review_at<=$1
-        GROUP BY course.company_id,mastery.learner_id,mastery.course_id,project.name
+        WHERE project.status='ACTIVE' AND state.next_review_at<=$1
+        GROUP BY course.company_id,state.user_id,course.id,project.name
      ), teacher AS (
-       SELECT course.company_id,member.user_id,attempt.course_id,project.name AS course_title,
+       SELECT course.company_id,member.user_id,course.id AS course_id,project.name AS course_title,
               'grading_queue'::text AS kind,COUNT(*)::int AS item_count
          FROM learning_evaluations evaluation
-         JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
-         JOIN courses course ON course.id=attempt.course_id AND course.company_id=attempt.company_id
+         JOIN learning_attempts attempt
+           ON attempt.company_id=evaluation.company_id AND attempt.project_id=evaluation.project_id
+          AND attempt.id=evaluation.attempt_id
+         JOIN courses course ON course.project_id=attempt.project_id AND course.company_id=attempt.company_id
          JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
          JOIN project_memberships member
            ON member.project_id=course.project_id AND member.company_id=course.company_id
           AND member.status='ACTIVE' AND member.role IN ('OWNER','TEACHER')
-        WHERE project.status='ACTIVE' AND evaluation.status='pending'
-        GROUP BY course.company_id,member.user_id,attempt.course_id,project.name
+        WHERE project.status='ACTIVE' AND evaluation.status='PENDING'
+        GROUP BY course.company_id,member.user_id,course.id,project.name
      ) SELECT * FROM learner UNION ALL SELECT * FROM teacher`,
     [now],
   )
@@ -149,13 +151,16 @@ async function deliverPending(now: Date): Promise<void> {
             claimed.channel,claimed.kind,claimed.attempts,project.name AS course_title,
             users.email,users.display_name,
             CASE WHEN claimed.kind='review_due' THEN (
-              SELECT COUNT(*)::int FROM learning_mastery mastery
-               WHERE mastery.course_id=claimed.course_id AND mastery.learner_id=claimed.user_id
-                 AND mastery.next_review_at<=$1
+              SELECT COUNT(*)::int FROM learning_states state
+               WHERE state.company_id=claimed.company_id AND state.project_id=course.project_id
+                 AND state.user_id=claimed.user_id AND state.next_review_at<=$1
             ) ELSE (
               SELECT COUNT(*)::int FROM learning_evaluations evaluation
-              JOIN learning_attempts attempt ON attempt.id=evaluation.attempt_id
-               WHERE attempt.course_id=claimed.course_id AND evaluation.status='pending'
+              JOIN learning_attempts attempt
+                ON attempt.company_id=evaluation.company_id AND attempt.project_id=evaluation.project_id
+               AND attempt.id=evaluation.attempt_id
+               WHERE attempt.company_id=claimed.company_id AND attempt.project_id=course.project_id
+                 AND evaluation.status='PENDING'
             ) END AS item_count
        FROM claimed
        JOIN courses course ON course.id=claimed.course_id AND course.company_id=claimed.company_id
