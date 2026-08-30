@@ -47,6 +47,37 @@ export async function learningCaseBelongsToStudent(
   return Boolean(rows[0])
 }
 
+export async function isManagedTeacherAgent(db: Queryable, companyId: string, agentId: string): Promise<boolean> {
+  const { rows } = await db.query(
+    `SELECT 1 FROM learning_project_teacher_agents WHERE company_id=$1 AND agent_id=$2`,
+    [companyId, agentId],
+  )
+  return Boolean(rows[0])
+}
+
+export async function findActiveDefaultProjectId(db: Queryable, companyId: string): Promise<string | null> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT id FROM projects
+      WHERE company_id=$1 AND is_default=TRUE AND status='ACTIVE'
+      LIMIT 1`,
+    [companyId],
+  )
+  return rows[0]?.id ?? null
+}
+
+export async function listActiveAgentIds(db: Queryable, companyId: string): Promise<string[]> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT id FROM participants
+      WHERE company_id=$1 AND kind='agent' AND departed_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM learning_project_teacher_agents managed
+           WHERE managed.company_id=participants.company_id AND managed.agent_id=participants.id)
+      ORDER BY id`,
+    [companyId],
+  )
+  return rows.map((row) => row.id)
+}
+
 export async function findContextThread(
   db: Queryable,
   args: { companyId: string; projectId: string; contextType: ContextType; contextId: string },

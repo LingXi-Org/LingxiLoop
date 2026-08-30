@@ -1,6 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
 import type { ImChannelProfile } from '../../im/types.js'
-import type { WorkspacePolicy } from './contracts.js'
 
 export interface ParticipantRow {
   id: string
@@ -40,19 +39,6 @@ export async function listParticipants(
   return rows
 }
 
-export async function listActiveCompanyParticipantIds(
-  db: Queryable,
-  companyId: string,
-): Promise<string[]> {
-  const { rows } = await db.query<{ id: string }>(
-    `SELECT id FROM participants
-      WHERE company_id=$1 AND departed_at IS NULL
-      ORDER BY id`,
-    [companyId],
-  )
-  return rows.map((row) => row.id)
-}
-
 export async function hasManagedPulse(db: Queryable, companyId: string, ids: string[]): Promise<boolean> {
   const { rows } = await db.query(
     `SELECT 1 FROM learning_project_teacher_agents
@@ -60,71 +46,6 @@ export async function hasManagedPulse(db: Queryable, companyId: string, ids: str
     [companyId, ids],
   )
   return Boolean(rows[0])
-}
-
-export async function listCourseHumanIds(
-  db: Queryable,
-  companyId: string,
-  courseId: string,
-  ids: string[],
-): Promise<string[]> {
-  const { rows } = await db.query<{ user_id: string }>(
-    `SELECT member.user_id FROM project_memberships member
-       JOIN courses course ON course.project_id=member.project_id AND course.company_id=member.company_id
-      WHERE member.company_id=$1 AND course.id=$2 AND member.user_id=ANY($3::text[])
-        AND member.status='ACTIVE'`,
-    [companyId, courseId, ids],
-  )
-  return rows.map((row) => row.user_id)
-}
-
-export async function findDirectConversation(
-  db: Queryable,
-  args: { companyId: string; projectId: string; firstId: string; secondId: string },
-): Promise<ConversationRow | null> {
-  const { rows } = await db.query<ConversationRow>(
-    `SELECT id,kind,title,topic,members,leader_id,pinned,project_id
-       FROM conversations
-      WHERE company_id=$1 AND project_id=$2 AND kind='direct'
-        AND members @> to_jsonb(ARRAY[$3::text])
-        AND members @> to_jsonb(ARRAY[$4::text])
-        AND jsonb_array_length(members)=2
-      ORDER BY updated_at DESC LIMIT 1`,
-    [args.companyId, args.projectId, args.firstId, args.secondId],
-  )
-  return rows[0] ?? null
-}
-
-export async function findConversationWorkspacePolicy(
-  db: Queryable,
-  companyId: string,
-  projectId: string,
-): Promise<WorkspacePolicy | null> {
-  const { rows } = await db.query<{ project_status: string; course_id: string | null }>(
-    `SELECT project.status AS project_status,course.id AS course_id
-       FROM projects project
-       LEFT JOIN courses course
-         ON course.project_id=project.id AND course.company_id=project.company_id
-      WHERE project.id=$1 AND project.company_id=$2`,
-    [projectId, companyId],
-  )
-  const row = rows[0]
-  return row ? { projectStatus: row.project_status, courseId: row.course_id } : null
-}
-
-export async function findDefaultConversationWorkspacePolicy(
-  db: Queryable,
-  companyId: string,
-): Promise<(WorkspacePolicy & { projectId: string }) | null> {
-  const { rows } = await db.query<{ project_id: string; project_status: string }>(
-    `SELECT id AS project_id,status AS project_status
-       FROM projects
-      WHERE company_id=$1 AND is_default=TRUE AND status='ACTIVE'
-      LIMIT 1`,
-    [companyId],
-  )
-  const row = rows[0]
-  return row ? { projectId: row.project_id, projectStatus: row.project_status, courseId: null } : null
 }
 
 export async function findConversationForUpdate(
@@ -235,34 +156,6 @@ export async function findBindingForUpdate(
     [conversationId, companyId],
   )
   return rows[0] ?? null
-}
-
-export async function createConversationBundle(
-  db: Queryable,
-  args: {
-    id: string
-    companyId: string
-    projectId: string
-    kind: 'direct' | 'group'
-    title: string
-    topic: string | null
-    members: string[]
-    leaderId: string | null
-    tag: string | null
-    profile: ImChannelProfile
-  },
-): Promise<boolean> {
-  const inserted = await db.query(
-    `INSERT INTO conversations
-       (id,kind,title,topic,members,leader_id,pinned,tag,company_id,project_id)
-     VALUES ($1,$2,$3,$4,$5::jsonb,$6,FALSE,$7,$8,$9)
-     ON CONFLICT (id) DO NOTHING`,
-    [args.id, args.kind, args.title, args.topic, JSON.stringify(args.members), args.leaderId,
-      args.tag, args.companyId, args.projectId],
-  )
-  if ((inserted.rowCount ?? 0) === 0) return false
-  await upsertBinding(db, args.companyId, args.profile, args.leaderId, null)
-  return true
 }
 
 export async function upsertBinding(
@@ -403,7 +296,6 @@ export async function searchWorkspaceDirectory(
   db: Queryable,
   args: { companyId: string; projectId: string; userId: string; raw: string },
 ): Promise<{
-  participants: Array<Record<string, unknown>>
   rooms: Array<Record<string, unknown>>
   groups: Array<Record<string, unknown>>
 }> {
@@ -412,31 +304,6 @@ export async function searchWorkspaceDirectory(
   const exact = escaped
   const prefix = `${escaped}%`
   const common = [args.companyId, args.userId, contains, exact, prefix, args.projectId]
-  const participantsPromise = db.query(
-    `SELECT participant.id,participant.kind,participant.name,participant.role,participant.initial,
-            CASE WHEN participant.kind='agent' THEN 'transparent' ELSE participant.avatar_bg END AS "avatarBg",
-            CASE WHEN participant.kind='agent' THEN NULL ELSE participant.avatar_url END AS "avatarUrl",
-            participant.status,participant.bio
-       FROM participants participant
-       LEFT JOIN learning_project_teacher_agents pulse
-         ON pulse.company_id=participant.company_id AND pulse.agent_id=participant.id
-      WHERE participant.company_id=$1 AND participant.departed_at IS NULL
-        AND (pulse.agent_id IS NULL OR EXISTS (
-          SELECT 1 FROM courses course
-          JOIN project_memberships teacher ON teacher.project_id=course.project_id AND teacher.company_id=course.company_id
-            AND teacher.user_id=$2 AND teacher.status='ACTIVE'
-            AND teacher.role IN ('OWNER','TEACHER')
-          WHERE course.company_id=pulse.company_id AND course.project_id=pulse.project_id AND pulse.project_id=$6))
-        AND (participant.kind='agent' OR EXISTS (
-          SELECT 1 FROM projects project
-          LEFT JOIN project_memberships member ON member.project_id=project.id AND member.company_id=project.company_id
-            AND member.user_id=participant.id AND member.status='ACTIVE'
-          WHERE project.id=$6 AND project.company_id=$1
-            AND member.user_id IS NOT NULL))
-        AND (participant.name ILIKE $3 ESCAPE '\\' OR participant.role ILIKE $3 ESCAPE '\\' OR participant.id ILIKE $3 ESCAPE '\\')
-      ORDER BY CASE WHEN lower(participant.name)=lower($4) THEN 0 WHEN participant.name ILIKE $5 ESCAPE '\\' THEN 1 ELSE 2 END,
-               CASE participant.kind WHEN 'agent' THEN 0 ELSE 1 END,participant.name
-      LIMIT 8`, common)
   const roomsPromise = db.query(
     `WITH my_rooms AS (
        SELECT conversation.id,conversation.kind,
@@ -485,8 +352,6 @@ export async function searchWorkspaceDirectory(
         AND (conversation.title ILIKE $3 ESCAPE '\\' OR conversation.topic ILIKE $3 ESCAPE '\\')
       ORDER BY CASE WHEN lower(conversation.title)=lower($4) THEN 0 WHEN conversation.title ILIKE $5 ESCAPE '\\' THEN 1 ELSE 2 END,
                conversation.updated_at DESC LIMIT 8`, common)
-  const [participants, rooms, groups] = await Promise.all([
-    participantsPromise, roomsPromise, groupsPromise,
-  ])
-  return { participants: participants.rows, rooms: rooms.rows, groups: groups.rows }
+  const [rooms, groups] = await Promise.all([roomsPromise, groupsPromise])
+  return { rooms: rooms.rows, groups: groups.rows }
 }

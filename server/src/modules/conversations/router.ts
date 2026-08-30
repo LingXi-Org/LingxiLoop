@@ -3,19 +3,15 @@ import { safe } from '../../http/async-handler.js'
 import { requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import {
-  requireCompany,
   requireCompanyArtifactContext,
-  requireWorkspace,
 } from '../../http/request-context.js'
 import type { PermissionAction } from '../access/public.js'
 import { permissionService } from '../access/public.js'
 import { ConversationApplicationError } from './application.js'
 import {
   addMemberRequestSchema,
-  createGroupRequestSchema,
   leaderRequestSchema,
   muteRequestSchema,
-  openDirectRequestSchema,
   pinRequestSchema,
   searchQuerySchema,
   titleRequestSchema,
@@ -47,35 +43,11 @@ function mapApplicationError(error: unknown): never {
     ? 404
     : error.code === 'not_member' || error.code === 'managed_pulse' || error.code === 'teacher_room_managed'
       ? 403
-      : error.code === 'workspace_read_only' || error.code === 'idempotency_conflict' || error.code === 'binding_missing'
+      : error.code === 'workspace_read_only' || error.code === 'binding_missing'
         ? 409
         : 400
   throw new HttpError(status, error.message)
 }
-
-conversationsRouter.post('/conversations', safe(async (req, res) => {
-  const identity = await requireCompany(req)
-  const input = parse(createGroupRequestSchema.safeParse(req.body ?? {}))
-  const workspace = await requireWorkspace(req, input.workspaceId, 'conversation:write')
-  try {
-    const result = await conversationsApplication.createGroup(identity, workspace, input)
-    res.status(result.created ? 201 : 200).json(result)
-  } catch (error) {
-    mapApplicationError(error)
-  }
-}))
-
-conversationsRouter.post('/conversations/direct', safe(async (req, res) => {
-  const scope = await requireCompanyArtifactContext(req, 'conversation:write')
-  const input = parse(openDirectRequestSchema.safeParse(req.body ?? {}))
-  const workspace = await requireWorkspace(req, scope.projectId, 'conversation:write')
-  try {
-    const result = await conversationsApplication.openDirect(scope, workspace, input.otherId)
-    res.status(result.created ? 201 : 200).json(result)
-  } catch (error) {
-    mapApplicationError(error)
-  }
-}))
 
 conversationsRouter.post('/conversations/:id/leader', safe(async (req, res) => {
   const conversationId = String(req.params.id)

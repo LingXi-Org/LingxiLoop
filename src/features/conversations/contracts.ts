@@ -1,5 +1,3 @@
-import type { Status } from '@/types'
-
 export interface ApiConversation {
   id: string
   kind: 'group' | 'direct' | 'email'
@@ -29,17 +27,6 @@ export interface ApiConversation {
 }
 
 export interface ConversationSearchResults {
-  participants: Array<{
-    id: string
-    kind: 'agent' | 'human'
-    name: string
-    role: string | null
-    initial: string
-    avatarBg: string
-    avatarUrl: string | null
-    status: Status
-    bio: string | null
-  }>
   rooms: Array<{
     id: string
     kind: 'direct'

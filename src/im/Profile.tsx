@@ -1,14 +1,15 @@
 import { Button } from '@/components/ui/button'
-import { conversationsApi } from '@/features/conversations/api'
+import { contextThreadsApi } from '@/features/context-threads/api'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
-import { IConvene, IDirectChat, IMail } from '@/components/icons'
+import { IMail } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/features/agents/state'
+import { useWorkspace } from '@/features/knowledge/workspace'
 
 const STATUS_LABEL: Record<string, string> = {
   avail: '可用',
@@ -55,6 +56,7 @@ export function ParticipantProfile({
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [opening, setOpening] = useState(false)
   const [copied, setCopied] = useState(false)
+  const projectId = useWorkspace((state) => state.selectedId)
 
   if (!participant) return null
   const isAgent = participant.kind === 'agent'
@@ -62,17 +64,17 @@ export function ParticipantProfile({
   const isSelf = participant.id === meId
   const statusColor = STATUS_COLOR[participant.status] ?? 'var(--resting)'
 
-  const startDM = async () => {
-    if (opening || isSelf) return
+  const openLearningThread = async () => {
+    if (opening || isSelf || !isAgent || !projectId) return
     setOpening(true)
     try {
-      const conversation = await conversationsApi.openDirect(participant.id)
+      const conversation = await contextThreadsApi.openLearning(projectId, participant.id)
       await useConversations.getState().reload()
       setView('conversations')
       selectConversation(conversation.id)
       onClose()
     } catch (error) {
-      console.warn('[profile] open direct failed', error)
+      console.warn('[profile] learning context failed', error)
     } finally {
       setOpening(false)
     }
@@ -132,18 +134,16 @@ export function ParticipantProfile({
             <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">Pulse 仅在学习中心的共享教师室中使用，不支持私聊、召开群组或邮件。</div>
           ) : isSelf ? (
             <Button type="button" onClick={() => { setView('me'); onClose() }} className="w-full rounded-xl bg-raised px-4 py-3 text-[13px] font-semibold text-accent hover:bg-raised-hover">打开我的设置</Button>
-          ) : (
-            <div className={cn('grid gap-2', isAgent ? 'grid-cols-3' : 'grid-cols-1')}>
-              <Button type="button" onClick={() => void startDM()} disabled={opening} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-accent px-3 text-[12px] font-semibold text-white shadow-soft transition active:scale-[0.97] disabled:opacity-50">
+          ) : isAgent ? (
+            <div className="grid gap-2">
+              <Button type="button" onClick={() => void openLearningThread()} disabled={opening || !projectId} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-accent px-3 text-[12px] font-semibold text-white shadow-soft transition active:scale-[0.97] disabled:opacity-50">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                {opening ? '打开中…' : '消息'}
+                {opening ? '打开中…' : '打开学习线程'}
               </Button>
-              {isAgent && (
-                <>
-                  <Button type="button" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-skype-ink px-3 text-[12px] font-semibold text-white transition active:scale-[0.97]"><IDirectChat className="size-4" />私聊</Button>
-                  <Button type="button" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-hairline bg-panel px-3 text-[12px] font-semibold text-ink transition active:scale-[0.97]"><IConvene className="size-4" />召开</Button>
-                </>
-              )}
+            </div>
+          ) : (
+            <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">
+              人员沟通由 Project 或 LearningCase 中的受控上下文发起。
             </div>
           )}
         </ProfileSection>

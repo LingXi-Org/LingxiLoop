@@ -3,7 +3,7 @@ import { withTransaction } from '../../db/transaction.js'
 import { wukongClient } from '../../im/wukong.js'
 import { inc } from '../../metrics.js'
 import { CH_DOC_MENTION, publish } from '../../redis.js'
-import { openDirectConversationForDocumentMention } from '../conversations/public.js'
+import { openLearningContextThread } from '../context-threads/public.js'
 import type { DocumentMentionEvent } from './contracts.js'
 import { DocumentMentionApplication } from './mention-application.js'
 
@@ -11,10 +11,10 @@ export const documentMentionApplication = new DocumentMentionApplication({
   transaction: (work) => withTransaction(pool, work),
   publish: async (event: DocumentMentionEvent) => { await publish(CH_DOC_MENTION, event) },
   wakeAgent: async (args) => {
-    const conversation = await openDirectConversationForDocumentMention({
+    const conversation = await openLearningContextThread({
       companyId: args.companyId,
       projectId: args.projectId,
-      mentionerId: args.mentionerId,
+      userId: args.mentionerId,
       agentId: args.agentId,
     })
     await wukongClient().sendMessage(conversation.id, 2, args.mentionerId, {

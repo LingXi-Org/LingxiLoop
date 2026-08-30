@@ -167,7 +167,7 @@ function OpenMausEmptyConversationState() {
         <img src="/logo.png" alt="" className="size-14 rounded-2xl opacity-90" draggable={false} />
         <h1 className="text-[17px] font-semibold text-foreground">选择一个会话开始交流</h1>
         <p className="text-[13px] leading-6 text-muted-foreground">
-          {total > 0 ? `左侧共有 ${total} 个会话。你也可以搜索消息，或新建群聊。` : '新消息和 Agent 的实时进度会显示在这里。'}
+          {total > 0 ? `左侧共有 ${total} 个上下文会话。你也可以搜索已有消息。` : '新消息和 Agent 的实时进度会显示在这里。'}
         </p>
       </div>
     </main>

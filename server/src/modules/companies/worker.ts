@@ -1,6 +1,6 @@
 import { pool } from '../../db/pool.js'
 import type { WorkerTaskHandle } from '../../runtime/lifecycle.js'
-import { seedMemberDirectConversations } from '../conversations/public.js'
+import { seedMemberLearningContextThreads } from '../context-threads/public.js'
 import {
   claimCompanyOnboardingEffect,
   completeCompanyOnboardingEffect,
@@ -20,7 +20,7 @@ export async function runCompanyOnboardingEffects(): Promise<void> {
     }, 30_000)
     heartbeat.unref?.()
     try {
-      await seedMemberDirectConversations({ companyId: effect.companyId, memberId: effect.memberId })
+      await seedMemberLearningContextThreads({ companyId: effect.companyId, userId: effect.memberId })
       if (leaseLost) throw new Error(`company onboarding effect lease lost during execution: ${effect.id}`)
       await completeCompanyOnboardingEffect(pool, effect)
     } catch (error) {

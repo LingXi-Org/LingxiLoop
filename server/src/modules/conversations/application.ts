@@ -1,28 +1,18 @@
-import { createHash } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { ImChannelProfile } from '../../im/types.js'
-import { createPermissionService } from '../access/public.js'
 import type {
   ConversationScope,
   ConversationUpdatedEvent,
-  CreateGroupInput,
   SearchBuckets,
   TypingEvent,
-  WorkspacePolicy,
 } from './contracts.js'
 import {
-  createConversationBundle,
   findActiveAgentCompanyId,
   findConversation,
   findBindingForUpdate,
   findConversationForUpdate,
   findAgentConversationContext,
-  findConversationWorkspacePolicy,
-  findDefaultConversationWorkspacePolicy,
-  findDirectConversation,
   hasManagedPulse,
-  listCourseHumanIds,
-  listActiveCompanyParticipantIds,
   listActiveConversationMutes,
   listParticipants,
   participantAllowedInProject,
@@ -43,7 +33,6 @@ export type ConversationErrorCode =
   | 'not_group'
   | 'not_member'
   | 'teacher_room_managed'
-  | 'idempotency_conflict'
   | 'binding_missing'
   | 'invalid_direct'
   | 'stale_title'
@@ -82,10 +71,6 @@ export interface ConversationInfrastructure {
   }>>
 }
 
-function deterministicId(prefix: string, ...parts: string[]): string {
-  return `${prefix}-${createHash('sha256').update(parts.join('\0')).digest('hex').slice(0, 24)}`
-}
-
 function profileFor(conversation: ConversationRow, now = new Date().toISOString()): ImChannelProfile {
   return {
     channelId: conversation.id,
@@ -106,157 +91,6 @@ export class ConversationsApplication {
     private readonly db: Queryable,
     private readonly infrastructure: ConversationInfrastructure,
   ) {}
-
-  async createGroup(
-    scope: Omit<ConversationScope, 'projectId'>,
-    workspace: WorkspacePolicy,
-    input: CreateGroupInput,
-  ): Promise<{ id: string; members: string[]; leaderId: string; projectId: string; created: boolean }> {
-    const members = [...new Set([...input.members, scope.userId])]
-    if (members.length < 2) {
-      throw new ConversationApplicationError('invalid_members', 'pick at least one teammate')
-    }
-    const participants = await listParticipants(this.db, scope.companyId, members)
-    const known = new Set(participants.map((participant) => participant.id))
-    const missing = members.filter((member) => !known.has(member))
-    if (missing.length > 0) {
-      throw new ConversationApplicationError('invalid_members', `unknown participant(s): ${missing.join(', ')}`)
-    }
-    if (await hasManagedPulse(this.db, scope.companyId, members)) {
-      throw new ConversationApplicationError('managed_pulse', 'Pulse can only belong to its provisioned teacher room')
-    }
-    const leader = participants.find((participant) => participant.id === input.leaderId)
-    if (!leader || leader.kind !== 'agent' || leader.departed_at) {
-      throw new ConversationApplicationError('invalid_leader', 'leaderId must be an active agent member')
-    }
-    if (workspace.courseId) {
-      const humanIds = participants.filter((participant) => participant.kind === 'human').map((participant) => participant.id)
-      const enrolled = new Set(await listCourseHumanIds(this.db, scope.companyId, workspace.courseId, humanIds))
-      if (humanIds.some((id) => !enrolled.has(id))) {
-        throw new ConversationApplicationError('invalid_members', 'all human members must belong to the course')
-      }
-    }
-    const id = deterministicId('g', scope.companyId, input.workspaceId, scope.userId, input.clientRequestId)
-    const topic = input.topic || null
-    const now = new Date().toISOString()
-    const profile: ImChannelProfile = {
-      channelId: id, channelType: 2, kind: 'group', title: input.title, topic,
-      members, leaderAgentId: input.leaderId, pinned: false, createdAt: now, updatedAt: now,
-    }
-    const created = await this.infrastructure.transaction(async (db) => {
-      const inserted = await createConversationBundle(db, {
-        id, companyId: scope.companyId, projectId: input.workspaceId, kind: 'group',
-        title: input.title, topic, members, leaderId: input.leaderId, tag: null, profile,
-      })
-      if (!inserted) {
-        const existing = await findConversationForUpdate(db, scope.companyId, id)
-        if (!existing || existing.project_id !== input.workspaceId || existing.title !== input.title
-          || existing.leader_id !== input.leaderId
-          || JSON.stringify([...existing.members].sort()) !== JSON.stringify([...members].sort())) {
-          throw new ConversationApplicationError('idempotency_conflict', 'clientRequestId was reused with different input')
-        }
-      }
-      return inserted
-    })
-    await this.infrastructure.syncChannel(profile)
-    return { id, members, leaderId: input.leaderId, projectId: input.workspaceId, created }
-  }
-
-  async openDirect(
-    scope: ConversationScope,
-    workspace: WorkspacePolicy,
-    otherId: string,
-  ): Promise<{ id: string; created: boolean }> {
-    if (otherId === scope.userId) {
-      throw new ConversationApplicationError('invalid_direct', 'cannot DM yourself')
-    }
-    const participants = await listParticipants(this.db, scope.companyId, [otherId])
-    const other = participants[0]
-    if (!other || other.departed_at) throw new ConversationApplicationError('not_found', 'unknown participant')
-    if (await hasManagedPulse(this.db, scope.companyId, [otherId])) {
-      throw new ConversationApplicationError('managed_pulse', 'Pulse can only belong to its provisioned teacher room')
-    }
-    if (workspace.courseId && other.kind === 'human') {
-      const enrolled = await listCourseHumanIds(this.db, scope.companyId, workspace.courseId, [otherId])
-      if (!enrolled.includes(otherId)) throw new ConversationApplicationError('not_found', 'unknown participant')
-    }
-    const members = [scope.userId, otherId]
-    const canonicalMembers = [...members].sort()
-    const id = deterministicId('direct', scope.companyId, scope.projectId, ...canonicalMembers)
-    const now = new Date().toISOString()
-    const result = await this.infrastructure.transaction(async (db) => {
-      const existing = await findDirectConversation(db, {
-        companyId: scope.companyId, projectId: scope.projectId,
-        firstId: scope.userId, secondId: otherId,
-      })
-      if (existing) {
-        const binding = await findBindingForUpdate(db, scope.companyId, existing.id)
-        if (!binding) throw new ConversationApplicationError('binding_missing', 'conversation channel binding is missing')
-        const profile = { ...profileFor(existing, now), ...binding.profile, channelId: existing.id,
-          title: existing.title, members: existing.members } as ImChannelProfile
-        return { created: false, profile }
-      }
-      const profile: ImChannelProfile = {
-        channelId: id, channelType: 2, kind: 'direct', title: other.name,
-        members, pinned: false, createdAt: now, updatedAt: now,
-      }
-      const created = await createConversationBundle(db, {
-        id, companyId: scope.companyId, projectId: scope.projectId, kind: 'direct',
-        title: other.name, topic: null, members, leaderId: null,
-        tag: other.kind === 'human' ? 'human' : null, profile,
-      })
-      return { created, profile }
-    })
-    // The binding committed above is the durable synchronization intent.
-    // The Worker continuously reconciles it to WuKongIM, so a transient IM
-    // outage must not turn a persisted Agent/direct conversation into a 500.
-    await this.infrastructure.syncChannel(result.profile).catch((error: unknown) => {
-      console.warn('[conversations] committed direct channel awaits reconciliation:',
-        error instanceof Error ? error.message : String(error))
-    })
-    return { id: result.profile.channelId, created: result.created }
-  }
-
-  async openDirectForDocumentMention(
-    scope: ConversationScope,
-    agentId: string,
-  ): Promise<{ id: string; created: boolean }> {
-    await createPermissionService(this.db).assertCan({
-      actorUserId: scope.userId,
-      action: 'conversation:write',
-      companyId: scope.companyId,
-      projectId: scope.projectId,
-    })
-    const workspace = await findConversationWorkspacePolicy(this.db, scope.companyId, scope.projectId)
-    if (!workspace) throw new ConversationApplicationError('not_found', 'workspace not found')
-    return this.openDirect(scope, workspace, agentId)
-  }
-
-  async openDirectForNewAgent(
-    scope: Omit<ConversationScope, 'projectId'>,
-    agentId: string,
-  ): Promise<{ id: string; created: boolean }> {
-    const workspace = await findDefaultConversationWorkspacePolicy(this.db, scope.companyId)
-    if (!workspace) throw new ConversationApplicationError('not_found', 'active default Project not found')
-    return this.openDirect({ ...scope, projectId: workspace.projectId }, workspace, agentId)
-  }
-
-  /** Create the complete direct-conversation bundle for a newly joined member.
-   * Reuses the same deterministic, tenant-scoped path as an interactive DM so
-   * retries repair bindings and WuKong synchronization instead of creating a
-   * second conversation data plane. */
-  async seedMemberDirects(scope: Omit<ConversationScope, 'projectId'>): Promise<void> {
-    const workspace = await findDefaultConversationWorkspacePolicy(this.db, scope.companyId)
-    if (!workspace) throw new ConversationApplicationError('not_found', 'active default Project not found')
-    const participantIds = await listActiveCompanyParticipantIds(this.db, scope.companyId)
-    if (!participantIds.includes(scope.userId)) {
-      throw new ConversationApplicationError('not_found', 'active company participant not found')
-    }
-    for (const participantId of participantIds) {
-      if (participantId === scope.userId) continue
-      await this.openDirect({ ...scope, projectId: workspace.projectId }, workspace, participantId)
-    }
-  }
 
   async authorizeDocumentShare(
     scope: ConversationScope,
@@ -546,7 +380,7 @@ export class ConversationsApplication {
   }
 
   async search(scope: ConversationScope, raw: string) {
-    if (!raw) return { participants: [], rooms: [], groups: [], messages: [] }
+    if (!raw) return { rooms: [], groups: [], messages: [] }
     const [directory, messageMatches] = await Promise.all([
       searchWorkspaceDirectory(this.db, { ...scope, raw }),
       this.infrastructure.searchMessages({

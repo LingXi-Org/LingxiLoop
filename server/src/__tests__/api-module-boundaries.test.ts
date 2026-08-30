@@ -186,8 +186,8 @@ test('migrated domains are complete vertical slices with thin HTTP routers', asy
   await assert.rejects(readFile(new URL('../api/inbound-email.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../invitation-email.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
   await assert.rejects(readFile(new URL('../onboardCompany.ts', import.meta.url), 'utf8'), { code: 'ENOENT' })
-  const conversationPublic = await readFile(new URL('../modules/conversations/public.ts', import.meta.url), 'utf8')
-  assert.match(conversationPublic, /seedMemberDirectConversations/)
+  const contextThreadPublic = await readFile(new URL('../modules/context-threads/public.ts', import.meta.url), 'utf8')
+  assert.match(contextThreadPublic, /seedMemberLearningContextThreads/)
   const emailCallers = await Promise.all([
     '../modules/companies/invitation-email.ts',
     '../modules/learning/notifications.ts',

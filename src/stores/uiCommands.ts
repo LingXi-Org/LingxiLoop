@@ -5,7 +5,6 @@ export type UiCommand =
   | 'focus-conversation-search'
   | 'find-chat'
   | 'focus-composer'
-  | 'new-group'
   | 'open-updater'
   | 'open-settings-profile'
   | 'open-settings-preferences'

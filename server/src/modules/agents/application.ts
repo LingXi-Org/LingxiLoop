@@ -27,7 +27,7 @@ export interface AgentInfrastructure {
   invalidatePersona(agentId?: string): void
   assertNotManaged(agentId: string, companyId: string): Promise<void>
   assertVisible(agentId: string, companyId: string, userId: string): Promise<void>
-  openDirectForAgent(scope: AgentScope, agentId: string): Promise<{ id: string; created: boolean }>
+  openLearningThreadForAgent(scope: AgentScope, agentId: string): Promise<{ id: string; created: boolean }>
 }
 
 export class AgentApplication {
@@ -48,7 +48,7 @@ export class AgentApplication {
     const id = await this.uniqueId(input.name)
     try {
       await this.infra.transaction((db) => insertAgent(db, { id, scope, input }))
-      await this.infra.openDirectForAgent(scope, id)
+      await this.infra.openLearningThreadForAgent(scope, id)
     } catch (error) {
       if (error instanceof Error && /duplicate key|participants_agent_id_unique/.test(error.message)) {
         throw new AgentApplicationError('conflict', 'agent id collision — please retry')

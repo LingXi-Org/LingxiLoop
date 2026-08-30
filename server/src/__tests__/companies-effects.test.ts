@@ -62,12 +62,12 @@ test('company onboarding completion and failure require tenant, member and lease
   assert.match(failed.sql(), /lease_token=\$4 AND status='processing'/)
 })
 
-test('company onboarding worker renews each single claim and invokes only Conversations public surface', () => {
+test('company onboarding worker renews each single claim and seeds only Agent learning ContextThreads', () => {
   const worker = readFileSync(new URL('../modules/companies/worker.ts', import.meta.url), 'utf8')
   const rootWorker = readFileSync(new URL('../worker.ts', import.meta.url), 'utf8')
   assert.match(worker, /claimCompanyOnboardingEffect\(pool\)/)
   assert.match(worker, /renewCompanyOnboardingEffectLease\(pool, effect\)/)
-  assert.match(worker, /seedMemberDirectConversations/)
+  assert.match(worker, /seedMemberLearningContextThreads/)
   assert.match(rootWorker, /company-onboarding-effects[\s\S]*startCompanyOnboardingEffectWorker/)
   assert.doesNotMatch(worker, /\b(?:INSERT|UPDATE|DELETE|SELECT)\b/)
 })

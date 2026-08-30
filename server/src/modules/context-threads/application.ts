@@ -12,6 +12,7 @@ import {
   findContextThread,
   findScopedParticipant,
   insertContextThreadBundle,
+  isManagedTeacherAgent,
   learningCaseBelongsToStudent,
   lockContextIdentity,
 } from './repository.js'
@@ -91,7 +92,8 @@ export class ContextThreadsApplication {
       otherId: agentId,
       validate: async (db) => {
         const agent = await findScopedParticipant(db, { companyId: scope.companyId, participantId: agentId })
-        if (!agent || agent.kind !== 'agent' || agent.departed_at) {
+        if (!agent || agent.kind !== 'agent' || agent.departed_at
+          || await isManagedTeacherAgent(db, scope.companyId, agentId)) {
           throw new ContextThreadApplicationError('invalid_agent', 'active Agent not found')
         }
         return agent.name

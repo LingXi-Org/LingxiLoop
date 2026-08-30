@@ -4,22 +4,19 @@ import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { AgentApplication, AgentApplicationError } from '../modules/agents/application.js'
 import { ParticipantPresenceApplication } from '../modules/agents/presence-application.js'
-import { ConversationsApplication } from '../modules/conversations/application.js'
+import { ContextThreadsApplication } from '../modules/context-threads/application.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => { await resetAllTables() })
 after(async () => { await teardownAll() })
 
-const conversations = new ConversationsApplication(pool, {
+const contextThreads = new ContextThreadsApplication({
   transaction: (work) => withTransaction(pool, work),
   syncChannel: async () => undefined,
-  publishUpdated: async () => undefined,
-  publishTyping: async () => undefined,
-  isTeacherRoom: async () => false,
-  postMembershipMessage: async () => ({ messageId: 'membership-message', sequence: 1 }),
-  clearReplyHold: async () => undefined,
-  searchMessages: async () => [],
+  assertCanManageLearning: async () => undefined,
+  assertCanWriteConversation: async () => undefined,
+  isActiveProjectStudent: async () => true,
 })
 
 const application = new AgentApplication(pool, {
@@ -28,7 +25,13 @@ const application = new AgentApplication(pool, {
   invalidatePersona: () => undefined,
   assertNotManaged: async () => undefined,
   assertVisible: async () => undefined,
-  openDirectForAgent: (scope, agentId) => conversations.openDirectForNewAgent(scope, agentId),
+  openLearningThreadForAgent: async (scope, agentId) => {
+    const { rows } = await pool.query<{ id: string }>(
+      `SELECT id FROM projects WHERE company_id=$1 AND is_default=TRUE AND status='ACTIVE'`,
+      [scope.companyId],
+    )
+    return contextThreads.createLearningThread({ ...scope, projectId: rows[0]!.id }, agentId)
+  },
 }, 60_000)
 
 async function fixture() {
@@ -37,7 +40,7 @@ async function fixture() {
   return seeded
 }
 
-test('[integration] agent creation atomically seeds strict identity, Bloub persistence, and direct chat', async () => {
+test('[integration] agent creation atomically seeds strict identity, Bloub persistence, and learning ContextThread', async () => {
   const { companyId, projectId } = await fixture()
   const created = await application.create({ companyId, userId: 'test-owner' }, {
     name: 'Research Guide', role: 'researcher', bio: 'Evidence first',
@@ -68,6 +71,16 @@ test('[integration] agent creation atomically seeds strict identity, Bloub persi
     [companyId, directs[0]?.id],
   )
   assert.equal(bindings.length, 1)
+  const { rows: threads } = await pool.query<{ context_type: string; participant_ids: string[] }>(
+    `SELECT thread.context_type,jsonb_agg(member.participant_id ORDER BY member.participant_id) AS participant_ids
+       FROM context_threads thread
+       JOIN context_thread_participants member ON member.thread_id=thread.id
+      WHERE thread.channel_id=$1
+      GROUP BY thread.id`,
+    [directs[0]?.id],
+  )
+  assert.equal(threads[0]?.context_type, 'LEARNING')
+  assert.deepEqual(threads[0]?.participant_ids, ['test-owner', created.id].sort())
 
   const participants = await application.participants({ companyId, projectId, userId: 'test-owner' })
   const agent = participants.find((participant) => participant.id === created.id)

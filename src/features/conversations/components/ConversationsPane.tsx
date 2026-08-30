@@ -6,7 +6,6 @@ import { Virtuoso } from 'react-virtuoso'
 import type { ConversationSearchResults } from '../contracts'
 import { conversationsApi } from '@/features/conversations/api'
 import { Avatar } from '@/components/Avatar'
-import { GroupCreator } from '@/features/conversations/components/GroupCreator'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { NavUser } from '@/components/nav-user'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
@@ -133,22 +132,17 @@ export function ConversationsPane() {
   const error = useConversations((s) => s.error)
   const selected = useApp((s) => s.selectedConversationId)
   const select = useApp((s) => s.selectConversation)
-  const authUser = useAuth((s) => s.user)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ConversationSearchResults | null>(null)
   const [searching, setSearching] = useState(false)
-  const [creating, setCreating] = useState<string[] | null>(null)
   const [addingMembers, setAddingMembers] = useState<Conversation | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const focusSearch = () => { searchRef.current?.focus(); searchRef.current?.select() }
-    const createGroup = () => setCreating([])
     window.addEventListener('lingxiloop:focus-conversation-search', focusSearch)
-    window.addEventListener('lingxiloop:new-group', createGroup)
     return () => {
       window.removeEventListener('lingxiloop:focus-conversation-search', focusSearch)
-      window.removeEventListener('lingxiloop:new-group', createGroup)
     }
   }, [])
 
@@ -204,9 +198,6 @@ export function ConversationsPane() {
           } catch { /* toast owns the visible error state */ }
         },
       })
-    } else {
-      const other = conversation.members.find((id) => id !== authUser?.id)
-      if (other) items.push({ label: '创建包含此成员的群聊…', onSelect: () => setCreating([other]) })
     }
     return items
   }
@@ -266,7 +257,6 @@ export function ConversationsPane() {
         )}
       </SidebarContent>
 
-      {creating && <GroupCreator initialPicked={creating} onClose={() => setCreating(null)} />}
       {addingMembers && <AddMembersDialog conversation={addingMembers} onClose={() => setAddingMembers(null)} />}
     </aside>
   )

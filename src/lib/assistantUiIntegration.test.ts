@@ -24,8 +24,6 @@ const contextMenuPrimitive = read('../components/ui/context-menu.tsx')
 const dropdownMenuPrimitive = read('../components/ui/dropdown-menu.tsx')
 const scrollAreaPrimitive = read('../components/ui/scroll-area.tsx')
 const canvasView = read('../features/canvas/components/CanvasView.tsx')
-const groupCreator = read('../features/conversations/components/GroupCreator.tsx')
-const dialog = read('../components/ui/dialog.tsx')
 const contextMenu = `${message}\n${canvasView}`
 const textareaPrimitive = read('../components/ui/textarea.tsx')
 const inputPrimitive = read('../components/ui/input.tsx')
@@ -357,15 +355,6 @@ test('global menus expose the complete Luma Radix dropdown composition', () => {
   assert.match(dropdownMenuPrimitive, /DropdownMenu as DropdownMenuPrimitive.*from "radix-ui"/)
   assert.match(dropdownMenuPrimitive, /rounded-3xl bg-popover/)
   assert.match(dropdownMenuPrimitive, /variant\?: "default" \| "destructive"/)
-})
-
-test('group creation uses the shared Luma Radix Dialog instead of a handwritten overlay', () => {
-  assert.match(dialog, /Dialog as DialogPrimitive.*from "radix-ui"/)
-  assert.match(groupCreator, /<Dialog open/)
-  assert.match(groupCreator, /<DialogContent/)
-  assert.match(groupCreator, /<DialogTitle/)
-  assert.match(groupCreator, /<DialogDescription/)
-  assert.doesNotMatch(groupCreator, /fixed inset-0 z-50 grid place-items-center/)
 })
 
 test('scrolling surfaces use the Luma Radix Scroll Area contract', () => {

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { agentsApi } from '../api'
-import { conversationsApi } from '@/features/conversations/api'
+import { contextThreadsApi } from '@/features/context-threads/api'
 import { useState } from 'react'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
@@ -10,6 +10,7 @@ import { Avatar } from '@/components/Avatar'
 import { IPlus } from '@/components/icons'
 import { AgentEditor } from './AgentEditor'
 import type { Participant } from '@/types'
+import { useWorkspace } from '@/features/knowledge/workspace'
 
 const STATUS_LABEL: Record<string, string> = {
   avail: '可用', working: '工作中', thinking: '思考中', waiting: '等待你确认', resting: '休息中',
@@ -28,16 +29,18 @@ function AgentCard({ p, onEdit, onDelete }: {
   const displayStatus = p.status
   const displayStatusLabel = STATUS_LABEL[p.status]
   const [openingChat, setOpeningChat] = useState(false)
+  const projectId = useWorkspace((state) => state.selectedId)
 
   const openChat = async () => {
     setOpeningChat(true)
     try {
-      const { id } = await conversationsApi.openDirect(p.id)
+      if (!projectId) return
+      const { id } = await contextThreadsApi.openLearning(projectId, p.id)
       await useConversations.getState().reload()
       setView('conversations')
       select(id)
     } catch (err) {
-      console.warn('[AgentCard] openDirect failed', err)
+      console.warn('[AgentCard] learning context failed', err)
     } finally {
       setOpeningChat(false)
     }
@@ -109,14 +112,10 @@ function AgentCard({ p, onEdit, onDelete }: {
       <div className="flex gap-2 mt-auto">
         <Button
           onClick={openChat}
-          disabled={openingChat}
+          disabled={openingChat || !projectId}
           className="flex-1 py-2 px-3 bg-skype text-white rounded-[9px] text-[12px] font-semibold transition disabled:opacity-60"
           style={{ boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.4)' }}>
           {openingChat ? "开幕..." : "聊天"}
-        </Button>
-        <Button className="flex-1 py-2 px-3 bg-cloud text-ink-700 rounded-[9px] text-[12px] font-semibold hover:border-whisper-200 hover:text-whisper-deep transition"
-          style={{ border: '1px solid var(--ink-100)' }}>
-          私聊
         </Button>
       </div>
     </div>

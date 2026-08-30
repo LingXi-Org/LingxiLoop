@@ -1,35 +1,5 @@
 import { conversationsApplication } from './facade.js'
 
-export function openDirectConversationForNewAgent(args: {
-  companyId: string
-  userId: string
-}, agentId: string): Promise<{ id: string; created: boolean }> {
-  return conversationsApplication.openDirectForNewAgent(args, agentId)
-}
-
-export function seedMemberDirectConversations(args: {
-  companyId: string
-  memberId: string
-}): Promise<void> {
-  return conversationsApplication.seedMemberDirects({
-    companyId: args.companyId,
-    userId: args.memberId,
-  })
-}
-
-export function openDirectConversationForDocumentMention(args: {
-  companyId: string
-  projectId: string
-  mentionerId: string
-  agentId: string
-}): Promise<{ id: string; created: boolean }> {
-  return conversationsApplication.openDirectForDocumentMention({
-    companyId: args.companyId,
-    projectId: args.projectId,
-    userId: args.mentionerId,
-  }, args.agentId)
-}
-
 export function authorizeConversationForDocumentShare(args: {
   companyId: string
   projectId: string

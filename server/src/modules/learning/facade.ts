@@ -13,7 +13,7 @@ import {
   sendTeacherAgentWelcome,
   syncTeacherRoomMembers,
 } from './teacher-agent-application.js'
-import { seedMemberDirectConversations } from '../conversations/public.js'
+import { seedMemberLearningContextThreads } from '../context-threads/public.js'
 import { CH_DOC_ACCESS_REVOKED, publish } from '../../redis.js'
 import { LearningApplication } from './application.js'
 import { inc } from '../../metrics.js'
@@ -46,7 +46,7 @@ export const learningApplication = new LearningApplication(pool, {
     await publish(CH_DOC_ACCESS_REVOKED, { type: 'doc.access.revoked', ...event })
   },
   seedMemberDms: async (companyId, userId) => {
-    await seedMemberDirectConversations({ companyId, memberId: userId })
+    await seedMemberLearningContextThreads({ companyId, userId })
   },
   generateInvitationToken,
   hashInvitationToken,

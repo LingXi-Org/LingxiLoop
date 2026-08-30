@@ -22,6 +22,7 @@ class FakeDb implements Queryable {
   thread: Record<string, unknown> | null = null
   participantIds: string[] = []
   eventPayloads: Array<Record<string, unknown>> = []
+  managedAgentIds = new Set<string>()
 
   async query<_T>(text: string, params: readonly unknown[] = []): Promise<any> {
     if (text.includes('pg_advisory_xact_lock')) return { rows: [], rowCount: 0 }
@@ -37,6 +38,10 @@ class FakeDb implements Queryable {
     }
     if (text.includes('FROM learning_cases')) {
       const matches = this.cases.get(String(params[2])) === String(params[3])
+      return { rows: matches ? [{ '?column?': 1 }] : [], rowCount: matches ? 1 : 0 }
+    }
+    if (text.includes('FROM learning_project_teacher_agents')) {
+      const matches = this.managedAgentIds.has(String(params[1]))
       return { rows: matches ? [{ '?column?': 1 }] : [], rowCount: matches ? 1 : 0 }
     }
     if (text.includes('FROM context_threads thread')) {
@@ -156,6 +161,12 @@ test('learning thread only accepts an active Agent participant', async () => {
 
   await assert.rejects(
     application.createLearningThread(scope, 'student-1'),
+    (error) => error instanceof ContextThreadApplicationError && error.code === 'invalid_agent',
+  )
+  const managed = harness()
+  managed.db.managedAgentIds.add('agent-1')
+  await assert.rejects(
+    managed.application.createLearningThread(scope, 'agent-1'),
     (error) => error instanceof ContextThreadApplicationError && error.code === 'invalid_agent',
   )
 })
