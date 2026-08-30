@@ -15,3 +15,4 @@ export function openLearningContextThread(args: {
 
 export { openDefaultLearningContextThread, seedMemberLearningContextThreads }
 export { bindTeacherOperationsContextThread } from './teacher-operations.js'
+export { findTeacherOperationsContextForTeacher } from './repository.js'

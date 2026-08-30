@@ -13,10 +13,10 @@ import {
   listSources,
   lockProjectCompanyType,
   moveConversation,
-  recordProjectVisit,
   replaceSourceExclusions,
   updateProject,
 } from './repository.js'
+import { recordProjectVisit } from '../briefings/public.js'
 
 export type KnowledgeErrorCode =
   | 'not_found'
@@ -133,8 +133,18 @@ export class KnowledgeApplication {
   }
 
   async openProject(companyId: string, projectId: string, userId: string) {
-    await createPermissionService(this.db).assertCan({ actorUserId: userId, action: 'project:read', companyId, projectId })
-    await recordProjectVisit(this.db, companyId, projectId, userId)
+    const access = createPermissionService(this.db)
+    const context = await access.assertCan({
+      actorUserId: userId, action: 'project:read', companyId, projectId,
+    })
+    if (!context.project) throw new KnowledgeApplicationError('not_found', 'Project not found')
+    const management = await access.can({
+      actorUserId: userId, action: 'learning:manage', companyId, projectId,
+    })
+    await recordProjectVisit(this.db, {
+      companyId, projectId, userId,
+      briefingEligible: context.project.kind === 'TEACHING' && management.allowed,
+    })
     return { ok: true as const }
   }
 

@@ -97,3 +97,28 @@ export async function listDomainEventRowsAfter(
   )
   return rows
 }
+
+export async function latestProjectEventSequenceRow(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+): Promise<number> {
+  const { rows } = await db.query<{ sequence: string }>(
+    `SELECT COALESCE(MAX(sequence),0)::text AS sequence FROM domain_events
+      WHERE company_id=$1 AND project_id=$2`,
+    [companyId, projectId],
+  )
+  return Number(rows[0]?.sequence ?? 0)
+}
+
+export async function projectEventTypeCountRows(db: Queryable, input: {
+  companyId: string; projectId: string; afterSequence: number; throughSequence: number
+}): Promise<Array<{ event_type: string; count: number }>> {
+  const { rows } = await db.query<{ event_type: string; count: number }>(
+    `SELECT event_type,COUNT(*)::int AS count FROM domain_events
+      WHERE company_id=$1 AND project_id=$2 AND sequence>$3 AND sequence<=$4
+      GROUP BY event_type ORDER BY event_type`,
+    [input.companyId, input.projectId, input.afterSequence, input.throughSequence],
+  )
+  return rows
+}

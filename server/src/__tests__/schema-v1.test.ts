@@ -346,6 +346,24 @@ test('M12 Attention Items are event-projected, teacher-scoped, ranked, and uniqu
   assert.match(workerBoot, /attention-projection.*database-lock/)
 })
 
+test('M13 Teacher Briefings advance a meaningful-visit watermark only through durable delivery', () => {
+  const visits = schema.match(/CREATE TABLE public\.project_visits \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  const briefings = schema.match(/CREATE TABLE public\.teacher_briefings \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  assert.match(visits, /meaningful_visited_at timestamp with time zone/)
+  assert.match(visits, /meaningful_visit_version bigint/)
+  assert.match(visits, /visit_event_sequence bigint/)
+  assert.match(visits, /event_sequence_watermark bigint/)
+  assert.match(briefings, /UNIQUE \(company_id, project_id, teacher_user_id, meaningful_visit_version\)/)
+  assert.match(briefings, /window_start_sequence bigint NOT NULL/)
+  assert.match(briefings, /window_end_sequence bigint NOT NULL/)
+  assert.match(briefings, /statistics jsonb NOT NULL/)
+  assert.match(briefings, /client_msg_no text NOT NULL/)
+  assert.match(schema, /CREATE TABLE public\.teacher_briefing_attention_items/)
+  assert.match(schema, /idx_teacher_briefings_pending/)
+  assert.match(bootstrap, /'teacher_briefing_attention_items', 'teacher_briefings'/)
+  assert.match(workerBoot, /teacher-briefings.*queue-claim/)
+})
+
 test('Plan and Entitlement are independent and accept JSON scalar values only', () => {
   assert.match(schema, /plans_code_key UNIQUE \(code\)/)
   assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)
@@ -371,13 +389,14 @@ test('v1 defaults preserve current capability and Canvas contracts', () => {
 })
 
 test('structured Agent cards store WuKong identities without SQL message foreign keys', () => {
+  const toolCalls = schema.match(/CREATE TABLE public\.tool_calls \(([\s\S]*?)\n\);/)?.[1] ?? ''
   for (const constraint of [
     'agent_approvals_message_id_fkey',
     'agent_handoffs_source_message_id_fkey',
     'agent_handoffs_result_message_id_fkey',
     'tool_calls_message_id_fkey',
   ]) assert.doesNotMatch(schema, new RegExp(`\\b${constraint}\\b`))
-  assert.doesNotMatch(schema, /CREATE TABLE public\.tool_calls \([\s\S]*?\bmessage_id text/)
+  assert.doesNotMatch(toolCalls, /\bmessage_id text/)
 })
 
 test('tenant-owned reaction and climate rows have no legacy tenant default', () => {

@@ -1647,9 +1647,24 @@ CREATE TABLE public.plan_entitlements (
 --
 
 CREATE TABLE public.project_visits (
+    company_id text NOT NULL,
     project_id text NOT NULL,
     user_id text NOT NULL,
-    visited_at timestamp with time zone DEFAULT now() NOT NULL
+    visited_at timestamp with time zone DEFAULT now() NOT NULL,
+    meaningful_visited_at timestamp with time zone DEFAULT now() NOT NULL,
+    meaningful_visit_version bigint DEFAULT 1 NOT NULL,
+    visit_event_sequence bigint DEFAULT 0 NOT NULL,
+    event_sequence_watermark bigint DEFAULT 0 NOT NULL,
+    visit_policy_version text NOT NULL,
+    briefing_eligible boolean DEFAULT false NOT NULL,
+    last_briefing_id text,
+    CONSTRAINT project_visits_scope_key UNIQUE (company_id, project_id, user_id),
+    CONSTRAINT project_visits_version_check CHECK (meaningful_visit_version >= 1),
+    CONSTRAINT project_visits_sequence_check CHECK (
+      visit_event_sequence >= 0 AND event_sequence_watermark >= 0
+      AND event_sequence_watermark <= visit_event_sequence
+    ),
+    CONSTRAINT project_visits_policy_version_check CHECK (char_length(visit_policy_version) BETWEEN 1 AND 100)
 );
 
 
@@ -3554,7 +3569,7 @@ CREATE INDEX idx_participants_email_lower ON public.participants USING btree (lo
 -- Name: idx_project_visits_user; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_project_visits_user ON public.project_visits USING btree (user_id, visited_at DESC);
+CREATE INDEX idx_project_visits_user ON public.project_visits USING btree (company_id, user_id, visited_at DESC);
 
 
 --
@@ -4581,7 +4596,11 @@ ALTER TABLE ONLY public.plan_entitlements
 --
 
 ALTER TABLE ONLY public.project_visits
-    ADD CONSTRAINT project_visits_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+    ADD CONSTRAINT project_visits_project_id_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE,
+    ADD CONSTRAINT project_visits_member_fkey
+      FOREIGN KEY (company_id, project_id, user_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE;
 
 
 --
@@ -5597,6 +5616,86 @@ CREATE TABLE public.attention_projection_events (
     CONSTRAINT attention_projection_events_source_fkey
       FOREIGN KEY (company_id, project_id, source_event_sequence)
       REFERENCES public.domain_events(company_id, project_id, sequence) ON DELETE CASCADE
+);
+
+CREATE TABLE public.teacher_briefings (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    teacher_user_id text NOT NULL,
+    context_thread_id text NOT NULL,
+    channel_id text NOT NULL,
+    sender_agent_id text NOT NULL,
+    meaningful_visit_version bigint NOT NULL,
+    policy_version text NOT NULL,
+    window_start_sequence bigint NOT NULL,
+    window_end_sequence bigint NOT NULL,
+    statistics jsonb NOT NULL,
+    summary text NOT NULL,
+    client_msg_no text NOT NULL,
+    status text DEFAULT 'PENDING'::text NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    available_at timestamp with time zone DEFAULT now() NOT NULL,
+    lease_token text,
+    lease_expires_at timestamp with time zone,
+    message_id text,
+    message_sequence bigint,
+    error text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    sent_at timestamp with time zone,
+    CONSTRAINT teacher_briefings_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT teacher_briefings_visit_key
+      UNIQUE (company_id, project_id, teacher_user_id, meaningful_visit_version),
+    CONSTRAINT teacher_briefings_client_msg_no_key UNIQUE (client_msg_no),
+    CONSTRAINT teacher_briefings_status_check
+      CHECK (status = ANY (ARRAY['PENDING'::text, 'SENDING'::text, 'SENT'::text, 'FAILED'::text, 'CANCELLED'::text])),
+    CONSTRAINT teacher_briefings_window_check CHECK (
+      window_start_sequence >= 0 AND window_end_sequence > window_start_sequence
+    ),
+    CONSTRAINT teacher_briefings_statistics_check CHECK (
+      jsonb_typeof(statistics) = 'object' AND octet_length(statistics::text) <= 8192
+    ),
+    CONSTRAINT teacher_briefings_summary_check CHECK (char_length(summary) BETWEEN 1 AND 1000),
+    CONSTRAINT teacher_briefings_policy_version_check CHECK (char_length(policy_version) BETWEEN 1 AND 100),
+    CONSTRAINT teacher_briefings_client_msg_no_check CHECK (char_length(client_msg_no) BETWEEN 1 AND 80),
+    CONSTRAINT teacher_briefings_attempts_check CHECK (attempts BETWEEN 0 AND 5),
+    CONSTRAINT teacher_briefings_error_check CHECK (error IS NULL OR char_length(error) <= 2000),
+    CONSTRAINT teacher_briefings_lease_check CHECK (
+      (status = 'SENDING'::text AND lease_token IS NOT NULL AND lease_expires_at IS NOT NULL)
+      OR (status <> 'SENDING'::text AND lease_token IS NULL AND lease_expires_at IS NULL)
+    ),
+    CONSTRAINT teacher_briefings_sent_check CHECK (
+      (status = 'SENT'::text AND sent_at IS NOT NULL AND message_id IS NOT NULL AND message_sequence IS NOT NULL)
+      OR (status <> 'SENT'::text AND sent_at IS NULL)
+    ),
+    CONSTRAINT teacher_briefings_visit_fkey
+      FOREIGN KEY (company_id, project_id, teacher_user_id)
+      REFERENCES public.project_visits(company_id, project_id, user_id) ON DELETE CASCADE,
+    CONSTRAINT teacher_briefings_context_fkey
+      FOREIGN KEY (context_thread_id, company_id, project_id)
+      REFERENCES public.context_threads(id, company_id, project_id) ON DELETE RESTRICT,
+    CONSTRAINT teacher_briefings_sender_fkey
+      FOREIGN KEY (sender_agent_id, company_id)
+      REFERENCES public.participants(id, company_id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_teacher_briefings_pending
+    ON public.teacher_briefings USING btree (status, available_at, created_at)
+    WHERE (status IN ('PENDING'::text, 'FAILED'::text, 'SENDING'::text));
+
+CREATE TABLE public.teacher_briefing_attention_items (
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    briefing_id text NOT NULL,
+    attention_item_id text NOT NULL,
+    CONSTRAINT teacher_briefing_attention_items_pkey
+      PRIMARY KEY (briefing_id, attention_item_id),
+    CONSTRAINT teacher_briefing_attention_items_briefing_fkey
+      FOREIGN KEY (company_id, project_id, briefing_id)
+      REFERENCES public.teacher_briefings(company_id, project_id, id) ON DELETE CASCADE,
+    CONSTRAINT teacher_briefing_attention_items_attention_fkey
+      FOREIGN KEY (company_id, project_id, attention_item_id)
+      REFERENCES public.attention_items(company_id, project_id, id) ON DELETE RESTRICT
 );
 
 CREATE INDEX idx_domain_events_company_cursor

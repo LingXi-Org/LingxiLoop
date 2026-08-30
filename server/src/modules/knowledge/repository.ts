@@ -48,7 +48,8 @@ export async function listProjects(db: Queryable, companyId: string, userId: str
        JOIN project_memberships course_member
          ON course_member.project_id=project.id AND course_member.company_id=project.company_id
         AND course_member.user_id=$2 AND course_member.status='ACTIVE'
-       LEFT JOIN project_visits visit ON visit.project_id=project.id AND visit.user_id=$2
+       LEFT JOIN project_visits visit ON visit.project_id=project.id
+        AND visit.company_id=project.company_id AND visit.user_id=$2
       WHERE project.company_id=$1
       ORDER BY project.status,visit.visited_at DESC NULLS LAST,project.updated_at DESC`,
     [companyId, userId],
@@ -118,18 +119,6 @@ export async function updateProject(
     values,
   )
   return (result.rowCount ?? 0) > 0
-}
-
-export async function recordProjectVisit(db: Queryable, companyId: string, projectId: string, userId: string): Promise<void> {
-  await db.query(
-    `INSERT INTO project_visits (project_id,user_id,visited_at)
-     SELECT project.id,$3,NOW() FROM projects project
-     JOIN company_memberships membership ON membership.company_id=project.company_id AND membership.user_id=$3
-       AND membership.status='ACTIVE'
-      WHERE project.id=$2 AND project.company_id=$1
-     ON CONFLICT (project_id,user_id) DO UPDATE SET visited_at=NOW()`,
-    [companyId, projectId, userId],
-  )
 }
 
 export async function listSources(db: Queryable, companyId: string, projectId: string) {

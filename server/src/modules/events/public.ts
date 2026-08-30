@@ -1,4 +1,10 @@
-export { appendDomainEvent, commitDomainEvent, readDomainEventsAfter } from './application.js'
+export {
+  appendDomainEvent,
+  commitDomainEvent,
+  latestProjectEventSequence,
+  readDomainEventsAfter,
+  summarizeProjectEventWindow,
+} from './application.js'
 export type {
   AppendDomainEventInput,
   DomainEventActor,

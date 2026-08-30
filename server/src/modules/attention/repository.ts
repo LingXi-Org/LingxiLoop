@@ -100,3 +100,19 @@ export async function updateAttentionItemStatus(db: Queryable, args: {
   if (!row) throw new Error('Attention Item disappeared while locked')
   return item(row)
 }
+
+export async function listBriefingAttentionItemIds(db: Queryable, args: {
+  companyId: string; projectId: string; teacherUserId: string
+  afterSequence: number; throughSequence: number; limit?: number
+}): Promise<string[]> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT id FROM attention_items
+      WHERE company_id=$1 AND project_id=$2 AND teacher_user_id=$3
+        AND source_event_sequence>$4 AND source_event_sequence<=$5
+      ORDER BY rank_score DESC,source_event_sequence,id
+      LIMIT $6`,
+    [args.companyId, args.projectId, args.teacherUserId,
+      args.afterSequence, args.throughSequence, args.limit ?? 50],
+  )
+  return rows.map((row) => row.id)
+}

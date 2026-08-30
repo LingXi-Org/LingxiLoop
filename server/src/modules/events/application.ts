@@ -12,6 +12,8 @@ import {
   findDomainEventByIdempotencyKey,
   insertDomainEvent,
   listDomainEventRowsAfter,
+  latestProjectEventSequenceRow,
+  projectEventTypeCountRows,
   lockDomainEventIdentity,
   type DomainEventRow,
 } from './repository.js'
@@ -166,4 +168,21 @@ export async function readDomainEventsAfter(
     afterSequence,
     limit,
   })).map(envelope)
+}
+
+export function latestProjectEventSequence(
+  db: Queryable,
+  input: { companyId: string; projectId: string },
+): Promise<number> {
+  return latestProjectEventSequenceRow(db, input.companyId, input.projectId)
+}
+
+export async function summarizeProjectEventWindow(db: Queryable, input: {
+  companyId: string; projectId: string; afterSequence: number; throughSequence: number
+}): Promise<Record<string, number>> {
+  if (!Number.isSafeInteger(input.afterSequence) || input.afterSequence < 0
+    || !Number.isSafeInteger(input.throughSequence) || input.throughSequence <= input.afterSequence) {
+    throw new Error('event summary window must be a non-empty safe sequence range')
+  }
+  return Object.fromEntries((await projectEventTypeCountRows(db, input)).map((row) => [row.event_type, row.count]))
 }

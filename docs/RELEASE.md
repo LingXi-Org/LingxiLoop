@@ -54,6 +54,10 @@ The M12 Attention cutover is reset-only. It adds canonical Attention Item and
 event-projection ledger relations; environments created before this cutover
 must reset before Worker startup.
 
+The M13 Teacher Briefing cutover is reset-only. It adds meaningful Project
+visit watermarks plus durable Briefing and Briefing-to-Attention relations;
+environments created before this cutover must reset before Worker startup.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

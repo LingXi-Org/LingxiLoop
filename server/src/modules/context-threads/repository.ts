@@ -183,3 +183,26 @@ export async function insertExistingChannelContextThread(
     )
   }
 }
+
+export async function findTeacherOperationsContextForTeacher(db: Queryable, args: {
+  companyId: string; projectId: string; teacherUserId: string
+}): Promise<{ id: string; channelId: string; agentId: string } | null> {
+  const { rows } = await db.query<{ id: string; channel_id: string; agent_id: string }>(
+    `SELECT thread.id,thread.channel_id,agent_member.participant_id AS agent_id
+       FROM context_threads thread
+       JOIN context_thread_participants teacher_member
+         ON teacher_member.thread_id=thread.id AND teacher_member.company_id=thread.company_id
+        AND teacher_member.project_id=thread.project_id AND teacher_member.participant_id=$3
+       JOIN context_thread_participants agent_member
+         ON agent_member.thread_id=thread.id AND agent_member.company_id=thread.company_id
+        AND agent_member.project_id=thread.project_id
+       JOIN participants agent
+         ON agent.id=agent_member.participant_id AND agent.company_id=agent_member.company_id
+        AND agent.kind='agent' AND agent.departed_at IS NULL
+      WHERE thread.company_id=$1 AND thread.project_id=$2
+        AND thread.context_type='TEACHER_OPERATIONS' AND thread.created_by=$3`,
+    [args.companyId, args.projectId, args.teacherUserId],
+  )
+  const row = rows[0]
+  return row ? { id: row.id, channelId: row.channel_id, agentId: row.agent_id } : null
+}
