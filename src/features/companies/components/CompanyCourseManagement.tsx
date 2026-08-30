@@ -8,6 +8,7 @@ import { companiesApi } from '@/features/companies/api'
 import type { ApiCompanyMember, ApiCompanyProfile } from '@/features/companies/contracts'
 import { useConversations } from '@/features/conversations/store'
 import { EducationIntegrationCapabilities } from '@/features/education/components/EducationIntegrationCapabilities'
+import { EnterpriseIntegrationCapabilities } from '@/features/education/components/EnterpriseIntegrationCapabilities'
 import { knowledgeApi } from '@/features/knowledge/api'
 import { learningApi } from '@/features/learning/api'
 import type { ApiCourse, ApiCourseMember, ApiProjectInvitation } from '@/features/learning/contracts'
@@ -230,6 +231,7 @@ export function CompanyCourseManagement() {
             <section className="rounded-2xl border border-hairline bg-panel p-5"><div className="mb-3 flex items-center justify-between"><h2 className="text-[14px] font-semibold">组织成员</h2><Button className={`${button} bg-accent text-white`} onClick={() => setCompanyInviteOpen(true)}>组织邀请</Button></div><div className="space-y-2">{members.map((member) => <div key={member.id} className="flex items-center gap-2 rounded-xl bg-raised p-3"><span className="min-w-0 flex-1"><b className="block truncate text-[12px]">{member.name}</b><small className="text-[10px] text-ink-secondary">{member.email} · {member.courses.length} courses</small></span>{member.role === 'owner' ? <span className="text-[11px]">owner</span> : <><Select value={member.role} onValueChange={async (role) => { await companiesApi.updateCompanyMember(profile.id, member.id, role as 'admin' | 'member'); await load() }}><SelectTrigger className="w-28"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="admin">admin</SelectItem><SelectItem value="member">member</SelectItem></SelectContent></Select><Button onClick={() => void removeCompanyMemberWithConfirmation(member)}><IconTrash size={14}/></Button></>}</div>)}</div></section>
           </div>
           <EducationIntegrationCapabilities />
+          <EnterpriseIntegrationCapabilities />
         </div>}
       </div>
       {companyInviteOpen && profile && <InvitePeopleModal companyId={profile.id} companyName={profile.name} onClose={() => setCompanyInviteOpen(false)} />}
