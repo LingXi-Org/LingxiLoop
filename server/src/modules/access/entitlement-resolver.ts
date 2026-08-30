@@ -1,11 +1,26 @@
 import type { EntitlementCode, ResolvedEntitlements } from './contracts.js'
 import type { AccessRepository, PlanRecord } from './repository.js'
 
-class BooleanEntitlements implements ResolvedEntitlements {
-  constructor(private readonly enabled: ReadonlySet<string>) {}
+class TypedEntitlements implements ResolvedEntitlements {
+  constructor(private readonly values: ReadonlyMap<EntitlementCode, boolean | number | string>) {}
 
   has(code: EntitlementCode): boolean {
-    return this.enabled.has(code)
+    return this.boolean(code) === true
+  }
+
+  boolean(code: EntitlementCode): boolean | null {
+    const value = this.values.get(code)
+    return typeof value === 'boolean' ? value : null
+  }
+
+  number(code: EntitlementCode): number | null {
+    const value = this.values.get(code)
+    return typeof value === 'number' ? value : null
+  }
+
+  string(code: EntitlementCode): string | null {
+    const value = this.values.get(code)
+    return typeof value === 'string' ? value : null
   }
 }
 
@@ -22,6 +37,6 @@ export async function resolveEntitlements(
   if (!plan) return { allowed: false, reason: 'PLAN_NOT_FOUND' }
   if (plan.status !== 'ACTIVE') return { allowed: false, reason: 'PLAN_INACTIVE' }
   const records = await repository.entitlements(plan.id)
-  const enabled = new Set(records.filter((record) => record.value === true).map((record) => record.code))
-  return { allowed: true, plan, entitlements: new BooleanEntitlements(enabled) }
+  const values = new Map(records.map((record) => [record.code, record.value]))
+  return { allowed: true, plan, entitlements: new TypedEntitlements(values) }
 }

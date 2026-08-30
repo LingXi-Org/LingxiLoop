@@ -13,7 +13,7 @@ const ownerContext: ResolvedAccessContext = {
   project: { id: 'project', kind: 'PERSONAL_LEARNING', status: 'ACTIVE' },
   projectMembership: { role: 'OWNER', status: 'ACTIVE' },
   effectivePlan: { id: 'plan', code: 'PERSONAL_FREE' },
-  entitlements: { has: () => true },
+  entitlements: { has: () => true, boolean: () => true, number: () => null, string: () => null },
 }
 
 test('every canonical PermissionAction has one typed policy', () => {

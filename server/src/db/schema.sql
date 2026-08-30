@@ -1039,29 +1039,26 @@ CREATE TABLE public.conversations (
 
 
 --
--- Name: course_invitation_acceptances; Type: TABLE; Schema: public; Owner: -
+-- Name: project_invitation_acceptances; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.course_invitation_acceptances (
+CREATE TABLE public.project_invitation_acceptances (
     token_hash text NOT NULL,
     user_id text NOT NULL,
-    role text NOT NULL,
-    accepted_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT course_invitation_acceptances_role_check CHECK ((role = ANY (ARRAY['TEACHER'::text, 'STUDENT'::text])))
+    accepted_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
 --
--- Name: course_invitations; Type: TABLE; Schema: public; Owner: -
+-- Name: project_invitations; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.course_invitations (
+CREATE TABLE public.project_invitations (
     token_hash text NOT NULL,
-    course_id text NOT NULL,
+    project_id text NOT NULL,
     company_id text NOT NULL,
     invited_by text NOT NULL,
     email text,
-    role text NOT NULL,
     note text,
     max_uses integer NOT NULL,
     use_count integer DEFAULT 0 NOT NULL,
@@ -1070,9 +1067,8 @@ CREATE TABLE public.course_invitations (
     last_accepted_at timestamp with time zone,
     last_accepted_by text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT course_invitations_check CHECK (((use_count >= 0) AND (use_count <= max_uses))),
-    CONSTRAINT course_invitations_max_uses_check CHECK (((max_uses >= 1) AND (max_uses <= 100))),
-    CONSTRAINT course_invitations_role_check CHECK ((role = ANY (ARRAY['TEACHER'::text, 'STUDENT'::text])))
+    CONSTRAINT project_invitations_check CHECK (((use_count >= 0) AND (use_count <= max_uses))),
+    CONSTRAINT project_invitations_max_uses_check CHECK (((max_uses >= 1) AND (max_uses <= 100)))
 );
 
 
@@ -2308,19 +2304,19 @@ ALTER TABLE ONLY public.conversations
 
 
 --
--- Name: course_invitation_acceptances course_invitation_acceptances_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_invitation_acceptances project_invitation_acceptances_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.course_invitation_acceptances
-    ADD CONSTRAINT course_invitation_acceptances_pkey PRIMARY KEY (token_hash, user_id);
+ALTER TABLE ONLY public.project_invitation_acceptances
+    ADD CONSTRAINT project_invitation_acceptances_pkey PRIMARY KEY (token_hash, user_id);
 
 
 --
--- Name: course_invitations course_invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_invitations project_invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.course_invitations
-    ADD CONSTRAINT course_invitations_pkey PRIMARY KEY (token_hash);
+ALTER TABLE ONLY public.project_invitations
+    ADD CONSTRAINT project_invitations_pkey PRIMARY KEY (token_hash);
 
 
 --
@@ -3254,17 +3250,17 @@ CREATE INDEX idx_conversations_project ON public.conversations USING btree (proj
 
 
 --
--- Name: idx_course_invitations_course; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_project_invitations_project; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_course_invitations_course ON public.course_invitations USING btree (course_id, created_at DESC);
+CREATE INDEX idx_project_invitations_project ON public.project_invitations USING btree (project_id, created_at DESC);
 
 
 --
--- Name: idx_course_invitations_email; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_project_invitations_email; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_course_invitations_email ON public.course_invitations USING btree (email) WHERE (email IS NOT NULL);
+CREATE INDEX idx_project_invitations_email ON public.project_invitations USING btree (email) WHERE (email IS NOT NULL);
 
 
 --
@@ -4217,19 +4213,19 @@ ALTER TABLE ONLY public.conversations
 
 
 --
--- Name: course_invitation_acceptances course_invitation_acceptances_token_hash_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_invitation_acceptances project_invitation_acceptances_token_hash_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.course_invitation_acceptances
-    ADD CONSTRAINT course_invitation_acceptances_token_hash_fkey FOREIGN KEY (token_hash) REFERENCES public.course_invitations(token_hash) ON DELETE CASCADE;
+ALTER TABLE ONLY public.project_invitation_acceptances
+    ADD CONSTRAINT project_invitation_acceptances_token_hash_fkey FOREIGN KEY (token_hash) REFERENCES public.project_invitations(token_hash) ON DELETE CASCADE;
 
 
 --
--- Name: course_invitations course_invitations_course_id_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_invitations project_invitations_project_id_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.course_invitations
-    ADD CONSTRAINT course_invitations_course_id_company_id_fkey FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.project_invitations
+    ADD CONSTRAINT project_invitations_project_id_company_id_fkey FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE;
 
 
 --

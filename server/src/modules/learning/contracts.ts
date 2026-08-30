@@ -18,9 +18,8 @@ export const updateCourseRequestSchema = z.object({
 
 export const updateCourseMemberRequestSchema = z.object({ role: z.enum(['teacher', 'learner']) }).strict()
 
-export const createCourseInvitationRequestSchema = z.object({
+export const createProjectInvitationRequestSchema = z.object({
   email: z.string().trim().email('invalid email').nullable().optional(),
-  role: z.enum(['teacher', 'learner']),
   note: z.string().trim().max(280).nullable().optional(),
   expiresInDays: z.coerce.number().int().min(1).max(30).default(7),
   maxUses: z.coerce.number().int().min(1).max(100).default(1),
@@ -58,7 +57,7 @@ export const reviewEvaluationRequestSchema = z.object({
 }).strict()
 export type CreateCourseInput = z.infer<typeof createCourseRequestSchema>
 export type UpdateCourseInput = z.infer<typeof updateCourseRequestSchema>
-export type CreateCourseInvitationInput = z.infer<typeof createCourseInvitationRequestSchema>
+export type CreateProjectInvitationInput = z.infer<typeof createProjectInvitationRequestSchema>
 export type BindCourseRoomInput = z.infer<typeof bindCourseRoomRequestSchema>
 export type CreateObjectivesInput = z.infer<typeof createObjectivesRequestSchema>
 export type ObjectiveStatusInput = z.infer<typeof objectiveStatusRequestSchema>

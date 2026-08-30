@@ -30,12 +30,14 @@ export async function listCourses(db: Queryable, companyId: string, userId: stri
 }
 
 export async function insertTeachingCourse(db: Queryable, args: {
-  companyId: string; userId: string; projectId: string; courseId: string; roomId: string; input: CreateCourseInput
+  companyId: string; userId: string; projectId: string; courseId: string; roomId: string
+  planId: string; input: CreateCourseInput
 }): Promise<void> {
   await db.query(
-    `INSERT INTO projects (id,company_id,kind,name,description,color,status,created_by,is_default)
-     VALUES ($1,$2,'TEACHING',$3,$4,$5,'ACTIVE',$6,FALSE)`,
-    [args.projectId, args.companyId, args.input.name, args.input.description, args.input.color, args.userId],
+    `INSERT INTO projects (id,company_id,kind,plan_id,name,description,color,status,created_by,is_default)
+     VALUES ($1,$2,'TEACHING',$3,$4,$5,$6,'ACTIVE',$7,FALSE)`,
+    [args.projectId, args.companyId, args.planId, args.input.name, args.input.description,
+      args.input.color, args.userId],
   )
   await db.query(
     `INSERT INTO courses (id,company_id,project_id,created_by) VALUES ($1,$2,$3,$4)`,
@@ -63,6 +65,15 @@ export async function insertTeachingCourse(db: Queryable, args: {
     `UPDATE courses SET study_room_conversation_id=$2 WHERE id=$1 AND company_id=$3`,
     [args.courseId, args.roomId, args.companyId],
   )
+}
+
+export async function countActiveTeachingProjects(db: Queryable, companyId: string): Promise<number> {
+  const { rows } = await db.query<{ count: number }>(
+    `SELECT COUNT(*)::int AS count FROM projects
+      WHERE company_id=$1 AND kind='TEACHING' AND status NOT IN ('ARCHIVED','DELETED')`,
+    [companyId],
+  )
+  return Number(rows[0]?.count ?? 0)
 }
 
 export async function findCourse(db: Queryable, courseId: string, companyId: string, userId: string) {

@@ -138,3 +138,48 @@ export async function insertContextThreadBundle(
     )
   }
 }
+
+export async function findTeacherOperationsChannel(
+  db: Queryable,
+  args: { companyId: string; projectId: string; channelId: string; agentId: string },
+): Promise<{ members: string[] } | null> {
+  const { rows } = await db.query<{ members: string[] }>(
+    `SELECT conversation.members
+       FROM conversations conversation
+       JOIN learning_project_teacher_agents managed
+         ON managed.company_id=conversation.company_id AND managed.project_id=conversation.project_id
+        AND managed.agent_id=$4
+      WHERE conversation.id=$3 AND conversation.company_id=$1 AND conversation.project_id=$2`,
+    [args.companyId, args.projectId, args.channelId, args.agentId],
+  )
+  return rows[0] ?? null
+}
+
+export async function insertExistingChannelContextThread(
+  db: Queryable,
+  args: {
+    id: string
+    companyId: string
+    projectId: string
+    contextType: ContextType
+    contextId: string
+    channelId: string
+    createdBy: string
+    participantIds: string[]
+  },
+): Promise<void> {
+  await db.query(
+    `INSERT INTO context_threads
+       (id,company_id,project_id,context_type,context_id,channel_id,created_by)
+     VALUES($1,$2,$3,$4,$5,$6,$7)`,
+    [args.id, args.companyId, args.projectId, args.contextType, args.contextId,
+      args.channelId, args.createdBy],
+  )
+  for (const participantId of args.participantIds) {
+    await db.query(
+      `INSERT INTO context_thread_participants(thread_id,company_id,project_id,participant_id)
+       VALUES($1,$2,$3,$4)`,
+      [args.id, args.companyId, args.projectId, participantId],
+    )
+  }
+}

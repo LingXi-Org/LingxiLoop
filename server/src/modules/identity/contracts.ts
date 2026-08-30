@@ -5,7 +5,7 @@ export type IdentityProvider = 'lingxi'
 export const authStartQuerySchema = z.object({
   return: z.string().trim().min(1).optional(),
   invite: z.string().min(8).max(200).optional(),
-  inviteKind: z.enum(['company', 'course']).optional(),
+  inviteKind: z.enum(['company', 'project']).optional(),
 }).strict()
 
 export const authCallbackQuerySchema = z.object({

@@ -46,6 +46,10 @@ The M10 notification-router cutover is reset-only. It replaces the Learning-only
 preference and delivery tables with canonical Intent, Preference, Delivery, and
 Delivery-to-Intent relations; environments created before this cutover must reset.
 
+The M11 Teacher Free cutover is reset-only. Course invitations are replaced by
+Project-owned Student invitations, and Teaching Projects receive an explicit
+Teacher Plan override; environments created before this cutover must reset.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

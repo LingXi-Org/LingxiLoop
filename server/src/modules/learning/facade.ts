@@ -13,7 +13,7 @@ import {
   sendTeacherAgentWelcome,
   syncTeacherRoomMembers,
 } from './teacher-agent-application.js'
-import { seedMemberLearningContextThreads } from '../context-threads/public.js'
+import { bindTeacherOperationsContextThread, seedMemberLearningContextThreads } from '../context-threads/public.js'
 import { CH_DOC_ACCESS_REVOKED, publish } from '../../redis.js'
 import { LearningApplication } from './application.js'
 import { inc } from '../../metrics.js'
@@ -29,6 +29,7 @@ export const learningApplication = new LearningApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
   auditInTransaction: async (db, event) => { await auditInTransaction(db, event) },
   ensureTeacherAgent: (companyId, courseId, db) => ensureTeacherAgentForCourse(companyId, courseId, db, teacherTransaction(db)),
+  bindTeacherOperationsContext: bindTeacherOperationsContextThread,
   syncTeacherRoom: (companyId, courseId) => syncTeacherRoomMembers(companyId, courseId, pool, teacherTransaction(pool)),
   welcomeTeacherAgent: (companyId, courseId) => sendTeacherAgentWelcome(companyId, courseId, pool),
   closeTeacherRoom: (companyId, courseId) => closeTeacherRoomForCourse(companyId, courseId, pool, teacherTransaction(pool)),
@@ -52,7 +53,7 @@ export const learningApplication = new LearningApplication(pool, {
   hashInvitationToken,
   invitationUrl: (token) => {
     const base = (env.INVITE_BASE_URL || env.AUTH_DONE_URL).replace(/\/+$/, '')
-    return `${base}/invite/course/${encodeURIComponent(token)}`
+    return `${base}/invite/project/${encodeURIComponent(token)}`
   },
   avatarForEmail: gravatarUrlForEmail,
   teacherAgentSummary: async (companyId, courseId, userId) => {

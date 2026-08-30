@@ -1,7 +1,13 @@
 import type { Queryable } from '../../db/queryable.js'
 import { ContextScopedPermissionService, type PermissionServiceOptions } from './application.js'
-import type { PermissionRequest, PermissionService, ResolvedAccessContext } from './contracts.js'
+import type {
+  PermissionRequest,
+  PermissionService,
+  ResolvedAccessContext,
+  ResolvedEntitlements,
+} from './contracts.js'
 import { AccessRepository } from './repository.js'
+import { resolveEntitlements } from './entitlement-resolver.js'
 
 export type {
   EntitlementCode,
@@ -37,6 +43,12 @@ export function isActiveProjectMember(
   input: { companyId: string; projectId: string; userId: string },
 ): Promise<boolean> {
   return new AccessRepository(db).isActiveProjectMember(input.companyId, input.projectId, input.userId)
+}
+
+export async function resolvePlanEntitlements(db: Queryable, planId: string): Promise<ResolvedEntitlements> {
+  const result = await resolveEntitlements(new AccessRepository(db), planId)
+  if (!result.allowed) throw new Error(`Plan entitlement resolution failed: ${result.reason}`)
+  return result.entitlements
 }
 
 export const permissionService: PermissionService = {

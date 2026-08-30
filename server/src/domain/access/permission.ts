@@ -89,6 +89,10 @@ export const ENTITLEMENT_CODES = [
   'knowledge.core',
   'conversation.core',
   'agent.core',
+  'teacher.project_limit',
+  'teacher.student_limit',
+  'teacher.expensive_compute',
+  'teacher.compute_tier',
 ] as const
 
 export type EntitlementCode = typeof ENTITLEMENT_CODES[number]
@@ -144,6 +148,9 @@ export type PermissionReason =
 
 export interface ResolvedEntitlements {
   has(code: EntitlementCode): boolean
+  boolean(code: EntitlementCode): boolean | null
+  number(code: EntitlementCode): number | null
+  string(code: EntitlementCode): string | null
 }
 
 export type ResourceAccessMode =

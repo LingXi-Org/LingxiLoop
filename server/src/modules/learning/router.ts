@@ -1,12 +1,12 @@
 import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
-import { requireAuth, requireCompany } from '../../http/request-context.js'
+import { requireAuth, requireCompany, requireWorkspace } from '../../http/request-context.js'
 import type { PermissionAction } from '../access/public.js'
 import { permissionService } from '../access/public.js'
 import { classroomRouter } from './classroom-router.js'
 import { learningCasesRouter } from './cases-router.js'
 import {
-  createCourseInvitationRequestSchema,
+  createProjectInvitationRequestSchema,
   createCourseRequestSchema,
   updateCourseMemberRequestSchema,
   updateCourseRequestSchema,
@@ -82,34 +82,30 @@ learningRouter.delete('/courses/:id/members/:userId', safe(async (req, res) => {
   )))
 }))
 
-learningRouter.get('/courses/:id/invitations', safe(async (req, res) => {
-  const courseId = String(req.params.id)
-  const { userId } = await requireCoursePermission(req, courseId, 'project_invitation:list')
-  res.json(await respond(() => learningApplication.invitations(userId, courseId)))
+learningRouter.get('/projects/:projectId/invitations', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireWorkspace(req, projectId, 'project_invitation:list')
+  res.json(await respond(() => learningApplication.invitations(scope)))
 }))
 
-learningRouter.post('/courses/:id/invitations', safe(async (req, res) => {
-  const courseId = String(req.params.id)
-  const { userId } = await requireCoursePermission(req, courseId, 'project_invitation:create')
-  const input = parse(createCourseInvitationRequestSchema.safeParse(req.body ?? {}))
-  res.status(201).json(await respond(() => learningApplication.createInvitation(
-    userId, courseId, input,
-  )))
+learningRouter.post('/projects/:projectId/invitations', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireWorkspace(req, projectId, 'project_invitation:create')
+  const input = parse(createProjectInvitationRequestSchema.safeParse(req.body ?? {}))
+  res.status(201).json(await respond(() => learningApplication.createInvitation(scope, input)))
 }))
 
-learningRouter.delete('/courses/:id/invitations/:inviteId', safe(async (req, res) => {
-  const courseId = String(req.params.id)
-  const { userId } = await requireCoursePermission(req, courseId, 'project_invitation:revoke')
-  res.json(await respond(() => learningApplication.revokeInvitation(
-    userId, courseId, String(req.params.inviteId),
-  )))
+learningRouter.delete('/projects/:projectId/invitations/:inviteId', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireWorkspace(req, projectId, 'project_invitation:revoke')
+  res.json(await respond(() => learningApplication.revokeInvitation(scope, String(req.params.inviteId))))
 }))
 
-learningRouter.get('/course-invitations/:token', safe(async (req, res) => {
+learningRouter.get('/project-invitations/:token', safe(async (req, res) => {
   res.json(await learningApplication.invitationPreview(String(req.params.token), req.authUserId))
 }))
 
-learningRouter.post('/course-invitations/:token/accept', safe(async (req, res) => {
+learningRouter.post('/project-invitations/:token/accept', safe(async (req, res) => {
   const userId = requireAuth(req)
   res.json(await respond(() => learningApplication.acceptInvitation(userId, String(req.params.token))))
 }))

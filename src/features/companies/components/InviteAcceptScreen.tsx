@@ -3,7 +3,7 @@ import { companiesApi } from '@/features/companies/api'
 import { learningApi } from '@/features/learning/api'
 import { authApi } from '@/auth/api'
 import { getServerOrigin } from '@/api/core/http'
-import type { ApiCourseInvitationAccept, ApiCourseInvitationPreview } from '@/features/learning/contracts'
+import type { ApiProjectInvitationAccept, ApiProjectInvitationPreview } from '@/features/learning/contracts'
 import type { ApiInvitationPreview } from '@/features/companies/contracts'
 /**
  * InviteAcceptScreen — the "you've been invited to <workspace>" landing
@@ -50,9 +50,9 @@ const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
  *  back up on return. */
 export function consumeInviteFromUrl(): { token: string; clear: () => void } | null {
   const url = new URL(window.location.href)
-  const coursePathMatch = url.pathname.match(/^\/invite\/course\/([^/?#]+)\/?$/)
-  if (coursePathMatch) {
-    const token = `course:${decodeURIComponent(coursePathMatch[1])}`
+  const projectPathMatch = url.pathname.match(/^\/invite\/project\/([^/?#]+)\/?$/)
+  if (projectPathMatch) {
+    const token = `project:${decodeURIComponent(projectPathMatch[1])}`
     const clear = () => {
       try { history.replaceState(null, '', `${url.origin}/${url.search}${url.hash}`) } catch { /* swallow */ }
     }
@@ -108,8 +108,8 @@ interface Props {
 
 export function InviteAcceptScreen({ token, onDone }: Props) {
   const token_ = token
-  const courseInvite = token_.startsWith('course:')
-  const rawToken = courseInvite ? token_.slice('course:'.length) : token_
+  const projectInvite = token_.startsWith('project:')
+  const rawToken = projectInvite ? token_.slice('project:'.length) : token_
   const tokenUserId = useAuth((s) => s.user?.id ?? null)
   const tokenStr = useAuth((s) => s.token)
   const setMe = useAuth((s) => s.setMe)
@@ -117,7 +117,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const setActive = useAuth((s) => s.setActiveCompany)
   const user = useAuth((s) => s.user)
 
-  const [preview, setPreview] = useState<ApiInvitationPreview | ApiCourseInvitationPreview | null>(null)
+  const [preview, setPreview] = useState<ApiInvitationPreview | ApiProjectInvitationPreview | null>(null)
   const [previewErr, setPreviewErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [acceptErr, setAcceptErr] = useState<string | null>(null)
@@ -130,19 +130,19 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const loadPreview = useCallback(async () => {
     setPreviewErr(null)
     try {
-      const r = courseInvite ? await learningApi.previewCourseInvitation(rawToken) : await companiesApi.previewInvitation(rawToken)
+      const r = projectInvite ? await learningApi.previewProjectInvitation(rawToken) : await companiesApi.previewInvitation(rawToken)
       setPreview(r)
     } catch (e) {
       setPreviewErr(e instanceof Error ? e.message : String(e))
     }
-  }, [courseInvite, rawToken])
+  }, [projectInvite, rawToken])
 
   useEffect(() => { void loadPreview() }, [loadPreview, tokenStr])
 
   const accept = useCallback(async () => {
     setBusy(true); setAcceptErr(null)
     try {
-      const r = courseInvite ? await learningApi.acceptCourseInvitation(rawToken) : await companiesApi.acceptInvitation(rawToken)
+      const r = projectInvite ? await learningApi.acceptProjectInvitation(rawToken) : await companiesApi.acceptInvitation(rawToken)
       const auth = useAuth.getState()
       if (auth.user) {
         const companies = auth.companies.some((company) => company.id === r.company.id)
@@ -153,8 +153,8 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         setActive(r.company.id)
       }
       clearPendingInvite()
-      if (courseInvite && 'course' in r) {
-        const accepted = r as ApiCourseInvitationAccept
+      if (projectInvite && 'course' in r) {
+        const accepted = r as ApiProjectInvitationAccept
         setWorkspaceSession({ companyId: accepted.company.id, projectId: accepted.course.projectId })
         useApp.getState().selectConversation(accepted.course.studyRoomId)
       }
@@ -170,7 +170,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     } finally {
       setBusy(false)
     }
-  }, [courseInvite, rawToken, setMe, setServerCapabilities, setActive, onDone])
+  }, [projectInvite, rawToken, setMe, setServerCapabilities, setActive, onDone])
 
   // Auto-accept the moment we have a session AND the preview is `valid`.
   // Saves a redundant click when the user just signed in to redeem the
@@ -456,7 +456,7 @@ function SignInToAccept({ token }: { token: string }) {
   const go = (provider: 'lingxi') => {
     setBusy(provider)
     setError(null)
-    const rawToken = token.startsWith('course:') ? token.slice('course:'.length) : token
+    const rawToken = token.startsWith('project:') ? token.slice('project:'.length) : token
     // Persist BEFORE redirect so the post-OAuth landing can resume here.
     stashPendingInvite(token)
     if (isElectron && window.lingxiloop?.auth) {
@@ -487,14 +487,14 @@ function SignInToAccept({ token }: { token: string }) {
         void auth.openExternal(authApi.startUrl({
           returnUrl: done,
           inviteToken: rawToken,
-          inviteKind: token.startsWith('course:') ? 'course' : 'company',
+          inviteKind: token.startsWith('project:') ? 'project' : 'company',
         }))
       })()
       return
     }
     location.assign(authApi.startUrl({
       inviteToken: rawToken,
-      inviteKind: token.startsWith('course:') ? 'course' : 'company',
+      inviteKind: token.startsWith('project:') ? 'project' : 'company',
     }))
   }
   return (

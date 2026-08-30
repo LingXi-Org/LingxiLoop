@@ -3,6 +3,8 @@ import type {
   CompanyRole,
   CompanyStatus,
   CompanyType,
+  EntitlementCode,
+  EntitlementValue,
   MembershipStatus,
   PermissionResource,
   PlanStatus,
@@ -44,8 +46,8 @@ export interface PlanRecord {
 }
 
 export interface EntitlementRecord {
-  code: string
-  value: unknown
+  code: EntitlementCode
+  value: EntitlementValue
 }
 
 export interface ResourceRecord {
@@ -90,8 +92,8 @@ interface PlanRow {
 }
 
 interface EntitlementRow {
-  code: string
-  value: unknown
+  code: EntitlementCode
+  value: EntitlementValue
 }
 
 interface ResourceRow {

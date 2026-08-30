@@ -15,7 +15,7 @@ export type {
 } from './access/public.js'
 export { ENTITLEMENT_CODES, PERMISSION_ACTIONS } from './access/public.js'
 export type { Entitlement, EntitlementValue, Plan, PlanEntitlement, PlanStatus } from './entitlement/public.js'
-export { PERSONAL_FREE_PLAN } from './entitlement/public.js'
+export { PERSONAL_FREE_PLAN, TEACHER_FREE_PLAN, TEACHER_PRO_PLAN } from './entitlement/public.js'
 export type { User } from './identity/user.js'
 export {
   LEARNING_CASE_ACTION_KINDS,

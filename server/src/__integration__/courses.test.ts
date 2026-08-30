@@ -91,23 +91,22 @@ async function createCourse(name: string, companyId = 'co-courses') {
 }
 
 async function createInvitation(
-  courseId: string,
-  role: 'teacher' | 'learner',
+  projectId: string,
   companyId = 'co-courses',
   email: string | null = 'learner@test.local',
 ) {
-  const created = await fetch(`${ownerUrl}/api/courses/${courseId}/invitations`, {
-    method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': companyId },
-    body: JSON.stringify({ email, role, expiresInDays: 7, maxUses: 1 }),
+  const created = await fetch(`${ownerUrl}/api/projects/${projectId}/invitations`, {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': companyId, 'x-project-id': projectId },
+    body: JSON.stringify({ email, expiresInDays: 7, maxUses: 1 }),
   })
   const createdRaw = await created.text()
   assert.equal(created.status, 201, createdRaw)
   return JSON.parse(createdRaw) as { token: string; id: string }
 }
 
-async function inviteAndAccept(courseId: string, role: 'teacher' | 'learner', companyId = 'co-courses') {
-  const invitation = await createInvitation(courseId, role, companyId)
-  const accepted = await fetch(`${learnerUrl}/api/course-invitations/${encodeURIComponent(invitation.token)}/accept`, { method: 'POST' })
+async function inviteAndAccept(projectId: string, companyId = 'co-courses') {
+  const invitation = await createInvitation(projectId, companyId)
+  const accepted = await fetch(`${learnerUrl}/api/project-invitations/${encodeURIComponent(invitation.token)}/accept`, { method: 'POST' })
   const acceptedRaw = await accepted.text()
   assert.equal(accepted.status, 200, acceptedRaw)
   return invitation
@@ -119,7 +118,7 @@ test('[integration] learner sees only enrolled courses and receives opaque 404 f
   const second = await createCourse('Chemistry')
   assert.equal(first.projectKind, 'TEACHING')
   assert.equal(second.projectKind, 'TEACHING')
-  await inviteAndAccept(first.id, 'learner')
+  await inviteAndAccept(first.projectId)
   await pool.query(
     `INSERT INTO documents (id,company_id,project_id,title,created_by) VALUES
       ('doc-first','co-courses',$1,'First',$3),('doc-second','co-courses',$2,'Second',$3)`,
@@ -162,54 +161,53 @@ test('[integration] Education Company cannot use the Teaching creation entrypoin
   )
 })
 
-test('[integration] course invitation replay is idempotent and teacher upgrade never downgrades', async () => {
+test('[integration] Project invitation replay is idempotent and never grants or downgrades Teacher', async () => {
   await seedCompany()
   const course = await createCourse('Mathematics')
-  const learnerInvite = await inviteAndAccept(course.id, 'learner')
-  const replay = await fetch(`${learnerUrl}/api/course-invitations/${encodeURIComponent(learnerInvite.token)}/accept`, { method: 'POST' })
+  const learnerInvite = await inviteAndAccept(course.projectId)
+  const replay = await fetch(`${learnerUrl}/api/project-invitations/${encodeURIComponent(learnerInvite.token)}/accept`, { method: 'POST' })
   assert.equal(replay.status, 200)
-  assert.equal((await pool.query(`SELECT use_count FROM course_invitations WHERE token_hash=$1`, [learnerInvite.id])).rows[0].use_count, 1)
+  assert.equal((await pool.query(`SELECT use_count FROM project_invitations WHERE token_hash=$1`, [learnerInvite.id])).rows[0].use_count, 1)
 
-  await inviteAndAccept(course.id, 'teacher')
+  await pool.query(`UPDATE project_memberships SET role='TEACHER' WHERE project_id=$1 AND user_id=$2`, [course.projectId, LEARNER])
+  const teacherInvite = await inviteAndAccept(course.projectId)
   assert.equal((await pool.query(`SELECT role FROM project_memberships WHERE project_id=$1 AND user_id=$2`, [course.projectId, LEARNER])).rows[0].role, 'TEACHER')
-  const downgrade = await inviteAndAccept(course.id, 'learner')
-  assert.equal((await pool.query(`SELECT role FROM project_memberships WHERE project_id=$1 AND user_id=$2`, [course.projectId, LEARNER])).rows[0].role, 'TEACHER')
-  assert.equal((await pool.query(`SELECT use_count FROM course_invitations WHERE token_hash=$1`, [downgrade.id])).rows[0].use_count, 0)
+  assert.equal((await pool.query(`SELECT use_count FROM project_invitations WHERE token_hash=$1`, [teacherInvite.id])).rows[0].use_count, 0)
 
   await fetch(`${ownerUrl}/api/courses/${course.id}/archive`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses' }, body: '{}' })
   const write = await fetch(`${learnerUrl}/api/documents`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-company-id': 'co-courses', 'x-project-id': course.projectId }, body: JSON.stringify({ title: 'Blocked' }) })
   assert.equal(write.status, 409)
 })
 
-test('[integration] concurrent teacher and learner invitations preserve the teacher role', async () => {
+test('[integration] concurrent Project invitations converge on one Student membership', async () => {
   await seedCompany()
   const course = await createCourse('Concurrency')
   const [teacherInvite, learnerInvite] = await Promise.all([
-    createInvitation(course.id, 'teacher', 'co-courses', null),
-    createInvitation(course.id, 'learner', 'co-courses', null),
+    createInvitation(course.projectId, 'co-courses', null),
+    createInvitation(course.projectId, 'co-courses', null),
   ])
   const responses = await Promise.all([teacherInvite, learnerInvite].map((invitation) => fetch(
-    `${learnerUrl}/api/course-invitations/${encodeURIComponent(invitation.token)}/accept`,
+    `${learnerUrl}/api/project-invitations/${encodeURIComponent(invitation.token)}/accept`,
     { method: 'POST' },
   )))
   assert.deepEqual(responses.map((response) => response.status), [200, 200])
   assert.equal((await pool.query(
     `SELECT role FROM project_memberships WHERE project_id=$1 AND user_id=$2`,
     [course.projectId, LEARNER],
-  )).rows[0].role, 'TEACHER')
+  )).rows[0].role, 'STUDENT')
 })
 
 test('[integration] removing a member invalidates replay of their consumed course invitation', async () => {
   await seedCompany()
   const course = await createCourse('Replay revocation')
-  const invitation = await inviteAndAccept(course.id, 'learner')
+  const invitation = await inviteAndAccept(course.projectId)
 
   const removed = await fetch(`${ownerUrl}/api/courses/${course.id}/members/${LEARNER}`, {
     method: 'DELETE', headers: { 'x-company-id': 'co-courses' },
   })
   assert.equal(removed.status, 200, await removed.text())
   const replay = await fetch(
-    `${learnerUrl}/api/course-invitations/${encodeURIComponent(invitation.token)}/accept`,
+    `${learnerUrl}/api/project-invitations/${encodeURIComponent(invitation.token)}/accept`,
     { method: 'POST' },
   )
   assert.equal(replay.status, 410, await replay.text())
@@ -290,7 +288,7 @@ function waitForSocketMessage(
 test('[integration] removing a course member revokes an existing document WebSocket subscription', async (t) => {
   await seedCompany()
   const course = await createCourse('Realtime security')
-  await inviteAndAccept(course.id, 'learner')
+  await inviteAndAccept(course.projectId)
   await pool.query(
     `INSERT INTO documents (id,company_id,project_id,title,created_by)
      VALUES ('doc-live','co-courses',$1,'Live document',$2)`,

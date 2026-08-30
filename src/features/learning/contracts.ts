@@ -28,10 +28,10 @@ export interface ApiCourseMember {
   joinedAt: string
 }
 
-export interface ApiCourseInvitation {
+export interface ApiProjectInvitation {
   id: string
   email: string | null
-  role: 'teacher' | 'learner'
+  role: 'learner'
   note: string | null
   maxUses: number
   useCount: number
@@ -40,20 +40,20 @@ export interface ApiCourseInvitation {
   revokedAt?: string | null
   lastAcceptedAt?: string | null
   lastAcceptedBy?: string | null
-  acceptances?: Array<{ userId: string; name: string | null; role: 'teacher' | 'learner'; acceptedAt: string }>
+  acceptances?: Array<{ userId: string; name: string | null; role: 'learner'; acceptedAt: string }>
   status: 'active' | 'revoked' | 'expired' | 'consumed'
 }
 
-export interface ApiCourseInvitationWithToken extends ApiCourseInvitation {
+export interface ApiProjectInvitationWithToken extends ApiProjectInvitation {
   token: string
   url: string
 }
 
-export interface ApiCourseInvitationPreview {
-  kind: 'course'
+export interface ApiProjectInvitationPreview {
+  kind: 'project'
   status: ApiInvitationPreviewStatus | 'archived'
   invitation?: {
-    role: 'teacher' | 'learner'
+    role: 'learner'
     email: string | null
     note: string | null
     expiresAt: string
@@ -63,7 +63,7 @@ export interface ApiCourseInvitationPreview {
   }
 }
 
-export interface ApiCourseInvitationAccept {
+export interface ApiProjectInvitationAccept {
   ok: true
   alreadyMember: boolean
   joinedCompany: boolean

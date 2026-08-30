@@ -46,7 +46,7 @@ export interface IdentityInfrastructure {
     provider: IdentityProvider,
     returnUrl: string | null,
     inviteToken: string | null,
-    inviteKind: 'company' | 'course' | null,
+    inviteKind: 'company' | 'project' | null,
   ): Promise<string>
   consumeState(state: string): Promise<ClaimedState | null>
   authorizeUrl(provider: IdentityProvider, state: string): Promise<string>
@@ -75,7 +75,7 @@ export class IdentityApplication {
 
   async start(
     provider: string,
-    input: { return?: string; invite?: string; inviteKind?: 'company' | 'course' },
+    input: { return?: string; invite?: string; inviteKind?: 'company' | 'project' },
   ): Promise<string> {
     const validProvider = this.requireProvider(provider)
     if (!this.infrastructure.providerEnabled(validProvider)) {
@@ -86,7 +86,7 @@ export class IdentityApplication {
       throw new IdentityApplicationError('return_url_forbidden', 'return URL not allowed')
     }
     const inviteToken = input.invite ?? null
-    const inviteKind = inviteToken ? (input.inviteKind === 'course' ? 'course' : 'company') : null
+    const inviteKind = inviteToken ? (input.inviteKind === 'project' ? 'project' : 'company') : null
     const state = await this.infrastructure.createState(validProvider, returnUrl, inviteToken, inviteKind)
     return this.infrastructure.authorizeUrl(validProvider, state)
   }

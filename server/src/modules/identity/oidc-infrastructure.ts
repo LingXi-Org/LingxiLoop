@@ -19,7 +19,7 @@ export interface ClaimedIdentityState {
   provider: IdentityProvider
   returnUrl: string | null
   inviteToken: string | null
-  inviteKind: 'company' | 'course' | null
+  inviteKind: 'company' | 'project' | null
 }
 
 async function providerConfig(): Promise<ProviderConfig> {
@@ -61,7 +61,7 @@ export async function createIdentityState(
   provider: IdentityProvider,
   returnUrl: string | null,
   inviteToken: string | null,
-  inviteKind: 'company' | 'course' | null,
+  inviteKind: 'company' | 'project' | null,
 ): Promise<string> {
   const state = randomBytes(32).toString('base64url')
   const data: ClaimedIdentityState = { provider, returnUrl, inviteToken, inviteKind }

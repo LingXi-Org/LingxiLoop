@@ -320,6 +320,17 @@ test('M10 notifications route bounded event-derived Intent into canonical Delive
   assert.match(bootstrap, /'idx_notification_deliveries_pending'/)
 })
 
+test('M11 ProjectInvite grants only Student membership and retires Course invitations', () => {
+  const invitations = schema.match(/CREATE TABLE public\.project_invitations \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  const acceptances = schema.match(/CREATE TABLE public\.project_invitation_acceptances \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  assert.match(invitations, /project_id text NOT NULL/)
+  assert.doesNotMatch(invitations, /\bcourse_id\b|\brole\b/)
+  assert.doesNotMatch(acceptances, /\brole\b/)
+  assert.match(schema, /project_invitations_project_id_company_id_fkey[\s\S]*projects\(id, company_id\) ON DELETE CASCADE/)
+  assert.doesNotMatch(schema, /CREATE TABLE public\.course_invitation/)
+  assert.match(bootstrap, /'course_invitation_acceptances'.*'course_invitations'/s)
+})
+
 test('Plan and Entitlement are independent and accept JSON scalar values only', () => {
   assert.match(schema, /plans_code_key UNIQUE \(code\)/)
   assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)
@@ -327,7 +338,7 @@ test('Plan and Entitlement are independent and accept JSON scalar values only', 
   assert.match(schema, /jsonb_typeof\(value\).*?'boolean'.*?'number'.*?'string'/s)
   assert.doesNotMatch(schema, /CREATE TABLE public\.(?:subscriptions|project_entitlement_overrides)\b/)
   assert.match(entitlementRepository, /ENTITLEMENT_CODES/)
-  assert.match(entitlementRepository, /'true'::jsonb/)
+  assert.match(entitlementRepository, /JSON\.stringify\(value\)/)
 })
 
 test('durable Agent work preserves a human authorization principal', () => {

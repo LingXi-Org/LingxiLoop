@@ -1,10 +1,10 @@
 import { http } from '@/api/core/http'
 import type {
   ApiCourse,
-  ApiCourseInvitation,
-  ApiCourseInvitationAccept,
-  ApiCourseInvitationPreview,
-  ApiCourseInvitationWithToken,
+  ApiProjectInvitation,
+  ApiProjectInvitationAccept,
+  ApiProjectInvitationPreview,
+  ApiProjectInvitationWithToken,
   ApiCourseMember,
   LearningActivity,
   LearningDashboard,
@@ -32,14 +32,14 @@ export const learningApi = {
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(userId)}`, { method: 'PATCH', body: JSON.stringify({ role }) }),
   removeCourseMember: (courseId: string, userId: string) =>
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(userId)}`, { method: 'DELETE' }),
-  listCourseInvitations: (courseId: string) =>
-    http<ApiCourseInvitation[]>(`/courses/${encodeURIComponent(courseId)}/invitations`),
-  createCourseInvitation: (courseId: string, input: { email?: string | null; role: 'teacher' | 'learner'; note?: string | null; expiresInDays?: number; maxUses?: number }) =>
-    http<ApiCourseInvitationWithToken>(`/courses/${encodeURIComponent(courseId)}/invitations`, { method: 'POST', body: JSON.stringify(input) }),
-  revokeCourseInvitation: (courseId: string, invitationId: string) =>
-    http<{ ok: true; revoked: boolean }>(`/courses/${encodeURIComponent(courseId)}/invitations/${encodeURIComponent(invitationId)}`, { method: 'DELETE' }),
-  previewCourseInvitation: (token: string) => http<ApiCourseInvitationPreview>(`/course-invitations/${encodeURIComponent(token)}`),
-  acceptCourseInvitation: (token: string) => http<ApiCourseInvitationAccept>(`/course-invitations/${encodeURIComponent(token)}/accept`, { method: 'POST', body: '{}' }),
+  listProjectInvitations: (projectId: string) =>
+    http<ApiProjectInvitation[]>(`/projects/${encodeURIComponent(projectId)}/invitations`),
+  createProjectInvitation: (projectId: string, input: { email?: string | null; note?: string | null; expiresInDays?: number; maxUses?: number }) =>
+    http<ApiProjectInvitationWithToken>(`/projects/${encodeURIComponent(projectId)}/invitations`, { method: 'POST', body: JSON.stringify(input) }),
+  revokeProjectInvitation: (projectId: string, invitationId: string) =>
+    http<{ ok: true; revoked: boolean }>(`/projects/${encodeURIComponent(projectId)}/invitations/${encodeURIComponent(invitationId)}`, { method: 'DELETE' }),
+  previewProjectInvitation: (token: string) => http<ApiProjectInvitationPreview>(`/project-invitations/${encodeURIComponent(token)}`),
+  acceptProjectInvitation: (token: string) => http<ApiProjectInvitationAccept>(`/project-invitations/${encodeURIComponent(token)}/accept`, { method: 'POST', body: '{}' }),
   getDashboard: () => http<LearningDashboard>('/learning/dashboard'),
   getTeacherAgent: (courseId: string) =>
     http<TeacherAgentSummary>(`/courses/${encodeURIComponent(courseId)}/teacher-agent`),

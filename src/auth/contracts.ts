@@ -31,6 +31,6 @@ export interface AuthMeResponse {
 
 export interface AuthStartOptions {
   inviteToken?: string | null
-  inviteKind?: 'company' | 'course' | null
+  inviteKind?: 'company' | 'project' | null
   returnUrl?: string | null
 }

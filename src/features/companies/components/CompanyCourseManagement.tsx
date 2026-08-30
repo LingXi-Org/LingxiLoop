@@ -9,7 +9,7 @@ import type { ApiCompanyMember, ApiCompanyProfile } from '@/features/companies/c
 import { useConversations } from '@/features/conversations/store'
 import { knowledgeApi } from '@/features/knowledge/api'
 import { learningApi } from '@/features/learning/api'
-import type { ApiCourse, ApiCourseInvitation, ApiCourseMember } from '@/features/learning/contracts'
+import type { ApiCourse, ApiCourseMember, ApiProjectInvitation } from '@/features/learning/contracts'
 import { projectLifecycleApi } from '@/features/projects/api'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
@@ -34,7 +34,7 @@ export function CompanyCourseManagement() {
   const [members, setMembers] = useState<ApiCompanyMember[]>([])
   const [selectedCourse, setSelectedCourse] = useState<ApiCourse | null>(null)
   const [courseMembers, setCourseMembers] = useState<ApiCourseMember[]>([])
-  const [invitations, setInvitations] = useState<ApiCourseInvitation[]>([])
+  const [invitations, setInvitations] = useState<ApiProjectInvitation[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [createdLink, setCreatedLink] = useState<string | null>(null)
@@ -59,7 +59,9 @@ export function CompanyCourseManagement() {
     setSelectedCourse(course); setCreatedLink(null); setError(null)
     if (!course.canManage) { setCourseMembers([]); setInvitations([]); return }
     try {
-      const [memberRows, invitationRows] = await Promise.all([learningApi.listCourseMembers(course.id), learningApi.listCourseInvitations(course.id)])
+      const [memberRows, invitationRows] = await Promise.all([
+        learningApi.listCourseMembers(course.id), learningApi.listProjectInvitations(course.projectId),
+      ])
       setCourseMembers(memberRows); setInvitations(invitationRows)
     } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)) }
   }
@@ -87,9 +89,8 @@ export function CompanyCourseManagement() {
     setBusy(true); setError(null)
     const data = new FormData(event.currentTarget)
     try {
-      const invitation = await learningApi.createCourseInvitation(selectedCourse.id, {
+      const invitation = await learningApi.createProjectInvitation(selectedCourse.projectId, {
         email: String(data.get('email') ?? '').trim() || null,
-        role: data.get('role') === 'teacher' ? 'teacher' : 'learner',
         note: String(data.get('note') ?? '').trim() || null,
         expiresInDays: Number(data.get('expiresInDays') ?? 7),
         maxUses: Number(data.get('maxUses') ?? 1),
@@ -158,7 +159,7 @@ export function CompanyCourseManagement() {
     } catch { /* toast owns the visible error state */ }
   }
 
-  const revokeCourseInvitationWithConfirmation = async (invitation: ApiCourseInvitation) => {
+  const revokeProjectInvitationWithConfirmation = async (invitation: ApiProjectInvitation) => {
     if (!selectedCourse) return
     if (!await confirmSensitiveAction({
       title: '撤销课程邀请？',
@@ -167,7 +168,7 @@ export function CompanyCourseManagement() {
       tone: 'destructive',
     })) return
     try {
-      await toastAction(learningApi.revokeCourseInvitation(selectedCourse.id, invitation.id), {
+      await toastAction(learningApi.revokeProjectInvitation(selectedCourse.projectId, invitation.id), {
         loading: '正在撤销课程邀请', success: '课程邀请已撤销', error: '撤销课程邀请失败',
       })
       await openCourse(selectedCourse)
@@ -212,9 +213,9 @@ export function CompanyCourseManagement() {
               <div className="flex items-center justify-between"><div><h2 className="text-[18px] font-semibold">{selectedCourse.name}</h2><p className="text-[11px] text-ink-secondary">Project: {selectedCourse.projectId}</p></div>{selectedCourse.canManage && ['ACTIVE', 'COURSE_ENDED', 'READ_ONLY'].includes(selectedCourse.status) && <Button className={`${button} bg-raised`} onClick={() => void advanceCourseLifecycleWithConfirmation()}><IconArchive size={15}/></Button>}</div>
               {selectedCourse.canManage && <>
                 <div><h3 className="mb-2 text-[12px] font-semibold">课程成员</h3><div className="space-y-2">{courseMembers.map((member) => <div key={member.id} className="flex items-center gap-2 rounded-xl bg-raised p-2"><span className="min-w-0 flex-1"><b className="block truncate text-[12px]">{member.name}</b><small className="text-[10px] text-ink-secondary">{member.email}</small></span><Select value={member.role} onValueChange={async (role) => { await learningApi.updateCourseMember(selectedCourse.id, member.id, role as 'teacher' | 'learner'); await openCourse(selectedCourse) }}><SelectTrigger className="w-28"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="teacher">teacher</SelectItem><SelectItem value="learner">learner</SelectItem></SelectContent></Select><Button aria-label="移除" onClick={() => void removeCourseMemberWithConfirmation(member)}><IconTrash size={14}/></Button></div>)}</div></div>
-                {selectedCourse.status === 'ACTIVE' && <form onSubmit={createInvite} className="space-y-2 border-t border-hairline pt-4"><h3 className="text-[12px] font-semibold">创建课程邀请</h3><Input className={field} name="email" type="email" placeholder="限制邮箱（可选）"/><div className="grid grid-cols-3 gap-2"><Select name="role" defaultValue="learner"><SelectTrigger className={field}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="learner">learner</SelectItem><SelectItem value="teacher">teacher</SelectItem></SelectContent></Select><Input className={field} name="expiresInDays" type="number" min="1" max="30" defaultValue="7" title="有效天数"/><Input className={field} name="maxUses" type="number" min="1" max="100" defaultValue="1" title="使用次数"/></div><Input className={field} name="note" placeholder="备注（可选）"/><Button disabled={busy} className={`${button} w-full bg-accent text-white`}>生成邀请链接</Button></form>}
+                {selectedCourse.status === 'ACTIVE' && <form onSubmit={createInvite} className="space-y-2 border-t border-hairline pt-4"><h3 className="text-[12px] font-semibold">创建 Student Project 邀请</h3><Input className={field} name="email" type="email" placeholder="限制邮箱（可选）"/><div className="grid grid-cols-2 gap-2"><Input className={field} name="expiresInDays" type="number" min="1" max="30" defaultValue="7" title="有效天数"/><Input className={field} name="maxUses" type="number" min="1" max="100" defaultValue="1" title="使用次数"/></div><Input className={field} name="note" placeholder="备注（可选）"/><Button disabled={busy} className={`${button} w-full bg-accent text-white`}>生成邀请链接</Button></form>}
                 {createdLink && <Button className="flex w-full items-center gap-2 rounded-xl bg-raised p-3 text-left text-[11px]" onClick={() => void navigator.clipboard.writeText(createdLink)}><IconCopy size={15}/><span className="min-w-0 flex-1 truncate">{createdLink}</span></Button>}
-                <div className="space-y-1">{invitations.map((invitation) => <div key={invitation.id} className="flex items-center gap-2 py-1 text-[10px] text-ink-secondary"><span className="flex-1">{invitation.email ?? '公开链接'} · {invitation.role} · {invitation.useCount}/{invitation.maxUses}</span><span>{invitation.status}</span>{invitation.status === 'active' && <Button onClick={() => void revokeCourseInvitationWithConfirmation(invitation)}>撤销</Button>}</div>)}</div>
+                <div className="space-y-1">{invitations.map((invitation) => <div key={invitation.id} className="flex items-center gap-2 py-1 text-[10px] text-ink-secondary"><span className="flex-1">{invitation.email ?? '公开链接'} · {invitation.role} · {invitation.useCount}/{invitation.maxUses}</span><span>{invitation.status}</span>{invitation.status === 'active' && <Button onClick={() => void revokeProjectInvitationWithConfirmation(invitation)}>撤销</Button>}</div>)}</div>
               </>}
             </div>}
           </section>

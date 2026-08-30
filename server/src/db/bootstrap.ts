@@ -24,7 +24,7 @@ const REQUIRED_V1_RELATIONS = [
   'company_onboarding_effects',
   'convene_transcript', 'convening_info',
   'context_thread_participants', 'context_threads', 'conversation_mutes', 'conversation_reads',
-  'conversation_source_exclusions', 'conversations', 'course_invitation_acceptances', 'course_invitations',
+  'conversation_source_exclusions', 'conversations',
   'courses', 'document_mention_deliveries', 'document_mentions', 'document_snapshots',
   'document_updates', 'documents', 'domain_events', 'email_attachments', 'email_contacts',
   'email_messages', 'email_sequence_counters', 'entitlements', 'evidence_claim_evidence',
@@ -44,7 +44,7 @@ const REQUIRED_V1_RELATIONS = [
   'notification_deliveries', 'notification_delivery_intents', 'notification_intents',
   'notification_preferences',
   'participants', 'plan_entitlements', 'plans', 'project_memberships',
-  'project_visits', 'projects', 'sessions',
+  'project_invitation_acceptances', 'project_invitations', 'project_visits', 'projects', 'sessions',
   'tool_calls', 'user_identities', 'user_preferences', 'users',
   'ws_tickets', 'wukong_webhook_receipts',
 ] as const
@@ -53,7 +53,8 @@ const FORBIDDEN_V1_RELATIONS = [
   'app_settings', 'company_members', 'course_members', 'learning_mastery',
   'learning_mastery_events', 'learning_objective_dependencies',
   'learning_objectives', 'learning_notification_deliveries',
-  'learning_notification_preferences', 'permissions', 'waitlist',
+  'learning_notification_preferences', 'course_invitation_acceptances', 'course_invitations',
+  'permissions', 'waitlist',
 ] as const
 
 const FORBIDDEN_V1_COLUMNS = [
