@@ -48,7 +48,14 @@ export async function resolveAccessContext(
   if (project && !projectMembership) return denied('PROJECT_MEMBERSHIP_REQUIRED')
   if (projectMembership && projectMembership.status !== 'ACTIVE') return denied('PROJECT_MEMBERSHIP_INACTIVE')
 
-  const entitlements = await resolveEntitlements(repository, project?.planId ?? company.planId)
+  let companyPlanId = company.planId
+  if (company.type === 'EDUCATION') {
+    const organizationPlanId = await repository.activeOrganizationSeatPlanId(company.id, request.actorUserId)
+    if (!organizationPlanId) return denied('ORGANIZATION_SEAT_REQUIRED')
+    companyPlanId = organizationPlanId
+  }
+
+  const entitlements = await resolveEntitlements(repository, project?.planId ?? companyPlanId)
   if (!entitlements.allowed) return denied(entitlements.reason)
 
   return {

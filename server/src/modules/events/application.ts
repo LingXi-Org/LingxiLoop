@@ -83,7 +83,7 @@ function sameRequest(existing: DomainEventEnvelope, input: AppendDomainEventInpu
     && isDeepStrictEqual(existing.payload, input.event.payload)
 }
 
-async function appendDomainEventInTransaction<TType extends string, TPayload extends JsonObject>(
+export async function appendDomainEventInTransaction<TType extends string, TPayload extends JsonObject>(
   db: Queryable,
   rawInput: AppendDomainEventInput<TType, TPayload>,
 ): Promise<DomainEventEnvelope<TType, TPayload>> {

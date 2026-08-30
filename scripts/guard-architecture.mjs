@@ -140,6 +140,7 @@ const legacyMembershipSqlAllowlist = new Set([
   'server/src/modules/email/address-repository.ts',
   'server/src/modules/email/agent-repository.ts',
   'server/src/modules/email/repository.ts',
+  'server/src/modules/education/repository.ts',
   'server/src/modules/identity/oauth-repository.ts',
   'server/src/modules/identity/repository.ts',
   'server/src/modules/knowledge/repository.ts',

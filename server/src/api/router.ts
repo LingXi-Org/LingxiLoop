@@ -7,6 +7,7 @@ import { boardsRouter } from '../modules/boards/router.js'
 import { calendarRouter } from '../modules/calendar/router.js'
 import { canvasRouter } from '../modules/canvas/router.js'
 import { companiesRouter } from '../modules/companies/router.js'
+import { educationRouter } from '../modules/education/router.js'
 import { conversationsRouter } from '../modules/conversations/router.js'
 import { contextThreadsRouter } from '../modules/context-threads/router.js'
 import { documentsRouter } from '../modules/documents/router.js'
@@ -28,6 +29,7 @@ api.use(platformRouter)
 api.use(identityRouter)
 api.use('/im', imRouter)
 api.use(companiesRouter)
+api.use(educationRouter)
 api.use(projectsRouter)
 api.use(canvasRouter)
 api.use(learningRouter)

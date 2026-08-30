@@ -4869,6 +4869,51 @@ ALTER TABLE ONLY public.subscriptions
 ALTER TABLE ONLY public.subscriptions
     ADD CONSTRAINT subscriptions_plan_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE RESTRICT;
 
+CREATE TABLE public.education_contracts (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    plan_id text NOT NULL,
+    status text DEFAULT 'TRIAL'::text NOT NULL,
+    starts_at timestamp with time zone NOT NULL,
+    ends_at timestamp with time zone NOT NULL,
+    seat_limit integer NOT NULL,
+    config jsonb DEFAULT '{}'::jsonb NOT NULL,
+    version bigint DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT education_contracts_scope_key UNIQUE (id, company_id),
+    CONSTRAINT education_contracts_company_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE RESTRICT,
+    CONSTRAINT education_contracts_plan_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id) ON DELETE RESTRICT,
+    CONSTRAINT education_contracts_status_check CHECK (status = ANY (ARRAY['TRIAL'::text, 'ACTIVE'::text, 'EXPIRED'::text, 'TERMINATED'::text])),
+    CONSTRAINT education_contracts_period_check CHECK (ends_at > starts_at),
+    CONSTRAINT education_contracts_seat_limit_check CHECK (seat_limit > 0),
+    CONSTRAINT education_contracts_config_check CHECK (jsonb_typeof(config) = 'object'),
+    CONSTRAINT education_contracts_version_check CHECK (version >= 1)
+);
+
+CREATE UNIQUE INDEX uniq_education_contracts_live_company
+    ON public.education_contracts USING btree (company_id)
+    WHERE status IN ('TRIAL'::text, 'ACTIVE'::text);
+
+CREATE TABLE public.organization_seats (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    contract_id text NOT NULL,
+    user_id text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    assigned_at timestamp with time zone DEFAULT now() NOT NULL,
+    revoked_at timestamp with time zone,
+    CONSTRAINT organization_seats_scope_key UNIQUE (id, company_id),
+    CONSTRAINT organization_seats_contract_fkey FOREIGN KEY (contract_id, company_id) REFERENCES public.education_contracts(id, company_id) ON DELETE RESTRICT,
+    CONSTRAINT organization_seats_membership_fkey FOREIGN KEY (company_id, user_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE RESTRICT,
+    CONSTRAINT organization_seats_status_check CHECK (status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'REVOKED'::text])),
+    CONSTRAINT organization_seats_revoked_check CHECK ((status = 'REVOKED') = (revoked_at IS NOT NULL))
+);
+
+CREATE UNIQUE INDEX uniq_organization_seats_live_member
+    ON public.organization_seats USING btree (company_id, user_id)
+    WHERE status IN ('ACTIVE'::text, 'SUSPENDED'::text);
+
 CREATE INDEX idx_learning_knowledge_units_project
     ON public.learning_knowledge_units USING btree (company_id, project_id, status, position);
 

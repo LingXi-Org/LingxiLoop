@@ -385,6 +385,21 @@ test('Personal Plus subscriptions and usage are canonical, scoped, and append-on
   assert.match(bootstrap, /'subscription_usage_ledger', 'subscriptions'/)
 })
 
+test('Education contracts and organization seats are scoped and independent from Project roles', () => {
+  assert.match(schema, /CREATE TABLE public\.education_contracts/)
+  assert.match(schema, /education_contracts_status_check[\s\S]*'TRIAL'.*'ACTIVE'.*'EXPIRED'.*'TERMINATED'/s)
+  assert.match(schema, /education_contracts_period_check CHECK \(ends_at > starts_at\)/)
+  assert.match(schema, /education_contracts_seat_limit_check CHECK \(seat_limit > 0\)/)
+  assert.match(schema, /education_contracts_config_check CHECK \(jsonb_typeof\(config\) = 'object'\)/)
+  assert.match(schema, /uniq_education_contracts_live_company[\s\S]*company_id[\s\S]*'TRIAL'.*'ACTIVE'/s)
+  assert.match(schema, /CREATE TABLE public\.organization_seats/)
+  assert.match(schema, /organization_seats_status_check[\s\S]*'ACTIVE'.*'SUSPENDED'.*'REVOKED'/s)
+  assert.match(schema, /organization_seats_membership_fkey[\s\S]*company_memberships\(company_id, user_id\)/)
+  assert.match(schema, /organization_seats_contract_fkey[\s\S]*education_contracts\(id, company_id\)/)
+  assert.match(bootstrap, /'education_contracts'/)
+  assert.match(bootstrap, /'organization_seats'/)
+})
+
 test('durable Agent work preserves a human authorization principal', () => {
   assert.match(schema, /CREATE TABLE public\.agent_work_items \([\s\S]*?authorization_user_id text,/)
   assert.match(schema, /agent_work_items_authorization_user_id_fkey[\s\S]*?REFERENCES public\.users\(id\) ON DELETE RESTRICT/)

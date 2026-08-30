@@ -1,5 +1,6 @@
 export {
   appendDomainEvent,
+  appendDomainEventInTransaction,
   commitDomainEvent,
   latestProjectEventSequence,
   readDomainEventsAfter,

@@ -96,6 +96,10 @@ interface EntitlementRow {
   value: EntitlementValue
 }
 
+interface OrganizationSeatPlanRow {
+  plan_id: string
+}
+
 interface ResourceRow {
   company_id: string
   project_id: string | null
@@ -185,6 +189,22 @@ export class AccessRepository {
       [companyId, userId],
     )
     return rows[0] ?? null
+  }
+
+  async activeOrganizationSeatPlanId(companyId: string, userId: string): Promise<string | null> {
+    const { rows } = await this.db.query<OrganizationSeatPlanRow>(
+      `SELECT contract.plan_id
+         FROM organization_seats seat
+         JOIN education_contracts contract ON contract.id=seat.contract_id
+          AND contract.company_id=seat.company_id
+        WHERE seat.company_id=$1 AND seat.user_id=$2 AND seat.status='ACTIVE'
+          AND contract.status IN ('TRIAL','ACTIVE')
+          AND contract.starts_at <= CURRENT_TIMESTAMP AND contract.ends_at > CURRENT_TIMESTAMP${
+            this.lockDependencies ? ' FOR UPDATE OF seat,contract' : ''
+          }`,
+      [companyId, userId],
+    )
+    return rows[0]?.plan_id ?? null
   }
 
   async projectMembership(
