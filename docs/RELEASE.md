@@ -83,6 +83,10 @@ The M24 Trust BFF cutover is reset-only. Signed Trust snapshots are immutable,
 tenant-scoped records backed by canonical Evidence; existing environments must
 reset before snapshot creation is enabled.
 
+The M26 Enterprise governance cutover is reset-only. It adds tenant-scoped
+Organization Units and versioned governance Policy records; environments created
+before this cutover must reset before governance configuration is enabled.
+
 For a new environment, the Compose `db-bootstrap` service creates the schema
 before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
 the complete marked v1 schema; an unmarked or partial database fails closed.

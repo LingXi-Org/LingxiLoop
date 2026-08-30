@@ -4914,6 +4914,52 @@ CREATE UNIQUE INDEX uniq_organization_seats_live_member
     ON public.organization_seats USING btree (company_id, user_id)
     WHERE status IN ('ACTIVE'::text, 'SUSPENDED'::text);
 
+CREATE TABLE public.organization_units (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    parent_unit_id text,
+    name text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    version bigint DEFAULT 1 NOT NULL,
+    created_by text NOT NULL,
+    updated_by text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT organization_units_scope_key UNIQUE (id, company_id),
+    CONSTRAINT organization_units_company_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE RESTRICT,
+    CONSTRAINT organization_units_parent_fkey FOREIGN KEY (parent_unit_id, company_id) REFERENCES public.organization_units(id, company_id) ON DELETE RESTRICT,
+    CONSTRAINT organization_units_creator_fkey FOREIGN KEY (company_id, created_by) REFERENCES public.company_memberships(company_id, user_id) ON DELETE RESTRICT,
+    CONSTRAINT organization_units_updater_fkey FOREIGN KEY (company_id, updated_by) REFERENCES public.company_memberships(company_id, user_id) ON DELETE RESTRICT,
+    CONSTRAINT organization_units_name_check CHECK (char_length(btrim(name)) BETWEEN 1 AND 120),
+    CONSTRAINT organization_units_status_check CHECK (status IN ('ACTIVE','ARCHIVED')),
+    CONSTRAINT organization_units_parent_check CHECK (parent_unit_id IS NULL OR parent_unit_id <> id),
+    CONSTRAINT organization_units_version_check CHECK (version >= 1)
+);
+
+CREATE INDEX idx_organization_units_parent
+    ON public.organization_units USING btree (company_id, parent_unit_id, status, name, id);
+
+CREATE TABLE public.governance_policies (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    kind text NOT NULL,
+    policy_version text NOT NULL,
+    config jsonb NOT NULL,
+    revision bigint DEFAULT 1 NOT NULL,
+    created_by text NOT NULL,
+    updated_by text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT governance_policies_company_kind_key UNIQUE (company_id, kind),
+    CONSTRAINT governance_policies_company_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE RESTRICT,
+    CONSTRAINT governance_policies_creator_fkey FOREIGN KEY (company_id, created_by) REFERENCES public.company_memberships(company_id, user_id) ON DELETE RESTRICT,
+    CONSTRAINT governance_policies_updater_fkey FOREIGN KEY (company_id, updated_by) REFERENCES public.company_memberships(company_id, user_id) ON DELETE RESTRICT,
+    CONSTRAINT governance_policies_kind_check CHECK (kind IN ('PROVISIONING','RETENTION','RESIDENCY','REGION','SLA')),
+    CONSTRAINT governance_policies_version_check CHECK (char_length(btrim(policy_version)) BETWEEN 1 AND 100),
+    CONSTRAINT governance_policies_config_check CHECK (jsonb_typeof(config)='object' AND octet_length(config::text)<=16384),
+    CONSTRAINT governance_policies_revision_check CHECK (revision >= 1)
+);
+
 CREATE TABLE public.project_transfers (
     id text PRIMARY KEY,
     project_id text NOT NULL,

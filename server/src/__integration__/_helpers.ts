@@ -146,6 +146,8 @@ const TABLES_TO_WIPE: readonly string[] = [
   'agent_events',
   'agent_tasks',
   'agent_log',
+  'governance_policies',
+  'organization_units',
   'company_invitations',
   'company_memberships',
   'participants',

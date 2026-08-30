@@ -435,6 +435,19 @@ test('signed Trust snapshots are bounded, Evidence-backed and immutable', () => 
   assert.match(bootstrap, /'idx_trust_snapshots_project_created'/)
 })
 
+test('Enterprise governance keeps Organization hierarchy and versioned Policy tenant-scoped', () => {
+  const units = schema.match(/CREATE TABLE public\.organization_units \([\s\S]*?\n\);/)?.[0] ?? ''
+  const policies = schema.match(/CREATE TABLE public\.governance_policies \([\s\S]*?\n\);/)?.[0] ?? ''
+  assert.match(units, /parent_unit_id text/)
+  assert.match(units, /organization_units_parent_fkey[\s\S]*REFERENCES public\.organization_units\(id, company_id\)/)
+  assert.match(units, /organization_units_creator_fkey[\s\S]*company_memberships/)
+  assert.match(policies, /'PROVISIONING'.*'RETENTION'.*'RESIDENCY'.*'REGION'.*'SLA'/s)
+  assert.match(policies, /policy_version text NOT NULL/)
+  assert.match(policies, /config jsonb NOT NULL/)
+  assert.match(policies, /revision bigint DEFAULT 1 NOT NULL/)
+  assert.match(policies, /octet_length\(config::text\)<=16384/)
+})
+
 test('durable Agent work preserves a human authorization principal', () => {
   assert.match(schema, /CREATE TABLE public\.agent_work_items \([\s\S]*?authorization_user_id text,/)
   assert.match(schema, /agent_work_items_authorization_user_id_fkey[\s\S]*?REFERENCES public\.users\(id\) ON DELETE RESTRICT/)
