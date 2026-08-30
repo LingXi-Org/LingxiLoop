@@ -9,6 +9,7 @@ import {
 } from '../server/src/agent-os/kernel-manager.js'
 import { type AgentModelDriver, type ModelTurnResult, ScriptedModelDriver } from '../server/src/agent-os/model-driver.js'
 import { AgentOSRuntime } from '../server/src/agent-os/runtime.js'
+import { assembleAgentSystemPrompt } from '../server/src/agent-os/prompt-assembly.js'
 import type {
   AgentContext,
   AgentRunEvent,
@@ -64,13 +65,15 @@ function work(caseId: string, overrides: Partial<AgentWorkItem> = {}): AgentWork
 }
 
 function context(item: AgentWorkItem, input: string): AgentContext {
+  const persona = {
+    name: 'Eval Tutor',
+    role: 'Deterministic runtime evaluator',
+    instructions: 'Eval deterministic tutor. Follow the Agent OS runtime contracts.',
+  }
+  const capabilities = ['knowledge', 'canvas']
   return {
     work: item,
-    persona: {
-      name: 'Eval Tutor',
-      role: 'Deterministic runtime evaluator',
-      instructions: 'Eval deterministic tutor. Follow the Agent OS runtime contracts.',
-    },
+    persona,
     messages: [{
       clientMsgNo: item.triggerClientMsgNo,
       authorId: 'eval-learner',
@@ -84,9 +87,15 @@ function context(item: AgentWorkItem, input: string): AgentContext {
       version: 1,
       epoch: 0,
       assembledAt: '2026-08-26T00:00:00.000Z',
-      systemInstructions: 'Eval deterministic tutor. Follow the Agent OS runtime contracts.',
-      persona: { name: 'Eval Tutor', role: 'Deterministic runtime evaluator', instructions: 'Use evidence and approval boundaries.' },
-      capabilities: ['knowledge', 'canvas'],
+      systemInstructions: assembleAgentSystemPrompt({
+        persona,
+        capabilities,
+        memories: { learner: [], course: [], agentRole: [] },
+        assembledAt: '2026-08-26T00:00:00.000Z',
+        executionRole: item.executionRole,
+      }),
+      persona,
+      capabilities,
       executionRole: item.executionRole,
       memories: { learner: [], course: [], agentRole: [] },
       sourceVersions: { eval: 'runtime-smoke.v1' },
@@ -100,11 +109,18 @@ function configureTeacherContext(runtimeContext: AgentContext, item: AgentWorkIt
     role: 'Project teacher agent',
     instructions: 'Pulse deterministic teacher agent. Use only the teacher control plane.',
   }
+  const capabilities = ['teacher_admin']
   runtimeContext.promptContextCandidate = {
     ...runtimeContext.promptContextCandidate!,
-    systemInstructions: 'Pulse deterministic teacher agent. Follow the scoped teacher runtime contract.',
+    systemInstructions: assembleAgentSystemPrompt({
+      persona: runtimeContext.persona,
+      capabilities,
+      memories: { learner: [], course: [], agentRole: [] },
+      assembledAt: '2026-08-26T00:00:00.000Z',
+      executionRole: item.executionRole,
+    }),
     persona: runtimeContext.persona,
-    capabilities: ['teacher_admin'],
+    capabilities,
   }
   runtimeContext.teacherContext = {
     agent: { id: item.agentId, name: 'Pulse', projectId: 'project-eval' },
@@ -482,6 +498,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
         },
       },
       {
+        instructionFragments: ['loop.teacher', 'Aggregate before learner drill-down'],
         itemFragments: ['attention-case-eval', 'sourceEventCount', '2'],
         result: {
           output: [{ role: 'assistant', content: '去重后有 1 个 Attention：同一 Case 的两次来源事件已合并。' }],
@@ -539,9 +556,9 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
         triggerClientMsgNo: item.triggerClientMsgNo,
         goal: 'Explain retrieval grounding',
         successCriteria: 'Explain and check the evidence source',
-        missionKind: 'study',
+        missionKind: 'STUDY',
         coordinatorAgentId: item.agentId,
-        status: 'planning',
+        status: 'PLANNING',
         steps: [],
         createdAt: '2026-08-26T00:00:00.000Z',
         updatedAt: '2026-08-26T00:00:00.000Z',
@@ -552,7 +569,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     }
     turns = [
       {
-        itemFragments: [input, 'status', 'planning'],
+        itemFragments: [input, 'status', 'PLANNING'],
         result: {
           output: [{ role: 'assistant', content: 'Mission planning is complete.' }],
           text: 'Mission planning is complete.',
@@ -566,14 +583,14 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
             type: 'function_call',
             callId: 'runtime-learning-add-steps',
             name: 'ipython',
-            arguments: JSON.stringify({ code: 'loop.learning.add_steps(mission_id="mission-eval", steps=[{"type":"check"}])' }),
+            arguments: JSON.stringify({ code: 'loop.learning.add_steps(mission_id="mission-eval", steps=[{"kind":"CHECK"}])' }),
           }],
           text: '',
           usage: { inputTokens: 46, outputTokens: 12 },
         },
       },
       {
-        itemFragments: ['step-eval-check', 'planning'],
+        itemFragments: ['step-eval-check', 'PLANNING'],
         result: {
           output: [{
             type: 'function_call',
@@ -586,7 +603,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
         },
       },
       {
-        itemFragments: ['active', 'function_call_output'],
+        itemFragments: ['ACTIVE', 'function_call_output'],
         result: {
           output: [{ role: 'assistant', content: '规划门已满足：检查步骤已创建，Mission 已激活。' }],
           text: '规划门已满足：检查步骤已创建，Mission 已激活。',
@@ -600,17 +617,17 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
       if (action.action === 'learning.add_steps') {
         mission.steps = [{
           id: 'step-eval-check',
-          type: 'check',
+          type: 'CHECK',
           description: 'Explain the retrieval check',
           successCriteria: 'Names the evidence source',
-          status: 'open',
+          status: 'OPEN',
           position: 0,
         }]
         return { ok: true, value: { missionId: mission.id, steps: mission.steps } }
       }
       if (action.action === 'learning.finish_planning') {
-        if (!mission.steps.some((step) => step.type === 'check')) return { ok: false, error: 'planning requires a check step' }
-        mission.status = 'active'
+        if (!mission.steps.some((step) => step.type === 'CHECK')) return { ok: false, error: 'planning requires a check step' }
+        mission.status = 'ACTIVE'
         return { ok: true, value: { missionId: mission.id, status: mission.status } }
       }
       return { ok: false, error: `unexpected action ${action.action}` }
