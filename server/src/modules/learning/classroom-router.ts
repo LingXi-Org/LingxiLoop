@@ -7,6 +7,7 @@ import {
   bindCourseRoomRequestSchema,
   createActivityRequestSchema,
   createObjectivesRequestSchema,
+  importLearningActivitiesRequestSchema,
   missionCoordinatorRequestSchema,
   objectiveStatusRequestSchema,
   reviewEvaluationRequestSchema,
@@ -62,6 +63,13 @@ classroomRouter.get('/projects/:projectId/learning/activities', safe(async (req,
   const projectId = String(req.params.projectId)
   const scope = await requireProjectPermission(req, projectId, 'learning:read')
   res.json(await respond(() => learningApplication.projectActivities(scope, projectId)))
+}))
+
+classroomRouter.post('/projects/:projectId/learning/activity-imports', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:manage')
+  const input = parse(importLearningActivitiesRequestSchema.safeParse(req.body ?? {}))
+  res.status(201).json(await respond(() => learningApplication.importActivities(scope, projectId, input)))
 }))
 
 classroomRouter.post('/projects/:projectId/learning/activities/:activityId/submit', safe(async (req, res) => {

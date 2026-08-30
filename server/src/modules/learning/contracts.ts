@@ -55,6 +55,28 @@ export const submitActivityRequestSchema = z.object({
   answer: z.string().trim().min(1),
   assistance: z.enum(['NONE', 'HINT', 'GUIDED']).default('NONE'),
 }).strict()
+const importedActivitySchema = z.object({
+  externalId: z.string().trim().min(1).max(200),
+  title: z.string().trim().min(1).max(200),
+  instructions: z.string().trim().min(1).max(10_000),
+  kind: z.enum(['LESSON', 'PRACTICE', 'ASSESSMENT', 'PROJECT', 'REVIEW']),
+  evaluationMode: z.enum(['AGENT_FORMATIVE', 'TEACHER_REQUIRED']).default('TEACHER_REQUIRED'),
+  targetLevel: z.number().int().min(1).max(4).default(2),
+  rubric: z.array(z.unknown()).max(100).default([]),
+  knowledgeUnitIds: z.array(z.string().trim().min(1).max(200)).max(100).default([]),
+  dueAt: z.string().datetime().optional(),
+}).strict().refine((value) => JSON.stringify(value.rubric).length <= 32_768, {
+  message: 'activity rubric exceeds 32768 characters', path: ['rubric'],
+})
+export const importLearningActivitiesRequestSchema = z.object({
+  sourceSystem: z.string().trim().min(1).max(100),
+  externalImportId: z.string().trim().min(1).max(200),
+  activities: z.array(importedActivitySchema).min(1).max(100),
+}).strict().refine((value) => new Set(value.activities.map((activity) => activity.externalId)).size === value.activities.length, {
+  message: 'external activity IDs must be unique', path: ['activities'],
+}).refine((value) => JSON.stringify(value).length <= 524_288, {
+  message: 'activity import exceeds 524288 characters', path: ['activities'],
+})
 export const missionCoordinatorRequestSchema = z.object({ agentId: z.string().trim().min(1) }).strict()
 export const reviewEvaluationRequestSchema = z.object({
   decision: z.enum(['accept', 'reject']),
@@ -69,6 +91,7 @@ export type CreateObjectivesInput = z.infer<typeof createObjectivesRequestSchema
 export type ObjectiveStatusInput = z.infer<typeof objectiveStatusRequestSchema>
 export type CreateActivityInput = z.infer<typeof createActivityRequestSchema>
 export type SubmitActivityInput = z.infer<typeof submitActivityRequestSchema>
+export type LearningActivityImportInput = z.infer<typeof importLearningActivitiesRequestSchema>
 export type MissionCoordinatorInput = z.infer<typeof missionCoordinatorRequestSchema>
 export type ReviewEvaluationInput = z.infer<typeof reviewEvaluationRequestSchema>
 

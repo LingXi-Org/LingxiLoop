@@ -13,12 +13,14 @@ import type {
   CreateProjectInvitationInput,
   CreateObjectivesInput,
   LearningScope,
+  LearningActivityImportInput,
   MissionCoordinatorInput,
   ObjectiveStatusInput,
   ReviewEvaluationInput,
   SubmitActivityInput,
   UpdateCourseInput,
 } from './contracts.js'
+import { importProjectLearningActivities } from './activity-import-application.js'
 import {
   closeLearningActivity,
   submitProjectLearningActivity,
@@ -732,6 +734,20 @@ export class LearningApplication {
       actorId: scope.userId,
       actorKind: 'teacher',
       ...input,
+    }))
+  }
+
+  async importActivities(
+    scope: LearningScope,
+    projectId: string,
+    input: LearningActivityImportInput,
+  ) {
+    return this.infrastructure.transaction((db) => importProjectLearningActivities(db, {
+      companyId: scope.companyId,
+      projectId,
+      actorId: scope.userId,
+      request: input,
+      audit: (entry) => this.infrastructure.auditInTransaction(db, entry),
     }))
   }
 
