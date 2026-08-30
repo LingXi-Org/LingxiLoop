@@ -282,7 +282,7 @@ export class KnowledgeApplication {
     return { ok: true as const, excludedSourceIds: accepted }
   }
 
-  async moveConversation(args: KnowledgeScope & { conversationId: string; targetProjectId: string; targetProjectStatus: string }) {
+  async moveConversation(args: KnowledgeScope & { conversationId: string; targetProjectId: string }) {
     await createPermissionService(this.db).assertCan({
       actorUserId: args.userId, action: 'conversation:manage', companyId: args.companyId, projectId: args.projectId,
       resource: { type: 'conversation', id: args.conversationId },
@@ -290,9 +290,6 @@ export class KnowledgeApplication {
     await createPermissionService(this.db).assertCan({
       actorUserId: args.userId, action: 'knowledge:write', companyId: args.companyId, projectId: args.targetProjectId,
     })
-    if (args.targetProjectStatus !== 'active') {
-      throw new KnowledgeApplicationError('workspace_read_only', 'archived courses are read-only')
-    }
     const result = await this.infrastructure.transaction((db) => moveConversation(db, {
       companyId: args.companyId, conversationId: args.conversationId,
       userId: args.userId, projectId: args.targetProjectId,

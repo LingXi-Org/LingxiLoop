@@ -237,18 +237,20 @@ knowledgeRouter.put('/conversations/:id/sources', safe(async (req, res) => {
 
 knowledgeRouter.post('/conversations/:id/project', safe(async (req, res) => {
   const identity = await requireCompany(req)
-  await permissionService.assertCan({
+  const sourceContext = await permissionService.assertCan({
     actorUserId: identity.userId,
     action: 'conversation:manage',
     companyId: identity.companyId,
     resource: { type: 'conversation', id: String(req.params.id) },
   })
+  const sourceProjectId = sourceContext.project?.id
+  if (!sourceProjectId) throw new HttpError(409, 'conversation has no workspace')
   const input = parse(moveConversationRequestSchema.safeParse(req.body ?? {}))
-  const target = await requireWorkspace(req, input.projectId, 'project:read')
+  const target = await requireWorkspace(req, input.projectId, 'knowledge:write')
   try {
     res.json(await knowledgeApplication.moveConversation({
-      ...identity, projectId: target.projectId, conversationId: String(req.params.id),
-      targetProjectId: target.projectId, targetProjectStatus: target.projectStatus,
+      ...identity, projectId: sourceProjectId, conversationId: String(req.params.id),
+      targetProjectId: target.projectId,
     }))
   } catch (error) {
     mapKnowledgeError(error)

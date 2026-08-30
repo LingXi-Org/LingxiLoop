@@ -2406,7 +2406,7 @@ async function resolveCliProjectId(companyId: string, requested?: string): Promi
   if (!requested) throw new Error('projectId is required')
   const { rows } = await pool.query<{ id: string }>(
     `SELECT id FROM projects
-      WHERE company_id=$1 AND status <> 'archived'
+      WHERE company_id=$1 AND status IN ('ACTIVE','TRANSFER_PENDING')
         AND id=$2
       LIMIT 1`,
     [companyId, requested],

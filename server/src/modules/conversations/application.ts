@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { ImChannelProfile } from '../../im/types.js'
+import { createPermissionService } from '../access/public.js'
 import type {
   ConversationScope,
   ConversationUpdatedEvent,
@@ -111,9 +112,6 @@ export class ConversationsApplication {
     workspace: WorkspacePolicy,
     input: CreateGroupInput,
   ): Promise<{ id: string; members: string[]; leaderId: string; projectId: string; created: boolean }> {
-    if (workspace.projectStatus !== 'active') {
-      throw new ConversationApplicationError('workspace_read_only', 'archived courses are read-only')
-    }
     const members = [...new Set([...input.members, scope.userId])]
     if (members.length < 2) {
       throw new ConversationApplicationError('invalid_members', 'pick at least one teammate')
@@ -223,11 +221,14 @@ export class ConversationsApplication {
     scope: ConversationScope,
     agentId: string,
   ): Promise<{ id: string; created: boolean }> {
+    await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId,
+      action: 'conversation:write',
+      companyId: scope.companyId,
+      projectId: scope.projectId,
+    })
     const workspace = await findConversationWorkspacePolicy(this.db, scope.companyId, scope.projectId)
     if (!workspace) throw new ConversationApplicationError('not_found', 'workspace not found')
-    if (workspace.projectStatus !== 'active') {
-      throw new ConversationApplicationError('workspace_read_only', 'workspace is read-only')
-    }
     return this.openDirect(scope, workspace, agentId)
   }
 
@@ -645,7 +646,7 @@ export class ConversationsApplication {
   }
 
   private assertAgentWorkspaceWritable(projectStatus: string | null): void {
-    if (projectStatus === 'archived') {
+    if (projectStatus && projectStatus !== 'ACTIVE' && projectStatus !== 'TRANSFER_PENDING') {
       throw new ConversationApplicationError('workspace_read_only', 'archived courses are read-only')
     }
   }
