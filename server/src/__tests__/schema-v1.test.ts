@@ -232,8 +232,8 @@ test('M8 Evidence keeps L1/L2 facts canonical and inferred Claims reviewable', (
   assert.match(records, /'L1'.*'L2'/s)
   assert.doesNotMatch(records, /'L3'|'L4'/)
   assert.match(records, /'OBSERVED'.*'COMPUTED'.*'RUBRIC'/s)
-  assert.match(records, /jsonb_typeof\(summary\) = 'object'/)
-  assert.match(records, /octet_length\(summary::text\) <= 32768/)
+  assert.match(records, /jsonb_typeof\(data\) = 'object'/)
+  assert.match(records, /octet_length\(data::text\) <= 32768/)
   assert.match(records, /evidence_records_project_company_fkey/)
   assert.match(records, /evidence_records_subject_user_fkey/)
 

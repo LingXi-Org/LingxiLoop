@@ -4971,7 +4971,7 @@ CREATE TABLE public.evidence_records (
     derivation text NOT NULL,
     kind text NOT NULL,
     subject_user_id text,
-    summary jsonb NOT NULL,
+    data jsonb NOT NULL,
     created_by_type text NOT NULL,
     created_by_id text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -4980,8 +4980,8 @@ CREATE TABLE public.evidence_records (
     CONSTRAINT evidence_records_derivation_check
       CHECK (derivation = ANY (ARRAY['OBSERVED'::text, 'COMPUTED'::text, 'RUBRIC'::text])),
     CONSTRAINT evidence_records_kind_check CHECK (char_length(kind) BETWEEN 1 AND 100),
-    CONSTRAINT evidence_records_summary_check
-      CHECK (jsonb_typeof(summary) = 'object' AND octet_length(summary::text) <= 32768),
+    CONSTRAINT evidence_records_data_check
+      CHECK (jsonb_typeof(data) = 'object' AND octet_length(data::text) <= 32768),
     CONSTRAINT evidence_records_actor_check CHECK (
       (created_by_type = 'SYSTEM' AND created_by_id IS NULL)
       OR (created_by_type = ANY (ARRAY['USER'::text, 'AGENT'::text])) AND created_by_id IS NOT NULL
