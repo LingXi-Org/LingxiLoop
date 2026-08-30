@@ -11,6 +11,8 @@ const agentOsPersistence = `${controlPlane}\n${hostActionRepository}`
 
 test('Agent OS derives learning context and progress from the conversation Project', () => {
   assert.match(controlPlane, /project\.id=c\.project_id AND project\.company_id=c\.company_id/)
+  assert.match(controlPlane, /project\.status <> 'DELETED'/)
+  assert.doesNotMatch(controlPlane, /project\.lifecycle_state/)
   assert.match(controlPlane, /s\.company_id=c\.company_id AND s\.project_id=c\.project_id/)
   assert.match(agentOsPersistence, /SELECT project_id FROM conversations WHERE id=\$1 AND company_id=\$3/)
   assert.match(agentOsPersistence, /m\.company_id=\$3 AND m\.project_id=\(SELECT project_id FROM scope\)/)

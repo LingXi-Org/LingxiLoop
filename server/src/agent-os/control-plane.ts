@@ -241,7 +241,7 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
               ORDER BY s.created_at DESC LIMIT 1) AS ingestion_failure,
             EXISTS(
               SELECT 1 FROM projects project
-              WHERE project.id=c.project_id AND project.company_id=c.company_id AND project.lifecycle_state <> 'DELETED'
+              WHERE project.id=c.project_id AND project.company_id=c.company_id AND project.status <> 'DELETED'
             ) AS is_learning
        FROM conversations c WHERE c.id = $1 AND c.company_id = $2 LIMIT 1`,
     [work.channelId, work.companyId, work.triggerClientMsgNo],
