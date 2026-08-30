@@ -23,6 +23,8 @@ import type {
 import {
   dedupeCitations,
   extractKnowledgeCitations,
+  sanitizeEvalMetadata,
+  sanitizeEvalObservation,
   sanitizeHostActionArgs,
   sanitizeHostActionResult,
 } from './trace.js'
@@ -450,9 +452,22 @@ export async function createEvalRun(input: EvalRunInput, createdBy: string): Pro
       ...(!input.target?.model && observedModels.length ? { model: observedModels.length === 1 ? observedModels[0] : 'mixed' } : {}),
     },
   }
-  const report = evaluateRun(effectiveInput, observations)
+  const evaluatedReport = evaluateRun(effectiveInput, observations)
+  const report: EvalRunReport = {
+    ...evaluatedReport,
+    cases: evaluatedReport.cases.map((item) => ({
+      ...item,
+      observation: sanitizeEvalObservation(item.observation),
+    })),
+  }
   const id = `eval-${randomUUID()}`
-  await evalPersistence.persistEvalRun({ id, report, input, createdBy, source: runSource(input) })
+  await evalPersistence.persistEvalRun({
+    id,
+    report,
+    input: { ...input, metadata: sanitizeEvalMetadata(input.metadata) },
+    createdBy,
+    source: runSource(input),
+  })
   return { id, report }
 }
 

@@ -12,6 +12,8 @@ test('Eval application logic cannot bypass its explicit persistence boundary', a
   assert.doesNotMatch(service, /from ['"][^'"]*db\//)
   assert.doesNotMatch(service, /\b(?:pool|client|db)\.query\s*\(|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/i)
   assert.match(service, /evalPersistence/)
+  assert.match(service, /sanitizeEvalObservation\(item\.observation\)/)
+  assert.match(service, /sanitizeEvalMetadata\(input\.metadata\)/)
   assert.match(repository, /Queryable/)
   assert.match(repository, /TransactionRunner/)
   assert.doesNotMatch(repository, /from ['"]\.\.\/db\/pool\.js['"]/)

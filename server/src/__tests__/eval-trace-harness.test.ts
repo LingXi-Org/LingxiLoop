@@ -5,6 +5,7 @@ import { compareEvalReport, type EvalBaseline, validateEvalBaseline } from '../e
 import {
   dedupeCitations,
   extractKnowledgeCitations,
+  sanitizeEvalObservation,
   sanitizeHostActionArgs,
   sanitizeHostActionResult,
 } from '../eval/trace.js'
@@ -47,6 +48,44 @@ test('dynamic and automatic RAG citations dedupe by source, chunk, and marker', 
     { sourceId: 'source-1', chunkId: 'chunk-1', marker: 'S1' },
     { sourceId: 'source-1', chunkId: 'chunk-2', marker: 'S2' },
   ])
+})
+
+test('Eval observations redact message bodies and secrets before report persistence', () => {
+  const sentinel = 'PRIVATE_MESSAGE_SENTINEL_8374'
+  const sanitized = sanitizeEvalObservation({
+    input: sentinel,
+    answer: sentinel,
+    citations: [{ sourceId: 'source-1', chunkId: 'chunk-1', marker: 'S1' }],
+    toolCalls: [{
+      name: 'email.send',
+      args: { body: sentinel, authorization: 'Bearer secret-token-8374' },
+      result: { stdout: sentinel, status: 'blocked' },
+      status: 'error',
+    }],
+    trace: [{
+      id: 'input-1',
+      kind: 'input',
+      label: 'Input loaded',
+      status: 'completed',
+      input: { text: sentinel },
+    }, {
+      id: 'cell-1',
+      kind: 'ipython',
+      label: 'IPython cell',
+      status: 'failed',
+      input: { codePreview: `print('${sentinel}')` },
+      output: { stderr: sentinel },
+    }],
+    error: 'provider rejected sk-secretvalue8374',
+    metadata: { authorization: `Bearer ${sentinel}` },
+  })
+  const serialized = JSON.stringify(sanitized)
+
+  assert.doesNotMatch(serialized, new RegExp(sentinel))
+  assert.doesNotMatch(serialized, /sk-secretvalue8374/)
+  assert.match(serialized, /source-1/)
+  assert.equal(sanitized.input, '[redacted]')
+  assert.equal(sanitized.answer, '[redacted]')
 })
 
 test('golden gate fails a case and stage regression even when the run minimum still passes', () => {
