@@ -8,6 +8,7 @@ import { CanvasWorkspaceCard, MessageArtifactParts } from './MessageBusinessPart
 import { NativeReasoningPart, NativeTextPart } from './MessageContentParts'
 import { CitationPart, EmailPart, MediaPart } from './MessageMediaParts'
 import { ApprovalPart, HandoffPart, LearningMissionPart, ToolActivityPart } from './MessageToolParts'
+import { AttentionCardsPart, BriefingMessagePart, EvidenceSheetPart } from './TeacherMessageParts'
 
 export function LingxiMessageParts({ openMaus = false, bubbleReactions }: { openMaus?: boolean; bubbleReactions?: ReactNode }) {
   const { message } = useAuiState((state) => state.message.metadata.custom) as unknown as LingxiImMessageCustom
@@ -16,7 +17,7 @@ export function LingxiMessageParts({ openMaus = false, bubbleReactions }: { open
       case 'text': return <NativeTextPart reactions={bubbleReactions} />
       case 'reasoning': return <NativeReasoningPart part={part} />
       case 'tool-call':
-        if (part.toolName === 'lingxi_approval') return <ApprovalPart message={message} addResult={part.addResult as (result: { decision: 'approved' | 'denied' }) => void} />
+        if (part.toolName === 'lingxi_approval') return <ApprovalPart message={message} addResult={part.addResult as (result: { decision: 'approved' | 'denied'; persisted: true }) => void} />
         if (part.toolName === 'lingxi_tool_activity') return <ToolActivityPart message={message} />
         throw new Error(`Unregistered native tool part: ${part.toolName}`)
       case 'image':
@@ -30,6 +31,9 @@ export function LingxiMessageParts({ openMaus = false, bubbleReactions }: { open
         if (part.name === 'lingxi_email') return <EmailPart message={message} />
         if (part.name === 'lingxi_canvas') return <CanvasWorkspaceCard />
         if (part.name === 'lingxi_citations') return <CitationPart message={message} />
+        if (part.name === 'lingxi_teacher_briefing') return <BriefingMessagePart message={message} />
+        if (part.name === 'lingxi_attention') return <AttentionCardsPart message={message} />
+        if (part.name === 'lingxi_evidence') return <EvidenceSheetPart message={message} />
         if (part.name === 'lingxi_artifacts') return <MessageArtifactParts />
         if (part.name === 'lingxi_link_preview') {
           const url = (part.data as { url?: unknown } | undefined)?.url

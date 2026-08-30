@@ -75,7 +75,7 @@ type ContentBuilder = (context: ContentBuilderContext) => void
 
 const MESSAGE_CONTENT_BUILDERS = {
   text: ({ pushBody }) => pushBody(),
-  system: ({ pushBody }) => pushBody(),
+  system: ({ message, pushBody }) => { if (!message.teacherBriefing) pushBody() },
   thought: ({ message, content }) => { content.push({ type: 'reasoning', text: message.body }) },
   tool: ({ message, content, pushBody }) => {
     pushBody()
@@ -90,8 +90,8 @@ const MESSAGE_CONTENT_BUILDERS = {
     content.push({
       type: 'tool-call', toolCallId: `approval:${approval?.id ?? message.id}`, toolName: 'lingxi_approval',
       args: { messageId: message.id, approval: approval ?? null },
-      result: approval && approval.status !== 'pending'
-        ? { decision: approval.status === 'approved' ? 'approved' : 'denied', status: approval.status }
+      result: approval && approval.status !== 'PENDING'
+        ? { decision: approval.status === 'APPROVED' || approval.status === 'EXECUTED' ? 'approved' : 'denied', status: approval.status }
         : undefined,
     })
   },
@@ -144,6 +144,11 @@ export function createLingxiAssistantMessage(
   const pushBody = () => { if (message.body) content.push({ type: 'text', text: message.body }) }
 
   MESSAGE_CONTENT_BUILDERS[message.kind]({ message, content, pushBody })
+  if (message.teacherBriefing) {
+    content.push(dataPart('lingxi_teacher_briefing'))
+    content.push(dataPart('lingxi_attention'))
+    content.push(dataPart('lingxi_evidence'))
+  }
   if (message.citations?.length) content.push(dataPart('lingxi_citations'))
   if (hasArtifactReferences(message)) content.push(dataPart('lingxi_artifacts'))
   const link = firstUrlInBody(message.body)
@@ -167,7 +172,7 @@ export function createLingxiAssistantMessage(
     conversationId: message.conversationId,
     sequence: message.sequence ?? null,
     sendStatus: message.failed ? 'failed' : message.pending ? 'sending' : 'sent',
-    presentation: MESSAGE_PRESENTATION[message.kind],
+    presentation: message.teacherBriefing ? STRUCTURED_PRESENTATION : MESSAGE_PRESENTATION[message.kind],
   }
   return {
     id: message.id,

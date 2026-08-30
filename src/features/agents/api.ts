@@ -43,6 +43,10 @@ export const agentsApi = {
     const init = { method: 'POST', body: JSON.stringify({ approved: decision === 'approved' }) }
     return http<{ ok: boolean; approved: boolean; result?: unknown; error?: string | null }>(path, init)
   },
+  supersedeApproval: (approvalId: string, input: { args: Record<string, unknown>; summary?: string }) =>
+    http<{ approvalId: string; supersedesApprovalId: string }>(`/im/approvals/${encodeURIComponent(approvalId)}/supersede`, {
+      method: 'POST', body: JSON.stringify(input),
+    }),
   getLearnedMemories: () => http<ApiLearnedMemory[]>('/coworker/memories'),
   updateLearnedMemory: (input: { agentId: string; path: string; body: string }) =>
     http<ApiLearnedMemory>('/coworker/memories', { method: 'PATCH', body: JSON.stringify(input) }),

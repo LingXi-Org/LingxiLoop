@@ -23,6 +23,8 @@ export function LingxiAssistantRuntimeProvider({ messages, children }: { message
       result: unknown
     }) => {
       if (toolName !== 'lingxi_approval' || !toolCallId.startsWith('approval:')) return
+      const persisted = typeof result === 'object' && result !== null && (result as { persisted?: unknown }).persisted === true
+      if (persisted) return
       const decision = typeof result === 'object' && result !== null ? (result as { decision?: unknown }).decision : undefined
       if (decision !== 'approved' && decision !== 'denied') return
       await agentsApi.resolveApproval(toolCallId.slice('approval:'.length), decision === 'approved' ? 'approved' : 'rejected')

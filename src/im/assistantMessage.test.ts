@@ -33,7 +33,7 @@ test('converts every Lingxi MessageKind into assistant-ui parts without hiding p
     message('questionnaire', { questionnaire: { title: 'Clarify', items: [{ name: 'scope', prompt: 'Which scope?', required: true, choices: [{ value: 'one', label: 'One' }] }] } }),
     message('poll', { poll: { question: 'Choose', mode: 'single', options: [{ id: 'a', text: 'A' }], expiresAt: null, closedAt: null, closedReason: null } }),
     message('handoff', { handoff: { id: 'h', fromAgentId: 'agent', toAgentId: 'agent-2', title: 'Handoff', status: 'working', sharedPaths: [], browserTargets: [] } }),
-    message('approval', { approval: { id: 'a', agentId: 'agent', kind: 'course_management', summary: 'Publish', status: 'pending', payload: {}, requestedAt: '2026-08-26T10:00:00.000Z' } }),
+    message('approval', { approval: { id: 'a', agentId: 'agent', kind: 'course_management', summary: 'Publish', status: 'PENDING', payload: {}, requestedAt: '2026-08-26T10:00:00.000Z' } }),
     message('canvas', { canvas: { canvasId: 'canvas', title: 'Canvas', goal: 'Goal', status: 'active', members: [], frameCount: 0 } }),
     message('learning_mission', { learningMission: { missionId: 'mission', projectId: 'project', goal: 'Goal', successCriteria: 'Done', status: 'ACTIVE' } }),
   ]
@@ -90,4 +90,16 @@ test('projects continuous grouping and streaming/failure states', () => {
   assert.ok(humanError.metadata?.custom)
   assert.equal((humanError.metadata.custom as unknown as LingxiImMessageCustom).sendStatus, 'failed')
   assert.equal(agentError.status?.type, 'incomplete')
+})
+
+test('projects Teacher Briefing, Attention, and Evidence as native assistant-ui data parts', () => {
+  const briefing = message('system', { teacherBriefing: { briefingId: 'briefing-1', windowStartSequence: 10, windowEndSequence: 20, statistics: { eventCount: 3, attentionCount: 1 }, attentionItemIds: ['attention-1'] } })
+  const converted = createLingxiAssistantMessage(briefing, 0, [briefing], participants, 'me')
+  assert.ok(Array.isArray(converted.content))
+  const content = converted.content as Exclude<typeof converted.content, string>
+  assert.deepEqual(content.map((part) => part.type === 'data' ? part.name : part.type), [
+    'lingxi_teacher_briefing', 'lingxi_attention', 'lingxi_evidence',
+  ])
+  assert.ok(converted.metadata?.custom)
+  assert.equal((converted.metadata.custom as unknown as LingxiImMessageCustom).presentation.variant, 'standard')
 })

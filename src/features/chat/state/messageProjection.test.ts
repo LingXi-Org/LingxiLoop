@@ -36,3 +36,21 @@ test('immutable handoff snapshots reconcile into one stable timeline card', asyn
   assert.equal(merged[0]?.handoff?.status, 'completed')
   assert.equal(merged[0]?.sequence, 10)
 })
+
+test('projects a visit-window Teacher Briefing without changing its system transport kind', async () => {
+  const { fromIm } = await import('./messageProjection')
+  const projected = fromIm({
+    messageId: 'message-briefing', messageSeq: 21, clientMsgNo: 'briefing-1', channelId: 'teacher-room', channelType: 2,
+    fromUid: 'pulse', timestamp: 1_788_000_021,
+    payload: {
+      version: 1, kind: 'system', clientMsgNo: 'briefing-1', body: '有 3 项更新，1 项需要关注。',
+      refs: { briefingId: 'briefing-1', attentionItemIds: ['attention-1'] },
+      data: { type: 'teacher_briefing', windowStartSequence: 10, windowEndSequence: 20, statistics: { eventCount: 3, attentionCount: 1, 'CASE.DETECTED': 2 }, attentionItemIds: ['attention-1'] },
+    },
+  })
+  assert.equal(projected.kind, 'system')
+  assert.deepEqual(projected.teacherBriefing, {
+    briefingId: 'briefing-1', windowStartSequence: 10, windowEndSequence: 20,
+    statistics: { eventCount: 3, attentionCount: 1, 'CASE.DETECTED': 2 }, attentionItemIds: ['attention-1'],
+  })
+})

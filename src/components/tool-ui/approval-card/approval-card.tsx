@@ -88,6 +88,8 @@ export function ApprovalCard({
   choice,
   onConfirm,
   onCancel,
+  modifyLabel,
+  onModify,
 }: ApprovalCardProps) {
   const resolvedVariant = variant ?? "default";
   const resolvedConfirmLabel = confirmLabel ?? "Approve";
@@ -100,9 +102,11 @@ export function ApprovalCard({
         await onConfirm?.();
       } else if (actionId === "cancel") {
         await onCancel?.();
+      } else if (actionId === "modify") {
+        await onModify?.();
       }
     },
-    [onConfirm, onCancel],
+    [onConfirm, onCancel, onModify],
   );
 
   const handleKeyDown = React.useCallback(
@@ -118,6 +122,7 @@ export function ApprovalCard({
   const isDestructive = resolvedVariant === "destructive";
 
   const actions: Action[] = [
+    ...(onModify ? [{ id: "modify", label: modifyLabel ?? "Modify", variant: "outline" as const }] : []),
     {
       id: "cancel",
       label: resolvedCancelLabel,

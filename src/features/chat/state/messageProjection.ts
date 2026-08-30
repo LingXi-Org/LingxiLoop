@@ -66,6 +66,7 @@ export function fromApi(message: ApiMessage): Message {
     runId?: string | null
     handoff?: Message['handoff'] | null
     approval?: Message['approval'] | null
+    teacherBriefing?: Message['teacherBriefing'] | null
     canvas?: Message['canvas'] | null
     learningMission?: Message['learningMission'] | null
     citations?: Message['citations'] | null
@@ -96,6 +97,7 @@ export function fromApi(message: ApiMessage): Message {
     runId: raw.runId ?? undefined,
     handoff: raw.handoff ?? undefined,
     approval: raw.approval ?? undefined,
+    teacherBriefing: raw.teacherBriefing ?? undefined,
     canvas: raw.canvas ?? undefined,
     learningMission: raw.learningMission ?? undefined,
     citations: raw.citations ?? undefined,
@@ -124,6 +126,17 @@ export function fromIm(message: ImEnvelope): Message {
     ? data.poll as Message['poll']
     : payload.kind === 'poll' ? data as unknown as Message['poll'] : undefined
   const createdAt = new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString()
+  const teacherBriefing = payload.kind === 'system' && data.type === 'teacher_briefing'
+    ? {
+        briefingId: String(payload.refs?.briefingId ?? message.messageId),
+        windowStartSequence: Number(data.windowStartSequence ?? 0),
+        windowEndSequence: Number(data.windowEndSequence ?? 0),
+        statistics: data.statistics && typeof data.statistics === 'object'
+          ? data.statistics as Record<string, number>
+          : {},
+        attentionItemIds: Array.isArray(data.attentionItemIds) ? data.attentionItemIds.map(String) : [],
+      }
+    : undefined
   return fromApi({
     id: pollClientMessageNumber ?? approvalId ?? handoffId ?? (message.messageId || payload.clientMsgNo),
     clientId: payload.clientMsgNo,
@@ -144,6 +157,7 @@ export function fromIm(message: ImEnvelope): Message {
     } : undefined,
     handoff: payload.kind === 'handoff' ? data as unknown as Message['handoff'] : undefined,
     approval: payload.kind === 'approval' ? data as unknown as Message['approval'] : undefined,
+    teacherBriefing,
     canvas: payload.kind === 'canvas' ? data as unknown as Message['canvas'] : undefined,
     learningMission: payload.kind === 'learning_mission' ? data as unknown as Message['learningMission'] : undefined,
     citations: Array.isArray(data.citations) ? data.citations as Message['citations'] : undefined,

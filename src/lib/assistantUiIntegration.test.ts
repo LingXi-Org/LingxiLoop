@@ -9,6 +9,7 @@ const messageList = read('../im/MessageList.tsx')
 const parts = read('../components/messages/LingxiMessageParts.tsx')
 const contentParts = read('../components/messages/MessageContentParts.tsx')
 const toolParts = read('../components/messages/MessageToolParts.tsx')
+const teacherParts = read('../components/messages/TeacherMessageParts.tsx')
 const mediaParts = read('../components/messages/MessageMediaParts.tsx')
 const message = read('../components/messages/LingxiImMessage.tsx')
 const avatar = read('../components/Avatar.tsx')
@@ -89,7 +90,7 @@ test('native metadata.custom is the only IM row input', () => {
 
 test('all primary payloads render through MessagePrimitive.Parts with no fallback renderer', () => {
   assert.match(parts, /<MessagePrimitive\.Parts>/)
-  for (const mapping of ['lingxi_approval', 'lingxi_tool_activity', 'lingxi_questionnaire', 'lingxi_poll', 'lingxi_handoff', 'lingxi_learning_mission', 'lingxi_email', 'lingxi_canvas', 'lingxi_citations']) {
+  for (const mapping of ['lingxi_approval', 'lingxi_tool_activity', 'lingxi_questionnaire', 'lingxi_poll', 'lingxi_handoff', 'lingxi_learning_mission', 'lingxi_email', 'lingxi_canvas', 'lingxi_citations', 'lingxi_teacher_briefing', 'lingxi_attention', 'lingxi_evidence']) {
     assert.ok(parts.includes(mapping), `missing ${mapping}`)
   }
   assert.doesNotMatch(parts, /UnsupportedPart|tool-ui-unsupported-part|unserializable payload/)
@@ -131,10 +132,24 @@ test('official Elements and Tool UI visual contracts remain intact', () => {
 })
 
 test('approval is single-flight and feeds assistant-ui addResult into the native API', () => {
-  assert.match(toolParts, /if \(!pending \|\| busy\) return/)
-  assert.match(toolParts, /addResult\(\{ decision \}\)/)
+  assert.match(toolParts, /if \(!pending \|\| busy \|\| confirming\) return/)
+  assert.match(toolParts, /addResult\(\{ decision, persisted: true \}\)/)
   assert.match(runtime, /onAddToolResult/)
   assert.match(runtime, /agentsApi\.resolveApproval/)
+  assert.match(toolParts, /confirmSensitiveAction\(/)
+  assert.match(toolParts, /agentsApi\.resolveApproval/)
+  assert.match(toolParts, /agentsApi\.supersedeApproval/)
+  assert.match(toolParts, /persisted: true/)
+})
+
+test('Teacher experience stays inside message parts and uses Badge plus Evidence Sheet tabs', () => {
+  assert.match(teacherParts, /BriefingMessagePart/)
+  assert.match(teacherParts, /AttentionCardsPart/)
+  assert.match(teacherParts, /EvidenceSheetPart/)
+  assert.match(teacherParts, /<Badge/)
+  assert.match(teacherParts, /<SheetContent/)
+  assert.match(teacherParts, /<Tabs/)
+  assert.doesNotMatch(teacherParts, /Dashboard|Kanban/)
 })
 
 test('questions and polls import the accessible shadcn Questionnaire primitive directly', () => {
@@ -205,7 +220,8 @@ test('reply, reactions, retry, menu and read state stay outside Parts in the IM 
     assert.ok(message.includes(marker), `missing outer shell marker ${marker}`)
   }
   assert.doesNotMatch(message, /message-action-tray|QuickReactionButton|ReplyIconButton|在线程中打开/)
-  assert.match(reactions, /data-message-surface="overlay"/)
+  assert.match(reactions, /variant="outline"/)
+  assert.match(reactions, /className=\{cn\([\s\S]*?reaction-control reaction-pill/)
   assert.match(quote, /data-message-surface="inset"/)
   assert.match(system, /data-message-surface="status"/)
 })

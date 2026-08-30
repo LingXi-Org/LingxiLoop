@@ -51,4 +51,6 @@ export interface ApprovalCardProps extends SerializableApprovalCard {
   className?: string;
   onConfirm?: () => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
+  modifyLabel?: string;
+  onModify?: () => void | Promise<void>;
 }

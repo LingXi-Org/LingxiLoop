@@ -128,7 +128,7 @@ export interface ApprovalPayload {
   agentId: string
   kind: 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action' | 'course_management' | 'learning_evaluation'
   summary: string
-  status: 'pending' | 'approved' | 'rejected' | 'expired'
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'EXECUTED'
   payload: Record<string, unknown>
   requestedAt: string
   resolvedAt?: string | null
@@ -137,6 +137,15 @@ export interface ApprovalPayload {
   scope?: Record<string,unknown>
   preview?: Record<string,unknown>
   error?: string | null
+  supersedesApprovalId?: string | null
+}
+
+export interface TeacherBriefingPayload {
+  briefingId: string
+  windowStartSequence: number
+  windowEndSequence: number
+  statistics: Record<string, number>
+  attentionItemIds: string[]
 }
 
 /* ============== Polls (lightweight votes inline in any conversation) ====== */
@@ -308,6 +317,8 @@ export interface Message {
   questionnaire?: QuestionnairePayload
   handoff?: HandoffPayload
   approval?: ApprovalPayload
+  /** Visit-window summary delivered by Pulse inside the Teacher Thread. */
+  teacherBriefing?: TeacherBriefingPayload
   canvas?: {
     canvasId: string
     title: string
