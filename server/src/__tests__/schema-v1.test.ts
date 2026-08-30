@@ -291,6 +291,34 @@ test('M9 ContextThread owns domain participation while WuKong remains the messag
   assert.match(bootstrap, /'idx_context_thread_participants_principal'/)
 })
 
+test('M10 notifications route bounded event-derived Intent into canonical Delivery records', () => {
+  const relation = (name: string) => (
+    schema.match(new RegExp(`CREATE TABLE public\\.${name} \\(([\\s\\S]*?)\\n\\);`))?.[1] ?? ''
+  )
+  const intents = relation('notification_intents')
+  const preferences = relation('notification_preferences')
+  const deliveries = relation('notification_deliveries')
+  const links = relation('notification_delivery_intents')
+
+  assert.doesNotMatch(schema, /CREATE TABLE public\.learning_notification_/)
+  assert.match(intents, /source_event_sequence bigint NOT NULL/)
+  assert.match(intents, /'IMMEDIATE'.*'DAILY'.*'WEEKLY'.*'FORMAL'/s)
+  assert.match(intents, /char_length\(summary\) BETWEEN 1 AND 500/)
+  assert.match(intents, /left\(link_path, 1\) = '\/'/)
+  assert.match(schema, /notification_intents_source_event_fkey[\s\S]*?domain_events\(sequence\) ON DELETE RESTRICT/)
+  assert.match(schema, /notification_intents_recipient_project_fkey[\s\S]*?project_memberships\(company_id, project_id, user_id\)/)
+
+  assert.match(preferences, /push_enabled boolean DEFAULT false NOT NULL/)
+  assert.match(preferences, /notification_preferences_push_unavailable_check CHECK \(push_enabled = false\)/)
+  assert.match(deliveries, /'IN_APP'.*'EMAIL'.*'PUSH'/s)
+  assert.match(deliveries, /'PENDING'.*'SENDING'.*'SENT'.*'FAILED'.*'CANCELLED'/s)
+  assert.match(deliveries, /UNIQUE \(company_id, project_id, recipient_user_id, channel, policy, window_key\)/)
+  assert.match(links, /PRIMARY KEY \(delivery_id, intent_id\)/)
+  assert.match(bootstrap, /'learning_notification_deliveries'.*'learning_notification_preferences'/s)
+  assert.match(bootstrap, /'idx_notification_intents_pending'/)
+  assert.match(bootstrap, /'idx_notification_deliveries_pending'/)
+})
+
 test('Plan and Entitlement are independent and accept JSON scalar values only', () => {
   assert.match(schema, /plans_code_key UNIQUE \(code\)/)
   assert.match(schema, /entitlements_code_key UNIQUE \(code\)/)

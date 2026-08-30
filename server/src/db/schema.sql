@@ -5325,38 +5325,83 @@ CREATE TABLE public.learning_case_actions (
 CREATE INDEX idx_learning_case_actions_case
     ON public.learning_case_actions USING btree (company_id, project_id, case_id, created_at, id);
 
-CREATE TABLE public.learning_notification_preferences (
+CREATE TABLE public.notification_intents (
+    id text PRIMARY KEY,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    recipient_user_id text NOT NULL,
+    source_event_sequence bigint NOT NULL,
+    category text NOT NULL,
+    policy text NOT NULL,
+    summary text NOT NULL,
+    link_path text NOT NULL,
+    status text DEFAULT 'PENDING'::text NOT NULL,
+    available_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT notification_intents_source_recipient_key UNIQUE (source_event_sequence, recipient_user_id),
+    CONSTRAINT notification_intents_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT notification_intents_category_check CHECK (category = ANY (ARRAY[
+      'LEARNING'::text, 'ASSESSMENT'::text, 'INTERVENTION'::text, 'REASSESSMENT'::text,
+      'ATTENTION'::text, 'APPROVAL'::text, 'COMMUNICATION'::text, 'SUBSCRIPTION'::text,
+      'MEMBERSHIP'::text, 'SAFETY'::text
+    ])),
+    CONSTRAINT notification_intents_policy_check
+      CHECK (policy = ANY (ARRAY['IMMEDIATE'::text, 'DAILY'::text, 'WEEKLY'::text, 'FORMAL'::text])),
+    CONSTRAINT notification_intents_status_check
+      CHECK (status = ANY (ARRAY['PENDING'::text, 'ROUTED'::text, 'CANCELLED'::text])),
+    CONSTRAINT notification_intents_summary_check CHECK (char_length(summary) BETWEEN 1 AND 500),
+    CONSTRAINT notification_intents_link_check
+      CHECK (char_length(link_path) BETWEEN 1 AND 500 AND left(link_path, 1) = '/'),
+    CONSTRAINT notification_intents_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT notification_intents_recipient_project_fkey
+      FOREIGN KEY (company_id, project_id, recipient_user_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_notification_intents_pending
+    ON public.notification_intents USING btree (status, available_at, source_event_sequence)
+    WHERE (status = 'PENDING'::text);
+
+CREATE TABLE public.notification_preferences (
     id text PRIMARY KEY,
     company_id text NOT NULL,
     user_id text NOT NULL,
-    course_id text,
+    project_id text,
     in_app_enabled boolean DEFAULT true NOT NULL,
     email_enabled boolean DEFAULT false NOT NULL,
+    push_enabled boolean DEFAULT false NOT NULL,
     timezone text DEFAULT 'Asia/Shanghai'::text NOT NULL,
-    preferred_time time without time zone DEFAULT '19:00:00'::time without time zone NOT NULL,
+    daily_time time without time zone DEFAULT '19:00:00'::time without time zone NOT NULL,
+    weekly_day smallint DEFAULT 1 NOT NULL,
     quiet_start time without time zone,
     quiet_end time without time zone,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT learning_notification_preferences_member_company_fkey
+    CONSTRAINT notification_preferences_push_unavailable_check CHECK (push_enabled = false),
+    CONSTRAINT notification_preferences_weekly_day_check CHECK (weekly_day BETWEEN 1 AND 7),
+    CONSTRAINT notification_preferences_timezone_check CHECK (char_length(timezone) BETWEEN 1 AND 100),
+    CONSTRAINT notification_preferences_member_company_fkey
       FOREIGN KEY (company_id, user_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE,
-    CONSTRAINT learning_notification_preferences_course_company_fkey
-      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE
+    CONSTRAINT notification_preferences_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX uq_learning_notification_preferences_global
-    ON public.learning_notification_preferences USING btree (company_id, user_id) WHERE (course_id IS NULL);
-CREATE UNIQUE INDEX uq_learning_notification_preferences_course
-    ON public.learning_notification_preferences USING btree (company_id, user_id, course_id) WHERE (course_id IS NOT NULL);
+CREATE UNIQUE INDEX uq_notification_preferences_global
+    ON public.notification_preferences USING btree (company_id, user_id) WHERE (project_id IS NULL);
+CREATE UNIQUE INDEX uq_notification_preferences_project
+    ON public.notification_preferences USING btree (company_id, user_id, project_id) WHERE (project_id IS NOT NULL);
 
-CREATE TABLE public.learning_notification_deliveries (
+CREATE TABLE public.notification_deliveries (
     id text PRIMARY KEY,
     company_id text NOT NULL,
-    user_id text NOT NULL,
-    course_id text,
+    project_id text NOT NULL,
+    recipient_user_id text NOT NULL,
     channel text NOT NULL,
-    kind text NOT NULL,
-    digest_date date NOT NULL,
-    status text DEFAULT 'pending'::text NOT NULL,
+    policy text NOT NULL,
+    window_key text NOT NULL,
+    summary text NOT NULL,
+    link_path text NOT NULL,
+    status text DEFAULT 'PENDING'::text NOT NULL,
     attempts integer DEFAULT 0 NOT NULL,
     error text,
     sent_at timestamp with time zone,
@@ -5365,27 +5410,41 @@ CREATE TABLE public.learning_notification_deliveries (
     lease_expires_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT learning_notification_deliveries_channel_check
-      CHECK (channel = ANY (ARRAY['in_app'::text, 'email'::text])),
-    CONSTRAINT learning_notification_deliveries_kind_check
-      CHECK (kind = ANY (ARRAY['review_due'::text, 'grading_queue'::text])),
-    CONSTRAINT learning_notification_deliveries_status_check
-      CHECK (status = ANY (ARRAY['pending'::text, 'sending'::text, 'sent'::text, 'failed'::text, 'cancelled'::text])),
-    CONSTRAINT learning_notification_deliveries_member_company_fkey
-      FOREIGN KEY (company_id, user_id) REFERENCES public.company_memberships(company_id, user_id) ON DELETE CASCADE,
-    CONSTRAINT learning_notification_deliveries_course_company_fkey
-      FOREIGN KEY (course_id, company_id) REFERENCES public.courses(id, company_id) ON DELETE CASCADE
+    CONSTRAINT notification_deliveries_identity_key
+      UNIQUE (company_id, project_id, recipient_user_id, channel, policy, window_key),
+    CONSTRAINT notification_deliveries_scope_key UNIQUE (company_id, project_id, id),
+    CONSTRAINT notification_deliveries_channel_check
+      CHECK (channel = ANY (ARRAY['IN_APP'::text, 'EMAIL'::text, 'PUSH'::text])),
+    CONSTRAINT notification_deliveries_policy_check
+      CHECK (policy = ANY (ARRAY['IMMEDIATE'::text, 'DAILY'::text, 'WEEKLY'::text, 'FORMAL'::text])),
+    CONSTRAINT notification_deliveries_status_check
+      CHECK (status = ANY (ARRAY['PENDING'::text, 'SENDING'::text, 'SENT'::text, 'FAILED'::text, 'CANCELLED'::text])),
+    CONSTRAINT notification_deliveries_attempts_check CHECK (attempts BETWEEN 0 AND 5),
+    CONSTRAINT notification_deliveries_summary_check CHECK (char_length(summary) BETWEEN 1 AND 500),
+    CONSTRAINT notification_deliveries_link_check
+      CHECK (char_length(link_path) BETWEEN 1 AND 500 AND left(link_path, 1) = '/'),
+    CONSTRAINT notification_deliveries_recipient_project_fkey
+      FOREIGN KEY (company_id, project_id, recipient_user_id)
+      REFERENCES public.project_memberships(company_id, project_id, user_id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX uq_learning_deliveries_global
-    ON public.learning_notification_deliveries USING btree (company_id, user_id, channel, kind, digest_date)
-    WHERE (course_id IS NULL);
-CREATE UNIQUE INDEX uq_learning_deliveries_course
-    ON public.learning_notification_deliveries USING btree (company_id, user_id, course_id, channel, kind, digest_date)
-    WHERE (course_id IS NOT NULL);
-CREATE INDEX idx_learning_notification_pending
-    ON public.learning_notification_deliveries USING btree (status, available_at, created_at)
-    WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text]));
+CREATE TABLE public.notification_delivery_intents (
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    delivery_id text NOT NULL,
+    intent_id text NOT NULL,
+    CONSTRAINT notification_delivery_intents_pkey PRIMARY KEY (delivery_id, intent_id),
+    CONSTRAINT notification_delivery_intents_delivery_fkey
+      FOREIGN KEY (company_id, project_id, delivery_id)
+      REFERENCES public.notification_deliveries(company_id, project_id, id) ON DELETE CASCADE,
+    CONSTRAINT notification_delivery_intents_intent_fkey
+      FOREIGN KEY (company_id, project_id, intent_id)
+      REFERENCES public.notification_intents(company_id, project_id, id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_notification_deliveries_pending
+    ON public.notification_deliveries USING btree (status, available_at, created_at)
+    WHERE (status = ANY (ARRAY['PENDING'::text, 'FAILED'::text]));
 
 CREATE TABLE public.learning_effects (
     id text PRIMARY KEY,
@@ -5485,6 +5544,10 @@ $$;
 CREATE TRIGGER domain_events_append_only
     BEFORE UPDATE OR DELETE ON public.domain_events
     FOR EACH ROW EXECUTE FUNCTION public.reject_domain_event_mutation();
+
+ALTER TABLE ONLY public.notification_intents
+    ADD CONSTRAINT notification_intents_source_event_fkey
+    FOREIGN KEY (source_event_sequence) REFERENCES public.domain_events(sequence) ON DELETE RESTRICT;
 
 CREATE TABLE public.company_onboarding_effects (
     id text PRIMARY KEY,
