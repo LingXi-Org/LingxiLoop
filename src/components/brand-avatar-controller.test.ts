@@ -7,6 +7,7 @@ import {
   BRAND_AVATAR_BASE_EXPRESSION,
   BRAND_AVATAR_BLINK_EXPRESSION,
   BRAND_AVATAR_IDLE_ANIMATION,
+  BRAND_AVATAR_SQUINT_ANIMATION,
   BrandAvatarController,
   type BrandAvatarScheduler,
   type BrandAvatarTimer,
@@ -85,6 +86,15 @@ test('a click holds the sleepy squint before returning to idle blinking', () => 
 
   assert.equal(expressions.at(-1), BRAND_AVATAR_BASE_EXPRESSION)
   assert.equal(scheduler.pendingCount(), 0)
+})
+
+test('the click squint reaches its target through the accelerated native timeline', () => {
+  const squint = avatarDefinition.animations[BRAND_AVATAR_SQUINT_ANIMATION]
+
+  assert.equal(squint.playbackMode, 'loop')
+  assert.deepEqual(squint.steps.map((step) => step.expression), [BRAND_AVATAR_BLINK_EXPRESSION])
+  assert.equal(squint.steps[0]?.transition, 'smooth')
+  assert.equal(squint.steps[0]?.transitionMs, 160)
 })
 
 test('clicking an already closed expression extends it without flashing through idle', () => {

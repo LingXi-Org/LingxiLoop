@@ -1,5 +1,6 @@
 import { createAvatar } from '@bible-strong/avatar-react'
 import '@bible-strong/avatar-react/styles.css'
+import './brand-avatar.css'
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import avatarDefinition from '@/assets/lingxiloop.avatar.json'
 import {
@@ -7,6 +8,7 @@ import {
   BRAND_AVATAR_ANGRY_EXPRESSION,
   BRAND_AVATAR_BASE_EXPRESSION,
   BRAND_AVATAR_IDLE_ANIMATION,
+  BRAND_AVATAR_SQUINT_ANIMATION,
   BrandAvatarController,
   type BrandAvatarExpression,
 } from './brand-avatar-controller'
@@ -48,7 +50,7 @@ export function BrandAvatar({ expression, className }: {
       <LingxiLoopAvatar
         animation={BRAND_AVATAR_ANGRY_ANIMATION}
         size="100%"
-        className={className}
+        className={['brand-avatar--angry', className].filter(Boolean).join(' ')}
         style={brandAvatarFrameStyle}
         ariaLabel="LingxiLoop 品牌头像"
       />
@@ -69,7 +71,7 @@ export function BrandAvatar({ expression, className }: {
 
   return (
     <LingxiLoopAvatar
-      expression={expression}
+      animation={BRAND_AVATAR_SQUINT_ANIMATION}
       size="100%"
       className={className}
       style={brandAvatarFrameStyle}

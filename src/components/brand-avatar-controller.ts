@@ -2,6 +2,7 @@ export const BRAND_AVATAR_BASE_EXPRESSION = 'upward-side-glance' as const
 export const BRAND_AVATAR_BLINK_EXPRESSION = 'sleepy-squint' as const
 export const BRAND_AVATAR_ANGRY_EXPRESSION = 'angry-brows' as const
 export const BRAND_AVATAR_IDLE_ANIMATION = 'brand-idle' as const
+export const BRAND_AVATAR_SQUINT_ANIMATION = 'brand-squint' as const
 export const BRAND_AVATAR_ANGRY_ANIMATION = 'brand-angry-shake' as const
 
 export type BrandAvatarExpression =

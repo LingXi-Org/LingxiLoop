@@ -1778,6 +1778,29 @@
         "group": "Custom"
       }
     },
+    "brand-squint": {
+      "playbackMode": "loop",
+      "steps": [
+        {
+          "expression": "sleepy-squint",
+          "holdMs": 700,
+          "transitionMs": 160,
+          "transition": "smooth"
+        }
+      ],
+      "blink": {
+        "enabled": false,
+        "initialDelayMs": 700,
+        "minIntervalMs": 700,
+        "maxIntervalMs": 700,
+        "durationMs": 160
+      },
+      "metadata": {
+        "label": "品牌快速眯眼",
+        "description": "从当前帧快速且平滑地进入 sleepy-squint。",
+        "group": "Custom"
+      }
+    },
     "brand-angry-shake": {
       "playbackMode": "loop",
       "steps": [
@@ -1828,6 +1851,7 @@
     "celebrate",
     "doubt",
     "brand-idle",
+    "brand-squint",
     "brand-angry-shake"
   ]
 }

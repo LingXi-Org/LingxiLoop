@@ -13,6 +13,7 @@ const logoMirrors = [
 const requiredBrandAssets = [
   canonicalLogo,
   avatarDefinition,
+  'src/components/brand-avatar.css',
   ...logoMirrors,
   'public/favicon.ico',
   'public/favicon-32.png',
@@ -137,6 +138,16 @@ if (existsSync(avatarDefinition)) {
   ) {
     failures.push(`${avatarDefinition}: brand-idle must own the smooth upward-glance blink timeline`)
   }
+  const squintAnimation = definition.animations?.['brand-squint']
+  if (
+    squintAnimation?.playbackMode !== 'loop'
+    || squintAnimation.steps?.length !== 1
+    || squintAnimation.steps[0]?.expression !== 'sleepy-squint'
+    || squintAnimation.steps[0]?.transition !== 'smooth'
+    || squintAnimation.steps[0]?.transitionMs !== 160
+  ) {
+    failures.push(`${avatarDefinition}: brand-squint must use the 160ms smooth response timeline`)
+  }
   if (angryAnimation?.steps?.[0]?.transition !== 'smooth' || angryAnimation.steps[0]?.transitionMs !== 420) {
     failures.push(`${avatarDefinition}: brand-angry-shake must enter with a 420ms smooth transition`)
   }
@@ -166,6 +177,16 @@ if (existsSync('src/components/BrandAvatar.tsx')) {
   }
   if (!brandAvatar.includes("borderRadius: '18%'")) {
     failures.push('src/components/BrandAvatar.tsx: frame must retain the canonical SVG corner radius')
+  }
+  if (!brandAvatar.includes("import './brand-avatar.css'")) {
+    failures.push('src/components/BrandAvatar.tsx: angry state must load its amplitude enhancement')
+  }
+}
+
+if (existsSync('src/components/brand-avatar.css')) {
+  const brandAvatarStyles = readFileSync('src/components/brand-avatar.css', 'utf8')
+  if (!brandAvatarStyles.includes('translate3d(-1.8px') || !brandAvatarStyles.includes('prefers-reduced-motion')) {
+    failures.push('src/components/brand-avatar.css: angry amplitude and reduced-motion fallback must remain intact')
   }
 }
 
