@@ -113,7 +113,7 @@ export async function persistTeacherProvisioning(
   const teacherIds = await listCourseTeacherIds(db, input.companyId, input.courseId)
   const members = [...teacherIds, input.agentId]
   const title = `课题组｜${input.courseTitle}`.slice(0, 80)
-  const { rowCount } = await db.query(
+  const { rows } = await db.query<{ created: boolean }>(
     `INSERT INTO conversations(
       id,preset_key,kind,title,subtitle,topic,members,leader_id,pinned,tag,company_id,project_id
     ) VALUES(
@@ -121,7 +121,8 @@ export async function persistTeacherProvisioning(
     ) ON CONFLICT(id) DO UPDATE SET
       title=EXCLUDED.title,subtitle=EXCLUDED.subtitle,topic=EXCLUDED.topic,
       members=EXCLUDED.members,leader_id=EXCLUDED.leader_id,pinned=TRUE,
-      tag='teacher',project_id=EXCLUDED.project_id,updated_at=NOW()`,
+      tag='teacher',project_id=EXCLUDED.project_id,updated_at=NOW()
+    RETURNING (xmax = 0) AS created`,
     [
       input.roomId,
       `teacher-room:${input.courseId}`,
@@ -173,7 +174,7 @@ export async function persistTeacherProvisioning(
       `# Pulse operating policy\n\n${input.prompt}\n`,
     ],
   )
-  return { created: (rowCount ?? 0) > 0 }
+  return { created: rows[0]?.created ?? false }
 }
 
 export async function findTeacherWelcomeDescriptor(
