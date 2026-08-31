@@ -152,7 +152,7 @@ jobs:
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.eval == 'true'
         run: npm run eval:check
       - name: Upload Agent Eval reports
-        if: always() && (needs.classify.outputs.full == 'true' || needs.classify.outputs.eval == 'true')
+        if: always() && hashFiles('artifacts/eval-*.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: agent-eval-${{ github.run_attempt }}
