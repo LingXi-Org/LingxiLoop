@@ -93,7 +93,7 @@ services:
       R2_ACCESS_KEY_ID: minioadmin
       R2_SECRET_ACCESS_KEY: minioadmin
       OPENAI_API_KEY: ci-open-notebook-password
-      OPENAI_BASE_URL: http://fake-embedding-provider:8126/v1
+      OPENAI_BASE_URL: http://lingxiloop:5181/internal/open-notebook/v1
       OPENAI_EMBEDDING_MODEL: text-embedding-3-small
       SURREAL_URL: ws://surrealdb:8000/rpc
       SURREAL_USER: open-notebook
@@ -191,7 +191,7 @@ services:
       wukongim:
         condition: service_healthy
       open-notebook:
-        condition: service_healthy
+        condition: service_started
       minio-bootstrap:
         condition: service_completed_successfully
       db-bootstrap:
