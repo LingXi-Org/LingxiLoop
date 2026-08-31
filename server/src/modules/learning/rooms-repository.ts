@@ -1,14 +1,23 @@
 import type { Queryable } from '../../db/queryable.js'
-import { projectRoleFromLearningWire, type ProjectRole } from '../../domain/access/public.js'
+import { type ProjectRole, projectRoleFromLearningWire } from '../../domain/access/public.js'
+import type { CourseMemberChangeOutcome } from './types.js'
 
 export async function setLearningCourseMembershipRecord(
   db: Queryable,
   args: {
     companyId: string; courseId: string; userId: string; role: 'teacher'|'learner'; enabled: boolean
   },
-): Promise<'updated'|'not_found'|'last_teacher'> {
-  const { rows: locked } = await db.query<{ project_id: string }>(
-    `SELECT project_id FROM courses WHERE id=$1 AND company_id=$2 FOR UPDATE`,
+): Promise<CourseMemberChangeOutcome> {
+  const { rows: locked } = await db.query<{
+    project_id: string
+    course_created_by: string
+    project_created_by: string | null
+  }>(
+    `SELECT course.project_id,course.created_by AS course_created_by,
+            project.created_by AS project_created_by
+       FROM courses course JOIN projects project ON project.id=course.project_id
+        AND project.company_id=course.company_id
+      WHERE course.id=$1 AND course.company_id=$2 FOR UPDATE OF course,project`,
     [args.courseId,args.companyId],
   )
   if (!locked[0]) return 'not_found'
@@ -20,7 +29,8 @@ export async function setLearningCourseMembershipRecord(
   const projectId = locked[0].project_id
   const { rows } = await db.query<{ role: ProjectRole }>(
     `SELECT role FROM project_memberships
-      WHERE project_id=$1 AND company_id=$2 AND user_id=$3 AND status='ACTIVE'`,
+      WHERE project_id=$1 AND company_id=$2 AND user_id=$3 AND status='ACTIVE'
+      FOR UPDATE`,
     [projectId,args.companyId,args.userId],
   )
   const current = rows[0]?.role
@@ -38,8 +48,19 @@ export async function setLearningCourseMembershipRecord(
     )
     return 'updated'
   }
+  const creator = args.userId === locked[0].course_created_by
+    || args.userId === locked[0].project_created_by
   if (args.role === 'teacher') {
     if (current !== 'OWNER' && current !== 'TEACHER') return 'updated'
+    if (current === 'OWNER') {
+      const { rows: owners } = await db.query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM project_memberships
+          WHERE project_id=$1 AND company_id=$2 AND status='ACTIVE' AND role='OWNER'`,
+        [projectId,args.companyId],
+      )
+      return Number(owners[0]?.count ?? 0) <= 1 ? 'last_owner' : 'protected_owner'
+    }
+    if (creator) return 'protected_creator'
     const { rows: counts } = await db.query<{ count: number }>(
       `SELECT COUNT(*)::int AS count FROM project_memberships
         WHERE project_id=$1 AND company_id=$2 AND status='ACTIVE' AND role IN ('OWNER','TEACHER')`,
@@ -54,6 +75,7 @@ export async function setLearningCourseMembershipRecord(
     )
     return 'updated'
   }
+  if (creator && (current === 'STUDENT' || current === 'OBSERVER')) return 'protected_creator'
   await db.query(
     `DELETE FROM project_memberships
       WHERE project_id=$1 AND company_id=$2 AND user_id=$3 AND role IN ('STUDENT','OBSERVER')`,

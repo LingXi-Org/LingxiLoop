@@ -13,7 +13,13 @@ import {
   createJavaScriptRegexEngine,
   type Highlighter,
 } from "shiki";
-import { Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ArrowDown01Icon,
+  ArrowUp01Icon,
+  Copy01Icon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import pierreDarkTheme from "../shared/pierre-dark-theme.js";
 import pierreLightTheme from "../shared/pierre-light-theme.js";
 import type { CodeBlockLineNumbersMode, CodeBlockProps } from "./schema";
@@ -89,7 +95,7 @@ const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
   yaml: "YAML",
   go: "Go",
   rust: "Rust",
-  text: "Plain Text",
+  text: "纯文本",
 };
 
 function getLanguageDisplayName(lang: string): string {
@@ -381,12 +387,20 @@ function CodeBlockHeader({ className }: CodeBlockSectionProps) {
         size="sm"
         onClick={copyCode}
         className="h-7 w-7 p-0"
-        aria-label={isCopied ? "Copied" : "Copy code"}
+        aria-label={isCopied ? "已复制" : "复制代码"}
       >
         {isCopied ? (
-          <Check className="h-4 w-4 text-green-700 dark:text-green-400" />
+          <HugeiconsIcon
+            icon={Tick02Icon}
+            className="h-4 w-4 text-green-700 dark:text-green-400"
+            aria-hidden="true"
+          />
         ) : (
-          <Copy className="text-muted-foreground h-4 w-4" />
+          <HugeiconsIcon
+            icon={Copy01Icon}
+            className="text-muted-foreground h-4 w-4"
+            aria-hidden="true"
+          />
         )}
       </Button>
     </div>
@@ -429,13 +443,21 @@ function CodeBlockCollapseToggle({ className }: CodeBlockSectionProps) {
       >
         {isCollapsed ? (
           <>
-            <ChevronDown className="mr-1 size-4" />
-            Show all {lineCount} lines
+            <HugeiconsIcon
+              icon={ArrowDown01Icon}
+              className="mr-1 size-4"
+              aria-hidden="true"
+            />
+            展开全部 {lineCount} 行
           </>
         ) : (
           <>
-            <ChevronUp className="mr-2 h-4 w-4" />
-            Collapse
+            <HugeiconsIcon
+              icon={ArrowUp01Icon}
+              className="mr-2 h-4 w-4"
+              aria-hidden="true"
+            />
+            收起代码
           </>
         )}
       </Button>

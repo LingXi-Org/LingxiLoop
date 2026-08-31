@@ -53,7 +53,7 @@ function validateOptionListInvariants(
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["minSelections"],
-      message: "`minSelections` cannot be greater than `maxSelections`.",
+      message: "最少选择数不能大于最多选择数。",
     });
   }
 
@@ -66,7 +66,7 @@ function validateOptionListInvariants(
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["options", index, "id"],
-        message: `Duplicate option id "${optionId}" is not allowed.`,
+        message: `选项编号“${optionId}”不能重复。`,
       });
     } else {
       optionIds.add(optionId);
@@ -91,7 +91,7 @@ function validateOptionListInvariants(
           code: z.ZodIssueCode.custom,
           path:
             typeof selection === "string" ? [fieldName] : [fieldName, index],
-          message: `Selection id "${selectionId}" must exist in options.`,
+          message: `已选内容“${selectionId}”不在可选项中。`,
         });
       }
     });

@@ -22,7 +22,7 @@ export const SerializableImageSchema = z.object({
   receipt: ToolUIReceiptSchema.optional(),
   assetId: z.string(),
   src: z.url(),
-  alt: z.string().min(1, "Images require alt text for accessibility"),
+  alt: z.string().min(1, "请为图片填写替代文字"),
   title: z.string().optional(),
   description: z.string().optional(),
   href: z.url().optional(),

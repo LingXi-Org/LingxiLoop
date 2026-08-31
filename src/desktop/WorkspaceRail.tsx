@@ -18,12 +18,13 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { useWorkspace } from '@/features/knowledge/workspace'
+import { selectLearningSpace, useWorkspace } from '@/features/knowledge/workspace'
 import { learningApi } from '@/features/learning/api'
 import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
-import { toastAction } from '@/lib/actionToast'
+import { notifyAction, toastAction } from '@/lib/actionToast'
+import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
-import { useMe } from '@/stores/auth'
+import { useAuth, useMe } from '@/stores/auth'
 import type { WorkspaceSummary } from '@/types'
 
 export function workspaceInitials(name: string): string {
@@ -126,6 +127,7 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
   const activeId = useWorkspace((state) => state.selectedId)
   const select = useWorkspace((state) => state.select)
   const meId = useMe()
+  const personalCompanyId = useAuth((state) => state.personalCompanyId)
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -154,6 +156,12 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
     setPendingId(id)
     try {
       await select(id)
+    } catch (error) {
+      notifyAction({
+        title: '学习区切换失败',
+        description: userFacingError(error, '暂时无法打开这个学习区，请稍后重试。'),
+        type: 'error',
+      })
     } finally {
       setPendingId(null)
     }
@@ -168,21 +176,21 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
     setCreating(true)
     setCreateError(null)
     try {
+      if (!personalCompanyId) throw new Error('暂时无法确认你的个人学习区，请重新登录后再试。')
       const course = await toastAction(learningApi.createCourse({
         name,
         description: String(data.get('description') ?? '').trim(),
-      }), {
-        loading: '正在创建课程与 Study Room',
+      }, personalCompanyId), {
+        loading: '正在创建课程与课程对话',
         success: '课程已创建',
         error: '创建课程失败',
       })
-      await useWorkspace.getState().load()
-      await select(course.projectId)
+      await selectLearningSpace({ companyId: personalCompanyId, projectId: course.projectId })
       form.reset()
       setCreateOpen(false)
       onOpenDashboard()
     } catch (error) {
-      setCreateError(error instanceof Error ? error.message : String(error))
+      setCreateError(userFacingError(error, '课程创建失败，请稍后重试。'))
     } finally {
       setCreating(false)
     }
@@ -200,7 +208,7 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
               type="button"
               variant="ghost"
               size="icon"
-              aria-label="打开本人看板"
+              aria-label="打开学习看板"
               aria-current={dashboardActive ? 'page' : undefined}
               onClick={() => {
                 brandAvatar.registerClick()
@@ -214,7 +222,7 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
               <BrandAvatar expression={brandAvatar.expression} className="size-9 rounded-lg" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={10}>本人看板</TooltipContent>
+          <TooltipContent side="right" sideOffset={10}>学习看板</TooltipContent>
         </Tooltip>
         <div className="server-rail-scroll flex min-h-0 w-full translate-x-px flex-1 flex-col items-center overflow-y-auto overflow-x-hidden pb-3 pt-0.5">
           <WorkspaceRailGroup workspaces={enterprise} dashboardActive={dashboardActive} activeId={activeId} pendingId={pendingId} onSelect={(id) => void handleSelect(id)} />
@@ -244,7 +252,7 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>新建课程</DialogTitle>
-                <DialogDescription>创建课程后会同时建立专属 Study Room，并进入新的课程看板。</DialogDescription>
+                <DialogDescription>创建后会同时准备专属课程对话，并进入新的课程看板。</DialogDescription>
               </DialogHeader>
               <form id="workspace-rail-create-course" onSubmit={handleCreateCourse}>
                 <FieldGroup>

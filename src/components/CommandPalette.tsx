@@ -19,11 +19,11 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const actions = useMemo<CommandAction[]>(() => {
     const dispatch = useUiCommands.getState().dispatch
     return [
-      { id: 'conversation-search', label: '搜索会话和消息', keywords: 'search conversations', run: () => dispatch('focus-conversation-search') },
-      { id: 'find-chat', label: '搜索当前对话', keywords: 'find chat', shortcut: '⌘ F', run: () => dispatch('find-chat') },
-      { id: 'focus-composer', label: '聚焦消息输入框', keywords: 'focus composer input', run: () => dispatch('focus-composer') },
-      { id: 'library', label: '打开资料库', keywords: 'library documents', run: () => useApp.getState().setView('library') },
-      { id: 'theme', label: '切换浅色 / 深色模式', keywords: 'theme light dark', run: toggleTheme },
+      { id: 'conversation-search', label: '搜索会话和消息', keywords: '搜索 会话 消息', run: () => dispatch('focus-conversation-search') },
+      { id: 'find-chat', label: '搜索当前对话', keywords: '查找 当前 对话', shortcut: '⌘ F', run: () => dispatch('find-chat') },
+      { id: 'focus-composer', label: '聚焦消息输入框', keywords: '输入 消息', run: () => dispatch('focus-composer') },
+      { id: 'library', label: '打开资料库', keywords: '资料 文档', run: () => useApp.getState().setView('library') },
+      { id: 'theme', label: '切换浅色 / 深色模式', keywords: '主题 浅色 深色', run: toggleTheme },
       ...conversations.slice(0, 8).map((conversation, index) => ({
         id: `conversation-${conversation.id}`,
         label: `转到：${conversation.title}`,

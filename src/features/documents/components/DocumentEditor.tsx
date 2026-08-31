@@ -19,6 +19,7 @@ import {
   UndoIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { userFacingError } from '@/lib/userFacingError'
 import Collaboration from '@tiptap/extension-collaboration'
 // TipTap v3 collaboration uses the Caret extension with @tiptap/y-tiptap.
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
@@ -538,9 +539,12 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
       if (attachment.kind !== 'img') throw new Error('Uploaded file is not an image.')
       insertImage({ src: attachment.url, alt: attachment.name, storageKey: attachment.key ?? null })
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.warn('[docs] image upload failed', msg)
-      notifyAction({ title: '图片上传失败', description: msg, type: 'error' })
+      console.warn('[docs] image upload failed', err)
+      notifyAction({
+        title: '图片上传失败',
+        description: userFacingError(err, '请稍后重试，或改用图片地址。'),
+        type: 'error',
+      })
     } finally {
       setUploading(false)
     }

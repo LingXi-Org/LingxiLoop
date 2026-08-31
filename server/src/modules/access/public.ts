@@ -6,8 +6,8 @@ import type {
   ResolvedAccessContext,
   ResolvedEntitlements,
 } from './contracts.js'
-import { AccessRepository } from './repository.js'
 import { resolveEntitlements } from './entitlement-resolver.js'
+import { AccessRepository } from './repository.js'
 
 export type {
   EntitlementCode,
@@ -50,6 +50,30 @@ export function listActiveProjectTeacherIds(
   input: { companyId: string; projectId: string },
 ): Promise<string[]> {
   return new AccessRepository(db).activeProjectTeacherIds(input.companyId, input.projectId)
+}
+
+export function countActiveProjectLearners(
+  db: Queryable,
+  input: { companyId: string; projectId: string },
+): Promise<number> {
+  return new AccessRepository(db).activeProjectLearnerCount(input.companyId, input.projectId)
+}
+
+export function listActiveActorProjectScopes(
+  db: Queryable,
+  input: {
+    actorUserId: string
+    afterSortAt: string | null
+    afterProjectId: string | null
+    limit: number
+  },
+) {
+  return new AccessRepository(db).activeActorProjectScopes(
+    input.actorUserId,
+    input.afterSortAt,
+    input.afterProjectId,
+    input.limit,
+  )
 }
 
 export async function resolvePlanEntitlements(db: Queryable, planId: string): Promise<ResolvedEntitlements> {

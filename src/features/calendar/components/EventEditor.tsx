@@ -21,6 +21,7 @@ import { useParticipants } from '@/features/agents/state'
 import { useConversations } from '@/features/conversations/store'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
+import { userFacingError } from '@/lib/userFacingError'
 import { useMe } from '@/stores/auth'
 import type { Participant } from '@/types'
 import type { CalendarEvent, CalendarEventKind, RecurrenceRule } from '../contracts'
@@ -44,7 +45,7 @@ interface Props {
   onClose: () => void
 }
 
-const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 /** Format a JS Date into the local date-time control value. */
 function toLocalInput(d: Date): string {
@@ -131,9 +132,9 @@ export function EventEditor({ event, prefill, onClose }: Props) {
   const submit = async () => {
     setErr(null)
     const cleanTitle = title.trim()
-    if (!cleanTitle) { setErr('title is required'); return }
-    if (kind === 'agent_task' && !assigneeId) { setErr('pick an assignee for the agent task'); return }
-    if (!startAt) { setErr('start time is required'); return }
+    if (!cleanTitle) { setErr('请输入事件标题。'); return }
+    if (kind === 'agent_task' && !assigneeId) { setErr('请选择要执行任务的智能助教。'); return }
+    if (!startAt) { setErr('请选择开始时间。'); return }
 
     const recurrence: RecurrenceRule | null = recurEnabled
       ? {
@@ -177,7 +178,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
       }
       onClose()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      setErr(userFacingError(e, '日历事件保存失败，请稍后重试。'))
     } finally {
       setBusy(false)
     }
@@ -196,7 +197,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
       await toastAction(remove(event.id), { loading: '正在删除事件', success: '事件已删除', error: '删除事件失败' })
       onClose()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      setErr(userFacingError(e, '日历事件删除失败，请稍后重试。'))
     } finally {
       setBusy(false)
     }
@@ -213,9 +214,11 @@ export function EventEditor({ event, prefill, onClose }: Props) {
         description: event.title,
       })
       if (r.status === 'dispatched') onClose()
-      else setErr(`run-now: ${r.status}${r.error ? ` — ${r.error}` : ''}`)
+      else if (r.status === 'duplicate') setErr('这个任务已经触发，无需重复执行。')
+      else if (r.status === 'skipped') setErr('这个任务当前不需要执行。')
+      else setErr(userFacingError(r.error, '任务执行失败，请稍后重试。'))
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      setErr(userFacingError(e, '暂时无法执行这个日历事件，请稍后重试。'))
     } finally {
       setBusy(false)
     }
@@ -235,8 +238,8 @@ export function EventEditor({ event, prefill, onClose }: Props) {
           </DialogTitle>
           <DialogDescription>
             {kind === 'agent_task'
-              ? "选择智能体和时间。当它触发时，你的提示会出现在对话中并唤醒他们。"
-              : "个人时间标记 — 没有智能体被 ping 到。"}
+              ? "选择智能助教和时间。到达设定时间后，任务会发送到对话中。"
+              : "个人时间标记，不会通知智能助教。"}
           </DialogDescription>
         </DialogHeader>
 
@@ -256,7 +259,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
 
           <Field>
             <FieldLabel>种类</FieldLabel>
-            <FieldDescription>智能体任务触发提示；个人只是一个时间标记。</FieldDescription>
+            <FieldDescription>智能助教任务会按时执行；个人事件只记录时间。</FieldDescription>
             <div className="flex gap-2">
               {(['agent_task', 'personal'] as const).map((k) => (
                 <Button
@@ -265,7 +268,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                   onClick={() => setKind(k)}
                   variant={kind === k ? 'secondary' : 'outline'}
                   size="sm"
-                >{k === 'agent_task' ? "智能体任务" : "个人"}</Button>
+                >{k === 'agent_task' ? "智能助教任务" : "个人"}</Button>
               ))}
             </div>
           </Field>
@@ -332,10 +335,10 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                   <Select value={recur.freq} onValueChange={(value) => setRecur({ ...recur, freq: value as RecurrenceRule['freq'] })}>
                     <SelectTrigger className="w-28" aria-label="重复频率"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="daily">日{recur.interval > 1 ? 's' : ''}</SelectItem>
-                      <SelectItem value="weekly">周{recur.interval > 1 ? 's' : ''}</SelectItem>
-                      <SelectItem value="monthly">月{recur.interval > 1 ? 's' : ''}</SelectItem>
-                      <SelectItem value="yearly">年{recur.interval > 1 ? 's' : ''}</SelectItem>
+                      <SelectItem value="daily">天</SelectItem>
+                      <SelectItem value="weekly">周</SelectItem>
+                      <SelectItem value="monthly">月</SelectItem>
+                      <SelectItem value="yearly">年</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -455,7 +458,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
             <>
               <Field>
                 <FieldLabel>分配给</FieldLabel>
-                <FieldDescription>选择接收调度的智能体或人员。</FieldDescription>
+                <FieldDescription>选择接收任务的智能助教或成员。</FieldDescription>
                 <div className="grid grid-cols-1 gap-1 max-h-[200px] overflow-auto pr-1">
                   {candidates.map((p) => {
                     const on = assigneeId === p.id
@@ -485,7 +488,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                   })}
                   {candidates.length === 0 && (
                     <div className="py-4 text-center text-sm text-muted-foreground">
-                      没有可用的队友 - 首先添加智能体。
+                      暂无可选成员，请先添加智能助教。
                     </div>
                   )}
                 </div>
@@ -505,7 +508,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
 
               <Field>
                 <FieldLabel htmlFor="event-prompt">提示</FieldLabel>
-                <FieldDescription>智能体每次应该完成的任务，内容会作为系统消息发送。</FieldDescription>
+                <FieldDescription>说明智能助教每次需要完成的任务，内容会发送到所选对话。</FieldDescription>
                 <Textarea
                   id="event-prompt"
                   value={agentPrompt}
@@ -520,7 +523,7 @@ export function EventEditor({ event, prefill, onClose }: Props) {
 
           <Field>
             <FieldLabel>隐私</FieldLabel>
-            <FieldDescription>私人事件仅对创建者和受让人显示；工作区所有者仍可监督涉及智能体的事件。</FieldDescription>
+            <FieldDescription>私人事件仅对创建者和执行者显示；学习区所有者仍可查看涉及智能助教的事件。</FieldDescription>
             <FieldLabel className="w-fit font-normal">
               <Checkbox
                 checked={isPrivate}

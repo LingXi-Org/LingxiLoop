@@ -20,6 +20,8 @@ import { Button } from '@/components/ui/button'
  * keeps drawer open + surfaces error inline so the user can edit + retry.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { participantRoleZh } from '@/lib/participantRole'
+import { userFacingError } from '@/lib/userFacingError'
 import { emailApi } from '../api'
 import { uploadsApi } from '@/features/platform/api'
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
@@ -85,7 +87,7 @@ function makeEntry(raw: string, byId: Record<string, Participant>): RecipientEnt
   const trimmed = raw.trim()
   const p = byId[trimmed]
   if (p) return { raw: p.id, display: `${p.name}${p.email ? ` <${p.email}>` : ''}`, participant: p }
-  return { raw: trimmed, display: trimmed, participant: null }
+  return { raw: trimmed, display: trimmed.includes('@') ? trimmed : '待解析成员', participant: null }
 }
 
 function PillField({
@@ -157,7 +159,7 @@ function PillField({
               type="button"
               onClick={(ev) => { ev.stopPropagation(); onChange(entries.filter((x) => x.raw !== e.raw)) }}
               className="ml-0.5 text-ink-300 hover:text-coral-deep leading-none"
-              aria-label={`Remove ${e.display}`}
+              aria-label={`移除 ${e.display}`}
             >×</Button>
           </span>
         ))}
@@ -188,9 +190,9 @@ function PillField({
               <Avatar p={p} size={30} ringColor="var(--card)" />
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-semibold text-ink-900 truncate">{p.name}</div>
-                <div className="text-[11px] text-ink-500 truncate font-mono">{p.email ?? p.id}</div>
+                <div className="text-[11px] text-ink-500 truncate font-mono">{p.email ?? '暂无可用邮箱'}</div>
               </div>
-              <span className="text-[9.5px] font-bold text-ink-300 uppercase tracking-wider">{p.kind}</span>
+              <span className="text-[9.5px] font-bold text-ink-300 tracking-wider">{participantRoleZh(p)}</span>
             </Button>
           ))}
         </div>
@@ -300,7 +302,7 @@ export function EmailComposer() {
       } catch (e) {
         setAttachments((prev) => prev.map((a) =>
           a.localId === localId
-            ? { ...a, state: 'error', error: e instanceof Error ? e.message : String(e) }
+            ? { ...a, state: 'error', error: userFacingError(e, '附件上传失败，请稍后重试。') }
             : a,
         ))
       }
@@ -352,17 +354,17 @@ export function EmailComposer() {
 
   const submit = async () => {
     setError(null)
-    if (!body.trim()) { setError('body is required'); return }
+    if (!body.trim()) { setError('请输入邮件正文。'); return }
     if (!isReply) {
-      if (to.length === 0) { setError('add at least one recipient'); return }
-      if (!subject.trim()) { setError('subject is required'); return }
+      if (to.length === 0) { setError('请至少添加一位收件人。'); return }
+      if (!subject.trim()) { setError('请输入邮件主题。'); return }
     }
     // Refuse to send while any attachment is still in flight or errored —
     // sending partial would silently drop files and confuse the recipient.
     const pending = attachments.filter((a) => a.state === 'uploading')
     const failed = attachments.filter((a) => a.state === 'error')
-    if (pending.length > 0) { setError(`${pending.length} attachment(s) still uploading`); return }
-    if (failed.length > 0) { setError(`remove failed attachments before sending`); return }
+    if (pending.length > 0) { setError(`还有 ${pending.length} 个附件正在上传`); return }
+    if (failed.length > 0) { setError('请先移除上传失败的附件。'); return }
     const attachmentArgs = attachments
       .filter((a) => a.state === 'done' && a.key)
       .map((a) => ({ key: a.key!, filename: a.filename, mimeType: a.mimeType, sizeBytes: a.sizeBytes }))
@@ -397,7 +399,7 @@ export function EmailComposer() {
       select(result.conversationId)
       close()
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(userFacingError(err, '邮件发送失败，请稍后重试。'))
     } finally {
       setSending(false)
     }
@@ -457,7 +459,7 @@ export function EmailComposer() {
             label="至"
             entries={to}
             onChange={setTo}
-            placeholder="地址或@id，逗号添加"
+            placeholder="邮箱地址或成员，按逗号添加"
             autocompletePool={pool}
           />
         )}
@@ -494,7 +496,7 @@ export function EmailComposer() {
           <div className="email-composer-row bg-inset px-4 py-2.5 text-[11.5px] text-ink-secondary">
             <div className="flex items-baseline gap-2">
               <span className="font-bold text-ink-300 uppercase tracking-wider text-[10px]">回复：</span>
-              <span className="text-ink-700 font-medium">{replyOriginal.email.subject || '(no subject)'}</span>
+              <span className="text-ink-700 font-medium">{replyOriginal.email.subject || '无主题'}</span>
             </div>
             <div className="mt-0.5 truncate">
               来自 <span className="text-ink-700">{replyOriginal.email.from}</span>
@@ -528,8 +530,8 @@ export function EmailComposer() {
                   <AttachmentTitle>{a.filename}</AttachmentTitle>
                   <AttachmentDescription>
                     {a.mimeType} · {humanBytes(a.sizeBytes)}
-                    {a.state === 'uploading' && ' · uploading…'}
-                    {a.state === 'error' && ` · ${a.error ?? 'upload failed'}`}
+                    {a.state === 'uploading' && ' · 正在上传…'}
+                    {a.state === 'error' && ' · 上传失败'}
                   </AttachmentDescription>
                 </AttachmentContent>
                 <AttachmentActions><AttachmentAction onClick={() => removeAttachment(a.localId)} aria-label={`移除 ${a.filename}`}>×</AttachmentAction></AttachmentActions>
@@ -560,7 +562,7 @@ export function EmailComposer() {
             title="附加文件"
           >📎 附上</Button>
           <span className="text-[11px] text-ink-300 mr-auto">
-            来自 <span className="font-mono text-ink-500">{me?.email ?? '(no auth email)'}</span>
+            来自 <span className="font-mono text-ink-500">{me?.email ?? '未找到登录邮箱'}</span>
           </span>
           <Button
             type="button"

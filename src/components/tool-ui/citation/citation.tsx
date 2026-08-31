@@ -1,17 +1,17 @@
-import { Button } from '@/components/ui/button'
 "use client";
 
-import type { LucideIcon } from "lucide-react";
 import {
-  Code2,
-  Database,
-  ExternalLink,
-  File,
-  FileText,
-  Globe,
-  Newspaper,
-} from "lucide-react";
+  CodeIcon,
+  DatabaseIcon,
+  ExternalLinkIcon,
+  File01Icon,
+  FileTextIcon,
+  GlobalIcon,
+  NewspaperIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import * as React from "react";
+import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -22,15 +22,15 @@ import type {
   SerializableCitation,
 } from "./schema";
 
-const FALLBACK_LOCALE = "en-US";
+const FALLBACK_LOCALE = "zh-CN";
 
-const TYPE_ICONS: Record<CitationType, LucideIcon> = {
-  webpage: Globe,
-  document: FileText,
-  article: Newspaper,
-  api: Database,
-  code: Code2,
-  other: File,
+const TYPE_ICONS: Record<CitationType, IconSvgElement> = {
+  webpage: GlobalIcon,
+  document: FileTextIcon,
+  article: NewspaperIcon,
+  api: DatabaseIcon,
+  code: CodeIcon,
+  other: File01Icon,
 };
 
 function extractDomain(url: string): string | undefined {
@@ -110,7 +110,7 @@ export function Citation(props: CitationProps) {
     locale,
   };
 
-  const TypeIcon = TYPE_ICONS[type] ?? Globe;
+  const typeIcon = TYPE_ICONS[type] ?? GlobalIcon;
 
   const handleClick = () => {
     if (!sanitizedHref) return;
@@ -138,7 +138,11 @@ export function Citation(props: CitationProps) {
       className="bg-muted size-3.5 shrink-0 rounded object-cover"
     />
   ) : (
-    <TypeIcon className="size-3.5 shrink-0 opacity-60" aria-hidden="true" />
+    <HugeiconsIcon
+      icon={typeIcon}
+      className="size-3.5 shrink-0 opacity-60"
+      aria-hidden="true"
+    />
   );
 
   const { open, setOpen, handleMouseEnter, handleMouseLeave } = useHoverPopover();
@@ -238,7 +242,11 @@ export function Citation(props: CitationProps) {
               )}
             </div>
             {sanitizedHref && (
-              <ExternalLink className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
+              <HugeiconsIcon
+                icon={ExternalLinkIcon}
+                className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                aria-hidden="true"
+              />
             )}
           </div>
 

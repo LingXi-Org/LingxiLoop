@@ -1,24 +1,58 @@
 "use client";
 
 import * as React from "react";
+import {
+  Alert01Icon,
+  Calendar03Icon,
+  CheckmarkCircle02Icon,
+  Delete02Icon,
+  Download04Icon,
+  Edit02Icon,
+  File01Icon,
+  InformationCircleIcon,
+  Link01Icon,
+  LockIcon,
+  Mail01Icon,
+  Notification01Icon,
+  Settings02Icon,
+  Shield01Icon,
+  Tick02Icon,
+  Cancel01Icon,
+  Upload04Icon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { ApprovalCardProps, ApprovalDecision } from "./schema";
 import { ActionButtons } from "../shared/action-buttons";
 import type { Action } from "../shared/schema";
 
-import { icons, Check, X } from "lucide-react";
+const HUGE_ICON_MAP: Record<string, IconSvgElement> = {
+  alert: Alert01Icon,
+  "alert-circle": Alert01Icon,
+  "alert-triangle": Alert01Icon,
+  calendar: Calendar03Icon,
+  check: Tick02Icon,
+  "check-circle": CheckmarkCircle02Icon,
+  download: Download04Icon,
+  edit: Edit02Icon,
+  file: File01Icon,
+  info: InformationCircleIcon,
+  link: Link01Icon,
+  lock: LockIcon,
+  mail: Mail01Icon,
+  notification: Notification01Icon,
+  settings: Settings02Icon,
+  shield: Shield01Icon,
+  trash: Delete02Icon,
+  "trash-2": Delete02Icon,
+  upload: Upload04Icon,
+  user: UserIcon,
+};
 
-type LucideIcon = React.ComponentType<{ className?: string }>;
-
-function getLucideIcon(name: string): LucideIcon | null {
-  const pascalName = name
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("");
-
-  const Icon = icons[pascalName as keyof typeof icons];
-  return Icon ?? null;
+function getHugeIcon(name: string): IconSvgElement | null {
+  return HUGE_ICON_MAP[name.trim().toLowerCase()] ?? null;
 }
 
 interface ApprovalCardReceiptProps {
@@ -37,7 +71,7 @@ function ApprovalCardReceipt({
   className,
 }: ApprovalCardReceiptProps) {
   const isApproved = choice === "approved";
-  const displayLabel = actionLabel ?? (isApproved ? "Approved" : "Denied");
+  const displayLabel = actionLabel ?? (isApproved ? "已允许" : "已拒绝");
 
   return (
     <div
@@ -64,7 +98,11 @@ function ApprovalCardReceipt({
             isApproved ? "text-primary" : "text-muted-foreground",
           )}
         >
-          {isApproved ? <Check className="size-4" /> : <X className="size-4" />}
+          <HugeiconsIcon
+            icon={isApproved ? Tick02Icon : Cancel01Icon}
+            className="size-4"
+            aria-hidden="true"
+          />
         </span>
         <div className="flex flex-col">
           <span className="text-sm font-medium">{displayLabel}</span>
@@ -92,9 +130,9 @@ export function ApprovalCard({
   onModify,
 }: ApprovalCardProps) {
   const resolvedVariant = variant ?? "default";
-  const resolvedConfirmLabel = confirmLabel ?? "Approve";
-  const resolvedCancelLabel = cancelLabel ?? "Deny";
-  const Icon = icon ? getLucideIcon(icon) : null;
+  const resolvedConfirmLabel = confirmLabel ?? "允许";
+  const resolvedCancelLabel = cancelLabel ?? "拒绝";
+  const resolvedIcon = icon ? getHugeIcon(icon) : null;
 
   const handleAction = React.useCallback(
     async (actionId: string) => {
@@ -122,7 +160,7 @@ export function ApprovalCard({
   const isDestructive = resolvedVariant === "destructive";
 
   const actions: Action[] = [
-    ...(onModify ? [{ id: "modify", label: modifyLabel ?? "Modify", variant: "outline" as const }] : []),
+    ...(onModify ? [{ id: "modify", label: modifyLabel ?? "修改", variant: "outline" as const }] : []),
     {
       id: "cancel",
       label: resolvedCancelLabel,
@@ -162,7 +200,7 @@ export function ApprovalCard({
         >
           <div className="bg-card flex w-full flex-col gap-4 rounded-2xl border p-5 shadow-xs">
             <div className="flex items-start gap-3">
-              {Icon && (
+              {resolvedIcon && (
                 <span
                   className={cn(
                     "flex size-10 shrink-0 items-center justify-center rounded-xl",
@@ -171,7 +209,11 @@ export function ApprovalCard({
                       : "bg-primary/10 text-primary",
                   )}
                 >
-                  <Icon className="size-5" />
+                  <HugeiconsIcon
+                    icon={resolvedIcon}
+                    className="size-5"
+                    aria-hidden="true"
+                  />
                 </span>
               )}
               <div className="flex flex-1 flex-col gap-1">

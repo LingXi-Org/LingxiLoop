@@ -17,7 +17,7 @@ import { useUiCommand } from '@/stores/uiCommands'
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
 
 function SurfaceFallback() {
-  return <div className="fixed inset-0 grid place-items-center bg-background text-sm text-muted-foreground">Loading…</div>
+  return <div className="fixed inset-0 grid place-items-center bg-background text-sm text-muted-foreground">正在打开 LingxiLoop…</div>
 }
 
 function AuthedApp() {

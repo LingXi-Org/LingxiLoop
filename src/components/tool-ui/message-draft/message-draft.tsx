@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type {
@@ -10,7 +12,6 @@ import type {
 } from "./schema";
 import { ActionButtons } from "../shared/action-buttons";
 import type { Action } from "../shared/schema";
-import { Check, ChevronDown } from "lucide-react";
 
 type DraftState = "review" | "sending" | "sent" | "cancelled";
 type DraftOutcome = MessageDraftProps["outcome"];
@@ -42,7 +43,9 @@ function RecipientRow({
       <td className={cn("pb-1 align-top", muted && "text-muted-foreground")}>
         {visibleRecipients.join(", ")}
         {overflowCount > 0 && (
-          <span className="text-muted-foreground"> +{overflowCount} more</span>
+          <span className="text-muted-foreground">
+            另有 {overflowCount} 人
+          </span>
         )}
       </td>
     </tr>
@@ -142,13 +145,13 @@ function EmailDraftContent({
 
       <table className="w-full">
         <tbody>
-          {draft.from && <SingleFieldRow label="From" value={draft.from} />}
-          <RecipientRow label="To" recipients={draft.to} />
+          {draft.from && <SingleFieldRow label="发件人" value={draft.from} />}
+          <RecipientRow label="收件人" recipients={draft.to} />
           {draft.cc && draft.cc.length > 0 && (
-            <RecipientRow label="Cc" recipients={draft.cc} />
+            <RecipientRow label="抄送" recipients={draft.cc} />
           )}
           {draft.bcc && draft.bcc.length > 0 && (
-            <RecipientRow label="Bcc" recipients={draft.bcc} muted />
+            <RecipientRow label="密送" recipients={draft.bcc} muted />
           )}
         </tbody>
       </table>
@@ -204,7 +207,7 @@ function SlackDraftContent({
   const isChannel = target.type === "channel";
   const targetDisplay = isChannel
     ? `#${target.name}`
-    : `Message to @${target.name}`;
+    : `发送给 @${target.name}`;
   const memberCount = isChannel ? target.memberCount : undefined;
 
   return (
@@ -217,7 +220,7 @@ function SlackDraftContent({
         <span>{targetDisplay}</span>
         {memberCount !== undefined && (
           <span className="text-muted-foreground ml-auto text-sm font-normal">
-            {memberCount.toLocaleString()} members
+            {memberCount.toLocaleString("zh-CN")} 位成员
           </span>
         )}
       </div>
@@ -234,7 +237,7 @@ function SlackDraftContent({
 }
 
 function formatSentTime(date: Date): string {
-  return date.toLocaleTimeString(undefined, {
+  return date.toLocaleTimeString("zh-CN", {
     hour: "numeric",
     minute: "2-digit",
   });
@@ -266,13 +269,17 @@ function SentConfirmation({ sentAt }: SentConfirmationProps) {
     <div
       className="flex items-center justify-end gap-2 text-sm"
       role="status"
-      aria-label="Message sent"
+      aria-label="消息已发送"
     >
       <span className="text-muted-foreground">
-        Sent at {formatSentTime(sentAt)}
+        发送于 {formatSentTime(sentAt)}
       </span>
       <span className="bg-primary/10 text-primary flex size-6 shrink-0 items-center justify-center rounded-full">
-        <Check className="size-3.5" />
+        <HugeiconsIcon
+          icon={Tick02Icon}
+          className="size-3.5"
+          aria-hidden="true"
+        />
       </span>
     </div>
   );
@@ -416,12 +423,12 @@ export function MessageDraft(props: MessageDraftProps) {
   const actions: Action[] = [
     {
       id: "cancel",
-      label: "Cancel",
+      label: "取消",
       variant: "ghost",
     },
     {
       id: "send",
-      label: "Send",
+      label: "发送",
       variant: "default",
     },
   ];
@@ -433,8 +440,12 @@ export function MessageDraft(props: MessageDraftProps) {
       onClick={handleToggleExpand}
       className="h-7 gap-1 px-2 text-sm"
     >
-      {isExpanded ? "Show less" : "Read more"}
-      <ChevronDown className={cn("size-3", isExpanded && "rotate-180")} />
+      {isExpanded ? "收起" : "展开更多"}
+      <HugeiconsIcon
+        icon={ArrowDown01Icon}
+        className={cn("size-3", isExpanded && "rotate-180")}
+        aria-hidden="true"
+      />
     </Button>
   ) : null;
 
@@ -447,7 +458,7 @@ export function MessageDraft(props: MessageDraftProps) {
             aria-live="polite"
           >
             <span className="text-muted-foreground text-sm">
-              Sending in {countdown}s
+              {countdown} 秒后发送
             </span>
             <Button
               ref={undoButtonRef}
@@ -456,7 +467,7 @@ export function MessageDraft(props: MessageDraftProps) {
               onClick={handleUndo}
               className="rounded-full"
             >
-              Undo
+              撤销
             </Button>
           </div>
         );

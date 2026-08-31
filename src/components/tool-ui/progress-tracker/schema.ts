@@ -30,7 +30,7 @@ const ProgressStepsSchema = z
       if (seenIds.has(step.id)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Duplicate step id: "${step.id}"`,
+          message: `步骤编号“${step.id}”不能重复。`,
           path: [index, "id"],
         });
       }

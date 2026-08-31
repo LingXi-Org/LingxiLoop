@@ -9,6 +9,7 @@ import { chatTransport } from '@/features/chat/runtime'
 import { useChatThreadStore } from '@/features/chat/runtime/store'
 import { useParticipants } from '@/features/agents/state'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
+import { userFacingError } from '@/lib/userFacingError'
 
 interface ConversationsState {
   list: Conversation[]
@@ -18,6 +19,7 @@ interface ConversationsState {
   error: string | null
   load: () => Promise<void>
   reload: () => Promise<void>
+  reset: () => void
   setLeader: (id: string, leaderId: string) => Promise<void>
   setTitle: (id: string, title: string) => Promise<void>
   setTopic: (id: string, topic: string | null) => Promise<void>
@@ -41,7 +43,7 @@ function timeFromIso(iso?: string): string {
     const m = String(d.getMinutes()).padStart(2, '0')
     return `${h}:${m}`
   }
-  if ((now.getTime() - d.getTime()) < 86400e3 * 2) return 'Yest'
+  if ((now.getTime() - d.getTime()) < 86400e3 * 2) return '昨天'
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
@@ -55,8 +57,8 @@ function renderSystemPreview(
   try {
     const p = JSON.parse(raw) as { kind?: string; participantId?: string; actorId?: string; title?: string }
     if (p.kind === 'calendar_event') {
-      const title = typeof p.title === 'string' && p.title.trim() ? p.title.trim() : 'Calendar event'
-      return `Calendar fired: ${title}`
+      const title = typeof p.title === 'string' && p.title.trim() ? p.title.trim() : '日历事件'
+      return `日历提醒：${title}`
     }
     if (!p.kind || !p.participantId) return null
     const subject = resolveName(p.participantId) ?? p.participantId
@@ -64,16 +66,16 @@ function renderSystemPreview(
     switch (p.kind) {
       case 'joined':
         return actor && actor !== subject
-          ? `${actor} added ${subject} to the group`
-          : `${subject} joined the group`
+          ? `${actor} 将 ${subject} 加入了群聊`
+          : `${subject} 加入了群聊`
       case 'left':
-        return `${subject} left the group`
+        return `${subject} 离开了群聊`
       case 'kicked':
         return actor
-          ? `${actor} removed ${subject} from the group`
-          : `${subject} was removed from the group`
+          ? `${actor} 将 ${subject} 移出了群聊`
+          : `${subject} 已被移出群聊`
       default:
-        return `${subject} — ${p.kind}`
+        return `${subject} 的群聊状态已更新`
     }
   } catch {
     return null
@@ -93,7 +95,7 @@ function fromApi(c: ApiConversation): Conversation {
     const meId = useAuth.getState().user?.id
     const byId = useParticipants.getState().byId
     const resolveName = (id: string): string | null => {
-      if (id === meId) return 'You'
+      if (id === meId) return '你'
       return byId[id]?.name ?? null
     }
     const authorName = resolveName(last.authorId)
@@ -112,20 +114,20 @@ function fromApi(c: ApiConversation): Conversation {
     if (last.kind === 'tool' && last.tool) {
       const t = last.tool as { name?: string; arg?: string }
       preview = authorName
-        ? `${authorName}: used ${t.name ?? 'tool'}`
-        : `used ${t.name ?? 'tool'}`
+        ? `${authorName} 使用了${t.name ? ` ${t.name}` : '工具'}`
+        : `使用了${t.name ? ` ${t.name}` : '工具'}`
     } else if (last.kind === 'email' && last.email) {
       // Subject leads — that's how mailbox apps preview a thread. Body
       // excerpt follows in muted text only when there's room.
       const arrow = last.email.direction === 'in' ? '↓' : '↑'
-      const subject = last.email.subject || '(no subject)'
+      const subject = last.email.subject || '无主题'
       const snippet = trimmedBody ? ` — ${trimmedBody.slice(0, 60)}` : ''
       preview = `${arrow} ${subject}${snippet}`
     } else if (last.kind === 'system') {
       // System rows ship as JSON bodies — translate to a short
       // human-readable line ("Bram joined the group" / "Scout removed
       // Iris") instead of leaking raw `{"kind":"left",...}` payloads.
-      preview = renderSystemPreview(last.body, resolveName) ?? '(system)'
+      preview = renderSystemPreview(last.body, resolveName) ?? '系统消息'
     } else if (last.attachment) {
       // Attachment messages (user uploads) — the row stores attachment
       // metadata in a separate jsonb column and `body` carries only the
@@ -134,7 +136,7 @@ function fromApi(c: ApiConversation): Conversation {
       // without a caption.
       const a = last.attachment
       const verb = a.kind === 'img' ? '📷' : '📎'
-      const filename = a.name ?? (a.kind === 'img' ? 'image' : 'file')
+      const filename = a.name ?? (a.kind === 'img' ? '图片' : '文件')
       const label = trimmedBody
         ? `${verb} ${filename} — ${trimmedBody.slice(0, 80)}`
         : `${verb} ${filename}`
@@ -201,7 +203,8 @@ export const useConversations = create<ConversationsState>((set) => ({
   loading: false,
   error: null,
   async load() {
-    const projectId = getWorkspaceSession()?.projectId ?? null
+    const workspace = getWorkspaceSession()
+    const projectId = workspace?.projectId ?? null
     const epoch = ++requestEpoch
     // Clear stale data immediately so a workspace switch never shows the
     // previous tenant's conversations during the loading window.
@@ -209,35 +212,53 @@ export const useConversations = create<ConversationsState>((set) => ({
     chatTransport.setWorkspaceChannels([])
     try {
       const list = await conversationsApi.getConversations()
-      if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
+      const activeWorkspace = getWorkspaceSession()
+      if (epoch !== requestEpoch
+        || activeWorkspace?.companyId !== workspace?.companyId
+        || activeWorkspace?.projectId !== projectId) return
       const conversations = list.map(fromApi)
       chatTransport.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations, loaded: true, loading: false, error: null })
       reconcileConversationSelection(conversations)
       refreshActiveMessagesIfSidebarMoved(conversations)
     } catch (error) {
-      if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
-      set({ loading: false, error: error instanceof Error ? error.message : String(error) })
+      const activeWorkspace = getWorkspaceSession()
+      if (epoch !== requestEpoch
+        || activeWorkspace?.companyId !== workspace?.companyId
+        || activeWorkspace?.projectId !== projectId) return
+      set({ loading: false, error: userFacingError(error, '暂时无法加载对话，请稍后重试。') })
     }
   },
   async reload() {
-    const projectId = getWorkspaceSession()?.projectId ?? null
+    const workspace = getWorkspaceSession()
+    const projectId = workspace?.projectId ?? null
     const epoch = ++requestEpoch
     set({ loading: true, error: null })
     try {
       const list = await conversationsApi.getConversations()
-      if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
+      const activeWorkspace = getWorkspaceSession()
+      if (epoch !== requestEpoch
+        || activeWorkspace?.companyId !== workspace?.companyId
+        || activeWorkspace?.projectId !== projectId) return
       const conversations = list.map(fromApi)
       chatTransport.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
       set({ list: conversations, projectId, loaded: true, loading: false, error: null })
       reconcileConversationSelection(conversations)
       refreshActiveMessagesIfSidebarMoved(conversations)
     } catch (error) {
-      if (epoch !== requestEpoch || getWorkspaceSession()?.projectId !== projectId) return
+      const activeWorkspace = getWorkspaceSession()
+      if (epoch !== requestEpoch
+        || activeWorkspace?.companyId !== workspace?.companyId
+        || activeWorkspace?.projectId !== projectId) return
       // A refresh failure keeps the last safe projection visible, but is
       // explicit so the shell can render a retry affordance.
-      set({ loading: false, error: error instanceof Error ? error.message : String(error) })
+      set({ loading: false, error: userFacingError(error, '暂时无法刷新对话，请稍后重试。') })
     }
+  },
+  reset() {
+    requestEpoch += 1
+    chatTransport.setWorkspaceChannels([])
+    set({ list: [], projectId: null, loaded: false, loading: false, error: null })
   },
   async setLeader(id, leaderId) {
     let previous: string | null = null

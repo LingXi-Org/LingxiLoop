@@ -46,12 +46,12 @@ export function DocumentsView() {
       {!loaded && <div className="space-y-2 p-2" role="status" aria-label="正在加载文档"><span className="sr-only">正在加载文档</span><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /></div>}
       {loaded && list.length === 0 && (
         <Empty className="border-0 px-4 py-8">
-          <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle className="text-base">尚无文档</EmptyTitle><EmptyDescription>人类和智能体都可以实时协作编辑。</EmptyDescription></EmptyHeader>
+          <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle className="text-base">尚无文档</EmptyTitle><EmptyDescription>你可以和智能助教实时协作编辑。</EmptyDescription></EmptyHeader>
         </Empty>
       )}
       <ItemGroup className="gap-0 p-2">{list.map((document) => {
         const author = byId[document.createdBy]
-        const authorName = author?.name ?? (document.createdBy === me?.id ? 'You' : document.createdBy)
+        const authorName = author?.name ?? (document.createdBy === me?.id ? '你' : '未知成员')
         const active = document.id === selectedId
         return (
           <Item
@@ -70,7 +70,7 @@ export function DocumentsView() {
             className={cn('cursor-pointer border-0', active ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'hover:bg-sidebar-accent')}
           >
             <ItemContent className="min-w-0">
-              <ItemTitle className="block w-full truncate">{document.title || 'Untitled'}</ItemTitle>
+              <ItemTitle className="block w-full truncate">{document.title || '未命名文档'}</ItemTitle>
               <ItemDescription className="line-clamp-1 text-xs">{authorName} · {timeAgo(document.updatedAt)}</ItemDescription>
             </ItemContent>
           </Item>
@@ -102,7 +102,7 @@ export function DocumentsView() {
             <DocumentEditor documentId={selectedId} />
           ) : (
             <Empty className="h-full border-0">
-              <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>{list.length === 0 ? '创建文档以开始协作' : '选择一个文档'}</EmptyTitle><EmptyDescription>{list.length === 0 ? '新文档支持多人和智能体实时编辑。' : '从文档列表中选择要打开的内容。'}</EmptyDescription></EmptyHeader>
+              <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>{list.length === 0 ? '创建文档以开始协作' : '选择一个文档'}</EmptyTitle><EmptyDescription>{list.length === 0 ? '新文档支持多人和智能助教实时编辑。' : '从文档列表中选择要打开的内容。'}</EmptyDescription></EmptyHeader>
             </Empty>
           )}
         </div>
@@ -122,8 +122,8 @@ export function DocumentsView() {
 function timeAgo(iso: string): string {
   const then = new Date(iso).getTime()
   const ms = Date.now() - then
-  if (ms < 60_000) return 'just now'
-  if (ms < 3_600_000) return `${Math.floor(ms / 60_000)}m ago`
-  if (ms < 86_400_000) return `${Math.floor(ms / 3_600_000)}h ago`
-  return new Date(iso).toLocaleDateString()
+  if (ms < 60_000) return '刚刚'
+  if (ms < 3_600_000) return `${Math.floor(ms / 60_000)} 分钟前`
+  if (ms < 86_400_000) return `${Math.floor(ms / 3_600_000)} 小时前`
+  return new Date(iso).toLocaleDateString('zh-CN')
 }

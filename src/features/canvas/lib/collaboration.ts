@@ -48,7 +48,7 @@ export function canvasActivityLabel(activity: CanvasActivity): string {
     case 'agent_status': return status ? `状态更新：${status}` : '更新了工作状态'
     case 'assignment_created': return '在画布中新增了工作'
     case 'assignment_updated': return '补充了新的工作要求'
-    case 'handoff': return '把任务和画布上下文移交给了另一位 Agent'
+    case 'handoff': return '把任务和画布内容移交给了另一位智能助教'
     case 'task_completed': return '完成了任务并提交自检'
     case 'task_failed': return '任务执行失败'
     case 'task_cancelled': return '任务已停止'

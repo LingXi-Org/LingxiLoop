@@ -6,6 +6,7 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { type AttachmentPreviewDescriptor, type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
+import { userFacingError } from '@/lib/userFacingError'
 import { TypesetMarkdown } from './Typeset'
 
 GlobalWorkerOptions.workerSrc ||= pdfWorkerUrl
@@ -143,7 +144,9 @@ function TextViewer({ attachment, url, onClose }: { attachment: Attachment; url:
     const controller = new AbortController()
     setState({ status: 'loading' })
     void fetch(url, { signal: controller.signal }).then(readTextPreview).then((text) => setState({ status: 'ready', url, text: formatTextPreview(attachment.name, text) })).catch((reason) => {
-      if ((reason as { name?: string }).name !== 'AbortError') setState({ status: 'error', message: reason instanceof Error ? reason.message : String(reason) })
+      if ((reason as { name?: string }).name !== 'AbortError') {
+        setState({ status: 'error', message: userFacingError(reason, '暂时无法预览附件，请下载后查看。') })
+      }
     })
     return () => controller.abort()
   }, [attachment.name, attempt, url])

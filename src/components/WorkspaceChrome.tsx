@@ -12,12 +12,16 @@ import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useParticipants } from '@/features/agents/state'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
+import { userFacingError } from '@/lib/userFacingError'
 import type { KnowledgeSource } from '@/features/knowledge/contracts'
 
 const ACCEPT = '.pdf,.docx,.txt,.md,.csv,.json'
 const statusLabel: Record<string, string> = {
   upload_pending: '等待上传', queued: '排队', processing: '处理中', parsing: '解析',
   chunking: '分块', indexing: '索引', ready: '就绪', failed: '失败',
+}
+const sourceKindLabel: Record<KnowledgeSource['kind'], string> = {
+  file: '文件', url: '网页', text: '文本',
 }
 
 function SourceRow({ source, conversationId, flat = false }: { source: KnowledgeSource; conversationId: string | null; flat?: boolean }) {
@@ -26,11 +30,11 @@ function SourceRow({ source, conversationId, flat = false }: { source: Knowledge
   const selection = useKnowledgeSources((state) => state.conversationSelection)
   const setSourceEnabled = useKnowledgeSources((state) => state.setSourceEnabled)
   const selected = selection?.sources.find((item) => item.sourceId === source.id)
-  const creator = useParticipants((state) => state.byId[source.createdBy]?.name ?? source.createdBy)
+  const creator = useParticipants((state) => state.byId[source.createdBy]?.name ?? '一位成员')
   if (flat) return <article className="group flex items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-muted/70">
     <Button type="button" onClick={() => void open(source.id)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
       <IFile className="size-4 shrink-0 text-muted-foreground" />
-      <span className="min-w-0 flex-1"><span className="block truncate text-xs font-medium text-foreground">{source.title}</span><span className="mt-0.5 flex items-center gap-1.5 truncate text-[10px] text-muted-foreground"><span className={`size-1.5 shrink-0 rounded-full ${source.status === 'ready' ? 'bg-emerald-500' : source.status === 'failed' ? 'bg-red-500' : 'bg-amber-500'}`} />{statusLabel[source.stage] ?? statusLabel[source.status] ?? source.stage}{source.chunkCount ? ` · ${source.chunkCount} 片段` : ''} · {creator}</span></span>
+      <span className="min-w-0 flex-1"><span className="block truncate text-xs font-medium text-foreground">{source.title}</span><span className="mt-0.5 flex items-center gap-1.5 truncate text-[10px] text-muted-foreground"><span className={`size-1.5 shrink-0 rounded-full ${source.status === 'ready' ? 'bg-emerald-500' : source.status === 'failed' ? 'bg-red-500' : 'bg-amber-500'}`} />{statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态待同步'}{source.chunkCount ? ` · ${source.chunkCount} 片段` : ''} · {creator}</span></span>
     </Button>
     {conversationId && source.status === 'ready' && selected ? <Button type="button" variant="ghost" size="icon-xs" aria-label={`${source.title} 在本对话中${selected.enabled ? '停用' : '启用'}`} aria-pressed={selected.enabled} title={selected.enabled ? '回答将使用此资料' : '此资料已停用'} onClick={() => void setSourceEnabled(conversationId, source.id, !selected.enabled)} className={selected.enabled ? 'text-emerald-600' : 'text-muted-foreground'}>{selected.enabled ? <IconCheck /> : <IconMinus />}</Button> : null}
     {source.status === 'failed' && <Button type="button" onClick={() => void retry(source.id)} variant="ghost" size="xs">重试</Button>}
@@ -39,9 +43,9 @@ function SourceRow({ source, conversationId, flat = false }: { source: Knowledge
   return <article className="rounded-xl border border-hairline bg-panel p-3 shadow-sm">
     <Button type="button" onClick={() => void open(source.id)} className="flex w-full items-start gap-2.5 text-left">
       <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-raised text-accent"><IFile className="size-4" /></span>
-      <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-ink">{source.title}</span><span className="mt-1 flex items-center gap-1.5 text-[10px] text-ink-secondary"><span className={`size-1.5 rounded-full ${source.status === 'ready' ? 'bg-emerald-500' : source.status === 'failed' ? 'bg-red-500' : 'bg-amber-500'}`} />{statusLabel[source.stage] ?? statusLabel[source.status] ?? source.stage}{source.chunkCount ? ` · ${source.chunkCount} 片段` : ''}</span></span>
+      <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-ink">{source.title}</span><span className="mt-1 flex items-center gap-1.5 text-[10px] text-ink-secondary"><span className={`size-1.5 rounded-full ${source.status === 'ready' ? 'bg-emerald-500' : source.status === 'failed' ? 'bg-red-500' : 'bg-amber-500'}`} />{statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态待同步'}{source.chunkCount ? ` · ${source.chunkCount} 片段` : ''}</span></span>
     </Button>
-    <p className="mt-2 truncate text-[9px] text-ink-secondary">{source.kind.toUpperCase()} · {Math.max(1, Math.round(source.sizeBytes / 1024))} KB · {creator}</p>
+    <p className="mt-2 truncate text-[9px] text-ink-secondary">{sourceKindLabel[source.kind]} · {Math.max(1, Math.round(source.sizeBytes / 1024))} KB · {creator}</p>
     <div className="mt-2 flex items-center justify-between">
       {conversationId && source.status === 'ready' && selected ? <label className="flex items-center gap-1.5 text-[10px] text-ink-secondary"><Checkbox checked={selected.enabled} onCheckedChange={(checked) => void setSourceEnabled(conversationId, source.id, checked === true)} />本对话使用</label> : <span />}
       {source.status === 'failed' && <Button type="button" onClick={() => void retry(source.id)} className="text-[10px] font-semibold text-accent">重试</Button>}
@@ -127,15 +131,15 @@ export function SourceDetailOverlay() {
     <DrawerContent className="w-[min(92vw,48rem)] sm:[--drawer-content-width:min(92vw,48rem)]">
       <DrawerHeader className="border-b border-hairline p-6">
         <div className="flex items-start justify-between gap-4"><div>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-accent">{selectedSource ? statusLabel[selectedSource.status] : '历史引用'}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-accent">{selectedSource ? statusLabel[selectedSource.status] ?? '状态待同步' : '历史引用'}</div>
           <DrawerTitle className="mt-1 text-xl">{selectedSource?.title ?? selectedCitation?.sourceTitle ?? '资料'}</DrawerTitle>
           <DrawerDescription>资料详情与引用依据</DrawerDescription>
         </div><DrawerClose asChild><Button type="button" className="size-9 rounded-xl hover:bg-raised" aria-label="关闭资料">×</Button></DrawerClose></div>
       </DrawerHeader>
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
-      {selectedSource && <><div className="mt-5 flex flex-wrap gap-2 text-[10px] text-ink-secondary"><span className="rounded-full bg-raised px-2.5 py-1">{selectedSource.kind}</span><span className="rounded-full bg-raised px-2.5 py-1">{Math.max(1, Math.round(selectedSource.sizeBytes / 1024))} KB</span>{selectedSource.isTruncated && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">已截断</span>}</div>{selectedSource.originalUrl && <a href={selectedSource.originalUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始网页</a>}{selectedSource.originalFileUrl && <a href={selectedSource.originalFileUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始文件</a>}</>}
+      {selectedSource && <><div className="mt-5 flex flex-wrap gap-2 text-[10px] text-ink-secondary"><span className="rounded-full bg-raised px-2.5 py-1">{sourceKindLabel[selectedSource.kind]}</span><span className="rounded-full bg-raised px-2.5 py-1">{Math.max(1, Math.round(selectedSource.sizeBytes / 1024))} KB</span>{selectedSource.isTruncated && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">已截断</span>}</div>{selectedSource.originalUrl && <a href={selectedSource.originalUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始网页</a>}{selectedSource.originalFileUrl && <a href={selectedSource.originalFileUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始文件</a>}</>}
       {selectedCitation && <section className="mt-5 rounded-2xl border border-accent/25 bg-accent/5 p-4"><div className="text-[10px] font-bold text-accent">[{selectedCitation.marker}] 命中片段 · 位置 {selectedCitation.position + 1}</div><p className="mt-2 whitespace-pre-wrap text-xs leading-6 text-ink">{selectedCitation.excerpt}</p></section>}
-      {selectedSource ? <><pre className="mt-5 whitespace-pre-wrap rounded-2xl bg-app p-4 font-sans text-xs leading-6 text-ink">{selectedSource.extractedText || selectedSource.error || '资料仍在处理中，完成后可查看抽取文本。'}</pre><Button onClick={() => void removeSelectedSource()} className="mt-5 text-xs font-semibold text-red-600">删除来源</Button></> : <p className="mt-5 text-xs leading-6 text-ink-secondary">原来源已不可用；以上引用摘要随历史消息保留。</p>}
+      {selectedSource ? <><pre className="mt-5 whitespace-pre-wrap rounded-2xl bg-app p-4 font-sans text-xs leading-6 text-ink">{selectedSource.extractedText || (selectedSource.error ? userFacingError(selectedSource.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可查看抽取文本。')}</pre><Button onClick={() => void removeSelectedSource()} className="mt-5 text-xs font-semibold text-red-600">删除来源</Button></> : <p className="mt-5 text-xs leading-6 text-ink-secondary">原来源已不可用；以上引用摘要随历史消息保留。</p>}
       </div>
     </DrawerContent>
   </Drawer>

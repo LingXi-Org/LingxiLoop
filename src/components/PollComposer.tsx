@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { BarChart3Icon, PlusIcon, XIcon } from 'lucide-react'
+import { Cancel01Icon, ChartBarLineIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { messagesApi } from '@/features/chat/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Questionnaire } from '@shadcn/react/questionnaire'
 import { cn } from '@/lib/utils'
+import { userFacingError } from '@/lib/userFacingError'
 
 interface Props {
   onSubmitted: () => void
@@ -61,7 +63,7 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
       requestIdRef.current = null
       onSubmitted()
     }).catch((reason) => {
-      setError(reason instanceof Error ? reason.message : '创建投票失败')
+      setError(userFacingError(reason, '创建投票失败，请稍后重试。'))
       setSubmitting(false)
     })
   }
@@ -71,10 +73,10 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
       <Card className="w-full" size="sm">
         <CardHeader className="grid-cols-[1fr_auto]">
           <div className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-lg bg-primary/10 text-primary"><BarChart3Icon className="size-4" /></span>
+            <span className="grid size-7 place-items-center rounded-lg bg-primary/10 text-primary"><HugeiconsIcon icon={ChartBarLineIcon} strokeWidth={2} className="size-4" /></span>
             <CardTitle>新建投票</CardTitle>
           </div>
-          <Button type="button" variant="ghost" size="icon-xs" onClick={onCancel} aria-label="取消投票"><XIcon /></Button>
+          <Button type="button" variant="ghost" size="icon-xs" onClick={onCancel} aria-label="取消投票"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button>
         </CardHeader>
         <CardContent>
           <Questionnaire.Item name="mode" required>
@@ -92,12 +94,12 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
                     aria-label={`投票选项 ${index + 1}`}
                   />
                   {options.length > MIN_OPTIONS ? (
-                    <Button type="button" variant="ghost" size="icon-xs" onClick={() => setOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`移除选项 ${index + 1}`}><XIcon /></Button>
+                    <Button type="button" variant="ghost" size="icon-xs" onClick={() => setOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`移除选项 ${index + 1}`}><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button>
                   ) : null}
                 </div>
               ))}
               {options.length < MAX_OPTIONS ? (
-                <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => setOptions((current) => [...current, ''])}><PlusIcon />添加选项</Button>
+                <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => setOptions((current) => [...current, ''])}><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />添加选项</Button>
               ) : null}
             </div>
             <Questionnaire.Choices className="grid grid-cols-2 gap-3">

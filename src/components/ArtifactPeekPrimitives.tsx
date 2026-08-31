@@ -89,5 +89,5 @@ export function PeekUnavailable({
 export function formatShortDate(iso: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return '最近'
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', year: 'numeric' })
 }

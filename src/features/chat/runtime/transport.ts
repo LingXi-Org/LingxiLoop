@@ -8,6 +8,7 @@ import { messagesApi } from '@/features/chat/api'
 import { conversationsApi } from '@/features/conversations/api'
 import { hasBroadcastMention } from '@/lib/chatMessages'
 import { toastAction } from '@/lib/actionToast'
+import { userFacingError } from '@/lib/userFacingError'
 import {
   lingxiIm,
   type ImEnvelope,
@@ -218,7 +219,7 @@ export class ChatTransport {
       updateConversation(conversationId, (state) => ({
         ...state,
         isLoading: false,
-        error: error instanceof Error ? error.message : '无法加载消息',
+        error: userFacingError(error, '暂时无法加载消息，请稍后重试。'),
       }))
     }
   }
@@ -426,7 +427,7 @@ export class ChatTransport {
       })
       updateConversation(envelope.channelId, (state) => ({
         ...state,
-        error: error instanceof Error ? error.message : '收到不支持的消息类型',
+        error: userFacingError(error, '这条消息暂时无法显示。'),
       }))
     }
   }

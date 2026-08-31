@@ -7,14 +7,20 @@ import type {
   ApiProjectInvitationWithToken,
   ApiCourseMember,
   LearningActivity,
+  LearningAttemptDetail,
   LearningDashboard,
   LearningDelivery,
   LearningEvidence,
   LearningMission,
   LearningNotificationPreferences,
   LearningObjective,
+  LearningOverview,
   LearningProgress,
   LearningReview,
+  LearningSpace,
+  CursorPage,
+  TeacherLearnerDetail,
+  TeacherLearnerSummary,
   TeacherAgentSummary,
 } from './contracts'
 import { normalizeCourseContract } from './courseContract'
@@ -22,8 +28,12 @@ import { normalizeCourseContract } from './courseContract'
 export const learningApi = {
   listCourses: async () => (await http<ApiCourse[]>('/courses')).map(normalizeCourseContract),
   getCourse: (courseId: string) => http<ApiCourse>(`/courses/${encodeURIComponent(courseId)}`),
-  createCourse: (input: { name: string; description?: string; color?: string }) =>
-    http<ApiCourse>('/courses', { method: 'POST', body: JSON.stringify(input) }),
+  createCourse: (input: { name: string; description?: string; color?: string }, companyId?: string) =>
+    http<ApiCourse>('/courses', {
+      method: 'POST',
+      headers: companyId ? { 'x-company-id': companyId } : undefined,
+      body: JSON.stringify(input),
+    }),
   updateCourse: (courseId: string, input: { name?: string; description?: string; color?: string }) =>
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}`, { method: 'PATCH', body: JSON.stringify(input) }),
   listCourseMembers: (courseId: string) =>
@@ -41,6 +51,39 @@ export const learningApi = {
   previewProjectInvitation: (token: string) => http<ApiProjectInvitationPreview>(`/project-invitations/${encodeURIComponent(token)}`),
   acceptProjectInvitation: (token: string) => http<ApiProjectInvitationAccept>(`/project-invitations/${encodeURIComponent(token)}/accept`, { method: 'POST', body: '{}' }),
   getDashboard: () => http<LearningDashboard>('/learning/dashboard'),
+  listSpaces: (input: { cursor?: string; limit?: number } = {}) => {
+    const params = new URLSearchParams()
+    if (input.cursor) params.set('cursor', input.cursor)
+    if (input.limit) params.set('limit', String(input.limit))
+    const query = params.size > 0 ? `?${params.toString()}` : ''
+    return http<CursorPage<LearningSpace>>(`/learning/spaces${query}`)
+  },
+  getOverview: (projectId: string, windowDays = 30) =>
+    http<LearningOverview>(`/projects/${encodeURIComponent(projectId)}/learning/overview?windowDays=${windowDays}`),
+  listLearners: (projectId: string, input: {
+    cursor?: string
+    limit?: number
+    attentionOnly?: boolean
+    search?: string
+  } = {}) => {
+    const params = new URLSearchParams()
+    if (input.cursor) params.set('cursor', input.cursor)
+    if (input.limit) params.set('limit', String(input.limit))
+    if (input.attentionOnly) params.set('attentionOnly', 'true')
+    if (input.search) params.set('search', input.search)
+    const query = params.size > 0 ? `?${params.toString()}` : ''
+    return http<CursorPage<TeacherLearnerSummary>>(
+      `/projects/${encodeURIComponent(projectId)}/learning/learners${query}`,
+    )
+  },
+  getLearner: (projectId: string, learnerId: string) =>
+    http<TeacherLearnerDetail>(
+      `/projects/${encodeURIComponent(projectId)}/learning/learners/${encodeURIComponent(learnerId)}`,
+    ),
+  getAttempt: (projectId: string, attemptId: string) =>
+    http<LearningAttemptDetail>(
+      `/projects/${encodeURIComponent(projectId)}/learning/attempts/${encodeURIComponent(attemptId)}`,
+    ),
   getTeacherAgent: (courseId: string) =>
     http<TeacherAgentSummary>(`/courses/${encodeURIComponent(courseId)}/teacher-agent`),
   bindCourseRoom: (courseId: string, conversationId: string, purpose: 'lab' | 'discussion') =>

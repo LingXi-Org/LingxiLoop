@@ -10,6 +10,7 @@ interface ParticipantsState {
   loaded: boolean
   /** Hard reload — clears state first, used at boot / workspace switch. */
   load: () => Promise<void>
+  reset: () => void
   /** Quiet re-fetch — keeps the existing roster visible during the network
    *  round-trip, then swaps. Used by the 60s background refresher so human
    *  profile changes or a status nudge arrive without a blank flash. */
@@ -40,9 +41,15 @@ function normalizeStatus(status: Status, updatedAt?: string): Status {
 
 /** Shared fetch impl — both load() and refresh() call this; the
  *  difference is whether they pre-clear state. */
-async function fetchInto(set: (partial: Partial<ParticipantsState>) => void): Promise<void> {
+let participantsRequestEpoch = 0
+
+async function fetchInto(
+  set: (partial: Partial<ParticipantsState>) => void,
+  epoch: number,
+): Promise<void> {
   try {
     const list = await agentsApi.getParticipants()
+    if (epoch !== participantsRequestEpoch) return
     const byId: Record<string, Participant> = {}
     for (const p of list) byId[p.id] = fromApi(p)
     set({ byId, loaded: true })
@@ -81,12 +88,19 @@ export const useParticipants = create<ParticipantsState>((set) => ({
     // from the previous workspace to flash on a same-id participant.
     set({ byId: {}, loaded: false })
     clearAvatarCache()
-    await fetchInto(set)
+    const epoch = ++participantsRequestEpoch
+    await fetchInto(set, epoch)
+  },
+  reset() {
+    participantsRequestEpoch += 1
+    clearAvatarCache()
+    set({ byId: {}, loaded: false })
   },
   async refresh() {
     // No state-clear — just fetch fresh data and swap. Used by the
     // periodic background ticker; we don't want avatars to flicker.
-    await fetchInto(set)
+    const epoch = ++participantsRequestEpoch
+    await fetchInto(set, epoch)
   },
   applyStatus(id, status, updatedAt) {
     set((s) => {

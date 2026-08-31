@@ -51,6 +51,15 @@ export async function setLearningCourseMembership(
   if (outcome === 'last_teacher') {
     throw new LearningApplicationError('conflict', 'cannot remove the final course teacher')
   }
+  if (outcome === 'last_owner') {
+    throw new LearningApplicationError('conflict', 'an active course must keep at least one owner')
+  }
+  if (outcome === 'protected_owner') {
+    throw new LearningApplicationError('conflict', 'a course owner cannot be downgraded or removed')
+  }
+  if (outcome === 'protected_creator') {
+    throw new LearningApplicationError('conflict', 'the course creator cannot be downgraded or removed')
+  }
 }
 
 export async function bindLearningCourseRoom(

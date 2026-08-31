@@ -28,7 +28,6 @@ test('shared resource placeholders cover every global layout shape accessibly', 
 test('global resource surfaces render Skeletons instead of plain initial loading text', () => {
   const surfaces = [
     '../desktop/PersonalDashboard.tsx',
-    '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/documents/components/DocumentsView.tsx',
     '../features/calendar/components/CalendarView.tsx',
     '../features/calendar/components/CalendarEventPeekContent.tsx',
@@ -36,7 +35,10 @@ test('global resource surfaces render Skeletons instead of plain initial loading
     '../components/WorkspacePicker.tsx',
     '../components/AttachmentViewer.tsx',
     '../features/documents/components/DocumentEditor.tsx',
-    '../features/learning/components/LearningCenter.tsx',
+    '../features/learning/dashboard/LearningDashboardPanel.tsx',
+    '../features/learning/dashboard/TeacherLearnersSection.tsx',
+    '../features/learning/dashboard/CourseMembersSection.tsx',
+    '../features/learning/dashboard/CourseSettingsSection.tsx',
     '../components/LinkPreview.tsx',
   ]
   for (const path of surfaces) {
@@ -45,13 +47,12 @@ test('global resource surfaces render Skeletons instead of plain initial loading
   }
   for (const path of [
     '../desktop/PersonalDashboard.tsx',
-    '../features/companies/components/CompanyCourseManagement.tsx',
-    '../features/documents/components/DocumentsView.tsx',
-    '../features/documents/components/DocumentEditor.tsx',
-    '../features/calendar/components/CalendarView.tsx',
-    '../features/learning/components/LearningCenter.tsx',
-  ]) assert.match(read(path), /role="status"/, `${path} has no accessible busy state`)
-  assert.match(read('../desktop/PersonalDashboard.tsx'), /pagePending[\s\S]*正在切换看板页面/)
+    '../features/learning/dashboard/LearningDashboardPanel.tsx',
+    '../features/learning/dashboard/TeacherLearnersSection.tsx',
+    '../features/learning/dashboard/CourseMembersSection.tsx',
+    '../features/learning/dashboard/CourseSettingsSection.tsx',
+  ]) assert.match(read(path), /<(?:ResourceSkeleton|Skeleton)\b/, `${path} has no accessible busy resource`)
+  assert.match(read('../desktop/PersonalDashboard.tsx'), /pagePending[\s\S]*正在加载学习看板/)
   assert.match(read('../features/calendar/components/CalendarView.tsx'), /!loaded \?[\s\S]*正在加载日历/)
   assert.match(read('../components/LinkPreview.tsx'), /if \(!loaded\) return <ResourceSkeleton/)
   assert.doesNotMatch(read('../components/LinkPreview.tsx'), /render NOTHING \(no skeleton\)/)

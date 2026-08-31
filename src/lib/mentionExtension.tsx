@@ -140,7 +140,7 @@ function makeSuggestion(): Partial<SuggestionOptions> {
 export function buildMentionExtension() {
   return Mention.configure({
     HTMLAttributes: { class: 'mention' },
-    renderText: ({ node }) => `@${String(node.attrs.label ?? node.attrs.id ?? '')}`,
+    renderText: ({ node }) => `@${String(node.attrs.label ?? '成员')}`,
     suggestion: makeSuggestion() as never,
   })
 }

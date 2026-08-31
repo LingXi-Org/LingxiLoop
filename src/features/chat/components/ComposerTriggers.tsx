@@ -12,6 +12,7 @@ import { Avatar } from '@/components/Avatar'
 import { useParticipants } from '@/features/agents/state'
 import { useConversations } from '@/features/conversations/store'
 import { useMe } from '@/stores/auth'
+import { participantRoleZh } from '@/lib/participantRole'
 
 const mentionFormatter: Unstable_DirectiveFormatter = {
   serialize: (item) => `@${item.id}`,
@@ -115,7 +116,7 @@ export function ComposerTriggers({
         id: participant.id,
         type: 'participant',
         label: participant.name,
-        description: participant.kind === 'agent' ? participant.role ?? 'Agent' : '会话成员',
+        description: participantRoleZh(participant) ?? '会话成员',
       }))
     return members.length > 0
       ? [{ id: 'all', type: 'broadcast', label: '所有人', description: '通知会话中的全部成员' }, ...members]
@@ -128,8 +129,8 @@ export function ComposerTriggers({
   })
   const commands = useMemo(() => [{
     id: 'poll',
-    label: 'Poll',
-    description: '发起一次投票，Agent 和人都能参与',
+    label: '投票',
+    description: '发起一次投票，智能助教和成员都能参与',
     execute: onOpenPoll,
   }], [onOpenPoll])
   const slash = unstable_useSlashCommandAdapter({ commands, removeOnExecute: true })

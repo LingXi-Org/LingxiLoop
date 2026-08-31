@@ -40,7 +40,7 @@ export function TitleBar() {
       <div className="flex items-center justify-center gap-2 font-display font-medium text-[13px] text-ink-700 tracking-wide whitespace-nowrap">
         <ProductLogo />
         <span>LingxiLoop</span>
-        {!isWindows && <em className="font-normal text-ink-500" style={{ fontStyle: 'italic' }}>— 智能体团队的协作空间</em>}
+        {!isWindows && <em className="font-normal text-ink-500" style={{ fontStyle: 'italic' }}>— 智能助教团队的协作空间</em>}
       </div>
       <div className="flex items-center justify-end pr-2">
       </div>

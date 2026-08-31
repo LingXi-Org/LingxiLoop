@@ -9,6 +9,8 @@ import { useParticipants } from '@/features/agents/state'
 import { useConversations } from '@/features/conversations/store'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
+import { participantRoleZh } from '@/lib/participantRole'
+import { userFacingError } from '@/lib/userFacingError'
 import type { CalendarEvent, RecurrenceRule } from '../contracts'
 import { useCalendar } from '../state'
 import { EventEditor } from './EventEditor'
@@ -28,15 +30,15 @@ function formatTime(date: Date): string {
 function formatEventRange(event: CalendarEvent): string {
   const start = new Date(event.startAt)
   if (Number.isNaN(start.getTime())) return event.allDay ? '全天' : '时间不可用'
-  if (event.allDay) return start.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
-  const startLabel = `${start.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} · ${formatTime(start)}`
+  if (event.allDay) return start.toLocaleDateString('zh-CN', { weekday: 'short', month: 'short', day: 'numeric' })
+  const startLabel = `${start.toLocaleDateString('zh-CN', { weekday: 'short', month: 'short', day: 'numeric' })} · ${formatTime(start)}`
   if (!event.endAt) return startLabel
   const end = new Date(event.endAt)
   if (Number.isNaN(end.getTime())) return startLabel
   const sameDay = start.toDateString() === end.toDateString()
   return sameDay
     ? `${startLabel}–${formatTime(end)}`
-    : `${startLabel}–${end.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ${formatTime(end)}`
+    : `${startLabel}–${end.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })} ${formatTime(end)}`
 }
 
 function describeRecurrence(recurrence: RecurrenceRule | null): string {
@@ -79,7 +81,7 @@ export function CalendarEventPeekContent({
     if (!event && loadingEventId !== eventId && !didRequestCalendar.current) {
       didRequestCalendar.current = true
       void loadEvent(eventId).catch((error) => {
-        setFailed(error instanceof Error ? error.message : String(error))
+        setFailed(userFacingError(error, '暂时无法打开这个日历事件，请稍后重试。'))
       })
     }
   }, [event, eventId, loadEvent, loadingEventId])
@@ -105,7 +107,7 @@ export function CalendarEventPeekContent({
         icon={<HugeiconsIcon icon={Calendar03Icon} className="size-5" />}
         label="日历事件"
         title={event.title || '未命名事件'}
-        meta={`${event.kind === 'agent_task' ? '智能体任务' : '个人事件'} · ${STATUS_LABEL[event.status]}`}
+        meta={`${event.kind === 'agent_task' ? '智能助教任务' : '个人事件'} · ${STATUS_LABEL[event.status]}`}
         onClose={onClose}
         onOpenFull={onOpenFull}
       />
@@ -133,7 +135,7 @@ export function CalendarEventPeekContent({
                 <Avatar className="size-6"><AvatarImage src={assignee.avatarUrl ?? undefined} alt="" /><AvatarFallback>{assignee.name.slice(0, 1).toUpperCase()}</AvatarFallback></Avatar>
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">{assignee.name}</div>
-                  <div className="truncate text-xs text-muted-foreground">{assignee.role || assignee.kind}</div>
+                  <div className="truncate text-xs text-muted-foreground">{participantRoleZh(assignee)}</div>
                 </div>
               </div>
             </CardContent></Card>

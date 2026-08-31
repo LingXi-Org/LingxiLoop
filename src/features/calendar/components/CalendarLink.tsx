@@ -11,7 +11,7 @@ export function CalendarLink({ id }: { id: string }) {
   const loadingEventId = useCalendar((s) => s.loadingEventId)
   const loadEvent = useCalendar((s) => s.loadEvent)
   const event = useCalendar((s) => s.events.find((e) => e.id === id) ?? null)
-  const label = event?.title?.trim() || id
+  const label = event?.title?.trim() || '日程'
   const didRequestCalendar = useRef(false)
 
   useEffect(() => {
@@ -30,10 +30,10 @@ export function CalendarLink({ id }: { id: string }) {
         if (view === 'conversations') openCalendarEventPeek(id)
         else setView('calendar')
       }}
-      className="inline-flex max-w-[260px] items-center gap-1.5 rounded-full border border-sky2-100 bg-[#F5FBFF] px-2 py-0.5 text-[13px] font-semibold text-skype-deep no-underline transition hover:border-sky2-200 hover:bg-[#EAF7FD]"
+      className="inline-flex max-w-[260px] items-center gap-1.5 rounded-full border border-sky2-100 bg-sky2-50 px-2 py-0.5 text-[13px] font-semibold text-skype-deep no-underline transition hover:border-sky2-200 hover:bg-sky2-100"
       style={{ verticalAlign: '-0.16em' }}
-      title={`Open calendar event ${id}`}
-      aria-label={`Open calendar event ${label}`}
+      title="打开日历事件"
+      aria-label={`打开日历事件 ${label}`}
     >
       <ICalendar className="h-3.5 w-3.5 shrink-0" />
       <span className="truncate">{label}</span>

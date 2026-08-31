@@ -5,30 +5,30 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 const capabilities = [
   {
     id: 'scim-provisioning',
-    title: 'SCIM Provisioning',
-    description: '供应商和目录映射规则确定后，才会开放自动账号配置。',
-    detail: '状态：不支持 · 当前仅允许手动 Membership 与 Seat 流程',
-    action: '配置 SCIM',
+    title: '自动配置账号',
+    description: '账号目录连接准备完成后，可自动为成员开通访问权。',
+    detail: '当前仅支持手动添加成员',
+    action: '配置账号目录',
   },
   {
     id: 'siem-sink',
-    title: 'SIEM Sink',
-    description: '安全事件导出将在目标 SIEM、数据范围和投递策略确定后开放。',
-    detail: '状态：不支持 · 当前不会发送任何安全日志',
-    action: '配置 SIEM',
+    title: '安全日志导出',
+    description: '安全日志服务准备完成后，可将指定事件发送到外部平台。',
+    detail: '当前不会向外部发送安全日志',
+    action: '配置日志导出',
   },
   {
     id: 'advanced-sso',
-    title: '高级 SSO',
-    description: 'LingxiIdentity 仍是唯一身份入口；高级协议不会绕过 Existing User 映射。',
-    detail: '状态：不支持 · 当前不接受 IdP 凭据',
-    action: '配置高级 SSO',
+    title: '企业单点登录',
+    description: '企业身份连接准备完成后，可使用已有账号安全登录。',
+    detail: '当前不接收企业身份服务的密钥',
+    action: '配置单点登录',
   },
   {
     id: 'private-deployment',
     title: '私有部署',
     description: '部署拓扑、升级责任与支持边界确定后，才会提供激活流程。',
-    detail: '状态：不支持 · 当前不会创建或模拟部署',
+    detail: '当前不会创建或模拟私有部署',
     action: '申请私有部署',
   },
 ] as const
@@ -36,8 +36,8 @@ const capabilities = [
 export function EnterpriseIntegrationCapabilities() {
   return <section aria-labelledby="enterprise-integrations-title" className="space-y-3">
     <div>
-      <h2 id="enterprise-integrations-title" className="text-[14px] font-semibold">Enterprise 能力</h2>
-      <p className="mt-1 text-xs text-muted-foreground">供应商未选定前，这些入口不会收集凭据、发送数据或模拟激活成功。</p>
+      <h2 id="enterprise-integrations-title" className="text-[14px] font-semibold">企业版能力</h2>
+      <p className="mt-1 text-xs text-muted-foreground">这些服务开放前，不会收集密钥、发送数据或显示虚假的开通结果。</p>
     </div>
     <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))]">
       {capabilities.map((capability) => <Card key={capability.id} data-capability={capability.id}>

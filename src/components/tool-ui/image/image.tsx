@@ -13,7 +13,7 @@ import {
 } from "../shared/media";
 import type { SerializableImage, Source } from "./schema";
 
-const FALLBACK_LOCALE = "en-US";
+const FALLBACK_LOCALE = "zh-CN";
 
 export interface ImageProps extends SerializableImage {
   className?: string;

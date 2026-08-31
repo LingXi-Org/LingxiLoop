@@ -103,6 +103,112 @@ test('[integration] member removal disconnects immediately and retries IM reconc
   assert.equal(disconnected.length, 2)
   assert.equal(audits.filter((entry) => entry.kind === 'company_member_remove').length, 1)
 })
+
+test('[integration] company member cascade cannot remove a Course creator', async () => {
+  await pool.query(
+    `INSERT INTO projects(id,company_id,kind,plan_id,name,status,created_by)
+     VALUES ('project-company-creator',$1,'INSTITUTIONAL_COURSE','plan-personal-free','Creator Course','ACTIVE',$2)`,
+    [COMPANY, MEMBER],
+  )
+  await pool.query(
+    `INSERT INTO courses(id,company_id,project_id,created_by)
+     VALUES ('course-company-creator',$1,'project-company-creator',$2)`,
+    [COMPANY, MEMBER],
+  )
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES
+       ($1,'project-company-creator',$2,'OWNER'),
+       ($1,'project-company-creator',$3,'TEACHER')`,
+    [COMPANY, MEMBER, OWNER],
+  )
+
+  await assert.rejects(
+    application.removeMember({
+      companyId: COMPANY,
+      userId: OWNER,
+      targetId: MEMBER,
+      audit: { ip: null, userAgent: null },
+    }),
+    (error) => error instanceof CompanyApplicationError
+      && error.code === 'conflict'
+      && /creator cannot be removed/.test(error.message),
+  )
+  assert.equal((await pool.query(
+    `SELECT 1 FROM company_memberships WHERE company_id=$1 AND user_id=$2`,
+    [COMPANY, MEMBER],
+  )).rowCount, 1)
+})
+
+test('[integration] company member cascade preserves the final Course OWNER', async () => {
+  await pool.query(
+    `INSERT INTO projects(id,company_id,kind,plan_id,name,status,created_by)
+     VALUES ('project-company-owner',$1,'INSTITUTIONAL_COURSE','plan-personal-free','Owner Course','ACTIVE',$2)`,
+    [COMPANY, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO courses(id,company_id,project_id,created_by)
+     VALUES ('course-company-owner',$1,'project-company-owner',$2)`,
+    [COMPANY, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES
+       ($1,'project-company-owner',$2,'OWNER'),
+       ($1,'project-company-owner',$3,'TEACHER')`,
+    [COMPANY, MEMBER, OWNER],
+  )
+
+  await assert.rejects(
+    application.removeMember({
+      companyId: COMPANY,
+      userId: OWNER,
+      targetId: MEMBER,
+      audit: { ip: null, userAgent: null },
+    }),
+    (error) => error instanceof CompanyApplicationError
+      && error.code === 'conflict'
+      && /keep at least one owner/.test(error.message),
+  )
+  assert.equal((await pool.query(
+    `SELECT 1 FROM project_memberships
+      WHERE company_id=$1 AND project_id='project-company-owner' AND user_id=$2 AND role='OWNER'`,
+    [COMPANY, MEMBER],
+  )).rowCount, 1)
+})
+
+test('[integration] company member cascade never leaves a Course without a manager', async () => {
+  await pool.query(
+    `INSERT INTO projects(id,company_id,kind,plan_id,name,status,created_by)
+     VALUES ('project-company-manager',$1,'INSTITUTIONAL_COURSE','plan-personal-free','Manager Course','ACTIVE',$2)`,
+    [COMPANY, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO courses(id,company_id,project_id,created_by)
+     VALUES ('course-company-manager',$1,'project-company-manager',$2)`,
+    [COMPANY, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,'project-company-manager',$2,'TEACHER')`,
+    [COMPANY, MEMBER],
+  )
+
+  await assert.rejects(
+    application.removeMember({
+      companyId: COMPANY,
+      userId: OWNER,
+      targetId: MEMBER,
+      audit: { ip: null, userAgent: null },
+    }),
+    (error) => error instanceof CompanyApplicationError
+      && error.code === 'conflict'
+      && /keep at least one teacher/.test(error.message),
+  )
+  assert.equal((await pool.query(
+    `SELECT 1 FROM project_memberships
+      WHERE company_id=$1 AND project_id='project-company-manager' AND user_id=$2 AND role='TEACHER'`,
+    [COMPANY, MEMBER],
+  )).rowCount, 1)
+})
 after(async () => { await teardownAll() })
 
 test('[integration] company member mutation never crosses tenant ownership', async () => {

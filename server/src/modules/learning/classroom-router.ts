@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
-import { requireCompany } from '../../http/request-context.js'
+import { requireAuth, requireCompany } from '../../http/request-context.js'
 import type { PermissionAction } from '../access/public.js'
 import { permissionService } from '../access/public.js'
 import {
@@ -8,6 +8,9 @@ import {
   createActivityRequestSchema,
   createObjectivesRequestSchema,
   importLearningActivitiesRequestSchema,
+  learningLearnersQuerySchema,
+  learningOverviewQuerySchema,
+  learningSpacesQuerySchema,
   missionCoordinatorRequestSchema,
   objectiveStatusRequestSchema,
   reviewEvaluationRequestSchema,
@@ -51,6 +54,46 @@ async function requireProjectPermission(
 classroomRouter.get('/learning/dashboard', safe(async (req, res) => {
   const scope = await requireCompany(req)
   res.json(await respond(() => learningApplication.dashboard(scope)))
+}))
+
+classroomRouter.get('/learning/spaces', safe(async (req, res) => {
+  const userId = requireAuth(req)
+  const input = parse(learningSpacesQuerySchema.safeParse(req.query))
+  res.json(await respond(() => learningApplication.spaces(userId, input)))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/overview', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:read')
+  const input = parse(learningOverviewQuerySchema.safeParse(req.query))
+  res.json(await respond(() => learningApplication.overview(scope, projectId, input.windowDays)))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/learners', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:review')
+  const input = parse(learningLearnersQuerySchema.safeParse(req.query))
+  res.json(await respond(() => learningApplication.learners(scope, projectId, input)))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/learners/:learnerId', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:review')
+  res.json(await respond(() => learningApplication.learnerDetail(
+    scope,
+    projectId,
+    String(req.params.learnerId),
+  )))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/attempts/:attemptId', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:review')
+  res.json(await respond(() => learningApplication.attemptDetail(
+    scope,
+    projectId,
+    String(req.params.attemptId),
+  )))
 }))
 
 classroomRouter.get('/projects/:projectId/learning/knowledge-units', safe(async (req, res) => {

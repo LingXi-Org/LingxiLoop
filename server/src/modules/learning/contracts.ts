@@ -30,6 +30,27 @@ export const createProjectInvitationRequestSchema = z.object({
   maxUses: z.coerce.number().int().min(1).max(100).default(1),
 }).strict()
 
+const cursorSchema = z.string().trim().min(1).max(1024).optional()
+
+export const learningSpacesQuerySchema = z.object({
+  cursor: cursorSchema,
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+}).strict()
+
+export const learningOverviewQuerySchema = z.object({
+  windowDays: z.coerce.number().int().min(1).max(365).default(30),
+}).strict()
+
+const queryBooleanSchema = z.union([z.boolean(), z.enum(['true', 'false'])])
+  .transform((value) => value === true || value === 'true')
+
+export const learningLearnersQuerySchema = z.object({
+  cursor: cursorSchema,
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+  attentionOnly: queryBooleanSchema.default(false),
+  search: z.string().trim().min(1).max(100).optional(),
+}).strict()
+
 export const bindCourseRoomRequestSchema = z.object({ purpose: z.enum(['lab', 'discussion']) }).strict()
 export const createObjectivesRequestSchema = z.object({
   objectives: z.array(z.object({
@@ -86,6 +107,9 @@ export type CreateCourseInput = z.infer<typeof createCourseRequestSchema>
 export type UpdateCourseInput = z.infer<typeof updateCourseRequestSchema>
 export type AddInstitutionalCourseMemberInput = z.infer<typeof addInstitutionalCourseMemberRequestSchema>
 export type CreateProjectInvitationInput = z.infer<typeof createProjectInvitationRequestSchema>
+export type LearningSpacesQuery = z.infer<typeof learningSpacesQuerySchema>
+export type LearningOverviewQuery = z.infer<typeof learningOverviewQuerySchema>
+export type LearningLearnersQuery = z.infer<typeof learningLearnersQuerySchema>
 export type BindCourseRoomInput = z.infer<typeof bindCourseRoomRequestSchema>
 export type CreateObjectivesInput = z.infer<typeof createObjectivesRequestSchema>
 export type ObjectiveStatusInput = z.infer<typeof objectiveStatusRequestSchema>

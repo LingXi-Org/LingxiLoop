@@ -2,7 +2,14 @@
 
 import * as React from "react";
 import { useMemo, useState, useEffect, useRef, memo } from "react";
-import { Loader2, Check, X, MoreHorizontal, ChevronRight } from "lucide-react";
+import {
+  ArrowRight01Icon,
+  Cancel01Icon,
+  Loading03Icon,
+  MoreHorizontalIcon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { PlanProps, PlanTodo, PlanTodoStatus } from "./schema";
 import {
   Accordion,
@@ -47,7 +54,10 @@ const TodoIcon = memo(function TodoIcon({
         className="border-border bg-card flex size-6 shrink-0 items-center justify-center rounded-full border shadow-[0_0_0_4px_hsl(var(--primary)/0.1)] motion-safe:transition-all motion-safe:duration-300"
         aria-hidden="true"
       >
-        <Loader2 className="text-primary size-5 motion-safe:animate-spin" />
+        <HugeiconsIcon
+          icon={Loading03Icon}
+          className="text-primary size-5 motion-safe:animate-spin"
+        />
       </span>
     );
   }
@@ -58,7 +68,8 @@ const TodoIcon = memo(function TodoIcon({
         className="border-primary bg-primary flex size-6 shrink-0 items-center justify-center rounded-full border shadow-sm motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-75 motion-safe:duration-300 motion-safe:ease-out"
         aria-hidden="true"
       >
-        <Check
+        <HugeiconsIcon
+          icon={Tick02Icon}
           className="text-primary-foreground size-4 motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-75 motion-safe:delay-75 motion-safe:duration-200 motion-safe:fill-mode-both"
           strokeWidth={3}
         />
@@ -72,7 +83,8 @@ const TodoIcon = memo(function TodoIcon({
         className="border-destructive bg-destructive flex size-6 shrink-0 items-center justify-center rounded-full border shadow-sm motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-75 motion-safe:duration-300 motion-safe:ease-out dark:border-red-600 dark:bg-red-600"
         aria-hidden="true"
       >
-        <X
+        <HugeiconsIcon
+          icon={Cancel01Icon}
           className="size-4 text-white motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-75 motion-safe:delay-75 motion-safe:duration-200 motion-safe:fill-mode-both"
           strokeWidth={3}
         />
@@ -188,7 +200,11 @@ const PlanTodoItem = memo(function PlanTodoItem({
               <TodoIcon status={todo.status} />
             </div>
             <span className="min-w-0 flex-1">{labelElement}</span>
-            <ChevronRight className="text-muted-foreground/50 group-hover/todo:text-muted-foreground mt-0.5 size-4 shrink-0 rotate-90 group-data-[state=open]/todo:[transform:rotateY(180deg)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.34,1.56,0.64,1)]" />
+            <HugeiconsIcon
+              icon={ArrowRight01Icon}
+              className="text-muted-foreground/50 group-hover/todo:text-muted-foreground mt-0.5 size-4 shrink-0 rotate-90 group-data-[state=open]/todo:[transform:rotateY(180deg)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+              aria-hidden="true"
+            />
           </CollapsibleTrigger>
           <CollapsibleContent
             className="group/content"
@@ -258,6 +274,7 @@ const ProgressBar = memo(function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={progress}
+      aria-label="计划完成进度"
     >
       <div
         className={cn(
@@ -358,8 +375,12 @@ function PlanRoot({
           <Accordion type="single" collapsible>
             <AccordionItem value="more" className="border-0">
               <AccordionTrigger className="text-muted-foreground hover:text-primary flex cursor-default items-start justify-start gap-2 py-1 text-sm font-normal [&>svg:last-child]:hidden">
-                <MoreHorizontal className="text-muted-foreground/70 mt-0.5 size-4 shrink-0" />
-                <span>{hiddenTodos.length} more</span>
+                <HugeiconsIcon
+                  icon={MoreHorizontalIcon}
+                  className="text-muted-foreground/70 mt-0.5 size-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>还有 {hiddenTodos.length} 项</span>
               </AccordionTrigger>
               <AccordionContent className="pt-2 pb-0">
                 <ul className="-mx-2 space-y-2 px-2">
@@ -388,7 +409,11 @@ function PlanRoot({
             {description && <CardDescription>{description}</CardDescription>}
           </div>
           {allComplete && (
-            <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" />
+            <HugeiconsIcon
+              icon={Tick02Icon}
+              className="mt-0.5 size-5 shrink-0 text-emerald-500"
+              aria-label="全部完成"
+            />
           )}
         </CardHeader>
       )}
@@ -403,7 +428,7 @@ function PlanRoot({
           {!compact && (
             <>
               <div className="text-muted-foreground mb-2 text-sm">
-                {completedCount} of {todos.length} complete
+                已完成 {completedCount} / {todos.length}
               </div>
               <ProgressBar progress={progress} isCelebrating={isCelebrating} />
             </>

@@ -36,7 +36,7 @@ export function ConversationActivity({ conversationId }: { conversationId: strin
   const active = [...latestByRun.values()].reverse()
     .find((event) => event.runStatus === 'running' || event.runStatus === 'waiting_for_human')
   return (
-    <div className="border-b border-[var(--im-divider-weak)] bg-background px-5 py-2" role="status" aria-label="Agent 最近活动">
+    <div className="border-b border-[var(--im-divider-weak)] bg-background px-5 py-2" role="status" aria-label="智能助教最近活动">
       <div className="mx-auto flex max-w-[900px] items-center gap-3 overflow-hidden">
         <span className={`size-2 shrink-0 rounded-full ${active ? 'animate-pulse bg-[var(--working)]' : 'bg-[var(--avail)]'}`} />
         <span className="shrink-0 text-[11px] font-semibold text-muted-foreground">

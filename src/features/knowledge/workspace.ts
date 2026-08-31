@@ -4,12 +4,14 @@ import { useCalendar } from '@/features/calendar/state'
 import { useConversations } from '@/features/conversations/store'
 import { useDocuments } from '@/features/documents/state'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
+import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
-import { getActiveCompanyId } from '@/stores/auth'
+import { getActiveCompanyId, useAuth } from '@/stores/auth'
 import type { WorkspaceSummary } from '@/types'
 import { knowledgeApi } from './api'
 
 interface WorkspaceState {
+  companyId: string | null
   list: WorkspaceSummary[]
   selectedId: string | null
   loaded: boolean
@@ -17,17 +19,33 @@ interface WorkspaceState {
   error: string | null
   load: () => Promise<void>
   select: (projectId: string) => Promise<void>
+  reset: () => void
   leave: () => void
   createBlank: (name: string, description?: string) => Promise<string>
 }
 
+let workspaceRequestEpoch = 0
+
+const emptyWorkspaceState = {
+  companyId: null,
+  list: [] as WorkspaceSummary[],
+  selectedId: null,
+  loaded: false,
+  loading: false,
+  error: null,
+}
+
 export const useWorkspace = create<WorkspaceState>((set, get) => ({
-  list: [], selectedId: null, loaded: false, loading: false, error: null,
+  ...emptyWorkspaceState,
   load: async () => {
-    set({ loading: true, error: null })
+    const companyId = getActiveCompanyId()
+    const epoch = ++workspaceRequestEpoch
+    set((state) => state.companyId === companyId
+      ? { loading: true, error: null }
+      : { ...emptyWorkspaceState, companyId, loading: true })
     try {
-      const companyId = getActiveCompanyId()
       const list = await knowledgeApi.listProjects()
+      if (epoch !== workspaceRequestEpoch || getActiveCompanyId() !== companyId) return
       const stored = getWorkspaceSession()
       const restoredProjectId = stored?.companyId === companyId && list.some((workspace) => workspace.id === stored.projectId && workspace.status !== 'DELETED')
         ? stored.projectId : null
@@ -37,9 +55,14 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
       const selectedId = restoredProjectId ?? list.find((workspace) => workspace.isDefault && workspace.status !== 'DELETED')?.id ?? null
       if (selectedId && companyId) setWorkspaceSession({ companyId, projectId: selectedId })
       else if (stored) setWorkspaceSession(null)
-      set({ list, selectedId, loaded: true, loading: false })
+      set({ companyId, list, selectedId, loaded: true, loading: false })
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : String(error), loaded: true, loading: false })
+      if (epoch !== workspaceRequestEpoch || getActiveCompanyId() !== companyId) return
+      set({
+        error: userFacingError(error, '暂时无法打开学习区，请稍后重试。'),
+        loaded: true,
+        loading: false,
+      })
     }
   },
   select: async (projectId) => {
@@ -58,6 +81,10 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
       useConversations.getState().load(),
     ])
   },
+  reset: () => {
+    workspaceRequestEpoch += 1
+    set(emptyWorkspaceState)
+  },
   leave: () => {
     setWorkspaceSession(null)
     set({ selectedId: null })
@@ -74,4 +101,32 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
 export function activeWorkspace(): WorkspaceSummary | null {
   const state = useWorkspace.getState()
   return state.list.find((workspace) => workspace.id === state.selectedId) ?? null
+}
+
+export interface LearningSpaceSelection {
+  companyId: string
+  projectId: string
+}
+
+/**
+ * Select an accessible learning space without ever rendering data from the
+ * previously active company in the new context. Same-company changes retain
+ * the existing project-open workflow; cross-company changes are restored by
+ * AuthedApp after its company-keyed remount.
+ */
+export async function selectLearningSpace(selection: LearningSpaceSelection): Promise<void> {
+  const activeCompanyId = getActiveCompanyId()
+  if (activeCompanyId === selection.companyId) {
+    await useWorkspace.getState().select(selection.projectId)
+    return
+  }
+
+  setWorkspaceSession(selection)
+  useWorkspace.getState().reset()
+  useParticipants.getState().reset()
+  useConversations.getState().reset()
+  useCalendar.getState().reset()
+  useDocuments.getState().reset()
+  useApp.setState({ selectedConversationId: null })
+  useAuth.getState().setActiveCompany(selection.companyId)
 }

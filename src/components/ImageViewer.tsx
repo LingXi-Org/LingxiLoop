@@ -99,12 +99,12 @@ export function ImageViewer({ src, name, onClose }: ImageViewerProps) {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = name || 'image'
+      a.download = name || '图片'
       document.body.appendChild(a)
       a.click()
       a.remove()
       URL.revokeObjectURL(url)
-      flashToast('Downloaded')
+      flashToast('已下载')
     } catch {
       window.open(src, '_blank', 'noopener,noreferrer')
     }
@@ -121,16 +121,16 @@ export function ImageViewer({ src, name, onClose }: ImageViewerProps) {
       // environments (or in non-secure contexts) — guard before using.
       if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })])
-        flashToast('Copied')
+        flashToast('已复制')
         return
       }
       throw new Error('Clipboard API unavailable')
     } catch {
       try {
         await navigator.clipboard.writeText(src)
-        flashToast('Copied URL')
+        flashToast('图片地址已复制')
       } catch {
-        flashToast('Copy failed')
+        flashToast('复制失败')
       }
     }
   }
@@ -260,7 +260,7 @@ function Toolbar({
         </svg>
       </ToolBtn>
       <Sep />
-      <ToolBtn title="关闭 (Esc)" onClick={onClose}>
+      <ToolBtn title="关闭（Esc）" onClick={onClose}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
         </svg>

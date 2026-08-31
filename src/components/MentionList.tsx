@@ -13,6 +13,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import type { Participant } from '@/types'
 import { Avatar } from './Avatar'
+import { participantRoleZh } from '@/lib/participantRole'
 import { cn } from '@/lib/utils'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
 
@@ -92,7 +93,7 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
           <ItemContent className="min-w-0">
             <ItemTitle className="block w-full truncate font-medium leading-tight">{p.name}</ItemTitle>
             <ItemDescription className="line-clamp-1 text-[11px] leading-tight text-stone-400">
-              {p.kind === 'agent' ? "智能体" : "成员"}{p.role ? ` · ${p.role}` : ''}
+              {participantRoleZh(p)}
             </ItemDescription>
           </ItemContent>
         </Item>

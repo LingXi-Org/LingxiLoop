@@ -8,11 +8,19 @@ const ROLE_ZH: Record<string, string> = {
   developer: '开发工程师',
   'product manager': '产品经理',
   'study coach': '学习教练',
+  'learning coach': '学习教练',
+  coach: '学习教练',
+  'learning coordinator': '学习统筹',
+  coordinator: '学习统筹',
   'concept tutor': '概念导师',
+  tutor: '学习导师',
   'problem coach': '解题陪练',
   'learning diagnostician': '错因诊断',
+  diagnostician: '错因诊断',
   'research guide': '阅读研究',
   'practice mentor': '实践导师',
+  'teacher operations': '课程运营',
+  'teaching assistant': '教学助教',
   'brand & voice': '品牌策划',
   ops: '运营专员',
   operator: '运营专员',
@@ -21,13 +29,17 @@ const ROLE_ZH: Record<string, string> = {
   marketing: '市场专员',
 }
 
-/** UI-facing Chinese title. Never leaks an English persona title. */
+/** UI-facing Chinese participant title. Never leaks an English persona title or kind. */
 export function participantRoleZh(participant?: Participant): string | null {
-  if (!participant || participant.kind !== 'agent') return null
+  if (!participant) return null
+  if (participant.kind === 'human') return '成员'
   const role = participant.role?.trim()
-  if (!role) return '智能体'
-  // Learning personas are stored as "中文 · English" for model context.
-  // The product UI intentionally exposes only the authored Chinese title.
-  if (/^[\u3400-\u9fff]/u.test(role)) return role.split(/\s*[·|｜]\s*/u, 1)[0]?.trim() || '智能体'
-  return ROLE_ZH[role.toLowerCase()] ?? '智能体'
+  if (!role) return '智能助教'
+  // Learning personas can store both languages for model context. The UI
+  // keeps an authored Chinese segment regardless of which side comes first.
+  const segments = role.split(/\s*[·|｜]\s*/u).map((segment) => segment.trim()).filter(Boolean)
+  const chinese = segments.find((segment) => /^[\u3400-\u9fff]/u.test(segment))
+  if (chinese) return chinese
+  const normalized = (segments[0] ?? role).toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ')
+  return ROLE_ZH[normalized] ?? '智能助教'
 }

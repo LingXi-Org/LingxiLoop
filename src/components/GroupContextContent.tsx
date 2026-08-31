@@ -1,4 +1,5 @@
-import { IconLayoutDashboard, IconPlus } from '@tabler/icons-react'
+import { DashboardSquare01Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { type ReactNode, useEffect, useState } from 'react'
 import { CardSurface } from '@/components/assistant-ui/elements/surfaces'
 import { CanvasPreview } from '@/features/canvas/components/CanvasPreview'
@@ -35,14 +36,14 @@ export function GroupCanvasPanel({ conversationId, flat = false, toolbar }: { co
     {flat ? toolbar ? <div className="flex h-10 shrink-0 items-center justify-between px-3">
       {toolbar}
     </div> : null : <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-hairline px-3.5">
-      <div><h2 className="text-sm font-semibold text-ink">Canvas</h2><p className="text-[10px] text-ink-secondary">只读实时预览</p></div>
+      <div><h2 className="text-sm font-semibold text-ink">画布</h2><p className="text-[10px] text-ink-secondary">实时预览</p></div>
     </header>}
     {summary ? <div className={`flex min-h-0 flex-1 flex-col ${flat ? 'px-3 pb-2 pt-9' : 'gap-2 p-3'}`}>
       <CardSurface asChild variant="interactive" interactive className={`relative min-h-0 flex-1 cursor-zoom-in gap-0 py-0 text-left [--card-spacing:0px] ${flat ? 'rounded-2xl' : ''}`}>
-        <Button type="button" onClick={() => openCanvas(summary.id)} aria-label="打开完整 Canvas"><CanvasPreview snapshot={preview} title={summary.title} frameCount={summary.frameCount} fill={flat} /></Button>
+        <Button type="button" onClick={() => openCanvas(summary.id)} aria-label="打开完整画布"><CanvasPreview snapshot={preview} title={summary.title} frameCount={summary.frameCount} fill={flat} /></Button>
       </CardSurface>
-      {!flat && <p className="flex shrink-0 items-center justify-between text-[10px] text-ink-secondary"><span>{summary.frameCount} 张卡片 · {summary.assignmentCount} 个 Agent</span><span className="flex items-center gap-1"><i className="size-1.5 rounded-full bg-emerald-500" />实时</span></p>}
-    </div> : <div className="grid min-h-0 flex-1 place-items-center px-8 pb-12 text-center"><div><IconLayoutDashboard className="mx-auto size-8 text-muted-foreground" /><p className="mt-4 text-sm font-medium text-foreground">还没有 Canvas</p><p className="mt-1 max-w-[250px] text-xs leading-5 text-muted-foreground">开始后，Agent 的工作进度会实时出现在这里。</p><Button type="button" disabled={creating} onClick={() => void start()} className="context-empty-action mt-4" size="sm"><IconPlus />{creating ? '正在创建…' : '开始 Canvas'}</Button></div></div>}
+      {!flat && <p className="flex shrink-0 items-center justify-between text-[10px] text-ink-secondary"><span>{summary.frameCount} 张卡片 · {summary.assignmentCount} 位智能助教</span><span className="flex items-center gap-1"><i className="size-1.5 rounded-full bg-primary" />实时</span></p>}
+    </div> : <div className="grid min-h-0 flex-1 place-items-center px-8 pb-12 text-center"><div><HugeiconsIcon icon={DashboardSquare01Icon} strokeWidth={2} className="mx-auto size-8 text-muted-foreground" /><p className="mt-4 text-sm font-medium text-foreground">还没有画布</p><p className="mt-1 max-w-[250px] text-xs leading-5 text-muted-foreground">开始后，智能助教的工作进度会显示在这里。</p><Button type="button" disabled={creating} onClick={() => void start()} className="context-empty-action mt-4" size="sm"><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />{creating ? '正在创建…' : '新建画布'}</Button></div></div>}
   </section>
 }
 

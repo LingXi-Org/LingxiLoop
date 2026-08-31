@@ -106,7 +106,7 @@ export function ConversationListItemContent({
           </span>
           {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[9px] font-normal text-muted-foreground">{role}</span>)}
           {muted && <span className="shrink-0 text-[10px] text-muted-foreground" aria-label="已静音">⌁</span>}
-          {conversation.tag === 'fresh-pulled' && <span className="rounded bg-secondary px-1.5 py-0.5 text-[8px] font-bold text-secondary-foreground">NEW</span>}
+          {conversation.tag === 'fresh-pulled' && <span className="rounded bg-secondary px-1.5 py-0.5 text-[8px] font-bold text-secondary-foreground">新消息</span>}
         </span>
         <span className={cn('mt-0.5 block truncate', isMobile ? 'text-[14px]' : 'text-[13px]', typingNames.length > 0 ? 'text-primary' : 'text-muted-foreground')}>
           {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}

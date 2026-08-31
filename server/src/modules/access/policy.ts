@@ -1,9 +1,9 @@
 import {
+  type CompanyRole,
   companyStatusBelongsToType,
+  type ProjectRole,
   projectKindBelongsToCompanyType,
   projectStatusBelongsToKind,
-  type CompanyRole,
-  type ProjectRole,
 } from '../../domain/public.js'
 import type {
   EntitlementCode,
@@ -121,11 +121,17 @@ export const PERMISSION_POLICIES = {
     scope: 'company', entitlement: 'conversation.core', companyRoles: ALL_COMPANY_ROLES, resource: 'none',
   },
   'agent:read': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'none' },
-  'agent:manage': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'none' },
+  'agent:manage': { scope: 'company', entitlement: 'agent.core', companyRoles: COMPANY_MANAGERS, resource: 'none' },
   'agent_autonomy:read': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'none' },
   'agent_autonomy:write': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'none' },
-  'agent_memory:read': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'none' },
-  'agent_memory:write': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'none' },
+  'agent_memory:read': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'member' },
+  'agent_memory:write': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'member' },
+  'agent_memory:read_company': {
+    scope: 'company', entitlement: 'agent.core', companyRoles: COMPANY_MANAGERS, resource: 'none',
+  },
+  'agent_memory:write_company': {
+    scope: 'company', entitlement: 'agent.core', companyRoles: COMPANY_MANAGERS, resource: 'none',
+  },
   'agent_approval:list': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'member' },
   'agent_approval:resolve': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'member' },
   'agent_run:control': { scope: 'company', entitlement: 'agent.core', companyRoles: ALL_COMPANY_ROLES, resource: 'member' },
@@ -148,7 +154,8 @@ export const PROJECT_WRITE_ACTIONS = new Set<PermissionAction>([
   'knowledge:write', 'knowledge:manage', 'conversation:write', 'conversation:manage',
   'document:write', 'document:delete', 'calendar:write', 'canvas:write',
   'poll:create', 'poll:vote', 'poll:close', 'email:write', 'attachment:write',
-  'agent_autonomy:write', 'agent_memory:write', 'agent_approval:resolve', 'agent_run:control',
+  'agent_autonomy:write', 'agent_memory:write', 'agent_memory:write_company',
+  'agent_approval:resolve', 'agent_run:control',
 ])
 
 const READ_ACTIONS = new Set<PermissionAction>([
@@ -156,7 +163,7 @@ const READ_ACTIONS = new Set<PermissionAction>([
   'project:list', 'project:read', 'course:read', 'project_member:list', 'project_invitation:list',
   'learning:read', 'knowledge:read', 'conversation:read', 'document:read',
   'calendar:read', 'canvas:read', 'poll:read', 'email:read', 'agent:read',
-  'agent_autonomy:read', 'agent_memory:read', 'agent_approval:list',
+  'agent_autonomy:read', 'agent_memory:read', 'agent_memory:read_company', 'agent_approval:list',
   'trust:read_l2', 'trust:read_l3_company', 'trust:read_l3_project',
 ])
 

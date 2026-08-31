@@ -9,6 +9,8 @@ import {
   Fragment,
 } from "react";
 import type { KeyboardEvent } from "react";
+import { Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type {
   OptionListProps,
   OptionListSelection,
@@ -24,7 +26,6 @@ import type { Action } from "../shared/schema";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
 
 function convertIdSetToSelection(
   selected: Set<string>,
@@ -68,7 +69,9 @@ function SelectionIndicator({
         disabled && "opacity-50",
       )}
     >
-      {mode === "multi" && isSelected && <Check className="size-3" />}
+      {mode === "multi" && isSelected && (
+        <HugeiconsIcon icon={Tick02Icon} className="size-3" />
+      )}
       {mode === "single" && isSelected && (
         <span className="size-2 rounded-full bg-current" />
       )}
@@ -178,7 +181,7 @@ function OptionListConfirmation({
       data-tool-ui-id={id}
       data-receipt="true"
       role="status"
-      aria-label="Confirmed selection"
+      aria-label="已确认选择"
     >
       <div
         className={cn(
@@ -192,7 +195,11 @@ function OptionListConfirmation({
             )}
             <div className="flex items-start gap-3 py-1">
               <span className="flex h-6 items-center">
-                <Check className="text-primary size-4 shrink-0" />
+                <HugeiconsIcon
+                  icon={Tick02Icon}
+                  className="text-primary size-4 shrink-0"
+                  aria-hidden="true"
+                />
               </span>
               {option.icon && (
                 <span className="flex h-6 items-center">{option.icon}</span>
@@ -413,8 +420,8 @@ export function OptionList({
     if (customActions) return customActions;
     return {
       items: [
-        { id: "cancel", label: "Clear", variant: "ghost" as const },
-        { id: "confirm", label: "Confirm", variant: "default" as const },
+        { id: "cancel", label: "清空", variant: "ghost" as const },
+        { id: "confirm", label: "确认", variant: "default" as const },
       ],
       align: "right" as const,
     } satisfies ReturnType<typeof normalizeActionsConfig>;
@@ -568,7 +575,7 @@ export function OptionList({
           data-slot="option-list"
           data-tool-ui-id={id}
           role="group"
-          aria-label="Option list"
+          aria-label="选项列表"
         >
           <div
             className={cn(

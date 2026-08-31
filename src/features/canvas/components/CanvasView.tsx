@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useParticipants } from '@/features/agents/state'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
+import { userFacingError } from '@/lib/userFacingError'
 import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType } from '../contracts'
 import { canvasStatusLabel, isCanvasAssignmentActive } from '../lib/collaboration'
 import { useCanvas } from '../state'
@@ -371,24 +372,24 @@ function CanvasFrameMenu({ frame: targetFrame, onClose, onFeedback }: {
   async function remove() {
     if (busy) return
     if (!await confirmSensitiveAction({
-      title: '删除 Canvas 卡片？',
+      title: '删除画布卡片？',
       description: `“${frame.title}”将被永久删除，且无法恢复。`,
       confirmLabel: '删除卡片',
       tone: 'destructive',
     })) return
     setBusy(true)
     try {
-      await toastAction(deleteFrame(frame.id), { loading: '正在删除 Canvas 卡片', success: 'Canvas 卡片已删除', error: '删除 Canvas 卡片失败' })
+      await toastAction(deleteFrame(frame.id), { loading: '正在删除画布卡片', success: '画布卡片已删除', error: '删除画布卡片失败' })
       onClose()
     } catch (cause) {
-      setNotice(cause instanceof Error ? cause.message : '删除失败')
+      setNotice(userFacingError(cause, '画布卡片删除失败，请稍后重试。'))
       setBusy(false)
     }
   }
 
   return <CanvasMenuItems onClose={onClose} items={[
     { label: frame.title, hint: `${TYPE_LABELS[frame.type]} · 第 ${frame.revision} 版`, disabled: true },
-    { label: '反馈给智能体', icon: <IAt />, onSelect: () => onFeedback(frame.id) },
+    { label: '反馈给智能助教', icon: <IAt />, onSelect: () => onFeedback(frame.id) },
     { label: notice ?? '复制内容', keepOpen: true, onSelect: () => void copyContent() },
     { label: '下载文件', keepOpen: true, onSelect: () => void download() },
     { label: '删除卡片', icon: <ITrash />, destructive: true, disabled: busy, onSelect: () => void remove() },
@@ -499,7 +500,7 @@ function FrameCard({ frame, assignment, status, selected, zoom, allowActivation 
     try {
       await updateFrame(frame.id, { content }, true, currentFrame.revision)
     } catch (cause) {
-      setSaveError(cause instanceof Error ? cause.message : '保存失败')
+      setSaveError(userFacingError(cause, '画布内容保存失败，请稍后重试。'))
       setEditing(true)
     } finally {
       savingRef.current = false
@@ -542,7 +543,7 @@ function FrameCard({ frame, assignment, status, selected, zoom, allowActivation 
 
   return <article data-canvas-frame={frame.id} className={`canvas-frame-card absolute overflow-hidden ${selected ? 'is-selected' : ''} ${status ? 'is-live-editing' : ''}`} style={{ left: frame.x, top: frame.y, width: frame.width, height: frame.height, '--canvas-frame-accent': color } as CSSProperties} onPointerDown={(event) => { event.stopPropagation(); selectFrame(frame.id) }}>
     <header onPointerDown={beginMove} className="canvas-frame-header cursor-grab active:cursor-grabbing" aria-label={`移动${frame.title}`} />
-    {ownerId && <span className="canvas-frame-agent-label"><i aria-hidden />{owner?.name ?? ownerId}</span>}
+    {ownerId && <span className="canvas-frame-agent-label"><i aria-hidden />{owner?.name ?? '智能助教'}</span>}
     <div className={`canvas-frame-body relative h-[calc(100%-40px)] overflow-auto ${EDITABLE_FRAME_TYPES.has(frame.type) ? 'cursor-text' : ''}`} onClick={(event) => {
       event.stopPropagation()
       if (EDITABLE_FRAME_TYPES.has(frame.type) && allowActivation() && !editing) setEditing(true)
@@ -666,19 +667,19 @@ function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame;
       await addComment(text, frame.id)
       writeFeedbackDraft(frame.canvasId, frame.id, '')
       onClose()
-    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)) }
+    } catch (cause) { setError(userFacingError(cause, '反馈发送失败，请稍后重试。')) }
     finally { setBusy(false) }
   }
 
   return <form ref={panelRef} onSubmit={submit} onPointerDown={(event) => event.stopPropagation()} className="canvas-mini-dialog app-menu-surface absolute z-[70] w-[min(384px,calc(100%-24px))] overflow-auto rounded-2xl p-4" style={position}>
     <div className="flex items-center gap-3">
       {participant ? <AvatarMini p={participant} size={34} /> : <span className="grid size-9 place-items-center rounded-full bg-accent/10 text-sm font-bold text-accent">评</span>}
-      <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-ink">反馈给 {participant?.name ?? '智能体'}</div><div className="truncate text-[10px] text-ink-secondary">{frame.title}{targetAssignment ? ` · ${localizeStatus(canvasStatusLabel(targetAssignment.status))}` : ''}</div></div>
+      <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-ink">反馈给 {participant?.name ?? '智能助教'}</div><div className="truncate text-[10px] text-ink-secondary">{frame.title}{targetAssignment ? ` · ${localizeStatus(canvasStatusLabel(targetAssignment.status))}` : ''}</div></div>
       <Button type="button" onClick={() => { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); onClose() }} aria-label="关闭反馈" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</Button>
     </div>
     {!assignment && <div className="mt-3 flex flex-wrap gap-2">{snapshot.assignments.map((item) => {
       const agent = byId[item.agentId]
-      return <Button key={item.agentId} type="button" onClick={() => setAgentId(item.agentId)} className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-semibold ${agentId === item.agentId ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}>{agent && <AvatarMini p={agent} size={20} />}@{agent?.name ?? item.agentId}</Button>
+      return <Button key={item.agentId} type="button" onClick={() => setAgentId(item.agentId)} className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-semibold ${agentId === item.agentId ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}>{agent && <AvatarMini p={agent} size={20} />}@{agent?.name ?? '智能助教'}</Button>
     })}</div>}
     {comments.length > 0 && <div className="mt-3 space-y-1.5">{comments.map((comment) => <div key={comment.id} className="rounded-lg bg-inset px-2.5 py-2 text-[10px] leading-4 text-ink-secondary">{comment.body}</div>)}</div>}
     <Textarea autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="canvas-panel-input mt-3 resize-none text-xs" />
@@ -705,16 +706,16 @@ function CanvasAgentDialog({ onClose }: { onClose: () => void }) {
     try {
       await assignAgent(agentId, text)
       onClose()
-    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)) }
+    } catch (cause) { setError(userFacingError(cause, '任务分配失败，请稍后重试。')) }
     finally { setBusy(false) }
   }
 
   return <div className="canvas-dialog-layer absolute inset-0 z-[70] grid place-items-center p-4" onPointerDown={onClose}><form onSubmit={submit} onPointerDown={(event) => event.stopPropagation()} className="canvas-mini-dialog w-full max-w-md rounded-2xl border border-hairline p-4 shadow-2xl backdrop-blur-xl">
-    <div className="flex items-center justify-between"><div><div className="text-sm font-semibold text-ink">在画布中新增工作</div><div className="mt-0.5 text-[10px] text-ink-secondary">选择智能体，并通过 @ 对话把任务加入当前画布。</div></div><Button type="button" onClick={onClose} aria-label="关闭对话" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</Button></div>
+    <div className="flex items-center justify-between"><div><div className="text-sm font-semibold text-ink">在画布中新增工作</div><div className="mt-0.5 text-[10px] text-ink-secondary">选择智能助教，并通过 @ 对话把任务加入当前画布。</div></div><Button type="button" onClick={onClose} aria-label="关闭对话" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</Button></div>
     <div className="mt-4 flex flex-wrap gap-2">{agents.map((agent) => <Button key={agent.id} type="button" onClick={() => setAgentId(agent.id)} className={`flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold ${agentId === agent.id ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}><AvatarMini p={agent} size={24} />@{agent.name}</Button>)}</div>
-    <Textarea autoFocus value={assignment} onChange={(event) => setAssignment(event.target.value)} rows={4} placeholder="描述希望智能体在这块画布中新增的工作…" className="canvas-panel-input mt-4 resize-none text-xs" />
+    <Textarea autoFocus value={assignment} onChange={(event) => setAssignment(event.target.value)} rows={4} placeholder="描述希望智能助教在这块画布中完成的工作…" className="canvas-panel-input mt-4 resize-none text-xs" />
     {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
-    <div className="mt-3 flex justify-end"><Button type="submit" disabled={!agentId || !assignment.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />@ 智能体并新增工作</Button></div>
+    <div className="mt-3 flex justify-end"><Button type="submit" disabled={!agentId || !assignment.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />@ 智能助教并新增工作</Button></div>
   </form></div>
 }
 

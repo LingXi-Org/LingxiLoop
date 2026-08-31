@@ -70,7 +70,7 @@ const server = createServer(async (request, response) => {
         .map((key) => `<input type="hidden" name="${key}" value="${escapeHtml(url.searchParams.get(key) || '')}">`)
         .join('')
       response.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' })
-      return response.end(`<!doctype html><html><head><meta charset="utf-8"><title>LingxiIdentity Local</title></head><body><main><h1>LingxiIdentity Local</h1><p>Only this loopback process receives these values.</p><form method="post" action="/authorize">${hidden}<label>Email <input name="email" type="email" required value="${escapeHtml(defaultEmail)}"></label><label>Name <input name="name" required value="${escapeHtml(defaultName)}"></label><button type="submit">Continue to LingxiLoop</button></form></main></body></html>`)
+      return response.end(`<!doctype html><html><head><meta charset="utf-8"><title>LingxiLoop 本地登录</title></head><body><main><h1>LingxiLoop 本地登录</h1><p>这些信息只会发送到本机预览服务。</p><form method="post" action="/authorize">${hidden}<label>邮箱 <input name="email" type="email" required value="${escapeHtml(defaultEmail)}"></label><label>姓名 <input name="name" required value="${escapeHtml(defaultName)}"></label><button type="submit">继续进入 LingxiLoop</button></form></main></body></html>`)
     }
     if (request.method === 'POST' && url.pathname === '/authorize') {
       const body = await readForm(request)

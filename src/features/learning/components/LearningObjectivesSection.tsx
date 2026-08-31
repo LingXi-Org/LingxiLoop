@@ -1,5 +1,8 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction } from '@/lib/confirmAction'
+import { userFacingError } from '@/lib/userFacingError'
 import { learningApi } from '../api'
 import type { LearningCourse, LearningObjective, LearningRole } from '../contracts'
 import { MasteryBadge, statusLabel } from './learningDisplay'
@@ -16,10 +19,35 @@ interface LearningObjectivesSectionProps {
 export function LearningObjectivesSection({
   course, objectives, perspective, mastery, onChanged, onError,
 }: LearningObjectivesSectionProps) {
+  const publishObjective = async (objective: LearningObjective) => {
+    if (perspective !== 'teacher' || !course.canManage || !course.canEditContent || !course.courseId) return
+    const confirmed = await confirmSensitiveAction({
+      title: '发布学习目标？',
+      description: `“${objective.title}”将对课程学习者可见。`,
+      confirmLabel: '发布目标',
+      tone: 'warning',
+    })
+    if (!confirmed) return
+    try {
+      await toastAction(learningApi.setObjectiveStatus(course.courseId, objective.id, 'PUBLISHED'), {
+        loading: '正在发布学习目标', success: '学习目标已发布', error: '发布学习目标失败，请稍后重试',
+      })
+      await onChanged()
+    } catch (reason) {
+      onError(userFacingError(reason, '学习目标未能发布，请稍后重试。'))
+    }
+  }
+
+  const objectivesById = new Map(objectives.map((objective) => [objective.id, objective]))
+
   return (
     <div className="space-y-3">
-      {objectives.map((objective, index) => (
-        <Card key={objective.id} size="sm">
+      {objectives.map((objective, index) => {
+        const masteryLevel = mastery.get(objective.id)
+        const prerequisites = objective.prerequisiteIds.map(
+          (id) => objectivesById.get(id)?.title ?? '已归档前置目标',
+        )
+        return <Card key={objective.id} size="sm">
           <CardContent className="flex gap-3">
             <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
               {index + 1}
@@ -27,29 +55,36 @@ export function LearningObjectivesSection({
             <div className="min-w-0 flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-heading text-sm font-medium">{objective.title}</h3>
-                {perspective === 'learner' && <MasteryBadge level={mastery.get(objective.id) ?? 0} />}
+                {perspective === 'learner' && masteryLevel !== undefined && <MasteryBadge level={masteryLevel} />}
               </div>
               <p className="text-sm leading-5 text-muted-foreground">成功标准：{objective.successCriteria}</p>
               <p className="text-xs text-muted-foreground">
-                目标等级 L{objective.targetLevel} · 先修 {objective.prerequisiteIds.length || '无'} · {statusLabel(objective.status)}
+                目标掌握等级 {objective.targetLevel} · {statusLabel(objective.status)}
               </p>
-              {perspective === 'teacher' && objective.status === 'DRAFT' && course.courseId && (
-                <Button
-                  size="sm"
-                  onClick={() => void learningApi
-                    .setObjectiveStatus(course.courseId!, objective.id, 'PUBLISHED')
-                    .then(onChanged)
-                    .catch(onError)}
-                >
-                  发布目标
-                </Button>
+              <div className="rounded-2xl bg-muted p-3">
+                <p className="text-xs font-medium">前置目标</p>
+                {prerequisites.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {prerequisites.map((title, prerequisiteIndex) => (
+                      <span key={`${objective.id}-${prerequisiteIndex}`} className="contents">
+                        {prerequisiteIndex > 0 && <span className="text-muted-foreground">·</span>}
+                        <span className="rounded-xl bg-card px-2.5 py-1 text-xs shadow-sm">{title}</span>
+                      </span>
+                    ))}
+                    <span className="text-muted-foreground">→</span>
+                    <span className="text-xs font-medium">{objective.title}</span>
+                  </div>
+                ) : <p className="mt-1 text-xs text-muted-foreground">无需先完成其他目标</p>}
+              </div>
+              {perspective === 'teacher' && course.canManage && course.canEditContent && objective.status === 'DRAFT' && course.courseId && (
+                <Button size="sm" onClick={() => void publishObjective(objective)}>发布目标</Button>
               )}
             </div>
           </CardContent>
         </Card>
-      ))}
+      })}
       {objectives.length === 0 && (
-        <Card size="sm"><CardContent className="text-sm text-muted-foreground">还没有目标。教师或 Nova 可以先创建草稿。</CardContent></Card>
+        <Card size="sm"><CardContent className="text-sm text-muted-foreground">还没有学习目标。</CardContent></Card>
       )}
     </div>
   )

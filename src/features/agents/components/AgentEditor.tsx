@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { useConversations } from '@/features/conversations/store'
+import { userFacingError } from '@/lib/userFacingError'
 import { useParticipants } from '../state'
 import type { AgentCapability, Participant } from '@/types'
 
@@ -17,7 +18,7 @@ const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; descriptio
   { id: 'email', label: '邮件', description: '起草邮件；实际发送仍受审批策略约束' },
   { id: 'documents', label: '协作文档', description: '创建、读取和编辑协作文档' },
   { id: 'calendar', label: '日历', description: '访问日历和日程相关能力' },
-  { id: 'knowledge', label: '知识库', description: '检索并操作当前工作区的 Open Notebook 知识库' },
+  { id: 'knowledge', label: '知识库', description: '检索并使用当前学习区的知识资料' },
   { id: 'learning', label: '教学', description: '在课程范围内规划学习任务、记录证据并提出形成性评价' },
 ]
 const DEFAULT_CAPABILITIES: AgentCapability[] = ['canvas', 'web', 'files', 'email', 'documents', 'knowledge']
@@ -62,7 +63,7 @@ export function AgentEditor({ agent, onClose }: Props) {
       await useConversations.getState().reload()
       onClose()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      setErr(userFacingError(e, '智能助教保存失败，请稍后重试。'))
     } finally {
       setBusy(false)
     }
@@ -72,7 +73,7 @@ export function AgentEditor({ agent, onClose }: Props) {
 
   const previewId = agent?.id ?? (name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'agent-preview')
   const previewParticipant: Participant = {
-    id: previewId, kind: 'agent', name: name || 'Agent', role, initial,
+    id: previewId, kind: 'agent', name: name || '智能助教', role, initial,
     avatarBg: 'transparent', status: 'avail',
   }
 
@@ -91,7 +92,7 @@ export function AgentEditor({ agent, onClose }: Props) {
           <Avatar p={previewParticipant} size={48} animated={false} />
           <div className="flex-1">
             <h2 className="font-display font-medium text-[20px] tracking-tight">
-              {editing ? `编辑 ${agent!.name}` : "新建智能体"}
+              {editing ? `编辑 ${agent!.name}` : "新建智能助教"}
             </h2>
             <div className="text-[12.5px] text-ink-500 italic font-display">
               {editing ? "调整该队友的行为方式。" : "从头开始​​定义一个新队友。"}
@@ -105,7 +106,7 @@ export function AgentEditor({ agent, onClose }: Props) {
         </div>
 
         <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
-          <Field label="名称" hint="智能体在界面中的显示名称；@提及标识会自动生成。">
+          <Field label="名称" hint="智能助教在界面中的显示名称；@提及标识会自动生成。">
             <Input
               type="text"
               value={name}
@@ -114,7 +115,7 @@ export function AgentEditor({ agent, onClose }: Props) {
             />
           </Field>
 
-          <Field label="任务职责" hint="由 AgentOS 主机按每个持久任务分配；智能体不能通过名称或提示词提升权限。">
+          <Field label="任务职责" hint="系统会按任务分配职责，智能助教不能自行提高权限。">
             <div className="grid gap-2 sm:grid-cols-2">
               {[
                 ['协调者', '维护学习任务板，并分派完成任务所需的最小团队'],
@@ -125,7 +126,7 @@ export function AgentEditor({ agent, onClose }: Props) {
             </div>
           </Field>
 
-          <Field label="角色说明" hint="显示在名称旁，用简短文字说明该智能体的职责。">
+          <Field label="角色说明" hint="显示在名称旁，用简短文字说明该智能助教的职责。">
             <Input
               type="text"
               value={role}
@@ -134,7 +135,7 @@ export function AgentEditor({ agent, onClose }: Props) {
             />
           </Field>
 
-          <Field label="行为提示词" hint="描述智能体的语气、原则和工作边界。请用第二人称“你”来书写。">
+          <Field label="行为提示词" hint="描述智能助教的语气、原则和工作边界。请用第二人称“你”来书写。">
             <Textarea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
@@ -145,22 +146,22 @@ export function AgentEditor({ agent, onClose }: Props) {
             />
           </Field>
 
-          <Field label="简介" hint="可选，显示在智能体资料卡上。">
+          <Field label="简介" hint="可选，显示在智能助教资料卡上。">
             <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={2}
-              placeholder="用一句话说明这个智能体最擅长的事情。"
+              placeholder="用一句话说明这个智能助教最擅长的事情。"
             />
           </Field>
 
-          <Field label="运行时" hint="所有学习 Agent 使用同一套 LingxiLoop Agent OS 与全局模型配置。">
+          <Field label="运行环境" hint="所有学习智能助教使用相同的安全运行环境与模型配置。">
             <div className="rounded-[10px] bg-sky2-50 px-3 py-2 text-[12.5px] text-ink-700">
-              LingxiLoop Agent OS · Persistent IPython
+              LingxiLoop 智能助教安全运行环境
             </div>
           </Field>
 
-          <Field label="能力与权限" hint="只允许该智能体使用已勾选的能力；可随时撤销。高风险动作仍会单独请求批准。">
+          <Field label="能力与权限" hint="只允许该智能助教使用已勾选的能力；可随时撤销。高风险动作仍会单独请求批准。">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {CAPABILITY_OPTIONS.map((option) => {
                 const checked = capabilities.includes(option.id)
@@ -193,10 +194,10 @@ export function AgentEditor({ agent, onClose }: Props) {
             </div>
           </Field>
 
-          <Field label="Bloub 头像" hint="智能体统一使用确定性的 Bloub 身份；颜色、形状与表情由身份和状态驱动。">
+          <Field label="趣味头像" hint="智能助教使用固定的趣味头像；颜色、形状与表情会随身份和状态变化。">
             <div className="flex items-center gap-3 rounded-[12px] border border-ink-100 bg-white px-4 py-3">
               <Avatar p={previewParticipant} size={72} animated={false} />
-              <div className="text-[12.5px] leading-5 text-ink-500">无需上传或生成图片；同一智能体在聊天、成员列表和管理界面保持一致。</div>
+              <div className="text-[12.5px] leading-5 text-ink-500">无需上传或生成图片；同一智能助教在聊天、成员列表和管理界面保持一致。</div>
             </div>
           </Field>
 
@@ -223,7 +224,7 @@ export function AgentEditor({ agent, onClose }: Props) {
               boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
             }}
           >
-            {busy ? "正在保存..." : (editing ? "保存更改" : "创建智能体")}
+            {busy ? "正在保存…" : (editing ? "保存更改" : "创建智能助教")}
           </Button>
         </div>
       </div>

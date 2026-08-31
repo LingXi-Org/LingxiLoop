@@ -48,7 +48,7 @@
 .desktop-openmaus [data-context-layout='flat-stacked'] > div:last-child {
   border-top: 1px solid var(--im-divider);
 }
-.desktop-openmaus [data-context-layout='flat-stacked'] button[aria-label='打开完整 Canvas'] {
+.desktop-openmaus [data-context-layout='flat-stacked'] button[aria-label='打开完整画布'] {
   background: var(--im-elevated-surface) !important;
   box-shadow: inset 0 0 0 1px var(--im-divider);
 }

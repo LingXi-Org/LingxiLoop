@@ -241,6 +241,228 @@ export async function findTeacherAttemptDetail(
   return rows[0]
 }
 
+export interface LearningDashboardTeacherOverviewRows {
+  summary: DataRow
+  masteryDistribution: DataRow[]
+  missionDistribution: DataRow[]
+  evaluationDistribution: DataRow[]
+  attention: DataRow[]
+}
+
+export async function loadLearningDashboardTeacherOverviewRows(
+  db: Queryable,
+  args: { companyId: string; projectId: string; teacherId: string; windowDays: number },
+): Promise<LearningDashboardTeacherOverviewRows> {
+  const scopeParams = [args.companyId, args.projectId] as const
+  const windowParams = [...scopeParams, args.windowDays] as const
+  const teacherParams = [...scopeParams, args.teacherId] as const
+  const [summary, mastery, missions, evaluations, attention] = await Promise.all([
+    db.query<DataRow>(
+      `SELECT
+        (SELECT COUNT(*)::int FROM project_memberships member
+          WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
+            AND member.role IN ('STUDENT','OBSERVER')) AS "learnerCount",
+        (SELECT COUNT(DISTINCT evaluation.id)::int FROM learning_evaluations evaluation
+          WHERE evaluation.company_id=$1 AND evaluation.project_id=$2
+            AND evaluation.status='PENDING') AS "pendingReviews",
+        (SELECT COUNT(DISTINCT attempt.id)::int FROM learning_attempts attempt
+          WHERE attempt.company_id=$1 AND attempt.project_id=$2
+            AND attempt.submitted_at>=NOW()-($3::int*INTERVAL '1 day')) AS attempts,
+        (SELECT COUNT(DISTINCT attempt.learner_id)::int
+           FROM learning_attempts attempt
+           JOIN project_memberships learner ON learner.company_id=attempt.company_id
+            AND learner.project_id=attempt.project_id AND learner.user_id=attempt.learner_id
+            AND learner.status='ACTIVE' AND learner.role IN ('STUDENT','OBSERVER')
+          WHERE attempt.company_id=$1 AND attempt.project_id=$2
+            AND attempt.submitted_at>=NOW()-($3::int*INTERVAL '1 day')) AS "learnersWithEvidence",
+        (SELECT COUNT(DISTINCT (state.user_id,state.knowledge_unit_id))::int
+           FROM learning_states state
+           JOIN project_memberships learner ON learner.company_id=state.company_id
+            AND learner.project_id=state.project_id AND learner.user_id=state.user_id
+            AND learner.status='ACTIVE' AND learner.role IN ('STUDENT','OBSERVER')
+          WHERE state.company_id=$1 AND state.project_id=$2
+            AND state.next_review_at<=NOW()) AS "dueReviews"`,
+      windowParams,
+    ),
+    db.query<DataRow>(
+      `WITH levels AS (SELECT generate_series(0,4)::int AS level),
+        learners AS (
+          SELECT user_id FROM project_memberships
+           WHERE company_id=$1 AND project_id=$2 AND status='ACTIVE'
+             AND role IN ('STUDENT','OBSERVER')
+        ), units AS (
+          SELECT id FROM learning_knowledge_units
+           WHERE company_id=$1 AND project_id=$2 AND status<>'ARCHIVED'
+        ), totals AS (
+          SELECT (SELECT COUNT(*) FROM learners)*(SELECT COUNT(*) FROM units) AS possible
+        ), state_counts AS (
+          SELECT state.level,COUNT(DISTINCT (state.user_id,state.knowledge_unit_id))::int AS count
+            FROM learning_states state
+            JOIN learners ON learners.user_id=state.user_id
+            JOIN units ON units.id=state.knowledge_unit_id
+           WHERE state.company_id=$1 AND state.project_id=$2 GROUP BY state.level
+        )
+       SELECT levels.level,
+              CASE WHEN levels.level=0
+                THEN GREATEST(totals.possible
+                  -(SELECT COALESCE(SUM(count),0) FROM state_counts WHERE level<>0),0)::int
+                ELSE COALESCE(state_counts.count,0)::int END AS count
+         FROM levels CROSS JOIN totals LEFT JOIN state_counts ON state_counts.level=levels.level
+        ORDER BY levels.level`,
+      scopeParams,
+    ),
+    db.query<DataRow>(
+      `WITH statuses(status,position) AS (VALUES
+        ('PLANNING'::text,1),('ACTIVE'::text,2),('PAUSED'::text,3),
+        ('COMPLETED'::text,4),('CANCELLED'::text,5)), counts AS (
+          SELECT mission.status,COUNT(DISTINCT mission.id)::int AS count
+            FROM learning_missions mission
+            JOIN project_memberships learner ON learner.company_id=mission.company_id
+             AND learner.project_id=mission.project_id AND learner.user_id=mission.learner_id
+             AND learner.status='ACTIVE' AND learner.role IN ('STUDENT','OBSERVER')
+           WHERE mission.company_id=$1 AND mission.project_id=$2 GROUP BY mission.status
+        )
+       SELECT statuses.status,COALESCE(counts.count,0)::int AS count
+         FROM statuses LEFT JOIN counts USING(status) ORDER BY statuses.position`,
+      scopeParams,
+    ),
+    db.query<DataRow>(
+      `WITH statuses(status,position) AS (VALUES
+        ('PENDING'::text,1),('ACCEPTED'::text,2),('REJECTED'::text,3)), counts AS (
+          SELECT evaluation.status,COUNT(DISTINCT evaluation.id)::int AS count
+            FROM learning_evaluations evaluation
+           WHERE evaluation.company_id=$1 AND evaluation.project_id=$2
+             AND evaluation.created_at>=NOW()-($3::int*INTERVAL '1 day')
+           GROUP BY evaluation.status
+        )
+       SELECT statuses.status,COALESCE(counts.count,0)::int AS count
+         FROM statuses LEFT JOIN counts USING(status) ORDER BY statuses.position`,
+      windowParams,
+    ),
+    db.query<DataRow>(
+      `SELECT attention.learner_user_id AS "learnerId",user_account.display_name AS "displayName",
+              array_agg(DISTINCT attention.reason ORDER BY attention.reason) AS reasons,
+              MAX(attention.rank_score)::int AS "rankScore",
+              MIN(attention.expected_minutes)::int AS "expectedMinutes"
+         FROM attention_items attention
+         JOIN users user_account ON user_account.id=attention.learner_user_id
+         JOIN project_memberships learner ON learner.company_id=attention.company_id
+          AND learner.project_id=attention.project_id AND learner.user_id=attention.learner_user_id
+          AND learner.status='ACTIVE' AND learner.role IN ('STUDENT','OBSERVER')
+        WHERE attention.company_id=$1 AND attention.project_id=$2 AND attention.teacher_user_id=$3
+          AND (attention.status IN ('OPEN','ACKNOWLEDGED')
+            OR (attention.status='DEFERRED' AND attention.deferred_until<=NOW()))
+        GROUP BY attention.learner_user_id,user_account.display_name
+        ORDER BY "rankScore" DESC,attention.learner_user_id LIMIT 20`,
+      teacherParams,
+    ),
+  ])
+  return {
+    summary: summary.rows[0] ?? {
+      learnerCount: 0, pendingReviews: 0, attempts: 0, learnersWithEvidence: 0, dueReviews: 0,
+    },
+    masteryDistribution: mastery.rows,
+    missionDistribution: missions.rows,
+    evaluationDistribution: evaluations.rows,
+    attention: attention.rows,
+  }
+}
+
+export interface LearningDashboardLearnerRow extends DataRow {
+  learnerId: string
+}
+
+export async function listLearningDashboardLearnerRows(
+  db: Queryable,
+  args: {
+    companyId: string
+    projectId: string
+    reviewerId: string
+    attentionOnly: boolean
+    afterLearnerId: string | null
+    search: string | null
+    limit: number
+  },
+): Promise<LearningDashboardLearnerRow[]> {
+  const { rows } = await db.query<LearningDashboardLearnerRow>(
+    `WITH learners AS (
+       SELECT member.user_id,member.created_at
+         FROM project_memberships member
+        WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
+          AND member.role IN ('STUDENT','OBSERVER')
+     ), state_summary AS (
+       SELECT state.user_id,COALESCE(AVG(state.level),0)::float8 AS average_level,
+              COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.level>=3)::int AS verified_objectives,
+              COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.next_review_at<=NOW())::int AS due_reviews,
+              COUNT(DISTINCT state.knowledge_unit_id) FILTER(WHERE state.status='NEEDS_REVIEW')::int AS needs_review
+         FROM learning_states state JOIN learners ON learners.user_id=state.user_id
+        WHERE state.company_id=$1 AND state.project_id=$2 GROUP BY state.user_id
+     ), mission_summary AS (
+       SELECT mission.learner_id,
+              COUNT(DISTINCT mission.id) FILTER(WHERE mission.status='PAUSED')::int AS paused_missions
+         FROM learning_missions mission JOIN learners ON learners.user_id=mission.learner_id
+        WHERE mission.company_id=$1 AND mission.project_id=$2 GROUP BY mission.learner_id
+     ), attempt_summary AS (
+       SELECT attempt.learner_id,COUNT(DISTINCT attempt.id)::int AS attempt_count,
+              MAX(attempt.submitted_at) AS last_attempt_at
+         FROM learning_attempts attempt JOIN learners ON learners.user_id=attempt.learner_id
+        WHERE attempt.company_id=$1 AND attempt.project_id=$2 GROUP BY attempt.learner_id
+     ), attention_summary AS (
+       SELECT attention.learner_user_id,
+              array_agg(DISTINCT attention.reason ORDER BY attention.reason) AS attention_reasons
+         FROM attention_items attention JOIN learners ON learners.user_id=attention.learner_user_id
+        WHERE attention.company_id=$1 AND attention.project_id=$2 AND attention.teacher_user_id=$3
+          AND (attention.status IN ('OPEN','ACKNOWLEDGED')
+            OR (attention.status='DEFERRED' AND attention.deferred_until<=NOW()))
+        GROUP BY attention.learner_user_id
+     )
+     SELECT learners.user_id AS "learnerId",user_account.display_name AS "displayName",user_account.email,
+            COALESCE(state_summary.average_level,0)::float8 AS "averageLevel",
+            COALESCE(state_summary.verified_objectives,0)::int AS "verifiedObjectives",
+            COALESCE(state_summary.due_reviews,0)::int AS "dueReviews",
+            COALESCE(state_summary.needs_review,0)::int AS "needsReview",
+            COALESCE(mission_summary.paused_missions,0)::int AS "pausedMissions",
+            COALESCE(attempt_summary.attempt_count,0)::int AS "attemptCount",
+            attempt_summary.last_attempt_at AS "lastAttemptAt",
+            COALESCE(attention_summary.attention_reasons,ARRAY[]::text[]) AS "attentionReasons"
+       FROM learners JOIN users user_account ON user_account.id=learners.user_id
+       LEFT JOIN state_summary ON state_summary.user_id=learners.user_id
+       LEFT JOIN mission_summary ON mission_summary.learner_id=learners.user_id
+       LEFT JOIN attempt_summary ON attempt_summary.learner_id=learners.user_id
+       LEFT JOIN attention_summary ON attention_summary.learner_user_id=learners.user_id
+      WHERE (NOT $4::boolean OR attention_summary.learner_user_id IS NOT NULL)
+        AND ($5::text IS NULL OR learners.user_id>$5)
+        AND ($6::text IS NULL OR user_account.display_name ILIKE '%'||$6||'%'
+          OR user_account.email ILIKE '%'||$6||'%')
+      ORDER BY learners.user_id LIMIT $7`,
+    [
+      args.companyId,
+      args.projectId,
+      args.reviewerId,
+      args.attentionOnly,
+      args.afterLearnerId,
+      args.search,
+      args.limit,
+    ],
+  )
+  return rows
+}
+
+export async function findLearningDashboardLearner(
+  db: Queryable,
+  args: { companyId: string; projectId: string; learnerId: string },
+): Promise<DataRow | null> {
+  const { rows } = await db.query<DataRow>(
+    `SELECT member.user_id AS "learnerId",user_account.display_name AS "displayName",
+            user_account.email,member.created_at AS "joinedAt"
+       FROM project_memberships member JOIN users user_account ON user_account.id=member.user_id
+      WHERE member.company_id=$1 AND member.project_id=$2 AND member.user_id=$3
+        AND member.status='ACTIVE' AND member.role IN ('STUDENT','OBSERVER')`,
+    [args.companyId, args.projectId, args.learnerId],
+  )
+  return rows[0] ?? null
+}
+
 export async function listTeacherObjectives(
   db: Queryable,
   scope: TeacherReportingScope,

@@ -7,19 +7,21 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
+import { userFacingError } from "@/lib/userFacingError"
 import {
-  CheckCircle,
-  ChevronDown,
-  Code2,
-  Database,
-  Globe2,
-  Loader2,
-  Mail,
-  Palette,
-  Settings,
-  Sparkles,
-  XCircle,
-} from "lucide-react"
+  ArrowDown01Icon,
+  CancelCircleIcon,
+  CheckmarkCircle02Icon,
+  CodeIcon,
+  DatabaseIcon,
+  GlobalIcon,
+  Loading03Icon,
+  Mail01Icon,
+  PaintBrush01Icon,
+  Settings02Icon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 
 export type ToolService = "web" | "code" | "data" | "design" | "communication" | "automation"
@@ -41,19 +43,29 @@ export type ToolProps = {
 }
 
 const serviceStyle = {
-  web: { icon: Globe2, color: "text-sky-500" },
-  code: { icon: Code2, color: "text-violet-500" },
-  data: { icon: Database, color: "text-amber-500" },
-  design: { icon: Palette, color: "text-fuchsia-500" },
-  communication: { icon: Mail, color: "text-emerald-500" },
-  automation: { icon: Sparkles, color: "text-[#4682f6]" },
-} satisfies Record<ToolService, { icon: typeof Settings; color: string }>
+  web: { icon: GlobalIcon, color: "text-chart-1" },
+  code: { icon: CodeIcon, color: "text-chart-2" },
+  data: { icon: DatabaseIcon, color: "text-chart-3" },
+  design: { icon: PaintBrush01Icon, color: "text-chart-4" },
+  communication: { icon: Mail01Icon, color: "text-chart-5" },
+  automation: { icon: SparklesIcon, color: "text-primary" },
+} satisfies Record<ToolService, { icon: typeof Settings02Icon; color: string }>
+
+const SERVICE_LABELS: Record<ToolService, string> = {
+  web: "网页工具",
+  code: "代码工具",
+  data: "数据工具",
+  design: "设计工具",
+  communication: "沟通工具",
+  automation: "自动化工具",
+}
 
 const openToolCalls = new Set<string>()
 
 const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
   const { state, input, output, toolCallId } = toolPart
   const openKey = toolCallId ?? `${toolPart.service ?? "tool"}:${toolPart.type}`
+  const toolLabel = toolPart.service ? SERVICE_LABELS[toolPart.service] : "工具调用"
   const [isOpen, setIsOpen] = useState(() => defaultOpen || openToolCalls.has(openKey))
 
   const toggleOpen = () => {
@@ -68,32 +80,32 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
   const getStateIcon = () => {
     if (toolPart.service) {
       const service = serviceStyle[toolPart.service]
-      const ServiceIcon = service.icon
-      return <ServiceIcon className={cn("h-4 w-4", service.color)} />
+      return <HugeiconsIcon icon={service.icon} strokeWidth={2} className={cn("size-4", service.color)} />
     }
     switch (state) {
-      case "input-streaming": return <Loader2 className="h-4 w-4 animate-spin text-[#4682f6]" />
-      case "input-available": return <Settings className="h-4 w-4 text-orange-500" />
-      case "output-available": return <CheckCircle className="h-4 w-4 text-green-500" />
-      case "output-error": return <XCircle className="h-4 w-4 text-red-500" />
-      default: return <Settings className="text-muted-foreground h-4 w-4" />
+      case "input-streaming": return <HugeiconsIcon icon={Loading03Icon} strokeWidth={2} className="size-4 animate-spin text-primary" />
+      case "input-available": return <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} className="size-4 text-chart-3" />
+      case "output-available": return <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-4 text-primary" />
+      case "output-error": return <HugeiconsIcon icon={CancelCircleIcon} strokeWidth={2} className="size-4 text-destructive" />
+      default: return <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} className="size-4 text-muted-foreground" />
     }
   }
 
   const getStateBadge = () => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium"
     switch (state) {
-      case "input-streaming": return <span className={cn(baseClasses, "bg-[#4682f6]/10 text-[#4682f6]")}>执行中</span>
-      case "input-available": return <span className={cn(baseClasses, "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400")}>准备就绪</span>
-      case "output-available": return <span className={cn(baseClasses, "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400")}>已完成</span>
-      case "output-error": return <span className={cn(baseClasses, "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400")}>执行失败</span>
+      case "input-streaming": return <span className={cn(baseClasses, "bg-primary/10 text-primary")}>执行中</span>
+      case "input-available": return <span className={cn(baseClasses, "bg-chart-3/10 text-chart-3")}>准备就绪</span>
+      case "output-available": return <span className={cn(baseClasses, "bg-primary/10 text-primary")}>已完成</span>
+      case "output-error": return <span className={cn(baseClasses, "bg-destructive/10 text-destructive")}>执行失败</span>
       default: return <span className={cn(baseClasses, "bg-muted text-muted-foreground")}>等待中</span>
     }
   }
 
   const formatValue = (value: unknown): string => {
-    if (value === null) return "null"
-    if (value === undefined) return "undefined"
+    if (value === null) return "无"
+    if (value === undefined) return "未提供"
+    if (typeof value === "boolean") return value ? "是" : "否"
     if (typeof value === "string") return value
     if (typeof value === "object") return JSON.stringify(value, null, 2)
     return String(value)
@@ -110,7 +122,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
         <CollapsibleTrigger asChild>
           <Button
             type="button"
-            aria-label={isOpen ? `收起${toolPart.type}` : `展开${toolPart.type}`}
+            aria-label={isOpen ? `收起${toolLabel}` : `展开${toolLabel}`}
             onClick={(event) => {
               event.preventDefault()
               toggleOpen()
@@ -119,10 +131,10 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
           >
             <div className="flex min-w-0 items-center gap-2">
               {getStateIcon()}
-              <span className="truncate font-mono text-sm font-medium">{toolPart.type}</span>
+              <span className="truncate text-sm font-medium">{toolLabel}</span>
               {getStateBadge()}
             </div>
-            <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", isOpen && "rotate-180")} />
+            <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className={cn("size-4 shrink-0 transition-transform", isOpen && "rotate-180")} />
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className={cn("border-border border-t", "data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden")}>
@@ -138,11 +150,10 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
               <div className="bg-background max-h-60 overflow-auto rounded border p-2 font-mono text-sm"><pre className="whitespace-pre-wrap break-words">{formatValue(output)}</pre></div>
             </div>}
             {state === "output-error" && toolPart.errorText && <div>
-              <h4 className="mb-2 text-sm font-medium text-red-500">错误信息</h4>
-              <div className="bg-background rounded border border-red-200 p-2 text-sm dark:border-red-950 dark:bg-red-900/20">{toolPart.errorText}</div>
+              <h4 className="mb-2 text-sm font-medium text-destructive">错误信息</h4>
+              <div className="rounded border border-destructive/20 bg-destructive/5 p-2 text-sm">{userFacingError(toolPart.errorText, "工具执行失败，请稍后重试。")}</div>
             </div>}
             {state === "input-streaming" && <div className="text-muted-foreground text-sm">正在调用工具能力…</div>}
-            {toolCallId && <div className="text-muted-foreground border-t border-[#4682f6]/20 pt-2 text-xs"><span className="font-mono">调用标识：{toolCallId}</span></div>}
           </div>
         </CollapsibleContent>
       </Collapsible>

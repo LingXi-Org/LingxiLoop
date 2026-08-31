@@ -34,3 +34,7 @@ export interface AuthStartOptions {
   inviteKind?: 'company' | 'project' | null
   returnUrl?: string | null
 }
+
+export interface DeleteAccountResponse {
+  ok: true
+}

@@ -248,7 +248,7 @@ export function ConversationMessage() {
         </div>
         <Reactions metadata={custom} messageId={messageId} />
         <div className={cn('mt-0.5 flex items-center gap-2 px-1 text-[10px] text-muted-foreground', custom.isMine && 'justify-end')}>
-          {custom.groupEnd && <time>{createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>}
+          {custom.groupEnd && <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
           {custom.isMine && custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}
           {custom.isMine && custom.receipts.length > 0 && <span>已读 {custom.receipts.length}</span>}
         </div>

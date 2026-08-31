@@ -27,10 +27,10 @@ interface Props {
 
 function detectLabel(): string {
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
-  if (/Mac OS X|Macintosh/i.test(ua)) return 'Download for macOS'
-  if (/Windows/i.test(ua)) return 'Download for Windows'
-  if (/Linux/i.test(ua) && !/Android/i.test(ua)) return 'Download for Linux'
-  return 'Download LingxiLoop'
+  if (/Mac OS X|Macintosh/i.test(ua)) return '下载 macOS 版'
+  if (/Windows/i.test(ua)) return '下载 Windows 版'
+  if (/Linux/i.test(ua) && !/Android/i.test(ua)) return '下载 Linux 版'
+  return '下载 LingxiLoop'
 }
 
 interface VariantDefaults {

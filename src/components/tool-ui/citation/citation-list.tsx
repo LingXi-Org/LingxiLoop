@@ -1,17 +1,17 @@
-import { Button } from '@/components/ui/button'
 "use client";
 
-import type { LucideIcon } from "lucide-react";
 import {
-  Code2,
-  Database,
-  ExternalLink,
-  File,
-  FileText,
-  Globe,
-  Newspaper,
-} from "lucide-react";
+  CodeIcon,
+  DatabaseIcon,
+  ExternalLinkIcon,
+  File01Icon,
+  FileTextIcon,
+  GlobalIcon,
+  NewspaperIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import * as React from "react";
+import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
@@ -25,13 +25,13 @@ import type {
   SerializableCitation,
 } from "./schema";
 
-const TYPE_ICONS: Record<CitationType, LucideIcon> = {
-  webpage: Globe,
-  document: FileText,
-  article: Newspaper,
-  api: Database,
-  code: Code2,
-  other: File,
+const TYPE_ICONS: Record<CitationType, IconSvgElement> = {
+  webpage: GlobalIcon,
+  document: FileTextIcon,
+  article: NewspaperIcon,
+  api: DatabaseIcon,
+  code: CodeIcon,
+  other: File01Icon,
 };
 
 function useHoverPopover(delay = 100) {
@@ -236,7 +236,7 @@ function OverflowIndicator({
               "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
             )}
           >
-            <span className="text-muted-foreground">+{count} more</span>
+            <span className="text-muted-foreground">另有 {count} 条</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -270,7 +270,7 @@ function OverflowIndicator({
           )}
         >
           <span className="text-muted-foreground text-sm tabular-nums">
-            +{count} more sources
+            另有 {count} 个来源
           </span>
         </Button>
       </PopoverTrigger>
@@ -294,7 +294,7 @@ interface OverflowItemProps {
 }
 
 function OverflowItem({ citation, onClick }: OverflowItemProps) {
-  const TypeIcon = TYPE_ICONS[citation.type ?? "webpage"] ?? Globe;
+  const typeIcon = TYPE_ICONS[citation.type ?? "webpage"] ?? GlobalIcon;
 
   return (
     <Button
@@ -312,7 +312,8 @@ function OverflowItem({ citation, onClick }: OverflowItemProps) {
           className="bg-muted size-4 shrink-0 rounded object-cover"
         />
       ) : (
-        <TypeIcon
+        <HugeiconsIcon
+          icon={typeIcon}
           className="text-muted-foreground size-4 shrink-0"
           aria-hidden="true"
         />
@@ -325,7 +326,11 @@ function OverflowItem({ citation, onClick }: OverflowItemProps) {
           {citation.domain}
         </p>
       </div>
-      <ExternalLink className="text-muted-foreground mt-0.5 size-3.5 shrink-0 self-start opacity-0 transition-opacity group-hover:opacity-100" />
+      <HugeiconsIcon
+        icon={ExternalLinkIcon}
+        className="text-muted-foreground mt-0.5 size-3.5 shrink-0 self-start opacity-0 transition-opacity group-hover:opacity-100"
+        aria-hidden="true"
+      />
     </Button>
   );
 }
@@ -392,8 +397,8 @@ function StackedCitations({
           >
             <div className="flex items-center">
               {visibleCitations.map((citation, index) => {
-                const TypeIcon =
-                  TYPE_ICONS[citation.type ?? "webpage"] ?? Globe;
+                const typeIcon =
+                  TYPE_ICONS[citation.type ?? "webpage"] ?? GlobalIcon;
                 return (
                   <div
                     key={citation.id}
@@ -413,7 +418,8 @@ function StackedCitations({
                         className="size-4.5 rounded-full object-cover"
                       />
                     ) : (
-                      <TypeIcon
+                      <HugeiconsIcon
+                        icon={typeIcon}
                         className="text-muted-foreground size-3"
                         aria-hidden="true"
                       />
@@ -433,7 +439,7 @@ function StackedCitations({
               )}
             </div>
             <span className="text-muted-foreground text-sm tabular-nums">
-              {citations.length} source{citations.length !== 1 && "s"}
+              {citations.length} 个来源
             </span>
           </Button>
         </PopoverTrigger>

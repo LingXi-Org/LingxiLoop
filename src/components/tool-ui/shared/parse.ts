@@ -1,7 +1,7 @@
 import type { z } from "zod";
 
 function formatZodPath(path: Array<string | number | symbol>): string {
-  if (path.length === 0) return "root";
+  if (path.length === 0) return "根节点";
   return path
     .map((segment) =>
       typeof segment === "number" ? `[${segment}]` : String(segment),
@@ -31,7 +31,7 @@ export function parseWithSchema<T>(
 ): T {
   const res = schema.safeParse(input);
   if (!res.success) {
-    throw new Error(`Invalid ${name} payload: ${formatZodError(res.error)}`);
+    throw new Error(`${name} 数据无效：${formatZodError(res.error)}`);
   }
   return res.data;
 }

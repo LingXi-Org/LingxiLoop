@@ -10,6 +10,7 @@ import { useMe } from '@/stores/auth'
 import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/features/agents/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
+import { participantRoleZh } from '@/lib/participantRole'
 
 const STATUS_LABEL: Record<string, string> = {
   avail: '可用',
@@ -63,6 +64,8 @@ export function ParticipantProfile({
   const isManaged=participant.managed===true
   const isSelf = participant.id === meId
   const statusColor = STATUS_COLOR[participant.status] ?? 'var(--resting)'
+  const roleLabel = participantRoleZh(participant) ?? (isAgent ? '智能助教' : '学习区成员')
+  const toolLabels = [...new Set((participant.tools ?? []).map((tool) => tool === 'ipython' ? '数据分析' : '扩展能力'))]
 
   const openLearningThread = async () => {
     if (opening || isSelf || !isAgent || !projectId) return
@@ -103,7 +106,7 @@ export function ParticipantProfile({
           <Avatar p={participant} size={32} ringColor="var(--panel)" />
           <span className="min-w-0">
             <span className="block truncate text-[14px] font-semibold text-ink">{participant.name}</span>
-            <span className="block truncate text-[10px] text-ink-secondary">{participant.role ?? (isAgent ? 'Agent' : 'Member')}</span>
+            <span className="block truncate text-[10px] text-ink-secondary">{roleLabel}</span>
           </span>
         </motion.div>
       </div>
@@ -122,16 +125,16 @@ export function ParticipantProfile({
             <Avatar p={participant} size={96} ringColor="var(--panel)" />
           </motion.div>
           <h2 className="relative truncate text-[25px] font-semibold tracking-[-0.025em] text-ink">{participant.name}</h2>
-          <p className="relative mt-0.5 text-[12px] text-ink-secondary">{participant.role ?? (isAgent ? 'Agent' : 'Workspace member')}</p>
+          <p className="relative mt-0.5 text-[12px] text-ink-secondary">{roleLabel}</p>
           <span className="relative mt-3 inline-flex items-center gap-1.5 rounded-full border border-hairline bg-panel/90 px-3 py-1.5 text-[11px] text-ink-secondary shadow-soft">
             <span className="size-1.5 rounded-full" style={{ background: statusColor }} />
-            {STATUS_LABEL[participant.status] ?? 'Idle'}
+            {STATUS_LABEL[participant.status] ?? '空闲'}
           </span>
         </motion.div>
 
-        <ProfileSection title="Actions">
+        <ProfileSection title="操作">
           {isManaged ? (
-            <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">Pulse 仅在学习中心的课题组中使用，不支持私聊、召开群组或邮件。</div>
+            <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">课程智能助教仅在学习区中使用，不支持私聊、创建群聊或收发邮件。</div>
           ) : isSelf ? null : isAgent ? (
             <div className="grid gap-2">
               <Button type="button" onClick={() => void openLearningThread()} disabled={opening || !projectId} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-accent px-3 text-[12px] font-semibold text-white shadow-soft transition active:scale-[0.97] disabled:opacity-50">
@@ -141,13 +144,13 @@ export function ParticipantProfile({
             </div>
           ) : (
             <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">
-              人员沟通由 Project 或 LearningCase 中的受控上下文发起。
+              请在所属课程或学习任务中与该成员联系。
             </div>
           )}
         </ProfileSection>
 
         {participant.email && (
-          <ProfileSection title="Email">
+          <ProfileSection title="邮箱">
             <Button type="button" onClick={() => void copyEmail()} className="flex w-full items-center gap-2.5 rounded-xl bg-raised px-3 py-2.5 text-left font-mono text-[12px] text-ink">
               <IMail className="size-4 shrink-0 text-accent" />
               <span className="min-w-0 flex-1 truncate">{participant.email}</span>
@@ -156,16 +159,16 @@ export function ParticipantProfile({
           </ProfileSection>
         )}
 
-        {isAgent && (participant.tools?.length ?? 0) > 0 && (
-          <ProfileSection title="Tools">
+        {isAgent && toolLabels.length > 0 && (
+          <ProfileSection title="可用工具">
             <div className="flex flex-wrap gap-1.5">
-              {(participant.tools ?? []).map((tool) => <span key={tool} className="rounded-lg bg-raised px-2.5 py-1.5 font-mono text-[11px] text-ink-secondary">{tool}</span>)}
+              {toolLabels.map((tool) => <span key={tool} className="rounded-lg bg-raised px-2.5 py-1.5 text-[11px] text-ink-secondary">{tool}</span>)}
             </div>
           </ProfileSection>
         )}
 
         {participant.bio && (
-          <ProfileSection title={`About ${participant.name}`}>
+          <ProfileSection title={`关于 ${participant.name}`}>
             <p className="border-l-2 border-accent pl-3 text-[13px] leading-relaxed text-ink-secondary">{participant.bio}</p>
           </ProfileSection>
         )}

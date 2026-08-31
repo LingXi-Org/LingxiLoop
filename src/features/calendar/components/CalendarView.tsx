@@ -60,7 +60,7 @@ type EditingState =
   | null
 
 const DAY_MS = 86_400_000
-const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 const HOUR_HEIGHT = 48
 const SLOT_MINUTES = 30
 const SLOT_HEIGHT = (HOUR_HEIGHT * SLOT_MINUTES) / 60
@@ -82,7 +82,7 @@ function formatTime(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 function formatDateLong(d: Date): string {
-  return d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
+  return d.toLocaleDateString('zh-CN', { weekday: 'long', month: 'long', day: 'numeric' })
 }
 function addDays(d: Date, n: number): Date { const out = new Date(d); out.setDate(out.getDate() + n); return out }
 
@@ -132,10 +132,9 @@ function nextOccurrence(event: CalendarEvent, from: Date): Date | null {
 }
 
 function describeRecurrence(r: RecurrenceRule | null): string {
-  if (!r) return 'one-shot'
-  const every = r.interval > 1 ? `every ${r.interval} ` : 'every '
-  const freqMap = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' } as const
-  const base = `${every}${freqMap[r.freq]}${r.interval > 1 ? 's' : ''}`
+  if (!r) return '仅一次'
+  const freqMap = { daily: '天', weekly: '周', monthly: '个月', yearly: '年' } as const
+  const base = r.interval > 1 ? `每 ${r.interval} ${freqMap[r.freq]}` : `每${freqMap[r.freq]}`
   if (r.freq === 'weekly' && r.byweekday && r.byweekday.length) {
     return `${base} · ${r.byweekday.map((d) => WEEK[d]).join('/')}`
   }
@@ -300,7 +299,7 @@ function MonthGrid({ cursor, events, onEdit, onNew }: GridProps) {
                 }}
                 />}
                 items={[
-                  { label: `New event on ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`, onClick: () => { const start = new Date(date); start.setHours(9, 0, 0, 0); const end = new Date(date); end.setHours(10, 0, 0, 0); onNew({ startAt: start, endAt: end }) } },
+                  { label: `在${date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}新建日程`, onClick: () => { const start = new Date(date); start.setHours(9, 0, 0, 0); const end = new Date(date); end.setHours(10, 0, 0, 0); onNew({ startAt: start, endAt: end }) } },
                   { label: '新的全天活动', onClick: () => { const start = new Date(date); start.setHours(0, 0, 0, 0); const end = new Date(date); end.setHours(23, 59, 0, 0); onNew({ startAt: start, endAt: end, allDay: true }) } },
                 ]}
               >
@@ -482,7 +481,7 @@ function TimeGrid({ cursor, events, onEdit, onNew, dayCount }: GridProps & { day
               }}
             />}
               items={[
-                { label: `New event at ${contextDate ? formatTime(contextDate) : ''}`, onClick: () => { if (!contextDate) return; const end = new Date(contextDate); end.setHours(end.getHours() + 1); onNew({ startAt: contextDate, endAt: end }) } },
+                { label: `在${contextDate ? formatTime(contextDate) : ''}新建日程`, onClick: () => { if (!contextDate) return; const end = new Date(contextDate); end.setHours(end.getHours() + 1); onNew({ startAt: contextDate, endAt: end }) } },
                 { label: '新的全天活动', onClick: () => { if (!contextDate) return; const start = new Date(contextDate); start.setHours(0, 0, 0, 0); const end = new Date(contextDate); end.setHours(23, 59, 0, 0); onNew({ startAt: start, endAt: end, allDay: true }) } },
               ]}
             >
@@ -605,19 +604,19 @@ export function CalendarView() {
 
   const headerLabel = useMemo(() => {
     if (mode === 'month') {
-      return cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+      return cursor.toLocaleDateString('zh-CN', { month: 'long', year: 'numeric' })
     }
     if (mode === 'week') {
       const ws = startOfWeek(cursor)
       const we = addDays(ws, 6)
       const sameMonth = ws.getMonth() === we.getMonth()
-      const left = ws.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      const left = ws.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
       const right = sameMonth
-        ? we.toLocaleDateString(undefined, { day: 'numeric', year: 'numeric' })
-        : we.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+        ? we.toLocaleDateString('zh-CN', { day: 'numeric', year: 'numeric' })
+        : we.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', year: 'numeric' })
       return `${left} – ${right}`
     }
-    return cursor.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+    return cursor.toLocaleDateString('zh-CN', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   }, [cursor.getTime(), mode])
 
   // Agenda panel: next 30 days starting from today (unaffected by cursor
@@ -637,16 +636,16 @@ export function CalendarView() {
       {!loaded && <div className="space-y-2" aria-label="正在加载日历事件"><Skeleton className="h-24 rounded-2xl" /><Skeleton className="h-24 rounded-2xl" /><Skeleton className="h-24 rounded-2xl" /></div>}
       {loaded && agenda.length === 0 && (
         <Empty className="border-0 px-4 py-8">
-          <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle className="text-base">未来 30 天没有安排</EmptyTitle><EmptyDescription>创建事件或智能体任务后会显示在这里。</EmptyDescription></EmptyHeader>
+          <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle className="text-base">未来 30 天没有安排</EmptyTitle><EmptyDescription>创建事件或智能助教任务后会显示在这里。</EmptyDescription></EmptyHeader>
           <EmptyContent><Button type="button" variant="outline" size="sm" onClick={() => openNew()}><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} data-icon="inline-start" />安排事件</Button></EmptyContent>
         </Empty>
       )}
       <ItemGroup className="gap-2">{agenda.map((item, index) => {
         const assignee = item.event.assigneeId ? byId[item.event.assigneeId] : null
         const day = sameDay(item.occurrence, new Date())
-          ? 'Today'
+          ? '今天'
           : sameDay(item.occurrence, new Date(Date.now() + DAY_MS))
-            ? 'Tomorrow'
+            ? '明天'
             : formatDateLong(item.occurrence)
         return (
           <Item key={`${item.event.id}-${index}`} variant="outline" size="sm" className="group">
@@ -659,7 +658,7 @@ export function CalendarView() {
               <Button type="button" variant="link" className="h-auto w-full justify-start truncate p-0 text-start text-foreground" onClick={() => { openEdit(item.event); setAgendaOpen(false) }}>{item.event.title}</Button>
               {item.event.kind === 'agent_task' && assignee && (
                 <div className="mt-1 flex min-w-0 items-center gap-1.5">
-                  <Avatar className="size-5"><AvatarImage src={assignee.avatarUrl} alt={assignee.name} /><AvatarFallback>{assignee.name.slice(0, 1)}</AvatarFallback></Avatar>
+                  <Avatar className="size-5"><AvatarImage src={assignee.avatarUrl ?? undefined} alt={assignee.name} /><AvatarFallback>{assignee.name.slice(0, 1)}</AvatarFallback></Avatar>
                   <span className="text-xs text-foreground">→ {assignee.name}</span>
                   {item.event.targetConversationId && convosById[item.event.targetConversationId] && <span className="truncate text-xs text-muted-foreground">在 #{convosById[item.event.targetConversationId]}</span>}
                 </div>
@@ -693,7 +692,7 @@ export function CalendarView() {
       <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--im-divider-weak)] px-4">
         <div className="flex min-w-0 items-center gap-2"><HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} className="size-4 text-muted-foreground" /><h1 className="font-heading text-sm font-medium">日历</h1><span className="hidden truncate text-sm text-muted-foreground @min-[42rem]/calendar:inline">{headerLabel}</span></div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button type="button" size="sm" variant="outline" className="@min-[48rem]/calendar:hidden" onClick={() => setAgendaOpen(true)}><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} data-icon="inline-start" />即将推出</Button>
+          <Button type="button" size="sm" variant="outline" className="@min-[48rem]/calendar:hidden" onClick={() => setAgendaOpen(true)}><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} data-icon="inline-start" />近期日程</Button>
           <Button type="button" size="sm" onClick={() => openNew()}><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} data-icon="inline-start" />新事件</Button>
         </div>
       </header>
@@ -703,7 +702,7 @@ export function CalendarView() {
         <Button type="button" variant="ghost" size="icon-sm" aria-label="下一时间段" onClick={goNext}><HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} /></Button>
         <span className="min-w-0 flex-1 truncate text-sm font-medium @min-[42rem]/calendar:hidden">{headerLabel}</span>
         <Tabs value={mode} onValueChange={(value) => setMode(value as ViewMode)}>
-          <TabsList aria-label="日历视图"><TabsTrigger value="day">day</TabsTrigger><TabsTrigger value="week">week</TabsTrigger><TabsTrigger value="month">month</TabsTrigger></TabsList>
+          <TabsList aria-label="日历视图"><TabsTrigger value="day">日</TabsTrigger><TabsTrigger value="week">周</TabsTrigger><TabsTrigger value="month">月</TabsTrigger></TabsList>
         </Tabs>
       </div>
 

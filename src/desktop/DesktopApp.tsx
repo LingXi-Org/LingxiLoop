@@ -19,13 +19,13 @@ import { ConversationsPane, SidebarUserFooter } from '@/features/conversations/c
 import { useConversations } from '@/features/conversations/store'
 import { DocumentPeekPane } from '@/features/documents/components/DocumentPeekPane'
 import { useWorkspace } from '@/features/knowledge/workspace'
+import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import { useTheme } from '@/stores/theme'
 import { ChatPane } from './ChatPane'
-import { getDefaultDashboardWorkspace } from './dashboardScope'
 import { InfoPane } from './InfoPane'
 import { PersonalDashboard } from './PersonalDashboard'
 import { ThreadDrawer } from './ThreadDrawer'
@@ -113,12 +113,7 @@ export function DesktopApp() {
 
   const dashboardOpen = view !== 'conversations'
   const openDashboard = () => {
-    const target = getDefaultDashboardWorkspace(workspaces, selectedWorkspaceId)
-    const selection = target && target.id !== selectedWorkspaceId
-      ? useWorkspace.getState().select(target.id)
-      : null
     useApp.getState().setView('learning')
-    void selection?.catch(() => undefined)
   }
   const handleSidebarLayoutChanged = (layout: Layout, meta: LayoutChangedMeta) => {
     if (!meta.isUserInteraction) return
@@ -208,6 +203,7 @@ export function DesktopApp() {
       </Drawer>
 
       <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+      <SettingsDialog />
     </div>
   )
 }

@@ -237,14 +237,14 @@ export function UpdaterDialog({ open, onClose }: DialogProps) {
             LingxiLoop 更新
           </h2>
           <div className="mt-1 text-[12.5px] text-ink-500 italic font-display">
-            {kind === 'idle' && 'You\'re on the latest version.'}
-            {kind === 'checking' && 'Checking for updates…'}
-            {kind === 'update-not-available' && 'You\'re on the latest version.'}
-            {kind === 'update-available' && 'A new version is ready to download.'}
-            {kind === 'downloading' && 'Downloading the update…'}
-            {kind === 'update-downloaded' && 'Update downloaded. Restart to install.'}
-            {kind === 'error' && 'Update check failed.'}
-            {isUnsupported && 'Auto-update is not available in this build.'}
+            {kind === 'idle' && '当前已是最新版本。'}
+            {kind === 'checking' && '正在检查更新…'}
+            {kind === 'update-not-available' && '当前已是最新版本。'}
+            {kind === 'update-available' && '新版本已可下载。'}
+            {kind === 'downloading' && '正在下载更新…'}
+            {kind === 'update-downloaded' && '更新已下载，重新启动后安装。'}
+            {kind === 'error' && '检查更新失败，请稍后重试。'}
+            {isUnsupported && '当前安装版本不支持自动更新。'}
           </div>
         </div>
 
@@ -311,13 +311,13 @@ export function UpdaterDialog({ open, onClose }: DialogProps) {
           )}
 
           {/* Error */}
-          {kind === 'error' && status.detail && (
+          {kind === 'error' && (
             <div
               className="flex items-start gap-2 rounded-[8px] px-3 py-2.5 text-[12.5px] text-coral-deep"
               style={{ background: 'var(--coral-soft)' }}
             >
               <span className="font-bold mt-px">!</span>
-              <span className="font-mono break-words">{status.detail}</span>
+              <span>暂时无法完成更新，请稍后重试。</span>
             </div>
           )}
         </div>

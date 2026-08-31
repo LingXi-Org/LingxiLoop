@@ -177,14 +177,22 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
   await assert.rejects(access(new URL('../features/companies/components/WorkspaceCreateDialog.tsx', import.meta.url)))
   const companySources = await Promise.all([
     '../features/companies/components/InvitePeopleModal.tsx',
-    '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/companies/components/InviteAcceptScreen.tsx',
   ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))
   assert.doesNotMatch(companySources.join('\n'), /api\/companies|components\/InvitePeopleModal/)
 
-  for (const file of ['api.ts', 'contracts.ts', 'courseContract.ts', 'components/LearningCenter.tsx']) {
+  for (const file of [
+    'api.ts',
+    'contracts.ts',
+    'courseContract.ts',
+    'dashboard/LearningDashboardPanel.tsx',
+    'dashboard/OverviewSection.tsx',
+    'dashboard/TeacherLearnersSection.tsx',
+  ]) {
     await access(new URL(`../features/learning/${file}`, import.meta.url))
   }
+  await assert.rejects(access(new URL('../features/learning/components/LearningCenter.tsx', import.meta.url)))
+  await assert.rejects(access(new URL('../features/companies/components/CompanyCourseManagement.tsx', import.meta.url)))
   await assert.rejects(access(new URL('./learning.ts', import.meta.url)))
   await assert.rejects(access(new URL('./courseContract.ts', import.meta.url)))
   const learningApi = await readFile(new URL('../features/learning/api.ts', import.meta.url), 'utf8')

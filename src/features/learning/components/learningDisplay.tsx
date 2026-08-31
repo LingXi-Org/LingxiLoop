@@ -14,6 +14,7 @@ const STATUS_LABELS: Record<string, string> = {
   OPEN: '待开始', IN_PROGRESS: '进行中', COMPLETED: '已完成', CANCELLED: '已取消', PENDING: '待审核',
   ACCEPTED: '已采纳', REJECTED: '已退回', VERIFIED: '已验证', LEARNING: '学习中', NEEDS_REVIEW: '待复核',
   SENT: '已送达', SENDING: '发送中', FAILED: '投递失败',
+  PAUSED: '已暂停', CLOSED: '已关闭', SUPPORTED: '证据支持', INCONCLUSIVE: '待确认',
 }
 
 export const MISSION_KIND_LABELS: Record<string, string> = {
@@ -29,7 +30,7 @@ export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
 }
 
 export const EVALUATION_MODE_LABELS: Record<string, string> = {
-  AGENT_FORMATIVE: '智能体形成性评价', TEACHER_REQUIRED: '教师审核',
+  AGENT_FORMATIVE: '智能助教形成性评价', TEACHER_REQUIRED: '课程创建者审核',
 }
 
 export const WEEKDAY_LABELS: Record<string, string> = {
@@ -47,10 +48,10 @@ export const DELIVERY_CHANNEL_LABELS: Record<string, string> = {
 
 export function statusLabel(value: unknown): string {
   const raw = String(value ?? '—')
-  return STATUS_LABELS[raw] ?? raw
+  return STATUS_LABELS[raw.toUpperCase()] ?? '状态待同步'
 }
 
 export function MasteryBadge({ level }: { level: number }) {
   const labels = ['尚无证据', '识别 / 回忆', '提示下完成', '独立完成', '迁移应用']
-  return <Badge variant="secondary">L{level} · {labels[level] ?? labels[0]}</Badge>
+  return <Badge variant="secondary">掌握等级 {level} · {labels[level] ?? labels[0]}</Badge>
 }

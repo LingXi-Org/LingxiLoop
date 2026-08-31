@@ -1,14 +1,7 @@
-import {
-  BookOpen01Icon,
-  Calendar03Icon,
-  DashboardSquare01Icon,
-  Folder01Icon,
-  Mail01Icon,
-} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Layout, LayoutChangedMeta } from 'react-resizable-panels'
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
@@ -25,59 +18,39 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CalendarView } from '@/features/calendar/components/CalendarView'
-import { CompanyCourseManagement } from '@/features/companies/components/CompanyCourseManagement'
 import { SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
-import { DocumentsView } from '@/features/documents/components/DocumentsView'
-import { useWorkspace } from '@/features/knowledge/workspace'
+import { learningApi } from '@/features/learning/api'
 import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
-import { LearningCenter } from '@/features/learning/components/LearningCenter'
+import { LearningDashboardPanel } from '@/features/learning/dashboard/LearningDashboardPanel'
+import {
+  getLearningDashboardDefaultSection,
+  getLearningDashboardMenu,
+  isLearningDashboardSectionAvailable,
+  type LearningDashboardSection,
+} from '@/features/learning/dashboard/navigation'
+import type { LearningSpace } from '@/features/learning/contracts'
+import { selectLearningSpace, useWorkspace } from '@/features/knowledge/workspace'
+import { toastAction } from '@/lib/actionToast'
+import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
 import type { ViewKey } from '@/types'
-import { getDashboardScopes } from './dashboardScope'
+import { getLearningSpaceScopes } from './dashboardScope'
 
 type DashboardView = Exclude<ViewKey['view'], 'conversations'>
+const MAX_SPACE_PAGES = 50
 
-const DASHBOARD_ITEMS: Array<{
-  value: Exclude<DashboardView, 'courses'>
-  label: string
-  icon: typeof DashboardSquare01Icon
-}> = [
-  { value: 'learning', label: '我的学习', icon: DashboardSquare01Icon },
-  { value: 'mail', label: '邮件', icon: Mail01Icon },
-  { value: 'calendar', label: '日历', icon: Calendar03Icon },
-  { value: 'library', label: '资料库', icon: Folder01Icon },
-]
-
-function MailPage() {
-  return (
-    <div className="flex h-full min-h-0 flex-col bg-card text-card-foreground">
-      <header className="flex h-12 shrink-0 items-center border-b border-[var(--im-divider-weak)] px-4">
-        <h1 className="font-heading text-sm font-medium">邮件</h1>
-      </header>
-      <div className="min-h-0 flex-1 overflow-y-auto p-6">
-        <Empty className="h-full border-0">
-          <EmptyHeader>
-            <EmptyMedia variant="icon"><HugeiconsIcon icon={Mail01Icon} strokeWidth={2} /></EmptyMedia>
-            <EmptyTitle>邮件收件箱即将接入</EmptyTitle>
-            <EmptyDescription>现有邮件撰写流程保持可用，收件箱业务将在后续迁移到本人看板。</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      </div>
-    </div>
-  )
+function initialSection(view: DashboardView): LearningDashboardSection {
+  if (view === 'calendar') return 'calendar'
+  if (view === 'library') return 'resources'
+  if (view === 'courses') return 'settings'
+  return 'overview'
 }
 
-function DashboardPage({ view, workspaceId, personal }: {
-  view: DashboardView
-  workspaceId: string
-  personal: boolean
-}) {
-  if (view === 'learning') return <LearningCenter workspaceId={workspaceId} allowOnboarding={personal} />
-  if (view === 'courses') return <CompanyCourseManagement projectId={workspaceId} />
-  if (view === 'mail') return <MailPage />
-  if (view === 'calendar') return <CalendarView />
-  return <DocumentsView />
+function appViewForSection(section: LearningDashboardSection): DashboardView {
+  if (section === 'calendar') return 'calendar'
+  if (section === 'resources') return 'library'
+  if (section === 'settings') return 'courses'
+  return 'learning'
 }
 
 export function PersonalDashboard({
@@ -89,133 +62,170 @@ export function PersonalDashboard({
   defaultLayout: Layout
   onLayoutChanged: (layout: Layout, meta: LayoutChangedMeta) => void
 }) {
-  const workspaces = useWorkspace((state) => state.list)
   const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
-  const selectWorkspace = useWorkspace((state) => state.select)
+  const selectedCompanyId = useWorkspace((state) => state.companyId)
+  const [spaces, setSpaces] = useState<LearningSpace[]>([])
+  const [spacesLoading, setSpacesLoading] = useState(true)
+  const [spaceError, setSpaceError] = useState('')
   const [pagePending, setPagePending] = useState(false)
-  const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const scopes = getDashboardScopes(workspaces)
-  const activeWorkspace = scopes.visible.find((workspace) => workspace.id === selectedWorkspaceId)
-    ?? scopes.courses[0]
-    ?? scopes.personal
-  const personalPage = activeWorkspace?.id === scopes.personal?.id
+  const [section, setSection] = useState<LearningDashboardSection>(() => initialSection(view))
 
-  useEffect(() => () => {
-    if (transitionTimer.current) clearTimeout(transitionTimer.current)
+  const loadSpaces = useCallback(async () => {
+    setSpacesLoading(true)
+    setSpaceError('')
+    try {
+      const byProjectId = new Map<string, LearningSpace>()
+      const cursors = new Set<string>()
+      let cursor: string | undefined
+      for (let pageIndex = 0; pageIndex < MAX_SPACE_PAGES; pageIndex += 1) {
+        const page = await learningApi.listSpaces({ cursor, limit: 100 })
+        for (const space of page.data) byProjectId.set(space.projectId, space)
+        if (!page.nextCursor) {
+          cursor = undefined
+          break
+        }
+        if (cursors.has(page.nextCursor)) throw new Error('repeated learning spaces cursor')
+        cursors.add(page.nextCursor)
+        cursor = page.nextCursor
+      }
+      if (cursor) throw new Error('learning spaces page limit exceeded')
+      setSpaces([...byProjectId.values()])
+    } catch (reason) {
+      setSpaceError(userFacingError(reason, '学习区暂时无法加载，请稍后重试。'))
+    } finally {
+      setSpacesLoading(false)
+    }
   }, [])
 
-  const openView = (next: DashboardView) => {
-    if (next === view) return
-    if (transitionTimer.current) clearTimeout(transitionTimer.current)
-    setPagePending(true)
-    useApp.getState().setView(next)
-    transitionTimer.current = setTimeout(() => {
-      setPagePending(false)
-      transitionTimer.current = null
-    }, 120)
+  useEffect(() => { void loadSpaces() }, [loadSpaces, selectedCompanyId])
+  useEffect(() => {
+    const refresh = () => void loadSpaces()
+    window.addEventListener('lingxiloop:learning-spaces-updated', refresh)
+    return () => window.removeEventListener('lingxiloop:learning-spaces-updated', refresh)
+  }, [loadSpaces])
+
+  const scopes = getLearningSpaceScopes(spaces)
+  const activeSpace = scopes.visible.find(
+    (space) => space.companyId === selectedCompanyId && space.projectId === selectedWorkspaceId,
+  )
+  const personal = activeSpace?.projectKind === 'PERSONAL_LEARNING'
+  const menu = activeSpace ? getLearningDashboardMenu({ personal, perspective: activeSpace.perspective }) : []
+
+  useEffect(() => {
+    if (!activeSpace) return
+    const context = { personal: activeSpace.projectKind === 'PERSONAL_LEARNING', perspective: activeSpace.perspective }
+    setSection((current) => isLearningDashboardSectionAvailable(current, context)
+      ? current
+      : getLearningDashboardDefaultSection(context))
+  }, [activeSpace?.projectId, activeSpace?.perspective, activeSpace?.projectKind])
+
+  const openSection = (next: LearningDashboardSection) => {
+    setSection(next)
+    const nextView = appViewForSection(next)
+    if (nextView !== view) useApp.getState().setView(nextView)
   }
-  const openWorkspacePage = (workspaceId: string) => {
-    if (workspaceId === selectedWorkspaceId) return
-    const targetIsPersonal = workspaceId === scopes.personal?.id
-    const nextView = targetIsPersonal && view === 'courses' ? 'learning' : view
-    if (transitionTimer.current) clearTimeout(transitionTimer.current)
+
+  const openWorkspace = async (projectId: string) => {
+    const target = scopes.visible.find((space) => space.projectId === projectId)
+    if (!target || (target.projectId === selectedWorkspaceId && target.companyId === selectedCompanyId)) return
+    const previous = activeSpace
     setPagePending(true)
-    const selection = selectWorkspace(workspaceId)
-    useApp.getState().setView(nextView)
-    void selection.catch(() => undefined).finally(() => setPagePending(false))
+    const selection = selectLearningSpace({ companyId: target.companyId, projectId: target.projectId }).catch(
+      async (reason) => {
+        if (previous) {
+          await selectLearningSpace({ companyId: previous.companyId, projectId: previous.projectId }).catch(
+            () => undefined,
+          )
+          useApp.getState().setView('learning')
+        }
+        throw reason
+      },
+    )
+    useApp.getState().setView('learning')
+    try {
+      await toastAction(selection, {
+        loading: '正在切换学习区',
+        success: `已切换到${target.title}`,
+        error: (reason) => userFacingError(reason, '切换学习区失败，已恢复原学习区。'),
+      })
+    } catch {
+      // Toast owns the visible error state and the previous selection has been restored.
+    } finally {
+      setPagePending(false)
+    }
   }
 
   return (
-    <SidebarProvider
-      className="h-full min-h-0 bg-card"
-      style={{ '--sidebar-width': '100%' } as React.CSSProperties}
-    >
-      <ResizablePanelGroup
-        id="dashboard-two-panel-layout"
-        orientation="horizontal"
-        className="min-h-0 min-w-0"
-        defaultLayout={defaultLayout}
-        onLayoutChanged={onLayoutChanged}
-      >
+    <SidebarProvider className="h-full min-h-0 bg-card" style={{ '--sidebar-width': '100%' } as React.CSSProperties}>
+      <ResizablePanelGroup id="dashboard-two-panel-layout" orientation="horizontal" className="min-h-0 min-w-0" defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged}>
         <ResizablePanel id="conversations" defaultSize="25%" minSize={280} maxSize={420} className="min-h-0 min-w-0">
           <Sidebar collapsible="none" className="w-full shrink-0 bg-card text-card-foreground">
-        <SidebarHeader className="omb-drag h-12 shrink-0 justify-center p-2">
-          <Select value={activeWorkspace?.id} onValueChange={openWorkspacePage}>
-            <SelectTrigger aria-label="切换个人学习区或课程" className="omb-no-drag h-8 w-full bg-input/50 shadow-none">
-              <SelectValue placeholder="选择学习空间" />
-            </SelectTrigger>
-            <SelectContent>
-              {scopes.personal && (
-                <SelectItem value={scopes.personal.id}>
-                  <span className="flex items-center gap-2"><CourseAvatar courseId={scopes.personal.id} title={scopes.personal.name} size="sm" /><span>个人学习区</span></span>
-                </SelectItem>
+            <SidebarHeader className="omb-drag h-12 shrink-0 justify-center p-2">
+              {spacesLoading && spaces.length === 0 ? <Skeleton className="h-8 w-full rounded-xl" /> : (
+                <Select
+                  value={activeSpace?.projectId}
+                  disabled={pagePending}
+                  onValueChange={(projectId) => void openWorkspace(projectId)}
+                >
+                  <SelectTrigger aria-label="切换个人学习区或课程" className="omb-no-drag h-8 w-full bg-input/50 shadow-none">
+                    <SelectValue placeholder="选择学习区" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {scopes.personal && (
+                      <SelectItem value={scopes.personal.projectId}>
+                        <span className="flex items-center gap-2"><CourseAvatar courseId={scopes.personal.projectId} title={scopes.personal.title} size="sm" /><span>{scopes.personal.title || '个人学习区'}</span></span>
+                      </SelectItem>
+                    )}
+                    {scopes.courses.map((space) => (
+                      <SelectItem key={space.projectId} value={space.projectId}>
+                        <span className="flex items-center gap-2"><CourseAvatar courseId={space.courseId ?? space.projectId} title={space.title} size="sm" /><span>{space.title}</span></span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
-              {scopes.courses.map((workspace) => (
-                <SelectItem key={workspace.id} value={workspace.id}>
-                  <span className="flex items-center gap-2"><CourseAvatar courseId={workspace.id} title={workspace.name} size="sm" /><span>{workspace.name}</span></span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </SidebarHeader>
-        <SidebarContent className="gap-1 px-2 pb-2 pt-0.5">
-          <SidebarGroup className="p-0">
-            <SidebarGroupLabel>{personalPage ? '个人学习区' : activeWorkspace?.name ?? '课程'}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={view === 'learning'} onClick={() => openView('learning')}>
-                    <HugeiconsIcon icon={DashboardSquare01Icon} strokeWidth={2} />
-                    <span>{personalPage ? '我的学习' : '课程首页'}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                {!personalPage && <SidebarMenuItem>
-                  <SidebarMenuButton isActive={view === 'courses'} onClick={() => openView('courses')}>
-                    <HugeiconsIcon icon={BookOpen01Icon} strokeWidth={2} />
-                    <span>课程</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>}
-                {DASHBOARD_ITEMS.slice(1).map((item) => (
-                  <SidebarMenuItem key={item.value}>
-                    <SidebarMenuButton isActive={view === item.value} onClick={() => openView(item.value)}>
-                      <HugeiconsIcon icon={item.icon} strokeWidth={2} />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+            </SidebarHeader>
+            <SidebarContent className="gap-1 px-2 pb-2 pt-0.5">
+              <SidebarGroup className="p-0">
+                <SidebarGroupLabel>{personal ? '个人学习区' : activeSpace?.title ?? '学习看板'}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {menu.map((item) => (
+                      <SidebarMenuItem key={item.section}>
+                        <SidebarMenuButton isActive={section === item.section} onClick={() => openSection(item.section)}>
+                          <HugeiconsIcon icon={item.icon} strokeWidth={2} />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
             <SidebarUserFooter />
           </Sidebar>
         </ResizablePanel>
-        <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整看板侧边栏宽度" title="拖动调整侧边栏宽度，双击恢复默认" />
+        <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整看板侧边栏宽度" title="拖动调整看板侧边栏宽度，双击恢复默认" />
         <ResizablePanel id="conversation" defaultSize="75%" minSize={320} className="min-h-0 min-w-0">
-          <SidebarInset className="@container/dashboard-content h-full min-h-0 min-w-0 overflow-hidden bg-card text-card-foreground">
-            {pagePending ? (
-              <div className="flex h-full min-h-0 flex-col" role="status" aria-label="正在切换看板页面">
-                <span className="sr-only">正在切换看板页面</span>
-                <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--im-divider-weak)] px-4">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-8 w-24 rounded-xl" />
-                </div>
-                <div className="grid min-h-0 flex-1 gap-4 p-4 @min-[48rem]/dashboard-content:grid-cols-[minmax(0,1.4fr)_minmax(16rem,.6fr)] @min-[48rem]/dashboard-content:p-6">
-                  <div className="space-y-4"><Skeleton className="h-10 w-full rounded-xl" /><Skeleton className="h-44 w-full rounded-4xl" /><Skeleton className="h-44 w-full rounded-4xl" /></div>
-                  <div className="space-y-4"><Skeleton className="h-28 w-full rounded-4xl" /><Skeleton className="h-52 w-full rounded-4xl" /></div>
-                </div>
-              </div>
-            ) : activeWorkspace && (
-              <DashboardPage
-                key={activeWorkspace.id}
-                view={view}
-                workspaceId={activeWorkspace.id}
-                personal={personalPage}
-              />
+          <SidebarInset className="h-full min-h-0 min-w-0 overflow-hidden bg-card text-card-foreground">
+            {pagePending || (spacesLoading && !activeSpace) ? <DashboardSkeleton /> : spaceError && !activeSpace ? (
+              <div className="p-6"><Alert variant="destructive"><AlertDescription>{spaceError}</AlertDescription></Alert></div>
+            ) : activeSpace ? <LearningDashboardPanel key={activeSpace.projectId} space={activeSpace} section={section} /> : (
+              <div className="grid h-full place-items-center p-6 text-center"><div><p className="font-heading text-base font-medium">{scopes.visible.length > 0 ? '当前学习区不可用' : '还没有学习区'}</p><p className="mt-1 text-sm text-muted-foreground">{scopes.visible.length > 0 ? '请从左上方选择一个可访问的学习区。' : '创建个人学习区或加入课程后会显示在这里。'}</p></div></div>
             )}
           </SidebarInset>
         </ResizablePanel>
       </ResizablePanelGroup>
     </SidebarProvider>
+  )
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="flex h-full min-h-0 flex-col" role="status" aria-label="正在加载学习看板">
+      <span className="sr-only">正在加载学习看板</span>
+      <div className="flex h-12 shrink-0 items-center gap-3 border-b border-[var(--im-divider-weak)] px-4"><Skeleton className="size-6 rounded-lg" /><Skeleton className="h-4 w-28" /><Skeleton className="ms-auto h-6 w-14 rounded-full" /></div>
+      <div className="grid min-h-0 flex-1 gap-4 p-4 @min-[48rem]:grid-cols-2 @min-[48rem]:p-6"><Skeleton className="h-32 rounded-4xl" /><Skeleton className="h-32 rounded-4xl" /><Skeleton className="h-64 rounded-4xl @min-[48rem]:col-span-2" /></div>
+    </div>
   )
 }

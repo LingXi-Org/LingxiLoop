@@ -13,6 +13,7 @@ import type {
 import { enqueueMemberOnboardingEffect } from './effects-repository.js'
 import {
   companyMembershipSummary,
+  courseManagementCounts,
   emailAlreadyMember,
   findCompany,
   findCompanyForMember,
@@ -35,7 +36,6 @@ import {
   revokeActiveEmailInvitations,
   revokeInvitation,
   setMemberRole,
-  teacherCount,
   updateCompany,
 } from './repository.js'
 
@@ -178,7 +178,14 @@ export class CompanyApplication {
       if (role === 'OWNER') throw new CompanyApplicationError('conflict', 'the company owner cannot be removed')
       const courses = await lockTeachingCourses(db, args.companyId, args.targetId)
       for (const course of courses) {
-        if (await teacherCount(db, args.companyId, course.id) <= 1) {
+        if (course.course_created_by === args.targetId || course.project_created_by === args.targetId) {
+          throw new CompanyApplicationError('conflict', `${course.name} creator cannot be removed`)
+        }
+        const counts = await courseManagementCounts(db, args.companyId, course.id)
+        if (course.role === 'OWNER' && counts.owners <= 1) {
+          throw new CompanyApplicationError('conflict', `${course.name} must keep at least one owner`)
+        }
+        if (counts.managers <= 1) {
           throw new CompanyApplicationError('conflict', `${course.name} must keep at least one teacher`)
         }
       }

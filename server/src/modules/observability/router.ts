@@ -37,13 +37,13 @@ observabilityRouter.get('/coworker/handoffs', safe(async (req, res) => {
 
 observabilityRouter.get('/coworker/memories', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
-  await permissionService.assertCan({ actorUserId: userId, action: 'agent_memory:read', companyId })
+  await permissionService.assertCan({ actorUserId: userId, action: 'agent_memory:read_company', companyId })
   res.json(await observabilityApplication.memories(companyId))
 }))
 
 observabilityRouter.patch('/coworker/memories', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
-  await permissionService.assertCan({ actorUserId: userId, action: 'agent_memory:write', companyId })
+  await permissionService.assertCan({ actorUserId: userId, action: 'agent_memory:write_company', companyId })
   const input = parsedOr400(memoryUpdateSchema.safeParse(req.body ?? {}))
   try { res.json(await observabilityApplication.updateMemory(companyId, input)) }
   catch (error) {
@@ -54,7 +54,7 @@ observabilityRouter.patch('/coworker/memories', safe(async (req, res) => {
 
 observabilityRouter.delete('/coworker/memories', safe(async (req, res) => {
   const { userId, companyId } = await requireCompany(req)
-  await permissionService.assertCan({ actorUserId: userId, action: 'agent_memory:write', companyId })
+  await permissionService.assertCan({ actorUserId: userId, action: 'agent_memory:write_company', companyId })
   const input = parsedOr400(memoryDeleteSchema.safeParse(req.query))
   try { res.json(await observabilityApplication.deleteMemory(companyId, input)) }
   catch (error) {

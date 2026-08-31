@@ -17,6 +17,7 @@ import { isMuted, useConversations } from '@/features/conversations/store'
 import { ConversationListItemContent } from '@/im/ConversationList'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
+import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
@@ -106,7 +107,7 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
       await conversationsApi.addMember(conversation.id, participant.id)
       await useConversations.getState().reload()
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason))
+      setError(userFacingError(reason, '暂时无法搜索对话，请稍后重试。'))
     } finally {
       setBusy(null)
     }
@@ -127,7 +128,7 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
               <span className="text-xs text-primary">{busy === p.id ? '添加中…' : '添加'}</span>
             </Item>
           ))}</ItemGroup>
-          {error && <p className="m-3 rounded-lg bg-red-500/10 px-3 py-2 text-[12px] text-red-400">{error}</p>}
+          {error && <p className="m-3 rounded-lg bg-destructive/10 px-3 py-2 text-[12px] text-destructive">{userFacingError(error, '搜索失败，请稍后重试。')}</p>}
         </div>
         <div className="border-t border-border p-3 text-right"><Button type="button" onClick={onClose} size="sm">完成</Button></div>
       </div>
@@ -223,7 +224,7 @@ export function ConversationsPane() {
     <aside data-slot="sidebar" className="im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card text-card-foreground">
       <SidebarHeader className="desktop-window-toolbar omb-drag h-12 shrink-0 p-2">
         <InputGroup className="omb-no-drag h-8 rounded-xl border-transparent bg-input/50 shadow-none">
-          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="Find conversation" aria-label="搜索会话和消息" className="h-8 px-2 text-sm" />
+          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className="h-8 px-2 text-sm" />
           <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4 opacity-50" /></InputGroupAddon>
           {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
         </InputGroup>
@@ -247,14 +248,14 @@ export function ConversationsPane() {
           </div>
         ) : (
           <div className="relative min-h-0 flex-1">
-          {error && conversations.length > 0 && <div role="alert" className="absolute inset-x-2 top-2 z-10 flex items-center gap-2 rounded-xl border border-destructive/30 bg-background/95 px-3 py-2 text-xs text-destructive shadow-sm"><span className="min-w-0 flex-1 truncate">刷新失败：{error}</span><Button type="button" variant="ghost" size="sm" onClick={() => void useConversations.getState().reload()}>重试</Button></div>}
+          {error && conversations.length > 0 && <div role="alert" className="absolute inset-x-2 top-2 z-10 flex items-center gap-2 rounded-xl border border-destructive/30 bg-background/95 px-3 py-2 text-xs text-destructive shadow-sm"><span className="min-w-0 flex-1 truncate">{userFacingError(error, '会话刷新失败，请稍后重试。')}</span><Button type="button" variant="ghost" size="sm" onClick={() => void useConversations.getState().reload()}>重试</Button></div>}
           <Virtuoso
             className="h-full"
             data={conversations}
             computeItemKey={(_, conversation) => conversation.id}
             defaultItemHeight={60}
             increaseViewportBy={{ top: 500, bottom: 500 }}
-            components={{ List: ConversationItemGroup, EmptyPlaceholder: () => error ? <div role="alert" className="px-4 py-10 text-center"><p className="text-sm font-medium text-foreground">会话加载失败</p><p className="mt-1 text-xs text-muted-foreground">{error}</p><Button type="button" size="sm" className="mt-3" onClick={() => void useConversations.getState().load()}>重试</Button></div> : loaded ? <p className="px-3 py-8 text-center text-sm text-muted-foreground">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
+            components={{ List: ConversationItemGroup, EmptyPlaceholder: () => error ? <div role="alert" className="px-4 py-10 text-center"><p className="text-sm font-medium text-foreground">会话加载失败</p><p className="mt-1 text-xs text-muted-foreground">{userFacingError(error, '请稍后重试。')}</p><Button type="button" size="sm" className="mt-3" onClick={() => void useConversations.getState().load()}>重试</Button></div> : loaded ? <p className="px-3 py-8 text-center text-sm text-muted-foreground">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
             itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} />}
           />
           </div>

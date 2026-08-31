@@ -17,7 +17,7 @@ import { ComposerLexicalInput } from './ComposerLexicalInput'
 export function ConversationComposer({
   conversationId,
   compact = false,
-  placeholder = 'Message LingXi…',
+  placeholder = '发送消息…',
 }: {
   conversationId: string
   compact?: boolean
@@ -79,9 +79,9 @@ export function ConversationComposer({
             <Tooltip>
               <TooltipTrigger asChild>
                 <ComposerPrimitive.AddAttachment asChild>
-                  <button type="button" className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#5d5d5d] transition-colors hover:bg-black/[0.07] dark:text-[#cdcdcd] dark:hover:bg-white/15" aria-label="添加附件">
+                  <Button type="button" variant="ghost" size="icon" className="size-9 shrink-0 rounded-full text-[#5d5d5d] hover:bg-black/[0.07] dark:text-[#cdcdcd] dark:hover:bg-white/15" aria-label="添加附件">
                     <HugeiconsIcon icon={PlusSignIcon} size={20} strokeWidth={2} />
-                  </button>
+                  </Button>
                 </ComposerPrimitive.AddAttachment>
               </TooltipTrigger>
               <TooltipContent side="top">添加附件</TooltipContent>
@@ -98,19 +98,19 @@ export function ConversationComposer({
             {isRunning && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <ComposerPrimitive.Cancel className="flex size-9 items-center justify-center rounded-full bg-[#0d0d0d] text-white dark:bg-white dark:text-black" aria-label="停止全部 Agent">
+                  <ComposerPrimitive.Cancel className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground" aria-label="停止全部智能助教">
                     <span className="size-2.5 rounded-[2px] bg-current" />
                   </ComposerPrimitive.Cancel>
                 </TooltipTrigger>
-                <TooltipContent side="top">停止当前会话全部 Agent</TooltipContent>
+                <TooltipContent side="top">停止当前会话中的全部智能助教</TooltipContent>
               </Tooltip>
             )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <ComposerPrimitive.Send asChild>
-                  <button type="submit" className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-30" aria-label="发送">
+                  <Button type="submit" size="icon" className="size-9 rounded-full transition-opacity disabled:opacity-30" aria-label="发送">
                     <HugeiconsIcon icon={ArrowUp02Icon} size={24} strokeWidth={2} />
-                  </button>
+                  </Button>
                 </ComposerPrimitive.Send>
               </TooltipTrigger>
               <TooltipContent side="top">发送</TooltipContent>

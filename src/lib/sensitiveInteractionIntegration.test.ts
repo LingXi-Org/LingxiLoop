@@ -52,8 +52,8 @@ test('production code never uses native alert, confirm, or prompt', () => {
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
     '../features/calendar/components/CalendarView.tsx',
-    '../features/companies/components/CompanyCourseManagement.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
+    '../features/settings/DataAccountSettingsPanel.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })
 
@@ -73,12 +73,32 @@ test('approval decisions and user-triggered tasks publish through the global Toa
 })
 
 test('dashboard role changes and destructive actions confirm before mutation and preserve Toast lifecycle', () => {
-  const courses = read('../features/companies/components/CompanyCourseManagement.tsx')
+  const members = read('../features/learning/dashboard/CourseMembersSection.tsx')
+  const settings = read('../features/learning/dashboard/CourseSettingsSection.tsx')
+  const reviews = read('../features/learning/components/LearningReviewsSection.tsx')
   const invitations = read('../features/companies/components/InvitePeopleModal.tsx')
-  assert.match(courses, /const updateCourseMemberRole[\s\S]*?confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.updateCourseMember/)
+  assert.match(members, /space\.perspective === 'teacher' && space\.canManage/)
+  assert.match(members, /space\.canInviteMembers/)
+  assert.match(members, /space\.canRevokeInvitations/)
+  assert.match(members, /space\.canRemoveMembers/)
+  assert.match(members, /confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.removeCourseMember/)
+  assert.match(members, /confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.revokeProjectInvitation/)
+  assert.match(settings, /space\.perspective === 'teacher' && space\.canManage/)
+  assert.match(settings, /space\.canUpdateCourse/)
+  assert.match(settings, /confirmSensitiveAction\([\s\S]*?toastAction\(lifecycle\.run/)
+  assert.match(reviews, /course\.perspective !== 'teacher' \|\| !course\.canManage/)
+  assert.match(reviews, /confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.reviewEvaluation/)
   assert.match(read('../desktop/WorkspaceRail.tsx'), /toastAction\(learningApi\.createCourse/)
   assert.match(invitations, /confirmSensitiveAction\([\s\S]*?toastAction\(companiesApi\.revokeInvitation/)
   assert.match(invitations, /toastAction\(companiesApi\.createInvitation/)
+})
+
+test('settings confirms account deletion before the API call, Toasts the lifecycle, then clears auth', () => {
+  const settings = read('../features/settings/DataAccountSettingsPanel.tsx')
+  assert.match(
+    settings,
+    /const confirmation = await promptSensitiveAction\([\s\S]*?if \(confirmation === null\) return[\s\S]*?confirmation !== ACCOUNT_DELETE_CONFIRMATION[\s\S]*?await toastAction\(authApi\.deleteAccount\(\)[\s\S]*?useAuth\.getState\(\)\.clear\(\)/,
+  )
 })
 
 test('calendar editing uses the controlled Base UI Dialog without a handwritten modal shell', () => {

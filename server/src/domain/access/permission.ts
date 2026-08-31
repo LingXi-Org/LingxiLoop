@@ -73,6 +73,8 @@ export const PERMISSION_ACTIONS = [
   'agent_autonomy:write',
   'agent_memory:read',
   'agent_memory:write',
+  'agent_memory:read_company',
+  'agent_memory:write_company',
   'agent_approval:list',
   'agent_approval:resolve',
   'agent_run:control',

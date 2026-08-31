@@ -2,6 +2,7 @@ import type { Queryable } from '../../db/queryable.js'
 import { type ProjectRole, projectRoleFromLearningWire } from '../../domain/access/public.js'
 import type { ProjectKind } from '../../domain/public.js'
 import type { CourseManager, CreateCourseInput, UpdateCourseInput } from './contracts.js'
+import type { CourseMemberChangeOutcome } from './types.js'
 
 export async function listCourses(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query<Record<string, unknown> & { id: string }>(
@@ -220,21 +221,44 @@ export async function listCourseMembers(db: Queryable, courseId: string, company
 
 export async function changeCourseMember(db: Queryable, args: {
   courseId: string; companyId: string; userId: string; role: 'teacher' | 'learner' | null
-}): Promise<'updated' | 'not_found' | 'last_teacher'> {
-  const { rows: locked } = await db.query<{ project_id: string }>(
-    `SELECT project_id FROM courses WHERE id=$1 AND company_id=$2 FOR UPDATE`,
+}): Promise<CourseMemberChangeOutcome> {
+  const { rows: locked } = await db.query<{
+    project_id: string
+    course_created_by: string
+    project_created_by: string | null
+  }>(
+    `SELECT course.project_id,course.created_by AS course_created_by,
+            project.created_by AS project_created_by
+       FROM courses course JOIN projects project ON project.id=course.project_id
+        AND project.company_id=course.company_id
+      WHERE course.id=$1 AND course.company_id=$2 FOR UPDATE OF course,project`,
     [args.courseId, args.companyId],
   )
   if (!locked[0]) return 'not_found'
   const projectId = locked[0].project_id
   const { rows } = await db.query<{ role: ProjectRole }>(
     `SELECT role FROM project_memberships
-      WHERE project_id=$1 AND company_id=$2 AND user_id=$3 AND status='ACTIVE'`,
+      WHERE project_id=$1 AND company_id=$2 AND user_id=$3 AND status='ACTIVE'
+      FOR UPDATE`,
     [projectId, args.companyId, args.userId],
   )
   const current = rows[0]?.role
   if (!current) return 'not_found'
-  if ((current === 'OWNER' || current === 'TEACHER') && args.role !== 'teacher') {
+  const next = args.role === null ? null : projectRoleFromLearningWire(args.role)
+  if (current === 'OWNER') {
+    const { rows: owners } = await db.query<{ count: number }>(
+      `SELECT COUNT(*)::int AS count FROM project_memberships
+        WHERE project_id=$1 AND company_id=$2 AND status='ACTIVE' AND role='OWNER'`,
+      [projectId, args.companyId],
+    )
+    return Number(owners[0]?.count ?? 0) <= 1 ? 'last_owner' : 'protected_owner'
+  }
+  const creator = args.userId === locked[0].course_created_by
+    || args.userId === locked[0].project_created_by
+  if (creator && (next === null || (current === 'TEACHER' && next === 'STUDENT'))) {
+    return 'protected_creator'
+  }
+  if (current === 'TEACHER' && next !== 'TEACHER') {
     const { rows: counts } = await db.query<{ count: number }>(
       `SELECT COUNT(*)::int AS count FROM project_memberships
         WHERE project_id=$1 AND company_id=$2 AND status='ACTIVE' AND role IN ('OWNER','TEACHER')`,
@@ -246,7 +270,7 @@ export async function changeCourseMember(db: Queryable, args: {
     await db.query(
       `UPDATE project_memberships SET role=$4,updated_at=NOW()
         WHERE project_id=$1 AND company_id=$2 AND user_id=$3 AND status='ACTIVE'`,
-      [projectId, args.companyId, args.userId, projectRoleFromLearningWire(args.role)],
+      [projectId, args.companyId, args.userId, next],
     )
   } else {
     await db.query(

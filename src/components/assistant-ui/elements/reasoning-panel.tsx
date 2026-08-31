@@ -52,7 +52,7 @@ export function ReasoningPanel({
               active={streaming}
               className="relative inline-block leading-none"
             >
-              Thinking
+              正在思考
             </ShimmerLabel>
             {elapsed !== undefined && (
               <span className={cn(mono, "text-foreground/30 tabular-nums")}>

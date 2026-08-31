@@ -16,6 +16,7 @@ import { companiesApi } from '@/features/companies/api'
 import type { ApiInvitation, ApiInvitationWithToken } from '@/features/companies/contracts'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
+import { userFacingError } from '@/lib/userFacingError'
 import { useAuth } from '@/stores/auth'
 
 interface Props {
@@ -25,6 +26,17 @@ interface Props {
 }
 
 type InviteMode = 'link' | 'email'
+
+const INVITATION_STATUS_LABELS: Record<ApiInvitation['status'], string> = {
+  active: '有效',
+  revoked: '已撤销',
+  expired: '已过期',
+  consumed: '已用完',
+}
+
+function invitationRoleLabel(role: ApiInvitation['role']): string {
+  return role === 'admin' ? '管理员' : '成员'
+}
 
 export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
   const [mode, setMode] = useState<InviteMode>('link')
@@ -46,7 +58,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
     try {
       setList(await companiesApi.listInvitations(companyId))
     } catch (error) {
-      setListErr(error instanceof Error ? error.message : String(error))
+      setListErr(userFacingError(error, '暂时无法加载邀请，请稍后重试。'))
     } finally {
       setLoadingList(false)
     }
@@ -81,7 +93,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
       setNote('')
       void reload()
     } catch (error) {
-      setFormErr(error instanceof Error ? error.message : String(error))
+      setFormErr(userFacingError(error, '邀请创建失败，请稍后重试。'))
     } finally {
       setBusy(false)
     }
@@ -100,7 +112,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
       })
       void reload()
     } catch (error) {
-      setListErr(error instanceof Error ? error.message : String(error))
+      setListErr(userFacingError(error, '邀请撤销失败，请稍后重试。'))
     }
   }
 
@@ -132,7 +144,7 @@ export function InvitePeopleModal({ companyId, companyName, onClose }: Props) {
               <Field>
                 <FieldLabel htmlFor="invite-email">电子邮件</FieldLabel>
                 <FieldDescription>一次性使用并锁定到该地址，对方需使用相同地址登录。</FieldDescription>
-                <Input id="invite-email" type="email" autoFocus autoComplete="off" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="teammate@example.com" />
+                <Input id="invite-email" type="email" autoFocus autoComplete="off" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="请输入邮箱地址" />
               </Field>
             ) : (
               <Alert><AlertDescription>知道链接的任何人都可以加入。链接将在 7 天后过期，并可随时撤销。</AlertDescription></Alert>
@@ -220,7 +232,7 @@ function CreatedInviteCard({ invite, onDone }: { invite: ApiInvitationWithToken;
     <Card>
       <CardHeader>
         <CardTitle>{invite.emailDelivery?.ok ? '邀请已发送' : '邀请已可分享'}</CardTitle>
-        <CardDescription>{invite.email ? `该邀请仅限 ${invite.email} 使用。` : `知道链接的任何人都可以作为 ${invite.role} 加入。`}</CardDescription>
+        <CardDescription>{invite.email ? `该邀请仅限 ${invite.email} 使用。` : `知道链接的任何人都可以作为${invitationRoleLabel(invite.role)}加入。`}</CardDescription>
       </CardHeader>
       <CardContent className="flex gap-2">
         <Input readOnly value={invite.url} className="font-mono" onFocus={(event) => event.currentTarget.select()} />
@@ -235,7 +247,7 @@ function InvitationRow({ invitation, onRevoke, historical }: { invitation: ApiIn
   return (
     <Item variant="outline">
       <ItemContent>
-        <ItemTitle>{invitation.email ?? '可分享链接'} <Badge variant={invitation.status === 'active' ? 'secondary' : 'outline'}>{invitation.status}</Badge> <Badge variant="outline">{invitation.role}</Badge></ItemTitle>
+        <ItemTitle>{invitation.email ?? '可分享链接'} <Badge variant={invitation.status === 'active' ? 'secondary' : 'outline'}>{INVITATION_STATUS_LABELS[invitation.status]}</Badge> <Badge variant="outline">{invitationRoleLabel(invitation.role)}</Badge></ItemTitle>
         <ItemDescription>
           {!invitation.email && `${invitation.useCount}/${invitation.maxUses} 已使用 · `}
           {invitation.status === 'active' ? `${relativeFrom(invitation.expiresAt)}后过期` : invitation.note ?? '历史邀请'}
@@ -243,24 +255,11 @@ function InvitationRow({ invitation, onRevoke, historical }: { invitation: ApiIn
       </ItemContent>
       {invitation.status === 'active' && !historical && onRevoke && (
         <ItemActions>
-          <CopyLinkButton inviteId={invitation.id} />
           <Button variant="destructive" size="sm" onClick={onRevoke}>撤销</Button>
         </ItemActions>
       )}
     </Item>
   )
-}
-
-function CopyLinkButton({ inviteId }: { inviteId: string }) {
-  const [copied, setCopied] = useState(false)
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(inviteId)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1200)
-    } catch { /* Clipboard availability is surfaced by the unchanged button state. */ }
-  }
-  return <Button variant="outline" size="sm" onClick={copy} title="复制邀请参考">{copied ? '已复制' : '复制参考'}</Button>
 }
 
 function relativeFrom(iso: string): string {

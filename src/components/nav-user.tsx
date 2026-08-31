@@ -1,9 +1,8 @@
-import { Button } from '@/components/ui/button'
-"use client"
-
-import { ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
+import { Logout03Icon, Settings02Icon, UnfoldMoreIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { authApi } from '@/auth/api'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,14 +11,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useAuth } from "@/stores/auth"
+} from '@/components/ui/dropdown-menu'
+import { openSettingsDialog, SETTINGS_DIALOG_TRIGGER_ID } from '@/features/settings/store'
 import { resolveUserAvatarUrl } from '@/lib/userAvatar'
+import { useAuth } from '@/stores/auth'
 
 export function NavUser({ user }: {
   user: { name: string; email: string; avatar?: string | null }
 }) {
-  const fallback = user.name.trim().slice(0, 2).toLocaleUpperCase() || "我"
+  const fallback = user.name.trim().slice(0, 2).toLocaleUpperCase() || '我'
   const avatarUrl = resolveUserAvatarUrl(user.avatar)
   const signOut = () => {
     useAuth.getState().clear()
@@ -39,9 +39,9 @@ export function NavUser({ user }: {
 
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <Button type="button" variant="ghost" className="h-14 w-full justify-start gap-2 rounded-xl px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground" aria-label="打开账户菜单">
+      <Button id={SETTINGS_DIALOG_TRIGGER_ID} type="button" variant="ghost" className="h-14 w-full justify-start gap-2 rounded-xl px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground" aria-label="打开账户菜单">
         {identity}
-        <ChevronsUpDownIcon className="ms-auto size-4" />
+        <HugeiconsIcon icon={UnfoldMoreIcon} strokeWidth={2} className="ms-auto size-4" />
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent className="min-w-64 rounded-lg" side="right" align="end" sideOffset={8}>
@@ -51,7 +51,14 @@ export function NavUser({ user }: {
         </DropdownMenuLabel>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={signOut}><LogOutIcon />Log out</DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => openSettingsDialog()}>
+        <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} />
+        设置
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={signOut}>
+        <HugeiconsIcon icon={Logout03Icon} strokeWidth={2} />
+        退出登录
+      </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 }

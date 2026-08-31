@@ -1,5 +1,5 @@
 import { API, http } from '@/api/core/http'
-import type { AuthMeResponse, AuthStartOptions } from './contracts'
+import type { AuthMeResponse, AuthStartOptions, DeleteAccountResponse } from './contracts'
 
 export const authApi = {
   startUrl(options: AuthStartOptions = {}) {
@@ -11,5 +11,6 @@ export const authApi = {
     return `${API}/auth/start/lingxi${query ? `?${query}` : ''}`
   },
   logout: () => http<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
+  deleteAccount: () => http<DeleteAccountResponse>('/me/account', { method: 'DELETE' }),
   me: () => http<AuthMeResponse>('/auth/me'),
 }

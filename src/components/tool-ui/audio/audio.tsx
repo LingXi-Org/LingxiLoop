@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Pause, Play } from "lucide-react";
+import { PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
@@ -9,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { AudioProvider, useAudio } from "./context";
 import type { SerializableAudio, AudioVariant } from "./schema";
 
-const FALLBACK_LOCALE = "en-US";
+const FALLBACK_LOCALE = "zh-CN";
 
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds)) return "0:00";
@@ -94,7 +95,7 @@ function FullPlayer({
               onPointerDown={controls.onSeekStart}
               onPointerUp={controls.onSeekEnd}
               className="cursor-pointer [&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:size-3 [&_[data-slot=thumb]]:border-2 [&_[data-slot=thumb]]:border-background [&_[data-slot=thumb]]:bg-foreground"
-              aria-label="Audio progress"
+              aria-label="音频进度"
             />
             <div className="text-muted-foreground flex items-center justify-between text-xs tabular-nums">
               <span>{formatTime(controls.currentTime)}</span>
@@ -106,12 +107,22 @@ function FullPlayer({
             size="icon"
             onClick={controls.onPlayPause}
             className="-mt-4 size-10 shrink-0 rounded-full"
-            aria-label={controls.isPlaying ? "Pause" : "Play"}
+            aria-label={controls.isPlaying ? "暂停" : "播放"}
           >
             {controls.isPlaying ? (
-              <Pause className="size-4" fill="currentColor" />
+              <HugeiconsIcon
+                icon={PauseIcon}
+                className="size-4"
+                fill="currentColor"
+                aria-hidden="true"
+              />
             ) : (
-              <Play className="size-4 ml-0.5" fill="currentColor" />
+              <HugeiconsIcon
+                icon={PlayIcon}
+                className="ml-0.5 size-4"
+                fill="currentColor"
+                aria-hidden="true"
+              />
             )}
           </Button>
         </div>
@@ -193,12 +204,22 @@ function CompactPlayer({
         size="icon"
         onClick={controls.onPlayPause}
         className="relative size-10 shrink-0 rounded-full shadow-md"
-        aria-label={controls.isPlaying ? "Pause" : "Play"}
+        aria-label={controls.isPlaying ? "暂停" : "播放"}
       >
         {controls.isPlaying ? (
-          <Pause className="size-4" fill="currentColor" />
+          <HugeiconsIcon
+            icon={PauseIcon}
+            className="size-4"
+            fill="currentColor"
+            aria-hidden="true"
+          />
         ) : (
-          <Play className="size-4 ml-0.5" fill="currentColor" />
+          <HugeiconsIcon
+            icon={PlayIcon}
+            className="ml-0.5 size-4"
+            fill="currentColor"
+            aria-hidden="true"
+          />
         )}
       </Button>
     </div>

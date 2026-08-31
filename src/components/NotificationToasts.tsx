@@ -142,7 +142,7 @@ export function NotificationToasts() {
       if (isMuted(convo)) return
       const title = convo.title
       const at = Date.now()
-      const body = messageText(message) || '(empty)'
+      const body = messageText(message) || '（无内容）'
       // The conversation list comes from the API; `unread` is the
       // server's snapshot at last poll. The just-arrived message bumps
       // that by one in spirit, so add 1 here. Snapshot, not subscribed —
@@ -226,7 +226,7 @@ export function NotificationToasts() {
             ...next[idx], authorId: e.mentionerId,
             at, count: next[idx].count + 1,
             conversationTitle: e.documentTitle,
-            body: `${e.mentionerName} @-mentioned you in “${e.documentTitle}”`,
+            body: `${e.mentionerName} 在“${e.documentTitle}”中提到了你`,
           }
           return next
         }
@@ -236,7 +236,7 @@ export function NotificationToasts() {
           kind: 'doc.mention',
           documentId: e.documentId,
           authorId: e.mentionerId,
-          body: `${e.mentionerName} @-mentioned you in “${e.documentTitle}”`,
+          body: `${e.mentionerName} 在“${e.documentTitle}”中提到了你`,
           conversationTitle: e.documentTitle,
           at, count: 1,
         }
@@ -266,10 +266,10 @@ export function NotificationToasts() {
         }
         queueMicrotask(playNotificationChime)
         const inText = e.leadMinutes <= 1
-          ? 'starting now'
+          ? '即将开始'
           : e.leadMinutes < 60
-            ? `in ${e.leadMinutes} min`
-            : `in ${Math.round(e.leadMinutes / 60)}h`
+            ? `${e.leadMinutes} 分钟后开始`
+            : `${Math.round(e.leadMinutes / 60)} 小时后开始`
         const fresh: Toast = {
           id: `toast-reminder-${e.eventId}-${at}`,
           kind: 'calendar.reminder',
@@ -277,7 +277,7 @@ export function NotificationToasts() {
           occurrenceAt: e.occurrenceAt,
           leadMinutes: e.leadMinutes,
           authorId: '',                          // unused — calendar icon shown
-          body: `Coming up ${inText}`,
+          body: inText,
           conversationTitle: e.title,
           at, count: 1,
         }
@@ -415,7 +415,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="text-[12.5px] font-semibold text-ink-900 truncate">
-              {toast.kind === 'calendar.reminder' ? toast.conversationTitle : (author?.name ?? toast.authorId)}
+              {toast.kind === 'calendar.reminder' ? toast.conversationTitle : (author?.name ?? '成员')}
             </span>
             <span className="text-[10.5px] text-ink-300 italic font-display truncate">
               {toast.kind === 'calendar.reminder' ? "日历提醒" : toast.conversationTitle}
@@ -424,7 +424,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
               <span
                 className="ml-auto text-[9.5px] font-bold py-px px-1.5 rounded-full shrink-0"
                 style={{ background: 'var(--sky-100)', color: 'var(--skype-deep)' }}
-                title={`${toast.count - 1} more message${toast.count - 1 === 1 ? '' : 's'} from this conversation`}
+                title={`本对话还有 ${toast.count - 1} 条消息`}
               >+{toast.count - 1} 更多</span>
             )}
           </div>

@@ -12,6 +12,8 @@ interface AuthState {
   user: AuthUser | null
   companies: AuthCompany[]
   activeCompanyId: string | null
+  /** Server-owned Personal Company used for user-created learning spaces. */
+  personalCompanyId: string | null
   ready: boolean   // false until the initial /auth/me probe finishes
   /** Server-driven feature flags. Null until the first /auth/me probe
    *  populates them; consumers should treat null as "don't know yet" and
@@ -33,6 +35,7 @@ export const useAuth = create<AuthState>((set) => ({
   user: null,
   companies: [],
   activeCompanyId: localStorage.getItem(COMPANY_KEY),
+  personalCompanyId: null,
   ready: false,
   serverCapabilities: null,
   setSession(token, user, companyId) {
@@ -40,7 +43,7 @@ export const useAuth = create<AuthState>((set) => ({
     if (previousUserId && previousUserId !== user.id) runAuthTeardown()
     localStorage.setItem(TOKEN_KEY, token)
     if (companyId) localStorage.setItem(COMPANY_KEY, companyId)
-    set({ token, user, activeCompanyId: companyId, ready: true })
+    set({ token, user, activeCompanyId: companyId, personalCompanyId: companyId, ready: true })
     // Fresh auth → rebind the WS connection so it carries the new
     // session's ticket instead of staying on whatever it had before.
     void import('@/api/core/realtime').then(({ ws }) => ws.reconnect())
@@ -55,7 +58,7 @@ export const useAuth = create<AuthState>((set) => ({
       ? stored
       : (activeCompanyId && memberIds.has(activeCompanyId) ? activeCompanyId : (companies[0]?.id ?? null))
     if (resolved) localStorage.setItem(COMPANY_KEY, resolved)
-    set({ user, companies, activeCompanyId: resolved })
+    set({ user, companies, activeCompanyId: resolved, personalCompanyId: activeCompanyId })
   },
   setServerCapabilities(caps) {
     set({ serverCapabilities: caps })
@@ -83,7 +86,15 @@ export const useAuth = create<AuthState>((set) => ({
     runAuthTeardown()
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(COMPANY_KEY)
-    set({ token: null, user: null, companies: [], activeCompanyId: null, ready: true, serverCapabilities: null })
+    set({
+      token: null,
+      user: null,
+      companies: [],
+      activeCompanyId: null,
+      personalCompanyId: null,
+      ready: true,
+      serverCapabilities: null,
+    })
     // Stale object-URLs from the previous user's avatars would otherwise
     // linger; clear them so the next sign-in doesn't briefly render a
     // dead URL.createObjectURL pointing at a freed blob.

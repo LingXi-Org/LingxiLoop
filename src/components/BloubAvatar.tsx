@@ -74,6 +74,14 @@ interface Props {
   className?: string
 }
 
+const AVATAR_STATUS_LABELS: Record<string, string> = {
+  avail: '可用',
+  working: '工作中',
+  thinking: '思考中',
+  waiting: '等待确认',
+  resting: '休息中',
+}
+
 const STATIC_PHASE: Record<StateId, number> = {
   idle: 0.9,
   thinking: 0.8,
@@ -231,7 +239,7 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
       height={size}
       viewBox={`${-DEMI_VIEWBOX} ${-DEMI_VIEWBOX} ${DEMI_VIEWBOX * 2} ${DEMI_VIEWBOX * 2}`}
       role="img"
-      aria-label={`${participant.name} · ${status}`}
+      aria-label={`${participant.name} · ${AVATAR_STATUS_LABELS[status] ?? '状态更新中'}`}
       className={[className, motionEnabled ? 'bloub-avatar-alive' : ''].filter(Boolean).join(' ')}
       style={motionStyle}
       focusable="false"

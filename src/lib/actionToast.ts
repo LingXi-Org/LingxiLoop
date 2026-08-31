@@ -7,10 +7,6 @@ interface ActionToastMessages<T> {
   description?: string
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
-}
-
 export function toastAction<T>(promise: Promise<T>, messages: ActionToastMessages<T>): Promise<T> {
   return toast.promise(promise, {
     loading: messages.loading,
@@ -18,9 +14,7 @@ export function toastAction<T>(promise: Promise<T>, messages: ActionToastMessage
     error: (error) => typeof messages.error === 'function'
       ? messages.error(error)
       : messages.error ?? '操作失败',
-    description: (value) => messages.error && value instanceof Error
-      ? errorMessage(value)
-      : messages.description,
+    description: messages.description,
   }).unwrap()
 }
 

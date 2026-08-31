@@ -120,31 +120,45 @@ export async function setMemberRole(
 }
 
 export async function lockTeachingCourses(db: Queryable, companyId: string, userId: string) {
-  const { rows } = await db.query<{ id: string; name: string }>(
-    `SELECT course.id,project.name
-       FROM project_memberships membership
-       JOIN courses course ON course.project_id=membership.project_id AND course.company_id=membership.company_id
+  const { rows } = await db.query<{
+    id: string
+    name: string
+    role: 'OWNER' | 'TEACHER' | null
+    course_created_by: string
+    project_created_by: string | null
+  }>(
+    `SELECT course.id,project.name,membership.role,
+            course.created_by AS course_created_by,project.created_by AS project_created_by
+       FROM courses course
        JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
-      WHERE membership.company_id=$1 AND membership.user_id=$2
-        AND membership.status='ACTIVE' AND membership.role IN ('OWNER','TEACHER')
-        AND project.status='ACTIVE'
+       LEFT JOIN project_memberships membership ON membership.project_id=course.project_id
+        AND membership.company_id=course.company_id AND membership.user_id=$2
+        AND membership.status='ACTIVE'
+      WHERE course.company_id=$1
+        AND (membership.role IN ('OWNER','TEACHER')
+          OR course.created_by=$2 OR project.created_by=$2)
       ORDER BY course.id
-      FOR UPDATE OF course`,
+      FOR UPDATE OF course,project`,
     [companyId, userId],
   )
   return rows
 }
 
-export async function teacherCount(db: Queryable, companyId: string, courseId: string): Promise<number> {
-  const { rows } = await db.query<{ count: number }>(
-    `SELECT COUNT(*)::int AS count
+export async function courseManagementCounts(
+  db: Queryable,
+  companyId: string,
+  courseId: string,
+): Promise<{ owners: number; managers: number }> {
+  const { rows } = await db.query<{ owners: number; managers: number }>(
+    `SELECT COUNT(*) FILTER(WHERE membership.role='OWNER')::int AS owners,
+            COUNT(*) FILTER(WHERE membership.role IN ('OWNER','TEACHER'))::int AS managers
        FROM project_memberships membership
        JOIN courses course ON course.project_id=membership.project_id AND course.company_id=membership.company_id
       WHERE membership.company_id=$1 AND course.id=$2
-        AND membership.status='ACTIVE' AND membership.role IN ('OWNER','TEACHER')`,
+        AND membership.status='ACTIVE'`,
     [companyId, courseId],
   )
-  return rows[0]?.count ?? 0
+  return rows[0] ?? { owners: 0, managers: 0 }
 }
 
 export async function removeMemberState(db: Queryable, companyId: string, userId: string): Promise<void> {

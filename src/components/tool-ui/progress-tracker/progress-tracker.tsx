@@ -4,20 +4,26 @@ import type {
   ProgressTrackerChoice,
   ProgressTrackerProps,
 } from "./schema";
-import { Check, X, Loader2, Timer, AlertCircle } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import {
+  AlertCircleIcon,
+  Cancel01Icon,
+  Loading03Icon,
+  Tick02Icon,
+  Timer01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 
 function formatElapsedTime(milliseconds: number): string {
   const roundedSeconds = Math.round(Math.max(0, milliseconds) / 100) / 10;
 
   if (roundedSeconds < 60) {
-    return `${roundedSeconds.toFixed(1)}s`;
+    return `${roundedSeconds.toFixed(1)} 秒`;
   }
 
   const wholeSeconds = Math.floor(roundedSeconds);
   const minutes = Math.floor(wholeSeconds / 60);
   const remainingSeconds = wholeSeconds % 60;
-  return `${minutes}m ${remainingSeconds}s`;
+  return `${minutes} 分 ${remainingSeconds} 秒`;
 }
 
 function formatElapsedTimeDateTime(milliseconds: number): string {
@@ -58,28 +64,28 @@ function getCurrentStepId(steps: ProgressStep[]): string | null {
 
 function getReceiptState(outcome: ProgressTrackerChoice["outcome"]): {
   toneClassName: string;
-  icon: LucideIcon;
+  icon: IconSvgElement;
 } {
   switch (outcome) {
     case "success":
       return {
         toneClassName: "text-emerald-600 dark:text-emerald-500",
-        icon: Check,
+        icon: Tick02Icon,
       };
     case "partial":
       return {
         toneClassName: "text-amber-600 dark:text-amber-500",
-        icon: AlertCircle,
+        icon: AlertCircleIcon,
       };
     case "failed":
       return {
         toneClassName: "text-destructive",
-        icon: AlertCircle,
+        icon: AlertCircleIcon,
       };
     case "cancelled":
       return {
         toneClassName: "text-muted-foreground",
-        icon: X,
+        icon: Cancel01Icon,
       };
   }
 }
@@ -104,7 +110,11 @@ function StepIndicator({ status }: StepIndicatorProps) {
         className="bg-card border-border flex size-6 shrink-0 items-center justify-center rounded-full border shadow-[0_0_0_4px_hsl(var(--primary)/0.1)] motion-safe:transition-all motion-safe:duration-300"
         aria-hidden="true"
       >
-        <Loader2 className="text-primary size-5 motion-safe:animate-spin" />
+        <HugeiconsIcon
+          icon={Loading03Icon}
+          className="text-primary size-5 motion-safe:animate-spin"
+          aria-hidden="true"
+        />
       </span>
     );
   }
@@ -115,7 +125,8 @@ function StepIndicator({ status }: StepIndicatorProps) {
         className="bg-primary text-primary-foreground border-primary flex size-6 shrink-0 items-center justify-center rounded-full border shadow-sm motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-75 motion-safe:duration-300 motion-safe:ease-out"
         aria-hidden="true"
       >
-        <Check
+        <HugeiconsIcon
+          icon={Tick02Icon}
           className="size-4 motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-75 motion-safe:delay-75 motion-safe:duration-200 motion-safe:fill-mode-both"
           strokeWidth={3}
         />
@@ -129,7 +140,8 @@ function StepIndicator({ status }: StepIndicatorProps) {
         className="bg-destructive border-destructive flex size-6 shrink-0 items-center justify-center rounded-full border text-white shadow-sm motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-75 motion-safe:duration-300 motion-safe:ease-out dark:border-red-600 dark:bg-red-600"
         aria-hidden="true"
       >
-        <X
+        <HugeiconsIcon
+          icon={Cancel01Icon}
           className="size-4 motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-75 motion-safe:delay-75 motion-safe:duration-200 motion-safe:fill-mode-both"
           strokeWidth={3}
         />
@@ -147,7 +159,11 @@ function ElapsedTimeBadge({ elapsedTime }: { elapsedTime?: number }) {
 
   return (
     <div className="text-muted-foreground flex items-center gap-1.5 font-mono text-xs">
-      <Timer className="-mt-px size-3.5" />
+      <HugeiconsIcon
+        icon={Timer01Icon}
+        className="-mt-px size-3.5"
+        aria-hidden="true"
+      />
       <time dateTime={formatElapsedTimeDateTime(elapsedTime)}>
         {formatElapsedTime(elapsedTime)}
       </time>
@@ -170,7 +186,7 @@ function ProgressTrackerReceipt({
   choice,
 }: ProgressTrackerBaseProps & { choice: ProgressTrackerChoice }) {
   const receiptState = getReceiptState(choice.outcome);
-  const ReceiptIcon = receiptState.icon;
+  const receiptIcon = receiptState.icon;
 
   return (
     <div
@@ -195,7 +211,11 @@ function ProgressTrackerReceipt({
               receiptState.toneClassName,
             )}
           >
-            <ReceiptIcon className="size-3.5" />
+            <HugeiconsIcon
+              icon={receiptIcon}
+              className="size-3.5"
+              aria-hidden="true"
+            />
             {choice.summary}
           </span>
         </div>
@@ -257,6 +277,7 @@ function ProgressTrackerLive({
       role="status"
       aria-live="polite"
       aria-busy={hasInProgress}
+      aria-label="任务执行进度"
     >
       <div className="bg-card flex w-full flex-col gap-4 rounded-2xl border p-5 shadow-xs">
         <ElapsedTimeBadge elapsedTime={elapsedTime} />

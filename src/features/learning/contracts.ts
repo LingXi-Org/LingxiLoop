@@ -73,6 +73,221 @@ export interface ApiProjectInvitationAccept {
 
 export type LearningRole = 'teacher' | 'learner'
 
+export interface LearningSpace {
+  companyId: string
+  projectId: string
+  projectKind: ProjectKind
+  courseId?: string
+  title: string
+  description: string
+  color: string | null
+  status: ProjectStatus
+  perspective: LearningRole
+  canManage: boolean
+  canEditContent: boolean
+  canUpdateCourse: boolean
+  canInviteMembers: boolean
+  canRevokeInvitations: boolean
+  canRemoveMembers: boolean
+  canSubmit: boolean
+  canReview: boolean
+  lifecycleAction: 'END' | 'ENTER_READ_ONLY' | 'ENTER_RETENTION' | 'ARCHIVE' | null
+  studyRoomId?: string | null
+  isDefault: boolean
+  lastVisitedAt: string | null
+}
+
+export interface CursorPage<T> {
+  data: T[]
+  nextCursor: string | null
+}
+
+export interface LearningCountByLevel {
+  level: number
+  count: number
+}
+
+export interface LearningCountByStatus {
+  status: string
+  count: number
+}
+
+export interface LearningAttemptTrendPoint {
+  date: string
+  count: number
+}
+
+export interface LearningAssistanceDistribution {
+  assistance: LearningEvidence['assistance']
+  count: number
+}
+
+export interface LearningDueReview {
+  knowledgeUnitId: string
+  title: string
+  level: number
+  status: string
+  nextReviewAt: string
+}
+
+export interface LearningMissionProgress {
+  missionId: string
+  goal: string
+  status: string
+  completedSteps: number
+  totalSteps: number
+  updatedAt: string
+}
+
+export interface LearnerLearningOverview {
+  perspective: 'learner'
+  windowDays: number
+  summary: {
+    dueReviews: number
+    verifiedObjectives: number
+    activeMissions: number
+    evidenceAttempts: number
+  }
+  masteryDistribution: LearningCountByLevel[]
+  attemptTrend: LearningAttemptTrendPoint[]
+  assistanceDistribution: LearningAssistanceDistribution[]
+  dueReviews: LearningDueReview[]
+  missionProgress: LearningMissionProgress[]
+}
+
+export interface TeacherAttentionItem {
+  learnerId: string
+  displayName: string
+  reasons: string[]
+}
+
+export interface TeacherLearningOverview {
+  perspective: 'teacher'
+  windowDays: number
+  summary: {
+    learnerCount: number
+    pendingReviews: number
+    attempts: number
+    learnersWithEvidence: number
+    dueReviews: number
+  }
+  masteryDistribution: LearningCountByLevel[]
+  missionDistribution: LearningCountByStatus[]
+  evaluationDistribution: LearningCountByStatus[]
+  attention: TeacherAttentionItem[]
+}
+
+export type LearningOverview = LearnerLearningOverview | TeacherLearningOverview
+
+export interface TeacherLearnerSummary {
+  learnerId: string
+  displayName: string
+  email: string
+  averageLevel: number
+  verifiedObjectives: number
+  dueReviews: number
+  needsReview: number
+  pausedMissions: number
+  attemptCount: number
+  lastAttemptAt: string | null
+  attentionReasons: string[]
+}
+
+export interface LearnerMasteryState {
+  knowledgeUnitId: string
+  title: string
+  level: number
+  status: string
+  nextReviewAt: string | null
+  reviewIntervalDays: number
+  lastEvidenceAt: string | null
+}
+
+export interface LearnerMissionDetail {
+  missionId: string
+  goal: string
+  successCriteria: string
+  kind: LearningMission['kind']
+  status: LearningMission['status']
+  completedSteps: number
+  totalSteps: number
+  updatedAt: string
+}
+
+export interface LearnerAttemptSummary {
+  attemptId: string
+  activityId: string | null
+  missionStepId: string | null
+  title: string
+  assistance: LearningEvidence['assistance']
+  status: string
+  submittedAt: string
+  evaluation: {
+    evaluationId: string
+    demonstratedLevel: number
+    confidence: number
+    status: string
+    feedback: string
+  } | null
+}
+
+export interface TeacherLearnerDetail {
+  learner: {
+    learnerId: string
+    displayName: string
+    email: string
+    joinedAt: string
+  }
+  summary: {
+    averageLevel: number
+    verifiedObjectives: number
+    dueReviews: number
+    attemptCount: number
+    activeMissions: number
+  }
+  masteryDistribution: LearningCountByLevel[]
+  states: LearnerMasteryState[]
+  missions: LearnerMissionDetail[]
+  attempts: LearnerAttemptSummary[]
+}
+
+export interface LearningAttemptDetail {
+  attemptId: string
+  learner: {
+    learnerId: string
+    displayName: string
+    email: string
+  }
+  source: {
+    type: 'activity' | 'missionStep'
+    id: string
+    title: string
+  } | null
+  assistance: LearningEvidence['assistance']
+  status: string
+  submittedAt: string
+  evidence: {
+    evidenceId: string
+    kind: string
+    data: unknown
+    createdAt: string
+  } | null
+  evaluations: Array<{
+    evaluationId: string
+    demonstratedLevel: number
+    confidence: number
+    rubricResults: unknown
+    feedback: string
+    evaluatorId: string
+    evaluatorKind: string
+    status: string
+    reviewReason: string | null
+    reviewedBy: string | null
+    reviewedAt: string | null
+    createdAt: string
+  }>
+}
+
 export interface LearningCourse {
   projectId: string
   courseId?: string
@@ -81,7 +296,10 @@ export interface LearningCourse {
   description: string
   status: ProjectStatus
   perspective: LearningRole
-  learnerCount: number
+  canManage?: boolean
+  canEditContent?: boolean
+  canSubmit?: boolean
+  canReview?: boolean
 }
 
 export interface LearningObjective {

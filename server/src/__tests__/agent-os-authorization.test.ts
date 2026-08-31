@@ -61,7 +61,13 @@ function accessDb(projectMembership = true): { db: Queryable; calls: string[] } 
         return { rows: [{ id: 'plan', code: 'PERSONAL_FREE', status: 'ACTIVE' }], rowCount: 1 } as never
       }
       if (/FROM plan_entitlements/.test(sql)) {
-        return { rows: [{ code: 'conversation.core', value: true }], rowCount: 1 } as never
+        return {
+          rows: [
+            { code: 'conversation.core', value: true },
+            { code: 'agent.core', value: true },
+          ],
+          rowCount: 2,
+        } as never
       }
       throw new Error(`unexpected access query: ${sql}`)
     },
@@ -87,4 +93,14 @@ test('Host Action fails closed when delegated Project membership was revoked', a
     assertHostActionPermission(db, work, action),
     (error) => error instanceof ForbiddenError && error.reason === 'PROJECT_MEMBERSHIP_REQUIRED',
   )
+})
+
+test('ordinary members retain scoped Agent OS memory recall and note permissions', async () => {
+  const { db } = accessDb()
+  for (const memoryAction of ['memory.recall', 'memory.note']) {
+    await assert.doesNotReject(assertHostActionPermission(db, work, {
+      ...action,
+      action: memoryAction,
+    }))
+  }
 })

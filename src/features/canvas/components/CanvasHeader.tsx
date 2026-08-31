@@ -8,6 +8,11 @@ import { canvasStatusLabel, isCanvasAssignmentActive } from '../lib/collaboratio
 import { useCanvas } from '../state'
 import { localizeCanvasStatus } from './canvasLabels'
 
+const EXECUTION_ROLE_LABELS: Record<CanvasAgentAssignment['executionRole'], string> = {
+  specialist: '执行',
+  verifier: '核验',
+}
+
 export function CanvasHeader({ onBack, onFocusFrame }: {
   onBack?: () => void
   onFocusFrame: (frameId: string) => void
@@ -74,8 +79,8 @@ function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => v
         const activeFrameId = snapshot.frames.some((frame) => frame.id === assignment.activeFrameId && frame.type !== 'artifact') ? assignment.activeFrameId : null
         const progress = latestAssignmentProgress(snapshot, assignment)
         return <Button key={assignment.id} type="button" disabled={!activeFrameId} onClick={() => activeFrameId && onFocusFrame(activeFrameId)} className="canvas-timeline-item group relative flex max-w-52 items-center gap-2 px-3 text-left disabled:cursor-default">
-          <span className="canvas-timeline-node relative z-10 grid size-7 shrink-0 place-items-center">{participant ? <AvatarMini p={participant} size={26} statusOverride={assignment.status === 'blocked' || assignment.status === 'waiting' ? 'thinking' : isCanvasAssignmentActive(assignment.status) ? 'working' : 'avail'} /> : <span className="text-[9px] font-bold" style={{ color: assignment.color }}>{assignment.agentId.slice(0, 1).toUpperCase()}</span>}</span>
-          <span className="min-w-0"><span className="flex items-center gap-1 truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? assignment.agentId}<span className="rounded bg-raised px-1 py-0.5 text-[7px] uppercase text-ink-secondary">{assignment.executionRole}</span></span><span className="block truncate text-[8px] text-ink-secondary" title={progress}>{progress}{snapshot.reports.some((report) => report.assignmentId === assignment.id) ? ' · 已提交报告' : ''}</span></span>
+          <span className="canvas-timeline-node relative z-10 grid size-7 shrink-0 place-items-center">{participant ? <AvatarMini p={participant} size={26} statusOverride={assignment.status === 'blocked' || assignment.status === 'waiting' ? 'thinking' : isCanvasAssignmentActive(assignment.status) ? 'working' : 'avail'} /> : <span className="text-[9px] font-bold" style={{ color: assignment.color }}>助</span>}</span>
+          <span className="min-w-0"><span className="flex items-center gap-1 truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? '智能助教'}<span className="rounded bg-raised px-1 py-0.5 text-[7px] text-ink-secondary">{EXECUTION_ROLE_LABELS[assignment.executionRole]}</span></span><span className="block truncate text-[8px] text-ink-secondary" title={progress}>{progress}{snapshot.reports.some((report) => report.assignmentId === assignment.id) ? ' · 已提交报告' : ''}</span></span>
         </Button>
       })}
     </div></div>
@@ -98,7 +103,7 @@ function latestAssignmentProgress(snapshot: CanvasSnapshot, assignment: CanvasAg
     if (activity.action === 'frame_updated') return `已更新 ${String(activity.detail.title ?? frame?.title ?? '卡片')}`
     if (activity.action === 'frame_created') return `已新建 ${frame?.title ?? '卡片'}`
     if (activity.action === 'comment_created') return '已收到新的画布反馈'
-    if (activity.action === 'handoff') return `已移交给 ${String(activity.detail.toAgentName ?? '另一位 Agent')}`
+    if (activity.action === 'handoff') return `已移交给 ${String(activity.detail.toAgentName ?? '另一位智能助教')}`
   }
   return `${localizeCanvasStatus(canvasStatusLabel(assignment.status))} · ${assignment.assignment}`
 }

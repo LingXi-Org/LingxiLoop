@@ -73,7 +73,7 @@ export function CanvasPreview({ snapshot, title, frameCount, fill = false }: Can
         </div>
       ) : (
         <div className="absolute inset-0 grid place-items-center">
-          <div className="canvas-preview-loading" role="status" aria-label="正在加载 Canvas 预览">
+          <div className="canvas-preview-loading" role="status" aria-label="正在加载画布预览">
             {Array.from({ length: Math.max(2, Math.min(frameCount, 4)) }).map((_, index) => <Skeleton key={index} />)}
           </div>
         </div>

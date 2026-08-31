@@ -1,5 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
-import { resolvePlanEntitlements } from '../access/public.js'
+import { createPermissionService, resolvePlanEntitlements } from '../access/public.js'
 import type { CreateProjectInvitationInput, LearningScope } from './contracts.js'
 import { enqueueLearningEffect } from './effects-repository.js'
 import { LearningApplicationError } from './errors.js'
@@ -51,6 +51,12 @@ export class LearningInvitationApplication {
     const email = input.email?.toLowerCase() || null
     const note = input.note || null
     await this.infrastructure.transaction(async (db) => {
+      await createPermissionService(db, { lockDependencies: true }).assertCan({
+        actorUserId: scope.userId,
+        action: 'project_invitation:create',
+        companyId: scope.companyId,
+        projectId: scope.projectId,
+      })
       const created = await insertProjectInvitation(db, {
         tokenHash,
         projectId: scope.projectId,
@@ -91,6 +97,12 @@ export class LearningInvitationApplication {
 
   async revoke(scope: LearningScope & { projectId: string }, invitationId: string) {
     const revoked = await this.infrastructure.transaction(async (db) => {
+      await createPermissionService(db, { lockDependencies: true }).assertCan({
+        actorUserId: scope.userId,
+        action: 'project_invitation:revoke',
+        companyId: scope.companyId,
+        projectId: scope.projectId,
+      })
       const revoked = await revokeProjectInvitation(db, scope.projectId, scope.companyId, invitationId)
       if (revoked) {
         await this.infrastructure.auditInTransaction(db, {

@@ -1,6 +1,7 @@
 "use client";
 
-import { Globe } from "lucide-react";
+import { GlobalIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@/lib/utils";
 
 import {
@@ -11,7 +12,7 @@ import {
 } from "../shared/media";
 import type { SerializableLinkPreview } from "./schema";
 
-const FALLBACK_LOCALE = "en-US";
+const FALLBACK_LOCALE = "zh-CN";
 const CONTENT_SPACING = "px-5 py-4 gap-2";
 
 export interface LinkPreviewProps extends SerializableLinkPreview {
@@ -117,7 +118,11 @@ export function LinkPreview(props: LinkPreviewProps) {
                   />
                 ) : (
                   <div className="border-border/60 bg-muted flex size-4 shrink-0 items-center justify-center rounded-full border">
-                    <Globe className="h-2.5 w-2.5" aria-hidden="true" />
+                    <HugeiconsIcon
+                      icon={GlobalIcon}
+                      className="h-2.5 w-2.5"
+                      aria-hidden="true"
+                    />
                   </div>
                 )}
                 <span>{domain}</span>

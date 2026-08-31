@@ -59,6 +59,13 @@ export interface ResourceRecord {
   status: string | null
 }
 
+export interface ActorProjectScopeRecord {
+  companyId: string
+  projectId: string
+  lastVisitedAt: Date | string | null
+  sortAt: Date | string
+}
+
 interface ActorRow {
   id: string
   deleted_at: Date | null
@@ -148,6 +155,41 @@ export class AccessRepository {
       [companyId, projectId],
     )
     return rows.map((row) => row.user_id)
+  }
+
+  async activeProjectLearnerCount(companyId: string, projectId: string): Promise<number> {
+    const { rows } = await this.db.query<{ count: number }>(
+      `SELECT COUNT(*)::int AS count FROM project_memberships
+        WHERE company_id=$1 AND project_id=$2 AND status='ACTIVE'
+          AND role IN ('STUDENT','OBSERVER')`,
+      [companyId, projectId],
+    )
+    return rows[0]?.count ?? 0
+  }
+
+  async activeActorProjectScopes(
+    actorUserId: string,
+    afterSortAt: string | null,
+    afterProjectId: string | null,
+    limit: number,
+  ): Promise<ActorProjectScopeRecord[]> {
+    const { rows } = await this.db.query<ActorProjectScopeRecord>(
+      `SELECT member.company_id AS "companyId",member.project_id AS "projectId",
+              visit.meaningful_visited_at AS "lastVisitedAt",
+              COALESCE(visit.meaningful_visited_at,project.updated_at) AS "sortAt"
+         FROM project_memberships member
+         JOIN projects project ON project.id=member.project_id AND project.company_id=member.company_id
+         LEFT JOIN project_visits visit ON visit.company_id=member.company_id
+          AND visit.project_id=member.project_id AND visit.user_id=member.user_id
+        WHERE member.user_id=$1 AND member.status='ACTIVE'
+          AND ($2::timestamptz IS NULL
+            OR (COALESCE(visit.meaningful_visited_at,project.updated_at),member.project_id)
+              <($2::timestamptz,$3::text))
+        ORDER BY COALESCE(visit.meaningful_visited_at,project.updated_at) DESC,member.project_id DESC
+        LIMIT $4`,
+      [actorUserId, afterSortAt, afterProjectId, limit],
+    )
+    return rows
   }
 
   async actor(id: string): Promise<ActorRecord | null> {

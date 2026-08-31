@@ -2,6 +2,7 @@ import { knowledgeApi } from './api'
 import { create } from 'zustand'
 import { useApp } from '@/stores/app'
 import { useConversations } from '@/features/conversations/store'
+import { userFacingError } from '@/lib/userFacingError'
 import type { ConversationSourceSelection, KnowledgeCitation, KnowledgeSource } from './contracts'
 
 let sourcePollTimer: number | null = null
@@ -51,7 +52,7 @@ export const useKnowledgeSources = create<SourceState>((set, get) => ({
       set({ list, loading: false })
       scheduleSourcePoll(list, get().load)
     } catch (error) {
-      set({ loading: false, error: error instanceof Error ? error.message : String(error) })
+      set({ loading: false, error: userFacingError(error, '暂时无法加载资料，请稍后重试。') })
       throw error
     }
   },

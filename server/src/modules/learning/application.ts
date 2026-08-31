@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { type ProjectKind, projectKindBelongsToCompanyType } from '../../domain/public.js'
-import { ForbiddenError, type PermissionAction } from '../access/public.js'
-import { createPermissionService, resolvePlanEntitlements } from '../access/public.js'
+import { createPermissionService, ForbiddenError, type PermissionAction, resolvePlanEntitlements } from '../access/public.js'
 import { ensureTeacherPlans } from '../entitlements/public.js'
 import { appendDomainEventInTransaction } from '../events/public.js'
 import { importProjectLearningActivities } from './activity-import-application.js'
@@ -14,7 +13,9 @@ import type {
   CreateObjectivesInput,
   CreateProjectInvitationInput,
   LearningActivityImportInput,
+  LearningLearnersQuery,
   LearningScope,
+  LearningSpacesQuery,
   MissionCoordinatorInput,
   ObjectiveStatusInput,
   ReviewEvaluationInput,
@@ -30,6 +31,13 @@ import {
   submitLearningActivity,
   submitProjectLearningActivity,
 } from './curriculum-application.js'
+import {
+  learningAttemptDetail,
+  learningLearnerDetail,
+  learningOverview,
+  listLearningLearners,
+  listLearningSpaces,
+} from './dashboard-application.js'
 import { runLearningEffect } from './effect-application.js'
 import type { LearningEffect } from './effects-repository.js'
 import { enqueueLearningEffect } from './effects-repository.js'
@@ -66,6 +74,7 @@ import {
   syncStudyRoomMembers,
   updateCourseMetadata,
 } from './repository.js'
+import type { CourseMemberChangeOutcome } from './types.js'
 
 export {
   closeLearningActivity,
@@ -138,6 +147,26 @@ export class LearningApplication {
 
   constructor(private readonly db: Queryable, private readonly infrastructure: LearningInfrastructure) {
     this.invitationApplication = new LearningInvitationApplication(db, infrastructure)
+  }
+
+  spaces(userId: string, input: LearningSpacesQuery) {
+    return listLearningSpaces(this.db, userId, input)
+  }
+
+  overview(scope: LearningScope, projectId: string, windowDays: number) {
+    return learningOverview(this.db, scope, projectId, windowDays)
+  }
+
+  learners(scope: LearningScope, projectId: string, input: LearningLearnersQuery) {
+    return listLearningLearners(this.db, scope, projectId, input)
+  }
+
+  learnerDetail(scope: LearningScope, projectId: string, learnerId: string) {
+    return learningLearnerDetail(this.db, scope, projectId, learnerId)
+  }
+
+  attemptDetail(scope: LearningScope, projectId: string, attemptId: string) {
+    return learningAttemptDetail(this.db, scope, projectId, attemptId)
   }
 
   async courses(scope: LearningScope) {
@@ -786,10 +815,19 @@ export class LearningApplication {
     }
   }
 
-  private assertMemberChange(outcome: 'updated' | 'not_found' | 'last_teacher'): void {
+  private assertMemberChange(outcome: CourseMemberChangeOutcome): void {
     if (outcome === 'not_found') throw new LearningApplicationError('not_found', 'course member not found')
     if (outcome === 'last_teacher') {
       throw new LearningApplicationError('conflict', 'an active course must keep at least one teacher')
+    }
+    if (outcome === 'last_owner') {
+      throw new LearningApplicationError('conflict', 'an active course must keep at least one owner')
+    }
+    if (outcome === 'protected_owner') {
+      throw new LearningApplicationError('conflict', 'a course owner cannot be downgraded or removed')
+    }
+    if (outcome === 'protected_creator') {
+      throw new LearningApplicationError('conflict', 'the course creator cannot be downgraded or removed')
     }
   }
 

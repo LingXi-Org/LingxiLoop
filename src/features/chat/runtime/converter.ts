@@ -261,7 +261,7 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
     case 'canvas':
       return [toolCall(`canvas:${id}`, 'link-preview', {
         id: `canvas-${id}`,
-        title: string(data.title, payload.body || 'Canvas'),
+        title: string(data.title, payload.body || '画布'),
         description: string(data.goal),
         href: `lingxiloop://canvas/${encodeURIComponent(string(data.canvasId))}`,
       })]
@@ -285,8 +285,8 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
       return [toolCall(`email:${id}`, 'message-draft', {
         id: `email-${id}`,
         channel: 'email',
-        body: payload.body || string(email.body, '(empty)'),
-        subject: string(email.subject, '(no subject)'),
+        body: payload.body || string(email.body, '（无内容）'),
+        subject: string(email.subject, '无主题'),
         from: string(email.from),
         to: stringArray(email.to),
         cc: stringArray(email.cc),

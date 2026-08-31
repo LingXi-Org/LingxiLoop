@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Item, ItemContent, ItemGroup, ItemMedia, ItemTitle, ItemDescription } from '@/components/ui/item'
 import { useSurface } from '@/stores/surface'
 import { useMe } from '@/stores/auth'
+import { participantRoleZh } from '@/lib/participantRole'
 import type { Participant } from '@/types'
 
 const STATUS_LABEL: Record<string, string> = {
@@ -91,6 +92,7 @@ export function MembersPopover({ members, anchor, triggerRef, onClose }: Props) 
         <ItemGroup className="gap-0 py-0.5">
         {sorted.map((p) => {
           const isYou = p.id === meId
+          const roleLabel = participantRoleZh(p)
           return (
             <Item
               key={p.id}
@@ -120,8 +122,8 @@ export function MembersPopover({ members, anchor, triggerRef, onClose }: Props) 
                     className="inline-block w-1.5 h-1.5 rounded-full"
                     style={{ background: STATUS_COLOR[p.status] ?? 'var(--resting)' }}
                   />
-                  {STATUS_LABEL[p.status] ?? 'idle'}
-                  {p.role && <><span className="text-ink-300">·</span><em className="not-italic font-display italic">{p.role}</em></>}
+                  {STATUS_LABEL[p.status] ?? '空闲'}
+                  {roleLabel && <><span className="text-ink-300">·</span><em className="not-italic font-display italic">{roleLabel}</em></>}
                 </ItemDescription>
               </ItemContent>
             </Item>

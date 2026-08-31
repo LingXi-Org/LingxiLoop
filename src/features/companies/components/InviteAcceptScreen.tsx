@@ -35,13 +35,24 @@ import type { ApiInvitationPreview } from '@/features/companies/contracts'
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
-import { setWorkspaceSession } from '@/lib/workspaceSession'
+import { selectLearningSpace } from '@/features/knowledge/workspace'
 import { isElectron, isWebAppHost } from '@/lib/runtime'
+import { userFacingError } from '@/lib/userFacingError'
 import { ProductLogo } from '@/components/Avatar'
 import { GetDesktopAppLink } from '@/components/GetDesktopAppLink'
 import { WindowDragStrip } from '@/components/WindowDragStrip'
 
 const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
+
+function inviteRoleLabel(role: string): string {
+  switch (role.toLowerCase()) {
+    case 'learner': return '学习者'
+    case 'teacher': return '课程创建者'
+    case 'owner': return '所有者'
+    case 'admin': return '管理员'
+    default: return '成员'
+  }
+}
 
 /** Look at the URL path or app deep-link hash for an invite token. Returns
  *  the token + a no-op cleanup that scrubs it from the URL so a refresh
@@ -133,7 +144,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
       const r = projectInvite ? await learningApi.previewProjectInvitation(rawToken) : await companiesApi.previewInvitation(rawToken)
       setPreview(r)
     } catch (e) {
-      setPreviewErr(e instanceof Error ? e.message : String(e))
+      setPreviewErr(userFacingError(e, '暂时无法读取邀请，请稍后重试。'))
     }
   }, [projectInvite, rawToken])
 
@@ -148,25 +159,27 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         const companies = auth.companies.some((company) => company.id === r.company.id)
           ? auth.companies
           : [...auth.companies, r.company]
-        setMe(auth.user, companies, r.company.id)
+        setMe(auth.user, companies, auth.personalCompanyId ?? auth.activeCompanyId ?? r.company.id)
       } else {
         setActive(r.company.id)
       }
       clearPendingInvite()
       if (projectInvite && 'course' in r) {
         const accepted = r as ApiProjectInvitationAccept
-        setWorkspaceSession({ companyId: accepted.company.id, projectId: accepted.course.projectId })
+        await selectLearningSpace({ companyId: accepted.company.id, projectId: accepted.course.projectId })
         useApp.getState().selectConversation(accepted.course.studyRoomId)
+      } else {
+        setActive(r.company.id)
       }
       void authApi.me().then((me) => {
-        setMe(me.user, me.companies, r.company.id)
+        setMe(me.user, me.companies, me.activeCompanyId)
         setServerCapabilities(me.serverCapabilities)
       }).catch(() => undefined)
       // Both supported surfaces enter the workspace immediately. The Web app
       // is a complete product surface, not a Desktop-download handoff.
       onDone()
     } catch (e) {
-      setAcceptErr(e instanceof Error ? e.message : String(e))
+      setAcceptErr(userFacingError(e, '暂时无法接受邀请，请稍后重试。'))
     } finally {
       setBusy(false)
     }
@@ -186,7 +199,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const inv = preview?.invitation
   const companyName = inv?.company.name ?? 'LingxiLoop'
   const course = inv && 'course' in inv ? inv.course : null
-  const inviter = inv?.inviterName ?? 'Someone'
+  const inviter = inv?.inviterName ?? '一位成员'
   const signedIn = !!tokenStr && !!tokenUserId
 
   return (
@@ -218,7 +231,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         )}
 
         {!joinedCompany && !preview && !previewErr && (
-          <div className="text-[13px] text-ink-400 italic font-display">正在检查您的邀请...</div>
+          <div className="text-[13px] text-ink-400 italic font-display">正在检查邀请…</div>
         )}
 
         {!joinedCompany && preview && preview.status === 'not_found' && (
@@ -240,7 +253,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         {!joinedCompany && preview && preview.status === 'expired' && (
           <ErrorBlock
             title="该邀请已过期"
-            body={`${companyName} 的邀请会在 7 天后过期。请索取新的邀请。`}
+            body={`${companyName} 的邀请已超过有效期，请让邀请人重新发送。`}
             onDismiss={() => { clearPendingInvite(); onDone() }}
           />
         )}
@@ -266,8 +279,8 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
             <h1 className="font-display text-[20px] text-ink-900">账号错误</h1>
             <p className="text-[13px] text-ink-500 font-display italic leading-relaxed">
               此邀请 <b className="not-italic text-ink-900">{companyName}</b> 保留用于{' '}
-              <b className="not-italic text-ink-900">{inv.email}</b>，但您登录的身份为{' '}
-              <b className="not-italic text-ink-900">{user?.email}</b>。注销并使用正确的电子邮件重新登录。
+              <b className="not-italic text-ink-900">{inv.email}</b>，但你当前登录的是{' '}
+              <b className="not-italic text-ink-900">{user?.email}</b>。请退出后使用受邀邮箱重新登录。
             </p>
             <Button
               onClick={() => { useAuth.getState().clear() }}
@@ -280,12 +293,13 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         {!joinedCompany && preview && preview.status === 'already_member' && (
           <AlreadyMemberBlock
             companyName={companyName}
-            onSwitchInBrowser={() => {
+            onSwitchInBrowser={async () => {
               if (inv) {
-                setActive(inv.company.id)
                 if ('course' in inv) {
-                  setWorkspaceSession({ companyId: inv.company.id, projectId: inv.course.projectId })
+                  await selectLearningSpace({ companyId: inv.company.id, projectId: inv.course.projectId })
                   useApp.getState().selectConversation(inv.course.studyRoomId)
+                } else {
+                  setActive(inv.company.id)
                 }
               }
               clearPendingInvite()
@@ -303,7 +317,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
               <h1 className="font-display text-[24px] tracking-tight text-ink-900">
                 {course?.name ?? companyName}
               </h1>
-              {course && <div className="text-[12px] text-ink-400">{companyName} · Study Room</div>}
+              {course && <div className="text-[12px] text-ink-400">{companyName} · 课程对话</div>}
               {inv.note && (
                 <div className="text-[12.5px] text-ink-500 font-display italic mt-2 px-3 py-2 rounded-[10px]"
                      style={{ background: 'var(--cloud)' }}>
@@ -324,7 +338,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
                     background: 'var(--skype)',
                     boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
                   }}
-                >{busy ? '正在加入…' : `以 ${inv.role} 身份加入 ${companyName}`}</Button>
+                >{busy ? '正在加入…' : `以${inviteRoleLabel(inv.role)}身份加入 ${companyName}`}</Button>
                 <Button
                   onClick={() => { clearPendingInvite(); onDone() }}
                   className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic"
@@ -374,7 +388,7 @@ function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
           欢迎来到 {companyName}
         </h1>
         <p className="text-[12.5px] text-ink-500 font-display italic">
-          您已进入。直接继续前往您的 LingxiLoop 工作区。
+          你已成功加入，可直接前往 LingxiLoop 工作区。
         </p>
       </div>
       <div className="w-full flex flex-col gap-2.5">
@@ -410,9 +424,9 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
 }) {
   return (
     <div className="flex flex-col items-center gap-5 text-center w-full">
-      <h1 className="font-display text-[20px] text-ink-900">你已经在 {companyName}</h1>
+      <h1 className="font-display text-[20px] text-ink-900">你已加入 {companyName}</h1>
       <p className="text-[12.5px] text-ink-500 font-display italic -mt-2">
-        从您上次停下的地方继续 - 在此设备上或您安装了 LingxiLoop 的任何地方。
+        从上次离开的地方继续；你可以在此设备或任何安装了 LingxiLoop 的设备上使用。
       </p>
       <div className="w-full flex flex-col gap-2.5">
         <Button
@@ -422,7 +436,7 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
             background: 'var(--skype)',
             boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
           }}
-        >在LingxiLoop桌面中打开</Button>
+        >在 LingxiLoop 桌面端打开</Button>
         <GetDesktopAppLink variant="button-secondary" />
         <Button
           onClick={onSwitchInBrowser}
@@ -444,7 +458,7 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
           onClick={onDismiss}
           className="px-4 py-2 rounded-[10px] text-[12.5px] font-semibold text-ink-700 transition"
           style={{ background: 'var(--cloud)', border: '1px solid var(--ink-100)' }}
-        >继续LingxiLoop</Button>
+        >继续使用 LingxiLoop</Button>
       )}
     </div>
   )
@@ -481,7 +495,7 @@ function SignInToAccept({ token }: { token: string }) {
           if (nonce) done += `?n=${encodeURIComponent(nonce)}`
         } catch (reason) {
           setBusy(null)
-          setError(reason instanceof Error ? reason.message : '无法建立安全的桌面登录会话')
+          setError(userFacingError(reason, '无法建立安全的桌面登录会话，请重试。'))
           return
         }
         void auth.openExternal(authApi.startUrl({
@@ -509,7 +523,7 @@ function SignInToAccept({ token }: { token: string }) {
         disabled={busy !== null}
         className="auth-provider-button auth-provider-lingxi h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
       >
-        {busy === 'lingxi' ? '正在跳转…' : '使用 LingxiIdentity 继续'}
+        {busy === 'lingxi' ? '正在跳转…' : '使用灵犀账号继续'}
       </Button>
       <div className="text-[10.5px] text-ink-300 text-center font-display italic">
         我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。

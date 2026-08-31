@@ -3,6 +3,7 @@ import type { WsEvent } from '@/api/contracts'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
 import { findCanvasPlacement } from '@/lib/canvasLayout'
+import { userFacingError } from '@/lib/userFacingError'
 import { mergeCanvasActivities } from './lib/events'
 import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from './lib/realtime'
 import { useApp } from '@/stores/app'
@@ -47,11 +48,11 @@ interface CanvasState {
 }
 
 const defaults: Record<CanvasFrameType, { title: string; content: string; width: number; height: number }> = {
-  markdown: { title: 'Markdown note', content: '# New idea\n\nStart writing together…', width: 420, height: 320 },
-  html: { title: 'HTML preview', content: '<main><h1>Hello Canvas</h1><p>Safe, sandboxed HTML preview.</p></main>', width: 520, height: 360 },
-  document: { title: 'Document', content: '', width: 420, height: 260 },
-  image: { title: 'Image', content: '', width: 420, height: 320 },
-  artifact: { title: 'Artifact', content: '', width: 420, height: 280 },
+  markdown: { title: '文本笔记', content: '# 新想法\n\n从这里开始一起创作…', width: 420, height: 320 },
+  html: { title: '网页预览', content: '<main><h1>你好，画布</h1><p>在安全环境中预览网页内容。</p></main>', width: 520, height: 360 },
+  document: { title: '文档', content: '', width: 420, height: 260 },
+  image: { title: '图片', content: '', width: 420, height: 320 },
+  artifact: { title: '成果', content: '', width: 420, height: 280 },
 }
 
 export const useCanvas = create<CanvasState>((set, get) => ({
@@ -93,7 +94,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
         }
       })
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : String(error) })
+      set({ error: userFacingError(error, '暂时无法打开画布，请稍后重试。') })
     } finally {
       set({ loading: false })
     }
@@ -119,7 +120,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
 
   loadWorkspaces: async (conversationId) => {
     try { set({ workspaces: await canvasApi.getCanvases(conversationId) }) }
-    catch (error) { set({ error: error instanceof Error ? error.message : String(error) }) }
+    catch (error) { set({ error: userFacingError(error, '暂时无法加载画布列表，请稍后重试。') }) }
   },
 
   createForConversation: async (conversationId) => {
@@ -165,7 +166,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
 
   createFrame: async (type, at = { x: 80, y: 80 }) => {
     const canvasId = get().activeCanvasId
-    if (!canvasId) throw new Error('active Canvas workspace is required')
+    if (!canvasId) throw new Error('请先打开一个画布')
     const preset = defaults[type]
     const placement = findCanvasPlacement(get().snapshot?.frames ?? [], preset, at)
     const frame = await canvasApi.createCanvasFrame({ canvasId, type, x: placement.x, y: placement.y, ...preset })
@@ -225,7 +226,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
 
   addComment: async (body, frameId = null) => {
     const canvasId = get().activeCanvasId
-    if (!canvasId) throw new Error('active Canvas workspace is required')
+    if (!canvasId) throw new Error('请先打开一个画布')
     const comment = await canvasApi.addCanvasComment(body, frameId, canvasId)
     set((state) => state.snapshot ? {
       snapshot: { ...state.snapshot, comments: [comment, ...state.snapshot.comments.filter((item) => item.id !== comment.id)] },
@@ -234,7 +235,7 @@ export const useCanvas = create<CanvasState>((set, get) => ({
 
   setStatus: async (status, frameId = null, cursor) => {
     const canvasId = get().activeCanvasId
-    if (!canvasId) throw new Error('active Canvas workspace is required')
+    if (!canvasId) throw new Error('请先打开一个画布')
     const presence = await canvasApi.setCanvasStatus(status, frameId, canvasId, cursor)
     set((state) => {
       if (!state.snapshot) return {}
@@ -244,11 +245,11 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   },
 
   steerAgent: async (agentId, text) => {
-    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('active Canvas workspace is required')
+    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('请先打开一个画布')
     await canvasApi.steerCanvasAssignment(canvasId, agentId, text)
   },
   assignAgent: async (agentId, assignment) => {
-    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('active Canvas workspace is required')
+    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('请先打开一个画布')
     const snapshot = await canvasApi.assignCanvasWork(canvasId, agentId, assignment)
     set((state) => ({
       snapshot,
@@ -257,11 +258,11 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     }))
   },
   stopAgent: async (agentId) => {
-    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('active Canvas workspace is required')
+    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('请先打开一个画布')
     await canvasApi.stopCanvasAssignment(canvasId, agentId); await get().load(canvasId)
   },
   stopWorkspace: async () => {
-    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('active Canvas workspace is required')
+    const canvasId = get().activeCanvasId; if (!canvasId) throw new Error('请先打开一个画布')
     await canvasApi.stopCanvas(canvasId); await get().load(canvasId)
   },
 

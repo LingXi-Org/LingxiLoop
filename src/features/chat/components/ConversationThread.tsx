@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { useParticipants } from '@/features/agents/state'
 import type { Participant } from '@/types'
 import { useConversationUi } from '@/stores/conversationUi'
+import { userFacingError } from '@/lib/userFacingError'
 import { chatTransport, useConversationThreadSnapshot } from '../runtime'
 import { getLingxiMessageMetadata } from '../runtime/model'
 import { ConversationComposer } from './ConversationComposer'
@@ -111,7 +112,7 @@ export function ConversationThread({
           <div className="grid flex-1 place-items-center px-8 py-20 text-center text-sm text-muted-foreground">
             {snapshot.error ? (
               <div className="grid gap-3">
-                <span>{snapshot.error}</span>
+                <span>{userFacingError(snapshot.error, '消息加载失败，请稍后重试。')}</span>
                 <Button size="sm" onClick={() => void chatTransport.reloadConversation(conversationId)}>重试</Button>
               </div>
             ) : snapshot.isLoading ? '正在加载消息…' : threadRootId ? '尚无回复' : '开始一段新对话'}

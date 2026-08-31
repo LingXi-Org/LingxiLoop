@@ -50,10 +50,10 @@ export function WorkspacePicker() {
         <header className="flex flex-col gap-6 border-b border-hairline pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-hairline bg-panel px-3 py-1 text-[11px] font-semibold tracking-[0.08em] text-accent">
-              SOURCE-GROUNDED KNOWLEDGE WORKSPACE
+              基于资料的知识工作区
             </div>
             <h1 className="font-display text-[clamp(28px,4vw,48px)] font-semibold tracking-[-0.04em] text-ink">选择你的知识工作区</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-secondary">围绕上传资料组织对话、文档、看板与 Canvas。也可以从一个完全空白的工作区开始。</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-secondary">围绕上传资料组织对话、文档、看板与画布，也可以从一个空白学习区开始。</p>
           </div>
           {companies.length > 1 && (
             <div className="text-xs font-semibold text-ink-secondary">组织
@@ -100,7 +100,7 @@ export function WorkspacePicker() {
       {creating && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/30 p-5 backdrop-blur-sm" onMouseDown={() => setCreating(false)}>
         <form onSubmit={(event) => { event.preventDefault(); void submit() }} onMouseDown={(event) => event.stopPropagation()} className="w-full max-w-md rounded-2xl border border-hairline bg-panel p-6 shadow-2xl">
           <h2 className="text-xl font-semibold">新建空白工作区</h2>
-          <p className="mt-1 text-xs text-ink-secondary">不会自动创建资料、群聊或 Agent 会话。</p>
+          <p className="mt-1 text-xs text-ink-secondary">不会自动创建资料、群聊或智能助教会话。</p>
           <Input autoFocus value={name} onChange={(event) => setName(event.target.value)} maxLength={80} placeholder="工作区名称" className="mt-5 h-11 w-full rounded-xl border border-hairline bg-app px-3 text-sm outline-none focus:border-accent" />
           <div className="mt-5 flex justify-end gap-2"><Button type="button" onClick={() => setCreating(false)} className="h-10 rounded-xl px-4 text-sm text-ink-secondary hover:bg-raised">取消</Button><Button type="submit" disabled={!name.trim()} className="h-10 rounded-xl bg-accent px-5 text-sm font-semibold text-white disabled:opacity-40">创建并进入</Button></div>
         </form>

@@ -40,7 +40,7 @@ export const PlanPropsSchema = z
         ctx.addIssue({
           code: "custom",
           path: ["todos", index, "id"],
-          message: `Duplicate todo id "${todo.id}".`,
+          message: `计划项编号“${todo.id}”不能重复。`,
         });
         return;
       }

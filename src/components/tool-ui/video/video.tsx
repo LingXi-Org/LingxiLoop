@@ -1,7 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { ExternalLink, Play } from "lucide-react";
+import {
+  ExternalLinkIcon,
+  PauseIcon,
+  PlayIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +25,7 @@ import {
   resolveVideoNavigation,
 } from "./video-helpers";
 
-const FALLBACK_LOCALE = "en-US";
+const FALLBACK_LOCALE = "zh-CN";
 
 export interface VideoProps extends SerializableVideo {
   className?: string;
@@ -208,7 +213,7 @@ function VideoInner(props: Omit<VideoProps, "defaultMuted">) {
                     {title}
                   </div>
                 ) : (
-                  <span className="sr-only">Video controls</span>
+                  <span className="sr-only">视频控制</span>
                 )}
                 <div className="flex items-center gap-2">
                   {primaryHref && (
@@ -218,11 +223,12 @@ function VideoInner(props: Omit<VideoProps, "defaultMuted">) {
                       onClick={handleOpen}
                       className="bg-black/55 text-white hover:bg-black/70"
                     >
-                      <ExternalLink
+                      <HugeiconsIcon
+                        icon={ExternalLinkIcon}
                         className="mr-1 h-4 w-4"
                         aria-hidden="true"
                       />
-                      Open
+                      打开来源
                     </Button>
                   )}
                   <Button
@@ -231,8 +237,12 @@ function VideoInner(props: Omit<VideoProps, "defaultMuted">) {
                     onClick={handleWatch}
                     className="shadow-sm"
                   >
-                    <Play className="mr-1 h-4 w-4" aria-hidden="true" />
-                    Watch
+                    <HugeiconsIcon
+                      icon={state.playing ? PauseIcon : PlayIcon}
+                      className="mr-1 h-4 w-4"
+                      aria-hidden="true"
+                    />
+                    {state.playing ? "暂停" : "播放"}
                   </Button>
                 </div>
               </div>

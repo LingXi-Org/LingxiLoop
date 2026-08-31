@@ -8,7 +8,7 @@ import { ArrowRight01Icon, MoreHorizontalCircle01Icon } from "@hugeicons/core-fr
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
-      aria-label="breadcrumb"
+      aria-label="路径导航"
       data-slot="breadcrumb"
       className={cn(className)}
       {...props}
@@ -106,7 +106,7 @@ function BreadcrumbEllipsis({
       {...props}
     >
       <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
-      <span className="sr-only">More</span>
+      <span className="sr-only">更多</span>
     </span>
   )
 }

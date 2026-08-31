@@ -12,6 +12,7 @@ import { getServerOrigin } from '@/api/core/http'
  */
 import { useState, useEffect } from 'react'
 import { isElectron } from '@/lib/runtime'
+import { userFacingError } from '@/lib/userFacingError'
 import { ProductLogo } from './Avatar'
 import { WindowDragStrip } from './WindowDragStrip'
 
@@ -25,7 +26,7 @@ export function AuthScreen() {
   useEffect(() => {
     const params = new URLSearchParams(location.hash.replace(/^#/, ''))
     const error = params.get('error')
-    if (error) setErr(decodeURIComponent(error))
+    if (error) setErr(userFacingError(decodeURIComponent(error), '登录没有完成，请重试。'))
   }, [])
 
   // Re-arm the sign-in buttons when the user returns to this window after
@@ -104,7 +105,7 @@ export function AuthScreen() {
       <div className="w-[320px] flex flex-col items-center gap-8">
         <ProductLogo size={64} rounded />
         <div className="text-center">
-          <div className="font-display text-[22px] text-ink-900">欢迎使用LingxiLoop</div>
+          <div className="font-display text-[22px] text-ink-900">欢迎使用 LingxiLoop</div>
           <div className="font-display italic text-[13px] text-ink-400 mt-1">
             登录后继续
           </div>
@@ -116,7 +117,7 @@ export function AuthScreen() {
             disabled={busy !== null}
             className="auth-provider-button auth-provider-lingxi h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
           >
-            {busy === 'lingxi' ? '正在跳转…' : '使用 LingxiIdentity 继续'}
+            {busy === 'lingxi' ? '正在跳转…' : '使用灵犀账号继续'}
           </Button>
         </div>
         {err && (
