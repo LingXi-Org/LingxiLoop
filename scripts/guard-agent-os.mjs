@@ -20,7 +20,6 @@ const activeFiles = [
   join(root, 'server/src/web.ts'),
   join(root, 'server/src/im/router.ts'),
   join(root, 'src/lib/im/wukong.ts'),
-  ...sourceFiles(join(root, 'src/features/chat/state')).filter((path) => !path.includes('.test.')),
 ]
 
 for (const retiredPath of [
