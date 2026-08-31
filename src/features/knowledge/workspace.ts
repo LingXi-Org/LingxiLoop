@@ -117,6 +117,9 @@ export interface LearningSpaceSelection {
 export async function selectLearningSpace(selection: LearningSpaceSelection): Promise<void> {
   const activeCompanyId = getActiveCompanyId()
   if (activeCompanyId === selection.companyId) {
+    if (!useWorkspace.getState().list.some((workspace) => workspace.id === selection.projectId)) {
+      await useWorkspace.getState().load()
+    }
     await useWorkspace.getState().select(selection.projectId)
     return
   }

@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Agent OS ④ Canvas 多 Agent DAG、共享状态与汇总交付",
+    "locale": "zh-CN",
+    "output": "artifacts/agent-os-deep-dive-canvas.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "column_fit": "spread",
+    "viewBox": [1600, 1540],
+    "views": [
+      { "id": "plan", "label": "建立 DAG", "focus": ["human", "coordinator", "host", "canvasdb"], "note": "Coordinator 通过 typed Canvas actions 创建 workspace、assignment 与依赖。" },
+      { "id": "workers", "label": "并行领取", "focus": ["canvasdb", "worker", "verifier"], "note": "仅 dependency-free assignment 入队；每个 Agent 仍在自己的 session 与 kernel 中运行。" },
+      { "id": "reports", "label": "报告门", "focus": ["worker", "verifier", "host", "canvasdb"], "note": "worker 不能用普通文本完成任务，必须提交结构化 learning_report_v1。" },
+      { "id": "summary", "label": "最终汇总", "focus": ["canvasdb", "reporter", "wukong", "human"], "note": "所有任务完成后只唤醒 reporter；它消费 report IDs 并提交唯一最终消息。" }
+    ]
+  },
+  "participants": [
+    { "id": "human", "type": "external", "label": "Human" },
+    { "id": "wukong", "type": "messagebus", "label": "WuKongIM" },
+    { "id": "coordinator", "type": "backend", "label": "Coordinator" },
+    { "id": "host", "type": "security", "label": "Canvas Actions" },
+    { "id": "canvasdb", "type": "database", "label": "Canvas State" },
+    { "id": "queue", "type": "messagebus", "label": "AgentWorkItems" },
+    { "id": "worker", "type": "backend", "label": "Builder Agent" },
+    { "id": "verifier", "type": "backend", "label": "Verifier Agent" },
+    { "id": "reporter", "type": "backend", "label": "Reporter Agent" }
+  ],
+  "segments": [
+    { "from": 150, "to": 496, "label": "A. Coordinator 建立 workspace 与任务图" },
+    { "from": 512, "to": 822, "label": "B. dependency-free assignments 入队并隔离执行" },
+    { "from": 838, "to": 1160, "label": "C. report gate、验证与下游解锁" },
+    { "from": 1176, "to": 1460, "label": "D. canvas_summary 与唯一群聊回复" }
+  ],
+  "messages": [
+    { "from": "human", "to": "wukong", "y": 178, "label": "complex collaborative request", "variant": "emphasis" },
+    { "from": "wukong", "to": "coordinator", "y": 220, "label": "message work claimed", "variant": "emphasis" },
+    { "from": "coordinator", "to": "host", "y": 262, "label": "loop.canvas.start(title, goal)", "variant": "security" },
+    { "from": "host", "to": "canvasdb", "y": 304, "label": "create workspace + channel binding", "variant": "emphasis" },
+    { "from": "coordinator", "to": "host", "y": 346, "label": "loop.canvas.agents / assignment plan", "variant": "default" },
+    { "from": "host", "to": "canvasdb", "y": 388, "label": "validate membership, roles, DAG", "variant": "security" },
+    { "from": "host", "to": "canvasdb", "y": 430, "label": "persist assignments + dependencies", "variant": "emphasis" },
+    { "from": "canvasdb", "to": "queue", "y": 472, "label": "enqueue dependency-free canvas_worker", "variant": "emphasis" },
+    { "from": "queue", "to": "worker", "y": 542, "label": "claim builder assignment", "variant": "emphasis" },
+    { "from": "queue", "to": "verifier", "y": 584, "label": "claim independent verifier assignment", "variant": "emphasis" },
+    { "from": "worker", "to": "canvasdb", "y": 626, "label": "load workspace snapshot + roster", "variant": "default" },
+    { "from": "verifier", "to": "canvasdb", "y": 668, "label": "load own assignment context", "variant": "default" },
+    { "from": "worker", "to": "host", "y": 710, "label": "typed actions in private session/kernel", "variant": "security" },
+    { "from": "verifier", "to": "host", "y": 752, "label": "narrow verifier read/report actions", "variant": "security" },
+    { "from": "host", "to": "canvasdb", "y": 794, "label": "workspace lock + idempotent updates", "variant": "emphasis" },
+    { "from": "worker", "to": "host", "y": 868, "label": "loop.canvas.report(learning_report_v1)", "variant": "emphasis" },
+    { "from": "host", "to": "canvasdb", "y": 910, "label": "validate artifacts, evidence, assignment identity", "variant": "security" },
+    { "from": "canvasdb", "to": "worker", "y": 952, "label": "report persisted; assignment completed", "variant": "return" },
+    { "from": "worker", "to": "canvasdb", "y": 994, "label": "store final text on assignment, not chat", "variant": "default" },
+    { "from": "canvasdb", "to": "queue", "y": 1036, "label": "unlock newly dependency-free assignments", "variant": "emphasis" },
+    { "from": "queue", "to": "verifier", "y": 1078, "label": "verify builder output from persisted report", "variant": "emphasis" },
+    { "from": "verifier", "to": "canvasdb", "y": 1120, "label": "submit verifier report", "variant": "emphasis" },
+    { "from": "canvasdb", "to": "queue", "y": 1206, "label": "all assignments complete → canvas_summary", "variant": "emphasis" },
+    { "from": "queue", "to": "reporter", "y": 1248, "label": "claim summary work with report IDs", "variant": "emphasis" },
+    { "from": "reporter", "to": "canvasdb", "y": 1290, "label": "read reports + frames + final artifacts", "variant": "default" },
+    { "from": "reporter", "to": "host", "y": 1332, "label": "submit reporter learning_report_v1", "variant": "security" },
+    { "from": "host", "to": "canvasdb", "y": 1374, "label": "mark workspace completed", "variant": "emphasis" },
+    { "from": "reporter", "to": "wukong", "y": 1416, "label": "one final LingxiMessageV1", "variant": "emphasis" },
+    { "from": "wukong", "to": "human", "y": 1450, "label": "authoritative collaborative answer", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "coordinator", "from": 214, "to": 480, "type": "backend" },
+    { "participant": "worker", "from": 536, "to": 1006, "type": "backend" },
+    { "participant": "verifier", "from": 578, "to": 1132, "type": "backend" },
+    { "participant": "host", "from": 256, "to": 1386, "type": "security" },
+    { "participant": "reporter", "from": 1242, "to": 1428, "type": "backend" }
+  ],
+  "cards": [
+    { "dot": "violet", "title": "Canvas 是共享状态协议，不是共享执行器", "items": ["workspace、assignment DAG、frames、reports 和状态在 PostgreSQL 中共享", "每个 Agent 仍使用自己的 session key、lease、IPython kernel、globals 与 Agent Home", "Agent 间协作只能通过持久 Canvas 状态、WuKong 消息或显式 handoff，不共享进程内内存"] },
+    { "dot": "cyan", "title": "DAG 约束", "items": ["创建 assignment 时验证依赖存在、无环和 workspace 归属", "只有全部依赖完成的 assignment 会生成 canvas_worker work", "验证者必须与 builder 不同；reporter 是最终汇总角色，不代替任务级验证"] },
+    { "dot": "emerald", "title": "为什么 worker 不直接发群聊", "items": ["canvas_worker 的 assistant 文本保存在 assignment，runtime 明确抑制普通 conversation reply", "完成条件不是“模型说完成”，而是数据库中存在与 assignment 对应的有效 learning_report_v1", "因此并行 worker 不会在群聊产生多条互相竞争的最终答案"] },
+    { "dot": "amber", "title": "report gate", "items": ["报告携带 summary、evidence、artifacts、limitations、nextActions 等结构化事实", "Host Action 校验 workspace/assignment/Agent 身份，并用共享 workspace advisory lock 串行关键更新", "下游任务只消费已经持久化的报告与工件，不依赖上游 Agent 的临时上下文"] },
+    { "dot": "orange", "title": "handoff 与 defer_to_canvas", "items": ["普通 chat.handoff 会发送可见消息并为目标 Agent 创建 handoff work", "当产品动作返回 defer_to_canvas，原 runtime 保存 session 并结束，不伪造一个即时聊天答案", "后续由 Canvas DAG 和 reporter 承担交付；这一点把长任务从单 Agent hop loop 中解耦"] },
+    { "dot": "rose", "title": "停止语义", "items": ["停止 workspace 会阻止新的任务推进并让 active worker 在租约/取消检查处退出", "Host Action 对 stop 后的 Canvas 动作要求 actionable lease，因此不等待下一模型 hop 才生效", "workspace stopped 时不再创建 canvas_summary，避免用户取消后仍收到迟到汇总"] },
+    { "dot": "cyan", "title": "实时展示与权威状态", "items": ["Canvas UI 可通过 Redis/WebSocket 接收状态投影、活动和 frame 更新", "刷新或断线后必须从 PostgreSQL snapshot 重建；实时流不是 DAG 权威", "最终聊天交付仍由 reporter 的单条 WuKongIM 消息完成"] },
+    { "dot": "slate", "title": "角色与能力仍经过 Host Bridge", "items": ["coordinator 可规划与分配；specialist 构建；verifier/reporters 的动作表被窄化", "角色不是跨租户授权；每次动作仍检查 company、Agent、human principal、capability 和资源归属", "共享 workspace 锁只解决并发一致性，不替代用户权限和 action idempotency"] }
+  ]
+}

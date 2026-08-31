@@ -15,6 +15,7 @@ test('switching workspaces reloads the complete project-scoped conversation surf
   ])
 
   assert.match(workspace, /setWorkspaceSession\(\{ companyId, projectId \}\)[\s\S]*selectConversation\(null\)[\s\S]*useConversations\.getState\(\)\.load\(\)/)
+  assert.match(workspace, /selectLearningSpace[\s\S]*list\.some\(\(workspace\) => workspace\.id === selection\.projectId\)[\s\S]*useWorkspace\.getState\(\)\.load\(\)[\s\S]*select\(selection\.projectId\)/)
   assert.match(workspace, /selectLearningSpace[\s\S]*setWorkspaceSession\(selection\)[\s\S]*useWorkspace\.getState\(\)\.reset\(\)[\s\S]*useParticipants\.getState\(\)\.reset\(\)[\s\S]*useConversations\.getState\(\)\.reset\(\)[\s\S]*useCalendar\.getState\(\)\.reset\(\)[\s\S]*useDocuments\.getState\(\)\.reset\(\)[\s\S]*setActiveCompany\(selection\.companyId\)/)
   assert.match(conversations, /const workspace = getWorkspaceSession\(\)[\s\S]*const epoch = \+\+requestEpoch/)
   assert.match(conversations, /activeWorkspace\?\.companyId !== workspace\?\.companyId[\s\S]*activeWorkspace\?\.projectId !== projectId/)

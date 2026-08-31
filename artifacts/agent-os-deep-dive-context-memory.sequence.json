@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Agent OS ⑤ Prompt、知识上下文、会话压缩与长期记忆",
+    "locale": "zh-CN",
+    "output": "artifacts/agent-os-deep-dive-context-memory.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "column_fit": "spread",
+    "viewBox": [1540, 1620],
+    "views": [
+      { "id": "assemble", "label": "Prompt 装配", "focus": ["runtime", "control", "postgres", "knowledge"], "note": "首次运行冻结稳定 PromptContext，并把 persona、能力、角色、记忆和 turn-local 知识分层装入。" },
+      { "id": "dynamic", "label": "hop 动态上下文", "focus": ["runtime", "model", "knowledge"], "note": "学习/教师上下文可逐 hop 更新；初始知识检索在该 run 内保持不变。" },
+      { "id": "compact", "label": "会话压缩", "focus": ["runtime", "model", "postgres"], "note": "达到软/硬阈值时由模型生成有界摘要，再以 revision 保存 session。" },
+      { "id": "memory", "label": "长期记忆", "focus": ["runtime", "postgres", "scheduler", "model", "vector"], "note": "最终回复后记录 evidence，后台 proposal + verification 后写入 pgvector memory。" }
+    ]
+  },
+  "participants": [
+    { "id": "runtime", "type": "backend", "label": "Agent Runtime" },
+    { "id": "control", "type": "security", "label": "Control Plane" },
+    { "id": "postgres", "type": "database", "label": "Session / Evidence" },
+    { "id": "knowledge", "type": "cloud", "label": "Knowledge RAG" },
+    { "id": "vector", "type": "database", "label": "pgvector Memory" },
+    { "id": "model", "type": "cloud", "label": "LLM Provider" },
+    { "id": "scheduler", "type": "backend", "label": "Memory Scheduler" },
+    { "id": "wukong", "type": "messagebus", "label": "WuKongIM" }
+  ],
+  "segments": [
+    { "from": 150, "to": 502, "label": "A. 分层装配并冻结本 run 的上下文" },
+    { "from": 518, "to": 778, "label": "B. hop 动态刷新与显式知识工具" },
+    { "from": 794, "to": 1048, "label": "C. 预算估算、压缩与 session checkpoint" },
+    { "from": 1064, "to": 1540, "label": "D. evidence → proposal → verification → memory" }
+  ],
+  "messages": [
+    { "from": "runtime", "to": "control", "y": 178, "label": "GET context(work, fence, lease)", "variant": "security" },
+    { "from": "control", "to": "wukong", "y": 220, "label": "load authoritative recent messages", "variant": "default" },
+    { "from": "control", "to": "postgres", "y": 262, "label": "persona + capabilities + role + session", "variant": "default" },
+    { "from": "control", "to": "vector", "y": 304, "label": "recall scoped memories with embedding", "variant": "default" },
+    { "from": "control", "to": "knowledge", "y": 346, "label": "turn-local retrieval under user scope", "variant": "emphasis" },
+    { "from": "knowledge", "to": "control", "y": 388, "label": "bounded excerpts + source identities", "variant": "return" },
+    { "from": "control", "to": "runtime", "y": 430, "label": "AgentContext", "variant": "return" },
+    { "from": "runtime", "to": "postgres", "y": 472, "label": "freeze PromptContext + sourceVersions", "variant": "emphasis" },
+    { "from": "runtime", "to": "control", "y": 548, "label": "refresh learning / teacher context each hop", "variant": "default" },
+    { "from": "runtime", "to": "model", "y": 590, "label": "stable policy + task role + dynamic context", "variant": "emphasis" },
+    { "from": "model", "to": "runtime", "y": 632, "label": "text or ipython loop.knowledge.search", "variant": "return" },
+    { "from": "runtime", "to": "knowledge", "y": 674, "label": "explicit search/read through Host Bridge", "variant": "security" },
+    { "from": "knowledge", "to": "runtime", "y": 716, "label": "tool result appended to history", "variant": "return" },
+    { "from": "runtime", "to": "model", "y": 758, "label": "next hop with tool output", "variant": "emphasis" },
+    { "from": "runtime", "to": "model", "y": 866, "label": "compact history to ≤1500-token summary", "variant": "default" },
+    { "from": "model", "to": "runtime", "y": 908, "label": "bounded summary", "variant": "return" },
+    { "from": "runtime", "to": "postgres", "y": 950, "label": "save history + compactionEpoch + revision", "variant": "security" },
+    { "from": "postgres", "to": "runtime", "y": 992, "label": "409 on stale revision / fence", "variant": "return" },
+    { "from": "runtime", "to": "wukong", "y": 1094, "label": "commit final answer", "variant": "emphasis" },
+    { "from": "runtime", "to": "postgres", "y": 1136, "label": "record bounded user + assistant evidence", "variant": "default" },
+    { "from": "runtime", "to": "postgres", "y": 1178, "label": "enqueue memory_synthesis work", "variant": "emphasis" },
+    { "from": "scheduler", "to": "postgres", "y": 1220, "label": "claim evidence batch ≤12", "variant": "security" },
+    { "from": "scheduler", "to": "vector", "y": 1262, "label": "load current scoped memories", "variant": "default" },
+    { "from": "scheduler", "to": "model", "y": 1304, "label": "propose ≤64 memory changes", "variant": "emphasis" },
+    { "from": "model", "to": "scheduler", "y": 1346, "label": "structured proposal", "variant": "return" },
+    { "from": "scheduler", "to": "model", "y": 1388, "label": "independent verification", "variant": "security" },
+    { "from": "model", "to": "scheduler", "y": 1430, "label": "confidence + accepted changes", "variant": "return" },
+    { "from": "scheduler", "to": "vector", "y": 1472, "label": "apply confidence≥0.6 with optimistic version", "variant": "emphasis" },
+    { "from": "scheduler", "to": "postgres", "y": 1514, "label": "mark evidence synthesized", "variant": "emphasis" }
+  ],
+  "activations": [
+    { "participant": "runtime", "from": 172, "to": 1190, "type": "backend" },
+    { "participant": "control", "from": 172, "to": 442, "type": "security" },
+    { "participant": "model", "from": 584, "to": 920, "type": "cloud" },
+    { "participant": "scheduler", "from": 1214, "to": 1526, "type": "backend" },
+    { "participant": "model", "from": 1298, "to": 1442, "type": "cloud" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Prompt 的稳定与动态层", "items": ["稳定层：平台策略、执行角色、capability 说明、persona、响应约束、日期与长期记忆", "run 初始层：用户输入、最近 WuKong 历史、turn-local 知识、审批结果、Canvas snapshot", "逐 hop 动态层：学习进度与 teacher context；Steer 在模型调用前作为最高优先级输入"] },
+    { "dot": "violet", "title": "PromptContext 冻结的目的", "items": ["同一 run 与重试使用相同策略/能力快照，减少上下文抖动和 provider cache miss", "session 保存 prompt_context、sourceVersions、compactionEpoch 与 appliedWorkIds", "运行角色或 knowledgeContract 改变时会刷新；压缩也会重建稳定上下文"] },
+    { "dot": "rose", "title": "当前 persona / capability 刷新缺口", "items": ["PromptContext 记录 persona 与 capability sourceVersions，但 runtime 的刷新条件没有比较这两个版本", "已有 session 在角色和 knowledgeContract 不变时，persona 或 capability 更新可能继续使用旧冻结值", "这是当前实现与“版本化 PromptContext”意图之间的静态代码缺口"] },
+    { "dot": "emerald", "title": "知识上下文是 turn-local", "items": ["初始检索使用持久的人类 authorization principal 与资源范围，结果在整个 run 内保持不变", "模型可在后续 hop 通过 loop.knowledge.search/read 做显式查询，结果作为 tool output 进入 history", "Agent OS 不直接连接 Open Notebook 网络；所有查询经 Web Host Bridge 进入知识服务"] },
+    { "dot": "rose", "title": "后续显式检索的引用校验缺口", "items": ["最终消息的 citation validator 只拿初始 context.knowledgeContext 做来源集合", "后续 loop.knowledge.search 返回的新 source identity 虽进入 history，却没有合并进最终验证集合", "因此“先显式搜索再引用”的合法来源可能无法通过与初始 RAG 相同的严格校验"] },
+    { "dot": "amber", "title": "压缩边界", "items": ["默认 context window 128k；约 75% 触发软压缩，90% 进入硬阈值", "压缩请求只允许最长约 1500 token 的摘要；原 history 被摘要化但系统策略重新装配", "session revision 与 fence 同时保护 checkpoint；stale save 返回 409，而不是覆盖更新"] },
+    { "dot": "orange", "title": "长期记忆不是聊天全文", "items": ["最终答复后只记录有界 evidence：用户和助手文本各最多约 8k 字符", "后台模型先提出 add/update/delete，再由独立模型验证；仅 confidence≥0.6 的变更可应用", "显式用户记忆与 pinned memory 不允许被自动 synthesis 修改；所有更新带 scope 与 optimistic version"] },
+    { "dot": "rose", "title": "当前 memory_synthesis 阻断缺陷", "items": ["recallScope 明确拒绝空 query；但 loadMemorySynthesisBatch 为读取当前 memories 调用 query:''", "只要 evidence batch 非空，流程会在 proposal 之前抛错，导致自动长期记忆合成无法完成", "仓库中未找到覆盖这一调用链的测试；显式 memory.note 的即时 embedding 不受此缺陷影响"] },
+    { "dot": "cyan", "title": "两个向量系统不要混淆", "items": ["知识 RAG：Open Notebook / SurrealDB，面向文件、来源、切块、检索与问答上下文", "Agent 长期记忆：PostgreSQL agent_workspace + pgvector(1536)，按 learner/course/agent_role 等 scope 召回", "两者都进入 Prompt，但生命周期、权限、索引和修订机制不同"] },
+    { "dot": "slate", "title": "上下文有界原则", "items": ["WuKong 同步最多 80 条；memory prompt 总字符默认上限 24k；单个 injected fragment 必须有硬上限", "知识 excerpt、tool output、rich MIME、stdout/stderr、artifact snapshot 都分别设限", "有界不是简单截断：稳定策略要保留，历史可摘要，权威事实必须能够从持久服务重新读取"] }
+  ]
+}
