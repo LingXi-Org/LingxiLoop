@@ -14,7 +14,7 @@ interface Props {
   className?: string
   /** Disable continuous motion for dense composite surfaces such as HiveAvatar. */
   animated?: boolean
-  /** Live agent states are reserved for avatars rendered in the Chat Panel. */
+  /** Opt into live agent states on conversation-facing chat surfaces. */
   mode?: 'chat' | 'neutral'
 }
 
@@ -113,9 +113,9 @@ export function AvatarMini({
   )
 }
 
-export function AvatarStack({ ps, size = 28, max = 4 }: { ps: Participant[]; size?: number; max?: number }) {
-  // The overflow badge occupies one of the advertised slots; otherwise
-  // `max={3}` could render three portraits PLUS a fourth badge and overflow.
+export function AvatarStack({ ps, size = 28, max = 4, mode = 'neutral' }: { ps: Participant[]; size?: number; max?: number; mode?: 'chat' | 'neutral' }) {
+  // The overflow indicator occupies one of the advertised slots; otherwise
+  // `max={3}` could render three portraits PLUS a fourth item and overflow.
   const visibleLimit = Math.max(0, max - (ps.length > max ? 1 : 0))
   const visible = ps.slice(0, visibleLimit)
   const overflow = ps.length - visible.length
@@ -124,20 +124,22 @@ export function AvatarStack({ ps, size = 28, max = 4 }: { ps: Participant[]; siz
   // 34px avatars inside a 56px conversation slot. A bounded step keeps the
   // whole cluster compact at every call-site, including tablet headers.
   const step = Math.min(11, Math.max(7, Math.round(size * 0.32)))
-  const width = itemCount > 0 ? size + (itemCount - 1) * step : 0
+  const overflowOffset = overflow > 0 ? Math.round(size * 0.18) : 0
+  const width = itemCount > 0 ? size + (itemCount - 1) * step + overflowOffset : 0
   return (
     <div className="relative shrink-0" style={{ width, height: size }}>
       {visible.map((p, i) => (
         <div key={p.id} className="absolute top-0" style={{ left: i * step, zIndex: itemCount - i }}>
-          <AvatarMini p={p} size={size} />
+          <AvatarMini p={p} size={size} mode={mode} />
         </div>
       ))}
       {overflow > 0 && (
         <div
-          className="absolute top-0 grid place-items-center rounded-xl bg-muted text-[10px] font-bold text-muted-foreground"
+          className="absolute top-0 grid place-items-center text-[10px] font-bold text-muted-foreground"
+          aria-label={`${overflow} 位其他成员`}
           style={{
             width: size, height: size,
-            left: visible.length * step,
+            left: visible.length * step + overflowOffset,
             zIndex: 0,
           }}
         >+{overflow}</div>

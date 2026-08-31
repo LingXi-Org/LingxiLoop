@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ImEnvelope, LingxiMessageV1 } from '@/lib/im/wukong'
 import type { Participant } from '@/types'
-import { convertEnvelope, convertEnvelopeBatch } from './converter'
+import { convertEnvelope, convertEnvelopeBatch, projectMessageGroups } from './converter'
 import { getLingxiMessageMetadata } from './model'
 
 const participants: Record<string, Participant> = {
@@ -78,6 +78,21 @@ test('structured kinds become Tool UI calls instead of view-level kind branches'
   }
 })
 
+test('lecture deck artifacts use the dedicated presentation card renderer', () => {
+  const message = convertEnvelope(envelope('artifact', {
+    artifactId: 'presentation-1',
+    artifactKind: 'lecture_deck_html',
+    title: 'Evidence-led lecture',
+  }), { participants, meId: 'me' })
+  const part = message.content.find((item) => item.type === 'tool-call')
+  assert.equal(part?.type === 'tool-call' ? part.toolName : null, 'presentation-artifact')
+  assert.deepEqual(part?.type === 'tool-call' ? part.args : null, {
+    artifactId: 'presentation-1',
+    artifactKind: 'lecture_deck_html',
+    title: 'Evidence-led lecture',
+  })
+})
+
 test('batch conversion is stable, deduplicated, and projects sender grouping', () => {
   const first = envelope('tool_activity', kindData.tool_activity, { messageId: 'one', messageSeq: 1, timestamp: 1_767_225_600 })
   const second = envelope('tool_activity', kindData.tool_activity, { messageId: 'two', messageSeq: 2, timestamp: 1_767_225_610 })
@@ -108,6 +123,16 @@ test('clusters adjacent text, attachments, and Tool UI cards by sender rather th
   ])
 })
 
+test('group projection preserves messages whose cluster position did not change', () => {
+  const messages = convertEnvelopeBatch([
+    envelope('text', {}, { messageId: 'one', messageSeq: 1 }),
+    envelope('text', {}, { messageId: 'two', messageSeq: 2, timestamp: 1_767_225_610 }),
+  ], { participants, meId: 'me' })
+  assert.deepEqual(projectMessageGroups(messages), messages)
+  assert.equal(projectMessageGroups(messages)[0], messages[0])
+  assert.equal(projectMessageGroups(messages)[1], messages[1])
+})
+
 test('unknown WuKong kinds fail closed at the transport conversion boundary', () => {
   const unknown = envelope('text')
   unknown.payload = { ...unknown.payload, kind: 'legacy-card' as LingxiMessageV1['kind'] }
@@ -117,11 +142,14 @@ test('unknown WuKong kinds fail closed at the transport conversion boundary', ()
   )
 })
 
-test('self-authored structured messages remain assistant tool parts and citations become sources', () => {
+test('self-authored structured messages keep canonical knowledge citations in metadata', () => {
   const message = convertEnvelope(envelope('approval', {
     approval: { id: 'a-self', summary: 'Review', status: 'PENDING' },
-    citations: [{ id: 'source-1', url: 'https://example.com/evidence', title: 'Evidence' }],
+    citations: [{ sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1' }],
   }, { fromUid: 'me' }), { participants, meId: 'me' })
   assert.equal(message.role, 'assistant')
-  assert.deepEqual(message.content.map((part) => part.type), ['tool-call', 'source'])
+  assert.deepEqual(message.content.map((part) => part.type), ['tool-call'])
+  assert.deepEqual(getLingxiMessageMetadata(message).citations, [{
+    sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1',
+  }])
 })

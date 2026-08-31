@@ -1,9 +1,10 @@
-import { DashboardSquare01Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { DashboardSquare01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { type ReactNode, useEffect, useState } from 'react'
-import { CardSurface } from '@/components/assistant-ui/elements/surfaces'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { CanvasPreview } from '@/features/canvas/components/CanvasPreview'
 import { Button } from '@/components/ui/button'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { SourcePanel } from '@/components/WorkspaceChrome'
 import { useSurface } from '@/stores/surface'
 import { useCanvas } from '@/features/canvas/state'
@@ -12,25 +13,24 @@ export function GroupCanvasPanel({ conversationId, flat = false, toolbar }: { co
   const workspaces = useCanvas((state) => state.workspaces)
   const previews = useCanvas((state) => state.previews)
   const snapshot = useCanvas((state) => state.snapshot)
-  const loadWorkspaces = useCanvas((state) => state.loadWorkspaces)
   const loadPreview = useCanvas((state) => state.loadPreview)
-  const createForConversation = useCanvas((state) => state.createForConversation)
+  const ensureForConversation = useCanvas((state) => state.ensureForConversation)
   const openCanvas = useSurface((state) => state.openCanvasPeek)
-  const [creating, setCreating] = useState(false)
+  const [preparing, setPreparing] = useState(true)
+  const [prepareFailed, setPrepareFailed] = useState(false)
   const summary = workspaces.find((item) => item.conversationId === conversationId) ?? null
   const preview = summary ? (previews[summary.id] ?? (snapshot?.id === summary.id ? snapshot : null)) : null
 
-  useEffect(() => { void loadWorkspaces(conversationId) }, [conversationId, loadWorkspaces])
+  useEffect(() => {
+    let active = true
+    setPreparing(true)
+    setPrepareFailed(false)
+    void ensureForConversation(conversationId)
+      .catch(() => { if (active) setPrepareFailed(true) })
+      .finally(() => { if (active) setPreparing(false) })
+    return () => { active = false }
+  }, [conversationId, ensureForConversation])
   useEffect(() => { if (summary) void loadPreview(summary.id) }, [loadPreview, summary?.id])
-
-  const start = async () => {
-    setCreating(true)
-    try {
-      const created = await createForConversation(conversationId)
-      openCanvas(created.id)
-    }
-    finally { setCreating(false) }
-  }
 
   return <section className={`flex h-full min-h-0 flex-col ${flat ? 'bg-transparent' : 'bg-panel'}`}>
     {flat ? toolbar ? <div className="flex h-10 shrink-0 items-center justify-between px-3">
@@ -38,19 +38,24 @@ export function GroupCanvasPanel({ conversationId, flat = false, toolbar }: { co
     </div> : null : <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-hairline px-3.5">
       <div><h2 className="text-sm font-semibold text-ink">画布</h2><p className="text-[10px] text-ink-secondary">实时预览</p></div>
     </header>}
-    {summary ? <div className={`flex min-h-0 flex-1 flex-col ${flat ? 'px-3 pb-2 pt-9' : 'gap-2 p-3'}`}>
-      <CardSurface asChild variant="interactive" interactive className={`relative min-h-0 flex-1 cursor-zoom-in gap-0 py-0 text-left [--card-spacing:0px] ${flat ? 'rounded-2xl' : ''}`}>
-        <Button type="button" onClick={() => openCanvas(summary.id)} aria-label="打开完整画布"><CanvasPreview snapshot={preview} title={summary.title} frameCount={summary.frameCount} fill={flat} /></Button>
-      </CardSurface>
+    {summary ? <div className={`flex min-h-0 flex-1 flex-col ${flat ? 'p-3' : 'gap-2 p-3'}`}>
+      <Button type="button" variant="outline" onClick={() => openCanvas(summary.id)} aria-label="打开完整画布" data-canvas-open-trigger={summary.id} className="canvas-preview-shell h-full min-h-0 w-full flex-1 shrink cursor-zoom-in items-stretch justify-stretch overflow-hidden rounded-2xl border-border bg-card p-0 text-start shadow-none hover:bg-card"><CanvasPreview snapshot={preview} title={summary.title} frameCount={summary.frameCount} fill={flat} /></Button>
       {!flat && <p className="flex shrink-0 items-center justify-between text-[10px] text-ink-secondary"><span>{summary.frameCount} 张卡片 · {summary.assignmentCount} 位智能助教</span><span className="flex items-center gap-1"><i className="size-1.5 rounded-full bg-primary" />实时</span></p>}
-    </div> : <div className="grid min-h-0 flex-1 place-items-center px-8 pb-12 text-center"><div><HugeiconsIcon icon={DashboardSquare01Icon} strokeWidth={2} className="mx-auto size-8 text-muted-foreground" /><p className="mt-4 text-sm font-medium text-foreground">还没有画布</p><p className="mt-1 max-w-[250px] text-xs leading-5 text-muted-foreground">开始后，智能助教的工作进度会显示在这里。</p><Button type="button" disabled={creating} onClick={() => void start()} className="context-empty-action mt-4" size="sm"><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />{creating ? '正在创建…' : '新建画布'}</Button></div></div>}
+    </div> : preparing ? <ResourceSkeleton variant="media" label="正在准备画布" className="min-h-0 flex-1 p-3" /> : <Empty className="min-h-0 px-6 py-8">
+      <EmptyHeader>
+        <EmptyMedia variant="icon"><HugeiconsIcon icon={DashboardSquare01Icon} strokeWidth={2} /></EmptyMedia>
+        <EmptyTitle className="text-base">{prepareFailed ? '画布暂不可用' : '正在准备画布'}</EmptyTitle>
+        <EmptyDescription>{prepareFailed ? '暂时无法准备画布，请稍后重试。' : '每个会话都有独立画布，准备完成后会自动显示。'}</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent><span className="text-xs text-muted-foreground">无需手动创建</span></EmptyContent>
+    </Empty>}
   </section>
 }
 
 /** Business content rendered inside the shared detail panel. */
 export function GroupContextContent({ conversationId }: { conversationId: string }) {
-  return <div className="grid h-full min-h-0 grid-rows-[minmax(0,38fr)_minmax(0,62fr)] overflow-hidden bg-sidebar" data-context-layout="flat-stacked" aria-label="群聊上下文内容">
-    <div className="min-h-0 overflow-hidden"><GroupCanvasPanel conversationId={conversationId} flat /></div>
+  return <div className="grid h-full min-h-0 grid-rows-[minmax(0,38fr)_minmax(0,62fr)] overflow-hidden bg-card" data-context-layout="flat-stacked" aria-label="资料与 Canvas 工作区">
+    <div className="min-h-0 overflow-hidden"><GroupCanvasPanel conversationId={conversationId} flat toolbar={<span className="px-2 text-xs font-medium text-muted-foreground">Canvas</span>} /></div>
     <div className="min-h-0 overflow-hidden"><SourcePanel flat toolbar={<span className="px-2 text-xs font-medium text-muted-foreground">资料</span>} /></div>
   </div>
 }

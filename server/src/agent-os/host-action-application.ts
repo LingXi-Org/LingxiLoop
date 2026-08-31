@@ -36,6 +36,7 @@ const ACTION_CAPABILITIES: Record<string, string> = {
   canvas: 'canvas',
   email: 'email',
   knowledge: 'knowledge',
+  presentations: 'knowledge',
   learning: 'learning',
   teacher: 'teacher_admin',
 }

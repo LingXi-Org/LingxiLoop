@@ -49,8 +49,6 @@ services:
     pull_policy: always
     restart: unless-stopped
     command: ["start", "--log", "warn", "--user", "${OPEN_NOTEBOOK_SURREAL_USER:-open-notebook}", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:-open-notebook-dev}", "rocksdb:/data/open-notebook.db"]
-    environment:
-      SURREAL_EXPERIMENTAL_GRAPHQL: "true"
     volumes:
       - open-notebook-surreal-data:/data
     healthcheck:
@@ -63,23 +61,24 @@ services:
     logging: *quiet-logging
 
   open-notebook:
-    build:
-      context: ./third_party/open-notebook
-      target: runtime
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-open-notebook:${LINGXILOOP_IMAGE_TAG:-mvp}
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       surrealdb:
         condition: service_healthy
     environment:
-      OPEN_NOTEBOOK_ENCRYPTION_KEY: ${OPEN_NOTEBOOK_ENCRYPTION_KEY:-lingxiloop-local-open-notebook-key}
       OPEN_NOTEBOOK_PASSWORD: ${OPEN_NOTEBOOK_PASSWORD:-lingxiloop-local-open-notebook-password}
       OPEN_NOTEBOOK_WORKER_MAX_TASKS: ${OPEN_NOTEBOOK_WORKER_MAX_TASKS:-5}
-      OPEN_NOTEBOOK_R2_ENABLED: ${OPEN_NOTEBOOK_R2_ENABLED:-auto}
+      OPEN_NOTEBOOK_R2_ENABLED: "true"
       OPEN_NOTEBOOK_R2_PREFIX: ${OPEN_NOTEBOOK_R2_PREFIX:-open-notebook}
       R2_ENDPOINT: ${R2_ENDPOINT:?R2_ENDPOINT is required}
       R2_BUCKET: ${R2_BUCKET:?R2_BUCKET is required}
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
+      OPENAI_API_KEY: ${OPEN_NOTEBOOK_PASSWORD:-lingxiloop-local-open-notebook-password}
+      OPENAI_BASE_URL: http://lingxiloop:5181/internal/open-notebook/v1
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required in .env}
       SURREAL_URL: ws://surrealdb:8000/rpc
       SURREAL_USER: ${OPEN_NOTEBOOK_SURREAL_USER:-open-notebook}
       SURREAL_PASSWORD: ${OPEN_NOTEBOOK_SURREAL_PASSWORD:-open-notebook-dev}
@@ -88,7 +87,7 @@ services:
     volumes:
       - open-notebook-data:/app/data
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:5055/health"]
+      test: ["CMD-SHELL", "grep -a -l 'surreal-commands-worker' /proc/[0-9]*/cmdline 2>/dev/null | grep -q . && curl -fsS http://localhost:5055/health"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -102,6 +101,7 @@ services:
     restart: unless-stopped
     environment:
       WK_NODE_DATA_DIR: /var/lib/wukongim
+      WK_WEBHOOK_HTTP_ADDR: "http://lingxiloop:5181/webhooks/wukong?token=${WUKONG_WEBHOOK_SECRET:-dev-wukong-webhook-secret}"
     volumes:
       - lingxiloop-wukong-data:/var/lib/wukongim
     ports:
@@ -193,10 +193,7 @@ services:
       OPEN_NOTEBOOK_ENABLED: ${OPEN_NOTEBOOK_ENABLED:-true}
       OPEN_NOTEBOOK_URL: http://open-notebook:5055
       OPEN_NOTEBOOK_PASSWORD: ${OPEN_NOTEBOOK_PASSWORD:-lingxiloop-local-open-notebook-password}
-      OPEN_NOTEBOOK_CHAT_MODEL: ${OPEN_NOTEBOOK_CHAT_MODEL:-}
-      OPEN_NOTEBOOK_STRATEGY_MODEL: ${OPEN_NOTEBOOK_STRATEGY_MODEL:-}
-      OPEN_NOTEBOOK_ANSWER_MODEL: ${OPEN_NOTEBOOK_ANSWER_MODEL:-}
-      OPEN_NOTEBOOK_FINAL_ANSWER_MODEL: ${OPEN_NOTEBOOK_FINAL_ANSWER_MODEL:-}
+      PRESENTATION_HTML_ENABLED: ${PRESENTATION_HTML_ENABLED:-false}
     ports:
       # Public by default so the mobile client can reach the API backend.
       - "${LINGXILOOP_BIND_ADDRESS:-0.0.0.0}:${LINGXILOOP_PORT:-5181}:5181"

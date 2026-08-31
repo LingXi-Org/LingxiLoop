@@ -49,3 +49,15 @@ test('Canvas capabilities own separate application and repository modules', () =
     assert.match(read(`../modules/canvas/${repositoryCapability}-repository.ts`), /export async function/)
   }
 })
+
+test('Canvas ownership accepts every authorized chat conversation', () => {
+  const router = read('../modules/canvas/router.ts')
+  const workspaces = read('../modules/canvas/workspace-repository.ts')
+  const assignments = read('../modules/canvas/assignments-repository.ts')
+
+  assert.match(router, /requireConversationMember/)
+  assert.doesNotMatch(router, /requireGroupConversation/)
+  assert.doesNotMatch(`${workspaces}\n${assignments}`, /c\.kind='group'/)
+  assert.match(workspaces, /INSERT INTO canvases \(id,company_id,project_id,conversation_id/)
+  assert.match(workspaces, /SELECT \$1,c\.company_id,c\.project_id,c\.id/)
+})

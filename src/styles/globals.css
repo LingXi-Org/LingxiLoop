@@ -7,6 +7,8 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/geist";
 
+@source "../../node_modules/streamdown/dist/*.js";
+
 @custom-variant dark (&:is(.dark *));
 @config "../../tailwind.config.ts";
 
@@ -71,14 +73,6 @@
   --accent-ink: var(--primary-foreground);
   --selection-bg: color-mix(in srgb, var(--primary) 22%, transparent);
   --code-bg: var(--muted);
-  --canvas-bg: var(--background);
-  --canvas-dot: color-mix(in srgb, var(--muted-foreground) 20%, transparent);
-  --canvas-surface: var(--card);
-  --canvas-surface-muted: var(--muted);
-  --canvas-frame-border: var(--border);
-  --canvas-shadow: 0 12px 35px color-mix(in srgb, var(--foreground) 16%, transparent);
-  --canvas-vignette: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--primary) 8%, transparent));
-
   /* Shared detail-panel theme contract. Component structure remains untouched;
      these aliases connect its semantic tokens to LingxiLoop's existing theme. */
   --background: oklch(1 0 0);
@@ -242,156 +236,6 @@
 .select-menu-option:disabled { opacity: 0.45; }
 @keyframes select-menu-in { from { opacity: 0; transform: translateY(-3px) scale(0.985); } }
 
-.canvas-shell,
-.canvas-stage { background-color: var(--im-chat-surface, var(--canvas-bg)); }
-.canvas-stage {
-  background-image: none;
-}
-.canvas-header {
-  background: color-mix(in srgb, var(--panel) 96%, transparent);
-  border-color: var(--hairline);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--hairline) 72%, transparent);
-}
-.canvas-main-header { height: 76px; }
-.canvas-main-stage {
-  top: 76px;
-  overflow: clip;
-  overscroll-behavior: none;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.canvas-main-stage img { -webkit-user-drag: none; }
-.canvas-work-timeline {
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-  overscroll-behavior-x: contain;
-  touch-action: pan-x;
-  -webkit-overflow-scrolling: touch;
-}
-.canvas-work-timeline::-webkit-scrollbar { display: none; }
-.canvas-work-timeline-track { position: relative; min-height: 42px; }
-.canvas-timeline-scroll-button {
-  position: absolute;
-  top: 50%;
-  z-index: 5;
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  transform: translateY(-50%);
-  border: 0;
-  border-radius: 14px;
-  background: transparent;
-  color: var(--ink-secondary);
-  transition: color 120ms ease, transform 120ms ease;
-}
-.canvas-timeline-scroll-button::before {
-  content: '';
-  position: absolute;
-  inset: 8px;
-  border: 1px solid var(--hairline);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--panel) 96%, transparent);
-  box-shadow: 0 5px 16px color-mix(in srgb, var(--ink) 14%, transparent);
-  backdrop-filter: blur(12px);
-  transition: background-color 120ms ease, transform 120ms ease;
-}
-.canvas-timeline-scroll-button:hover { color: var(--accent); }
-.canvas-timeline-scroll-button:hover::before { background: var(--raised); }
-.canvas-timeline-scroll-button:active::before { transform: scale(0.92); }
-.canvas-timeline-scroll-button.is-left { left: -6px; }
-.canvas-timeline-scroll-button.is-right { right: -6px; }
-.canvas-timeline-scroll-button svg { position: relative; z-index: 1; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.canvas-timeline-item {
-  min-height: 42px;
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-  border-radius: 13px;
-  background: transparent;
-}
-.canvas-timeline-item + .canvas-timeline-item::before {
-  content: '';
-  position: absolute;
-  left: -13px;
-  width: 12px;
-  top: 50%;
-  height: 1px;
-  background: color-mix(in srgb, var(--hairline) 86%, transparent);
-  pointer-events: none;
-}
-.canvas-timeline-item:not(:disabled):hover { background: color-mix(in srgb, var(--raised) 82%, transparent); }
-.canvas-context-menu,
-.canvas-mini-dialog {
-  background: color-mix(in srgb, var(--canvas-surface) 96%, transparent);
-  color: var(--ink);
-  border-color: color-mix(in srgb, var(--hairline) 90%, transparent);
-  box-shadow: 0 18px 48px color-mix(in srgb, var(--ink) 18%, transparent), 0 2px 9px color-mix(in srgb, var(--ink) 9%, transparent);
-  color-scheme: light dark;
-}
-.canvas-dialog-layer { background: color-mix(in srgb, var(--canvas-bg) 42%, transparent); backdrop-filter: blur(5px); }
-.canvas-frame-card {
-  border: 1px solid var(--input) !important;
-  border-radius: 8px !important;
-  background: transparent;
-  box-shadow: none !important;
-  outline: none;
-  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
-}
-.canvas-frame-card.is-selected {
-  border-color: var(--canvas-frame-accent, var(--accent)) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--canvas-frame-accent, var(--accent)) 50%, transparent) !important;
-}
-:root[data-theme='dark'] .canvas-frame-card { background: color-mix(in srgb, var(--input) 30%, transparent); }
-.canvas-frame-card.is-live-editing:not(.is-selected) {
-  border-color: var(--canvas-frame-accent, var(--accent)) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--canvas-frame-accent, var(--accent)) 24%, transparent) !important;
-}
-.canvas-frame-header {
-  position: absolute; z-index: 4; inset: 0 22px auto 0;
-  height: 18px !important; border: 0; background: transparent; padding: 0; opacity: 0;
-}
-.canvas-frame-agent-label {
-  position: absolute; z-index: 5; top: 7px; left: 7px;
-  display: inline-flex; max-width: calc(100% - 34px); align-items: center; gap: 5px;
-  border-radius: 999px; background: color-mix(in srgb, var(--panel) 84%, transparent);
-  padding: 3px 7px 3px 5px; color: var(--canvas-frame-accent, var(--accent));
-  font-size: 9px; font-weight: 650; line-height: 1; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; pointer-events: none; backdrop-filter: blur(8px);
-}
-.canvas-frame-agent-label i { width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: currentColor; }
-.canvas-frame-resize-handle { background: color-mix(in srgb, var(--canvas-frame-accent, var(--accent)) 10%, transparent); color: var(--canvas-frame-accent, var(--accent)); }
-.canvas-frame-resize-handle::before { border-color: currentColor; }
-.canvas-frame-body { height: 100% !important; }
-.canvas-frame-body { background: transparent; color: var(--ink-700); color-scheme: light dark; }
-.canvas-frame-iframe { background: var(--panel); color: var(--ink-700); color-scheme: light dark; }
-.canvas-frame-body pre { color: var(--ink-700); }
-.canvas-inline-editor,
-.canvas-inline-editor * {
-  user-select: text;
-  -webkit-user-select: text;
-}
-.canvas-panel-input {
-  border-color: var(--hairline);
-  background: var(--canvas-surface);
-  color: var(--ink);
-}
-.canvas-panel-input::placeholder { color: var(--ink-secondary); }
-.canvas-panel-input:focus {
-  border-color: color-mix(in srgb, var(--accent) 66%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
-}
-@media (max-width: 640px) {
-  .canvas-main-header { height: 116px; flex-wrap: wrap; align-content: center; gap: 4px 10px; padding: 8px 10px; }
-  .canvas-main-stage { top: 116px; }
-  .canvas-timeline-shell { order: 3; width: 100%; flex-basis: 100%; }
-  .canvas-work-timeline { width: 100%; }
-  .canvas-work-timeline-track { min-height: 38px; }
-  .canvas-timeline-item { min-height: 38px; max-width: 174px; padding-left: 8px; padding-right: 8px; }
-  .canvas-timeline-node { width: 26px; height: 26px; }
-  .canvas-mini-dialog { top: 128px; max-height: calc(100% - 140px); }
-}
-
 .message-attachment-host { width: min(420px, 100%); }
 .message-attachment-host:has([data-slot="tool"]) { width: 28rem; min-width: min(28rem, 100%); max-width: 100%; }
 
@@ -405,58 +249,6 @@
 }
 .animate-collapsible-down { animation: collapsible-down 180ms ease-out; }
 .animate-collapsible-up { animation: collapsible-up 160ms ease-in; }
-.canvas-preview {
-  position: relative;
-  height: 196px;
-  overflow: hidden;
-  border-bottom: 0;
-  background-color: var(--brand-bubble-surface);
-  background-image: none;
-}
-.canvas-preview-frame {
-  position: absolute;
-  min-width: 28px;
-  min-height: 22px;
-  overflow: hidden;
-  border: 0 !important;
-  border-radius: 12px;
-  background: var(--panel);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--canvas-frame-accent, var(--accent)) 72%, transparent);
-}
-:root[data-theme='dark'] .canvas-preview-frame { box-shadow: 0 0 0 1px color-mix(in srgb, var(--canvas-frame-accent, var(--accent)) 78%, transparent); }
-.canvas-preview-frame-header {
-  display: none;
-}
-.canvas-preview-frame-content {
-  height: 100%;
-  overflow: hidden;
-  background: var(--panel);
-  pointer-events: none;
-}
-.canvas-preview-frame-content .canvas-frame-iframe { min-height: 0; pointer-events: none; }
-.canvas-preview-html-scale { position: absolute; left: 0; top: 0; transform-origin: left top; }
-.canvas-preview-html-scale .canvas-frame-iframe { width: 100%; height: 100%; }
-.canvas-frame-markdown-preview {
-  height: 100%;
-  overflow: hidden;
-  padding: 5px 7px;
-}
-.canvas-preview-vignette { position: absolute; inset: 0; pointer-events: none; background: var(--canvas-vignette); }
-.canvas-preview-loading { display: flex; align-items: center; gap: 10px; }
-.canvas-preview-loading span {
-  display: block;
-  width: 70px;
-  height: 54px;
-  border: 1px solid var(--canvas-frame-border);
-  border-radius: 7px;
-  background: var(--canvas-surface);
-  box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 9%, transparent);
-}
-@media (max-width: 520px) {
-  .canvas-preview { height: 156px; }
-  .canvas-preview-loading span { width: 54px; height: 42px; }
-}
-
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; }
 
@@ -503,17 +295,6 @@ body {
   --im-elevated-surface: var(--card);
   --im-divider: color-mix(in srgb, var(--border) 52%, transparent);
   --im-divider-weak: color-mix(in srgb, var(--border) 38%, transparent);
-
-  /* Canvas is part of the same product surface, not a separate blackboard.
-     These semantic aliases follow the surrounding panel/card palette in both
-     themes and keep only a restrained accent tint for depth. */
-  --canvas-bg: color-mix(in srgb, var(--panel) 78%, var(--app));
-  --canvas-dot: color-mix(in srgb, var(--ink-secondary) 20%, transparent);
-  --canvas-surface: var(--card);
-  --canvas-surface-muted: color-mix(in srgb, var(--raised) 48%, var(--card));
-  --canvas-frame-border: var(--hairline);
-  --canvas-shadow: 0 16px 34px -24px color-mix(in srgb, var(--ink) 44%, transparent), 0 1px 2px color-mix(in srgb, var(--ink) 12%, transparent);
-  --canvas-vignette: linear-gradient(180deg, transparent 70%, color-mix(in srgb, var(--accent) 5%, transparent));
 
   color: var(--ink);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;

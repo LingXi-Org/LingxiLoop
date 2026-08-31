@@ -112,18 +112,24 @@ function FixtureThread() {
       id: userId, role: 'user', content: append.content, attachments: append.attachments ?? [], createdAt: new Date(),
       metadata: { custom: metadata(userId, human, true) },
     }, {
-      id: previewId, role: 'assistant', content: [{ type: 'text', text: 'Streaming', status: { type: 'running' } }],
+      id: previewId, role: 'assistant', content: [],
       status: { type: 'running' }, createdAt: new Date(), metadata: { custom: metadata(previewId, scout) },
     }])
     setRunning(true)
     window.setTimeout(() => {
       setMessages((current) => current.map((message) => message.id === previewId ? {
         ...message,
-        content: [{ type: 'text', text: 'Streaming complete', status: { type: 'complete' } }],
+        content: [{ type: 'text', text: '## Streaming\n\n**Markdown** is arriving.', status: { type: 'running' } }],
+      } as ThreadMessage : message))
+    }, 250)
+    window.setTimeout(() => {
+      setMessages((current) => current.map((message) => message.id === previewId ? {
+        ...message,
+        content: [{ type: 'text', text: '## Streaming complete\n\n**Markdown** stayed formatted.', status: { type: 'complete' } }],
         status: { type: 'complete', reason: 'stop' },
       } as ThreadMessage : message))
       setRunning(false)
-    }, 250)
+    }, 3_000)
   }, [])
   const adapter = useMemo<ExternalStoreAdapter<ThreadMessage>>(() => ({
     messages,

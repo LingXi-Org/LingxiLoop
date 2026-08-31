@@ -1,0 +1,760 @@
+@import './canvas-fonts.css';
+
+:where(
+  [data-canvas-ui='root'],
+  [data-canvas-ui='preview'],
+  [data-canvas-ui='dialog'],
+  [data-canvas-ui='portal'],
+  .canvas-preview-shell
+) {
+  --canvas-ui-font: 'Assistant', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --canvas-content-font: 'Excalifont', 'Xiaolai', 'Kaiti SC', cursive;
+  --canvas-paper: color-mix(in srgb, var(--background) 96%, var(--muted));
+  --canvas-dot: color-mix(in srgb, var(--muted-foreground) 18%, transparent);
+  --canvas-surface: color-mix(in srgb, var(--card) 98%, var(--muted));
+  --canvas-island: color-mix(in srgb, var(--popover) 94%, transparent);
+  --canvas-surface-muted: color-mix(in srgb, var(--muted) 68%, var(--card));
+  --canvas-border: color-mix(in srgb, var(--border) 88%, transparent);
+  --canvas-border-strong: color-mix(in srgb, var(--muted-foreground) 28%, var(--border));
+  --canvas-sketch-ink: color-mix(in srgb, var(--muted-foreground) 48%, var(--canvas-border-strong));
+  --canvas-sketch-echo: color-mix(in srgb, var(--muted-foreground) 24%, transparent);
+  --canvas-sketch-mask-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M3 1.3 C27 .7 72 1.9 97 1.1 Q99.1 1.2 98.9 3.2 C99.2 28 98.7 72 99.1 96.8 Q99 99 96.8 98.8 C71 99.3 28 98.2 3.1 99 Q.9 98.9 1.2 96.7 C.8 72 1.4 28 1 3.2 Q1.1 1.1 3 1.3 Z' fill='none' stroke='white' stroke-width='1.35' vector-effect='non-scaling-stroke' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --canvas-sketch-mask-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M3.4 .9 C25 1.7 75 .6 96.8 1.7 Q99.2 1 98.8 3.5 C98.5 27 99.3 74 98.7 96.5 Q99.4 98.8 96.4 99.1 C73 98.4 27 99.4 3.3 98.2 Q1 99.2 1.5 96.4 C1.8 73 .7 26 1.6 3.4 Q1 1 3.4 .9 Z' fill='none' stroke='white' stroke-width='.78' vector-effect='non-scaling-stroke' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --canvas-accent: var(--primary);
+  --canvas-island-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 8%, transparent), 0 10px 28px -18px color-mix(in srgb, var(--foreground) 28%, transparent);
+  --canvas-card-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 7%, transparent), 0 12px 30px -24px color-mix(in srgb, var(--foreground) 24%, transparent);
+  --canvas-vignette: linear-gradient(180deg, transparent 62%, color-mix(in srgb, var(--primary) 5%, transparent));
+  --font-display: var(--canvas-content-font);
+  color-scheme: light dark;
+  font-family: var(--canvas-ui-font);
+}
+
+:root[data-theme='dark'] :where(
+  [data-canvas-ui='root'],
+  [data-canvas-ui='preview'],
+  [data-canvas-ui='dialog'],
+  [data-canvas-ui='portal'],
+  .canvas-preview-shell
+) {
+  --canvas-paper: color-mix(in srgb, var(--background) 90%, var(--muted));
+  --canvas-dot: color-mix(in srgb, var(--muted-foreground) 23%, transparent);
+  --canvas-surface: color-mix(in srgb, var(--card) 94%, var(--muted));
+  --canvas-island: color-mix(in srgb, var(--popover) 95%, transparent);
+  --canvas-border: color-mix(in srgb, var(--border) 82%, transparent);
+  --canvas-border-strong: color-mix(in srgb, var(--muted-foreground) 34%, var(--border));
+  --canvas-sketch-ink: color-mix(in srgb, var(--muted-foreground) 58%, var(--canvas-border-strong));
+  --canvas-sketch-echo: color-mix(in srgb, var(--muted-foreground) 31%, transparent);
+  --canvas-island-shadow: 0 1px 2px color-mix(in srgb, black 34%, transparent), 0 12px 34px -18px color-mix(in srgb, black 72%, transparent);
+  --canvas-card-shadow: 0 1px 2px color-mix(in srgb, black 30%, transparent), 0 14px 34px -24px color-mix(in srgb, black 68%, transparent);
+}
+
+[data-canvas-ui='root'].canvas-shell,
+[data-canvas-ui='root'] .canvas-stage {
+  background-color: var(--canvas-paper);
+}
+
+[data-canvas-ui='root'].canvas-shell {
+  color: var(--foreground);
+}
+
+[data-canvas-ui='root'] .canvas-stage {
+  background-image: radial-gradient(circle at center, var(--canvas-dot) 1px, transparent 1.15px);
+}
+
+[data-canvas-ui='root'] .canvas-main-header {
+  height: 76px;
+}
+
+[data-canvas-ui='root'] .canvas-header {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+[data-canvas-ui='root'] .canvas-timeline-shell {
+  min-height: 56px;
+  backdrop-filter: blur(14px);
+}
+
+[data-canvas-ui='root'] .canvas-timeline-shell {
+  align-self: center;
+  overflow: hidden;
+}
+
+[data-canvas-ui='root'] .canvas-main-stage {
+  top: 76px;
+  overflow: clip;
+  overscroll-behavior: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+[data-canvas-ui='root'] .canvas-main-stage img {
+  -webkit-user-drag: none;
+}
+
+[data-canvas-ui='root'] .canvas-icon-button:focus-visible,
+[data-canvas-ui='root'] .canvas-timeline-item:focus-visible,
+[data-canvas-ui='root'] .canvas-agent-option:focus-visible,
+[data-canvas-ui='root'] .canvas-primary-action:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--canvas-accent) 72%, transparent);
+  outline-offset: 2px;
+}
+
+[data-canvas-ui='root'] .canvas-work-timeline {
+  height: 54px;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+}
+
+[data-canvas-ui='root'] .canvas-work-timeline::-webkit-scrollbar {
+  display: none;
+}
+
+[data-canvas-ui='root'] .canvas-work-timeline-track {
+  position: relative;
+  min-height: 38px;
+}
+
+[data-canvas-ui='root'] .canvas-timeline-scroll-button {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  transform: translateY(-50%);
+  transition: transform 120ms ease;
+}
+
+[data-canvas-ui='root'] .canvas-timeline-scroll-button:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+[data-canvas-ui='root'] .canvas-timeline-scroll-button.is-left {
+  left: 2px;
+}
+
+[data-canvas-ui='root'] .canvas-timeline-scroll-button.is-right {
+  right: 2px;
+}
+
+[data-canvas-ui='root'] .canvas-timeline-scroll-button svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+[data-canvas-ui='root'] .canvas-timeline-item {
+  min-height: 38px;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+[data-canvas-ui='root'] .canvas-frame-card {
+  --canvas-sketch-color: var(--canvas-sketch-ink);
+  border: 0;
+  border-radius: 9px 7px 10px 6px / 7px 10px 6px 9px;
+  background: var(--canvas-surface);
+  box-shadow: none;
+  outline: none;
+  transition: background-color 150ms ease;
+}
+
+[data-canvas-ui='root'] .canvas-frame-card.is-selected {
+  --canvas-sketch-color: var(--canvas-frame-accent, var(--canvas-accent));
+}
+
+[data-canvas-ui='root'] .canvas-frame-card.is-live-editing:not(.is-selected) {
+  --canvas-sketch-color: var(--canvas-frame-accent, var(--canvas-accent));
+}
+
+[data-canvas-ui='root'] .canvas-frame-header {
+  position: absolute;
+  z-index: 4;
+  inset: 0 22px auto 0;
+  height: 18px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  opacity: 0;
+}
+
+[data-canvas-ui='root'] .canvas-frame-agent-label {
+  position: absolute;
+  z-index: 5;
+  top: 6px;
+  left: 6px;
+  display: inline-flex;
+  max-width: calc(100% - 34px);
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--canvas-frame-accent, var(--canvas-accent)) 38%, var(--canvas-border));
+  border-radius: 7px 5px 6px 4px / 5px 7px 4px 6px;
+  background: color-mix(in srgb, var(--canvas-surface) 90%, transparent);
+  padding: 3px 7px 3px 5px;
+  color: var(--canvas-frame-accent, var(--canvas-accent));
+  font-family: var(--canvas-ui-font);
+  font-size: 9px;
+  font-weight: 650;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0.65px -0.45px 0 color-mix(in srgb, currentColor 28%, transparent);
+}
+
+[data-canvas-ui='root'] .canvas-frame-agent-label i {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+[data-canvas-ui='root'] .canvas-timeline-role {
+  border: 1px solid var(--canvas-sketch-echo);
+  border-radius: 45% 55% 43% 57% / 58% 42% 54% 46%;
+  box-shadow: inset 0.5px -0.4px 0 var(--canvas-sketch-echo);
+}
+
+[data-canvas-ui='root'] .canvas-frame-resize-handle {
+  z-index: 6;
+  border: 0;
+  border-radius: 7px 0 0 0 / 5px 0 0 0;
+  background: color-mix(in srgb, var(--canvas-frame-accent, var(--canvas-accent)) 11%, transparent);
+  box-shadow: none;
+  color: var(--canvas-frame-accent, var(--canvas-accent));
+}
+
+[data-canvas-ui='root'] .canvas-frame-resize-handle::before {
+  border-color: currentColor;
+  transform: rotate(2deg);
+}
+
+[data-canvas-ui='root'] .canvas-frame-resize-handle::after {
+  content: '';
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 8px;
+  height: 8px;
+  border-right: 0.7px solid currentColor;
+  border-bottom: 0.7px solid currentColor;
+  border-radius: 0 0 2px;
+  opacity: 0.62;
+  transform: rotate(-1.6deg);
+  pointer-events: none;
+}
+
+[data-canvas-ui='root'] .canvas-frame-body {
+  height: 100% !important;
+  background: transparent;
+  color: var(--foreground);
+  color-scheme: light dark;
+  font-family: var(--canvas-content-font);
+  --font-display: var(--canvas-content-font);
+}
+
+[data-canvas-ui='root'] .canvas-frame-iframe {
+  background: var(--card);
+  color: var(--foreground);
+  color-scheme: light dark;
+}
+
+[data-canvas-ui='root'] .canvas-frame-body pre,
+[data-canvas-ui='root'] .canvas-artifact-content {
+  color: var(--foreground);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+[data-canvas-ui='root'] .canvas-linked-document {
+  color: var(--canvas-accent);
+  font-family: var(--canvas-ui-font);
+}
+
+[data-canvas-ui='root'] .canvas-inline-editor,
+[data-canvas-ui='root'] .canvas-inline-editor * {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+[data-canvas-ui='root'] .canvas-panel-input {
+  border: 1.35px solid var(--canvas-sketch-ink);
+  border-radius: 8px 6px 9px 5px / 6px 9px 5px 8px;
+  background: var(--canvas-surface);
+  box-shadow: inset 0.7px -0.45px 0 var(--canvas-sketch-echo), 0.65px 0.8px 0 -0.3px var(--canvas-sketch-echo);
+  color: var(--foreground);
+  font-family: var(--canvas-ui-font);
+}
+
+[data-canvas-ui='root'] .canvas-content-input {
+  font-family: var(--canvas-content-font);
+}
+
+[data-canvas-ui='root'] .canvas-panel-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+[data-canvas-ui='root'] .canvas-panel-input:focus,
+[data-canvas-ui='root'] .canvas-panel-input:focus-visible {
+  border-color: var(--canvas-frame-accent, var(--canvas-accent));
+  outline: none;
+  box-shadow: inset 0.75px -0.5px 0 color-mix(in srgb, var(--canvas-frame-accent, var(--canvas-accent)) 42%, transparent), -1px 1px 0 2px color-mix(in srgb, var(--canvas-frame-accent, var(--canvas-accent)) 14%, transparent), 2px -0.5px 0 1px color-mix(in srgb, var(--canvas-frame-accent, var(--canvas-accent)) 10%, transparent);
+}
+
+[data-canvas-ui='root'] .canvas-save-status {
+  border: 1.2px solid var(--canvas-sketch-ink);
+  border-radius: 48% 52% 46% 54% / 55% 44% 56% 45%;
+  background: color-mix(in srgb, var(--canvas-surface) 92%, transparent);
+  box-shadow: inset 0.55px -0.4px 0 var(--canvas-sketch-echo), 0 2px 8px color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: var(--muted-foreground);
+  font-family: var(--canvas-ui-font);
+}
+
+[data-canvas-ui='root'] .canvas-save-status.is-error {
+  border-color: color-mix(in srgb, var(--destructive) 28%, transparent);
+  background: color-mix(in srgb, var(--destructive) 9%, var(--canvas-surface));
+  color: var(--destructive);
+}
+
+[data-canvas-ui='root'] .canvas-empty-state,
+[data-canvas-ui='root'] .canvas-error-state,
+[data-canvas-ui='root'] .canvas-mini-dialog {
+  border: 1px solid transparent;
+  border-radius: 9px 7px 10px 6px / 7px 10px 6px 9px;
+  background: var(--canvas-island);
+  box-shadow: var(--canvas-island-shadow);
+  color: var(--foreground);
+  backdrop-filter: blur(14px);
+}
+
+[data-canvas-ui='root'] .canvas-empty-state {
+  max-width: min(28rem, calc(100% - 32px));
+  border: 0;
+  box-shadow: none;
+}
+
+[data-canvas-ui='root'] .canvas-error-state {
+  --canvas-sketch-color: color-mix(in srgb, var(--destructive) 68%, var(--canvas-sketch-ink));
+  background: color-mix(in srgb, var(--destructive) 8%, var(--canvas-island));
+  color: var(--destructive);
+}
+
+[data-canvas-ui='root'] .canvas-dialog-layer {
+  background: color-mix(in srgb, var(--canvas-paper) 48%, transparent);
+  backdrop-filter: blur(5px);
+}
+
+[data-canvas-ui='root'] .canvas-agent-option {
+  border: 1px solid transparent;
+  border-radius: 8px 6px 7px 5px / 6px 8px 5px 7px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted-foreground);
+}
+
+[data-canvas-ui='root'] .canvas-feedback-avatar {
+  border: 1.2px solid var(--canvas-sketch-ink);
+  border-radius: 47% 53% 45% 55% / 55% 44% 56% 45%;
+  background: color-mix(in srgb, var(--canvas-accent) 11%, var(--canvas-surface));
+  box-shadow: inset 0.65px -0.45px 0 var(--canvas-sketch-echo);
+  color: var(--canvas-accent);
+}
+
+[data-canvas-ui='root'] .canvas-feedback-comment {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 8px 6px 9px 5px / 6px 9px 5px 8px;
+  box-shadow: inset 0 0 0 1.1px var(--canvas-sketch-echo), inset 0.8px -0.55px 0 color-mix(in srgb, var(--canvas-sketch-ink) 36%, transparent);
+}
+
+[data-canvas-ui='root'] .canvas-agent-option:hover {
+  background: var(--canvas-surface-muted);
+  color: var(--foreground);
+}
+
+[data-canvas-ui='root'] .canvas-agent-option.is-selected {
+  --canvas-sketch-color: var(--canvas-accent);
+  background: color-mix(in srgb, var(--canvas-accent) 11%, var(--canvas-surface));
+  color: var(--canvas-accent);
+}
+
+[data-canvas-ui='root'] .canvas-primary-action {
+  min-height: 36px;
+  --canvas-sketch-color: color-mix(in srgb, var(--canvas-accent) 62%, var(--foreground));
+  border: 1px solid transparent;
+  border-radius: 8px 6px 9px 5px / 6px 9px 5px 8px;
+  background: var(--canvas-accent);
+  box-shadow: none;
+  color: var(--primary-foreground);
+}
+
+[data-canvas-ui='root'] .canvas-primary-action:hover {
+  background: color-mix(in srgb, var(--canvas-accent) 88%, var(--foreground));
+}
+
+[data-canvas-ui='root'] .canvas-primary-action:disabled {
+  opacity: 0.4;
+}
+
+.canvas-ui-portal[data-canvas-ui='portal'].canvas-context-menu {
+  border: 1px solid transparent;
+  border-radius: 9px 7px 10px 6px / 7px 10px 6px 9px;
+  background: var(--canvas-island);
+  padding: 6px;
+  box-shadow: var(--canvas-island-shadow);
+  color: var(--foreground);
+  font-family: var(--canvas-ui-font);
+  color-scheme: light dark;
+}
+
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-item'],
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-sub-trigger'] {
+  min-height: 32px;
+  border-radius: 7px 5px 8px 6px / 5px 8px 6px 7px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-item']:focus,
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-sub-trigger']:focus,
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-sub-trigger'][data-state='open'] {
+  background: color-mix(in srgb, var(--canvas-accent) 11%, var(--canvas-surface));
+  color: var(--foreground);
+}
+
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-shortcut'] {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+.canvas-preview-shell {
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.canvas-preview-shell:focus-within {
+  box-shadow: none;
+}
+
+.canvas-preview-shell:focus-within [data-canvas-ui='preview'].canvas-preview {
+  --canvas-sketch-color: var(--canvas-accent);
+  box-shadow: -1px 1px 0 2px color-mix(in srgb, var(--canvas-accent) 18%, transparent), 2px -1px 0 1px color-mix(in srgb, var(--canvas-accent) 10%, transparent), var(--canvas-card-shadow);
+}
+
+[data-canvas-ui='preview'].canvas-preview {
+  --canvas-sketch-color: var(--canvas-sketch-ink);
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  height: 196px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 10px 7px 9px 6px / 7px 10px 6px 9px;
+  background-color: var(--canvas-paper);
+  background-image: radial-gradient(circle at center, var(--canvas-dot) 0.85px, transparent 1px);
+  background-size: 16px 16px;
+  color: var(--foreground);
+}
+
+[data-canvas-ui='preview'] .canvas-preview-frame {
+  position: absolute;
+  min-width: 28px;
+  min-height: 22px;
+  overflow: hidden;
+  --canvas-sketch-color: color-mix(in srgb, var(--canvas-frame-accent, var(--canvas-accent)) 68%, var(--canvas-sketch-ink));
+  border: 1px solid transparent;
+  border-radius: 8px 6px 9px 5px / 6px 9px 5px 8px;
+  background: var(--canvas-surface);
+  box-shadow: var(--canvas-card-shadow);
+}
+
+[data-canvas-ui='preview'] .canvas-preview-frame-content {
+  height: 100%;
+  overflow: hidden;
+  background: var(--canvas-surface);
+  color: var(--foreground);
+  font-family: var(--canvas-content-font);
+  pointer-events: none;
+  --font-display: var(--canvas-content-font);
+}
+
+[data-canvas-ui='preview'] .canvas-preview-frame-content .canvas-frame-iframe {
+  min-height: 0;
+  background: var(--card);
+  pointer-events: none;
+}
+
+[data-canvas-ui='preview'] .canvas-preview-html-scale {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: left top;
+}
+
+[data-canvas-ui='preview'] .canvas-preview-html-scale .canvas-frame-iframe {
+  width: 100%;
+  height: 100%;
+}
+
+[data-canvas-ui='preview'] .canvas-frame-markdown-preview {
+  height: 100%;
+  overflow: hidden;
+  padding: 5px 7px;
+}
+
+[data-canvas-ui='preview'] .canvas-artifact-content,
+[data-canvas-ui='preview'] .canvas-artifact-content pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+[data-canvas-ui='preview'] .canvas-preview-vignette {
+  position: absolute;
+  inset: 0;
+  background: var(--canvas-vignette);
+  pointer-events: none;
+}
+
+[data-canvas-ui='preview'] .canvas-preview-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+[data-canvas-ui='preview'] .canvas-preview-loading span {
+  display: block;
+  width: 70px;
+  height: 54px;
+  border: 1px solid transparent;
+  border-radius: 8px 6px 9px 5px / 6px 9px 5px 8px;
+  background: var(--canvas-surface);
+  box-shadow: var(--canvas-card-shadow);
+}
+
+/* Rough, doubled strokes keep the Canvas chrome hand-drawn without filtering
+   or changing any interactive geometry or user-authored frame content. */
+[data-canvas-ui='root'] .canvas-empty-state,
+[data-canvas-ui='root'] .canvas-agent-option,
+[data-canvas-ui='root'] .canvas-primary-action,
+[data-canvas-ui='preview'] .canvas-preview-loading span {
+  position: relative;
+}
+
+[data-canvas-ui='root'] .canvas-frame-card,
+[data-canvas-ui='root'] .canvas-empty-state,
+[data-canvas-ui='root'] .canvas-error-state,
+[data-canvas-ui='root'] .canvas-mini-dialog,
+[data-canvas-ui='root'] .canvas-agent-option,
+[data-canvas-ui='root'] .canvas-primary-action,
+.canvas-ui-portal[data-canvas-ui='portal'].canvas-context-menu,
+[data-canvas-ui='preview'].canvas-preview,
+[data-canvas-ui='preview'] .canvas-preview-frame,
+[data-canvas-ui='preview'] .canvas-preview-loading span {
+  isolation: isolate;
+}
+
+[data-canvas-ui='root'] .canvas-frame-card::before,
+[data-canvas-ui='root'] .canvas-frame-card::after,
+[data-canvas-ui='root'] .canvas-empty-state::before,
+[data-canvas-ui='root'] .canvas-empty-state::after,
+[data-canvas-ui='root'] .canvas-error-state::before,
+[data-canvas-ui='root'] .canvas-error-state::after,
+[data-canvas-ui='root'] .canvas-mini-dialog::before,
+[data-canvas-ui='root'] .canvas-mini-dialog::after,
+[data-canvas-ui='root'] .canvas-agent-option::before,
+[data-canvas-ui='root'] .canvas-agent-option::after,
+[data-canvas-ui='root'] .canvas-primary-action::before,
+[data-canvas-ui='root'] .canvas-primary-action::after,
+.canvas-ui-portal[data-canvas-ui='portal'].canvas-context-menu::before,
+.canvas-ui-portal[data-canvas-ui='portal'].canvas-context-menu::after,
+[data-canvas-ui='preview'].canvas-preview::before,
+[data-canvas-ui='preview'].canvas-preview::after,
+[data-canvas-ui='preview'] .canvas-preview-frame::before,
+[data-canvas-ui='preview'] .canvas-preview-frame::after,
+[data-canvas-ui='preview'] .canvas-preview-loading span::before,
+[data-canvas-ui='preview'] .canvas-preview-loading span::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+[data-canvas-ui='root'] .canvas-frame-card::before,
+[data-canvas-ui='root'] .canvas-empty-state::before,
+[data-canvas-ui='root'] .canvas-error-state::before,
+[data-canvas-ui='root'] .canvas-mini-dialog::before,
+[data-canvas-ui='root'] .canvas-agent-option::before,
+[data-canvas-ui='root'] .canvas-primary-action::before,
+.canvas-ui-portal[data-canvas-ui='portal'].canvas-context-menu::before,
+[data-canvas-ui='preview'].canvas-preview::before,
+[data-canvas-ui='preview'] .canvas-preview-frame::before,
+[data-canvas-ui='preview'] .canvas-preview-loading span::before {
+  inset: 0.6px 0.9px 0.85px 0.55px;
+  border: 1.35px solid var(--canvas-sketch-color, var(--canvas-sketch-ink));
+  border-radius: 9px 7px 10px 6px / 7px 10px 6px 9px;
+  background: var(--canvas-sketch-color, var(--canvas-sketch-ink));
+  -webkit-mask: var(--canvas-sketch-mask-a) center / 100% 100% no-repeat;
+  mask: var(--canvas-sketch-mask-a) center / 100% 100% no-repeat;
+  transform: rotate(-0.055deg) scaleX(0.9994);
+  transform-origin: 48% 52%;
+}
+
+[data-canvas-ui='root'] .canvas-frame-card::after,
+[data-canvas-ui='root'] .canvas-empty-state::after,
+[data-canvas-ui='root'] .canvas-error-state::after,
+[data-canvas-ui='root'] .canvas-mini-dialog::after,
+[data-canvas-ui='root'] .canvas-agent-option::after,
+[data-canvas-ui='root'] .canvas-primary-action::after,
+.canvas-ui-portal[data-canvas-ui='portal'].canvas-context-menu::after,
+[data-canvas-ui='preview'].canvas-preview::after,
+[data-canvas-ui='preview'] .canvas-preview-frame::after,
+[data-canvas-ui='preview'] .canvas-preview-loading span::after {
+  inset: 2.3px 1.15px 1.35px 2.4px;
+  border: 0.7px solid color-mix(in srgb, var(--canvas-sketch-color, var(--canvas-sketch-ink)) 62%, transparent);
+  border-radius: 7px 10px 6px 9px / 10px 6px 9px 7px;
+  background: color-mix(in srgb, var(--canvas-sketch-color, var(--canvas-sketch-ink)) 62%, transparent);
+  -webkit-mask: var(--canvas-sketch-mask-b) center / 100% 100% no-repeat;
+  mask: var(--canvas-sketch-mask-b) center / 100% 100% no-repeat;
+  opacity: 0.72;
+  transform: rotate(0.07deg) scaleY(0.9988);
+  transform-origin: 52% 47%;
+}
+
+[data-canvas-ui='root'] .canvas-frame-card::before,
+[data-canvas-ui='preview'] .canvas-preview-frame::before,
+[data-canvas-ui='preview'] .canvas-preview-loading span::before {
+  border-radius: 8px 6px 9px 5px / 6px 9px 5px 8px;
+  transform: rotate(0.065deg) scaleY(0.9992);
+}
+
+[data-canvas-ui='root'] .canvas-frame-card::after,
+[data-canvas-ui='preview'] .canvas-preview-frame::after,
+[data-canvas-ui='preview'] .canvas-preview-loading span::after {
+  border-radius: 6px 9px 5px 8px / 9px 5px 8px 6px;
+  transform: rotate(-0.075deg) scaleX(0.999);
+}
+
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-item'],
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-sub-trigger'] {
+  position: relative;
+}
+
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-item']::after,
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-sub-trigger']::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid var(--canvas-sketch-ink);
+  border-radius: 7px 5px 8px 6px / 5px 8px 6px 7px;
+  opacity: 0;
+  transform: rotate(-0.12deg);
+  pointer-events: none;
+}
+
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-item']:focus::after,
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-sub-trigger']:focus::after,
+.canvas-ui-portal[data-canvas-ui='portal'] [data-slot='context-menu-sub-trigger'][data-state='open']::after {
+  opacity: 0.68;
+}
+
+/* These two surfaces own their scrolling. Keep their outline on the scroll
+   container itself so the rough frame cannot move with the scroll contents. */
+[data-canvas-ui='root'] .canvas-mini-dialog[data-canvas-dialog='feedback'] {
+  border: 1.35px solid var(--canvas-sketch-ink);
+  box-shadow: inset 0.8px -0.55px 0 var(--canvas-sketch-echo), var(--canvas-island-shadow);
+}
+
+[data-canvas-ui='root'] .canvas-mini-dialog[data-canvas-dialog='feedback']::before,
+[data-canvas-ui='root'] .canvas-mini-dialog[data-canvas-dialog='feedback']::after,
+.canvas-ui-portal[data-canvas-ui='portal'].canvas-context-menu::before,
+.canvas-ui-portal[data-canvas-ui='portal'].canvas-context-menu::after {
+  content: none;
+}
+
+.canvas-ui-portal[data-canvas-ui='portal'].canvas-context-menu {
+  border: 1.35px solid var(--canvas-sketch-ink);
+  box-shadow: inset 0.75px -0.5px 0 var(--canvas-sketch-echo), 0.65px 0.8px 0 -0.3px var(--canvas-sketch-echo), var(--canvas-island-shadow);
+}
+
+@media (max-width: 640px) {
+  [data-canvas-ui='root'] .canvas-main-header {
+    height: 116px;
+    flex-wrap: wrap;
+    align-content: center;
+    gap: 4px 8px;
+    padding: 8px 10px;
+  }
+
+  [data-canvas-ui='root'] .canvas-main-stage {
+    top: 116px;
+  }
+
+  [data-canvas-ui='root'] .canvas-timeline-shell {
+    order: 3;
+    width: 100%;
+    min-height: 50px;
+    flex-basis: 100%;
+  }
+
+  [data-canvas-ui='root'] .canvas-work-timeline {
+    width: 100%;
+    height: 48px;
+  }
+
+  [data-canvas-ui='root'] .canvas-work-timeline-track {
+    min-height: 34px;
+  }
+
+  [data-canvas-ui='root'] .canvas-timeline-item {
+    min-height: 34px;
+    max-width: 174px;
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  [data-canvas-ui='root'] .canvas-timeline-node {
+    width: 26px;
+    height: 26px;
+  }
+
+  [data-canvas-ui='root'] [data-canvas-dialog='feedback'] {
+    max-height: calc(100% - 140px);
+  }
+}
+
+@media (max-width: 520px) {
+  [data-canvas-ui='preview'].canvas-preview:not(.is-fill) {
+    height: 156px;
+  }
+
+  [data-canvas-ui='preview'] .canvas-preview-loading span {
+    width: 54px;
+    height: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-canvas-ui='root'] .canvas-frame-card,
+  [data-canvas-ui='root'] .canvas-timeline-scroll-button {
+    transition: none;
+  }
+}

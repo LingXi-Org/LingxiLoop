@@ -17,7 +17,7 @@ import {
   updateCanvasFrame,
 } from './facade.js'
 import { safe } from '../../http/async-handler.js'
-import { requireCanvasFrameWorkspace, requireCanvasWorkspace, requireGroupConversation } from '../../http/authorization.js'
+import { requireCanvasFrameWorkspace, requireCanvasWorkspace, requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import {
   canvasAppendRequestSchema,
@@ -36,18 +36,18 @@ const api = canvasRouter
 /* ============== Shared Canvas (shared state, isolated execution) ======= */
 
 api.get('/conversations/:id/canvas', safe(async (req, res) => {
-  const membership = await requireGroupConversation(req, String(req.params.id))
+  const membership = await requireConversationMember(req, String(req.params.id))
   res.json(await getConversationCanvas(membership.companyId, String(req.params.id), membership.userId))
 }))
 
 api.post('/conversations/:id/canvas', safe(async (req, res) => {
-  const membership = await requireGroupConversation(req, String(req.params.id), 'canvas:write')
+  const membership = await requireConversationMember(req, String(req.params.id), 'canvas:write')
   res.status(201).json(await ensureConversationCanvas(membership.companyId, String(req.params.id), membership.userId))
 }))
 
 api.get('/canvas', safe(async (req, res) => {
   const { conversationId } = canvasConversationQuerySchema.parse(req.query)
-  const membership = await requireGroupConversation(req, conversationId)
+  const membership = await requireConversationMember(req, conversationId)
   const canvas = await getConversationCanvas(membership.companyId, conversationId, membership.userId)
   if (!canvas) throw new HttpError(404, 'canvas not found')
   res.json(canvas)
@@ -55,7 +55,7 @@ api.get('/canvas', safe(async (req, res) => {
 
 api.get('/canvases', safe(async (req, res) => {
   const { conversationId } = canvasConversationQuerySchema.parse(req.query)
-  const membership = await requireGroupConversation(req, conversationId)
+  const membership = await requireConversationMember(req, conversationId)
   res.json(await listCanvasWorkspaces(membership.companyId, conversationId))
 }))
 

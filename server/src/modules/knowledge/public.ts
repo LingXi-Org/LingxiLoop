@@ -18,30 +18,15 @@ export {
   validateKnowledgeUrl,
 } from './policy.js'
 export type { KnowledgeCitation, KnowledgeSourceStatus } from './runtime.js'
+export { openNotebookClient } from './provider.js'
 import { knowledgeAgentApplication } from './facade.js'
 
 export const {
   addKnowledgeFile,
   addKnowledgeText,
   addKnowledgeUrl,
-  askKnowledgeForAgent,
-  createKnowledgeInsight,
-  createKnowledgeNote,
-  deleteKnowledgeInsight,
-  deleteKnowledgeNote,
   deleteKnowledgeSourceForAgent,
-  getKnowledgeNote,
-  getKnowledgeSourceForAgent,
-  listKnowledgeInsights,
-  listKnowledgeNotes,
   listKnowledgeSourcesForAgent,
   retryKnowledgeSourceForAgent,
-  searchKnowledgeForAgent,
-  sendKnowledgeSourceChatMessage,
   setKnowledgeSourceEnabled,
-  startKnowledgeSourceChat,
-  unlinkKnowledgeSourceForAgent,
-  updateKnowledgeInsight,
-  updateKnowledgeNote,
-  updateKnowledgeSourceForAgent,
 } = knowledgeAgentApplication

@@ -40,6 +40,8 @@ export const moveConversationRequestSchema = z.object({
 export type ProjectPatch = z.infer<typeof updateProjectRequestSchema>
 export type CreateSourceInput = z.infer<typeof createSourceRequestSchema>
 export type PresignSourceInput = z.infer<typeof presignSourceRequestSchema>
+export type KnowledgeVisibilityScope = 'PRIVATE' | 'PROJECT'
+export type KnowledgeCreatedVia = 'USER' | 'AGENT'
 
 export interface KnowledgeScope {
   userId: string

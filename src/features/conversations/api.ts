@@ -1,7 +1,6 @@
 
 import { http } from '@/api/core/http'
 import type { ApiConversation, ConversationSearchResults } from './contracts'
-import type { ImReadReceiptAdvance } from '@/types'
 
 export const conversationsApi = {
   search: (query: string, signal?: AbortSignal) =>
@@ -44,15 +43,6 @@ export const conversationsApi = {
       method: 'POST',
       body: JSON.stringify({ id: participantId }),
     }),
-  markRead: (conversationId: string, readThroughSeq: number) =>
-    http<{ ok: boolean; latestSeq: number; receipt: ImReadReceiptAdvance | null }>(`/im/channels/${encodeURIComponent(conversationId)}/read`, {
-      method: 'POST',
-      body: JSON.stringify({ readThroughSeq }),
-    }),
-  readReceipts: (conversationId: string, fromSeq: number, toSeq: number) =>
-    http<{ channelId: string; fromSeq: number; toSeq: number; receipts: ImReadReceiptAdvance[] }>(
-      `/im/channels/${encodeURIComponent(conversationId)}/read-receipts?fromSeq=${fromSeq}&toSeq=${toSeq}`,
-    ),
   emitTyping: (conversationId: string, done: boolean) =>
     http<{ ok: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/typing`, {
       method: 'POST',

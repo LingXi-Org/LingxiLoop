@@ -15,7 +15,7 @@
 import { createHmac } from 'node:crypto'
 import {
   S3Client, PutObjectCommand, GetObjectCommand,
-  DeleteObjectCommand, ListObjectsV2Command,
+  DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { env } from './env.js'
@@ -23,12 +23,14 @@ import { env } from './env.js'
 /** Keys under these prefixes always get HMAC-signed URLs. Other prefixes
  *  (e.g. `avatars/`) are served unsigned — they
  *  carry no private user content and benefit from full CDN caching. */
-const SIGNED_PREFIXES = ['attachments/', 'email-attachments/', 'knowledge-sources/']
+const SIGNED_PREFIXES = ['attachments/', 'email-attachments/', 'knowledge-sources/', 'presentation-artifacts/']
 function needsSignature(key: string): boolean {
   return SIGNED_PREFIXES.some((p) => key.startsWith(p))
 }
 
-const STORAGE_KEY_PREFIXES = ['attachments/', 'email-attachments/', 'avatars/', 'knowledge-sources/']
+const STORAGE_KEY_PREFIXES = [
+  'attachments/', 'email-attachments/', 'avatars/', 'knowledge-sources/', 'presentation-artifacts/',
+]
 function isStorageKey(key: string): boolean {
   return STORAGE_KEY_PREFIXES.some((p) => key.startsWith(p))
 }
@@ -84,6 +86,31 @@ export interface StorageObject {
   lastModifiedMs: number
 }
 
+export interface StorageObjectMetadata {
+  sizeBytes: number
+  contentType: string | null
+  etag: string | null
+  lastModifiedMs: number | null
+}
+
+export interface PresignPutOptions {
+  ttlSeconds?: number
+  contentLength?: number
+}
+
+export class StorageObjectTooLargeError extends Error {
+  constructor(readonly maxBytes: number) {
+    super(`storage object exceeds the ${maxBytes} byte limit`)
+    this.name = 'StorageObjectTooLargeError'
+  }
+}
+
+/** Metadata and bounded reads used at untrusted object-ingestion boundaries. */
+export interface BoundedStorageReader {
+  statObject(key: string): Promise<StorageObjectMetadata>
+  readObjectBounded(key: string, maxBytes: number): Promise<Buffer>
+}
+
 export interface Storage {
   mode: 'r2'
   /** Write bytes synchronously from the server side (avatar gen path).
@@ -91,7 +118,11 @@ export interface Storage {
   put(key: string, body: Buffer, mime: string): Promise<string>
   /** Return a short-lived PUT URL the browser uploads to directly, plus
    *  the public URL the file will be available at after the upload. */
-  presignPut(key: string, mime: string, ttlSeconds?: number): Promise<{ uploadUrl: string; publicUrl: string }>
+  presignPut(
+    key: string,
+    mime: string,
+    options?: number | PresignPutOptions,
+  ): Promise<{ uploadUrl: string; publicUrl: string }>
   /** Resolve the configured public gateway URL for a key. */
   publicUrl(key: string): Promise<string>
   /** Read an object into memory. Knowledge-source files are capped at 25 MB
@@ -105,7 +136,89 @@ export interface Storage {
   deleteObject(key: string): Promise<boolean>
 }
 
-class R2Storage implements Storage {
+function validateReadLimit(maxBytes: number): void {
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) {
+    throw new RangeError('maxBytes must be a non-negative safe integer')
+  }
+}
+
+function bodyChunkBytes(chunk: unknown): Uint8Array {
+  if (typeof chunk === 'string') return Buffer.from(chunk)
+  if (chunk instanceof Uint8Array) return chunk
+  if (chunk instanceof ArrayBuffer) return new Uint8Array(chunk)
+  if (ArrayBuffer.isView(chunk)) {
+    return new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+  }
+  throw new Error('object body yielded an unsupported chunk')
+}
+
+function terminateBody(body: unknown, error: Error): void {
+  if (!body || typeof body !== 'object') return
+  const destroy = (body as { destroy?: (error?: Error) => void }).destroy
+  if (typeof destroy === 'function') {
+    destroy.call(body, error)
+    return
+  }
+  const cancel = (body as { cancel?: (reason?: unknown) => Promise<void> | void }).cancel
+  if (typeof cancel === 'function') void Promise.resolve(cancel.call(body, error)).catch(() => undefined)
+}
+
+/** Buffer a Node or Web SDK response body without ever retaining more than maxBytes. */
+export async function readStorageBodyBounded(body: unknown, maxBytes: number): Promise<Buffer> {
+  validateReadLimit(maxBytes)
+  if (!body) throw new Error('object has no body')
+
+  const chunks: Buffer[] = []
+  let total = 0
+  const append = (chunk: unknown) => {
+    const bytes = bodyChunkBytes(chunk)
+    if (bytes.byteLength > maxBytes - total) {
+      const error = new StorageObjectTooLargeError(maxBytes)
+      terminateBody(body, error)
+      throw error
+    }
+    total += bytes.byteLength
+    chunks.push(Buffer.from(bytes))
+  }
+
+  if (body instanceof Blob) {
+    if (body.size > maxBytes) throw new StorageObjectTooLargeError(maxBytes)
+    return readStorageBodyBounded(body.stream(), maxBytes)
+  }
+
+  const asyncIterable = body as Partial<AsyncIterable<unknown>>
+  if (typeof asyncIterable[Symbol.asyncIterator] === 'function') {
+    for await (const chunk of asyncIterable as AsyncIterable<unknown>) append(chunk)
+    return Buffer.concat(chunks, total)
+  }
+
+  const stream = body as { getReader?: () => ReadableStreamDefaultReader<unknown> }
+  if (typeof stream.getReader === 'function') {
+    const reader = stream.getReader()
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        append(value)
+      }
+    } catch (error) {
+      await reader.cancel(error).catch(() => undefined)
+      throw error
+    } finally {
+      reader.releaseLock()
+    }
+    return Buffer.concat(chunks, total)
+  }
+
+  if (body instanceof Uint8Array || body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
+    append(body)
+    return Buffer.concat(chunks, total)
+  }
+
+  throw new Error('object body is not a supported stream')
+}
+
+class R2Storage implements Storage, BoundedStorageReader {
   mode = 'r2' as const
   private client: S3Client
   private bucket: string
@@ -150,13 +263,21 @@ class R2Storage implements Storage {
     return this.publicUrl(key)
   }
 
-  async presignPut(key: string, mime: string, ttl = 300): Promise<{ uploadUrl: string; publicUrl: string }> {
+  async presignPut(
+    key: string,
+    mime: string,
+    options: number | PresignPutOptions = {},
+  ): Promise<{ uploadUrl: string; publicUrl: string }> {
+    const { ttlSeconds = 300, contentLength } = typeof options === 'number'
+      ? { ttlSeconds: options, contentLength: undefined }
+      : options
     const cmd = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
       ContentType: mime,
+      ContentLength: contentLength,
     })
-    const uploadUrl = await getSignedUrl(this.client, cmd, { expiresIn: ttl })
+    const uploadUrl = await getSignedUrl(this.client, cmd, { expiresIn: ttlSeconds })
     const publicUrl = await this.publicUrl(key)
     return { uploadUrl, publicUrl }
   }
@@ -212,9 +333,39 @@ class R2Storage implements Storage {
     if (!response.Body) throw new Error('object has no body')
     return Buffer.from(await response.Body.transformToByteArray())
   }
+
+  async statObject(key: string): Promise<StorageObjectMetadata> {
+    const normalized = normalizeStorageKey(key)
+    if (!normalized) throw new Error('invalid storage key')
+    const response = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: normalized }))
+    const sizeBytes = response.ContentLength
+    if (sizeBytes === undefined || !Number.isSafeInteger(sizeBytes) || sizeBytes < 0) {
+      throw new Error('object has no valid content length')
+    }
+    return {
+      sizeBytes,
+      contentType: response.ContentType ?? null,
+      etag: response.ETag ?? null,
+      lastModifiedMs: response.LastModified?.getTime() ?? null,
+    }
+  }
+
+  async readObjectBounded(key: string, maxBytes: number): Promise<Buffer> {
+    validateReadLimit(maxBytes)
+    const normalized = normalizeStorageKey(key)
+    if (!normalized) throw new Error('invalid storage key')
+    const response = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: normalized }))
+    if (!response.Body) throw new Error('object has no body')
+    if (response.ContentLength !== undefined && response.ContentLength > maxBytes) {
+      const error = new StorageObjectTooLargeError(maxBytes)
+      terminateBody(response.Body, error)
+      throw error
+    }
+    return readStorageBodyBounded(response.Body, maxBytes)
+  }
 }
 
-function buildStorage(): Storage {
+function buildStorage(): Storage & BoundedStorageReader {
   const required = {
     R2_ENDPOINT: env.R2_ENDPOINT,
     R2_BUCKET: env.R2_BUCKET,
@@ -236,13 +387,13 @@ function buildStorage(): Storage {
   })
 }
 
-let activeStorage: Storage | null = null
+let activeStorage: (Storage & Partial<BoundedStorageReader>) | null = null
 
 /** Install the process-wide storage adapter at the composition boundary.
  * Tests pass an explicit in-memory provider; production calls
  * `initializeNativeStorage` and therefore still fails before readiness when
  * the canonical R2 contract is incomplete. */
-export function installStorageProvider(provider: Storage): void {
+export function installStorageProvider(provider: Storage & Partial<BoundedStorageReader>): void {
   if (activeStorage && activeStorage !== provider) {
     throw new Error('storage provider is already installed')
   }
@@ -254,7 +405,7 @@ export function initializeNativeStorage(): void {
   installStorageProvider(buildStorage())
 }
 
-function requireStorage(): Storage {
+function requireStorage(): Storage & Partial<BoundedStorageReader> {
   if (!activeStorage) throw new Error('storage provider is not installed')
   return activeStorage
 }
@@ -262,12 +413,22 @@ function requireStorage(): Storage {
 /** Stable delegating port captured by domain applications during module
  * composition. The provider itself must be installed explicitly before any
  * process exposes readiness or any test invokes a storage-backed use case. */
-export const storage: Storage = {
+export const storage: Storage & BoundedStorageReader = {
   get mode() { return requireStorage().mode },
   put: (...args) => requireStorage().put(...args),
   presignPut: (...args) => requireStorage().presignPut(...args),
   publicUrl: (...args) => requireStorage().publicUrl(...args),
   readObject: (...args) => requireStorage().readObject(...args),
+  statObject: (...args) => {
+    const provider = requireStorage()
+    if (!provider.statObject) throw new Error('storage provider does not support object metadata')
+    return provider.statObject(...args)
+  },
+  readObjectBounded: (...args) => {
+    const provider = requireStorage()
+    if (!provider.readObjectBounded) throw new Error('storage provider does not support bounded reads')
+    return provider.readObjectBounded(...args)
+  },
   listObjectsByPrefix: (...args) => requireStorage().listObjectsByPrefix(...args),
   deleteObject: (...args) => requireStorage().deleteObject(...args),
 }

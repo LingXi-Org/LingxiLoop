@@ -7,6 +7,7 @@ export type ConversationSurface =
   | { kind: 'document'; documentId: string }
   | { kind: 'calendar'; eventId: string }
   | { kind: 'canvas'; canvasId: string }
+  | { kind: 'presentation'; presentationId: string }
   | null
 
 interface SurfaceState {
@@ -21,6 +22,8 @@ interface SurfaceState {
   closeCalendarEventPeek: () => void
   openCanvasPeek: (canvasId: string) => void
   closeCanvasPeek: () => void
+  openPresentationPeek: (presentationId: string) => void
+  closePresentationPeek: () => void
   closeForConversationChange: () => void
   closeSurface: () => void
 }
@@ -41,6 +44,8 @@ export const useSurface = create<SurfaceState>((set) => ({
   closeCalendarEventPeek: () => set(closeKind('calendar')),
   openCanvasPeek: (canvasId) => { showConversation(); set({ surface: { kind: 'canvas', canvasId } }) },
   closeCanvasPeek: () => set(closeKind('canvas')),
+  openPresentationPeek: (presentationId) => { showConversation(); set({ surface: { kind: 'presentation', presentationId } }) },
+  closePresentationPeek: () => set(closeKind('presentation')),
   closeForConversationChange: () => set((state) => state.surface?.kind === 'member' ? {} : { surface: null }),
   closeSurface: () => set({ surface: null }),
 }))

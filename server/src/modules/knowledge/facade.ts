@@ -10,10 +10,7 @@ import {
 import { storage } from '../../storage.js'
 import { createKnowledgeAgentApplication } from './agent-application.js'
 import { KnowledgeApplication } from './application.js'
-import { openNotebookClient } from './provider.js'
 import { MAX_SOURCE_BYTES, openNotebookEnabled } from './policy.js'
-import { auditInTransaction } from '../identity/public.js'
-import { OrganizationKnowledgeApplication } from './organization-application.js'
 
 export const knowledgeApplication = new KnowledgeApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
@@ -24,18 +21,13 @@ export const knowledgeApplication = new KnowledgeApplication(pool, {
   retrySource: retryKnowledgeSource,
   deleteSource: deleteKnowledgeSource,
   putObject: async (key, body, contentType) => { await storage.put(key, body, contentType) },
-  presignPut: (key, contentType) => storage.presignPut(key, contentType),
-  readObject: (key) => storage.readObject(key),
+  presignPut: (key, contentType, contentLength) => storage.presignPut(key, contentType, { contentLength }),
+  statObject: (key) => storage.statObject(key),
   publicUrl: (key) => storage.publicUrl(key),
   maxSourceBytes: MAX_SOURCE_BYTES,
 })
 
 export const knowledgeAgentApplication = createKnowledgeAgentApplication(pool, {
   storage,
-  provider: openNotebookClient,
-})
-
-export const organizationKnowledgeApplication = new OrganizationKnowledgeApplication({
   transaction: (work) => withTransaction(pool, work),
-  auditInTransaction,
 })

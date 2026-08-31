@@ -17,6 +17,7 @@ import { startKnowledgeStorageGc, startKnowledgeWorker } from './modules/knowled
 import { startLearningEffectWorker } from './modules/learning/worker.js'
 import { startNotificationScheduler } from './modules/notifications/public.js'
 import { startPollExpirationSweeper } from './modules/polls/index.js'
+import { startPresentationStorageGc, startPresentationWorker } from './modules/presentations/public.js'
 import { redis, sub } from './redis.js'
 import { Lifecycle, type ServiceHandle, startWorkerTasks, type WorkerTaskDefinition } from './runtime/lifecycle.js'
 import { initializeNativeStorage } from './storage.js'
@@ -45,6 +46,8 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'database-gc', concurrency: 'idempotent', start: () => startDbGcWorker() },
   { name: 'knowledge-ingestion', concurrency: 'queue-claim', start: () => startKnowledgeWorker() },
   { name: 'knowledge-storage-gc', concurrency: 'idempotent', start: () => startKnowledgeStorageGc() },
+  { name: 'presentation-generation', concurrency: 'queue-claim', start: () => startPresentationWorker() },
+  { name: 'presentation-storage-gc', concurrency: 'idempotent', start: () => startPresentationStorageGc() },
   { name: 'calendar-dispatch', concurrency: 'idempotent', start: () => startCalendarScheduler() },
   { name: 'poll-expiration', concurrency: 'database-lock', start: () => startPollExpirationSweeper(env.POLL_SWEEP_INTERVAL_MS) },
   ...(process.env.ENABLE_AGENT_RUN_SWEEPER === 'false' ? [] : [

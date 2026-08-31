@@ -13,7 +13,7 @@ export const canvasApi = {
   getCanvas: (canvasId?: string) => http<CanvasSnapshot>(canvasId ? `/canvases/${encodeURIComponent(canvasId)}` : '/canvas'),
   getCanvases: (conversationId?: string) => http<CanvasWorkspaceSummary[]>(`/canvases${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`),
   getConversationCanvas: (conversationId: string) => http<CanvasSnapshot | null>(`/conversations/${encodeURIComponent(conversationId)}/canvas`),
-  createConversationCanvas: (conversationId: string) => http<CanvasSnapshot>(`/conversations/${encodeURIComponent(conversationId)}/canvas`, { method: 'POST' }),
+  ensureConversationCanvas: (conversationId: string) => http<CanvasSnapshot>(`/conversations/${encodeURIComponent(conversationId)}/canvas`, { method: 'POST' }),
   createCanvasFrame: (input: {
     type: CanvasFrameType; title?: string; x?: number; y?: number; width?: number
     canvasId: string; height?: number; content?: string; data?: Record<string, unknown>

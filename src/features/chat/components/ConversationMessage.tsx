@@ -13,6 +13,8 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { MarkdownText } from '@/components/assistant-ui/markdown-text'
+import { ConfidenceMarker, type ConfidenceClaim } from '@/components/confidence-marker'
+import { TypingIndicator } from '@/components/typing-indicator'
 import { TwEmoji } from '@/components/TwEmoji'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -21,13 +23,13 @@ import { useConversationUi } from '@/stores/conversationUi'
 import { chatTransport, type LingxiMessageMetadata } from '../runtime'
 import { CHAT_TOOL_RENDERERS } from './ToolRenderers'
 
-function ReasoningPart({ text, status }: ReasoningMessagePartProps) {
+function ReasoningPart({ status }: ReasoningMessagePartProps) {
   return (
     <details className="my-2 rounded-xl border border-border bg-muted/30 px-3 py-2" open={status.type === 'running'}>
       <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
         {status.type === 'running' ? '正在思考…' : '思考过程'}
       </summary>
-      <div className="mt-2 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{text}</div>
+      <div className="mt-2 text-xs leading-5 text-muted-foreground"><MarkdownText /></div>
     </details>
   )
 }
@@ -176,11 +178,23 @@ export function ConversationMessage() {
     .join('\n'))
   const createdAt = useAuiState((state) => state.message.createdAt)
   const messageId = useAuiState((state) => state.message.id)
+  const awaitingContent = useAuiState((state) => (
+    state.message.status?.type === 'running' && state.message.content.length === 0
+  ))
   const participant = useParticipants((state) => state.byId[custom.senderId])
+  const [hoveredCitationId, setHoveredCitationId] = useState('')
+  const citationClaims: ConfidenceClaim[] = (custom.citations ?? []).map((citation) => ({
+    id: `${citation.marker}:${citation.sourceId}`,
+    text: citation.excerpt,
+    confidence: 'grounded',
+    basis: `[${citation.marker}] ${citation.sourceTitle}`,
+  }))
   const groupPosition = custom.groupStart
     ? custom.groupEnd ? 'single' : 'start'
     : custom.groupEnd ? 'end' : 'middle'
-  const bubbleRadius = custom.isMine
+  const bubbleRadius = groupPosition === 'single'
+    ? 'rounded-[18px]'
+    : custom.isMine
     ? groupPosition === 'middle'
       ? 'rounded-[18px_4px_4px_18px]'
       : groupPosition === 'end'
@@ -190,21 +204,26 @@ export function ConversationMessage() {
       ? 'rounded-[4px_18px_18px_4px]'
       : groupPosition === 'end'
         ? 'rounded-[4px_18px_18px_18px]'
-        : 'rounded-[18px_18px_18px_4px]'
+      : 'rounded-[18px_18px_18px_4px]'
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
       data-msg-id={custom.clientMessageId}
       data-find-message-id={custom.clientMessageId}
       className={cn(
-        'group/message flex w-full gap-2.5 px-3 sm:px-4',
-        custom.continuedFromPrevious ? 'pt-0.5' : 'pt-2.5',
-        custom.continuedToNext ? 'pb-0.5' : 'pb-2.5',
+        'group/message flex w-full shrink-0 gap-2.5 px-3 sm:px-4',
+        custom.continuedFromPrevious ? 'pt-px' : 'pt-1.5',
+        custom.continuedToNext ? 'pb-px' : 'pb-1.5',
         custom.isMine && 'flex-row-reverse',
       )}
     >
-      <div className="w-8 shrink-0 pt-0.5">
-        {custom.groupStart && participant && <Avatar p={participant} size={30} ringColor="var(--background)" mode="chat" />}
+      <div className={cn(
+        'w-10 shrink-0 pt-0.5',
+        participant?.kind === 'agent' && 'chat-message-avatar',
+        participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
+        participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
+      )}>
+        {custom.groupStart && participant && <Avatar p={participant} size={38} ringColor="var(--background)" mode="chat" />}
       </div>
       <div className={cn('flex min-w-0 flex-1 flex-col', custom.isMine && 'items-end')}>
         {custom.groupStart && !custom.isMine && (
@@ -230,6 +249,7 @@ export function ConversationMessage() {
               custom.delivery === 'failed' && 'ring-1 ring-destructive/50',
             )}
           >
+            {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
             <MessagePrimitive.Parts
               components={{
                 Text: MarkdownText,
@@ -244,13 +264,18 @@ export function ConversationMessage() {
             <MessagePrimitive.Error>
               <div className="mt-2 text-xs text-destructive">消息生成失败</div>
             </MessagePrimitive.Error>
+            {citationClaims.length > 0 && <ConfidenceMarker
+              claims={citationClaims}
+              hoveredId={hoveredCitationId}
+              onHover={setHoveredCitationId}
+              className="max-w-full px-3.5 pb-2"
+            />}
           </div>
         </div>
         <Reactions metadata={custom} messageId={messageId} />
         <div className={cn('mt-0.5 flex items-center gap-2 px-1 text-[10px] text-muted-foreground', custom.isMine && 'justify-end')}>
           {custom.groupEnd && <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
           {custom.isMine && custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}
-          {custom.isMine && custom.receipts.length > 0 && <span>已读 {custom.receipts.length}</span>}
         </div>
       </div>
     </MessagePrimitive.Root>

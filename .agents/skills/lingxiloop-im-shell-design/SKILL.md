@@ -16,7 +16,7 @@ This skill owns only:
 - the shared inset panel containing the conversation list and conversation area;
 - conversation search chrome and the flat conversation list;
 - the minimal current-conversation header;
-- the resize divider between list and conversation area;
+- the resize dividers between the conversation list, conversation area, and optional context workspace;
 - the account/avatar footer attached to the conversation list.
 
 This skill does **not** own `MessageList`, message rows, message bubbles, reactions, tool cards, attachments, activity content, empty conversation content, or Composer. Do not preserve, normalize, or redesign those surfaces merely because they render inside the main panel. A shell task does not authorize edits to them.
@@ -56,10 +56,11 @@ Never hard-code light colors such as white, stone, slate, or gray for these shel
 ## Desktop layout baseline
 
 - ServerRail is an independent fixed `w-16` column. It is not part of the white/card inset panel and has no vertical border against the page.
-- The current-workspace strip above the main panel is `h-5`, centered in the available content width, and intentionally very compact. Its workspace mark is `size-3`; its label is 11px with tight line height.
+- The current-workspace strip above the main panel is `h-5`, centered in the available content width, and intentionally very compact. Its workspace mark is the same `CourseAvatar` and workspace ID used by the rail, rendered at `size-3`; never substitute a static text fallback. Its label is 11px with tight line height.
 - The inset main panel leaves the preset-colored page visible at its end and bottom (`me-2 mb-2`), clips its children, and uses `rounded-2xl bg-card text-card-foreground shadow-sm`.
-- The conversation column defaults to 25%. Keep its practical resize range at 280–420px unless the user explicitly changes density. The conversation area must retain at least 320px.
-- The list and conversation area share the same `card` surface. The resize divider supplies the physical partition; do not wrap either side in another floating card.
+- The conversation/dashboard navigation column uses one shared persisted pixel width across every layout. It defaults to 260px, keeps a 240–360px resize range, and uses `preserve-pixel-size`; never maintain separate two-panel, three-panel, or dashboard widths. The conversation area must retain at least 320px.
+- Materials and the Canvas preview belong in an optional native third `ResizablePanel`, not a Drawer. Selecting a conversation opens this panel automatically; the header toggle may collapse it afterward. Keep that context workspace at 320–720px and let the conversation area retain at least 320px. Opening the full Canvas uses the installed shadcn `Dialog` and must not replace the context panel.
+- The list, conversation area, and optional context workspace share the same inset panel. Resize dividers supply the physical partitions; do not wrap a column in another floating card.
 - The resize bar uses `--im-divider`; its visible handle remains hidden until hover, active, or keyboard focus.
 
 ## Workspace rail
@@ -85,6 +86,7 @@ Never hard-code light colors such as white, stone, slate, or gray for these shel
 - The list is classic flat: `ItemGroup` gap 0; rows have no border or shadow, transparent default background, and subtle token hover/selected backgrounds.
 - Desktop rows remain compact while keeping the established large Telegram-like identity scale: 48px conversation avatar, 15px title, 13px preview, and approximately 60px virtualized row height.
 - Selected rows use `sidebar-accent/sidebar-accent-foreground`; unselected rows use the normal shell foreground and the same subtle accent on hover.
+- Unmuted unread counts use the shadcn `Badge` primary tokens; muted unread counts use its `secondary` variant. Pinned conversations keep only the `PinIcon` indicator and do not receive a row-level highlight; selected rows alone use the sidebar accent.
 - Do not render a `Direct` section label or per-row bottom-right status dots. Preserve unread meaning without reintroducing removed status-dot code.
 - The first visible conversation and first workspace should read as corresponding rows. When changing header height, rail gaps, row height, or list padding, inspect both columns together and restore optical center alignment.
 
@@ -92,7 +94,7 @@ Never hard-code light colors such as white, stone, slate, or gray for these shel
 
 - Use the simplest classic shadcn header: desktop `h-12`, `bg-card`, token foreground, and only the selected conversation's real Avatar plus name.
 - Desktop Avatar is 30px; the name is `text-sm font-medium`. Keep this as one leading information group.
-- Do not add an avatar button frame, stacked metadata, topic, leader selector, presence copy, search button, Canvas button, or right-side action cluster unless the user explicitly requests one.
+- Do not add an avatar button frame, stacked metadata, topic, leader selector, presence copy, search button, Canvas button, or right-side action cluster. For every conversation, the sole trailing action is the shadcn `Button` that expands or collapses the native context `ResizablePanel`.
 - The required bottom separator uses `--im-divider-weak`. Ensure no higher-specificity CSS overrides it back to full `border`.
 - Mobile may retain a shadcn ghost back button and safe-area padding, but should otherwise show the same Avatar/name hierarchy.
 

@@ -6,12 +6,19 @@ import type { AgentWorkItem, HostAction } from './types.js'
 const LEARNING_READ_METHODS = new Set([
   'current', 'get_learner_state', 'list_knowledge_units', 'list_due', 'get_mission', 'get_activity',
 ])
-const KNOWLEDGE_READ_METHODS = new Set([
-  'list_sources', 'get_source', 'search', 'ask', 'list_notes', 'get_note', 'list_insights',
-  'start_source_chat', 'send_source_chat_message',
-])
+const KNOWLEDGE_READ_METHODS = new Set(['list_sources'])
+const KNOWLEDGE_WRITE_METHODS = new Set(['add_text', 'add_url', 'add_file'])
 const KNOWLEDGE_MANAGE_METHODS = new Set([
-  'retry_ingestion', 'update_source', 'set_source_enabled', 'unlink_source', 'delete_source',
+  'retry_ingestion', 'set_source_enabled', 'delete_source',
+])
+const PRESENTATION_READ_METHODS = new Set(['get'])
+export const PRESENTATION_ACTION_METHODS: ReadonlySet<string> = new Set([
+  'create', 'get', 'revise_outline', 'approve_outline', 'revise', 'cancel', 'retry',
+])
+export const KNOWLEDGE_ACTION_METHODS: ReadonlySet<string> = new Set([
+  ...KNOWLEDGE_READ_METHODS,
+  ...KNOWLEDGE_WRITE_METHODS,
+  ...KNOWLEDGE_MANAGE_METHODS,
 ])
 const CANVAS_READ_METHODS = new Set(['available_agents', 'get'])
 
@@ -48,6 +55,7 @@ function productPermission(work: AgentWorkItem, action: HostAction): ProductPerm
         resource: conversation(work.channelId),
       }
     case 'knowledge': {
+      if (!KNOWLEDGE_ACTION_METHODS.has(method)) throw new Error(`unsupported knowledge action: ${method}`)
       const sourceId = text(args, 'sourceId')
       return {
         action: KNOWLEDGE_READ_METHODS.has(method)
@@ -56,6 +64,15 @@ function productPermission(work: AgentWorkItem, action: HostAction): ProductPerm
         resource: sourceId && KNOWLEDGE_MANAGE_METHODS.has(method)
           ? { type: 'knowledge_source', id: sourceId }
           : conversation(work.channelId),
+      }
+    }
+    case 'presentations': {
+      if (!PRESENTATION_ACTION_METHODS.has(method)) {
+        throw new Error(`unsupported presentations action: ${method}`)
+      }
+      return {
+        action: PRESENTATION_READ_METHODS.has(method) ? 'knowledge:read' : 'knowledge:write',
+        resource: conversation(work.channelId),
       }
     }
     case 'chat':

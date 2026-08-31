@@ -5,12 +5,20 @@ import { withTransaction } from '../db/transaction.js'
 import { advanceAgentReadReceipt } from '../im/read-receipts.js'
 import { wukongClient } from '../im/wukong.js'
 import { recordLlmCall } from '../llm-ledger.js'
+import { createPermissionService } from '../modules/access/public.js'
 import { assertCanvasWorkReportReady, completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../modules/canvas/index.js'
 import { retrieveKnowledge } from '../modules/knowledge/public.js'
 import { loadLearningTurnContext, loadTeacherTurnContext } from '../modules/learning/public.js'
 import { executeActionWithLedger } from './host-action-application.js'
 import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
-import type { AgentRunEvent, AgentSessionRecord, AgentWorkItem, HostAction, LingxiMessageV1 } from './types.js'
+import {
+  type AgentRunEvent,
+  type AgentSessionRecord,
+  type AgentWorkItem,
+  type HostAction,
+  KNOWLEDGE_CONTRACT_VERSION,
+  type LingxiMessageV1,
+} from './types.js'
 
 export { executeActionWithLedger } from './host-action-application.js'
 
@@ -232,32 +240,65 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   }))
   const triggerMessage = messages.find((message) => message.clientMsgNo === work.triggerClientMsgNo)
   const learnerMessage = triggerMessage?.authorKind === 'human' ? triggerMessage : [...messages].reverse().find((message) => message.authorKind === 'human')
-  const { rows: workspaceRows } = await pool.query<{ kind: string; source_count: number; ingestion_failure: string | null; is_learning: boolean }>(
-    `SELECT c.kind,
-            (SELECT COUNT(*)::int FROM knowledge_sources s WHERE s.company_id=c.company_id AND s.project_id=c.project_id AND s.status='ready' AND s.deleted_at IS NULL) AS source_count,
-            (SELECT COALESCE(j.wake_error, s.error) FROM knowledge_sources s
-               LEFT JOIN knowledge_source_jobs j ON j.source_id=s.id
-              WHERE s.company_id=c.company_id AND s.project_id=c.project_id AND s.origin_client_msg_no=$3 AND s.deleted_at IS NULL
-              ORDER BY s.created_at DESC LIMIT 1) AS ingestion_failure,
+  const knowledgeAuthorizationUserId = work.authorizationUserId?.trim()
+  if (!knowledgeAuthorizationUserId) {
+    res.status(403).json({ error: 'Agent work has no persisted human authorization principal' })
+    return
+  }
+  const persona = { name: personas[0].name, role: personas[0].role ?? 'Learning Agent', instructions: personas[0].system_prompt ?? '' }
+  const capabilities = personas[0].capabilities ?? []
+  const isTeacherAgent = capabilities.includes('teacher_admin')
+  const { rows: workspaceRows } = await pool.query<{ kind: string; project_id: string | null; is_learning: boolean }>(
+    `SELECT c.kind,c.project_id,
             EXISTS(
               SELECT 1 FROM projects project
               WHERE project.id=c.project_id AND project.company_id=c.company_id AND project.status <> 'DELETED'
             ) AS is_learning
-       FROM conversations c WHERE c.id = $1 AND c.company_id = $2 LIMIT 1`,
-    [work.channelId, work.companyId, work.triggerClientMsgNo],
+       FROM conversations c WHERE c.id=$1 AND c.company_id=$2 LIMIT 1`,
+    [work.channelId, work.companyId],
   )
-  const workspaceRow = workspaceRows[0]
-  const persona = { name: personas[0].name, role: personas[0].role ?? 'Learning Agent', instructions: personas[0].system_prompt ?? '' }
-  const capabilities = personas[0].capabilities ?? []
-  const isTeacherAgent = capabilities.includes('teacher_admin')
+  const workspace = workspaceRows[0]
+  const knowledgeAccess = !isTeacherAgent && workspace?.project_id
+    ? await createPermissionService(pool).can({
+        actorUserId: knowledgeAuthorizationUserId,
+        action: 'knowledge:read',
+        companyId: work.companyId,
+        projectId: workspace.project_id,
+      })
+    : null
+  const { rows: sourceSummaries } = knowledgeAccess?.allowed && workspace?.project_id
+    ? await pool.query<{ source_count: number; ingestion_failure: string | null }>(
+        `SELECT
+            (SELECT COUNT(*)::int FROM knowledge_sources source
+              WHERE source.company_id=$1 AND source.project_id=$2 AND source.status='ready'
+                AND (source.visibility_scope='PROJECT'
+                  OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4))
+                AND source.deleted_at IS NULL) AS source_count,
+            (SELECT COALESCE(job.wake_error, source.error) FROM knowledge_sources source
+               LEFT JOIN knowledge_source_jobs job ON job.source_id=source.id
+              WHERE source.company_id=$1 AND source.project_id=$2 AND source.origin_client_msg_no=$3
+                AND (source.visibility_scope='PROJECT'
+                  OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4))
+                AND source.deleted_at IS NULL
+              ORDER BY source.created_at DESC LIMIT 1) AS ingestion_failure`,
+        [work.companyId, workspace.project_id, work.triggerClientMsgNo, knowledgeAuthorizationUserId],
+      )
+    : { rows: [] }
+  const workspaceRow = workspace
+    ? { ...workspace, source_count: sourceSummaries[0]?.source_count ?? 0,
+        ingestion_failure: sourceSummaries[0]?.ingestion_failure ?? null }
+    : undefined
   const teacherContext = isTeacherAgent
     ? await loadTeacherTurnContext(work)
     : undefined
   if (isTeacherAgent && !teacherContext) { res.status(403).json({ error: 'Pulse is not authorized for this teacher room' }); return }
-  const knowledgeContext = !isTeacherAgent && workspaceRow?.kind === 'group' && learnerMessage
+  const knowledgeContext = knowledgeAccess?.allowed
+    && (workspaceRow?.kind === 'group' || workspaceRow?.kind === 'direct')
+    && learnerMessage
     ? await retrieveKnowledge({
         companyId: work.companyId,
         conversationId: work.channelId,
+        authorizationUserId: knowledgeAuthorizationUserId,
         query: triggerMessage?.body ?? learnerMessage.body,
       })
     : []
@@ -267,7 +308,11 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
     query: triggerMessage?.body ?? learnerMessage?.body ?? 'Generate the scheduled teacher aggregate digest.',
     persona, capabilities,
     executionRole: work.executionRole,
-    sourceVersions: { persona: personas[0].updated_at, capabilities: personas[0].updated_at },
+    sourceVersions: {
+      persona: personas[0].updated_at,
+      capabilities: personas[0].updated_at,
+      knowledgeContract: KNOWLEDGE_CONTRACT_VERSION,
+    },
     skipMemories: isTeacherAgent,
   }) : undefined
   const learningContext = !isTeacherAgent && workspaceRow?.is_learning

@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { AvatarMini } from '@/components/Avatar'
 import { IBack } from '@/components/icons'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useParticipants } from '@/features/agents/state'
 import type { CanvasAgentAssignment, CanvasSnapshot } from '../contracts'
 import { canvasStatusLabel, isCanvasAssignmentActive } from '../lib/collaboration'
@@ -17,18 +18,15 @@ export function CanvasHeader({ onBack, onFocusFrame }: {
   onBack?: () => void
   onFocusFrame: (frameId: string) => void
 }) {
-  const snapshot = useCanvas((state) => state.snapshot)
-  return <header className="canvas-header canvas-main-header absolute inset-x-0 top-0 z-30 flex items-center gap-4 border-b border-hairline px-3 backdrop-blur-xl">
-    <div className="flex min-w-0 shrink-0 items-center gap-2">
-      {onBack && <Button type="button" onClick={onBack} aria-label="返回对话" className="grid size-9 place-items-center rounded-full text-ink-secondary hover:bg-raised"><IBack className="size-5" /></Button>}
-      <div className="min-w-0 max-w-64"><div className="truncate text-[14px] font-semibold text-ink">{snapshot?.title ?? '画布'}</div><div className="truncate text-[9px] text-ink-secondary">{snapshot ? `${snapshot.goal} · ${snapshot.reports.length} 份结构化报告${snapshot.reports.some((report) => report.executionRole === 'reporter') ? ' · 已完成汇总' : ''}` : '共同工作的可视空间'}</div></div>
-    </div>
+  return <header data-canvas-header className="canvas-header canvas-main-header absolute inset-x-0 top-0 z-30 flex items-center gap-3 px-3">
+    {onBack && <Button type="button" variant="outline" size="icon-sm" onClick={onBack} aria-label="返回对话" className="rounded-full"><IBack className="size-4" /></Button>}
     <CanvasTimeline onFocusFrame={onFocusFrame} />
   </header>
 }
 
 function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => void }) {
   const snapshot = useCanvas((state) => state.snapshot)
+  const loading = useCanvas((state) => state.loading)
   const byId = useParticipants((state) => state.byId)
   const timelineRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -62,14 +60,24 @@ function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => v
     }
   }, [snapshot?.assignments.length])
 
-  if (!snapshot) return <div className="min-w-0 flex-1" />
+  if (!snapshot) return <div data-canvas-timeline data-canvas-timeline-state="loading" aria-busy={loading} aria-label="正在加载工作时间线" className="canvas-timeline-shell flex min-w-0 flex-1 items-center gap-5 overflow-hidden rounded-xl border bg-card px-4 shadow-sm">
+    {[0, 1, 2].map((item) => <div key={item} className="flex min-w-32 items-center gap-2">
+      <Skeleton className="size-7 shrink-0 rounded-full" />
+      <span className="grid flex-1 gap-1.5"><Skeleton className="h-2.5 w-20" /><Skeleton className="h-2 w-28" /></span>
+    </div>)}
+  </div>
   const scrollTimeline = (direction: -1 | 1) => {
     const timeline = timelineRef.current
     if (!timeline) return
     timeline.scrollBy({ left: direction * Math.max(180, timeline.clientWidth * 0.72), behavior: 'smooth' })
   }
-  return <div className="canvas-timeline-shell relative min-w-0 flex-1">
-    {scrollState.left && <Button type="button" aria-label="向左移动工作时间轴" onClick={() => scrollTimeline(-1)} className="canvas-timeline-scroll-button is-left"><svg viewBox="0 0 20 20" aria-hidden><path d="m12.5 5-5 5 5 5" /></svg></Button>}
+  if (snapshot.assignments.length === 0) return <div data-canvas-timeline data-canvas-timeline-state="empty" className="canvas-timeline-shell flex min-w-0 flex-1 items-center justify-center rounded-xl border bg-card px-4 text-muted-foreground shadow-sm">
+    <span className="size-1.5 rounded-full bg-muted-foreground/40" aria-hidden />
+    <span className="ms-2 text-xs font-medium">暂无工作任务</span>
+    <span className="ms-2 hidden text-xs text-muted-foreground/70 sm:inline">智能助教接到任务后会在这里显示进度</span>
+  </div>
+  return <div data-canvas-timeline className="canvas-timeline-shell relative min-w-0 flex-1 rounded-xl border bg-card shadow-sm">
+    {scrollState.left && <Button type="button" variant="outline" size="icon" aria-label="向左移动工作时间轴" onClick={() => scrollTimeline(-1)} className="canvas-timeline-scroll-button is-left"><svg viewBox="0 0 20 20" aria-hidden><path d="m12.5 5-5 5 5 5" /></svg></Button>}
     <div ref={timelineRef} className={`canvas-work-timeline min-w-0 overflow-x-auto py-2 ${scrollState.overflowing ? 'px-8' : 'px-2'}`} onWheel={(event) => {
       if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
       event.currentTarget.scrollLeft += event.deltaY
@@ -78,13 +86,13 @@ function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => v
         const participant = byId[assignment.agentId]
         const activeFrameId = snapshot.frames.some((frame) => frame.id === assignment.activeFrameId && frame.type !== 'artifact') ? assignment.activeFrameId : null
         const progress = latestAssignmentProgress(snapshot, assignment)
-        return <Button key={assignment.id} type="button" disabled={!activeFrameId} onClick={() => activeFrameId && onFocusFrame(activeFrameId)} className="canvas-timeline-item group relative flex max-w-52 items-center gap-2 px-3 text-left disabled:cursor-default">
+        return <Button key={assignment.id} type="button" variant="ghost" disabled={!activeFrameId} onClick={() => activeFrameId && onFocusFrame(activeFrameId)} className="canvas-timeline-item group relative flex max-w-52 items-center gap-2 rounded-lg border border-transparent px-3 text-left hover:border-border disabled:cursor-default">
           <span className="canvas-timeline-node relative z-10 grid size-7 shrink-0 place-items-center">{participant ? <AvatarMini p={participant} size={26} statusOverride={assignment.status === 'blocked' || assignment.status === 'waiting' ? 'thinking' : isCanvasAssignmentActive(assignment.status) ? 'working' : 'avail'} /> : <span className="text-[9px] font-bold" style={{ color: assignment.color }}>助</span>}</span>
-          <span className="min-w-0"><span className="flex items-center gap-1 truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? '智能助教'}<span className="rounded bg-raised px-1 py-0.5 text-[7px] text-ink-secondary">{EXECUTION_ROLE_LABELS[assignment.executionRole]}</span></span><span className="block truncate text-[8px] text-ink-secondary" title={progress}>{progress}{snapshot.reports.some((report) => report.assignmentId === assignment.id) ? ' · 已提交报告' : ''}</span></span>
+          <span className="min-w-0"><span className="flex items-center gap-1 truncate text-[10px] font-semibold" style={{ color: assignment.color }}>{participant?.name ?? '智能助教'}<span className="canvas-timeline-role bg-raised px-1 py-0.5 text-[7px] text-ink-secondary">{EXECUTION_ROLE_LABELS[assignment.executionRole]}</span></span><span className="block truncate text-[8px] text-ink-secondary" title={progress}>{progress}{snapshot.reports.some((report) => report.assignmentId === assignment.id) ? ' · 已提交报告' : ''}</span></span>
         </Button>
       })}
     </div></div>
-    {scrollState.right && <Button type="button" aria-label="向右移动工作时间轴" onClick={() => scrollTimeline(1)} className="canvas-timeline-scroll-button is-right"><svg viewBox="0 0 20 20" aria-hidden><path d="m7.5 5 5 5-5 5" /></svg></Button>}
+    {scrollState.right && <Button type="button" variant="outline" size="icon" aria-label="向右移动工作时间轴" onClick={() => scrollTimeline(1)} className="canvas-timeline-scroll-button is-right"><svg viewBox="0 0 20 20" aria-hidden><path d="m7.5 5 5 5-5 5" /></svg></Button>}
   </div>
 }
 

@@ -1,4 +1,5 @@
 export const AGENT_OS_PROTOCOL_VERSION = 1 as const
+export const KNOWLEDGE_CONTRACT_VERSION = 'native-v1' as const
 
 export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary' | 'memory_synthesis'
 export type WorkLane = 'learner' | 'approval' | 'collaboration' | 'background'

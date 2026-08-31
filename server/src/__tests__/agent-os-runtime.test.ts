@@ -4,7 +4,13 @@ import { MemoryHostAdapter } from '../agent-os/host-adapter.js'
 import type { KernelExecutor } from '../agent-os/kernel-manager.js'
 import { type AgentModelDriver, ModelAdapterError, type ModelTurnResult, ScriptedModelDriver } from '../agent-os/model-driver.js'
 import { AgentOSRuntime, canvasContextContract, knowledgeContextContract } from '../agent-os/runtime.js'
-import type { AgentContext, AgentWorkItem, KernelExecution, ModelItem } from '../agent-os/types.js'
+import {
+  KNOWLEDGE_CONTRACT_VERSION,
+  type AgentContext,
+  type AgentWorkItem,
+  type KernelExecution,
+  type ModelItem,
+} from '../agent-os/types.js'
 
 function work(id: string, trigger: string): AgentWorkItem {
   return { id, fence: 1, companyId: 'co-1', agentId: 'nova', channelId: 'study', triggerClientMsgNo: trigger, reason: 'message', executionRole:'coordinator',lane: 'learner', leaseToken: `lease-${id}` }
@@ -142,13 +148,16 @@ test('PromptContext stays frozen within one compaction epoch', async () => {
 
 test('Knowledge contract exposes native IPython operations without external scope IDs', () => {
   const contract = knowledgeContextContract()
+  assert.match(contract, new RegExp(KNOWLEDGE_CONTRACT_VERSION))
   assert.match(contract, /loop\.knowledge/)
-  assert.match(contract, /search\(query=/)
-  assert.match(contract, /ask\(question=/)
+  assert.match(contract, /Retrieval is automatic and turn-local/)
+  assert.doesNotMatch(contract, /get_source\(|search\(/)
   assert.match(contract, /add_file\(clientMsgNo=/)
-  assert.match(contract, /create_note/)
-  assert.match(contract, /start_source_chat/)
-  assert.match(contract, /Host fixes company, project and notebook scope/)
+  assert.match(contract, /set_source_enabled\(sourceId=/)
+  assert.match(contract, /delete_source\(sourceId=/)
+  assert.match(contract, /Open Notebook never generates an answer/)
+  assert.doesNotMatch(contract, /ask\(|create_note\(|create_insight\(|start_source_chat\(|update_source\(|unlink_source\(/)
+  assert.match(contract, /Host fixes company, project, notebook, conversation and human authorization scope/)
   assert.doesNotMatch(contract, /notebookId=/)
 })
 
@@ -174,6 +183,7 @@ test('knowledge evidence is turn-dynamic and only valid citations are persisted'
   const citations = message.data?.citations
   assert.ok(Array.isArray(citations))
   assert.deepEqual((citations as Array<{ marker: string }>).map((citation) => citation.marker), ['S1'])
+  assert.equal('chunkId' in (citations as Array<Record<string, unknown>>)[0]!, false)
   assert.doesNotMatch(message.body ?? '', /S99/)
   const session = [...host.sessions.values()][0]
   assert.doesNotMatch(JSON.stringify(session?.history), /EVIDENCE_ONLY_TOKEN/)

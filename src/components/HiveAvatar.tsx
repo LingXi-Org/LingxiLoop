@@ -77,16 +77,17 @@ interface Props {
   /** container diameter in px */
   size?: number
   ringColor?: string
+  mode?: 'chat' | 'neutral'
 }
 
-export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)' }: Props) {
+export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', mode = 'neutral' }: Props) {
   if (ps.length === 0) {
     return <div className="rounded-full" style={{ width: size, height: size, background: 'var(--ink-100)' }} />
   }
 
   // Single member: just render the regular avatar.
   if (ps.length === 1) {
-    return <SingleTile p={ps[0]} size={size} ringColor={ringColor} />
+    return <SingleTile p={ps[0]} size={size} ringColor={ringColor} mode={mode} />
   }
 
   const max = 6
@@ -124,6 +125,7 @@ export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)' }: Props)
             cy={pos.cy}
             d={pos.d}
             ringColor={ringColor}
+            mode={mode}
           />
         )
       })}
@@ -155,13 +157,14 @@ function tileStyle(container: number, cx: number, cy: number, d: number, ringCol
   }
 }
 
-function Tile({ p, container, cx, cy, d, ringColor }: {
+function Tile({ p, container, cx, cy, d, ringColor, mode }: {
   p: Participant
   container: number
   cx: number
   cy: number
   d: number
   ringColor: string
+  mode: 'chat' | 'neutral'
 }) {
   const px = d * container
   return (
@@ -169,7 +172,7 @@ function Tile({ p, container, cx, cy, d, ringColor }: {
       style={tileStyle(container, cx, cy, d, ringColor)}
       className="grid place-items-center"
     >
-      <Avatar p={p} size={px} ringColor={ringColor} />
+      <Avatar p={p} size={px} ringColor={ringColor} mode={mode} />
     </div>
   )
 }
@@ -197,10 +200,11 @@ function OverflowTile({ n, container, cx, cy, d, ringColor }: {
   )
 }
 
-function SingleTile({ p, size, ringColor }: {
+function SingleTile({ p, size, ringColor, mode }: {
   p: Participant
   size: number
   ringColor: string
+  mode: 'chat' | 'neutral'
 }) {
-  return <Avatar p={p} size={size} ringColor={ringColor} />
+  return <Avatar p={p} size={size} ringColor={ringColor} mode={mode} />
 }

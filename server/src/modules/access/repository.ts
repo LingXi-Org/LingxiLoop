@@ -54,6 +54,8 @@ export interface ResourceRecord {
   companyId: string
   projectId: string | null
   createdBy: string | null
+  visibilityScope?: 'PRIVATE' | 'PROJECT' | null
+  ownerUserId?: string | null
   conversationMembers: string[] | null
   leaderId: string | null
   status: string | null
@@ -111,6 +113,8 @@ interface ResourceRow {
   company_id: string
   project_id: string | null
   created_by: string | null
+  visibility_scope?: 'PRIVATE' | 'PROJECT' | null
+  owner_user_id?: string | null
   conversation_members: string[] | null
   leader_id: string | null
   resource_status: string | null
@@ -296,6 +300,8 @@ export class AccessRepository {
       companyId: row.company_id,
       projectId: row.project_id,
       createdBy: row.created_by,
+      visibilityScope: row.visibility_scope ?? null,
+      ownerUserId: row.owner_user_id ?? null,
       conversationMembers: row.conversation_members,
       leaderId: row.leader_id,
       status: row.resource_status,
@@ -364,7 +370,8 @@ function resourceQuery(resource: PermissionResource): {
       }
     case 'knowledge_source':
       return {
-        sql: `SELECT company_id,project_id,created_by,NULL::jsonb AS conversation_members,
+        sql: `SELECT company_id,project_id,created_by_user_id AS created_by,
+                     visibility_scope,owner_user_id,NULL::jsonb AS conversation_members,
                      NULL::text AS leader_id,status AS resource_status
                 FROM knowledge_sources WHERE id=$1 AND deleted_at IS NULL`,
         params: [resource.id],

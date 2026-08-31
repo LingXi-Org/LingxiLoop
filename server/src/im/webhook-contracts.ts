@@ -24,11 +24,26 @@ const webhookEnvelopeSchema = z.object({
   }).passthrough(),
 }).passthrough()
 
+const msgNotifySchema = z.array(z.object({
+  message_idstr: z.string().min(1),
+  channel_id: z.string().min(1),
+  from_uid: z.string().min(1),
+  client_msg_no: z.string().min(1).max(80),
+  payload: z.unknown(),
+}).passthrough()).length(1)
+
+function normalizePayload(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value
+  if ((value as Record<string, unknown>).type !== 1000) return value
+  const { type: _wireType, ...payload } = value as Record<string, unknown>
+  return payload
+}
+
 function decodePayload(value: unknown): unknown {
-  if (value && typeof value === 'object' && !Array.isArray(value)) return value
+  if (value && typeof value === 'object' && !Array.isArray(value)) return normalizePayload(value)
   if (typeof value !== 'string') return null
   for (const candidate of [value, Buffer.from(value, 'base64').toString('utf8')]) {
-    try { return JSON.parse(candidate) as unknown } catch { /* try the next supported wire representation */ }
+    try { return normalizePayload(JSON.parse(candidate) as unknown) } catch { /* try the next supported wire representation */ }
   }
   return null
 }
@@ -48,7 +63,13 @@ type ParsedWukongWebhook =
     }
 
 export function parseWukongWebhook(value: unknown): ParsedWukongWebhook {
-  const envelope = webhookEnvelopeSchema.safeParse(value)
+  const notify = msgNotifySchema.safeParse(value)
+  const normalized = notify.success ? {
+    event_id: `msg.notify:${notify.data[0].message_idstr}`,
+    event_type: 'msg.notify',
+    message: notify.data[0],
+  } : value
+  const envelope = webhookEnvelopeSchema.safeParse(normalized)
   if (!envelope.success) return envelope
   const payload = lingxiMessageSchema.safeParse(decodePayload(envelope.data.message.payload))
   if (!payload.success) return payload

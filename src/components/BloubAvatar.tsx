@@ -69,7 +69,7 @@ interface Props {
   size: number
   paper?: string
   animated?: boolean
-  /** Only message-row avatars are allowed to reflect live agent activity. */
+  /** Conversation-facing chat surfaces may reflect live agent activity. */
   mode?: 'chat' | 'neutral'
   className?: string
 }
@@ -153,8 +153,8 @@ function Dot({ dot, ink }: { dot: DotRender; ink: string }) {
 /** Native React renderer for Bloub's clock-free SVG morph engine. */
 export function BloubAvatar({ participant, status, size, paper = 'var(--paper)', animated = true, mode = 'neutral', className }: Props) {
   const participantIdentity = useMemo(() => getBloubIdentity(participant), [participant.id, participant.role])
-  // Outside the transcript, agents deliberately present one quiet, stable
-  // identity. Live states and animation belong exclusively to Chat Panel rows.
+  // Outside opted-in chat surfaces, agents deliberately present one quiet,
+  // stable identity. Conversation avatars and transcript rows opt in explicitly.
   const identity = useMemo(() => (
     mode === 'chat' ? participantIdentity : { ...participantIdentity, expression: 'neutre' as const }
   ), [mode, participantIdentity])

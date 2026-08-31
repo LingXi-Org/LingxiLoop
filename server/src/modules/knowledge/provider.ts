@@ -42,29 +42,31 @@ export interface OpenNotebookSource {
   updated?: string
 }
 
-export interface OpenNotebookNote {
-  id: string
-  title?: string | null
-  content?: string | null
-  note_type?: string | null
-  created?: string
-  updated?: string
+export interface OpenNotebookPresentationMaterialBlock {
+  chunk_id: string
+  ordinal: number
+  text: string
+  page_number?: number | null
+  section_title?: string | null
 }
 
-export interface OpenNotebookInsight {
-  id: string
+export interface OpenNotebookPresentationMaterialAsset {
+  asset_id: string
+  mime_type: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/svg+xml'
+  data_uri: string
+  page_number?: number | null
+  section_title?: string | null
+  width?: number | null
+  height?: number | null
+}
+
+export interface OpenNotebookPresentationMaterialV1 {
+  version: 'PresentationMaterialV1'
   source_id: string
-  insight_type: string
-  content: string
-  created?: string | null
-  updated?: string | null
-}
-
-export interface OpenNotebookTransformation {
-  id: string
-  name: string
   title: string
-  description?: string
+  blocks: OpenNotebookPresentationMaterialBlock[]
+  assets: OpenNotebookPresentationMaterialAsset[]
+  truncated: boolean
 }
 
 export interface OpenNotebookSearchHit {
@@ -99,6 +101,22 @@ function detail(value: unknown): string {
   return typeof row.detail === 'string' ? row.detail : typeof row.error === 'string' ? row.error : ''
 }
 
+const UPLOAD_SUFFIX_BY_MIME: Readonly<Record<string, string>> = {
+  'application/pdf': 'pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'text/plain': 'txt',
+  'text/markdown': 'md',
+  'text/csv': 'csv',
+  'application/json': 'json',
+}
+
+function canonicalUploadFilename(title: string, mime: string): string {
+  const suffix = UPLOAD_SUFFIX_BY_MIME[mime]
+  if (!suffix) throw new OpenNotebookError(`Unsupported knowledge source MIME type: ${mime}`)
+  const base = title.trim() || 'source'
+  return base.toLowerCase().endsWith(`.${suffix}`) ? base : `${base}.${suffix}`
+}
+
 export class OpenNotebookClient {
   private readonly baseUrl: string
   private readonly password: string
@@ -112,6 +130,12 @@ export class OpenNotebookClient {
     const headers = new Headers({ accept: 'application/json' })
     if (json) headers.set('content-type', 'application/json')
     if (this.password) headers.set('authorization', `Bearer ${this.password}`)
+    return headers
+  }
+
+  private sourceHeaders(json: boolean, idempotencyKey: string): Headers {
+    const headers = this.headers(json)
+    headers.set('idempotency-key', idempotencyKey)
     return headers
   }
 
@@ -143,8 +167,8 @@ export class OpenNotebookClient {
     try { await this.raw('/health', {}, 5_000); return true } catch { return false }
   }
 
-  listNotebooks(): Promise<OpenNotebookNotebook[]> {
-    return this.json('/api/notebooks?order_by=updated%20desc')
+  async ready(): Promise<boolean> {
+    try { await this.raw('/readyz', {}, 30_000); return true } catch { return false }
   }
 
   createNotebook(input: { name: string; description: string; externalKey: string }): Promise<OpenNotebookNotebook> {
@@ -162,198 +186,88 @@ export class OpenNotebookClient {
     })
   }
 
-  listSources(notebookId: string): Promise<OpenNotebookSource[]> {
-    return this.json(`/api/sources?notebook_id=${encodeURIComponent(notebookId)}&limit=100&sort_by=updated&sort_order=desc`)
-  }
-
   getSource(sourceId: string): Promise<OpenNotebookSource> {
     return this.json(`/api/sources/${encodeURIComponent(sourceId)}`)
+  }
+
+  getPresentationMaterial(sourceId: string): Promise<OpenNotebookPresentationMaterialV1> {
+    return this.json(`/api/sources/${encodeURIComponent(sourceId)}/presentation-material`, {}, 90_000)
   }
 
   getSourceStatus(sourceId: string): Promise<{ status?: string | null; command_id?: string | null; processing_info?: Record<string, unknown> | null }> {
     return this.json(`/api/sources/${encodeURIComponent(sourceId)}/status`)
   }
 
-  createTextSource(input: { notebookId: string; title: string; content: string }): Promise<OpenNotebookSource> {
+  createTextSource(input: {
+    notebookId: string; title: string; content: string; idempotencyKey: string; companyId: string
+  }): Promise<OpenNotebookSource> {
     return this.json('/api/sources/json', {
-      method: 'POST', headers: this.headers(true),
+      method: 'POST', headers: this.sourceHeaders(true, input.idempotencyKey),
       body: JSON.stringify({
-        type: 'text', notebooks: [input.notebookId], title: input.title, content: input.content,
-        transformations: [], embed: true, delete_source: false, async_processing: true,
+        type: 'text', notebooks: [input.notebookId], title: input.title, content: input.content, company_id: input.companyId,
       }),
     }, 60_000)
   }
 
-  createUrlSource(input: { notebookId: string; title: string; url: string }): Promise<OpenNotebookSource> {
+  createUrlSource(input: {
+    notebookId: string; title: string; url: string; idempotencyKey: string; companyId: string
+  }): Promise<OpenNotebookSource> {
     return this.json('/api/sources/json', {
-      method: 'POST', headers: this.headers(true),
+      method: 'POST', headers: this.sourceHeaders(true, input.idempotencyKey),
       body: JSON.stringify({
-        type: 'link', notebooks: [input.notebookId], title: input.title, url: input.url,
-        transformations: [], embed: true, delete_source: false, async_processing: true,
+        type: 'link', notebooks: [input.notebookId], title: input.title, url: input.url, company_id: input.companyId,
       }),
     }, 60_000)
   }
 
-  async createFileSource(input: { notebookId: string; title: string; mime: string; bytes: Buffer }): Promise<OpenNotebookSource> {
-    const form = new FormData()
-    form.set('type', 'upload')
-    form.set('notebooks', JSON.stringify([input.notebookId]))
-    form.set('title', input.title)
-    form.set('transformations', '[]')
-    form.set('embed', 'true')
-    form.set('delete_source', 'false')
-    form.set('async_processing', 'true')
-    form.set('file', new Blob([input.bytes], { type: input.mime || 'application/octet-stream' }), input.title)
-    return this.json('/api/sources', { method: 'POST', headers: this.headers(false), body: form }, 120_000)
+  createFileSource(input: {
+    notebookId: string; title: string; mime: string; storageKey: string; size: number; idempotencyKey: string; companyId: string
+  }): Promise<OpenNotebookSource> {
+    return this.json('/api/sources/json', {
+      method: 'POST', headers: this.sourceHeaders(true, input.idempotencyKey),
+      body: JSON.stringify({
+        type: 'file', notebooks: [input.notebookId], title: input.title,
+        storage_key: input.storageKey, filename: canonicalUploadFilename(input.title, input.mime),
+        mime_type: input.mime, size_bytes: input.size,
+        company_id: input.companyId,
+      }),
+    }, 60_000)
   }
 
   retrySource(sourceId: string): Promise<OpenNotebookSource> {
     return this.json(`/api/sources/${encodeURIComponent(sourceId)}/retry`, { method: 'POST', headers: this.headers(true), body: '{}' }, 60_000)
   }
 
-  updateSource(sourceId: string, input: { title?: string; topics?: string[] }): Promise<OpenNotebookSource> {
-    return this.json(`/api/sources/${encodeURIComponent(sourceId)}`, {
-      method: 'PUT', headers: this.headers(true), body: JSON.stringify(input),
-    })
-  }
-
   async deleteSource(sourceId: string): Promise<void> {
     await this.raw(`/api/sources/${encodeURIComponent(sourceId)}`, { method: 'DELETE', headers: this.headers() })
-  }
-
-  async unlinkSource(notebookId: string, sourceId: string): Promise<void> {
-    await this.raw(
-      `/api/notebooks/${encodeURIComponent(notebookId)}/sources/${encodeURIComponent(sourceId)}`,
-      { method: 'DELETE', headers: this.headers() },
-    )
-  }
-
-  async downloadSource(sourceId: string): Promise<Buffer> {
-    return Buffer.from(await (await this.raw(`/api/sources/${encodeURIComponent(sourceId)}/download`, { headers: this.headers() }, 120_000)).arrayBuffer())
   }
 
   async search(input: {
     notebookId: string
     sourceIds: string[]
-    excludedSourceIds?: string[]
     query: string
     limit?: number
     type?: 'text' | 'vector'
     minimumScore?: number
-    includeNotes?: boolean
+    companyId: string
   }): Promise<OpenNotebookSearchHit[]> {
-    const excluded = new Set(input.excludedSourceIds ?? [])
-    const allowedSources = new Set(input.sourceIds.filter((id) => !excluded.has(id)))
-    const notes = input.includeNotes === false ? [] : await this.listNotes(input.notebookId)
-    const allowedNotes = new Set(notes.map((note) => note.id))
+    const allowedSources = new Set(input.sourceIds)
+    if (allowedSources.size === 0) return []
     const requestedLimit = Math.max(1, Math.min(100, input.limit ?? 8))
     const response = await this.json<{ results?: OpenNotebookSearchHit[] }>('/api/search', {
       method: 'POST', headers: this.headers(true),
       body: JSON.stringify({
         query: input.query, type: input.type ?? 'vector', limit: requestedLimit,
-        search_sources: true, search_notes: input.includeNotes !== false,
         minimum_score: input.minimumScore ?? 0.2,
-        notebook_id: input.notebookId, source_ids: [...allowedSources], excluded_source_ids: [...excluded],
+        notebook_id: input.notebookId, source_ids: [...allowedSources],
+        company_id: input.companyId,
       }),
     }, 90_000)
     // Fail closed even if an older upstream ignored the scope fields.
     return (response.results ?? []).filter((hit) => {
       const parent = String(hit.parent_id ?? hit.id ?? '')
-      return allowedSources.has(parent) || allowedNotes.has(parent) || allowedNotes.has(String(hit.id ?? ''))
+      return allowedSources.has(parent)
     }).slice(0, requestedLimit)
-  }
-
-  ask(input: { notebookId: string; sourceIds: string[]; excludedSourceIds?: string[]; question: string }): Promise<{ answer: string; question: string }> {
-    const strategyModel = process.env.OPEN_NOTEBOOK_STRATEGY_MODEL ?? process.env.OPEN_NOTEBOOK_CHAT_MODEL ?? ''
-    const answerModel = process.env.OPEN_NOTEBOOK_ANSWER_MODEL ?? process.env.OPEN_NOTEBOOK_CHAT_MODEL ?? ''
-    const finalAnswerModel = process.env.OPEN_NOTEBOOK_FINAL_ANSWER_MODEL ?? process.env.OPEN_NOTEBOOK_CHAT_MODEL ?? ''
-    if (!strategyModel || !answerModel || !finalAnswerModel) {
-      throw new OpenNotebookError('Open Notebook Ask models are not configured')
-    }
-    return this.json('/api/search/ask/simple', {
-      method: 'POST', headers: this.headers(true),
-      body: JSON.stringify({
-        question: input.question, strategy_model: strategyModel, answer_model: answerModel,
-        final_answer_model: finalAnswerModel, notebook_id: input.notebookId,
-        source_ids: input.sourceIds, excluded_source_ids: input.excludedSourceIds ?? [],
-      }),
-    }, 300_000)
-  }
-
-  listNotes(notebookId: string): Promise<OpenNotebookNote[]> {
-    return this.json(`/api/notes?notebook_id=${encodeURIComponent(notebookId)}`)
-  }
-
-  createNote(input: { notebookId: string; title?: string; content: string }): Promise<OpenNotebookNote> {
-    return this.json('/api/notes', {
-      method: 'POST', headers: this.headers(true),
-      body: JSON.stringify({ notebook_id: input.notebookId, title: input.title, content: input.content, note_type: 'ai' }),
-    }, 90_000)
-  }
-
-  getNote(noteId: string): Promise<OpenNotebookNote> {
-    return this.json(`/api/notes/${encodeURIComponent(noteId)}`)
-  }
-
-  updateNote(noteId: string, input: { title?: string; content?: string }): Promise<OpenNotebookNote> {
-    return this.json(`/api/notes/${encodeURIComponent(noteId)}`, {
-      method: 'PUT', headers: this.headers(true), body: JSON.stringify(input),
-    }, 90_000)
-  }
-
-  async deleteNote(noteId: string): Promise<void> {
-    await this.raw(`/api/notes/${encodeURIComponent(noteId)}`, { method: 'DELETE', headers: this.headers() })
-  }
-
-  listInsights(sourceId: string): Promise<OpenNotebookInsight[]> {
-    return this.json(`/api/sources/${encodeURIComponent(sourceId)}/insights`)
-  }
-
-  listTransformations(): Promise<OpenNotebookTransformation[]> {
-    return this.json('/api/transformations')
-  }
-
-  createInsight(sourceId: string, transformationId: string): Promise<{ status: string; command_id?: string | null }> {
-    return this.json(`/api/sources/${encodeURIComponent(sourceId)}/insights`, {
-      method: 'POST', headers: this.headers(true), body: JSON.stringify({ transformation_id: transformationId }),
-    }, 60_000)
-  }
-
-  updateInsight(insightId: string, input: { insight_type?: string; content?: string }): Promise<OpenNotebookInsight> {
-    return this.json(`/api/insights/${encodeURIComponent(insightId)}`, {
-      method: 'PUT', headers: this.headers(true), body: JSON.stringify(input),
-    })
-  }
-
-  async deleteInsight(insightId: string): Promise<void> {
-    await this.raw(`/api/insights/${encodeURIComponent(insightId)}`, { method: 'DELETE', headers: this.headers() })
-  }
-
-  createSourceChat(notebookId: string, sourceId: string, title?: string): Promise<{ id: string; title: string; source_id: string }> {
-    return this.json(`/api/sources/${encodeURIComponent(sourceId)}/chat/sessions`, {
-      method: 'POST', headers: this.headers(true), body: JSON.stringify({ notebook_id: notebookId, source_id: sourceId, title: title || undefined }),
-    })
-  }
-
-  async sendSourceChatMessage(notebookId: string, sourceId: string, sessionId: string, message: string): Promise<{ answer: string; events: unknown[] }> {
-    const response = await this.raw(`/api/sources/${encodeURIComponent(sourceId)}/chat/sessions/${encodeURIComponent(sessionId)}/messages`, {
-      method: 'POST', headers: this.headers(true), body: JSON.stringify({ notebook_id: notebookId, message }),
-    }, 300_000)
-    const body = await response.text()
-    const events: unknown[] = []
-    let answer = ''
-    for (const line of body.split(/\r?\n/)) {
-      if (!line.startsWith('data:')) continue
-      try {
-        const event = JSON.parse(line.slice(5).trim()) as Record<string, unknown>
-        events.push(event)
-        if (event.type === 'ai_message' && typeof event.content === 'string') answer = event.content
-        if (event.type === 'error') throw new OpenNotebookError(String(event.message ?? 'Source Chat failed'))
-      } catch (error) {
-        if (error instanceof OpenNotebookError) throw error
-      }
-    }
-    return { answer, events }
   }
 }
 

@@ -133,7 +133,7 @@ export function createCanvasWorkspacesApplication(context: CanvasWorkspacesAppli
   ): Promise<CanvasSnapshot> {
     const id = stableCanvasId(`${companyId}:${conversationId}`)
     const canvasId = await ensureConversationCanvasId(db, { id, companyId, conversationId, actorId })
-    if (!canvasId) throw Object.assign(new Error('group conversation not found'), { status: 404 })
+    if (!canvasId) throw Object.assign(new Error('conversation not found'), { status: 404 })
     return getCanvasSnapshot(companyId, actorId, canvasId)
   }
 
@@ -169,7 +169,7 @@ export function createCanvasWorkspacesApplication(context: CanvasWorkspacesAppli
         initiatorAgentId: input.initiatorAgentId,
         authorizationUserId: input.authorizationUserId,
       })
-      if (!canvas) throw new Error('canvas requires a group conversation')
+      if (!canvas) throw new Error('canvas requires a conversation')
       const existing = await listAssignments(transactionDb, canvas.id)
       if (existing.length === 0) {
         await insertCanvasMembers(transactionDb, { canvas, members: input.members, existing })

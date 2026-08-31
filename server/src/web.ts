@@ -16,6 +16,8 @@ import { agentOSControlRouter } from './agent-os/control-plane.js'
 import { wukongWebhookRouter } from './im/webhook.js'
 import { wukongClient } from './im/wukong.js'
 import { Lifecycle, type ServiceHandle } from './runtime/lifecycle.js'
+import { openNotebookEmbeddingRouter } from './modules/knowledge/embedding-proxy.js'
+import { errorHandler } from './http/errors.js'
 
 export async function startWebProcess(): Promise<ServiceHandle> {
   // Construct every mandatory infrastructure adapter before exposing HTTP.
@@ -64,6 +66,7 @@ export async function startWebProcess(): Promise<ServiceHandle> {
   // file bodies up to MAX_UPLOAD_BYTES (25MB raw → ~34MB base64). R2-mode
   // uploads bypass this limit entirely (browser PUTs directly to R2).
   app.use(express.json({ limit: '34mb' }))
+  app.use('/internal/open-notebook', openNotebookEmbeddingRouter, errorHandler)
   app.use((req, res, next) => {
     const t = Date.now()
     res.on('finish', () => {

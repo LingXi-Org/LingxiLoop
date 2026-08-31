@@ -198,9 +198,7 @@ export async function resolveProjectTransfer(db: Queryable, input: {
 
 const PROJECT_OWNED_TABLES = [
   'calendar_events', 'canvases', 'conversations', 'project_invitations',
-  'project_memberships', 'courses', 'documents', 'knowledge_note_bindings',
-  'knowledge_notebook_bindings', 'knowledge_source_chat_sessions', 'knowledge_sources',
-  'knowledge_source_bindings',
+  'project_memberships', 'courses', 'documents', 'knowledge_notebook_bindings', 'knowledge_sources',
   'document_mention_deliveries', 'project_visits', 'context_threads',
   'context_thread_participants', 'learning_project_teacher_agents',
   'learning_knowledge_units', 'learning_knowledge_unit_dependencies', 'learning_activities',
@@ -363,9 +361,6 @@ export async function completeProjectTransferOwnership(
      ), indirect_reports AS (
        UPDATE canvas_assignment_reports SET company_id=$3 WHERE company_id=$2
         AND canvas_id IN (SELECT id FROM canvas_scope) RETURNING 1
-     ), indirect_insights AS (
-       UPDATE knowledge_insight_bindings SET company_id=$3 WHERE company_id=$2
-        AND source_id IN (SELECT id FROM source_scope) RETURNING 1
      ), indirect_course_rooms AS (
        UPDATE learning_course_rooms SET company_id=$3 WHERE company_id=$2
         AND course_id IN (SELECT id FROM course_scope) RETURNING 1

@@ -37,3 +37,13 @@ test('preserves reasoning and tool parts when answer deltas arrive', () => {
     { type: 'text', text: 'Done!', status: { type: 'complete' } },
   ])
 })
+
+test('keeps an empty running message part-free until its first delta', () => {
+  const opened = mergeStreamParts([], { phase: 'answer', mode: 'open', text: '', running: true })
+  const streaming = mergeStreamParts(opened, { phase: 'answer', mode: 'append', text: '**Hello**', running: true })
+  const closed = mergeStreamParts(streaming, { phase: 'answer', mode: 'append', text: '', running: false })
+
+  assert.deepEqual(opened, [])
+  assert.deepEqual(streaming, [{ type: 'text', text: '**Hello**', status: { type: 'running' } }])
+  assert.deepEqual(closed, [{ type: 'text', text: '**Hello**', status: { type: 'complete' } }])
+})

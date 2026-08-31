@@ -35,17 +35,17 @@ interface SourceState {
   setSourceEnabled: (conversationId: string, sourceId: string, enabled: boolean) => Promise<void>
 }
 
-function groupConversationId(): string {
+function currentConversationId(): string {
   const id = useApp.getState().selectedConversationId
   const conversation = useConversations.getState().list.find((item) => item.id === id)
-  if (!id || conversation?.kind !== 'group') throw new Error('知识库仅适用于群聊')
+  if (!id || (conversation?.kind !== 'group' && conversation?.kind !== 'direct')) throw new Error('请选择可使用资料的对话')
   return id
 }
 
 export const useKnowledgeSources = create<SourceState>((set, get) => ({
   list: [], loading: false, error: null, selectedSource: null, selectedCitation: null, conversationSelection: null,
   load: async () => {
-    const id = groupConversationId()
+    const id = currentConversationId()
     set({ loading: true, error: null })
     try {
       const list = await knowledgeApi.listSources(id)
@@ -59,34 +59,34 @@ export const useKnowledgeSources = create<SourceState>((set, get) => ({
   open: async (sourceId) => {
     const cached = get().list.find((source) => source.id === sourceId) ?? null
     set({ selectedSource: cached, selectedCitation: null })
-    set({ selectedSource: await knowledgeApi.getSource(groupConversationId(), sourceId) })
+    set({ selectedSource: await knowledgeApi.getSource(currentConversationId(), sourceId) })
   },
   openCitation: async (citation) => {
     const cached = get().list.find((source) => source.id === citation.sourceId) ?? null
     set({ selectedSource: cached, selectedCitation: citation })
-    try { set({ selectedSource: await knowledgeApi.getSource(groupConversationId(), citation.sourceId) }) }
+    try { set({ selectedSource: await knowledgeApi.getSource(currentConversationId(), citation.sourceId) }) }
     catch { /* the citation snapshot remains usable after source deletion */ }
   },
   close: () => set({ selectedSource: null, selectedCitation: null }),
-  addText: async (title, text) => { await knowledgeApi.addTextSource(groupConversationId(), { title, text }); await get().load() },
-  addUrl: async (url, title) => { await knowledgeApi.addUrlSource(groupConversationId(), { url, title }); await get().load() },
+  addText: async (title, text) => { await knowledgeApi.addTextSource(currentConversationId(), { title, text }); await get().load() },
+  addUrl: async (url, title) => { await knowledgeApi.addUrlSource(currentConversationId(), { url, title }); await get().load() },
   addFiles: async (files) => {
-    const id = groupConversationId()
+    const id = currentConversationId()
     for (const file of files) await knowledgeApi.uploadKnowledgeFile(id, file)
     await get().load()
   },
-  retry: async (sourceId) => { await knowledgeApi.retrySource(groupConversationId(), sourceId); await get().load() },
+  retry: async (sourceId) => { await knowledgeApi.retrySource(currentConversationId(), sourceId); await get().load() },
   remove: async (sourceId) => {
-    await knowledgeApi.deleteSource(groupConversationId(), sourceId)
+    await knowledgeApi.deleteSource(currentConversationId(), sourceId)
     set({ selectedSource: null, selectedCitation: null })
     await get().load()
   },
   loadConversationSelection: async (conversationId) => {
-    if (groupConversationId() !== conversationId) throw new Error('只能管理当前群聊的知识库')
+    if (currentConversationId() !== conversationId) throw new Error('只能管理当前对话的资料')
     set({ conversationSelection: await knowledgeApi.getConversationSources(conversationId) })
   },
   setSourceEnabled: async (conversationId, sourceId, enabled) => {
-    if (groupConversationId() !== conversationId) throw new Error('只能管理当前群聊的知识库')
+    if (currentConversationId() !== conversationId) throw new Error('只能管理当前对话的资料')
     const selection = get().conversationSelection ?? await knowledgeApi.getConversationSources(conversationId)
     const excluded = selection.sources.filter((source) => source.sourceId !== sourceId && !source.enabled).map((source) => source.sourceId)
     if (!enabled) excluded.push(sourceId)

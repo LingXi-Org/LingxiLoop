@@ -16,12 +16,32 @@ function sourceRequestKey(fingerprint: string): string {
   return key
 }
 
+async function uploadSource(basePath: string, fingerprintScope: string, file: File): Promise<void> {
+  const caps = await uploadsApi.uploadCapabilities()
+  const mime = file.type || 'text/plain'
+  if (file.size > caps.maxBytes) throw new Error(`file exceeds the ${Math.round(caps.maxBytes / 1024 / 1024)} MB limit`)
+  if (!caps.allowedMimes.includes(mime)) throw new Error(`file type not allowed: ${mime}`)
+  const fingerprint = JSON.stringify(['file', fingerprintScope, file.name, file.size, file.lastModified, mime])
+  const signed = await http<{ id: string; uploadUrl: string; mime: string; size: number }>(`${basePath}/upload/presign`, {
+    method: 'POST', body: JSON.stringify({ idempotencyKey: sourceRequestKey(fingerprint), name: file.name, mime, size: file.size }),
+  })
+  const response = await putPresignedFile(signed.uploadUrl, file, mime)
+  if (!response.ok) throw new Error(`source upload failed: ${response.status}`)
+  await http(`${basePath}/${encodeURIComponent(signed.id)}/complete-upload`, { method: 'POST' })
+  sourceRequestKeys.delete(fingerprint)
+}
+
 export const knowledgeApi = {
   listProjects: () => http<WorkspaceSummary[]>('/projects'),
   openProject: (id: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(id)}/open`, { method: 'POST' }),
   createProject: (input: { name: string; description?: string; color?: string }) =>
     http<WorkspaceSummary>('/projects', { method: 'POST', body: JSON.stringify(input) }),
   archiveProject: projectLifecycleApi.archive,
+  listProjectSources: (projectId: string) => http<KnowledgeSource[]>(`/projects/${encodeURIComponent(projectId)}/sources`),
+  getProjectSource: (projectId: string, sourceId: string) => http<KnowledgeSource>(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}`),
+  uploadProjectSource: (projectId: string, file: File) => uploadSource(`/projects/${encodeURIComponent(projectId)}/sources`, projectId, file),
+  retryProjectSource: (projectId: string, sourceId: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}/retry`, { method: 'POST' }),
+  deleteProjectSource: (projectId: string, sourceId: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}`, { method: 'DELETE' }),
   listSources: (conversationId: string) => http<KnowledgeSource[]>(`/conversations/${encodeURIComponent(conversationId)}/sources`),
   getSource: (conversationId: string, sourceId: string) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}`),
   addTextSource: async (conversationId: string, input: { title?: string; text: string }) => {
@@ -36,20 +56,7 @@ export const knowledgeApi = {
     sourceRequestKeys.delete(fingerprint)
     return result
   },
-  uploadKnowledgeFile: async (conversationId: string, file: File): Promise<void> => {
-    const caps = await uploadsApi.uploadCapabilities()
-    const mime = file.type || 'text/plain'
-    if (file.size > caps.maxBytes) throw new Error(`file exceeds the ${Math.round(caps.maxBytes / 1024 / 1024)} MB limit`)
-    if (!caps.allowedMimes.includes(mime)) throw new Error(`file type not allowed: ${mime}`)
-    const fingerprint = JSON.stringify(['file',conversationId,file.name,file.size,file.lastModified,mime])
-    const signed = await http<{ id: string; uploadUrl: string; mime: string; size: number }>(`/conversations/${encodeURIComponent(conversationId)}/sources/upload/presign`, {
-      method: 'POST', body: JSON.stringify({ idempotencyKey: sourceRequestKey(fingerprint), name: file.name, mime, size: file.size }),
-    })
-    const response = await putPresignedFile(signed.uploadUrl, file, mime)
-    if (!response.ok) throw new Error(`source upload failed: ${response.status}`)
-    await http(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(signed.id)}/complete-upload`, { method: 'POST' })
-    sourceRequestKeys.delete(fingerprint)
-  },
+  uploadKnowledgeFile: (conversationId: string, file: File) => uploadSource(`/conversations/${encodeURIComponent(conversationId)}/sources`, conversationId, file),
   retrySource: (conversationId: string, sourceId: string) => http<{ ok: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}/retry`, { method: 'POST' }),
   deleteSource: (conversationId: string, sourceId: string) => http<{ ok: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}`, { method: 'DELETE' }),
   getConversationSources: async (conversationId: string): Promise<ConversationSourceSelection> => {

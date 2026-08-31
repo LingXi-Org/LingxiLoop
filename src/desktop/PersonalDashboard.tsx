@@ -55,11 +55,11 @@ function appViewForSection(section: LearningDashboardSection): DashboardView {
 
 export function PersonalDashboard({
   view,
-  defaultLayout,
+  sidebarWidth,
   onLayoutChanged,
 }: {
   view: DashboardView
-  defaultLayout: Layout
+  sidebarWidth: number
   onLayoutChanged: (layout: Layout, meta: LayoutChangedMeta) => void
 }) {
   const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
@@ -157,8 +157,8 @@ export function PersonalDashboard({
 
   return (
     <SidebarProvider className="h-full min-h-0 bg-card" style={{ '--sidebar-width': '100%' } as React.CSSProperties}>
-      <ResizablePanelGroup id="dashboard-two-panel-layout" orientation="horizontal" className="min-h-0 min-w-0" defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged}>
-        <ResizablePanel id="conversations" defaultSize="25%" minSize={280} maxSize={420} className="min-h-0 min-w-0">
+      <ResizablePanelGroup id="dashboard-two-panel-layout" orientation="horizontal" className="min-h-0 min-w-0" onLayoutChanged={onLayoutChanged}>
+        <ResizablePanel id="conversations" defaultSize={sidebarWidth} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
           <Sidebar collapsible="none" className="w-full shrink-0 bg-card text-card-foreground">
             <SidebarHeader className="omb-drag h-12 shrink-0 justify-center p-2">
               {spacesLoading && spaces.length === 0 ? <Skeleton className="h-8 w-full rounded-xl" /> : (

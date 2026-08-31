@@ -1,5 +1,6 @@
+import { PanelRightCloseIcon, PanelRightOpenIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useRef, useState } from 'react'
-import { ICanvas, ISearch } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { ConversationActivity } from '@/features/chat/components/ConversationActivity'
 import { ConversationSearch } from '@/features/chat/components/ConversationSearch'
@@ -27,10 +28,12 @@ function EmptyConversation() {
 
 export function ChatPane({
   onBackToConversations,
-  onOpenGroupContext,
+  groupContextOpen = false,
+  onToggleGroupContext,
 }: {
   onBackToConversations?: () => void
-  onOpenGroupContext?: () => void
+  groupContextOpen?: boolean
+  onToggleGroupContext?: () => void
 } = {}) {
   const conversationId = useApp((state) => state.selectedConversationId)
   const conversation = useConversations((state) => (
@@ -52,17 +55,10 @@ export function ChatPane({
         <ConversationHeader
           conversationId={conversationId}
           onBack={onBackToConversations}
-          actions={(
-            <>
-              <Button type="button" variant="ghost" size="icon-lg" onClick={() => setSearchOpen((open) => !open)} aria-label="搜索当前会话" className="text-muted-foreground">
-                <ISearch className="size-[18px]" />
-              </Button>
-              {conversation.kind === 'group' && onOpenGroupContext && (
-                <Button type="button" variant="ghost" size="icon-lg" onClick={onOpenGroupContext} aria-label="打开群聊上下文" className="text-muted-foreground">
-                  <ICanvas className="size-[18px]" />
-                </Button>
-              )}
-            </>
+          actions={onToggleGroupContext && (
+            <Button type="button" variant="ghost" size="icon-lg" onClick={onToggleGroupContext} aria-label={groupContextOpen ? '收起资料与 Canvas 工作区' : '展开资料与 Canvas 工作区'} aria-controls="desktop-context-workspace" aria-expanded={groupContextOpen} className="text-muted-foreground">
+              <HugeiconsIcon icon={groupContextOpen ? PanelRightCloseIcon : PanelRightOpenIcon} strokeWidth={2} className="size-[18px]" />
+            </Button>
           )}
         />
         <div data-chat-auxiliary="true">

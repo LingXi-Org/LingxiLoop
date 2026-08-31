@@ -16,6 +16,11 @@ import { safeParseSerializableProgressTracker } from '@/components/tool-ui/progr
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import {
+  parsePresentationArtifact,
+  PresentationArtifactCard,
+} from '@/features/presentations'
+import { useSurface } from '@/stores/surface'
 
 export function ApprovalCardTool({ args, result, addResult }: ToolCallMessagePartProps) {
   const parsed = safeParseSerializableApprovalCard(args)
@@ -156,6 +161,15 @@ export function StatsDisplayTool({ args }: ToolCallMessagePartProps) {
   )
 }
 
+export function PresentationArtifactTool({ args, result }: ToolCallMessagePartProps) {
+  const openPresentation = useSurface((state) => state.openPresentationPeek)
+  const artifact = parsePresentationArtifact(args)
+  if (!artifact) {
+    return <ToolFallback {...({ args, result, toolName: 'presentation-artifact' } as ToolCallMessagePartProps)} />
+  }
+  return <PresentationArtifactCard artifact={artifact} onOpen={openPresentation} />
+}
+
 export const CHAT_TOOL_RENDERERS = {
   by_name: {
     'approval-card': ApprovalCardTool,
@@ -166,6 +180,7 @@ export const CHAT_TOOL_RENDERERS = {
     'question-flow': QuestionFlowTool,
     'stats-display': StatsDisplayTool,
     'message-draft': MessageDraftTool,
+    'presentation-artifact': PresentationArtifactTool,
   },
   Fallback: ToolFallback,
 }

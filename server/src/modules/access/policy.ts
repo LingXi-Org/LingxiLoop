@@ -26,6 +26,13 @@ export interface PermissionPolicy {
   resource: ResourceRule
 }
 
+export function knowledgeSourceVisibilityScope(
+  context: ResolvedAccessContext,
+): 'PRIVATE' | 'PROJECT' {
+  const role = context.projectMembership?.role
+  return role === 'OWNER' || role === 'TEACHER' ? 'PROJECT' : 'PRIVATE'
+}
+
 const ALL_COMPANY_ROLES = ['OWNER', 'ADMIN', 'MEMBER'] as const satisfies readonly CompanyRole[]
 const COMPANY_MANAGERS = ['OWNER', 'ADMIN'] as const satisfies readonly CompanyRole[]
 const ALL_PROJECT_ROLES = ['OWNER', 'TEACHER', 'TA', 'STUDENT', 'OBSERVER'] as const satisfies readonly ProjectRole[]
@@ -395,10 +402,15 @@ export function evaluatePolicy(
 
   const accessModeDecision = evaluateResourceAccessMode(request, context)
   if (accessModeDecision !== 'ALLOWED') return accessModeDecision
-  if (request.action === 'canvas:write' && resource?.status && resource.status !== 'active') {
+  const ownsCanvasFrame = request.resource?.type === 'canvas_frame'
+    && resource?.createdBy === request.actorUserId
+  if (request.action === 'canvas:write' && resource?.status && resource.status !== 'active' && !ownsCanvasFrame) {
     return 'RESOURCE_STATE_DENIED'
   }
   if (!resource) return 'ALLOWED'
+  if (resource.visibilityScope === 'PRIVATE' && resource.ownerUserId !== request.actorUserId) {
+    return 'ROLE_NOT_ALLOWED'
+  }
 
   const projectRole = context.projectMembership?.role
   const isProjectManager = projectRole === 'OWNER' || projectRole === 'TEACHER'

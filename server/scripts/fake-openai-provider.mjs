@@ -38,6 +38,14 @@ const server = createServer(async (req, res) => {
     try { body = await readJson(req) } catch (error) {
       json(res, 400, { error: { message: `invalid JSON: ${String(error)}`, type: 'invalid_request_error' } }); return
     }
+    if (process.env.EMBEDDING_PROXY_URL) {
+      const upstream = await fetch(process.env.EMBEDDING_PROXY_URL, {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+      })
+      res.writeHead(upstream.status, { 'content-type': 'application/json' })
+      res.end(await upstream.text())
+      return
+    }
     const inputs = Array.isArray(body.input) ? body.input : [body.input]
     const vector = Array(1536).fill(0.001)
     const encoded = Buffer.alloc(vector.length * Float32Array.BYTES_PER_ELEMENT)

@@ -221,8 +221,31 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
         : { type: 'file', data: url, filename: name, mimeType, sourceType: 'url' }
       return [...textPart, part]
     }
+    case 'artifact': {
+      const artifact = object(data.artifact ?? data)
+      if (artifact.artifactKind === 'lecture_deck_html' && typeof artifact.artifactId === 'string') {
+        return [toolCall(`presentation:${id}`, 'presentation-artifact', {
+          artifactId: artifact.artifactId,
+          artifactKind: 'lecture_deck_html',
+          title: string(artifact.title, payload.body || 'HTML 演示'),
+        })]
+      }
+      return [...textPart, toolCall(`activity:${id}`, 'progress-tracker', {
+        id: `activity-${id}`,
+        role: 'state',
+        steps: [{
+          id: `activity-step-${id}`,
+          label: string(data.name, payload.body || '工具活动'),
+          description: [string(data.arg), string(data.detail)].filter(Boolean).join(' · '),
+          status: /failed|error/i.test(string(data.status, string(data.stage)))
+            ? 'failed'
+            : /running|pending|working/i.test(string(data.status, string(data.stage)))
+              ? 'in-progress'
+              : 'completed',
+        }],
+      })]
+    }
     case 'tool_activity':
-    case 'artifact':
       return [...textPart, toolCall(`activity:${id}`, 'progress-tracker', {
         id: `activity-${id}`,
         role: 'state',
@@ -297,22 +320,7 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
 }
 
 function structuredParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
-  const parts = baseParts(envelope)
-  const data = object(envelope.payload.data)
-  const citations = Array.isArray(data.citations) ? data.citations : []
-  const sources: ThreadAssistantMessagePart[] = citations.flatMap((value, index) => {
-    const citation = object(value)
-    const url = string(citation.url, string(citation.href))
-    if (!url) return []
-    return [{
-      type: 'source',
-      sourceType: 'url',
-      id: string(citation.id, `${messageId(envelope)}-source-${index}`),
-      url,
-      title: string(citation.title, string(citation.label, url)),
-    }]
-  })
-  return [...parts, ...sources]
+  return baseParts(envelope)
 }
 
 function assistantStatus(envelope: ImEnvelope): MessageStatus {
@@ -338,13 +346,29 @@ function buildMetadata(envelope: ImEnvelope, context: MessageConversionContext):
     quotedMessageId: envelope.payload.replyToClientMsgNo ?? null,
     quote: quoted,
     reactions: reactions(data, context.meId),
-    receipts: [],
     replyCount: finiteNumber(data.replyCount) ?? 0,
     threadRootId: envelope.payload.replyToClientMsgNo ?? null,
     groupStart: true,
     groupEnd: true,
     continuedFromPrevious: false,
     continuedToNext: false,
+    citations: (Array.isArray(data.citations) ? data.citations : []).flatMap((value) => {
+      const citation = object(value)
+      const sourceId = string(citation.sourceId)
+      const sourceTitle = string(citation.sourceTitle)
+      const excerpt = string(citation.excerpt)
+      const marker = string(citation.marker)
+      const position = finiteNumber(citation.position)
+      if (!sourceId || !sourceTitle || !excerpt || !marker || position === null) return []
+      return [{
+        sourceId,
+        sourceTitle,
+        excerpt,
+        ...(string(citation.sourceUrl) ? { sourceUrl: string(citation.sourceUrl) } : {}),
+        position,
+        marker,
+      }]
+    }),
   }
 }
 
@@ -408,6 +432,12 @@ export function projectMessageGroups(messages: readonly ThreadMessage[]): Thread
     const continuedFromPrevious = Boolean(previous && adjacent(previous, message))
     const continuedToNext = Boolean(next && adjacent(message, next))
     const custom = message.metadata.custom as LingxiMessageMetadata
+    if (
+      custom.groupStart === !continuedFromPrevious
+      && custom.groupEnd === !continuedToNext
+      && custom.continuedFromPrevious === continuedFromPrevious
+      && custom.continuedToNext === continuedToNext
+    ) return message
     return {
       ...message,
       metadata: {

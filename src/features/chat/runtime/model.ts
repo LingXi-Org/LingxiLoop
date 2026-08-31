@@ -1,4 +1,5 @@
 import type { ThreadMessage } from '@assistant-ui/react'
+import type { KnowledgeCitation } from '@/features/knowledge/contracts'
 
 export type LingxiDeliveryStatus = 'sending' | 'sent' | 'failed'
 
@@ -7,12 +8,6 @@ export interface LingxiReactionMetadata {
   count: number
   mine: boolean
   userIds: string[]
-}
-
-export interface LingxiReceiptMetadata {
-  readerId: string
-  readThroughSequence: number
-  readAt: string
 }
 
 export interface LingxiQuoteMetadata {
@@ -39,13 +34,13 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   quotedMessageId: string | null
   quote: LingxiQuoteMetadata | null
   reactions: LingxiReactionMetadata[]
-  receipts: LingxiReceiptMetadata[]
   replyCount: number
   threadRootId: string | null
   groupStart: boolean
   groupEnd: boolean
   continuedFromPrevious: boolean
   continuedToNext: boolean
+  citations?: KnowledgeCitation[]
 }
 
 export interface ConversationThreadSnapshot {

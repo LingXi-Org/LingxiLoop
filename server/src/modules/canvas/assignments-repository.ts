@@ -56,7 +56,7 @@ export async function insertAgentWorkspace(db: Queryable, args: {
     `INSERT INTO canvases
        (id,company_id,project_id,title,conversation_id,trigger_client_msg_no,goal,initiator_agent_id,status,origin,created_by,authorization_user_id)
      SELECT $1,$2,c.project_id,$3,$4,$5,$6,$7,'active','agent_os',$7,$8
-       FROM conversations c WHERE c.id=$4 AND c.company_id=$2 AND c.kind='group'
+       FROM conversations c WHERE c.id=$4 AND c.company_id=$2
      ON CONFLICT (conversation_id) DO UPDATE SET updated_at=NOW(),status='active' RETURNING *`,
     [args.id, args.companyId, args.title, args.conversationId, args.triggerClientMsgNo,
       args.goal, args.initiatorAgentId, args.authorizationUserId],

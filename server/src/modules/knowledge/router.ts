@@ -13,7 +13,7 @@ import {
   sourceSelectionRequestSchema,
   updateProjectRequestSchema,
 } from './contracts.js'
-import { knowledgeApplication, organizationKnowledgeApplication } from './facade.js'
+import { knowledgeApplication } from './facade.js'
 
 export const knowledgeRouter = Router()
 
@@ -77,7 +77,6 @@ knowledgeRouter.post('/projects/:id/open', safe(async (req, res) => {
 }))
 
 knowledgeRouter.get('/projects/:id/sources', safe(async (req, res) => {
-  requireKnowledge()
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
   res.json(await knowledgeApplication.sources(workspace))
 }))
@@ -87,33 +86,6 @@ knowledgeRouter.get('/projects/:id/sources/:sourceId', safe(async (req, res) => 
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
   try { res.json(await knowledgeApplication.source(workspace, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
-}))
-
-knowledgeRouter.get('/organization-knowledge/sources', safe(async (req, res) => {
-  const scope = await requireCompany(req)
-  try { res.json(await organizationKnowledgeApplication.list(scope.userId, scope.companyId)) }
-  catch (error) { mapKnowledgeError(error) }
-}))
-
-knowledgeRouter.put('/organization-knowledge/sources/:sourceId', safe(async (req, res) => {
-  const scope = await requireCompany(req)
-  try {
-    res.json(await organizationKnowledgeApplication.promote(
-      scope.userId, scope.companyId, String(req.params.sourceId),
-    ))
-  } catch (error) { mapKnowledgeError(error) }
-}))
-
-knowledgeRouter.put('/projects/:id/organization-knowledge/:sourceId', safe(async (req, res) => {
-  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:manage')
-  try {
-    res.json(await organizationKnowledgeApplication.attach(
-      workspace.userId,
-      workspace.companyId,
-      workspace.projectId,
-      String(req.params.sourceId),
-    ))
-  } catch (error) { mapKnowledgeError(error) }
 }))
 
 knowledgeRouter.post('/projects/:id/sources', safe(async (req, res) => {
@@ -178,7 +150,6 @@ async function conversationScope(
 }
 
 knowledgeRouter.get('/conversations/:id/sources', safe(async (req, res) => {
-  requireKnowledge()
   const conversationId = String(req.params.id)
   const scope = await conversationScope(req, conversationId)
   res.json(await knowledgeApplication.conversationSources(scope, conversationId))

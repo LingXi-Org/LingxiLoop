@@ -61,5 +61,6 @@ export function mergeStreamParts(
     return part
   })
   if (replaced) return parts
+  if (nextText.length === 0) return parts
   return [...parts, { type: targetType, text: nextText, status: partStatus }]
 }

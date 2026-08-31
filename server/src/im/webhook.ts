@@ -19,7 +19,8 @@ wukongWebhookRouter.post('/', safe(async (req, res) => {
   const raw = req.rawBody ?? Buffer.from(JSON.stringify(req.body ?? {}))
   const signature = typeof req.headers['x-wukong-signature'] === 'string'
     ? req.headers['x-wukong-signature'] : undefined
-  if (!wukongWebhookApplication.verify(raw, signature)) {
+  const token = typeof req.query.token === 'string' ? req.query.token : undefined
+  if (!wukongWebhookApplication.verify(raw, signature, token)) {
     res.status(401).json({ error: 'invalid webhook signature' })
     return
   }

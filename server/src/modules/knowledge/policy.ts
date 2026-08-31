@@ -39,11 +39,10 @@ export function openNotebookEnabled(): boolean {
 export const KNOWLEDGE_ATTACHMENT_MIMES = new Set([
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'text/plain', 'text/markdown', 'text/csv', 'text/html', 'application/json',
-  'image/png', 'image/jpeg', 'image/webp',
-  'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/x-wav', 'audio/webm',
-  'video/mp4', 'video/webm',
+  'text/plain',
+  'text/markdown',
+  'text/csv',
+  'application/json',
 ])
 
 export function isKnowledgeAttachmentMime(mime: string, size = 0): boolean {

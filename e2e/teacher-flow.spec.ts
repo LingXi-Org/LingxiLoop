@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+test.setTimeout(90_000)
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/e2e/teacher-flow.html', { waitUntil: 'domcontentloaded', timeout: 90_000 })
 })
@@ -10,11 +12,21 @@ test('renders the native assistant-ui thread, Expo-style bubble, composer, and s
   await composer.fill('Hello Scout')
   await composer.press('Enter')
   await expect(page.getByText('Hello Scout')).toBeVisible()
-  await expect(page.getByText('Streaming complete')).toBeVisible()
+  const preview = page.locator('[data-msg-id^="preview-"]')
+  await expect(preview.locator('[data-slot="typing-indicator"]')).toBeVisible()
+  const streamingMarkdown = preview.locator('[data-status="running"]')
+  await expect(streamingMarkdown.getByRole('heading', { name: 'Streaming' })).toBeVisible()
+  await expect(preview.locator('[data-slot="typing-indicator"]')).toBeHidden()
+  await expect.poll(() => streamingMarkdown.locator(':scope > div').evaluate((element) => (
+    getComputedStyle(element).getPropertyValue('--streamdown-caret')
+  ))).toContain('▋')
+  const completedMarkdown = preview.locator('[data-status="complete"]')
+  await expect(completedMarkdown.getByRole('heading', { name: 'Streaming complete' })).toBeVisible()
+  await expect(completedMarkdown.getByText('Markdown stayed formatted.')).toBeVisible()
   await expect(page.locator('.chat-composer')).toHaveCSS('border-radius', '28px')
   await expect(page.locator('.chat-composer')).toHaveCSS('background-color', 'rgb(33, 33, 33)')
   const userBubble = page.locator('[data-message-bubble="user"]').filter({ hasText: 'Hello Scout' })
-  await expect(userBubble).toHaveCSS('border-bottom-right-radius', '4px')
+  await expect(userBubble).toHaveCSS('border-bottom-right-radius', '18px')
   await expect(userBubble).toHaveCSS('padding-left', '14px')
   await expect(userBubble).toHaveCSS('padding-top', '8px')
   const messageWidth = await userBubble.locator('xpath=ancestor::*[@data-msg-id][1]').evaluate((element) => element.getBoundingClientRect().width)
@@ -169,5 +181,5 @@ test('slash command opens poll composer and approval uses Tool UI', async ({ pag
   await expect(page.getByText('新建投票')).toBeVisible()
   await page.getByRole('button', { name: '取消投票' }).click()
   await page.getByRole('button', { name: '批准' }).click()
-  await expect(page.getByRole('status', { name: 'Approved' })).toBeVisible()
+  await expect(page.getByRole('status', { name: '已允许' })).toBeVisible()
 })

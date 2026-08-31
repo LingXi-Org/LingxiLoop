@@ -130,6 +130,9 @@ jobs:
       - name: Verify synchronized version
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.build_release == 'true'
         run: npm run version:check
+      - name: Verify production RAG packaging contract
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.build_release == 'true' || needs.classify.outputs.open_notebook == 'true'
+        run: node --test scripts/production-rag-contract.test.mjs
       - name: Lint changed code domains
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.frontend == 'true' || needs.classify.outputs.server == 'true' || needs.classify.outputs.eval == 'true' || needs.classify.outputs.build_release == 'true'
         run: npm run lint
@@ -252,6 +255,74 @@ jobs:
           fi
       - name: Verify WuKong webhook, durable work, IPython and final reply
         run: npm run mvp:ci:smoke
+      - name: Verify upload, parse, embed and scoped retrieval
+        run: >-
+          docker compose -f docker-compose.mvp.ci.yml exec -T
+          -e MVP_SMOKE_CLEANUP=1
+          -e KNOWLEDGE_SMOKE_EMBEDDING_CONTROL_URL=http://fake-embedding-provider:8126/control
+          -e KNOWLEDGE_SMOKE_EMBEDDING_CONTROL_TOKEN=ci-embedding-control-token-not-for-prod
+          lingxiloop npx tsx server/scripts/knowledge-rag-smoke.ts
+      - name: Verify the Open Notebook image contains only the RAG runtime
+        shell: bash
+        run: |
+          docker compose -f docker-compose.mvp.ci.yml exec -T open-notebook sh -ec '
+            ! command -v node
+            test ! -d /app/frontend
+            supervisorctl status rag-api | grep -q RUNNING
+            supervisorctl status rag-worker | grep -q RUNNING
+            test "$(supervisorctl status | wc -l)" -eq 2
+          '
+      - name: Verify the RAG image excludes retired generation and rich-media packages
+        shell: bash
+        run: |
+          docker compose -f docker-compose.mvp.ci.yml exec -T open-notebook /app/.venv/bin/python - <<'PY'
+          from importlib.metadata import distributions
+
+          forbidden = {
+              "content-core",
+              "langgraph",
+              "langgraph-checkpoint",
+              "langgraph-checkpoint-sqlite",
+              "esperanto",
+              "ai-prompter",
+              "podcast-creator",
+              "nodejs-wheel-binaries",
+              "python-pptx",
+              "pytubefix",
+              "langchain",
+              "langchain-openai",
+              "langchain-anthropic",
+              "langchain-ollama",
+              "langchain-google-genai",
+              "langchain-groq",
+              "langchain-mistralai",
+          }
+          normalize = lambda value: value.lower().replace("_", "-").replace(".", "-")
+          installed = {
+              normalize(name)
+              for distribution in distributions()
+              if (name := distribution.metadata.get("Name"))
+          }
+          found = sorted(forbidden.intersection(installed))
+          if found:
+              raise SystemExit(f"forbidden packages in RAG image: {', '.join(found)}")
+          PY
+      - name: Verify Open Notebook used only the embedding-only provider
+        shell: bash
+        run: |
+          stats=$(docker compose -f docker-compose.mvp.ci.yml exec -T open-notebook curl -fsS http://fake-embedding-provider:8126/stats)
+          node -e '
+            const stats = JSON.parse(process.argv[1])
+            if (
+              stats.embeddingRequests < 1 ||
+              stats.blockedEmbeddingRequests < 1 ||
+              stats.controlRequests < 3 ||
+              stats.waitingRequests !== 0 ||
+              stats.blocked !== false ||
+              stats.chatRequests !== 0 ||
+              stats.otherRequests !== 0
+            ) process.exit(1)
+          ' "$stats"
       - name: Collect service logs after failure
         if: failure()
         run: docker compose -f docker-compose.mvp.ci.yml logs --no-color --tail 300

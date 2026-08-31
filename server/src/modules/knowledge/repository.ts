@@ -1,18 +1,22 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { ProjectKind } from '../../domain/public.js'
-import type { ProjectPatch } from './contracts.js'
+import type { KnowledgeCreatedVia, KnowledgeVisibilityScope, ProjectPatch } from './contracts.js'
 
 const SOURCE_LIST_SELECT = `source.id,source.kind,source.title,source.mime_type AS "mimeType",
   source.size_bytes AS "sizeBytes",source.original_url AS "originalUrl",source.status,source.stage,
-  source.error,source.is_truncated AS "isTruncated",source.created_by AS "createdBy",
+  source.error,source.is_truncated AS "isTruncated",source.visibility_scope AS "visibilityScope",
+  source.owner_user_id AS "ownerUserId",source.created_by_user_id AS "createdByUserId",
+  source.created_by_user_id AS "createdBy",source.created_via AS "createdVia",
   source.created_at AS "createdAt",source.updated_at AS "updatedAt",
   source.origin_client_msg_no AS "originClientMsgNo",source.external_chunk_count AS "chunkCount"`
 
 const SOURCE_DETAIL_SELECT = `source.id,source.kind,source.title,source.mime_type AS "mimeType",
   source.size_bytes AS "sizeBytes",source.original_url AS "originalUrl",source.storage_key AS "storageKey",
   source.status,source.stage,source.error,source.is_truncated AS "isTruncated",
-  source.created_by AS "createdBy",source.created_at AS "createdAt",source.updated_at AS "updatedAt"`
+  source.visibility_scope AS "visibilityScope",source.owner_user_id AS "ownerUserId",
+  source.created_by_user_id AS "createdByUserId",source.created_by_user_id AS "createdBy",
+  source.created_via AS "createdVia",source.created_at AS "createdAt",source.updated_at AS "updatedAt"`
 
 export interface KnowledgeSourceRow extends Record<string, unknown> {
   id: string
@@ -20,6 +24,10 @@ export interface KnowledgeSourceRow extends Record<string, unknown> {
   status: string
   storageKey: string | null
   createdBy: string
+  createdByUserId: string
+  createdVia: KnowledgeCreatedVia
+  ownerUserId: string
+  visibilityScope: KnowledgeVisibilityScope
   sizeBytes: number
 }
 
@@ -32,11 +40,10 @@ export async function listProjects(db: Queryable, companyId: string, userId: str
             project.archived_at AS "archivedAt",visit.visited_at AS "lastVisitedAt",
             (SELECT COUNT(*)::int FROM conversations WHERE project_id=project.id AND company_id=project.company_id) AS "conversationCount",
             (SELECT COUNT(*)::int FROM knowledge_sources source
-              WHERE source.company_id=project.company_id AND source.deleted_at IS NULL AND (
-                source.project_id=project.id OR EXISTS (
-                  SELECT 1 FROM knowledge_source_bindings binding
-                   WHERE binding.company_id=source.company_id AND binding.source_id=source.id
-                     AND binding.scope_type='COURSE' AND binding.project_id=project.id))) AS "sourceCount",
+              WHERE source.company_id=project.company_id AND source.project_id=project.id
+                AND source.deleted_at IS NULL
+                AND (source.visibility_scope='PROJECT'
+                  OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$2))) AS "sourceCount",
             (SELECT COUNT(*)::int FROM documents WHERE project_id=project.id AND company_id=project.company_id) AS "documentCount",
             (SELECT COUNT(*)::int FROM calendar_events WHERE project_id=project.id AND company_id=project.company_id) AS "calendarEventCount",
             (SELECT COUNT(*)::int FROM canvases WHERE project_id=project.id AND company_id=project.company_id) AS "canvasCount",
@@ -125,36 +132,32 @@ export async function updateProject(
   return (result.rowCount ?? 0) > 0
 }
 
-export async function listSources(db: Queryable, companyId: string, projectId: string) {
+export async function listSources(db: Queryable, companyId: string, projectId: string, userId: string) {
   const { rows } = await db.query(
     `SELECT ${SOURCE_LIST_SELECT} FROM knowledge_sources source
-      WHERE source.company_id=$1 AND source.deleted_at IS NULL AND (
-        source.project_id=$2 OR EXISTS (
-          SELECT 1 FROM knowledge_source_bindings binding
-           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
-             AND binding.scope_type='COURSE' AND binding.project_id=$2))
+      WHERE source.company_id=$1 AND source.project_id=$2 AND source.deleted_at IS NULL
+        AND (source.visibility_scope='PROJECT'
+          OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$3))
       ORDER BY source.created_at DESC`,
-    [companyId, projectId],
+    [companyId, projectId, userId],
   )
   return rows
 }
 
 export async function listConversationSources(
   db: Queryable,
-  args: { companyId: string; projectId: string; conversationId: string },
+  args: { companyId: string; projectId: string; userId: string; conversationId: string },
 ) {
   const { rows } = await db.query(
     `SELECT ${SOURCE_LIST_SELECT},(exclusion.source_id IS NULL) AS enabled
        FROM knowledge_sources source
        LEFT JOIN conversation_source_exclusions exclusion
-         ON exclusion.source_id=source.id AND exclusion.conversation_id=$3
-      WHERE source.company_id=$1 AND source.deleted_at IS NULL AND (
-        source.project_id=$2 OR EXISTS (
-          SELECT 1 FROM knowledge_source_bindings binding
-           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
-             AND binding.scope_type='COURSE' AND binding.project_id=$2))
+         ON exclusion.source_id=source.id AND exclusion.conversation_id=$4 AND exclusion.user_id=$3
+      WHERE source.company_id=$1 AND source.project_id=$2 AND source.deleted_at IS NULL
+        AND (source.visibility_scope='PROJECT'
+          OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$3))
       ORDER BY source.created_at DESC`,
-    [args.companyId, args.projectId, args.conversationId],
+    [args.companyId, args.projectId, args.userId, args.conversationId],
   )
   return rows
 }
@@ -163,16 +166,15 @@ export async function findSource(
   db: Queryable,
   companyId: string,
   projectId: string,
+  userId: string,
   sourceId: string,
 ): Promise<KnowledgeSourceRow | null> {
   const { rows } = await db.query<KnowledgeSourceRow>(
     `SELECT ${SOURCE_DETAIL_SELECT} FROM knowledge_sources source
-      WHERE source.id=$1 AND source.company_id=$2 AND source.deleted_at IS NULL AND (
-        source.project_id=$3 OR EXISTS (
-          SELECT 1 FROM knowledge_source_bindings binding
-           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
-             AND binding.scope_type='COURSE' AND binding.project_id=$3))`,
-    [sourceId, companyId, projectId],
+      WHERE source.id=$1 AND source.company_id=$2 AND source.project_id=$3 AND source.deleted_at IS NULL
+        AND (source.visibility_scope='PROJECT'
+          OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4))`,
+    [sourceId, companyId, projectId, userId],
   )
   return rows[0] ?? null
 }
@@ -181,28 +183,37 @@ export async function insertSource(db: Queryable, args: {
   id: string; companyId: string; projectId: string; conversationId: string | null
   kind: 'text' | 'url' | 'file'; title: string; mime: string | null; size: number
   storageKey: string | null; originalUrl: string | null; status: 'queued' | 'upload_pending'; userId: string
+  visibilityScope: KnowledgeVisibilityScope
 }): Promise<void> {
   await db.query(
     `INSERT INTO knowledge_sources
-       (id,company_id,project_id,conversation_id,kind,title,mime_type,size_bytes,storage_key,original_url,status,stage,created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12)`,
+       (id,company_id,project_id,conversation_id,kind,title,mime_type,size_bytes,storage_key,original_url,status,stage,
+        visibility_scope,owner_user_id,created_by_user_id,created_via)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12,$13,$13,'USER')`,
     [args.id, args.companyId, args.projectId, args.conversationId, args.kind, args.title,
-      args.mime, args.size, args.storageKey, args.originalUrl, args.status, args.userId],
+      args.mime, args.size, args.storageKey, args.originalUrl, args.status, args.visibilityScope, args.userId],
   )
 }
 
-export async function enqueueSourceJob(db: Queryable, sourceId: string): Promise<void> {
-  await db.query(
+export async function enqueueSourceJob(db: Queryable, args: {
+  sourceId: string; companyId: string; projectId: string; userId: string
+}): Promise<void> {
+  const inserted = await db.query(
     `INSERT INTO knowledge_source_jobs (id, source_id, status, available_at)
-     VALUES ($1,$2,'queued',NOW())
+     SELECT $1,source.id,'queued',NOW() FROM knowledge_sources source
+      WHERE source.id=$2 AND source.company_id=$3 AND source.project_id=$4 AND source.deleted_at IS NULL
+        AND (source.visibility_scope='PROJECT'
+          OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$5))
      ON CONFLICT (source_id) DO UPDATE SET status='queued',available_at=NOW(),leased_until=NULL,leased_by=NULL,
        last_error=NULL,updated_at=NOW()`,
-    [`ksj-${randomUUID()}`, sourceId],
+    [`ksj-${randomUUID()}`, args.sourceId, args.companyId, args.projectId, args.userId],
   )
+  if ((inserted.rowCount ?? 0) === 0) throw new Error('source not found')
   await db.query(
     `UPDATE knowledge_sources SET status='queued',stage='queued',error=NULL,updated_at=NOW()
-      WHERE id=$1 AND deleted_at IS NULL`,
-    [sourceId],
+      WHERE id=$1 AND company_id=$2 AND project_id=$3 AND deleted_at IS NULL
+        AND (visibility_scope='PROJECT' OR (visibility_scope='PRIVATE' AND owner_user_id=$4))`,
+    [args.sourceId, args.companyId, args.projectId, args.userId],
   )
 }
 
@@ -214,20 +225,20 @@ export async function replaceSourceExclusions(
     `DELETE FROM conversation_source_exclusions exclusion
       USING conversations conversation
      WHERE exclusion.conversation_id=$1 AND conversation.id=exclusion.conversation_id
-       AND conversation.company_id=$2 AND conversation.project_id=$3`,
-    [args.conversationId, args.companyId, args.projectId],
+       AND conversation.company_id=$2 AND conversation.project_id=$3
+       AND exclusion.user_id=$4`,
+    [args.conversationId, args.companyId, args.projectId, args.userId],
   )
   if (args.sourceIds.length === 0) return []
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO conversation_source_exclusions (conversation_id,source_id,created_by)
+    `INSERT INTO conversation_source_exclusions (conversation_id,source_id,user_id)
      SELECT $1,source.id,$4 FROM knowledge_sources source
      JOIN conversations conversation
        ON conversation.id=$1 AND conversation.company_id=$2 AND conversation.project_id=$3
-      WHERE source.company_id=$2 AND source.id=ANY($5::text[]) AND source.deleted_at IS NULL AND (
-        source.project_id=$3 OR EXISTS (
-          SELECT 1 FROM knowledge_source_bindings binding
-           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
-             AND binding.scope_type='COURSE' AND binding.project_id=$3))
+      WHERE source.company_id=$2 AND source.project_id=$3 AND source.id=ANY($5::text[])
+        AND source.deleted_at IS NULL
+        AND (source.visibility_scope='PROJECT'
+          OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4))
      RETURNING source_id AS id`,
     [args.conversationId, args.companyId, args.projectId, args.userId, args.sourceIds],
   )

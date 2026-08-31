@@ -1,6 +1,5 @@
 import type { ThreadMessage } from '@assistant-ui/react'
 import { create } from 'zustand'
-import type { ImReadReceiptAdvance } from '@/types'
 import { getLingxiMessageMetadata, type LingxiMessageMetadata } from './model'
 import { projectMessageGroups } from './converter'
 
@@ -18,7 +17,6 @@ export interface ConversationChatState {
   messages: ThreadMessage[]
   typingAgentIds: string[]
   activeRuns: Record<string, ActiveAgentRun>
-  receipts: ImReadReceiptAdvance[]
   loaded: boolean
   isLoading: boolean
   isLoadingOlder: boolean
@@ -34,7 +32,6 @@ export const EMPTY_CONVERSATION_CHAT_STATE: ConversationChatState = {
   messages: [],
   typingAgentIds: [],
   activeRuns: {},
-  receipts: [],
   loaded: false,
   isLoading: false,
   isLoadingOlder: false,
@@ -147,36 +144,6 @@ export function setTypingAgent(conversationId: string, agentId: string, typing: 
       ? [...current.typingAgentIds.filter((id) => id !== agentId), agentId]
       : current.typingAgentIds.filter((id) => id !== agentId),
   }))
-}
-
-export function mergeConversationReceipts(
-  conversationId: string,
-  receipts: readonly ImReadReceiptAdvance[],
-): void {
-  updateConversation(conversationId, (current) => {
-    const byKey = new Map<string, ImReadReceiptAdvance>()
-    for (const receipt of [...current.receipts, ...receipts]) {
-      byKey.set(`${receipt.readerId}:${receipt.readThroughSeq}`, receipt)
-    }
-    const merged = [...byKey.values()].sort((left, right) => left.readAt.localeCompare(right.readAt))
-    return {
-      ...current,
-      receipts: merged,
-      messages: current.messages.map((message) => {
-        const sequence = metadata(message).sequence
-        if (sequence === null) return message
-        return patchMetadata(message, {
-          receipts: merged
-            .filter((receipt) => receipt.readThroughSeq >= sequence)
-            .map((receipt) => ({
-              readerId: receipt.readerId,
-              readThroughSequence: receipt.readThroughSeq,
-              readAt: receipt.readAt,
-            })),
-        })
-      }),
-    }
-  })
 }
 
 export function replaceMessageReactions(

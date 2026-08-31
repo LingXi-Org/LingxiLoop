@@ -6,7 +6,7 @@ import { wukongClient } from './wukong.js'
 
 export const wukongWebhookApplication = new WukongWebhookApplication({
   transaction: (work) => withTransaction(pool, work),
-  verify: (raw, signature) => wukongClient().verifyWebhook(raw, signature),
+  verify: (raw, signature, token) => wukongClient().verifyWebhook(raw, signature, token),
   isKnowledgeAttachment: isKnowledgeAttachmentMime,
   createKnowledgeJob: createAttachmentKnowledgeJob,
   emitQueued: async ({ channelId, channelType, agentId, workId }) => {

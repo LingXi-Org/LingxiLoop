@@ -79,6 +79,33 @@ and Course bindings over one canonical ingested source; it does not copy source
 content, chunks, or Learning State. Environments created before this cutover
 must reset before startup.
 
+The Source privacy cutover is reset-only. Canonical `knowledge_sources` rows
+carry exactly one `PRIVATE` or `PROJECT` visibility scope plus human owner,
+creator, and creation-channel provenance. Conversation exclusions are per-user
+enablement state. There is no migration, backfill, dual read, dual write, or
+legacy `created_by` compatibility; reset PostgreSQL and the development Open
+Notebook index together before startup.
+
+## Open Notebook RAG-only knowledge cutover
+
+For the current production environment, which has no user or business data,
+prefer the explicit empty-environment rebuild. It refuses to run when a live
+PostgreSQL instance contains users, Companies, conversations, Agent work, or
+knowledge rows; with the exact confirmation it removes this Compose project's
+named data volumes, deletes only the two knowledge R2 prefixes, bootstraps the
+canonical schema from empty storage, and runs the RAG readiness plus public
+upload/retrieval gate:
+
+```sh
+EMPTY_PRODUCTION_REBUILD_CONFIRM=ERASE-EMPTY-PRODUCTION \
+  sh ./scripts/rebuild-empty-production.sh
+```
+
+This mode has no rollback backup because native v1 has no migration or
+compatibility protocol. It is valid only before production data exists; if a
+protected row exists, stop and provision a fresh environment rather than
+attempting an in-place knowledge-plane conversion.
+
 The M24 Trust BFF cutover is reset-only. Signed Trust snapshots are immutable,
 tenant-scoped records backed by canonical Evidence; existing environments must
 reset before snapshot creation is enabled.
@@ -105,6 +132,23 @@ deployment image applies the policy and reads it back, requiring presigned
 origin (`app://lingxiloop`).
 Partial R2 configuration or a failed readback aborts the deployment. Operators
 can add comma-separated origins with `R2_CORS_EXTRA_ORIGINS` in `.env.secrets`.
+
+## HTML presentation release gate
+
+`PRESENTATION_HTML_ENABLED` defaults to `false`. Enable it only when the same
+deployment has healthy Open Notebook ingestion, the canonical presentation
+tables, private R2 access and the pinned `interactive-lecture-deck` runtime
+provenance. The Worker publishes only after version/schema validation,
+source/evidence coverage, citation consistency, page completeness, text budget,
+zoom-anchor and self-contained-CSP checks all pass. The release path does not
+install or launch Chromium; its offline and 3D safety gate is deterministic and
+is exercised through static DOM/runtime contracts and geometry invariants.
+
+Presentation HTML lives only under
+`presentation-artifacts/{companyId}/{presentationId}/{version}/deck.html`.
+Every database version stores immutable size and SHA-256 metadata, and both
+preview and download verify those bytes before serving them. Keep the feature
+disabled if orphan cleanup or the pinned renderer asset cannot initialize.
 
 Desktop artifacts contain only the renderer and Electron shell. Package
 verification rejects server/runtime source and environment files.

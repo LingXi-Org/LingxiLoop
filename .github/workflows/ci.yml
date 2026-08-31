@@ -33,14 +33,17 @@ jobs:
             dockerfile: server/docker/lingxiloop-server.Dockerfile
             wukong_commit: ""
             context: .
+            target: ""
           - package: lingxiloop-agent-os
             dockerfile: server/docker/agent-os.Dockerfile
             wukong_commit: ""
             context: .
+            target: ""
           - package: lingxiloop-wukongim
             dockerfile: server/docker/wukongim.Dockerfile
             wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
             context: .
+            target: ""
           - package: lingxiloop-open-notebook
             # `file` is evaluated from the checked-out workspace by Buildx.
             # Keep the narrower context: the Dockerfile's COPY paths are
@@ -48,6 +51,7 @@ jobs:
             dockerfile: third_party/open-notebook/Dockerfile
             wukong_commit: ""
             context: ./third_party/open-notebook
+            target: lingxiloop-rag
     steps:
       - uses: actions/checkout@v4
       - id: version
@@ -66,6 +70,7 @@ jobs:
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |

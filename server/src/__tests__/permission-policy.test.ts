@@ -39,6 +39,27 @@ test('creator policies deny missing ownership facts instead of treating them as 
   ), 'ROLE_NOT_ALLOWED')
 })
 
+test('users can edit their own Canvas frames after the workspace finishes', () => {
+  const resource = {
+    companyId: 'company',
+    projectId: 'project',
+    createdBy: 'owner',
+    conversationMembers: ['owner'],
+    leaderId: null,
+    status: 'completed',
+  }
+  assert.equal(evaluatePolicy(
+    { actorUserId: 'owner', action: 'canvas:write', resource: { type: 'canvas_frame', id: 'frame' } },
+    ownerContext,
+    resource,
+  ), 'ALLOWED')
+  assert.equal(evaluatePolicy(
+    { actorUserId: 'other', action: 'canvas:write', resource: { type: 'canvas_frame', id: 'frame' } },
+    { ...ownerContext, actorUserId: 'other' },
+    resource,
+  ), 'RESOURCE_STATE_DENIED')
+})
+
 test('runtime failures and unregistered actions fail closed without a context', async () => {
   const db: Queryable = {
     query: async () => { throw new Error('database unavailable') },

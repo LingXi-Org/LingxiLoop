@@ -78,27 +78,30 @@ services:
   open-notebook:
     build:
       context: ./third_party/open-notebook
-      target: runtime
+      target: lingxiloop-rag
     depends_on:
       surrealdb:
         condition: service_healthy
+      fake-embedding-provider:
+        condition: service_healthy
     environment:
-      OPEN_NOTEBOOK_ENCRYPTION_KEY: ci-open-notebook-encryption-key
       OPEN_NOTEBOOK_PASSWORD: ci-open-notebook-password
       OPEN_NOTEBOOK_WORKER_MAX_TASKS: "1"
-      OPEN_NOTEBOOK_R2_ENABLED: "true"
       OPEN_NOTEBOOK_R2_PREFIX: open-notebook
       R2_ENDPOINT: http://minio:9000
       R2_BUCKET: lingxiloop
       R2_ACCESS_KEY_ID: minioadmin
       R2_SECRET_ACCESS_KEY: minioadmin
+      OPENAI_API_KEY: ci-open-notebook-password
+      OPENAI_BASE_URL: http://lingxiloop:5181/internal/open-notebook/v1
+      OPENAI_EMBEDDING_MODEL: text-embedding-3-small
       SURREAL_URL: ws://surrealdb:8000/rpc
       SURREAL_USER: open-notebook
       SURREAL_PASSWORD: ci-open-notebook-db-password
       SURREAL_NAMESPACE: open_notebook
       SURREAL_DATABASE: open_notebook
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:5055/health"]
+      test: ["CMD-SHELL", "supervisorctl status rag-api | grep -q RUNNING && supervisorctl status rag-worker | grep -q RUNNING && curl -fsS http://localhost:5055/readyz"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -113,13 +116,31 @@ services:
     command: ["node", "/app/fake-openai-provider.mjs"]
     environment:
       PORT: 8125
+      EMBEDDING_PROXY_URL: http://fake-embedding-provider:8126/v1/embeddings
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:8125/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 5s
       timeout: 3s
       retries: 10
       start_period: 3s
-    networks: [lingxiloop-mvp-ci]
+    networks: [lingxiloop-mvp-ci, lingxiloop-knowledge-internal-ci]
+
+  fake-embedding-provider:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./scripts/fake-embedding-provider.mjs:/app/fake-embedding-provider.mjs:ro
+    command: ["node", "/app/fake-embedding-provider.mjs"]
+    environment:
+      PORT: 8126
+      CONTROL_TOKEN: ci-embedding-control-token-not-for-prod
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8126/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+    networks: [lingxiloop-knowledge-internal-ci, lingxiloop-knowledge-egress-ci]
 
   wukongim:
     build:
@@ -129,6 +150,7 @@ services:
         WUKONG_COMMIT: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
     environment:
       WK_NODE_DATA_DIR: /var/lib/wukongim
+      WK_WEBHOOK_HTTP_ADDR: "http://lingxiloop:5181/webhooks/wukong?token=ci-wukong-webhook-secret"
     volumes:
       - ./server/wukongim/wukongim.toml:/etc/wukongim/wukongim.toml:ro
     healthcheck:
@@ -194,6 +216,7 @@ services:
       OPEN_NOTEBOOK_ENABLED: "true"
       OPEN_NOTEBOOK_URL: http://open-notebook:5055
       OPEN_NOTEBOOK_PASSWORD: ci-open-notebook-password
+      PRESENTATION_HTML_ENABLED: "false"
       R2_ENDPOINT: http://minio:9000
       R2_BUCKET: lingxiloop
       R2_ACCESS_KEY_ID: minioadmin

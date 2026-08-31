@@ -1,15 +1,11 @@
 import { ThreadPrimitive } from '@assistant-ui/react'
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { AgentTypingIndicator } from '@/components/messages/AgentTypingIndicator'
+import { useCallback, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { useParticipants } from '@/features/agents/state'
-import type { Participant } from '@/types'
 import { useConversationUi } from '@/stores/conversationUi'
 import { userFacingError } from '@/lib/userFacingError'
 import { chatTransport, useConversationThreadSnapshot } from '../runtime'
-import { getLingxiMessageMetadata } from '../runtime/model'
 import { ConversationComposer } from './ConversationComposer'
 import { ConversationMessage } from './ConversationMessage'
 
@@ -28,38 +24,8 @@ export function ConversationThread({
   const viewportRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadingOlderRef = useRef(false)
-  const lastReadSequenceRef = useRef(0)
   const pendingJumpId = useConversationUi((state) => state.pendingJumpMessageId)
   const clearPendingJump = useConversationUi((state) => state.clearPendingJump)
-  const participants = useParticipants((state) => state.byId)
-  const typingAgents = useMemo(() => snapshot.typingAgentIds
-    .map((id) => participants[id])
-    .filter((participant): participant is Participant => participant?.kind === 'agent'), [participants, snapshot.typingAgentIds])
-
-  useEffect(() => {
-    lastReadSequenceRef.current = 0
-  }, [conversationId])
-
-  useEffect(() => {
-    const viewport = viewportRef.current
-    if (!viewport || snapshot.messages.length === 0) return
-    const sequenceById = new Map(snapshot.messages.map((message) => [
-      getLingxiMessageMetadata(message).clientMessageId,
-      getLingxiMessageMetadata(message).sequence,
-    ]))
-    const observer = new IntersectionObserver((entries) => {
-      const visibleSequence = Math.max(0, ...entries
-        .filter((entry) => entry.isIntersecting)
-        .map((entry) => sequenceById.get((entry.target as HTMLElement).dataset.msgId ?? '') ?? 0))
-      if (visibleSequence <= lastReadSequenceRef.current) return
-      lastReadSequenceRef.current = visibleSequence
-      void chatTransport.markRead(conversationId, visibleSequence)
-    }, { root: viewport, threshold: 0.6 })
-    viewport.querySelectorAll<HTMLElement>('[data-msg-id]').forEach((element) => {
-      observer.observe(element)
-    })
-    return () => observer.disconnect()
-  }, [conversationId, snapshot.messages])
 
   const loadOlder = useCallback(async () => {
     const viewport = viewportRef.current
@@ -102,9 +68,9 @@ export function ConversationThread({
 
   return (
     <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread>
-      <ThreadPrimitive.Viewport ref={viewportRef} data-chat-viewport className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+      <ThreadPrimitive.Viewport ref={viewportRef} data-chat-viewport className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
         {!threadRootId && (
-          <div ref={sentinelRef} className="flex h-10 w-full items-center justify-center px-3 text-[10.5px] text-muted-foreground sm:px-4">
+          <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-[10.5px] text-muted-foreground sm:px-4">
             {snapshot.isLoadingOlder ? '正在加载更早的消息…' : snapshot.hasMoreOlder ? '' : '会话开始'}
           </div>
         )}
@@ -119,8 +85,7 @@ export function ConversationThread({
           </div>
         </ThreadPrimitive.Empty>
         <ThreadPrimitive.Messages components={MESSAGE_COMPONENTS} />
-        <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto bg-gradient-to-t from-background via-background to-transparent pt-4">
-          <AgentTypingIndicator agents={typingAgents} className="w-full px-3 sm:px-4" />
+        <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4">
           <ConversationComposer
             conversationId={conversationId}
             compact={compact}

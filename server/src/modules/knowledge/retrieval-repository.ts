@@ -12,18 +12,22 @@ export async function findKnowledgeRetrievalProject(
   db: Queryable,
   companyId: string,
   conversationId: string,
+  authorizationUserId: string,
 ): Promise<string | null> {
   const { rows } = await db.query<{ project_id: string | null }>(
-    `SELECT project_id FROM conversations
-      WHERE id=$1 AND company_id=$2 AND kind='group'`,
-    [conversationId,companyId],
+    `SELECT conversation.project_id
+       FROM conversations conversation
+      WHERE conversation.id=$1 AND conversation.company_id=$2
+        AND conversation.kind IN ('group','direct')
+        AND conversation.members @> to_jsonb(ARRAY[$3::text])`,
+    [conversationId, companyId, authorizationUserId],
   )
   return rows[0]?.project_id ?? null
 }
 
 export async function listKnowledgeRetrievalSources(
   db: Queryable,
-  input: { companyId: string; projectId: string; conversationId: string },
+  input: { companyId: string; projectId: string; conversationId: string; authorizationUserId: string },
 ): Promise<KnowledgeRetrievalSource[]> {
   const { rows } = await db.query<{
     id: string; title: string; external_source_id: string; original_url: string | null; excluded: boolean
@@ -32,14 +36,14 @@ export async function listKnowledgeRetrievalSources(
             (exclusion.source_id IS NOT NULL) AS excluded
        FROM knowledge_sources source
        LEFT JOIN conversation_source_exclusions exclusion
-         ON exclusion.source_id=source.id AND exclusion.conversation_id=$1
-      WHERE source.company_id=$2 AND source.status='ready' AND (
-        source.project_id=$3 OR EXISTS (
-          SELECT 1 FROM knowledge_source_bindings binding
-           WHERE binding.company_id=source.company_id AND binding.source_id=source.id
-             AND binding.scope_type='COURSE' AND binding.project_id=$3))
+         ON exclusion.source_id=source.id AND exclusion.conversation_id=$1 AND exclusion.user_id=$4
+      WHERE source.company_id=$2 AND source.project_id=$3 AND source.status='ready'
+        AND (
+          source.visibility_scope='PROJECT'
+          OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4)
+        )
         AND source.deleted_at IS NULL AND source.external_source_id IS NOT NULL`,
-    [input.conversationId,input.companyId,input.projectId],
+    [input.conversationId,input.companyId,input.projectId,input.authorizationUserId],
   )
   return rows.map((row) => ({
     id: row.id,

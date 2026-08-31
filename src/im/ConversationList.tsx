@@ -1,3 +1,6 @@
+import { NotificationOff01Icon, PinIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Badge } from '@/components/ui/badge'
 import { useEffect } from 'react'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { HiveAvatar } from '@/components/HiveAvatar'
@@ -54,12 +57,12 @@ export function ConversationAvatar({
       return <span className="grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground" style={{ width: size, height: size }}>群</span>
     }
     return variant === 'mobile'
-      ? <HiveAvatar ps={members} size={size} ringColor="var(--card)" />
-      : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} />
+      ? <HiveAvatar ps={members} size={size} ringColor="var(--card)" mode="chat" />
+      : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} mode="chat" />
   }
 
   const person = members[0] ?? conversation.members.map((id) => byId[id]).find(Boolean)
-  if (person) return <Avatar p={person} size={size} ringColor="var(--card)" />
+  if (person) return <Avatar p={person} size={size} ringColor="var(--card)" mode="chat" />
   return (
     <span className="grid shrink-0 place-items-center rounded-full bg-muted font-semibold text-foreground" style={{ width: size, height: size }}>
       {conversation.kind === 'email' ? '邮' : conversation.title.charAt(0).toUpperCase()}
@@ -95,17 +98,23 @@ export function ConversationListItemContent({
     .map((id) => byId[id]?.name?.trim())
     .filter((name): name is string => Boolean(name))
   const isMobile = variant === 'mobile'
+  const isDirectAgent = conversation.kind === 'direct' && conversation.members.some(
+    (id) => id !== meId && byId[id]?.kind === 'agent',
+  )
   return (
     <>
-      <ConversationAvatar conversation={conversation} size={48} variant={variant} />
+      <ConversationAvatar conversation={conversation} size={isMobile || !isDirectAgent ? 48 : 54} variant={variant} />
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
-          {conversation.pinned && !isMobile && <span className="text-[9px] text-muted-foreground" aria-label="已置顶">◆</span>}
           <span className={cn('truncate font-semibold', isMobile ? 'text-[16px]' : 'text-[15px]', muted ? 'text-muted-foreground' : 'text-foreground')}>
             {conversation.title}
           </span>
           {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[9px] font-normal text-muted-foreground">{role}</span>)}
-          {muted && <span className="shrink-0 text-[10px] text-muted-foreground" aria-label="已静音">⌁</span>}
+          {muted && (
+            <span className="inline-flex size-4 shrink-0 items-center justify-center text-muted-foreground" aria-label="已静音" title="已静音">
+              <HugeiconsIcon icon={NotificationOff01Icon} strokeWidth={2} className="size-3" />
+            </span>
+          )}
           {conversation.tag === 'fresh-pulled' && <span className="rounded bg-secondary px-1.5 py-0.5 text-[8px] font-bold text-secondary-foreground">新消息</span>}
         </span>
         <span className={cn('mt-0.5 block truncate', isMobile ? 'text-[14px]' : 'text-[13px]', typingNames.length > 0 ? 'text-primary' : 'text-muted-foreground')}>
@@ -113,11 +122,18 @@ export function ConversationListItemContent({
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1 self-center">
-        <span className={cn('tabular-nums text-muted-foreground', isMobile ? 'text-[12px]' : 'text-[11px]')}>{conversation.lastAt}</span>
+        <span className="flex items-center gap-1">
+          <span className={cn('tabular-nums text-muted-foreground', isMobile ? 'text-[12px]' : 'text-[11px]')}>{conversation.lastAt}</span>
+          {conversation.pinned && !isMobile && (
+            <span className="inline-flex size-4 items-center justify-center text-muted-foreground" aria-label="已置顶" title="已置顶">
+              <HugeiconsIcon icon={PinIcon} strokeWidth={2} className="size-3" />
+            </span>
+          )}
+        </span>
         {(conversation.unread ?? 0) > 0 && (
-          <span className={cn('grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-bold leading-5', muted ? 'bg-muted text-muted-foreground' : 'bg-foreground text-background')}>
+          <Badge variant={muted ? 'secondary' : 'default'} className="min-w-5 px-1.5 text-[10px] font-bold tabular-nums">
             {conversation.unread! > 99 ? '99+' : conversation.unread}
-          </span>
+          </Badge>
         )}
       </span>
     </>

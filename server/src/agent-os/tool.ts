@@ -14,7 +14,7 @@ export const IPYTHON_TOOL: OpenAIFunctionTool = {
   type: 'function',
   function: {
     name: 'ipython',
-    description: 'Execute Python in your persistent per-agent IPython session. Use the preloaded loop SDK for chat, memory, files, documents, canvas, calendar, routines, research, email, knowledge, learning, polls, and turn control.',
+    description: 'Execute Python in your persistent per-agent IPython session. Use the preloaded loop SDK for chat, memory, files, documents, canvas, calendar, routines, research, email, knowledge, presentations, learning, polls, and turn control.',
     parameters: {
       type: 'object',
       properties: {

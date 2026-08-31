@@ -55,3 +55,11 @@ test('Open Notebook shares LingxiLoop R2 credentials without exposing R2 publicl
   }
   assert.doesNotMatch(ciNotebook, /R2_PUBLIC_BASE:/)
 })
+
+test('local Open Notebook health checks the API and ingestion worker exposed by the image', () => {
+  const mvp = readFileSync(new URL('../../../docker-compose.mvp.yml', import.meta.url), 'utf8')
+  const notebook = serviceBlock(mvp, 'open-notebook', 'wukongim')
+  assert.match(notebook, /surreal-commands-worker/)
+  assert.match(notebook, /curl -fsS http:\/\/localhost:5055\/health/)
+  assert.doesNotMatch(notebook, /supervisorctl status rag-/)
+})

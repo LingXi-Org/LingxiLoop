@@ -1,9 +1,10 @@
-import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import { ws } from '@/api/core/realtime'
 import { AvatarMini } from '@/components/Avatar'
 import { IAt, IPlus, ISend, ITrash } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { useParticipants } from '@/features/agents/state'
 import { toastAction } from '@/lib/actionToast'
@@ -15,6 +16,7 @@ import { useCanvas } from '../state'
 import { CanvasFrameContent } from './CanvasFrameContent'
 import { CanvasHeader } from './CanvasHeader'
 import { localizeCanvasStatus as localizeStatus } from './canvasLabels'
+import '../canvas.css'
 
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 2.5
@@ -179,11 +181,11 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
 
   function onStagePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement
-    if (target.closest('[role="menu"], .canvas-mini-dialog, .canvas-inline-editor')) return
+    if (target.closest('[role="menu"], .canvas-inline-editor')) return
     setMenu(null)
     setFrameMenu(null)
     const blankSurface = event.target === event.currentTarget || Boolean(target.dataset.canvasWorld)
-    const touchSurface = event.pointerType === 'touch' && !target.closest('button, input, textarea, [role="menu"], .canvas-context-menu')
+    const touchSurface = event.pointerType === 'touch' && !target.closest('button, input, textarea, [role="menu"]')
     if (!blankSurface && !touchSurface) return
     if (event.pointerType === 'mouse' && event.button !== 0) return
     if (blankSurface && document.activeElement instanceof HTMLElement) document.activeElement.blur()
@@ -272,12 +274,13 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
 
   const feedbackFrame = visibleFrames.find((frame) => frame.id === feedbackFrameId) ?? null
 
-  return <div className="canvas-shell relative h-full min-h-0 overflow-hidden">
+  return <div data-canvas-ui="root" className="canvas-shell relative h-full min-h-0 overflow-hidden">
     <CanvasHeader onBack={onBack} onFocusFrame={focusFrame} />
     <ContextMenu onOpenChange={(open) => { if (!open) { setMenu(null); setFrameMenu(null) } }}>
     <ContextMenuTrigger asChild>
     <div
       ref={stageRef}
+      data-canvas-stage
       className={`canvas-stage canvas-main-stage absolute inset-x-0 bottom-0 overflow-hidden ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
       onPointerDownCapture={onStagePointerDown}
       onPointerMove={onStagePointerMove}
@@ -295,8 +298,8 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
           return <FrameCard key={frame.id} frame={frame} assignment={assignment} status={livePresence?.status} selected={selectedId === frame.id} zoom={viewport.zoom} allowActivation={() => !gestureMoved.current} />
         })}
       </div>
-      {snapshot && visibleFrames.length === 0 && <div className="pointer-events-none absolute inset-0 grid place-items-center"><div className="rounded-2xl border border-hairline bg-panel/80 px-5 py-4 text-center shadow-sm backdrop-blur"><div className="text-sm font-semibold text-ink">画布还没有卡片</div><div className="mt-1 text-xs text-ink-secondary">在空白处单击右键，选择“新增”或“对话”。</div></div></div>}
-      {error && <div className="absolute left-4 top-4 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 shadow">{error}</div>}
+      {snapshot && visibleFrames.length === 0 && <div className="pointer-events-none fixed inset-0 grid place-items-center"><div data-canvas-empty className="canvas-empty-state px-5 py-4 text-center" style={{ transform: `scale(${viewport.zoom})` }}><div className="text-sm font-semibold text-ink">画布还没有卡片</div><div className="mt-1 text-xs text-ink-secondary">在空白处单击右键，选择“新增”或“对话”。</div></div></div>}
+      {error && <div className="canvas-error-state absolute left-4 top-4 px-3 py-2 text-xs">{error}</div>}
     </div>
     </ContextMenuTrigger>
     <ContextMenuContent aria-label={frameMenu && snapshot ? `${snapshot.frames.find((frame) => frame.id === frameMenu.frameId)?.title ?? ''}卡片操作` : '画布操作'} className="min-w-[200px]">
@@ -305,7 +308,7 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
         : menu && <CanvasContextMenu menu={menu} onTalk={() => { setMenu(null); setDialogOpen(true) }} onCreate={createAt} />}
     </ContextMenuContent>
     </ContextMenu>
-    {feedbackFrame && <FrameFeedbackDialog frame={feedbackFrame} viewport={viewport} onClose={() => setFeedbackFrameId(null)} />}
+    {feedbackFrame && <FrameFeedbackDialog frame={feedbackFrame} onClose={() => setFeedbackFrameId(null)} />}
     {dialogOpen && snapshot && <CanvasAgentDialog onClose={() => setDialogOpen(false)} />}
   </div>
 }
@@ -467,7 +470,7 @@ function FrameCard({ frame, assignment, status, selected, zoom, allowActivation 
   const [draft, setDraft] = useState(frame.content)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const color = assignment?.color ?? 'var(--accent)'
+  const color = assignment?.color ?? 'var(--primary)'
 
   useEffect(() => {
     if (!editing) {
@@ -550,8 +553,8 @@ function FrameCard({ frame, assignment, status, selected, zoom, allowActivation 
     }}>
       {editing
         ? <div className="canvas-inline-editor flex h-full min-h-0 flex-col p-2" onPointerDown={(event) => event.stopPropagation()}>
-          <Textarea ref={editorRef} value={draft} onChange={(event) => { draftRef.current = event.target.value; setDraft(event.target.value) }} onBlur={() => { void persistContent(draftRef.current); setEditing(false) }} onKeyDown={(event) => { if (event.key === 'Escape') event.currentTarget.blur() }} spellCheck className="canvas-panel-input min-h-0 flex-1 resize-none font-mono text-xs leading-5" aria-label={`编辑${frame.title}`} />
-          {(saving || saveError) && <div aria-live="polite" className={`pointer-events-none absolute bottom-3 right-4 rounded-full px-2 py-1 text-[9px] shadow-sm ${saveError ? 'bg-red-500/10 text-red-500' : 'bg-panel/90 text-ink-secondary'}`}>{saveError ?? '自动保存中…'}</div>}
+          <Textarea ref={editorRef} value={draft} onChange={(event) => { draftRef.current = event.target.value; setDraft(event.target.value) }} onBlur={() => { void persistContent(draftRef.current); setEditing(false) }} onKeyDown={(event) => { if (event.key === 'Escape') event.currentTarget.blur() }} spellCheck className="canvas-panel-input canvas-content-input min-h-0 flex-1 resize-none text-xs leading-5" aria-label={`编辑${frame.title}`} />
+          {(saving || saveError) && <div aria-live="polite" className={`canvas-save-status pointer-events-none absolute bottom-3 right-4 px-2 py-1 text-[9px] ${saveError ? 'is-error' : ''}`}>{saveError ?? '自动保存中…'}</div>}
         </div>
         : <CanvasFrameContent frame={frame} />}
     </div>
@@ -576,7 +579,7 @@ function writeFeedbackDraft(canvasId: string, frameId: string, body: string) {
   } catch { /* Session storage can be unavailable in privacy-restricted webviews. */ }
 }
 
-function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame; viewport: Viewport; onClose: () => void }) {
+function FrameFeedbackDialog({ frame, onClose }: { frame: CanvasFrame; onClose: () => void }) {
   const snapshot = useCanvas((state) => state.snapshot)!
   const steerAgent = useCanvas((state) => state.steerAgent)
   const assignAgent = useCanvas((state) => state.assignAgent)
@@ -587,72 +590,10 @@ function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame;
   const [agentId, setAgentId] = useState(assignmentForFrame(frame, snapshot.assignments)?.agentId ?? snapshot.assignments[0]?.agentId ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const panelRef = useRef<HTMLFormElement>(null)
-  const [position, setPosition] = useState({ left: 12, top: 88, maxHeight: 520 })
   const assignment = assignmentForFrame(frame, snapshot.assignments)
   const targetAssignment = snapshot.assignments.find((item) => item.agentId === agentId)
   const participant = agentId ? byId[agentId] : undefined
   const comments = snapshot.comments.filter((comment) => comment.frameId === frame.id).slice(0, 3)
-
-  useEffect(() => {
-    const closeOnOutside = (event: PointerEvent) => {
-      const target = event.target as Node | null
-      if (target && panelRef.current?.contains(target)) return
-      writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current)
-      onClose()
-    }
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current)
-      onClose()
-    }
-    document.addEventListener('pointerdown', closeOnOutside, true)
-    window.addEventListener('keydown', closeOnEscape)
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutside, true)
-      window.removeEventListener('keydown', closeOnEscape)
-    }
-  }, [frame.canvasId, frame.id, onClose])
-
-  useLayoutEffect(() => {
-    const panel = panelRef.current
-    const card = document.querySelector<HTMLElement>(`[data-canvas-frame="${CSS.escape(frame.id)}"]`)
-    const shell = card?.closest<HTMLElement>('.canvas-shell')
-    if (!panel || !card || !shell) return
-    let animationFrame = 0
-    const place = () => {
-      window.cancelAnimationFrame(animationFrame)
-      animationFrame = window.requestAnimationFrame(() => {
-        const shellRect = shell.getBoundingClientRect()
-        const cardRect = card.getBoundingClientRect()
-        const panelRect = panel.getBoundingClientRect()
-        const gap = 12
-        const edge = 12
-        const minTop = shellRect.width <= 640 ? 128 : 88
-        const panelWidth = Math.min(panelRect.width || 384, shellRect.width - edge * 2)
-        const maxHeight = Math.max(180, shellRect.height - minTop - edge)
-        const panelHeight = Math.min(panelRect.height || 420, maxHeight)
-        const right = cardRect.right - shellRect.left + gap
-        const left = cardRect.left - shellRect.left - panelWidth - gap
-        const preferredLeft = right + panelWidth <= shellRect.width - edge ? right : left
-        const x = Math.max(edge, Math.min(preferredLeft, shellRect.width - panelWidth - edge))
-        const centeredTop = cardRect.top - shellRect.top + (cardRect.height - panelHeight) / 2
-        const y = Math.max(minTop, Math.min(centeredTop, shellRect.height - panelHeight - edge))
-        setPosition({ left: Math.round(x), top: Math.round(y), maxHeight: Math.round(maxHeight) })
-      })
-    }
-    place()
-    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place)
-    observer?.observe(shell)
-    observer?.observe(card)
-    observer?.observe(panel)
-    window.addEventListener('resize', place)
-    return () => {
-      window.cancelAnimationFrame(animationFrame)
-      observer?.disconnect()
-      window.removeEventListener('resize', place)
-    }
-  }, [frame.height, frame.id, frame.width, frame.x, frame.y, viewport.x, viewport.y, viewport.zoom])
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -671,21 +612,20 @@ function FrameFeedbackDialog({ frame, viewport, onClose }: { frame: CanvasFrame;
     finally { setBusy(false) }
   }
 
-  return <form ref={panelRef} onSubmit={submit} onPointerDown={(event) => event.stopPropagation()} className="canvas-mini-dialog app-menu-surface absolute z-[70] w-[min(384px,calc(100%-24px))] overflow-auto rounded-2xl p-4" style={position}>
-    <div className="flex items-center gap-3">
-      {participant ? <AvatarMini p={participant} size={34} /> : <span className="grid size-9 place-items-center rounded-full bg-accent/10 text-sm font-bold text-accent">评</span>}
-      <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-ink">反馈给 {participant?.name ?? '智能助教'}</div><div className="truncate text-[10px] text-ink-secondary">{frame.title}{targetAssignment ? ` · ${localizeStatus(canvasStatusLabel(targetAssignment.status))}` : ''}</div></div>
-      <Button type="button" onClick={() => { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); onClose() }} aria-label="关闭反馈" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</Button>
-    </div>
+  return <Dialog open onOpenChange={(open) => { if (!open) { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); onClose() } }}><DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-sm"><form onSubmit={submit}>
+    <DialogHeader className="pe-10"><div className="flex items-center gap-3">
+      {participant ? <AvatarMini p={participant} size={34} /> : <span className="canvas-feedback-avatar grid size-9 place-items-center text-sm font-bold">评</span>}
+      <div className="min-w-0 flex-1"><DialogTitle className="truncate">反馈给 {participant?.name ?? '智能助教'}</DialogTitle><DialogDescription className="truncate">{frame.title}{targetAssignment ? ` · ${localizeStatus(canvasStatusLabel(targetAssignment.status))}` : ''}</DialogDescription></div>
+    </div></DialogHeader>
     {!assignment && <div className="mt-3 flex flex-wrap gap-2">{snapshot.assignments.map((item) => {
       const agent = byId[item.agentId]
-      return <Button key={item.agentId} type="button" onClick={() => setAgentId(item.agentId)} className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-semibold ${agentId === item.agentId ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}>{agent && <AvatarMini p={agent} size={20} />}@{agent?.name ?? '智能助教'}</Button>
+      return <Button key={item.agentId} type="button" size="sm" variant={agentId === item.agentId ? 'default' : 'outline'} onClick={() => setAgentId(item.agentId)}>{agent && <AvatarMini p={agent} size={20} />}@{agent?.name ?? '智能助教'}</Button>
     })}</div>}
-    {comments.length > 0 && <div className="mt-3 space-y-1.5">{comments.map((comment) => <div key={comment.id} className="rounded-lg bg-inset px-2.5 py-2 text-[10px] leading-4 text-ink-secondary">{comment.body}</div>)}</div>}
-    <Textarea autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="canvas-panel-input mt-3 resize-none text-xs" />
+    {comments.length > 0 && <div className="mt-3 space-y-1.5">{comments.map((comment) => <div key={comment.id} className="rounded-md bg-muted px-2.5 py-2 text-xs leading-4 text-muted-foreground">{comment.body}</div>)}</div>}
+    <Textarea autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="mt-3 resize-none text-xs" />
     {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
-    <div className="mt-3 flex justify-end"><Button type="submit" disabled={!agentId || !body.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />发送反馈</Button></div>
-  </form>
+    <DialogFooter className="mt-3"><Button type="submit" disabled={!agentId || !body.trim() || busy}><ISend className="size-3.5" />发送反馈</Button></DialogFooter>
+  </form></DialogContent></Dialog>
 }
 
 function CanvasAgentDialog({ onClose }: { onClose: () => void }) {
@@ -710,13 +650,13 @@ function CanvasAgentDialog({ onClose }: { onClose: () => void }) {
     finally { setBusy(false) }
   }
 
-  return <div className="canvas-dialog-layer absolute inset-0 z-[70] grid place-items-center p-4" onPointerDown={onClose}><form onSubmit={submit} onPointerDown={(event) => event.stopPropagation()} className="canvas-mini-dialog w-full max-w-md rounded-2xl border border-hairline p-4 shadow-2xl backdrop-blur-xl">
-    <div className="flex items-center justify-between"><div><div className="text-sm font-semibold text-ink">在画布中新增工作</div><div className="mt-0.5 text-[10px] text-ink-secondary">选择智能助教，并通过 @ 对话把任务加入当前画布。</div></div><Button type="button" onClick={onClose} aria-label="关闭对话" className="grid size-8 place-items-center rounded-full text-ink-secondary hover:bg-raised">×</Button></div>
-    <div className="mt-4 flex flex-wrap gap-2">{agents.map((agent) => <Button key={agent.id} type="button" onClick={() => setAgentId(agent.id)} className={`flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold ${agentId === agent.id ? 'border-accent bg-accent/10 text-accent' : 'border-hairline text-ink-secondary hover:bg-raised'}`}><AvatarMini p={agent} size={24} />@{agent.name}</Button>)}</div>
-    <Textarea autoFocus value={assignment} onChange={(event) => setAssignment(event.target.value)} rows={4} placeholder="描述希望智能助教在这块画布中完成的工作…" className="canvas-panel-input mt-4 resize-none text-xs" />
+  return <Dialog open onOpenChange={(open) => { if (!open) onClose() }}><DialogContent><form onSubmit={submit}>
+    <DialogHeader><DialogTitle>在画布中新增工作</DialogTitle><DialogDescription>选择智能助教，并通过 @ 对话把任务加入当前画布。</DialogDescription></DialogHeader>
+    <div className="mt-4 flex flex-wrap gap-2">{agents.map((agent) => <Button key={agent.id} type="button" size="sm" variant={agentId === agent.id ? 'default' : 'outline'} onClick={() => setAgentId(agent.id)}><AvatarMini p={agent} size={24} />@{agent.name}</Button>)}</div>
+    <Textarea autoFocus value={assignment} onChange={(event) => setAssignment(event.target.value)} rows={4} placeholder="描述希望智能助教在这块画布中完成的工作…" className="mt-4 resize-none text-xs" />
     {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
-    <div className="mt-3 flex justify-end"><Button type="submit" disabled={!agentId || !assignment.trim() || busy} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-40"><ISend className="size-3.5" />@ 智能助教并新增工作</Button></div>
-  </form></div>
+    <DialogFooter className="mt-3"><Button type="submit" disabled={!agentId || !assignment.trim() || busy}><ISend className="size-3.5" />@ 智能助教并新增工作</Button></DialogFooter>
+  </form></DialogContent></Dialog>
 }
 
 function assignmentForFrame(frame: CanvasFrame, assignments: CanvasAgentAssignment[]): CanvasAgentAssignment | undefined {

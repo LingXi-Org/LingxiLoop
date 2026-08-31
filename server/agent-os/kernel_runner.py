@@ -91,12 +91,15 @@ class ApprovalPending(RuntimeError):
 
 
 class Namespace:
-    def __init__(self, bridge: "LoopBridge", name: str):
+    def __init__(self, bridge: "LoopBridge", name: str, allowed_methods: frozenset[str] | None = None):
         self._bridge = bridge
         self._name = name
+        self._allowed_methods = allowed_methods
 
     def __getattr__(self, method: str):
-        if method.startswith("_"):
+        if method.startswith("_") or (
+            self._allowed_methods is not None and method not in self._allowed_methods
+        ):
             raise AttributeError(method)
 
         def invoke(**kwargs: Any) -> Any:
@@ -106,13 +109,22 @@ class Namespace:
 
 
 class LoopBridge:
+    KNOWLEDGE_METHODS = frozenset({
+        "list_sources",
+        "add_text", "add_url", "add_file",
+        "retry_ingestion", "set_source_enabled", "delete_source",
+    })
+    PRESENTATION_METHODS = frozenset({
+        "create", "get", "revise_outline", "approve_outline",
+        "revise", "cancel", "retry",
+    })
     NAMESPACES = (
         "chat", "memory", "skills", "files", "documents", "boards",
-        "canvas", "calendar", "routines", "research", "email", "knowledge", "learning", "polls", "teacher", "turn",
+        "canvas", "calendar", "routines", "research", "email", "knowledge", "presentations", "learning", "polls", "teacher", "turn",
     )
     DEFAULT_NAMESPACES = (
         "chat", "memory", "skills", "files", "documents", "boards",
-        "canvas", "calendar", "routines", "research", "email", "knowledge", "learning", "polls", "turn",
+        "canvas", "calendar", "routines", "research", "email", "knowledge", "presentations", "learning", "polls", "turn",
     )
 
     def __init__(self) -> None:
@@ -122,7 +134,12 @@ class LoopBridge:
         self.call_index = 0
         self.directives: list[dict[str, Any]] = []
         for name in self.DEFAULT_NAMESPACES:
-            setattr(self, name, Namespace(self, name))
+            methods = (
+                self.KNOWLEDGE_METHODS if name == "knowledge"
+                else self.PRESENTATION_METHODS if name == "presentations"
+                else None
+            )
+            setattr(self, name, Namespace(self, name, methods))
 
     def begin(self, execution_id: str, context: dict[str, Any]) -> None:
         self.execution_id = execution_id
@@ -138,7 +155,12 @@ class LoopBridge:
             if name in self.__dict__:
                 delattr(self, name)
         for name in allowed:
-            setattr(self, name, TeacherSDK(self) if name == "teacher" else Namespace(self, name))
+            methods = (
+                self.KNOWLEDGE_METHODS if name == "knowledge"
+                else self.PRESENTATION_METHODS if name == "presentations"
+                else None
+            )
+            setattr(self, name, TeacherSDK(self) if name == "teacher" else Namespace(self, name, methods))
 
     def call(self, action: str, args: dict[str, Any]) -> Any:
         index = self.call_index

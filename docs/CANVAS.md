@@ -2,7 +2,11 @@
 
 LingxiLoop Canvas follows one invariant: **shared state, isolated execution**.
 
-The shared boundary contains only task-workspace-scoped Canvas records:
+Each ordinary chat conversation gets one durable Canvas automatically when its
+Canvas workspace is first opened. Users cannot create additional canvases for a
+conversation; the conversation identity is the idempotent ownership key.
+
+The shared boundary contains only conversation-scoped Canvas records:
 
 - `canvases` identifies a durable learning-task workspace and its source conversation, trigger, goal, initiator, and lifecycle. A tenant may retain many historical workspaces.
 - `canvas_frames` stores typed frame geometry, content and revision metadata.

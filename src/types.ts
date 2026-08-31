@@ -132,14 +132,6 @@ export interface PollTally {
   voterIds: string[]
 }
 
-export interface ImReadReceiptAdvance {
-  channelId: string
-  readerId: string
-  previousReadSeq: number
-  readThroughSeq: number
-  readAt: string
-}
-
 export interface ViewKey {
   view: 'conversations' | 'mail' | 'calendar' | 'library' | 'learning' | 'courses'
 }

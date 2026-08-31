@@ -30,7 +30,7 @@ interface KnowledgeJobInput {
 
 export interface WukongWebhookInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
-  verify(raw: Buffer, signature?: string): boolean
+  verify(raw: Buffer, signature?: string, token?: string): boolean
   isKnowledgeAttachment(mime: string, size: number): boolean
   createKnowledgeJob(db: Queryable, input: KnowledgeJobInput): Promise<{ deferAgentWake: boolean; sourceId: string }>
   emitQueued(input: { channelId: string; channelType: number; agentId: string; workId: string }): Promise<void>
@@ -53,8 +53,8 @@ function record(value: unknown): Record<string, unknown> {
 export class WukongWebhookApplication {
   constructor(private readonly infrastructure: WukongWebhookInfrastructure) {}
 
-  verify(raw: Buffer, signature?: string): boolean {
-    return this.infrastructure.verify(raw, signature)
+  verify(raw: Buffer, signature?: string, token?: string): boolean {
+    return this.infrastructure.verify(raw, signature, token)
   }
 
   async process(input: WukongCommittedEvent): Promise<Record<string, unknown>> {

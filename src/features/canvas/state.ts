@@ -29,7 +29,7 @@ interface CanvasState {
   load: (canvasId?: string) => Promise<void>
   loadPreview: (canvasId: string) => Promise<void>
   loadWorkspaces: (conversationId?: string) => Promise<void>
-  createForConversation: (conversationId: string) => Promise<CanvasSnapshot>
+  ensureForConversation: (conversationId: string) => Promise<CanvasSnapshot>
   reset: () => void
   selectFrame: (id: string | null) => void
   patchLocalFrame: (id: string, patch: Partial<CanvasFrame>) => void
@@ -123,8 +123,8 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     catch (error) { set({ error: userFacingError(error, '暂时无法加载画布列表，请稍后重试。') }) }
   },
 
-  createForConversation: async (conversationId) => {
-    const snapshot = await canvasApi.createConversationCanvas(conversationId)
+  ensureForConversation: async (conversationId) => {
+    const snapshot = await canvasApi.ensureConversationCanvas(conversationId)
     const summary: CanvasWorkspaceSummary = {
       id: snapshot.id,
       title: snapshot.title,

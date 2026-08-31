@@ -4,12 +4,14 @@ import { IFile, IPlus } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useApp } from '@/stores/app'
 import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useParticipants } from '@/features/agents/state'
+import { useConversations } from '@/features/conversations/store'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
@@ -62,7 +64,13 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
   const addFiles = useKnowledgeSources((state) => state.addFiles)
   const loadConversationSelection = useKnowledgeSources((state) => state.loadConversationSelection)
   const conversationId = useApp((state) => state.selectedConversationId)
+  const supportsSources = useConversations((state) => {
+    const kind = state.list.find((conversation) => conversation.id === conversationId)?.kind
+    return kind === 'group' || kind === 'direct'
+  })
   const setView = useApp((state) => state.setView)
+  const [initialLoading, setInitialLoading] = useState(supportsSources)
+  const settledConversationId = useRef<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [mode, setMode] = useState<'file' | 'url' | 'text'>('file')
   const [url, setUrl] = useState('')
@@ -71,10 +79,23 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
   const [dragging, setDragging] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { if (conversationId) void load() }, [conversationId, load])
   useEffect(() => {
-    if (conversationId) void loadConversationSelection(conversationId)
-  }, [conversationId, loadConversationSelection, sources.length])
+    let active = true
+    setInitialLoading(Boolean(conversationId && supportsSources))
+    if (conversationId && supportsSources) {
+      void load()
+        .then(() => loadConversationSelection(conversationId))
+        .catch(() => undefined)
+        .finally(() => {
+          if (!active) return
+          settledConversationId.current = conversationId
+          setInitialLoading(false)
+        })
+    }
+    return () => { active = false }
+  }, [conversationId, load, loadConversationSelection, supportsSources])
+  const visibleSources = supportsSources ? sources : []
+  const firstLoadPending = supportsSources && settledConversationId.current !== conversationId
   const filesChosen = async (files: File[]) => {
     const allowed = files.filter((file) => file.size <= 25 * 1024 * 1024)
     if (allowed.length) await addFiles(allowed)
@@ -91,10 +112,20 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
   return <section className={`knowledge-source-panel flex h-full min-h-0 flex-col ${flat ? 'bg-transparent' : 'bg-app'} ${mobile ? 'w-full' : ''}`} data-source-layout={flat ? 'flat' : 'standard'}>
     {flat ? <div className="flex h-10 shrink-0 items-center justify-between px-3">
       {toolbar}
-      <Button type="button" onClick={() => setAdding(true)} variant="ghost" size="sm" aria-label="添加资料"><IPlus />添加</Button>
-    </div> : <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-hairline px-3.5"><div><h2 className="text-sm font-semibold text-ink">知识库</h2><p className="text-[10px] text-ink-secondary">此群共享 · 回答优先使用</p></div><Button type="button" onClick={() => setAdding(true)} className="grid size-8 place-items-center rounded-lg bg-accent text-white" aria-label="添加资料"><IPlus className="size-4" /></Button></header>}
+      {supportsSources && <Button type="button" onClick={() => setAdding(true)} variant="ghost" size="sm" aria-label="添加资料"><IPlus />添加</Button>}
+    </div> : <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-hairline px-3.5"><div><h2 className="text-sm font-semibold text-ink">知识库</h2><p className="text-[10px] text-ink-secondary">项目共享与我的私有资料</p></div><Button type="button" onClick={() => setAdding(true)} className="grid size-8 place-items-center rounded-lg bg-accent text-white" aria-label="添加资料"><IPlus className="size-4" /></Button></header>}
     <div className={`min-h-0 flex-1 overflow-y-auto ${flat ? 'space-y-0.5 px-3 pb-3 pt-1' : 'space-y-2 p-3'}`}>
-      {loading && sources.length === 0 ? <ResourceSkeleton variant={flat ? 'list' : 'cards'} count={flat ? 5 : 3} compact={flat} label="正在加载知识资料" /> : sources.length === 0 ? <div className={flat ? 'grid min-h-full place-items-center px-8 pb-12 text-center' : 'rounded-2xl border border-dashed border-hairline p-5 text-center'}><div><IFile className={flat ? 'mx-auto size-8 text-muted-foreground' : 'mx-auto size-5 text-accent'} /><p className={`${flat ? 'mt-4 text-sm font-medium text-foreground' : 'mt-3 text-xs font-semibold'}`}>这个群还没有资料</p><p className={`${flat ? 'mt-1 text-xs leading-5 text-muted-foreground' : 'mt-1 text-[10px] leading-4 text-ink-secondary'}`}>上传文件、网页或文本，让回答建立在群聊资料之上。</p><div className="mt-4 flex flex-wrap justify-center gap-2"><Button onClick={() => setAdding(true)} className="context-empty-action" size="sm"><IconPlus />添加资料</Button><Button onClick={() => { setView('conversations'); window.dispatchEvent(new Event('lingxiloop:focus-composer')) }} className="context-empty-action" variant="secondary" size="sm"><IconArrowLeft />继续对话</Button></div></div></div> : sources.map((source) => <SourceRow key={source.id} source={source} conversationId={conversationId} flat={flat} />)}
+      {(firstLoadPending || initialLoading || loading) && visibleSources.length === 0 ? <ResourceSkeleton variant={flat ? 'list' : 'cards'} count={flat ? 5 : 3} compact={flat} label="正在加载知识资料" /> : visibleSources.length === 0 ? <Empty className={flat ? 'min-h-full px-6 py-8' : 'min-h-72 border'}>
+        <EmptyHeader>
+          <EmptyMedia variant="icon"><IFile /></EmptyMedia>
+          <EmptyTitle className="text-base">这个对话还没有资料</EmptyTitle>
+          <EmptyDescription>上传文件、网页或文本，让回答建立在当前对话可访问的资料之上。</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent className="flex-row justify-center gap-2">
+          {supportsSources && <Button type="button" onClick={() => setAdding(true)} size="sm"><IconPlus />添加资料</Button>}
+          <Button type="button" onClick={() => { setView('conversations'); window.dispatchEvent(new Event('lingxiloop:focus-composer')) }} variant="outline" size="sm"><IconArrowLeft />继续对话</Button>
+        </EmptyContent>
+      </Empty> : visibleSources.map((source) => <SourceRow key={source.id} source={source} conversationId={conversationId} flat={flat} />)}
     </div>
 
     {adding && <div className="fixed inset-0 z-[110] grid place-items-center bg-black/35 p-4 backdrop-blur-sm" onMouseDown={() => setAdding(false)}><div className="w-full max-w-xl rounded-2xl border border-hairline bg-panel p-5 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>

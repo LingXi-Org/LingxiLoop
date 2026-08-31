@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import { createHmac } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 import { afterEach, test } from 'node:test'
 import { WukongClient } from '../im/wukong.js'
+import { parseWukongWebhook } from '../im/webhook-contracts.js'
 
 const originalFetch = globalThis.fetch
 afterEach(() => { globalThis.fetch = originalFetch })
@@ -180,6 +182,32 @@ test('WuKong webhook signatures are constant-time HMAC contracts', () => {
   const signature = createHmac('sha256', secret).update(raw).digest('hex')
   const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: secret })
   assert.equal(client.verifyWebhook(raw, `sha256=${signature}`), true)
+  assert.equal(client.verifyWebhook(raw, undefined, secret), true)
+  assert.equal(client.verifyWebhook(raw, undefined, 'wrong-secret'), false)
   assert.equal(client.verifyWebhook(raw, 'sha256=deadbeef'), false)
   assert.equal(client.verifyWebhook(Buffer.from('tampered'), `sha256=${signature}`), false)
+})
+
+test('WuKong msg.notify batches normalize to the Agent OS webhook contract', () => {
+  const payload = { version: 1, kind: 'text', clientMsgNo: 'msg-1', body: 'hello' }
+  const parsed = parseWukongWebhook([{
+    message_idstr: '123', channel_id: 'channel-1', from_uid: 'user-1', client_msg_no: 'msg-1',
+    payload: Buffer.from(JSON.stringify({ type: 1000, ...payload })).toString('base64'),
+  }])
+  assert.deepEqual(parsed, {
+    success: true,
+    data: { eventId: 'msg.notify:123', eventType: 'msg.notify', channelId: 'channel-1', fromUid: 'user-1', clientMsgNo: 'msg-1', payload },
+  })
+})
+
+test('production enables authenticated WuKong callbacks without inheriting the local proxy', async () => {
+  const [compose, deploy, manifest] = await Promise.all([
+    readFile(new URL('../../../docker-compose.production.yml', import.meta.url), 'utf8'),
+    readFile(new URL('../../../scripts/deploy-production.sh', import.meta.url), 'utf8'),
+    readFile(new URL('../../../package.json', import.meta.url), 'utf8'),
+  ])
+  assert.match(compose, /WK_WEBHOOK_HTTP_ADDR: .*\/webhooks\/wukong\?token=\$\{WUKONG_WEBHOOK_SECRET:\?/)
+  assert.match(deploy, /OPENAI_EMBEDDING_MODEL WUKONG_WEBHOOK_SECRET/)
+  assert.doesNotMatch(compose, /NODE_USE_ENV_PROXY/)
+  assert.match(manifest, /dev:preview.*NODE_USE_ENV_PROXY=1/)
 })

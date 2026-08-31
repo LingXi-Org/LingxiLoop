@@ -1,11 +1,19 @@
 import os
 
+
+def _truthy(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+RAG_ONLY = _truthy(os.environ.get("OPEN_NOTEBOOK_RAG_ONLY", ""))
+
 # ROOT DATA FOLDER
 DATA_FOLDER = "./data"
 
 # LANGGRAPH CHECKPOINT FILE
 sqlite_folder = f"{DATA_FOLDER}/sqlite-db"
-os.makedirs(sqlite_folder, exist_ok=True)
+if not RAG_ONLY:
+    os.makedirs(sqlite_folder, exist_ok=True)
 LANGGRAPH_CHECKPOINT_FILE = f"{sqlite_folder}/checkpoints.sqlite"
 
 # UPLOADS FOLDER
@@ -16,7 +24,8 @@ os.makedirs(UPLOADS_FOLDER, exist_ok=True)
 # Matches the root that build_episode_output_dir() (commands/podcast_commands.py)
 # creates episode directories under when called with DATA_FOLDER in production.
 PODCASTS_FOLDER = f"{DATA_FOLDER}/podcasts"
-os.makedirs(PODCASTS_FOLDER, exist_ok=True)
+if not RAG_ONLY:
+    os.makedirs(PODCASTS_FOLDER, exist_ok=True)
 
 # TIKTOKEN CACHE FOLDER
 # Reads TIKTOKEN_CACHE_DIR from the environment so Docker can redirect the cache

@@ -15,7 +15,7 @@ function message(id: string, sequence: number | null, delivery: LingxiMessageMet
     schema: 'lingxiloop.thread-message.v1', conversationId: 'room', clientMessageId: id,
     sequence, senderId: 'me', senderName: 'Me', senderKind: 'human', senderAvatarUrl: null,
     isMine: true, delivery, messageKind: 'text', runId: null, quotedMessageId: null, quote: null,
-    reactions: [], receipts: [], replyCount: 0, threadRootId: null, groupStart: true, groupEnd: true,
+    reactions: [], replyCount: 0, threadRootId: null, groupStart: true, groupEnd: true,
     continuedFromPrevious: false, continuedToNext: false,
   }
   return { id, role: 'user', content: [{ type: 'text', text: id }], attachments: [], createdAt: new Date(sequence ?? 99), metadata: { custom: metadata } }

@@ -69,7 +69,8 @@ test('domain foundation relations replace legacy product identity and membership
   assert.match(schema, /companies_personal_owner_check/)
   assert.match(schema, /idx_companies_personal_owner[\s\S]*?personal_owner_user_id[\s\S]*?type = 'PERSONAL'/)
   assert.match(schema, /companies_personal_owner_user_id_fkey[\s\S]*?REFERENCES public\.users\(id\) ON DELETE RESTRICT/)
-  assert.doesNotMatch(schema, /\bowner_user_id\b/)
+  const companies = schema.match(/CREATE TABLE public\.companies \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  assert.doesNotMatch(companies, /\bowner_user_id\b/)
   assert.match(schema, /CREATE TABLE public\.projects \([\s\S]*?company_id text NOT NULL[\s\S]*?kind text NOT NULL[\s\S]*?plan_id text,/)
   assert.match(schema, /projects_kind_check[\s\S]*?'PERSONAL_LEARNING'[\s\S]*?'TEACHING'[\s\S]*?'INSTITUTIONAL_COURSE'/)
   assert.match(schema, /projects_status_check[\s\S]*?'CREATED'[\s\S]*?'DRAFT'[\s\S]*?'ACTIVE'[\s\S]*?'COURSE_ENDED'[\s\S]*?'READ_ONLY'[\s\S]*?'TRANSFER_PENDING'[\s\S]*?'RETENTION'[\s\S]*?'ARCHIVED'[\s\S]*?'DELETED'/)
@@ -413,16 +414,35 @@ test('Project Transfer persists dual confirmation, policy snapshot, and one term
   assert.match(bootstrap, /'idx_project_transfers_status'/)
 })
 
-test('Organization and Course Knowledge share one canonical source through explicit scoped bindings', () => {
-  assert.match(schema, /knowledge_sources_scope_key UNIQUE \(id, company_id\)/)
-  assert.match(schema, /CREATE TABLE public\.knowledge_source_bindings/)
-  assert.match(schema, /knowledge_source_bindings_scope_check[\s\S]*'ORGANIZATION'[\s\S]*project_id IS NULL[\s\S]*'COURSE'[\s\S]*project_id IS NOT NULL/)
-  assert.match(schema, /knowledge_source_bindings_source_fkey[\s\S]*knowledge_sources\(id,company_id\)/)
-  assert.match(schema, /knowledge_source_bindings_project_fkey[\s\S]*projects\(id,company_id\)/)
-  assert.match(schema, /uniq_organization_knowledge_source/)
-  assert.match(schema, /uniq_course_knowledge_source/)
-  assert.match(bootstrap, /'knowledge_source_bindings'/)
-  assert.match(bootstrap, /'knowledge_source_bindings_scope_check'/)
+test('knowledge sources use the canonical PRIVATE or PROJECT authorization scope', () => {
+  const sources = schema.match(/CREATE TABLE public\.knowledge_sources \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  assert.match(sources, /visibility_scope text NOT NULL/)
+  assert.match(sources, /owner_user_id text NOT NULL/)
+  assert.match(sources, /created_by_user_id text NOT NULL/)
+  assert.match(sources, /created_via text NOT NULL/)
+  assert.doesNotMatch(sources, /\bcreated_by\s+text/)
+  assert.match(sources, /knowledge_sources_visibility_scope_check[\s\S]*'PRIVATE'[\s\S]*'PROJECT'/)
+  assert.match(sources, /knowledge_sources_created_via_check[\s\S]*'USER'[\s\S]*'AGENT'/)
+  assert.match(schema, /knowledge_sources_id_company_id_key[\s\S]*UNIQUE \(id, company_id\)/)
+  assert.match(schema, /knowledge_sources_project_company_fkey[\s\S]*FOREIGN KEY \(project_id, company_id\)[\s\S]*projects\(id, company_id\)/)
+  assert.match(schema, /knowledge_sources_conversation_scope_fkey[\s\S]*FOREIGN KEY \(conversation_id, company_id, project_id\)/)
+  assert.match(schema, /knowledge_sources_owner_user_id_fkey[\s\S]*users\(id\) ON DELETE RESTRICT/)
+  assert.match(schema, /knowledge_sources_created_by_user_id_fkey[\s\S]*users\(id\) ON DELETE RESTRICT/)
+  assert.match(schema, /idx_knowledge_sources_private_owner[\s\S]*owner_user_id[\s\S]*visibility_scope = 'PRIVATE'/)
+  for (const column of ['visibility_scope', 'owner_user_id', 'created_by_user_id', 'created_via']) {
+    assert.match(bootstrap, new RegExp(`\\['knowledge_sources', '${column}'\\]`))
+  }
+  assert.match(bootstrap, /\['knowledge_sources', 'created_by'\]/)
+})
+
+test('conversation source exclusions are a per-user enablement overlay', () => {
+  const exclusions = schema.match(/CREATE TABLE public\.conversation_source_exclusions \(([\s\S]*?)\n\);/)?.[1] ?? ''
+  assert.match(exclusions, /user_id text NOT NULL/)
+  assert.doesNotMatch(exclusions, /\bcreated_by\s+text/)
+  assert.match(schema, /conversation_source_exclusions_pkey PRIMARY KEY \(conversation_id, source_id, user_id\)/)
+  assert.match(schema, /conversation_source_exclusions_user_id_fkey[\s\S]*users\(id\) ON DELETE CASCADE/)
+  assert.match(bootstrap, /\['conversation_source_exclusions', 'user_id'\]/)
+  assert.match(bootstrap, /\['conversation_source_exclusions', \['conversation_id', 'source_id', 'user_id'\]\]/)
 })
 
 test('signed Trust snapshots are bounded, Evidence-backed and immutable', () => {
@@ -471,6 +491,9 @@ test('v1 defaults preserve current capability and Canvas contracts', () => {
   assert.match(schema, /capabilities jsonb DEFAULT '\["canvas", "web", "files", "email", "documents"\]'::jsonb NOT NULL/)
   assert.doesNotMatch(schema, /capabilities jsonb DEFAULT '[^']*knowledge/)
   assert.match(schema, /CREATE TABLE public\.canvases \([\s\S]*?conversation_id text,/)
+  assert.match(schema, /canvases_conversation_id_fkey[\s\S]*?REFERENCES public\.conversations\(id\) ON DELETE CASCADE/)
+  assert.doesNotMatch(schema, /canvases require a group conversation/)
+  assert.match(schema, /trg_canvas_conversation_owner[\s\S]*?enforce_canvas_conversation_owner/)
 })
 
 test('structured Agent cards store WuKong identities without SQL message foreign keys', () => {

@@ -21,10 +21,16 @@ import { env } from '../env.js'
 import { ensurePersonalFreePlan } from '../modules/entitlements/public.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
 import type { InboundEmailPayload } from '../modules/email/contracts.js'
-import { installStorageProvider, type Storage, type StorageObject } from '../storage.js'
+import {
+  type BoundedStorageReader,
+  installStorageProvider,
+  type Storage,
+  type StorageObject,
+  StorageObjectTooLargeError,
+} from '../storage.js'
 
 const storageObjects = new Map<string, { body: Buffer; mime: string; modifiedAt: number }>()
-const integrationStorage: Storage = {
+const integrationStorage: Storage & BoundedStorageReader = {
   mode: 'r2',
   async put(key, body, mime) {
     storageObjects.set(key, { body: Buffer.from(body), mime, modifiedAt: Date.now() })
@@ -42,6 +48,22 @@ const integrationStorage: Storage = {
   async readObject(key) {
     const object = storageObjects.get(key)
     if (!object) throw new Error(`integration storage object not found: ${key}`)
+    return Buffer.from(object.body)
+  },
+  async statObject(key) {
+    const object = storageObjects.get(key)
+    if (!object) throw new Error(`integration storage object not found: ${key}`)
+    return {
+      sizeBytes: object.body.byteLength,
+      contentType: object.mime,
+      etag: null,
+      lastModifiedMs: object.modifiedAt,
+    }
+  },
+  async readObjectBounded(key, maxBytes) {
+    const object = storageObjects.get(key)
+    if (!object) throw new Error(`integration storage object not found: ${key}`)
+    if (object.body.byteLength > maxBytes) throw new StorageObjectTooLargeError(maxBytes)
     return Buffer.from(object.body)
   },
   async listObjectsByPrefix(prefix): Promise<StorageObject[]> {

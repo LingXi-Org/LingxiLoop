@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from '
 import type { CanvasFrame, CanvasSnapshot } from '../contracts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CanvasFrameContent } from './CanvasFrameContent'
+import '../canvas.css'
 
 interface CanvasPreviewProps {
   snapshot: CanvasSnapshot | null
@@ -58,11 +59,11 @@ export function CanvasPreview({ snapshot, title, frameCount, fill = false }: Can
     ?? snapshot?.assignments.find((assignment) => assignment.activeFrameId === frame.id)?.color
 
   return (
-    <div ref={previewRef} className="canvas-preview" style={fill ? { height: '100%', borderBottom: 0 } : undefined} aria-label={`${title}画布预览`}>
+    <div ref={previewRef} data-canvas-ui="preview" data-canvas-preview className={`canvas-preview ${fill ? 'is-fill' : ''}`} style={fill ? { height: '100%' } : undefined} aria-label={`${title}画布预览`}>
       {snapshot ? (
         <div className="absolute inset-0">
           {frames.map((frame) => (
-            <div key={frame.id} className="canvas-preview-frame" style={{ ...rectStyle(frame), '--canvas-frame-accent': agentColor(frame) ?? 'var(--accent)' } as CSSProperties}>
+            <div key={frame.id} className="canvas-preview-frame" style={{ ...rectStyle(frame), '--canvas-frame-accent': agentColor(frame) ?? 'var(--primary)' } as CSSProperties}>
               <div className="canvas-preview-frame-content">
                 {frame.type === 'html'
                   ? <div className="canvas-preview-html-scale" style={htmlPreviewStyle(frame)}><CanvasFrameContent frame={frame} preview /></div>

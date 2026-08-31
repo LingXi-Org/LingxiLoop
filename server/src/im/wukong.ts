@@ -235,12 +235,15 @@ export class WukongClient {
     })
   }
 
-  verifyWebhook(rawBody: Buffer, signature: string | undefined): boolean {
-    if (!this.config.webhookSecret || !signature) return false
+  verifyWebhook(rawBody: Buffer, signature: string | undefined, token?: string): boolean {
+    if (!this.config.webhookSecret) return false
+    if (token && token.length === this.config.webhookSecret.length
+      && timingSafeEqual(Buffer.from(token), Buffer.from(this.config.webhookSecret))) return true
+    if (!signature) return false
     const expected = createHmac('sha256', this.config.webhookSecret).update(rawBody).digest('hex')
     const provided = signature.replace(/^sha256=/, '').toLowerCase()
-    if (provided.length !== expected.length) return false
-    return timingSafeEqual(Buffer.from(provided), Buffer.from(expected))
+    return provided.length === expected.length
+      && timingSafeEqual(Buffer.from(provided), Buffer.from(expected))
   }
 }
 

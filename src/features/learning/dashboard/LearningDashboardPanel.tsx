@@ -1,25 +1,25 @@
 import { BubbleChatIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useState } from 'react'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
-import { DocumentsView } from '@/features/documents/components/DocumentsView'
 import { useConversations } from '@/features/conversations/store'
+import { ProjectSourceLibrary } from '@/features/knowledge/components/ProjectSourceLibrary'
 import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
-import { LearningActivitiesSection } from '../components/LearningActivitiesSection'
 import { CourseAvatar } from '../components/CourseAvatar'
+import { LearningActivitiesSection } from '../components/LearningActivitiesSection'
 import { LearningEvidenceSection } from '../components/LearningEvidenceSection'
 import { LearningObjectivesSection } from '../components/LearningObjectivesSection'
 import { LearningReviewsSection } from '../components/LearningReviewsSection'
 import type { LearningCourse, LearningSpace } from '../contracts'
 import { CourseMembersSection } from './CourseMembersSection'
 import { CourseSettingsSection } from './CourseSettingsSection'
-import type { LearningDashboardSection } from './navigation'
 import { MissionSection } from './MissionSection'
+import type { LearningDashboardSection } from './navigation'
 import { OverviewSection } from './OverviewSection'
 import { TeacherLearnersSection } from './TeacherLearnersSection'
 import { useLearningDashboardData } from './useLearningDashboardData'
@@ -88,7 +88,7 @@ function DashboardSectionFrame({ space, section, children }: {
 
 export function LearningDashboardPanel({ space, section }: { space: LearningSpace; section: LearningDashboardSection }) {
   if (section === 'calendar') return <CalendarView />
-  if (section === 'resources') return <DocumentsView />
+  if (section === 'resources') return <ProjectSourceLibrary projectId={space.projectId} canManage={space.canManage} />
   if (section === 'learners') return <DashboardSectionFrame space={space} section={section}>{space.canReview ? <TeacherLearnersSection projectId={space.projectId} /> : <CapabilityNotice message="当前课程状态下无法查看学习者审核资料。" />}</DashboardSectionFrame>
   if (section === 'members') return <DashboardSectionFrame space={space} section={section}><CourseMembersSection space={space} /></DashboardSectionFrame>
   if (section === 'settings') return <DashboardSectionFrame space={space} section={section}><CourseSettingsSection space={space} /></DashboardSectionFrame>

@@ -19,36 +19,21 @@ for required in "$compose_file" "$next_env" ".env.secrets"; do
   fi
 done
 
-for secret in OPEN_NOTEBOOK_PASSWORD OPEN_NOTEBOOK_ENCRYPTION_KEY OPEN_NOTEBOOK_SURREAL_PASSWORD; do
+for secret in OPEN_NOTEBOOK_PASSWORD OPEN_NOTEBOOK_SURREAL_PASSWORD OPENAI_API_KEY OPENAI_BASE_URL OPENAI_EMBEDDING_MODEL WUKONG_WEBHOOK_SECRET; do
   if ! grep -Eq "^${secret}=.+" .env.secrets; then
-    echo "Missing required Open Notebook production secret: $secret" >&2
+    echo "Missing required RAG production value: $secret" >&2
     exit 2
   fi
 done
 
-r2_present=0
 r2_missing=""
-for secret in R2_ENDPOINT R2_BUCKET R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY; do
-  if grep -Eq "^${secret}=.+" .env.secrets; then
-    r2_present=$((r2_present + 1))
-  else
+for secret in R2_ENDPOINT R2_BUCKET R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_PUBLIC_BASE R2_URL_SIGNING_SECRET; do
+  if ! grep -Eq "^${secret}=.+" .env.secrets; then
     r2_missing="${r2_missing} ${secret}"
   fi
 done
-if [ "$r2_present" -gt 0 ] && [ "$r2_present" -lt 4 ]; then
+if [ -n "$r2_missing" ]; then
   echo "Incomplete R2 production configuration; missing:${r2_missing}" >&2
-  exit 2
-fi
-if [ "$r2_present" -eq 4 ]; then
-  r2_configured=true
-else
-  r2_configured=false
-fi
-if ! grep -Eq '^OPEN_NOTEBOOK_CHAT_MODEL=.+' .env.secrets &&
-   { ! grep -Eq '^OPEN_NOTEBOOK_STRATEGY_MODEL=.+' .env.secrets ||
-     ! grep -Eq '^OPEN_NOTEBOOK_ANSWER_MODEL=.+' .env.secrets ||
-     ! grep -Eq '^OPEN_NOTEBOOK_FINAL_ANSWER_MODEL=.+' .env.secrets; }; then
-  echo "Open Notebook Ask requires OPEN_NOTEBOOK_CHAT_MODEL or all three stage model IDs" >&2
   exit 2
 fi
 
@@ -64,7 +49,7 @@ if ! grep -Eq '^LINGXILOOP_SERVER_IMAGE=.+@sha256:[0-9a-f]{64}$' "$next_env" ||
   exit 2
 fi
 
-if [ -f "$active_env" ]; then
+if [ -f "$active_env" ] && ! cmp -s "$active_env" "$next_env"; then
   cp "$active_env" "$previous_env"
 fi
 cp "$next_env" "$active_env"
@@ -74,12 +59,8 @@ compose() {
 }
 
 configure_r2_cors() {
-  if [ "$r2_configured" = "true" ]; then
-    echo "Applying and verifying R2 CORS policy"
-    compose --profile tools run --rm --no-deps r2-cors
-  else
-    echo "R2 is not configured; skipping bucket CORS reconciliation"
-  fi
+  echo "Applying and verifying R2 CORS policy"
+  compose --profile tools run --rm --no-deps r2-cors
 }
 
 verify() {
@@ -92,6 +73,8 @@ verify() {
        printf '%s' "$meta" | grep -Fq "\"version\":\"$expected_version\"" &&
        printf '%s' "$meta" | grep -Fq '"reasoningRuntime":"agent-os"'; then
       curl -fsS --max-time 10 http://127.0.0.1:5181/api/health >/dev/null
+      compose exec -T open-notebook sh -ec \
+        'supervisorctl status rag-api | grep -q RUNNING && supervisorctl status rag-worker | grep -q RUNNING && curl -fsS http://localhost:5055/readyz >/dev/null'
       return 0
     fi
     attempts=$((attempts + 1))
@@ -115,8 +98,10 @@ rollback() {
 if ! compose pull ||
    ! configure_r2_cors ||
    ! compose up -d --remove-orphans ||
+   ! compose up -d --no-deps --force-recreate agent-os ||
    ! verify ||
-   ! compose exec -T -e MVP_SMOKE_CLEANUP=1 -e MVP_SMOKE_SKIP_FAULT_CHECK=1 lingxiloop npx tsx server/scripts/mvp-smoke.ts; then
+   ! compose exec -T -e MVP_SMOKE_CLEANUP=1 -e MVP_SMOKE_SKIP_FAULT_CHECK=1 lingxiloop npx tsx server/scripts/mvp-smoke.ts ||
+   ! compose exec -T -e MVP_SMOKE_CLEANUP=1 lingxiloop npx tsx server/scripts/knowledge-rag-smoke.ts; then
   rollback
   exit 1
 fi

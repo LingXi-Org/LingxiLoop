@@ -12,7 +12,10 @@ export interface KnowledgeSource {
   stage: string
   error: string | null
   isTruncated: boolean
+  visibilityScope: 'PRIVATE' | 'PROJECT'
+  ownerUserId: string
   createdBy: string
+  createdVia: 'USER' | 'AGENT'
   createdAt: string
   updatedAt: string
   chunkCount?: number
@@ -23,7 +26,6 @@ export interface KnowledgeSource {
 export interface KnowledgeCitation {
   sourceId: string
   sourceTitle: string
-  chunkId: string
   excerpt: string
   sourceUrl?: string
   position: number

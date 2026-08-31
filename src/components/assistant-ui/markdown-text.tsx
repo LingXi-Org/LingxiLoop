@@ -1,17 +1,18 @@
 "use client"
 
-import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
+import { StreamdownTextPrimitive } from '@assistant-ui/react-streamdown'
 import { memo } from 'react'
-import remarkGfm from 'remark-gfm'
 
 const MarkdownTextImpl = () => (
-  <MarkdownTextPrimitive
-    remarkPlugins={[remarkGfm]}
-    className="typeset typeset-chat"
-    data-typeset-preset="chat"
-    data-find-content
-    defer
-  />
+  <div className="typeset typeset-chat" data-typeset-preset="chat" data-find-content>
+    <StreamdownTextPrimitive
+      mode="streaming"
+      caret="block"
+      controls={false}
+      smooth
+      defer
+    />
+  </div>
 )
 
 export const MarkdownText = memo(MarkdownTextImpl)

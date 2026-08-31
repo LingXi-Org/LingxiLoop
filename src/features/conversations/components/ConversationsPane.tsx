@@ -1,4 +1,4 @@
-import { Cancel01Icon, SearchIcon } from '@hugeicons/core-free-icons'
+import { Cancel01Icon, Notification01Icon, NotificationOff01Icon, PinIcon, PinOffIcon, SearchIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type React from 'react'
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
@@ -59,7 +59,9 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
       }}
       className={cn(
         'group h-15 min-h-15 max-h-15 cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-xl border-0 px-2 py-1.5 text-left shadow-none',
-        selected ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        selected
+          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+          : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
         className,
       )}
       {...props}
@@ -153,6 +155,7 @@ export function ConversationsPane() {
   const [results, setResults] = useState<ConversationSearchResults | null>(null)
   const [searching, setSearching] = useState(false)
   const [addingMembers, setAddingMembers] = useState<Conversation | null>(null)
+  const [pendingPreferences, setPendingPreferences] = useState<Set<string>>(() => new Set())
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -192,10 +195,52 @@ export function ConversationsPane() {
     return [...unique.values()]
   }, [list, results])
 
+  const updatePreference = async (conversation: Conversation, preference: 'pin' | 'mute') => {
+    const key = `${conversation.id}:${preference}`
+    setPendingPreferences((current) => new Set(current).add(key))
+    const nextPinned = !conversation.pinned
+    const nextMuted = !isMuted(conversation)
+    try {
+      const mutation = preference === 'pin'
+        ? conversationsApi.togglePin(conversation.id, nextPinned)
+        : conversationsApi.setMute(conversation.id, nextMuted, null)
+      await toastAction(mutation.then(async (result) => {
+        await useConversations.getState().reload()
+        return result
+      }), {
+        loading: preference === 'pin' ? '正在更新置顶状态' : '正在更新静音状态',
+        success: preference === 'pin'
+          ? (nextPinned ? '会话已置顶' : '已取消置顶')
+          : (nextMuted ? '会话已静音' : '已取消静音'),
+        error: preference === 'pin' ? '置顶状态更新失败' : '静音状态更新失败',
+        description: conversation.title,
+      })
+    } catch { /* toast owns the visible error state */ }
+    finally {
+      setPendingPreferences((current) => {
+        const next = new Set(current)
+        next.delete(key)
+        return next
+      })
+    }
+  }
+
   const conversationMenuItems = (conversation: Conversation): ConversationMenuItem[] => {
+    const pinned = Boolean(conversation.pinned)
+    const muted = isMuted(conversation)
     const items: ConversationMenuItem[] = [
-      { label: conversation.pinned ? '取消置顶' : '置顶会话', onSelect: () => void conversationsApi.togglePin(conversation.id, !conversation.pinned).then(() => useConversations.getState().reload()) },
-      { label: isMuted(conversation) ? '取消静音' : '静音会话', onSelect: () => void conversationsApi.setMute(conversation.id, !isMuted(conversation), null).then(() => useConversations.getState().reload()) },
+      {
+        label: pinned ? '取消置顶' : '置顶会话',
+        icon: <HugeiconsIcon icon={pinned ? PinOffIcon : PinIcon} strokeWidth={2} />,
+        disabled: pendingPreferences.has(`${conversation.id}:pin`),
+        onSelect: () => void updatePreference(conversation, 'pin'),
+      },
+      {
+        label: muted ? '取消静音' : '静音会话',
+        icon: <HugeiconsIcon icon={muted ? Notification01Icon : NotificationOff01Icon} strokeWidth={2} />,
+        disabled: pendingPreferences.has(`${conversation.id}:mute`),
+        onSelect: () => void updatePreference(conversation, 'mute'),
+      },
     ]
     if (conversation.kind === 'group' && conversation.tag !== 'teacher') {
       items.push({ label: '添加成员…', onSelect: () => setAddingMembers(conversation) })

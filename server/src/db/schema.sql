@@ -45,15 +45,15 @@ COMMENT ON EXTENSION vector IS 'vector data type and ivfflat and hnsw access met
 
 
 --
--- Name: enforce_group_context_owner(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: enforce_canvas_conversation_owner(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.enforce_group_context_owner() RETURNS trigger
+CREATE FUNCTION public.enforce_canvas_conversation_owner() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  IF NEW.conversation_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM conversations c WHERE c.id = NEW.conversation_id AND c.company_id = NEW.company_id AND c.kind = 'group') THEN
-    RAISE EXCEPTION 'canvases require a group conversation';
+  IF NEW.conversation_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM conversations c WHERE c.id = NEW.conversation_id AND c.company_id = NEW.company_id) THEN
+    RAISE EXCEPTION 'canvas conversation must belong to the same company';
   END IF;
   RETURN NEW;
 END;
@@ -935,7 +935,7 @@ CREATE TABLE public.conversation_reads (
 CREATE TABLE public.conversation_source_exclusions (
     conversation_id text NOT NULL,
     source_id text NOT NULL,
-    created_by text NOT NULL,
+    user_id text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
@@ -1328,35 +1328,6 @@ CREATE TABLE public.im_send_acceptances (
 
 
 --
--- Name: knowledge_insight_bindings; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.knowledge_insight_bindings (
-    id text NOT NULL,
-    company_id text NOT NULL,
-    source_id text NOT NULL,
-    external_insight_id text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: knowledge_note_bindings; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.knowledge_note_bindings (
-    id text NOT NULL,
-    company_id text NOT NULL,
-    project_id text NOT NULL,
-    external_note_id text NOT NULL,
-    title text NOT NULL,
-    created_by text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
 -- Name: knowledge_notebook_bindings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1369,23 +1340,6 @@ CREATE TABLE public.knowledge_notebook_bindings (
     last_error text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: knowledge_source_chat_sessions; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.knowledge_source_chat_sessions (
-    id text NOT NULL,
-    company_id text NOT NULL,
-    project_id text NOT NULL,
-    source_id text NOT NULL,
-    agent_id text NOT NULL,
-    external_session_id text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    deleted_at timestamp with time zone
 );
 
 
@@ -1437,10 +1391,17 @@ CREATE TABLE public.knowledge_sources (
     stage text DEFAULT 'queued'::text NOT NULL,
     error text,
     is_truncated boolean DEFAULT false NOT NULL,
-    created_by text NOT NULL,
+    visibility_scope text NOT NULL,
+    owner_user_id text NOT NULL,
+    created_by_user_id text NOT NULL,
+    created_via text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    deleted_at timestamp with time zone
+    deleted_at timestamp with time zone,
+    CONSTRAINT knowledge_sources_visibility_scope_check
+      CHECK (visibility_scope = ANY (ARRAY['PRIVATE'::text, 'PROJECT'::text])),
+    CONSTRAINT knowledge_sources_created_via_check
+      CHECK (created_via = ANY (ARRAY['USER'::text, 'AGENT'::text]))
 );
 
 
@@ -2192,7 +2153,7 @@ ALTER TABLE ONLY public.conversation_reads
 --
 
 ALTER TABLE ONLY public.conversation_source_exclusions
-    ADD CONSTRAINT conversation_source_exclusions_pkey PRIMARY KEY (conversation_id, source_id);
+    ADD CONSTRAINT conversation_source_exclusions_pkey PRIMARY KEY (conversation_id, source_id, user_id);
 
 
 --
@@ -2431,38 +2392,6 @@ ALTER TABLE ONLY public.im_send_acceptances
 
 
 --
--- Name: knowledge_insight_bindings knowledge_insight_bindings_external_insight_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_insight_bindings
-    ADD CONSTRAINT knowledge_insight_bindings_external_insight_id_key UNIQUE (external_insight_id);
-
-
---
--- Name: knowledge_insight_bindings knowledge_insight_bindings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_insight_bindings
-    ADD CONSTRAINT knowledge_insight_bindings_pkey PRIMARY KEY (id);
-
-
---
--- Name: knowledge_note_bindings knowledge_note_bindings_external_note_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_note_bindings
-    ADD CONSTRAINT knowledge_note_bindings_external_note_id_key UNIQUE (external_note_id);
-
-
---
--- Name: knowledge_note_bindings knowledge_note_bindings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_note_bindings
-    ADD CONSTRAINT knowledge_note_bindings_pkey PRIMARY KEY (id);
-
-
---
 -- Name: knowledge_notebook_bindings knowledge_notebook_bindings_external_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2487,22 +2416,6 @@ ALTER TABLE ONLY public.knowledge_notebook_bindings
 
 
 --
--- Name: knowledge_source_chat_sessions knowledge_source_chat_sessions_external_session_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_source_chat_sessions
-    ADD CONSTRAINT knowledge_source_chat_sessions_external_session_id_key UNIQUE (external_session_id);
-
-
---
--- Name: knowledge_source_chat_sessions knowledge_source_chat_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_source_chat_sessions
-    ADD CONSTRAINT knowledge_source_chat_sessions_pkey PRIMARY KEY (id);
-
-
---
 -- Name: knowledge_source_jobs knowledge_source_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2524,6 +2437,9 @@ ALTER TABLE ONLY public.knowledge_source_jobs
 
 ALTER TABLE ONLY public.knowledge_sources
     ADD CONSTRAINT knowledge_sources_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.knowledge_sources
+    ADD CONSTRAINT knowledge_sources_id_company_id_key UNIQUE (id, company_id);
 
 
 --
@@ -3325,13 +3241,6 @@ CREATE INDEX idx_knowledge_jobs_claim ON public.knowledge_source_jobs USING btre
 
 
 --
--- Name: idx_knowledge_notes_project; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_knowledge_notes_project ON public.knowledge_note_bindings USING btree (company_id, project_id, updated_at DESC);
-
-
---
 -- Name: idx_knowledge_sources_external; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3349,7 +3258,14 @@ CREATE UNIQUE INDEX idx_knowledge_sources_origin_message ON public.knowledge_sou
 -- Name: idx_knowledge_sources_project; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_knowledge_sources_project ON public.knowledge_sources USING btree (company_id, project_id, status, created_at DESC) WHERE (deleted_at IS NULL);
+CREATE INDEX idx_knowledge_sources_project ON public.knowledge_sources USING btree (company_id, project_id, status, created_at DESC) WHERE ((visibility_scope = 'PROJECT'::text) AND (deleted_at IS NULL));
+
+
+--
+-- Name: idx_knowledge_sources_private_owner; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_knowledge_sources_private_owner ON public.knowledge_sources USING btree (company_id, project_id, owner_user_id, status, created_at DESC) WHERE ((visibility_scope = 'PRIVATE'::text) AND (deleted_at IS NULL));
 
 
 --
@@ -3578,7 +3494,7 @@ CREATE TRIGGER participants_touch_updated_at BEFORE UPDATE ON public.participant
 -- Name: canvases trg_canvas_group_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trg_canvas_group_only BEFORE INSERT OR UPDATE OF conversation_id ON public.canvases FOR EACH ROW EXECUTE FUNCTION public.enforce_group_context_owner();
+CREATE TRIGGER trg_canvas_conversation_owner BEFORE INSERT OR UPDATE OF conversation_id ON public.canvases FOR EACH ROW EXECUTE FUNCTION public.enforce_canvas_conversation_owner();
 
 
 --
@@ -3883,7 +3799,7 @@ ALTER TABLE ONLY public.canvases
 --
 
 ALTER TABLE ONLY public.canvases
-    ADD CONSTRAINT canvases_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
+    ADD CONSTRAINT canvases_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
 
 
 --
@@ -3996,6 +3912,14 @@ ALTER TABLE ONLY public.conversation_source_exclusions
 
 ALTER TABLE ONLY public.conversation_source_exclusions
     ADD CONSTRAINT conversation_source_exclusions_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(id) ON DELETE CASCADE;
+
+
+--
+-- Name: conversation_source_exclusions conversation_source_exclusions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_source_exclusions
+    ADD CONSTRAINT conversation_source_exclusions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -4244,38 +4168,6 @@ ALTER TABLE ONLY public.im_send_acceptances
 
 
 --
--- Name: knowledge_insight_bindings knowledge_insight_bindings_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_insight_bindings
-    ADD CONSTRAINT knowledge_insight_bindings_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
-
-
---
--- Name: knowledge_insight_bindings knowledge_insight_bindings_source_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_insight_bindings
-    ADD CONSTRAINT knowledge_insight_bindings_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(id) ON DELETE CASCADE;
-
-
---
--- Name: knowledge_note_bindings knowledge_note_bindings_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_note_bindings
-    ADD CONSTRAINT knowledge_note_bindings_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
-
-
---
--- Name: knowledge_note_bindings knowledge_note_bindings_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_note_bindings
-    ADD CONSTRAINT knowledge_note_bindings_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
-
-
---
 -- Name: knowledge_notebook_bindings knowledge_notebook_bindings_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4292,35 +4184,11 @@ ALTER TABLE ONLY public.knowledge_notebook_bindings
 
 
 --
--- Name: knowledge_source_chat_sessions knowledge_source_chat_sessions_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_source_chat_sessions
-    ADD CONSTRAINT knowledge_source_chat_sessions_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
-
-
---
 -- Name: llm_calls llm_calls_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.llm_calls
     ADD CONSTRAINT llm_calls_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
-
-
---
--- Name: knowledge_source_chat_sessions knowledge_source_chat_sessions_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_source_chat_sessions
-    ADD CONSTRAINT knowledge_source_chat_sessions_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
-
-
---
--- Name: knowledge_source_chat_sessions knowledge_source_chat_sessions_source_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.knowledge_source_chat_sessions
-    ADD CONSTRAINT knowledge_source_chat_sessions_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.knowledge_sources(id) ON DELETE CASCADE;
 
 
 --
@@ -4340,19 +4208,27 @@ ALTER TABLE ONLY public.knowledge_sources
 
 
 --
--- Name: knowledge_sources knowledge_sources_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: knowledge_sources knowledge_sources_project_company_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.knowledge_sources
-    ADD CONSTRAINT knowledge_sources_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
+    ADD CONSTRAINT knowledge_sources_project_company_fkey FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE;
 
 
 --
--- Name: knowledge_sources knowledge_sources_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: knowledge_sources knowledge_sources_owner_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.knowledge_sources
-    ADD CONSTRAINT knowledge_sources_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+    ADD CONSTRAINT knowledge_sources_owner_user_id_fkey FOREIGN KEY (owner_user_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: knowledge_sources knowledge_sources_created_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.knowledge_sources
+    ADD CONSTRAINT knowledge_sources_created_by_user_id_fkey FOREIGN KEY (created_by_user_id) REFERENCES public.users(id) ON DELETE RESTRICT;
 
 
 -- Name: plan_entitlements plan_entitlements_entitlement_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
@@ -4781,37 +4657,6 @@ CREATE TABLE public.project_transfers (
 CREATE INDEX idx_project_transfers_status
     ON public.project_transfers USING btree (status, updated_at, id);
 
-ALTER TABLE ONLY public.knowledge_sources
-    ADD CONSTRAINT knowledge_sources_scope_key UNIQUE (id, company_id);
-
-CREATE TABLE public.knowledge_source_bindings (
-    id text PRIMARY KEY,
-    company_id text NOT NULL,
-    source_id text NOT NULL,
-    scope_type text NOT NULL,
-    project_id text,
-    created_by text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT knowledge_source_bindings_scope_check CHECK (
-      (scope_type='ORGANIZATION' AND project_id IS NULL)
-      OR (scope_type='COURSE' AND project_id IS NOT NULL)
-    ),
-    CONSTRAINT knowledge_source_bindings_source_fkey
-      FOREIGN KEY (source_id,company_id) REFERENCES public.knowledge_sources(id,company_id) ON DELETE CASCADE,
-    CONSTRAINT knowledge_source_bindings_project_fkey
-      FOREIGN KEY (project_id,company_id) REFERENCES public.projects(id,company_id) ON DELETE CASCADE,
-    CONSTRAINT knowledge_source_bindings_creator_fkey
-      FOREIGN KEY (company_id,created_by) REFERENCES public.company_memberships(company_id,user_id) ON DELETE RESTRICT
-);
-
-CREATE UNIQUE INDEX uniq_organization_knowledge_source
-    ON public.knowledge_source_bindings USING btree (company_id,source_id)
-    WHERE scope_type='ORGANIZATION';
-
-CREATE UNIQUE INDEX uniq_course_knowledge_source
-    ON public.knowledge_source_bindings USING btree (company_id,project_id,source_id)
-    WHERE scope_type='COURSE';
-
 CREATE INDEX idx_learning_knowledge_units_project
     ON public.learning_knowledge_units USING btree (company_id, project_id, status, position);
 
@@ -4889,6 +4734,12 @@ CREATE INDEX idx_learning_activity_knowledge_units_unit
 
 CREATE UNIQUE INDEX idx_conversations_id_company_project
     ON public.conversations USING btree (id, company_id, project_id);
+
+ALTER TABLE ONLY public.knowledge_sources
+    ADD CONSTRAINT knowledge_sources_conversation_scope_fkey
+      FOREIGN KEY (conversation_id, company_id, project_id)
+      REFERENCES public.conversations(id, company_id, project_id)
+      ON DELETE SET NULL (conversation_id);
 
 CREATE TABLE public.learning_missions (
     id text PRIMARY KEY,
@@ -5790,6 +5641,204 @@ ALTER TABLE ONLY public.agent_work_items
 ALTER TABLE ONLY public.canvases
     ADD CONSTRAINT canvases_authorization_user_id_fkey
     FOREIGN KEY (authorization_user_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+--
+-- Versioned, source-grounded HTML lecture decks. These tables are part of the
+-- canonical v1 reset schema; runtime code must never create or alter them.
+--
+
+CREATE TABLE public.presentations (
+    id text NOT NULL,
+    company_id text NOT NULL,
+    project_id text NOT NULL,
+    conversation_id text NOT NULL,
+    authorization_user_id text NOT NULL,
+    visibility_scope text NOT NULL,
+    title text NOT NULL,
+    request_text text NOT NULL,
+    target_page_count integer NOT NULL,
+    recommended_page_count integer,
+    source_snapshot jsonb DEFAULT '[]'::jsonb NOT NULL,
+    outline jsonb,
+    outline_revision integer DEFAULT 0 NOT NULL,
+    error text,
+    latest_version_id text,
+    artifact_client_msg_no text,
+    status text DEFAULT 'waitingForSources'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT presentations_pkey PRIMARY KEY (id),
+    CONSTRAINT presentations_scope_key UNIQUE (id, company_id),
+    CONSTRAINT presentations_visibility_scope_check
+      CHECK (visibility_scope = ANY (ARRAY['PRIVATE'::text, 'PROJECT'::text])),
+    CONSTRAINT presentations_status_check CHECK (status = ANY (ARRAY[
+      'waitingForSources'::text, 'planning'::text, 'awaitingOutlineApproval'::text,
+      'generating'::text, 'validating'::text, 'ready'::text,
+      'needsAttention'::text, 'failed'::text, 'cancelled'::text
+    ])),
+    CONSTRAINT presentations_target_page_count_check CHECK (target_page_count BETWEEN 3 AND 40),
+    CONSTRAINT presentations_recommended_page_count_check
+      CHECK (recommended_page_count IS NULL OR recommended_page_count BETWEEN 3 AND 40),
+    CONSTRAINT presentations_outline_revision_check CHECK (outline_revision >= 0),
+    CONSTRAINT presentations_source_snapshot_check
+      CHECK (jsonb_typeof(source_snapshot) = 'array'::text AND jsonb_array_length(source_snapshot) BETWEEN 0 AND 40),
+    CONSTRAINT presentations_company_fkey
+      FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE,
+    CONSTRAINT presentations_project_company_fkey
+      FOREIGN KEY (project_id, company_id) REFERENCES public.projects(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT presentations_conversation_scope_fkey
+      FOREIGN KEY (conversation_id, company_id, project_id)
+      REFERENCES public.conversations(id, company_id, project_id) ON DELETE CASCADE,
+    CONSTRAINT presentations_authorization_user_fkey
+      FOREIGN KEY (authorization_user_id) REFERENCES public.users(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE public.presentation_jobs (
+    id text NOT NULL,
+    company_id text NOT NULL,
+    presentation_id text NOT NULL,
+    kind text NOT NULL,
+    status text DEFAULT 'queued'::text NOT NULL,
+    stage text DEFAULT 'waitingForSources'::text NOT NULL,
+    checkpoint jsonb DEFAULT '{}'::jsonb NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    available_at timestamp with time zone DEFAULT now() NOT NULL,
+    lease_token text,
+    lease_fence bigint DEFAULT 0 NOT NULL,
+    lease_expires_at timestamp with time zone,
+    error text,
+    idempotency_key text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT presentation_jobs_pkey PRIMARY KEY (id),
+    CONSTRAINT presentation_jobs_idempotency_key UNIQUE (company_id, idempotency_key),
+    CONSTRAINT presentation_jobs_kind_check
+      CHECK (kind = ANY (ARRAY['initial'::text, 'outlineRevision'::text, 'deckRevision'::text])),
+    CONSTRAINT presentation_jobs_status_check
+      CHECK (status = ANY (ARRAY['queued'::text, 'running'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])),
+    CONSTRAINT presentation_jobs_stage_check CHECK (stage = ANY (ARRAY[
+      'waitingForSources'::text, 'planning'::text, 'awaitingOutlineApproval'::text,
+      'generating'::text, 'validating'::text, 'ready'::text,
+      'needsAttention'::text, 'failed'::text, 'cancelled'::text
+    ])),
+    CONSTRAINT presentation_jobs_attempts_check CHECK (attempts BETWEEN 0 AND 6),
+    CONSTRAINT presentation_jobs_lease_fence_check CHECK (lease_fence >= 0),
+    CONSTRAINT presentation_jobs_checkpoint_check CHECK (jsonb_typeof(checkpoint) = 'object'::text),
+    CONSTRAINT presentation_jobs_presentation_fkey
+      FOREIGN KEY (presentation_id, company_id)
+      REFERENCES public.presentations(id, company_id) ON DELETE CASCADE
+);
+
+CREATE TABLE public.presentation_evidence (
+    id text NOT NULL,
+    company_id text NOT NULL,
+    presentation_id text NOT NULL,
+    source_id text NOT NULL,
+    source_title text NOT NULL,
+    chunk_id text NOT NULL,
+    page_number integer,
+    section_title text,
+    excerpt text NOT NULL,
+    claim text NOT NULL,
+    marker text NOT NULL,
+    position jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT presentation_evidence_pkey PRIMARY KEY (id, company_id, presentation_id),
+    CONSTRAINT presentation_evidence_page_number_check CHECK (page_number IS NULL OR page_number >= 1),
+    CONSTRAINT presentation_evidence_excerpt_check CHECK (char_length(excerpt) BETWEEN 1 AND 4000),
+    CONSTRAINT presentation_evidence_claim_check CHECK (char_length(claim) BETWEEN 1 AND 2000),
+    CONSTRAINT presentation_evidence_marker_check CHECK (char_length(marker) BETWEEN 1 AND 80),
+    CONSTRAINT presentation_evidence_position_check CHECK (jsonb_typeof(position) = 'object'::text),
+    CONSTRAINT presentation_evidence_presentation_fkey
+      FOREIGN KEY (presentation_id, company_id)
+      REFERENCES public.presentations(id, company_id) ON DELETE CASCADE,
+    CONSTRAINT presentation_evidence_source_fkey
+      FOREIGN KEY (source_id, company_id)
+      REFERENCES public.knowledge_sources(id, company_id) ON DELETE RESTRICT
+);
+
+CREATE TABLE public.presentation_pages (
+    id text NOT NULL,
+    company_id text NOT NULL,
+    presentation_id text NOT NULL,
+    page_number integer NOT NULL,
+    revision integer DEFAULT 1 NOT NULL,
+    plan jsonb NOT NULL,
+    content_ir jsonb,
+    slide_spec jsonb,
+    quality_issues jsonb DEFAULT '[]'::jsonb NOT NULL,
+    status text DEFAULT 'planned'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT presentation_pages_pkey PRIMARY KEY (id, company_id, presentation_id),
+    CONSTRAINT presentation_pages_page_key UNIQUE (company_id, presentation_id, page_number),
+    CONSTRAINT presentation_pages_page_number_check CHECK (page_number BETWEEN 1 AND 40),
+    CONSTRAINT presentation_pages_revision_check CHECK (revision >= 1),
+    CONSTRAINT presentation_pages_quality_issues_check CHECK (jsonb_typeof(quality_issues) = 'array'::text),
+    CONSTRAINT presentation_pages_status_check
+      CHECK (status = ANY (ARRAY['planned'::text, 'generating'::text, 'generated'::text, 'validated'::text, 'failed'::text])),
+    CONSTRAINT presentation_pages_presentation_fkey
+      FOREIGN KEY (presentation_id, company_id)
+      REFERENCES public.presentations(id, company_id) ON DELETE CASCADE
+);
+
+CREATE TABLE public.presentation_versions (
+    id text NOT NULL,
+    company_id text NOT NULL,
+    presentation_id text NOT NULL,
+    version_number integer NOT NULL,
+    storage_key text NOT NULL,
+    sha256 text NOT NULL,
+    size_bytes bigint NOT NULL,
+    manifest jsonb NOT NULL,
+    quality_report jsonb NOT NULL,
+    runtime_version text NOT NULL,
+    renderer_version text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT presentation_versions_pkey PRIMARY KEY (id),
+    CONSTRAINT presentation_versions_scope_key UNIQUE (id, company_id, presentation_id),
+    CONSTRAINT presentation_versions_number_key UNIQUE (company_id, presentation_id, version_number),
+    CONSTRAINT presentation_versions_storage_key_key UNIQUE (storage_key),
+    CONSTRAINT presentation_versions_version_number_check CHECK (version_number >= 1),
+    CONSTRAINT presentation_versions_size_check CHECK (size_bytes BETWEEN 1 AND 26214400),
+    CONSTRAINT presentation_versions_sha256_check CHECK (sha256 ~ '^[0-9a-f]{64}$'::text),
+    CONSTRAINT presentation_versions_manifest_check CHECK (jsonb_typeof(manifest) = 'object'::text),
+    CONSTRAINT presentation_versions_quality_report_check CHECK (jsonb_typeof(quality_report) = 'object'::text),
+    CONSTRAINT presentation_versions_presentation_fkey
+      FOREIGN KEY (presentation_id, company_id)
+      REFERENCES public.presentations(id, company_id) ON DELETE CASCADE
+);
+
+ALTER TABLE ONLY public.presentations
+    ADD CONSTRAINT presentations_latest_version_fkey
+    FOREIGN KEY (latest_version_id, company_id, id)
+    REFERENCES public.presentation_versions(id, company_id, presentation_id)
+    ON DELETE SET NULL (latest_version_id) DEFERRABLE INITIALLY DEFERRED;
+
+CREATE INDEX idx_presentations_detail
+    ON public.presentations USING btree (company_id, id);
+
+CREATE INDEX idx_presentations_project_status
+    ON public.presentations USING btree (company_id, project_id, status, updated_at DESC);
+
+CREATE UNIQUE INDEX uniq_presentations_artifact_message
+    ON public.presentations USING btree (company_id, artifact_client_msg_no)
+    WHERE (artifact_client_msg_no IS NOT NULL);
+
+CREATE INDEX idx_presentation_jobs_claim
+    ON public.presentation_jobs USING btree (status, available_at, created_at);
+
+CREATE INDEX idx_presentation_jobs_presentation
+    ON public.presentation_jobs USING btree (company_id, presentation_id, created_at DESC);
+
+CREATE INDEX idx_presentation_evidence_source
+    ON public.presentation_evidence USING btree (company_id, presentation_id, source_id, created_at);
+
+CREATE INDEX idx_presentation_pages_order
+    ON public.presentation_pages USING btree (company_id, presentation_id, page_number);
+
+CREATE INDEX idx_presentation_versions_history
+    ON public.presentation_versions USING btree (company_id, presentation_id, version_number DESC);
 
 -- Written last so a failed or partial bootstrap is never accepted as v1.
 COMMENT ON SCHEMA public IS 'LingxiLoop schema v1';

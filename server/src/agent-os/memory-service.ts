@@ -3,13 +3,14 @@ import type { PoolClient } from 'pg'
 import { embedText, hasPgVector } from '../agents/embeddings.js'
 import { pool } from '../db/pool.js'
 import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
-import type {
-  AgentWorkItem,
-  MemoryScopeType,
-  MemorySynthesisBatch,
-  MemorySynthesisChange,
-  PromptContextV1,
-  PromptMemoryV1,
+import {
+  KNOWLEDGE_CONTRACT_VERSION,
+  type AgentWorkItem,
+  type MemoryScopeType,
+  type MemorySynthesisBatch,
+  type MemorySynthesisChange,
+  type PromptContextV1,
+  type PromptMemoryV1,
 } from './types.js'
 import { assembleAgentSystemPrompt } from './prompt-assembly.js'
 
@@ -86,24 +87,32 @@ async function recallScope(args: {
     await enqueuePendingMemorySynthesis(args.companyId, args.agentId, args.conversationId)
   }
   const params: unknown[] = [args.companyId, args.scopeType, args.scopeId]
-  if (!args.query.trim()) throw new Error('memory recall query is required')
-  if (!await hasPgVector()) throw new Error('pgvector extension is required')
+  const semanticQuery = args.query.trim()
   let distance = 'NULL::real AS distance'
   let order = `COALESCE((meta->>'pinned')::boolean,false) DESC, updated_at DESC`
+  let semanticRecall = false
   params.push(limit)
   const limitParameter = `$${params.length}`
-  const vector = await embedText(args.query, { companyId: args.companyId, agentId: args.agentId })
-  if (!vector) throw new Error('memory recall embedding is required')
-  params.push(vector)
-  distance = `embedding <=> $${params.length}::vector AS distance`
-  order = `COALESCE((meta->>'pinned')::boolean,false) DESC, distance ASC, updated_at DESC`
+  if (semanticQuery) {
+    if (!await hasPgVector()) throw new Error('pgvector extension is required')
+    try {
+      const vector = await embedText(semanticQuery, { companyId: args.companyId, agentId: args.agentId })
+      if (!vector) throw new Error('memory recall embedding is required')
+      params.push(vector)
+      semanticRecall = true
+      distance = `embedding <=> $${params.length}::vector AS distance`
+      order = `COALESCE((meta->>'pinned')::boolean,false) DESC, distance ASC, updated_at DESC`
+    } catch (error) {
+      console.warn('[memory:recall] semantic recall unavailable; using recency:', error instanceof Error ? error.message : String(error))
+    }
+  }
   const { rows } = await pool.query<MemoryRow & { distance: number | null }>(
     `SELECT agent_id,path,body,meta,updated_at,${distance}
        FROM agent_workspace
       WHERE company_id=$1 AND path LIKE 'memory/%'
         AND COALESCE(meta->>'status','active')='active'
         AND meta->>'scopeType'=$2 AND meta->>'scopeId'=$3
-        AND embedding IS NOT NULL
+        ${semanticRecall ? 'AND embedding IS NOT NULL' : ''}
       ORDER BY ${order} LIMIT ${limitParameter}`, params,
   )
   return rows.map(toPromptMemory)
@@ -198,6 +207,7 @@ export async function buildPromptContext(args: {
     }),
     sourceVersions: {
       ...(args.sourceVersions ?? { persona: assembledAt, capabilities: assembledAt }),
+      knowledgeContract: KNOWLEDGE_CONTRACT_VERSION,
       learner: learner.map((item) => `${item.id}:${item.version}`).join(','),
       course: course.map((item) => `${item.id}:${item.version}`).join(','),
       agentRole: agentRole.map((item) => `${item.id}:${item.version}`).join(','),

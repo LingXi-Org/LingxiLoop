@@ -197,9 +197,9 @@ export class LingxiImClient {
     return response.json() as Promise<ImEnvelope[]>
   }
 
-  async send(channelId: string, payload: LingxiMessageV1, channelType = 2): Promise<ImEnvelope> {
+  async send(channelId: string, payload: LingxiMessageV1): Promise<ImEnvelope> {
     const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages/accept`, {
-      method: 'POST', headers: authHeaders(), body: JSON.stringify({ clientNonce: payload.clientMsgNo, payload, channelType }),
+      method: 'POST', headers: authHeaders(), body: JSON.stringify({ clientNonce: payload.clientMsgNo, payload }),
     })
     if (!response.ok) {
       const detail = await response.text().catch(() => '')

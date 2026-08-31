@@ -7,27 +7,20 @@ import {
   addKnowledgeFile,
   addKnowledgeText,
   addKnowledgeUrl,
-  askKnowledgeForAgent,
-  createKnowledgeInsight,
-  createKnowledgeNote,
-  deleteKnowledgeInsight,
-  deleteKnowledgeNote,
   deleteKnowledgeSourceForAgent,
-  getKnowledgeNote,
-  getKnowledgeSourceForAgent,
-  listKnowledgeInsights,
-  listKnowledgeNotes,
   listKnowledgeSourcesForAgent,
   retryKnowledgeSourceForAgent,
-  searchKnowledgeForAgent,
-  sendKnowledgeSourceChatMessage,
   setKnowledgeSourceEnabled,
-  startKnowledgeSourceChat,
-  updateKnowledgeNote,
-  updateKnowledgeInsight,
-  updateKnowledgeSourceForAgent,
-  unlinkKnowledgeSourceForAgent,
 } from '../modules/knowledge/public.js'
+import {
+  approvePresentationOutlineForAgent,
+  cancelPresentationForAgent,
+  createPresentationForAgent,
+  getPresentationForAgent,
+  retryPresentationForAgent,
+  revisePresentationForAgent,
+  revisePresentationOutlineForAgent,
+} from '../modules/presentations/public.js'
 import {
   addCanvasWorkspaceAgents,
   appendCanvasFrameContent,
@@ -70,8 +63,8 @@ const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
   'routines.create', 'routines.activate',
   'documents.delete', 'calendar.delete',
-  'knowledge.update_source', 'knowledge.set_source_enabled', 'knowledge.unlink_source', 'knowledge.delete_source',
-  'knowledge.update_note', 'knowledge.delete_note', 'knowledge.update_insight', 'knowledge.delete_insight',
+  'knowledge.set_source_enabled', 'knowledge.delete_source',
+  'presentations.approve_outline',
 ])
 
 function record(value: unknown): Record<string, unknown> {
@@ -199,13 +192,10 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
   throw new Error(`unsupported learning action: ${method}`)
 }
 
-async function executeKnowledge(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
+async function executeKnowledge(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
   if (method === 'list_sources') return { ok: true, value: await listKnowledgeSourcesForAgent(work) }
-  if (method === 'get_source') return { ok: true, value: await getKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
-  if (method === 'search') return { ok: true, value: await searchKnowledgeForAgent(work, textArg(args, 'query'), Math.max(1, Math.min(20, Number(args.limit ?? 8)))) }
-  if (method === 'ask') return { ok: true, value: await askKnowledgeForAgent(work, textArg(args, 'question')) }
-  if (method === 'add_text') return { ok: true, value: await addKnowledgeText(work, { title: textArg(args, 'title'), text: textArg(args, 'text') }) }
-  if (method === 'add_url') return { ok: true, value: await addKnowledgeUrl(work, { title: textArg(args, 'title', false) || textArg(args, 'url'), url: textArg(args, 'url') }) }
+  if (method === 'add_text') return { ok: true, value: await addKnowledgeText(work, { title: textArg(args, 'title'), text: textArg(args, 'text'), idempotencyKey: action.idempotencyKey }) }
+  if (method === 'add_url') return { ok: true, value: await addKnowledgeUrl(work, { title: textArg(args, 'title', false) || textArg(args, 'url'), url: textArg(args, 'url'), idempotencyKey: action.idempotencyKey }) }
   if (method === 'add_file') {
     // Agents refer to a committed message, never an arbitrary storage key.
     // The Host resolves the attachment inside the current channel so a guessed
@@ -221,33 +211,108 @@ async function executeKnowledge(work: AgentWorkItem, method: string, args: Recor
     return { ok: true, value: await addKnowledgeFile(work, {
       title: textArg(args, 'title', false) || String(attachment.name ?? '聊天附件'),
       storageKey: String(attachment.key ?? ''), mime: String(attachment.mime ?? ''), size: Number(attachment.size ?? 0),
+      idempotencyKey: action.idempotencyKey,
     }) }
   }
   if (method === 'retry_ingestion') return { ok: true, value: await retryKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
-  if (method === 'update_source') return { ok: true, value: await updateKnowledgeSourceForAgent(work, textArg(args, 'sourceId'), {
-    ...(typeof args.title === 'string' ? { title: args.title } : {}),
-    ...(Array.isArray(args.topics) ? { topics: args.topics.map(String).slice(0, 50) } : {}),
-  }) }
   if (method === 'set_source_enabled') return { ok: true, value: await setKnowledgeSourceEnabled(work, textArg(args, 'sourceId'), args.enabled === true) }
-  if (method === 'unlink_source') return { ok: true, value: await unlinkKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
   if (method === 'delete_source') return { ok: true, value: await deleteKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
-  if (method === 'list_notes') return { ok: true, value: await listKnowledgeNotes(work) }
-  if (method === 'get_note') return { ok: true, value: await getKnowledgeNote(work, textArg(args, 'noteId')) }
-  if (method === 'create_note') return { ok: true, value: await createKnowledgeNote(work, { title: textArg(args, 'title', false) || undefined, content: textArg(args, 'content') }) }
-  if (method === 'update_note') return { ok: true, value: await updateKnowledgeNote(work, textArg(args, 'noteId'), {
-    ...(typeof args.title === 'string' ? { title: args.title } : {}), ...(typeof args.content === 'string' ? { content: args.content } : {}),
-  }) }
-  if (method === 'delete_note') return { ok: true, value: await deleteKnowledgeNote(work, textArg(args, 'noteId')) }
-  if (method === 'list_insights') return { ok: true, value: await listKnowledgeInsights(work, textArg(args, 'sourceId')) }
-  if (method === 'create_insight') return { ok: true, value: await createKnowledgeInsight(work, textArg(args, 'sourceId'), textArg(args, 'transformation')) }
-  if (method === 'update_insight') return { ok: true, value: await updateKnowledgeInsight(work, textArg(args, 'insightId'), {
-    ...(typeof args.insightType === 'string' ? { insightType: args.insightType } : {}),
-    ...(typeof args.content === 'string' ? { content: args.content } : {}),
-  }) }
-  if (method === 'delete_insight') return { ok: true, value: await deleteKnowledgeInsight(work, textArg(args, 'insightId')) }
-  if (method === 'start_source_chat') return { ok: true, value: await startKnowledgeSourceChat(work, textArg(args, 'sourceId'), textArg(args, 'title', false) || undefined) }
-  if (method === 'send_source_chat_message') return { ok: true, value: await sendKnowledgeSourceChatMessage(work, textArg(args, 'sessionId'), textArg(args, 'message')) }
   throw new Error(`unsupported knowledge action: ${method}`)
+}
+
+async function executePresentation(
+  work: AgentWorkItem,
+  method: string,
+  args: Record<string, unknown>,
+  action: HostAction,
+): Promise<HostActionResult> {
+  const presentationId = (): string => textArg(args, 'presentationId')
+  const expectedRevision = (): number => {
+    const value = Number(args.expectedRevision)
+    if (!Number.isInteger(value) || value < 0) throw new Error('expectedRevision must be a non-negative integer')
+    return value
+  }
+  const boundedInteger = (name: string, minimum: number, maximum: number): number | undefined => {
+    if (args[name] === undefined) return undefined
+    const value = Number(args[name])
+    if (!Number.isInteger(value) || value < minimum || value > maximum) {
+      throw new Error(`${name} must be an integer between ${minimum} and ${maximum}`)
+    }
+    return value
+  }
+  const stringIds = (name: string): string[] | undefined => {
+    if (args[name] === undefined) return undefined
+    if (!Array.isArray(args[name])) throw new Error(`${name} must be an array`)
+    if (!args[name].every((value) => typeof value === 'string' && value.trim())) {
+      throw new Error(`${name} must contain only non-empty strings`)
+    }
+    const values = args[name].map((value) => value.trim())
+    return [...new Set(values)]
+  }
+
+  if (method === 'create') {
+    const sourceIds = stringIds('sourceIds')
+    const targetSlideCount = boundedInteger('targetSlideCount', 24, 40)
+    return {
+      ok: true,
+      value: await createPresentationForAgent(work, {
+        idempotencyKey: action.idempotencyKey,
+        requirements: textArg(args, 'requirements'),
+        ...(typeof args.title === 'string' && args.title.trim() ? { title: args.title.trim() } : {}),
+        ...(sourceIds ? { sourceIds } : {}),
+        ...(targetSlideCount !== undefined ? { targetSlideCount } : {}),
+        ...(typeof args.language === 'string' && args.language.trim() ? { language: args.language.trim() } : {}),
+      }),
+    }
+  }
+  if (method === 'get') return { ok: true, value: await getPresentationForAgent(work, presentationId()) }
+  if (method === 'revise_outline') {
+    const feedback = textArg(args, 'feedback', false)
+    const targetSlideCount = boundedInteger('targetSlideCount', 3, 40)
+    if (!feedback && targetSlideCount === undefined) {
+      throw new Error('feedback or targetSlideCount is required')
+    }
+    return {
+      ok: true,
+      value: await revisePresentationOutlineForAgent(work, presentationId(), {
+        ...(feedback ? { feedback } : {}),
+        ...(targetSlideCount !== undefined ? { targetSlideCount } : {}),
+        expectedRevision: expectedRevision(),
+        idempotencyKey: action.idempotencyKey,
+      }),
+    }
+  }
+  if (method === 'approve_outline') return {
+    ok: true,
+    value: await approvePresentationOutlineForAgent(work, presentationId(), {
+      expectedRevision: expectedRevision(),
+    }),
+  }
+  if (method === 'revise') {
+    const pageIds = stringIds('pageIds')
+    const sectionIds = stringIds('sectionIds')
+    return {
+      ok: true,
+      value: await revisePresentationForAgent(work, presentationId(), {
+        instruction: textArg(args, 'instruction'),
+        scope: closedArg(args, 'scope', ['page', 'section', 'deck'] as const),
+        ...(pageIds ? { pageIds } : {}),
+        ...(sectionIds ? { sectionIds } : {}),
+        idempotencyKey: action.idempotencyKey,
+      }),
+    }
+  }
+  if (method === 'cancel') return {
+    ok: true,
+    value: await cancelPresentationForAgent(work, presentationId(), { idempotencyKey: action.idempotencyKey }),
+  }
+  if (method === 'retry') return {
+    ok: true,
+    value: await retryPresentationForAgent(work, presentationId(), {
+      idempotencyKey: action.idempotencyKey,
+    }),
+  }
+  throw new Error(`unsupported presentations action: ${method}`)
 }
 
 async function executeChat(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
@@ -573,8 +638,8 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
       'learning.current', 'learning.get_learner_state', 'learning.list_knowledge_units',
       'learning.list_due', 'learning.get_mission', 'learning.get_activity',
       'learning.add_steps', 'learning.finish_planning',
-      'knowledge.list_sources', 'knowledge.get_source', 'knowledge.search',
-      'knowledge.ask', 'knowledge.list_notes', 'knowledge.get_note',
+      'knowledge.list_sources',
+      'presentations.get',
       'chat.ask', 'polls.create', 'polls.show',
     ])
     if (!planningAllowed.has(action.action)) {
@@ -590,7 +655,8 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   if (namespace === 'turn') return { ok: true, value: { status: method, ...args } }
   if (namespace === 'research') return executeResearch(work, method, args)
   if (namespace === 'canvas') return executeCanvas(work, method, args, action)
-  if (namespace === 'knowledge') return executeKnowledge(work, method, args)
+  if (namespace === 'knowledge') return executeKnowledge(work, method, args, action)
+  if (namespace === 'presentations') return executePresentation(work, method, args, action)
   if (namespace === 'learning') return executeEducation(work, method, args)
   if (namespace === 'memory') {
     const rawScope = String(args.scope ?? 'course')

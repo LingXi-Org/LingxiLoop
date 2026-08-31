@@ -18,6 +18,9 @@ export async function resolveAccessContext(
 
   const resource = request.resource ? await repository.resource(request.resource) : null
   if (request.resource && !resource) return denied('RESOURCE_NOT_FOUND')
+  if (resource?.visibilityScope === 'PRIVATE' && resource.ownerUserId !== request.actorUserId) {
+    return denied('RESOURCE_NOT_FOUND')
+  }
 
   const resourceProjectId = resource?.projectId ?? null
   if (resourceProjectId && request.projectId && resourceProjectId !== request.projectId) {

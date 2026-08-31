@@ -5,7 +5,6 @@ import { ws } from '@/api/core/realtime'
 import { agentsApi } from '@/features/agents/api'
 import { useParticipants } from '@/features/agents/state'
 import { messagesApi } from '@/features/chat/api'
-import { conversationsApi } from '@/features/conversations/api'
 import { hasBroadcastMention } from '@/lib/chatMessages'
 import { toastAction } from '@/lib/actionToast'
 import { userFacingError } from '@/lib/userFacingError'
@@ -23,7 +22,6 @@ import {
   CHAT_HISTORY_PAGE_SIZE,
   markDelivery,
   mergeCanonicalMessages,
-  mergeConversationReceipts,
   removeConversationMessage,
   replaceMessageReactions,
   replacePollData,
@@ -135,7 +133,6 @@ function optimisticMessage(
       sequence: originalMetadata?.sequence ?? null,
     } : null,
     reactions: [],
-    receipts: [],
     replyCount: 0,
     threadRootId: quotedMessageId,
     groupStart: true,
@@ -213,7 +210,6 @@ export class ChatTransport {
         isLoading: false,
         hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE,
       }))
-      await this.loadReceiptsFor(conversationId, messages)
     } catch (error) {
       console.error('[chat.transport] history conversion/load failed', error)
       updateConversation(conversationId, (state) => ({
@@ -230,7 +226,6 @@ export class ChatTransport {
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
       setConversationMessages(conversationId, messages)
       updateConversation(conversationId, (state) => ({ ...state, loaded: true, error: null }))
-      await this.loadReceiptsFor(conversationId, messages)
     } catch (error) {
       console.error('[chat.transport] reload failed', error)
     }
@@ -255,7 +250,6 @@ export class ChatTransport {
         isLoadingOlder: false,
         hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE && messages.length > 0,
       }))
-      await this.loadReceiptsFor(conversationId, messages)
     } catch (error) {
       console.error('[chat.transport] older history failed', error)
       updateConversation(conversationId, (state) => ({ ...state, isLoadingOlder: false }))
@@ -360,15 +354,6 @@ export class ChatTransport {
     await Promise.allSettled(agentIds.map((agentId) => agentsApi.stopAgentRun(agentId, conversationId)))
   }
 
-  async markRead(conversationId: string, readThroughSequence: number): Promise<void> {
-    if (!Number.isSafeInteger(readThroughSequence) || readThroughSequence <= 0) return
-    const response = await conversationsApi.markRead(conversationId, readThroughSequence)
-    if (response.receipt) mergeConversationReceipts(conversationId, [response.receipt])
-    void import('@/features/conversations/store')
-      .then(({ useConversations }) => useConversations.getState().reload())
-      .catch((error) => console.warn('[chat.transport] conversation read refresh failed', error))
-  }
-
   async toggleReaction(conversationId: string, messageId: string, emoji: string): Promise<void> {
     const message = useChatThreadStore.getState().conversations[conversationId]?.messages
       .find((candidate) => candidate.id === messageId)
@@ -467,7 +452,6 @@ export class ChatTransport {
             quotedMessageId: null,
             quote: null,
             reactions: [],
-            receipts: [],
             replyCount: 0,
             threadRootId: null,
             groupStart: true,
@@ -540,33 +524,12 @@ export class ChatTransport {
       }
       return
     }
-    if (event.type === 'im.read-receipt') {
-      mergeConversationReceipts(event.channelId, [event])
-      return
-    }
     if (event.type === 'message.reactions') {
       replaceMessageReactions(event.conversationId, event.messageId, event.reactions)
       return
     }
     if (event.type === 'poll.updated') {
       replacePollData(event.conversationId, event.messageId, event.revision, event.poll, event.tallies)
-    }
-  }
-
-  private async loadReceiptsFor(conversationId: string, messages: readonly ThreadMessage[]): Promise<void> {
-    const sequences = messages
-      .map((message) => messageMetadata(message).sequence)
-      .filter((sequence): sequence is number => sequence !== null)
-    if (sequences.length === 0) return
-    try {
-      const response = await conversationsApi.readReceipts(
-        conversationId,
-        Math.min(...sequences),
-        Math.max(...sequences),
-      )
-      mergeConversationReceipts(conversationId, response.receipts)
-    } catch (error) {
-      console.warn('[chat.transport] receipt sync failed', error)
     }
   }
 
