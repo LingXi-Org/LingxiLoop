@@ -4,7 +4,6 @@ import test from 'node:test'
 
 const domains = [
   'platform',
-  'identity',
   'companies',
   'canvas',
   'learning',
@@ -28,6 +27,8 @@ test('the API entrypoint is a composition root, not a business router', async ()
   assert.doesNotMatch(source, /\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
   assert.doesNotMatch(source, /\bpool\.query\b/)
   assert.match(source, /api\.use\(errorHandler\)/)
+  assert.match(source, /import \{ gatewayRegistrationRouter \} from '\.\.\/modules\/identity\/gateway-registration-router\.js'/)
+  assert.match(source, /api\.use\(gatewayRegistrationRouter\)/)
 
   for (const domain of domains) {
     assert.match(source, new RegExp(`import \\{ ${domain}Router \\} from '../modules/${domain}/router\\.js'`))
@@ -49,7 +50,7 @@ test('domain modules expose one native router implementation without forwarding 
 })
 
 test('migrated domains are complete vertical slices with thin HTTP routers', async () => {
-  for (const domain of ['agents', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'identity', 'knowledge', 'learning', 'messages', 'notifications', 'observability', 'platform', 'polls']) {
+  for (const domain of ['agents', 'calendar', 'canvas', 'companies', 'conversations', 'documents', 'email', 'knowledge', 'learning', 'messages', 'notifications', 'observability', 'platform', 'polls']) {
     const base = new URL(`../modules/${domain}/`, import.meta.url)
     const router = await readFile(new URL('router.ts', base), 'utf8')
     const applicationFiles = (await readdir(new URL('.', base)))
@@ -272,9 +273,10 @@ test('authentication, request context, authorization, and errors have one shared
   const authorization = await readFile(new URL('../http/authorization.ts', import.meta.url), 'utf8')
   const asyncHandler = await readFile(new URL('../http/async-handler.ts', import.meta.url), 'utf8')
   const errors = await readFile(new URL('../http/errors.ts', import.meta.url), 'utf8')
-  const routers = await Promise.all(domains.map((domain) => (
-    readFile(new URL(`../modules/${domain}/router.ts`, import.meta.url), 'utf8')
-  )))
+  const routers = await Promise.all([
+    ...domains.map((domain) => readFile(new URL(`../modules/${domain}/router.ts`, import.meta.url), 'utf8')),
+    readFile(new URL('../modules/identity/gateway-registration-router.ts', import.meta.url), 'utf8'),
+  ])
   for (const boundary of ['requireAuth', 'requireCompany', 'requireWorkspace']) {
     assert.match(context, new RegExp(`export (?:async )?function ${boundary}\\b`))
   }
