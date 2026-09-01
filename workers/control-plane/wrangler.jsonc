@@ -23,9 +23,5 @@
     "OPENSHIP_BASE_URL": "https://ops.lingxilearn.cn",
     "AUTH_ALLOWED_HOSTS": "loop.lingxilearn.cn,admin.lingxilearn.cn",
     "APP_VERSION": "0.1.0-beta"
-  },
-  "routes": [
-    { "pattern": "loop.lingxilearn.cn/api/*", "zone_name": "lingxilearn.cn" },
-    { "pattern": "admin.lingxilearn.cn", "custom_domain": true }
-  ]
+  }
 }
