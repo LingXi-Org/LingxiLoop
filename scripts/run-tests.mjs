@@ -25,7 +25,7 @@ const testFiles = [
 
 const child = spawn(
   process.execPath,
-  ['--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-concurrency=1', ...testFiles],
+  ['--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-force-exit', '--test-concurrency=1', ...testFiles],
   {
     stdio: 'inherit',
     env: {
