@@ -114,7 +114,7 @@ services:
     logging: *quiet-logging
 
   wukongim:
-    image: ${WUKONGIM_IMAGE:?WUKONGIM_IMAGE must pin v3 commit c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47 by digest}
+    image: ${WUKONGIM_IMAGE:-ghcr.io/lyyzka/lingxiloop-wukongim:mvp}
     restart: unless-stopped
     env_file:
       - ./.env.secrets

@@ -48,7 +48,7 @@ services:
     logging: *logging
 
   wukongim:
-    image: ${WUKONGIM_IMAGE:?WUKONGIM_IMAGE must be digest-pinned}
+    image: ${WUKONGIM_IMAGE:-ghcr.io/lyyzka/lingxiloop-wukongim:mvp}
     restart: unless-stopped
     environment:
       GOMEMLIMIT: ${WUKONG_GOMEMLIMIT:-320MiB}
