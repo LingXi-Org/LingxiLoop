@@ -32,7 +32,8 @@ let observedFetch: typeof fetch | undefined
 let pricingState: PricingState | undefined
 
 function serviceVersionAttributes(): Attributes {
-  const version = process.env.OTEL_SERVICE_VERSION?.trim()
+  const version =
+    process.env.OTEL_SERVICE_VERSION?.trim() || process.env.LINGXILOOP_VERSION?.trim()
   return version ? { 'service.version': version } : {}
 }
 
@@ -455,7 +456,8 @@ export function openAIObservabilityFetch(): typeof fetch | undefined {
   initialized = true
 
   try {
-    const serviceVersion = process.env.OTEL_SERVICE_VERSION?.trim()
+    const serviceVersion =
+      process.env.OTEL_SERVICE_VERSION?.trim() || process.env.LINGXILOOP_VERSION?.trim()
     Openlit.init({
       applicationName: process.env.OTEL_SERVICE_NAME?.trim() || 'lingxiloop',
       environment:

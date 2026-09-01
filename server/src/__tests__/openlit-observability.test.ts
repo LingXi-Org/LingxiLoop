@@ -112,6 +112,7 @@ test('OpenLIT instruments a preloaded OpenAI module without exporting message co
   process.env.OTEL_EXPORTER_OTLP_ENDPOINT = `http://127.0.0.1:${collectorPort}`
   process.env.OTEL_SERVICE_NAME = 'lingxiloop-observability-test'
   process.env.OTEL_DEPLOYMENT_ENVIRONMENT = 'test'
+  process.env.LINGXILOOP_VERSION = 'image-version-test'
   process.env.OPENLIT_DISABLE_BATCH = 'true'
   process.env.OPENLIT_DISABLE_METRICS = 'true'
   process.env.OPENLIT_DISABLE_EVENTS = 'true'
@@ -192,6 +193,7 @@ test('OpenLIT instruments a preloaded OpenAI module without exporting message co
   assert.match(telemetry, /gen_ai\.usage\.cost/)
   assert.match(telemetry, /lingxiloop\.limit\.tpm/)
   assert.match(telemetry, /lingxiloop\.limit\.rpm/)
+  assert.match(telemetry, /image-version-test/)
   assert.doesNotMatch(telemetry, /TOP-SECRET-OBSERVABILITY-CONTENT/)
   assert.doesNotMatch(telemetry, /TOP-SECRET-(STREAM|EMBEDDING|IMAGE|FAILED)-CONTENT/)
   assert.doesNotMatch(telemetry, /gen_ai\.tool\.(definitions|args)/)

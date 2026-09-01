@@ -7,6 +7,8 @@ FROM ${NODE_BASE_IMAGE}
 ARG APT_MIRROR
 ARG NPM_REGISTRY
 ARG PYPI_INDEX_URL
+ARG LINGXILOOP_VERSION=0.0.0-dev
+ARG LINGXILOOP_COMMIT_SHA=dev
 RUN sed -i "s|http://deb.debian.org|${APT_MIRROR}|g; s|https://deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
   && apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 python3-pip tini ca-certificates \
@@ -20,7 +22,9 @@ COPY server ./server
 
 ENV NODE_ENV=production \
     AGENT_OS_PYTHON=python3 \
-    AGENT_OS_HOMES_ROOT=/var/lib/lingxiloop-agent-os/homes
+    AGENT_OS_HOMES_ROOT=/var/lib/lingxiloop-agent-os/homes \
+    LINGXILOOP_VERSION=${LINGXILOOP_VERSION} \
+    LINGXILOOP_COMMIT_SHA=${LINGXILOOP_COMMIT_SHA}
 
 VOLUME ["/var/lib/lingxiloop-agent-os"]
 EXPOSE 5190
