@@ -184,11 +184,21 @@ class PersistentKernel {
     let result: HostActionResult
     try {
       await execution.options?.onHostAction?.({ stage: 'started', action })
+    } catch (error) {
+      this.failAll(error instanceof Error ? error : new Error(String(error)))
+      return
+    }
+    try {
       result = await this.bridge.execute(execution.work, action)
     } catch (error) {
       result = { ok: false, error: error instanceof Error ? error.message : String(error) }
     }
-    await execution.options?.onHostAction?.({ stage: 'completed', action, result })
+    try {
+      await execution.options?.onHostAction?.({ stage: 'completed', action, result })
+    } catch (error) {
+      this.failAll(error instanceof Error ? error : new Error(String(error)))
+      return
+    }
     this.write({ type: 'host_result', requestId: message.requestId, ...result })
   }
 
