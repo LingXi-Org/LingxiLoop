@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
     command: ["start", "--log", "warn", "--user", "open-notebook", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}", "rocksdb:/data/open-notebook.db"]
     volumes:
-      - surreal-data:/data
+      - surreal-data-v2:/data
     healthcheck:
       test: ["CMD", "/surreal", "is-ready", "--endpoint", "http://localhost:8000"]
       interval: 5s
@@ -104,6 +104,6 @@ services:
     logging: *logging
 
 volumes:
-  surreal-data: {}
+  surreal-data-v2: {}
   open-notebook-data: {}
   agent-os-data: {}
