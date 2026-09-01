@@ -77,7 +77,8 @@ clients reconnect automatically and presence leases are shared through Redis.
 
 Use immutable digest references produced by CI for
 `LINGXILOOP_SERVER_IMAGE`, `AGENT_OS_IMAGE`, and `OPEN_NOTEBOOK_IMAGE`.
-WuKongIM automatically uses `ghcr.io/lyyzka/lingxiloop-wukongim:mvp`; set
+WuKongIM automatically uses
+`accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:mvp`; set
 `WUKONGIM_IMAGE` only when overriding it with an immutable digest. Copy the
 remaining secrets and product variables from the production environment; the
 Compose validation errors name every required value that is missing.

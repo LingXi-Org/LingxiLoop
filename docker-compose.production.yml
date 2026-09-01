@@ -114,7 +114,7 @@ services:
     logging: *quiet-logging
 
   wukongim:
-    image: ${WUKONGIM_IMAGE:-ghcr.io/lyyzka/lingxiloop-wukongim:mvp}
+    image: ${WUKONGIM_IMAGE:-accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:mvp}
     restart: unless-stopped
     env_file:
       - ./.env.secrets
