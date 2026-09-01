@@ -2,17 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import { ImMessagesApplication } from '../im/messages-application.js'
-import { isPlatformAdminEmail } from '../modules/platform-operations/authorization.js'
 import { listAdminResources } from '../modules/platform-operations/resources.js'
-import { changeUserSuspension } from '../modules/platform-operations/user-lifecycle.js'
-
-test('platform admin allowlist requires a verified normalized email', () => {
-  const allowlist = ['operator@example.com']
-  assert.equal(isPlatformAdminEmail(' Operator@Example.com ', new Date(), allowlist), true)
-  assert.equal(isPlatformAdminEmail('operator@example.com', null, allowlist), false)
-  assert.equal(isPlatformAdminEmail('other@example.com', new Date(), allowlist), false)
-  assert.equal(isPlatformAdminEmail('operator@example.com', new Date(), []), false)
-})
+import { changeUserLifecycle } from '../modules/platform-operations/user-lifecycle.js'
 
 test('admin resource lists enforce bounds and return an opaque next cursor', async () => {
   const calls: Array<{ sql: string; params: readonly unknown[] }> = []
@@ -39,7 +30,7 @@ test('admin resource lists enforce bounds and return an opaque next cursor', asy
   await assert.rejects(() => listAdminResources(db, 'companies', { cursor: 'not-a-cursor' }), /invalid cursor/)
 })
 
-test('suspending revokes sessions and WS tickets while restore creates no session', async () => {
+test('suspending revokes WS tickets while restore creates no ticket', async () => {
   const statements: string[] = []
   const db = {
     query: async (sql: string) => {
@@ -48,18 +39,17 @@ test('suspending revokes sessions and WS tickets while restore creates no sessio
     },
   } as unknown as Queryable
 
-  assert.deepEqual(await changeUserSuspension(db, {
+  assert.deepEqual(await changeUserLifecycle(db, {
     action: 'suspend', targetId: 'user-1', adminId: 'admin-1', reason: 'security response', ip: null, userAgent: null,
-  }), { id: 'user-1', suspended: true })
-  assert.ok(statements.some((sql) => sql.includes('DELETE FROM sessions')))
+  }), { id: 'user-1', suspended: true, deleted: false })
   assert.ok(statements.some((sql) => sql.includes('DELETE FROM ws_tickets')))
 
   statements.length = 0
-  assert.deepEqual(await changeUserSuspension(db, {
+  assert.deepEqual(await changeUserLifecycle(db, {
     action: 'restore', targetId: 'user-1', adminId: 'admin-1', reason: 'review complete', ip: null, userAgent: null,
-  }), { id: 'user-1', suspended: false })
+  }), { id: 'user-1', suspended: false, deleted: false })
   assert.ok(statements.some((sql) => sql.includes('suspended_at=NULL')))
-  assert.equal(statements.some((sql) => /INSERT INTO sessions|INSERT INTO ws_tickets/.test(sql)), false)
+  assert.equal(statements.some((sql) => /INSERT INTO ws_tickets/.test(sql)), false)
 })
 
 test('platform message history uses the company-scoped channel profile', async () => {

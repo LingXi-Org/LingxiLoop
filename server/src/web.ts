@@ -36,10 +36,9 @@ export async function startWebProcess(): Promise<ServiceHandle> {
     },
   }))
   // CORS — only kicks in when LINGXILOOP_CORS_ORIGINS is set. Browsers send
-  // `Origin` only on cross-origin requests, so same-origin (Vite proxy,
-  // colocated static deploy) is unaffected. `*` allows any origin but
-  // disables credentials per the CORS spec. We do NOT enable credentials
-  // because auth here is header-based (Bearer token), not cookies.
+  // `Origin` only on cross-origin requests, so same-origin traffic is
+  // unaffected. The public origin is the Worker; product APIs require its
+  // signed gateway assertion independently of this browser-facing policy.
   const corsAllow = new Set(env.CORS_ORIGINS)
   const corsAny = corsAllow.has('*')
   app.use((req, res, next) => {

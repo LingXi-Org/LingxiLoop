@@ -274,19 +274,6 @@ body {
   outline-offset: 2px;
 }
 
-/* OAuth buttons use fixed, audited foreground/background pairs. Theme ink
-   tokens intentionally invert in dark mode, which made the old combinations
-   (text-white + bg-ink-900, or bg-white + text-ink-800) turn white-on-white. */
-.auth-provider-button {
-  border: 1px solid transparent;
-  box-shadow: 0 1px 2px rgba(10, 27, 46, 0.08);
-}
-.auth-provider-lingxi {
-  background: #0078c8;
-  color: #fff;
-}
-.auth-provider-lingxi:hover { background: #0068ad; }
-
 /* Desktop product aliases are compositions of the canonical Luma tokens. */
 .desktop-openmaus {
   --im-chat-surface: var(--background);

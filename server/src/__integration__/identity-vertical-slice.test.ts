@@ -1,25 +1,21 @@
 import assert from 'node:assert/strict'
-import { createHash } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
+import { hashInvitationToken } from '../http/invitation-token.js'
 import { provisionPersonalWorkspace } from '../modules/companies/public.js'
-import {
-  buildApiTestApp,
-  ensureSchemaOnce,
-  resetAllTables,
-  teardownAll,
-} from './_helpers.js'
+import { buildApiTestApp, ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
-const USER_ID = 'u-identity-slice'
+const INVITER_ID = 'u-registration-inviter'
+const TOKEN = 'registration-invite-token'
 let companyId = ''
 let server: Server
 let baseUrl = ''
 
 before(async () => {
   await ensureSchemaOnce()
-  const app = await buildApiTestApp(USER_ID)
+  const app = await buildApiTestApp(INVITER_ID)
   await new Promise<void>((resolve) => {
     server = createServer(app).listen(0, () => {
       const address = server.address()
@@ -31,81 +27,32 @@ before(async () => {
 
 beforeEach(async () => {
   await resetAllTables()
-  const provisioned = await withTransaction(pool, async (db) => {
-    await db.query(
-      `INSERT INTO users (id,email,display_name,email_verified_at)
-       VALUES ($1,'identity@example.com','Identity User',NOW())`,
-      [USER_ID],
-    )
-    await db.query(
-      `INSERT INTO user_identities (provider, provider_id, user_id, email_lower)
-       VALUES ('lingxi', 'identity-provider-user', $1, 'identity@example.com')`,
-      [USER_ID],
-    )
-    return provisionPersonalWorkspace(db, USER_ID)
+  companyId = await withTransaction(pool, async (db) => {
+    await db.query(`INSERT INTO users(id,email,display_name,email_verified_at) VALUES($1,'owner@example.com','Owner',NOW())`, [INVITER_ID])
+    return (await provisionPersonalWorkspace(db, INVITER_ID)).companyId
   })
-  companyId = provisioned.companyId
-  await pool.query(
-    `INSERT INTO participants (id,kind,name,initial,avatar_bg,status,company_id)
-     VALUES ($1,'human','Identity User','I','#FF8870','avail',$2)`,
-    [USER_ID, companyId],
-  )
+  await pool.query(`INSERT INTO company_invitations(token_hash,company_id,invited_by,email,role,max_uses,expires_at) VALUES($1,$2,$3,'new@example.com','MEMBER',1,NOW()+INTERVAL '1 day')`, [hashInvitationToken(TOKEN), companyId, INVITER_ID])
 })
 
 after(async () => teardownAll(server))
 
-test('[integration] identity snapshot is assembled by the application boundary', async () => {
-  const response = await fetch(`${baseUrl}/api/auth/me`)
-  assert.equal(response.status, 200)
-  const payload = await response.json() as {
-    user: { id: string; providers: string[] }
-    companies: Array<{ id: string; name: string; slug: string; role: string }>
-    activeCompanyId: string
-  }
-  assert.equal(payload.user.id, USER_ID)
-  assert.deepEqual(payload.user.providers, ['lingxi'])
-  assert.equal(payload.companies.length, 1)
-  assert.equal(payload.companies[0]?.id, companyId)
-  assert.equal(payload.companies[0]?.name, "Identity User's workspace")
-  assert.match(payload.companies[0]?.slug ?? '', /^identity-/)
-  assert.equal(payload.companies[0]?.role, 'owner')
-  assert.equal(payload.activeCompanyId, companyId)
-})
+test('[integration] invitation validation and provision are transactional and idempotent', async () => {
+  const validation = await fetch(`${baseUrl}/api/internal/registration/invitation`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'new@example.com', inviteToken: TOKEN, inviteKind: 'company' }),
+  })
+  assert.equal(validation.status, 200)
 
-test('[integration] account deletion atomically scrubs identity and access rows', async () => {
-  const expiresAt = new Date(Date.now() + 60_000)
-  await pool.query(
-    `INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($1, $2, $3)`,
-    [createHash('sha256').update('session').digest('hex'), USER_ID, expiresAt],
-  )
-  await pool.query(
-    `INSERT INTO ws_tickets (token_hash, user_id, expires_at) VALUES ($1, $2, $3)`,
-    [createHash('sha256').update('ticket').digest('hex'), USER_ID, expiresAt],
-  )
-
-  const response = await fetch(`${baseUrl}/api/me/account`, { method: 'DELETE' })
-  assert.equal(response.status, 200)
-  const user = await pool.query<{
-    email: string
-    display_name: string
-    deleted_at: Date | null
-  }>(`SELECT email, display_name, deleted_at FROM users WHERE id = $1`, [USER_ID])
-  assert.equal(user.rows[0]?.email, `deleted+${USER_ID}@lingxiloop.invalid`)
-  assert.equal(user.rows[0]?.display_name, 'Deleted user')
-  assert.ok(user.rows[0]?.deleted_at)
-  for (const table of ['sessions', 'ws_tickets', 'user_identities']) {
-    const rows = await pool.query(`SELECT 1 FROM ${table} WHERE user_id = $1`, [USER_ID])
-    assert.equal(rows.rowCount, 0)
-  }
-  const participant = await pool.query<{ departed_at: Date | null }>(
-    `SELECT departed_at FROM participants WHERE id = $1 AND company_id = $2`,
-    [USER_ID, companyId],
-  )
-  assert.ok(participant.rows[0]?.departed_at)
-})
-
-test('[integration] repeated account deletion fails closed without recreating compatibility state', async () => {
-  assert.equal((await fetch(`${baseUrl}/api/me/account`, { method: 'DELETE' })).status, 200)
-  assert.equal((await fetch(`${baseUrl}/api/me/account`, { method: 'DELETE' })).status, 404)
-  assert.equal((await pool.query(`SELECT 1 FROM users WHERE id = $1`, [USER_ID])).rowCount, 1)
+  const body = JSON.stringify({ authUserId: 'auth-1', email: 'new@example.com', name: 'New User', inviteToken: TOKEN, inviteKind: 'company' })
+  const first = await fetch(`${baseUrl}/api/internal/registration/provision`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })
+  const second = await fetch(`${baseUrl}/api/internal/registration/provision`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })
+  assert.equal(first.status, 200)
+  assert.equal(second.status, 200)
+  const one = await first.json() as { appUserId: string }
+  const two = await second.json() as { appUserId: string }
+  assert.deepEqual(two, one)
+  const state = await pool.query<{ personal: number; invited: number; use_count: number }>(`SELECT
+    (SELECT COUNT(*)::int FROM companies WHERE type='PERSONAL' AND personal_owner_user_id=$1) AS personal,
+    (SELECT COUNT(*)::int FROM company_memberships WHERE company_id=$2 AND user_id=$1 AND status='ACTIVE') AS invited,
+    (SELECT use_count FROM company_invitations WHERE token_hash=$3) AS use_count`, [one.appUserId, companyId, hashInvitationToken(TOKEN)])
+  assert.deepEqual(state.rows[0], { personal: 1, invited: 1, use_count: 1 })
 })

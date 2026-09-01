@@ -20,7 +20,7 @@ export interface SiemSinkPort {
   availability(): Promise<EnterpriseCapabilityAvailability<'SIEM_SINK'>>
 }
 
-/** Future advanced SSO providers report availability without bypassing LingxiIdentity. */
+/** Future advanced SSO providers report availability without bypassing Better Auth. */
 export interface AdvancedSsoPort {
   availability(): Promise<EnterpriseCapabilityAvailability<'ADVANCED_SSO'>>
 }

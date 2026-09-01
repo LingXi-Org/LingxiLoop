@@ -128,6 +128,7 @@ test('the active viewer runs only authenticated Blob HTML in a script-only sandb
   assert.doesNotMatch(viewer, /allow-same-origin/)
   assert.match(viewer, /referrerPolicy="no-referrer"/)
   assert.match(html, /presentationsApi\.getVersionContent/)
-  assert.match(api, /authorization[\s\S]*Bearer/)
+  assert.match(api, /credentials:\s*'include'/)
+  assert.doesNotMatch(api, /authorization|Bearer/)
   assert.match(api, /content-type[\s\S]*text\/html/)
 })

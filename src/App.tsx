@@ -1,5 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { consumeSuspendedFragment, SuspendedScreen } from '@/auth/AuthStateScreens'
+import { lazy, Suspense, useEffect } from 'react'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { NotificationToasts } from '@/components/NotificationToasts'
@@ -69,22 +68,11 @@ function AuthedApp() {
 }
 
 export function App() {
-  // Suspension landing — handleCallback redirects here with
-  // `#suspended=1&email=...&reason=...` when a returning user whose
-  // account is currently suspended finishes OAuth.
-  const [suspended] = useState<{ email: string | null; reason: string | null } | null>(
-    () => consumeSuspendedFragment(),
-  )
-
   // Force AuthedApp to remount when the user logs in/out OR switches between
   // companies — every store keys off the active tenant, so a clean remount is
   // the simplest way to reload all data without stale rows leaking across.
   const userId = useAuth((s) => s.user?.id ?? null)
   const companyId = useAuth((s) => s.activeCompanyId)
-
-  if (suspended) {
-    return <SuspendedScreen email={suspended.email} reason={suspended.reason} />
-  }
 
   return (
     <AuthGate>

@@ -16,7 +16,7 @@ export function DataAccountSettingsPanel() {
   const [deleting, setDeleting] = useState(false)
 
   const signOut = () => {
-    const logout = authApi.logout()
+    const logout = authApi.signOut()
     useSettingsDialog.getState().setOpen(false)
     useAuth.getState().clear()
     void logout.catch(() => undefined)

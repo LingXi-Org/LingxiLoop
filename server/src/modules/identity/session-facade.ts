@@ -1,35 +1,19 @@
-import { pool } from '../../db/pool.js'
+import { createHash, randomBytes } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
-import { withTransaction } from '../../db/transaction.js'
-import {
-  generateSessionToken,
-  generateWsTicket,
-  SessionApplication,
-  type AuditInput,
-} from './session-application.js'
-import { insertAuditEvent } from './session-repository.js'
+import { pool } from '../../db/pool.js'
+import { consumeWsTicketByHash, insertAuditEvent, insertWsTicket } from './session-repository.js'
 
-const sessionApplication = new SessionApplication(pool, {
-  transaction: (work) => withTransaction(pool, work),
-  now: Date.now,
-  sessionToken: generateSessionToken,
-  wsTicket: generateWsTicket,
-})
+export interface AuditInput {
+  kind: string
+  userId?: string | null
+  companyId?: string | null
+  ip?: string | null
+  userAgent?: string | null
+  detail?: Record<string, unknown> | null
+}
 
-export const createSession = (
-  userId: string,
-  options: { ip?: string; ua?: string },
-) => sessionApplication.createSession(userId, options)
+const hash = (value: string) => createHash('sha256').update(value).digest('hex')
 
-export const createLoginSession = (
-  userId: string,
-  options: { ip?: string; ua?: string },
-  auditInput: AuditInput,
-) => sessionApplication.createSession(userId, options, auditInput)
-
-export const resolveSession = (token: string) => sessionApplication.resolveSession(token)
-export const deleteSession = (token: string) => sessionApplication.deleteSession(token)
-export const audit = (input: AuditInput) => sessionApplication.audit(input)
 export const auditInTransaction = (db: Queryable, input: AuditInput) => insertAuditEvent(db, {
   kind: input.kind,
   userId: input.userId ?? null,
@@ -38,5 +22,13 @@ export const auditInTransaction = (db: Queryable, input: AuditInput) => insertAu
   userAgent: input.userAgent ?? null,
   detail: input.detail ?? null,
 })
-export const createWsTicket = (userId: string) => sessionApplication.createWsTicket(userId)
-export const consumeWsTicket = (ticket: string) => sessionApplication.consumeWsTicket(ticket)
+export const audit = (input: AuditInput) => auditInTransaction(pool, input)
+
+export async function createWsTicket(userId: string): Promise<{ ticket: string; expiresAt: Date }> {
+  const ticket = randomBytes(32).toString('base64url')
+  const expiresAt = new Date(Date.now() + 30_000)
+  await insertWsTicket(pool, { tokenHash: hash(ticket), userId, expiresAt })
+  return { ticket, expiresAt }
+}
+
+export const consumeWsTicket = (ticket: string) => consumeWsTicketByHash(pool, hash(ticket))

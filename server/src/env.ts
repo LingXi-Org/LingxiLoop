@@ -37,6 +37,8 @@ export const env = {
   WUKONG_USER_TOKEN_SECRET: required('WUKONG_USER_TOKEN_SECRET'),
   DATABASE_URL: required('DATABASE_URL'),
   REDIS_URL: required('REDIS_URL'),
+  GATEWAY_HMAC_SECRET: process.env.LINGXILOOP_GATEWAY_HMAC_SECRET
+    ?? (process.env.NODE_ENV === 'production' ? required('LINGXILOOP_GATEWAY_HMAC_SECRET') : 'dev-only-gateway-secret'),
   OPENAI_API_KEY: required('OPENAI_API_KEY'),
   /** Standard OpenAI API endpoint. */
   OPENAI_BASE_URL: process.env.OPENAI_BASE_URL?.trim() || 'https://api.openai.com/v1',
@@ -65,7 +67,6 @@ export const env = {
   /**
    * Publicly reachable application origin.
    */
-  PUBLIC_HOST: process.env.PUBLIC_HOST ?? '',
   /**
    * Cloudflare R2 object storage. All values are required at startup.
    *
@@ -122,45 +123,11 @@ export const env = {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
-  LINGXI_IDENTITY_ISSUER: (process.env.LINGXI_IDENTITY_ISSUER ?? '').replace(/\/+$/, ''),
-  LINGXI_IDENTITY_CLIENT_ID: process.env.LINGXI_IDENTITY_CLIENT_ID ?? '',
-  LINGXI_IDENTITY_CLIENT_SECRET: process.env.LINGXI_IDENTITY_CLIENT_SECRET ?? '',
-  LINGXI_IDENTITY_SCOPES: process.env.LINGXI_IDENTITY_SCOPES ?? 'openid profile email',
-  /** LingxiIdentity is the only OIDC provider. */
-  /** Public origin this server is reachable at. Used to construct the
-   *  redirect_uri that we hand to LingxiIdentity at flow
-   *  start. Defaults to http://localhost:5181 for local dev. In prod
-   *  set LINGXILOOP_PUBLIC_ORIGIN=https://loop.example.com. */
+  /** Public origin used for generated product links. */
   PUBLIC_ORIGIN: (process.env.LINGXILOOP_PUBLIC_ORIGIN ?? 'http://localhost:5181').replace(
     /\/+$/,
     '',
   ),
-  /** Default URL the server 302s to after a successful OAuth callback,
-   *  with `#token=...&companyId=...` appended. Used when the client
-   *  didn't pass `?return=` at flow start. For dev (Vite) point at
-   *  http://localhost:5173/; for packaged Electron the client passes
-   *  lingxiloop://auth at start time and the server picks that. */
-  AUTH_DONE_URL: process.env.LINGXILOOP_AUTH_DONE_URL ?? 'http://localhost:5173/',
-  /** Allow-list of return URLs the client may pass via /auth/start
-   *  `?return=...`. Without this we'd have an open-redirect: any
-   *  attacker could craft a malicious provider-callback chain that
-   *  delivers the user's token to a foreign origin. Entries are matched by
-   *  parsed scheme, host, effective port, and path boundary. Comma-separated.
-   *  Common values:
-   *    lingxiloop://auth                       (packaged Electron deep link)
-   *    http://localhost:5173/              (Vite dev renderer)
-   *    http://localhost:5180/              (Electron dev renderer)
-   *    https://loop.example.com/                 (web client)
-   */
-  AUTH_RETURN_ALLOWLIST: (process.env.LINGXILOOP_AUTH_RETURN_ALLOWLIST ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean),
-  /** Verified LingxiIdentity emails allowed to use the platform operations API. */
-  PLATFORM_ADMIN_EMAILS: (process.env.LINGXILOOP_PLATFORM_ADMIN_EMAILS ?? '')
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean),
   /** Public base URL used to build company invitation links. */
   INVITE_BASE_URL: required('LINGXILOOP_INVITE_BASE_URL'),
   /**

@@ -1,0 +1,31 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "lingxiloop-control-plane",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "../../dist-admin",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "lingxiloop-control-plane",
+    "database_id": "cf22d961-eba4-4d21-b447-4d19ec0ad524",
+    "migrations_dir": "migrations"
+  }],
+  "vars": {
+    "ORIGIN_BASE_URL": "https://origin.loop.lingxilearn.cn",
+    "OPENSHIP_BASE_URL": "https://ops.lingxilearn.cn",
+    "AUTH_ALLOWED_HOSTS": "loop.lingxilearn.cn,admin.lingxilearn.cn",
+    "APP_VERSION": "0.1.0-beta"
+  },
+  "routes": [
+    { "pattern": "loop.lingxilearn.cn/api/*", "zone_name": "lingxilearn.cn" },
+    { "pattern": "admin.lingxilearn.cn", "custom_domain": true }
+  ]
+}

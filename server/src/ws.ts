@@ -315,10 +315,10 @@ export function attachWebSocket(httpServer: Server) {
       return
     }
 
-    const companies = await loadMemberships(session.userId)
+    const companies = await loadMemberships(session)
     const c: AuthedSocket = {
       ws,
-      userId: session.userId,
+      userId: session,
       originId: randomUUID(),
       companies,
       docSubs: new Map(),
@@ -329,8 +329,8 @@ export function attachWebSocket(httpServer: Server) {
     // no JS involvement on the client side. The pong handler here is the
     // server's only signal that the socket is still alive end-to-end.
     ws.on('pong', () => { c.isAlive = true })
-    console.log(`[ws] client connected (${ip}, user=${session.userId}, companies=${companies.size}) · total ${clients.size}`)
-    void onHumanConnect(session.userId, companies)
+    console.log(`[ws] client connected (${ip}, user=${session}, companies=${companies.size}) · total ${clients.size}`)
+    void onHumanConnect(session, companies)
 
     // Single-fire disconnect handler — both 'close' and 'error' route
     // through here so we never double-decrement the connection counter.
@@ -341,7 +341,7 @@ export function attachWebSocket(httpServer: Server) {
       for (const [docId, subRec] of c.docSubs) docUnsubscribe(docId, subRec)
       c.docSubs.clear()
       clients.delete(c)
-      void onHumanDisconnect(session.userId)
+      void onHumanDisconnect(session)
     }
 
     try {

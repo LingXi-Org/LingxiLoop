@@ -52,7 +52,7 @@ export const learningApplication = new LearningApplication(pool, {
   generateInvitationToken,
   hashInvitationToken,
   invitationUrl: (token) => {
-    const base = (env.INVITE_BASE_URL || env.AUTH_DONE_URL).replace(/\/+$/, '')
+    const base = env.INVITE_BASE_URL.replace(/\/+$/, '')
     return `${base}/invite/project/${encodeURIComponent(token)}`
   },
   avatarForEmail: gravatarUrlForEmail,

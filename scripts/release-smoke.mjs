@@ -3,7 +3,7 @@
 /** Authenticated production smoke.
  *
  * Required:
- *   LINGXILOOP_SMOKE_TOKEN       bearer session/service token
+ *   LINGXILOOP_SMOKE_COOKIE      Better Auth cookie header value
  *   LINGXILOOP_SMOKE_COMPANY_ID  tenant whose real API surface is exercised
  *   LINGXILOOP_SMOKE_BASE        deployed public origin
  * Optional:
@@ -15,13 +15,13 @@
  * all survive the deployed schema + runtime. */
 
 const base = (process.env.LINGXILOOP_SMOKE_BASE || '').replace(/\/+$/, '')
-const token = process.env.LINGXILOOP_SMOKE_TOKEN
+const cookie = process.env.LINGXILOOP_SMOKE_COOKIE
 const companyId = process.env.LINGXILOOP_SMOKE_COMPANY_ID
 const expectedSha = process.env.LINGXILOOP_SMOKE_EXPECTED_SHA
 const expectedVersion = process.env.LINGXILOOP_SMOKE_EXPECTED_VERSION
 
-if (!base || !token || !companyId) {
-  console.error('LINGXILOOP_SMOKE_BASE, LINGXILOOP_SMOKE_TOKEN and LINGXILOOP_SMOKE_COMPANY_ID are required')
+if (!base || !cookie || !companyId) {
+  console.error('LINGXILOOP_SMOKE_BASE, LINGXILOOP_SMOKE_COOKIE and LINGXILOOP_SMOKE_COMPANY_ID are required')
   process.exit(2)
 }
 
@@ -34,7 +34,7 @@ if (parsedBase.protocol !== 'https:' || parsedBase.pathname !== '/' || parsedBas
 async function request(path, { authenticated = true, method = 'GET' } = {}) {
   const headers = { accept: 'application/json' }
   if (authenticated) {
-    headers.authorization = `Bearer ${token}`
+    headers.cookie = cookie
     headers['x-company-id'] = companyId
   }
   const started = Date.now()

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const ports = readFileSync(new URL('../modules/education/integration-ports.ts', import.meta.url), 'utf8')
-const identityRouter = readFileSync(new URL('../modules/identity/router.ts', import.meta.url), 'utf8')
+const identityRouter = readFileSync(new URL('../modules/identity/gateway-registration-router.ts', import.meta.url), 'utf8')
 const capabilityCards = readFileSync(
   new URL('../../../src/features/education/components/EducationIntegrationCapabilities.tsx', import.meta.url),
   'utf8',

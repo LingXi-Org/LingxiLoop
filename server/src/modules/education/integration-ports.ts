@@ -22,7 +22,7 @@ export interface LmsConnectorPort {
 
 export type EducationIdentityBrokerCapability = 'EXISTING_USER_MAPPING'
 
-/** Future Education SSO brokers resolve an opaque subject to an already-existing LingxiIdentity user. */
+/** Future Education SSO brokers resolve an opaque subject to an already-existing business user. */
 export interface EducationIdentityBrokerPort {
   probe(): Promise<ExternalIntegrationProbe<EducationIdentityBrokerCapability>>
   mapExistingUser(input: {

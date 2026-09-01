@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button'
 import { companiesApi } from '@/features/companies/api'
 import { learningApi } from '@/features/learning/api'
 import { authApi } from '@/auth/api'
-import { getServerOrigin } from '@/api/core/http'
 import type { ApiProjectInvitationAccept, ApiProjectInvitationPreview } from '@/features/learning/contracts'
 import type { ApiInvitationPreview } from '@/features/companies/contracts'
 /**
@@ -15,10 +14,7 @@ import type { ApiInvitationPreview } from '@/features/companies/contracts'
  *   1. On mount, parse the token from the URL and call previewInvitation —
  *      unauthenticated callers learn the workspace name + inviter so the
  *      page reads "Iris invited you to Sunfire" before they sign in.
- *   2. If not signed in: show the same OAuth buttons AuthScreen uses, but
- *      we DON'T scrub the invite token from the URL — the AuthGate's
- *      OAuth-fragment handler stays scoped to `#token=…`, so the invite
- *      token survives the round-trip and we resume on return.
+ *   2. If not signed in: open invitation-bound Better Auth registration.
  *   3. Once signed in, show a "Join <workspace>" CTA. On click, POST the
  *      accept endpoint, append the company to the local auth store, and
  *      switch to it — at which point the AuthedApp key changes and the
@@ -36,12 +32,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
 import { selectLearningSpace } from '@/features/knowledge/workspace'
-import { isElectron } from '@/lib/runtime'
 import { userFacingError } from '@/lib/userFacingError'
 import { ProductLogo } from '@/components/Avatar'
 import { WindowDragStrip } from '@/components/WindowDragStrip'
-
-const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
 
 function inviteRoleLabel(role: string): string {
   switch (role.toLowerCase()) {
@@ -55,9 +48,7 @@ function inviteRoleLabel(role: string): string {
 
 /** Look at the URL path or app deep-link hash for an invite token. Returns
  *  the token + a no-op cleanup that scrubs it from the URL so a refresh
- *  doesn't trip the same handler again. The token is stashed in
- *  localStorage before scrubbing so the OAuth round-trip can pick it
- *  back up on return. */
+ *  doesn't trip the same handler again. */
 export function consumeInviteFromUrl(): { token: string; clear: () => void } | null {
   const url = new URL(window.location.href)
   const projectPathMatch = url.pathname.match(/^\/invite\/project\/([^/?#]+)\/?$/)
@@ -94,23 +85,6 @@ export function consumeInviteFromUrl(): { token: string; clear: () => void } | n
   return null
 }
 
-/** Persist a pending invite token across the OAuth round-trip. The
- *  AuthScreen redirects the browser to LingxiIdentity — when the
- *  user lands back on AUTH_DONE_URL the path/hash is reset to the auth
- *  fragment shape, and `consumeInviteFromUrl` won't find the token.
- *  Pulling it from localStorage instead keeps the flow seamless. */
-export function stashPendingInvite(token: string): void {
-  try { localStorage.setItem(INVITE_TOKEN_KEY, token) } catch { /* swallow */ }
-}
-
-export function getPendingInvite(): string | null {
-  try { return localStorage.getItem(INVITE_TOKEN_KEY) } catch { return null }
-}
-
-export function clearPendingInvite(): void {
-  try { localStorage.removeItem(INVITE_TOKEN_KEY) } catch { /* swallow */ }
-}
-
 interface Props {
   token: string
   onDone: () => void
@@ -121,7 +95,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const projectInvite = token_.startsWith('project:')
   const rawToken = projectInvite ? token_.slice('project:'.length) : token_
   const tokenUserId = useAuth((s) => s.user?.id ?? null)
-  const tokenStr = useAuth((s) => s.token)
+  const tokenStr = useAuth((s) => s.authenticated)
   const setMe = useAuth((s) => s.setMe)
   const setServerCapabilities = useAuth((s) => s.setServerCapabilities)
   const setActive = useAuth((s) => s.setActiveCompany)
@@ -156,7 +130,6 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
       } else {
         setActive(r.company.id)
       }
-      clearPendingInvite()
       if (projectInvite && 'course' in r) {
         const accepted = r as ApiProjectInvitationAccept
         await selectLearningSpace({ companyId: accepted.company.id, projectId: accepted.course.projectId })
@@ -211,7 +184,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           <ErrorBlock
             title="无法加载此邀请"
             body={previewErr}
-            onDismiss={() => { clearPendingInvite(); onDone() }}
+            onDismiss={onDone}
           />
         )}
 
@@ -223,7 +196,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           <ErrorBlock
             title="该邀请链接无效"
             body="链接可能输入有误。请让邀请人重新发送一条新的邀请链接。"
-            onDismiss={() => { clearPendingInvite(); onDone() }}
+            onDismiss={onDone}
           />
         )}
 
@@ -231,7 +204,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           <ErrorBlock
             title="该邀请已被撤销"
             body={`${companyName} 的所有者已取消此邀请。请让他们发送新的邀请。`}
-            onDismiss={() => { clearPendingInvite(); onDone() }}
+            onDismiss={onDone}
           />
         )}
 
@@ -239,7 +212,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           <ErrorBlock
             title="该邀请已过期"
             body={`${companyName} 的邀请已超过有效期，请让邀请人重新发送。`}
-            onDismiss={() => { clearPendingInvite(); onDone() }}
+            onDismiss={onDone}
           />
         )}
 
@@ -247,7 +220,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           <ErrorBlock
             title="该邀请已被使用"
             body={`前往 ${companyName} 的链接只能使用一次，已被其他人使用。`}
-            onDismiss={() => { clearPendingInvite(); onDone() }}
+            onDismiss={onDone}
           />
         )}
 
@@ -255,7 +228,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           <ErrorBlock
             title="该课程已归档"
             body="归档课程为只读状态，无法再接受新成员。"
-            onDismiss={() => { clearPendingInvite(); onDone() }}
+            onDismiss={onDone}
           />
         )}
 
@@ -287,7 +260,6 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
                   setActive(inv.company.id)
                 }
               }
-              clearPendingInvite()
               onDone()
             }}
           />
@@ -325,7 +297,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
                   }}
                 >{busy ? '正在加入…' : `以${inviteRoleLabel(inv.role)}身份加入 ${companyName}`}</Button>
                 <Button
-                  onClick={() => { clearPendingInvite(); onDone() }}
+                  onClick={onDone}
                   className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic"
                 >暂不</Button>
               </>
@@ -364,7 +336,7 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
 }
 
 function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; onDismiss?: () => void }) {
-  const tokenStr = useAuth((s) => s.token)
+  const tokenStr = useAuth((s) => s.authenticated)
   return (
     <div className="flex flex-col items-center gap-4 text-center">
       <h1 className="font-display text-[20px] text-ink-900">{title}</h1>
@@ -381,68 +353,26 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
 }
 
 function SignInToAccept({ token }: { token: string }) {
-  const [busy, setBusy] = useState<'lingxi' | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const go = (provider: 'lingxi') => {
-    setBusy(provider)
-    setError(null)
+  const go = () => {
     const rawToken = token.startsWith('project:') ? token.slice('project:'.length) : token
-    // Persist BEFORE redirect so the post-OAuth landing can resume here.
-    stashPendingInvite(token)
-    if (isElectron && window.lingxiloop?.auth) {
-      const origin = getServerOrigin()
-      if (!origin) {
-        setBusy(null)
-        setError('桌面端未配置服务地址，无法继续登录')
-        return
-      }
-      // Arm a single-use nonce (anti session-fixation — see AuthScreen). The
-      // nonce rides the return URL's query and must match on the inbound token.
-      const auth = window.lingxiloop.auth
-      void (async () => {
-        let done = 'http://127.0.0.1:47823/auth/done'
-        if (!auth.arm) {
-          setBusy(null)
-          setError('当前桌面版本不支持安全登录会话，请更新后重试')
-          return
-        }
-        try {
-          const nonce = await auth.arm()
-          if (nonce) done += `?n=${encodeURIComponent(nonce)}`
-        } catch (reason) {
-          setBusy(null)
-          setError(userFacingError(reason, '无法建立安全的桌面登录会话，请重试。'))
-          return
-        }
-        void auth.openExternal(authApi.startUrl({
-          returnUrl: done,
-          inviteToken: rawToken,
-          inviteKind: token.startsWith('project:') ? 'project' : 'company',
-        }))
-      })()
-      return
-    }
-    location.assign(authApi.startUrl({
-      inviteToken: rawToken,
-      inviteKind: token.startsWith('project:') ? 'project' : 'company',
-    }))
+    const returnTo = token.startsWith('project:') ? `/invite/project/${encodeURIComponent(rawToken)}` : `/invite/${encodeURIComponent(rawToken)}`
+    const parameters = new URLSearchParams({ mode: 'signup', invite: rawToken, inviteKind: token.startsWith('project:') ? 'project' : 'company', returnTo })
+    location.assign(`/?${parameters}`)
   }
   return (
     <div className="w-full flex flex-col gap-2.5">
       <div className="text-[12.5px] text-ink-500 font-display italic text-center">
         登录以接受此邀请
       </div>
-      {error && <div role="alert" className="rounded-lg bg-coral-soft px-3 py-2 text-center text-[12px] text-coral-deep">{error}</div>}
       <Button
         type="button"
-        onClick={() => go('lingxi')}
-        disabled={busy !== null}
-        className="auth-provider-button auth-provider-lingxi h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
+        onClick={go}
+        className="h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold"
       >
-        {busy === 'lingxi' ? '正在跳转…' : '使用灵犀账号继续'}
+        使用邮箱继续
       </Button>
       <div className="text-[10.5px] text-ink-300 text-center font-display italic">
-        我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。
+        注册后验证邮箱即可加入受邀空间。
       </div>
     </div>
   )

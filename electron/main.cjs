@@ -2,10 +2,7 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, shell, nativeTheme, screen, ipcMain, protocol, net } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
-const http = require('node:http')
-const crypto = require('node:crypto')
 const { pathToFileURL } = require('node:url')
-const { createAuthNonceGuard } = require('./authNonce.cjs')
 const { registerRendererScheme, rendererFile } = require('./rendererProtocol.cjs')
 const { DEFAULT_WINDOW_STATE, createWindowStateStore } = require('./windowState.cjs')
 
@@ -51,34 +48,6 @@ const windowStateStore = createWindowStateStore({
   filePath: () => path.join(app.getPath('userData'), 'window-state.json'),
   displays: () => screen.getAllDisplays(),
 })
-
-// ============== OAuth loopback: http://127.0.0.1:47823/auth/done ==============
-// Sign-in opens the system browser; after the provider redirects to
-// our prod server's /auth/callback, the server 302s to this tiny
-// local-only HTTP server. The /auth/done HTML page renders a polished
-// "You're signed in" card with an explicit "Open LingxiLoop" button — the
-// button uses the lingxiloop:// deep link to hand the session to the app
-// (works whether the app is currently running or not).
-//
-// Why button + deep link over silent auto-handoff:
-//   - User sees a deliberate "open the app" moment instead of an
-//     invisible POST that doesn't always bring LingxiLoop to front
-//   - Deep link launches the app even if it isn't running yet —
-//     fresh-install + first sign-in works without a manual launch
-//   - The browser tab stays put on the success page, so if LingxiLoop
-//     fails to come forward the user can click again
-//
-// Tokens ride in the URL fragment (#token=…) so they stay out of
-// server access logs and HTTP Referer headers. macOS LaunchServices
-// does log the full deep-link URL — same threat surface as any other
-// lingxiloop:// link, accepted as the cost of an explicit, user-driven
-// handoff. Session TTL stays tight (30d hard / 14d idle).
-//
-// Single-instance lock keeps a stray second `lingxiloop` from binding the
-// same loopback port AND lets deep links routed to a NEW process bounce
-// over to the already-running instance via second-instance event below.
-const LOOPBACK_PORT = 47823
-const DEEP_LINK_SCHEME = 'lingxiloop'
 
 const gotSingleInstance = app.requestSingleInstanceLock()
 if (!gotSingleInstance) {
@@ -156,310 +125,6 @@ if (process.platform === 'darwin') {
   // as a series of shadow flickers. The notification panel is the only
   // window that can actually cause AppKit to demote us, and its own
   // create-path handles repair locally (see createNotificationWindow).
-}
-
-// Register the app as the OS handler for lingxiloop:// links. In dev this
-// only persists until the dev process ends (Electron writes to LSDb
-// each launch); packaged builds get a durable registration via the
-// `build.protocols` entry in package.json.
-if (process.defaultApp) {
-  // `process.defaultApp` is true when Electron is run from CLI (dev).
-  // The argv[1] is the script path — register so macOS knows which
-  // executable to invoke for lingxiloop:// URLs.
-  if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME, process.execPath, [path.resolve(process.argv[1])])
-  }
-} else {
-  app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME)
-}
-
-/** HTML served at /auth/done. Self-contained: no external assets, so
- *  it renders identically online/offline. Shows a "You're signed in"
- *  card with an explicit Open LingxiLoop button — clicking it navigates
- *  to `lingxiloop://auth#token=…` so the OS hands the URL to the running
- *  LingxiLoop app (open-url on macOS, second-instance argv on Win/Linux),
- *  launching it if it isn't already running. */
-const AUTH_DONE_HTML = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LingxiLoop — Signed in</title>
-<style>
-  :root { color-scheme: light; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; height: 100%; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
-    background: linear-gradient(180deg, #F8FBFD 0%, #EDF4F9 100%);
-    display: grid; place-items: center; color: #1A2733;
-  }
-  .card {
-    width: min(420px, calc(100vw - 32px));
-    background: #fff;
-    border-radius: 18px;
-    padding: 40px 32px 32px;
-    box-shadow: 0 30px 60px -30px rgba(10, 30, 60, 0.20), 0 0 0 1px rgba(0, 80, 140, 0.06);
-    text-align: center;
-  }
-  .cloud { font-size: 56px; line-height: 1; margin-bottom: 24px; }
-  h1 { font-size: 22px; font-weight: 500; margin: 0 0 6px; letter-spacing: -0.01em; }
-  .sub { font-style: italic; font-size: 13.5px; color: #65778A; margin: 0 0 28px; }
-  /* Same shape + color story as the website's Download CTA: flat sky-
-     blue rectangle with generous rounding, white label, no gradients,
-     soft tinted shadow. Hover lifts a touch + darkens the surface a
-     hair. */
-  .btn {
-    appearance: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    border: 0;
-    border-radius: 14px;
-    padding: 14px 28px;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: inherit;
-    letter-spacing: 0.005em;
-    color: #fff;
-    background: #0BB3F0;
-    cursor: pointer;
-    transition: transform 140ms ease, background 160ms ease, box-shadow 200ms ease;
-    box-shadow:
-      0 8px 18px -6px rgba(11, 179, 240, 0.55),
-      0 2px 4px rgba(11, 179, 240, 0.20);
-  }
-  .btn:hover {
-    background: #0AA5E0;
-    transform: translateY(-1px);
-    box-shadow:
-      0 12px 24px -6px rgba(11, 179, 240, 0.6),
-      0 3px 6px rgba(11, 179, 240, 0.22);
-  }
-  .btn:active { transform: translateY(0); background: #0997D0; }
-  .btn:disabled {
-    background: #B7D7E6;
-    cursor: default;
-    box-shadow: none;
-    transform: none;
-  }
-  .btn-mark { width: 14px; height: 14px; opacity: 0.9; }
-  .hint { font-size: 11.5px; color: #8B9AAC; margin-top: 20px; font-style: italic; }
-  .ok { color: #34A853; font-weight: 600; }
-  .err { color: #D03A3A; font-size: 13px; margin-top: 16px; }
-</style>
-</head>
-<body>
-  <div class="card">
-    <div class="cloud">☁️</div>
-    <h1 id="h1">You're signed in</h1>
-    <p class="sub" id="sub">Ready when you are.</p>
-    <button id="open" class="btn">
-      <span id="btn-label">Open LingxiLoop</span>
-      <svg class="btn-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M9 6l6 6-6 6"/>
-      </svg>
-    </button>
-    <p class="hint" id="hint">You can close this tab after LingxiLoop opens.</p>
-    <p class="err" id="err" style="display:none"></p>
-  </div>
-<script>
-(() => {
-  // Token stays in the fragment (out of access logs). The nonce may arrive
-  // through the query string, so read both locations.
-  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
-  const queryParams = new URLSearchParams(location.search);
-  const params = { get: (k) => hashParams.get(k) ?? queryParams.get(k) };
-  const token = params.get('token');
-  const companyId = params.get('companyId');
-  // Single-use nonce the app armed with (round-tripped via the return URL's
-  // query). Threaded back into the deep link so main can verify this handoff
-  // was app-initiated (anti session-fixation).
-  const nonce = params.get('n');
-  const error = params.get('error');
-  const h1 = document.getElementById('h1');
-  const sub = document.getElementById('sub');
-  const btn = document.getElementById('open');
-  const label = document.getElementById('btn-label');
-  const hint = document.getElementById('hint');
-  const err = document.getElementById('err');
-
-  if (error) {
-    h1.textContent = 'Sign-in failed';
-    sub.textContent = '';
-    btn.style.display = 'none';
-    hint.style.display = 'none';
-    err.style.display = 'block';
-    err.textContent = decodeURIComponent(error);
-    return;
-  }
-  if (!token) {
-    h1.textContent = 'No session token';
-    sub.textContent = 'Try signing in again from LingxiLoop.';
-    btn.style.display = 'none';
-    hint.style.display = 'none';
-    return;
-  }
-
-  // Build the deep link. Token + companyId ride in the URL fragment
-  // so they're not URL-encoded as a query string (cleaner) and don't
-  // appear in any web-server access logs along the path (we never
-  // navigate to a remote URL here — the OS routes the lingxiloop:// scheme
-  // directly to the local app).
-  const frag = new URLSearchParams({ token });
-  if (companyId) frag.set('companyId', companyId);
-  if (nonce) frag.set('n', nonce);
-  const deepLink = 'lingxiloop://auth#' + frag.toString();
-
-  let opened = false;
-  btn.addEventListener('click', () => {
-    if (opened) return;
-    opened = true;
-    location.href = deepLink;
-    // Optimistic confirmation — the OS handler is fire-and-forget. If
-    // the app fails to open (e.g. uninstalled), the user can still
-    // click again; we re-enable after a short delay.
-    label.innerHTML = '<span class="ok">✓</span> Opening LingxiLoop…';
-    btn.disabled = true;
-    setTimeout(() => {
-      opened = false;
-      btn.disabled = false;
-      label.textContent = 'Open LingxiLoop again';
-    }, 2500);
-  });
-})();
-</script>
-</body>
-</html>`
-
-// ============== Auth-handoff nonce (anti session-fixation) ==============
-// An inbound `lingxiloop://auth#token=…` deep link is otherwise unauthenticated:
-// any web page the user visits can navigate to that scheme and silently log
-// the app into the ATTACKER's account (session fixation). We defend with a
-// single-use nonce that only the app can originate: the renderer asks main to
-// ARM before opening the browser, threads the nonce through the OAuth return
-// URL (server round-trips it back onto the /auth/done page), and every inbound
-// token must carry the matching armed nonce or it's dropped. A drive-by deep
-// link has no valid nonce because the app never armed for it.
-//
-// The armed state is in-memory: the normal desktop flow keeps the app open
-// across the browser OAuth detour, so it's armed when the token returns. If
-// the user QUITS the app mid-sign-in, a deep link that cold-starts a fresh
-// process finds no armed nonce and is (correctly) dropped — they just sign in
-// again from the now-running app. That rare edge is the accepted cost of not
-// persisting a bearer-handoff credential to disk.
-const AUTH_NONCE_TTL_MS = 10 * 60 * 1000
-const authNonceGuard = createAuthNonceGuard({
-  randomBytes: crypto.randomBytes,
-  timingSafeEqual: crypto.timingSafeEqual,
-  ttlMs: AUTH_NONCE_TTL_MS,
-})
-
-/** Arm for one sign-in and return a fresh nonce the renderer appends to the
- *  OAuth return URL. Supersedes any previous unused nonce. */
-function armAuthHandoff() {
-  return authNonceGuard.arm()
-}
-
-/** Validate + single-use-consume an inbound nonce. Constant-time compare so a
- *  mismatch leaks nothing; invalid callbacks preserve the current attempt,
- *  while a match or expiry clears it. */
-function consumeAuthNonce(nonce) {
-  return authNonceGuard.consume(nonce)
-}
-
-/** Pull token + companyId + nonce out of a `lingxiloop://auth#token=…` URL. The OS
- *  hands us the full URL on open-url / second-instance; we only care
- *  about the fragment. Returns null if the URL isn't auth-shaped. */
-function parseAuthDeepLink(rawUrl) {
-  try {
-    const u = new URL(rawUrl)
-    if (u.protocol !== DEEP_LINK_SCHEME + ':') return null
-    if (u.hostname !== 'auth' && u.pathname !== '//auth' && u.pathname !== '/auth') return null
-    const hash = (u.hash || '').replace(/^#/, '')
-    const params = new URLSearchParams(hash)
-    const token = params.get('token')
-    if (!token || token.length < 8) return null
-    return { token, companyId: params.get('companyId'), nonce: params.get('n') }
-  } catch {
-    return null
-  }
-}
-
-/** Push token+companyId into the renderer — but ONLY for a handoff this app
- *  itself initiated (matching armed nonce). Bringing the main window forward
- *  is the polish touch — the user came from the browser, they want LingxiLoop on
- *  top. An inbound token with a missing/stale/wrong nonce is dropped. */
-function dispatchAuthToken(token, companyId, nonce) {
-  if (!consumeAuthNonce(nonce)) {
-    console.warn('[auth] dropped inbound token: no matching armed nonce (possible drive-by deep link)')
-    return
-  }
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.show()
-    mainWindow.focus()
-    mainWindow.webContents.send('auth:token', { token, companyId })
-  } else {
-    pendingAuthToken = { token, companyId }
-  }
-}
-let pendingAuthToken = null
-
-/** Reference to the auth loopback HTTP server. Held so `before-quit`
- *  can `.close()` it — otherwise the listening socket keeps Node's event
- *  loop alive after all windows close and the user is forced to
- *  Activity-Monitor-kill the process. */
-let authLoopbackServer = null
-
-function startAuthLoopback() {
-  const server = http.createServer((req, res) => {
-    // Cross-origin protection: only accept requests whose Origin (when
-    // present) is empty (top-level navigation) or self. Belt-and-suspenders
-    // against a malicious page on another origin POSTing tokens at us.
-    const origin = req.headers.origin
-    const selfOrigin = `http://127.0.0.1:${LOOPBACK_PORT}`
-    if (origin && origin !== selfOrigin) {
-      res.statusCode = 403; res.end('forbidden'); return
-    }
-    if (req.method === 'GET' && (req.url === '/auth/done' || req.url.startsWith('/auth/done?'))) {
-      res.setHeader('content-type', 'text/html; charset=utf-8')
-      res.end(AUTH_DONE_HTML)
-      return
-    }
-    if (req.method === 'POST' && req.url === '/auth/token') {
-      let body = ''
-      req.on('data', (chunk) => {
-        body += chunk
-        // 4kb cap — token is base64url 32 bytes, companyId ~14 chars.
-        // Anything over this is malicious or buggy.
-        if (body.length > 4096) { req.destroy(); }
-      })
-      req.on('end', () => {
-        try {
-          const parsed = JSON.parse(body)
-          if (typeof parsed?.token !== 'string' || parsed.token.length < 8) {
-            res.statusCode = 400; res.end('bad token'); return
-          }
-          const companyId = typeof parsed.companyId === 'string' ? parsed.companyId : null
-          const nonce = typeof parsed.nonce === 'string' ? parsed.nonce : null
-          dispatchAuthToken(parsed.token, companyId, nonce)
-          res.statusCode = 204; res.end()
-        } catch {
-          res.statusCode = 400; res.end('bad json')
-        }
-      })
-      return
-    }
-    res.statusCode = 404; res.end('not found')
-  })
-  server.on('error', (e) => {
-    console.warn('[auth-loopback] server error', e.message || e)
-  })
-  server.listen(LOOPBACK_PORT, '127.0.0.1', () => {
-    console.log(`[auth-loopback] listening on http://127.0.0.1:${LOOPBACK_PORT}`)
-  })
-  authLoopbackServer = server
 }
 
 // Resolve once — used for `BrowserWindow.icon` (Win/Linux taskbar) and for
@@ -961,16 +626,6 @@ function createWindow() {
     else if (saved.maximized) mainWindow.maximize()
   })
 
-  // If a token arrived on the loopback server BEFORE the window finished
-  // loading (the user was that fast), flush it now.
-  mainWindow.webContents.once('did-finish-load', () => {
-    if (pendingAuthToken) {
-      const t = pendingAuthToken
-      pendingAuthToken = null
-      mainWindow.webContents.send('auth:token', t)
-    }
-  })
-
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       shell.openExternal(url)
@@ -1152,22 +807,6 @@ ipcMain.handle('app:is-focused', () => {
   return !!(mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused())
 })
 
-// Renderer asks main to open a URL in the user's default browser
-// (used for OAuth — embedded webviews are banned by Google and the
-// experience is better in a familiar browser anyway). Restricted to
-// http/https so a compromised renderer can't shell-out arbitrary URLs.
-ipcMain.handle('auth:open-external', (_event, url) => {
-  if (typeof url !== 'string') return false
-  if (!url.startsWith('http://') && !url.startsWith('https://')) return false
-  void shell.openExternal(url)
-  return true
-})
-
-// Renderer arms a sign-in and gets a single-use nonce to thread through the
-// OAuth return URL; only an inbound token carrying this nonce is accepted
-// (see dispatchAuthToken / consumeAuthNonce — anti session-fixation).
-ipcMain.handle('auth:arm', () => armAuthHandoff())
-
 // NOTIFICATION window asks main to focus a conversation when user clicks
 // a toast. Bring the main window forward + forward the id over to its
 // renderer so the React app selects the conversation.
@@ -1179,59 +818,6 @@ ipcMain.on('notification:focus-convo', (_event, conversationId) => {
     mainWindow.webContents.send('notification:focus-convo', conversationId)
   }
 })
-
-// ============== Deep-link routing (lingxiloop://auth#token=…) ==============
-// Three entry points cover all three OSes:
-//   • macOS (running) → `open-url` event
-//   • macOS (cold start by Finder/Safari clicking the link) → `open-url` fires
-//     after whenReady; we also stash the URL via `process.argv` as belt-and-braces
-//   • Windows/Linux (running) → `second-instance` event (because we hold the
-//     single-instance lock, a fresh `lingxiloop lingxiloop://…` invocation bounces here)
-//   • Windows/Linux (cold start) → URL is in `process.argv` at boot
-//
-// Each handler funnels into dispatchAuthToken() which IPCs the renderer
-// and brings the window to front — the same plumbing the (now-deprecated)
-// loopback /auth/token POST used.
-let pendingDeepLink = null
-
-function consumeDeepLink(url) {
-  const parsed = parseAuthDeepLink(url)
-  if (!parsed) return
-  // If main window hasn't loaded yet, dispatchAuthToken stashes the
-  // payload in pendingAuthToken and the did-finish-load hook flushes
-  // it. So we can call it eagerly here regardless of timing.
-  dispatchAuthToken(parsed.token, parsed.companyId, parsed.nonce)
-}
-
-// macOS — single canonical event for all deep-link arrivals (running OR
-// cold start). preventDefault stops Electron's default no-op.
-app.on('open-url', (event, url) => {
-  event.preventDefault()
-  if (!app.isReady()) { pendingDeepLink = url; return }
-  consumeDeepLink(url)
-})
-
-// Windows / Linux — a second `lingxiloop lingxiloop://auth#…` invocation bounces
-// here via the single-instance lock we acquired up top. The URL is the
-// last element of argv per Electron convention.
-app.on('second-instance', (_event, argv) => {
-  const url = argv.find((a) => typeof a === 'string' && a.startsWith(DEEP_LINK_SCHEME + '://'))
-  if (url) consumeDeepLink(url)
-  // Always surface the existing window — the user just clicked something
-  // expecting LingxiLoop to come forward.
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.show()
-    mainWindow.focus()
-  }
-})
-
-// Windows / Linux cold-start path: the URL arrives baked into our own
-// argv. macOS doesn't use argv for this — it uses open-url above.
-{
-  const coldStartUrl = process.argv.find((a) => typeof a === 'string' && a.startsWith(DEEP_LINK_SCHEME + '://'))
-  if (coldStartUrl) pendingDeepLink = coldStartUrl
-}
 
 app.whenReady().then(() => {
   if (process.platform === 'darwin') {
@@ -1284,18 +870,6 @@ app.whenReady().then(() => {
     }
   })
 
-  startAuthLoopback()
-
-  // Cold-start deep link (Windows/Linux, OR a macOS open-url that
-  // arrived before whenReady resolved). consumeDeepLink stashes into
-  // pendingAuthToken when the renderer isn't ready yet, and the
-  // did-finish-load hook in createWindow flushes that.
-  if (pendingDeepLink) {
-    const url = pendingDeepLink
-    pendingDeepLink = null
-    consumeDeepLink(url)
-  }
-
 })
 
 // macOS: Dock-icon click (and Cmd-Tab to a hidden app) fires `activate`.
@@ -1337,13 +911,6 @@ app.on('before-quit', () => {
   if (notificationWindow && !notificationWindow.isDestroyed()) {
     try { notificationWindow.destroy() } catch { /* swallow */ }
     notificationWindow = null
-  }
-  if (authLoopbackServer) {
-    try { authLoopbackServer.close() } catch { /* swallow */ }
-    // closeAllConnections is Node 18+ — without it, keep-alive HTTP
-    // clients can hold the port past app exit.
-    try { authLoopbackServer.closeAllConnections?.() } catch { /* swallow */ }
-    authLoopbackServer = null
   }
   if (tray && !tray.isDestroyed?.()) {
     try { tray.destroy() } catch { /* swallow */ }

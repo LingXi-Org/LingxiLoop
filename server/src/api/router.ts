@@ -13,7 +13,7 @@ import { conversationsRouter } from '../modules/conversations/router.js'
 import { contextThreadsRouter } from '../modules/context-threads/router.js'
 import { documentsRouter } from '../modules/documents/router.js'
 import { emailRouter } from '../modules/email/router.js'
-import { identityRouter } from '../modules/identity/router.js'
+import { gatewayRegistrationRouter } from '../modules/identity/gateway-registration-router.js'
 import { knowledgeRouter } from '../modules/knowledge/router.js'
 import { learningRouter } from '../modules/learning/router.js'
 import { messagesRouter } from '../modules/messages/router.js'
@@ -29,10 +29,10 @@ import { trustRouter } from '../modules/trust/router.js'
 export const api = Router()
 
 api.use(authMiddleware as never)
+api.use(gatewayRegistrationRouter)
 api.use('/admin', adminRouter)
 api.use(platformAdminCommandAuditMiddleware)
 api.use(platformRouter)
-api.use(identityRouter)
 api.use('/im', imRouter)
 api.use(companiesRouter)
 api.use(educationRouter)

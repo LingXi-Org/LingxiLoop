@@ -23,7 +23,7 @@ export function NavUser({ user }: {
   const avatarUrl = resolveUserAvatarUrl(user.avatar)
   const signOut = () => {
     useAuth.getState().clear()
-    void authApi.logout().catch(() => undefined)
+    void authApi.signOut().catch(() => undefined)
   }
 
   const identity = <>

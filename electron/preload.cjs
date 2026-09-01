@@ -76,24 +76,4 @@ contextBridge.exposeInMainWorld('lingxiloop', {
       return () => ipcRenderer.removeListener('notification:focus-convo', wrapped)
     },
   },
-
-  /**
-   * OAuth loopback plumbing. Sign-in opens the user's system browser
-   * via `auth.openExternal(url)`; after the provider redirects through
-   * our server to http://127.0.0.1:47823/auth/done, the loopback HTML
-   * page POSTs the token to the main process, which IPCs it here.
-   * AuthGate subscribes via `onToken` to plant the session.
-   */
-  auth: {
-    openExternal: (url) => ipcRenderer.invoke('auth:open-external', url),
-    // Arm a single-use nonce before opening the browser; the renderer threads
-    // it through the OAuth return URL so main can verify the inbound token was
-    // app-initiated (anti session-fixation).
-    arm: () => ipcRenderer.invoke('auth:arm'),
-    onToken: (handler) => {
-      const wrapped = (_evt, payload) => handler(payload)
-      ipcRenderer.on('auth:token', wrapped)
-      return () => ipcRenderer.removeListener('auth:token', wrapped)
-    },
-  },
 })

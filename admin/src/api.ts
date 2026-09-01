@@ -9,31 +9,10 @@ import type {
   GetOneParams,
   HttpError,
 } from '@refinedev/core'
+import { createAuthClient } from 'better-auth/react'
 
-const TOKEN_KEY = 'lingxiloop.admin.token'
-
-function serverOrigin(): string {
-  return (import.meta.env.VITE_LINGXILOOP_API_BASE as string | undefined)?.replace(/\/+$/, '') ?? ''
-}
-
-export const API_URL = `${serverOrigin()}/api`
-
-export function getAdminToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
-}
-
-export function clearAdminToken(): void {
-  localStorage.removeItem(TOKEN_KEY)
-}
-
-export function consumeOAuthFragment(): boolean {
-  const parameters = new URLSearchParams(location.hash.replace(/^#/, ''))
-  const token = parameters.get('token')
-  if (!token) return false
-  localStorage.setItem(TOKEN_KEY, token)
-  history.replaceState(null, '', `${location.pathname}${location.search}`)
-  return true
-}
+export const API_URL = '/api'
+export const adminAuthClient = createAuthClient({ baseURL: location.origin, basePath: '/api/auth' })
 
 function httpError(statusCode: number, message: string): HttpError {
   return { statusCode, message }
@@ -42,10 +21,7 @@ function httpError(statusCode: number, message: string): HttpError {
 export async function adminFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   headers.set('content-type', 'application/json')
-  const token = getAdminToken()
-  if (token) headers.set('authorization', `Bearer ${token}`)
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers })
-  if (response.status === 401) clearAdminToken()
+  const response = await fetch(`${API_URL}${path}`, { ...init, credentials: 'include', headers })
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: string } | null
     throw httpError(response.status, payload?.error ?? `${response.status} ${response.statusText}`)
@@ -77,7 +53,7 @@ export const dataProvider: DataProvider = {
     const sorter = sorters?.[0]
     if (sorter) parameters.set('sort', sorter.field === 'id' ? 'id' : sorter.order === 'asc' ? 'oldest' : 'newest')
     const result = await adminFetch<{ data: TData[]; nextCursor: string | null; total?: number }>(
-      `/admin/resources/${encodeURIComponent(resource)}?${parameters}`,
+      `/control/platform/resources/${encodeURIComponent(resource)}?${parameters}`,
     )
     return {
       data: result.data,
@@ -85,7 +61,7 @@ export const dataProvider: DataProvider = {
     }
   },
   getOne: async <TData extends BaseRecord = BaseRecord>(params: GetOneParams) => ({
-    data: await adminFetch<TData>(`/admin/resources/${encodeURIComponent(params.resource)}/${encodeURIComponent(params.id)}`),
+    data: await adminFetch<TData>(`/control/platform/resources/${encodeURIComponent(params.resource)}/${encodeURIComponent(params.id)}`),
   }),
   create: async () => { throw httpError(405, '该资源不支持任意创建') },
   update: async () => { throw httpError(405, '该资源不支持任意编辑') },
@@ -99,36 +75,30 @@ export const dataProvider: DataProvider = {
   }),
 }
 
-interface AdminSession {
-  user: { id: string; email: string; name: string }
-  version: string
-  commitSha: string
-}
-
 export const authProvider: AuthProvider = {
-  login: async () => {
-    const returnUrl = `${location.origin}/`
-    location.assign(`${API_URL}/auth/start/lingxi?return=${encodeURIComponent(returnUrl)}`)
-    return { success: true }
+  login: async ({ email, password }) => {
+    const result = await adminAuthClient.signIn.email({ email: String(email), password: String(password) })
+    return result.error ? { success: false, error: httpError(result.error.status ?? 401, result.error.message ?? '登录失败') } : { success: true, redirectTo: '/' }
+  },
+  register: async ({ email, password, name, inviteToken, inviteKind }) => {
+    const response = await fetch('/api/auth/sign-up/email', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password, name, inviteToken, inviteKind }) })
+    const payload = await response.json().catch(() => ({})) as { error?: string }
+    return response.ok ? { success: true, redirectTo: '/login' } : { success: false, error: httpError(response.status, payload.error ?? '注册失败') }
   },
   logout: async () => {
-    await adminFetch('/auth/logout', { method: 'POST' }).catch(() => undefined)
-    clearAdminToken()
+    await adminAuthClient.signOut()
     return { success: true, redirectTo: '/login' }
   },
   check: async () => {
-    if (!getAdminToken()) return { authenticated: false, redirectTo: '/login' }
-    try {
-      await adminFetch<AdminSession>('/admin/session')
-      return { authenticated: true }
-    } catch (error) {
-      const status = (error as HttpError).statusCode
-      return status === 403
-        ? { authenticated: false, redirectTo: '/forbidden', logout: false }
-        : { authenticated: false, redirectTo: '/login', logout: true }
-    }
+    const session = await adminAuthClient.getSession()
+    if (!session.data) return { authenticated: false, redirectTo: '/login' }
+    const role = (session.data.user as { role?: string }).role
+    return role === 'admin' ? { authenticated: true } : { authenticated: false, redirectTo: '/forbidden', logout: false }
   },
-  getIdentity: async () => (await adminFetch<AdminSession>('/admin/session')).user,
+  getIdentity: async () => {
+    const session = await adminAuthClient.getSession()
+    return session.data?.user ?? null
+  },
   onError: async (error) => {
     const status = (error as HttpError).statusCode
     if (status === 401) return { logout: true, redirectTo: '/login', error }
@@ -139,9 +109,11 @@ export const authProvider: AuthProvider = {
 
 export const accessControlProvider: AccessControlProvider = {
   can: async ({ resource, action }) => {
+    const session = await adminAuthClient.getSession()
+    if ((session.data?.user as { role?: string } | undefined)?.role !== 'admin') return { can: false, reason: '需要 D1 管理员角色' }
     if (action === 'list' || action === 'show') return { can: true }
     const commands: Record<string, readonly string[]> = {
-      users: ['suspend', 'restore'],
+      users: ['suspend', 'restore', 'delete'],
       companies: ['activate', 'enter-read-only', 'archive'],
       projects: ['activate', 'end', 'enter-read-only', 'archive'],
       'agent-routines': ['pause'],

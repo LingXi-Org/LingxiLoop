@@ -1,0 +1,339 @@
+import { betterAuth } from 'better-auth'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { admin } from 'better-auth/plugins'
+import { drizzle } from 'drizzle-orm/d1'
+import { Hono, type Context } from 'hono'
+import { authSchema } from './schema'
+
+type Secrets = {
+  BETTER_AUTH_SECRET: string
+  GATEWAY_HMAC_SECRET: string
+  RELEASE_HMAC_SECRET: string
+  BOOTSTRAP_ADMIN_TOKEN: string
+  OPENSHIP_PAT: string
+  OPENSHIP_PROJECT_ID: string
+  RESEND_API_KEY: string
+  RESEND_FROM: string
+  CF_ACCESS_CLIENT_ID?: string
+  CF_ACCESS_CLIENT_SECRET?: string
+}
+type Bindings = Env & Secrets
+type Variables = { auth: ReturnType<typeof createAuth>; session: AuthSession }
+type AuthSession = { user: { id: string; name: string; email: string; emailVerified: boolean; role?: string }; session: unknown }
+type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>
+
+const encoder = new TextEncoder()
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+function base64url(bytes: ArrayBuffer | Uint8Array): string {
+  const value = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
+  return btoa(String.fromCharCode(...value)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
+}
+
+async function sha256(value: string): Promise<string> {
+  return base64url(await crypto.subtle.digest('SHA-256', encoder.encode(value)))
+}
+
+async function hmac(secret: string, value: string): Promise<string> {
+  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  return base64url(await crypto.subtle.sign('HMAC', key, encoder.encode(value)))
+}
+
+async function claimCipher(secret: string): Promise<CryptoKey> {
+  const material = await crypto.subtle.digest('SHA-256', encoder.encode(`registration-claim:${secret}`))
+  return crypto.subtle.importKey('raw', material, 'AES-GCM', false, ['encrypt', 'decrypt'])
+}
+
+async function sealClaim(secret: string, value: string): Promise<string> {
+  const nonce = crypto.getRandomValues(new Uint8Array(12))
+  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, await claimCipher(secret), encoder.encode(value)))
+  const sealed = new Uint8Array(nonce.length + ciphertext.length)
+  sealed.set(nonce); sealed.set(ciphertext, nonce.length)
+  return base64url(sealed)
+}
+
+async function openClaim(secret: string, value: string): Promise<string> {
+  const encoded = value.replaceAll('-', '+').replaceAll('_', '/')
+  const sealed = Uint8Array.from(atob(encoded.padEnd(Math.ceil(encoded.length / 4) * 4, '=')), (character) => character.charCodeAt(0))
+  if (sealed.length < 29) throw new Error('invalid registration claim')
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: sealed.slice(0, 12) }, await claimCipher(secret), sealed.slice(12)))
+}
+
+async function secretMatches(expected: string, candidate: string): Promise<boolean> {
+  if (!expected || !candidate) return false
+  const expectedKey = await crypto.subtle.importKey('raw', encoder.encode(expected), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'])
+  const candidateKey = await crypto.subtle.importKey('raw', encoder.encode(candidate), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const signature = await crypto.subtle.sign('HMAC', candidateKey, encoder.encode('lingxiloop-secret-check'))
+  return crypto.subtle.verify('HMAC', expectedKey, signature, encoder.encode('lingxiloop-secret-check'))
+}
+
+async function sendEmail(env: Bindings, message: { to: string; subject: string; html: string }): Promise<void> {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ from: env.RESEND_FROM, ...message }),
+  })
+  if (!response.ok) throw new Error(`Resend rejected email (${response.status})`)
+}
+
+async function originRequest(env: Bindings, path: string, init: RequestInit, identity?: { appUserId?: string; authUserId?: string }): Promise<Response> {
+  const url = new URL(path, env.ORIGIN_BASE_URL)
+  const assertion = {
+    appUserId: identity?.appUserId ?? null,
+    authUserId: identity?.authUserId ?? null,
+    method: init.method ?? 'GET',
+    path: url.pathname + url.search,
+    timestamp: Date.now(),
+    nonce: crypto.randomUUID(),
+  }
+  const payload = base64url(encoder.encode(JSON.stringify(assertion)))
+  const headers = new Headers(init.headers)
+  headers.set('x-lingxiloop-gateway', `${payload}.${await hmac(env.GATEWAY_HMAC_SECRET, payload)}`)
+  return fetch(url, { ...init, headers })
+}
+
+async function provision(env: Bindings, authUser: { id: string; email: string; name: string }): Promise<void> {
+  const claim = await env.DB.prepare(
+    `SELECT invite_token,invite_kind,status FROM registration_claims WHERE auth_user_id=?`,
+  ).bind(authUser.id).first<{ invite_token: string; invite_kind: string; status: string }>()
+  if (!claim || claim.status === 'provisioned') return
+  await env.DB.prepare(`UPDATE registration_claims SET status='provisioning',updated_at=? WHERE auth_user_id=?`)
+    .bind(Date.now(), authUser.id).run()
+  const response = await originRequest(env, '/api/internal/registration/provision', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ authUserId: authUser.id, email: authUser.email, name: authUser.name, inviteToken: await openClaim(env.BETTER_AUTH_SECRET, claim.invite_token), inviteKind: claim.invite_kind }),
+  }, { authUserId: authUser.id })
+  if (!response.ok) {
+    const error = (await response.text()).slice(0, 500)
+    await env.DB.prepare(`UPDATE registration_claims SET status='failed',error=?,updated_at=? WHERE auth_user_id=?`)
+      .bind(error, Date.now(), authUser.id).run()
+    throw new Error(`business user provision failed (${response.status})`)
+  }
+  const result = await response.json<{ appUserId: string }>()
+  const now = Date.now()
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES(?,?,?) ON CONFLICT(auth_user_id) DO UPDATE SET app_user_id=excluded.app_user_id,provisioned_at=excluded.provisioned_at,suspended_at=NULL`).bind(authUser.id, result.appUserId, now),
+    env.DB.prepare(`UPDATE registration_claims SET status='provisioned',error=NULL,updated_at=? WHERE auth_user_id=?`).bind(now, authUser.id),
+  ])
+}
+
+function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promise<unknown>) => void) {
+  const origin = new URL(request.url).origin
+  const trustedOrigins = env.AUTH_ALLOWED_HOSTS.split(',').map((host) => `https://${host.trim()}`)
+  const hostname = new URL(request.url).hostname
+  if (['localhost', '127.0.0.1', '::1'].includes(hostname) || hostname.endsWith('.workers.dev')) trustedOrigins.push(origin)
+  return betterAuth({
+    appName: 'LingxiLoop',
+    baseURL: origin,
+    basePath: '/api/auth',
+    secret: env.BETTER_AUTH_SECRET,
+    trustedOrigins,
+    database: drizzleAdapter(drizzle(env.DB), { provider: 'sqlite', schema: authSchema }),
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: true,
+      autoSignIn: false,
+      sendResetPassword: async ({ user, url }) => sendEmail(env, { to: user.email, subject: '重置 LingxiLoop 密码', html: `<p><a href="${url}">重置密码</a></p>` }),
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: false,
+      sendVerificationEmail: async ({ user, url }) => sendEmail(env, { to: user.email, subject: '验证 LingxiLoop 邮箱', html: `<p><a href="${url}">验证邮箱</a></p>` }),
+      afterEmailVerification: async (user) => provision(env, user),
+    },
+    rateLimit: { enabled: true, storage: 'database', window: 60, max: 60 },
+    plugins: [admin({ defaultRole: 'user', adminRoles: ['admin'] })],
+    advanced: {
+      ipAddress: { ipAddressHeaders: ['cf-connecting-ip'] },
+      backgroundTasks: { handler: waitUntil },
+    },
+  })
+}
+
+app.use('*', async (c, next) => {
+  const auth = createAuth(c.env, c.req.raw, c.executionCtx.waitUntil.bind(c.executionCtx))
+  c.set('auth', auth)
+  const session = await auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null)
+  if (session) c.set('session', session as AuthSession)
+  await next()
+})
+
+app.post('/api/auth/sign-up/email', async (c) => {
+  const input = await c.req.json<{ email?: string; password?: string; name?: string; inviteToken?: string; inviteKind?: string }>()
+  if (!input.email || !input.password || !input.name || !input.inviteToken) return c.json({ error: '有效邀请、邮箱、姓名和密码均为必填项' }, 400)
+  const inviteKind = input.inviteKind === 'project' ? 'project' : 'company'
+  const validation = await originRequest(c.env, '/api/internal/registration/invitation', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email: input.email, inviteToken: input.inviteToken, inviteKind }),
+  })
+  if (!validation.ok) return c.json({ error: '邀请无效、已过期或与邮箱不匹配' }, validation.status === 404 ? 404 : 403)
+  const request = new Request(c.req.raw, { body: JSON.stringify({ email: input.email, password: input.password, name: input.name }) })
+  const response = await c.get('auth').handler(request)
+  if (response.ok) {
+    const result = await response.clone().json<{ user?: { id?: string } }>().catch(() => null)
+    if (result?.user?.id) {
+      const now = Date.now()
+      await c.env.DB.prepare(`INSERT INTO registration_claims(auth_user_id,token_hash,invite_token,invite_kind,email,status,created_at,updated_at) VALUES(?,?,?,?,?,'pending',?,?)`)
+        .bind(result.user.id, await sha256(input.inviteToken), await sealClaim(c.env.BETTER_AUTH_SECRET, input.inviteToken), inviteKind, input.email.toLowerCase(), now, now).run()
+    }
+  }
+  return response
+})
+
+app.all('/api/auth/*', (c) => c.get('auth').handler(c.req.raw))
+
+function requireSession(c: AppContext): AuthSession | Response {
+  return c.get('session') ?? c.json({ error: 'authentication required' }, 401)
+}
+
+function requireAdmin(c: AppContext): AuthSession | Response {
+  const session = requireSession(c)
+  if (session instanceof Response) return session
+  return session.user.role === 'admin' ? session : c.json({ error: 'administrator required' }, 403)
+}
+
+app.get('/api/registration/invitation', async (c) => {
+  const token = c.req.query('token')
+  const kind = c.req.query('kind') === 'project' ? 'project' : 'company'
+  if (!token) return c.json({ error: 'token required' }, 400)
+  return originRequest(c.env, '/api/internal/registration/invitation', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ inviteToken: token, inviteKind: kind }),
+  })
+})
+
+app.post('/api/internal/bootstrap-admin', async (c) => {
+  const input = await c.req.json<{ token?: string; email?: string }>()
+  if (!await secretMatches(c.env.BOOTSTRAP_ADMIN_TOKEN, input.token ?? '')) return c.json({ error: 'invalid bootstrap token' }, 401)
+  const state = await c.env.DB.prepare(`SELECT completed_at FROM bootstrap_state WHERE id=1`).first<{ completed_at: number | null }>()
+  const currentAdmin = await c.env.DB.prepare(`SELECT id FROM user WHERE role='admin' LIMIT 1`).first()
+  if (state?.completed_at || currentAdmin) return c.json({ error: 'bootstrap permanently locked' }, 409)
+  const user = await c.env.DB.prepare(`SELECT id,emailVerified FROM user WHERE lower(email)=lower(?)`).bind(input.email ?? '').first<{ id: string; emailVerified: number }>()
+  if (!user?.emailVerified) return c.json({ error: 'verified user not found' }, 404)
+  const now = Date.now()
+  await c.env.DB.batch([
+    c.env.DB.prepare(`UPDATE user SET role='admin',updatedAt=? WHERE id=?`).bind(now, user.id),
+    c.env.DB.prepare(`UPDATE bootstrap_state SET completed_at=?,admin_user_id=? WHERE id=1`).bind(now, user.id),
+  ])
+  return c.json({ ok: true, removeSecret: 'BOOTSTRAP_ADMIN_TOKEN' })
+})
+
+const openShipRead = /^(?:\/projects(?:\/[^/]+)?|\/servers(?:\/[^/]+)?|\/deployments(?:\/[^/]+(?:\/(?:logs|stream|info|usage|build))?)?)$/
+const openShipWrite = /^\/deployments(?:\/build\/access|\/[^/]+\/(?:redeploy|rollback|cancel|restart|keep|reject))$/
+
+async function openShip(c: AppContext): Promise<Response> {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  const path = `/${c.req.param('path') ?? ''}`
+  const allowed = c.req.method === 'GET' ? openShipRead.test(path) : c.req.method === 'POST' && openShipWrite.test(path)
+  if (!allowed) return c.json({ error: 'OpenShip capability is not exposed' }, 404)
+  const headers = new Headers(c.req.raw.headers)
+  headers.set('authorization', `Bearer ${c.env.OPENSHIP_PAT}`)
+  headers.delete('cookie')
+  headers.delete('host')
+  if (c.env.CF_ACCESS_CLIENT_ID) headers.set('cf-access-client-id', c.env.CF_ACCESS_CLIENT_ID)
+  if (c.env.CF_ACCESS_CLIENT_SECRET) headers.set('cf-access-client-secret', c.env.CF_ACCESS_CLIENT_SECRET)
+  const target = new URL(`/api${path}${new URL(c.req.url).search}`, c.env.OPENSHIP_BASE_URL)
+  const response = await fetch(target, { method: c.req.method, headers, body: c.req.method === 'GET' ? null : c.req.raw.body })
+  if (c.req.method !== 'GET') c.executionCtx.waitUntil(c.env.DB.prepare(`INSERT INTO control_audit(id,actor_user_id,action,resource,reason,created_at) VALUES(?,?,?,?,?,?)`)
+    .bind(crypto.randomUUID(), session.user.id, c.req.method, `openship:${path}`, c.req.header('x-control-reason') ?? null, Date.now()).run().then(() => undefined))
+  return response
+}
+
+app.all('/api/control/openship/*', openShip)
+
+app.get('/api/control/releases', async (c) => {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  const { results } = await c.env.DB.prepare(`SELECT * FROM release_requests ORDER BY created_at DESC LIMIT 100`).all()
+  return c.json({ data: results })
+})
+
+app.post('/api/control/platform/users/:id/:action', async (c) => {
+  const adminSession = requireAdmin(c)
+  if (adminSession instanceof Response) return adminSession
+  const action = c.req.param('action')
+  if (action !== 'suspend' && action !== 'restore' && action !== 'delete') return c.json({ error: 'unsupported user lifecycle action' }, 404)
+  const appUserId = c.req.param('id')
+  const adminLink = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=?`).bind(adminSession.user.id).first<{ app_user_id: string }>()
+  if (!adminLink) return c.json({ error: 'administrator business account is not provisioned' }, 409)
+  const link = await c.env.DB.prepare(`SELECT auth_user_id FROM app_user_links WHERE app_user_id=?`).bind(appUserId).first<{ auth_user_id: string }>()
+  if (!link) return c.json({ error: 'auth user mapping not found' }, 404)
+  const raw = await c.req.text()
+  const reason = (JSON.parse(raw || '{}') as { reason?: string }).reason?.trim()
+  if (!reason) return c.json({ error: 'reason required' }, 400)
+  if (action === 'suspend') {
+    await c.env.DB.batch([
+      c.env.DB.prepare(`UPDATE user SET banned=1,banReason=?,updatedAt=? WHERE id=?`).bind(reason, Date.now(), link.auth_user_id),
+      c.env.DB.prepare(`DELETE FROM session WHERE userId=?`).bind(link.auth_user_id),
+      c.env.DB.prepare(`UPDATE app_user_links SET suspended_at=? WHERE auth_user_id=?`).bind(Date.now(), link.auth_user_id),
+    ])
+  }
+  const response = await originRequest(c.env, `/api/admin/users/${encodeURIComponent(appUserId)}/${action}`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: raw,
+  }, { appUserId: adminLink.app_user_id, authUserId: adminSession.user.id })
+  if (response.ok && action === 'restore') {
+    await c.env.DB.batch([
+      c.env.DB.prepare(`UPDATE user SET banned=0,banReason=NULL,banExpires=NULL,updatedAt=? WHERE id=?`).bind(Date.now(), link.auth_user_id),
+      c.env.DB.prepare(`UPDATE app_user_links SET suspended_at=NULL WHERE auth_user_id=?`).bind(link.auth_user_id),
+    ])
+  }
+  if (response.ok && action === 'delete') {
+    await c.env.DB.prepare(`DELETE FROM user WHERE id=?`).bind(link.auth_user_id).run()
+  }
+  return response
+})
+
+app.all('/api/health*', (c) => originRequest(c.env, c.req.path + new URL(c.req.url).search, { method: c.req.method, headers: c.req.raw.headers }))
+app.all('/api/meta', (c) => originRequest(c.env, c.req.path, { method: c.req.method, headers: c.req.raw.headers }))
+
+app.post('/api/internal/releases', async (c) => {
+  const raw = await c.req.text()
+  if (!await secretMatches(await hmac(c.env.RELEASE_HMAC_SECRET, raw), c.req.header('x-release-signature') ?? '')) return c.json({ error: 'invalid release signature' }, 401)
+  const input = JSON.parse(raw) as { commitSha?: string; imageDigests?: Record<string, string> }
+  if (!input.commitSha || !/^[0-9a-f]{40}$/.test(input.commitSha) || !input.imageDigests) return c.json({ error: 'invalid release payload' }, 400)
+  const existing = await c.env.DB.prepare(`SELECT * FROM release_requests WHERE commit_sha=?`).bind(input.commitSha).first()
+  if (existing) return c.json(existing)
+  const now = Date.now()
+  await c.env.DB.prepare(`INSERT INTO release_requests(commit_sha,image_digests,status,created_at,updated_at) VALUES(?,?,'triggering',?,?)`)
+    .bind(input.commitSha, JSON.stringify(input.imageDigests), now, now).run()
+  const response = await fetch(new URL('/api/deployments/build/access', c.env.OPENSHIP_BASE_URL), {
+    method: 'POST', headers: { authorization: `Bearer ${c.env.OPENSHIP_PAT}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      projectId: c.env.OPENSHIP_PROJECT_ID,
+      branch: 'main',
+      environment: 'production',
+      envVars: { ...input.imageDigests, LINGXILOOP_GATEWAY_HMAC_SECRET: c.env.GATEWAY_HMAC_SECRET },
+    }),
+  })
+  const result = await response.json().catch(() => ({})) as { deployment_id?: string; error?: string }
+  const status = response.ok ? 'triggered' : 'failed'
+  await c.env.DB.prepare(`UPDATE release_requests SET status=?,openship_deployment_id=?,error=?,updated_at=? WHERE commit_sha=?`)
+    .bind(status, result.deployment_id ?? null, response.ok ? null : result.error ?? `OpenShip ${response.status}`, Date.now(), input.commitSha).run()
+  return c.json({ commitSha: input.commitSha, status, deploymentId: result.deployment_id ?? null }, response.ok ? 202 : 502)
+})
+
+app.all('/api/control/platform/*', async (c) => {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  const link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
+  if (!link) return c.json({ error: 'business account is not provisioned' }, 409)
+  const suffix = c.req.path.slice('/api/control/platform'.length)
+  return originRequest(c.env, `/api/admin${suffix}${new URL(c.req.url).search}`, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }, { appUserId: link.app_user_id, authUserId: session.user.id })
+})
+
+app.all('/api/*', async (c) => {
+  if (c.req.path.startsWith('/api/webhooks/')) return originRequest(c.env, c.req.path + new URL(c.req.url).search, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body })
+  const session = requireSession(c)
+  if (session instanceof Response) return session
+  let link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
+  if (!link && session.user.emailVerified) {
+    await provision(c.env, session.user)
+    link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
+  }
+  if (!link) return c.json({ error: 'business account is not provisioned' }, 409)
+  const path = c.req.path === '/api/session' ? '/api/auth/me' : c.req.path
+  return originRequest(c.env, path + new URL(c.req.url).search, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }, { appUserId: link.app_user_id, authUserId: session.user.id })
+})
+
+export default app

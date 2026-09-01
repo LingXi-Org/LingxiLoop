@@ -17,7 +17,7 @@ import {
   listAdminResources,
   type AdminListQuery,
 } from './resources.js'
-import { changeUserSuspension } from './user-lifecycle.js'
+import { changeUserLifecycle } from './user-lifecycle.js'
 
 export const adminRouter = Router()
 
@@ -73,7 +73,7 @@ adminRouter.get('/session', (request, response) => {
     capabilities: {
       crossTenantRead: true,
       sensitiveContentRead: true,
-      userLifecycle: ['suspend', 'restore'],
+      userLifecycle: ['suspend', 'restore', 'delete'],
       arbitraryCrud: false,
     },
   })
@@ -241,14 +241,14 @@ adminRouter.get('/conversations/:id/messages', safe(async (request, response) =>
   response.json(messages)
 }))
 
-function userLifecycle(action: 'suspend' | 'restore') {
+function userLifecycle(action: 'suspend' | 'restore' | 'delete') {
   return safe(async (request, response) => {
     const parsed = reasonSchema.safeParse(request.body ?? {})
     if (!parsed.success) throw new HttpError(400, parsed.error.issues[0]?.message ?? 'reason required')
     const admin = identity(response)
     const targetId = String(request.params.id)
     if (targetId === admin.id) throw new HttpError(409, 'platform administrators cannot change their own access')
-    const result = await withTransaction(pool, (db) => changeUserSuspension(db, {
+    const result = await withTransaction(pool, (db) => changeUserLifecycle(db, {
       action,
       targetId,
       adminId: admin.id,
@@ -261,3 +261,4 @@ function userLifecycle(action: 'suspend' | 'restore') {
 
 adminRouter.post('/users/:id/suspend', userLifecycle('suspend'))
 adminRouter.post('/users/:id/restore', userLifecycle('restore'))
+adminRouter.post('/users/:id/delete', userLifecycle('delete'))

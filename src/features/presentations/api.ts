@@ -1,7 +1,7 @@
 import { API, http } from '@/api/core/http'
 import { lingxiApiFetch } from '@/api/transport'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
-import { getActiveCompanyId, getAuthToken, useAuth } from '@/stores/auth'
+import { getActiveCompanyId, useAuth } from '@/stores/auth'
 import {
   parsePresentationDetail,
   parsePresentationVersionList,
@@ -31,14 +31,12 @@ async function responseError(response: Response): Promise<Error> {
 
 async function fetchPresentationHtml(path: string, signal?: AbortSignal): Promise<Blob> {
   const headers = new Headers({ accept: 'text/html' })
-  const token = getAuthToken()
-  if (token) headers.set('authorization', `Bearer ${token}`)
   const companyId = getActiveCompanyId()
   if (companyId) headers.set('x-company-id', companyId)
   const workspace = getWorkspaceSession()
   if (workspace && workspace.companyId === companyId) headers.set('x-project-id', workspace.projectId)
 
-  const response = await lingxiApiFetch(`${API}${path}`, { headers, signal })
+  const response = await lingxiApiFetch(`${API}${path}`, { headers, signal, credentials: 'include' })
   if (response.status === 401) useAuth.getState().clear()
   if (!response.ok) throw await responseError(response)
   const contentType = response.headers.get('content-type') ?? ''

@@ -1,4 +1,4 @@
-name: LingxiLoop CI
+name: LingxiLoop CI and CD
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: lingxiloop-ci-${{ github.ref }}
+  group: lingxiloop-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -19,96 +19,64 @@ env:
 
 jobs:
   quality:
-    name: Quality and builds
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+        with: { node-version: "22", cache: npm }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+        with: { python-version: "3.12" }
       - run: npm ci
       - run: npm run version:check
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run server:typecheck
       - run: npm run admin:typecheck
+      - run: npm run control:typecheck
       - run: npm run build
       - run: npm run admin:build
       - name: Verify vendored Open Notebook scope
         working-directory: third_party/open-notebook
-        run: |
-          python -m pip install pytest python-dotenv
-          python -m pytest -q tests/test_lingxiloop_native_scope.py
-      - name: Verify production RAG packaging contract
-        run: node --test scripts/production-rag-contract.test.mjs
+        run: python -m pip install pytest python-dotenv && python -m pytest -q tests/test_lingxiloop_native_scope.py
+      - run: node --test scripts/production-rag-contract.test.mjs
 
   unit-eval:
-    name: Unit tests and deterministic Agent Eval
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     services:
       redis:
         image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+        with: { node-version: "22", cache: npm }
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+        with: { python-version: "3.12" }
       - run: python -m pip install --disable-pip-version-check ipython==9.4.0
       - run: npm ci
       - run: npm test
+      - run: npm run control:test
       - run: npm run eval:check
-      - name: Upload Agent Eval reports
-        if: always() && hashFiles('artifacts/eval-*.json') != ''
+      - if: always() && hashFiles('artifacts/eval-*.json') != ''
         uses: actions/upload-artifact@v4
-        with:
-          name: agent-eval-${{ github.run_attempt }}
-          path: artifacts/eval-*.json
-          if-no-files-found: error
+        with: { name: agent-eval, path: "artifacts/eval-*.json", if-no-files-found: error }
 
   integration:
-    name: PostgreSQL and Redis integration
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
       postgres:
         image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: lingxiloop_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d lingxiloop_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
+        env: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres, POSTGRES_DB: lingxiloop_test }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U postgres -d lingxiloop_test" --health-interval 5s --health-timeout 5s --health-retries 12
       redis:
         image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
     env:
       INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
@@ -116,65 +84,42 @@ jobs:
       OPENAI_API_KEY: integration-test-key
       OPENAI_EMBEDDING_MODEL: text-embedding-3-small
       LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
-      WUKONG_USER_TOKEN_SECRET: integration-test-wukong-user-token-secret
+      LINGXILOOP_GATEWAY_HMAC_SECRET: integration-gateway-secret
+      WUKONG_USER_TOKEN_SECRET: integration-wukong-secret
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+        with: { node-version: "22", cache: npm }
       - run: npm ci
+      - run: npm run db:migrate
       - run: npm run db:migrate
       - run: npm run test:integration
 
   publish:
-    name: Publish ${{ matrix.package }}
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [quality, unit-eval, integration]
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    permissions:
-      contents: read
-      packages: write
+    permissions: { contents: read, packages: write }
     strategy:
       fail-fast: false
       matrix:
         include:
-          - package: lingxiloop-server
-            dockerfile: server/docker/lingxiloop-server.Dockerfile
-            context: .
-            target: ""
-            wukong_commit: ""
-          - package: lingxiloop-agent-os
-            dockerfile: server/docker/agent-os.Dockerfile
-            context: .
-            target: ""
-            wukong_commit: ""
-          - package: lingxiloop-wukongim
-            dockerfile: server/docker/wukongim.Dockerfile
-            context: .
-            target: ""
-            wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
-          - package: lingxiloop-open-notebook
-            dockerfile: third_party/open-notebook/Dockerfile
-            context: ./third_party/open-notebook
-            target: lingxiloop-rag
-            wukong_commit: ""
+          - { package: lingxiloop-server, dockerfile: server/docker/lingxiloop-server.Dockerfile, context: ".", target: "", wukong_commit: "" }
+          - { package: lingxiloop-agent-os, dockerfile: server/docker/agent-os.Dockerfile, context: ".", target: "", wukong_commit: "" }
+          - { package: lingxiloop-wukongim, dockerfile: server/docker/wukongim.Dockerfile, context: ".", target: "", wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47 }
+          - { package: lingxiloop-open-notebook, dockerfile: third_party/open-notebook/Dockerfile, context: ./third_party/open-notebook, target: lingxiloop-rag, wukong_commit: "" }
     steps:
       - uses: actions/checkout@v5
-      - id: metadata
-        name: Resolve image metadata
-        shell: bash
-        run: |
-          echo "namespace=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
-          echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
+      - id: metadata
+        shell: bash
+        run: |
+          echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+          echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
       - id: build
         uses: docker/build-push-action@v6
         with:
@@ -184,139 +129,62 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ steps.metadata.outputs.namespace }}/${{ matrix.package }}:${{ github.sha }}
-            ghcr.io/${{ steps.metadata.outputs.namespace }}/${{ matrix.package }}:mvp
-          labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ steps.metadata.outputs.version }}
+            ghcr.io/${{ steps.metadata.outputs.owner }}/${{ matrix.package }}:${{ github.sha }}
+            ghcr.io/${{ steps.metadata.outputs.owner }}/${{ matrix.package }}:mvp
           build-args: |
             LINGXILOOP_VERSION=${{ steps.metadata.outputs.version }}
             LINGXILOOP_COMMIT_SHA=${{ github.sha }}
             WUKONG_COMMIT=${{ matrix.wukong_commit }}
           cache-from: type=gha,scope=${{ matrix.package }}
           cache-to: type=gha,mode=max,scope=${{ matrix.package }}
-      - name: Record immutable digest
-        shell: bash
-        run: |
-          mkdir -p image-digests
-          printf '%s\n' '${{ steps.build.outputs.digest }}' > "image-digests/${{ matrix.package }}"
+      - run: mkdir -p image-digests && printf '%s\n' '${{ steps.build.outputs.digest }}' > image-digests/${{ matrix.package }}
       - uses: actions/upload-artifact@v4
-        with:
-          name: image-digest-${{ matrix.package }}
-          path: image-digests/${{ matrix.package }}
-          if-no-files-found: error
-          retention-days: 1
+        with: { name: "image-digest-${{ matrix.package }}", path: "image-digests/${{ matrix.package }}", retention-days: 1 }
 
-  deploy-production:
-    name: Deploy Shanghai production
+  deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: publish
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: production
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: image-digest-*
-          path: image-digests
-          merge-multiple: true
-      - name: Build release manifest
-        shell: bash
-        env:
-          REGISTRY_NAMESPACE: ${{ github.repository_owner }}
-          PUBLIC_ORIGIN: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
-          ADMIN_ORIGIN: ${{ vars.LINGXILOOP_ADMIN_ORIGIN }}
-          WUKONG_WS_PUBLIC_URL: ${{ vars.WUKONG_WS_PUBLIC_URL }}
-        run: |
-          set -euo pipefail
-          : "${PUBLIC_ORIGIN:?Set repository variable LINGXILOOP_PUBLIC_ORIGIN}"
-          : "${ADMIN_ORIGIN:?Set repository variable LINGXILOOP_ADMIN_ORIGIN}"
-          : "${WUKONG_WS_PUBLIC_URL:?Set repository variable WUKONG_WS_PUBLIC_URL}"
-          version="$(tr -d '[:space:]' < VERSION)"
-          owner="${REGISTRY_NAMESPACE,,}"
-          for package in lingxiloop-server lingxiloop-agent-os lingxiloop-wukongim lingxiloop-open-notebook; do
-            digest="$(cat "image-digests/${package}")"
-            case "$digest" in sha256:[0-9a-f][0-9a-f]*) ;; *) echo "Invalid digest for ${package}" >&2; exit 2 ;; esac
-            case "$package" in
-              lingxiloop-server) key=LINGXILOOP_SERVER_IMAGE ;;
-              lingxiloop-agent-os) key=AGENT_OS_IMAGE ;;
-              lingxiloop-wukongim) key=WUKONGIM_IMAGE ;;
-              lingxiloop-open-notebook) key=OPEN_NOTEBOOK_IMAGE ;;
-            esac
-            printf '%s=ghcr.io/%s/%s@%s\n' "$key" "$owner" "$package" "$digest" >> .release.next.env
-          done
-          cat >> .release.next.env <<EOF
-          LINGXILOOP_VERSION=$version
-          LINGXILOOP_COMMIT_SHA=$GITHUB_SHA
-          LINGXILOOP_PUBLIC_ORIGIN=${PUBLIC_ORIGIN%/}
-          WUKONG_WS_PUBLIC_URL=$WUKONG_WS_PUBLIC_URL
-          LINGXILOOP_CORS_ORIGINS=${ADMIN_ORIGIN%/}
-          LINGXILOOP_AUTH_RETURN_ALLOWLIST=${PUBLIC_ORIGIN%/}/,${ADMIN_ORIGIN%/}/
-          R2_CORS_EXTRA_ORIGINS=${ADMIN_ORIGIN%/}
-          AGENT_OS_MAX_CONCURRENT_RUNS=2
-          OPEN_NOTEBOOK_WORKER_MAX_TASKS=1
-          EOF
-      - name: Configure SSH
-        shell: bash
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
-        run: |
-          set -euo pipefail
-          : "${SSH_PRIVATE_KEY:?Set production secret PRODUCTION_SSH_PRIVATE_KEY}"
-          : "${SSH_KNOWN_HOSTS:?Set production secret PRODUCTION_SSH_KNOWN_HOSTS}"
-          install -d -m 700 ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/lingxiloop-production
-          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/lingxiloop-production ~/.ssh/known_hosts
-      - name: Deploy through the verified production entrypoint
-        shell: bash
-        env:
-          SSH_HOST: ${{ vars.PRODUCTION_SSH_HOST }}
-          SSH_PORT: ${{ vars.PRODUCTION_SSH_PORT }}
-          SSH_USER: ${{ vars.PRODUCTION_SSH_USER }}
-          DEPLOY_PATH: ${{ vars.PRODUCTION_DEPLOY_PATH }}
-        run: |
-          set -euo pipefail
-          : "${SSH_HOST:?Set repository variable PRODUCTION_SSH_HOST}"
-          : "${SSH_USER:?Set repository variable PRODUCTION_SSH_USER}"
-          SSH_PORT="${SSH_PORT:-22}"
-          DEPLOY_PATH="${DEPLOY_PATH:-/opt/lingxiloop}"
-          case "$SSH_PORT" in *[!0-9]*|'') echo 'PRODUCTION_SSH_PORT must be numeric' >&2; exit 2 ;; esac
-          case "$DEPLOY_PATH" in /*) ;; *) echo 'PRODUCTION_DEPLOY_PATH must be absolute' >&2; exit 2 ;; esac
-          ssh=(ssh -i ~/.ssh/lingxiloop-production -p "$SSH_PORT" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
-          scp=(scp -i ~/.ssh/lingxiloop-production -P "$SSH_PORT" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
-          "${ssh[@]}" "$SSH_USER@$SSH_HOST" "install -d -m 700 '$DEPLOY_PATH'"
-          "${scp[@]}" docker-compose.production.yml scripts/deploy-production.sh scripts/rollback-production.sh .release.next.env "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
-          "${ssh[@]}" "$SSH_USER@$SSH_HOST" "cd '$DEPLOY_PATH' && chmod 700 deploy-production.sh rollback-production.sh && ./deploy-production.sh"
-
-  deploy-admin:
-    name: Deploy Refine admin to Cloudflare Pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: publish
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: production
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+        with: { node-version: "22", cache: npm }
+      - uses: actions/download-artifact@v4
+        with: { pattern: "image-digest-*", path: image-digests, merge-multiple: true }
       - run: npm ci
-      - name: Build Refine admin
-        run: npm run admin:build
-        env:
-          VITE_LINGXILOOP_API_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
-      - name: Publish Pages production deployment
-        run: npx --yes wrangler@4.127.1 pages deploy dist-admin --project-name "$CLOUDFLARE_PAGES_PROJECT" --branch main --commit-hash "$GITHUB_SHA"
+      - name: Apply D1 migrations
+        run: npm run control:d1:remote
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+      - name: Deploy Refine and control-plane Worker
+        run: npm run control:deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Trigger idempotent OpenShip release
+        shell: bash
+        env:
+          RELEASE_HMAC_SECRET: ${{ secrets.RELEASE_HMAC_SECRET }}
+          CONTROL_PLANE_ORIGIN: ${{ vars.CONTROL_PLANE_ORIGIN }}
+        run: |
+          set -euo pipefail
+          : "${RELEASE_HMAC_SECRET:?Set RELEASE_HMAC_SECRET}"
+          : "${CONTROL_PLANE_ORIGIN:?Set CONTROL_PLANE_ORIGIN}"
+          payload="$(node - <<'NODE'
+          const { readFileSync } = require('node:fs')
+          const names = {
+            LINGXILOOP_SERVER_IMAGE: 'lingxiloop-server',
+            AGENT_OS_IMAGE: 'lingxiloop-agent-os',
+            WUKONGIM_IMAGE: 'lingxiloop-wukongim',
+            OPEN_NOTEBOOK_IMAGE: 'lingxiloop-open-notebook',
+          }
+          const owner = process.env.GITHUB_REPOSITORY_OWNER.toLowerCase()
+          const imageDigests = Object.fromEntries(Object.entries(names).map(([key, name]) => [key, `ghcr.io/${owner}/${name}@${readFileSync(`image-digests/${name}`, 'utf8').trim()}`]))
+          process.stdout.write(JSON.stringify({ commitSha: process.env.GITHUB_SHA, imageDigests }))
+          NODE
+          )"
+          signature="$(PAYLOAD="$payload" SECRET="$RELEASE_HMAC_SECRET" node -e "process.stdout.write(require('node:crypto').createHmac('sha256',process.env.SECRET).update(process.env.PAYLOAD).digest('base64url'))")"
+          curl --fail-with-body --retry 3 -X POST "${CONTROL_PLANE_ORIGIN%/}/api/internal/releases" -H 'content-type: application/json' -H "x-release-signature: $signature" --data-binary "$payload"

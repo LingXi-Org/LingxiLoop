@@ -1,131 +1,81 @@
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 import { authApi } from '@/auth/api'
-import { getServerOrigin } from '@/api/core/http'
-/**
- * Sign-in screen — LingxiIdentity only. No password forms, no
- * signup, no forgot. Provider buttons trigger a full-page redirect to
- * /api/auth/start/<provider> on the configured server origin (relative
- * URL goes through the Vite proxy in dev; baked-in absolute URL in
- * packaged builds). The provider returns to /auth/done with a fragment
- * the AuthGate consumes on next mount.
- *
- */
-import { useState, useEffect } from 'react'
-import { isElectron } from '@/lib/runtime'
-import { userFacingError } from '@/lib/userFacingError'
-import { ProductLogo } from './Avatar'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
+import { LoginForm } from './login-form'
+import { SignupForm } from './signup-form'
 import { WindowDragStrip } from './WindowDragStrip'
 
+type Mode = 'login' | 'signup' | 'forgot' | 'reset' | 'verify'
+
 export function AuthScreen() {
-  const [busy, setBusy] = useState<'lingxi' | null>(null)
-  const [err, setErr] = useState<string | null>(null)
+  const parameters = new URLSearchParams(location.search)
+  const requestedMode = parameters.get('mode')
+  const [mode, setMode] = useState<Mode>(requestedMode === 'reset' || requestedMode === 'signup' ? requestedMode : 'login')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
 
-  // AuthGate strips a successful fragment after consuming it. A failure
-  // fragment looks like `#token=&companyId=&error=...` — surface that
-  // so the user knows the previous attempt didn't take.
-  useEffect(() => {
-    const params = new URLSearchParams(location.hash.replace(/^#/, ''))
-    const error = params.get('error')
-    if (error) setErr(userFacingError(decodeURIComponent(error), '登录没有完成，请重试。'))
-  }, [])
-
-  // Re-arm the sign-in buttons when the user returns to this window after
-  // abandoning the OAuth tab. Without this, the Electron renderer stays
-  // mounted with busy=provider after openExternal — both buttons disabled
-  // forever, no way to retry. Three signals cover the cases:
-  //   - window focus: user clicked back into the Electron window.
-  //   - visibilitychange → visible: tab/window came back from hidden.
-  //   - 90s safety timer: focus events occasionally miss (e.g. user
-  //     never clicked away from the Electron window because the OAuth
-  //     tab opened in the background).
-  // The browser-flow case (location.assign) is unaffected — full-page
-  // nav unmounts this component before any listener can fire.
-  useEffect(() => {
-    if (busy === null) return
-    const reset = () => setBusy(null)
-    const onVisibility = () => { if (document.visibilityState === 'visible') reset() }
-    window.addEventListener('focus', reset)
-    document.addEventListener('visibilitychange', onVisibility)
-    const safety = window.setTimeout(reset, 90_000)
-    return () => {
-      window.removeEventListener('focus', reset)
-      document.removeEventListener('visibilitychange', onVisibility)
-      window.clearTimeout(safety)
-    }
-  }, [busy])
-
-  function go(provider: 'lingxi') {
-    setBusy(provider); setErr(null)
-    if (isElectron && window.lingxiloop?.auth) {
-      // Open the user's real browser so they see LingxiIdentity's authentic
-      // URL bar. We pass `?return=http://127.0.0.1:47823/auth/done`
-      // — the loopback HTTP server in main.cjs serves a styled
-      // "Signed in" page that POSTs the fragment back to the main
-      // process, which IPCs the renderer (see AuthGate's onToken).
-      const origin = getServerOrigin()
-      if (!origin) {
-        setErr('此桌面端构建尚未配置 LingxiLoop 服务器。')
-        setBusy(null)
-        return
-      }
-      // Arm a single-use nonce and thread it through the return URL. The server
-      // round-trips it back onto /auth/done, the loopback page carries it into
-      // the lingxiloop:// deep link, and main accepts the token only if the nonce
-      // matches — so a drive-by deep link the app never initiated is rejected
-      // (anti session-fixation). arm() is Electron-only.
-      const auth = window.lingxiloop.auth
-      void (async () => {
-        let ret = 'http://127.0.0.1:47823/auth/done'
-        try {
-          const nonce = await auth.arm?.()
-          if (nonce) ret += `?n=${encodeURIComponent(nonce)}`
-        } catch { /* no arm available → fall through unarmed; token will be rejected, user retries */ }
-        void auth.openExternal(
-          authApi.startUrl({ returnUrl: ret }),
-        )
-      })()
-      return
-    }
-    // Browser fallback — full-page nav, fragment-on-redirect handled by
-    // AuthGate on next mount. Pass the *current* page as `?return=` so
-    // a user signing in from a configured app origin lands back there rather
-    // than the server's default app origin. The origin must be in
-    // LINGXILOOP_AUTH_RETURN_ALLOWLIST or the server
-    // will reject it.
-    const returnUrl = `${location.origin}${location.pathname}`
-    location.assign(authApi.startUrl({ returnUrl }))
+  const run = async (work: () => Promise<unknown>, success?: () => void) => {
+    setBusy(true); setError(null)
+    try { await work(); success?.() } catch (reason) { setError(reason instanceof Error ? reason.message : '请求失败') } finally { setBusy(false) }
   }
 
   return (
-    <div
-      className="fixed inset-0 grid place-items-center"
-      style={{ background: 'var(--paper)' }}
-    >
+    <main className="min-h-svh bg-muted flex items-center justify-center p-6">
       <WindowDragStrip />
-      <div className="w-[320px] flex flex-col items-center gap-8">
-        <ProductLogo size={64} rounded />
-        <div className="text-center">
-          <div className="font-display text-[22px] text-ink-900">欢迎使用 LingxiLoop</div>
-          <div className="font-display italic text-[13px] text-ink-400 mt-1">
-            登录后继续
-          </div>
-        </div>
-        <div className="w-full flex flex-col gap-3">
-          <Button
-            type="button"
-            onClick={() => go('lingxi')}
-            disabled={busy !== null}
-            className="auth-provider-button auth-provider-lingxi h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold disabled:opacity-60"
-          >
-            {busy === 'lingxi' ? '正在跳转…' : '使用灵犀账号继续'}
-          </Button>
-        </div>
-        {err && (
-          <div className="text-[12px] text-red-600 text-center max-w-full break-words">
-            {err}
-          </div>
-        )}
+      <div className="w-full max-w-sm">
+        {mode === 'login' ? <LoginForm busy={busy} error={error} onSignup={() => setMode('signup')} onForgot={() => setMode('forgot')} onSubmit={(loginEmail, password) => {
+          void run(async () => {
+            const result = await authApi.signIn(loginEmail, password)
+            if (result.error) throw new Error(result.error.message)
+          }, () => location.assign(parameters.get('returnTo') ?? '/'))
+        }} /> : null}
+        {mode === 'signup' ? <SignupForm busy={busy} error={error} defaultInviteToken={parameters.get('invite') ?? ''} defaultInviteKind={parameters.get('inviteKind') === 'project' ? 'project' : 'company'} onLogin={() => setMode('login')} onSubmit={(input) => {
+          void run(() => authApi.signUp(input), () => { setEmail(input.email); setMode('verify') })
+        }} /> : null}
+        {mode === 'verify' ? (
+          <Card>
+            <CardHeader><CardTitle>验证邮箱</CardTitle><CardDescription>验证成功后会自动创建 Personal Context 并消费邀请。</CardDescription></CardHeader>
+            <CardContent className="grid gap-4">
+              <Alert><AlertTitle>验证邮件已发送</AlertTitle><AlertDescription>请检查 {email} 的收件箱。</AlertDescription></Alert>
+              <Button variant="outline" disabled={busy} onClick={() => void run(() => authApi.sendVerification(email))}>{busy ? <Spinner /> : null}重新发送</Button>
+              <Button variant="ghost" onClick={() => setMode('login')}>返回登录</Button>
+            </CardContent>
+          </Card>
+        ) : null}
+        {mode === 'forgot' ? (
+          <Card>
+            <CardHeader><CardTitle>忘记密码</CardTitle><CardDescription>我们会发送一次性重置链接。</CardDescription></CardHeader>
+            <CardContent>
+              <form onSubmit={(event) => { event.preventDefault(); const value = String(new FormData(event.currentTarget).get('email')); void run(() => authApi.requestPasswordReset(value), () => setEmail(value)) }}>
+                <FieldGroup><Field><FieldLabel htmlFor="forgot-email">邮箱</FieldLabel><Input id="forgot-email" name="email" type="email" required /></Field>
+                  {email ? <Alert><AlertDescription>若账号存在，重置邮件已发送。</AlertDescription></Alert> : null}
+                  {error ? <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert> : null}
+                  <Button type="submit" disabled={busy}>{busy ? <Spinner /> : null}发送重置邮件</Button><Button type="button" variant="ghost" onClick={() => setMode('login')}>返回登录</Button>
+                </FieldGroup>
+              </form>
+            </CardContent>
+          </Card>
+        ) : null}
+        {mode === 'reset' ? (
+          <Card>
+            <CardHeader><CardTitle>设置新密码</CardTitle></CardHeader>
+            <CardContent>
+              <form onSubmit={(event) => { event.preventDefault(); const password = String(new FormData(event.currentTarget).get('password')); void run(() => authApi.resetPassword(password, parameters.get('token') ?? ''), () => setMode('login')) }}>
+                <FieldGroup><Field><FieldLabel htmlFor="reset-password">新密码</FieldLabel><Input id="reset-password" name="password" type="password" minLength={8} required /></Field>
+                  {error ? <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert> : null}
+                  <Button type="submit" disabled={busy}>{busy ? <Spinner /> : null}保存新密码</Button>
+                </FieldGroup>
+              </form>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
-    </div>
+    </main>
   )
 }

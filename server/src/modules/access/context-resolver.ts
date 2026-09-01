@@ -2,7 +2,6 @@ import type { PermissionReason, PermissionRequest, ResolvedAccessContext } from 
 import { resolveEntitlements } from './entitlement-resolver.js'
 import { PERMISSION_POLICIES } from './policy.js'
 import type { AccessRepository, ResourceRecord } from './repository.js'
-import { env } from '../../env.js'
 
 export type ContextResolution =
   | { allowed: true; context: ResolvedAccessContext; resource: ResourceRecord | null }
@@ -16,8 +15,7 @@ export async function resolveAccessContext(
   const actor = await repository.actor(request.actorUserId)
   if (!actor) return denied('NOT_AUTHENTICATED')
   if (actor.deletedAt || actor.suspendedAt) return denied('ACTOR_INACTIVE')
-  const platformAdmin = Boolean(actor.emailVerifiedAt)
-    && env.PLATFORM_ADMIN_EMAILS.includes(actor.email.trim().toLowerCase())
+  const platformAdmin = false
 
   const resource = request.resource ? await repository.resource(request.resource) : null
   if (request.resource && !resource) return denied('RESOURCE_NOT_FOUND')

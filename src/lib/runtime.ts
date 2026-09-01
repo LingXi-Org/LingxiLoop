@@ -57,18 +57,6 @@ interface LingxiLoopBridge {
     /** Main window subscribes — fires when notif window asks to focus a convo. */
     onFocusConvo: (handler: (conversationId: string) => void) => () => void
   }
-  /** OAuth loopback bridge. Main process opens the user's system
-   *  browser via openExternal(); after the provider chain, our local
-   *  loopback HTTP server (port 47823) catches the redirect, the
-   *  served HTML page POSTs the parsed fragment to /auth/token, and
-   *  onToken fires here so AuthGate can plant the session. */
-  auth?: {
-    openExternal: (url: string) => Promise<boolean>
-    /** Arm a single-use handoff nonce (anti session-fixation). Returns the
-     *  nonce to thread through the OAuth return URL. */
-    arm?: () => Promise<string>
-    onToken: (handler: (payload: { token: string; companyId: string | null }) => void) => () => void
-  }
 }
 
 declare global {

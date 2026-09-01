@@ -42,17 +42,12 @@ RUN npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer
 # postcss are available. The output (dist/) is copied into the runtime
 # image; nothing from this stage's node_modules makes it through.
 #
-# VITE_LINGXILOOP_API_BASE is intentionally NOT baked here — the SPA serves
-# from the SAME origin as the API in production, so relative URLs (`/api/...`) work without any
-# baked origin. Builders pointing the SPA at a remote API (e.g. for a
-# separate Cloudflare Pages deploy) should override via --build-arg.
+# The SPA uses same-origin `/api` routes through the control-plane Worker.
 FROM ${NODE_BASE_IMAGE} AS spa-build
 ARG NPM_REGISTRY
 WORKDIR /app
-ARG VITE_LINGXILOOP_API_BASE=""
 ARG VITE_PUBLIC_POSTHOG_KEY=""
 ARG VITE_PUBLIC_POSTHOG_HOST=""
-ENV VITE_LINGXILOOP_API_BASE=${VITE_LINGXILOOP_API_BASE}
 ENV VITE_PUBLIC_POSTHOG_KEY=${VITE_PUBLIC_POSTHOG_KEY}
 ENV VITE_PUBLIC_POSTHOG_HOST=${VITE_PUBLIC_POSTHOG_HOST}
 COPY package.json package-lock.json ./

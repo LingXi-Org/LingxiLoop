@@ -32,10 +32,6 @@ body { margin: 0; background: var(--background); color: var(--foreground); }
 .admin-state { display: flex; min-height: 14rem; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; border: 1px dashed var(--border); border-radius: 1rem; color: var(--muted-foreground); }
 .admin-search-result { display: flex; flex-direction: column; gap: .25rem; border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; background: var(--card); }
 .admin-search-result span { color: var(--muted-foreground); font-size: .875rem; }
-.admin-auth { display: grid; min-height: 100dvh; place-items: center; padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); background: radial-gradient(circle at top, color-mix(in srgb, var(--primary) 12%, var(--background)), var(--background) 45%); }
-.admin-auth-card { width: min(100%, 26rem); border: 1px solid var(--border); border-radius: 1.25rem; background: var(--card); padding: 2rem; text-align: center; box-shadow: 0 1rem 4rem color-mix(in srgb, var(--foreground) 10%, transparent); }
-.admin-auth-card h1 { margin-block-start: 1rem; font-size: 1.5rem; font-weight: 650; }
-.admin-auth-card p { margin-block-start: .5rem; color: var(--muted-foreground); }
 .admin-scrim { display: none; }
 
 @media (max-width: 58rem) {

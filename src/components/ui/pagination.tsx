@@ -52,12 +52,13 @@ function PaginationLink({ className, isActive, size = "icon", ...props }: Pagina
 function PaginationPrevious({
   className,
   text = "上一页",
+  size = "default",
   ...props
 }: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
   return (
     <PaginationLink
       aria-label="前往上一页"
-      size="default"
+      size={size}
       className={cn("ps-2", className)}
       {...props}
     >
@@ -70,12 +71,13 @@ function PaginationPrevious({
 function PaginationNext({
   className,
   text = "下一页",
+  size = "default",
   ...props
 }: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
   return (
     <PaginationLink
       aria-label="前往下一页"
-      size="default"
+      size={size}
       className={cn("pe-2", className)}
       {...props}
     >

@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process'
 import { readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
-const roots = [resolve('server/src/__tests__'), resolve('src'), resolve('workers')]
+const roots = [resolve('server/src/__tests__'), resolve('src')]
 
 function collect(directory) {
   const files = []

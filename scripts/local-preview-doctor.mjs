@@ -7,9 +7,7 @@ const required = [
   'OPENAI_API_KEY',
   'OPENAI_MODEL',
   'OPENAI_EMBEDDING_MODEL',
-  'LINGXI_IDENTITY_ISSUER',
-  'LINGXI_IDENTITY_CLIENT_ID',
-  'LINGXI_IDENTITY_CLIENT_SECRET',
+  'LINGXILOOP_GATEWAY_HMAC_SECRET',
   'LINGXILOOP_INVITE_BASE_URL',
   'WUKONG_API_URL',
   'WUKONG_WS_URL',
@@ -37,7 +35,7 @@ if (missing.length > 0) {
   process.exit(1)
 }
 
-for (const name of ['OPENAI_BASE_URL', 'LINGXI_IDENTITY_ISSUER', 'R2_ENDPOINT', 'R2_PUBLIC_BASE']) {
+for (const name of ['OPENAI_BASE_URL', 'R2_ENDPOINT', 'R2_PUBLIC_BASE']) {
   try {
     new URL(process.env[name])
   } catch {

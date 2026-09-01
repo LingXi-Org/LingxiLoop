@@ -52,12 +52,12 @@ test('protocol and service errors are mapped at user-visible boundaries', () => 
 
 test('browser entry points keep their fixed product copy in Chinese', () => {
   const index = read('../../index.html')
-  const localIdentity = read('../../scripts/local-identity-mock.mjs')
+  const authScreen = read('../components/AuthScreen.tsx')
 
   assert.match(index, /<title>LingxiLoop — 人与智能助教协作<\/title>/)
   assert.doesNotMatch(index, /Human-Agent collaboration/)
-  assert.match(localIdentity, /<button type="submit">继续进入 LingxiLoop<\/button>/)
-  assert.doesNotMatch(localIdentity, /Continue to LingxiLoop|Only this loopback process receives/)
+  assert.match(authScreen, /验证邮箱/)
+  assert.doesNotMatch(authScreen, /Continue to LingxiLoop/)
 })
 
 test('invitation success actions use natural Chinese around the product name', () => {

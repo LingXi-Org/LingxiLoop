@@ -312,7 +312,9 @@ export async function buildApiTestApp(userId: string): Promise<import('express')
   // Fake auth middleware: stamp authUserId from the test's choice. Real
   // requireAuth() just reads this field, so handlers can't distinguish.
   app.use((req, _res, next) => {
-    (req as unknown as { authUserId: string }).authUserId = userId
+    const request = req as unknown as { authUserId: string; gatewayAuthenticated: boolean }
+    request.authUserId = userId
+    request.gatewayAuthenticated = true
     next()
   })
   const { api } = await import('../api/router.js')

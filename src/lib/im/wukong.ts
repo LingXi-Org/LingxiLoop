@@ -1,7 +1,7 @@
 import WKSDK, { MessageContent, type Message as WKMessage } from 'wukongimjssdk'
 import { getServerOrigin } from '@/api/core/http'
 import { lingxiApiFetch } from '@/api/transport'
-import { getActiveCompanyId, getAuthToken, getMeId } from '@/stores/auth'
+import { getActiveCompanyId, getMeId } from '@/stores/auth'
 
 export const LINGXI_MESSAGE_CONTENT_TYPE = 1000
 
@@ -39,11 +39,9 @@ class LingxiContent extends MessageContent {
 }
 
 function authHeaders(): Record<string, string> {
-  const token = getAuthToken()
   const companyId = getActiveCompanyId()
   return {
     'content-type': 'application/json',
-    ...(token ? { authorization: `Bearer ${token}` } : {}),
     ...(companyId ? { 'x-company-id': companyId } : {}),
   }
 }
@@ -72,7 +70,6 @@ export class LingxiImClient {
   private started = false
   private boundUid: string | null = null
   private boundCompanyId: string | null = null
-  private boundAuthToken: string | null = null
   private connectingKey: string | null = null
   private connectPromise: Promise<void> | null = null
   private listeners = new Set<(message: ImEnvelope) => void>()
@@ -90,13 +87,11 @@ export class LingxiImClient {
   async connect(): Promise<void> {
     const uid = getMeId()
     const companyId = getActiveCompanyId()
-    const authToken = getAuthToken()
-    if (!uid || !companyId || !authToken) throw new Error('IM connection requires an authenticated workspace')
-    const key = `${uid}:${companyId}:${authToken}`
+    if (!uid || !companyId) throw new Error('IM connection requires an authenticated workspace')
+    const key = `${uid}:${companyId}`
     if (this.started
       && this.boundUid === uid
-      && this.boundCompanyId === companyId
-      && this.boundAuthToken === authToken) return
+      && this.boundCompanyId === companyId) return
     if (this.connectPromise) {
       if (this.connectingKey === key) return this.connectPromise
       try { await this.connectPromise } catch { /* A newer identity retries below. */ }
@@ -106,10 +101,10 @@ export class LingxiImClient {
     this.connectingKey = key
     this.connectPromise = (async () => {
       if (this.started) this.sdk.disconnect()
-      const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/bootstrap`, { headers: authHeaders() })
+      const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/bootstrap`, { headers: authHeaders(), credentials: 'include' })
       if (!response.ok) throw new Error(`IM bootstrap failed: ${response.status}`)
       const bootstrap = await response.json() as Bootstrap
-      if (getMeId() !== uid || getActiveCompanyId() !== companyId || getAuthToken() !== authToken) {
+      if (getMeId() !== uid || getActiveCompanyId() !== companyId) {
         throw new Error('IM identity changed during bootstrap')
       }
       this.sdk.config.uid = bootstrap.uid
@@ -119,7 +114,6 @@ export class LingxiImClient {
       this.started = true
       this.boundUid = uid
       this.boundCompanyId = companyId
-      this.boundAuthToken = authToken
     })().finally(() => {
       this.connectPromise = null
       this.connectingKey = null
@@ -132,7 +126,6 @@ export class LingxiImClient {
     this.started = false
     this.boundUid = null
     this.boundCompanyId = null
-    this.boundAuthToken = null
     this.workspaceChannels.clear()
   }
 

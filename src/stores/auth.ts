@@ -1,14 +1,12 @@
 import type { AuthCompany, AuthUser, ServerCapabilities } from '@/auth/contracts'
 export type { AuthCompany, AuthUser } from '@/auth/contracts'
 /**
- * Auth state — token + current user + active company. Token persists in
- * localStorage so reloads stay signed in. Every API request reads the
- * current token from this store through the shared HTTP transport.
+ * Browser authentication is held only by Better Auth's host-only cookie.
  */
 import { create } from 'zustand'
 import { runAuthTeardown } from './authTeardown'
 interface AuthState {
-  token: string | null
+  authenticated: boolean
   user: AuthUser | null
   companies: AuthCompany[]
   activeCompanyId: string | null
@@ -19,7 +17,7 @@ interface AuthState {
    *  populates them; consumers should treat null as "don't know yet" and
    *  default to a safe value (usually: hide optional UI). */
   serverCapabilities: ServerCapabilities | null
-  setSession: (token: string, user: AuthUser, companyId: string | null) => void
+  setAuthenticated: (user: AuthUser, companyId: string | null) => void
   setMe: (user: AuthUser, companies: AuthCompany[], activeCompanyId: string) => void
   setServerCapabilities: (caps: ServerCapabilities) => void
   setActiveCompany: (id: string) => void
@@ -27,23 +25,21 @@ interface AuthState {
   markReady: () => void
 }
 
-const TOKEN_KEY = 'lingxiloop.auth.token'
 const COMPANY_KEY = 'lingxiloop.auth.company'
 
 export const useAuth = create<AuthState>((set) => ({
-  token: localStorage.getItem(TOKEN_KEY),
+  authenticated: false,
   user: null,
   companies: [],
   activeCompanyId: localStorage.getItem(COMPANY_KEY),
   personalCompanyId: null,
   ready: false,
   serverCapabilities: null,
-  setSession(token, user, companyId) {
+  setAuthenticated(user, companyId) {
     const previousUserId = useAuth.getState().user?.id
     if (previousUserId && previousUserId !== user.id) runAuthTeardown()
-    localStorage.setItem(TOKEN_KEY, token)
     if (companyId) localStorage.setItem(COMPANY_KEY, companyId)
-    set({ token, user, activeCompanyId: companyId, personalCompanyId: companyId, ready: true })
+    set({ authenticated: true, user, activeCompanyId: companyId, personalCompanyId: companyId, ready: true })
     // Fresh auth → rebind the WS connection so it carries the new
     // session's ticket instead of staying on whatever it had before.
     void import('@/api/core/realtime').then(({ ws }) => ws.reconnect())
@@ -84,10 +80,9 @@ export const useAuth = create<AuthState>((set) => ({
   },
   clear() {
     runAuthTeardown()
-    localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(COMPANY_KEY)
     set({
-      token: null,
+      authenticated: false,
       user: null,
       companies: [],
       activeCompanyId: null,
@@ -111,11 +106,6 @@ export const useAuth = create<AuthState>((set) => ({
     set({ ready: true })
   },
 }))
-
-/** Sync getter for the API client + WS connection. */
-export function getAuthToken(): string | null {
-  return useAuth.getState().token
-}
 
 /** Sync getter for the current user id. Returns null when no user is signed
  *  in — callers MUST handle that case explicitly. (We never default to a
