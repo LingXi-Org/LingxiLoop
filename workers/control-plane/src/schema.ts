@@ -16,12 +16,12 @@ export const session = sqliteTable('session', {
 })
 
 export const account = sqliteTable('account', {
-  id: text('id').primaryKey(), accountId: text('accountId').notNull(), providerId: text('providerId').notNull(),
+  id: text('id').primaryKey(), accountId: text('accountId').notNull(), providerId: text('providerId').notNull(), issuer: text('issuer').notNull(),
   userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }), accessToken: text('accessToken'),
   refreshToken: text('refreshToken'), idToken: text('idToken'), accessTokenExpiresAt: integer('accessTokenExpiresAt', { mode: 'timestamp' }),
   refreshTokenExpiresAt: integer('refreshTokenExpiresAt', { mode: 'timestamp' }), scope: text('scope'), password: text('password'),
   createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(), updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
-}, (table) => [uniqueIndex('account_provider_idx').on(table.providerId, table.accountId)])
+}, (table) => [uniqueIndex('account_issuer_accountId_uidx').on(table.issuer, table.accountId)])
 
 export const verification = sqliteTable('verification', {
   id: text('id').primaryKey(), identifier: text('identifier').notNull(), value: text('value').notNull(),

@@ -13,6 +13,8 @@ describe('control-plane trust boundaries', () => {
   it('applies auth/control schema and rejects unauthenticated administration', async () => {
     const tables = await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all<{ name: string }>()
     expect(tables.results.map((row) => row.name)).toEqual(expect.arrayContaining(['user', 'session', 'app_user_links', 'registration_claims', 'release_requests', 'control_audit']))
+    const accountColumns = await env.DB.prepare(`PRAGMA table_info(account)`).all<{ name: string; notnull: number }>()
+    expect(accountColumns.results).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'issuer', notnull: 1 })]))
     const response = await SELF.fetch('https://admin.lingxilearn.cn/api/control/releases')
     expect(response.status).toBe(401)
   })
