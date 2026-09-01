@@ -25,7 +25,8 @@ services:
     logging: *logging
 
   open-notebook:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:mvp
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:a73f400f238071ee6bbd659e33480c0a5e2a21a9
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       surrealdb:
@@ -62,7 +63,8 @@ services:
     logging: *logging
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:mvp
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:a73f400f238071ee6bbd659e33480c0a5e2a21a9
+    pull_policy: always
     restart: unless-stopped
     stop_grace_period: 30s
     environment:

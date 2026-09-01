@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
+import { updateImageTags } from './update-deployment-images.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
@@ -44,7 +45,9 @@ test('packaged and published stacks select the RAG-only image', () => {
   assert.match(workflow, /needs: \[quality, unit-eval, integration\]/)
   assert.match(workflow, /GITHUB_REPOSITORY_OWNER,,/)
   assert.match(workflow, /:\$\{\{ github\.sha \}\}/)
-  assert.match(workflow, /:mvp/)
+  assert.match(workflow, /platforms: linux\/amd64/)
+  assert.match(workflow, /update-deployment-images\.mjs/)
+  assert.doesNotMatch(workflow, /setup-qemu|:mvp/)
   assert.match(smoke, /createSecondProject/)
   assert.match(smoke, /seedOtherCompany/)
   assert.match(smoke, /otherProjectSourceId/)
@@ -132,15 +135,34 @@ test('OpenShip knowledge services receive writable storage and the control plane
   assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
 })
 
-test('main publishes immutable digests before Worker and OpenShip deployment', () => {
+test('main publishes unique tags and updates Compose before Worker deployment', () => {
   const workflow = read('.github/workflows/ci.yml')
   const compose = read('docker-compose.production.yml')
 
-  assert.match(workflow, /image-digest-\$\{\{ matrix\.package \}\}/)
-  assert.match(workflow, /deploy:[\s\S]*needs: publish/)
-  assert.match(workflow, /control:d1:remote[\s\S]*control:deploy[\s\S]*api\/internal\/releases/)
+  assert.match(workflow, /update-manifests:[\s\S]*needs: publish/)
+  assert.match(workflow, /deploy:[\s\S]*needs: update-manifests/)
+  assert.match(workflow, /control:d1:remote[\s\S]*control:deploy/)
+  assert.doesNotMatch(workflow, /image-digest-|api\/internal\/releases/)
   assert.doesNotMatch(workflow, /pages deploy|PRODUCTION_SSH|deploy-production\.sh/)
   assert.match(compose, /LINGXILOOP_GATEWAY_HMAC_SECRET: \$\{LINGXILOOP_GATEWAY_HMAC_SECRET:\?/)
   assert.match(compose, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-2\}/)
   assert.match(compose, /OPEN_NOTEBOOK_WORKER_MAX_TASKS: \$\{OPEN_NOTEBOOK_WORKER_MAX_TASKS:-1\}/)
+})
+
+test('all deployable LingxiLoop images use CI-managed unique tags', () => {
+  const manifests = [
+    'deploy/openship/app.yml',
+    'deploy/openship/core-state.yml',
+    'deploy/openship/knowledge-agent.yml',
+    'docker-compose.production.yml',
+    'docker-compose.mvp.yml',
+    'docker-compose.dokploy.yml',
+  ].map(read).join('\n')
+  const references = [...manifests.matchAll(/image:\s+\S*lingxiloop-[^:\s]+:([^\s]+)/g)]
+  assert.equal(references.length, 18)
+  assert.ok(references.every((match) => /^[0-9a-f]{40}$/.test(match[1])))
+  assert.equal(
+    updateImageTags(`image: registry/lingxiloop-server:${'a'.repeat(40)}`, 'b'.repeat(40), ['server']),
+    `image: registry/lingxiloop-server:${'b'.repeat(40)}`,
+  )
 })

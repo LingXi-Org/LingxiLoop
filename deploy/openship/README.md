@@ -79,16 +79,11 @@ the Open Notebook embedding proxy and Agent OS Host Bridge use
 probe as `GET /api/health`; it checks both PostgreSQL and Redis. WebSocket
 clients reconnect automatically and presence leases are shared through Redis.
 
-The app automatically uses
-`accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:mvp`; its version and
-commit metadata come from the image built by CI. Set `LINGXILOOP_SERVER_IMAGE`
-only to override it with an immutable digest. Agent OS and Open Notebook use
-their accelerated CI `mvp` images directly so OpenShip can detect them without
-environment-variable interpolation. WuKongIM automatically uses
-`accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:mvp`; set
-`WUKONGIM_IMAGE` only when overriding it with an immutable digest. Copy the
-remaining secrets and product variables from the production environment; the
-Compose validation errors name every required value that is missing.
+CI writes the published commit SHA directly into every LingxiLoop image in
+these manifests. OpenShip therefore sees a unique, immutable tag without any
+image environment variables or `mvp` cache ambiguity. Copy the remaining
+secrets and product variables from the production environment; the Compose
+validation errors name every required value that is missing.
 
 ## Deploy order
 

@@ -7,12 +7,12 @@ x-quiet-logging: &quiet-logging
     max-file: "3"
 
 # Agent execution is owned by the independently scalable Agent OS work queue.
-# CI supplies .release.env with digest-pinned image references and public,
-# release-specific metadata. Operators pre-provision .env.secrets; CI never
-# creates or overwrites that file.
+# CI pins every project image to its release commit. Operators pre-provision
+# .env.secrets; CI never creates or overwrites that file.
 
 x-lingxiloop-runtime: &lingxiloop-runtime
-  image: ${LINGXILOOP_SERVER_IMAGE:-accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:mvp}
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:a73f400f238071ee6bbd659e33480c0a5e2a21a9
+  pull_policy: always
   env_file:
     - ./.env.secrets
   environment: &lingxiloop-environment
@@ -78,7 +78,8 @@ services:
     logging: *quiet-logging
 
   open-notebook:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:mvp
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:a73f400f238071ee6bbd659e33480c0a5e2a21a9
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       surrealdb:
@@ -111,7 +112,8 @@ services:
     logging: *quiet-logging
 
   wukongim:
-    image: ${WUKONGIM_IMAGE:-accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:mvp}
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:a73f400f238071ee6bbd659e33480c0a5e2a21a9
+    pull_policy: always
     restart: unless-stopped
     env_file:
       - ./.env.secrets
@@ -200,7 +202,8 @@ services:
     logging: *quiet-logging
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:mvp
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:a73f400f238071ee6bbd659e33480c0a5e2a21a9
+    pull_policy: always
     restart: unless-stopped
     env_file:
       - ./.env.secrets

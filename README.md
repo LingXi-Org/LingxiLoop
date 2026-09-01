@@ -42,7 +42,7 @@ For the packaged service topology:
 
 ```powershell
 Copy-Item .env.example .env
-# Fill required values. Set GHCR_NAMESPACE for a fork; it defaults to lingxi-org.
+# Fill required product and secret values; image tags are managed by CI.
 npm run mvp:up
 ```
 

@@ -1,0 +1,29 @@
+import { readFileSync, writeFileSync } from 'node:fs'
+
+const manifests = {
+  'deploy/openship/app.yml': ['server'],
+  'deploy/openship/core-state.yml': ['wukongim'],
+  'deploy/openship/knowledge-agent.yml': ['open-notebook', 'agent-os'],
+  'docker-compose.production.yml': ['server', 'open-notebook', 'wukongim', 'agent-os'],
+  'docker-compose.mvp.yml': ['server', 'open-notebook', 'wukongim', 'agent-os'],
+  'docker-compose.dokploy.yml': ['server', 'open-notebook', 'wukongim', 'agent-os'],
+}
+
+export function updateImageTags(source, sha, packages) {
+  if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error(`invalid commit SHA: ${sha}`)
+  let updated = source
+  for (const name of packages) {
+    const pattern = new RegExp(`(lingxiloop-${name}:)[0-9a-f]{40}`, 'g')
+    if (!pattern.test(updated)) throw new Error(`missing lingxiloop-${name} image`)
+    updated = updated.replace(pattern, `$1${sha}`)
+  }
+  return updated
+}
+
+if (process.argv[1]?.endsWith('update-deployment-images.mjs')) {
+  const sha = process.argv[2] ?? ''
+  for (const [path, packages] of Object.entries(manifests)) {
+    const source = readFileSync(path, 'utf8')
+    writeFileSync(path, updateImageTags(source, sha, packages))
+  }
+}

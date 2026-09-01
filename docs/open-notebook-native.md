@@ -32,7 +32,7 @@ Production must provide:
 
 - `OPEN_NOTEBOOK_IMAGE`: a digest-pinned
   `ghcr.io/lingxi-org/lingxiloop-open-notebook` image built by CI and recorded
-  beside the other three images in `.release.next.env`;
+  beside the other three images under the same CI commit tag;
 - `OPEN_NOTEBOOK_PASSWORD` in `.env.secrets`;
 - `OPEN_NOTEBOOK_SURREAL_PASSWORD` to Compose interpolation;
 - `OPENAI_EMBEDDING_MODEL` for the one supported embedding model. Open Notebook
