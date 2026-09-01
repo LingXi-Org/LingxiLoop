@@ -75,9 +75,11 @@ and Agent OS Host Bridge all use it. Configure the edge/load balancer health
 probe as `GET /api/health`; it checks both PostgreSQL and Redis. WebSocket
 clients reconnect automatically and presence leases are shared through Redis.
 
-Use immutable digest references produced by CI for
-`LINGXILOOP_SERVER_IMAGE`, `AGENT_OS_IMAGE`, and `OPEN_NOTEBOOK_IMAGE`.
-WuKongIM automatically uses
+The app automatically uses
+`accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:mvp`; its version and
+commit metadata come from the image built by CI. Set `LINGXILOOP_SERVER_IMAGE`
+only to override it with an immutable digest. Use immutable digest references
+produced by CI for `AGENT_OS_IMAGE` and `OPEN_NOTEBOOK_IMAGE`. WuKongIM automatically uses
 `accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:mvp`; set
 `WUKONGIM_IMAGE` only when overriding it with an immutable digest. Copy the
 remaining secrets and product variables from the production environment; the
