@@ -14,16 +14,19 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  NODE_VERSION: "22"
+
 jobs:
   quality:
     name: Quality and builds
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - uses: actions/setup-python@v5
         with:
@@ -59,11 +62,15 @@ jobs:
           --health-timeout 5s
           --health-retries 12
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check ipython==9.4.0
       - run: npm ci
       - run: npm test
       - run: npm run eval:check
@@ -111,10 +118,10 @@ jobs:
       LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
       WUKONG_USER_TOKEN_SECRET: integration-test-wukong-user-token-secret
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
       - run: npm run db:migrate
@@ -154,7 +161,7 @@ jobs:
             target: lingxiloop-rag
             wukong_commit: ""
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: metadata
         name: Resolve image metadata
         shell: bash
@@ -168,7 +175,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+      - id: build
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
@@ -188,3 +196,127 @@ jobs:
             WUKONG_COMMIT=${{ matrix.wukong_commit }}
           cache-from: type=gha,scope=${{ matrix.package }}
           cache-to: type=gha,mode=max,scope=${{ matrix.package }}
+      - name: Record immutable digest
+        shell: bash
+        run: |
+          mkdir -p image-digests
+          printf '%s\n' '${{ steps.build.outputs.digest }}' > "image-digests/${{ matrix.package }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-digest-${{ matrix.package }}
+          path: image-digests/${{ matrix.package }}
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy-production:
+    name: Deploy Shanghai production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: image-digest-*
+          path: image-digests
+          merge-multiple: true
+      - name: Build release manifest
+        shell: bash
+        env:
+          REGISTRY_NAMESPACE: ${{ github.repository_owner }}
+          PUBLIC_ORIGIN: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+          ADMIN_ORIGIN: ${{ vars.LINGXILOOP_ADMIN_ORIGIN }}
+          WUKONG_WS_PUBLIC_URL: ${{ vars.WUKONG_WS_PUBLIC_URL }}
+        run: |
+          set -euo pipefail
+          : "${PUBLIC_ORIGIN:?Set repository variable LINGXILOOP_PUBLIC_ORIGIN}"
+          : "${ADMIN_ORIGIN:?Set repository variable LINGXILOOP_ADMIN_ORIGIN}"
+          : "${WUKONG_WS_PUBLIC_URL:?Set repository variable WUKONG_WS_PUBLIC_URL}"
+          version="$(tr -d '[:space:]' < VERSION)"
+          owner="${REGISTRY_NAMESPACE,,}"
+          for package in lingxiloop-server lingxiloop-agent-os lingxiloop-wukongim lingxiloop-open-notebook; do
+            digest="$(cat "image-digests/${package}")"
+            case "$digest" in sha256:[0-9a-f][0-9a-f]*) ;; *) echo "Invalid digest for ${package}" >&2; exit 2 ;; esac
+            case "$package" in
+              lingxiloop-server) key=LINGXILOOP_SERVER_IMAGE ;;
+              lingxiloop-agent-os) key=AGENT_OS_IMAGE ;;
+              lingxiloop-wukongim) key=WUKONGIM_IMAGE ;;
+              lingxiloop-open-notebook) key=OPEN_NOTEBOOK_IMAGE ;;
+            esac
+            printf '%s=ghcr.io/%s/%s@%s\n' "$key" "$owner" "$package" "$digest" >> .release.next.env
+          done
+          cat >> .release.next.env <<EOF
+          LINGXILOOP_VERSION=$version
+          LINGXILOOP_COMMIT_SHA=$GITHUB_SHA
+          LINGXILOOP_PUBLIC_ORIGIN=${PUBLIC_ORIGIN%/}
+          WUKONG_WS_PUBLIC_URL=$WUKONG_WS_PUBLIC_URL
+          LINGXILOOP_CORS_ORIGINS=${ADMIN_ORIGIN%/}
+          LINGXILOOP_AUTH_RETURN_ALLOWLIST=${PUBLIC_ORIGIN%/}/,${ADMIN_ORIGIN%/}/
+          R2_CORS_EXTRA_ORIGINS=${ADMIN_ORIGIN%/}
+          AGENT_OS_MAX_CONCURRENT_RUNS=2
+          OPEN_NOTEBOOK_WORKER_MAX_TASKS=1
+          EOF
+      - name: Configure SSH
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          : "${SSH_PRIVATE_KEY:?Set production secret PRODUCTION_SSH_PRIVATE_KEY}"
+          : "${SSH_KNOWN_HOSTS:?Set production secret PRODUCTION_SSH_KNOWN_HOSTS}"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/lingxiloop-production
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/lingxiloop-production ~/.ssh/known_hosts
+      - name: Deploy through the verified production entrypoint
+        shell: bash
+        env:
+          SSH_HOST: ${{ vars.PRODUCTION_SSH_HOST }}
+          SSH_PORT: ${{ vars.PRODUCTION_SSH_PORT }}
+          SSH_USER: ${{ vars.PRODUCTION_SSH_USER }}
+          DEPLOY_PATH: ${{ vars.PRODUCTION_DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          : "${SSH_HOST:?Set repository variable PRODUCTION_SSH_HOST}"
+          : "${SSH_USER:?Set repository variable PRODUCTION_SSH_USER}"
+          SSH_PORT="${SSH_PORT:-22}"
+          DEPLOY_PATH="${DEPLOY_PATH:-/opt/lingxiloop}"
+          case "$SSH_PORT" in *[!0-9]*|'') echo 'PRODUCTION_SSH_PORT must be numeric' >&2; exit 2 ;; esac
+          case "$DEPLOY_PATH" in /*) ;; *) echo 'PRODUCTION_DEPLOY_PATH must be absolute' >&2; exit 2 ;; esac
+          ssh=(ssh -i ~/.ssh/lingxiloop-production -p "$SSH_PORT" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+          scp=(scp -i ~/.ssh/lingxiloop-production -P "$SSH_PORT" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+          "${ssh[@]}" "$SSH_USER@$SSH_HOST" "install -d -m 700 '$DEPLOY_PATH'"
+          "${scp[@]}" docker-compose.production.yml scripts/deploy-production.sh scripts/rollback-production.sh .release.next.env "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+          "${ssh[@]}" "$SSH_USER@$SSH_HOST" "cd '$DEPLOY_PATH' && chmod 700 deploy-production.sh rollback-production.sh && ./deploy-production.sh"
+
+  deploy-admin:
+    name: Deploy Refine admin to Cloudflare Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Build Refine admin
+        run: npm run admin:build
+        env:
+          VITE_LINGXILOOP_API_BASE: ${{ vars.LINGXILOOP_PUBLIC_ORIGIN }}
+      - name: Publish Pages production deployment
+        run: npx --yes wrangler@4.127.1 pages deploy dist-admin --project-name "$CLOUDFLARE_PAGES_PROJECT" --branch main --commit-hash "$GITHUB_SHA"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}

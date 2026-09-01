@@ -123,3 +123,16 @@ test('normal production deploy revalidates RAG and recreates Agent OS', () => {
   assert.match(deploy, /--force-recreate agent-os/)
   assert.match(deploy, /knowledge-rag-smoke\.ts/)
 })
+
+test('main publishes immutable digests before Shanghai and Pages deployments', () => {
+  const workflow = read('.github/workflows/ci.yml')
+  const compose = read('docker-compose.production.yml')
+
+  assert.match(workflow, /image-digest-\$\{\{ matrix\.package \}\}/)
+  assert.match(workflow, /deploy-production:[\s\S]*needs: publish/)
+  assert.match(workflow, /scripts\/deploy-production\.sh/)
+  assert.match(workflow, /deploy-admin:[\s\S]*wrangler@4\.127\.1 pages deploy dist-admin/)
+  assert.match(compose, /LINGXILOOP_AUTH_RETURN_ALLOWLIST: \$\{LINGXILOOP_AUTH_RETURN_ALLOWLIST:\?/)
+  assert.match(compose, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-2\}/)
+  assert.match(compose, /OPEN_NOTEBOOK_WORKER_MAX_TASKS: \$\{OPEN_NOTEBOOK_WORKER_MAX_TASKS:-1\}/)
+})

@@ -191,7 +191,8 @@ test('production enables authenticated WuKong callbacks without inheriting the l
     readFile(new URL('../../../package.json', import.meta.url), 'utf8'),
   ])
   assert.match(compose, /WK_WEBHOOK_HTTP_ADDR: .*\/webhooks\/wukong\?token=\$\{WUKONG_WEBHOOK_SECRET:\?/)
-  assert.match(deploy, /OPENAI_EMBEDDING_MODEL WUKONG_WEBHOOK_SECRET/)
+  assert.match(deploy, /WUKONG_API_TOKEN WUKONG_WEBHOOK_SECRET WUKONG_USER_TOKEN_SECRET/)
+  assert.match(deploy, /OPENAI_API_KEY OPENAI_BASE_URL OPENAI_MODEL/)
   assert.doesNotMatch(compose, /NODE_USE_ENV_PROXY/)
   assert.match(manifest, /dev:preview.*NODE_USE_ENV_PROXY=1/)
   assert.match(manifest, /dev:preview.*--restart-tries -1.*npm:agent-os:dev/)

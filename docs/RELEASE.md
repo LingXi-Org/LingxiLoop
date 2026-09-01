@@ -27,6 +27,29 @@ Open Notebook/SurrealDB retains its separate vendored schema lifecycle.
 
 ## Deployment
 
+Every successful push to `main` now deploys both release surfaces after quality, unit/eval, and integration gates pass. Browser tests are intentionally not part of this workflow.
+
+- Shanghai production is updated over SSH from digest-pinned GHCR images. The current one-host profile limits Agent OS to 2 concurrent runs and Open Notebook to 1 worker task.
+- Refine admin is built with `VITE_LINGXILOOP_API_BASE` and published to the `lingxiloop-admin` Cloudflare Pages project with Wrangler.
+
+Configure these GitHub `production` environment variables before the first push:
+
+| Variable | Value |
+| --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID |
+| `CLOUDFLARE_PAGES_PROJECT` | `lingxiloop-admin` |
+| `LINGXILOOP_PUBLIC_ORIGIN` | Public Shanghai Web/API origin, without a trailing slash |
+| `LINGXILOOP_ADMIN_ORIGIN` | Refine Pages/custom-domain origin, without a trailing slash |
+| `WUKONG_WS_PUBLIC_URL` | Public `wss://` WuKongIM endpoint |
+| `PRODUCTION_SSH_HOST` | Shanghai host or IP |
+| `PRODUCTION_SSH_PORT` | SSH port, normally `22` |
+| `PRODUCTION_SSH_USER` | Restricted deployment user |
+| `PRODUCTION_DEPLOY_PATH` | Absolute path, normally `/opt/lingxiloop` |
+
+Configure `CLOUDFLARE_API_TOKEN`, `PRODUCTION_SSH_PRIVATE_KEY`, and `PRODUCTION_SSH_KNOWN_HOSTS` as GitHub environment secrets in `production`. The Cloudflare token only needs Pages edit access for this account. `PRODUCTION_SSH_KNOWN_HOSTS` must be the verified host-key line, not the result of an unverified scan performed in CI.
+
+On the Shanghai host, install Docker with the Compose plugin, authenticate Docker to `ghcr.io`, create the deployment path, and place a mode-`600` `.env.secrets` there. CI deliberately never reads or overwrites this file. It must contain the PostgreSQL, WuKongIM, Agent OS, model, Open Notebook, R2, invite, and optional LingxiIdentity values used by `docker-compose.production.yml`.
+
 Before cutover:
 
 1. Back up PostgreSQL and other durable stores.
