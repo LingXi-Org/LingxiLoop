@@ -9,11 +9,11 @@ x-logging: &logging
 services:
   surrealdb:
     image: surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011
-    user: root
     restart: unless-stopped
-    command: ["start", "--log", "warn", "--user", "open-notebook", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}", "rocksdb:/data/open-notebook.db"]
+    working_dir: /home/nonroot
+    command: ["start", "--log", "warn", "--user", "open-notebook", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}", "rocksdb:open-notebook.db"]
     volumes:
-      - surreal-data-v2:/data
+      - surreal-data-v3:/home/nonroot
     healthcheck:
       test: ["CMD", "/surreal", "is-ready", "--endpoint", "http://localhost:8000"]
       interval: 5s
@@ -104,6 +104,6 @@ services:
     logging: *logging
 
 volumes:
-  surreal-data-v2: {}
+  surreal-data-v3: {}
   open-notebook-data: {}
   agent-os-data: {}
