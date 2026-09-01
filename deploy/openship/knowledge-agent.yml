@@ -9,6 +9,7 @@ x-logging: &logging
 services:
   surrealdb:
     image: surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011
+    user: root
     restart: unless-stopped
     command: ["start", "--log", "warn", "--user", "open-notebook", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}", "rocksdb:/data/open-notebook.db"]
     volumes:
@@ -44,7 +45,7 @@ services:
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
       OPENAI_API_KEY: ${OPEN_NOTEBOOK_PASSWORD:?OPEN_NOTEBOOK_PASSWORD is required}
-      OPENAI_BASE_URL: "${LINGXILOOP_INTERNAL_ORIGIN:?LINGXILOOP_INTERNAL_ORIGIN is required}/internal/open-notebook/v1"
+      OPENAI_BASE_URL: "${LINGXILOOP_CONTROL_PLANE_URL:?LINGXILOOP_CONTROL_PLANE_URL is required}/internal/open-notebook/v1"
       OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required}
     ports:
       - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5055:5055"
@@ -80,7 +81,7 @@ services:
       AGENT_OS_KERNEL_IDLE_MS: ${AGENT_OS_KERNEL_IDLE_MS:-900000}
       AGENT_OS_SHUTDOWN_GRACE_MS: ${AGENT_OS_SHUTDOWN_GRACE_MS:-20000}
       AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required}
-      LINGXILOOP_CONTROL_PLANE_URL: ${LINGXILOOP_INTERNAL_ORIGIN:?LINGXILOOP_INTERNAL_ORIGIN is required}
+      LINGXILOOP_CONTROL_PLANE_URL: ${LINGXILOOP_CONTROL_PLANE_URL:?LINGXILOOP_CONTROL_PLANE_URL is required}
       OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}

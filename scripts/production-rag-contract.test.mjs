@@ -124,6 +124,14 @@ test('normal production deploy revalidates RAG and recreates Agent OS', () => {
   assert.match(deploy, /knowledge-rag-smoke\.ts/)
 })
 
+test('OpenShip knowledge services receive writable storage and the control plane URL', () => {
+  const compose = read('deploy/openship/knowledge-agent.yml')
+
+  assert.match(compose, /surrealdb:[\s\S]*?user: root[\s\S]*?rocksdb:\/data\/open-notebook\.db/)
+  assert.equal((compose.match(/\$\{LINGXILOOP_CONTROL_PLANE_URL:\?/g) ?? []).length, 2)
+  assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
+})
+
 test('main publishes immutable digests before Worker and OpenShip deployment', () => {
   const workflow = read('.github/workflows/ci.yml')
   const compose = read('docker-compose.production.yml')

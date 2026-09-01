@@ -60,8 +60,11 @@ OPEN_NOTEBOOK_URL=http://<server-b-private-ip>:5055
 AGENT_OS_URL=http://<server-b-private-ip>:5190
 DATABASE_POOL_MAX=8
 
-# core-state and knowledge-agent callbacks
+# core-state callbacks
 LINGXILOOP_INTERNAL_ORIGIN=https://origin.example.com
+
+# knowledge-agent callbacks
+LINGXILOOP_CONTROL_PLANE_URL=https://origin.example.com
 
 # Project-specific identities
 INSTANCE_ID=web-a                 # app-a; use web-b on app-b
@@ -69,9 +72,10 @@ AGENT_OS_WORKER_ID=agent-os-b     # knowledge-agent only
 PRIVATE_BIND_IP=<that-server-private-ip>
 ```
 
-`LINGXILOOP_INTERNAL_ORIGIN` must be a stable HTTPS entry point that routes to
-the healthy app services. The WuKongIM webhook, Open Notebook embedding proxy,
-and Agent OS Host Bridge all use it. Configure the edge/load balancer health
+Both callback origins must be the same stable HTTPS entry point that routes to
+the healthy app services. The WuKongIM webhook uses `LINGXILOOP_INTERNAL_ORIGIN`;
+the Open Notebook embedding proxy and Agent OS Host Bridge use
+`LINGXILOOP_CONTROL_PLANE_URL`. Configure the edge/load balancer health
 probe as `GET /api/health`; it checks both PostgreSQL and Redis. WebSocket
 clients reconnect automatically and presence leases are shared through Redis.
 
@@ -92,7 +96,7 @@ Compose validation errors name every required value that is missing.
    named volumes.
 2. Deploy `app-a`. Its one-shot `db-migrate` service applies migrations before
    Web and Worker start.
-3. Point `LINGXILOOP_INTERNAL_ORIGIN` at healthy `app-a`, then deploy
+3. Point `LINGXILOOP_CONTROL_PLANE_URL` at healthy `app-a`, then deploy
    `knowledge-agent` on Server B and back up its three named volumes.
 4. Deploy `app-b` with the same shared endpoints and secrets but a different
    `INSTANCE_ID`.
