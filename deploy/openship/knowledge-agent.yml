@@ -25,7 +25,7 @@ services:
     logging: *logging
 
   open-notebook:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:17fcc4c43d33ca85a2d8ece154d8a8a282fda8a1
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:e96274a2a6edbbea9ea113ad38dc7be3397bf8fc
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -64,7 +64,7 @@ services:
     logging: *logging
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:17fcc4c43d33ca85a2d8ece154d8a8a282fda8a1
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:e96274a2a6edbbea9ea113ad38dc7be3397bf8fc
     pull_policy: always
     restart: unless-stopped
     stop_grace_period: 30s
