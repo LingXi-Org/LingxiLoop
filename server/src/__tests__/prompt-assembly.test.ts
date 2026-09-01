@@ -30,6 +30,10 @@ test('prompt ordering keeps turn data out of the stable policy and puts personal
   assert.match(prompt, /loop\.polls\.create/)
   assert.match(prompt, /cohesive natural paragraphs/)
   assert.match(prompt, /formal document, sourced research/)
+  assert.match(prompt, /explicit request to create, recreate, reschedule, or revise a weekly study plan is sufficient authorization/)
+  assert.match(prompt, /start_mission\(goal=\.\.\., successCriteria=\.\.\., missionKind="STUDY", explicit=True\)/)
+  assert.match(prompt, /A weekly plan alone does not justify Canvas or specialist dispatch/)
+  assert.match(prompt, /Never announce that a product action, specialist task, Canvas workspace, or durable plan has started/)
 })
 
 test('explicit execution role selects verifier or specialist contract independently of persona name', () => {

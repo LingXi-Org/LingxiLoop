@@ -432,6 +432,34 @@ test('tool-call narration is not streamed into the durable final answer', async 
   assert.equal(host.messages[0]?.body, streamed)
 })
 
+test('unexecuted specialist narration is corrected into a real IPython call', async () => {
+  const item = work('weekly-plan-tool-use', 'weekly-plan-message')
+  const host = new MemoryHostAdapter()
+  host.contexts.set(item.id, context(item, '帮我重新制定本周高数复习计划'))
+  const model = new ScriptedModelDriver([
+    {
+      output: [{ role: 'assistant', content: '我将即刻启动 Sage、Trace 和 Scout，并发起专项任务。\n\nInitiating specialized tasks:' }],
+      text: '我将即刻启动 Sage、Trace 和 Scout，并发起专项任务。\n\nInitiating specialized tasks:',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    },
+    {
+      output: [{ type: 'function_call', callId: 'learning-current', name: 'ipython', arguments: '{"code":"state = loop.learning.current()\\nstate"}' }],
+      text: '', usage: { inputTokens: 1, outputTokens: 1 },
+    },
+    {
+      output: [{ role: 'assistant', content: '已根据真实学习状态制定本周计划。' }],
+      text: '已根据真实学习状态制定本周计划。', usage: { inputTokens: 1, outputTokens: 1 },
+    },
+  ])
+  const kernel = new StatefulKernel()
+
+  await new AgentOSRuntime(host, model, kernel, { heartbeatMs: 60_000 }).runWork(item)
+
+  assert.deepEqual(kernel.cells, ['state = loop.learning.current()\nstate'])
+  assert.doesNotMatch(JSON.stringify(host.events.filter((event) => event.kind === 'model.delta')), /Initiating specialized tasks|即刻启动/)
+  assert.equal(host.messages[0]?.body, '已根据真实学习状态制定本周计划。')
+})
+
 test('knowledge evidence uses one exact streamed and durable confidence-link protocol', async () => {
   const item = work('knowledge-turn', 'knowledge-message')
   const host = new MemoryHostAdapter()
