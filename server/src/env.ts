@@ -6,6 +6,7 @@
  *  environment win over those in `.env` (dotenv default), so deployment
  *  doesn't need a file. */
 import 'dotenv/config'
+import { createHmac } from 'node:crypto'
 
 function required(name: string): string {
   const v = process.env[name]
@@ -25,6 +26,16 @@ function integerAtLeast(name: string, fallback: number, minimum: number): number
   }
   return value
 }
+function wukongUserTokenSecret(): string {
+  const configured = process.env.WUKONG_USER_TOKEN_SECRET?.trim()
+  if (configured) return configured
+  const webhookSecret = process.env.WUKONG_WEBHOOK_SECRET?.trim()
+  if (!webhookSecret) return required('WUKONG_USER_TOKEN_SECRET')
+  console.warn('[env] WUKONG_USER_TOKEN_SECRET not provided; deriving it from WUKONG_WEBHOOK_SECRET')
+  return createHmac('sha256', webhookSecret)
+    .update('lingxiloop:wukong-user-token:v1')
+    .digest('base64url')
+}
 const DEFAULT_MODEL = process.env.OPENAI_MODEL?.trim() || 'gpt-5-mini'
 export const env = {
   PORT: Number(process.env.PORT ?? 5181),
@@ -35,7 +46,7 @@ export const env = {
   PRESENTATION_HTML_ENABLED: process.env.PRESENTATION_HTML_ENABLED?.trim().toLowerCase() === 'true',
   AGENT_OS_APPROVAL_TTL_MS: integerAtLeast('AGENT_OS_APPROVAL_TTL_MS', 24 * 60 * 60_000, 60_000),
   DATABASE_POOL_MAX: integerAtLeast('DATABASE_POOL_MAX', 20, 1),
-  WUKONG_USER_TOKEN_SECRET: required('WUKONG_USER_TOKEN_SECRET'),
+  WUKONG_USER_TOKEN_SECRET: wukongUserTokenSecret(),
   DATABASE_URL: required('DATABASE_URL'),
   REDIS_URL: required('REDIS_URL'),
   GATEWAY_HMAC_SECRET: process.env.LINGXILOOP_GATEWAY_HMAC_SECRET

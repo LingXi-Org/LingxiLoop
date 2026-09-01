@@ -7,7 +7,8 @@ x-logging: &logging
     max-file: "3"
 
 x-runtime: &runtime
-  image: ${LINGXILOOP_SERVER_IMAGE:-accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:mvp}
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:mvp
+  pull_policy: always
   restart: unless-stopped
   environment: &runtime-environment
     NODE_ENV: production
@@ -24,7 +25,6 @@ x-runtime: &runtime
     WUKONG_WS_URL: ${WUKONG_WS_PUBLIC_URL:?WUKONG_WS_PUBLIC_URL is required}
     WUKONG_API_TOKEN: ${WUKONG_API_TOKEN:?WUKONG_API_TOKEN is required}
     WUKONG_WEBHOOK_SECRET: ${WUKONG_WEBHOOK_SECRET:?WUKONG_WEBHOOK_SECRET is required}
-    WUKONG_USER_TOKEN_SECRET: ${WUKONG_USER_TOKEN_SECRET:?WUKONG_USER_TOKEN_SECRET is required}
     OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
     OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
     OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}

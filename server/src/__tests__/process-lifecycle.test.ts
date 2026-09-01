@@ -115,6 +115,8 @@ test('OpenShip workers inherit the complete runtime environment', async () => {
     new URL('../../../deploy/openship/app.yml', import.meta.url),
     'utf8',
   )
-  assert.match(compose, /WUKONG_USER_TOKEN_SECRET: \$\{WUKONG_USER_TOKEN_SECRET:\?/)
+  assert.match(compose, /WUKONG_WEBHOOK_SECRET: \$\{WUKONG_WEBHOOK_SECRET:\?/)
+  assert.doesNotMatch(compose, /WUKONG_USER_TOKEN_SECRET/)
+  assert.match(compose, /pull_policy: always/)
   assert.doesNotMatch(compose, /environment:\s*\n\s+<<: \*runtime-environment/)
 })
