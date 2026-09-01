@@ -79,8 +79,8 @@ The app automatically uses
 `accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:mvp`; its version and
 commit metadata come from the image built by CI. Set `LINGXILOOP_SERVER_IMAGE`
 only to override it with an immutable digest. Agent OS and Open Notebook use
-their accelerated CI `mvp` images by default; set `AGENT_OS_IMAGE` or
-`OPEN_NOTEBOOK_IMAGE` only to override them with immutable digests. WuKongIM automatically uses
+their accelerated CI `mvp` images directly so OpenShip can detect them without
+environment-variable interpolation. WuKongIM automatically uses
 `accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:mvp`; set
 `WUKONGIM_IMAGE` only when overriding it with an immutable digest. Copy the
 remaining secrets and product variables from the production environment; the
