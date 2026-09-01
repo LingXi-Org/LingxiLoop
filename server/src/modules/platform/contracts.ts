@@ -1,9 +1,10 @@
 import { z } from 'zod'
 
-export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+export const MAX_UPLOAD_BYTES = 200 * 1024 * 1024
 
 export const presignUploadRequestSchema = z.object({
-  name: z.string().trim().min(1).max(200),
+  name: z.string().trim().min(1).max(200)
+    .refine((name) => !/[\\/\u0000-\u001f\u007f]/.test(name), 'invalid file name'),
   mime: z.string().trim().min(1).transform((value) => value.toLowerCase()),
   size: z.number().finite().positive().max(MAX_UPLOAD_BYTES),
 }).strict()

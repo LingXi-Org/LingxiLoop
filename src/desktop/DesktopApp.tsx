@@ -15,6 +15,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { CanvasView } from '@/features/canvas/components/CanvasView'
 import { ConversationsPane, SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
 import { useConversations } from '@/features/conversations/store'
@@ -246,6 +247,7 @@ export function DesktopApp() {
 
       <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       <SettingsDialog />
+      <SourceDetailOverlay />
     </div>
   )
 }

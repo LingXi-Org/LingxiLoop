@@ -19,13 +19,18 @@ export const createSourceRequestSchema = z.discriminatedUnion('kind', [
 
 export const presignSourceRequestSchema = z.object({
   idempotencyKey: z.string().trim().min(8).max(200),
-  name: z.string().trim().min(1).max(200),
+  name: z.string().trim().min(1).max(200)
+    .refine((name) => !/[\\/\u0000-\u001f\u007f]/.test(name), 'invalid file name'),
   mime: z.enum([
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'text/plain', 'text/markdown', 'text/csv', 'application/json',
   ]),
   size: z.coerce.number().int().positive(),
+}).strict()
+
+export const updateSourceRequestSchema = z.object({
+  title: z.string().trim().min(1).max(200),
 }).strict()
 
 export const sourceSelectionRequestSchema = z.object({
@@ -40,6 +45,7 @@ export const moveConversationRequestSchema = z.object({
 export type ProjectPatch = z.infer<typeof updateProjectRequestSchema>
 export type CreateSourceInput = z.infer<typeof createSourceRequestSchema>
 export type PresignSourceInput = z.infer<typeof presignSourceRequestSchema>
+export type UpdateSourceInput = z.infer<typeof updateSourceRequestSchema>
 export type KnowledgeVisibilityScope = 'PRIVATE' | 'PROJECT'
 export type KnowledgeCreatedVia = 'USER' | 'AGENT'
 

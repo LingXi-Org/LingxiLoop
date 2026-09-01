@@ -79,9 +79,9 @@ if (!/"teacher"/.test(kernel) || !/allowedNamespaces/.test(kernel)
   || !/namespace === 'teacher'/.test(actions) || !/teacher: 'teacher_admin'/.test(hostActionApplication)) {
   failures.push('Pulse must be capability-gated through the loop.teacher Host Bridge namespace')
 }
-if (!runtime.includes("allowedNamespaces: ['teacher', 'turn']")
-  || !runtime.includes('teacherAgent\n        ?') || !runtime.includes('teacherContextContract')) {
-  failures.push('Pulse IPython must expose only teacher/turn and use a dedicated transient contract')
+if (!runtime.includes("return { allowedNamespaces: ['teacher'] }")
+  || !/teacherAgent\s*\?/.test(runtime) || !runtime.includes('teacherContextContract')) {
+  failures.push('Pulse IPython must expose only teacher and use a dedicated transient contract')
 }
 if (!teacherAgent.includes("PULSE_CAPABILITIES = ['teacher_admin']")
   || !teacherProvisioningRepository.includes("JSON.stringify(['ipython'])")

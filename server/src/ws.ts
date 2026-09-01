@@ -1,27 +1,36 @@
-import { WebSocketServer, type WebSocket } from 'ws'
+import { randomUUID } from 'node:crypto'
 import type { Server } from 'node:http'
-import {
-  sub,
-  CH_STATUS,
-  CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
-  CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
-  CH_IM_READ_RECEIPTS,
-} from './redis.js'
-import { env } from './env.js'
-import { consumeWsTicket } from './modules/identity/public.js'
-import { participantPresenceApplication } from './modules/agents/index.js'
+import { type WebSocket, WebSocketServer } from 'ws'
 import { pool } from './db/pool.js'
+import { env } from './env.js'
+import { permissionService } from './modules/access/public.js'
+import { participantPresenceApplication } from './modules/agents/index.js'
 import {
-  subscribe as docSubscribe,
-  unsubscribe as docUnsubscribe,
+  type DocSubscriber,
   applyLocalUpdate as docApplyLocalUpdate,
   broadcastAwareness as docBroadcastAwareness,
+  subscribe as docSubscribe,
+  unsubscribe as docUnsubscribe,
   notifyDocumentMention,
   projectDocumentIds,
-  type DocSubscriber,
 } from './modules/documents/public.js'
-import { randomUUID } from 'node:crypto'
-import { permissionService } from './modules/access/public.js'
+import { consumeWsTicket } from './modules/identity/public.js'
+import {
+  CH_AGENT_ACTIVITY,
+  CH_ASSISTANT_STREAM,
+  CH_CALENDAR_EVENTS,
+  CH_CALENDAR_REMINDER,
+  CH_CANVAS,
+  CH_CONVENE,
+  CH_CONVO_UPDATED,
+  CH_DOC_ACCESS_REVOKED,
+  CH_DOC_MENTION,
+  CH_DOCS,
+  CH_GROUP_PULLED,
+  CH_IM_READ_RECEIPTS,
+  CH_STATUS,
+  sub,
+} from './redis.js'
 
 interface AuthedSocket {
   ws: WebSocket
@@ -368,6 +377,7 @@ export function attachWebSocket(httpServer: Server) {
   // this list — the room manager handles them, since recipients need to
   // be filtered by doc-subscription, not just company.
   sub.subscribe(
+    CH_ASSISTANT_STREAM,
     CH_STATUS,
     CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
     CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,

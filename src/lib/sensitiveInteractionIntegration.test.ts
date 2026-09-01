@@ -52,6 +52,7 @@ test('production code never uses native alert, confirm, or prompt', () => {
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
     '../features/knowledge/components/ProjectSourceLibrary.tsx',
+    '../features/knowledge/components/PersonalSourceDrive.tsx',
     '../features/calendar/components/CalendarView.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
     '../features/settings/DataAccountSettingsPanel.tsx',
@@ -92,6 +93,9 @@ test('dashboard role changes and destructive actions confirm before mutation and
   assert.match(read('../desktop/WorkspaceRail.tsx'), /toastAction\(learningApi\.createCourse/)
   assert.match(invitations, /confirmSensitiveAction\([\s\S]*?toastAction\(companiesApi\.revokeInvitation/)
   assert.match(invitations, /toastAction\(companiesApi\.createInvitation/)
+  const drive = read('../features/knowledge/components/PersonalSourceDrive.tsx')
+  assert.match(drive, /confirmSensitiveAction\([\s\S]*toastAction\(knowledgeApi\.archiveProject/)
+  assert.match(drive, /confirmSensitiveAction\([\s\S]*knowledgeApi\.archiveProject[\s\S]*knowledgeApi\.deleteProject[\s\S]*toastAction\(deletion/)
 })
 
 test('settings confirms account deletion before the API call, Toasts the lifecycle, then clears auth', () => {
@@ -100,6 +104,15 @@ test('settings confirms account deletion before the API call, Toasts the lifecyc
     settings,
     /const confirmation = await promptSensitiveAction\([\s\S]*?if \(confirmation === null\) return[\s\S]*?confirmation !== ACCOUNT_DELETE_CONFIRMATION[\s\S]*?await toastAction\(authApi\.deleteAccount\(\)[\s\S]*?useAuth\.getState\(\)\.clear\(\)/,
   )
+})
+
+test('platform administration routes sensitive commands through the shared dialog and Toast lifecycle', () => {
+  const admin = read('../../admin/src/pages.tsx')
+  assert.match(admin, /promptSensitiveAction\(/)
+  assert.match(admin, /if \(reason === null\) return/)
+  assert.match(admin, /disabled=\{pending\}/)
+  assert.match(admin, /await toastAction\(adminFetch/)
+  assert.doesNotMatch(admin, /\b(?:window\.)?(?:alert|confirm|prompt)\s*\(/)
 })
 
 test('calendar editing uses the controlled Base UI Dialog without a handwritten modal shell', () => {

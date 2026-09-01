@@ -78,6 +78,28 @@ test('structured kinds become Tool UI calls instead of view-level kind branches'
   }
 })
 
+test('questionnaires preserve choices and freeform inputs for the question card', () => {
+  const message = convertEnvelope(envelope('questionnaire', {
+    title: '复习计划',
+    items: [{
+      name: 'time', prompt: '每天多久？', required: true,
+      choices: [{ value: '30', label: '30 分钟', disabled: true }],
+      input: { label: '其他时长', placeholder: '例如 45 分钟' },
+    }],
+  }), { participants, meId: 'me' })
+  const part = message.content.find((item) => item.type === 'tool-call')
+  assert.deepEqual(part?.type === 'tool-call' ? part.args : null, {
+    id: 'questionnaire-questionnaire-server',
+    title: '复习计划',
+    items: [{
+      name: 'time', prompt: '每天多久？', description: '', required: true, multiple: false,
+      choices: [{ value: '30', label: '30 分钟', description: '', disabled: true }],
+      input: { label: '其他时长', placeholder: '例如 45 分钟' },
+    }],
+    submitLabel: '提交',
+  })
+})
+
 test('lecture deck artifacts use the dedicated presentation card renderer', () => {
   const message = convertEnvelope(envelope('artifact', {
     artifactId: 'presentation-1',
@@ -152,4 +174,40 @@ test('self-authored structured messages keep canonical knowledge citations in me
   assert.deepEqual(getLingxiMessageMetadata(message).citations, [{
     sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1',
   }])
+})
+
+test('agent text restores knowledge citations as the native cite_claims tool result', () => {
+  const input = envelope('text', {
+    citations: [{ sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1' }],
+    confidenceClaims: [{
+      id: 'S1', text: '', confidence: 'grounded', basis: 'Evidence · Quoted text',
+      sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0,
+    }],
+  }, { fromUid: 'agent' })
+  input.payload.refs = { runId: 'run-1' }
+  input.payload.body = '[hello](#cite-S1)'
+  const message = convertEnvelope(input, { participants, meId: 'me' })
+  assert.deepEqual(message.content, [
+    {
+      type: 'tool-call',
+      toolCallId: 'cite-claims:text-server',
+      toolName: 'cite_claims',
+      args: {},
+      argsText: '{}',
+      result: { claims: [{
+        id: 'S1', text: '', confidence: 'grounded', basis: 'Evidence · Quoted text',
+        sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0,
+      }] },
+    },
+    { type: 'text', text: '[hello](#cite-S1)' },
+  ])
+})
+
+test('agent text rejects retired markers instead of rebuilding confidence from citations', () => {
+  const input = envelope('text', {
+    citations: [{ sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1' }],
+  }, { fromUid: 'agent' })
+  input.payload.refs = { runId: 'run-1' }
+  input.payload.body = 'hello [S1]'
+  assert.throws(() => convertEnvelope(input, { participants, meId: 'me' }), /retired bare citation marker/)
 })

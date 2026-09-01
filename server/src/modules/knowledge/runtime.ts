@@ -43,6 +43,7 @@ import {
   validateKnowledgeUrl,
 } from './policy.js'
 import {
+  fuseKnowledgeSearchHits,
   OpenNotebookError,
   type OpenNotebookSearchHit,
   type OpenNotebookSource,
@@ -431,7 +432,7 @@ function hitExcerpt(hit: OpenNotebookSearchHit): string {
 }
 
 export async function retrieveKnowledge(args: {
-  companyId: string; conversationId: string; authorizationUserId: string; query: string; limit?: number
+  companyId: string; conversationId: string; authorizationUserId: string; query: string; contextQuery?: string; limit?: number
 }): Promise<KnowledgeCitation[]> {
   const authorizationUserId = requireAuthorizationUserId(args.authorizationUserId)
   if (!openNotebookEnabled() || !args.query.trim()) return []
@@ -460,13 +461,21 @@ export async function retrieveKnowledge(args: {
   if (!externalIds.length) return []
   inc('knowledge.retrieval.queries')
   const searchStartedAt = Date.now()
-  let hits: OpenNotebookSearchHit[]
+  let rankedHits: OpenNotebookSearchHit[]
   try {
-    hits = await openNotebookClient.search({
-      notebookId, sourceIds: externalIds, query: args.query,
-      limit: args.limit ?? 8, type: 'vector', minimumScore: Number(process.env.OPEN_NOTEBOOK_MINIMUM_SCORE ?? 0.2),
-      companyId: args.companyId,
-    })
+    const limit = Math.max(1, Math.min(8, args.limit ?? 8))
+    const [textHits, vectorHits] = await Promise.all([
+      openNotebookClient.search({
+        notebookId, sourceIds: externalIds, query: args.query,
+        limit, type: 'text', minimumScore: 0, companyId: args.companyId,
+      }),
+      openNotebookClient.search({
+        notebookId, sourceIds: externalIds, query: args.contextQuery?.trim() || args.query,
+        limit, type: 'vector', minimumScore: Number(process.env.OPEN_NOTEBOOK_MINIMUM_SCORE ?? 0.2),
+        companyId: args.companyId,
+      }),
+    ])
+    rankedHits = fuseKnowledgeSearchHits([textHits, vectorHits], limit)
   } catch (error) {
     inc('knowledge.retrieval.errors')
     throw error
@@ -474,16 +483,16 @@ export async function retrieveKnowledge(args: {
     inc('knowledge.retrieval.latency_ms', undefined, Date.now() - searchStartedAt)
   }
   const byExternal = new Map(sources.map((source) => [source.externalSourceId, source]))
-  const citations = hits.flatMap((hit, index) => {
+  const citations = rankedHits.flatMap((hit) => {
     const externalId = String(hit.parent_id ?? hit.id ?? '')
     const source = byExternal.get(externalId)
     const excerpt = hitExcerpt(hit)
     if (!source || !excerpt) return []
     return [{
-      sourceId: source.id, sourceTitle: source.title, chunkId: String(hit.id ?? `${externalId}:${index}`), excerpt,
-      ...(source.originalUrl ? { sourceUrl: source.originalUrl } : {}), position: index, marker: `S${index + 1}`,
+      sourceId: source.id, sourceTitle: source.title, chunkId: String(hit.id ?? externalId), excerpt,
+      ...(source.originalUrl ? { sourceUrl: source.originalUrl } : {}),
     }]
-  })
+  }).slice(0, args.limit ?? 8).map((citation, index) => ({ ...citation, position: index, marker: `S${index + 1}` }))
   if (citations.length) inc('knowledge.retrieval.hits', undefined, citations.length)
   else inc('knowledge.retrieval.miss')
   return citations

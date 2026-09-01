@@ -23,7 +23,6 @@ const WEBHOOK_SECRET = 'agent-os-reliability-webhook-secret'
 let server: Server
 let baseUrl = ''
 const persistedClientMessages = new Set<string>()
-const emittedEvents: Array<Parameters<WukongClient['emitEvent']>[0]> = []
 let sendAttempts = 0
 
 class IdempotentWukong extends WukongClient {
@@ -31,10 +30,6 @@ class IdempotentWukong extends WukongClient {
     sendAttempts += 1
     persistedClientMessages.add(payload.clientMsgNo)
     return { messageId: `wk-${payload.clientMsgNo}`, messageSeq: [...persistedClientMessages].indexOf(payload.clientMsgNo) + 1 }
-  }
-
-  override async emitEvent(args: Parameters<WukongClient['emitEvent']>[0]): Promise<void> {
-    emittedEvents.push(structuredClone(args))
   }
 
   override async syncMessages(): Promise<never[]> {
@@ -66,7 +61,6 @@ before(async () => {
 beforeEach(async () => {
   await resetAllTables()
   persistedClientMessages.clear()
-  emittedEvents.length = 0
   sendAttempts = 0
   await pool.query(
     `INSERT INTO users (id,email,display_name) VALUES ($1,'learner@reliability.test','Learner')`,
@@ -149,18 +143,11 @@ test('[integration] failed webhook dispatch rolls back its receipt and the same 
   assert.equal(retried.status, 200)
   assert.equal((await pool.query(`SELECT 1 FROM wukong_webhook_receipts WHERE event_id=$1 AND processed_at IS NOT NULL`, [eventId])).rowCount, 1)
   assert.equal((await pool.query(`SELECT 1 FROM agent_work_items WHERE trigger_client_msg_no=$1`, [`msg-${eventId}`])).rowCount, 1)
-  assert.equal(emittedEvents.length, 1)
-  assert.equal(emittedEvents[0]?.eventType, 'stream.open')
-  assert.equal(emittedEvents[0]?.fromUid, AGENT)
-  assert.match(emittedEvents[0]?.clientMsgNo ?? '', /^preview-/)
-  assert.deepEqual(emittedEvents[0]?.data, { kind: 'text', text: '', phase: 'thinking', queued: true, streamSeq: 0 })
-
   const duplicate = await postWebhook(body)
   assert.equal(duplicate.status, 200)
-  assert.equal(emittedEvents.length, 1)
 })
 
-test('[integration] @all queues six agents and opens one unique thinking preview for each', async () => {
+test('[integration] @all queues six agents', async () => {
   const agentIds = [AGENT, ...Array.from({ length: 5 }, (_, index) => `agent-agent-os-reliability-${index + 2}`)]
   for (const [index, agentId] of agentIds.slice(1).entries()) {
     await pool.query(
@@ -195,12 +182,6 @@ test('[integration] @all queues six agents and opens one unique thinking preview
   const response = await postWebhook(body)
   assert.equal(response.status, 200)
   assert.equal((await pool.query(`SELECT 1 FROM agent_work_items WHERE trigger_client_msg_no=$1`, [`msg-${eventId}`])).rowCount, 6)
-  assert.equal(emittedEvents.length, 6)
-  assert.equal(new Set(emittedEvents.map((event) => event.clientMsgNo)).size, 6)
-  assert.deepEqual(new Set(emittedEvents.map((event) => event.fromUid)), new Set(agentIds))
-  assert.equal(emittedEvents.every((event) => event.eventType === 'stream.open'), true)
-  assert.equal(emittedEvents.every((event) => (event.data as { phase?: string }).phase === 'thinking'), true)
-  assert.equal(emittedEvents.every((event) => (event.data as { streamSeq?: number }).streamSeq === 0), true)
 })
 
 test('[integration] durable lanes and watchdog preempt lower-lane work without losing it', async () => {
@@ -247,7 +228,13 @@ test('[integration] session persistence rejects a worker after its fence is supe
     method: 'PUT', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
     body: JSON.stringify({ workId, fence: 1, leaseToken, session }),
   })
-  assert.equal((await save()).status, 200)
+  const firstSave = await save()
+  assert.equal(firstSave.status, 200)
+  session.revision = Number((await firstSave.json() as { revision: number }).revision)
+  session.history.push({ role: 'assistant', content: 'saved by the current worker' })
+  const secondSave = await save()
+  assert.equal(secondSave.status, 200)
+  session.revision = Number((await secondSave.json() as { revision: number }).revision)
   await pool.query(`UPDATE agent_work_items SET fence=2,status='queued',lease_token_hash=NULL WHERE id=$1`, [workId])
   await pool.query(`DELETE FROM agent_os_session_leases WHERE work_id=$1`, [workId])
   session.history.push({ role: 'assistant', content: 'late zombie write' })

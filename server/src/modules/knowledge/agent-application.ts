@@ -122,7 +122,7 @@ export function createKnowledgeAgentApplication(db: Queryable, infrastructure: K
 
   function addKnowledgeText(work: AgentWorkItem, input: { title: string; text: string; idempotencyKey: string }) {
     if (!input.text.trim()) throw new Error('text is required')
-    if (Buffer.byteLength(input.text) > MAX_SOURCE_BYTES) throw new Error('source exceeds 25 MB')
+    if (Buffer.byteLength(input.text) > MAX_SOURCE_BYTES) throw new Error('source exceeds 200 MB')
     return createAgentSource(work, { kind: 'text', title: input.title, text: input.text, idempotencyKey: input.idempotencyKey })
   }
 

@@ -268,7 +268,6 @@ export function installFakeWukong(): void {
     }
     override async upsertChannel(): Promise<void> {}
     override async sendMessage() { sequence += 1; return { messageId: `wk-test-${sequence}`, messageSeq: sequence } }
-    override async emitEvent(): Promise<void> {}
     override async listConversations() { return [] }
     override async clearUnread(): Promise<void> {}
     override async setUnread(): Promise<void> {}

@@ -145,6 +145,7 @@ export interface AnswerExpectations {
 
 export interface RagExpectations {
   requiredSourceIds?: string[]
+  requiredClaimCitations?: Array<{ claim: string; sourceId: string }>
   requireCitations?: boolean
   minRetrievalRecall?: number
   minCitationPrecision?: number

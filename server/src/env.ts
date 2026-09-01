@@ -156,6 +156,11 @@ export const env = {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
+  /** Verified LingxiIdentity emails allowed to use the platform operations API. */
+  PLATFORM_ADMIN_EMAILS: (process.env.LINGXILOOP_PLATFORM_ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
   /** Public base URL used to build company invitation links. */
   INVITE_BASE_URL: required('LINGXILOOP_INVITE_BASE_URL'),
   /**

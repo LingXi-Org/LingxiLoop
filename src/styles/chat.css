@@ -135,26 +135,79 @@
 }
 .message-bubble-agent { background: var(--bubble-agent); color: var(--ink); }
 
-@keyframes attachment-viewer-in { from { opacity: 0; transform: translateY(-8px) scale(.985); } to { opacity: 1; transform: none; } }
+/* Conversation-only Markdown skin. Streamdown owns parsing, streaming,
+   incomplete Markdown recovery, code tools, tables, math and diagrams. */
+.im-bubble-markdown {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.65rem;
+  color: inherit;
+  font: inherit;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.im-bubble-markdown > * { margin-block: 0 !important; }
+.im-bubble-markdown :where(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.im-bubble-markdown :where(h1) { font-size: 1.3em; }
+.im-bubble-markdown :where(h2) { font-size: 1.18em; }
+.im-bubble-markdown :where(h3, h4, h5, h6) { font-size: 1.05em; }
+.im-bubble-markdown :where(p, ul, ol, blockquote, pre, table) { margin-block: 0; }
+.im-bubble-markdown :where(ul, ol) { padding-inline-start: 1.35em; }
+.im-bubble-markdown :where(li + li) { margin-block-start: 0.3em; }
+.im-bubble-markdown :where(a) {
+  color: var(--primary);
+  font-weight: 550;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--primary) 40%, transparent);
+  text-underline-offset: 0.16em;
+}
+.im-bubble-markdown :where(strong) { font-weight: 650; }
+.im-bubble-markdown :where(blockquote) {
+  border-inline-start: 2px solid color-mix(in oklch, var(--primary) 42%, var(--border));
+  padding-inline-start: 0.8em;
+  color: var(--muted-foreground);
+  font-style: normal;
+}
+.im-bubble-markdown :where(:not(pre) > code) {
+  border: 1px solid color-mix(in oklch, var(--border) 72%, transparent);
+  border-radius: 0.35em;
+  background: color-mix(in oklch, var(--background) 64%, transparent);
+  padding: 0.1em 0.32em;
+  font-size: 0.88em;
+}
+.im-bubble-markdown [data-streamdown='code-block'],
+.im-bubble-markdown [data-streamdown='mermaid-block'] {
+  margin-block: 0;
+  border-color: color-mix(in oklch, var(--border) 78%, transparent);
+  background: color-mix(in oklch, var(--background) 88%, var(--muted));
+  box-shadow: none;
+}
+.im-bubble-markdown :where(table) { font-size: 0.92em; }
+.im-bubble-markdown :where(th, td) { border-color: var(--border); }
+.im-bubble-markdown-agent { gap: 4px; }
+.im-bubble-markdown-agent > * {
+  border-radius: 6px 18px 18px 6px;
+  background: var(--bubble-agent);
+  padding: 8px 14px;
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--border) 72%, transparent);
+}
+[data-message-group-position='single'] .im-bubble-markdown-agent > :first-child,
+[data-message-group-position='start'] .im-bubble-markdown-agent > :first-child { border-radius: 18px 18px 18px 6px; }
+[data-message-group-position='single'] .im-bubble-markdown-agent > :last-child,
+[data-message-group-position='end'] .im-bubble-markdown-agent > :last-child { border-radius: 6px 18px 18px 18px; }
+[data-message-group-position='single'] .im-bubble-markdown-agent > :only-child { border-radius: 18px; }
+
 @media (prefers-reduced-motion: reduce) {
   .desktop-panel-resize-handle > div { transition: none; }
-  .attachment-viewer { animation: none; }
 }
 
-.attachment-viewer-backdrop {
-  position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 18px;
-  background: color-mix(in srgb, #000 72%, transparent); backdrop-filter: blur(10px);
-}
-.attachment-viewer-shell {
-  display: flex; width: min(1080px, 100%); height: min(860px, calc(100vh - 36px)); min-height: 0; flex-direction: column;
-  overflow: hidden; border: 1px solid var(--hairline); border-radius: 18px; background: var(--panel); color: var(--ink-900);
-  box-shadow: 0 34px 100px -36px rgba(0, 0, 0, .8); animation: attachment-viewer-in 170ms cubic-bezier(.22, 1, .36, 1) both;
-}
-.attachment-viewer-shell > header { display: flex; min-height: 56px; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--hairline); padding: 9px 12px 9px 16px; }
-.attachment-viewer-shell > header strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
-.attachment-viewer-actions { display: flex; align-items: center; gap: 6px; }
-.attachment-viewer-actions a, .attachment-viewer-actions button, .pdf-preview-toolbar button, .attachment-preview-state a, .attachment-preview-state button { border-radius: 9px; background: var(--raised); padding: 7px 10px; color: var(--ink-600); font-size: 11px; text-decoration: none; }
-.attachment-viewer-actions button { display: grid; width: 34px; height: 34px; place-items: center; padding: 0; font-size: 21px; }
 .attachment-viewer-body { min-height: 0; flex: 1; overflow: auto; background: var(--im-chat-surface); }
 .pdf-preview-toolbar { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; border-bottom: 1px solid var(--hairline); background: var(--panel); padding: 7px 14px; color: var(--ink-500); font-size: 11px; }
 .pdf-preview-body { padding: 24px; }
@@ -181,15 +234,10 @@
 :root[data-theme='dark'] .json-attachment-preview { --json-key: #82b9f2; --json-string: #73d3aa; --json-number: #edb869; --json-boolean: #b9a1f4; --json-null: #b2a0ac; }
 .video-preview-body { display: grid; place-items: center; padding: 22px; background: #080808; }
 .video-preview-body video { max-width: 100%; max-height: 100%; border-radius: 12px; }
-.attachment-preview-state { display: flex; min-height: 220px; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 28px; color: var(--ink-400); text-align: center; font-size: 12px; }
-.attachment-preview-state strong { color: var(--ink-700); font-size: 14px; }
 @media (max-width: 767px) {
-  .attachment-viewer-backdrop { padding: 0; }
-  .attachment-viewer-shell { width: 100%; height: 100%; max-height: none; border: 0; border-radius: 0; }
   .pdf-preview-body { padding: 12px; }
   .pdf-preview-page { min-width: 100%; margin-bottom: 12px; }
 }
-@media (prefers-reduced-motion: reduce) { .attachment-viewer-shell { animation: none; } }
 
 .lingxiloop-code { background: var(--code-bg); }
 :root[data-theme='dark'] .lingxiloop-code .hljs-string,

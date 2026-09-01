@@ -10,6 +10,7 @@ import {
   LeftToRightListBulletIcon,
   LeftToRightListNumberIcon,
   Link01Icon,
+  Loading03Icon,
   QuoteDownIcon,
   RedoIcon,
   SourceCodeIcon,
@@ -19,7 +20,6 @@ import {
   UndoIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { userFacingError } from '@/lib/userFacingError'
 import Collaboration from '@tiptap/extension-collaboration'
 // TipTap v3 collaboration uses the Caret extension with @tiptap/y-tiptap.
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
@@ -45,6 +45,7 @@ import { uploadsApi } from '@/features/platform/api'
 import { notifyAction, toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { buildMentionExtension } from '@/lib/mentionExtension'
+import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
 import { openDocument, type YDocSession } from '@/lib/yjsClient'
 import { useAuth } from '@/stores/auth'
@@ -580,8 +581,9 @@ function ImageButton({ editor, disabled }: { editor: Editor; disabled: boolean }
             variant={editor.isActive('image') ? 'secondary' : 'ghost'}
             size="icon-sm"
             aria-label={uploading ? '正在上传图片' : '插入图像'}
+            aria-busy={uploading}
           >
-            <HugeiconsIcon icon={Image01Icon} strokeWidth={2} />
+            <HugeiconsIcon icon={uploading ? Loading03Icon : Image01Icon} className={uploading ? 'animate-spin' : undefined} strokeWidth={2} />
           </Button>
         </TooltipTrigger>
         <TooltipContent>{uploading ? '正在上传图片' : '插入图像；按住 Alt 可使用图片地址'}</TooltipContent>

@@ -1,7 +1,7 @@
 import { lookup } from 'node:dns/promises'
 import { isIP } from 'node:net'
 
-export const MAX_SOURCE_BYTES = 25 * 1024 * 1024
+export const MAX_SOURCE_BYTES = 200 * 1024 * 1024
 
 function blockedIp(raw: string): boolean {
   const ip = raw.toLowerCase().replace(/^::ffff:/, '')

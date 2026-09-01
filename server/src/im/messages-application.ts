@@ -105,12 +105,34 @@ export class ImMessagesApplication {
   }): Promise<ImMessageEnvelope[] | null> {
     const profile = await channelProfileForMember(this.infrastructure.db, input)
     if (!profile) return null
+    return this.historyFromProfile(input, profile, input.userId)
+  }
+
+  async historyForPlatformAdmin(input: {
+    companyId: string
+    channelId: string
+    limit: number
+    beforeSequence: number
+  }): Promise<ImMessageEnvelope[] | null> {
+    const profile = await channelProfileForCompany(this.infrastructure.db, input)
+    if (!profile) return null
+    const members = Array.isArray(profile.members)
+      ? profile.members.filter((member): member is string => typeof member === 'string')
+      : []
+    return this.historyFromProfile(input, profile, members[0] ?? '')
+  }
+
+  private async historyFromProfile(
+    input: { companyId: string; channelId: string; limit: number; beforeSequence: number },
+    profile: Record<string, unknown>,
+    syncUserId: string,
+  ): Promise<ImMessageEnvelope[]> {
     const channelType: 1 | 2 = Number(profile.channelType) === 1 ? 1 : 2
     const messages = await this.infrastructure.syncMessages(
       input.channelId,
       channelType,
       input.limit,
-      input.userId,
+      syncUserId,
       input.beforeSequence,
       {
         channelId: input.channelId,

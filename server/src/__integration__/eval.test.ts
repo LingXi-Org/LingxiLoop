@@ -20,7 +20,7 @@ beforeEach(async () => {
   await pool.query(
     `INSERT INTO agent_work_items
        (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,result_text,lease_started_at,finished_at)
-     VALUES($1,$2,$3,'channel-eval','message-eval','message','completed','Grounded answer [S1]',NOW()-INTERVAL '1 second',NOW())`,
+     VALUES($1,$2,$3,'channel-eval','message-eval','message','completed','[Grounded answer](#cite-S1)',NOW()-INTERVAL '1 second',NOW())`,
     [RUN, COMPANY, AGENT],
   )
   await pool.query(

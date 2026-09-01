@@ -101,6 +101,34 @@ function detail(value: unknown): string {
   return typeof row.detail === 'string' ? row.detail : typeof row.error === 'string' ? row.error : ''
 }
 
+export function fuseKnowledgeSearchHits(
+  rankings: readonly OpenNotebookSearchHit[][],
+  limit = 8,
+): OpenNotebookSearchHit[] {
+  const fused = new Map<string, { hit: OpenNotebookSearchHit; score: number; firstRank: number }>()
+  for (const hits of rankings) {
+    hits.forEach((hit, index) => {
+      const key = `${String(hit.parent_id ?? hit.id ?? '')}:${String(hit.id ?? index)}`
+      const current = fused.get(key)
+      const score = 1 / (60 + index + 1)
+      fused.set(key, current
+        ? { ...current, score: current.score + score }
+        : { hit, score, firstRank: index })
+    })
+  }
+  const sourceCounts = new Map<string, number>()
+  return [...fused.values()]
+    .sort((left, right) => right.score - left.score || left.firstRank - right.firstRank)
+    .flatMap(({ hit }) => {
+      const sourceId = String(hit.parent_id ?? hit.id ?? '')
+      const count = sourceCounts.get(sourceId) ?? 0
+      if (count >= 3) return []
+      sourceCounts.set(sourceId, count + 1)
+      return [hit]
+    })
+    .slice(0, Math.max(1, Math.min(8, limit)))
+}
+
 const UPLOAD_SUFFIX_BY_MIME: Readonly<Record<string, string>> = {
   'application/pdf': 'pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',

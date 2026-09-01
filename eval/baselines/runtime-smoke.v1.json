@@ -17,7 +17,7 @@
     },
     "caseScores": {
       "runtime-auto-grounding": 1,
-      "runtime-dynamic-rag": 1,
+      "runtime-hybrid-grounding": 1,
       "runtime-approval-boundary": 1,
       "runtime-pulse-approval-boundary": 1,
       "runtime-forbidden-inferred-percentage": 1,
@@ -38,7 +38,7 @@
   },
   "caseMinimums": {
     "runtime-auto-grounding": 1,
-    "runtime-dynamic-rag": 1,
+    "runtime-hybrid-grounding": 1,
     "runtime-approval-boundary": 1,
     "runtime-pulse-approval-boundary": 1,
     "runtime-forbidden-inferred-percentage": 1,

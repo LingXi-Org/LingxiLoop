@@ -1,7 +1,8 @@
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import { createHash, randomUUID } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import { createInterface, type Interface as ReadlineInterface } from 'node:readline'
 import type { AgentWorkItem, HostAction, HostActionResult, KernelExecution } from './types.js'
 
@@ -25,6 +26,12 @@ export interface KernelExecutor {
 
 export interface KernelExecutionOptions {
   allowedNamespaces?: readonly string[]
+  allowedMethods?: Readonly<Record<string, readonly string[]>>
+  onHostAction?: (event: {
+    stage: 'started' | 'completed'
+    action: HostAction
+    result?: HostActionResult
+  }) => Promise<void>
 }
 
 interface KernelMessage {
@@ -52,6 +59,7 @@ interface PendingExecution {
   work: AgentWorkItem
   runId: string
   cellId: string
+  options?: KernelExecutionOptions
   resolve(value: KernelExecution): void
   reject(error: Error): void
   timer: NodeJS.Timeout
@@ -98,8 +106,12 @@ class PersistentKernel {
       windowsHide: true,
     })
     this.process = child
+    child.stdin.on('error', (error) => this.failAll(error))
+    child.stdout.on('error', (error) => this.failAll(error))
+    child.stderr.on('error', (error) => this.failAll(error))
     this.lines = createInterface({ input: child.stdout })
     this.lines.on('line', (line) => this.onLine(line))
+    this.lines.on('error', (error) => this.failAll(error))
     let stderr = ''
     child.stderr.on('data', (chunk: Buffer) => { stderr = `${stderr}${chunk.toString('utf8')}`.slice(-4000) })
     child.once('error', (error) => this.failAll(error))
@@ -114,7 +126,10 @@ class PersistentKernel {
 
   private write(value: unknown): void {
     if (!this.process?.stdin.writable) throw new Error(`IPython kernel ${this.key} is not writable`)
-    this.process.stdin.write(`${JSON.stringify(value)}\n`)
+    // `python -I` ignores PYTHONIOENCODING, so keep the stdio protocol locale-independent.
+    const line = JSON.stringify(value).replace(/[\u007f-\uffff]/g, (character) =>
+      `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`)
+    this.process.stdin.write(`${line}\n`, 'ascii')
   }
 
   private onLine(line: string): void {
@@ -138,7 +153,7 @@ class PersistentKernel {
     if (message.approvalId) {
       pending.reject(new ApprovalPendingError(message.approvalId, pending.cellId))
     } else if (!message.ok) {
-      pending.reject(new Error(message.error || message.stderr || 'IPython execution failed'))
+      pending.reject(new KernelExecutionError(message.error || message.stderr || 'IPython execution failed', pending.cellId))
     } else {
       pending.resolve({
         executionId: message.id,
@@ -158,19 +173,22 @@ class PersistentKernel {
     const execution = pending ?? [...this.pending.values()][0]
     if (!execution || !message.requestId || !message.action || message.callIndex === undefined) return
     const idempotencyKey = `${execution.runId}:${execution.cellId}:${message.callIndex}`
+    const action: HostAction = {
+      runId: execution.runId,
+      cellId: execution.cellId,
+      callIndex: message.callIndex,
+      action: message.action,
+      args: message.args ?? {},
+      idempotencyKey,
+    }
     let result: HostActionResult
     try {
-      result = await this.bridge.execute(execution.work, {
-        runId: execution.runId,
-        cellId: execution.cellId,
-        callIndex: message.callIndex,
-        action: message.action,
-        args: message.args ?? {},
-        idempotencyKey,
-      })
+      await execution.options?.onHostAction?.({ stage: 'started', action })
+      result = await this.bridge.execute(execution.work, action)
     } catch (error) {
       result = { ok: false, error: error instanceof Error ? error.message : String(error) }
     }
+    await execution.options?.onHostAction?.({ stage: 'completed', action, result })
     this.write({ type: 'host_result', requestId: message.requestId, ...result })
   }
 
@@ -207,11 +225,19 @@ class PersistentKernel {
         signal?.addEventListener('abort', abort, { once: true })
         this.pending.set(executionId, {
           work, runId, cellId,
+          options,
           timer,
           resolve: (value) => { signal?.removeEventListener('abort', abort); resolveExecution(value) },
           reject: (error) => { signal?.removeEventListener('abort', abort); rejectExecution(error) },
         })
-        this.write({ type: 'execute', id: executionId, code, context: { runId, cellId, ...(options?.allowedNamespaces ? { allowedNamespaces: [...options.allowedNamespaces] } : {}) } })
+        this.write({
+          type: 'execute', id: executionId, code,
+          context: {
+            runId, cellId,
+            ...(options?.allowedNamespaces ? { allowedNamespaces: [...options.allowedNamespaces] } : {}),
+            ...(options?.allowedMethods ? { allowedMethods: options.allowedMethods } : {}),
+          },
+        })
       })
     })
     this.tail = operation.catch(() => undefined)
@@ -228,6 +254,9 @@ class PersistentKernel {
 export class ApprovalPendingError extends Error {
   constructor(readonly approvalId: string, readonly cellId: string) { super(`approval pending: ${approvalId}`) }
 }
+export class KernelExecutionError extends Error {
+  constructor(message: string, readonly cellId: string) { super(message) }
+}
 export class KernelTimeoutError extends Error {
   constructor(readonly timeoutMs: number, readonly cellId: string) { super(`IPython cell timed out after ${timeoutMs}ms`) }
 }
@@ -241,13 +270,15 @@ export class KernelManager implements KernelExecutor {
   private readonly sweepTimer: NodeJS.Timeout
 
   constructor(private readonly bridge: KernelHostBridge, options: KernelManagerOptions = {}) {
+    const localPython = resolve(process.platform === 'win32' ? '.venv/Scripts/python.exe' : '.venv/bin/python')
     this.options = {
-      pythonCommand: options.pythonCommand ?? process.env.AGENT_OS_PYTHON ?? 'python3',
+      pythonCommand: options.pythonCommand ?? process.env.AGENT_OS_PYTHON
+        ?? (existsSync(localPython) ? localPython : process.platform === 'win32' ? 'python' : 'python3'),
       runnerPath: resolve(options.runnerPath ?? 'server/agent-os/kernel_runner.py'),
       homesRoot: resolve(options.homesRoot ?? process.env.AGENT_OS_HOMES_ROOT ?? '.agent-os/homes'),
       idleMs: options.idleMs ?? 90 * 60_000,
       executionTimeoutMs: options.executionTimeoutMs ?? 120_000,
-      maxOutputChars: options.maxOutputChars ?? 64_000,
+      maxOutputChars: options.maxOutputChars ?? 8_000,
       allowNetwork: options.allowNetwork ?? false,
     }
     this.sweepTimer = setInterval(() => this.sweepIdle(), Math.min(60_000, this.options.idleMs))
@@ -270,7 +301,10 @@ export class KernelManager implements KernelExecutor {
       const safeCompany = this.homeSegment(work.companyId)
       const safeAgent = this.homeSegment(work.agentId)
       const safeSession = this.homeSegment(`${work.channelId}:${work.threadRootClientMsgNo ?? '-'}`)
-      kernel = new PersistentKernel(key, resolve(this.options.homesRoot, safeCompany, safeAgent, 'sessions', safeSession), this.bridge, this.options)
+      const home = process.platform === 'win32'
+        ? resolve(this.options.homesRoot, this.homeSegment(key))
+        : resolve(this.options.homesRoot, safeCompany, safeAgent, 'sessions', safeSession)
+      kernel = new PersistentKernel(key, home, this.bridge, this.options)
       this.kernels.set(key, kernel)
     }
     try {

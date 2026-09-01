@@ -422,9 +422,26 @@ def test_rag_upload_allowlist_excludes_removed_media_types() -> None:
 def test_file_limit_leaves_bounded_multipart_overhead() -> None:
     from api.rag_main import RAG_FILE_MAX_SIZE, RAG_REQUEST_MAX_SIZE
 
-    assert RAG_FILE_MAX_SIZE == 25 * 1024 * 1024
+    assert RAG_FILE_MAX_SIZE == 200 * 1024 * 1024
     assert RAG_REQUEST_MAX_SIZE > RAG_FILE_MAX_SIZE
     assert RAG_REQUEST_MAX_SIZE - RAG_FILE_MAX_SIZE <= 1024 * 1024
+
+
+def test_file_metadata_uses_the_shared_source_limit() -> None:
+    from api.rag_models import SourceJsonCreate
+    from open_notebook.rag.extraction import MAX_SOURCE_BYTES
+
+    payload = {
+        "type": "file",
+        "notebooks": ["notebook:1"],
+        "storage_key": "knowledge-sources/company/project/source.pdf",
+        "filename": "source.pdf",
+        "mime_type": "application/pdf",
+        "company_id": "company:1",
+    }
+    assert SourceJsonCreate(**payload, size_bytes=MAX_SOURCE_BYTES).size_bytes == MAX_SOURCE_BYTES
+    with pytest.raises(ValidationError):
+        SourceJsonCreate(**payload, size_bytes=MAX_SOURCE_BYTES + 1)
 
 
 def test_upload_mime_must_match_the_supported_extension() -> None:

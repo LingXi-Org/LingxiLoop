@@ -47,7 +47,9 @@ class RealtimeClient {
       try {
         const data = JSON.parse(event.data) as WsEvent
         this.listeners.forEach((listener) => { listener(data) })
-      } catch { /* Ignore malformed server frames. */ }
+      } catch (error) {
+        console.error('[realtime] rejected malformed server frame', error)
+      }
     }
     socket.onclose = () => {
       if (this.socket !== socket) return

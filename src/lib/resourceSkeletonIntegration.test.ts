@@ -39,6 +39,8 @@ test('global resource surfaces render Skeletons instead of plain initial loading
     '../features/learning/dashboard/TeacherLearnersSection.tsx',
     '../features/learning/dashboard/CourseMembersSection.tsx',
     '../features/learning/dashboard/CourseSettingsSection.tsx',
+    '../features/knowledge/components/PersonalSourceDrive.tsx',
+    '../features/knowledge/components/ProjectSourceLibrary.tsx',
     '../components/LinkPreview.tsx',
   ]
   for (const path of surfaces) {
@@ -64,16 +66,29 @@ test('global resource surfaces render Skeletons instead of plain initial loading
   assert.doesNotMatch(linkPreview, /@\/api\/core\/http/)
 })
 
+test('confidence citations open the shared source Drawer with an exact highlighted passage', () => {
+  const desktop = read('../desktop/DesktopApp.tsx')
+  const markdown = read('../components/assistant-ui/markdown-text.tsx')
+  const sources = read('../components/WorkspaceChrome.tsx')
+  const state = read('../features/knowledge/state.ts')
+  assert.match(desktop, /<SourceDetailOverlay \/>/)
+  assert.match(markdown, /openCitation\(evidence\[0\]!\)/)
+  assert.match(sources, /detailLoading && !selectedSource[\s\S]*ResourceSkeleton variant="detail"/)
+  assert.match(sources, /sourceText\.indexOf\(selectedCitation\.excerpt\)/)
+  assert.match(sources, /<mark ref=\{citationMark\}[\s\S]*bg-emerald-500\/20/)
+  assert.match(state, /selectedCitation: citation, detailLoading: !cached/)
+})
+
 test('repository skill requires Skeletons for all future asynchronous resources', () => {
   assert.match(resourceSkill, /name: lingxiloop-resource-loading/)
   assert.match(resourceSkill, /any LingxiLoop resource UI, page-like destination, or focused creation\/editing flow/)
-  assert.match(resourceSkill, /shared shadcn `Drawer`/)
-  assert.match(resourceSkill, /permanently limited to two columns/)
+  assert.match(resourceSkill, /established page, Drawer, or Dialog host/)
+  assert.match(resourceSkill, /Dashboard page for top-level browsing and management destinations/)
   assert.match(resourceSkill, /Never render developer-facing annotations/)
   assert.match(resourceSkill, /temporary debug copy as prohibited production UI/)
   assert.match(resourceSkill, /Creating a group chat is a required Dialog use case/)
-  assert.match(resourceSkill, /Do not turn every overlay into a Drawer/)
-  assert.match(resourceSkill, /Choose Drawer, Dialog, or Alert Dialog by intent/)
+  assert.match(resourceSkill, /Do not turn every destination or overlay into a Drawer/)
+  assert.match(resourceSkill, /Choose Page, Drawer, Dialog, or Alert Dialog by intent/)
   assert.match(resourceSkill, /Treat a resource loading state as part of the feature contract/)
   assert.match(resourceSkill, /Do not return `null`, plain “加载中…” text, a spinner alone/)
   assert.match(resourceSkill, /Web, Electron, peek\/sheet\/dialog/)

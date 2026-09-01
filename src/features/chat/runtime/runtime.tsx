@@ -135,6 +135,19 @@ export function useConversationThreadRuntime(
           : Array.isArray(result) ? result.map(String) : []
         if (values.length > 0) await chatTransport.votePoll(toolCallId.slice('poll:'.length), values)
       }
+      if (toolName === 'question-flow' && toolCallId.startsWith('questionnaire:') && result && typeof result === 'object') {
+        const answers = Object.entries(result).map(([name, answer]) => (
+          `${name}: ${Array.isArray(answer) ? answer.map(String).join(', ') : String(answer)}`
+        ))
+        if (answers.length > 0) {
+          await chatTransport.send(
+            conversationId,
+            `问答卡片回复：\n${answers.join('\n')}`,
+            null,
+            toolCallId.slice('questionnaire:'.length),
+          )
+        }
+      }
     },
     onRespondToToolApproval: async ({ approvalId, approved }) => {
       await chatTransport.resolveApproval(approvalId, approved ? 'approved' : 'denied')

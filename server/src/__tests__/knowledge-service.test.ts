@@ -9,13 +9,22 @@ import {
   openNotebookEnabled,
   validateKnowledgeUrl,
 } from '../modules/knowledge/policy.js'
-import { OpenNotebookClient } from '../modules/knowledge/provider.js'
+import { fuseKnowledgeSearchHits, OpenNotebookClient } from '../modules/knowledge/provider.js'
 import {
   findKnowledgeRetrievalProject,
   listKnowledgeRetrievalSources,
 } from '../modules/knowledge/retrieval-repository.js'
 
 const routerSource = readFileSync(new URL('../modules/knowledge/router.ts', import.meta.url), 'utf8')
+
+test('hybrid retrieval fuses duplicate ranks and caps each source at three chunks', () => {
+  const hit = (parent_id: string, id: string) => ({ parent_id, id, content: id })
+  const fused = fuseKnowledgeSearchHits([
+    [hit('source-a', 'a1'), hit('source-a', 'a2'), hit('source-a', 'a3'), hit('source-a', 'a4')],
+    [hit('source-a', 'a2'), hit('source-b', 'b1'), hit('source-a', 'a1')],
+  ])
+  assert.deepEqual(fused.map((item) => item.id), ['a2', 'a1', 'b1', 'a3'])
+})
 
 test('source metadata lists remain readable while the Open Notebook engine is offline', () => {
   const projectList = routerSource.match(/get\('\/projects\/:id\/sources'[\s\S]*?\n\}\)\)/)?.[0] ?? ''
@@ -63,7 +72,7 @@ test('knowledge URL validator rejects local, credentialed, and non-http targets'
 })
 
 test('native ingestion preserves the public upload limit', () => {
-  assert.equal(MAX_SOURCE_BYTES, 25 * 1024 * 1024)
+  assert.equal(MAX_SOURCE_BYTES, 200 * 1024 * 1024)
 })
 
 test('Open Notebook file ingestion references the canonical private object without uploading a second copy', async () => {

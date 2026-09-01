@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@admin/*": ["./admin/src/*"]
+    }
+  },
+  "include": ["admin/src", "src/components/GlobalInteractionProvider.tsx", "src/components/ResourceSkeleton.tsx", "src/lib/actionToast.ts", "src/lib/confirmAction.ts", "src/components/ui"]
+}

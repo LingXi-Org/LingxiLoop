@@ -1,23 +1,32 @@
-import { IconArrowLeft, IconCheck, IconMinus, IconPlus } from '@tabler/icons-react'
-import { type ChangeEvent, type DragEvent, type ReactNode, useEffect, useRef, useState } from 'react'
-import { IFile, IPlus } from '@/components/icons'
+import { File01Icon, Loading03Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { IconArrowLeft, IconCheck, IconMinus } from '@tabler/icons-react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+  AttachmentTrigger,
+} from '@/components/ui/attachment'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { useApp } from '@/stores/app'
-import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useParticipants } from '@/features/agents/state'
 import { useConversations } from '@/features/conversations/store'
+import { knowledgeApi } from '@/features/knowledge/api'
+import { KnowledgeSourceUploadDialog } from '@/features/knowledge/components/KnowledgeSourceUploadDialog'
+import type { KnowledgeSource } from '@/features/knowledge/contracts'
+import { useKnowledgeSources } from '@/features/knowledge/state'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
-import type { KnowledgeSource } from '@/features/knowledge/contracts'
+import { useApp } from '@/stores/app'
 
-const ACCEPT = '.pdf,.docx,.txt,.md,.csv,.json'
 const statusLabel: Record<string, string> = {
   upload_pending: '等待上传', queued: '排队', processing: '处理中', parsing: '解析',
   chunking: '分块', indexing: '索引', ready: '就绪', failed: '失败',
@@ -33,26 +42,28 @@ function SourceRow({ source, conversationId, flat = false }: { source: Knowledge
   const setSourceEnabled = useKnowledgeSources((state) => state.setSourceEnabled)
   const selected = selection?.sources.find((item) => item.sourceId === source.id)
   const creator = useParticipants((state) => state.byId[source.createdBy]?.name ?? '一位成员')
-  if (flat) return <article className="group flex items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-muted/70">
-    <Button type="button" onClick={() => void open(source.id)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
-      <IFile className="size-4 shrink-0 text-muted-foreground" />
-      <span className="min-w-0 flex-1"><span className="block truncate text-xs font-medium text-foreground">{source.title}</span><span className="mt-0.5 flex items-center gap-1.5 truncate text-[10px] text-muted-foreground"><span className={`size-1.5 shrink-0 rounded-full ${source.status === 'ready' ? 'bg-emerald-500' : source.status === 'failed' ? 'bg-red-500' : 'bg-amber-500'}`} />{statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态待同步'}{source.chunkCount ? ` · ${source.chunkCount} 片段` : ''} · {creator}</span></span>
-    </Button>
-    {conversationId && source.status === 'ready' && selected ? <Button type="button" variant="ghost" size="icon-xs" aria-label={`${source.title} 在本对话中${selected.enabled ? '停用' : '启用'}`} aria-pressed={selected.enabled} title={selected.enabled ? '回答将使用此资料' : '此资料已停用'} onClick={() => void setSourceEnabled(conversationId, source.id, !selected.enabled)} className={selected.enabled ? 'text-emerald-600' : 'text-muted-foreground'}>{selected.enabled ? <IconCheck /> : <IconMinus />}</Button> : null}
-    {source.status === 'failed' && <Button type="button" onClick={() => void retry(source.id)} variant="ghost" size="xs">重试</Button>}
-  </article>
-
-  return <article className="rounded-xl border border-hairline bg-panel p-3 shadow-sm">
-    <Button type="button" onClick={() => void open(source.id)} className="flex w-full items-start gap-2.5 text-left">
-      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-raised text-accent"><IFile className="size-4" /></span>
-      <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-ink">{source.title}</span><span className="mt-1 flex items-center gap-1.5 text-[10px] text-ink-secondary"><span className={`size-1.5 rounded-full ${source.status === 'ready' ? 'bg-emerald-500' : source.status === 'failed' ? 'bg-red-500' : 'bg-amber-500'}`} />{statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态待同步'}{source.chunkCount ? ` · ${source.chunkCount} 片段` : ''}</span></span>
-    </Button>
-    <p className="mt-2 truncate text-[9px] text-ink-secondary">{sourceKindLabel[source.kind]} · {Math.max(1, Math.round(source.sizeBytes / 1024))} KB · {creator}</p>
-    <div className="mt-2 flex items-center justify-between">
-      {conversationId && source.status === 'ready' && selected ? <label className="flex items-center gap-1.5 text-[10px] text-ink-secondary"><Checkbox checked={selected.enabled} onCheckedChange={(checked) => void setSourceEnabled(conversationId, source.id, checked === true)} />本对话使用</label> : <span />}
-      {source.status === 'failed' && <Button type="button" onClick={() => void retry(source.id)} className="text-[10px] font-semibold text-accent">重试</Button>}
-    </div>
-  </article>
+  const state = source.status === 'failed' ? 'error' : source.status === 'ready' ? 'done' : source.status === 'upload_pending' ? 'uploading' : 'processing'
+  return <Attachment
+    state={state}
+    size={flat ? 'sm' : 'default'}
+    className={flat ? 'w-full flex-nowrap border-transparent bg-transparent' : 'w-full flex-nowrap'}
+    aria-busy={state === 'uploading' || state === 'processing'}
+  >
+    <AttachmentMedia>
+      {state === 'uploading' || state === 'processing'
+        ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" strokeWidth={2} />
+        : <HugeiconsIcon icon={File01Icon} strokeWidth={2} />}
+    </AttachmentMedia>
+    <AttachmentContent>
+      <AttachmentTitle>{source.title}</AttachmentTitle>
+      <AttachmentDescription>{sourceKindLabel[source.kind]} · {Math.max(1, Math.round(source.sizeBytes / 1024))} KB · {statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态待同步'}{source.chunkCount ? ` · ${source.chunkCount} 片段` : ''} · {creator}</AttachmentDescription>
+    </AttachmentContent>
+    <AttachmentActions>
+      {conversationId && source.status === 'ready' && selected ? <AttachmentAction type="button" aria-label={`${source.title} 在本对话中${selected.enabled ? '停用' : '启用'}`} aria-pressed={selected.enabled} title={selected.enabled ? '回答将使用此资料' : '此资料已停用'} onClick={() => void setSourceEnabled(conversationId, source.id, !selected.enabled)} className={selected.enabled ? 'text-emerald-600' : 'text-muted-foreground'}>{selected.enabled ? <IconCheck /> : <IconMinus />}</AttachmentAction> : null}
+      {source.status === 'failed' && <AttachmentAction type="button" size="xs" onClick={() => void retry(source.id)}>重试</AttachmentAction>}
+    </AttachmentActions>
+    <AttachmentTrigger type="button" onClick={() => void open(source.id)} aria-label={`打开 ${source.title}`} />
+  </Attachment>
 }
 
 export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?: boolean; flat?: boolean; toolbar?: ReactNode }) {
@@ -61,7 +72,6 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
   const load = useKnowledgeSources((state) => state.load)
   const addText = useKnowledgeSources((state) => state.addText)
   const addUrl = useKnowledgeSources((state) => state.addUrl)
-  const addFiles = useKnowledgeSources((state) => state.addFiles)
   const loadConversationSelection = useKnowledgeSources((state) => state.loadConversationSelection)
   const conversationId = useApp((state) => state.selectedConversationId)
   const supportsSources = useConversations((state) => {
@@ -72,12 +82,6 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
   const [initialLoading, setInitialLoading] = useState(supportsSources)
   const settledConversationId = useRef<string | null>(null)
   const [adding, setAdding] = useState(false)
-  const [mode, setMode] = useState<'file' | 'url' | 'text'>('file')
-  const [url, setUrl] = useState('')
-  const [title, setTitle] = useState('')
-  const [text, setText] = useState('')
-  const [dragging, setDragging] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let active = true
@@ -96,44 +100,40 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
   }, [conversationId, load, loadConversationSelection, supportsSources])
   const visibleSources = supportsSources ? sources : []
   const firstLoadPending = supportsSources && settledConversationId.current !== conversationId
-  const filesChosen = async (files: File[]) => {
-    const allowed = files.filter((file) => file.size <= 25 * 1024 * 1024)
-    if (allowed.length) await addFiles(allowed)
-    setAdding(false); setDragging(false)
-  }
-  const onFileChange = (event: ChangeEvent<HTMLInputElement>) => void filesChosen([...event.target.files ?? []])
-  const onDrop = (event: DragEvent) => { event.preventDefault(); void filesChosen([...event.dataTransfer.files]) }
-  const submit = async () => {
-    if (mode === 'url' && url.trim()) await addUrl(url.trim(), title.trim() || undefined)
-    if (mode === 'text' && text.trim()) await addText(title.trim() || '粘贴文本', text.trim())
-    setAdding(false); setUrl(''); setTitle(''); setText('')
+  const uploadFiles = (files: File[]) => {
+    if (!conversationId) return
+    let revealed = false
+    const revealPending = () => {
+      if (revealed) return
+      revealed = true
+      void load().catch(() => undefined)
+    }
+    const uploads = Promise.all(files.map((file) => knowledgeApi.uploadKnowledgeFile(conversationId, file, revealPending)))
+    void toastAction(uploads, {
+      loading: '正在后台上传文件', success: '文件已上传，正在解析并建立索引', error: '文件上传失败',
+    }).then(() => load()).catch(() => undefined)
   }
 
   return <section className={`knowledge-source-panel flex h-full min-h-0 flex-col ${flat ? 'bg-transparent' : 'bg-app'} ${mobile ? 'w-full' : ''}`} data-source-layout={flat ? 'flat' : 'standard'}>
     {flat ? <div className="flex h-10 shrink-0 items-center justify-between px-3">
       {toolbar}
-      {supportsSources && <Button type="button" onClick={() => setAdding(true)} variant="ghost" size="sm" aria-label="添加资料"><IPlus />添加</Button>}
-    </div> : <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-hairline px-3.5"><div><h2 className="text-sm font-semibold text-ink">知识库</h2><p className="text-[10px] text-ink-secondary">项目共享与我的私有资料</p></div><Button type="button" onClick={() => setAdding(true)} className="grid size-8 place-items-center rounded-lg bg-accent text-white" aria-label="添加资料"><IPlus className="size-4" /></Button></header>}
+      {supportsSources && <Button type="button" onClick={() => setAdding(true)} variant="ghost" size="sm" aria-label="添加资料"><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />添加</Button>}
+    </div> : <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-hairline px-3.5"><div><h2 className="text-sm font-semibold text-ink">知识库</h2><p className="text-[10px] text-ink-secondary">项目共享与我的私有资料</p></div><Button type="button" onClick={() => setAdding(true)} size="icon-sm" aria-label="添加资料"><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} /></Button></header>}
     <div className={`min-h-0 flex-1 overflow-y-auto ${flat ? 'space-y-0.5 px-3 pb-3 pt-1' : 'space-y-2 p-3'}`}>
       {(firstLoadPending || initialLoading || loading) && visibleSources.length === 0 ? <ResourceSkeleton variant={flat ? 'list' : 'cards'} count={flat ? 5 : 3} compact={flat} label="正在加载知识资料" /> : visibleSources.length === 0 ? <Empty className={flat ? 'min-h-full px-6 py-8' : 'min-h-72 border'}>
         <EmptyHeader>
-          <EmptyMedia variant="icon"><IFile /></EmptyMedia>
+          <EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia>
           <EmptyTitle className="text-base">这个对话还没有资料</EmptyTitle>
           <EmptyDescription>上传文件、网页或文本，让回答建立在当前对话可访问的资料之上。</EmptyDescription>
         </EmptyHeader>
         <EmptyContent className="flex-row justify-center gap-2">
-          {supportsSources && <Button type="button" onClick={() => setAdding(true)} size="sm"><IconPlus />添加资料</Button>}
+          {supportsSources && <Button type="button" onClick={() => setAdding(true)} size="sm"><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />添加资料</Button>}
           <Button type="button" onClick={() => { setView('conversations'); window.dispatchEvent(new Event('lingxiloop:focus-composer')) }} variant="outline" size="sm"><IconArrowLeft />继续对话</Button>
         </EmptyContent>
       </Empty> : visibleSources.map((source) => <SourceRow key={source.id} source={source} conversationId={conversationId} flat={flat} />)}
     </div>
 
-    {adding && <div className="fixed inset-0 z-[110] grid place-items-center bg-black/35 p-4 backdrop-blur-sm" onMouseDown={() => setAdding(false)}><div className="w-full max-w-xl rounded-2xl border border-hairline bg-panel p-5 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
-      <div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold">添加资料</h2><p className="text-[11px] text-ink-secondary">PDF、DOCX、TXT、MD、CSV、JSON，单文件不超过 25 MB</p></div><Button onClick={() => setAdding(false)} className="size-8 rounded-lg hover:bg-raised">×</Button></div>
-      <div className="mt-4 flex gap-1 rounded-xl bg-raised p-1">{(['file','url','text'] as const).map((item) => <Button key={item} onClick={() => setMode(item)} className={`flex-1 rounded-lg py-2 text-xs font-semibold ${mode === item ? 'bg-panel text-accent shadow-sm' : 'text-ink-secondary'}`}>{item === 'file' ? '文件' : item === 'url' ? '网页 URL' : '粘贴文本'}</Button>)}</div>
-      {mode === 'file' ? <div onDragEnter={(event) => { event.preventDefault(); setDragging(true) }} onDragOver={(event) => event.preventDefault()} onDragLeave={() => setDragging(false)} onDrop={onDrop} className={`mt-4 grid min-h-44 place-items-center rounded-2xl border-2 border-dashed p-6 text-center ${dragging ? 'border-accent bg-accent/5' : 'border-hairline'}`}><div><IFile className="mx-auto size-8 text-accent" /><p className="mt-3 text-sm font-semibold">拖放多个文件到这里</p><Button onClick={() => fileRef.current?.click()} className="mt-2 text-xs font-semibold text-accent">或浏览文件</Button><Input ref={fileRef} hidden multiple accept={ACCEPT} type="file" onChange={onFileChange} /></div></div>
-        : <div className="mt-4 space-y-3"><Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="标题（可选）" className="h-10 w-full rounded-xl border border-hairline bg-app px-3 text-sm outline-none focus:border-accent" />{mode === 'url' ? <Input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://…" className="h-11 w-full rounded-xl border border-hairline bg-app px-3 text-sm outline-none focus:border-accent" /> : <Textarea value={text} onChange={(event) => setText(event.target.value)} placeholder="粘贴需要作为依据的内容…" className="h-44 w-full resize-none rounded-xl border border-hairline bg-app p-3 text-sm outline-none focus:border-accent" />}<div className="flex justify-end"><Button onClick={() => void submit()} className="h-10 rounded-xl bg-accent px-5 text-sm font-semibold text-white">添加并处理</Button></div></div>}
-    </div></div>}
+    <KnowledgeSourceUploadDialog open={adding} onOpenChange={setAdding} onFiles={uploadFiles} onUrl={addUrl} onText={addText} />
 
   </section>
 }
@@ -143,8 +143,17 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
 export function SourceDetailOverlay() {
   const selectedSource = useKnowledgeSources((state) => state.selectedSource)
   const selectedCitation = useKnowledgeSources((state) => state.selectedCitation)
+  const detailLoading = useKnowledgeSources((state) => state.detailLoading)
   const close = useKnowledgeSources((state) => state.close)
   const remove = useKnowledgeSources((state) => state.remove)
+  const citationMark = useRef<HTMLElement>(null)
+  const sourceText = selectedSource?.extractedText ?? ''
+  const citationStart = selectedCitation && sourceText ? sourceText.indexOf(selectedCitation.excerpt) : -1
+  useEffect(() => {
+    if (citationStart < 0) return
+    const frame = window.requestAnimationFrame(() => citationMark.current?.scrollIntoView({ block: 'center' }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [citationStart, selectedCitation?.marker, selectedSource?.id])
   const removeSelectedSource = async () => {
     if (!selectedSource) return
     if (!await confirmSensitiveAction({
@@ -168,9 +177,17 @@ export function SourceDetailOverlay() {
         </div><DrawerClose asChild><Button type="button" className="size-9 rounded-xl hover:bg-raised" aria-label="关闭资料">×</Button></DrawerClose></div>
       </DrawerHeader>
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
-      {selectedSource && <><div className="mt-5 flex flex-wrap gap-2 text-[10px] text-ink-secondary"><span className="rounded-full bg-raised px-2.5 py-1">{sourceKindLabel[selectedSource.kind]}</span><span className="rounded-full bg-raised px-2.5 py-1">{Math.max(1, Math.round(selectedSource.sizeBytes / 1024))} KB</span>{selectedSource.isTruncated && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">已截断</span>}</div>{selectedSource.originalUrl && <a href={selectedSource.originalUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始网页</a>}{selectedSource.originalFileUrl && <a href={selectedSource.originalFileUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始文件</a>}</>}
-      {selectedCitation && <section className="mt-5 rounded-2xl border border-accent/25 bg-accent/5 p-4"><div className="text-[10px] font-bold text-accent">[{selectedCitation.marker}] 命中片段 · 位置 {selectedCitation.position + 1}</div><p className="mt-2 whitespace-pre-wrap text-xs leading-6 text-ink">{selectedCitation.excerpt}</p></section>}
-      {selectedSource ? <><pre className="mt-5 whitespace-pre-wrap rounded-2xl bg-app p-4 font-sans text-xs leading-6 text-ink">{selectedSource.extractedText || (selectedSource.error ? userFacingError(selectedSource.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可查看抽取文本。')}</pre><Button onClick={() => void removeSelectedSource()} className="mt-5 text-xs font-semibold text-red-600">删除来源</Button></> : <p className="mt-5 text-xs leading-6 text-ink-secondary">原来源已不可用；以上引用摘要随历史消息保留。</p>}
+        {selectedSource && <><div className="mt-5 flex flex-wrap gap-2 text-[10px] text-ink-secondary"><span className="rounded-full bg-raised px-2.5 py-1">{sourceKindLabel[selectedSource.kind]}</span><span className="rounded-full bg-raised px-2.5 py-1">{Math.max(1, Math.round(selectedSource.sizeBytes / 1024))} KB</span>{selectedSource.isTruncated && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">已截断</span>}</div>{selectedSource.originalUrl && <a href={selectedSource.originalUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始网页</a>}{selectedSource.originalFileUrl && <a href={selectedSource.originalFileUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始文件</a>}</>}
+        {selectedCitation && <section className="mt-5 rounded-2xl border bg-muted/40 p-4"><div className="text-[10px] font-semibold text-muted-foreground">引用片段 {selectedCitation.position + 1}</div><p className="mt-2 whitespace-pre-wrap text-xs leading-6 text-foreground">{selectedCitation.excerpt}</p></section>}
+        {detailLoading && !selectedSource
+          ? <ResourceSkeleton variant="detail" label="正在加载引用资料" />
+          : selectedSource
+            ? <><pre className="mt-5 whitespace-pre-wrap rounded-2xl bg-muted/40 p-4 font-sans text-xs leading-6 text-foreground">{sourceText
+              ? citationStart >= 0 && selectedCitation
+                ? <>{sourceText.slice(0, citationStart)}<mark ref={citationMark} className="scroll-m-6 rounded-sm bg-emerald-500/20 px-0.5 text-foreground ring-1 ring-emerald-500/30">{sourceText.slice(citationStart, citationStart + selectedCitation.excerpt.length)}</mark>{sourceText.slice(citationStart + selectedCitation.excerpt.length)}</>
+                : sourceText
+              : selectedSource.error ? userFacingError(selectedSource.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可查看抽取文本。'}</pre><Button onClick={() => void removeSelectedSource()} className="mt-5 text-xs font-semibold text-red-600">删除来源</Button></>
+            : <p className="mt-5 text-xs leading-6 text-ink-secondary">原来源已不可用；以上引用摘要随历史消息保留。</p>}
       </div>
     </DrawerContent>
   </Drawer>

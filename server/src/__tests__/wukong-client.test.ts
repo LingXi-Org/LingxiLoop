@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import { createHmac } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { afterEach, test } from 'node:test'
-import { WukongClient } from '../im/wukong.js'
 import { parseWukongWebhook } from '../im/webhook-contracts.js'
+import { WukongClient } from '../im/wukong.js'
 
 const originalFetch = globalThis.fetch
 afterEach(() => { globalThis.fetch = originalFetch })
@@ -160,22 +160,6 @@ test('WuKong adapter does not hide unrelated HTTP 400 failures', async () => {
   await assert.rejects(() => client.clearUnread('student', 'study', 2), /channel_id cannot be empty/)
 })
 
-test('WuKong stream events include enough routing metadata for the browser', async () => {
-  let body: Record<string, unknown> = {}
-  globalThis.fetch = async (_input, init) => {
-    body = JSON.parse(String(init?.body)) as Record<string, unknown>
-    return new Response('{}', { status: 200 })
-  }
-  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
-  await client.emitEvent({
-    channelId: 'study', channelType: 2, fromUid: 'nova', clientMsgNo: 'preview-1',
-    eventId: 'evt-1', eventType: 'stream.delta', data: { kind: 'text', delta: 'hi' },
-  })
-  assert.deepEqual(body.payload, {
-    kind: 'text', delta: 'hi', channelId: 'study', channelType: 2, fromUid: 'nova', clientMsgNo: 'preview-1',
-  })
-})
-
 test('WuKong webhook signatures are constant-time HMAC contracts', () => {
   const raw = Buffer.from('{"event":"message.committed"}')
   const secret = 'test-webhook-secret'
@@ -210,4 +194,5 @@ test('production enables authenticated WuKong callbacks without inheriting the l
   assert.match(deploy, /OPENAI_EMBEDDING_MODEL WUKONG_WEBHOOK_SECRET/)
   assert.doesNotMatch(compose, /NODE_USE_ENV_PROXY/)
   assert.match(manifest, /dev:preview.*NODE_USE_ENV_PROXY=1/)
+  assert.match(manifest, /dev:preview.*--restart-tries -1.*npm:agent-os:dev/)
 })

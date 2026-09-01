@@ -145,6 +145,7 @@ test('learning spaces expose only the next valid lifecycle action for each Proje
 
 const managerContext: ResolvedAccessContext = {
   actorUserId: 'actor-1',
+  platformAdmin: false,
   company: { id: 'company-1', type: 'PERSONAL', status: 'ACTIVE' },
   companyMembership: { role: 'OWNER', status: 'ACTIVE' },
   effectivePlan: { id: 'plan-1', code: 'PERSONAL_FREE' },

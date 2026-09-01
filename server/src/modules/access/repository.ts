@@ -15,6 +15,8 @@ import type {
 
 export interface ActorRecord {
   id: string
+  email: string
+  emailVerifiedAt: Date | null
   deletedAt: Date | null
   suspendedAt: Date | null
 }
@@ -70,6 +72,8 @@ export interface ActorProjectScopeRecord {
 
 interface ActorRow {
   id: string
+  email: string
+  email_verified_at: Date | null
   deleted_at: Date | null
   suspended_at: Date | null
 }
@@ -198,11 +202,17 @@ export class AccessRepository {
 
   async actor(id: string): Promise<ActorRecord | null> {
     const { rows } = await this.db.query<ActorRow>(
-      `SELECT id,deleted_at,suspended_at FROM users WHERE id=$1${this.lockClause}`,
+      `SELECT id,email,email_verified_at,deleted_at,suspended_at FROM users WHERE id=$1${this.lockClause}`,
       [id],
     )
     const row = rows[0]
-    return row ? { id: row.id, deletedAt: row.deleted_at, suspendedAt: row.suspended_at } : null
+    return row ? {
+      id: row.id,
+      email: row.email,
+      emailVerifiedAt: row.email_verified_at,
+      deletedAt: row.deleted_at,
+      suspendedAt: row.suspended_at,
+    } : null
   }
 
   async company(id: string): Promise<CompanyRecord | null> {

@@ -304,9 +304,9 @@ test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restric
   assert.match(teacherProvisioningRepositorySource,/JSON\.stringify\(\['ipython'\]\)/)
   assert.match(teacherProvisioningRepositorySource,/learning_project_teacher_agents/)
   assert.match(teacherProvisioningRepositorySource,/learning_course_teacher_rooms/)
-  assert.match(runtime,/allowedNamespaces: \['teacher', 'turn'\]/)
+  assert.match(runtime,/allowedNamespaces: \['teacher'\]/)
   assert.match(kernel,/allowedNamespaces/)
-  assert.match(hostAction,/Pulse may only call teacher\.\* and turn\.\*/)
+  assert.match(hostAction,/Pulse may only call teacher\.\*/)
   assert.match(hostAction,/teacher\.\* is reserved for the product-managed Pulse Agent/)
   assert.doesNotMatch(hostAction,/\b(?:SELECT|INSERT INTO|UPDATE|DELETE FROM)\b/)
   assert.match(hostActionRepository,/SELECT p\.capabilities/)
@@ -314,8 +314,9 @@ test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restric
 
 test('learning remains an IPython namespace with transient per-turn context', () => {
   assert.match(kernel, /"learning"/)
+  assert.match(kernel, /if method\.startswith\("_"\):\s+raise AttributeError\(method\)/)
   assert.match(runtime, /dynamicLearningItems/)
-  assert.match(runtime, /items: \[\.\.\.session\.history, \.\.\.dynamicKnowledgeItems, \.\.\.dynamicLearningItems, \.\.\.dynamicTeacherItems\]/)
+  assert.match(runtime, /\.\.\.session\.history,\s+\.\.\.dynamicMemoryItems,\s+\.\.\.dynamicKnowledgeItems,\s+\.\.\.dynamicLearningItems,\s+\.\.\.dynamicTeacherItems/)
   assert.doesNotMatch(runtime, /systemInstructions: `\$\{candidate\.systemInstructions\}[^`]*JSON\.stringify\(context\.learningContext\)/s)
   assert.match(runtime, /const liveContext = hop === 0 \? context : await this\.host\.loadContext\(work\)/)
   assert.match(actions, /planning gate blocked/)

@@ -1,3 +1,4 @@
+import type { AssistantStreamChunk } from 'assistant-stream'
 import IORedis from 'ioredis'
 import { env } from './env.js'
 
@@ -31,7 +32,7 @@ sub.on('error', (e) => console.error('[redis sub]', e))
 
 /* === Channel keys === */
 export const CH_MESSAGE_NEW = 'lingxiloop:msg.new'
-export const CH_MESSAGE_DELTA = 'lingxiloop:msg.delta'
+export const CH_ASSISTANT_STREAM = 'lingxiloop:assistant.stream'
 export const CH_TYPING = 'lingxiloop:typing'
 export const CH_STATUS = 'lingxiloop:status'
 export const CH_REACTIONS = 'lingxiloop:reactions'
@@ -169,16 +170,13 @@ export interface MessageNewEvent extends TenantTagged {
   }
 }
 
-export interface MessageDeltaEvent extends TenantTagged {
-  type: 'message.delta'
+export interface AssistantStreamEvent extends TenantTagged {
+  type: 'assistant.stream'
   conversationId: string
   messageId: string
   authorId: string
-  delta: string
-  /** sequence number for this in-flight message; assigned at start */
   sequence: number
-  /** when true, no more deltas — final body has been written to DB */
-  done: boolean
+  chunks: AssistantStreamChunk[]
 }
 
 export interface TypingEvent extends TenantTagged {
@@ -444,7 +442,7 @@ export interface DocAccessRevokedEvent extends TenantTagged {
   userId: string
 }
 
-export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
+export type BroadcastEvent = MessageNewEvent | AssistantStreamEvent | TypingEvent
   | StatusEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
   | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent

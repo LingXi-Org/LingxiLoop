@@ -14,13 +14,13 @@ export const IPYTHON_TOOL: OpenAIFunctionTool = {
   type: 'function',
   function: {
     name: 'ipython',
-    description: 'Execute Python in your persistent per-agent IPython session. Use the preloaded loop SDK for chat, memory, files, documents, canvas, calendar, routines, research, email, knowledge, presentations, learning, polls, and turn control.',
+    description: 'Execute pure Python in the persistent per-agent IPython session. Product actions use only the preloaded capability-gated loop SDK. loop methods are synchronous and accept keyword arguments.',
     parameters: {
       type: 'object',
       properties: {
         code: {
           type: 'string',
-          description: 'Python source. Top-level await is supported. State persists across turns while this agent kernel is alive.',
+          description: 'Executable Python source only, without Markdown fences or user-facing prose. Python state persists across turns; never await loop SDK calls.',
         },
       },
       required: ['code'],

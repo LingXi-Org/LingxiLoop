@@ -74,6 +74,7 @@ function context(item: AgentWorkItem, input: string): AgentContext {
   return {
     work: item,
     persona,
+    capabilities,
     messages: [{
       clientMsgNo: item.triggerClientMsgNo,
       authorId: 'eval-learner',
@@ -90,8 +91,6 @@ function context(item: AgentWorkItem, input: string): AgentContext {
       systemInstructions: assembleAgentSystemPrompt({
         persona,
         capabilities,
-        memories: { learner: [], course: [], agentRole: [] },
-        assembledAt: '2026-08-26T00:00:00.000Z',
         executionRole: item.executionRole,
       }),
       persona,
@@ -110,13 +109,12 @@ function configureTeacherContext(runtimeContext: AgentContext, item: AgentWorkIt
     instructions: 'Pulse deterministic teacher agent. Use only the teacher control plane.',
   }
   const capabilities = ['teacher_admin']
+  runtimeContext.capabilities = capabilities
   runtimeContext.promptContextCandidate = {
     ...runtimeContext.promptContextCandidate!,
     systemInstructions: assembleAgentSystemPrompt({
       persona: runtimeContext.persona,
       capabilities,
-      memories: { learner: [], course: [], agentRole: [] },
-      assembledAt: '2026-08-26T00:00:00.000Z',
       executionRole: item.executionRole,
     }),
     persona: runtimeContext.persona,
@@ -149,7 +147,7 @@ class ContractCheckingModel implements AgentModelDriver {
     this.delegate = new ScriptedModelDriver(turns.map((turn) => turn.result))
   }
 
-  async run(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal; onTextDelta?: (delta: string) => void | Promise<void> }): Promise<ModelTurnResult> {
+  async run(args: Parameters<AgentModelDriver['run']>[0]): Promise<ModelTurnResult> {
     const expected = this.turns[this.index]
     if (!expected) throw new Error('runtime Eval model received an unexpected extra turn')
     for (const fragment of expected.instructionFragments ?? ['Eval deterministic tutor', 'loop.knowledge', 'loop.canvas']) {
@@ -169,7 +167,7 @@ class ContractCheckingModel implements AgentModelDriver {
       throw new Error(`runtime Eval model exposed a non-IPython tool: ${unexpectedTool.name}`)
     }
     this.index += 1
-    return await this.delegate.run()
+    return await this.delegate.run(args)
   }
 
   async compact(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal }): Promise<string> {
@@ -201,8 +199,7 @@ class HostBridgeKernel implements KernelExecutor {
     _signal?: AbortSignal,
     options?: KernelExecutionOptions,
   ): Promise<KernelExecution> {
-    const actionName = code.includes('loop.knowledge.search') ? 'knowledge.search'
-      : code.includes('loop.email.send') ? 'email.send'
+    const actionName = code.includes('loop.email.send') ? 'email.send'
         : code.includes('loop.teacher.list_learners') ? 'teacher.list_learners'
           : code.includes('loop.teacher.review_evaluation') ? 'teacher.review_evaluation'
         : code.includes('loop.teacher.publish_objective') ? 'teacher.publish_objective'
@@ -216,19 +213,24 @@ class HostBridgeKernel implements KernelExecutor {
       throw new Error(`runtime Eval rejected ${actionName} outside the scoped IPython namespaces`)
     }
     let args: unknown
-    if (actionName === 'knowledge.search') args = { query: 'runtime handbook', limit: 3 }
-    else if (actionName === 'email.send') args = { to: ['learner@example.invalid'], subject: 'Course summary' }
+    if (actionName === 'email.send') args = { to: ['learner@example.invalid'], subject: 'Course summary', body: 'Grounded summary' }
     else if (actionName === 'teacher.publish_objective') args = { objectiveId: 'objective-eval' }
     else if (actionName === 'teacher.list_learners') args = { attentionOnly: true }
     else if (actionName === 'teacher.review_evaluation') {
       args = { evaluationId: 'evaluation-eval', decision: 'reject', reason: 'Teacher evidence override' }
     }
     else if (actionName === 'learning.add_steps') {
+      if (!code.includes('missionId=') || !code.includes('description') || !code.includes('successCriteria')) {
+        throw new Error('runtime Eval requires the exact learning.add_steps SDK arguments')
+      }
       args = {
         missionId: 'mission-eval',
-        steps: [{ type: 'check', description: 'Explain the retrieval check', successCriteria: 'Names the evidence source' }],
+        steps: [{ kind: 'CHECK', description: 'Explain the retrieval check', successCriteria: 'Names the evidence source' }],
       }
-    } else if (actionName === 'learning.finish_planning') args = { missionId: 'mission-eval' }
+    } else if (actionName === 'learning.finish_planning') {
+      if (!code.includes('missionId=')) throw new Error('runtime Eval requires the exact learning.finish_planning SDK argument')
+      args = { missionId: 'mission-eval' }
+    }
     else {
       args = {
         finding: 'The runtime enforces the Canvas report completion gate.',
@@ -369,14 +371,21 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   let input = ''
   let turns: CheckedTurn[] = []
   const runtimeContext = context(item, '')
+  if (scenario === 'approval-boundary') {
+    runtimeContext.capabilities = ['email']
+    runtimeContext.promptContextCandidate!.capabilities = ['email']
+  } else if (scenario === 'planning-gate') {
+    runtimeContext.capabilities = ['learning']
+    runtimeContext.promptContextCandidate!.capabilities = ['learning']
+  }
 
   if (scenario === 'auto-grounding') {
     input = 'Explain retrieval grounding using the uploaded handbook.'
     turns = [{
-      itemFragments: [input, 'AUTO_EVIDENCE_SECRET', '[S1]'],
+      itemFragments: [input, 'AUTO_EVIDENCE_SECRET', 'evidence-id=S1'],
       result: {
-        output: [{ role: 'assistant', content: '结论：RAG 回答必须保留可追溯证据。因为检索片段可能不完整，因此要核对来源；例如本次结论来自课程手册 [S1]。你能解释为什么证据引用会降低幻觉吗？' }],
-        text: '结论：RAG 回答必须保留可追溯证据。因为检索片段可能不完整，因此要核对来源；例如本次结论来自课程手册 [S1]。你能解释为什么证据引用会降低幻觉吗？',
+        output: [{ role: 'assistant', content: '结论：RAG 回答必须保留可追溯证据。因为检索片段可能不完整，因此要核对来源；[本次结论来自课程手册](#cite-S1)。你能解释为什么证据引用会降低幻觉吗？' }],
+        text: '结论：RAG 回答必须保留可追溯证据。因为检索片段可能不完整，因此要核对来源；[本次结论来自课程手册](#cite-S1)。你能解释为什么证据引用会降低幻觉吗？',
         usage: { inputTokens: 42, outputTokens: 38 },
       },
     }]
@@ -389,55 +398,36 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
       position: 1,
       marker: 'S1',
     }]
-  } else if (scenario === 'dynamic-rag') {
-    input = 'Find the runtime handbook before answering.'
+  } else if (scenario === 'hybrid-grounding') {
+    input = 'Use the automatically retrieved runtime handbook before answering.'
     runtimeContext.knowledgeSourceCount = 1
-    turns = [
-      {
-        itemFragments: [input, 'No uploaded source passage sufficiently matched'],
-        result: {
-          output: [{
-            type: 'function_call',
-            callId: 'runtime-search',
-            name: 'ipython',
-            arguments: JSON.stringify({ code: 'results = loop.knowledge.search(query="runtime handbook", limit=3)' }),
-          }],
-          text: '',
-          usage: { inputTokens: 34, outputTokens: 12 },
-        },
+    runtimeContext.knowledgeContext = [{
+      sourceId: 'source-hybrid',
+      chunkId: 'chunk-hybrid',
+      marker: 'S1',
+      sourceTitle: 'Runtime Handbook',
+      excerpt: 'HYBRID_SECRET_EXCERPT: lexical and vector candidates are fused before answering.',
+      position: 0,
+    }]
+    turns = [{
+      itemFragments: [input, 'HYBRID_SECRET_EXCERPT', 'evidence-id=S1'],
+      result: {
+        output: [{ role: 'assistant', content: '[混合检索会在回答前融合关键词与语义候选](#cite-S1)，因此既保留专有词匹配，也获得上下文消歧。' }],
+        text: '[混合检索会在回答前融合关键词与语义候选](#cite-S1)，因此既保留专有词匹配，也获得上下文消歧。',
+        usage: { inputTokens: 58, outputTokens: 20 },
       },
-      {
-        itemFragments: ['function_call_output', 'DYNAMIC_SECRET_EXCERPT', 'source-dynamic'],
-        result: {
-          output: [{ role: 'assistant', content: '动态检索确认运行手册要求工具调用经过 IPython [S2]。' }],
-          text: '动态检索确认运行手册要求工具调用经过 IPython [S2]。',
-          usage: { inputTokens: 58, outputTokens: 20 },
-        },
-      },
-    ]
-    host.actionHandler = async (action) => {
-      if (action.action !== 'knowledge.search') return { ok: false, error: `unexpected action ${action.action}` }
-      return {
-        ok: true,
-        value: [{
-          sourceId: 'source-dynamic',
-          chunkId: 'chunk-dynamic',
-          marker: 'S2',
-          sourceTitle: 'Runtime Handbook',
-          excerpt: 'DYNAMIC_SECRET_EXCERPT: all host tools cross the IPython boundary.',
-        }],
-      }
-    }
+    }]
   } else if (scenario === 'approval-boundary') {
     input = 'Send the course summary by email.'
     turns = [{
+      instructionFragments: ['Eval deterministic tutor', 'loop.email'],
       itemFragments: [input],
       result: {
         output: [{
           type: 'function_call',
           callId: 'runtime-email',
           name: 'ipython',
-          arguments: JSON.stringify({ code: 'loop.email.send(to=["learner@example.invalid"], subject="Course summary")' }),
+          arguments: JSON.stringify({ code: 'loop.email.send(to=["learner@example.invalid"], subject="Course summary", body="Grounded summary")' }),
         }],
         text: '',
         usage: { inputTokens: 28, outputTokens: 10 },
@@ -450,8 +440,8 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     input = 'Publish the prepared retrieval objective.'
     configureTeacherContext(runtimeContext, item)
     turns = [{
-      instructionFragments: ['Pulse deterministic teacher agent', 'loop.teacher', 'loop.turn', 'product-managed Pulse Agent'],
-      forbiddenInstructionFragments: ['loop.learning is the only', 'loop.canvas is preloaded', 'loop.email'],
+      instructionFragments: ['Pulse deterministic teacher agent', 'loop.teacher', 'product-managed Pulse Agent'],
+      forbiddenInstructionFragments: ['loop.turn', 'loop.learning is the only', 'loop.canvas is preloaded', 'loop.email'],
       itemFragments: [input, 'Current teacher context', 'course-eval', 'eval-teacher'],
       result: {
         output: [{
@@ -569,6 +559,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     }
     turns = [
       {
+        instructionFragments: ['Eval deterministic tutor', 'loop.learning'],
         itemFragments: [input, 'status', 'PLANNING'],
         result: {
           output: [{ role: 'assistant', content: 'Mission planning is complete.' }],
@@ -577,32 +568,35 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
         },
       },
       {
+        instructionFragments: ['Eval deterministic tutor', 'loop.learning'],
         itemFragments: ['Planning gate:', 'loop.learning.add_steps'],
         result: {
           output: [{
             type: 'function_call',
             callId: 'runtime-learning-add-steps',
             name: 'ipython',
-            arguments: JSON.stringify({ code: 'loop.learning.add_steps(mission_id="mission-eval", steps=[{"kind":"CHECK"}])' }),
+            arguments: JSON.stringify({ code: 'loop.learning.add_steps(missionId="mission-eval", steps=[{"kind":"CHECK","description":"Explain the retrieval check","successCriteria":"Names the evidence source"}])' }),
           }],
           text: '',
           usage: { inputTokens: 46, outputTokens: 12 },
         },
       },
       {
+        instructionFragments: ['Eval deterministic tutor', 'loop.learning'],
         itemFragments: ['step-eval-check', 'PLANNING'],
         result: {
           output: [{
             type: 'function_call',
             callId: 'runtime-learning-finish-planning',
             name: 'ipython',
-            arguments: JSON.stringify({ code: 'loop.learning.finish_planning(mission_id="mission-eval")' }),
+            arguments: JSON.stringify({ code: 'loop.learning.finish_planning(missionId="mission-eval")' }),
           }],
           text: '',
           usage: { inputTokens: 52, outputTokens: 10 },
         },
       },
       {
+        instructionFragments: ['Eval deterministic tutor', 'loop.learning'],
         itemFragments: ['ACTIVE', 'function_call_output'],
         result: {
           output: [{ role: 'assistant', content: '规划门已满足：检查步骤已创建，Mission 已激活。' }],

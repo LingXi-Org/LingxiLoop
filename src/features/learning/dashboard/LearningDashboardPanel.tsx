@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { useConversations } from '@/features/conversations/store'
-import { ProjectSourceLibrary } from '@/features/knowledge/components/ProjectSourceLibrary'
+import { PersonalSourceDrive } from '@/features/knowledge/components/PersonalSourceDrive'
 import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
 import { CourseAvatar } from '../components/CourseAvatar'
@@ -36,7 +36,7 @@ const SECTION_COPY: Record<LearningDashboardSection, { title: string; descriptio
   reviews: { title: '评价审核', description: '核对评价与学习证据' },
   members: { title: '分享与成员', description: '管理课程访问与邀请' },
   calendar: { title: '日历', description: '课程与个人安排' },
-  resources: { title: '资料', description: '当前学习区的资料' },
+  resources: { title: '资料', description: '按工作区管理个人资料' },
   settings: { title: '课程设置', description: '课程资料与生命周期' },
 }
 
@@ -88,7 +88,7 @@ function DashboardSectionFrame({ space, section, children }: {
 
 export function LearningDashboardPanel({ space, section }: { space: LearningSpace; section: LearningDashboardSection }) {
   if (section === 'calendar') return <CalendarView />
-  if (section === 'resources') return <ProjectSourceLibrary projectId={space.projectId} canManage={space.canManage} />
+  if (section === 'resources') return <PersonalSourceDrive />
   if (section === 'learners') return <DashboardSectionFrame space={space} section={section}>{space.canReview ? <TeacherLearnersSection projectId={space.projectId} /> : <CapabilityNotice message="当前课程状态下无法查看学习者审核资料。" />}</DashboardSectionFrame>
   if (section === 'members') return <DashboardSectionFrame space={space} section={section}><CourseMembersSection space={space} /></DashboardSectionFrame>
   if (section === 'settings') return <DashboardSectionFrame space={space} section={section}><CourseSettingsSection space={space} /></DashboardSectionFrame>

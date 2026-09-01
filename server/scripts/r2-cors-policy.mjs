@@ -2,6 +2,7 @@ export const DEFAULT_R2_CORS_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:5180',
   'app://lingxiloop',
+  'https://loop.lingxilearn.cn',
 ]
 
 export function uniqueOrigins(extraOrigins = []) {

@@ -12,6 +12,7 @@ import {
   presignSourceRequestSchema,
   sourceSelectionRequestSchema,
   updateProjectRequestSchema,
+  updateSourceRequestSchema,
 } from './contracts.js'
 import { knowledgeApplication } from './facade.js'
 
@@ -122,6 +123,14 @@ knowledgeRouter.post('/projects/:id/sources/:sourceId/retry', safe(async (req, r
     resource: { type: 'knowledge_source', id: String(req.params.sourceId) },
   })
   try { res.json(await knowledgeApplication.retry(workspace, String(req.params.sourceId))) }
+  catch (error) { mapKnowledgeError(error) }
+}))
+
+knowledgeRouter.patch('/projects/:id/sources/:sourceId', safe(async (req, res) => {
+  requireKnowledge()
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
+  const input = parse(updateSourceRequestSchema.safeParse(req.body ?? {}))
+  try { res.json(await knowledgeApplication.editSource(workspace, String(req.params.sourceId), input)) }
   catch (error) { mapKnowledgeError(error) }
 }))
 

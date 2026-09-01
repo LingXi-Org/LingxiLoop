@@ -384,9 +384,9 @@ export function evaluatePolicy(
   const policy: PermissionPolicy = PERMISSION_POLICIES[request.action]
   if (policy.entitlement && !context.entitlements.has(policy.entitlement)) return 'ENTITLEMENT_MISSING'
 
-  if (policy.scope === 'company') {
+  if (!context.platformAdmin && policy.scope === 'company') {
     if (!policy.companyRoles?.includes(context.companyMembership.role)) return 'ROLE_NOT_ALLOWED'
-  } else {
+  } else if (!context.platformAdmin) {
     const membership = context.projectMembership
     const personalOwnerCanLearn = request.action === 'learning:submit'
       && context.project?.kind === 'PERSONAL_LEARNING'
@@ -408,6 +408,7 @@ export function evaluatePolicy(
     return 'RESOURCE_STATE_DENIED'
   }
   if (!resource) return 'ALLOWED'
+  if (context.platformAdmin) return 'ALLOWED'
   if (resource.visibilityScope === 'PRIVATE' && resource.ownerUserId !== request.actorUserId) {
     return 'ROLE_NOT_ALLOWED'
   }

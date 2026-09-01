@@ -48,7 +48,7 @@ export async function startWebProcess(): Promise<ServiceHandle> {
       res.setHeader('Access-Control-Allow-Origin', corsAny ? '*' : origin)
       res.setHeader('Vary', 'Origin')
       res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
-      res.setHeader('Access-Control-Allow-Headers', 'content-type,authorization,x-company-id,x-project-id')
+      res.setHeader('Access-Control-Allow-Headers', 'content-type,authorization,x-company-id,x-project-id,x-platform-admin-reason')
       res.setHeader('Access-Control-Max-Age', '600')
       if (req.method === 'OPTIONS') { res.status(204).end(); return }
     }
@@ -62,9 +62,8 @@ export async function startWebProcess(): Promise<ServiceHandle> {
   app.use('/webhooks/email', resendInboundEmailRouter)
   app.use('/webhooks/wukong', wukongWebhookRouter)
 
-  // Bumped from 256kb to 32mb because the upload endpoint takes base64-encoded
-  // file bodies up to MAX_UPLOAD_BYTES (25MB raw → ~34MB base64). R2-mode
-  // uploads bypass this limit entirely (browser PUTs directly to R2).
+  // Keep legacy JSON payloads bounded independently from the 200 MB upload
+  // policy. File uploads PUT directly to R2 and never enter this parser.
   app.use(express.json({ limit: '34mb' }))
   app.use('/internal/open-notebook', openNotebookEmbeddingRouter, errorHandler)
   app.use((req, res, next) => {

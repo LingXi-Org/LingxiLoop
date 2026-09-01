@@ -16,6 +16,7 @@ from open_notebook.exceptions import (
     NotFoundError,
     OpenNotebookError,
 )
+from open_notebook.rag.extraction import MAX_SOURCE_BYTES
 from open_notebook.rag.runtime import (
     RagRuntimeState,
     initialize_runtime,
@@ -24,8 +25,8 @@ from open_notebook.rag.runtime import (
 from open_notebook.utils.proxy import ensure_internal_no_proxy
 
 ensure_internal_no_proxy()
-RAG_FILE_MAX_SIZE = 25 * 1024 * 1024
-# A 25 MiB file needs bounded room for multipart headers and the scope fields.
+RAG_FILE_MAX_SIZE = MAX_SOURCE_BYTES
+# A file needs bounded room for multipart headers and the scope fields.
 RAG_REQUEST_MAX_SIZE = RAG_FILE_MAX_SIZE + 1024 * 1024
 
 

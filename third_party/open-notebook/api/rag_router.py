@@ -501,7 +501,7 @@ async def create_json_source(
     assert payload.content is not None
     encoded_content = payload.content.encode("utf-8")
     if len(encoded_content) > MAX_SOURCE_BYTES:
-        raise HTTPException(status_code=413, detail="Text exceeds the 25 MiB limit")
+        raise HTTPException(status_code=413, detail="Text exceeds the 200 MiB limit")
     fingerprint = _ingestion_fingerprint(
         source_type="text",
         notebook_ids=payload.notebooks,

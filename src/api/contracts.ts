@@ -1,4 +1,4 @@
-import type { Status } from '@/types'
+import type { CoworkerActivity } from '@/features/agents/contracts'
 import type {
   CanvasActivity,
   CanvasAgentAssignment,
@@ -8,7 +8,7 @@ import type {
   CanvasSnapshot,
 } from '@/features/canvas/contracts'
 import type { DocumentChangedEvent } from '@/features/documents/contracts'
-import type { CoworkerActivity } from '@/features/agents/contracts'
+import type { Status } from '@/types'
 
 
 export interface ApiMessage {
@@ -60,7 +60,7 @@ export interface ApiConveneTranscript {
 export type WsEvent =
   | { type: 'hello'; instanceId: string; ts: number }
   | { type: 'message.new'; conversationId: string; message: ApiMessage }
-  | { type: 'message.delta'; conversationId: string; messageId: string; authorId: string; delta: string; sequence: number; done: boolean }
+  | { type: 'assistant.stream'; conversationId: string; messageId: string; authorId: string; sequence: number; chunks: AssistantStreamChunk[] }
   | { type: 'im.read-receipt'; companyId: string; channelId: string; readerId: string; previousReadSeq: number; readThroughSeq: number; readAt: string }
   | { type: 'typing'; conversationId: string; agentId: string; done: boolean }
   | { type: 'agent.activity'; conversationIds: string[]; activity: CoworkerActivity }
@@ -131,3 +131,5 @@ export type WsEvent =
       tallies: import('../types.js').PollTally[]
       actorId: string | null
     }
+
+import type { AssistantStreamChunk } from 'assistant-stream'

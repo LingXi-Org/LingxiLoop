@@ -19,14 +19,19 @@ import socket
 import sys
 import time
 import traceback
+import types
 import uuid
 from typing import Any
 
 from IPython.core.interactiveshell import InteractiveShell
+
+# Isolated mode removes the script directory from sys.path; restore only this
+# trusted runtime directory so the bundled SDK remains importable.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from teacher_sdk import TeacherSDK
 
 
-MAX_STREAM_CHARS = int(os.environ.get("LINGXILOOP_KERNEL_MAX_OUTPUT_CHARS", "64000"))
+MAX_STREAM_CHARS = int(os.environ.get("LINGXILOOP_KERNEL_MAX_OUTPUT_CHARS", "8000"))
 ROOT = pathlib.Path(os.environ["LINGXILOOP_AGENT_HOME"]).resolve()
 HOMES_ROOT = pathlib.Path(os.environ.get("LINGXILOOP_HOMES_ROOT", str(ROOT.parent.parent))).resolve()
 ROOT.mkdir(parents=True, exist_ok=True)
@@ -34,7 +39,7 @@ os.chdir(ROOT)
 
 
 def emit(payload: dict[str, Any]) -> None:
-    sys.__stdout__.write(json.dumps(payload, ensure_ascii=False, default=str) + "\n")
+    sys.__stdout__.write(json.dumps(payload, ensure_ascii=True, default=str) + "\n")
     sys.__stdout__.flush()
 
 
@@ -118,14 +123,28 @@ class LoopBridge:
         "create", "get", "revise_outline", "approve_outline",
         "revise", "cancel", "retry",
     })
+    DOCUMENT_METHODS = frozenset({
+        "list", "create", "read", "append", "prepend", "replace",
+        "replace_block", "rename", "delete",
+    })
     NAMESPACES = (
-        "chat", "memory", "skills", "files", "documents", "boards",
-        "canvas", "calendar", "routines", "research", "email", "knowledge", "presentations", "learning", "polls", "teacher", "turn",
+        "chat", "memory", "files", "documents", "canvas", "calendar",
+        "routines", "research", "email", "knowledge", "presentations",
+        "learning", "polls", "teacher",
     )
-    DEFAULT_NAMESPACES = (
-        "chat", "memory", "skills", "files", "documents", "boards",
-        "canvas", "calendar", "routines", "research", "email", "knowledge", "presentations", "learning", "polls", "turn",
-    )
+    DEFAULT_NAMESPACES = ("chat", "memory", "polls")
+
+    def methods_for(self, name: str, requested: Any = None) -> frozenset[str] | None:
+        built_in = (
+            self.KNOWLEDGE_METHODS if name == "knowledge"
+            else self.PRESENTATION_METHODS if name == "presentations"
+            else self.DOCUMENT_METHODS if name == "documents"
+            else None
+        )
+        if not isinstance(requested, list):
+            return built_in
+        selected = frozenset(method for method in requested if isinstance(method, str))
+        return selected if built_in is None else selected & built_in
 
     def __init__(self) -> None:
         self.execution_id = ""
@@ -134,12 +153,7 @@ class LoopBridge:
         self.call_index = 0
         self.directives: list[dict[str, Any]] = []
         for name in self.DEFAULT_NAMESPACES:
-            methods = (
-                self.KNOWLEDGE_METHODS if name == "knowledge"
-                else self.PRESENTATION_METHODS if name == "presentations"
-                else None
-            )
-            setattr(self, name, Namespace(self, name, methods))
+            setattr(self, name, Namespace(self, name, self.methods_for(name)))
 
     def begin(self, execution_id: str, context: dict[str, Any]) -> None:
         self.execution_id = execution_id
@@ -148,6 +162,7 @@ class LoopBridge:
         self.call_index = 0
         self.directives = []
         requested = context.get("allowedNamespaces")
+        requested_methods = context.get("allowedMethods")
         allowed = self.DEFAULT_NAMESPACES if requested is None else tuple(
             name for name in requested if isinstance(name, str) and name in self.NAMESPACES
         )
@@ -155,10 +170,9 @@ class LoopBridge:
             if name in self.__dict__:
                 delattr(self, name)
         for name in allowed:
-            methods = (
-                self.KNOWLEDGE_METHODS if name == "knowledge"
-                else self.PRESENTATION_METHODS if name == "presentations"
-                else None
+            methods = self.methods_for(
+                name,
+                requested_methods.get(name) if isinstance(requested_methods, dict) else None,
             )
             setattr(self, name, TeacherSDK(self) if name == "teacher" else Namespace(self, name, methods))
 
@@ -191,7 +205,11 @@ class LoopBridge:
 
 def safe_result(value: Any) -> Any:
     if value is None or isinstance(value, (str, int, float, bool, list, dict)):
-        return value
+        encoded = json.dumps(value, ensure_ascii=False, default=str)
+        return value if len(encoded) <= MAX_STREAM_CHARS else {
+            "truncated": True,
+            "preview": encoded[:MAX_STREAM_CHARS - 80],
+        }
     if hasattr(value, "_repr_mimebundle_"):
         bundle = value._repr_mimebundle_()
         if isinstance(bundle, tuple):
@@ -250,7 +268,21 @@ def changed_artifacts(before: dict[str, tuple[int, int]]) -> list[dict[str, Any]
     return artifacts
 
 
-loop = LoopBridge()
+bridge = LoopBridge()
+loop = types.ModuleType("loop")
+loop.__path__ = []
+for namespace_name in bridge.NAMESPACES:
+    namespace_module = types.ModuleType(f"loop.{namespace_name}")
+
+    def namespace_getattr(method: str, namespace: str = namespace_name) -> Any:
+        if method.startswith("_"):
+            raise AttributeError(method)
+        return getattr(getattr(bridge, namespace), method)
+
+    namespace_module.__getattr__ = namespace_getattr
+    setattr(loop, namespace_name, namespace_module)
+    sys.modules[namespace_module.__name__] = namespace_module
+sys.modules["loop"] = loop
 shell = InteractiveShell.instance()
 shell.user_ns["loop"] = loop
 shell.user_ns["ApprovalPending"] = ApprovalPending
@@ -259,7 +291,7 @@ shell.user_ns["ApprovalPending"] = ApprovalPending
 def execute(message: dict[str, Any]) -> None:
     execution_id = str(message["id"])
     code = str(message["code"])
-    loop.begin(execution_id, message.get("context") or {})
+    bridge.begin(execution_id, message.get("context") or {})
     stdout = io.StringIO()
     stderr = io.StringIO()
     started = time.monotonic()
@@ -300,7 +332,7 @@ def execute(message: dict[str, Any]) -> None:
         "truncated": truncated,
         "durationMs": round((time.monotonic() - started) * 1000),
         "artifacts": changed_artifacts(files_before),
-        "directives": loop.directives,
+        "directives": bridge.directives,
     })
 
 

@@ -1,4 +1,5 @@
-import { Button } from '@/components/ui/button'
+import { Alert02Icon, Cancel01Icon, File01Icon, Loading03Icon, Upload04Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 /**
  * EmailComposer — slide-in drawer for writing real email.
  *
@@ -20,12 +21,11 @@ import { Button } from '@/components/ui/button'
  * keeps drawer open + surfaces error inline so the user can edit + retry.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { participantRoleZh } from '@/lib/participantRole'
-import { userFacingError } from '@/lib/userFacingError'
-import { emailApi } from '../api'
-import { uploadsApi } from '@/features/platform/api'
+import { Avatar } from '@/components/Avatar'
+import { IMail } from '@/components/icons'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Drawer,
   DrawerClose,
@@ -35,19 +35,21 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
-import { toastAction } from '@/lib/actionToast'
-import { useApp } from '@/stores/app'
-import { useAuth } from '@/stores/auth'
-import { useConversations } from '@/features/conversations/store'
-import { useEmailComposer } from '../state'
+import { useParticipants } from '@/features/agents/state'
 import { chatTransport } from '@/features/chat/runtime'
 import { useChatThreadStore } from '@/features/chat/runtime/store'
-import { useParticipants } from '@/features/agents/state'
+import { useConversations } from '@/features/conversations/store'
+import { uploadsApi } from '@/features/platform/api'
+import { toastAction } from '@/lib/actionToast'
+import { participantRoleZh } from '@/lib/participantRole'
+import { userFacingError } from '@/lib/userFacingError'
+import { useApp } from '@/stores/app'
+import { useAuth } from '@/stores/auth'
 import type { Participant } from '@/types'
-import { Avatar } from '@/components/Avatar'
-import { IMail } from '@/components/icons'
+import { emailApi } from '../api'
+import { useEmailComposer } from '../state'
 
 /** Pending or completed file attachment in the composer. We track the
  *  upload lifecycle locally so the user gets immediate feedback (filename
@@ -415,22 +417,14 @@ export function EmailComposer() {
         onDrop={onDrop}
       >
         {dragOver && (
-          <div
-            // Drop overlay: covers the drawer while dragging, with a
-            // dashed outline + hint text. pointer-events-none so the
-            // child drop target keeps receiving the event.
-            className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none animate-fade-in"
-            style={{
-              background: 'color-mix(in srgb, var(--accent) 12%, var(--panel))',
-              border: '2px dashed var(--skype)',
-              animationDuration: '120ms',
-            }}
-          >
-            <div
-              className="flex items-center gap-2 rounded-xl border border-sky2-200 bg-raised px-5 py-3 text-[13px] font-semibold text-skype-deep shadow-xl"
-            >
-              📎 拖放以附加
-            </div>
+          <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center bg-background/90 p-6 backdrop-blur-sm">
+            <Attachment state="idle" className="bg-card shadow-sm">
+              <AttachmentMedia><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} /></AttachmentMedia>
+              <AttachmentContent>
+                <AttachmentTitle>拖放文件以附加</AttachmentTitle>
+                <AttachmentDescription>松开后立即开始上传</AttachmentDescription>
+              </AttachmentContent>
+            </Attachment>
           </div>
         )}
         <DrawerHeader className="relative flex-row items-center gap-2.5 border-b border-hairline bg-card px-4 py-3.5 pr-14 text-left">
@@ -524,26 +518,32 @@ export function EmailComposer() {
         {attachments.length > 0 && (
           <AttachmentGroup className="mx-3 mb-2" role="group" aria-label="邮件附件" tabIndex={0}>
             {attachments.map((a) => (
-              <Attachment key={a.localId} size="sm" state={a.state}>
-                <AttachmentMedia>{a.state === 'uploading' ? '⏳' : a.state === 'error' ? '⚠️' : '📎'}</AttachmentMedia>
+              <Attachment key={a.localId} size="sm" state={a.state} aria-busy={a.state === 'uploading'}>
+                <AttachmentMedia>
+                  {a.state === 'uploading'
+                    ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" strokeWidth={2} />
+                    : a.state === 'error'
+                      ? <HugeiconsIcon icon={Alert02Icon} strokeWidth={2} />
+                      : <HugeiconsIcon icon={File01Icon} strokeWidth={2} />}
+                </AttachmentMedia>
                 <AttachmentContent>
                   <AttachmentTitle>{a.filename}</AttachmentTitle>
                   <AttachmentDescription>
-                    {a.mimeType} · {humanBytes(a.sizeBytes)}
-                    {a.state === 'uploading' && ' · 正在上传…'}
-                    {a.state === 'error' && ' · 上传失败'}
+                    {a.state === 'error' ? a.error : `${a.mimeType} · ${humanBytes(a.sizeBytes)}${a.state === 'uploading' ? ' · 正在上传…' : ''}`}
                   </AttachmentDescription>
                 </AttachmentContent>
-                <AttachmentActions><AttachmentAction onClick={() => removeAttachment(a.localId)} aria-label={`移除 ${a.filename}`}>×</AttachmentAction></AttachmentActions>
+                <AttachmentActions>
+                  <AttachmentAction onClick={() => removeAttachment(a.localId)} aria-label={`移除 ${a.filename}`}>
+                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+                  </AttachmentAction>
+                </AttachmentActions>
               </Attachment>
             ))}
           </AttachmentGroup>
         )}
 
         {error && (
-          <div className="mx-3 mb-2 rounded-xl border border-coral/25 bg-coral-soft px-4 py-2 text-[12px] text-coral-deep">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mx-3 mb-2 w-auto"><AlertDescription>{error}</AlertDescription></Alert>
         )}
 
         <DrawerFooter className="email-composer-footer mt-auto flex-row items-center gap-2 border-t border-hairline bg-card px-4 py-3">
@@ -558,9 +558,10 @@ export function EmailComposer() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={sending}
-            className="rounded-xl border border-hairline bg-raised px-3 py-2 text-[12px] font-semibold text-ink transition hover:border-sky2-200 hover:text-skype-deep disabled:opacity-50"
+            variant="outline"
+            size="sm"
             title="附加文件"
-          >📎 附上</Button>
+          ><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />附上</Button>
           <span className="text-[11px] text-ink-300 mr-auto">
             来自 <span className="font-mono text-ink-500">{me?.email ?? '未找到登录邮箱'}</span>
           </span>
@@ -568,16 +569,15 @@ export function EmailComposer() {
             type="button"
             onClick={close}
             disabled={sending}
-            className="rounded-xl px-3 py-2 text-[12px] font-semibold text-ink-secondary transition hover:bg-raised hover:text-ink disabled:opacity-50"
+            variant="ghost"
+            size="sm"
           >取消</Button>
           <Button
             type="button"
             onClick={submit}
             disabled={sending}
-            className={cn(
-              'rounded-xl bg-accent px-4 py-2 text-[12px] font-semibold text-white transition hover:brightness-110 disabled:opacity-50',
-            )}
-          >{sending ? "正在发送..." : isReply ? "发送回复" : "发送"}</Button>
+            size="sm"
+          >{sending && <HugeiconsIcon icon={Loading03Icon} className="animate-spin" strokeWidth={2} />}{sending ? "正在发送..." : isReply ? "发送回复" : "发送"}</Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

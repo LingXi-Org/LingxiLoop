@@ -179,6 +179,18 @@ export async function findSource(
   return rows[0] ?? null
 }
 
+export async function updateSourceTitle(db: Queryable, args: {
+  sourceId: string; companyId: string; projectId: string; userId: string; title: string
+}): Promise<boolean> {
+  const result = await db.query(
+    `UPDATE knowledge_sources SET title=$5,updated_at=NOW()
+      WHERE id=$1 AND company_id=$2 AND project_id=$3 AND deleted_at IS NULL
+        AND (visibility_scope='PROJECT' OR (visibility_scope='PRIVATE' AND owner_user_id=$4))`,
+    [args.sourceId, args.companyId, args.projectId, args.userId, args.title],
+  )
+  return (result.rowCount ?? 0) > 0
+}
+
 export async function insertSource(db: Queryable, args: {
   id: string; companyId: string; projectId: string; conversationId: string | null
   kind: 'text' | 'url' | 'file'; title: string; mime: string | null; size: number

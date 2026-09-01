@@ -38,6 +38,7 @@ const ACTION_CAPABILITIES: Record<string, string> = {
   knowledge: 'knowledge',
   presentations: 'knowledge',
   learning: 'learning',
+  routines: 'routines',
   teacher: 'teacher_admin',
 }
 
@@ -117,8 +118,8 @@ async function assertActionAllowed(
   const agent = await loadAgentActionScope(client, work)
   if (!agent) throw new Error('Agent identity is not active in this tenant')
   const namespace = action.action.split('.')[0]
-  if (agent.teacher_managed && namespace !== 'teacher' && namespace !== 'turn') {
-    throw new Error(`Pulse may only call teacher.* and turn.*; ${action.action} is unavailable`)
+  if (agent.teacher_managed && namespace !== 'teacher') {
+    throw new Error(`Pulse may only call teacher.*; ${action.action} is unavailable`)
   }
   if (!agent.teacher_managed && namespace === 'teacher') {
     throw new Error('teacher.* is reserved for the product-managed Pulse Agent')

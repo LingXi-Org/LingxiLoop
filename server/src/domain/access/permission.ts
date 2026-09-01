@@ -166,6 +166,7 @@ export type ResourceAccessMode =
 
 export interface ResolvedAccessContext {
   actorUserId: string
+  platformAdmin: boolean
   company: {
     id: string
     type: CompanyType

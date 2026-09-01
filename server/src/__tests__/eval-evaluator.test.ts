@@ -16,13 +16,18 @@ test('Eval pipeline passes answer, RAG, tool, and parallel collaboration gates',
     expectations: {
       requiredStages: ['answer', 'rag', 'tools', 'collaboration'],
       answer: { requiredKeywords: ['可追溯'], forbiddenPatterns: ['我猜'], maxLatencyMs: 5_000, maxTokens: 500 },
-      rag: { requiredSourceIds: ['source-a'], requireCitations: true },
+      rag: {
+        requiredSourceIds: ['source-a'],
+        requiredClaimCitations: [{ claim: '结论可追溯到给定证据', sourceId: 'source-a' }],
+        requireCitations: true,
+      },
       tools: { calls: [{ name: 'knowledge.search', argsSubset: { query: '评测' } }], requireSuccess: true, allowUnexpected: false },
       collaboration: { requiredAgentIds: ['sage', 'forge'], minAgents: 2, requireAllCompleted: true, requireParallelism: true },
     },
   }, {
-    answer: '结论可追溯到给定证据。[S1]',
+    answer: '[结论可追溯到给定证据](#cite-S1)。',
     retrievedSourceIds: ['source-a'],
+    citedSourceIds: [],
     citations: [{ sourceId: 'source-a', marker: 'S1' }],
     toolCalls: [{ name: 'knowledge.search', args: { query: '评测', limit: 5 }, status: 'ok' }],
     agentTurns: [
@@ -47,12 +52,16 @@ test('Eval pipeline preserves root causes across RAG, tools, and collaboration f
     caseId: 'bad-trace',
     expectations: {
       answer: { requiredKeywords: ['证据'] },
-      rag: { requiredSourceIds: ['source-required'], requireCitations: true },
+      rag: {
+        requiredSourceIds: ['source-required'],
+        requiredClaimCitations: [{ claim: '这是一个猜测', sourceId: 'source-required' }],
+        requireCitations: true,
+      },
       tools: { calls: [{ name: 'calendar.create' }], forbiddenToolNames: ['email.send'], requireSuccess: true },
       collaboration: { minAgents: 2, maxFailedAgents: 0 },
     },
   }, {
-    answer: '这是一个猜测。[S9]',
+    answer: '[这是一个猜测](#cite-S9)。',
     retrievedSourceIds: ['source-other'],
     citations: [{ sourceId: 'source-other', marker: 'S1' }],
     toolCalls: [{ name: 'email.send', status: 'error' }],
@@ -61,6 +70,7 @@ test('Eval pipeline preserves root causes across RAG, tools, and collaboration f
   assert.equal(report.status, 'fail')
   assert.ok(report.failureReasons.some((reason) => reason.includes('缺少关键点')))
   assert.ok(report.failureReasons.some((reason) => reason.includes('召回率')))
+  assert.ok(report.failureReasons.some((reason) => reason.includes('论断没有引用预期来源')))
   assert.ok(report.failureReasons.some((reason) => reason.includes('禁止工具')))
   assert.ok(report.failureReasons.some((reason) => reason.includes('Agent 参与')))
   assert.equal(report.stages.find((stage) => stage.stage === 'aggregate')?.status, 'fail')

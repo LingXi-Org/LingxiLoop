@@ -75,13 +75,15 @@ export class PlatformApplication {
     if (!policy) throw new PlatformApplicationError('mime_not_allowed', `mime not allowed: ${input.mime}`)
     const id = randomUUID().replaceAll('-', '')
     const key = `attachments/${companyId}/${id}.${policy.ext}`
-    const signed = await this.infrastructure.storage.presignPut(key, input.mime)
+    const signed = await this.infrastructure.storage.presignPut(key, input.mime, { contentLength: input.size })
     return { ...signed, key, ...input, kind: policy.kind }
   }
 
-  async refreshUploadUrl(requestedKey: string): Promise<{ key: string; url: string }> {
+  async refreshUploadUrl(companyId: string, requestedKey: string): Promise<{ key: string; url: string }> {
     const key = normalizeStorageKey(requestedKey)
-    if (!key) throw new PlatformApplicationError('storage_key_invalid', 'native storage key required')
+    if (!key || !key.startsWith(`attachments/${companyId}/`)) {
+      throw new PlatformApplicationError('storage_key_invalid', 'workspace attachment key required')
+    }
     return { key, url: await this.infrastructure.storage.publicUrl(key) }
   }
 

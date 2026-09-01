@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
+import type { AssistantStreamChunk } from 'assistant-stream'
 import { type NextFunction, type Request, type Response, Router } from 'express'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
@@ -9,6 +10,7 @@ import { createPermissionService } from '../modules/access/public.js'
 import { assertCanvasWorkReportReady, completeCanvasWork, getCanvasSnapshot, listCanvasAvailableAgents, setCanvasStatus } from '../modules/canvas/index.js'
 import { retrieveKnowledge } from '../modules/knowledge/public.js'
 import { loadLearningTurnContext, loadTeacherTurnContext } from '../modules/learning/public.js'
+import { CH_ASSISTANT_STREAM, publish } from '../redis.js'
 import { executeActionWithLedger } from './host-action-application.js'
 import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
 import {
@@ -25,6 +27,83 @@ export { executeActionWithLedger } from './host-action-application.js'
 export const agentOSControlRouter = Router()
 
 function hash(value: string): string { return createHash('sha256').update(value).digest('hex') }
+
+function validPartIndex(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+}
+
+type KnowledgePreviewClaim = {
+  id: string
+  text: ''
+  confidence: 'grounded'
+  basis: string
+  sourceId: string
+  sourceTitle: string
+  excerpt: string
+  sourceUrl?: string
+  position: number
+}
+
+function parseKnowledgePreviewClaims(value: unknown): KnowledgePreviewClaim[] | null {
+  if (!Array.isArray(value) || value.length > 32) return null
+  const ids = new Set<string>()
+  const claims: KnowledgePreviewClaim[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null
+    const claim = item as Record<string, unknown>
+    if (
+      typeof claim.id !== 'string'
+      || !/^S\d+$/.test(claim.id)
+      || ids.has(claim.id)
+      || claim.text !== ''
+      || claim.confidence !== 'grounded'
+      || typeof claim.basis !== 'string'
+      || !claim.basis.trim()
+      || claim.basis.length > 4_000
+      || typeof claim.sourceId !== 'string'
+      || !claim.sourceId.trim()
+      || typeof claim.sourceTitle !== 'string'
+      || !claim.sourceTitle.trim()
+      || typeof claim.excerpt !== 'string'
+      || !claim.excerpt.trim()
+      || claim.basis !== `${claim.sourceTitle} · ${claim.excerpt}`
+      || (claim.sourceUrl !== undefined && typeof claim.sourceUrl !== 'string')
+      || typeof claim.position !== 'number'
+      || !Number.isSafeInteger(claim.position)
+      || claim.position < 0
+    ) return null
+    ids.add(claim.id)
+    claims.push({
+      id: claim.id,
+      text: '',
+      confidence: 'grounded',
+      basis: claim.basis,
+      sourceId: claim.sourceId,
+      sourceTitle: claim.sourceTitle,
+      excerpt: claim.excerpt,
+      ...(claim.sourceUrl ? { sourceUrl: claim.sourceUrl } : {}),
+      position: claim.position,
+    })
+  }
+  return claims
+}
+
+function contextualKnowledgeQuery(
+  messages: Array<{ clientMsgNo: string; authorKind: 'agent' | 'human'; body: string; replyToClientMsgNo?: string }>,
+  current: { clientMsgNo: string; body: string; replyToClientMsgNo?: string },
+): string {
+  const reply = current.replyToClientMsgNo
+    ? messages.find((message) => message.clientMsgNo === current.replyToClientMsgNo)
+    : undefined
+  const priorUsers = messages
+    .filter((message) => message.authorKind === 'human' && message.clientMsgNo !== current.clientMsgNo)
+    .slice(-2)
+  return [
+    `current user question: ${current.body}`,
+    reply ? `replied-to ${reply.authorKind} message: ${reply.body}` : '',
+    ...priorUsers.map((message) => `earlier user message: ${message.body}`),
+  ].filter(Boolean).join('\n').slice(0, 2_000)
+}
 
 function serviceAuthorized(req: Request): boolean {
   const expected = process.env.AGENT_OS_SERVICE_TOKEN ?? 'dev-agent-os-service-token'
@@ -300,6 +379,7 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
         conversationId: work.channelId,
         authorizationUserId: knowledgeAuthorizationUserId,
         query: triggerMessage?.body ?? learnerMessage.body,
+        contextQuery: contextualKnowledgeQuery(messages, triggerMessage ?? learnerMessage),
       })
     : []
   const promptContextCandidate = learnerMessage || teacherContext ? await buildPromptContext({
@@ -334,6 +414,7 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
   res.json({
     work,
     persona,
+    capabilities,
     messages,
     knowledgeContext,
     ...(learningContext ? { learningContext } : {}),
@@ -347,7 +428,7 @@ agentOSControlRouter.get('/work/:id/context', safe(async (req, res) => {
       id: canvas.id, title: canvas.title, goal: canvas.goal, status: canvas.status,
       initiatorAgentId: canvas.initiatorAgentId,
       assignment: canvas.assignments.find((item) => item.agentId === work.agentId),
-      assignments: canvas.assignments, frames: canvas.frames,
+      assignments: canvas.assignments, reports: canvas.reports, frames: canvas.frames,
       activity: canvas.activity.slice(0, 50),
     } } : {}),
     ...(approvals[0] ? { pendingApproval: {
@@ -423,7 +504,11 @@ agentOSControlRouter.put('/sessions', safe(async (req, res) => {
   const { rows: saved } = await pool.query<{ revision: string | number }>(
     `INSERT INTO agent_os_sessions
        (session_key, company_id, agent_id, channel_id, thread_root_client_msg_no, summary, history, revision, compaction_epoch, prompt_context, applied_work_ids)
-     SELECT $1,$2,$3,$4,$5,$6,$7::jsonb,1,$9,$10::jsonb,$11::jsonb WHERE $8=0
+     SELECT $1,$2,$3,$4,$5,$6,$7::jsonb,1,$9,$10::jsonb,$11::jsonb
+      WHERE $8=0 OR EXISTS (
+        SELECT 1 FROM agent_os_sessions current
+         WHERE current.session_key=$1 AND current.revision=$8
+      )
      ON CONFLICT (session_key) DO UPDATE SET summary=EXCLUDED.summary, history=EXCLUDED.history,
        compaction_epoch=EXCLUDED.compaction_epoch,prompt_context=EXCLUDED.prompt_context,
        applied_work_ids=EXCLUDED.applied_work_ids,
@@ -445,7 +530,27 @@ agentOSControlRouter.post('/work/:id/actions', safe(async (req, res) => {
 
 agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
   const { work } = await requireLease(req)
-  const event = req.body.event as AgentRunEvent
+  const rawEvent: unknown = req.body.event
+  if (!rawEvent || typeof rawEvent !== 'object') { res.status(400).json({ error: 'invalid Agent OS event' }); return }
+  const event = rawEvent as AgentRunEvent
+  if (
+    event.runId !== work.id
+    || !Number.isSafeInteger(event.seq)
+    || event.seq <= 0
+    || !['started', 'delta', 'completed', 'failed', 'cancelled'].includes(event.stage)
+    || (event.visibility !== 'user' && event.visibility !== 'internal')
+    || !event.data
+    || typeof event.data !== 'object'
+    || Array.isArray(event.data)
+  ) { res.status(400).json({ error: 'invalid Agent OS event envelope' }); return }
+  const knowledgeClaims = event.kind === 'knowledge.context.loaded'
+    ? parseKnowledgePreviewClaims((event.data as Record<string, unknown>).previewClaims)
+    : undefined
+  if (event.kind === 'knowledge.context.loaded' && knowledgeClaims === null) {
+    res.status(400).json({ error: 'invalid knowledge preview claims' }); return
+  }
+  const ledgerData = { ...(event.data as Record<string, unknown>) }
+  if (event.kind === 'knowledge.context.loaded') delete ledgerData.previewClaims
   await withTransaction(pool, async (db) => {
     await db.query(
     `INSERT INTO agent_runs (id, agent_id, company_id, trigger, status, stage, reasoning_runtime)
@@ -457,7 +562,7 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9)
      ON CONFLICT (run_id, sequence) WHERE sequence IS NOT NULL DO NOTHING RETURNING id`,
     [randomUUID(), event.runId, work.agentId, work.companyId, event.kind,
-      event.stage === 'failed' ? 'error' : 'info', event.kind, JSON.stringify(event.data), event.seq],
+      event.stage === 'failed' ? 'error' : 'info', event.kind, JSON.stringify(ledgerData), event.seq],
   )
   if (insertedEvents.length > 0 && (event.kind === 'model.completed' || event.kind === 'model.failed')) {
     const data = event.data as {
@@ -494,31 +599,158 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
     }
     res.json({ ok: true }); return
   }
+  if (work.reason === 'memory_synthesis') { res.json({ ok: true }); return }
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(`SELECT profile FROM im_channel_bindings WHERE channel_id=$1`, [work.channelId])
   const channelType = Number(rows[0]?.profile?.channelType ?? 2)
   const previewClientMsgNo = `preview-${event.runId}`
-  if (event.kind === 'run.started') {
-    // A run-start notification is transport state, not conversation content.
-    // Keep it ephemeral so it cannot leak into history as a tool bubble.
-    await wukongClient().emitEvent({
-      channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
-      eventId: `${event.runId}:${event.seq}`, eventType: 'stream.open',
-      data: { kind: 'text', text: '', phase: 'thinking', streamSeq: event.seq },
-    }).catch(() => undefined)
+  const publishPreview = (chunks: AssistantStreamChunk[], sequence = event.seq * 2) => publish(CH_ASSISTANT_STREAM, {
+    type: 'assistant.stream' as const,
+    companyId: work.companyId,
+    conversationId: work.channelId,
+    messageId: previewClientMsgNo,
+    authorId: work.agentId,
+    sequence,
+    chunks,
+  })
+  const sendActivity = (body: string, data: Record<string, unknown>) => wukongClient().sendMessage(
+    work.channelId,
+    channelType,
+    work.agentId,
+    {
+      version: 1,
+      kind: 'tool_activity',
+      clientMsgNo: `activity-${event.runId}-${event.seq}`,
+      body,
+      refs: { runId: event.runId, agentId: work.agentId },
+      data: { ...data, suppressAgentWake: true },
+    },
+  )
+  if (event.kind === 'knowledge.context.loaded') {
+    if (knowledgeClaims && knowledgeClaims.length > 0) {
+      await publishPreview([
+        {
+          type: 'part-start', path: [0],
+          part: { type: 'tool-call', toolCallId: `knowledge-${work.id}`, toolName: 'cite_claims' },
+        },
+        { type: 'text-delta', path: [0], textDelta: '{}' },
+        { type: 'tool-call-args-text-finish', path: [0] },
+        { type: 'result', path: [0], result: { claims: knowledgeClaims }, isError: false },
+        { type: 'part-finish', path: [0] },
+      ])
+    }
+  } else if (event.kind === 'run.started' || event.kind === 'model.started') {
+    await publishPreview([{ type: 'step-start', path: [], messageId: previewClientMsgNo }])
   } else if (event.kind === 'model.delta') {
-    await wukongClient().emitEvent({
-      channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
-      eventId: `${event.runId}:${event.seq}`, eventType: 'stream.delta',
-      data: { kind: 'text', delta: String((event.data as { delta?: unknown } | null)?.delta ?? ''), streamSeq: event.seq },
-    }).catch(() => undefined)
-  } else if (event.kind === 'run.completed' || event.kind === 'run.failed' || event.kind === 'run.cancelled') {
-    const eventType = event.kind === 'run.completed' ? 'stream.close' : event.kind === 'run.cancelled' ? 'stream.cancel' : 'stream.error'
-    await wukongClient().emitEvent({
-      channelId: work.channelId, channelType, fromUid: work.agentId, clientMsgNo: previewClientMsgNo,
-      eventId: `${event.runId}:${event.seq}`, eventType, data: { kind: 'text', event, streamSeq: event.seq },
-    }).catch(() => undefined)
+    const data = event.data as {
+      delta?: unknown
+      finishPartIndex?: unknown
+      partIndex?: unknown
+      partStart?: unknown
+      partType?: unknown
+    } | null
+    const delta = typeof data?.delta === 'string' ? data.delta : ''
+    if (!delta) throw new Error('model.delta must contain a non-empty native stream delta')
+    const partType = data?.partType
+    const partIndexValue = data?.partIndex
+    if ((partType !== 'reasoning' && partType !== 'text') || !validPartIndex(partIndexValue)) {
+      throw new Error('model.delta must identify a native reasoning or text part')
+    }
+    const partIndex = partIndexValue as number
+    const chunks: AssistantStreamChunk[] = []
+    if (data?.finishPartIndex !== undefined && !validPartIndex(data.finishPartIndex)) {
+      throw new Error('model.delta contains an invalid native finish part index')
+    }
+    if (validPartIndex(data?.finishPartIndex)) {
+      chunks.push({ type: 'part-finish', path: [data?.finishPartIndex as number] })
+    }
+    if (data?.partStart === true) chunks.push({ type: 'part-start', path: [partIndex], part: { type: partType } })
+    chunks.push({ type: 'text-delta', path: [partIndex], textDelta: delta })
+    await publishPreview(chunks)
+  } else if (event.kind === 'model.completed') {
+    const finishPartIndex = (event.data as { finishPartIndex?: unknown } | null)?.finishPartIndex
+    if (finishPartIndex !== undefined && !validPartIndex(finishPartIndex)) {
+      throw new Error('model.completed contains an invalid native finish part index')
+    }
+    if (validPartIndex(finishPartIndex)) {
+      await publishPreview([{ type: 'part-finish', path: [finishPartIndex as number] }])
+    }
+  } else if (event.kind === 'ipython.started') {
+    const data = event.data as { callId?: unknown; partIndex?: unknown; codePreview?: unknown } | null
+    if (typeof data?.callId !== 'string' || !data.callId || !validPartIndex(data.partIndex)) {
+      throw new Error('ipython.started must identify its native assistant-ui tool part')
+    }
+    await publishPreview([
+      {
+        type: 'part-start', path: [data.partIndex as number],
+        part: { type: 'tool-call', toolCallId: data.callId, toolName: 'ipython' },
+      },
+      {
+        type: 'text-delta', path: [data.partIndex as number],
+        textDelta: JSON.stringify({ codePreview: typeof data.codePreview === 'string' ? data.codePreview : '' }),
+      },
+      { type: 'tool-call-args-text-finish', path: [data.partIndex as number] },
+    ])
+  } else if (event.kind === 'ipython.completed' || event.kind === 'ipython.timeout' || event.kind === 'ipython.failed') {
+    const data = event.data as {
+      artifactCount?: unknown
+      callId?: unknown
+      durationMs?: unknown
+      error?: unknown
+      partIndex?: unknown
+      recoverable?: unknown
+      timeoutMs?: unknown
+      truncated?: unknown
+    } | null
+    if (typeof data?.callId !== 'string' || !data.callId || !validPartIndex(data.partIndex)) {
+      throw new Error(`${event.kind} must identify its native assistant-ui tool part`)
+    }
+    const failed = event.kind !== 'ipython.completed'
+    const error = event.kind === 'ipython.timeout'
+      ? `IPython 执行超过 ${Number(data.timeoutMs ?? 0)} ms，内核已重启`
+      : failed ? String(data.error ?? 'IPython 执行失败') : undefined
+    const result: Record<string, string | number | boolean> = failed
+      ? { status: 'failed', error: String(error), recoverable: data.recoverable === true }
+      : {
+          status: 'completed',
+          durationMs: Number(data.durationMs ?? 0),
+          truncated: data.truncated === true,
+          artifactCount: Number(data.artifactCount ?? 0),
+        }
+    await publishPreview([
+      { type: 'result', path: [data.partIndex as number], result, isError: failed },
+      { type: 'part-finish', path: [data.partIndex as number] },
+    ])
+    const detail = failed
+      ? error
+      : `用时 ${Number(data.durationMs ?? 0)} ms${data.truncated === true ? ' · 输出已截断' : ''}`
+    if (data.recoverable !== true) await sendActivity('IPython', {
+      name: 'IPython',
+      stage: failed ? 'failed' : 'completed',
+      status: failed ? 'failed' : 'completed',
+      detail,
+      callId: data.callId,
+    })
+  } else if (event.kind === 'run.failed' || event.kind === 'run.cancelled') {
+    const error = String((event.data as { error?: unknown } | null)?.error ?? event.kind)
+    await publishPreview([{ type: 'error', path: [], error, code: event.kind }])
+  } else if (event.kind === 'run.completed' && (event.data as { deferredToCanvasId?: unknown } | null)?.deferredToCanvasId) {
+    await publishPreview([{
+      type: 'message-finish', path: [], finishReason: 'stop',
+      usage: { inputTokens: 0, outputTokens: 0 },
+    }])
   } else if (event.kind === 'approval.pending') {
-    const approvalId = String((event.data as { approvalId?: unknown } | null)?.approvalId ?? '')
+    const approvalData = event.data as { approvalId?: unknown; callId?: unknown; partIndex?: unknown } | null
+    const approvalId = String(approvalData?.approvalId ?? '')
+    if (!approvalId || typeof approvalData?.callId !== 'string' || !approvalData.callId || !validPartIndex(approvalData.partIndex)) {
+      throw new Error('approval.pending must identify its native assistant-ui tool part')
+    }
+    await publishPreview([
+      {
+        type: 'result', path: [approvalData.partIndex as number], isError: false,
+        result: { status: 'completed', approvalPending: approvalId },
+      },
+      { type: 'part-finish', path: [approvalData.partIndex as number] },
+    ])
     const { rows: approvals } = await pool.query<{
       id: string; agent_id: string; action: string; args: Record<string, unknown>; summary: string
       status: string; requested_at: string; resolved_at: string | null; resolved_by: string | null
@@ -540,13 +772,12 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
         },
       })
     }
+    await publishPreview([{
+      type: 'message-finish', path: [], finishReason: 'tool-calls',
+      usage: { inputTokens: 0, outputTokens: 0 },
+    }], event.seq * 2 + 1)
   } else if (event.visibility === 'user') {
-    const activity: LingxiMessageV1 = {
-      version: 1, kind: event.kind.startsWith('approval.') ? 'approval' : 'tool_activity',
-      clientMsgNo: `activity-${event.runId}-${event.seq}`, body: event.kind,
-      refs: { runId: event.runId, agentId: work.agentId }, data: { stage: event.stage, suppressAgentWake: true },
-    }
-    await wukongClient().sendMessage(work.channelId, channelType, work.agentId, activity)
+    await sendActivity(event.kind, { stage: event.stage })
   }
   res.json({ ok: true })
 }))
@@ -558,6 +789,39 @@ agentOSControlRouter.post('/work/:id/messages', safe(async (req, res) => {
     if (canvases[0]?.status !== 'summarizing') { res.json({ ok: true, suppressed: true }); return }
   }
   const message = req.body.message as LingxiMessageV1
+  if (message.kind !== 'text' || message.refs?.runId !== work.id || !message.body?.trim()) {
+    res.status(409).json({ error: 'assistant message is missing its native stream identity or body' }); return
+  }
+  const { rows: streamEvents } = await pool.query<{ kind: string; data: Record<string, unknown>; sequence: number }>(
+    `SELECT kind,data,sequence FROM agent_events
+      WHERE run_id=$1 AND kind IN ('model.started','model.delta','model.completed')
+      ORDER BY sequence`,
+    [work.id],
+  )
+  const streamed = streamEvents
+    .filter((row) => row.kind === 'model.delta' && row.data.partType === 'text' && typeof row.data.delta === 'string')
+    .map((row) => String(row.data.delta))
+    .join('')
+    .trim()
+  const completed = streamEvents.filter((row) => row.kind === 'model.completed')
+  if (!streamed || completed.length === 0 || streamed !== message.body.trim()) {
+    res.status(409).json({ error: 'assistant final message does not match its native streamed deltas' }); return
+  }
+  const usage = completed.reduce((total, row) => {
+    const value = row.data.usage as { inputTokens?: unknown; outputTokens?: unknown } | undefined
+    return {
+      inputTokens: total.inputTokens + (typeof value?.inputTokens === 'number' ? value.inputTokens : 0),
+      outputTokens: total.outputTokens + (typeof value?.outputTokens === 'number' ? value.outputTokens : 0),
+    }
+  }, { inputTokens: 0, outputTokens: 0 })
+  const sequence = (streamEvents.at(-1)?.sequence ?? 0) * 2 + 1
+  await publish(CH_ASSISTANT_STREAM, {
+    type: 'assistant.stream', companyId: work.companyId, conversationId: work.channelId,
+    messageId: `preview-${work.id}`, authorId: work.agentId, sequence,
+    chunks: [
+      { type: 'message-finish', path: [], finishReason: 'stop', usage },
+    ],
+  })
   const { rows } = await pool.query<{ profile: Record<string, unknown> }>(`SELECT profile FROM im_channel_bindings WHERE channel_id=$1`, [work.channelId])
   res.json(await wukongClient().sendMessage(work.channelId, Number(rows[0]?.profile?.channelType ?? 2), work.agentId, message))
 }))

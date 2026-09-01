@@ -1,5 +1,6 @@
 export const AGENT_OS_PROTOCOL_VERSION = 1 as const
-export const KNOWLEDGE_CONTRACT_VERSION = 'native-v1' as const
+export const PROMPT_CONTRACT_VERSION = 'prompt-v3' as const
+export const KNOWLEDGE_CONTRACT_VERSION = 'native-v2' as const
 
 export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary' | 'memory_synthesis'
 export type WorkLane = 'learner' | 'approval' | 'collaboration' | 'background'
@@ -103,6 +104,7 @@ export interface AgentContext {
     role: string
     instructions: string
   }
+  capabilities?: string[]
   messages: AgentContextMessage[]
   /** Retrieved for this turn only. Never frozen into PromptContext/session. */
   knowledgeContext?: Array<{

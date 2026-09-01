@@ -165,6 +165,7 @@ const legacyMembershipSqlAllowlist = new Set([
   'server/src/modules/learning/teacher-provisioning-repository.ts',
   'server/src/modules/learning/teacher-reporting-repository.ts',
   'server/src/modules/learning/teacher-runtime-repository.ts',
+  'server/src/modules/platform-operations/resources.ts',
   'server/src/modules/transfers/repository.ts',
   'server/src/ws.ts',
 ])

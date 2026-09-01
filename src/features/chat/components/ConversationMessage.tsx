@@ -1,24 +1,31 @@
 import {
   ActionBarPrimitive,
-  MessagePrimitive,
-  useAui,
-  useAuiState,
   type FileMessagePartProps,
   type ImageMessagePartProps,
+  MessagePrimitive,
   type ReasoningMessagePartProps,
   type SourceMessagePartProps,
+  useAui,
+  useAuiState,
 } from '@assistant-ui/react'
-import { Copy01Icon, ReplyIcon, SmilePlusIcon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, Copy01Icon, File01Icon, Loading03Icon, ReplyIcon, SmilePlusIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { MarkdownText } from '@/components/assistant-ui/markdown-text'
-import { ConfidenceMarker, type ConfidenceClaim } from '@/components/confidence-marker'
-import { TypingIndicator } from '@/components/typing-indicator'
 import { TwEmoji } from '@/components/TwEmoji'
+import { TypingIndicator } from '@/components/typing-indicator'
+import {
+  Attachment,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+  AttachmentTrigger,
+} from '@/components/ui/attachment'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { useParticipants } from '@/features/agents/state'
+import { cn } from '@/lib/utils'
 import { useConversationUi } from '@/stores/conversationUi'
 import { chatTransport, type LingxiMessageMetadata } from '../runtime'
 import { CHAT_TOOL_RENDERERS } from './ToolRenderers'
@@ -34,18 +41,70 @@ function ReasoningPart({ status }: ReasoningMessagePartProps) {
   )
 }
 
+function AgentMarkdownText() { return <MarkdownText segmented /> }
+
 function ImagePart({ image, filename }: ImageMessagePartProps) {
-  return <img src={image} alt={filename ?? ''} className="my-2 max-h-[420px] max-w-full rounded-2xl object-contain" />
+  const [state, setState] = useState<'processing' | 'error' | 'done'>('processing')
+  return <Attachment
+    state={state}
+    orientation="vertical"
+    className="my-2 w-56 max-w-full overflow-hidden has-data-[slot=attachment-content]:w-56"
+    aria-busy={state === 'processing'}
+  >
+    <AttachmentMedia variant="image" className="aspect-auto w-full rounded-b-none p-0">
+      {state === 'processing' && <HugeiconsIcon icon={Loading03Icon} className="absolute animate-spin" strokeWidth={2} />}
+      <img
+        src={image}
+        alt={filename ?? ''}
+        className="max-h-[420px] min-h-24 w-full object-contain"
+        onLoad={() => setState('done')}
+        onError={() => setState('error')}
+      />
+    </AttachmentMedia>
+    <AttachmentContent>
+      <AttachmentTitle>{filename ?? '图片附件'}</AttachmentTitle>
+      <AttachmentDescription>{state === 'error' ? '图片加载失败' : state === 'processing' ? '正在加载图片…' : '图片'}</AttachmentDescription>
+    </AttachmentContent>
+    <AttachmentTrigger asChild>
+      <a href={image} target="_blank" rel="noreferrer" aria-label={`打开 ${filename ?? '图片附件'}`} />
+    </AttachmentTrigger>
+  </Attachment>
 }
 
 function FilePart({ data, filename, mimeType }: FileMessagePartProps) {
-  if (mimeType.startsWith('audio/')) return <audio src={data} controls className="my-2 max-w-full" />
-  if (mimeType.startsWith('video/')) return <video src={data} controls className="my-2 max-h-[420px] max-w-full rounded-2xl" />
-  return (
-    <a href={data} target="_blank" rel="noreferrer" className="my-2 flex max-w-md items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm text-primary">
-      {filename ?? '下载附件'}
-    </a>
-  )
+  const media = mimeType.startsWith('audio/') || mimeType.startsWith('video/')
+  const [state, setState] = useState<'processing' | 'error' | 'done'>(media ? 'processing' : 'done')
+  if (mimeType.startsWith('video/')) return <Attachment
+    state={state}
+    orientation="vertical"
+    className="my-2 w-72 max-w-full overflow-hidden has-data-[slot=attachment-content]:w-72"
+    aria-busy={state === 'processing'}
+  >
+    <AttachmentMedia variant="image" className="aspect-video w-full rounded-b-none p-0">
+      {state === 'processing' && <HugeiconsIcon icon={Loading03Icon} className="absolute animate-spin" strokeWidth={2} />}
+      <video src={data} controls preload="metadata" className="size-full object-contain" onLoadedMetadata={() => setState('done')} onError={() => setState('error')} />
+    </AttachmentMedia>
+    <AttachmentContent>
+      <AttachmentTitle>{filename ?? '视频附件'}</AttachmentTitle>
+      <AttachmentDescription>{state === 'error' ? '视频加载失败' : state === 'processing' ? '正在加载视频…' : mimeType}</AttachmentDescription>
+    </AttachmentContent>
+  </Attachment>
+  return <Attachment state={state} className="my-2 w-full max-w-md" aria-busy={state === 'processing'}>
+    <AttachmentMedia>
+      {state === 'processing'
+        ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" strokeWidth={2} />
+        : state === 'error'
+          ? <HugeiconsIcon icon={Alert02Icon} strokeWidth={2} />
+          : <HugeiconsIcon icon={File01Icon} strokeWidth={2} />}
+    </AttachmentMedia>
+    <AttachmentContent>
+      <AttachmentTitle>{filename ?? '附件'}</AttachmentTitle>
+      <AttachmentDescription>{state === 'error' ? '附件加载失败' : state === 'processing' ? '正在加载附件…' : mimeType}</AttachmentDescription>
+    </AttachmentContent>
+    {mimeType.startsWith('audio/')
+      ? <audio src={data} controls preload="metadata" className="w-full basis-full px-2 pb-2" onLoadedMetadata={() => setState('done')} onError={() => setState('error')} />
+      : <AttachmentTrigger asChild><a href={data} target="_blank" rel="noreferrer" aria-label={`打开 ${filename ?? '附件'}`} /></AttachmentTrigger>}
+  </Attachment>
 }
 
 function SourcePart({ url, title }: SourceMessagePartProps) {
@@ -179,32 +238,27 @@ export function ConversationMessage() {
   const createdAt = useAuiState((state) => state.message.createdAt)
   const messageId = useAuiState((state) => state.message.id)
   const awaitingContent = useAuiState((state) => (
-    state.message.status?.type === 'running' && state.message.content.length === 0
+    state.message.status?.type === 'running' && state.message.content.every((part) => (
+      part.type === 'tool-call' && part.toolName === 'cite_claims'
+    ))
   ))
   const participant = useParticipants((state) => state.byId[custom.senderId])
-  const [hoveredCitationId, setHoveredCitationId] = useState('')
-  const citationClaims: ConfidenceClaim[] = (custom.citations ?? []).map((citation) => ({
-    id: `${citation.marker}:${citation.sourceId}`,
-    text: citation.excerpt,
-    confidence: 'grounded',
-    basis: `[${citation.marker}] ${citation.sourceTitle}`,
-  }))
   const groupPosition = custom.groupStart
     ? custom.groupEnd ? 'single' : 'start'
     : custom.groupEnd ? 'end' : 'middle'
   const bubbleRadius = groupPosition === 'single'
     ? 'rounded-[18px]'
     : custom.isMine
-    ? groupPosition === 'middle'
-      ? 'rounded-[18px_4px_4px_18px]'
-      : groupPosition === 'end'
-        ? 'rounded-[18px_4px_18px_18px]'
-        : 'rounded-[18px_18px_4px_18px]'
-    : groupPosition === 'middle'
-      ? 'rounded-[4px_18px_18px_4px]'
-      : groupPosition === 'end'
-        ? 'rounded-[4px_18px_18px_18px]'
-      : 'rounded-[18px_18px_18px_4px]'
+      ? groupPosition === 'start'
+        ? 'rounded-[18px_18px_6px_18px]'
+        : groupPosition === 'end'
+          ? 'rounded-[18px_6px_18px_18px]'
+          : 'rounded-[18px_6px_6px_18px]'
+      : groupPosition === 'start'
+        ? 'rounded-[18px_18px_18px_6px]'
+        : groupPosition === 'end'
+          ? 'rounded-[6px_18px_18px_18px]'
+          : 'rounded-[6px_18px_18px_6px]'
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
@@ -218,16 +272,19 @@ export function ConversationMessage() {
       )}
     >
       <div className={cn(
-        'w-10 shrink-0 pt-0.5',
+        'flex w-10 shrink-0 items-end pb-5',
         participant?.kind === 'agent' && 'chat-message-avatar',
         participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
         participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
       )}>
-        {custom.groupStart && participant && <Avatar p={participant} size={38} ringColor="var(--background)" mode="chat" />}
+        {custom.groupEnd && participant && <Avatar p={participant} size={38} ringColor="var(--background)" mode="chat" />}
       </div>
       <div className={cn('flex min-w-0 flex-1 flex-col', custom.isMine && 'items-end')}>
         {custom.groupStart && !custom.isMine && (
-          <div className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">{custom.senderName}</div>
+          <div className="mb-1 flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
+            <span className="font-medium">{custom.senderName}</span>
+            <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>
+          </div>
         )}
         <div className={cn('relative w-fit max-w-[75%]', custom.messageKind !== 'text' && 'max-w-full')}>
           <MessageActions metadata={custom} text={text} />
@@ -235,11 +292,10 @@ export function ConversationMessage() {
             data-message-bubble={custom.isMine ? 'user' : 'assistant'}
             data-message-group-position={groupPosition}
             className={cn(
-              'relative min-w-0 px-3.5 py-2 text-[15px] leading-[1.35] tracking-[-0.01em]',
-              bubbleRadius,
-              custom.isMine
-                ? 'bg-primary text-white [&_.typeset]:!text-white [&_.typeset_*]:!text-white'
-                : 'bg-muted text-foreground',
+              'relative min-w-0 text-[15px] leading-[1.35] tracking-[-0.01em]',
+              custom.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-white [&_.typeset]:!text-white [&_.typeset_*]:!text-white'],
+              !custom.isMine && custom.messageKind === 'text' && 'text-foreground',
+              !custom.isMine && custom.messageKind !== 'text' && ['px-3.5 py-2', bubbleRadius, 'bg-[var(--bubble-agent)] text-foreground'],
               custom.messageKind !== 'text' && [
                 'w-full overflow-hidden p-0',
                 '[&_[data-tool-ui-id]]:m-0 [&_[data-tool-ui-id]]:min-w-0 [&_[data-tool-ui-id]]:max-w-none',
@@ -252,7 +308,7 @@ export function ConversationMessage() {
             {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
             <MessagePrimitive.Parts
               components={{
-                Text: MarkdownText,
+                Text: custom.isMine ? MarkdownText : AgentMarkdownText,
                 Reasoning: ReasoningPart,
                 Image: ImagePart,
                 File: FilePart,
@@ -264,17 +320,11 @@ export function ConversationMessage() {
             <MessagePrimitive.Error>
               <div className="mt-2 text-xs text-destructive">消息生成失败</div>
             </MessagePrimitive.Error>
-            {citationClaims.length > 0 && <ConfidenceMarker
-              claims={citationClaims}
-              hoveredId={hoveredCitationId}
-              onHover={setHoveredCitationId}
-              className="max-w-full px-3.5 pb-2"
-            />}
           </div>
         </div>
         <Reactions metadata={custom} messageId={messageId} />
         <div className={cn('mt-0.5 flex items-center gap-2 px-1 text-[10px] text-muted-foreground', custom.isMine && 'justify-end')}>
-          {custom.groupEnd && <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
+          {custom.isMine && custom.groupEnd && <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
           {custom.isMine && custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}
         </div>
       </div>

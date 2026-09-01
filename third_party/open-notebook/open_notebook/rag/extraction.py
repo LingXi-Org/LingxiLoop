@@ -20,7 +20,7 @@ from open_notebook.exceptions import ExternalServiceError, InvalidInputError
 from open_notebook.utils.url_validation import PinnedHttpTarget
 
 ALLOWED_FILE_SUFFIXES = {".pdf", ".docx", ".txt", ".md", ".markdown", ".csv", ".json"}
-MAX_SOURCE_BYTES = 25 * 1024 * 1024
+MAX_SOURCE_BYTES = 200 * 1024 * 1024
 MAX_DOCX_ENTRIES = 10_000
 MAX_DOCX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
 MAX_REDIRECTS = 5
@@ -114,7 +114,7 @@ def validate_supported_file(file_path: str) -> None:
             "Supported uploads are PDF, DOCX, TXT, Markdown, CSV, and JSON"
         )
     if path.stat().st_size > MAX_SOURCE_BYTES:
-        raise InvalidInputError("File exceeds the 25 MiB limit")
+        raise InvalidInputError("File exceeds the 200 MiB limit")
     if suffix == ".pdf":
         if b"%PDF-" not in path.read_bytes()[:1024]:
             raise InvalidInputError("Uploaded PDF has an invalid signature")
@@ -247,14 +247,14 @@ async def _read_bounded_response(response: httpx.Response) -> bytes:
     if declared:
         try:
             if int(declared) > MAX_SOURCE_BYTES:
-                raise InvalidInputError("URL response exceeds the 25 MiB limit")
+                raise InvalidInputError("URL response exceeds the 200 MiB limit")
         except ValueError:
             pass
     body = bytearray()
     async for chunk in response.aiter_bytes():
         body.extend(chunk)
         if len(body) > MAX_SOURCE_BYTES:
-            raise InvalidInputError("URL response exceeds the 25 MiB limit")
+            raise InvalidInputError("URL response exceeds the 200 MiB limit")
     return bytes(body)
 
 
@@ -341,5 +341,5 @@ async def extract_content(
             raise InvalidInputError("Text source is empty")
         extracted = ExtractedContent(title=None, content=content)
     if len(extracted.content.encode("utf-8")) > MAX_SOURCE_BYTES:
-        raise InvalidInputError("Extracted text exceeds the 25 MiB limit")
+        raise InvalidInputError("Extracted text exceeds the 200 MiB limit")
     return extracted

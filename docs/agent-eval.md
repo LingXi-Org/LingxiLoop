@@ -28,7 +28,7 @@ Run the same gate used by CI:
 npm run eval:check
 ```
 
-`eval:check` deliberately runs two different gates. `eval:harness` replays frozen observations to verify evaluator, sanitizer, comparison, and report semantics. `eval:runtime` runs the current `AgentOSRuntime` with the repository's in-memory Host, scripted model, and deterministic Kernel/Host Bridge seam before generating observations. Its three Cases cover automatic evidence, dynamic `knowledge.search` through IPython, and a sensitive `email.send` stopped at Approval. The runtime model asserts current prompt and model-input fragments, so broken prompt/context wiring, routing, RAG, tool selection, or Approval behavior can fail the gate without a live model, network, or external account.
+`eval:check` deliberately runs two different gates. `eval:harness` replays frozen observations to verify evaluator, sanitizer, comparison, and report semantics. `eval:runtime` runs the current `AgentOSRuntime` with the repository's in-memory Host, scripted model, and deterministic Kernel/Host Bridge seam before generating observations. Its Cases cover automatic and hybrid evidence, strict IPython and Host Action behavior, Approval boundaries, learning planning, and the Canvas report completion gate. The runtime model asserts current prompt and model-input fragments, so broken prompt/context wiring, routing, RAG, tool selection, or Approval behavior can fail the gate without a live model, network, or external account.
 
 Both CLIs compare the run, every observed capability, and every Case against their baseline, append GitHub Job Summary tables, and exit non-zero for a threshold failure or regression. They write `artifacts/eval-harness-report.json` and `artifacts/eval-runtime-smoke-report.json`; CI uploads them together as the `agent-eval-*` artifact.
 
@@ -80,6 +80,9 @@ Define the suite as versioned JSON and execute it through `scripts/run-agent-eva
         },
         "rag": {
           "requiredSourceIds": ["source-123"],
+          "requiredClaimCitations": [
+            { "claim": "The conclusion is grounded", "sourceId": "source-123" }
+          ],
           "requireCitations": true,
           "minRetrievalRecall": 1,
           "minCitationPrecision": 1
@@ -115,7 +118,7 @@ Define the suite as versioned JSON and execute it through `scripts/run-agent-eva
 }
 ```
 
-`sourceAgentRunId` automatically hydrates the test input, answer, latency, Token use, cost, model calls, IPython cells, Host Bridge actions, Approval decisions, automatic and dynamic RAG evidence identities, Canvas workers/handoffs/artifacts, and task completion. An optional `observation` object overrides individual hydrated fields, which is useful for a controlled fixture. A case without a run ID must supply `observation` directly.
+`sourceAgentRunId` automatically hydrates the test input, answer, latency, Token use, cost, model calls, IPython cells, Host Bridge actions, Approval decisions, automatic RAG evidence identities, Canvas workers/handoffs/artifacts, and task completion. An optional `observation` object overrides individual hydrated fields, which is useful for a controlled fixture. A case without a run ID must supply `observation` directly.
 
 ## Inline observation
 
@@ -123,7 +126,7 @@ Define the suite as versioned JSON and execute it through `scripts/run-agent-eva
 {
   "caseId": "parallel-research",
   "observation": {
-    "answer": "The conclusion is grounded in the supplied evidence. [S1]",
+    "answer": "[The conclusion is grounded in the supplied evidence.](#cite-S1)",
     "retrievedSourceIds": ["source-123"],
     "citations": [{ "sourceId": "source-123", "chunkId": "chunk-7", "marker": "S1" }],
     "toolCalls": [{ "name": "knowledge.search", "args": { "query": "evaluation" }, "status": "ok" }],
@@ -158,4 +161,4 @@ The CLI writes sanitized JSON artifacts under `artifacts/`, and Eval persistence
 
 The run detail view separates the evaluation pipeline from the real Agent Trace: test input, routing/decisions, model calls, IPython cells, Host Bridge actions, Approval, Canvas workers/handoffs, and final answer. Trace nodes are clickable and show sanitized parameters, results, identities, timestamps, and real Agent-side durations. `EvalStageResult.durationMs` is derived from those Agent observations, never evaluator CPU time.
 
-RAG trace events and Eval observations persist source, chunk, marker, and title metadata only. Automatic context retrieval and later `knowledge.search` Host Actions are merged and deduplicated. Host Action results are sanitized before Eval persistence: knowledge actions use an identity allowlist, ordinary values are bounded, and source excerpts, message bodies, credentials, stdout/stderr, and content payloads are removed or redacted.
+RAG trace events and Eval observations persist source, chunk, marker, and title metadata only. Automatic context evidence and any observed knowledge Host Actions are merged and deduplicated. `requiredClaimCitations` deterministically checks that the sentence containing a specified claim uses an inline marker mapped to the expected Source; semantic naturalness and deeper entailment remain manual or scheduled real-model evaluation rather than a commit gate. Host Action results are sanitized before Eval persistence: knowledge actions use an identity allowlist, ordinary values are bounded, and source excerpts, message bodies, credentials, stdout/stderr, and content payloads are removed or redacted.

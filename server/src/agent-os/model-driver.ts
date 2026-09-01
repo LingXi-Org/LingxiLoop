@@ -1,6 +1,6 @@
 import type OpenAI from 'openai'
-import { createOpenAIClient } from '../llm-client.js'
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions'
+import { createOpenAIClient } from '../llm-client.js'
 import { MODEL_TOOLS } from './tool.js'
 import type { ModelItem } from './types.js'
 
@@ -36,7 +36,13 @@ export class ModelAdapterError extends Error {
 
 export interface AgentModelDriver {
   readonly modelId?: string
-  run(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal; onTextDelta?: (delta: string) => void | Promise<void> }): Promise<ModelTurnResult>
+  run(args: {
+    instructions: string
+    items: ModelItem[]
+    signal?: AbortSignal
+    onReasoningDelta?: (delta: string) => void | Promise<void>
+    onTextDelta?: (delta: string) => void | Promise<void>
+  }): Promise<ModelTurnResult>
   compact(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal }): Promise<AuxiliaryModelResult<string>>
   structured(args: { instructions: string; input: unknown; signal?: AbortSignal }): Promise<AuxiliaryModelResult<unknown>>
 }
@@ -59,6 +65,7 @@ const CHAT_TOOLS: ChatCompletionTool[] = MODEL_TOOLS.map((tool) => ({
     name: tool.function.name,
     description: tool.function.description,
     parameters: tool.function.parameters,
+    strict: tool.function.strict,
   },
 }))
 
@@ -76,7 +83,13 @@ export class OpenAIChatDriver implements AgentModelDriver {
     this.client = createOpenAIClient({ apiKey: options.apiKey, baseURL: options.baseURL })
   }
 
-  async run(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal; onTextDelta?: (delta: string) => void | Promise<void> }): Promise<ModelTurnResult> {
+  async run(args: {
+    instructions: string
+    items: ModelItem[]
+    signal?: AbortSignal
+    onReasoningDelta?: (delta: string) => void | Promise<void>
+    onTextDelta?: (delta: string) => void | Promise<void>
+  }): Promise<ModelTurnResult> {
     const request = {
       model: this.model,
       messages: [
@@ -85,8 +98,10 @@ export class OpenAIChatDriver implements AgentModelDriver {
       ],
       tools: CHAT_TOOLS,
       tool_choice: 'auto',
+      parallel_tool_calls: false,
       max_tokens: 4_000,
-    } satisfies Parameters<typeof this.client.chat.completions.create>[0]
+      ...(this.model.startsWith('Qwen/Qwen3.5-') ? { enable_thinking: false } : {}),
+    } satisfies Parameters<typeof this.client.chat.completions.create>[0] & { enable_thinking?: boolean }
     const stream = await this.client.chat.completions.create({
       ...request,
       stream: true,
@@ -95,6 +110,8 @@ export class OpenAIChatDriver implements AgentModelDriver {
 
     const output: ModelItem[] = []
     let text = ''
+    let pendingText = ''
+    let pendingReasoning = ''
     let inputTokens = 0
     let outputTokens = 0
     let usageAvailable = false
@@ -125,12 +142,25 @@ export class OpenAIChatDriver implements AgentModelDriver {
         if (choice.finish_reason) finishReasons.add(choice.finish_reason)
         const delta = choice.delta as {
           content?: string | null
+          reasoning_content?: string | null
           tool_calls?: Array<{ index?: number; id?: string; function?: { name?: string; arguments?: string } }>
+        }
+        const reasoning = delta.reasoning_content
+        if (reasoning) {
+          pendingReasoning += reasoning
+          if (pendingReasoning.trim()) {
+            await args.onReasoningDelta?.(pendingReasoning)
+            pendingReasoning = ''
+          }
         }
         const content = delta.content
         if (content) {
           text += content
-          await args.onTextDelta?.(content)
+          pendingText += content
+          if (pendingText.trim()) {
+            await args.onTextDelta?.(pendingText)
+            pendingText = ''
+          }
         }
         const rawCalls = delta.tool_calls ?? []
         for (const [position, raw] of rawCalls.entries()) {
@@ -143,20 +173,24 @@ export class OpenAIChatDriver implements AgentModelDriver {
         }
       }
     }
-    if (text) output.push({ role: 'assistant', content: text })
-    for (const call of [...calls.values()]) {
-      if (call.id && call.name === 'ipython') {
-        output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.arguments })
-      }
-    }
+    const streamedCalls = [...calls.values()]
     const diagnostics: ModelTurnDiagnostics = {
       chunkCount,
       choiceCount,
       finishReasons: [...finishReasons],
       contentLength: text.length,
-      toolCallCount: output.filter((item) => 'type' in item && item.type === 'function_call').length,
+      toolCallCount: streamedCalls.length,
       chunkShapes,
     }
+    if (streamedCalls.length > 1) {
+      throw new ModelAdapterError('native model stream emitted multiple tool calls; exactly one ipython call is allowed', diagnostics)
+    }
+    const call = streamedCalls[0]
+    if (call && (!call.id || call.name !== 'ipython')) {
+      throw new ModelAdapterError('native model stream emitted an incomplete or unsupported tool call', diagnostics)
+    }
+    if (text.trim()) output.push({ role: 'assistant', content: text })
+    if (call) output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.arguments })
     if (output.length === 0) {
       throw new ModelAdapterError(
         `native model stream returned no assistant content or supported tool calls (chunks=${chunkCount}, choices=${choiceCount}, finishReasons=${diagnostics.finishReasons.join(',') || 'unavailable'})`,
@@ -213,9 +247,10 @@ export class OpenAIChatDriver implements AgentModelDriver {
 export class ScriptedModelDriver implements AgentModelDriver {
   readonly modelId = 'scripted'
   constructor(private readonly turns: ModelTurnResult[]) {}
-  async run(): Promise<ModelTurnResult> {
+  async run(args: Parameters<AgentModelDriver['run']>[0]): Promise<ModelTurnResult> {
     const next = this.turns.shift()
     if (!next) throw new Error('scripted model exhausted')
+    if (next.text) await args.onTextDelta?.(next.text)
     return structuredClone(next)
   }
   async compact(args: { items: ModelItem[] }): Promise<AuxiliaryModelResult<string>> {

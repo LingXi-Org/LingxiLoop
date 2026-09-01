@@ -652,7 +652,6 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   if (namespace === 'chat') return executeChat(work, method, args, action)
   if (namespace === 'routines') return executeRoutine(work, method, args, action)
   if (namespace === 'polls') return executePoll(work, method, args, action)
-  if (namespace === 'turn') return { ok: true, value: { status: method, ...args } }
   if (namespace === 'research') return executeResearch(work, method, args)
   if (namespace === 'canvas') return executeCanvas(work, method, args, action)
   if (namespace === 'knowledge') return executeKnowledge(work, method, args, action)

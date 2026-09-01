@@ -69,7 +69,7 @@
   --brand-bubble-border: var(--border);
   --brand-bubble-ink: var(--foreground);
   --brand-bubble-muted: var(--muted-foreground);
-  --bubble-agent: var(--muted);
+  --bubble-agent: color-mix(in oklch, var(--background) 94%, var(--foreground));
   --accent-ink: var(--primary-foreground);
   --selection-bg: color-mix(in srgb, var(--primary) 22%, transparent);
   --code-bg: var(--muted);

@@ -4,6 +4,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from open_notebook.rag.extraction import MAX_SOURCE_BYTES
+
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -42,7 +44,7 @@ class SourceJsonCreate(StrictModel):
     storage_key: str | None = Field(default=None, max_length=1024)
     filename: str | None = Field(default=None, max_length=500)
     mime_type: str | None = Field(default=None, max_length=200)
-    size_bytes: int | None = Field(default=None, ge=1, le=25 * 1024 * 1024)
+    size_bytes: int | None = Field(default=None, ge=1, le=MAX_SOURCE_BYTES)
     company_id: str = Field(min_length=1, max_length=255)
 
     @model_validator(mode="after")

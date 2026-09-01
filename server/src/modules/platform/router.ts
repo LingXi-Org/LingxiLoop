@@ -40,7 +40,7 @@ platformRouter.post('/uploads/refresh-url', safe(async (req, res) => {
   const parsed = refreshUploadUrlRequestSchema.safeParse(req.body ?? {})
   if (!parsed.success) throw new HttpError(400, parsed.error.issues[0]?.message ?? 'invalid storage key')
   try {
-    res.json(await platformApplication.refreshUploadUrl(parsed.data.key))
+    res.json(await platformApplication.refreshUploadUrl(companyId, parsed.data.key))
   } catch (error) {
     if (error instanceof PlatformApplicationError) throw new HttpError(400, error.message)
     throw error

@@ -33,7 +33,7 @@ export interface WukongWebhookInfrastructure {
   verify(raw: Buffer, signature?: string, token?: string): boolean
   isKnowledgeAttachment(mime: string, size: number): boolean
   createKnowledgeJob(db: Queryable, input: KnowledgeJobInput): Promise<{ deferAgentWake: boolean; sourceId: string }>
-  emitQueued(input: { channelId: string; channelType: number; agentId: string; workId: string }): Promise<void>
+  emitQueued(input: { companyId: string; channelId: string; channelType: number; agentId: string; workId: string }): Promise<void>
 }
 
 export interface WukongCommittedEvent {
@@ -191,6 +191,7 @@ export class WukongWebhookApplication {
         },
         queued: queued.map((item) => ({
           ...item,
+          companyId: binding.company_id,
           channelId: input.channelId,
           channelType: Number(binding.profile.channelType ?? 2),
         })),

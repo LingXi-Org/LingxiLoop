@@ -20,6 +20,7 @@ test('R2 policy covers Web and Electron presigned PUT preflights', () => {
 
   assert.ok(origins.includes('http://localhost:5173'))
   assert.ok(origins.includes('app://lingxiloop'))
+  assert.ok(origins.includes('https://loop.lingxilearn.cn'))
   assert.ok(origins.includes('https://loop.example.com'))
   assert.deepEqual(validateR2CorsRules(rules, origins), [])
   assert.doesNotThrow(() => assertR2CorsRules(rules, origins))

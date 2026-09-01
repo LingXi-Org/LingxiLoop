@@ -1,10 +1,13 @@
+import { File01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { uploadsApi } from '@/features/platform/api'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { uploadsApi } from '@/features/platform/api'
 import { type AttachmentPreviewDescriptor, type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
 import { userFacingError } from '@/lib/userFacingError'
 import { TypesetMarkdown } from './Typeset'
@@ -105,7 +108,7 @@ function PdfViewer({ attachment, url, onClose }: { attachment: Attachment; url: 
 }
 
 function PreviewLoading() { return <ResourceSkeleton variant="media" className="h-full p-5" label="正在准备附件预览" /> }
-function PreviewError({ message, url, name }: { message: string; url: string; name: string }) { return <div className="attachment-preview-state" role="alert"><strong>无法显示预览</strong><span>{message}</span><a href={url} download={name} target="_blank" rel="noreferrer">下载文件</a></div> }
+function PreviewError({ message, url, name }: { message: string; url: string; name: string }) { return <Empty className="min-h-full" role="alert"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>无法显示预览</EmptyTitle><EmptyDescription>{message}</EmptyDescription></EmptyHeader><EmptyContent><Button asChild variant="outline"><a href={url} download={name} target="_blank" rel="noreferrer">下载文件</a></Button></EmptyContent></Empty> }
 
 function MarkdownDocument({ source }: { source: string }) {
   return <TypesetMarkdown
@@ -154,7 +157,7 @@ function TextViewer({ attachment, url, onClose }: { attachment: Attachment; url:
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); onClose() } }
     document.addEventListener('keydown', onKey, true); return () => document.removeEventListener('keydown', onKey, true)
   }, [onClose])
-  return <ViewerShell name={attachment.name} url={url} onClose={onClose}><div className="attachment-viewer-body text-preview-body">{state.status === 'ready' ? <TextDocument name={attachment.name} source={state.text ?? ''} /> : state.status === 'error' ? <div className="attachment-preview-state" role="alert"><strong>无法显示预览</strong><span>{state.message}</span><Button type="button" variant="outline" onClick={() => setAttempt((value) => value + 1)}>重试</Button></div> : <PreviewLoading />}</div></ViewerShell>
+  return <ViewerShell name={attachment.name} url={url} onClose={onClose}><div className="attachment-viewer-body text-preview-body">{state.status === 'ready' ? <TextDocument name={attachment.name} source={state.text ?? ''} /> : state.status === 'error' ? <Empty className="min-h-full" role="alert"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>无法显示预览</EmptyTitle><EmptyDescription>{state.message}</EmptyDescription></EmptyHeader><EmptyContent><Button type="button" variant="outline" onClick={() => setAttempt((value) => value + 1)}>重试</Button></EmptyContent></Empty> : <PreviewLoading />}</div></ViewerShell>
 }
 
 function VideoViewer({ attachment, url, onClose }: { attachment: Attachment; url: string; onClose: () => void }) {

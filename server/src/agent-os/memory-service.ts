@@ -5,6 +5,7 @@ import { pool } from '../db/pool.js'
 import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 import {
   KNOWLEDGE_CONTRACT_VERSION,
+  PROMPT_CONTRACT_VERSION,
   type AgentWorkItem,
   type MemoryScopeType,
   type MemorySynthesisBatch,
@@ -202,12 +203,11 @@ export async function buildPromptContext(args: {
       persona: args.persona,
       capabilities: args.capabilities,
       executionRole: args.executionRole,
-      memories,
-      assembledAt,
     }),
     sourceVersions: {
       ...(args.sourceVersions ?? { persona: assembledAt, capabilities: assembledAt }),
       knowledgeContract: KNOWLEDGE_CONTRACT_VERSION,
+      promptContract: PROMPT_CONTRACT_VERSION,
       learner: learner.map((item) => `${item.id}:${item.version}`).join(','),
       course: course.map((item) => `${item.id}:${item.version}`).join(','),
       agentRole: agentRole.map((item) => `${item.id}:${item.version}`).join(','),

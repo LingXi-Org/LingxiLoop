@@ -72,6 +72,7 @@ test('Agent application and provider contain only source management capabilities
   assert.doesNotMatch(provider, /search_notes|listNotes|\/api\/notes|\/insights|\/chat\/sessions|\/search\/ask/)
   assert.doesNotMatch(provider, /transformations|async_processing|delete_source/)
   for (const method of expectedKnowledgeMethods) assert.match(kernel, new RegExp(`"${method}"`))
+  assert.match(kernel, /sys\.modules\["loop"\] = loop/)
   for (const removed of ['ask', 'create_note', 'create_insight', 'start_source_chat', 'update_source', 'unlink_source']) {
     assert.doesNotMatch(kernel, new RegExp(`"${removed}"`))
   }

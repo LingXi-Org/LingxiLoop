@@ -4,6 +4,7 @@ import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { ForbiddenError } from '../modules/access/public.js'
 import { KnowledgeApplication, KnowledgeApplicationError } from '../modules/knowledge/application.js'
+import { MAX_SOURCE_BYTES } from '../modules/knowledge/policy.js'
 import {
   claimIngestionJob,
   completeIngestion,
@@ -53,7 +54,7 @@ const application = new KnowledgeApplication(pool, {
     contentType: objectMimes.get(key) ?? null,
   }),
   publicUrl: async (key) => `https://r2.invalid/${key}`,
-  maxSourceBytes: 25 * 1024 * 1024,
+  maxSourceBytes: MAX_SOURCE_BYTES,
 })
 
 before(async () => { await ensureSchemaOnce() })
@@ -140,6 +141,17 @@ test('[integration] knowledge source creation keeps explicit tenant and project 
     created_via: 'USER',
   })
   assert.equal(objects.get(storageKey)?.toString('utf8'), 'authoritative text')
+
+  await application.editSource(
+    { userId: USER_ID, companyId: COMPANY_ID, projectId: PROJECT_ID },
+    created.id,
+    { title: 'Renamed source' },
+  )
+  const renamed = await pool.query<{ title: string }>(
+    `SELECT title FROM knowledge_sources WHERE id=$1`,
+    [created.id],
+  )
+  assert.equal(renamed.rows[0]?.title, 'Renamed source')
 
   await assert.rejects(
     application.source({ companyId: OTHER_COMPANY_ID, projectId: OTHER_PROJECT_ID, userId: USER_ID }, created.id),
@@ -356,7 +368,7 @@ test('[integration] presigned upload confirmation rejects an oversized object fr
     `SELECT storage_key FROM knowledge_sources WHERE id=$1 AND company_id=$2 AND project_id=$3`,
     [pending.id, COMPANY_ID, PROJECT_ID],
   )
-  objectSizes.set(source.rows[0]?.storage_key ?? '', 25 * 1024 * 1024 + 1)
+  objectSizes.set(source.rows[0]?.storage_key ?? '', MAX_SOURCE_BYTES + 1)
 
   await assert.rejects(
     application.completeUpload(scope, pending.id),

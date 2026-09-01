@@ -2464,12 +2464,20 @@ export async function runStructuredLearningAction(
     }
   } else if (namespace === 'calendar') {
     command = 'calendar'; positional.push(method)
+    if (method === 'create') positional.push(stringValue('title'))
+    else if (new Set(['update', 'run-now', 'dispatches', 'cancel', 'delete']).has(method)) {
+      positional.push(stringValue('eventId'))
+    }
   } else if (namespace === 'polls') {
     command = 'poll'; positional.push(method)
     const id = stringValue('messageId', false); if (id) positional.push(id)
   } else if (namespace === 'email') {
     command = 'email'; positional.push(method)
-    const id = stringValue('messageId', false); if (id) positional.push(id)
+    if (method === 'show') positional.push(stringValue('conversationId'))
+    else if (method === 'reply') positional.push(stringValue('messageId'))
+    else if (method === 'contacts') {
+      const query = stringValue('query', false); if (query) positional.push(query)
+    }
   } else {
     return err(`unsupported structured namespace: ${namespace}`)
   }

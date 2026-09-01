@@ -8,6 +8,7 @@ import type { ResolvedAccessContext } from '../modules/access/public.js'
 
 const ownerContext: ResolvedAccessContext = {
   actorUserId: 'owner',
+  platformAdmin: false,
   company: { id: 'company', type: 'PERSONAL', status: 'ACTIVE' },
   companyMembership: { role: 'OWNER', status: 'ACTIVE' },
   project: { id: 'project', kind: 'PERSONAL_LEARNING', status: 'ACTIVE' },
@@ -58,6 +59,41 @@ test('users can edit their own Canvas frames after the workspace finishes', () =
     { ...ownerContext, actorUserId: 'other' },
     resource,
   ), 'RESOURCE_STATE_DENIED')
+})
+
+test('platform administrators bypass tenant membership but not entitlements or resource state', () => {
+  const platformContext: ResolvedAccessContext = {
+    ...ownerContext,
+    actorUserId: 'platform-admin',
+    platformAdmin: true,
+    companyMembership: { role: 'MEMBER', status: 'ACTIVE' },
+    projectMembership: { role: 'STUDENT', status: 'ACTIVE' },
+  }
+  const privateConversation = {
+    companyId: 'company',
+    projectId: 'project',
+    createdBy: 'other-user',
+    visibilityScope: 'PRIVATE' as const,
+    ownerUserId: 'other-user',
+    conversationMembers: ['other-user'],
+    leaderId: 'other-user',
+    status: 'active',
+  }
+  assert.equal(evaluatePolicy(
+    { actorUserId: 'platform-admin', action: 'conversation:read', resource: { type: 'conversation', id: 'private' } },
+    platformContext,
+    privateConversation,
+  ), 'ALLOWED')
+  assert.equal(evaluatePolicy(
+    { actorUserId: 'platform-admin', action: 'canvas:write', resource: { type: 'canvas', id: 'finished' } },
+    platformContext,
+    { ...privateConversation, visibilityScope: 'PROJECT', status: 'completed' },
+  ), 'RESOURCE_STATE_DENIED')
+  assert.equal(evaluatePolicy(
+    { actorUserId: 'platform-admin', action: 'conversation:read', resource: { type: 'conversation', id: 'private' } },
+    { ...platformContext, entitlements: { ...platformContext.entitlements, has: () => false } },
+    privateConversation,
+  ), 'ENTITLEMENT_MISSING')
 })
 
 test('runtime failures and unregistered actions fail closed without a context', async () => {

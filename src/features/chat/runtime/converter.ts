@@ -5,8 +5,8 @@ import type {
   ThreadUserMessagePart,
   ToolCallMessagePart,
 } from '@assistant-ui/react'
-import type { Participant } from '@/types'
 import type { ImEnvelope, LingxiMessageV1 } from '@/lib/im/wukong'
+import type { Participant } from '@/types'
 import type {
   LingxiMessageMetadata,
   LingxiQuoteMetadata,
@@ -116,6 +116,109 @@ function toolCall(
   }
 }
 
+function knowledgeCitations(data: JsonObject): NonNullable<LingxiMessageMetadata['citations']> {
+  if (data.citations === undefined) return []
+  if (!Array.isArray(data.citations)) throw new Error('Knowledge citations must be an array')
+  const seen = new Set<string>()
+  return data.citations.map((value) => {
+    const citation = object(value)
+    const sourceId = string(citation.sourceId)
+    const sourceTitle = string(citation.sourceTitle)
+    const excerpt = string(citation.excerpt)
+    const marker = string(citation.marker)
+    const position = finiteNumber(citation.position)
+    if (!sourceId || !sourceTitle || !excerpt || !/^S\d+$/.test(marker) || seen.has(marker) || position === null || position < 0) {
+      throw new Error('Knowledge citations contain an invalid or duplicate entry')
+    }
+    seen.add(marker)
+    return {
+      sourceId,
+      sourceTitle,
+      excerpt,
+      ...(string(citation.sourceUrl) ? { sourceUrl: string(citation.sourceUrl) } : {}),
+      position,
+      marker,
+    }
+  })
+}
+
+function confidenceClaims(
+  data: JsonObject,
+  body: string,
+  citations: NonNullable<LingxiMessageMetadata['citations']>,
+) {
+  if (/\[S\d+\]|【S\d+】/.test(body)) throw new Error('Agent text contains a retired bare citation marker')
+  const citedIds = new Set<string>()
+  for (const match of body.matchAll(/\[[^\]\n]+\]\(#cite-(S\d+(?:,S\d+)*)\)/g)) {
+    for (const id of match[1]!.split(',')) citedIds.add(id)
+  }
+  if (body.replace(/\[[^\]\n]+\]\(#cite-S\d+(?:,S\d+)*\)/g, '').includes('#cite-')) {
+    throw new Error('Agent text contains malformed confidence citation syntax')
+  }
+  if (citedIds.size === 0) {
+    if (data.confidenceClaims !== undefined || citations.length > 0) {
+      throw new Error('Unreferenced confidence evidence is not a valid assistant message')
+    }
+    return []
+  }
+  if (!Array.isArray(data.confidenceClaims)) throw new Error('Cited agent text requires a cite_claims result')
+  const seen = new Set<string>()
+  const claims = data.confidenceClaims.map((value) => {
+    const claim = object(value)
+    const id = string(claim.id)
+    const basis = string(claim.basis)
+    const sourceId = string(claim.sourceId)
+    const sourceTitle = string(claim.sourceTitle)
+    const excerpt = string(claim.excerpt)
+    const position = finiteNumber(claim.position)
+    if (
+      !/^S\d+$/.test(id)
+      || seen.has(id)
+      || claim.text !== ''
+      || !basis.trim()
+      || claim.confidence !== 'grounded'
+      || !sourceId
+      || !sourceTitle
+      || !excerpt
+      || position === null
+      || !Number.isSafeInteger(position)
+      || position < 0
+      || (claim.sourceUrl !== undefined && typeof claim.sourceUrl !== 'string')
+    ) {
+      throw new Error('cite_claims contains an invalid or duplicate grounded evidence claim')
+    }
+    seen.add(id)
+    return {
+      id,
+      text: '',
+      basis,
+      confidence: 'grounded' as const,
+      sourceId,
+      sourceTitle,
+      excerpt,
+      ...(string(claim.sourceUrl) ? { sourceUrl: string(claim.sourceUrl) } : {}),
+      position,
+    }
+  })
+  if (
+    citedIds.size !== citations.length
+    || claims.length !== citations.length
+    || claims.some((claim, index) => {
+      const citation = citations[index]
+      return !citation
+        || claim.id !== citation.marker
+        || claim.basis !== `${citation.sourceTitle} · ${citation.excerpt}`
+        || claim.sourceId !== citation.sourceId
+        || claim.sourceTitle !== citation.sourceTitle
+        || claim.excerpt !== citation.excerpt
+        || claim.sourceUrl !== citation.sourceUrl
+        || claim.position !== citation.position
+    })
+    || citations.some(({ marker }) => !citedIds.has(marker))
+  ) throw new Error('Confidence links, claims, and citations must identify the same evidence')
+  return claims
+}
+
 function approvalPart(id: string, data: JsonObject): ThreadAssistantMessagePart {
   const approval = object(data.approval ?? data)
   const approvalId = string(approval.id, id.replace(/^approval-/, ''))
@@ -180,8 +283,17 @@ function questionnairePart(id: string, data: JsonObject): ThreadAssistantMessage
       multiple: item.multiple === true,
       choices: Array.isArray(item.choices) ? item.choices.map((choiceValue) => {
         const choice = object(choiceValue)
-        return { value: string(choice.value), label: string(choice.label), description: string(choice.description) }
+        return {
+          value: string(choice.value), label: string(choice.label), description: string(choice.description),
+          ...(choice.disabled === true ? { disabled: true } : {}),
+        }
       }) : [],
+      ...(item.input && typeof item.input === 'object' ? {
+        input: {
+          label: string(object(item.input).label),
+          placeholder: string(object(item.input).placeholder),
+        },
+      } : {}),
     }
   }) : []
   return toolCall(`questionnaire:${id}`, 'question-flow', {
@@ -198,8 +310,15 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
   const id = messageId(envelope)
   const textPart = payload.body ? [{ type: 'text' as const, text: payload.body }] : []
   switch (payload.kind) {
-    case 'text':
-      return [{ type: 'text', text: payload.body ?? '' }]
+    case 'text': {
+      if (typeof payload.refs?.runId !== 'string') return [{ type: 'text', text: payload.body ?? '' }]
+      const citations = knowledgeCitations(data)
+      const claims = confidenceClaims(data, payload.body ?? '', citations)
+      return [
+        ...(claims.length > 0 ? [toolCall(`cite-claims:${id}`, 'cite_claims', {}, { claims })] : []),
+        { type: 'text', text: payload.body ?? '' },
+      ]
+    }
     case 'system': {
       if (data.type !== 'teacher_briefing') return [{ type: 'text', text: payload.body ?? '' }]
       return [toolCall(`briefing:${id}`, 'stats-display', {
@@ -246,7 +365,7 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
       })]
     }
     case 'tool_activity':
-      return [...textPart, toolCall(`activity:${id}`, 'progress-tracker', {
+      return [toolCall(`activity:${id}`, 'progress-tracker', {
         id: `activity-${id}`,
         role: 'state',
         steps: [{
@@ -352,23 +471,7 @@ function buildMetadata(envelope: ImEnvelope, context: MessageConversionContext):
     groupEnd: true,
     continuedFromPrevious: false,
     continuedToNext: false,
-    citations: (Array.isArray(data.citations) ? data.citations : []).flatMap((value) => {
-      const citation = object(value)
-      const sourceId = string(citation.sourceId)
-      const sourceTitle = string(citation.sourceTitle)
-      const excerpt = string(citation.excerpt)
-      const marker = string(citation.marker)
-      const position = finiteNumber(citation.position)
-      if (!sourceId || !sourceTitle || !excerpt || !marker || position === null) return []
-      return [{
-        sourceId,
-        sourceTitle,
-        excerpt,
-        ...(string(citation.sourceUrl) ? { sourceUrl: string(citation.sourceUrl) } : {}),
-        position,
-        marker,
-      }]
-    }),
+    citations: knowledgeCitations(data),
   }
 }
 

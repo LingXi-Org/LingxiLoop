@@ -6,10 +6,8 @@ import { IPYTHON_TOOL } from '../agent-os/tool.js'
 import { learningContextContract } from '../agent-os/runtime.js'
 import { preferredLearningMissionCoordinator } from '../modules/learning/application.js'
 
-const emptyMemory={learner:[],course:[],agentRole:[]}
-
 test('runtime execution role, not persona name, selects the Frontier workflow',()=>{
-  const prompt=assembleAgentSystemPrompt({persona:{name:'Trace',role:'Diagnostician',instructions:'Diagnose.'},capabilities:['learning'],memories:emptyMemory,assembledAt:'2026-08-26T00:00:00.000Z',executionRole:'reporter'})
+  const prompt=assembleAgentSystemPrompt({persona:{name:'Trace',role:'Diagnostician',instructions:'Diagnose.'},capabilities:['learning'],executionRole:'reporter'})
   assert.match(prompt,/# Frontier-style Reporter Workflow/)
   assert.doesNotMatch(prompt,/# Frontier-style Verifier Workflow/)
 })

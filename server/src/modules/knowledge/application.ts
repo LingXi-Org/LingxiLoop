@@ -8,6 +8,7 @@ import type {
   KnowledgeScope,
   PresignSourceInput,
   ProjectPatch,
+  UpdateSourceInput,
 } from './contracts.js'
 import {
   enqueueSourceJob,
@@ -21,6 +22,7 @@ import {
   moveConversation,
   replaceSourceExclusions,
   updateProject,
+  updateSourceTitle,
 } from './repository.js'
 
 export type KnowledgeErrorCode =
@@ -199,7 +201,7 @@ export class KnowledgeApplication {
     const originalUrl = input.kind === 'url' ? input.url : null
     const size = text ? Buffer.byteLength(text, 'utf8') : 0
     if (size > this.infrastructure.maxSourceBytes) {
-      throw new KnowledgeApplicationError('too_large', 'source exceeds 25 MB')
+      throw new KnowledgeApplicationError('too_large', 'source exceeds 200 MB')
     }
     const title = input.title || (input.kind === 'url' ? input.url : '粘贴文本')
     const storageKey = text ? `knowledge-sources/${scope.companyId}/${scope.projectId}/${id}.txt` : null
@@ -223,7 +225,7 @@ export class KnowledgeApplication {
       actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId,
     })
     if (input.size > this.infrastructure.maxSourceBytes) {
-      throw new KnowledgeApplicationError('too_large', 'file size is outside the 25 MB limit')
+      throw new KnowledgeApplicationError('too_large', 'file size is outside the 200 MB limit')
     }
     const id = `ks-${createHash('sha256').update(`${scope.companyId}:${scope.projectId}:${scope.userId}:${input.idempotencyKey}`).digest('hex').slice(0, 16)}`
     const replay = await findSource(this.db, scope.companyId, scope.projectId, scope.userId, id)
@@ -274,6 +276,19 @@ export class KnowledgeApplication {
       await enqueueSourceJob(db, { sourceId, ...scope })
     })
     return { ok: true as const, id: sourceId, status: 'queued' as const }
+  }
+
+  async editSource(scope: KnowledgeScope, sourceId: string, input: UpdateSourceInput) {
+    await this.infrastructure.transaction(async (db) => {
+      await createPermissionService(db, { lockDependencies: true }).assertCan({
+        actorUserId: scope.userId, action: 'knowledge:manage', companyId: scope.companyId,
+        projectId: scope.projectId, resource: { type: 'knowledge_source', id: sourceId },
+      })
+      if (!await updateSourceTitle(db, { sourceId, ...scope, title: input.title })) {
+        throw new KnowledgeApplicationError('not_found', 'source not found')
+      }
+    })
+    return { ok: true as const }
   }
 
   async retry(scope: KnowledgeScope, sourceId: string) {

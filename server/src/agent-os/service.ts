@@ -41,7 +41,9 @@ async function poll(): Promise<void> {
       if (!work) { await new Promise((resolveDelay) => setTimeout(resolveDelay, 750)); continue }
       if (active.has(work.id)) continue
       const controller = new AbortController()
-      const done = runtime.runWork(work, controller.signal).finally(() => active.delete(work.id))
+      const done = runtime.runWork(work, controller.signal).catch((error) => {
+        console.error(`[agent-os] work ${work.id} escaped runtime handling:`, error instanceof Error ? error.message : String(error))
+      }).finally(() => active.delete(work.id))
       active.set(work.id, { controller, done })
       void done
     } catch (error) {

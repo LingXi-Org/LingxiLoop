@@ -25,7 +25,7 @@ Independent Engineering Control Plane
   └─ typed, bounded L4 port → existing run/tool/RAG/LLM/Eval/Safety/Metrics/Log authorities
 ```
 
-The model receives exactly one tool:
+The model receives exactly one strict, non-parallel tool:
 
 ```ts
 { name: "ipython", arguments: { code: string } }
@@ -38,7 +38,9 @@ append-only `llm_calls` technical ledger; run-level token fields are projections
 not the usage authority.
 IPython variables survive across turns while
 the kernel lives; durable state must be written to Agent Home or a typed
-`loop.*` learning service. WuKongIM is the only authoritative message store.
+`loop.*` service. `loop.*` calls are synchronous, keyword-only, and checked
+against the same capability- and execution-role allowlist in Agent OS and the
+Python runner. WuKongIM is the only authoritative message store.
 Project lifecycle changes are typed Host Bridge commands, not arbitrary status
 writes. Pulse requests `END`, `ENTER_READ_ONLY`, or `ARCHIVE` through approval;
 execution rechecks the human principal and calls the Project application use

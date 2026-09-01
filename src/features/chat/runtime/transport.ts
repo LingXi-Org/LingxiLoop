@@ -1,23 +1,21 @@
 import type { AppendMessage, ThreadMessage, ThreadUserMessagePart } from '@assistant-ui/react'
-import type { WsEvent } from '@/api/contracts'
-import type { ApiAttachment } from '@/api/contracts'
+import type { ApiAttachment, WsEvent } from '@/api/contracts'
 import { ws } from '@/api/core/realtime'
 import { agentsApi } from '@/features/agents/api'
 import { useParticipants } from '@/features/agents/state'
 import { messagesApi } from '@/features/chat/api'
-import { hasBroadcastMention } from '@/lib/chatMessages'
 import { toastAction } from '@/lib/actionToast'
-import { userFacingError } from '@/lib/userFacingError'
+import { hasBroadcastMention } from '@/lib/chatMessages'
 import {
-  lingxiIm,
   type ImEnvelope,
-  type ImStreamEvent,
   type LingxiMessageV1,
+  lingxiIm,
 } from '@/lib/im/wukong'
+import { userFacingError } from '@/lib/userFacingError'
 import { getMeId } from '@/stores/auth'
 import { convertEnvelope, convertEnvelopeBatch, projectMessageGroups } from './converter'
-import { forgetChatOutbox, readChatOutbox, rememberChatOutbox } from './outbox'
 import type { LingxiMessageMetadata } from './model'
+import { forgetChatOutbox, readChatOutbox, rememberChatOutbox } from './outbox'
 import {
   CHAT_HISTORY_PAGE_SIZE,
   markDelivery,
@@ -31,7 +29,7 @@ import {
   updateConversation,
   useChatThreadStore,
 } from './store'
-import { mergeStreamParts, runningAgentIds, StreamSequenceTracker } from './stream'
+import { applyAssistantStreamChunks, runningAgentIds, StreamSequenceTracker } from './stream'
 
 const TYPING_STALE_MS = 45_000
 
@@ -157,10 +155,6 @@ function oldestSequence(messages: readonly ThreadMessage[]): number | null {
   return values.length > 0 ? Math.min(...values) : null
 }
 
-function activeRunState(state: 'queued' | 'running' | 'complete' | 'error' | 'cancelled'): boolean {
-  return state === 'queued' || state === 'running'
-}
-
 export class ChatTransport {
   private booted = false
   private readonly typingTimers = new Map<string, number>()
@@ -172,7 +166,6 @@ export class ChatTransport {
     if (this.booted) return
     this.booted = true
     lingxiIm.subscribe((envelope) => this.commitEnvelope(envelope))
-    lingxiIm.subscribeEvent((event) => this.applyStreamEvent(event))
     void lingxiIm.connect().catch((error) => console.warn('[chat.transport] IM connect failed', error))
     void this.recoverOutbox()
     void ws.connect()
@@ -384,22 +377,48 @@ export class ChatTransport {
       const metadata = messageMetadata(message)
       forgetChatOutbox(envelope.clientMsgNo || metadata.clientMessageId)
       updateConversation(envelope.channelId, (state) => {
+        const reconcilesStream = metadata.senderKind === 'agent' && metadata.messageKind === 'text' && Boolean(metadata.runId)
+        if (reconcilesStream && metadata.runId) {
+          const preview = state.messages.find((current) => current.id === `preview-${metadata.runId}`)
+          const streamed = preview?.role === 'assistant'
+            ? preview.content
+              .filter((part) => part.type === 'text')
+              .map((part) => part.text)
+              .join('')
+              .trim()
+            : ''
+          const committed = message.role === 'assistant'
+            ? message.content.filter((part) => part.type === 'text').map((part) => part.text).join('').trim()
+            : ''
+          if (!streamed || streamed !== committed) {
+            throw new Error(`Rejected unstreamed assistant message for run ${metadata.runId}`)
+          }
+        }
         const activeRuns = { ...state.activeRuns }
-        for (const id of Object.keys(activeRuns)) {
-          if (id === metadata.clientMessageId || (metadata.runId && id.includes(metadata.runId))) delete activeRuns[id]
+        if (reconcilesStream) {
+          for (const id of Object.keys(activeRuns)) {
+            if (id === metadata.clientMessageId || (metadata.runId && id.includes(metadata.runId))) delete activeRuns[id]
+          }
         }
         const withoutStream = state.messages.filter((current) => {
           const currentMetadata = messageMetadata(current)
           return !(
             current.id === metadata.clientMessageId
             || currentMetadata.clientMessageId === metadata.clientMessageId
-            || (metadata.runId && currentMetadata.runId === metadata.runId)
+            || (
+              reconcilesStream
+              && metadata.runId
+              && currentMetadata.runId === metadata.runId
+              && currentMetadata.messageKind === 'text'
+            )
           )
         })
         return {
           ...state,
           activeRuns,
-          typingAgentIds: state.typingAgentIds.filter((id) => id !== metadata.senderId),
+          typingAgentIds: reconcilesStream
+            ? state.typingAgentIds.filter((id) => id !== metadata.senderId)
+            : state.typingAgentIds,
           messages: mergeCanonicalMessages(withoutStream, [message]),
         }
       })
@@ -417,37 +436,56 @@ export class ChatTransport {
     }
   }
 
-  private applyStreamEvent(event: ImStreamEvent): void {
-    const messageId = event.clientMsgNo
-    if (!this.streamSequences.accept(messageId, event.streamSeq)) return
+  private applyAssistantStreamEvent(event: Extract<WsEvent, { type: 'assistant.stream' }>): void {
+    if (
+      typeof event.conversationId !== 'string'
+      || !event.conversationId
+      || typeof event.messageId !== 'string'
+      || !event.messageId
+      || typeof event.authorId !== 'string'
+      || !event.authorId
+      || !Array.isArray(event.chunks)
+    ) throw new Error('Invalid assistant stream envelope')
+    const messageId = event.messageId
+    if (!this.streamSequences.accept(messageId, event.sequence)) return
+    for (const chunk of event.chunks) {
+      if (chunk.type === 'step-start' && chunk.messageId !== messageId) {
+        throw new Error(`Assistant stream step belongs to ${chunk.messageId}, not ${messageId}`)
+      }
+    }
     const runId = messageId.startsWith('preview-') ? messageId.slice('preview-'.length) : messageId
-    const participant = useParticipants.getState().byId[event.fromUid]
-    const runState = event.type === 'stream.open'
-      ? event.queued ? 'queued' : 'running'
-      : event.type === 'stream.close' ? 'complete'
-        : event.type === 'stream.error' ? 'error'
-          : event.type === 'stream.cancel' ? 'cancelled'
-            : 'running'
-    updateConversation(event.channelId, (state) => {
+    const participant = useParticipants.getState().byId[event.authorId]
+    const failed = event.chunks.find((chunk) => chunk.type === 'error')
+    const finished = event.chunks.some((chunk) => chunk.type === 'message-finish')
+    updateConversation(event.conversationId, (state) => {
       const current = state.messages.find((message) => message.id === messageId)
-      const status: ThreadMessage['status'] = runState === 'running' || runState === 'queued'
-        ? { type: 'running' }
-        : runState === 'complete' ? { type: 'complete', reason: 'stop' }
-          : { type: 'incomplete', reason: runState === 'cancelled' ? 'cancelled' : 'error' }
+      const activeRuns = { ...state.activeRuns }
+      if (finished || failed) delete activeRuns[messageId]
+      if (!current && (finished || failed)) {
+        return {
+          ...state,
+          activeRuns,
+          ...(failed ? { error: failed.error } : {}),
+        }
+      }
+      const status: ThreadMessage['status'] = failed
+        ? { type: 'incomplete', reason: failed.code === 'run.cancelled' ? 'cancelled' : 'error' }
+        : finished ? { type: 'complete', reason: 'stop' }
+          : { type: 'running' }
       const metadata: LingxiMessageMetadata = current
         ? { ...messageMetadata(current), runId }
         : {
             schema: 'lingxiloop.thread-message.v1',
-            conversationId: event.channelId,
+            conversationId: event.conversationId,
             clientMessageId: messageId,
             sequence: null,
-            senderId: event.fromUid,
-            senderName: participant?.name ?? event.fromUid,
+            senderId: event.authorId,
+            senderName: participant?.name ?? event.authorId,
             senderKind: 'agent',
             senderAvatarUrl: participant?.avatarUrl ?? null,
             isMine: false,
             delivery: 'sent',
-            messageKind: event.kind ?? 'text',
+            messageKind: 'text',
             runId,
             quotedMessageId: null,
             quote: null,
@@ -462,16 +500,8 @@ export class ChatTransport {
       const streamMessage: ThreadMessage = {
         id: messageId,
         role: 'assistant',
-        createdAt: current?.createdAt ?? new Date(event.timestamp > 10_000_000_000 ? event.timestamp : event.timestamp * 1_000),
-        content: mergeStreamParts(
-          current?.role === 'assistant' ? current.content : [],
-          {
-            phase: event.phase === 'thinking' ? 'thinking' : 'answer',
-            mode: event.type === 'stream.open' ? 'open' : 'append',
-            text: event.type === 'stream.open' ? event.text ?? '' : event.delta ?? event.text ?? '',
-            running: status.type === 'running',
-          },
-        ),
+        createdAt: current?.createdAt ?? new Date(),
+        content: applyAssistantStreamChunks(current?.role === 'assistant' ? current.content : [], event.chunks),
         status,
         metadata: {
           unstable_state: null,
@@ -481,27 +511,46 @@ export class ChatTransport {
           custom: metadata,
         },
       }
-      const activeRuns = { ...state.activeRuns }
-      if (activeRunState(runState)) {
+      if (!finished && !failed) {
         activeRuns[messageId] = {
           id: runId,
-          agentId: event.fromUid,
+          agentId: event.authorId,
           messageId,
-          lastSequence: event.streamSeq ?? null,
-          state: runState,
+          lastSequence: event.sequence,
+          state: 'running',
         }
-      } else {
-        delete activeRuns[messageId]
+      }
+      const withoutCurrent = state.messages.filter((message) => message.id !== messageId)
+      if ((finished || failed) && streamMessage.content.length === 0) {
+        return {
+          ...state,
+          activeRuns,
+          messages: withoutCurrent,
+          ...(failed ? { error: failed.error } : {}),
+        }
       }
       return {
         ...state,
         activeRuns,
-        messages: mergeCanonicalMessages(state.messages.filter((message) => message.id !== messageId), [streamMessage]),
+        messages: mergeCanonicalMessages(withoutCurrent, [streamMessage]),
+        ...(failed ? { error: failed.error } : {}),
       }
     })
   }
 
   private applyWorkspaceEvent(event: WsEvent): void {
+    if (event.type === 'assistant.stream') {
+      try {
+        this.applyAssistantStreamEvent(event)
+      } catch (error) {
+        console.error('[chat.transport] rejected invalid assistant-ui stream', error, event)
+        updateConversation(event.conversationId, (state) => ({
+          ...state,
+          error: userFacingError(error, '模型流式协议错误，已拒绝显示最终消息。'),
+        }))
+      }
+      return
+    }
     if (event.type === 'hello') {
       for (const [conversationId, state] of Object.entries(useChatThreadStore.getState().conversations)) {
         if (state.loaded) void this.reloadConversation(conversationId)

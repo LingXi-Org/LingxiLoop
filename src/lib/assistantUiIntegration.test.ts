@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
@@ -46,9 +46,21 @@ test('chat is a single assistant-ui external-store runtime', () => {
   assert.match(triggers, /BarChart3Icon/)
   assert.match(message, /MessagePrimitive\.Root/)
   assert.match(message, /MessagePrimitive\.Parts/)
+  assert.match(markdown, /className=\{segmented \? 'im-bubble-markdown im-bubble-markdown-agent'/)
+  assert.doesNotMatch(markdown, /parseMarkdownIntoBlocksFn|splitMessageLines/)
+  assert.doesNotMatch(markdown, /\btypeset\b|from 'streamdown'/)
+  assert.match(message, /custom\.groupEnd && participant && <Avatar/)
+  assert.match(message, /<span className="font-medium">\{custom\.senderName\}<\/span>[\s\S]*<time>/)
   assert.match(message, /<TypingIndicator variant="bare"/)
   assert.match(markdown, /StreamdownTextPrimitive/)
-  assert.match(markdown, /caret="block"/)
+  assert.match(markdown, /const components: StreamdownTextComponents = \{ a: CitationLink \}/)
+  assert.match(markdown, /\^#cite-/)
+  assert.ok(markdown.indexOf("const [hoveredId, setHoveredId] = useState('')") < markdown.indexOf("if (!isAssistant || !href?.startsWith('#cite-'))"))
+  assert.match(markdown, /<ConfidenceMarker[\s\S]*variant="inline"/)
+  assert.doesNotMatch(markdown, /annotateConfidenceMarkdown|preprocess=|allowedTags=|【S/)
+  assert.doesNotMatch(markdown, /caret=/)
+  assert.match(markdown, /animated/)
+  assert.doesNotMatch(markdown, /\bsmooth\b|\bdefer\b/)
   assert.match(typingIndicator, /data-slot="typing-indicator"/)
   assert.doesNotMatch(thread, /AgentTypingIndicator/)
   assert.match(message, /ActionBarPrimitive\.Root/)
@@ -56,6 +68,16 @@ test('chat is a single assistant-ui external-store runtime', () => {
   assert.doesNotMatch(tools, /function ToolFallback/)
   assert.match(toolFallback, /data-slot="tool-fallback-root"/)
   assert.match(toolFallback, /ToolCallMessagePartComponent/)
+  assert.match(tools, /ipython: IPythonTool/)
+  assert.match(tools, /cite_claims: CiteClaimsTool/)
+  assert.match(tools, /function CiteClaimsTool\(\) \{ return null \}/)
+  assert.doesNotMatch(message, /custom\.citations|citationClaims/)
+  assert.match(tools, /<ProgressTracker/)
+  assert.match(tools, /value\?\.recoverable === true/)
+  assert.match(tools, /<OptionList/)
+  assert.match(runtime, /toolName === 'question-flow'/)
+  assert.match(runtime, /问答卡片回复/)
+  assert.match(tools, /Fallback: ToolFallback/)
 })
 
 test('chat keeps assistant-ui Viewport as its only scroll container', () => {
@@ -65,6 +87,36 @@ test('chat keeps assistant-ui Viewport as its only scroll container', () => {
   assert.match(thread, /ThreadPrimitive\.ViewportFooter className="[^"]*shrink-0[^"]*"/)
   assert.doesNotMatch(thread, /ScrollAreaPrimitive|<ScrollBar/)
   assert.doesNotMatch(globals, /data-radix-scroll-area-content/)
+})
+
+test('Agent OS uses native assistant-ui chunks through one live WebSocket bridge', () => {
+  const controlPlane = read('../../server/src/agent-os/control-plane.ts')
+  const agentService = read('../../server/src/agent-os/service.ts')
+  const webhook = read('../../server/src/im/webhook-facade.ts')
+  const webSocket = read('../../server/src/ws.ts')
+  const transport = read('../features/chat/runtime/transport.ts')
+  assert.match(controlPlane, /publish\(CH_ASSISTANT_STREAM/)
+  assert.match(controlPlane, /kind === 'model\.delta'/)
+  assert.match(controlPlane, /type: 'part-start'/)
+  assert.match(controlPlane, /type: 'text-delta'/)
+  assert.match(controlPlane, /toolName: 'ipython'/)
+  assert.match(controlPlane, /data\.recoverable === true/)
+  assert.match(controlPlane, /event\.kind === 'knowledge\.context\.loaded'/)
+  assert.doesNotMatch(controlPlane, /\/knowledge-preview/)
+  assert.match(controlPlane, /delete ledgerData\.previewClaims/)
+  assert.match(controlPlane, /toolName: 'cite_claims'/)
+  assert.match(controlPlane, /type: 'tool-call-args-text-finish'/)
+  assert.match(controlPlane, /type: 'result'/)
+  assert.match(controlPlane, /type: 'message-finish'/)
+  assert.match(agentService, /runtime\.runWork\(work, controller\.signal\)\.catch/)
+  assert.match(webhook, /publish\(CH_ASSISTANT_STREAM/)
+  assert.match(webSocket, /sub\.subscribe\([\s\S]*CH_ASSISTANT_STREAM/)
+  assert.match(transport, /event\.type === 'assistant\.stream'/)
+  assert.match(transport, /applyAssistantStreamChunks/)
+  assert.match(transport, /current\.id === `preview-\$\{metadata\.runId\}`/)
+  assert.match(transport, /currentMetadata\.messageKind === 'text'/)
+  assert.doesNotMatch(transport, /message\.delta|stream\.open/)
+  assert.equal(existsSync(resolve(here, '../../server/src/messages/stream-reply.ts')), false)
 })
 
 test('legacy chat protocol and handwritten chat surfaces are absent', () => {

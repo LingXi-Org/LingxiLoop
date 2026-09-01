@@ -83,6 +83,17 @@ content extraction, chunking/embedding, ingestion-state synchronization, and
 scoped retrieval of citation-ready excerpts. The LingxiLoop gateway never
 accepts or returns Open Notebook external IDs to a browser or Agent.
 
+The Agent OS knowledge contract is `native-v2`. For each turn, lexical search
+uses the raw current question so exact names survive, while vector search uses
+at most 2,000 characters made from the question, the replied-to message, and
+the two most recent earlier learner messages. Both authorized searches run in
+parallel. LingxiLoop fuses their ranks with `1 / (60 + rank)`, deduplicates by
+Source and chunk, keeps at most three chunks per Source and eight chunks total,
+then assigns the only model-visible markers `S1` through `S8`. Retrieved text is
+untrusted data; an answer may cite only a directly supporting span as
+`[claim](#cite-S1)` (or multiple supplied markers), and must say when scoped
+evidence is insufficient or conflicting.
+
 Presentation generation uses the internal
 `GET /api/sources/{source_id}/presentation-material` boundary. Its only valid
 success shape is `PresentationMaterialV1`: bounded structured text blocks with
@@ -97,7 +108,7 @@ authorized local Source before any evidence reaches a model, browser or deck.
 ## Initialization
 
 Open Notebook startup applies exactly `open_notebook/rag/schema.surrealql` to
-an empty store and records the native-v1 schema marker. A non-empty unmarked
+an empty store and records its deployment schema marker. A non-empty unmarked
 store is rejected. There is no migration chain, dual read, alternative RAG
 engine, compatibility index, or old knowledge import. Follow the guarded empty
 environment procedure in `docs/RELEASE.md`.

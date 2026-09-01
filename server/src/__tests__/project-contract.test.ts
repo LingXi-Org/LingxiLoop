@@ -9,12 +9,25 @@ import {
 } from '../domain/public.js'
 import {
   createProjectRequestSchema,
+  presignSourceRequestSchema,
+  updateSourceRequestSchema,
   updateProjectRequestSchema,
 } from '../modules/knowledge/contracts.js'
 
 test('Project creation kind is selected by the use case rather than client input', () => {
   assert.equal(createProjectRequestSchema.safeParse({ name: 'Math', kind: 'TEACHING' }).success, false)
   assert.equal(updateProjectRequestSchema.safeParse({ kind: 'INSTITUTIONAL_COURSE' }).success, false)
+})
+
+test('Knowledge source titles accept one bounded rename field', () => {
+  assert.deepEqual(updateSourceRequestSchema.parse({ title: '  New title  ' }), { title: 'New title' })
+  assert.equal(updateSourceRequestSchema.safeParse({ title: '', projectId: 'other' }).success, false)
+})
+
+test('Knowledge uploads reject path-like file names at the API boundary', () => {
+  assert.equal(presignSourceRequestSchema.safeParse({
+    idempotencyKey: 'upload-notes', name: '../notes.pdf', mime: 'application/pdf', size: 1,
+  }).success, false)
 })
 
 test('ProjectKind belongs to exactly one supported CompanyType boundary', () => {

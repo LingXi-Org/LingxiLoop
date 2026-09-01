@@ -1,13 +1,13 @@
-import { knowledgeApi } from './api'
 import { create } from 'zustand'
-import { useApp } from '@/stores/app'
 import { useConversations } from '@/features/conversations/store'
 import { userFacingError } from '@/lib/userFacingError'
+import { useApp } from '@/stores/app'
+import { knowledgeApi } from './api'
 import type { ConversationSourceSelection, KnowledgeCitation, KnowledgeSource } from './contracts'
 
 let sourcePollTimer: number | null = null
 function scheduleSourcePoll(sources: KnowledgeSource[], reload: () => Promise<void>): void {
-  const pending = sources.some((item) => item.status === 'queued' || item.status === 'processing')
+  const pending = sources.some((item) => item.status === 'upload_pending' || item.status === 'queued' || item.status === 'processing')
   if (!pending || sourcePollTimer || typeof window === 'undefined') return
   sourcePollTimer = window.setTimeout(() => {
     sourcePollTimer = null
@@ -21,6 +21,7 @@ interface SourceState {
   error: string | null
   selectedSource: KnowledgeSource | null
   selectedCitation: KnowledgeCitation | null
+  detailLoading: boolean
   conversationSelection: ConversationSourceSelection | null
   load: () => Promise<void>
   open: (sourceId: string) => Promise<void>
@@ -28,7 +29,6 @@ interface SourceState {
   close: () => void
   addText: (title: string, text: string) => Promise<void>
   addUrl: (url: string, title?: string) => Promise<void>
-  addFiles: (files: File[]) => Promise<void>
   retry: (sourceId: string) => Promise<void>
   remove: (sourceId: string) => Promise<void>
   loadConversationSelection: (conversationId: string) => Promise<void>
@@ -43,7 +43,7 @@ function currentConversationId(): string {
 }
 
 export const useKnowledgeSources = create<SourceState>((set, get) => ({
-  list: [], loading: false, error: null, selectedSource: null, selectedCitation: null, conversationSelection: null,
+  list: [], loading: false, error: null, selectedSource: null, selectedCitation: null, detailLoading: false, conversationSelection: null,
   load: async () => {
     const id = currentConversationId()
     set({ loading: true, error: null })
@@ -58,27 +58,24 @@ export const useKnowledgeSources = create<SourceState>((set, get) => ({
   },
   open: async (sourceId) => {
     const cached = get().list.find((source) => source.id === sourceId) ?? null
-    set({ selectedSource: cached, selectedCitation: null })
-    set({ selectedSource: await knowledgeApi.getSource(currentConversationId(), sourceId) })
+    set({ selectedSource: cached, selectedCitation: null, detailLoading: !cached })
+    try { set({ selectedSource: await knowledgeApi.getSource(currentConversationId(), sourceId) }) }
+    finally { set({ detailLoading: false }) }
   },
   openCitation: async (citation) => {
     const cached = get().list.find((source) => source.id === citation.sourceId) ?? null
-    set({ selectedSource: cached, selectedCitation: citation })
+    set({ selectedSource: cached, selectedCitation: citation, detailLoading: !cached })
     try { set({ selectedSource: await knowledgeApi.getSource(currentConversationId(), citation.sourceId) }) }
     catch { /* the citation snapshot remains usable after source deletion */ }
+    finally { set({ detailLoading: false }) }
   },
-  close: () => set({ selectedSource: null, selectedCitation: null }),
+  close: () => set({ selectedSource: null, selectedCitation: null, detailLoading: false }),
   addText: async (title, text) => { await knowledgeApi.addTextSource(currentConversationId(), { title, text }); await get().load() },
   addUrl: async (url, title) => { await knowledgeApi.addUrlSource(currentConversationId(), { url, title }); await get().load() },
-  addFiles: async (files) => {
-    const id = currentConversationId()
-    for (const file of files) await knowledgeApi.uploadKnowledgeFile(id, file)
-    await get().load()
-  },
   retry: async (sourceId) => { await knowledgeApi.retrySource(currentConversationId(), sourceId); await get().load() },
   remove: async (sourceId) => {
     await knowledgeApi.deleteSource(currentConversationId(), sourceId)
-    set({ selectedSource: null, selectedCitation: null })
+    set({ selectedSource: null, selectedCitation: null, detailLoading: false })
     await get().load()
   },
   loadConversationSelection: async (conversationId) => {

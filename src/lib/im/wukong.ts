@@ -1,5 +1,5 @@
+import WKSDK, { MessageContent, type Message as WKMessage } from 'wukongimjssdk'
 import { getServerOrigin } from '@/api/core/http'
-import WKSDK, { MessageContent, type WKEvent, type Message as WKMessage } from 'wukongimjssdk'
 import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId, getAuthToken, getMeId } from '@/stores/auth'
 
@@ -24,22 +24,6 @@ export interface ImEnvelope {
   fromUid: string
   timestamp: number
   payload: LingxiMessageV1
-}
-
-export interface ImStreamEvent {
-  id: string
-  type: 'stream.open' | 'stream.delta' | 'stream.close' | 'stream.error' | 'stream.cancel'
-  timestamp: number
-  channelId: string
-  channelType: number
-  fromUid: string
-  clientMsgNo: string
-  kind?: string
-  text?: string
-  delta?: string
-  phase?: 'thinking'
-  queued?: boolean
-  streamSeq?: number
 }
 
 type Bootstrap = { uid: string; token: string; wsUrl: string; apiVersion: 3; sdkVersion: '1.3.5' }
@@ -92,7 +76,6 @@ export class LingxiImClient {
   private connectingKey: string | null = null
   private connectPromise: Promise<void> | null = null
   private listeners = new Set<(message: ImEnvelope) => void>()
-  private eventListeners = new Set<(event: ImStreamEvent) => void>()
   private workspaceChannels = new Set<string>()
 
   constructor() {
@@ -101,28 +84,6 @@ export class LingxiImClient {
       const converted = fromSdk(message)
       if (!this.workspaceChannels.has(converted.channelId)) return
       for (const listener of this.listeners) listener(converted)
-    })
-    this.sdk.eventManager.addEventListener((event: WKEvent) => {
-      if (!['stream.open', 'stream.delta', 'stream.close', 'stream.error', 'stream.cancel'].includes(event.type)) return
-      const data = event.dataJson && typeof event.dataJson === 'object' ? event.dataJson as Record<string, unknown> : {}
-      const converted: ImStreamEvent = {
-        id: event.id,
-        type: event.type as ImStreamEvent['type'],
-        timestamp: event.timestamp,
-        channelId: String(data.channelId ?? ''),
-        channelType: Number(data.channelType ?? 2),
-        fromUid: String(data.fromUid ?? ''),
-        clientMsgNo: String(data.clientMsgNo ?? ''),
-        kind: typeof data.kind === 'string' ? data.kind : undefined,
-        text: typeof data.text === 'string' ? data.text : undefined,
-        delta: typeof data.delta === 'string' ? data.delta : undefined,
-        phase: data.phase === 'thinking' ? 'thinking' : undefined,
-        queued: data.queued === true,
-        streamSeq: typeof data.streamSeq === 'number' && Number.isSafeInteger(data.streamSeq) ? data.streamSeq : undefined,
-      }
-      if (!converted.channelId || !converted.fromUid || !converted.clientMsgNo) return
-      if (!this.workspaceChannels.has(converted.channelId)) return
-      for (const listener of this.eventListeners) listener(converted)
     })
   }
 
@@ -182,11 +143,6 @@ export class LingxiImClient {
   subscribe(listener: (message: ImEnvelope) => void): () => void {
     this.listeners.add(listener)
     return () => this.listeners.delete(listener)
-  }
-
-  subscribeEvent(listener: (event: ImStreamEvent) => void): () => void {
-    this.eventListeners.add(listener)
-    return () => this.eventListeners.delete(listener)
   }
 
   async history(channelId: string, limit = 80, beforeMessageSeq = 0): Promise<ImEnvelope[]> {

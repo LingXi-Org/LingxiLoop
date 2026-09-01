@@ -93,27 +93,6 @@ export class WukongClient {
     }
   }
 
-  async emitEvent(args: {
-    channelId: string; channelType: number; fromUid: string; clientMsgNo: string
-    eventId: string; eventType: 'stream.open' | 'stream.delta' | 'stream.close' | 'stream.error' | 'stream.cancel'
-    data: unknown
-  }): Promise<void> {
-    const payload = {
-      ...jsonRecord(args.data),
-      channelId: args.channelId,
-      channelType: args.channelType,
-      fromUid: args.fromUid,
-      clientMsgNo: args.clientMsgNo,
-    }
-    await this.request('/message/event', {
-      method: 'POST', body: JSON.stringify({
-        channel_id: args.channelId, channel_type: args.channelType, from_uid: args.fromUid,
-        client_msg_no: args.clientMsgNo, event_id: args.eventId, event_type: args.eventType,
-        event_key: 'main', visibility: 'user', occurred_at: Date.now(), payload,
-      }),
-    })
-  }
-
   async listConversations(uid: string): Promise<Array<{
     channelId: string; channelType: number; unread: number; activeAt: number
     lastMessage: ImMessage | null

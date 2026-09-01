@@ -42,10 +42,19 @@ function stripQueryAndHash(path: string): string {
 export function normalizeStorageKey(raw: string): string | null {
   try {
     const key = decodeURIComponent(stripQueryAndHash(raw.trim()).replace(/^\/+/, ''))
+    const segments = key.split('/')
+    if (key.length > 1_024 || /[\\%?#\u0000-\u001f\u007f]/.test(key)
+      || segments.some((segment) => !segment || segment === '.' || segment === '..')) return null
     return isStorageKey(key) ? key : null
   } catch {
     return null
   }
+}
+
+function requireStorageKey(raw: string): string {
+  const key = normalizeStorageKey(raw)
+  if (!key) throw new Error('invalid storage key')
+  return key
 }
 
 export function storageKeyFromPublicUrl(raw: string): string | null {
@@ -125,7 +134,7 @@ export interface Storage {
   ): Promise<{ uploadUrl: string; publicUrl: string }>
   /** Resolve the configured public gateway URL for a key. */
   publicUrl(key: string): Promise<string>
-  /** Read an object into memory. Knowledge-source files are capped at 25 MB
+  /** Read an object into memory. Knowledge-source files are capped at 200 MB
    *  at the API edge, so a bounded Buffer keeps parser APIs simple. */
   readObject(key: string): Promise<Buffer>
   /** Enumerate every object whose key starts with `prefix`. Used by the
@@ -254,13 +263,14 @@ class R2Storage implements Storage, BoundedStorageReader {
   }
 
   async put(key: string, body: Buffer, mime: string): Promise<string> {
+    const normalized = requireStorageKey(key)
     await this.client.send(new PutObjectCommand({
       Bucket: this.bucket,
-      Key: key,
+      Key: normalized,
       Body: body,
       ContentType: mime,
     }))
-    return this.publicUrl(key)
+    return this.publicUrl(normalized)
   }
 
   async presignPut(
@@ -268,17 +278,18 @@ class R2Storage implements Storage, BoundedStorageReader {
     mime: string,
     options: number | PresignPutOptions = {},
   ): Promise<{ uploadUrl: string; publicUrl: string }> {
+    const normalized = requireStorageKey(key)
     const { ttlSeconds = 300, contentLength } = typeof options === 'number'
       ? { ttlSeconds: options, contentLength: undefined }
       : options
     const cmd = new PutObjectCommand({
       Bucket: this.bucket,
-      Key: key,
+      Key: normalized,
       ContentType: mime,
       ContentLength: contentLength,
     })
     const uploadUrl = await getSignedUrl(this.client, cmd, { expiresIn: ttlSeconds })
-    const publicUrl = await this.publicUrl(key)
+    const publicUrl = await this.publicUrl(normalized)
     return { uploadUrl, publicUrl }
   }
 
@@ -307,36 +318,35 @@ class R2Storage implements Storage, BoundedStorageReader {
   }
 
   async deleteObject(key: string): Promise<boolean> {
-    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }))
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: requireStorageKey(key) }))
     return true
   }
 
   async publicUrl(key: string): Promise<string> {
+    const normalized = requireStorageKey(key)
     // Prefer the explicit public base (custom domain). Cache-friendly,
     // no expiry on the URL structure itself. When a signing secret is
     // required signing secret and the key falls under a signed prefix, append the
     // HMAC query params — the Cloudflare Worker at the edge validates
     // these before proxying R2 reads.
-    if (needsSignature(key)) {
+    if (needsSignature(normalized)) {
         const exp = Math.floor(Date.now() / 1000) + this.urlTtl
         const sig = createHmac('sha256', this.signingSecret)
-          .update(`${key}:${exp}`).digest('hex')
-        return `${this.publicBase}/${key}?exp=${exp}&sig=${sig}`
+          .update(`${normalized}:${exp}`).digest('hex')
+        return `${this.publicBase}/${normalized}?exp=${exp}&sig=${sig}`
     }
-    return `${this.publicBase}/${key}`
+    return `${this.publicBase}/${normalized}`
   }
 
   async readObject(key: string): Promise<Buffer> {
-    const normalized = normalizeStorageKey(key)
-    if (!normalized) throw new Error('invalid storage key')
+    const normalized = requireStorageKey(key)
     const response = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: normalized }))
     if (!response.Body) throw new Error('object has no body')
     return Buffer.from(await response.Body.transformToByteArray())
   }
 
   async statObject(key: string): Promise<StorageObjectMetadata> {
-    const normalized = normalizeStorageKey(key)
-    if (!normalized) throw new Error('invalid storage key')
+    const normalized = requireStorageKey(key)
     const response = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: normalized }))
     const sizeBytes = response.ContentLength
     if (sizeBytes === undefined || !Number.isSafeInteger(sizeBytes) || sizeBytes < 0) {
@@ -352,8 +362,7 @@ class R2Storage implements Storage, BoundedStorageReader {
 
   async readObjectBounded(key: string, maxBytes: number): Promise<Buffer> {
     validateReadLimit(maxBytes)
-    const normalized = normalizeStorageKey(key)
-    if (!normalized) throw new Error('invalid storage key')
+    const normalized = requireStorageKey(key)
     const response = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: normalized }))
     if (!response.Body) throw new Error('object has no body')
     if (response.ContentLength !== undefined && response.ContentLength > maxBytes) {

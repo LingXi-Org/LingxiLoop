@@ -2,6 +2,7 @@ import type { PermissionReason, PermissionRequest, ResolvedAccessContext } from 
 import { resolveEntitlements } from './entitlement-resolver.js'
 import { PERMISSION_POLICIES } from './policy.js'
 import type { AccessRepository, ResourceRecord } from './repository.js'
+import { env } from '../../env.js'
 
 export type ContextResolution =
   | { allowed: true; context: ResolvedAccessContext; resource: ResourceRecord | null }
@@ -15,10 +16,12 @@ export async function resolveAccessContext(
   const actor = await repository.actor(request.actorUserId)
   if (!actor) return denied('NOT_AUTHENTICATED')
   if (actor.deletedAt || actor.suspendedAt) return denied('ACTOR_INACTIVE')
+  const platformAdmin = Boolean(actor.emailVerifiedAt)
+    && env.PLATFORM_ADMIN_EMAILS.includes(actor.email.trim().toLowerCase())
 
   const resource = request.resource ? await repository.resource(request.resource) : null
   if (request.resource && !resource) return denied('RESOURCE_NOT_FOUND')
-  if (resource?.visibilityScope === 'PRIVATE' && resource.ownerUserId !== request.actorUserId) {
+  if (!platformAdmin && resource?.visibilityScope === 'PRIVATE' && resource.ownerUserId !== request.actorUserId) {
     return denied('RESOURCE_NOT_FOUND')
   }
 
@@ -41,18 +44,22 @@ export async function resolveAccessContext(
   const company = await repository.company(authoritativeCompanyId)
   if (!company) return denied('COMPANY_NOT_FOUND')
 
-  const companyMembership = await repository.companyMembership(company.id, request.actorUserId)
+  const companyMembership = platformAdmin
+    ? { role: 'OWNER' as const, status: 'ACTIVE' as const }
+    : await repository.companyMembership(company.id, request.actorUserId)
   if (!companyMembership) return denied('COMPANY_MEMBERSHIP_REQUIRED')
   if (companyMembership.status !== 'ACTIVE') return denied('COMPANY_MEMBERSHIP_INACTIVE')
 
   const projectMembership = project
-    ? await repository.projectMembership(company.id, project.id, request.actorUserId)
+    ? platformAdmin
+      ? { role: 'OWNER' as const, status: 'ACTIVE' as const }
+      : await repository.projectMembership(company.id, project.id, request.actorUserId)
     : null
   if (project && !projectMembership) return denied('PROJECT_MEMBERSHIP_REQUIRED')
   if (projectMembership && projectMembership.status !== 'ACTIVE') return denied('PROJECT_MEMBERSHIP_INACTIVE')
 
   let companyPlanId = company.planId
-  if (company.type === 'EDUCATION') {
+  if (company.type === 'EDUCATION' && !platformAdmin) {
     const organizationPlanId = await repository.activeOrganizationSeatPlanId(
       company.id,
       request.actorUserId,
@@ -69,6 +76,7 @@ export async function resolveAccessContext(
     allowed: true,
     context: {
       actorUserId: request.actorUserId,
+      platformAdmin,
       company: { id: company.id, type: company.type, status: company.status },
       companyMembership: { role: companyMembership.role, status: companyMembership.status },
       ...(project ? { project: { id: project.id, kind: project.kind, status: project.status } } : {}),

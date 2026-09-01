@@ -21,24 +21,23 @@
         "requiredStages": ["answer", "teaching", "rag", "safety", "task", "efficiency"],
         "answer": { "requiredKeywords": ["结论", "可追溯", "S1"], "minLength": 60 },
         "teaching": { "requiredConcepts": ["RAG", "证据"], "requireExplanation": true, "requireCheckForUnderstanding": true },
-        "rag": { "requiredSourceIds": ["source-auto"], "requireCitations": true, "minRetrievalRecall": 1, "minCitationPrecision": 1 },
+        "rag": { "requiredSourceIds": ["source-auto"], "requiredClaimCitations": [{ "claim": "本次结论来自课程手册", "sourceId": "source-auto" }], "requireCitations": true, "minRetrievalRecall": 1, "minCitationPrecision": 1 },
         "safety": { "requireNoPolicyViolations": true },
         "task": { "requireCompleted": true, "minCompletionRate": 1 },
         "efficiency": { "maxLatencyMs": 5000, "maxTokens": 200, "maxModelCalls": 1, "maxIpythonCells": 0, "maxToolCalls": 0, "requireSuccessfulTrace": true }
       }
     },
     {
-      "caseId": "runtime-dynamic-rag",
-      "name": "Agent OS executes IPython knowledge search",
-      "runtimeScenario": "dynamic-rag",
+      "caseId": "runtime-hybrid-grounding",
+      "name": "Agent OS consumes automatically fused hybrid evidence",
+      "runtimeScenario": "hybrid-grounding",
       "expectations": {
-        "requiredStages": ["answer", "rag", "tools", "safety", "task", "efficiency"],
-        "answer": { "requiredKeywords": ["动态检索", "S2"] },
-        "rag": { "requiredSourceIds": ["source-dynamic"], "requireCitations": true, "minRetrievalRecall": 1, "minCitationPrecision": 1 },
-        "tools": { "calls": [{ "name": "knowledge.search", "argsSubset": { "query": "runtime handbook" } }], "allowUnexpected": false, "requireSuccess": true, "maxCalls": 1 },
+        "requiredStages": ["answer", "rag", "safety", "task", "efficiency"],
+        "answer": { "requiredKeywords": ["混合检索", "S1"] },
+        "rag": { "requiredSourceIds": ["source-hybrid"], "requiredClaimCitations": [{ "claim": "混合检索会在回答前融合关键词与语义候选", "sourceId": "source-hybrid" }], "requireCitations": true, "minRetrievalRecall": 1, "minCitationPrecision": 1 },
         "safety": { "requireNoPolicyViolations": true },
         "task": { "requireCompleted": true, "minCompletionRate": 1 },
-        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 300, "maxModelCalls": 2, "maxIpythonCells": 1, "maxToolCalls": 1, "requireSuccessfulTrace": true }
+        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 300, "maxModelCalls": 1, "maxIpythonCells": 0, "maxToolCalls": 0, "requireSuccessfulTrace": true }
       }
     },
     {
