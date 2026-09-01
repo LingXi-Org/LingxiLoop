@@ -109,3 +109,12 @@ test('every deployment defines an independently runnable worker service', async 
     assert.match(compose, /command: \["npm", "run", "worker:start"\]/)
   }
 })
+
+test('OpenShip workers inherit the complete runtime environment', async () => {
+  const compose = await readFile(
+    new URL('../../../deploy/openship/app.yml', import.meta.url),
+    'utf8',
+  )
+  assert.match(compose, /WUKONG_USER_TOKEN_SECRET: \$\{WUKONG_USER_TOKEN_SECRET:\?/)
+  assert.doesNotMatch(compose, /environment:\s*\n\s+<<: \*runtime-environment/)
+})

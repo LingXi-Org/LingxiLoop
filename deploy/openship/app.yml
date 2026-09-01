@@ -11,6 +11,7 @@ x-runtime: &runtime
   restart: unless-stopped
   environment: &runtime-environment
     NODE_ENV: production
+    NODE_OPTIONS: --max-old-space-size=320
     LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
     PORT: "5181"
     INSTANCE_ID: ${INSTANCE_ID:?INSTANCE_ID must be unique per app project}
@@ -64,10 +65,6 @@ services:
 
   lingxiloop:
     <<: *runtime
-    environment:
-      <<: *runtime-environment
-      NODE_OPTIONS: --max-old-space-size=320
-      OTEL_SERVICE_NAME: lingxiloop-web
     depends_on:
       db-migrate:
         condition: service_completed_successfully
@@ -84,10 +81,6 @@ services:
 
   worker:
     <<: *runtime
-    environment:
-      <<: *runtime-environment
-      NODE_OPTIONS: --max-old-space-size=384
-      OTEL_SERVICE_NAME: lingxiloop-worker
     command: ["npm", "run", "worker:start"]
     depends_on:
       db-migrate:
