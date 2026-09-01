@@ -224,7 +224,7 @@ const openShipWrite = /^\/deployments(?:\/build\/access|\/[^/]+\/(?:redeploy|rol
 async function openShip(c: AppContext): Promise<Response> {
   const session = requireAdmin(c)
   if (session instanceof Response) return session
-  const path = `/${c.req.param('path') ?? ''}`
+  const path = `/${c.req.param('*') ?? ''}`
   const allowed = c.req.method === 'GET' ? openShipRead.test(path) : c.req.method === 'POST' && openShipWrite.test(path)
   if (!allowed) return c.json({ error: 'OpenShip capability is not exposed' }, 404)
   const headers = new Headers(c.req.raw.headers)

@@ -19,7 +19,7 @@
     "migrations_dir": "migrations"
   }],
   "vars": {
-    "ORIGIN_BASE_URL": "https://origin.loop.lingxilearn.cn",
+    "ORIGIN_BASE_URL": "https://origin-b.lingxilearn.cn",
     "OPENSHIP_BASE_URL": "https://ops.lingxilearn.cn",
     "AUTH_ALLOWED_HOSTS": "loop.lingxilearn.cn,admin.lingxilearn.cn",
     "APP_VERSION": "0.1.0-beta"

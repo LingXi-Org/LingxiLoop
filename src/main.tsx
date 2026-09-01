@@ -1,5 +1,7 @@
 import { StrictMode, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
+import '@fontsource-variable/inter'
+import '@fontsource-variable/geist'
 import { AppThemeProvider } from './components/AppThemeProvider'
 import { isElectron, isNotificationWindow } from './lib/runtime'
 import './styles/globals.css'
