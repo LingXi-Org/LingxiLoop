@@ -1,9 +1,17 @@
+import 'dotenv/config'
 import { Pool } from 'pg'
-import { env } from '../env.js'
+
+const databaseUrl = process.env.DATABASE_URL?.trim()
+if (!databaseUrl) throw new Error('[env] Missing required environment variable: DATABASE_URL')
+
+const databasePoolMax = Number(process.env.DATABASE_POOL_MAX ?? 20)
+if (!Number.isInteger(databasePoolMax) || databasePoolMax < 1) {
+  throw new Error('[env] DATABASE_POOL_MAX must be an integer >= 1')
+}
 
 export const pool = new Pool({
-  connectionString: env.DATABASE_URL,
-  max: env.DATABASE_POOL_MAX,
+  connectionString: databaseUrl,
+  max: databasePoolMax,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
   // Defense-in-depth against connection-pool exhaustion. A single slow or stuck

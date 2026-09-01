@@ -58,13 +58,18 @@ x-runtime: &runtime
 services:
   db-migrate:
     <<: *runtime
-    restart: "no"
+    environment:
+      NODE_ENV: production
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-8}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    restart: on-failure
     command: ["npm", "run", "db:migrate"]
     cpus: "0.5"
     mem_limit: 512m
 
   lingxiloop:
     <<: *runtime
+    environment: *runtime-environment
     depends_on:
       db-migrate:
         condition: service_completed_successfully
@@ -81,6 +86,7 @@ services:
 
   worker:
     <<: *runtime
+    environment: *runtime-environment
     command: ["npm", "run", "worker:start"]
     depends_on:
       db-migrate:

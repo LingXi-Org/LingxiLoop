@@ -33,6 +33,10 @@ test('Worker composition has injectable startup and connection shutdown boundari
   process.env.LINGXILOOP_RUNTIME_CLIENT = 'http'
   process.env.OPENAI_API_KEY = 'test-key'
   process.env.OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small'
+  process.env.WUKONG_USER_TOKEN_SECRET = 'test-wukong-user-token-secret'
+  process.env.DATABASE_URL = 'postgresql://test:test@localhost/test'
+  process.env.REDIS_URL = 'redis://localhost:6379'
+  process.env.LINGXILOOP_INVITE_BASE_URL = 'http://localhost:5180'
   const { startWorkerProcess } = await import('../worker.js')
   const events: string[] = []
   const service = await startWorkerProcess({
@@ -117,6 +121,22 @@ test('OpenShip workers inherit the complete runtime environment', async () => {
   )
   assert.match(compose, /WUKONG_WEBHOOK_SECRET: \$\{WUKONG_WEBHOOK_SECRET:\?/)
   assert.doesNotMatch(compose, /WUKONG_USER_TOKEN_SECRET/)
+  assert.match(compose, /lingxiloop:\n    <<: \*runtime\n    environment: \*runtime-environment/)
+  assert.match(compose, /worker:\n    <<: \*runtime\n    environment: \*runtime-environment/)
+  assert.match(compose, /db-migrate:\n    <<: \*runtime\n    environment:\n      NODE_ENV: production\n      DATABASE_POOL_MAX:[^\n]+\n      DATABASE_URL:/)
+  assert.match(compose, /db-migrate:[\s\S]*?restart: on-failure/)
   assert.match(compose, /pull_policy: always/)
-  assert.doesNotMatch(compose, /environment:\s*\n\s+<<: \*runtime-environment/)
+})
+
+test('Open Notebook restarts only after SurrealDB is healthy', async () => {
+  const compose = await readFile(
+    new URL('../../../deploy/openship/knowledge-agent.yml', import.meta.url),
+    'utf8',
+  )
+  assert.match(compose, /depends_on:\n      surrealdb:\n        condition: service_healthy\n        restart: true/)
+})
+
+test('database pool does not load unrelated application secrets', async () => {
+  const pool = await readFile(new URL('../db/pool.ts', import.meta.url), 'utf8')
+  assert.doesNotMatch(pool, /from ['"]\.\.\/env\.js['"]/)
 })

@@ -31,6 +31,7 @@ services:
     depends_on:
       surrealdb:
         condition: service_healthy
+        restart: true
     environment:
       SURREAL_URL: ws://surrealdb:8000/rpc
       SURREAL_USER: open-notebook
