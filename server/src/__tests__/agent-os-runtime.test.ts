@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { MemoryHostAdapter } from '../agent-os/host-adapter.js'
-import { KernelExecutionError, type KernelExecutor } from '../agent-os/kernel-manager.js'
+import { KernelExecutionError, type KernelExecutionOptions, type KernelExecutor } from '../agent-os/kernel-manager.js'
 import { type AgentModelDriver, ModelAdapterError, type ModelTurnResult, ScriptedModelDriver } from '../agent-os/model-driver.js'
 import { AgentOSRuntime, canvasContextContract, knowledgeContextContract } from '../agent-os/runtime.js'
 import {
@@ -130,11 +130,47 @@ test('Agent OS runs multi-hop IPython and keeps the channel session across work 
   const history = [...host.sessions.values()][0]?.history ?? []
   assert.ok(history.some((item) => 'type' in item && item.type === 'function_call_output'))
   assert.deepEqual(host.events.filter((event) => event.kind.startsWith('ipython.')).map((event) => event.data), [
-    { callId: 'c1', partIndex: 0, codePreview: 'score = 7' },
-    { callId: 'c1', partIndex: 0, durationMs: 1, truncated: false, artifactCount: 0 },
+    { callId: 'c1', codePreview: 'score = 7' },
+    { callId: 'c1', durationMs: 1, truncated: false, artifactCount: 0 },
   ])
   assert.equal(host.outcomes.get(first.id)?.status, 'completed')
   assert.equal(host.outcomes.get(second.id)?.status, 'completed')
+})
+
+test('streams Host Actions as native tools while keeping IPython internal', async () => {
+  const item = work('host-tools', 'host-tools-message')
+  const host = new MemoryHostAdapter()
+  host.contexts.set(item.id, context(item, 'Read the document.'))
+  const model = new ScriptedModelDriver([
+    { output: [{ type: 'function_call', callId: 'cell', name: 'ipython', arguments: '{"code":"loop.documents.read(documentId=\'doc-1\')"}' }], text: '', usage: { inputTokens: 1, outputTokens: 1 } },
+    { output: [{ role: 'assistant', content: 'Done.' }], text: 'Done.', usage: { inputTokens: 1, outputTokens: 1 } },
+  ])
+  const kernel: KernelExecutor = {
+    execute: async (_work, runId, cellId, _code, _signal, options?: KernelExecutionOptions) => {
+      const action = { runId, cellId, callIndex: 0, action: 'documents.read', args: { documentId: 'doc-1' }, idempotencyKey: `${runId}:${cellId}:0` }
+      const result = { ok: true as const, value: { documentId: 'doc-1' } }
+      await options?.onHostAction?.({ stage: 'started', action })
+      await options?.onHostAction?.({ stage: 'completed', action, result })
+      return { executionId: 'execution', stdout: '', stderr: '', result: result.value, durationMs: 1, truncated: false, artifacts: [] }
+    },
+  }
+
+  await new AgentOSRuntime(host, model, kernel, { heartbeatMs: 60_000 }).runWork(item)
+
+  assert.deepEqual(host.events.filter((event) => event.kind.startsWith('tool.')).map(({ kind, stage, visibility, data }) => ({ kind, stage, visibility, data })), [
+    {
+      kind: 'tool.started', stage: 'started', visibility: 'user',
+      data: { toolCallId: 'host:host-tools:hop-1-call-1:0', partIndex: 0, name: 'documents.read', args: { documentId: 'doc-1' } },
+    },
+    {
+      kind: 'tool.completed', stage: 'completed', visibility: 'user',
+      data: {
+        toolCallId: 'host:host-tools:hop-1-call-1:0', partIndex: 0,
+        result: { status: 'completed', value: { documentId: 'doc-1' } }, isError: false,
+      },
+    },
+  ])
+  assert.equal(host.events.filter((event) => event.kind.startsWith('ipython.')).every((event) => event.visibility === 'internal'), true)
 })
 
 test('an empty model response fails once with adapter diagnostics, not a hop-limit error', async () => {
@@ -268,8 +304,8 @@ test('repeated invalid question-card Python stops after one correction', async (
   assert.equal(attempts, 2)
   assert.equal(host.outcomes.get(item.id)?.status, 'failed')
   assert.deepEqual(host.events.filter((event) => event.kind === 'ipython.failed').map((event) => event.data), [
-    { callId: 'bad-1', partIndex: 0, error: 'SyntaxError: unterminated string literal', recoverable: true },
-    { callId: 'bad-2', partIndex: 1, error: 'SyntaxError: unterminated string literal', recoverable: false },
+    { callId: 'bad-1', error: 'SyntaxError: unterminated string literal', recoverable: true },
+    { callId: 'bad-2', error: 'SyntaxError: unterminated string literal', recoverable: false },
   ])
 })
 
@@ -447,8 +483,8 @@ test('unexecuted specialist narration is corrected into a real IPython call', as
       text: '', usage: { inputTokens: 1, outputTokens: 1 },
     },
     {
-      output: [{ role: 'assistant', content: '已根据真实学习状态制定本周计划。' }],
-      text: '已根据真实学习状态制定本周计划。', usage: { inputTokens: 1, outputTokens: 1 },
+      output: [{ role: 'assistant', content: '已读取真实学习状态。' }],
+      text: '已读取真实学习状态。', usage: { inputTokens: 1, outputTokens: 1 },
     },
   ])
   const kernel = new StatefulKernel()
@@ -457,7 +493,7 @@ test('unexecuted specialist narration is corrected into a real IPython call', as
 
   assert.deepEqual(kernel.cells, ['state = loop.learning.current()\nstate'])
   assert.doesNotMatch(JSON.stringify(host.events.filter((event) => event.kind === 'model.delta')), /Initiating specialized tasks|即刻启动/)
-  assert.equal(host.messages[0]?.body, '已根据真实学习状态制定本周计划。')
+  assert.equal(host.messages[0]?.body, '已读取真实学习状态。')
 })
 
 test('knowledge evidence uses one exact streamed and durable confidence-link protocol', async () => {

@@ -22,6 +22,12 @@ Only a prompt-contract, persona, capability, or execution-role change refreshes
 the stable prompt. Ordinary questions remain text; only `loop.chat.ask(...)`
 creates a question card.
 
+An explicit request to create or revise a weekly learning plan enters the
+typed `loop.learning` Mission flow. Optional scheduling details do not block a
+reasonable provisional plan, and a weekly plan alone does not justify Canvas.
+Agent OS suppresses and corrects model text that announces specialist, task,
+workflow, or Canvas execution without a corresponding tool turn.
+
 Each model request exposes one strict `ipython` function with parallel tool
 calls disabled. Malformed, unknown, or multiple calls execute nothing and
 receive call-ID-matched structured errors for one correction attempt. Python
@@ -55,6 +61,10 @@ source excerpts are removed before the event ledger write. The final WuKongIM
 message is accepted only when its body exactly matches every persisted text
 delta in the run; missing or malformed streams fail instead of falling back to
 direct text.
+IPython remains an internal ledger event and never becomes a conversation part.
+Only typed `loop.*` Host Actions are projected as assistant-ui `tool-call`
+parts; the frontend renders those parts with the official ToolCall and
+ToolTimeline registry components.
 Provider `reasoning_content` is a native `reasoning` part and answer `content`
 is a native `text` part; a tool-finish response without a valid tool call fails.
 Qwen 3.5 requests disable provider thinking so their first visible delta is

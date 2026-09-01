@@ -28,7 +28,7 @@ import { useParticipants } from '@/features/agents/state'
 import { cn } from '@/lib/utils'
 import { useConversationUi } from '@/stores/conversationUi'
 import { chatTransport, type LingxiMessageMetadata } from '../runtime'
-import { CHAT_TOOL_RENDERERS } from './ToolRenderers'
+import { CHAT_TOOL_RENDERERS, HostToolTimeline } from './ToolRenderers'
 
 function ReasoningPart({ status }: ReasoningMessagePartProps) {
   return (
@@ -306,6 +306,7 @@ export function ConversationMessage() {
             )}
           >
             {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
+            <HostToolTimeline />
             <MessagePrimitive.Parts
               components={{
                 Text: custom.isMine ? MarkdownText : AgentMarkdownText,

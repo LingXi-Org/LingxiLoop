@@ -517,7 +517,7 @@ export class AgentOSRuntime {
               output: boundedToolOutput({ error: message, protocolError: true }),
             })
             await this.event(work, runId, {
-              kind: 'ipython.failed', stage: 'failed', visibility: 'user',
+              kind: 'ipython.failed', stage: 'failed', visibility: 'internal',
               data: { callId: call.callId, error: message, protocolError: true },
             })
           }
@@ -567,7 +567,7 @@ export class AgentOSRuntime {
               output: boundedToolOutput({ error: message, protocolError: true }),
             })
             await this.event(work, runId, {
-              kind: 'ipython.failed', stage: 'failed', visibility: 'user',
+              kind: 'ipython.failed', stage: 'failed', visibility: 'internal',
               data: { callId: call.callId, error: message, protocolError: true },
             })
             if (protocolRetryUsed) throw new Error(`tool protocol correction exhausted: ${message}`)
@@ -578,16 +578,41 @@ export class AgentOSRuntime {
             }
             continue
           }
-          const toolPartIndex = nextStreamPartIndex++
           await this.event(work, runId, {
-            kind: 'ipython.started', stage: 'started', visibility: 'user',
-            data: { callId: call.callId, partIndex: toolPartIndex, codePreview: code.slice(0, 240) },
+            kind: 'ipython.started', stage: 'started', visibility: 'internal',
+            data: { callId: call.callId, codePreview: code.slice(0, 240) },
           })
           try {
             const cellId = `hop-${hop + 1}-call-${callIndex + 1}`
+            const hostToolPartIndices = new Map<string, number>()
             const execution = await this.kernels.execute(
               work, runId, cellId, code, lifecycle.signal,
-              kernelAccess(liveContext, work.executionRole),
+              {
+                ...kernelAccess(liveContext, work.executionRole),
+                onHostAction: async ({ stage, action, result }) => {
+                  const toolCallId = `host:${action.idempotencyKey}`
+                  if (stage === 'started') {
+                    const partIndex = nextStreamPartIndex++
+                    hostToolPartIndices.set(action.idempotencyKey, partIndex)
+                    await this.event(work, runId, {
+                      kind: 'tool.started', stage: 'started', visibility: 'user',
+                      data: { toolCallId, partIndex, name: action.action, args: action.args },
+                    })
+                    return
+                  }
+                  const partIndex = hostToolPartIndices.get(action.idempotencyKey)
+                  if (partIndex === undefined || !result) throw new Error('Host action completed without a matching tool start')
+                  const toolResult = result.approval
+                    ? { status: 'awaiting-approval', approvalId: result.approval.id }
+                    : result.ok
+                      ? { status: 'completed', value: JSON.parse(boundedToolOutput(result.value ?? null)) }
+                      : { status: 'failed', error: result.error ?? '工具调用失败' }
+                  await this.event(work, runId, {
+                    kind: 'tool.completed', stage: result.ok || result.approval ? 'completed' : 'failed', visibility: 'user',
+                    data: { toolCallId, partIndex, result: toolResult, isError: !result.ok && !result.approval },
+                  })
+                },
+              },
             )
             const output = boundedToolOutput({
               stdout: execution.stdout, stderr: execution.stderr, result: execution.result,
@@ -595,10 +620,9 @@ export class AgentOSRuntime {
             })
             session.history.push({ type: 'function_call_output', callId: call.callId, output })
             await this.event(work, runId, {
-              kind: 'ipython.completed', stage: 'completed', visibility: 'user',
+              kind: 'ipython.completed', stage: 'completed', visibility: 'internal',
               data: {
                 callId: call.callId,
-                partIndex: toolPartIndex,
                 durationMs: execution.durationMs,
                 truncated: execution.truncated,
                 artifactCount: execution.artifacts.length,
@@ -618,8 +642,6 @@ export class AgentOSRuntime {
                 data: {
                   approvalId: error.approvalId,
                   cellId: error.cellId,
-                  callId: call.callId,
-                  partIndex: toolPartIndex,
                 },
               })
               session.history.push({ type: 'function_call_output', callId: call.callId, output: boundedToolOutput({ approvalPending: error.approvalId }) })
@@ -630,18 +652,17 @@ export class AgentOSRuntime {
             if (error instanceof KernelTimeoutError) {
               session.history.push({ type: 'function_call_output', callId: call.callId, output: boundedToolOutput({ error: error.message, kernelRestarted: true }) })
               await this.event(work, runId, {
-                kind: 'ipython.timeout', stage: 'failed', visibility: 'user',
-                data: { callId: call.callId, partIndex: toolPartIndex, timeoutMs: error.timeoutMs },
+                kind: 'ipython.timeout', stage: 'failed', visibility: 'internal',
+                data: { callId: call.callId, timeoutMs: error.timeoutMs },
               })
               continue
             }
             const message = error instanceof Error ? error.message : String(error)
             const recoverable = error instanceof KernelExecutionError && !protocolRetryUsed
             await this.event(work, runId, {
-              kind: 'ipython.failed', stage: 'failed', visibility: 'user',
+              kind: 'ipython.failed', stage: 'failed', visibility: 'internal',
               data: {
                 callId: call.callId,
-                partIndex: toolPartIndex,
                 error: message,
                 recoverable,
               },

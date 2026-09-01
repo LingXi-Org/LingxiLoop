@@ -1,5 +1,8 @@
-import type { ToolCallMessagePartProps } from '@assistant-ui/react'
+import { type ToolCallMessagePart, type ToolCallMessagePartProps, useAuiState } from '@assistant-ui/react'
+import { WrenchIcon } from 'lucide-react'
 import { useState } from 'react'
+import { ToolCall } from '@/components/tool-call'
+import { ToolTimeline } from '@/components/tool-timeline'
 import { ToolFallback } from '@/components/tool-fallback.aui'
 import { ApprovalCard } from '@/components/tool-ui/approval-card'
 import { safeParseSerializableApprovalCard } from '@/components/tool-ui/approval-card/schema'
@@ -84,29 +87,52 @@ export function ProgressTrackerTool({ args, result, toolName, ...props }: ToolCa
   return parsed ? <ProgressTracker {...parsed} /> : <ToolFallback {...props} args={args} result={result} toolName={toolName} />
 }
 
-export function IPythonTool({ args, result, isError, toolCallId }: ToolCallMessagePartProps) {
-  const value = result && typeof result === 'object' ? result as Record<string, unknown> : null
-  if (value?.recoverable === true) return null
-  const failed = isError === true || value?.status === 'failed'
-  const durationMs = typeof value?.durationMs === 'number' ? value.durationMs : null
-  const artifactCount = typeof value?.artifactCount === 'number' ? value.artifactCount : 0
-  const description = failed
-    ? String(value?.error ?? '执行失败')
-    : value
-      ? [durationMs === null ? '执行完成' : `用时 ${durationMs} ms`, artifactCount > 0 ? `${artifactCount} 个产物` : ''].filter(Boolean).join(' · ')
-      : args && typeof args === 'object' && 'codePreview' in args ? '正在执行受控代码' : '正在启动运行环境'
+function toolChip(toolName: string, args: Record<string, unknown>): string {
+  const value = Object.values(args).find((item) => typeof item === 'string' || typeof item === 'number')
+  return value === undefined ? toolName : String(value).slice(0, 80)
+}
+
+export function NativeToolCall({ args, argsText, result, status, toolName }: ToolCallMessagePartProps) {
+  const [open, setOpen] = useState(false)
+  const running = status.type === 'running'
   return (
-    <ProgressTracker
-      id={`ipython-${toolCallId}`}
-      role="state"
-      steps={[{
-        id: `ipython-step-${toolCallId}`,
-        label: 'IPython',
-        description,
-        status: failed ? 'failed' : value ? 'completed' : 'in-progress',
-      }]}
+    <ToolCall
+      label={`已调用 ${toolName}`}
+      activeLabel={`正在调用 ${toolName}`}
+      query={toolChip(toolName, args as Record<string, unknown>)}
+      request={argsText}
+      result={result === undefined ? '' : JSON.stringify(result, null, 2)}
+      running={running}
+      open={open}
+      onOpenChange={setOpen}
+      className="max-w-none"
     />
   )
+}
+
+export function HostToolTimeline() {
+  const [open, setOpen] = useState(false)
+  const calls = useAuiState((state) => state.message.content.filter((part): part is ToolCallMessagePart => (
+    part.type === 'tool-call' && part.toolCallId.startsWith('host:')
+  )))
+  const streaming = calls.some((part) => part.result === undefined)
+  if (calls.length === 0) return null
+  const steps = calls.map((part) => ({
+    verb: part.result === undefined ? '调用' : '已调用',
+    chip: toolChip(part.toolName, part.args as Record<string, unknown>),
+    icon: WrenchIcon,
+  }))
+  return <ToolTimeline
+    steps={steps}
+    visibleSteps={steps.length}
+    streaming={streaming}
+    open={open}
+    onOpenChange={setOpen}
+    restingLabel={`${steps.length} 个工具步骤`}
+    activeLabel="正在工作"
+    stats={[]}
+    className="max-w-none"
+  />
 }
 
 export function CiteClaimsTool() { return null }
@@ -231,8 +257,8 @@ export const CHAT_TOOL_RENDERERS = {
     'stats-display': StatsDisplayTool,
     'message-draft': MessageDraftTool,
     'presentation-artifact': PresentationArtifactTool,
-    ipython: IPythonTool,
+    ipython: () => null,
     cite_claims: CiteClaimsTool,
   },
-  Fallback: ToolFallback,
+  Fallback: NativeToolCall,
 }

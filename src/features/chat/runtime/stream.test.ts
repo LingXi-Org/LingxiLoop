@@ -53,8 +53,8 @@ test('keeps prior parts across model steps and rejects a delta without part-star
 test('applies the native assistant-ui tool-call lifecycle', () => {
   const running = applyAssistantStreamChunks([], [
     { type: 'step-start', path: [], messageId: 'preview-1' },
-    { type: 'part-start', path: [0], part: { type: 'tool-call', toolCallId: 'call-1', toolName: 'ipython' } },
-    { type: 'text-delta', path: [0], textDelta: '{"codePreview":"print(1)"}' },
+    { type: 'part-start', path: [0], part: { type: 'tool-call', toolCallId: 'host:call-1', toolName: 'documents.read' } },
+    { type: 'text-delta', path: [0], textDelta: '{"documentId":"doc-1"}' },
     { type: 'tool-call-args-text-finish', path: [0] },
   ])
   const completed = applyAssistantStreamChunks(running, [
@@ -63,10 +63,10 @@ test('applies the native assistant-ui tool-call lifecycle', () => {
   ])
   assert.deepEqual(completed, [{
     type: 'tool-call',
-    toolCallId: 'call-1',
-    toolName: 'ipython',
-    args: { codePreview: 'print(1)' },
-    argsText: '{"codePreview":"print(1)"}',
+    toolCallId: 'host:call-1',
+    toolName: 'documents.read',
+    args: { documentId: 'doc-1' },
+    argsText: '{"documentId":"doc-1"}',
     result: { status: 'completed', durationMs: 12 },
     isError: false,
   }])

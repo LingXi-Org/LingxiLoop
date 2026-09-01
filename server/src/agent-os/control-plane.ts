@@ -674,62 +674,36 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
     if (validPartIndex(finishPartIndex)) {
       await publishPreview([{ type: 'part-finish', path: [finishPartIndex as number] }])
     }
-  } else if (event.kind === 'ipython.started') {
-    const data = event.data as { callId?: unknown; partIndex?: unknown; codePreview?: unknown } | null
-    if (typeof data?.callId !== 'string' || !data.callId || !validPartIndex(data.partIndex)) {
-      throw new Error('ipython.started must identify its native assistant-ui tool part')
-    }
+  } else if (event.kind === 'tool.started') {
+    const data = event.data as { args?: unknown; name?: unknown; partIndex?: unknown; toolCallId?: unknown } | null
+    if (
+      typeof data?.toolCallId !== 'string' || !data.toolCallId.startsWith('host:')
+      || typeof data.name !== 'string' || !data.name || data.name.length > 160
+      || !validPartIndex(data.partIndex)
+      || !data.args || typeof data.args !== 'object' || Array.isArray(data.args)
+    ) throw new Error('tool.started must identify a bounded native assistant-ui Host Action part')
+    const argsText = JSON.stringify(data.args)
+    if (argsText.length > 8_000) throw new Error('tool.started arguments exceed the user-visible limit')
     await publishPreview([
       {
         type: 'part-start', path: [data.partIndex as number],
-        part: { type: 'tool-call', toolCallId: data.callId, toolName: 'ipython' },
+        part: { type: 'tool-call', toolCallId: data.toolCallId, toolName: data.name },
       },
-      {
-        type: 'text-delta', path: [data.partIndex as number],
-        textDelta: JSON.stringify({ codePreview: typeof data.codePreview === 'string' ? data.codePreview : '' }),
-      },
+      { type: 'text-delta', path: [data.partIndex as number], textDelta: argsText },
       { type: 'tool-call-args-text-finish', path: [data.partIndex as number] },
     ])
-  } else if (event.kind === 'ipython.completed' || event.kind === 'ipython.timeout' || event.kind === 'ipython.failed') {
-    const data = event.data as {
-      artifactCount?: unknown
-      callId?: unknown
-      durationMs?: unknown
-      error?: unknown
-      partIndex?: unknown
-      recoverable?: unknown
-      timeoutMs?: unknown
-      truncated?: unknown
-    } | null
-    if (typeof data?.callId !== 'string' || !data.callId || !validPartIndex(data.partIndex)) {
-      throw new Error(`${event.kind} must identify its native assistant-ui tool part`)
-    }
-    const failed = event.kind !== 'ipython.completed'
-    const error = event.kind === 'ipython.timeout'
-      ? `IPython 执行超过 ${Number(data.timeoutMs ?? 0)} ms，内核已重启`
-      : failed ? String(data.error ?? 'IPython 执行失败') : undefined
-    const result: Record<string, string | number | boolean> = failed
-      ? { status: 'failed', error: String(error), recoverable: data.recoverable === true }
-      : {
-          status: 'completed',
-          durationMs: Number(data.durationMs ?? 0),
-          truncated: data.truncated === true,
-          artifactCount: Number(data.artifactCount ?? 0),
-        }
+  } else if (event.kind === 'tool.completed') {
+    const data = event.data as { isError?: unknown; partIndex?: unknown; result?: unknown; toolCallId?: unknown } | null
+    const resultText = JSON.stringify(data?.result)
+    if (
+      typeof data?.toolCallId !== 'string' || !data.toolCallId.startsWith('host:')
+      || !validPartIndex(data.partIndex) || typeof data.isError !== 'boolean' || data.result === undefined
+      || !resultText || resultText.length > 8_000
+    ) throw new Error('tool.completed must resolve a bounded native assistant-ui Host Action part')
     await publishPreview([
-      { type: 'result', path: [data.partIndex as number], result, isError: failed },
+      { type: 'result', path: [data.partIndex as number], result: JSON.parse(resultText), isError: data.isError },
       { type: 'part-finish', path: [data.partIndex as number] },
     ])
-    const detail = failed
-      ? error
-      : `用时 ${Number(data.durationMs ?? 0)} ms${data.truncated === true ? ' · 输出已截断' : ''}`
-    if (data.recoverable !== true) await sendActivity('IPython', {
-      name: 'IPython',
-      stage: failed ? 'failed' : 'completed',
-      status: failed ? 'failed' : 'completed',
-      detail,
-      callId: data.callId,
-    })
   } else if (event.kind === 'run.failed' || event.kind === 'run.cancelled') {
     const error = String((event.data as { error?: unknown } | null)?.error ?? event.kind)
     await publishPreview([{ type: 'error', path: [], error, code: event.kind }])
@@ -739,18 +713,9 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
       usage: { inputTokens: 0, outputTokens: 0 },
     }])
   } else if (event.kind === 'approval.pending') {
-    const approvalData = event.data as { approvalId?: unknown; callId?: unknown; partIndex?: unknown } | null
+    const approvalData = event.data as { approvalId?: unknown } | null
     const approvalId = String(approvalData?.approvalId ?? '')
-    if (!approvalId || typeof approvalData?.callId !== 'string' || !approvalData.callId || !validPartIndex(approvalData.partIndex)) {
-      throw new Error('approval.pending must identify its native assistant-ui tool part')
-    }
-    await publishPreview([
-      {
-        type: 'result', path: [approvalData.partIndex as number], isError: false,
-        result: { status: 'completed', approvalPending: approvalId },
-      },
-      { type: 'part-finish', path: [approvalData.partIndex as number] },
-    ])
+    if (!approvalId) throw new Error('approval.pending must identify its approval')
     const { rows: approvals } = await pool.query<{
       id: string; agent_id: string; action: string; args: Record<string, unknown>; summary: string
       status: string; requested_at: string; resolved_at: string | null; resolved_by: string | null

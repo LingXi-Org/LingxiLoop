@@ -17,6 +17,7 @@ function work(channelId: string): AgentWorkItem {
 test('real IPython kernels preserve session state and enforce the loop allowlist', async () => {
   const homesRoot = await mkdtemp(resolve(tmpdir(), 'lingxiloop-kernel-'))
   const hostCalls: string[] = []
+  const hostEvents: unknown[] = []
   const manager = new KernelManager({
     execute: async (_work, action) => {
       hostCalls.push(action.action)
@@ -38,9 +39,29 @@ test('real IPython kernels preserve session state and enforce the loop allowlist
     const isolated = await manager.execute(work('two'), 'work-two', 'cell-1', 'globals().get("value")', undefined, access)
     assert.equal(isolated.result, null)
 
-    const hostResult = await manager.execute(first, first.id, 'cell-3', 'loop.documents.read(documentId="doc-1")', undefined, access)
+    const hostResult = await manager.execute(first, first.id, 'cell-3', 'loop.documents.read(documentId="doc-1")', undefined, {
+      ...access,
+      onHostAction: async (event) => { hostEvents.push(event) },
+    })
     assert.deepEqual(hostResult.result, { documentId: 'doc-1' })
     assert.deepEqual(hostCalls, ['documents.read'])
+    assert.deepEqual(hostEvents, [
+      {
+        stage: 'started',
+        action: {
+          runId: first.id, cellId: 'cell-3', callIndex: 0, action: 'documents.read',
+          args: { documentId: 'doc-1' }, idempotencyKey: `${first.id}:cell-3:0`,
+        },
+      },
+      {
+        stage: 'completed',
+        action: {
+          runId: first.id, cellId: 'cell-3', callIndex: 0, action: 'documents.read',
+          args: { documentId: 'doc-1' }, idempotencyKey: `${first.id}:cell-3:0`,
+        },
+        result: { ok: true, value: { documentId: 'doc-1' } },
+      },
+    ])
 
     await assert.rejects(
       manager.execute(first, first.id, 'cell-4', 'loop.documents.delete(documentId="doc-1")', undefined, access),
