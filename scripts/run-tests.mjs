@@ -1,27 +1,27 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process'
-import { readdirSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
 
-const roots = [resolve('server/src/__tests__'), resolve('src')]
-
-function collect(directory) {
-  const files = []
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (entry.isDirectory() && ['node_modules', 'dist', 'coverage', '.wrangler'].includes(entry.name)) continue
-    const full = join(directory, entry.name)
-    if (entry.isDirectory()) files.push(...collect(full))
-    else if (entry.isFile() && entry.name.endsWith('.test.ts')) files.push(full)
-  }
-  return files
-}
-
-const testFiles = roots.flatMap(collect).sort()
-if (testFiles.length === 0) {
-  console.error('[test] no unit test files found')
-  process.exit(2)
-}
+// Keep the default unit gate deliberately small. Database behavior belongs to
+// test:integration, Worker behavior to control:test, and Agent OS behavior to
+// eval:check; rerunning every source-adjacent contract here only triples CI time.
+const testFiles = [
+  'server/src/__tests__/gateway-auth.test.ts',
+  'server/src/__tests__/admin-platform.test.ts',
+  'server/src/__tests__/api-module-boundaries.test.ts',
+  'server/src/__tests__/agent-os-authorization.test.ts',
+  'server/src/__tests__/agent-os-tool.test.ts',
+  'server/src/__tests__/domain-events.test.ts',
+  'server/src/__tests__/entitlement-resolver.test.ts',
+  'server/src/__tests__/llm-ledger.test.ts',
+  'server/src/__tests__/permission-policy.test.ts',
+  'server/src/__tests__/storage-provider.test.ts',
+  'server/src/__tests__/wukong-client.test.ts',
+  'src/api/transport.test.ts',
+  'src/features/presentations/presentationFeature.test.ts',
+  'src/lib/userVisibleChinese.test.ts',
+].map(resolve)
 
 const child = spawn(
   process.execPath,
