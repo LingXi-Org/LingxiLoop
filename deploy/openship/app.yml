@@ -80,7 +80,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 30
-      start_period: 20s
+      start_period: 10m
     cpus: "0.75"
     mem_limit: 448m
 

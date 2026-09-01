@@ -125,6 +125,7 @@ test('OpenShip workers inherit the complete runtime environment', async () => {
   assert.match(compose, /worker:\n    <<: \*runtime\n    environment: \*runtime-environment/)
   assert.match(compose, /db-migrate:\n    <<: \*runtime\n    environment:\n      NODE_ENV: production\n      DATABASE_POOL_MAX:[^\n]+\n      DATABASE_URL:/)
   assert.match(compose, /db-migrate:[\s\S]*?restart: on-failure/)
+  assert.match(compose, /start_period: 10m/)
   assert.match(compose, /pull_policy: always/)
 })
 
