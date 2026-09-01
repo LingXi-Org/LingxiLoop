@@ -21,7 +21,7 @@ const testFiles = [
   'src/api/transport.test.ts',
   'src/features/presentations/presentationFeature.test.ts',
   'src/lib/userVisibleChinese.test.ts',
-].map(resolve)
+].map((file) => resolve(file))
 
 const child = spawn(
   process.execPath,
