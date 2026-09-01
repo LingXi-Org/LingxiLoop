@@ -10,7 +10,7 @@ import { AuthScreen } from '@/components/AuthScreen'
 import { confirmSensitiveAction, promptSensitiveAction } from '@/lib/confirmAction'
 import { toastAction } from '@/lib/actionToast'
 import { API_URL, adminFetch } from './api'
-import { normalizeOpenlitUrl } from './openlit-url'
+import { normalizeLingxiLitUrl } from './lingxilit-url'
 import { ADMIN_RESOURCES, GROUP_LABELS, resourceDefinition, type ResourceGroup } from './resources'
 
 type RecordValue = string | number | boolean | null | Record<string, unknown> | unknown[]
@@ -38,7 +38,7 @@ export function AdminLayout() {
   const navigate = useNavigate()
   const { mutate: logout, isPending } = useLogout()
   const health = useCustom<{ ok: boolean }>({ url: `${API_URL}/health/dependencies`, method: 'get' })
-  const openlitUrl = normalizeOpenlitUrl(import.meta.env.VITE_OPENLIT_URL)
+  const lingxiLitUrl = normalizeLingxiLitUrl(import.meta.env.VITE_LINGXILIT_URL)
   return <div className="admin-shell">
     <aside className={navigationOpen ? 'admin-sidebar admin-sidebar-open' : 'admin-sidebar'}>
       <div className="flex items-center gap-3 px-5 py-5">
@@ -48,7 +48,7 @@ export function AdminLayout() {
       <nav className="min-h-0 flex-1 overflow-y-auto px-3 pb-5" aria-label="后台资源">
         <Link to="/" className="admin-nav-item" onClick={() => setNavigationOpen(false)}><ActivityIcon className="size-4" />仪表盘</Link>
         <Link to="/releases" className="admin-nav-item" onClick={() => setNavigationOpen(false)}><RocketIcon className="size-4" />发布管理</Link>
-        {openlitUrl && <a href={openlitUrl} className="admin-nav-item" target="_blank" rel="noopener noreferrer" onClick={() => setNavigationOpen(false)}><ExternalLinkIcon className="size-4" />AI 可观测（OpenLIT）</a>}
+        {lingxiLitUrl && <a href={lingxiLitUrl} className="admin-nav-item" target="_blank" rel="noopener noreferrer" onClick={() => setNavigationOpen(false)}><ExternalLinkIcon className="size-4" />AI 可观测（LingxiLit）</a>}
         {(Object.keys(GROUP_LABELS) as ResourceGroup[]).map((group) => <div key={group} className="mt-6 space-y-1">
           <p className="px-3 pb-2 text-xs font-semibold text-muted-foreground">{GROUP_LABELS[group]}</p>
           {ADMIN_RESOURCES.filter((resource) => resource.group === group).map((resource) => <Link

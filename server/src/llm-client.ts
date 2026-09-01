@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { instrumentOpenAIClient, openAIObservabilityFetch } from './openlit-observability.js'
+import { instrumentOpenAIClient, lingxiLitObservabilityFetch } from './lingxilit-observability.js'
 
 const SDK_MAX_RETRIES = 5
 const SDK_TIMEOUT_MS = 5 * 60_000
@@ -13,7 +13,7 @@ export type OpenAIClientOptions = {
 
 /** The only module allowed to construct the provider SDK client. */
 export function createOpenAIClient(options: OpenAIClientOptions): OpenAI {
-  const observedFetch = openAIObservabilityFetch()
+  const observedFetch = lingxiLitObservabilityFetch()
   const client = new OpenAI({
     apiKey: options.apiKey,
     baseURL: options.baseURL,

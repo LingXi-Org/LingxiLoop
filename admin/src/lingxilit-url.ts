@@ -1,4 +1,4 @@
-export function normalizeOpenlitUrl(value: string | undefined): string | undefined {
+export function normalizeLingxiLitUrl(value: string | undefined): string | undefined {
   const raw = value?.trim()
   if (!raw) return undefined
   try {

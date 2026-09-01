@@ -1,7 +1,7 @@
 {
   "formatVersion": 2,
   "title": "LingxiLoop AI Observability",
-  "description": "OpenLIT 1.24.2 dashboard for OpenAI-compatible logical calls and every provider HTTP attempt.",
+  "description": "LingxiLit dashboard for OpenAI-compatible logical calls and every provider HTTP attempt.",
   "isPinned": true,
   "isMainDashboard": false,
   "tags": ["lingxiloop", "llm", "openai-compatible"],
@@ -9,7 +9,7 @@
     "total-cost": {
       "id": "total-cost",
       "title": "Total cost",
-      "description": "USD cost calculated from OPENLIT_PRICING_JSON for the selected period.",
+      "description": "USD cost calculated from LINGXILIT_PRICING_JSON for the selected period.",
       "type": "STAT_CARD",
       "properties": { "value": "0.cost_usd", "prefix": "$", "color": "#F36C06" },
       "config": {

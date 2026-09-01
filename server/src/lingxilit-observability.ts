@@ -6,6 +6,7 @@ import {
   type Attributes,
   type Span,
 } from '@opentelemetry/api'
+// LingxiLit currently retains the OpenLIT TypeScript SDK package and API name.
 import { Openlit } from 'openlit'
 import type OpenAI from 'openai'
 
@@ -78,7 +79,7 @@ function parsePricingState(value: unknown): PricingState {
 }
 
 function resolvePricingJson(): string | Record<string, Record<string, unknown>> | undefined {
-  const raw = process.env.OPENLIT_PRICING_JSON?.trim()
+  const raw = process.env.LINGXILIT_PRICING_JSON?.trim()
   if (!raw) return undefined
   if (!raw.startsWith('{')) {
     void loadRemotePricingState(raw)
@@ -91,7 +92,7 @@ function resolvePricingJson(): string | Record<string, Record<string, unknown>> 
     return value as Record<string, Record<string, unknown>>
   } catch (error) {
     console.warn(
-      '[openlit] invalid inline pricing JSON; cost and limit metadata may be unavailable:',
+      '[lingxilit] invalid inline pricing JSON; cost and limit metadata may be unavailable:',
       error instanceof Error ? error.message : String(error),
     )
     return undefined
@@ -111,7 +112,7 @@ async function loadRemotePricingState(url: string): Promise<void> {
     pricingState = parsePricingState(await response.json())
   } catch (error) {
     console.warn(
-      '[openlit] pricing limits unavailable; model calls remain enabled:',
+      '[lingxilit] pricing limits unavailable; model calls remain enabled:',
       error instanceof Error ? error.message : String(error),
     )
   }
@@ -449,8 +450,8 @@ export function instrumentOpenAIClient(client: OpenAI): OpenAI {
   return client
 }
 
-/** Enables fail-open OpenLIT telemetry for the shared OpenAI-compatible client. */
-export function openAIObservabilityFetch(): typeof fetch | undefined {
+/** Enables fail-open LingxiLit telemetry for the shared OpenAI-compatible client. */
+export function lingxiLitObservabilityFetch(): typeof fetch | undefined {
   if (!process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim()) return undefined
   if (initialized) return observedFetch
   initialized = true
@@ -471,7 +472,7 @@ export function openAIObservabilityFetch(): typeof fetch | undefined {
     observedFetch = createObservedFetch()
   } catch (error) {
     console.warn(
-      '[openlit] initialization failed; model calls remain enabled:',
+      '[lingxilit] initialization failed; model calls remain enabled:',
       error instanceof Error ? error.message : String(error),
     )
   }

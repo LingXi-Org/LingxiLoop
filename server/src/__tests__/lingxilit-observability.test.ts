@@ -30,7 +30,7 @@ async function waitFor(check: () => boolean): Promise<void> {
   }
 }
 
-test('OpenLIT instruments a preloaded OpenAI module without exporting message content', async (t) => {
+test('LingxiLit instruments a preloaded OpenAI module without exporting message content', async (t) => {
   const otlpBodies: Buffer[] = []
   const collector = createServer((request, response) => {
     const chunks: Buffer[] = []
@@ -116,7 +116,7 @@ test('OpenLIT instruments a preloaded OpenAI module without exporting message co
   process.env.OPENLIT_DISABLE_BATCH = 'true'
   process.env.OPENLIT_DISABLE_METRICS = 'true'
   process.env.OPENLIT_DISABLE_EVENTS = 'true'
-  process.env.OPENLIT_PRICING_JSON = JSON.stringify({
+  process.env.LINGXILIT_PRICING_JSON = JSON.stringify({
     chat: { 'observability-test-model': { promptPrice: 0.001, completionPrice: 0.002 } },
     embeddings: { 'observability-embedding-model': 0.001 },
     images: { 'observability-image-model': { standard: { '1024x1024': 0.01 } } },
@@ -233,7 +233,7 @@ test('model calls fail open when pricing and OTLP are unavailable', async (t) =>
         OPENLIT_DISABLE_BATCH: 'true',
         OPENLIT_DISABLE_EVENTS: 'true',
         OPENLIT_DISABLE_METRICS: 'true',
-        OPENLIT_PRICING_JSON: 'http://127.0.0.1:1/pricing.json',
+        LINGXILIT_PRICING_JSON: 'http://127.0.0.1:1/pricing.json',
         OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:1',
       },
       stdio: ['ignore', 'ignore', 'pipe'],
