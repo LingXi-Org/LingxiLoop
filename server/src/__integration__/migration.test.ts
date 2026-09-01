@@ -39,13 +39,16 @@ async function withMigrations(run: (url: URL, directory: string) => Promise<void
   }
 }
 
-test('an empty database reaches v1 once and repeated migration is a no-op', async () => {
+test('an empty database reaches the latest schema once and repeated migration is a no-op', async () => {
   await withDatabase(async (database) => {
-    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline'])
+    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     const { rows } = await database.query('SELECT version,name FROM schema_migrations ORDER BY version')
-    assert.deepEqual(rows, [{ version: 1, name: 'v1_baseline' }])
+    assert.deepEqual(rows, [
+      { version: 1, name: 'v1_baseline' },
+      { version: 2, name: 'remove_legacy_identity' },
+    ])
   })
 })
 
@@ -91,11 +94,11 @@ test('concurrent migrators serialize and apply each migration once', async () =>
     try {
       const results = await Promise.all([migrateDatabase(database), migrateDatabase(second)])
       assert.deepEqual(results.map((result) => [...result]).sort((a, b) => b.length - a.length), [
-        ['0001_v1_baseline'],
+        ['0001_v1_baseline', '0002_remove_legacy_identity'],
         [],
       ])
       const { rows } = await database.query('SELECT COUNT(*)::int AS count FROM schema_migrations')
-      assert.deepEqual(rows, [{ count: 1 }])
+      assert.deepEqual(rows, [{ count: 2 }])
     } finally {
       await second.end()
     }
