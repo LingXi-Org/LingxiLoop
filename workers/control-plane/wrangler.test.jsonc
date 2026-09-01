@@ -1,0 +1,19 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "lingxiloop-control-plane-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "lingxiloop-control-plane-test",
+    "database_id": "00000000-0000-0000-0000-000000000000",
+    "migrations_dir": "migrations"
+  }],
+  "vars": {
+    "ORIGIN_BASE_URL": "https://origin.example.com",
+    "OPENSHIP_BASE_URL": "https://openship.example.com",
+    "AUTH_ALLOWED_HOSTS": "loop.example.com,admin.example.com",
+    "APP_VERSION": "test"
+  }
+}

@@ -9,7 +9,7 @@ export default defineWorkersConfig(async () => ({
     include: ['workers/control-plane/src/**/*.test.ts'],
     poolOptions: {
       workers: {
-        wrangler: { configPath: resolve(here, 'wrangler.jsonc') },
+        wrangler: { configPath: resolve(here, 'wrangler.test.jsonc') },
         miniflare: {
           bindings: {
             TEST_MIGRATIONS: await readD1Migrations(resolve(here, 'migrations')),
