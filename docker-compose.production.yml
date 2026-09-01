@@ -79,7 +79,7 @@ services:
     logging: *quiet-logging
 
   open-notebook:
-    image: ${OPEN_NOTEBOOK_IMAGE:?OPEN_NOTEBOOK_IMAGE must be the digest-pinned lingxiloop-rag target}
+    image: ${OPEN_NOTEBOOK_IMAGE:-accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:mvp}
     restart: unless-stopped
     depends_on:
       surrealdb:
@@ -201,7 +201,7 @@ services:
     logging: *quiet-logging
 
   agent-os:
-    image: ${AGENT_OS_IMAGE:?AGENT_OS_IMAGE must be digest-pinned}
+    image: ${AGENT_OS_IMAGE:-accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:mvp}
     restart: unless-stopped
     env_file:
       - ./.env.secrets
