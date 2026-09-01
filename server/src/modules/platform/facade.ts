@@ -8,7 +8,7 @@ import { PlatformApplication } from './application.js'
 async function agentOsHealth(): Promise<void> {
   const baseUrl = process.env.AGENT_OS_URL?.trim()
   if (!baseUrl) throw new Error('AGENT_OS_URL is required')
-  const response = await fetch(`${baseUrl.replace(/\/+$/, '')}/health`, {
+  const response = await fetch(`${baseUrl.replace(/\/+$/, '')}/readyz`, {
     signal: AbortSignal.timeout(3_000),
   })
   if (!response.ok) throw new Error(`Agent OS health returned ${response.status}`)

@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path'
 import { env } from './env.js'
 import { api } from './api/router.js'
 import { initializeNativeStorage } from './storage.js'
-import { attachWebSocket, resetHumanPresenceOnBoot } from './ws.js'
+import { attachWebSocket } from './ws.js'
 import { bootDocumentBus } from './modules/documents/public.js'
 import { pool } from './db/pool.js'
 import { redis, sub } from './redis.js'
@@ -184,9 +184,6 @@ export async function startWebProcess(): Promise<ServiceHandle> {
         console.log(`[web] listening :${env.PORT} · instance ${env.INSTANCE_ID} · OpenAI model ${env.OPENAI_MODEL}`)
         resolveListen()
       })
-    })
-    void resetHumanPresenceOnBoot().catch((error: unknown) => {
-      console.error('[ws] stale presence reset failed after listener startup', error)
     })
   } catch (error) {
     await lifecycle.stop('startup-failure').catch(() => undefined)

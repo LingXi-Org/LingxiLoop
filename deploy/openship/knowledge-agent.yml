@@ -1,0 +1,107 @@
+name: lingxiloop-knowledge-agent
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011
+    restart: unless-stopped
+    command: ["start", "--log", "warn", "--user", "open-notebook", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}", "rocksdb:/data/open-notebook.db"]
+    volumes:
+      - surreal-data:/data
+    healthcheck:
+      test: ["CMD", "/surreal", "is-ready", "--endpoint", "http://localhost:8000"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    cpus: "0.5"
+    mem_limit: 512m
+    logging: *logging
+
+  open-notebook:
+    image: ${OPEN_NOTEBOOK_IMAGE:?OPEN_NOTEBOOK_IMAGE must be digest-pinned}
+    restart: unless-stopped
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+    environment:
+      SURREAL_URL: ws://surrealdb:8000/rpc
+      SURREAL_USER: open-notebook
+      SURREAL_PASSWORD: ${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}
+      SURREAL_NAMESPACE: open_notebook
+      SURREAL_DATABASE: open_notebook
+      OPEN_NOTEBOOK_PASSWORD: ${OPEN_NOTEBOOK_PASSWORD:?OPEN_NOTEBOOK_PASSWORD is required}
+      OPEN_NOTEBOOK_WORKER_MAX_TASKS: ${OPEN_NOTEBOOK_WORKER_MAX_TASKS:-1}
+      OPEN_NOTEBOOK_R2_ENABLED: "true"
+      OPEN_NOTEBOOK_R2_PREFIX: ${OPEN_NOTEBOOK_R2_PREFIX:-open-notebook}
+      R2_ENDPOINT: ${R2_ENDPOINT:?R2_ENDPOINT is required}
+      R2_BUCKET: ${R2_BUCKET:?R2_BUCKET is required}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
+      OPENAI_API_KEY: ${OPEN_NOTEBOOK_PASSWORD:?OPEN_NOTEBOOK_PASSWORD is required}
+      OPENAI_BASE_URL: "${LINGXILOOP_INTERNAL_ORIGIN:?LINGXILOOP_INTERNAL_ORIGIN is required}/internal/open-notebook/v1"
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required}
+    ports:
+      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5055:5055"
+    volumes:
+      - open-notebook-data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "supervisorctl status rag-api | grep -q RUNNING && supervisorctl status rag-worker | grep -q RUNNING && curl -fsS http://localhost:5055/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    cpus: "1.0"
+    mem_limit: 768m
+    logging: *logging
+
+  agent-os:
+    image: ${AGENT_OS_IMAGE:?AGENT_OS_IMAGE must be digest-pinned}
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=384
+      LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
+      LINGXILOOP_VERSION: ${LINGXILOOP_VERSION:?LINGXILOOP_VERSION is required}
+      OTEL_SERVICE_NAME: lingxiloop-agent-os
+      OTEL_DEPLOYMENT_ENVIRONMENT: production
+      OTEL_SERVICE_VERSION: ${LINGXILOOP_VERSION:?LINGXILOOP_VERSION is required}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+      OPENLIT_PRICING_JSON: ${OPENLIT_PRICING_JSON:-}
+      AGENT_OS_PORT: "5190"
+      AGENT_OS_WORKER_ID: ${AGENT_OS_WORKER_ID:?AGENT_OS_WORKER_ID must be unique}
+      AGENT_OS_MAX_CONCURRENT_RUNS: ${AGENT_OS_MAX_CONCURRENT_RUNS:-1}
+      AGENT_OS_MAX_KERNELS: ${AGENT_OS_MAX_KERNELS:-4}
+      AGENT_OS_KERNEL_IDLE_MS: ${AGENT_OS_KERNEL_IDLE_MS:-900000}
+      AGENT_OS_SHUTDOWN_GRACE_MS: ${AGENT_OS_SHUTDOWN_GRACE_MS:-20000}
+      AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required}
+      LINGXILOOP_CONTROL_PLANE_URL: ${LINGXILOOP_INTERNAL_ORIGIN:?LINGXILOOP_INTERNAL_ORIGIN is required}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      AGENT_OS_HOMES_ROOT: /var/lib/lingxiloop-agent-os/homes
+    ports:
+      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5190:5190"
+    volumes:
+      - agent-os-data:/var/lib/lingxiloop-agent-os
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5190/readyz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    cpus: "1.0"
+    mem_limit: 768m
+    logging: *logging
+
+volumes:
+  surreal-data: {}
+  open-notebook-data: {}
+  agent-os-data: {}

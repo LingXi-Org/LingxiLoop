@@ -15,6 +15,7 @@ export interface KernelManagerOptions {
   runnerPath?: string
   homesRoot?: string
   idleMs?: number
+  maxKernels?: number
   executionTimeoutMs?: number
   maxOutputChars?: number
   allowNetwork?: boolean
@@ -73,6 +74,7 @@ class PersistentKernel {
   private readyReject: ((error: Error) => void) | null = null
   private tail: Promise<unknown> = Promise.resolve()
   private readonly pending = new Map<string, PendingExecution>()
+  private queuedExecutions = 0
   lastUsedAt = Date.now()
 
   constructor(
@@ -80,6 +82,7 @@ class PersistentKernel {
     private readonly home: string,
     private readonly bridge: KernelHostBridge,
     private readonly options: Required<KernelManagerOptions>,
+    private readonly onIdle: () => void,
   ) {}
 
   private async start(): Promise<void> {
@@ -214,6 +217,7 @@ class PersistentKernel {
   }
 
   execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal, options?: KernelExecutionOptions): Promise<KernelExecution> {
+    this.queuedExecutions++
     const operation = this.tail.then(async () => {
       await this.start()
       this.lastUsedAt = Date.now()
@@ -251,7 +255,11 @@ class PersistentKernel {
       })
     })
     this.tail = operation.catch(() => undefined)
-    return operation
+    return operation.finally(() => {
+      this.queuedExecutions--
+      this.lastUsedAt = Date.now()
+      if (!this.busy) this.onIdle()
+    })
   }
 
   stop(signal: NodeJS.Signals = 'SIGTERM'): void {
@@ -259,6 +267,8 @@ class PersistentKernel {
     this.process = null
     if (child && !child.killed) child.kill(signal)
   }
+
+  get busy(): boolean { return this.queuedExecutions > 0 }
 }
 
 export class ApprovalPendingError extends Error {
@@ -274,19 +284,32 @@ export class KernelCancelledError extends Error {
   constructor(readonly cellId: string) { super('IPython cell cancelled') }
 }
 
+function positiveInteger(value: string | number, name: string): number {
+  const parsed = Number(value)
+  if (!Number.isSafeInteger(parsed) || parsed < 1) throw new Error(`${name} must be a positive integer`)
+  return parsed
+}
+
 export class KernelManager implements KernelExecutor {
   private readonly kernels = new Map<string, PersistentKernel>()
   private readonly options: Required<KernelManagerOptions>
   private readonly sweepTimer: NodeJS.Timeout
+  private readonly capacityWaiters = new Set<() => void>()
+  private closed = false
 
   constructor(private readonly bridge: KernelHostBridge, options: KernelManagerOptions = {}) {
     const localPython = resolve(process.platform === 'win32' ? '.venv/Scripts/python.exe' : '.venv/bin/python')
+    const idleMs = options.idleMs ?? positiveInteger(process.env.AGENT_OS_KERNEL_IDLE_MS ?? 90 * 60_000, 'AGENT_OS_KERNEL_IDLE_MS')
+    const maxKernels = options.maxKernels === undefined && process.env.AGENT_OS_MAX_KERNELS === undefined
+      ? Number.POSITIVE_INFINITY
+      : positiveInteger(options.maxKernels ?? process.env.AGENT_OS_MAX_KERNELS!, 'AGENT_OS_MAX_KERNELS')
     this.options = {
       pythonCommand: options.pythonCommand ?? process.env.AGENT_OS_PYTHON
         ?? (existsSync(localPython) ? localPython : process.platform === 'win32' ? 'python' : 'python3'),
       runnerPath: resolve(options.runnerPath ?? 'server/agent-os/kernel_runner.py'),
       homesRoot: resolve(options.homesRoot ?? process.env.AGENT_OS_HOMES_ROOT ?? '.agent-os/homes'),
-      idleMs: options.idleMs ?? 90 * 60_000,
+      idleMs,
+      maxKernels,
       executionTimeoutMs: options.executionTimeoutMs ?? 120_000,
       maxOutputChars: options.maxOutputChars ?? 8_000,
       allowNetwork: options.allowNetwork ?? false,
@@ -304,17 +327,53 @@ export class KernelManager implements KernelExecutor {
     return createHash('sha256').update(value).digest('hex')
   }
 
+  private evictLeastRecentlyUsedIdle(): boolean {
+    let candidate: [string, PersistentKernel] | undefined
+    for (const entry of this.kernels) {
+      if (entry[1].busy) continue
+      if (!candidate || entry[1].lastUsedAt < candidate[1].lastUsedAt) candidate = entry
+    }
+    if (!candidate) return false
+    candidate[1].stop()
+    this.kernels.delete(candidate[0])
+    return true
+  }
+
+  private waitForIdle(cellId: string, signal?: AbortSignal): Promise<void> {
+    return new Promise((resolveWait, rejectWait) => {
+      const cleanup = () => {
+        this.capacityWaiters.delete(wake)
+        signal?.removeEventListener('abort', abort)
+      }
+      const wake = () => { cleanup(); resolveWait() }
+      const abort = () => { cleanup(); rejectWait(new KernelCancelledError(cellId)) }
+      this.capacityWaiters.add(wake)
+      if (signal?.aborted) abort()
+      else signal?.addEventListener('abort', abort, { once: true })
+    })
+  }
+
+  private wakeCapacityWaiters(): void {
+    for (const wake of [...this.capacityWaiters]) wake()
+  }
+
   async execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal, options?: KernelExecutionOptions): Promise<KernelExecution> {
     const key = this.key(work)
     let kernel = this.kernels.get(key)
-    if (!kernel) {
+    while (!kernel) {
+      if (this.closed) throw new KernelCancelledError(cellId)
+      if (this.kernels.size >= this.options.maxKernels && !this.evictLeastRecentlyUsedIdle()) {
+        await this.waitForIdle(cellId, signal)
+        kernel = this.kernels.get(key)
+        continue
+      }
       const safeCompany = this.homeSegment(work.companyId)
       const safeAgent = this.homeSegment(work.agentId)
       const safeSession = this.homeSegment(`${work.channelId}:${work.threadRootClientMsgNo ?? '-'}`)
       const home = process.platform === 'win32'
         ? resolve(this.options.homesRoot, this.homeSegment(key))
         : resolve(this.options.homesRoot, safeCompany, safeAgent, 'sessions', safeSession)
-      kernel = new PersistentKernel(key, home, this.bridge, this.options)
+      kernel = new PersistentKernel(key, home, this.bridge, this.options, () => this.wakeCapacityWaiters())
       this.kernels.set(key, kernel)
     }
     try {
@@ -328,6 +387,7 @@ export class KernelManager implements KernelExecutor {
   sweepIdle(now = Date.now()): number {
     let removed = 0
     for (const [key, kernel] of this.kernels) {
+      if (kernel.busy) continue
       if (now - kernel.lastUsedAt < this.options.idleMs) continue
       kernel.stop()
       this.kernels.delete(key)
@@ -337,9 +397,11 @@ export class KernelManager implements KernelExecutor {
   }
 
   close(): void {
+    this.closed = true
     clearInterval(this.sweepTimer)
     for (const kernel of this.kernels.values()) kernel.stop()
     this.kernels.clear()
+    this.wakeCapacityWaiters()
   }
 
   get size(): number { return this.kernels.size }

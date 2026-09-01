@@ -88,7 +88,10 @@ export class PlatformApplication {
   }
 
   async assertReady(): Promise<void> {
-    await timeout(assertDatabaseReady(this.infrastructure.db), 1_000, 'health database check')
+    await Promise.all([
+      timeout(assertDatabaseReady(this.infrastructure.db), 1_000, 'health database check'),
+      timeout(this.infrastructure.redisPing(), 1_000, 'health redis check'),
+    ])
   }
 
   async dependencyReadiness(): Promise<DependencyReadiness> {

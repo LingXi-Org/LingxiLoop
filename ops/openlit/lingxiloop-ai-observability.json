@@ -1,0 +1,164 @@
+{
+  "formatVersion": 2,
+  "title": "LingxiLoop AI Observability",
+  "description": "OpenLIT 1.24.2 dashboard for OpenAI-compatible logical calls and every provider HTTP attempt.",
+  "isPinned": true,
+  "isMainDashboard": false,
+  "tags": ["lingxiloop", "llm", "openai-compatible"],
+  "widgets": {
+    "total-cost": {
+      "id": "total-cost",
+      "title": "Total cost",
+      "description": "USD cost calculated from OPENLIT_PRICING_JSON for the selected period.",
+      "type": "STAT_CARD",
+      "properties": { "value": "0.cost_usd", "prefix": "$", "color": "#F36C06" },
+      "config": {
+        "query": "WITH parseDateTimeBestEffort('{{filter.timeLimit.start}}') AS start_time, parseDateTimeBestEffort('{{filter.timeLimit.end}}') AS end_time SELECT round(sum(toFloat64OrZero(SpanAttributes['gen_ai.usage.cost'])), 6) AS cost_usd FROM otel_traces WHERE notEmpty(SpanAttributes['gen_ai.operation.name']) AND SpanName != 'lingxiloop.openai.http_attempt' AND Timestamp >= start_time AND Timestamp <= end_time"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "logical-error-rate": {
+      "id": "logical-error-rate",
+      "title": "Logical error rate",
+      "description": "Final failed model calls divided by all logical model calls.",
+      "type": "STAT_CARD",
+      "properties": { "value": "0.error_rate", "suffix": "%", "color": "#ef4444" },
+      "config": {
+        "query": "WITH parseDateTimeBestEffort('{{filter.timeLimit.start}}') AS start_time, parseDateTimeBestEffort('{{filter.timeLimit.end}}') AS end_time SELECT round(if(count() = 0, 0, countIf(positionCaseInsensitive(StatusCode, 'error') > 0) * 100.0 / count()), 2) AS error_rate FROM otel_traces WHERE notEmpty(SpanAttributes['gen_ai.operation.name']) AND SpanName != 'lingxiloop.openai.http_attempt' AND Timestamp >= start_time AND Timestamp <= end_time"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "rate-limit-rate": {
+      "id": "rate-limit-rate",
+      "title": "429 attempt rate",
+      "description": "HTTP 429 attempts divided by all provider HTTP attempts, including retries.",
+      "type": "STAT_CARD",
+      "properties": { "value": "0.rate_429", "suffix": "%", "color": "#f59e0b" },
+      "config": {
+        "query": "WITH parseDateTimeBestEffort('{{filter.timeLimit.start}}') AS start_time, parseDateTimeBestEffort('{{filter.timeLimit.end}}') AS end_time SELECT round(if(count() = 0, 0, countIf(toInt32OrZero(SpanAttributes['http.response.status_code']) = 429) * 100.0 / count()), 2) AS rate_429 FROM otel_traces WHERE SpanName = 'lingxiloop.openai.http_attempt' AND Timestamp >= start_time AND Timestamp <= end_time"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "rpm-utilization": {
+      "id": "rpm-utilization",
+      "title": "Rolling RPM utilization",
+      "description": "Every provider HTTP attempt in the last 60 seconds. 🟡 begins at 80%; 🔴 begins at 100%.",
+      "type": "TABLE",
+      "properties": { "color": "#0ea5e9" },
+      "config": {
+        "query": "SELECT ResourceAttributes['service.name'] AS service, SpanAttributes['lingxiloop.provider.host'] AS provider, SpanAttributes['gen_ai.request.model'] AS model, count() AS rpm, toInt64OrZero(any(SpanAttributes['lingxiloop.limit.rpm'])) AS rpm_limit, round(if(rpm_limit = 0, 0, rpm * 100.0 / rpm_limit), 2) AS utilization_pct, multiIf(rpm_limit = 0, '⚪ UNCONFIGURED', rpm >= rpm_limit, '🔴 >=100%', rpm * 100 >= rpm_limit * 80, '🟡 >=80%', '🟢 <80%') AS status FROM otel_traces WHERE SpanName = 'lingxiloop.openai.http_attempt' AND Timestamp >= now() - INTERVAL 1 MINUTE GROUP BY service, provider, model ORDER BY utilization_pct DESC, rpm DESC"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "tpm-utilization": {
+      "id": "tpm-utilization",
+      "title": "Rolling TPM utilization",
+      "description": "Successful logical input + output tokens in the last 60 seconds, joined to provider limits without double-counting retries.",
+      "type": "TABLE",
+      "properties": { "color": "#8b5cf6" },
+      "config": {
+        "query": "WITH usage AS (SELECT TraceId, ResourceAttributes['service.name'] AS service, SpanAttributes['gen_ai.request.model'] AS model, toInt64OrZero(SpanAttributes['gen_ai.usage.input_tokens']) + toInt64OrZero(SpanAttributes['gen_ai.usage.output_tokens']) AS tokens FROM otel_traces WHERE notEmpty(SpanAttributes['gen_ai.operation.name']) AND SpanName != 'lingxiloop.openai.http_attempt' AND positionCaseInsensitive(StatusCode, 'error') = 0 AND Timestamp >= now() - INTERVAL 1 MINUTE), provider_limits AS (SELECT TraceId, any(SpanAttributes['lingxiloop.provider.host']) AS provider, toInt64OrZero(any(SpanAttributes['lingxiloop.limit.tpm'])) AS tpm_limit FROM otel_traces WHERE SpanName = 'lingxiloop.openai.http_attempt' AND Timestamp >= now() - INTERVAL 1 MINUTE GROUP BY TraceId) SELECT usage.service AS service, provider_limits.provider AS provider, usage.model AS model, sum(usage.tokens) AS tpm, any(provider_limits.tpm_limit) AS tpm_limit, round(if(tpm_limit = 0, 0, tpm * 100.0 / tpm_limit), 2) AS utilization_pct, multiIf(tpm_limit = 0, '⚪ UNCONFIGURED', tpm >= tpm_limit, '🔴 >=100%', tpm * 100 >= tpm_limit * 80, '🟡 >=80%', '🟢 <80%') AS status FROM usage INNER JOIN provider_limits ON usage.TraceId = provider_limits.TraceId GROUP BY service, provider, model ORDER BY utilization_pct DESC, tpm DESC"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "token-usage": {
+      "id": "token-usage",
+      "title": "Token usage",
+      "description": "Provider-reported logical input and output tokens over time; cached tokens are not added a second time.",
+      "type": "AREA_CHART",
+      "properties": {
+        "xAxis": "request_time",
+        "yAxis": "total_tokens",
+        "yAxes": [
+          { "key": "input_tokens", "color": "#10b981" },
+          { "key": "output_tokens", "color": "#F36C06" }
+        ]
+      },
+      "config": {
+        "query": "WITH parseDateTimeBestEffort('{{filter.timeLimit.start}}') AS start_time, parseDateTimeBestEffort('{{filter.timeLimit.end}}') AS end_time SELECT formatDateTime(toStartOfMinute(Timestamp), '%Y/%m/%d %H:%M') AS request_time, sum(toInt64OrZero(SpanAttributes['gen_ai.usage.input_tokens'])) AS input_tokens, sum(toInt64OrZero(SpanAttributes['gen_ai.usage.output_tokens'])) AS output_tokens, input_tokens + output_tokens AS total_tokens FROM otel_traces WHERE notEmpty(SpanAttributes['gen_ai.operation.name']) AND SpanName != 'lingxiloop.openai.http_attempt' AND positionCaseInsensitive(StatusCode, 'error') = 0 AND Timestamp >= start_time AND Timestamp <= end_time GROUP BY request_time ORDER BY request_time"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "cost-by-model": {
+      "id": "cost-by-model",
+      "title": "Cost by model",
+      "description": "USD cost by requested model for the selected period.",
+      "type": "BAR_CHART",
+      "properties": { "xAxis": "model", "yAxis": "cost_usd", "color": "#F36C06" },
+      "config": {
+        "query": "WITH parseDateTimeBestEffort('{{filter.timeLimit.start}}') AS start_time, parseDateTimeBestEffort('{{filter.timeLimit.end}}') AS end_time SELECT SpanAttributes['gen_ai.request.model'] AS model, round(sum(toFloat64OrZero(SpanAttributes['gen_ai.usage.cost'])), 6) AS cost_usd FROM otel_traces WHERE notEmpty(SpanAttributes['gen_ai.operation.name']) AND SpanName != 'lingxiloop.openai.http_attempt' AND Timestamp >= start_time AND Timestamp <= end_time GROUP BY model ORDER BY cost_usd DESC"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "logical-latency": {
+      "id": "logical-latency",
+      "title": "Logical latency percentiles",
+      "description": "Complete SDK operation duration in seconds, grouped by service and model.",
+      "type": "TABLE",
+      "properties": { "color": "#10b981" },
+      "config": {
+        "query": "WITH parseDateTimeBestEffort('{{filter.timeLimit.start}}') AS start_time, parseDateTimeBestEffort('{{filter.timeLimit.end}}') AS end_time SELECT ResourceAttributes['service.name'] AS service, SpanAttributes['gen_ai.request.model'] AS model, round(avg(Duration) / 1000000000, 3) AS average_s, round(quantile(0.50)(Duration) / 1000000000, 3) AS p50_s, round(quantile(0.95)(Duration) / 1000000000, 3) AS p95_s, round(quantile(0.99)(Duration) / 1000000000, 3) AS p99_s FROM otel_traces WHERE notEmpty(SpanAttributes['gen_ai.operation.name']) AND SpanName != 'lingxiloop.openai.http_attempt' AND Timestamp >= start_time AND Timestamp <= end_time GROUP BY service, model ORDER BY p95_s DESC"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "streaming-latency": {
+      "id": "streaming-latency",
+      "title": "Streaming TTFT / TBT",
+      "description": "Time to first token and time per output token when reported by the provider instrumentation.",
+      "type": "TABLE",
+      "properties": { "color": "#8b5cf6" },
+      "config": {
+        "query": "WITH parseDateTimeBestEffort('{{filter.timeLimit.start}}') AS start_time, parseDateTimeBestEffort('{{filter.timeLimit.end}}') AS end_time SELECT ResourceAttributes['service.name'] AS service, SpanAttributes['gen_ai.request.model'] AS model, round(avg(toFloat64OrZero(SpanAttributes['gen_ai.server.time_to_first_token'])), 3) AS average_ttft_s, round(quantile(0.95)(toFloat64OrZero(SpanAttributes['gen_ai.server.time_to_first_token'])), 3) AS p95_ttft_s, round(avg(toFloat64OrZero(SpanAttributes['gen_ai.server.time_per_output_token'])), 3) AS average_tbt_s FROM otel_traces WHERE notEmpty(SpanAttributes['gen_ai.server.time_to_first_token']) AND Timestamp >= start_time AND Timestamp <= end_time GROUP BY service, model ORDER BY p95_ttft_s DESC"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "rate-limits-over-time": {
+      "id": "rate-limits-over-time",
+      "title": "429 attempts over time",
+      "description": "Provider rate-limit responses, including attempts later recovered by an SDK retry.",
+      "type": "LINE_CHART",
+      "properties": { "xAxis": "request_time", "yAxis": "attempts_429", "color": "#ef4444" },
+      "config": {
+        "query": "WITH parseDateTimeBestEffort('{{filter.timeLimit.start}}') AS start_time, parseDateTimeBestEffort('{{filter.timeLimit.end}}') AS end_time SELECT formatDateTime(toStartOfMinute(Timestamp), '%Y/%m/%d %H:%M') AS request_time, count() AS attempts_429 FROM otel_traces WHERE SpanName = 'lingxiloop.openai.http_attempt' AND toInt32OrZero(SpanAttributes['http.response.status_code']) = 429 AND Timestamp >= start_time AND Timestamp <= end_time GROUP BY request_time ORDER BY request_time"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    },
+    "configuration-gaps": {
+      "id": "configuration-gaps",
+      "title": "Pricing and limit gaps",
+      "description": "Models seen without pricing or provider-specific TPM/RPM limits.",
+      "type": "TABLE",
+      "properties": { "color": "#f59e0b" },
+      "config": {
+        "query": "WITH parseDateTimeBestEffort('{{filter.timeLimit.start}}') AS start_time, parseDateTimeBestEffort('{{filter.timeLimit.end}}') AS end_time SELECT ResourceAttributes['service.name'] AS service, SpanAttributes['lingxiloop.provider.host'] AS provider, SpanAttributes['gen_ai.request.model'] AS model, if(SpanAttributes['lingxiloop.pricing.available'] = 'true', 'priced', 'UNPRICED') AS pricing, if(SpanAttributes['lingxiloop.limit.configured'] = 'true', 'configured', 'UNCONFIGURED') AS limits, count() AS attempts FROM otel_traces WHERE SpanName = 'lingxiloop.openai.http_attempt' AND (SpanAttributes['lingxiloop.pricing.available'] != 'true' OR SpanAttributes['lingxiloop.limit.configured'] != 'true') AND Timestamp >= start_time AND Timestamp <= end_time GROUP BY service, provider, model, pricing, limits ORDER BY attempts DESC"
+      },
+      "createdAt": "",
+      "updatedAt": ""
+    }
+  },
+  "layouts": {
+    "lg": [
+      { "i": "total-cost", "x": 0, "y": 0, "w": 1, "h": 1 },
+      { "i": "logical-error-rate", "x": 1, "y": 0, "w": 1, "h": 1 },
+      { "i": "rate-limit-rate", "x": 2, "y": 0, "w": 1, "h": 1 },
+      { "i": "rpm-utilization", "x": 0, "y": 1, "w": 2, "h": 2 },
+      { "i": "tpm-utilization", "x": 2, "y": 1, "w": 2, "h": 2 },
+      { "i": "token-usage", "x": 0, "y": 3, "w": 2, "h": 2 },
+      { "i": "cost-by-model", "x": 2, "y": 3, "w": 2, "h": 2 },
+      { "i": "logical-latency", "x": 0, "y": 5, "w": 2, "h": 2 },
+      { "i": "streaming-latency", "x": 2, "y": 5, "w": 2, "h": 2 },
+      { "i": "rate-limits-over-time", "x": 0, "y": 7, "w": 2, "h": 2 },
+      { "i": "configuration-gaps", "x": 2, "y": 7, "w": 2, "h": 2 }
+    ]
+  }
+}

@@ -91,3 +91,18 @@ test('storage use requires an explicitly installed provider', async () => {
     'https://storage.test.invalid/attachments/fixture.txt',
   )
 })
+
+test('readiness requires both PostgreSQL and Redis', async () => {
+  const checks: string[] = []
+  const infrastructure = {
+    db: { query: async () => { checks.push('postgres'); return { rows: [{ '?column?': 1 }] } } },
+    redisPing: async () => { checks.push('redis') },
+  } as unknown as PlatformInfrastructure
+  const application = new PlatformApplication(infrastructure)
+
+  await application.assertReady()
+  assert.deepEqual(checks.sort(), ['postgres', 'redis'])
+
+  infrastructure.redisPing = async () => { throw new Error('redis unavailable') }
+  await assert.rejects(application.assertReady(), /redis unavailable/)
+})

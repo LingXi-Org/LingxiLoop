@@ -28,6 +28,7 @@ test('real IPython kernels preserve session state and enforce the loop allowlist
     runnerPath: resolve('server/agent-os/kernel_runner.py'),
     executionTimeoutMs: 30_000,
     maxOutputChars: 8_000,
+    maxKernels: 2,
   })
   const first = work('one')
   const access = { allowedNamespaces: ['documents'], allowedMethods: { documents: ['read'] } }
@@ -36,7 +37,7 @@ test('real IPython kernels preserve session state and enforce the loop allowlist
     const persisted = await manager.execute(first, first.id, 'cell-2', 'value + 1', undefined, access)
     assert.equal(persisted.result, 42)
 
-    const isolated = await manager.execute(work('two'), 'work-two', 'cell-1', 'globals().get("value")', undefined, access)
+    const isolated = await manager.execute(work('two'), 'work-two', 'cell-1', 'session = "two"\nglobals().get("value")', undefined, access)
     assert.equal(isolated.result, null)
 
     const hostResult = await manager.execute(first, first.id, 'cell-3', 'loop.documents.read(documentId="doc-1")', undefined, {
@@ -72,6 +73,36 @@ test('real IPython kernels preserve session state and enforce the loop allowlist
     assert.equal(largeResult.truncated, true)
     assert.equal(typeof largeResult.preview, 'string')
     assert.ok((largeResult.preview?.length ?? 0) < 8_000)
+
+    const third = work('three')
+    await manager.execute(third, third.id, 'cell-1', 'session = "three"', undefined, access)
+    assert.equal(manager.size, 2)
+    assert.equal((await manager.execute(first, first.id, 'cell-6', 'value', undefined, access)).result, 41)
+    assert.equal((await manager.execute(work('two'), 'work-two', 'cell-2', 'globals().get("session")', undefined, access)).result, null)
+  } finally {
+    manager.close()
+    await rm(homesRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
+  }
+})
+
+test('kernel capacity waits for a busy kernel instead of killing it', async () => {
+  const homesRoot = await mkdtemp(resolve(tmpdir(), 'lingxiloop-kernel-capacity-'))
+  const manager = new KernelManager({ execute: async () => ({ ok: true, value: null }) }, {
+    homesRoot,
+    runnerPath: resolve('server/agent-os/kernel_runner.py'),
+    executionTimeoutMs: 30_000,
+    maxKernels: 1,
+  })
+  try {
+    const first = work('busy-one')
+    const second = work('busy-two')
+    const firstExecution = manager.execute(first, first.id, 'cell-1', 'import time\ntime.sleep(0.1)\n"first"')
+    const secondExecution = manager.execute(second, second.id, 'cell-1', '"second"')
+    assert.equal(manager.sweepIdle(Number.MAX_SAFE_INTEGER), 0)
+    const [firstResult, secondResult] = await Promise.all([firstExecution, secondExecution])
+    assert.equal(firstResult.result, 'first')
+    assert.equal(secondResult.result, 'second')
+    assert.equal(manager.size, 1)
   } finally {
     manager.close()
     await rm(homesRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })

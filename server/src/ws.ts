@@ -6,6 +6,10 @@ import { env } from './env.js'
 import { permissionService } from './modules/access/public.js'
 import { participantPresenceApplication } from './modules/agents/index.js'
 import {
+  HumanPresenceLeaseCoordinator,
+  RedisHumanPresenceLeaseStore,
+} from './modules/agents/human-presence-leases.js'
+import {
   type DocSubscriber,
   applyLocalUpdate as docApplyLocalUpdate,
   broadcastAwareness as docBroadcastAwareness,
@@ -29,6 +33,7 @@ import {
   CH_GROUP_PULLED,
   CH_IM_READ_RECEIPTS,
   CH_STATUS,
+  redis,
   sub,
 } from './redis.js'
 
@@ -46,8 +51,8 @@ interface AuthedSocket {
   /** Heartbeat liveness flag. Set true on every received pong; the periodic
    *  ping loop flips it to false right before sending the next ping. If the
    *  next round still sees false, the socket is half-open and we terminate
-   *  it — that triggers the 'close' handler, which decrements the
-   *  presence counter and flips the user to 'resting'. Without this,
+   *  it — that triggers the 'close' handler, which releases this socket's
+   *  Redis presence lease. Without this,
    *  laptop sleeps / network drops would leave 'avail' stuck until the
    *  OS finally noticed the dead TCP. */
   isAlive: boolean
@@ -96,73 +101,6 @@ export async function revokeUserProjectDocumentSubscriptions(
 // reconnects + re-syncs via REST).
 const WS_MAX_BUFFERED_BYTES = 2 * 1024 * 1024        // 2 MB
 const WS_TERMINATE_BUFFERED_BYTES = 8 * 1024 * 1024  // 8 MB
-
-/** Open WS connections per user. Drives real human presence:
- *   - 0 → 1  : user is now online, flip participant status to 'avail'.
- *   - 1 → 0  : user just went offline, flip to 'resting'.
- *  Multiple tabs / windows / devices coalesce on the same userId so
- *  presence stays "online" until the last one closes. */
-const humanConnections = new Map<string, number>()
-
-/** Called once at server boot. Demotes every human participant that's
- *  still flagged 'avail' from a previous run — those flags would otherwise
- *  persist as stale presence until that user reconnects/disconnects.
- *  Agents are handled by their own runtime lease + the GET /participants
- *  auto-expiry, so we leave their status alone here. */
-export async function resetHumanPresenceOnBoot(): Promise<void> {
-  const result = await participantPresenceApplication.resetOnBoot()
-  if (result.updated > 0) {
-    console.log(`[ws] demoted ${result.updated} stale 'avail' human(s) to 'resting' on boot`)
-  }
-  if (result.publishFailures > 0) {
-    console.warn(`[ws] ${result.publishFailures} presence reset event(s) await client refresh`)
-  }
-}
-
-const humanPresenceTransitions = new Map<string, Promise<void>>()
-
-function queueHumanPresenceTransition(userId: string, work: () => Promise<void>): Promise<void> {
-  const previous = humanPresenceTransitions.get(userId) ?? Promise.resolve()
-  const next = previous.catch(() => undefined).then(work)
-  humanPresenceTransitions.set(userId, next)
-  void next.finally(() => {
-    if (humanPresenceTransitions.get(userId) === next) humanPresenceTransitions.delete(userId)
-  }).catch(() => undefined)
-  return next
-}
-
-function onHumanConnect(userId: string, companies: ReadonlySet<string>): Promise<void> {
-  const cur = humanConnections.get(userId) ?? 0
-  humanConnections.set(userId, cur + 1)
-  if (cur !== 0) return Promise.resolve()
-  return queueHumanPresenceTransition(userId, async () => {
-    try {
-      await participantPresenceApplication.setHumanPresence({
-        companyIds: [...companies], participantId: userId, status: 'avail',
-      })
-    } catch (e) { console.warn(`[ws] set human presence avail failed for ${userId}`, e) }
-  })
-}
-
-function onHumanDisconnect(userId: string): Promise<void> {
-  const cur = humanConnections.get(userId) ?? 0
-  if (cur <= 1) {
-    humanConnections.delete(userId)
-    return queueHumanPresenceTransition(userId, async () => {
-      if (humanConnections.has(userId)) return
-      try {
-        const companies = await loadMemberships(userId)
-        if (humanConnections.has(userId)) return
-        await participantPresenceApplication.setHumanPresence({
-          companyIds: [...companies], participantId: userId, status: 'resting',
-        })
-      } catch (e) { console.warn(`[ws] set human presence resting failed for ${userId}`, e) }
-    })
-  } else {
-    humanConnections.set(userId, cur - 1)
-    return Promise.resolve()
-  }
-}
 
 async function loadMemberships(userId: string): Promise<Set<string>> {
   const { rows } = await pool.query<{ company_id: string }>(
@@ -289,6 +227,18 @@ async function handleDocFrame(c: AuthedSocket, msg: Record<string, unknown>): Pr
 
 export function attachWebSocket(httpServer: Server) {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' })
+  const humanPresence = new HumanPresenceLeaseCoordinator(
+    new RedisHumanPresenceLeaseStore(redis),
+    async (userId, status) => {
+      const companies = await loadMemberships(userId)
+      await participantPresenceApplication.setHumanPresence({
+        companyIds: [...companies], participantId: userId, status,
+      })
+    },
+  )
+  const logPresenceFailure = (operation: string, userId: string, error: unknown) => {
+    console.warn(`[ws] human presence ${operation} failed for ${userId}`, error)
+  }
 
   wss.on('connection', async (ws, req) => {
     const ip = req.socket.remoteAddress
@@ -328,12 +278,17 @@ export function attachWebSocket(httpServer: Server) {
     // Browsers auto-respond to ws.ping() with pong at the protocol level —
     // no JS involvement on the client side. The pong handler here is the
     // server's only signal that the socket is still alive end-to-end.
-    ws.on('pong', () => { c.isAlive = true })
+    ws.on('pong', () => {
+      c.isAlive = true
+      void humanPresence.renew(session, c.originId)
+        .catch((error: unknown) => logPresenceFailure('renewal', session, error))
+    })
     console.log(`[ws] client connected (${ip}, user=${session}, companies=${companies.size}) · total ${clients.size}`)
-    void onHumanConnect(session, companies)
+    void humanPresence.connect(session, c.originId)
+      .catch((error: unknown) => logPresenceFailure('connect', session, error))
 
     // Single-fire disconnect handler — both 'close' and 'error' route
-    // through here so we never double-decrement the connection counter.
+    // through here so we never release the same Redis lease twice.
     let released = false
     const release = () => {
       if (released) return
@@ -341,7 +296,8 @@ export function attachWebSocket(httpServer: Server) {
       for (const [docId, subRec] of c.docSubs) docUnsubscribe(docId, subRec)
       c.docSubs.clear()
       clients.delete(c)
-      void onHumanDisconnect(session)
+      void humanPresence.disconnect(session, c.originId)
+        .catch((error: unknown) => logPresenceFailure('disconnect', session, error))
     }
 
     try {
@@ -479,9 +435,9 @@ export function attachWebSocket(httpServer: Server) {
   // laptop sleeps / network drops, so the close handler never fired and
   // the user stayed 'avail' forever. Now we actively ping every 30s; a
   // client that doesn't pong before the NEXT tick is terminated, which
-  // routes through the same close handler that decrements the presence
-  // counter. End-to-end effect: status flips to 'resting' within ~60s
-  // of a real disconnect.
+  // routes through the same close handler that releases the socket's Redis
+  // lease. End-to-end effect: status flips to 'resting' within ~60s of a
+  // dead socket; a crashed replica's leases expire independently.
   const HEARTBEAT_MS = 30_000
   const heartbeat = setInterval(() => {
     for (const c of clients) {
@@ -494,8 +450,12 @@ export function attachWebSocket(httpServer: Server) {
       c.isAlive = false
       try { c.ws.ping() } catch { /* ignore */ }
     }
+    void humanPresence.sweep()
+      .catch((error: unknown) => console.warn('[ws] human presence lease sweep failed', error))
   }, HEARTBEAT_MS)
   heartbeat.unref()
+  void humanPresence.sweep()
+    .catch((error: unknown) => console.warn('[ws] initial human presence lease sweep failed', error))
   wss.on('close', () => clearInterval(heartbeat))
 
   return wss

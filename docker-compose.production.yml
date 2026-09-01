@@ -22,6 +22,8 @@ x-lingxiloop-runtime: &lingxiloop-runtime
     REDIS_URL: redis://redis:6379
     LINGXILOOP_VERSION: ${LINGXILOOP_VERSION:?LINGXILOOP_VERSION is required}
     LINGXILOOP_COMMIT_SHA: ${LINGXILOOP_COMMIT_SHA:?LINGXILOOP_COMMIT_SHA is required}
+    OTEL_DEPLOYMENT_ENVIRONMENT: production
+    OTEL_SERVICE_VERSION: ${LINGXILOOP_VERSION:?LINGXILOOP_VERSION is required}
     LINGXILOOP_PUBLIC_ORIGIN: ${LINGXILOOP_PUBLIC_ORIGIN:?LINGXILOOP_PUBLIC_ORIGIN is required}
     WUKONG_API_URL: http://wukongim:5001
     WUKONG_WS_URL: ${WUKONG_WS_PUBLIC_URL:?WUKONG_WS_PUBLIC_URL is required}
@@ -153,6 +155,9 @@ services:
 
   lingxiloop:
     <<: *lingxiloop-runtime
+    environment:
+      <<: *lingxiloop-environment
+      OTEL_SERVICE_NAME: lingxiloop-web
     restart: unless-stopped
     depends_on:
       postgres:
@@ -178,6 +183,9 @@ services:
 
   worker:
     <<: *lingxiloop-runtime
+    environment:
+      <<: *lingxiloop-environment
+      OTEL_SERVICE_NAME: lingxiloop-worker
     restart: unless-stopped
     command: ["npm", "run", "worker:start"]
     depends_on:
@@ -202,6 +210,9 @@ services:
     environment:
       NODE_ENV: production
       LINGXILOOP_LOG_LEVEL: warn
+      OTEL_SERVICE_NAME: lingxiloop-agent-os
+      OTEL_DEPLOYMENT_ENVIRONMENT: production
+      OTEL_SERVICE_VERSION: ${LINGXILOOP_VERSION:?LINGXILOOP_VERSION is required}
       AGENT_OS_PORT: "5190"
       AGENT_OS_MAX_CONCURRENT_RUNS: ${AGENT_OS_MAX_CONCURRENT_RUNS:-2}
       LINGXILOOP_CONTROL_PLANE_URL: http://lingxiloop:5181

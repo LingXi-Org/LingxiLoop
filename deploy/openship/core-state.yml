@@ -1,0 +1,78 @@
+name: lingxiloop-core-state
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    command: ["postgres", "-c", "log_min_messages=warning", "-c", "log_min_error_statement=error"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lingxiloop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-lingxiloop}
+    ports:
+      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    cpus: "1.25"
+    mem_limit: 768m
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--loglevel", "warning", "--maxmemory", "${REDIS_MAXMEMORY:-192mb}", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    cpus: "0.25"
+    mem_limit: 256m
+    logging: *logging
+
+  wukongim:
+    image: ${WUKONGIM_IMAGE:?WUKONGIM_IMAGE must be digest-pinned}
+    restart: unless-stopped
+    environment:
+      GOMEMLIMIT: ${WUKONG_GOMEMLIMIT:-320MiB}
+      GOMAXPROCS: ${WUKONG_GOMAXPROCS:-1}
+      WK_NODE_DATA_DIR: /var/lib/wukongim
+      WK_API_TOKEN: ${WUKONG_API_TOKEN:?WUKONG_API_TOKEN is required}
+      WK_CLUSTER_JOIN_TOKEN: ${WK_CLUSTER_JOIN_TOKEN:?WK_CLUSTER_JOIN_TOKEN is required}
+      WK_WEBHOOK_HTTP_ADDR: "${LINGXILOOP_INTERNAL_ORIGIN:?LINGXILOOP_INTERNAL_ORIGIN is required}/webhooks/wukong?token=${WUKONG_WEBHOOK_SECRET:?WUKONG_WEBHOOK_SECRET is required}"
+    ports:
+      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5001:5001"
+      - "${WUKONG_WS_BIND_IP:-127.0.0.1}:5200:5200"
+    volumes:
+      - wukong-data:/var/lib/wukongim
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:5001/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    cpus: "0.75"
+    mem_limit: 512m
+    logging: *logging
+
+volumes:
+  postgres-data: {}
+  redis-data: {}
+  wukong-data: {}

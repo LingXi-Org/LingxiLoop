@@ -27,7 +27,12 @@ const model = new OpenAIChatDriver(required('OPENAI_MODEL'), {
 const kernels = new KernelManager({ execute: (work, action) => host.executeAction(work, action) })
 const runtime = new AgentOSRuntime(host, model, kernels)
 const maxConcurrentRuns = parseAgentOSConcurrency(process.env.AGENT_OS_MAX_CONCURRENT_RUNS)
+const shutdownGraceMs = Number(process.env.AGENT_OS_SHUTDOWN_GRACE_MS ?? 20_000)
+if (!Number.isSafeInteger(shutdownGraceMs) || shutdownGraceMs < 1_000) {
+  throw new Error('AGENT_OS_SHUTDOWN_GRACE_MS must be an integer of at least 1000')
+}
 const active = new Map<string, { controller: AbortController; done: Promise<void> }>()
+const claimController = new AbortController()
 let stopping = false
 
 async function poll(): Promise<void> {
@@ -37,7 +42,13 @@ async function poll(): Promise<void> {
         await Promise.race([...active.values()].map((entry) => entry.done))
         continue
       }
-      const work = await host.claimWork()
+      const work = await host.claimWork(claimController.signal)
+      if (stopping) {
+        if (work) await host.yieldWork(work).catch((error) => {
+          console.error(`[agent-os] failed to yield work ${work.id} during shutdown:`, error instanceof Error ? error.message : String(error))
+        })
+        return
+      }
       if (!work) { await new Promise((resolveDelay) => setTimeout(resolveDelay, 750)); continue }
       if (active.has(work.id)) continue
       const controller = new AbortController()
@@ -47,6 +58,7 @@ async function poll(): Promise<void> {
       active.set(work.id, { controller, done })
       void done
     } catch (error) {
+      if (stopping) return
       console.error('[agent-os] poll failed:', error instanceof Error ? error.message : String(error))
       await new Promise((resolveDelay) => setTimeout(resolveDelay, 2_000))
     }
@@ -62,13 +74,31 @@ const health = http.createServer((req, res) => {
   res.writeHead(404).end()
 })
 health.listen(port, () => console.log(`[agent-os] ready on :${port} as ${workerId}`))
-void poll()
+const polling = poll()
+
+async function shutdown(): Promise<void> {
+  if (stopping) return
+  stopping = true
+  claimController.abort()
+  for (const { controller } of active.values()) controller.abort()
+  let graceTimer: NodeJS.Timeout | undefined
+  const timedOut = await Promise.race([
+    Promise.allSettled([polling, ...[...active.values()].map((entry) => entry.done)]).then(() => false),
+    new Promise<true>((resolveTimeout) => {
+      graceTimer = setTimeout(() => resolveTimeout(true), shutdownGraceMs)
+      graceTimer.unref?.()
+    }),
+  ])
+  if (graceTimer) clearTimeout(graceTimer)
+  if (timedOut) console.error(`[agent-os] shutdown grace period expired after ${shutdownGraceMs}ms`)
+  kernels.close()
+  await new Promise<void>((resolveClose) => {
+    health.close(() => resolveClose())
+    health.closeAllConnections()
+  })
+  process.exit(0)
+}
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
-  process.on(signal, () => {
-    stopping = true
-    for (const { controller } of active.values()) controller.abort()
-    kernels.close()
-    health.close(() => process.exit(0))
-  })
+  process.on(signal, () => { void shutdown() })
 }

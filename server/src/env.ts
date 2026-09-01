@@ -15,12 +15,12 @@ function required(name: string): string {
   }
   return v
 }
-function numberAtLeast(name: string, fallback: number, minimum: number): number {
+function integerAtLeast(name: string, fallback: number, minimum: number): number {
   const raw = process.env[name]?.trim()
   if (!raw) return fallback
   const value = Number(raw)
-  if (!Number.isFinite(value) || value < minimum) {
-    console.error(`[env] ${name} must be a finite number >= ${minimum}`)
+  if (!Number.isInteger(value) || value < minimum) {
+    console.error(`[env] ${name} must be an integer >= ${minimum}`)
     process.exit(1)
   }
   return value
@@ -33,7 +33,8 @@ export const env = {
   COMMIT_SHA: process.env.LINGXILOOP_COMMIT_SHA?.trim() || 'dev',
   /** Release gate for the deterministic, source-grounded HTML deck pipeline. */
   PRESENTATION_HTML_ENABLED: process.env.PRESENTATION_HTML_ENABLED?.trim().toLowerCase() === 'true',
-  AGENT_OS_APPROVAL_TTL_MS: numberAtLeast('AGENT_OS_APPROVAL_TTL_MS', 24 * 60 * 60_000, 60_000),
+  AGENT_OS_APPROVAL_TTL_MS: integerAtLeast('AGENT_OS_APPROVAL_TTL_MS', 24 * 60 * 60_000, 60_000),
+  DATABASE_POOL_MAX: integerAtLeast('DATABASE_POOL_MAX', 20, 1),
   WUKONG_USER_TOKEN_SECRET: required('WUKONG_USER_TOKEN_SECRET'),
   DATABASE_URL: required('DATABASE_URL'),
   REDIS_URL: required('REDIS_URL'),
