@@ -29,6 +29,6 @@ test('LMS, SSO and Domain Verification are disabled Shadcn capability cards with
     assert.match(capabilityCards, new RegExp(`id: '${capability}'`))
   }
   assert.match(capabilityCards, /Card[\s\S]*Badge[\s\S]*暂未开放[\s\S]*Button[\s\S]*disabled/)
-  assert.match(capabilityCards, /不会收集密钥或模拟配置成功/)
+  assert.match(capabilityCards, /不会收集密钥或显示虚假的配置结果/)
   assert.doesNotMatch(capabilityCards, /<Input|<Textarea|type="password"|onSubmit|fetch\(/)
 })

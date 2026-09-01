@@ -59,7 +59,7 @@ test('窄屏设置仍是带中文语义的 Dialog 图标栏', async ({ page }) =
   const settingsNavigation = dialog.getByRole('list', { name: '设置栏目' })
   await expect(settingsNavigation).toBeVisible()
   await expect(settingsNavigation.getByRole('button')).toHaveCount(5)
-  for (const label of ['账号', '外观与声音', '通知', '应用更新', '数据与账号']) {
+  for (const label of ['账号', '外观与声音', '通知', '数据与账号']) {
     await expect(settingsNavigation.getByRole('button', { name: label, exact: true })).toBeVisible()
   }
   const sidebar = dialog.locator('[data-slot="sidebar"]')

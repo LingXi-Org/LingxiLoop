@@ -1,6 +1,0 @@
-interface:
-  display_name: "LingxiLoop Change Verification"
-  short_description: "Select evidence for the current LingxiLoop diff"
-  default_prompt: "Use $lingxiloop-verify-change to classify and verify this change."
-policy:
-  allow_implicit_invocation: true

@@ -36,8 +36,6 @@ test('Permission has one canonical context-aware contract and no persistence mod
   assert.match(permission, /can\(request: PermissionRequest\): Promise<PermissionDecision>/)
   assert.match(permission, /assertCan\(request: PermissionRequest\): Promise<ResolvedAccessContext>/)
   assert.match(permission, /context: ResolvedAccessContext \| null/)
-  const schema = await readFile(new URL('../db/schema.sql', import.meta.url), 'utf8')
-  assert.doesNotMatch(schema, /CREATE TABLE public\.permissions\b/)
 })
 
 test('User remains identity-only while contextual roles retain lowercase wire compatibility', async () => {

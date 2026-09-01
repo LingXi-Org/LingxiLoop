@@ -100,7 +100,7 @@ EMAIL_DOMAIN=mail.loop.example.com
 
 The `participants.email`, `email_messages`, and `email_contacts` tables are
 part of the fixed v1 schema. Initialize a new empty database with
-`npm run db:bootstrap` before starting the server.
+`npm run db:migrate` before starting the server.
 
 ### 2. Resend sending and receiving
 

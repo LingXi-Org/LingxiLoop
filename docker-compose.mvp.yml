@@ -61,7 +61,7 @@ services:
     logging: *quiet-logging
 
   open-notebook:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-open-notebook:${LINGXILOOP_IMAGE_TAG:-mvp}
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-open-notebook:${LINGXILOOP_IMAGE_TAG:-mvp}
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -96,7 +96,7 @@ services:
     logging: *quiet-logging
 
   wukongim:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-wukongim:${LINGXILOOP_IMAGE_TAG:-mvp}
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-wukongim:${LINGXILOOP_IMAGE_TAG:-mvp}
     pull_policy: always
     restart: unless-stopped
     environment:
@@ -115,11 +115,11 @@ services:
     networks: [lingxiloop-mvp]
     logging: *quiet-logging
 
-  db-bootstrap:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
+  db-migrate:
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
     pull_policy: always
     restart: "no"
-    command: ["npm", "run", "db:bootstrap"]
+    command: ["npm", "run", "db:migrate"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -134,7 +134,7 @@ services:
     logging: *quiet-logging
 
   lingxiloop:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -146,7 +146,7 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
-      db-bootstrap:
+      db-migrate:
         condition: service_completed_successfully
     environment: &lingxiloop-environment
       NODE_ENV: production
@@ -207,7 +207,7 @@ services:
     logging: *quiet-logging
 
   worker:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
     pull_policy: always
     restart: unless-stopped
     command: ["npm", "run", "worker:start"]
@@ -220,12 +220,14 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
     environment: *lingxiloop-environment
     networks: [lingxiloop-mvp, lingxiloop-knowledge-internal]
     logging: *quiet-logging
 
   agent-os:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-agent-os:${LINGXILOOP_IMAGE_TAG:-mvp}
+    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-agent-os:${LINGXILOOP_IMAGE_TAG:-mvp}
     pull_policy: always
     restart: unless-stopped
     depends_on:

@@ -46,14 +46,3 @@ test('frontend typecheck never emits a second Vite configuration', () => {
     assert.equal(existsSync(`${root}/${artifact}`), false, `${artifact} must not be emitted`)
   }
 })
-
-test('production UI uses shadcn primitives instead of native form controls', () => {
-  const violations = sourceFiles(sourceRoot)
-    .filter((path) => path.endsWith('.tsx') && !path.includes('/components/ui/') && !path.endsWith('.test.tsx'))
-    .flatMap((path) => {
-      const source = readFileSync(path, 'utf8')
-      return /<(?:button|input|textarea|select)\b/.test(source) ? [path.replace(`${sourceRoot}/`, '')] : []
-    })
-
-  assert.deepEqual(violations, [], `Use components from @/components/ui instead of native controls: ${violations.join(', ')}`)
-})

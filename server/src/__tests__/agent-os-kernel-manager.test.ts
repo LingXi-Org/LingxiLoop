@@ -74,6 +74,6 @@ test('real IPython kernels preserve session state and enforce the loop allowlist
     assert.ok((largeResult.preview?.length ?? 0) < 8_000)
   } finally {
     manager.close()
-    await rm(homesRoot, { recursive: true, force: true })
+    await rm(homesRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
   }
 })

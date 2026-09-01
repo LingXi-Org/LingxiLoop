@@ -25,7 +25,7 @@ x-lingxiloop-runtime: &lingxiloop-runtime
     LINGXILOOP_PUBLIC_ORIGIN: ${LINGXILOOP_PUBLIC_ORIGIN:?LINGXILOOP_PUBLIC_ORIGIN is required}
     WUKONG_API_URL: http://wukongim:5001
     WUKONG_WS_URL: ${WUKONG_WS_PUBLIC_URL:?WUKONG_WS_PUBLIC_URL is required}
-    LINGXILOOP_CORS_ORIGINS: app://lingxiloop
+    LINGXILOOP_CORS_ORIGINS: ${LINGXILOOP_CORS_ORIGINS:-}
     LINGXILOOP_AUTH_RETURN_ALLOWLIST: ${LINGXILOOP_PUBLIC_ORIGIN}/,http://127.0.0.1:47823/auth/done,lingxiloop://auth
     OPEN_NOTEBOOK_ENABLED: "true"
     OPEN_NOTEBOOK_URL: http://open-notebook:5055
@@ -132,10 +132,10 @@ services:
     networks: [lingxiloop]
     logging: *quiet-logging
 
-  db-bootstrap:
+  db-migrate:
     <<: *lingxiloop-runtime
     restart: "no"
-    command: ["npm", "run", "db:bootstrap"]
+    command: ["npm", "run", "db:migrate"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -144,7 +144,7 @@ services:
 
   # Deployment-only reconciler. When R2 is configured, deploy-production.sh
   # runs this before the application cutover and the script reads the bucket
-  # policy back, failing the deployment if mobile WebView PUT origins are absent.
+  # policy back, failing the deployment if required Web PUT origins are absent.
   r2-cors:
     <<: *lingxiloop-runtime
     profiles: [tools]
@@ -163,7 +163,7 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
-      db-bootstrap:
+      db-migrate:
         condition: service_completed_successfully
     ports:
       - "127.0.0.1:5181:5181"
@@ -189,6 +189,8 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
     networks: [lingxiloop, lingxiloop-knowledge-internal]
     logging: *quiet-logging
 

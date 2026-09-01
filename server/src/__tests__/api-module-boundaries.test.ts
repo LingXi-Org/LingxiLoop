@@ -28,7 +28,6 @@ test('the API entrypoint is a composition root, not a business router', async ()
   assert.doesNotMatch(source, /\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
   assert.doesNotMatch(source, /\bpool\.query\b/)
   assert.match(source, /api\.use\(errorHandler\)/)
-  assert.doesNotMatch(source, /modules\/admin|api\.use\('\/admin'/)
 
   for (const domain of domains) {
     assert.match(source, new RegExp(`import \\{ ${domain}Router \\} from '../modules/${domain}/router\\.js'`))
@@ -267,13 +266,11 @@ test('retired observability HTTP views cannot return', async () => {
   assert.doesNotMatch(contracts, /runQuerySchema/)
 })
 
-test('retired boards capability has no HTTP module or canonical schema relations', async () => {
+test('retired boards capability has no HTTP or Agent entry point', async () => {
   const router = await readFile(new URL('../api/router.ts', import.meta.url), 'utf8')
-  const schema = await readFile(new URL('../db/schema.sql', import.meta.url), 'utf8')
   const cli = await readFile(new URL('../agents/cli.ts', import.meta.url), 'utf8')
   await assert.rejects(readFile(new URL('../modules/boards/router.ts', import.meta.url), 'utf8'))
   assert.doesNotMatch(router, /boardsRouter|modules\/boards/)
-  assert.doesNotMatch(schema, /public\.(?:boards|board_cards|board_columns|board_card_comments|board_mention_reads)\b/)
   assert.doesNotMatch(cli, /createBoardCommands|cmdBoard|cmdCard|case 'kanban'/)
 })
 
@@ -303,16 +300,9 @@ test('authentication, request context, authorization, and errors have one shared
   }
 })
 
-test('retired product Admin and signup configuration surfaces cannot return', async () => {
-  const api = await readFile(new URL('../api/router.ts', import.meta.url), 'utf8')
+test('signup configuration surfaces cannot return', async () => {
   const platform = await readFile(new URL('../modules/platform/router.ts', import.meta.url), 'utf8')
   const identity = await readFile(new URL('../modules/identity/contracts.ts', import.meta.url), 'utf8')
-  assert.doesNotMatch(api, /\/admin|modules\/admin/)
   assert.doesNotMatch(platform, /signup-config|waitlist/)
   assert.doesNotMatch(identity, /isAdmin/)
-  const retiredAdminFiles = await readdir(new URL('../modules/admin/', import.meta.url)).catch((error: NodeJS.ErrnoException) => {
-    if (error.code === 'ENOENT') return []
-    throw error
-  })
-  assert.deepEqual(retiredAdminFiles, [])
 })

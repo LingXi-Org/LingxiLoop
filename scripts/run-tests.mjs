@@ -1,16 +1,10 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process'
-import { existsSync, readdirSync } from 'node:fs'
-import { join, relative, resolve, sep } from 'node:path'
-import { changedPaths, parseScopeArguments } from './changed-paths.mjs'
-import { selectLocalTests } from './local-test-selection.mjs'
+import { readdirSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 
-const roots = [
-  resolve('server/src/__tests__'),
-  resolve('src'),
-  resolve('workers'),
-]
+const roots = [resolve('server/src/__tests__'), resolve('src'), resolve('workers')]
 
 function collect(directory) {
   const files = []
@@ -23,87 +17,19 @@ function collect(directory) {
   return files
 }
 
-function normalizePath(value) {
-  return value.replaceAll('\\', '/').replace(/^\.\//, '')
-}
-
-function repositoryPath(value) {
-  return normalizePath(relative(process.cwd(), value))
-}
-
-const arguments_ = process.argv.slice(2)
-const localIndex = arguments_.indexOf('--local')
-const local = localIndex >= 0
-if (local) arguments_.splice(localIndex, 1)
-const { base, paths: taskPaths, tests: declaredTests, remaining: testArguments } = parseScopeArguments(
-  arguments_,
-  { allowTests: true },
-)
-if (base && !local) {
-  console.error('[test] --base is available only with --local')
-  process.exit(2)
-}
-if (taskPaths.length > 0 && !local) {
-  console.error('[test] --path is available only with --local')
-  process.exit(2)
-}
-if (declaredTests.length > 0 && !local) {
-  console.error('[test] --test is available only with --local')
-  process.exit(2)
-}
-
-const allTestFiles = roots.flatMap(collect).sort()
-const explicitTests = [...declaredTests, ...testArguments].map((path) => resolve(path))
-for (const path of explicitTests) {
-  if (!existsSync(path) || !path.endsWith('.test.ts')) {
-    console.error(`[test] expected an existing .test.ts file: ${repositoryPath(path)}`)
-    process.exit(2)
-  }
-  if (!roots.some((root) => path === root || path.startsWith(`${root}${sep}`))) {
-    console.error(`[test] test is outside an owned unit-test root: ${repositoryPath(path)}`)
-    process.exit(2)
-  }
-}
-
-if (local && !base && taskPaths.length === 0 && explicitTests.length === 0) {
-  console.log('[test:local] no task paths supplied; pass repeated --path/--test values or an explicit --base')
-  process.exit(0)
-}
-
-const testFiles = local
-  ? selectLocalTests(
-    allTestFiles.map(repositoryPath),
-    changedPaths({ base, paths: taskPaths }),
-    explicitTests.map(repositoryPath),
-  ).map((path) => resolve(path))
-  : explicitTests.length > 0 ? [...new Set(explicitTests)].sort() : allTestFiles
-
+const testFiles = roots.flatMap(collect).sort()
 if (testFiles.length === 0) {
-  if (local) {
-    console.log('[test:local] no direct unit tests selected; CI owns broader regression coverage')
-    process.exit(0)
-  }
   console.error('[test] no unit test files found')
   process.exit(2)
 }
 
-if (local) {
-  console.log(`[test:local] running ${testFiles.length} direct file(s)${base ? ` since ${base}` : ''}:`)
-  for (const path of testFiles) console.log(`  - ${repositoryPath(path)}`)
-}
-
 const child = spawn(
   process.execPath,
-  // Several unit files intentionally override process-wide environment and
-  // module seams. Serialize files so those test doubles cannot race each
-  // other on faster CI runners; individual assertions remain deterministic.
   ['--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-concurrency=1', ...testFiles],
   {
     stdio: 'inherit',
     env: {
       ...process.env,
-      // Unit tests mock provider calls; importing env.ts should not require
-      // developers or CI to expose a real production credential.
       OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'unit-test-key',
       OPENAI_EMBEDDING_MODEL: process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small',
       WUKONG_USER_TOKEN_SECRET: process.env.WUKONG_USER_TOKEN_SECRET || 'unit-test-wukong-user-token-secret',

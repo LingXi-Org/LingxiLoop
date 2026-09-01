@@ -1,19 +1,7 @@
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider } from 'posthog-js/react'
-import type { PostHogConfig, PostHogInterface } from 'posthog-js'
+import type { PostHogConfig } from 'posthog-js'
 import { isElectron, isNotificationWindow, isWebAppHost } from '@/lib/runtime'
-
-async function getAppVersion(): Promise<string> {
-  try {
-    if (window.lingxiloop?.update) {
-      const info = await window.lingxiloop.update.getAppInfo()
-      if (info.version) return info.version
-    }
-  } catch {
-    // Browser/PWA mode has no native app version bridge.
-  }
-  return 'web'
-}
 
 export function getAnalyticsSurface(): 'electron' | 'web' | 'notification' | 'browser' {
   if (isNotificationWindow) return 'notification'
@@ -37,14 +25,7 @@ export function getPostHogConfig(): { apiKey: string; options: Partial<PostHogCo
       capture_pageleave: false,
       disable_session_recording: false,
       persistence: 'localStorage' as const,
-      loaded: (posthogInstance: PostHogInterface) => {
-        void getAppVersion().then((version) => {
-          posthogInstance.register({
-            app_version: version,
-            app_surface: getAnalyticsSurface(),
-          })
-        })
-      },
+      loaded: (posthogInstance) => posthogInstance.register({ app_surface: getAnalyticsSurface() }),
     },
   }
 }

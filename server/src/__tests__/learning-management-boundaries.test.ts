@@ -69,8 +69,11 @@ function invitationDb() {
   const db = {
     async query<T>(text: string) {
       calls.push({ text, inTransaction })
-      if (text.includes('SELECT id,deleted_at,suspended_at FROM users')) {
-        return { rows: [{ id: 'teacher-1', deleted_at: null, suspended_at: null }] as T[], rowCount: 1 }
+      if (text.includes('SELECT id,email,email_verified_at,deleted_at,suspended_at FROM users')) {
+        return { rows: [{
+          id: 'teacher-1', email: 'teacher@example.com', email_verified_at: new Date(),
+          deleted_at: null, suspended_at: null,
+        }] as T[], rowCount: 1 }
       }
       if (text.includes('SELECT id,company_id,kind,plan_id,status FROM projects')) {
         return { rows: [{

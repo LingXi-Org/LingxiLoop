@@ -8,7 +8,7 @@
 # Entry points:
 #   npm run server:start  →  tsx server/src/bin/web.ts  (HTTP/WS runtime)
 #   npm run worker:start  →  tsx server/src/bin/worker.ts  (background tasks)
-#   npm run db:bootstrap  →  tsx server/src/bootstrap-bin.ts  (empty DB only)
+#   npm run db:migrate  →  tsx server/src/migrate-bin.ts
 #
 # Model turns run only in the separate Agent OS service. The control plane
 # owns product authorization, approvals, WuKong integration and projections.
@@ -109,6 +109,6 @@ ENV NODE_ENV=production \
     LINGXILOOP_COMMIT_SHA=${LINGXILOOP_COMMIT_SHA}
 
 # tini for PID-1 reaping. Default command runs the server; the
-# production Compose bootstrap job overrides this with `npm run db:bootstrap`.
+# production Compose migration job overrides this with `npm run db:migrate`.
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["npm", "run", "server:start"]

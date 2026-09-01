@@ -38,8 +38,11 @@ function accessFixture(
   text: string,
   params: readonly unknown[] | undefined,
 ): { rows: unknown[]; rowCount?: number } | null {
-  if (/SELECT id,deleted_at,suspended_at FROM users/.test(text)) {
-    return { rows: [{ id: params?.[0], deleted_at: null, suspended_at: null }] }
+  if (/SELECT id,email,email_verified_at,deleted_at,suspended_at FROM users/.test(text)) {
+    return { rows: [{
+      id: params?.[0], email: `${params?.[0]}@example.com`, email_verified_at: new Date(),
+      deleted_at: null, suspended_at: null,
+    }] }
   }
   if (/NULL::text AS resource_status FROM courses WHERE id=\$1/.test(text)) {
     return { rows: [{

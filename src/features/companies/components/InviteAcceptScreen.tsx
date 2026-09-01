@@ -36,10 +36,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
 import { selectLearningSpace } from '@/features/knowledge/workspace'
-import { isElectron, isWebAppHost } from '@/lib/runtime'
+import { isElectron } from '@/lib/runtime'
 import { userFacingError } from '@/lib/userFacingError'
 import { ProductLogo } from '@/components/Avatar'
-import { GetDesktopAppLink } from '@/components/GetDesktopAppLink'
 import { WindowDragStrip } from '@/components/WindowDragStrip'
 
 const INVITE_TOKEN_KEY = 'lingxiloop.pending-invite'
@@ -132,12 +131,6 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const [previewErr, setPreviewErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [acceptErr, setAcceptErr] = useState<string | null>(null)
-  // After a successful accept in the WEB build, we stop on a success
-  // screen with "Open in LingxiLoop app" + "Download" CTAs instead of
-  // dropping the user straight into the SPA. The desktop app skips
-  // this — they're already in the app, so we route them in.
-  const [joinedCompany, setJoinedCompany] = useState<{ id: string; name: string; slug: string } | null>(null)
-
   const loadPreview = useCallback(async () => {
     setPreviewErr(null)
     try {
@@ -192,9 +185,8 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     if (!tokenStr) return
     if (preview?.status !== 'valid') return
     if (busy) return
-    if (joinedCompany) return  // already redeemed — don't re-POST in a loop
     void accept()
-  }, [tokenStr, preview, busy, accept, joinedCompany])
+  }, [tokenStr, preview, busy, accept])
 
   const inv = preview?.invitation
   const companyName = inv?.company.name ?? 'LingxiLoop'
@@ -215,14 +207,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
       >
         <ProductLogo size={56} rounded />
 
-        {joinedCompany && (
-          <JoinedSuccessBlock
-            companyName={joinedCompany.name}
-            onContinueInBrowser={() => { setJoinedCompany(null); onDone() }}
-          />
-        )}
-
-        {!joinedCompany && previewErr && (
+        {previewErr && (
           <ErrorBlock
             title="无法加载此邀请"
             body={previewErr}
@@ -230,11 +215,11 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           />
         )}
 
-        {!joinedCompany && !preview && !previewErr && (
+        {!preview && !previewErr && (
           <div className="text-[13px] text-ink-400 italic font-display">正在检查邀请…</div>
         )}
 
-        {!joinedCompany && preview && preview.status === 'not_found' && (
+        {preview && preview.status === 'not_found' && (
           <ErrorBlock
             title="该邀请链接无效"
             body="链接可能输入有误。请让邀请人重新发送一条新的邀请链接。"
@@ -242,7 +227,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           />
         )}
 
-        {!joinedCompany && preview && preview.status === 'revoked' && (
+        {preview && preview.status === 'revoked' && (
           <ErrorBlock
             title="该邀请已被撤销"
             body={`${companyName} 的所有者已取消此邀请。请让他们发送新的邀请。`}
@@ -250,7 +235,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           />
         )}
 
-        {!joinedCompany && preview && preview.status === 'expired' && (
+        {preview && preview.status === 'expired' && (
           <ErrorBlock
             title="该邀请已过期"
             body={`${companyName} 的邀请已超过有效期，请让邀请人重新发送。`}
@@ -258,7 +243,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           />
         )}
 
-        {!joinedCompany && preview && preview.status === 'consumed' && (
+        {preview && preview.status === 'consumed' && (
           <ErrorBlock
             title="该邀请已被使用"
             body={`前往 ${companyName} 的链接只能使用一次，已被其他人使用。`}
@@ -266,7 +251,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           />
         )}
 
-        {!joinedCompany && preview && preview.status === 'archived' && (
+        {preview && preview.status === 'archived' && (
           <ErrorBlock
             title="该课程已归档"
             body="归档课程为只读状态，无法再接受新成员。"
@@ -274,7 +259,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           />
         )}
 
-        {!joinedCompany && preview && preview.status === 'wrong_email' && inv && (
+        {preview && preview.status === 'wrong_email' && inv && (
           <div className="flex flex-col items-center gap-4 text-center">
             <h1 className="font-display text-[20px] text-ink-900">账号错误</h1>
             <p className="text-[13px] text-ink-500 font-display italic leading-relaxed">
@@ -290,7 +275,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           </div>
         )}
 
-        {!joinedCompany && preview && preview.status === 'already_member' && (
+        {preview && preview.status === 'already_member' && (
           <AlreadyMemberBlock
             companyName={companyName}
             onSwitchInBrowser={async () => {
@@ -308,7 +293,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
           />
         )}
 
-        {!joinedCompany && preview && preview.status === 'valid' && inv && (
+        {preview && preview.status === 'valid' && inv && (
           <div className="flex flex-col items-center gap-5 text-center w-full">
             <div className="space-y-1">
               <div className="text-[12.5px] text-ink-400 font-display italic">
@@ -357,67 +342,6 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
     </div>
   )
 }
-/** Best-effort lingxiloop:// deep link. If the OS protocol handler isn't
- *  registered, browsers fail silently (no broken-page) and the user just
- *  stays put — at which point the visible Download button below is the
- *  next thing they reach for. */
-function tryOpenDesktopApp() {
-  try { location.href = 'lingxiloop://open' } catch { /* swallow */ }
-}
-
-/** Success state shown after a successful accept in the WEB build. Offers
- *  "Open in LingxiLoop app" (best-effort lingxiloop:// deep link) and a download
- *  CTA, with "continue in browser" as the soft fallback. */
-function JoinedSuccessBlock({ companyName, onContinueInBrowser }: {
-  companyName: string
-  onContinueInBrowser: () => void
-}) {
-  return (
-    <div className="flex flex-col items-center gap-5 text-center w-full">
-      <div
-        className="w-12 h-12 rounded-full grid place-items-center"
-        style={{ background: 'var(--sky-100)', color: 'var(--skype-deep)' }}
-        aria-hidden
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      </div>
-      <div className="space-y-1">
-        <h1 className="font-display text-[22px] tracking-tight text-ink-900">
-          欢迎来到 {companyName}
-        </h1>
-        <p className="text-[12.5px] text-ink-500 font-display italic">
-          你已成功加入，可直接前往 LingxiLoop 工作区。
-        </p>
-      </div>
-      <div className="w-full flex flex-col gap-2.5">
-        <Button
-          onClick={tryOpenDesktopApp}
-          className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-white transition"
-          style={{
-            background: 'var(--skype)',
-            boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
-          }}
-        >在 LingxiLoop 应用程序中打开</Button>
-        <GetDesktopAppLink variant="button-secondary" />
-        {!isWebAppHost && (
-          <Button
-            onClick={onContinueInBrowser}
-            className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
-          >在浏览器中继续</Button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-/** Shown when the preview reports `already_member` — the signed-in user
- *  is already in the target workspace, so accepting is a no-op. The
- *  practical reason they hit this screen is usually "I clicked the
- *  invite link on a new device / fresh browser" — so we lead with
- *  "Open in desktop" + "Download" to cover the install case, and keep
- *  the "switch in browser" path as a soft tertiary. */
 function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
   companyName: string
   onSwitchInBrowser: () => void
@@ -426,22 +350,14 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
     <div className="flex flex-col items-center gap-5 text-center w-full">
       <h1 className="font-display text-[20px] text-ink-900">你已加入 {companyName}</h1>
       <p className="text-[12.5px] text-ink-500 font-display italic -mt-2">
-        从上次离开的地方继续；你可以在此设备或任何安装了 LingxiLoop 的设备上使用。
+        从上次离开的地方继续。
       </p>
       <div className="w-full flex flex-col gap-2.5">
         <Button
-          onClick={tryOpenDesktopApp}
-          className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-white transition"
-          style={{
-            background: 'var(--skype)',
-            boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
-          }}
-        >在 LingxiLoop 桌面端打开</Button>
-        <GetDesktopAppLink variant="button-secondary" />
-        <Button
           onClick={onSwitchInBrowser}
-          className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic mt-1"
-        >在浏览器中继续</Button>
+          className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-white transition"
+          style={{ background: 'var(--skype)' }}
+        >进入工作区</Button>
       </div>
     </div>
   )
@@ -527,10 +443,6 @@ function SignInToAccept({ token }: { token: string }) {
       </Button>
       <div className="text-[10.5px] text-ink-300 text-center font-display italic">
         我们仅使用第三方账号验证你的身份，不会代你发布内容，也不会索取额外权限。
-      </div>
-      <div className="text-[11.5px] text-ink-400 text-center font-display italic pt-1">
-        还没有桌面应用程序？{' '}
-        <GetDesktopAppLink variant="text" label="获取 LingxiLoop" />
       </div>
     </div>
   )

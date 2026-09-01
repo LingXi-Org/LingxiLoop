@@ -13,51 +13,154 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   quality:
-    uses: ./.github/workflows/_quality.yml
+    name: Quality and builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - run: npm run version:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run server:typecheck
+      - run: npm run admin:typecheck
+      - run: npm run build
+      - run: npm run admin:build
+      - name: Verify vendored Open Notebook scope
+        working-directory: third_party/open-notebook
+        run: |
+          python -m pip install pytest python-dotenv
+          python -m pytest -q tests/test_lingxiloop_native_scope.py
+      - name: Verify production RAG packaging contract
+        run: node --test scripts/production-rag-contract.test.mjs
 
-  publish-packages:
-    name: Publish ${{ matrix.package }} package
-    if: github.event_name != 'pull_request'
-    needs: quality
+  unit-eval:
+    name: Unit tests and deterministic Agent Eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run eval:check
+      - name: Upload Agent Eval reports
+        if: always() && hashFiles('artifacts/eval-*.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-eval-${{ github.run_attempt }}
+          path: artifacts/eval-*.json
+          if-no-files-found: error
+
+  integration:
+    name: PostgreSQL and Redis integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lingxiloop_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lingxiloop_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
+      REDIS_URL: redis://127.0.0.1:6379
+      OPENAI_API_KEY: integration-test-key
+      OPENAI_EMBEDDING_MODEL: text-embedding-3-small
+      LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
+      WUKONG_USER_TOKEN_SECRET: integration-test-wukong-user-token-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run test:integration
+
+  publish:
+    name: Publish ${{ matrix.package }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [quality, unit-eval, integration]
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
         include:
           - package: lingxiloop-server
             dockerfile: server/docker/lingxiloop-server.Dockerfile
-            wukong_commit: ""
             context: .
             target: ""
+            wukong_commit: ""
           - package: lingxiloop-agent-os
             dockerfile: server/docker/agent-os.Dockerfile
-            wukong_commit: ""
             context: .
             target: ""
+            wukong_commit: ""
           - package: lingxiloop-wukongim
             dockerfile: server/docker/wukongim.Dockerfile
-            wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
             context: .
             target: ""
+            wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
           - package: lingxiloop-open-notebook
-            # `file` is evaluated from the checked-out workspace by Buildx.
-            # Keep the narrower context: the Dockerfile's COPY paths are
-            # relative to this directory.
             dockerfile: third_party/open-notebook/Dockerfile
-            wukong_commit: ""
             context: ./third_party/open-notebook
             target: lingxiloop-rag
+            wukong_commit: ""
     steps:
       - uses: actions/checkout@v4
-      - id: version
-        name: Read package version
+      - id: metadata
+        name: Resolve image metadata
         shell: bash
-        run: echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "namespace=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+          echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
@@ -65,8 +168,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and publish immutable and MVP tags
-        uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
@@ -74,15 +176,14 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/lingxi-org/${{ matrix.package }}:mvp
-            ghcr.io/lingxi-org/${{ matrix.package }}:${{ github.sha }}
-            ghcr.io/lingxi-org/${{ matrix.package }}:${{ steps.version.outputs.version }}
+            ghcr.io/${{ steps.metadata.outputs.namespace }}/${{ matrix.package }}:${{ github.sha }}
+            ghcr.io/${{ steps.metadata.outputs.namespace }}/${{ matrix.package }}:mvp
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.version=${{ steps.metadata.outputs.version }}
           build-args: |
-            LINGXILOOP_VERSION=${{ steps.version.outputs.version }}
+            LINGXILOOP_VERSION=${{ steps.metadata.outputs.version }}
             LINGXILOOP_COMMIT_SHA=${{ github.sha }}
             WUKONG_COMMIT=${{ matrix.wukong_commit }}
           cache-from: type=gha,scope=${{ matrix.package }}

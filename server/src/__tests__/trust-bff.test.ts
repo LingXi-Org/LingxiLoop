@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { canonicalJson } from '../modules/trust/canonical-json.js'
 
-const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const application = readFileSync(new URL('../modules/trust/application.ts', import.meta.url), 'utf8')
 const repository = readFileSync(new URL('../modules/trust/repository.ts', import.meta.url), 'utf8')
 const router = readFileSync(new URL('../modules/trust/router.ts', import.meta.url), 'utf8')
@@ -44,9 +43,6 @@ test('signed snapshots use canonical JSON, hash, signature and immutable Evidenc
     canonicalJson({ at: new Date('2026-08-30T00:00:00.000Z') }),
     '{"at":"2026-08-30T00:00:00.000Z"}',
   )
-  assert.match(schema, /CREATE TABLE public\.trust_snapshots/)
-  assert.match(schema, /trust_snapshots_immutable/)
-  assert.match(schema, /trust_snapshots_evidence_fkey/)
   assert.match(application, /canonicalJson[\s\S]*sha256[\s\S]*sign\(canonical\)/)
   assert.match(application, /TRUST_SNAPSHOT\.CREATED/)
   assert.match(application, /createEvidenceRecordInTransaction/)

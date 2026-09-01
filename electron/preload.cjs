@@ -96,29 +96,4 @@ contextBridge.exposeInMainWorld('lingxiloop', {
       return () => ipcRenderer.removeListener('auth:token', wrapped)
     },
   },
-
-  /**
-   * Auto-update bridge. Mirrors alma's pattern:
-   *   - getAppInfo() — current version + autoupdate capability flag
-   *   - getStatus()  — last broadcast status (idle / checking / available / downloading / downloaded / error)
-   *   - getInfo()    — { version, releaseNotes, releaseDate } for the
-   *                    last detected update
-   *   - check()      — fire a manual check; returns the resolved result
-   *   - download()   — start download (we set autoDownload=false so this is explicit)
-   *   - install()    — quit + install (relaunches at new version)
-   *   - onStatus()   — subscribe to status broadcasts; returns unsubscribe
-   */
-  update: {
-    getAppInfo: () => ipcRenderer.invoke('update:app-info'),
-    getStatus: () => ipcRenderer.invoke('update:status'),
-    getInfo: () => ipcRenderer.invoke('update:info'),
-    check: () => ipcRenderer.invoke('update:check'),
-    download: () => ipcRenderer.invoke('update:download'),
-    install: () => ipcRenderer.invoke('update:install'),
-    onStatus: (handler) => {
-      const wrapped = (_evt, payload) => handler(payload)
-      ipcRenderer.on('auto-update-status', wrapped)
-      return () => ipcRenderer.removeListener('auto-update-status', wrapped)
-    },
-  },
 })

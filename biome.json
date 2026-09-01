@@ -12,6 +12,8 @@
       "!**/build",
       "!**/release",
       "!**/node_modules",
+      "!artifacts",
+      "!electron-package",
       "!third_party",
       "!**/*.min.js"
     ]

@@ -26,6 +26,7 @@ dist-admin
 dist-ssr
 /artifacts/eval-*.json
 /artifacts/playwright/
+/artifacts/.env*
 
 # Python bytecode cache
 .venv/

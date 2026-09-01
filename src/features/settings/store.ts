@@ -6,7 +6,6 @@ export type SettingsSectionId =
   | 'account'
   | 'appearance-sound'
   | 'notifications'
-  | 'updates'
   | 'data-account'
 
 interface SettingsDialogState {

@@ -9,7 +9,7 @@ test('the complete model-visible tool surface is strict IPython', () => {
   assert.equal(IPYTHON_TOOL.function.strict, true)
   assert.deepEqual(IPYTHON_TOOL.function.parameters, {
     type: 'object',
-    properties: { code: { type: 'string', description: 'Python source. Top-level await is supported. State persists across turns while this agent kernel is alive.' } },
+    properties: { code: { type: 'string', description: 'Executable Python source only, without Markdown fences or user-facing prose. Python state persists across turns; never await loop SDK calls.' } },
     required: ['code'],
     additionalProperties: false,
   })

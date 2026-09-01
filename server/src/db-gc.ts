@@ -62,7 +62,7 @@ function targets(): SweepTarget[] {
 /** Delete one batch of expired rows. Returns rows deleted (0 = table clean).
  *
  *  Two statements, both index-driven: the victim SELECT walks the bare
- *  time-column index (see db/schema.sql idx_*_created), the DELETE walks the
+ *  time-column index (see the database migrations' idx_*_created), the DELETE walks the
  *  PK index via `= ANY($ids)`. The earlier single-statement form —
  *  `DELETE WHERE ctid IN (subquery)` — planned the outer side as a seq
  *  scan of the whole heap, which on a 31GB table blew the 55s timeout

@@ -102,7 +102,6 @@ test('Web composition contains no background scheduler or worker startup', async
 test('every deployment defines an independently runnable worker service', async () => {
   for (const relative of [
     '../../../docker-compose.mvp.yml',
-    '../../../docker-compose.mvp.ci.yml',
     '../../../docker-compose.production.yml',
   ]) {
     const compose = await readFile(new URL(relative, import.meta.url), 'utf8')

@@ -7,7 +7,7 @@ x-quiet-logging: &quiet-logging
 # PostgreSQL and Redis intentionally live on the private database server.
 # Application images are assembled from immutable GHCR digests only.
 x-runtime: &runtime
-  image: ghcr.io/lingxi-org/lingxiloop-server@${LINGXILOOP_SERVER_DIGEST:?LINGXILOOP_SERVER_DIGEST is required}
+  image: ghcr.io/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-server@${LINGXILOOP_SERVER_DIGEST:?LINGXILOOP_SERVER_DIGEST is required}
   pull_policy: always
   environment: &runtime-environment
     NODE_ENV: production
@@ -73,7 +73,7 @@ services:
     logging: *quiet-logging
 
   open-notebook:
-    image: ghcr.io/lingxi-org/lingxiloop-open-notebook@${OPEN_NOTEBOOK_DIGEST:?OPEN_NOTEBOOK_DIGEST is required}
+    image: ghcr.io/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-open-notebook@${OPEN_NOTEBOOK_DIGEST:?OPEN_NOTEBOOK_DIGEST is required}
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -106,7 +106,7 @@ services:
     logging: *quiet-logging
 
   wukongim:
-    image: ghcr.io/lingxi-org/lingxiloop-wukongim@${WUKONGIM_DIGEST:?WUKONGIM_DIGEST is required}
+    image: ghcr.io/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-wukongim@${WUKONGIM_DIGEST:?WUKONGIM_DIGEST is required}
     pull_policy: always
     restart: unless-stopped
     environment:
@@ -123,10 +123,10 @@ services:
     networks: [lingxiloop]
     logging: *quiet-logging
 
-  db-bootstrap:
+  db-migrate:
     <<: *runtime
     restart: "no"
-    command: ["npm", "run", "db:bootstrap"]
+    command: ["npm", "run", "db:migrate"]
     networks: [lingxiloop]
 
   lingxiloop:
@@ -135,7 +135,7 @@ services:
     depends_on:
       wukongim: { condition: service_healthy }
       open-notebook: { condition: service_healthy }
-      db-bootstrap: { condition: service_completed_successfully }
+      db-migrate: { condition: service_completed_successfully }
     ports: ["5181:5181"]
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
@@ -151,11 +151,11 @@ services:
     depends_on:
       wukongim: { condition: service_healthy }
       open-notebook: { condition: service_healthy }
-      db-bootstrap: { condition: service_completed_successfully }
+      db-migrate: { condition: service_completed_successfully }
       lingxiloop: { condition: service_healthy }
 
   agent-os:
-    image: ghcr.io/lingxi-org/lingxiloop-agent-os@${AGENT_OS_DIGEST:?AGENT_OS_DIGEST is required}
+    image: ghcr.io/${GHCR_NAMESPACE:-lingxi-org}/lingxiloop-agent-os@${AGENT_OS_DIGEST:?AGENT_OS_DIGEST is required}
     pull_policy: always
     restart: unless-stopped
     environment:

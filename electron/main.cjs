@@ -5,7 +5,6 @@ const fs = require('node:fs')
 const http = require('node:http')
 const crypto = require('node:crypto')
 const { pathToFileURL } = require('node:url')
-const autoUpdater = require('./autoUpdater.cjs')
 const { createAuthNonceGuard } = require('./authNonce.cjs')
 const { registerRendererScheme, rendererFile } = require('./rendererProtocol.cjs')
 const { DEFAULT_WINDOW_STATE, createWindowStateStore } = require('./windowState.cjs')
@@ -1297,34 +1296,6 @@ app.whenReady().then(() => {
     consumeDeepLink(url)
   }
 
-  // Wire auto-update. registerIpc() is safe to call even when
-  // unsupported (handlers just return the unsupported status).
-  // initialize() is a no-op when there's no update channel (e.g. dev
-  // without dev-app-update.yml).
-  autoUpdater.registerIpc()
-  autoUpdater.setBeforeInstallHandler(() => {
-    // electron-updater on macOS skips `before-quit` (it goes through
-    // Browser::Shutdown), so our close-to-hide handler would otherwise
-    // intercept the window close and the app would just hide instead of
-    // exiting — Squirrel then waits forever for a quit that never comes
-    // and the update never installs. Flip the flag now and tear down the
-    // auxiliary windows / servers ourselves.
-    appIsQuitting = true
-    if (notificationWindow && !notificationWindow.isDestroyed()) {
-      try { notificationWindow.destroy() } catch { /* swallow */ }
-      notificationWindow = null
-    }
-    if (authLoopbackServer) {
-      try { authLoopbackServer.close() } catch { /* swallow */ }
-      try { authLoopbackServer.closeAllConnections?.() } catch { /* swallow */ }
-      authLoopbackServer = null
-    }
-    if (tray && !tray.isDestroyed?.()) {
-      try { tray.destroy() } catch { /* swallow */ }
-      tray = null
-    }
-  })
-  autoUpdater.initialize()
 })
 
 // macOS: Dock-icon click (and Cmd-Tab to a hidden app) fires `activate`.

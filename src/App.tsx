@@ -3,7 +3,6 @@ import { consumeSuspendedFragment, SuspendedScreen } from '@/auth/AuthStateScree
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { NotificationToasts } from '@/components/NotificationToasts'
-import { UpdateBanner, UpdaterDialog } from '@/components/UpdaterDialog'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
@@ -12,7 +11,6 @@ import { chatTransport } from '@/features/chat/runtime'
 import { bootParticipants } from '@/features/agents/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { usePrefs } from '@/stores/preferences'
-import { useUiCommand } from '@/stores/uiCommands'
 
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
 
@@ -28,8 +26,6 @@ function AuthedApp() {
   const selectedConvoExists = useConversations((s) =>
     convoId ? s.list.some((c) => c.id === convoId) : false,
   )
-  const [updaterOpen, setUpdaterOpen] = useState(false)
-  const uiCommand = useUiCommand()
   useEffect(() => {
     let disposed = false
     void (async () => {
@@ -61,10 +57,6 @@ function AuthedApp() {
     void chatTransport.loadConversation(convoId)
   }, [convoId, selectedConvoExists])
 
-  useEffect(() => {
-    if (uiCommand?.type === 'open-updater') setUpdaterOpen(true)
-  }, [uiCommand])
-
   return (
     <TooltipProvider delayDuration={120}>
       <Suspense fallback={<SurfaceFallback />}><DesktopApp /></Suspense>
@@ -72,8 +64,6 @@ function AuthedApp() {
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}
       <NotificationToasts />
-      <UpdateBanner onOpen={() => setUpdaterOpen(true)} />
-      <UpdaterDialog open={updaterOpen} onClose={() => setUpdaterOpen(false)} />
     </TooltipProvider>
   )
 }

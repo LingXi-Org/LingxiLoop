@@ -15,7 +15,7 @@
  */
 import { randomUUID } from 'node:crypto'
 import { Webhook } from 'svix'
-import { assertV1SchemaReady } from '../db/bootstrap.js'
+import { assertMigrationsCurrent } from '../db/migrate.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { ensurePersonalFreePlan } from '../modules/entitlements/public.js'
@@ -83,9 +83,9 @@ installStorageProvider(integrationStorage)
 
 let schemaReady: Promise<void> | null = null
 
-/** Assert the externally bootstrapped v1 schema exactly once per test process. */
+/** Assert the externally migrated schema exactly once per test process. */
 export function ensureSchemaOnce(): Promise<void> {
-  if (!schemaReady) schemaReady = assertV1SchemaReady()
+  if (!schemaReady) schemaReady = assertMigrationsCurrent()
   return schemaReady
 }
 
@@ -248,7 +248,7 @@ export async function seedCompanyWithAgent(opts?: {
      VALUES ($1,$2,'test-owner','OWNER') ON CONFLICT DO NOTHING`,
     [projectId, companyId],
   )
-  // participants composite PK is (id, company_id) — see db/schema.sql.
+  // participants composite PK is (id, company_id) — see the v1 baseline migration.
   await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
      VALUES ($1, $2, 'agent', $3, 'tester', $4, '#abcdef', 'avail', $5)

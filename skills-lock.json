@@ -13,29 +13,11 @@
       "skillPath": "skills/better-layout/SKILL.md",
       "computedHash": "4d38dfb87825bba2d8359759a3cb25b3da065f7bd8ff41cf72b9936f83c82903"
     },
-    "cloud": {
-      "source": "assistant-ui/skills",
-      "sourceType": "github",
-      "skillPath": "assistant-ui/skills/cloud/SKILL.md",
-      "computedHash": "e7c15b27a2196cd1442f38be770e7c358e3cc58b29756ae341a4f191ad4c616b"
-    },
-    "copilots": {
-      "source": "assistant-ui/skills",
-      "sourceType": "github",
-      "skillPath": "assistant-ui/skills/copilots/SKILL.md",
-      "computedHash": "5132b4dd5057aa2b4bbf6ea33fe213613b3fc58cebb8900017281e9461db2a4c"
-    },
     "markdown": {
       "source": "assistant-ui/skills",
       "sourceType": "github",
       "skillPath": "assistant-ui/skills/markdown/SKILL.md",
       "computedHash": "060ef16bb5d7c589ee52278a0487748da17aebf7ef69a07991a2f11587acbef3"
-    },
-    "observability": {
-      "source": "assistant-ui/skills",
-      "sourceType": "github",
-      "skillPath": "assistant-ui/skills/observability/SKILL.md",
-      "computedHash": "9313063365e5d006a987c6fdf9f1e90b31b57b7046a9fe2120d9a41c6c2bd35c"
     },
     "primitives": {
       "source": "assistant-ui/skills",
@@ -43,23 +25,11 @@
       "skillPath": "assistant-ui/skills/primitives/SKILL.md",
       "computedHash": "ad1a3e41652c8f29e28833fa8a9ececeacf624539e7f6d726a94d1ac94dc886d"
     },
-    "react-mcp": {
-      "source": "assistant-ui/skills",
-      "sourceType": "github",
-      "skillPath": "assistant-ui/skills/react-mcp/SKILL.md",
-      "computedHash": "555ab3ee597bd407c95da69e81498ab21c26bdd1786ed125d579f6efb703c9f8"
-    },
     "runtime": {
       "source": "assistant-ui/skills",
       "sourceType": "github",
       "skillPath": "assistant-ui/skills/runtime/SKILL.md",
-      "computedHash": "3de3681166b279731308da77a14eed887644d188437d1683f7f814470b6d3f86"
-    },
-    "setup": {
-      "source": "assistant-ui/skills",
-      "sourceType": "github",
-      "skillPath": "assistant-ui/skills/setup/SKILL.md",
-      "computedHash": "e6deeb15307b588288d357d81553c0129c64c3e87005a655033174774a8e39d3"
+      "computedHash": "3de3681166c279731308da77a14eed887644d188437d1683f7f814470b6d3f86"
     },
     "streaming": {
       "source": "assistant-ui/skills",
@@ -67,29 +37,11 @@
       "skillPath": "assistant-ui/skills/streaming/SKILL.md",
       "computedHash": "8d9c9d93079234bc065cd4106ac10b3873b4fb72214edda58f65128932e37e9e"
     },
-    "thread-list": {
-      "source": "assistant-ui/skills",
-      "sourceType": "github",
-      "skillPath": "assistant-ui/skills/thread-list/SKILL.md",
-      "computedHash": "17042dc4e1f3c2d04a84faa5626327d36ca7c40b4e354a89b6d9e17542209120"
-    },
-    "tool-ui": {
-      "source": "assistant-ui/tool-ui",
-      "sourceType": "github",
-      "skillPath": "packages/agent/plugin/skills/tool-ui/SKILL.md",
-      "computedHash": "39516e5417921ecba72cbf2a7c034361a245202a8d355e17a227d9e02bda2d0d"
-    },
     "tools": {
       "source": "assistant-ui/skills",
       "sourceType": "github",
       "skillPath": "assistant-ui/skills/tools/SKILL.md",
       "computedHash": "4edbc2e789db7c087639d315a1fd7c1dff101a27568bc5bcdb26337580361bfd"
-    },
-    "update": {
-      "source": "assistant-ui/skills",
-      "sourceType": "github",
-      "skillPath": "assistant-ui/skills/update/SKILL.md",
-      "computedHash": "d5f27502fb5fe285a821d70b871c2f65b54629b3c88a4295dfe27dc3535d20ef"
     }
   }
 }

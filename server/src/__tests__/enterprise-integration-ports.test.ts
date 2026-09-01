@@ -23,6 +23,6 @@ test('Enterprise capabilities are disabled Shadcn cards without credential or fa
     assert.match(cards, new RegExp(`id: '${capability}'`))
   }
   assert.match(cards, /Card[\s\S]*Badge[\s\S]*暂不支持[\s\S]*Button[\s\S]*disabled/)
-  assert.match(cards, /不会收集凭据、发送数据或模拟激活成功/)
+  assert.match(cards, /不会收集密钥、发送数据或显示虚假的开通结果/)
   assert.doesNotMatch(cards, /<Input|<Textarea|type="password"|onSubmit|fetch\(/)
 })

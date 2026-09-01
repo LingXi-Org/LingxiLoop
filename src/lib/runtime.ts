@@ -69,60 +69,6 @@ interface LingxiLoopBridge {
     arm?: () => Promise<string>
     onToken: (handler: (payload: { token: string; companyId: string | null }) => void) => () => void
   }
-  /** Auto-update bridge — ported from alma's pattern. Surfaces
-   *  electron-updater status to the renderer so the React side can
-   *  render the upgrade UI without polling. Unavailable in browser /
-   *  PWA mode (only present when `lingxiloop.isElectron`). */
-  update?: {
-    getAppInfo: () => Promise<AppUpdateInfo>
-    getStatus: () => Promise<AutoUpdateStatus>
-    getInfo: () => Promise<UpdateReleasePayload | null>
-    check: () => Promise<ManualUpdateResult>
-    download: () => Promise<{ ok: boolean; error?: string }>
-    install: () => Promise<{ ok: boolean }>
-    onStatus: (handler: (payload: AutoUpdateStatus) => void) => () => void
-  }
-}
-
-/** Status broadcast on every state change. `idle` is the initial value;
- *  `unsupported` means the running build can't auto-update at all
- *  (PWA, ad-hoc dev, packaged without a feed). */
-export type AutoUpdateKind =
-  | 'idle' | 'checking' | 'update-available' | 'update-not-available'
-  | 'downloading' | 'update-downloaded' | 'error' | 'unsupported'
-
-export interface AutoUpdateStatus {
-  status: AutoUpdateKind
-  version?: string
-  detail?: string
-  percent?: number
-  transferred?: number
-  total?: number
-  bytesPerSecond?: number
-  /** True if the manual "Check for updates" button kicked this off. UI
-   *  uses this to decide whether to surface a "no update" toast (don't
-   *  bother for background checks). */
-  triggeredByUser?: boolean
-}
-
-export type ManualUpdateResult =
-  | { status: 'unsupported'; message?: string }
-  | { status: 'update-available'; version?: string }
-  | { status: 'update-downloaded'; version?: string }
-  | { status: 'update-not-available' }
-  | { status: 'error'; message?: string }
-
-export interface AppUpdateInfo {
-  name: string
-  version: string
-  autoUpdateSupported: boolean
-  autoUpdateStatus: AutoUpdateStatus
-}
-
-export interface UpdateReleasePayload {
-  version: string
-  releaseNotes: string | null
-  releaseDate: string
 }
 
 declare global {

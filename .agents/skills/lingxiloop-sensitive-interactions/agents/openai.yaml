@@ -1,4 +1,0 @@
-interface:
-  display_name: "LingxiLoop Sensitive Interactions"
-  short_description: "Require Alert Dialog and Toast for sensitive user actions"
-  default_prompt: "Use $lingxiloop-sensitive-interactions to implement a sensitive action or user-triggered task with the required confirmation and feedback."

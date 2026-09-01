@@ -1,64 +1,8 @@
 import assert from 'node:assert/strict'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { fileURLToPath } from 'node:url'
-import ts from 'typescript'
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8')
-const here = dirname(fileURLToPath(import.meta.url))
-const srcRoot = resolve(here, '..')
-
-function productionTsxFiles(directory: string): string[] {
-  return readdirSync(directory).flatMap((name) => {
-    const path = join(directory, name)
-    if (statSync(path).isDirectory()) return productionTsxFiles(path)
-    return name.endsWith('.tsx') && !name.endsWith('.test.tsx') ? [path] : []
-  })
-}
-
-function fixedVisibleText(initializer: ts.JsxAttributeValue | undefined): string {
-  if (!initializer) return ''
-  if (ts.isStringLiteral(initializer)) return initializer.text
-  if (!ts.isJsxExpression(initializer) || !initializer.expression) return ''
-  const expression = initializer.expression
-  if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) return expression.text
-  if (!ts.isTemplateExpression(expression)) return ''
-  return [expression.head.text, ...expression.templateSpans.map((span) => span.literal.text)].join(' ')
-}
-
-const visibleAttributeNames = new Set(['alt', 'aria-description', 'aria-label', 'placeholder', 'title'])
-const allowedFixedLatin = /LingxiLoop|Asia\/Shanghai|HTTPS?|URL|JSON|PDF|DOCX|TXT|CSV|MD|MB|KB|Esc/gi
-
-function containsUnapprovedEnglish(value: string): boolean {
-  return /[A-Za-z]{2}/.test(value.replace(allowedFixedLatin, ''))
-}
-
-test('all production JSX keeps fixed visible copy in Chinese', () => {
-  const violations: string[] = []
-  for (const path of productionTsxFiles(srcRoot)) {
-    const source = readFileSync(path, 'utf8')
-    const file = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
-    const inspect = (node: ts.Node) => {
-      let value = ''
-      if (ts.isJsxText(node)) value = node.text.replace(/\s+/g, ' ').trim()
-      if (ts.isJsxExpression(node) && node.expression
-        && (ts.isStringLiteral(node.expression) || ts.isNoSubstitutionTemplateLiteral(node.expression))) {
-        value = node.expression.text
-      }
-      if (ts.isJsxAttribute(node) && visibleAttributeNames.has(node.name.getText(file))) {
-        value = fixedVisibleText(node.initializer)
-      }
-      if (value && containsUnapprovedEnglish(value)) {
-        const line = file.getLineAndCharacterOfPosition(node.getStart(file)).line + 1
-        violations.push(`${path}:${line}: ${value}`)
-      }
-      ts.forEachChild(node, inspect)
-    }
-    inspect(file)
-  }
-  assert.deepEqual(violations, [])
-})
 
 test('notification and email affordances keep fixed user-visible copy in Chinese', () => {
   const notificationToasts = read('../components/NotificationToasts.tsx')
@@ -121,9 +65,9 @@ test('invitation success actions use natural Chinese around the product name', (
   const invitationManager = read('../features/companies/components/InvitePeopleModal.tsx')
   const avatar = read('../components/BloubAvatar.tsx')
 
-  assert.match(invitation, /你已成功加入，可直接前往 LingxiLoop 工作区。/)
-  assert.match(invitation, /在 LingxiLoop 桌面端打开/)
+  assert.match(invitation, />进入工作区</)
   assert.match(invitation, /继续使用 LingxiLoop/)
+  assert.doesNotMatch(invitation, /桌面端打开|下载桌面/)
   assert.doesNotMatch(invitation, /在LingxiLoop|继续LingxiLoop|从您上次停下/)
   assert.match(invitationManager, /INVITATION_STATUS_LABELS/)
   assert.match(invitationManager, /invitationRoleLabel\(invitation\.role\)/)

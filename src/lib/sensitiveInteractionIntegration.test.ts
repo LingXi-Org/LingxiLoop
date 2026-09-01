@@ -121,12 +121,3 @@ test('calendar editing uses the controlled Base UI Dialog without a handwritten 
   assert.match(editor, /<DialogContent[\s\S]*?<DialogTitle[\s\S]*?<DialogDescription/)
   assert.doesNotMatch(editor, /fixed inset-0|addEventListener\(['"]keydown/)
 })
-
-test('repository skill requires Alert Dialog and Toast for future sensitive work', () => {
-  const skill = read('../../.agents/skills/lingxiloop-sensitive-interactions/SKILL.md')
-  assert.match(skill, /confirmSensitiveAction/)
-  assert.match(skill, /promptSensitiveAction/)
-  assert.match(skill, /Never use native `confirm\(\)`/)
-  assert.match(skill, /Approval cards must Toast both approve and reject paths/)
-  assert.match(skill, /user-triggered task dispatch/i)
-})

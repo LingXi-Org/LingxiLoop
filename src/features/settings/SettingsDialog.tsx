@@ -1,5 +1,4 @@
 import {
-  CloudDownloadIcon,
   Database01Icon,
   Notification02Icon,
   PaintBrush01Icon,
@@ -30,7 +29,6 @@ import { DataAccountSettingsPanel } from './DataAccountSettingsPanel'
 import { NotificationSettingsPanel } from './NotificationSettingsPanel'
 import type { SettingsSectionId } from './store'
 import { SETTINGS_DIALOG_TRIGGER_ID, useSettingsDialog } from './store'
-import { UpdateSettingsPanel } from './UpdateSettingsPanel'
 
 const SETTINGS_SECTIONS = [
   {
@@ -52,12 +50,6 @@ const SETTINGS_SECTIONS = [
     icon: Notification02Icon,
   },
   {
-    id: 'updates',
-    label: '应用更新',
-    description: '查看版本与安装渠道提供的更新。',
-    icon: CloudDownloadIcon,
-  },
-  {
     id: 'data-account',
     label: '数据与账号',
     description: '管理登录状态、账号访问权与身份数据。',
@@ -75,7 +67,6 @@ function SettingsPanel({ section }: { section: SettingsSectionId }) {
     case 'account': return <AccountSettingsPanel />
     case 'appearance-sound': return <AppearanceSoundSettingsPanel />
     case 'notifications': return <NotificationSettingsPanel />
-    case 'updates': return <UpdateSettingsPanel />
     case 'data-account': return <DataAccountSettingsPanel />
   }
 }
@@ -99,7 +90,7 @@ export function SettingsDialog() {
       >
         <DialogHeader className="sr-only">
           <DialogTitle>LingxiLoop 设置</DialogTitle>
-          <DialogDescription>管理账号、设备偏好、当前学习区通知与应用更新。</DialogDescription>
+          <DialogDescription>管理账号、设备偏好与当前学习区通知。</DialogDescription>
         </DialogHeader>
 
         <SidebarProvider

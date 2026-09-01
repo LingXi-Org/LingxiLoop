@@ -4,7 +4,6 @@ import { dirname, relative, resolve } from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url), 'utf8')
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
 const legacyLearningUrl = new URL('../learning/', import.meta.url)
@@ -111,21 +110,9 @@ test('Learning routers share one private request and error adapter', () => {
   assert.match(learningHttpAdapterSource, /export async function respondWithLearning/)
 })
 
-test('native learning schema keeps evidence, projection and delivery ledgers durable', () => {
-  for (const table of ['courses','project_memberships','learning_course_rooms','learning_knowledge_units',
-    'learning_knowledge_unit_dependencies','learning_activities','learning_activity_knowledge_units',
-    'learning_missions','learning_mission_steps','learning_attempts','learning_evaluations','learning_states',
-    'learning_cases','learning_case_actions','learning_effects',
-    'learning_project_teacher_agents','learning_course_teacher_rooms']) {
-    assert.match(schema, new RegExp(`CREATE TABLE public\\.${table}\\b`))
-  }
-  assert.match(schema, /num_nonnulls\(activity_id, mission_step_id\) = 1/)
-  assert.match(schema, /UNIQUE \(company_id, project_id, learner_id, conversation_id, trigger_client_msg_no\)/)
-  assert.match(schema, /PRIMARY KEY \(project_id, user_id, knowledge_unit_id\)/)
-  assert.match(schema, /idx_learning_effects_pending/)
+test('native learning provisioning writes effects through the durable queue', () => {
   assert.match(learningApplicationSource, /enqueueLearningEffect/)
   assert.doesNotMatch(learningApplicationSource, /const provisioning = await Promise\.allSettled/)
-  assert.doesNotMatch(schema, /CREATE TABLE public\.learning_(?:courses|project_memberships|objectives|mastery|mastery_events)\b/)
 })
 
 test('knowledge-unit persistence has one tenant and project scoped repository path', () => {
@@ -139,7 +126,7 @@ test('knowledge-unit persistence has one tenant and project scoped repository pa
 test('production runtime has no legacy learning fact table or Attempt Course dependency', () => {
   const serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
   const violations = productionTypeScriptFiles(serverRoot)
-    .filter((path) => relative(serverRoot, path).replaceAll('\\', '/') !== 'db/bootstrap.ts')
+    .filter((path) => relative(serverRoot, path).replaceAll('\\', '/') !== 'db/migrate.ts')
     .flatMap((path) => {
       const source = readFileSync(path, 'utf8')
       return /\blearning_(?:objectives|mastery|mastery_events)\b|\battempt\.course_id\b/.test(source)

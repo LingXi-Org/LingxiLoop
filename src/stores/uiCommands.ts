@@ -5,7 +5,6 @@ export type UiCommand =
   | 'focus-conversation-search'
   | 'find-chat'
   | 'focus-composer'
-  | 'open-updater'
 
 interface UiCommandState {
   command: { type: UiCommand; sequence: number } | null

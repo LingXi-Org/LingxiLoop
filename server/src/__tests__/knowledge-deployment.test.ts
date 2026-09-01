@@ -4,7 +4,6 @@ import { test } from 'node:test'
 
 const composeFiles = [
   '../../../docker-compose.mvp.yml',
-  '../../../docker-compose.mvp.ci.yml',
   '../../../docker-compose.production.yml',
 ]
 
@@ -20,7 +19,7 @@ test('Agent OS has no direct network path to Open Notebook or SurrealDB', () => 
   for (const relative of composeFiles) {
     const source = readFileSync(new URL(relative, import.meta.url), 'utf8')
     const surreal = serviceBlock(source, 'surrealdb', 'open-notebook')
-    const notebook = serviceBlock(source, 'open-notebook', relative.includes('ci') ? 'fake-openai-provider' : 'wukongim')
+    const notebook = serviceBlock(source, 'open-notebook', 'wukongim')
     const lingxiloop = serviceBlock(source, 'lingxiloop', 'agent-os')
     const agent = source.slice(source.indexOf('  agent-os:'), source.indexOf('\nnetworks:'))
     assert.match(surreal, /networks: \[lingxiloop-knowledge-internal/)
@@ -46,14 +45,6 @@ test('Open Notebook shares LingxiLoop R2 credentials without exposing R2 publicl
     assert.match(notebook, new RegExp(`${variable}:`))
   }
   assert.doesNotMatch(notebook, /R2_PUBLIC_BASE:/)
-
-  const ci = readFileSync(new URL('../../../docker-compose.mvp.ci.yml', import.meta.url), 'utf8')
-  const ciNotebook = serviceBlock(ci, 'open-notebook', 'fake-openai-provider')
-  assert.match(ciNotebook, /OPEN_NOTEBOOK_R2_ENABLED: "true"/)
-  for (const variable of ['R2_ENDPOINT', 'R2_BUCKET', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY']) {
-    assert.match(ciNotebook, new RegExp(`${variable}:`))
-  }
-  assert.doesNotMatch(ciNotebook, /R2_PUBLIC_BASE:/)
 })
 
 test('local Open Notebook health checks the API and ingestion worker exposed by the image', () => {

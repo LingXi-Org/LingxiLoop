@@ -15,16 +15,15 @@ test('settings uses the shadcn sidebar-in-dialog composition with every account 
   assert.match(dialog, /onCloseAutoFocus=[\s\S]*SETTINGS_DIALOG_TRIGGER_ID[\s\S]*\.focus\(\)/)
   assert.doesNotMatch(dialog, /\bDrawer\b|\bSheet\b/)
 
-  for (const label of ['账号', '外观与声音', '通知', '应用更新', '数据与账号']) {
+  for (const label of ['账号', '外观与声音', '通知', '数据与账号']) {
     assert.ok(dialog.includes(`label: '${label}'`), `missing settings section: ${label}`)
   }
 })
 
-test('settings surfaces only existing theme, sound, notification, update, and account APIs', () => {
+test('settings surfaces only existing theme, sound, notification, and account APIs', () => {
   const appearance = read('./AppearanceSoundSettingsPanel.tsx')
   const account = read('./AccountSettingsPanel.tsx')
   const notification = read('./NotificationSettingsPanel.tsx')
-  const updates = read('./UpdateSettingsPanel.tsx')
   const dataAccount = read('./DataAccountSettingsPanel.tsx')
   const authApi = read('../../auth/api.ts')
 
@@ -36,14 +35,12 @@ test('settings surfaces only existing theme, sound, notification, update, and ac
   assert.match(notification, /getNotificationPreferences\(selectedWorkspaceId\)/)
   assert.match(notification, /toastAction\(learningApi\.setNotificationPreferences/)
   assert.doesNotMatch(notification, /设备推送|不可用/)
-  assert.match(updates, /useUpdater\(\)/)
-  assert.match(updates, /toastAction\(task\(\), messages\)/)
   assert.match(dataAccount, /authApi\.logout\(\)/)
   assert.match(dataAccount, /promptSensitiveAction/)
   assert.match(dataAccount, /confirmation !== ACCOUNT_DELETE_CONFIRMATION/)
   assert.match(dataAccount, /toastAction\(authApi\.deleteAccount\(\)/)
   assert.match(authApi, /deleteAccount: \(\) => http<DeleteAccountResponse>\('\/me\/account', \{ method: 'DELETE' \}\)/)
-  assert.doesNotMatch(`${appearance}\n${updates}\n${dataAccount}`, /语言|发布渠道|稳定通道|永久删除全部数据|关联数据无法恢复/)
+  assert.doesNotMatch(`${appearance}\n${dataAccount}`, /语言|发布渠道|稳定通道|永久删除全部数据|关联数据无法恢复/)
 })
 
 test('settings provides Chinese loading and account menu affordances', () => {
