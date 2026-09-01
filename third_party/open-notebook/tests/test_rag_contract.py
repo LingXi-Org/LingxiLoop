@@ -679,6 +679,32 @@ async def test_readyz_rechecks_schema_embedding_contract_search_and_r2(
     assert r2_probe.await_count == 2
 
 
+@pytest.mark.asyncio
+async def test_runtime_initialization_retries_transient_dependency_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from open_notebook.rag import runtime
+
+    monkeypatch.setattr(runtime, "DATABASE_STARTUP_RETRY_ATTEMPTS", 2)
+    monkeypatch.setattr(runtime, "DATABASE_STARTUP_RETRY_INITIAL_DELAY_SECONDS", 0)
+    monkeypatch.setattr(runtime.asyncio, "sleep", AsyncMock())
+    monkeypatch.setattr(runtime, "initialize_rag_schema", AsyncMock(return_value=1))
+    monkeypatch.setattr(
+        runtime,
+        "bootstrap_embedding_model",
+        AsyncMock(return_value=("embedding-v1", "embedding-v1", "https://example.test/v1")),
+    )
+    r2_probe = AsyncMock(side_effect=[OSError("dependency refresh"), None])
+    monkeypatch.setattr(runtime, "probe_r2_access", r2_probe)
+    monkeypatch.setattr(runtime, "persist_embedding_contract", AsyncMock())
+    monkeypatch.setattr(runtime, "probe_search_contract", AsyncMock())
+
+    state = await runtime.initialize_runtime()
+
+    assert state.embedding_model == "embedding-v1"
+    assert r2_probe.await_count == 2
+
+
 def test_r2_prefix_cannot_overlap_the_knowledge_source_prefix(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

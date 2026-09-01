@@ -7,7 +7,7 @@ from pathlib import Path
 
 from open_notebook.artifact_storage import get_artifact_store
 from open_notebook.database.repository import repo_query, repo_query_statements
-from open_notebook.exceptions import ConfigurationError
+from open_notebook.exceptions import ConfigurationError, ExternalServiceError
 from open_notebook.rag.embedding import (
     embedding_configuration,
 )
@@ -143,7 +143,7 @@ async def probe_r2_access() -> None:
     try:
         await asyncio.to_thread(probe)
     except Exception as exc:
-        raise ConfigurationError(
+        raise ExternalServiceError(
             "R2 bucket/prefix read-write-delete readiness probe failed"
         ) from exc
 
@@ -214,25 +214,37 @@ async def persist_embedding_contract(
 
 
 async def initialize_runtime() -> RagRuntimeState:
-    schema_version = await initialize_rag_schema()
-    model_id, model, base_url = await bootstrap_embedding_model()
-    await probe_r2_access()
-    await persist_embedding_contract(
-        model_id=model_id,
-        model=model,
-        base_url=base_url,
-        dimensions=EMBEDDING_DIMENSIONS,
-    )
-    await probe_search_contract([0.0] * EMBEDDING_DIMENSIONS)
-    return RagRuntimeState(
-        schema_version=schema_version,
-        embedding_model_id=model_id,
-        embedding_model=model,
-        embedding_base_url=base_url,
-        embedding_dimensions=EMBEDDING_DIMENSIONS,
-        embedding_probe_succeeded=True,
-        r2_probe_succeeded=True,
-    )
+    delay = DATABASE_STARTUP_RETRY_INITIAL_DELAY_SECONDS
+    for attempt in range(1, DATABASE_STARTUP_RETRY_ATTEMPTS + 1):
+        try:
+            schema_version = await initialize_rag_schema()
+            model_id, model, base_url = await bootstrap_embedding_model()
+            await probe_r2_access()
+            await persist_embedding_contract(
+                model_id=model_id,
+                model=model,
+                base_url=base_url,
+                dimensions=EMBEDDING_DIMENSIONS,
+            )
+            await probe_search_contract([0.0] * EMBEDDING_DIMENSIONS)
+            return RagRuntimeState(
+                schema_version=schema_version,
+                embedding_model_id=model_id,
+                embedding_model=model,
+                embedding_base_url=base_url,
+                embedding_dimensions=EMBEDDING_DIMENSIONS,
+                embedding_probe_succeeded=True,
+                r2_probe_succeeded=True,
+            )
+        except ConfigurationError:
+            raise
+        except Exception:
+            if attempt == DATABASE_STARTUP_RETRY_ATTEMPTS:
+                raise
+            await asyncio.sleep(delay)
+            delay = min(delay * 2, DATABASE_STARTUP_RETRY_MAX_DELAY_SECONDS)
+
+    raise RuntimeError("RAG runtime initialization retry loop exhausted")
 
 
 async def readiness_details(state: RagRuntimeState) -> dict[str, object]:
