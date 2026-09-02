@@ -1,42 +1,44 @@
 import { type ToolCallMessagePart, type ToolCallMessagePartProps, useAuiState } from '@assistant-ui/react'
 import { WrenchIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { ApprovalCard } from '@/components/assistant-ui/elements/approval-card'
+import { DocumentReference } from '@/components/assistant-ui/elements/document-reference'
+import { readClaims } from '@/components/assistant-ui/markdown-text'
 import { ToolCall } from '@/components/tool-call'
-import { ToolTimeline } from '@/components/tool-timeline'
 import { ToolFallback } from '@/components/tool-fallback.aui'
-import { ApprovalCard } from '@/components/tool-ui/approval-card'
-import { safeParseSerializableApprovalCard } from '@/components/tool-ui/approval-card/schema'
+import { ToolTimeline } from '@/components/tool-timeline'
 import { LinkPreview } from '@/components/tool-ui/link-preview'
 import { safeParseSerializableLinkPreview } from '@/components/tool-ui/link-preview/schema'
 import { MessageDraft } from '@/components/tool-ui/message-draft'
 import { safeParseSerializableMessageDraft } from '@/components/tool-ui/message-draft/schema'
 import { OptionList } from '@/components/tool-ui/option-list'
-import { safeParseSerializableOptionList, type OptionListSelection } from '@/components/tool-ui/option-list/schema'
+import { type OptionListSelection, safeParseSerializableOptionList } from '@/components/tool-ui/option-list/schema'
 import { Plan } from '@/components/tool-ui/plan'
 import { safeParseSerializablePlan } from '@/components/tool-ui/plan/schema'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
 import { safeParseSerializableProgressTracker } from '@/components/tool-ui/progress-tracker/schema'
+import { StatsDisplay } from '@/components/tool-ui/stats-display'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
-  parsePresentationArtifact,
   PresentationArtifactCard,
+  parsePresentationArtifact,
 } from '@/features/presentations'
 import { useSurface } from '@/stores/surface'
 
-export function ApprovalCardTool({ args, result, addResult }: ToolCallMessagePartProps) {
-  const parsed = safeParseSerializableApprovalCard(args)
-  if (!parsed) return <ToolFallback {...({ args, result, toolName: 'approval-card' } as ToolCallMessagePartProps)} />
-  const receipt = typeof result === 'object' && result !== null
-    ? (result as { decision?: 'approved' | 'denied' }).decision
-    : undefined
+export function ApprovalCardTool({ args, approval, respondToApproval }: ToolCallMessagePartProps) {
+  const value = args as { id: string; title: string; description?: string }
+  const state = approval?.approved === false ? 'denied' : approval?.approved === true ? 'done' : 'request'
   return (
     <ApprovalCard
-      {...parsed}
-      choice={receipt ?? parsed.choice}
-      onConfirm={() => addResult({ decision: 'approved' })}
-      onCancel={() => addResult({ decision: 'denied' })}
+      data-tool-ui-id={value.id}
+      state={state}
+      title={value.title}
+      subtitle={value.description || '此操作需要你的确认'}
+      command={value.description || value.title}
+      onAllowOnce={state === 'request' ? () => respondToApproval({ approved: true }) : undefined}
+      onDeny={state === 'request' ? () => respondToApproval({ approved: false }) : undefined}
     />
   )
 }
@@ -136,7 +138,34 @@ export function HostToolTimeline() {
   />
 }
 
-export function CiteClaimsTool() { return null }
+export function CiteClaimsTool({ result, toolCallId }: ToolCallMessagePartProps) {
+  const claims = useMemo(() => readClaims(result), [result])
+  const [activePages, setActivePages] = useState<Record<string, number>>({})
+  const documents = useMemo(() => {
+    const grouped = new Map<string, typeof claims>()
+    for (const claim of claims) grouped.set(claim.sourceId, [...(grouped.get(claim.sourceId) ?? []), claim])
+    return [...grouped.entries()]
+  }, [claims])
+  const messageId = toolCallId.startsWith('cite-claims:') ? toolCallId.slice('cite-claims:'.length) : toolCallId
+
+  return <div data-slot="document-references" className="grid w-full max-w-2xl gap-2 sm:grid-cols-2">
+    {documents.map(([sourceId, sourceClaims]) => {
+      // ponytail: positions are ordered evidence anchors; use real page numbers when the source protocol exposes them.
+      const anchors = sourceClaims.map((claim) => ({ page: claim.position + 1, quote: claim.excerpt }))
+      const firstPage = anchors[0]?.page ?? 1
+      return <DocumentReference
+        key={sourceId}
+        id={`cite-ref-${messageId}-${sourceId}`}
+        title={sourceClaims[0]?.sourceTitle ?? '参考文献'}
+        pages={Math.max(firstPage, ...anchors.map((anchor) => anchor.page))}
+        anchors={anchors}
+        activePage={activePages[sourceId] ?? firstPage}
+        onJump={(page) => setActivePages((current) => ({ ...current, [sourceId]: page }))}
+        className="max-w-none"
+      />
+    })}
+  </div>
+}
 
 export function LinkPreviewTool({ args, result, toolName, ...props }: ToolCallMessagePartProps) {
   const parsed = safeParseSerializableLinkPreview(args)
@@ -221,21 +250,14 @@ export function QuestionFlowTool({ args, result, addResult }: ToolCallMessagePar
 }
 
 export function StatsDisplayTool({ args }: ToolCallMessagePartProps) {
-  const value = args as { id?: string; title?: string; statistics?: Record<string, unknown> }
-  const entries = Object.entries(value.statistics ?? {})
-  return (
-    <Card className="my-2 w-full max-w-xl rounded-2xl p-4" data-tool-ui-id={value.id}>
-      <div className="text-sm font-semibold text-foreground">{value.title ?? '数据概览'}</div>
-      <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {entries.map(([label, amount]) => (
-          <div key={label} className="rounded-xl bg-muted px-3 py-2">
-            <dt className="truncate text-[11px] text-muted-foreground">{label}</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums text-foreground">{String(amount)}</dd>
-          </div>
-        ))}
-      </dl>
-    </Card>
-  )
+  const value = args as { id: string; title?: string; statistics: Record<string, number> }
+  return <StatsDisplay
+    id={value.id}
+    title={value.title ?? '数据概览'}
+    stats={Object.entries(value.statistics).map(([key, amount]) => ({ key, label: key, value: amount }))}
+    locale="zh-CN"
+    className="max-w-none"
+  />
 }
 
 export function PresentationArtifactTool({ args, result }: ToolCallMessagePartProps) {

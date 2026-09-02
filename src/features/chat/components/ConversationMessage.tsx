@@ -1,28 +1,22 @@
 import {
   ActionBarPrimitive,
-  type FileMessagePartProps,
-  type ImageMessagePartProps,
   MessagePrimitive,
   type ReasoningMessagePartProps,
   type SourceMessagePartProps,
   useAui,
   useAuiState,
 } from '@assistant-ui/react'
-import { Alert02Icon, Copy01Icon, File01Icon, Loading03Icon, ReplyIcon, SmilePlusIcon } from '@hugeicons/core-free-icons'
+import { Copy01Icon, ReplyIcon, SmilePlusIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
+import {
+  type MessageAttachmentItem,
+  MessageAttachments,
+} from '@/components/assistant-ui/elements/message-attachment'
 import { MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
 import { TypingIndicator } from '@/components/typing-indicator'
-import {
-  Attachment,
-  AttachmentContent,
-  AttachmentDescription,
-  AttachmentMedia,
-  AttachmentTitle,
-  AttachmentTrigger,
-} from '@/components/ui/attachment'
 import { Button } from '@/components/ui/button'
 import { useParticipants } from '@/features/agents/state'
 import { cn } from '@/lib/utils'
@@ -42,70 +36,6 @@ function ReasoningPart({ status }: ReasoningMessagePartProps) {
 }
 
 function AgentMarkdownText() { return <MarkdownText segmented /> }
-
-function ImagePart({ image, filename }: ImageMessagePartProps) {
-  const [state, setState] = useState<'processing' | 'error' | 'done'>('processing')
-  return <Attachment
-    state={state}
-    orientation="vertical"
-    className="my-2 w-56 max-w-full overflow-hidden has-data-[slot=attachment-content]:w-56"
-    aria-busy={state === 'processing'}
-  >
-    <AttachmentMedia variant="image" className="aspect-auto w-full rounded-b-none p-0">
-      {state === 'processing' && <HugeiconsIcon icon={Loading03Icon} className="absolute animate-spin" strokeWidth={2} />}
-      <img
-        src={image}
-        alt={filename ?? ''}
-        className="max-h-[420px] min-h-24 w-full object-contain"
-        onLoad={() => setState('done')}
-        onError={() => setState('error')}
-      />
-    </AttachmentMedia>
-    <AttachmentContent>
-      <AttachmentTitle>{filename ?? '图片附件'}</AttachmentTitle>
-      <AttachmentDescription>{state === 'error' ? '图片加载失败' : state === 'processing' ? '正在加载图片…' : '图片'}</AttachmentDescription>
-    </AttachmentContent>
-    <AttachmentTrigger asChild>
-      <a href={image} target="_blank" rel="noreferrer" aria-label={`打开 ${filename ?? '图片附件'}`} />
-    </AttachmentTrigger>
-  </Attachment>
-}
-
-function FilePart({ data, filename, mimeType }: FileMessagePartProps) {
-  const media = mimeType.startsWith('audio/') || mimeType.startsWith('video/')
-  const [state, setState] = useState<'processing' | 'error' | 'done'>(media ? 'processing' : 'done')
-  if (mimeType.startsWith('video/')) return <Attachment
-    state={state}
-    orientation="vertical"
-    className="my-2 w-72 max-w-full overflow-hidden has-data-[slot=attachment-content]:w-72"
-    aria-busy={state === 'processing'}
-  >
-    <AttachmentMedia variant="image" className="aspect-video w-full rounded-b-none p-0">
-      {state === 'processing' && <HugeiconsIcon icon={Loading03Icon} className="absolute animate-spin" strokeWidth={2} />}
-      <video src={data} controls preload="metadata" className="size-full object-contain" onLoadedMetadata={() => setState('done')} onError={() => setState('error')} />
-    </AttachmentMedia>
-    <AttachmentContent>
-      <AttachmentTitle>{filename ?? '视频附件'}</AttachmentTitle>
-      <AttachmentDescription>{state === 'error' ? '视频加载失败' : state === 'processing' ? '正在加载视频…' : mimeType}</AttachmentDescription>
-    </AttachmentContent>
-  </Attachment>
-  return <Attachment state={state} className="my-2 w-full max-w-md" aria-busy={state === 'processing'}>
-    <AttachmentMedia>
-      {state === 'processing'
-        ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" strokeWidth={2} />
-        : state === 'error'
-          ? <HugeiconsIcon icon={Alert02Icon} strokeWidth={2} />
-          : <HugeiconsIcon icon={File01Icon} strokeWidth={2} />}
-    </AttachmentMedia>
-    <AttachmentContent>
-      <AttachmentTitle>{filename ?? '附件'}</AttachmentTitle>
-      <AttachmentDescription>{state === 'error' ? '附件加载失败' : state === 'processing' ? '正在加载附件…' : mimeType}</AttachmentDescription>
-    </AttachmentContent>
-    {mimeType.startsWith('audio/')
-      ? <audio src={data} controls preload="metadata" className="w-full basis-full px-2 pb-2" onLoadedMetadata={() => setState('done')} onError={() => setState('error')} />
-      : <AttachmentTrigger asChild><a href={data} target="_blank" rel="noreferrer" aria-label={`打开 ${filename ?? '附件'}`} /></AttachmentTrigger>}
-  </Attachment>
-}
 
 function SourcePart({ url, title }: SourceMessagePartProps) {
   return url
@@ -142,7 +72,8 @@ function MessageActions({
   const [showReactions, setShowReactions] = useState(false)
   return (
     <ActionBarPrimitive.Root className={cn(
-      'absolute -top-3 end-0 z-30 flex items-center gap-0.5 rounded-lg border border-border bg-popover p-0.5 text-popover-foreground opacity-0 invisible shadow-md transition-opacity group-hover/message:visible group-hover/message:opacity-100',
+      'absolute top-1/2 z-30 flex -translate-y-1/2 items-center gap-0.5 bg-transparent text-foreground opacity-0 invisible transition-opacity group-hover/message:visible group-hover/message:opacity-100',
+      metadata.isMine ? 'end-full me-2' : 'start-full ms-2',
     )} role="toolbar" aria-label="消息操作" onMouseLeave={() => setShowReactions(false)}>
       <Button
         type="button"
@@ -238,6 +169,31 @@ export function ConversationMessage() {
     .join('\n'))
   const createdAt = useAuiState((state) => state.message.createdAt)
   const messageId = useAuiState((state) => state.message.id)
+  const content = useAuiState((state) => state.message.content)
+  const attachments = useMemo<Array<MessageAttachmentItem & { href: string }>>(() => {
+    const items: Array<MessageAttachmentItem & { href: string }> = []
+    content.forEach((part, index) => {
+      if (part.type === 'image') {
+        items.push({
+          id: `${messageId}-${index}`,
+          name: part.filename ?? '图片附件',
+          size: '图片',
+          kind: 'image',
+          swatch: `url(${JSON.stringify(part.image)})`,
+          href: part.image,
+        })
+      } else if (part.type === 'file') {
+        items.push({
+          id: `${messageId}-${index}`,
+          name: part.filename ?? '附件',
+          size: part.mimeType,
+          kind: /pdf|text|document/.test(part.mimeType) ? 'document' : 'file',
+          href: part.data,
+        })
+      }
+    })
+    return items
+  }, [content, messageId])
   const awaitingContent = useAuiState((state) => (
     state.message.status?.type === 'running' && state.message.content.every((part) => (
       part.type === 'tool-call' && part.toolName === 'cite_claims'
@@ -260,6 +216,7 @@ export function ConversationMessage() {
         : groupPosition === 'end'
           ? 'rounded-[6px_18px_18px_18px]'
           : 'rounded-[6px_18px_18px_6px]'
+  const standalone = custom.messageKind !== 'text'
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
@@ -287,33 +244,35 @@ export function ConversationMessage() {
             <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>
           </div>
         )}
-        <div className={cn('relative w-fit max-w-[75%]', custom.messageKind !== 'text' && 'max-w-full')}>
+        <div className={cn('relative', standalone ? 'w-full max-w-xl' : 'w-fit max-w-[75%]')}>
           {!disableHoverActions && <MessageActions metadata={custom} text={text} />}
           <div
-            data-message-bubble={custom.isMine ? 'user' : 'assistant'}
+            data-message-bubble={standalone ? undefined : custom.isMine ? 'user' : 'assistant'}
             data-message-group-position={groupPosition}
             className={cn(
               'relative min-w-0 text-[15px] leading-[1.35] tracking-[-0.01em]',
-              custom.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-white [&_.typeset]:!text-white [&_.typeset_*]:!text-white'],
-              !custom.isMine && custom.messageKind === 'text' && 'text-foreground',
-              !custom.isMine && custom.messageKind !== 'text' && ['px-3.5 py-2', bubbleRadius, 'bg-[var(--bubble-agent)] text-foreground'],
-              custom.messageKind !== 'text' && [
-                'w-full overflow-hidden p-0',
-                '[&_[data-tool-ui-id]]:m-0 [&_[data-tool-ui-id]]:min-w-0 [&_[data-tool-ui-id]]:max-w-none',
-                '[&_[data-tool-ui-id]]:rounded-none [&_[data-tool-ui-id]]:border-0 [&_[data-tool-ui-id]]:shadow-none',
-                '[&_[data-tool-ui-id]>div]:rounded-none [&_[data-tool-ui-id]>div]:border-0 [&_[data-tool-ui-id]>div]:shadow-none',
-              ],
-              custom.delivery === 'failed' && 'ring-1 ring-destructive/50',
+              custom.isMine && !standalone && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-white [&_.typeset]:!text-white [&_.typeset_*]:!text-white'],
+              !custom.isMine && !standalone && 'text-foreground',
+              standalone && 'grid w-full gap-2',
+              custom.delivery === 'failed' && !standalone && 'ring-1 ring-destructive/50',
             )}
           >
             {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
+            {attachments.length > 0 && <MessageAttachments
+              attachments={attachments}
+              className="max-w-none"
+              onOpen={(id) => {
+                const attachment = attachments.find((item) => item.id === id)
+                if (attachment) window.open(attachment.href, '_blank', 'noopener,noreferrer')
+              }}
+            />}
             <HostToolTimeline />
             <MessagePrimitive.Parts
               components={{
                 Text: custom.isMine ? MarkdownText : AgentMarkdownText,
                 Reasoning: ReasoningPart,
-                Image: ImagePart,
-                File: FilePart,
+                Image: () => null,
+                File: () => null,
                 Source: SourcePart,
                 Quote: QuotePart,
                 tools: CHAT_TOOL_RENDERERS,

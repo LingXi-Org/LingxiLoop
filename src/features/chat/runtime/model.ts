@@ -1,5 +1,4 @@
 import type { ThreadMessage } from '@assistant-ui/react'
-import type { KnowledgeCitation } from '@/features/knowledge/contracts'
 
 export type LingxiDeliveryStatus = 'sending' | 'sent' | 'failed'
 
@@ -40,7 +39,6 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   groupEnd: boolean
   continuedFromPrevious: boolean
   continuedToNext: boolean
-  citations?: KnowledgeCitation[]
 }
 
 export interface ConversationThreadSnapshot {

@@ -138,22 +138,13 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
   </section>
 }
 
-/** Mounted at the application shell so citations and sources always open in
- * the shared page-level Drawer instead of creating another sidebar. */
+/** Mounted at the application shell for source-library details. */
 export function SourceDetailOverlay() {
   const selectedSource = useKnowledgeSources((state) => state.selectedSource)
-  const selectedCitation = useKnowledgeSources((state) => state.selectedCitation)
   const detailLoading = useKnowledgeSources((state) => state.detailLoading)
   const close = useKnowledgeSources((state) => state.close)
   const remove = useKnowledgeSources((state) => state.remove)
-  const citationMark = useRef<HTMLElement>(null)
   const sourceText = selectedSource?.extractedText ?? ''
-  const citationStart = selectedCitation && sourceText ? sourceText.indexOf(selectedCitation.excerpt) : -1
-  useEffect(() => {
-    if (citationStart < 0) return
-    const frame = window.requestAnimationFrame(() => citationMark.current?.scrollIntoView({ block: 'center' }))
-    return () => window.cancelAnimationFrame(frame)
-  }, [citationStart, selectedCitation?.marker, selectedSource?.id])
   const removeSelectedSource = async () => {
     if (!selectedSource) return
     if (!await confirmSensitiveAction({
@@ -166,28 +157,25 @@ export function SourceDetailOverlay() {
       await toastAction(remove(selectedSource.id), { loading: '正在删除知识来源', success: '知识来源已删除', error: '删除知识来源失败' })
     } catch { /* toast owns the visible error state */ }
   }
-  const open = Boolean(selectedSource || selectedCitation)
+  const open = Boolean(selectedSource)
   return <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) close() }} direction="right">
     <DrawerContent className="w-[min(92vw,48rem)] sm:[--drawer-content-width:min(92vw,48rem)]">
       <DrawerHeader className="border-b border-hairline p-6">
         <div className="flex items-start justify-between gap-4"><div>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-accent">{selectedSource ? statusLabel[selectedSource.status] ?? '状态待同步' : '历史引用'}</div>
-          <DrawerTitle className="mt-1 text-xl">{selectedSource?.title ?? selectedCitation?.sourceTitle ?? '资料'}</DrawerTitle>
-          <DrawerDescription>资料详情与引用依据</DrawerDescription>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-accent">{selectedSource ? statusLabel[selectedSource.status] ?? '状态待同步' : '资料'}</div>
+          <DrawerTitle className="mt-1 text-xl">{selectedSource?.title ?? '资料'}</DrawerTitle>
+          <DrawerDescription>资料详情</DrawerDescription>
         </div><DrawerClose asChild><Button type="button" className="size-9 rounded-xl hover:bg-raised" aria-label="关闭资料">×</Button></DrawerClose></div>
       </DrawerHeader>
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {selectedSource && <><div className="mt-5 flex flex-wrap gap-2 text-[10px] text-ink-secondary"><span className="rounded-full bg-raised px-2.5 py-1">{sourceKindLabel[selectedSource.kind]}</span><span className="rounded-full bg-raised px-2.5 py-1">{Math.max(1, Math.round(selectedSource.sizeBytes / 1024))} KB</span>{selectedSource.isTruncated && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">已截断</span>}</div>{selectedSource.originalUrl && <a href={selectedSource.originalUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始网页</a>}{selectedSource.originalFileUrl && <a href={selectedSource.originalFileUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始文件</a>}</>}
-        {selectedCitation && <section className="mt-5 rounded-2xl border bg-muted/40 p-4"><div className="text-[10px] font-semibold text-muted-foreground">引用片段 {selectedCitation.position + 1}</div><p className="mt-2 whitespace-pre-wrap text-xs leading-6 text-foreground">{selectedCitation.excerpt}</p></section>}
         {detailLoading && !selectedSource
-          ? <ResourceSkeleton variant="detail" label="正在加载引用资料" />
+          ? <ResourceSkeleton variant="detail" label="正在加载资料" />
           : selectedSource
             ? <><pre className="mt-5 whitespace-pre-wrap rounded-2xl bg-muted/40 p-4 font-sans text-xs leading-6 text-foreground">{sourceText
-              ? citationStart >= 0 && selectedCitation
-                ? <>{sourceText.slice(0, citationStart)}<mark ref={citationMark} className="scroll-m-6 rounded-sm bg-emerald-500/20 px-0.5 text-foreground ring-1 ring-emerald-500/30">{sourceText.slice(citationStart, citationStart + selectedCitation.excerpt.length)}</mark>{sourceText.slice(citationStart + selectedCitation.excerpt.length)}</>
-                : sourceText
+              ? sourceText
               : selectedSource.error ? userFacingError(selectedSource.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可查看抽取文本。'}</pre><Button onClick={() => void removeSelectedSource()} className="mt-5 text-xs font-semibold text-red-600">删除来源</Button></>
-            : <p className="mt-5 text-xs leading-6 text-ink-secondary">原来源已不可用；以上引用摘要随历史消息保留。</p>}
+            : null}
       </div>
     </DrawerContent>
   </Drawer>

@@ -13,7 +13,6 @@ test('attachment upload and loading surfaces share the preset shadcn primitives'
 
   for (const path of [
     '../features/chat/components/ConversationComposer.tsx',
-    '../features/chat/components/ConversationMessage.tsx',
     '../features/email/components/EmailComposer.tsx',
     '../components/WorkspaceChrome.tsx',
   ]) {
@@ -24,6 +23,9 @@ test('attachment upload and loading surfaces share the preset shadcn primitives'
 
   const composer = read('../features/chat/components/ConversationComposer.tsx')
   assert.doesNotMatch(composer, /border-\[#e5e5e5\]|bg-white|dark:bg-\[#2a2a2a\]/)
+  const message = read('../features/chat/components/ConversationMessage.tsx')
+  assert.match(message, /<MessageAttachments/)
+  assert.doesNotMatch(message, /@\/components\/ui\/attachment/)
   assert.match(read('../components/AttachmentViewer.tsx'), /<Empty[\s\S]*无法显示预览/)
   const drive = read('../features/knowledge/components/PersonalSourceDrive.tsx')
   const library = read('../features/knowledge/components/ProjectSourceLibrary.tsx')

@@ -5,6 +5,7 @@ import type {
   ThreadUserMessagePart,
   ToolCallMessagePart,
 } from '@assistant-ui/react'
+import type { KnowledgeCitation } from '@/features/knowledge/contracts'
 import type { ImEnvelope, LingxiMessageV1 } from '@/lib/im/wukong'
 import type { Participant } from '@/types'
 import type {
@@ -116,7 +117,7 @@ function toolCall(
   }
 }
 
-function knowledgeCitations(data: JsonObject): NonNullable<LingxiMessageMetadata['citations']> {
+function knowledgeCitations(data: JsonObject): KnowledgeCitation[] {
   if (data.citations === undefined) return []
   if (!Array.isArray(data.citations)) throw new Error('Knowledge citations must be an array')
   const seen = new Set<string>()
@@ -145,7 +146,7 @@ function knowledgeCitations(data: JsonObject): NonNullable<LingxiMessageMetadata
 function confidenceClaims(
   data: JsonObject,
   body: string,
-  citations: NonNullable<LingxiMessageMetadata['citations']>,
+  citations: KnowledgeCitation[],
 ) {
   if (/\[S\d+\]|【S\d+】/.test(body)) throw new Error('Agent text contains a retired bare citation marker')
   const citedIds = new Set<string>()
@@ -227,18 +228,13 @@ function approvalPart(id: string, data: JsonObject): ThreadAssistantMessagePart 
     id: `approval-${approvalId}`,
     title: string(approval.summary, '需要批准'),
     description: string(approval.kind),
-    variant: /destructive|financial|irreversible/i.test(string(approval.kind)) ? 'destructive' : 'default',
-    confirmLabel: '批准',
-    cancelLabel: '拒绝',
   }
-  const resolved = status === 'PENDING'
-    ? undefined
-    : { decision: status === 'APPROVED' || status === 'EXECUTED' ? 'approved' : 'denied', status }
+  const approved = status === 'PENDING' ? undefined : status === 'APPROVED' || status === 'EXECUTED'
   return {
-    ...toolCall(`approval:${approvalId}`, 'approval-card', args, resolved),
+    ...toolCall(`approval:${approvalId}`, 'approval-card', args),
     approval: {
       id: approvalId,
-      ...(resolved ? { approved: resolved.decision === 'approved' } : {}),
+      ...(approved === undefined ? {} : { approved }),
     },
   }
 }
@@ -471,7 +467,6 @@ function buildMetadata(envelope: ImEnvelope, context: MessageConversionContext):
     groupEnd: true,
     continuedFromPrevious: false,
     continuedToNext: false,
-    citations: knowledgeCitations(data),
   }
 }
 

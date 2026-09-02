@@ -7,11 +7,11 @@ import {
   type ThreadMessage,
   useExternalStoreRuntime,
 } from '@assistant-ui/react'
-import { useCallback, useEffect, useMemo, type ReactNode } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo } from 'react'
 import { uploadsApi } from '@/features/platform/api'
-import { chatTransport, filterThreadMessages } from './transport'
-import { EMPTY_CONVERSATION_CHAT_STATE, useChatThreadStore } from './store'
 import type { ConversationThreadSnapshot } from './model'
+import { EMPTY_CONVERSATION_CHAT_STATE, useChatThreadStore } from './store'
+import { chatTransport, filterThreadMessages } from './transport'
 
 type UploadedAttachment = PendingAttachment & {
   apiAttachment: Awaited<ReturnType<typeof uploadsApi.uploadFile>>
@@ -121,14 +121,6 @@ export function useConversationThreadRuntime(
     onRefetchThread: () => chatTransport.reloadConversation(conversationId),
     onDelete: (messageId) => chatTransport.discard(conversationId, messageId),
     onAddToolResult: async ({ toolCallId, toolName, result }) => {
-      if (toolName === 'approval-card' && toolCallId.startsWith('approval:')) {
-        const decision = typeof result === 'object' && result !== null
-          ? (result as { decision?: unknown }).decision
-          : undefined
-        if (decision === 'approved' || decision === 'denied') {
-          await chatTransport.resolveApproval(toolCallId.slice('approval:'.length), decision)
-        }
-      }
       if (toolName === 'option-list' && toolCallId.startsWith('poll:')) {
         const values = typeof result === 'string'
           ? [result]

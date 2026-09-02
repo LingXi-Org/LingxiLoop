@@ -164,16 +164,22 @@ test('unknown WuKong kinds fail closed at the transport conversion boundary', ()
   )
 })
 
-test('self-authored structured messages keep canonical knowledge citations in metadata', () => {
+test('structured approvals use the assistant-ui approval gate as their only decision path', () => {
   const message = convertEnvelope(envelope('approval', {
     approval: { id: 'a-self', summary: 'Review', status: 'PENDING' },
     citations: [{ sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1' }],
   }, { fromUid: 'me' }), { participants, meId: 'me' })
   assert.equal(message.role, 'assistant')
   assert.deepEqual(message.content.map((part) => part.type), ['tool-call'])
-  assert.deepEqual(getLingxiMessageMetadata(message).citations, [{
-    sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1',
-  }])
+  assert.equal('citations' in getLingxiMessageMetadata(message), false)
+  assert.deepEqual(message.content[0], {
+    type: 'tool-call',
+    toolCallId: 'approval:a-self',
+    toolName: 'approval-card',
+    args: { id: 'approval-a-self', title: 'Review', description: '' },
+    argsText: '{"id":"approval-a-self","title":"Review","description":""}',
+    approval: { id: 'a-self' },
+  })
 })
 
 test('agent text restores knowledge citations as the native cite_claims tool result', () => {

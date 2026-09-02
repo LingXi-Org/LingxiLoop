@@ -5,13 +5,12 @@ import { type StreamdownTextComponents, StreamdownTextPrimitive } from '@assista
 import { memo, type ReactNode, useMemo, useState } from 'react'
 import { type ConfidenceClaim, ConfidenceMarker } from '@/components/confidence-marker'
 import type { KnowledgeCitation } from '@/features/knowledge/contracts'
-import { useKnowledgeSources } from '@/features/knowledge/state'
 
 const CITATION_LINK = /^#cite-(S\d+(?:,S\d+)*)$/
 
-interface EvidenceClaim extends ConfidenceClaim, KnowledgeCitation {}
+export interface EvidenceClaim extends ConfidenceClaim, KnowledgeCitation {}
 
-function readClaims(value: unknown): EvidenceClaim[] {
+export function readClaims(value: unknown): EvidenceClaim[] {
   if (value === undefined) return []
   if (!value || typeof value !== 'object' || !Array.isArray((value as { claims?: unknown }).claims)) {
     throw new Error('cite_claims result must contain a claims array')
@@ -75,7 +74,7 @@ function CitationLink(rawProps: object) {
   const children = props.children as ReactNode
   const claims = useConfidenceClaims()
   const isAssistant = useAuiState((state) => state.message.role === 'assistant')
-  const openCitation = useKnowledgeSources((state) => state.openCitation)
+  const messageId = useAuiState((state) => state.message.id)
   const [hoveredId, setHoveredId] = useState('')
   if (!isAssistant || !href?.startsWith('#cite-')) return <a href={href} title={title}>{children}</a>
   const match = CITATION_LINK.exec(href)
@@ -98,7 +97,7 @@ function CitationLink(rawProps: object) {
     claims={[claim]}
     hoveredId={hoveredId}
     onHover={setHoveredId}
-    onActivate={() => void openCitation(evidence[0]!)}
+    onActivate={() => document.getElementById(`cite-ref-${messageId}-${evidence[0]!.sourceId}`)?.scrollIntoView({ block: 'nearest' })}
   >{children}</ConfidenceMarker>
 }
 
