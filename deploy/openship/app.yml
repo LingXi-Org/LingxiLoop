@@ -7,7 +7,7 @@ x-logging: &logging
     max-file: "3"
 
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:53572c0e6d48c1c757559dbd2e6adcd2ae1c4a69
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:3289901585a3356d8e1ccf5b7391275d66058578
   pull_policy: always
   restart: unless-stopped
   environment: &runtime-environment
@@ -96,7 +96,7 @@ services:
     mem_limit: 512m
 
   gateway:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-gateway:53572c0e6d48c1c757559dbd2e6adcd2ae1c4a69
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-gateway:3289901585a3356d8e1ccf5b7391275d66058578
     pull_policy: always
     profiles: [gateway]
     restart: unless-stopped
