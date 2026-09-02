@@ -11,8 +11,9 @@ test('learning dashboard is composed from bounded role-aware sections', () => {
   const shell = readDashboard('LearningDashboardPanel.tsx')
   const teacherDashboard = readDashboard('TeacherOverviewDashboard.tsx')
   const sections = [
+    'DashboardSectionFrame.tsx',
+    'LearnerOverviewDashboard.tsx',
     'OverviewSection.tsx',
-    'MissionSection.tsx',
     'TeacherLearnersSection.tsx',
     'TeacherLearningDetailDialog.tsx',
     'TeacherOverviewDashboard.tsx',
@@ -26,9 +27,14 @@ test('learning dashboard is composed from bounded role-aware sections', () => {
     const source = readDashboard(section)
     assert.ok(source.split('\n').length < 500, `${section} must keep one bounded section owner`)
   }
-  for (const section of ['OverviewSection', 'MissionSection', 'TeacherOverviewDashboard', 'CourseSettingsSection']) {
-    assert.match(shell, new RegExp(section))
+  const learnerOverview = readDashboard('LearnerOverviewDashboard.tsx')
+  for (const section of ['LearnerDashboardSummary.tsx', 'MissionSection.tsx']) {
+    const source = readDashboard(section)
+    assert.match(learnerOverview, new RegExp(section.replace('.tsx', '')))
+    assert.ok(source.split('\n').length < 500, `${section} must keep one bounded section owner`)
   }
+  assert.match(shell, /LearnerOverviewDashboard/)
+  assert.match(shell, /TeacherOverviewDashboard/)
   assert.match(teacherDashboard, /TeacherLearnersSection/)
   assert.match(teacherDashboard, /TeacherLearningDetailDialog/)
   assert.match(shell, /space\.perspective/)
@@ -38,6 +44,9 @@ test('learning dashboard is composed from bounded role-aware sections', () => {
 test('learning dashboard composes the required official data primitives', () => {
   const dashboardSource = [
     'LearningDashboardPanel.tsx',
+    'DashboardSectionFrame.tsx',
+    'LearnerOverviewDashboard.tsx',
+    'LearnerDashboardSummary.tsx',
     'OverviewSection.tsx',
     'MissionSection.tsx',
     'TeacherLearnersSection.tsx',

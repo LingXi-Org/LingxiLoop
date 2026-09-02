@@ -5,6 +5,7 @@ import type { LearningEvidence } from '../contracts'
 import { ASSISTANCE_LABELS, MasteryBadge, statusLabel } from './learningDisplay'
 
 type EvidenceRecord = Record<string, unknown>
+type EvidenceContext = { sourceLabel: string; objectiveTitles: string[] }
 
 function evidenceText(value: unknown): string {
   if (typeof value === 'string' && value.trim()) return value.trim().slice(0, 600)
@@ -33,7 +34,26 @@ function rubricRows(value: unknown): Array<{ label: string; result: string }> {
   })
 }
 
-export function LearningEvidenceSection({ evidence }: { evidence: LearningEvidence[] }) {
+function EvidenceSource({ context }: { context?: EvidenceContext }) {
+  if (!context) return null
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+      <span>来源：{context.sourceLabel}</span>
+      {context.objectiveTitles.length > 0 && <span aria-hidden="true">·</span>}
+      {context.objectiveTitles.length > 0 && <span>关联目标：</span>}
+      {context.objectiveTitles.map((title, index) => (
+        <Badge key={`${title}-${index}`} variant="outline">{title}</Badge>
+      ))}
+    </div>
+  )
+}
+
+export function LearningEvidenceSection({
+  evidence, contextByEvidenceId,
+}: {
+  evidence: LearningEvidence[]
+  contextByEvidenceId?: ReadonlyMap<string, EvidenceContext>
+}) {
   if (evidence.length === 0) {
     return <Empty className="min-h-72 border"><EmptyHeader><EmptyTitle>还没有学习证据</EmptyTitle><EmptyDescription>提交课程活动或完成学习任务后，证据与评价会显示在这里。</EmptyDescription></EmptyHeader></Empty>
   }
@@ -53,6 +73,7 @@ export function LearningEvidenceSection({ evidence }: { evidence: LearningEviden
                 ? <MasteryBadge level={item.demonstrated_level} />
                 : <span className="text-xs text-muted-foreground">等待评价</span>}
             </div>
+            <EvidenceSource context={contextByEvidenceId?.get(item.id)} />
             <div className="mt-4 grid gap-3 @min-[44rem]/learning-grid:grid-cols-2">
               <section className="rounded-2xl bg-muted p-3">
                 <p className="text-xs font-medium text-muted-foreground">学习证据</p>

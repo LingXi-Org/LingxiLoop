@@ -1,22 +1,14 @@
 import {
-  Activity01Icon,
   Calendar03Icon,
   DashboardSquare01Icon,
-  File01Icon,
   Folder01Icon,
-  GoalIcon,
   Settings02Icon,
-  Task01Icon,
 } from '@hugeicons/core-free-icons'
 import type { LearningRole } from '../contracts'
 
 export type LearningDashboardSection =
   | 'overview'
-  | 'plan'
-  | 'objectives'
-  | 'missions'
   | 'activities'
-  | 'evidence'
   | 'learners'
   | 'content'
   | 'reviews'
@@ -33,19 +25,12 @@ export interface LearningDashboardMenuItem {
 
 const PERSONAL_MENU: LearningDashboardMenuItem[] = [
   { section: 'overview', label: '概览', icon: DashboardSquare01Icon },
-  { section: 'plan', label: '学习计划', icon: Task01Icon },
-  { section: 'objectives', label: '学习目标', icon: GoalIcon },
-  { section: 'evidence', label: '学习证据', icon: File01Icon },
   { section: 'calendar', label: '日历', icon: Calendar03Icon },
   { section: 'resources', label: '资料', icon: Folder01Icon },
 ]
 
 const LEARNER_MENU: LearningDashboardMenuItem[] = [
   { section: 'overview', label: '概览', icon: DashboardSquare01Icon },
-  { section: 'missions', label: '学习任务', icon: Task01Icon },
-  { section: 'objectives', label: '学习目标', icon: GoalIcon },
-  { section: 'activities', label: '课程活动', icon: Activity01Icon },
-  { section: 'evidence', label: '学习证据', icon: File01Icon },
   { section: 'calendar', label: '日历', icon: Calendar03Icon },
   { section: 'resources', label: '资料', icon: Folder01Icon },
 ]

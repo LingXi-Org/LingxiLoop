@@ -4,10 +4,16 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Progress, ProgressLabel } from '@/components/ui/progress'
-import type { LearningMission } from '../contracts'
 import { MISSION_KIND_LABELS, STEP_TYPE_LABELS, statusLabel } from '../components/learningDisplay'
+import type { LearningMission } from '../contracts'
 
-export function MissionSection({ missions, personal }: { missions: LearningMission[]; personal: boolean }) {
+export function MissionSection({
+  missions, personal, showStepEvidence = false,
+}: {
+  missions: LearningMission[]
+  personal: boolean
+  showStepEvidence?: boolean
+}) {
   if (missions.length === 0) {
     return (
       <Empty className="min-h-72 border">
@@ -60,6 +66,12 @@ export function MissionSection({ missions, personal }: { missions: LearningMissi
                       <p className="mt-1 text-xs text-muted-foreground">
                         {STEP_TYPE_LABELS[step.kind] ?? '学习步骤'} · {step.successCriteria}
                       </p>
+                      {showStepEvidence && step.outcome && (
+                        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6">产出：{step.outcome}</p>
+                      )}
+                      {showStepEvidence && step.completionAttemptId && (
+                        <p className="mt-2 text-xs font-medium text-muted-foreground">完成证据已记录</p>
+                      )}
                     </div>
                   </div>
                 ))}

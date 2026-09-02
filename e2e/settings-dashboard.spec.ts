@@ -3,8 +3,8 @@ import { expect, test, type Page } from '@playwright/test'
 type Scenario = 'personal' | 'learner' | 'teacher'
 
 const menus: Record<Scenario, string[]> = {
-  personal: ['概览', '学习计划', '学习目标', '学习证据', '日历', '资料'],
-  learner: ['概览', '学习任务', '学习目标', '课程活动', '学习证据', '日历', '资料'],
+  personal: ['概览', '日历', '资料'],
+  learner: ['概览', '日历', '资料'],
   teacher: ['总览', '日历', '资料', '课程设置'],
 }
 
@@ -81,12 +81,13 @@ async function mockTeacherApi(page: Page) {
   return requests
 }
 
-async function openFixture(page: Page, options: { scenario?: Scenario; theme?: 'light' | 'dark'; dashboard?: 'open' | 'closed' } = {}) {
+async function openFixture(page: Page, options: { scenario?: Scenario; theme?: 'light' | 'dark'; dashboard?: 'open' | 'closed'; readOnly?: boolean } = {}) {
   const requests = options.scenario === 'teacher' ? await mockTeacherApi(page) : []
   const query = new URLSearchParams({
     scenario: options.scenario ?? 'personal',
     theme: options.theme ?? 'dark',
     dashboard: options.dashboard ?? 'open',
+    readonly: String(options.readOnly ?? false),
   })
   await page.goto(`/e2e/settings-dashboard.html?${query}`, { waitUntil: 'domcontentloaded', timeout: 90_000 })
   await expect(page.getByTestId('desktop-shell')).toBeVisible()
@@ -177,6 +178,12 @@ for (const scenario of ['personal', 'learner', 'teacher'] as const) {
     await expect(accessibleCharts.first()).toBeVisible()
     expect(await accessibleCharts.count()).toBe(await charts.count())
     await expect(overview).not.toContainText(/风险预测|学习时长|连续学习|排名/)
+    if (scenario !== 'teacher') {
+      await expect(overview.getByText(scenario === 'personal' ? '学习计划' : '学习任务', { exact: true })).toBeVisible()
+      for (const title of ['目标掌握', '课程活动', '学习证据']) {
+        await expect(overview.getByText(title, { exact: true })).toBeVisible()
+      }
+    }
   })
 }
 
@@ -236,6 +243,44 @@ test('老师课程设置在窄屏使用四栏标准设置并保持页面无横�
   await expect(page.getByRole('button', { name: '结束课程' })).toBeVisible()
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(1)
+})
+
+test('学生四类详情均使用可滚动 Dialog，Escape 后焦点归还入口', async ({ page }) => {
+  await openFixture(page, { scenario: 'learner' })
+  for (const title of ['学习任务', '目标掌握', '课程活动', '学习证据']) {
+    const trigger = page.getByRole('button', { name: `查看全部${title}` })
+    await trigger.click()
+    const dialog = page.getByRole('dialog', { name: title })
+    await expect(dialog).toBeVisible()
+    await expect(dialog).toHaveCSS('overflow', 'hidden')
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+    await expect(trigger).toBeFocused()
+  }
+})
+
+test('学生详情保留来源、rubric、已结束活动，且只读学习者不能提交', async ({ page }) => {
+  await openFixture(page, { scenario: 'learner', readOnly: true })
+  await page.getByRole('button', { name: '查看全部课程活动' }).click()
+  const activityDialog = page.getByRole('dialog', { name: '课程活动' })
+  await expect(activityDialog.getByText('第一轮假设复盘')).toBeVisible()
+  await expect(activityDialog.getByText('评价标准', { exact: true }).first()).toBeVisible()
+  await expect(activityDialog.getByRole('button', { name: '提交为学习证据' })).toHaveCount(0)
+  await page.keyboard.press('Escape')
+
+  await page.getByRole('button', { name: '查看全部学习证据' }).click()
+  const evidenceDialog = page.getByRole('dialog', { name: '学习证据' })
+  await expect(evidenceDialog.getByText(/来源：提交可用性测试记录/)).toBeVisible()
+  await expect(evidenceDialog.getByText(/关联目标：/).first()).toBeVisible()
+  await expect(evidenceDialog.getByText(/置信度 88%/)).toBeVisible()
+})
+
+test('480×360 学生概览按容器重排且没有横向溢出', async ({ page }) => {
+  await page.setViewportSize({ width: 480, height: 360 })
+  await openFixture(page, { scenario: 'learner' })
+  const overview = page.getByTestId('dashboard-overview')
+  const overflow = await overview.evaluate((element) => element.scrollWidth - element.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
 })
 
