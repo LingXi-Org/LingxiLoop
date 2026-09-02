@@ -14,7 +14,7 @@ import {
 import { userFacingError } from '@/lib/userFacingError'
 import { getMeId } from '@/stores/auth'
 import { convertEnvelope, convertEnvelopeBatch, projectMessageGroups } from './converter'
-import type { LingxiMessageMetadata } from './model'
+import { type LingxiMessageMetadata, resolveMessagePresentation } from './model'
 import { forgetChatOutbox, readChatOutbox, rememberChatOutbox } from './outbox'
 import {
   CHAT_HISTORY_PAGE_SIZE,
@@ -117,6 +117,7 @@ function optimisticMessage(
     isMine: true,
     delivery: 'sending',
     messageKind: attachment ? 'attachment' : 'text',
+    presentation: resolveMessagePresentation(content),
     runId: null,
     quotedMessageId,
     quote: original ? {
@@ -137,6 +138,7 @@ function optimisticMessage(
     groupEnd: true,
     continuedFromPrevious: false,
     continuedToNext: false,
+    clusterChromeAt: null,
   }
   return {
     id: clientMessageId,
@@ -472,6 +474,7 @@ export class ChatTransport {
         ? { type: 'incomplete', reason: failed.code === 'run.cancelled' ? 'cancelled' : 'error' }
         : finished ? { type: 'complete', reason: 'stop' }
           : { type: 'running' }
+      const content = applyAssistantStreamChunks(current?.role === 'assistant' ? current.content : [], event.chunks)
       const metadata: LingxiMessageMetadata = current
         ? { ...messageMetadata(current), runId }
         : {
@@ -486,6 +489,7 @@ export class ChatTransport {
             isMine: false,
             delivery: 'sent',
             messageKind: 'text',
+            presentation: 'conversation',
             runId,
             quotedMessageId: null,
             quote: null,
@@ -496,12 +500,14 @@ export class ChatTransport {
             groupEnd: true,
             continuedFromPrevious: false,
             continuedToNext: false,
+            clusterChromeAt: null,
           }
+      metadata.presentation = resolveMessagePresentation(content)
       const streamMessage: ThreadMessage = {
         id: messageId,
         role: 'assistant',
         createdAt: current?.createdAt ?? new Date(),
-        content: applyAssistantStreamChunks(current?.role === 'assistant' ? current.content : [], event.chunks),
+        content,
         status,
         metadata: {
           unstable_state: null,

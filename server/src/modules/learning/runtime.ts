@@ -25,6 +25,7 @@ import type {
   AddLearningMissionStepInput,
   CreateLearningKnowledgeUnitsCommand,
   CreateProjectLearningActivityCommand,
+  LearningScoreCriterion,
 } from './contracts.js'
 import {
   closeProjectLearningActivity,
@@ -277,7 +278,7 @@ export function proposeEvaluation(
     attemptId: string
     demonstratedLevel: number
     confidence: number
-    rubricResults?: unknown[]
+    rubricResults: LearningScoreCriterion[]
     feedback?: string
     sourceEvidenceId?: string
     verifierEvidenceId?: string

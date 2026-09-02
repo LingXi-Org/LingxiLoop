@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ws } from '@/api/core/realtime'
+import { AgentStatus } from '@/components/assistant-ui/elements/agent-status'
 import { agentsApi } from '@/features/agents/api'
 import type { CoworkerActivity } from '@/features/agents/contracts'
 
@@ -29,27 +30,17 @@ export function ConversationActivity({ conversationId }: { conversationId: strin
     return () => { cancelled = true; off(); window.clearInterval(timer) }
   }, [conversationId])
 
-  const visible = events.slice(-3)
-  if (visible.length === 0) return null
   const latestByRun = new Map<string, CoworkerActivity>()
   for (const event of events) latestByRun.set(event.runId, event)
   const active = [...latestByRun.values()].reverse()
     .find((event) => event.runStatus === 'running' || event.runStatus === 'waiting_for_human')
-  return (
-    <div className="border-b border-[var(--im-divider-weak)] bg-background px-5 py-2" role="status" aria-label="智能助教最近活动">
-      <div className="mx-auto flex max-w-[900px] items-center gap-3 overflow-hidden">
-        <span className={`size-2 shrink-0 rounded-full ${active ? 'animate-pulse bg-[var(--working)]' : 'bg-[var(--avail)]'}`} />
-        <span className="shrink-0 text-[11px] font-semibold text-muted-foreground">
-          {active ? `${active.agentName}${active.runStatus === 'waiting_for_human' ? ' 正在等待你' : ' 正在工作'}` : '最近活动'}
-        </span>
-        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-          {visible.map((event) => (
-            <span key={event.id} className="max-w-[240px] truncate rounded-full bg-muted px-2.5 py-1 text-[10.5px] text-muted-foreground" title={event.title}>
-              {/completed/.test(event.kind) ? '✓' : /failed/.test(event.kind) ? '!' : '●'} {event.title}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+  if (!active) return null
+  return <div className="flex w-full shrink-0 justify-center px-3 py-1.5" data-chat-agent-status>
+    <AgentStatus
+      state={active.runStatus === 'waiting_for_human' ? 'waiting' : 'working'}
+      label={`${active.agentName} · ${active.title}`}
+      role="status"
+      aria-live="polite"
+    />
+  </div>
 }

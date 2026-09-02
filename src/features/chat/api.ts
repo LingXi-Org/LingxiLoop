@@ -1,16 +1,6 @@
 
 import { http } from '@/api/core/http'
 
-export interface LinkPreviewMetadata {
-  url: string
-  title?: string
-  description?: string
-  image?: string
-  siteName?: string
-  finalUrl?: string
-  empty?: boolean
-}
-
 export const messagesApi = {
   createPoll: (args: {
     clientRequestId: string
@@ -40,6 +30,4 @@ export const messagesApi = {
       `/im/channels/${encodeURIComponent(conversationId)}/reactions`,
       { method: 'POST', body: JSON.stringify({ messageId, messageSeq, emoji }) },
     ),
-  getLinkPreview: (url: string) =>
-    http<LinkPreviewMetadata>(`/og?url=${encodeURIComponent(url)}`),
 }

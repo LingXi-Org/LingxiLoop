@@ -77,6 +77,7 @@ export interface OpenNotebookSearchHit {
   matches?: string[] | string
   similarity?: number
   relevance?: number
+  page_number?: number | null
   [key: string]: unknown
 }
 

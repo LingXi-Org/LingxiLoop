@@ -153,6 +153,48 @@ def test_search_requires_source_allowlist_and_rejects_note_controls() -> None:
 
 
 @pytest.mark.asyncio
+async def test_search_returns_clean_page_aware_rag_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from api import rag_router
+
+    monkeypatch.setattr(rag_router, "_allowed_source_ids", AsyncMock(return_value=["source:1"]))
+    monkeypatch.setattr(
+        rag_router,
+        "repo_query",
+        AsyncMock(return_value=[{
+            "id": "source_embedding:one",
+            "parent_id": "source:1",
+            "title": "课程讲义",
+            "content": "[[PAGE:7]]\n间隔练习提高长期保持。",
+            "matches": ["[[PAGE:7]]\n间隔练习提高长期保持。"],
+            "relevance": 0.9,
+        }]),
+    )
+
+    response = await rag_router.search(
+        rag_router.SearchRequest(
+            query="间隔练习",
+            notebook_id="notebook:1",
+            source_ids=["source:1"],
+            type="text",
+            company_id="company-1",
+        )
+    )
+
+    assert response.model_dump()["results"] == [{
+        "id": "source_embedding:one",
+        "parent_id": "source:1",
+        "title": "课程讲义",
+        "content": "间隔练习提高长期保持。",
+        "matches": ["间隔练习提高长期保持。"],
+        "page_number": 7,
+        "similarity": None,
+        "relevance": 0.9,
+    }]
+
+
+@pytest.mark.asyncio
 async def test_bootstrap_uses_only_the_configured_embedding_contract(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -326,24 +368,35 @@ async def test_chunk_replacement_is_one_transaction(
     from open_notebook.rag import ingestion
 
     source = SimpleNamespace(id="source:1", full_text="unique phrase", asset=None, company_id="company:test")
-    monkeypatch.setattr(ingestion, "chunk_text", lambda *args, **kwargs: ["chunk"])
     monkeypatch.setattr(
-        ingestion, "generate_embeddings", AsyncMock(return_value=[[0.1, 0.2]])
+        ingestion,
+        "chunk_text",
+        lambda *args, **kwargs: ["[[PAGE:7]]\nfirst", "second"],
+    )
+    monkeypatch.setattr(
+        ingestion,
+        "generate_embeddings",
+        AsyncMock(return_value=[[0.1, 0.2], [0.3, 0.4]]),
     )
     monkeypatch.setattr(
         ingestion, "validate_embedding_vectors", AsyncMock(return_value=2)
     )
     statements = AsyncMock(return_value=[])
-    query = AsyncMock(return_value=[{"chunks": 1}])
+    query = AsyncMock(return_value=[{"chunks": 2}])
     monkeypatch.setattr(ingestion, "repo_query_statements", statements)
     monkeypatch.setattr(ingestion, "repo_query", query)
 
-    assert await ingestion.replace_source_embeddings(source) == 1
+    assert await ingestion.replace_source_embeddings(source) == 2
     transaction = statements.await_args_list[0].args[0]
+    records = statements.await_args_list[0].args[1]["records"]
     assert "BEGIN TRANSACTION" in transaction
     assert "DELETE source_embedding" in transaction
     assert "CREATE source_embedding" in transaction
     assert "COMMIT TRANSACTION" in transaction
+    assert [record["content"] for record in records] == [
+        "[[PAGE:7]]\nfirst",
+        "[[PAGE:7]]\nsecond",
+    ]
 
 
 @pytest.mark.asyncio

@@ -1,6 +1,38 @@
 import type { ThreadMessage } from '@assistant-ui/react'
 
 export type LingxiDeliveryStatus = 'sending' | 'sent' | 'failed'
+export type LingxiMessagePresentation = 'conversation' | 'special-card'
+
+const SPECIAL_CARD_TOOLS = new Set([
+  'approval-card',
+  'poll-form',
+  'agent-handoff',
+  'agent-plan',
+  'canvas-artifact',
+  'elicitation-form',
+  'checkpoint-history',
+  'learning.propose_evaluation',
+  'calendar.create',
+  'calendar.list',
+  'calendar.get',
+  'draft-email',
+  'presentation-artifact',
+])
+
+export function resolveMessagePresentation(content: readonly {
+  type: string
+  toolName?: string
+  toolCallId?: string
+}[]): LingxiMessagePresentation {
+  return content.some((part) => (
+    part.type === 'file'
+    || part.type === 'image'
+    || (part.type === 'tool-call' && (
+      part.toolCallId?.startsWith('host:')
+      || SPECIAL_CARD_TOOLS.has(part.toolName ?? '')
+    ))
+  )) ? 'special-card' : 'conversation'
+}
 
 export interface LingxiReactionMetadata {
   emoji: string
@@ -29,6 +61,7 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   isMine: boolean
   delivery: LingxiDeliveryStatus
   messageKind: string
+  presentation: LingxiMessagePresentation
   runId: string | null
   quotedMessageId: string | null
   quote: LingxiQuoteMetadata | null
@@ -39,6 +72,7 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   groupEnd: boolean
   continuedFromPrevious: boolean
   continuedToNext: boolean
+  clusterChromeAt: string | null
 }
 
 export interface ConversationThreadSnapshot {
@@ -65,7 +99,11 @@ export interface SerializableThreadMessageSnapshot {
 
 export function getLingxiMessageMetadata(message: ThreadMessage): LingxiMessageMetadata {
   const metadata = message.metadata.custom as Partial<LingxiMessageMetadata>
-  if (metadata.schema !== 'lingxiloop.thread-message.v1') {
+  if (
+    metadata.schema !== 'lingxiloop.thread-message.v1'
+    || (metadata.presentation !== 'conversation' && metadata.presentation !== 'special-card')
+    || (metadata.clusterChromeAt !== null && typeof metadata.clusterChromeAt !== 'string')
+  ) {
     throw new Error(`Message ${message.id} is not a LingxiLoop ThreadMessage`)
   }
   return metadata as LingxiMessageMetadata

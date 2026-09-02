@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { PUBLIC_ACTIVITY_KINDS, publicActivityTitle } from '../agents/activity-visibility.js'
 
-test('Coworker activity uses the tenant-scoped message WebSocket bridge with a REST fallback', async () => {
+test('Coworker activity uses the tenant-scoped message WebSocket bridge with a REST snapshot', async () => {
   const redis = await readFile(new URL('../redis.ts', import.meta.url), 'utf8')
   const wsBridge = await readFile(new URL('../ws.ts', import.meta.url), 'utf8')
   const activity = await readFile(new URL('../../../src/features/chat/components/ConversationActivity.tsx', import.meta.url), 'utf8')
@@ -11,6 +11,8 @@ test('Coworker activity uses the tenant-scoped message WebSocket bridge with a R
   assert.match(redis, /CH_AGENT_ACTIVITY = 'lingxiloop:agent\.activity'/)
   assert.match(wsBridge, /sub\.subscribe\([\s\S]*CH_AGENT_ACTIVITY/)
   assert.match(activity, /event\.type === 'agent\.activity'/)
+  assert.match(activity, /<AgentStatus/)
+  assert.doesNotMatch(activity, /visible\.map|rounded-full|bg-muted/)
   assert.match(activity, /window\.setInterval\(refresh, 60_000\)/)
   assert.doesNotMatch(activity, /window\.setInterval\(refresh, 8_000\)/)
 })

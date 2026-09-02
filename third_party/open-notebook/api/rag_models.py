@@ -137,7 +137,18 @@ class SearchRequest(StrictModel):
     company_id: str = Field(min_length=1, max_length=255)
 
 
+class SearchResult(StrictModel):
+    id: str
+    parent_id: str
+    title: str | None = None
+    content: str = Field(min_length=1, max_length=8_000)
+    matches: list[str] = Field(min_length=1, max_length=8)
+    page_number: int | None = Field(default=None, ge=1)
+    similarity: float | None = None
+    relevance: float | None = None
+
+
 class SearchResponse(StrictModel):
-    results: list[dict[str, Any]]
+    results: list[SearchResult]
     total_count: int
     search_type: Literal["text", "vector"]

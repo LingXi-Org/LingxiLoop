@@ -74,6 +74,8 @@ test('Learning runtime contract requires canonical Evidence IDs', async () => {
   assert.match(contract, /method is add_steps \(plural\)/)
   assert.match(contract, /sourceEvidenceId/)
   assert.match(contract, /verifierEvidenceId/)
+  assert.match(contract, /propose_evaluation\(attemptId=/)
+  assert.match(contract, /rubricResults is required/)
   assert.doesNotMatch(contract, /sourceReportId|verifierReportId/)
 })
 
@@ -222,7 +224,7 @@ test('Knowledge contract exposes native IPython operations without external scop
   assert.match(contract, new RegExp(KNOWLEDGE_CONTRACT_VERSION))
   assert.match(contract, /loop\.knowledge/)
   assert.match(contract, /Retrieval is automatic and turn-local/)
-  assert.match(contract, /\[claim\]\(#cite-S<n>\)/)
+  assert.match(contract, /\[claim\.\]\(#cite-S<n>\)/)
   assert.doesNotMatch(contract, /\[S<n>\] markers/)
   assert.doesNotMatch(contract, /get_source\(|search\(/)
   assert.match(contract, /add_file\(clientMsgNo=/)
@@ -496,7 +498,7 @@ test('unexecuted specialist narration is corrected into a real IPython call', as
   assert.equal(host.messages[0]?.body, '已读取真实学习状态。')
 })
 
-test('knowledge evidence uses one exact streamed and durable confidence-link protocol', async () => {
+test('knowledge evidence uses one exact streamed and durable document-reference protocol', async () => {
   const item = work('knowledge-turn', 'knowledge-message')
   const host = new MemoryHostAdapter()
   host.contexts.set(item.id, {
@@ -504,13 +506,13 @@ test('knowledge evidence uses one exact streamed and durable confidence-link pro
     knowledgeSourceCount: 1,
     knowledgeContext: [{
       sourceId: 'source-1', sourceTitle: 'Brief.pdf', chunkId: 'chunk-1',
-      excerpt: 'EVIDENCE_ONLY_TOKEN: launch date October 4.', position: 2, marker: 'S1',
+      excerpt: 'EVIDENCE_ONLY_TOKEN: launch date October 4.', position: 2, page: 7, marker: 'S1',
     }],
   })
-  const rawText = '[The launch date is October 4](#cite-S1).'
+  const rawText = '- [The launch date is October 4.](#cite-S1)'
   const model: AgentModelDriver = {
     run: async (args) => {
-      for (const delta of ['[The launch date', ' is October 4]', '(#cite-', 'S1).']) {
+      for (const delta of ['- [The launch date', ' is October 4.]', '(#cite-', 'S1)']) {
         await args.onTextDelta?.(delta)
       }
       return {
@@ -527,36 +529,35 @@ test('knowledge evidence uses one exact streamed and durable confidence-link pro
   const knowledgeEvent = host.events.find((event) => event.kind === 'knowledge.context.loaded')
   assert.ok(knowledgeEvent)
   assert.equal(knowledgeEvent.seq, 3)
-  assert.deepEqual((knowledgeEvent.data as { previewClaims?: unknown }).previewClaims, [{
-      id: 'S1',
-      text: '',
-      confidence: 'grounded',
-      basis: 'Brief.pdf · EVIDENCE_ONLY_TOKEN: launch date October 4.',
-      sourceId: 'source-1',
-      sourceTitle: 'Brief.pdf',
-      excerpt: 'EVIDENCE_ONLY_TOKEN: launch date October 4.',
-      position: 2,
-  }])
+  assert.equal('previewClaims' in (knowledgeEvent.data as object), false)
   const streamDeltas = host.events.filter((event) => event.kind === 'model.delta')
   assert.equal(streamDeltas.map((event) => (event.data as { delta: string }).delta).join(''), rawText)
   assert.ok(streamDeltas[0])
-  assert.equal((streamDeltas[0].data as { partIndex?: number }).partIndex, 1)
+  assert.equal((streamDeltas[0].data as { partIndex?: number }).partIndex, 0)
   assert.deepEqual(message.refs?.sourceIds, ['source-1'])
-  const citations = message.data?.citations
-  assert.ok(Array.isArray(citations))
-  assert.deepEqual((citations as Array<{ marker: string }>).map((citation) => citation.marker), ['S1'])
-  assert.equal('chunkId' in (citations as Array<Record<string, unknown>>)[0]!, false)
   assert.equal(message.body, rawText)
-  assert.deepEqual(message.data?.confidenceClaims, [{
-    id: 'S1',
-    text: '',
-    confidence: 'grounded',
-    basis: 'Brief.pdf · EVIDENCE_ONLY_TOKEN: launch date October 4.',
-    sourceId: 'source-1',
-    sourceTitle: 'Brief.pdf',
-    excerpt: 'EVIDENCE_ONLY_TOKEN: launch date October 4.',
-    position: 2,
-  }])
+  const rag = message.data?.rag as { claims: unknown; documentReferences: unknown } | undefined
+  assert.ok(rag)
+  assert.deepEqual(rag, {
+    claims: [{
+      id: 'claim-1', text: 'The launch date is October 4.',
+      confidence: 'grounded', basis: 'Brief.pdf', markers: ['S1'],
+    }],
+    documentReferences: [{
+      marker: 'S1',
+      sourceId: 'source-1',
+      title: 'Brief.pdf',
+      pages: 7,
+      anchors: [{ page: 7, quote: 'EVIDENCE_ONLY_TOKEN: launch date October 4.' }],
+    }],
+  })
+  const referencesEvent = host.events.find((event) => event.kind === 'knowledge.rag.completed')
+  assert.deepEqual(referencesEvent?.data, {
+    partIndexStart: 1,
+    sourceIds: ['source-1'],
+    previewClaims: rag.claims,
+    previewReferences: rag.documentReferences,
+  })
   const session = [...host.sessions.values()][0]
   assert.doesNotMatch(JSON.stringify(session?.history), /EVIDENCE_ONLY_TOKEN/)
 })

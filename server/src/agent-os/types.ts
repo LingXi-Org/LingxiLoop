@@ -1,6 +1,6 @@
 export const AGENT_OS_PROTOCOL_VERSION = 1 as const
-export const PROMPT_CONTRACT_VERSION = 'prompt-v3' as const
-export const KNOWLEDGE_CONTRACT_VERSION = 'native-v2' as const
+export const PROMPT_CONTRACT_VERSION = 'prompt-v4' as const
+export const KNOWLEDGE_CONTRACT_VERSION = 'native-v3' as const
 
 export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary' | 'memory_synthesis'
 export type WorkLane = 'learner' | 'approval' | 'collaboration' | 'background'
@@ -115,6 +115,7 @@ export interface AgentContext {
     excerpt: string
     sourceUrl?: string
     position: number
+    page?: number
     marker: string
   }>
   knowledgeSourceCount?: number

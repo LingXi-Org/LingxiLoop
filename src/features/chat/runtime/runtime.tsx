@@ -121,13 +121,13 @@ export function useConversationThreadRuntime(
     onRefetchThread: () => chatTransport.reloadConversation(conversationId),
     onDelete: (messageId) => chatTransport.discard(conversationId, messageId),
     onAddToolResult: async ({ toolCallId, toolName, result }) => {
-      if (toolName === 'option-list' && toolCallId.startsWith('poll:')) {
+      if (toolName === 'poll-form' && toolCallId.startsWith('poll:')) {
         const values = typeof result === 'string'
           ? [result]
           : Array.isArray(result) ? result.map(String) : []
         if (values.length > 0) await chatTransport.votePoll(toolCallId.slice('poll:'.length), values)
       }
-      if (toolName === 'question-flow' && toolCallId.startsWith('questionnaire:') && result && typeof result === 'object') {
+      if (toolName === 'elicitation-form' && toolCallId.startsWith('questionnaire:') && result && typeof result === 'object') {
         const answers = Object.entries(result).map(([name, answer]) => (
           `${name}: ${Array.isArray(answer) ? answer.map(String).join(', ') : String(answer)}`
         ))

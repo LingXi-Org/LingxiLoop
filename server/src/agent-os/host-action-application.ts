@@ -185,14 +185,24 @@ export async function executeActionWithLedger(
     await insertHostAction(client, work.id, action)
     if (!approved && actionRequiresApproval(action.action)) {
       const teacherApproval = await describeTeacherAction(work, action, client)
+      const calendarArgs = action.args && typeof action.args === 'object' && !Array.isArray(action.args)
+        ? action.args as Record<string, unknown>
+        : {}
+      const calendarApproval = action.action === 'calendar.create'
+        ? {
+            summary: `确认创建安排：${String(calendarArgs.title ?? '')}`,
+            scope: { risk: 'calendar_create' },
+            preview: calendarArgs,
+          }
+        : null
       await insertHostApproval(client, {
         approvalId: randomUUID(),
         work,
         action,
-        summary: teacherApproval?.summary ?? `${work.agentId} requests ${action.action}`,
+        summary: teacherApproval?.summary ?? calendarApproval?.summary ?? `${work.agentId} requests ${action.action}`,
         requestedBy: teacherApproval?.requestedBy ?? null,
-        scope: teacherApproval?.scope ?? {},
-        preview: teacherApproval?.preview ?? {},
+        scope: teacherApproval?.scope ?? calendarApproval?.scope ?? {},
+        preview: teacherApproval?.preview ?? calendarApproval?.preview ?? {},
         ttlMs: env.AGENT_OS_APPROVAL_TTL_MS,
       })
       const approvalId = await markHostActionAwaitingApproval(client, action.idempotencyKey)

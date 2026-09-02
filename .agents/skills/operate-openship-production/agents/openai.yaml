@@ -1,0 +1,12 @@
+interface:
+  display_name: "LingxiLoop OpenShip Production"
+  short_description: "Operate LingxiLoop production deployment and monitoring"
+  default_prompt: "Use $operate-openship-production to inspect and safely operate the LingxiLoop production deployment."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "openship"
+      description: "Authenticated LingxiLoop OpenShip production control plane"
+      transport: "streamable_http"
+      url: "https://ops.christmas1314.xyz/api/proxy/api/mcp"

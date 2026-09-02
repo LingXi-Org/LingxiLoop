@@ -5,7 +5,6 @@ import type {
   ThreadUserMessagePart,
   ToolCallMessagePart,
 } from '@assistant-ui/react'
-import type { KnowledgeCitation } from '@/features/knowledge/contracts'
 import type { ImEnvelope, LingxiMessageV1 } from '@/lib/im/wukong'
 import type { Participant } from '@/types'
 import type {
@@ -13,6 +12,7 @@ import type {
   LingxiQuoteMetadata,
   LingxiReactionMetadata,
 } from './model'
+import { resolveMessagePresentation } from './model'
 
 type JsonObject = Record<string, unknown>
 
@@ -117,119 +117,140 @@ function toolCall(
   }
 }
 
-function knowledgeCitations(data: JsonObject): KnowledgeCitation[] {
-  if (data.citations === undefined) return []
-  if (!Array.isArray(data.citations)) throw new Error('Knowledge citations must be an array')
-  const seen = new Set<string>()
-  return data.citations.map((value) => {
-    const citation = object(value)
-    const sourceId = string(citation.sourceId)
-    const sourceTitle = string(citation.sourceTitle)
-    const excerpt = string(citation.excerpt)
-    const marker = string(citation.marker)
-    const position = finiteNumber(citation.position)
-    if (!sourceId || !sourceTitle || !excerpt || !/^S\d+$/.test(marker) || seen.has(marker) || position === null || position < 0) {
-      throw new Error('Knowledge citations contain an invalid or duplicate entry')
-    }
-    seen.add(marker)
-    return {
-      sourceId,
-      sourceTitle,
-      excerpt,
-      ...(string(citation.sourceUrl) ? { sourceUrl: string(citation.sourceUrl) } : {}),
-      position,
-      marker,
-    }
-  })
-}
-
-function confidenceClaims(
-  data: JsonObject,
-  body: string,
-  citations: KnowledgeCitation[],
-) {
+function ragParts(data: JsonObject, body: string, runId: string): ToolCallMessagePart[] {
   if (/\[S\d+\]|【S\d+】/.test(body)) throw new Error('Agent text contains a retired bare citation marker')
+  const citationPattern = /\[([^\]\n]+)\]\(#cite-(S\d+(?:,S\d+)*)\)/g
+  const citationLinks = [...body.matchAll(citationPattern)]
   const citedIds = new Set<string>()
-  for (const match of body.matchAll(/\[[^\]\n]+\]\(#cite-(S\d+(?:,S\d+)*)\)/g)) {
-    for (const id of match[1]!.split(',')) citedIds.add(id)
+  for (const match of citationLinks) {
+    for (const id of match[2]!.split(',')) citedIds.add(id)
   }
   if (body.replace(/\[[^\]\n]+\]\(#cite-S\d+(?:,S\d+)*\)/g, '').includes('#cite-')) {
     throw new Error('Agent text contains malformed confidence citation syntax')
   }
   if (citedIds.size === 0) {
-    if (data.confidenceClaims !== undefined || citations.length > 0) {
-      throw new Error('Unreferenced confidence evidence is not a valid assistant message')
+    if (data.rag !== undefined) {
+      throw new Error('Unreferenced RAG evidence is not a valid assistant message')
     }
     return []
   }
-  if (!Array.isArray(data.confidenceClaims)) throw new Error('Cited agent text requires a cite_claims result')
-  const seen = new Set<string>()
-  const claims = data.confidenceClaims.map((value) => {
+  const rag = object(data.rag)
+  if (!Array.isArray(rag.claims) || !Array.isArray(rag.documentReferences)) {
+    throw new Error('Cited agent text requires a native RAG result')
+  }
+  const claimIds = new Set<string>()
+  const claims = rag.claims.map((value) => {
     const claim = object(value)
     const id = string(claim.id)
+    const text = string(claim.text)
     const basis = string(claim.basis)
-    const sourceId = string(claim.sourceId)
-    const sourceTitle = string(claim.sourceTitle)
-    const excerpt = string(claim.excerpt)
-    const position = finiteNumber(claim.position)
+    const markers = Array.isArray(claim.markers) && claim.markers.every((marker) => typeof marker === 'string')
+      ? claim.markers
+      : []
     if (
-      !/^S\d+$/.test(id)
-      || seen.has(id)
-      || claim.text !== ''
-      || !basis.trim()
-      || claim.confidence !== 'grounded'
-      || !sourceId
-      || !sourceTitle
-      || !excerpt
-      || position === null
-      || !Number.isSafeInteger(position)
-      || position < 0
-      || (claim.sourceUrl !== undefined && typeof claim.sourceUrl !== 'string')
+      !id || claimIds.has(id) || !text || claim.confidence !== 'grounded' || !basis
+      || markers.length === 0 || new Set(markers).size !== markers.length
+      || markers.some((marker) => !/^S\d+$/.test(marker))
     ) {
-      throw new Error('cite_claims contains an invalid or duplicate grounded evidence claim')
+      throw new Error('Native confidence result contains an invalid claim')
     }
-    seen.add(id)
+    claimIds.add(id)
+    return { id, text, confidence: 'grounded' as const, basis, markers }
+  })
+  if (
+    claims.length !== citationLinks.length
+    || claims.some((claim, index) => (
+      claim.text !== citationLinks[index]![1]
+      || claim.markers.join(',') !== citationLinks[index]![2]
+    ))
+    || body.replace(citationPattern, '').split('\n').some((line) => !/^\s*(?:(?:[-+*]|\d+[.)])\s*)?$/.test(line))
+  ) throw new Error('Agent text and native confidence claims must be identical')
+  const seenMarkers = new Set<string>()
+  const seenSources = new Set<string>()
+  const references = rag.documentReferences.map((value) => {
+    const reference = object(value)
+    const marker = string(reference.marker)
+    const sourceId = string(reference.sourceId)
+    const title = string(reference.title)
+    const pages = finiteNumber(reference.pages)
+    if (
+      !/^S\d+$/.test(marker)
+      || seenMarkers.has(marker)
+      || seenSources.has(sourceId)
+      || !sourceId
+      || !title
+      || pages === null
+      || !Number.isSafeInteger(pages)
+      || pages < 1
+      || !Array.isArray(reference.anchors)
+      || reference.anchors.length === 0
+    ) {
+      throw new Error('Native document references contain an invalid or duplicate document')
+    }
+    const anchors = reference.anchors.map((value) => {
+      const anchor = object(value)
+      const page = finiteNumber(anchor.page)
+      const quote = string(anchor.quote)
+      if (page === null || !Number.isSafeInteger(page) || page < 1 || page > pages || !quote) {
+        throw new Error('Native document reference contains an invalid anchor')
+      }
+      return { page, quote }
+    })
+    seenMarkers.add(marker)
+    seenSources.add(sourceId)
     return {
-      id,
-      text: '',
-      basis,
-      confidence: 'grounded' as const,
+      marker,
       sourceId,
-      sourceTitle,
-      excerpt,
-      ...(string(claim.sourceUrl) ? { sourceUrl: string(claim.sourceUrl) } : {}),
-      position,
+      title,
+      pages,
+      anchors,
     }
   })
   if (
-    citedIds.size !== citations.length
-    || claims.length !== citations.length
-    || claims.some((claim, index) => {
-      const citation = citations[index]
-      return !citation
-        || claim.id !== citation.marker
-        || claim.basis !== `${citation.sourceTitle} · ${citation.excerpt}`
-        || claim.sourceId !== citation.sourceId
-        || claim.sourceTitle !== citation.sourceTitle
-        || claim.excerpt !== citation.excerpt
-        || claim.sourceUrl !== citation.sourceUrl
-        || claim.position !== citation.position
-    })
-    || citations.some(({ marker }) => !citedIds.has(marker))
-  ) throw new Error('Confidence links, claims, and citations must identify the same evidence')
-  return claims
+    citedIds.size !== references.length
+    || references.some(({ marker }) => !citedIds.has(marker))
+  ) throw new Error('Citation links and document references must identify the same evidence')
+  return [
+    toolCall(`cite-claims:${runId}`, 'cite_claims', {}, { claims }),
+    ...references.map((reference) => toolCall(
+      `read-document:${runId}:${reference.marker}`,
+      'read_document',
+      { sourceId: reference.sourceId, marker: reference.marker },
+      { title: reference.title, pages: reference.pages, anchors: reference.anchors },
+    )),
+  ]
 }
 
 function approvalPart(id: string, data: JsonObject): ThreadAssistantMessagePart {
   const approval = object(data.approval ?? data)
   const approvalId = string(approval.id, id.replace(/^approval-/, ''))
   const status = string(approval.status, 'PENDING')
+  const approved = status === 'PENDING' ? undefined : status === 'APPROVED' || status === 'EXECUTED'
+  const payload = object(approval.payload)
+  if (payload.action === 'calendar.create') {
+    return {
+      ...toolCall(`approval:${approvalId}`, 'calendar.create', object(payload.args)),
+      approval: {
+        id: approvalId,
+        ...(approved === undefined ? {} : { approved }),
+      },
+    }
+  }
+  const kind = string(approval.kind)
+  const detail = ({
+    external_communication: '外部通信',
+    sensitive_or_destructive_action: '敏感或破坏性操作',
+    financial_or_irreversible_action: '财务或不可逆操作',
+  } as Record<string, string>)[kind]
+  if (!detail) throw new Error('Approval kind is invalid')
   const args = {
     id: `approval-${approvalId}`,
-    title: string(approval.summary, '需要批准'),
-    description: string(approval.kind),
+    question: string(approval.summary, '需要批准'),
+    detail,
+    confidenceLabel: '需要你的决定',
+    acceptedLabel: '已批准',
+    rejectedLabel: '已拒绝',
   }
-  const approved = status === 'PENDING' ? undefined : status === 'APPROVED' || status === 'EXECUTED'
   return {
     ...toolCall(`approval:${approvalId}`, 'approval-card', args),
     approval: {
@@ -257,7 +278,7 @@ function pollPart(id: string, data: JsonObject): ThreadAssistantMessagePart {
         }
       })
     : []
-  return toolCall(`poll:${id}`, 'option-list', {
+  return toolCall(`poll:${id}`, 'poll-form', {
     id: `poll-${id}`,
     title: string(poll.question, '投票'),
     options,
@@ -292,12 +313,23 @@ function questionnairePart(id: string, data: JsonObject): ThreadAssistantMessage
       } : {}),
     }
   }) : []
-  return toolCall(`questionnaire:${id}`, 'question-flow', {
+  return toolCall(`questionnaire:${id}`, 'elicitation-form', {
     id: `questionnaire-${id}`,
     title: string(questionnaire.title, '请补充信息'),
     items,
     submitLabel: string(questionnaire.submitLabel, '提交'),
   })
+}
+
+function toolActivityPart(id: string, data: JsonObject, body: string): ThreadAssistantMessagePart {
+  const status = string(data.status, string(data.stage))
+  const running = /running|pending|working|requested/i.test(status)
+  return toolCall(`host:activity:${id}`, 'host-activity', {
+    name: string(data.name, body || '工具活动'),
+    arg: string(data.arg),
+    detail: string(data.detail),
+    status,
+  }, running ? undefined : { status })
 }
 
 function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
@@ -308,22 +340,31 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
   switch (payload.kind) {
     case 'text': {
       if (typeof payload.refs?.runId !== 'string') return [{ type: 'text', text: payload.body ?? '' }]
-      const citations = knowledgeCitations(data)
-      const claims = confidenceClaims(data, payload.body ?? '', citations)
       return [
-        ...(claims.length > 0 ? [toolCall(`cite-claims:${id}`, 'cite_claims', {}, { claims })] : []),
         { type: 'text', text: payload.body ?? '' },
+        ...ragParts(data, payload.body ?? '', payload.refs.runId),
       ]
     }
     case 'system': {
       if (data.type !== 'teacher_briefing') return [{ type: 'text', text: payload.body ?? '' }]
-      return [toolCall(`briefing:${id}`, 'stats-display', {
+      const windowStart = finiteNumber(data.windowStartSequence)
+      const windowEnd = finiteNumber(data.windowEndSequence)
+      if (windowStart === null || windowEnd === null) throw new Error('Teacher briefing requires a sequence window')
+      const checkpoints = Object.entries(object(data.statistics)).map(([key, rawValue]) => {
+        const value = finiteNumber(rawValue)
+        if (value === null) throw new Error('Teacher briefing statistics must be finite numbers')
+        return {
+          id: `briefing-${id}-${key}`,
+          label: key === 'eventCount' ? '学习更新' : key === 'attentionCount' ? '需要关注' : key,
+          at: `序列 ${windowStart}–${windowEnd}`,
+          items: value,
+        }
+      })
+      if (checkpoints.length === 0) throw new Error('Teacher briefing requires at least one checkpoint')
+      return [toolCall(`briefing:${id}`, 'checkpoint-history', {
         id: `briefing-${id}`,
-        title: payload.body || '学习简报',
-        statistics: object(data.statistics),
-        attentionItemIds: stringArray(data.attentionItemIds),
-        windowStartSequence: finiteNumber(data.windowStartSequence) ?? 0,
-        windowEndSequence: finiteNumber(data.windowEndSequence) ?? 0,
+        checkpoints,
+        currentId: checkpoints[checkpoints.length - 1]!.id,
       })]
     }
     case 'attachment': {
@@ -334,7 +375,7 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
       const part: ThreadAssistantMessagePart = data.kind === 'img' || mimeType.startsWith('image/')
         ? { type: 'image', image: url, filename: name }
         : { type: 'file', data: url, filename: name, mimeType, sourceType: 'url' }
-      return [...textPart, part]
+      return [part]
     }
     case 'artifact': {
       const artifact = object(data.artifact ?? data)
@@ -345,36 +386,10 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
           title: string(artifact.title, payload.body || 'HTML 演示'),
         })]
       }
-      return [...textPart, toolCall(`activity:${id}`, 'progress-tracker', {
-        id: `activity-${id}`,
-        role: 'state',
-        steps: [{
-          id: `activity-step-${id}`,
-          label: string(data.name, payload.body || '工具活动'),
-          description: [string(data.arg), string(data.detail)].filter(Boolean).join(' · '),
-          status: /failed|error/i.test(string(data.status, string(data.stage)))
-            ? 'failed'
-            : /running|pending|working/i.test(string(data.status, string(data.stage)))
-              ? 'in-progress'
-              : 'completed',
-        }],
-      })]
+      return [...textPart, toolActivityPart(id, data, payload.body ?? '')]
     }
     case 'tool_activity':
-      return [toolCall(`activity:${id}`, 'progress-tracker', {
-        id: `activity-${id}`,
-        role: 'state',
-        steps: [{
-          id: `activity-step-${id}`,
-          label: string(data.name, payload.body || '工具活动'),
-          description: [string(data.arg), string(data.detail)].filter(Boolean).join(' · '),
-          status: /failed|error/i.test(string(data.status, string(data.stage)))
-            ? 'failed'
-            : /running|pending|working/i.test(string(data.status, string(data.stage)))
-              ? 'in-progress'
-              : 'completed',
-        }],
-      })]
+      return [toolActivityPart(id, data, payload.body ?? '')]
     case 'approval':
       return [approvalPart(id, data)]
     case 'poll':
@@ -382,45 +397,29 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
     case 'questionnaire':
       return [questionnairePart(id, data)]
     case 'handoff':
-      return [toolCall(`handoff:${id}`, 'plan', {
+      return [toolCall(`handoff:${id}`, 'agent-handoff', {
         id: `handoff-${id}`,
-        title: string(data.title, payload.body || '任务交接'),
-        description: [string(data.note), `${string(data.fromAgentId)} → ${string(data.toAgentId)}`]
-          .filter(Boolean).join(' · '),
-        todos: [{
-          id: `handoff-todo-${id}`,
-          label: string(data.title, '完成交接'),
-          description: stringArray(data.sharedPaths).join(' · '),
-          status: /complete/i.test(string(data.status))
-            ? 'completed'
-            : /working|accepted/i.test(string(data.status)) ? 'in_progress' : 'pending',
-        }],
+        from: string(data.fromAgentId),
+        to: string(data.toAgentId),
+        settled: /complete|accepted/i.test(string(data.status)),
       })]
     case 'canvas':
-      return [toolCall(`canvas:${id}`, 'link-preview', {
+      return [toolCall(`canvas:${id}`, 'canvas-artifact', {
         id: `canvas-${id}`,
         title: string(data.title, payload.body || '画布'),
         description: string(data.goal),
         href: `lingxiloop://canvas/${encodeURIComponent(string(data.canvasId))}`,
       })]
     case 'learning_mission':
-      return [toolCall(`mission:${id}`, 'plan', {
+      return [toolCall(`mission:${id}`, 'agent-plan', {
         id: `mission-${id}`,
-        title: string(data.goal, payload.body || '学习任务'),
-        description: string(data.successCriteria),
-        todos: [{
-          id: `mission-todo-${string(data.missionId, id)}`,
-          label: string(data.goal, '完成学习任务'),
-          description: string(data.successCriteria),
-          status: /complete/i.test(string(data.status))
-            ? 'completed'
-            : /active|running|working/i.test(string(data.status)) ? 'in_progress' : 'pending',
-        }],
+        steps: [[string(data.goal, payload.body || '完成学习任务'), string(data.successCriteria)].filter(Boolean).join('：')],
+        activeIndex: /complete/i.test(string(data.status)) ? 1 : 0,
       })]
     case 'email': {
       const email = object(data.email ?? data)
       const transportStatus = string(email.transportStatus)
-      return [toolCall(`email:${id}`, 'message-draft', {
+      return [toolCall(`email:${id}`, 'draft-email', {
         id: `email-${id}`,
         channel: 'email',
         body: payload.body || string(email.body, '（无内容）'),
@@ -446,7 +445,11 @@ function assistantStatus(envelope: ImEnvelope): MessageStatus {
   return { type: 'complete', reason: 'stop' }
 }
 
-function buildMetadata(envelope: ImEnvelope, context: MessageConversionContext): LingxiMessageMetadata {
+function buildMetadata(
+  envelope: ImEnvelope,
+  context: MessageConversionContext,
+  content: readonly ThreadAssistantMessagePart[],
+): LingxiMessageMetadata {
   const data = object(envelope.payload.data)
   const quoted = quote(data, envelope.payload.replyToClientMsgNo)
   return {
@@ -457,6 +460,7 @@ function buildMetadata(envelope: ImEnvelope, context: MessageConversionContext):
     ...senderMetadata(envelope, context),
     delivery: 'sent',
     messageKind: envelope.payload.kind,
+    presentation: resolveMessagePresentation(content),
     runId: typeof envelope.payload.refs?.runId === 'string' ? envelope.payload.refs.runId : null,
     quotedMessageId: envelope.payload.replyToClientMsgNo ?? null,
     quote: quoted,
@@ -467,6 +471,7 @@ function buildMetadata(envelope: ImEnvelope, context: MessageConversionContext):
     groupEnd: true,
     continuedFromPrevious: false,
     continuedToNext: false,
+    clusterChromeAt: null,
   }
 }
 
@@ -474,13 +479,13 @@ export function convertEnvelope(envelope: ImEnvelope, context: MessageConversion
   if (!KNOWN_KINDS.has(envelope.payload.kind)) {
     throw new Error(`Unsupported WuKong message kind: ${String(envelope.payload.kind)}`)
   }
-  const metadata = buildMetadata(envelope, context)
+  const content = structuredParts(envelope)
+  const metadata = buildMetadata(envelope, context, content)
   const role = metadata.senderKind === 'system' && object(envelope.payload.data).type !== 'teacher_briefing'
     ? 'system'
     : metadata.isMine && (envelope.payload.kind === 'text' || envelope.payload.kind === 'attachment')
       ? 'user'
       : 'assistant'
-  const content = structuredParts(envelope)
   const common = { id: messageId(envelope), createdAt: timestamp(envelope.timestamp) }
   if (role === 'system') {
     const text = content.find((part) => part.type === 'text')?.text ?? envelope.payload.body ?? ''
@@ -524,17 +529,35 @@ function adjacent(left: ThreadMessage, right: ThreadMessage): boolean {
 }
 
 export function projectMessageGroups(messages: readonly ThreadMessage[]): ThreadMessage[] {
+  const clusterChrome = new Map<number, string>()
+  for (let start = 0; start < messages.length;) {
+    let end = start
+    while (end + 1 < messages.length && adjacent(messages[end]!, messages[end + 1]!)) end += 1
+    const first = messages[start]!
+    const firstMeta = first.metadata.custom as LingxiMessageMetadata
+    if (firstMeta.senderKind === 'agent' && firstMeta.presentation === 'special-card') {
+      const source = messages.slice(start, end + 1).find((message) => (
+        (message.metadata.custom as LingxiMessageMetadata).presentation === 'conversation'
+      ))
+      if (source) {
+        for (let index = start; index <= end; index += 1) clusterChrome.set(index, source.createdAt.toISOString())
+      }
+    }
+    start = end + 1
+  }
   return messages.map((message, index) => {
     const previous = messages[index - 1]
     const next = messages[index + 1]
     const continuedFromPrevious = Boolean(previous && adjacent(previous, message))
     const continuedToNext = Boolean(next && adjacent(message, next))
     const custom = message.metadata.custom as LingxiMessageMetadata
+    const clusterChromeAt = clusterChrome.get(index) ?? null
     if (
       custom.groupStart === !continuedFromPrevious
       && custom.groupEnd === !continuedToNext
       && custom.continuedFromPrevious === continuedFromPrevious
       && custom.continuedToNext === continuedToNext
+      && custom.clusterChromeAt === clusterChromeAt
     ) return message
     return {
       ...message,
@@ -546,6 +569,7 @@ export function projectMessageGroups(messages: readonly ThreadMessage[]): Thread
           groupEnd: !continuedToNext,
           continuedFromPrevious,
           continuedToNext,
+          clusterChromeAt,
         },
       },
     } as ThreadMessage

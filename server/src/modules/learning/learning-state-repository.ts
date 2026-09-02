@@ -1,4 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
+import type { LearningScoreCriterion } from './contracts.js'
 import type {
   LearningActivityType,
   LearningAssistance,
@@ -16,7 +17,7 @@ export async function insertLearningEvaluation(
     attemptId: string
     demonstratedLevel: number
     confidence: number
-    rubricResults: unknown[]
+    rubricResults: LearningScoreCriterion[]
     feedback: string
     evaluatorId: string
     status: 'PENDING' | 'ACCEPTED'

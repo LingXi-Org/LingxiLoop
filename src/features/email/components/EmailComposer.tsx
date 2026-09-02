@@ -243,7 +243,7 @@ export function EmailComposer() {
     const conversations = useChatThreadStore.getState().conversations
     for (const state of Object.values(conversations)) {
       const hit = state.messages.find((message) => message.id === compose.replyToMessageId)
-      const email = hit?.content.find((part) => part.type === 'tool-call' && part.toolName === 'message-draft')
+      const email = hit?.content.find((part) => part.type === 'tool-call' && part.toolName === 'draft-email')
       if (email?.type === 'tool-call') {
         return {
           email: {

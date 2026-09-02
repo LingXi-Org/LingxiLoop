@@ -14,9 +14,9 @@ function message(id: string, sequence: number | null, delivery: LingxiMessageMet
   const metadata: LingxiMessageMetadata = {
     schema: 'lingxiloop.thread-message.v1', conversationId: 'room', clientMessageId: id,
     sequence, senderId: 'me', senderName: 'Me', senderKind: 'human', senderAvatarUrl: null,
-    isMine: true, delivery, messageKind: 'text', runId: null, quotedMessageId: null, quote: null,
+    isMine: true, delivery, messageKind: 'text', presentation: 'conversation', runId: null, quotedMessageId: null, quote: null,
     reactions: [], replyCount: 0, threadRootId: null, groupStart: true, groupEnd: true,
-    continuedFromPrevious: false, continuedToNext: false,
+    continuedFromPrevious: false, continuedToNext: false, clusterChromeAt: null,
   }
   return { id, role: 'user', content: [{ type: 'text', text: id }], attachments: [], createdAt: new Date(sequence ?? 99), metadata: { custom: metadata } }
 }
@@ -29,13 +29,13 @@ test('canonical merge replaces optimistic messages by client identity and preser
   assert.equal(merged.some((item) => item.id === 'temp-1'), false)
 })
 
-test('poll events replace canonical option-list state without retaining a second payload model', () => {
+test('poll events replace canonical assistant-ui form state without retaining a second payload model', () => {
   resetChatThreadStore()
   const initial = {
     ...message('poll-message', 5),
     role: 'assistant',
     content: [{
-      type: 'tool-call', toolCallId: 'poll:poll-message', toolName: 'option-list',
+      type: 'tool-call', toolCallId: 'poll:poll-message', toolName: 'poll-form',
       args: { id: 'poll-poll-message', title: '旧标题', selectionMode: 'single', options: [{ id: 'a', label: 'A' }] },
       argsText: '{}',
     }],

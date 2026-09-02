@@ -30,9 +30,13 @@ test('prompt ordering keeps turn data out of the stable policy and puts personal
   assert.match(prompt, /loop\.polls\.create/)
   assert.match(prompt, /cohesive natural paragraphs/)
   assert.match(prompt, /formal document, sourced research/)
+  assert.match(prompt, /Markdown list markers when the user explicitly requested a list/)
   assert.match(prompt, /explicit request to create, recreate, reschedule, or revise a weekly study plan is sufficient authorization/)
   assert.match(prompt, /start_mission\(goal=\.\.\., successCriteria=\.\.\., missionKind="STUDY", explicit=True\)/)
   assert.match(prompt, /A weekly plan alone does not justify Canvas or specialist dispatch/)
+  assert.match(prompt, /propose_evaluation\(attemptId=/)
+  assert.match(prompt, /rubricResults=\[\{"label":"\.\.\.","score":0\.\.4,"weight":1,"note":"\.\.\."\}\]/)
+  assert.match(prompt, /rubricResults is required/)
   assert.match(prompt, /Never announce that a product action, specialist task, Canvas workspace, or durable plan has started/)
 })
 
@@ -53,6 +57,17 @@ test('explicit execution role selects verifier or specialist contract independen
   assert.match(sage, /Recommended next step:/)
   const traceAsSpecialist=assembleAgentSystemPrompt({persona:{name:'Trace',role:'Diagnostician',instructions:'Diagnose.'},capabilities:['learning'],executionRole:'specialist'})
   assert.match(traceAsSpecialist, /# Frontier-style Specialist Workflow/)
+})
+
+test('calendar protocol requires confirmation and exposes native event viewing', () => {
+  const prompt = assembleAgentSystemPrompt({
+    persona: { name: 'Nova', role: 'Learning Coordinator', instructions: 'Coordinate learning.' },
+    capabilities: ['calendar'],
+    executionRole: 'coordinator',
+  })
+  assert.match(prompt, /get\(eventId=\.\.\.\)/)
+  assert.match(prompt, /Creating an event always stops for human confirmation/)
+  assert.match(prompt, /Use get when presenting one selected event/)
 })
 
 test('Pulse follows the teacher operations workflow with no learner surface',()=>{

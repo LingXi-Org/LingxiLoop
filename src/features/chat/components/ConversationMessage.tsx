@@ -10,11 +10,9 @@ import { Copy01Icon, ReplyIcon, SmilePlusIcon } from '@hugeicons/core-free-icons
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMemo, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
-import {
-  type MessageAttachmentItem,
-  MessageAttachments,
-} from '@/components/assistant-ui/elements/message-attachment'
-import { MarkdownText } from '@/components/assistant-ui/markdown-text'
+import { ArtifactCard } from '@/components/assistant-ui/elements/artifact-card'
+import { conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
+import { type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
 import { TypingIndicator } from '@/components/typing-indicator'
 import { Button } from '@/components/ui/button'
@@ -34,8 +32,6 @@ function ReasoningPart({ status }: ReasoningMessagePartProps) {
     </details>
   )
 }
-
-function AgentMarkdownText() { return <MarkdownText segmented /> }
 
 function SourcePart({ url, title }: SourceMessagePartProps) {
   return url
@@ -131,6 +127,51 @@ function MessageActions({
   )
 }
 
+function MessageTextPart() {
+  const metadata = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
+  const text = useAuiState((state) => state.message.content
+    .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
+    .map((part) => part.text)
+    .join('\n'))
+  const confidenceClaims = useAuiState((state) => {
+    const part = state.message.content.find((part) => part.type === 'tool-call' && part.toolName === 'cite_claims')
+    if (part?.type !== 'tool-call' || !part.result || typeof part.result !== 'object') return undefined
+    const claims = (part.result as { claims?: unknown }).claims
+    return Array.isArray(claims) ? claims as MarkdownConfidenceClaim[] : undefined
+  })
+  const groupPosition = metadata.groupStart
+    ? metadata.groupEnd ? 'single' : 'start'
+    : metadata.groupEnd ? 'end' : 'middle'
+  const bubbleRadius = groupPosition === 'single'
+    ? 'rounded-[18px]'
+    : metadata.isMine
+      ? groupPosition === 'start'
+        ? 'rounded-[18px_18px_6px_18px]'
+        : groupPosition === 'end'
+          ? 'rounded-[18px_6px_18px_18px]'
+          : 'rounded-[18px_6px_6px_18px]'
+      : groupPosition === 'start'
+        ? 'rounded-[18px_18px_18px_6px]'
+        : groupPosition === 'end'
+          ? 'rounded-[6px_18px_18px_18px]'
+          : 'rounded-[6px_18px_18px_6px]'
+  return <div className={cn('relative w-fit max-w-[75%]', metadata.isMine && 'ms-auto')}>
+    <MessageActions metadata={metadata} text={text} />
+    <div
+      data-message-bubble={metadata.isMine ? 'user' : 'assistant'}
+      data-message-group-position={groupPosition}
+      className={cn(
+        'min-w-0 text-[15px] leading-[1.35] tracking-[-0.01em]',
+        metadata.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-white [&_.typeset]:!text-white [&_.typeset_*]:!text-white'],
+        !metadata.isMine && 'text-foreground',
+        metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
+      )}
+    >
+      <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} />
+    </div>
+  </div>
+}
+
 function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; messageId: string }) {
   if (metadata.reactions.length === 0) return null
   return (
@@ -162,131 +203,117 @@ function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; m
 
 export function ConversationMessage() {
   const custom = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
-  const text = useAuiState((state) => state.message.content
-    .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
-    .map((part) => part.text)
-    .join('\n'))
+  const isSpecialCard = custom.presentation === 'special-card'
+  const showInheritedChrome = isSpecialCard && custom.groupStart && custom.clusterChromeAt !== null
+  const showMessageChrome = !isSpecialCard && custom.clusterChromeAt === null
   const createdAt = useAuiState((state) => state.message.createdAt)
   const messageId = useAuiState((state) => state.message.id)
   const content = useAuiState((state) => state.message.content)
-  const attachments = useMemo<Array<MessageAttachmentItem & { href: string }>>(() => {
-    const items: Array<MessageAttachmentItem & { href: string }> = []
+  const attachments = useMemo(() => {
+    const items: Array<{
+      id: string
+      filename: string
+      data: string
+      mimeType: string
+    }> = []
     content.forEach((part, index) => {
-      if (part.type === 'image') {
+      if (part.type === 'image' && typeof part.image === 'string') {
         items.push({
           id: `${messageId}-${index}`,
-          name: part.filename ?? '图片附件',
-          size: '图片',
-          kind: 'image',
-          swatch: `url(${JSON.stringify(part.image)})`,
-          href: part.image,
+          filename: part.filename ?? '图片附件',
+          data: part.image,
+          mimeType: 'image/*',
         })
       } else if (part.type === 'file') {
         items.push({
           id: `${messageId}-${index}`,
-          name: part.filename ?? '附件',
-          size: part.mimeType,
-          kind: /pdf|text|document/.test(part.mimeType) ? 'document' : 'file',
-          href: part.data,
+          filename: part.filename ?? '附件',
+          data: part.data,
+          mimeType: part.mimeType,
         })
       }
     })
     return items
   }, [content, messageId])
   const awaitingContent = useAuiState((state) => (
-    state.message.status?.type === 'running' && state.message.content.every((part) => (
-      part.type === 'tool-call' && part.toolName === 'cite_claims'
-    ))
+    state.message.status?.type === 'running' && state.message.content.length === 0
   ))
   const participant = useParticipants((state) => state.byId[custom.senderId])
-  const groupPosition = custom.groupStart
-    ? custom.groupEnd ? 'single' : 'start'
-    : custom.groupEnd ? 'end' : 'middle'
-  const bubbleRadius = groupPosition === 'single'
-    ? 'rounded-[18px]'
-    : custom.isMine
-      ? groupPosition === 'start'
-        ? 'rounded-[18px_18px_6px_18px]'
-        : groupPosition === 'end'
-          ? 'rounded-[18px_6px_18px_18px]'
-          : 'rounded-[18px_6px_6px_18px]'
-      : groupPosition === 'start'
-        ? 'rounded-[18px_18px_18px_6px]'
-        : groupPosition === 'end'
-          ? 'rounded-[6px_18px_18px_18px]'
-          : 'rounded-[6px_18px_18px_6px]'
-  const standalone = custom.messageKind !== 'text'
+  const chromeAt = custom.clusterChromeAt === null ? createdAt : new Date(custom.clusterChromeAt)
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
       data-msg-id={custom.clientMessageId}
       data-find-message-id={custom.clientMessageId}
+      data-message-presentation={custom.presentation}
+      data-message-continued-from={custom.continuedFromPrevious}
       className={cn(
         'group/message flex w-full shrink-0 gap-2.5 px-3 sm:px-4',
-        custom.continuedFromPrevious ? 'pt-px' : 'pt-1.5',
-        custom.continuedToNext ? 'pb-px' : 'pb-1.5',
+        '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:-mt-px',
+        '[&[data-message-presentation=conversation]+[data-message-presentation=special-card][data-message-continued-from=true]]:-mt-px',
+        custom.continuedFromPrevious ? isSpecialCard ? 'pt-0' : 'pt-px' : 'pt-1.5',
+        custom.continuedToNext ? isSpecialCard ? 'pb-0' : 'pb-px' : 'pb-1.5',
         custom.isMine && 'flex-row-reverse',
       )}
     >
       <div className={cn(
-        'flex w-10 shrink-0 items-end pb-5',
-        participant?.kind === 'agent' && 'chat-message-avatar',
-        participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
-        participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
+        'flex w-10 shrink-0',
+        showInheritedChrome ? 'items-start' : 'items-end pb-5',
+        showMessageChrome && participant?.kind === 'agent' && 'chat-message-avatar',
+        showMessageChrome && participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
+        showMessageChrome && participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
       )}>
-        {custom.groupEnd && participant && <Avatar p={participant} size={38} ringColor="var(--background)" mode="chat" />}
+        {(showInheritedChrome || (showMessageChrome && custom.groupEnd)) && participant && (
+          <Avatar p={participant} size={38} ringColor="var(--background)" mode="chat" />
+        )}
       </div>
       <div className={cn('flex min-w-0 flex-1 flex-col', custom.isMine && 'items-end')}>
-        {custom.groupStart && !custom.isMine && (
+        {(showInheritedChrome || (showMessageChrome && custom.groupStart && !custom.isMine)) && (
           <div className="mb-1 flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
             <span className="font-medium">{custom.senderName}</span>
-            <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>
+            <time>{chromeAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>
           </div>
         )}
-        <div className={cn('relative', standalone ? 'w-full max-w-xl' : 'w-fit max-w-[75%]')}>
-          <MessageActions metadata={custom} text={text} />
-          <div
-            data-message-bubble={standalone ? undefined : custom.isMine ? 'user' : 'assistant'}
-            data-message-group-position={groupPosition}
-            className={cn(
-              'relative min-w-0 text-[15px] leading-[1.35] tracking-[-0.01em]',
-              custom.isMine && !standalone && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-white [&_.typeset]:!text-white [&_.typeset_*]:!text-white'],
-              !custom.isMine && !standalone && 'text-foreground',
-              standalone && 'grid w-full gap-2',
-              custom.delivery === 'failed' && !standalone && 'ring-1 ring-destructive/50',
-            )}
-          >
-            {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
-            {attachments.length > 0 && <MessageAttachments
-              attachments={attachments}
-              className="max-w-none"
-              onOpen={(id) => {
-                const attachment = attachments.find((item) => item.id === id)
-                if (attachment) window.open(attachment.href, '_blank', 'noopener,noreferrer')
+        <div className="grid w-full min-w-0 gap-0.5">
+          {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
+          {attachments.length > 0 && <div data-slot="message-attachments" className="flex w-full max-w-full flex-row gap-2 overflow-x-auto">
+            {attachments.map((attachment) => <ArtifactCard
+              key={attachment.id}
+              role="button"
+              tabIndex={0}
+              aria-label={`打开附件：${attachment.filename}`}
+              title={attachment.filename}
+              meta={attachment.mimeType.startsWith('image/') ? '图片附件' : '文件附件'}
+              className={conversationCardSize.tile}
+              onClick={() => window.open(attachment.data, '_blank', 'noopener,noreferrer')}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') window.open(attachment.data, '_blank', 'noopener,noreferrer')
               }}
-            />}
-            <HostToolTimeline />
-            <MessagePrimitive.Parts
-              components={{
-                Text: custom.isMine ? MarkdownText : AgentMarkdownText,
-                Reasoning: ReasoningPart,
-                Image: () => null,
-                File: () => null,
-                Source: SourcePart,
-                Quote: QuotePart,
-                tools: CHAT_TOOL_RENDERERS,
-              }}
-            />
-            <MessagePrimitive.Error>
-              <div className="mt-2 text-xs text-destructive">消息生成失败</div>
-            </MessagePrimitive.Error>
-          </div>
+            />)}
+          </div>}
+          <HostToolTimeline />
+          <MessagePrimitive.Parts
+            components={{
+              Text: MessageTextPart,
+              Reasoning: ReasoningPart,
+              Image: () => null,
+              File: () => null,
+              Source: SourcePart,
+              Quote: QuotePart,
+              tools: CHAT_TOOL_RENDERERS,
+            }}
+          />
+          <MessagePrimitive.Error>
+            <div className="mt-2 text-xs text-destructive">消息生成失败</div>
+          </MessagePrimitive.Error>
         </div>
         <Reactions metadata={custom} messageId={messageId} />
-        <div className={cn('mt-0.5 flex items-center gap-2 px-1 text-[10px] text-muted-foreground', custom.isMine && 'justify-end')}>
-          {custom.isMine && custom.groupEnd && <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
-          {custom.isMine && custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}
-        </div>
+        {custom.isMine && (custom.delivery !== 'sent' || (showMessageChrome && custom.groupEnd)) && (
+          <div className="mt-0.5 flex items-center justify-end gap-2 px-1 text-[10px] text-muted-foreground">
+            {showMessageChrome && custom.groupEnd && <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
+            {custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}
+          </div>
+        )}
       </div>
     </MessagePrimitive.Root>
   )

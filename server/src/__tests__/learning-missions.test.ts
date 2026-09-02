@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
+import { learningScoreBreakdownSchema } from '../modules/learning/contracts.js'
 import {
   bindLearningCourseRoom,
   loadLearningContext,
@@ -443,6 +444,7 @@ test('agent evaluation proposal commits its project state after the evaluation l
   }, {
     companyId: 'company-1', channelId: 'room-1', agentId: 'agent-1', attemptId: 'attempt-1',
     demonstratedLevel: 2, confidence: 0.9,
+    rubricResults: [{ label: 'Concept accuracy', score: 2, weight: 1, note: 'Core idea is correct.' }],
   })
 
   assert.equal(result.status, 'ACCEPTED')
@@ -452,6 +454,10 @@ test('agent evaluation proposal commits its project state after the evaluation l
   assert.ok(statements.some((text) => text.includes("UPDATE learning_attempts SET status='EVALUATED'")))
   assert.ok(statements.every((text) => !text.includes('learning_mastery')))
   assert.ok(metrics.includes('learning.evaluation.proposed'))
+})
+
+test('learning score breakdown protocol rejects unstructured rubric results', () => {
+  assert.equal(learningScoreBreakdownSchema.safeParse([{ criterion: 'accuracy', value: 2 }]).success, false)
 })
 
 test('independent Canvas verification resolves canonical Evidence IDs in one Project', async () => {

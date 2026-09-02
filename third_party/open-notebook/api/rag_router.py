@@ -24,6 +24,7 @@ from api.rag_models import (
     PresentationMaterialResponse,
     SearchRequest,
     SearchResponse,
+    SearchResult,
     SourceJsonCreate,
     SourceResponse,
     SourceStatusResponse,
@@ -908,8 +909,35 @@ async def search(payload: SearchRequest) -> SearchResponse:
                     "source_ids": source_ids,
                 },
             )
+    normalized_results: list[SearchResult] = []
+    for row in results:
+        content, page_number, _ = _presentation_location(
+            str(row.get("content") or ""), None, None
+        )
+        if not content:
+            continue
+        normalized_results.append(
+            SearchResult(
+                id=str(row.get("id") or ""),
+                parent_id=str(row.get("parent_id") or ""),
+                title=str(row["title"]) if row.get("title") is not None else None,
+                content=content[:8_000],
+                matches=[content[:8_000]],
+                page_number=page_number,
+                similarity=(
+                    float(row["similarity"])
+                    if isinstance(row.get("similarity"), int | float)
+                    else None
+                ),
+                relevance=(
+                    float(row["relevance"])
+                    if isinstance(row.get("relevance"), int | float)
+                    else None
+                ),
+            )
+        )
     return SearchResponse(
-        results=results,
-        total_count=len(results),
+        results=normalized_results,
+        total_count=len(normalized_results),
         search_type=payload.type,
     )

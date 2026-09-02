@@ -3,7 +3,6 @@
 import { Slot } from "@radix-ui/react-slot";
 import type { ComponentProps } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export type MessageSurfaceVariant = "bubble" | "inset" | "overlay" | "status";
@@ -14,6 +13,16 @@ type SurfaceProps = ComponentProps<"div"> & {
   asChild?: boolean;
   status?: SurfaceStatus;
 };
+
+export const conversationCardSize = {
+  tile: "w-52 max-w-none shrink-0",
+  compact: "w-[min(20rem,75%)] max-w-none",
+  standard: "w-[min(24rem,75%)] max-w-none",
+  wide: "w-[min(32rem,75%)] max-w-none",
+  inline: "w-fit max-w-[75%]",
+} as const;
+
+export const paper = "bg-background border border-border/60 dark:bg-popover";
 
 export function MessageSurface({ asChild, status, variant, className, ...props }: SurfaceProps & { variant: MessageSurfaceVariant }) {
   const Component = asChild ? Slot : "div";
@@ -26,31 +35,20 @@ export function MessageSurface({ asChild, status, variant, className, ...props }
 }
 
 export function CardSurface({ asChild, status, variant = "default", interactive, className, ...props }: SurfaceProps & { variant?: CardSurfaceVariant; interactive?: boolean }) {
-  const surfaceClassName = cn(
-    interactive && "transition focus-within:ring-3 focus-within:ring-ring/30",
-    className,
-  );
-  if (asChild) {
-    const { children, ...childProps } = props;
-    return <Card
-      data-message-surface="card"
-      data-card-variant={variant}
-      data-card-status={status}
-      className={surfaceClassName}
-    >
-      <Slot {...childProps}>{children}</Slot>
-    </Card>;
-  }
-  return <Card
+  const Component = asChild ? Slot : "div";
+  return <Component
     data-message-surface="card"
     data-card-variant={variant}
     data-card-status={status}
-    className={surfaceClassName}
+    className={cn(
+      paper,
+      "overflow-hidden rounded-[20px]",
+      interactive && "transition focus-within:ring-3 focus-within:ring-ring/30",
+      className,
+    )}
     {...props}
   />;
 }
-
-export const paper = "bg-background border border-border/60 dark:bg-popover";
 
 export const floating = "bg-background border border-border/60 dark:bg-popover";
 
@@ -66,7 +64,7 @@ export const ghostButton =
   "flex items-center justify-center rounded-full text-foreground/45 outline-none transition-[background-color,color,scale] duration-150 hover:bg-foreground/[0.06] hover:text-foreground/90 active:scale-[0.96] focus-visible:ring-1 focus-visible:ring-foreground/20 motion-reduce:transition-none dark:hover:bg-foreground/[0.09]";
 
 export const inkButton =
-  "bg-[#4682f6] text-white transition-[opacity,scale] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:opacity-90 active:scale-[0.96] motion-reduce:transition-none";
+  "bg-primary text-primary-foreground transition-[opacity,scale] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:opacity-90 active:scale-[0.96] motion-reduce:transition-none";
 
 export const iconSwap =
   "[grid-area:1/1] transition-[opacity,scale,filter] duration-200 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none";

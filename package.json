@@ -69,6 +69,7 @@
   },
   "dependencies": {
     "@assistant-ui/react": "^0.15.16",
+    "@assistant-ui/react-generative-ui": "^0.0.16",
     "@assistant-ui/react-lexical": "0.2.11",
     "@assistant-ui/react-markdown": "0.14.13",
     "@assistant-ui/react-streamdown": "^0.3.12",

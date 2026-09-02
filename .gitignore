@@ -74,6 +74,7 @@ server/uploads/
 .release.env
 .release.next.env
 .release.previous.env
+.openlit_apikey
 *.tsbuildinfo
 
 docs/HANDOFF.md

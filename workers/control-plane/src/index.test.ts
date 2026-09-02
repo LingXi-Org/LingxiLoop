@@ -43,7 +43,7 @@ describe('control-plane trust boundaries', () => {
     expect(noInvite.status).toBe(400)
   })
 
-  it('proxies Kuma status for an authenticated administrator', async () => {
+  it('accepts a signed admin session on control-plane routes', async () => {
     const now = Math.floor(Date.now() / 1000)
     await env.DB.batch([
       env.DB.prepare(`INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt,role) VALUES(?,?,?,1,?,?,'admin')`)
@@ -62,8 +62,18 @@ describe('control-plane trust boundaries', () => {
     const cookie = signIn.headers.get('set-cookie')
     expect(cookie).toContain('__Secure-better-auth.session_token=')
 
+    const session = await SELF.fetch('https://admin.example.com/api/auth/get-session', { headers: { cookie: cookie ?? '' } })
+    expect((await session.json<{ user?: { role?: string } }>()).user?.role).toBe('admin')
+    const releases = await SELF.fetch('https://admin.example.com/api/control/releases', { headers: { cookie: cookie ?? '' } })
+    expect(releases.status).toBe(200)
+
     fetchMock.activate()
     fetchMock.disableNetConnect()
+    fetchMock.get('https://origin.example.com').intercept({ path: '/api/admin/dashboard' }).reply(401, { error: 'valid gateway assertion required' })
+    const dashboard = await SELF.fetch('https://admin.example.com/api/control/platform/dashboard', { headers: { cookie: cookie ?? '' } })
+    expect(dashboard.status).toBe(502)
+    expect(await dashboard.json()).toEqual({ error: 'business API rejected the control-plane gateway identity' })
+
     fetchMock.get('https://uptime.example.com')
       .intercept({ path: '/api/status-page/lingxiloop' })
       .reply(200, { config: { title: 'LingxiLoop 服务状态' }, incident: null, publicGroupList: [{ id: 1, name: '公共入口', monitorList: [{ id: 11, name: 'Web' }] }], maintenanceList: [] })

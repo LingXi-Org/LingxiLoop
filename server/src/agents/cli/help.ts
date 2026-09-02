@@ -66,6 +66,7 @@ export function createHelpCommand(ok: (text: string) => CliResult) {
     # tell a user "I'll do X later / tomorrow / every morning" — instead of
     # promising to come back, schedule the wake so future-you actually does.
     calendar list [--as <id>] [--all] [--status active|paused|done|cancelled]
+    calendar get <event_id>
                                      # default scope = events assigned to OR created by --as
     calendar create "<title>" --at <iso> [--assignee <id>] [--prompt "..."]
                                          [--in <convo_id>] [--every daily|weekly|monthly|yearly]

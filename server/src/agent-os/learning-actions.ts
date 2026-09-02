@@ -1,8 +1,22 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { runStructuredLearningAction } from '../agents/cli.js'
 import { pool } from '../db/pool.js'
-import { wukongClient } from '../im/wukong.js'
 import { advanceAgentReadReceipt } from '../im/read-receipts.js'
+import { wukongClient } from '../im/wukong.js'
+import {
+  addCanvasWorkspaceAgents,
+  appendCanvasFrameContent,
+  type CanvasMemberInput,
+  createCanvasFrame,
+  deleteCanvasFrame,
+  getCanvasSnapshot,
+  handoffCanvasWork,
+  listCanvasAvailableAgents,
+  setCanvasStatus,
+  startCanvasWorkspace,
+  submitCanvasReport,
+  updateCanvasFrame,
+} from '../modules/canvas/index.js'
 import {
   addKnowledgeFile,
   addKnowledgeText,
@@ -12,6 +26,27 @@ import {
   retryKnowledgeSourceForAgent,
   setKnowledgeSourceEnabled,
 } from '../modules/knowledge/public.js'
+import { learningScoreBreakdownSchema } from '../modules/learning/contracts.js'
+import {
+  addMissionSteps,
+  completeMission,
+  createKnowledgeUnits,
+  draftActivity,
+  executeTeacherAction,
+  finishMissionPlanning,
+  getActivity,
+  getMission,
+  type LearningActivityType,
+  type LearningEvaluationMode,
+  type LearningStepStatus,
+  type LearningStepType,
+  loadLearningTurnContext,
+  proposeEvaluation,
+  recordAttempt,
+  startMission,
+  teacherActionRequiresApproval,
+  updateMissionStep,
+} from '../modules/learning/runtime.js'
 import {
   approvePresentationOutlineForAgent,
   cancelPresentationForAgent,
@@ -21,48 +56,14 @@ import {
   revisePresentationForAgent,
   revisePresentationOutlineForAgent,
 } from '../modules/presentations/public.js'
-import {
-  addCanvasWorkspaceAgents,
-  appendCanvasFrameContent,
-  createCanvasFrame,
-  deleteCanvasFrame,
-  getCanvasSnapshot,
-  handoffCanvasWork,
-  listCanvasAvailableAgents,
-  setCanvasStatus,
-  submitCanvasReport,
-  startCanvasWorkspace,
-  updateCanvasFrame,
-  type CanvasMemberInput,
-} from '../modules/canvas/index.js'
-import { readResearch, searchResearch } from './research.js'
 import { recallMemories, verifyExplicitMemory, writeExplicitMemory } from './memory-service.js'
+import { readResearch, searchResearch } from './research.js'
 import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1, MemoryScopeType } from './types.js'
-import {
-  addMissionSteps,
-  completeMission,
-  createKnowledgeUnits,
-  draftActivity,
-  finishMissionPlanning,
-  getActivity,
-  getMission,
-  loadLearningTurnContext,
-  proposeEvaluation,
-  recordAttempt,
-  startMission,
-  updateMissionStep,
-  executeTeacherAction,
-  teacherActionRequiresApproval,
-  type LearningActivityType,
-  type LearningEvaluationMode,
-  type LearningStepStatus,
-  type LearningStepType,
-} from '../modules/learning/runtime.js'
 
 const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
   'routines.create', 'routines.activate',
-  'documents.delete', 'calendar.delete',
+  'documents.delete', 'calendar.create', 'calendar.delete',
   'knowledge.set_source_enabled', 'knowledge.delete_source',
   'presentations.approve_outline',
 ])
@@ -182,13 +183,16 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
       ? 'NONE'
       : closedArg(args, 'assistance', ASSISTANCE_LEVELS),
   }) }
-  if (method === 'propose_evaluation') return { ok: true, value: await proposeEvaluation(work, {
-    attemptId: textArg(args, 'attemptId'), demonstratedLevel: Number(args.demonstratedLevel), confidence: Number(args.confidence),
-    ...(Array.isArray(args.rubricResults) ? { rubricResults: args.rubricResults } : {}),
-    ...(typeof args.feedback === 'string' ? { feedback: args.feedback } : {}),
-    ...(typeof args.sourceEvidenceId === 'string' ? { sourceEvidenceId: args.sourceEvidenceId } : {}),
-    ...(typeof args.verifierEvidenceId === 'string' ? { verifierEvidenceId: args.verifierEvidenceId } : {}),
-  }) }
+  if (method === 'propose_evaluation') {
+    const rubricResults = learningScoreBreakdownSchema.parse(args.rubricResults)
+    return { ok: true, value: await proposeEvaluation(work, {
+      attemptId: textArg(args, 'attemptId'), demonstratedLevel: Number(args.demonstratedLevel), confidence: Number(args.confidence),
+      rubricResults,
+      ...(typeof args.feedback === 'string' ? { feedback: args.feedback } : {}),
+      ...(typeof args.sourceEvidenceId === 'string' ? { sourceEvidenceId: args.sourceEvidenceId } : {}),
+      ...(typeof args.verifierEvidenceId === 'string' ? { verifierEvidenceId: args.verifierEvidenceId } : {}),
+    }) }
+  }
   throw new Error(`unsupported learning action: ${method}`)
 }
 
@@ -690,5 +694,8 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
     )).rows[0]?.project_id
     : undefined
   const result = await runStructuredLearningAction(action.action, args, work.agentId, { idempotencyKey: action.idempotencyKey, ...(projectId ? { projectId } : {}) })
+  if (result.ok && namespace === 'calendar' && new Set(['list', 'get', 'create', 'update']).has(method)) {
+    return { ok: true, value: JSON.parse(result.text) }
+  }
   return result.ok ? { ok: true, value: { text: result.text, sideEffects: result.sideEffects ?? [] } } : { ok: false, error: result.text }
 }

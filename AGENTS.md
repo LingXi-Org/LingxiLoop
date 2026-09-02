@@ -42,3 +42,8 @@ npm run db:migrate && npm run test:integration
 ```
 
 Database migrations also require the migration integration cases. Agent runtime changes require deterministic Eval coverage.
+
+## Production handoff
+
+- Before every final response, follow `.codex/hooks.json`. If the turn changed live production, update the applicable `operate-openship-production` references without recording secrets, then validate that skill.
+- OpenShip MCP authentication is supplied by the configured MCP transport. Never read, print, or copy its PAT into repository files or skills; validate access with a harmless MCP health call.

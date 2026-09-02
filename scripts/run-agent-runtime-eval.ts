@@ -8,8 +8,8 @@ import {
   type KernelExecutor,
 } from '../server/src/agent-os/kernel-manager.js'
 import { type AgentModelDriver, type ModelTurnResult, ScriptedModelDriver } from '../server/src/agent-os/model-driver.js'
-import { AgentOSRuntime } from '../server/src/agent-os/runtime.js'
 import { assembleAgentSystemPrompt } from '../server/src/agent-os/prompt-assembly.js'
+import { AgentOSRuntime } from '../server/src/agent-os/runtime.js'
 import type {
   AgentContext,
   AgentRunEvent,
@@ -200,13 +200,15 @@ class HostBridgeKernel implements KernelExecutor {
     options?: KernelExecutionOptions,
   ): Promise<KernelExecution> {
     const actionName = code.includes('loop.email.send') ? 'email.send'
+      : code.includes('loop.calendar.create') ? 'calendar.create'
         : code.includes('loop.teacher.list_learners') ? 'teacher.list_learners'
           : code.includes('loop.teacher.review_evaluation') ? 'teacher.review_evaluation'
         : code.includes('loop.teacher.publish_objective') ? 'teacher.publish_objective'
-          : code.includes('loop.learning.add_steps') ? 'learning.add_steps'
-            : code.includes('loop.learning.finish_planning') ? 'learning.finish_planning'
-              : code.includes('loop.canvas.submit_report') ? 'canvas.submit_report'
-                : ''
+          : code.includes('loop.learning.propose_evaluation') ? 'learning.propose_evaluation'
+            : code.includes('loop.learning.add_steps') ? 'learning.add_steps'
+              : code.includes('loop.learning.finish_planning') ? 'learning.finish_planning'
+                : code.includes('loop.canvas.submit_report') ? 'canvas.submit_report'
+                  : ''
     if (!actionName) throw new Error(`runtime Eval received unsupported IPython code: ${code}`)
     const namespace = actionName.split('.')[0]
     if (options?.allowedNamespaces && !options.allowedNamespaces.includes(namespace)) {
@@ -214,12 +216,23 @@ class HostBridgeKernel implements KernelExecutor {
     }
     let args: unknown
     if (actionName === 'email.send') args = { to: ['learner@example.invalid'], subject: 'Course summary', body: 'Grounded summary' }
+    else if (actionName === 'calendar.create') args = { title: '线性代数复习', at: '2026-09-04T19:30:00+08:00' }
     else if (actionName === 'teacher.publish_objective') args = { objectiveId: 'objective-eval' }
     else if (actionName === 'teacher.list_learners') args = { attentionOnly: true }
     else if (actionName === 'teacher.review_evaluation') {
       args = { evaluationId: 'evaluation-eval', decision: 'reject', reason: 'Teacher evidence override' }
     }
-    else if (actionName === 'learning.add_steps') {
+    else if (actionName === 'learning.propose_evaluation') {
+      for (const argument of ['attemptId=', 'demonstratedLevel=', 'confidence=', 'rubricResults=', '"label"', '"score"', '"weight"']) {
+        if (!code.includes(argument)) throw new Error(`runtime Eval requires learning.propose_evaluation ${argument}`)
+      }
+      args = {
+        attemptId: 'attempt-eval',
+        demonstratedLevel: 2,
+        confidence: 0.9,
+        rubricResults: [{ label: 'Concept accuracy', score: 2, weight: 1, note: 'Core idea is correct.' }],
+      }
+    } else if (actionName === 'learning.add_steps') {
       if (!code.includes('missionId=') || !code.includes('description') || !code.includes('successCriteria')) {
         throw new Error('runtime Eval requires the exact learning.add_steps SDK arguments')
       }
@@ -374,7 +387,10 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   if (scenario === 'approval-boundary') {
     runtimeContext.capabilities = ['email']
     runtimeContext.promptContextCandidate!.capabilities = ['email']
-  } else if (scenario === 'planning-gate') {
+  } else if (scenario === 'calendar-create-approval') {
+    runtimeContext.capabilities = ['calendar']
+    runtimeContext.promptContextCandidate!.capabilities = ['calendar']
+  } else if (scenario === 'planning-gate' || scenario === 'score-breakdown-evaluation') {
     runtimeContext.capabilities = ['learning']
     runtimeContext.promptContextCandidate!.capabilities = ['learning']
   }
@@ -382,10 +398,10 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   if (scenario === 'auto-grounding') {
     input = 'Explain retrieval grounding using the uploaded handbook.'
     turns = [{
-      itemFragments: [input, 'AUTO_EVIDENCE_SECRET', 'evidence-id=S1'],
+      itemFragments: [input, 'AUTO_EVIDENCE_SECRET', 'document-id=S1'],
       result: {
-        output: [{ role: 'assistant', content: '结论：RAG 回答必须保留可追溯证据。因为检索片段可能不完整，因此要核对来源；[本次结论来自课程手册](#cite-S1)。你能解释为什么证据引用会降低幻觉吗？' }],
-        text: '结论：RAG 回答必须保留可追溯证据。因为检索片段可能不完整，因此要核对来源；[本次结论来自课程手册](#cite-S1)。你能解释为什么证据引用会降低幻觉吗？',
+        output: [{ role: 'assistant', content: '[结论：RAG 回答必须保留可追溯证据。](#cite-S1)[因为检索片段可能不完整，所以引用来源能降低幻觉。](#cite-S1)[本次结论来自课程手册。](#cite-S1)[你能解释为什么证据引用会降低幻觉吗？](#cite-S1)' }],
+        text: '[结论：RAG 回答必须保留可追溯证据。](#cite-S1)[因为检索片段可能不完整，所以引用来源能降低幻觉。](#cite-S1)[本次结论来自课程手册。](#cite-S1)[你能解释为什么证据引用会降低幻觉吗？](#cite-S1)',
         usage: { inputTokens: 42, outputTokens: 38 },
       },
     }]
@@ -410,10 +426,10 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
       position: 0,
     }]
     turns = [{
-      itemFragments: [input, 'HYBRID_SECRET_EXCERPT', 'evidence-id=S1'],
+      itemFragments: [input, 'HYBRID_SECRET_EXCERPT', 'document-id=S1'],
       result: {
-        output: [{ role: 'assistant', content: '[混合检索会在回答前融合关键词与语义候选](#cite-S1)，因此既保留专有词匹配，也获得上下文消歧。' }],
-        text: '[混合检索会在回答前融合关键词与语义候选](#cite-S1)，因此既保留专有词匹配，也获得上下文消歧。',
+        output: [{ role: 'assistant', content: '[混合检索会在回答前融合关键词与语义候选。](#cite-S1)[因此既保留专有词匹配，也获得上下文消歧。](#cite-S1)' }],
+        text: '[混合检索会在回答前融合关键词与语义候选。](#cite-S1)[因此既保留专有词匹配，也获得上下文消歧。](#cite-S1)',
         usage: { inputTokens: 58, outputTokens: 20 },
       },
     }]
@@ -435,6 +451,25 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     }]
     host.actionHandler = async (action) => action.action === 'email.send'
       ? { ok: false, approval: { id: 'approval-runtime-email', status: 'pending' } }
+      : { ok: false, error: `unexpected action ${action.action}` }
+  } else if (scenario === 'calendar-create-approval') {
+    input = 'Schedule a linear algebra review for Friday at 19:30.'
+    turns = [{
+      instructionFragments: ['loop.calendar', 'Creating an event always stops for human confirmation'],
+      itemFragments: [input],
+      result: {
+        output: [{
+          type: 'function_call',
+          callId: 'runtime-calendar-create',
+          name: 'ipython',
+          arguments: JSON.stringify({ code: 'loop.calendar.create(title="线性代数复习", at="2026-09-04T19:30:00+08:00")' }),
+        }],
+        text: '',
+        usage: { inputTokens: 30, outputTokens: 12 },
+      },
+    }]
+    host.actionHandler = async (action) => action.action === 'calendar.create'
+      ? { ok: false, approval: { id: 'approval-runtime-calendar', status: 'PENDING' } }
       : { ok: false, error: `unexpected action ${action.action}` }
   } else if (scenario === 'pulse-approval-boundary') {
     input = 'Publish the prepared retrieval objective.'
@@ -530,6 +565,38 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     }]
     host.actionHandler = async (action) => action.action === 'teacher.review_evaluation'
       ? { ok: false, approval: { id: 'approval-runtime-override', status: 'pending' } }
+      : { ok: false, error: `unexpected action ${action.action}` }
+  } else if (scenario === 'score-breakdown-evaluation') {
+    input = 'Grade the recorded learner attempt against its rubric.'
+    turns = [
+      {
+        instructionFragments: ['Eval deterministic tutor', 'propose_evaluation(attemptId=', 'rubricResults is required'],
+        itemFragments: [input],
+        result: {
+          output: [{
+            type: 'function_call',
+            callId: 'runtime-score-breakdown',
+            name: 'ipython',
+            arguments: JSON.stringify({
+              code: 'loop.learning.propose_evaluation(attemptId="attempt-eval", demonstratedLevel=2, confidence=0.9, rubricResults=[{"label":"Concept accuracy","score":2,"weight":1,"note":"Core idea is correct."}])',
+            }),
+          }],
+          text: '',
+          usage: { inputTokens: 40, outputTokens: 18 },
+        },
+      },
+      {
+        instructionFragments: ['Eval deterministic tutor', 'rubricResults is required'],
+        itemFragments: ['ACCEPTED', 'evaluation-eval', 'function_call_output'],
+        result: {
+          output: [{ role: 'assistant', content: '判分已记录：2.0 / 4，评估已判定。' }],
+          text: '判分已记录：2.0 / 4，评估已判定。',
+          usage: { inputTokens: 48, outputTokens: 14 },
+        },
+      },
+    ]
+    host.actionHandler = async (action) => action.action === 'learning.propose_evaluation'
+      ? { ok: true, value: { evaluationId: 'evaluation-eval', status: 'ACCEPTED', decisions: [] } }
       : { ok: false, error: `unexpected action ${action.action}` }
   } else if (scenario === 'planning-gate') {
     input = 'Start the retrieval mission now.'

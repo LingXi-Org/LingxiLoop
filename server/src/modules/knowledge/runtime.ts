@@ -109,6 +109,7 @@ export interface KnowledgeCitation {
   excerpt: string
   sourceUrl?: string
   position: number
+  page?: number
   marker: string
 }
 
@@ -491,11 +492,23 @@ export async function retrieveKnowledge(args: {
     return [{
       sourceId: source.id, sourceTitle: source.title, chunkId: String(hit.id ?? externalId), excerpt,
       ...(source.originalUrl ? { sourceUrl: source.originalUrl } : {}),
+      ...(typeof hit.page_number === 'number' && Number.isSafeInteger(hit.page_number) && hit.page_number > 0
+        ? { page: hit.page_number }
+        : {}),
     }]
-  }).slice(0, args.limit ?? 8).map((citation, index) => ({ ...citation, position: index, marker: `S${index + 1}` }))
-  if (citations.length) inc('knowledge.retrieval.hits', undefined, citations.length)
+  }).slice(0, args.limit ?? 8)
+  const markers = new Map<string, string>()
+  for (const citation of citations) {
+    if (!markers.has(citation.sourceId)) markers.set(citation.sourceId, `S${markers.size + 1}`)
+  }
+  const markedCitations = citations.map((citation, position) => ({
+    ...citation,
+    position,
+    marker: markers.get(citation.sourceId)!,
+  }))
+  if (markedCitations.length) inc('knowledge.retrieval.hits', undefined, markedCitations.length)
   else inc('knowledge.retrieval.miss')
-  return citations
+  return markedCitations
 }
 
 /** Insert an idempotent attachment ingestion and persist the deferred Agent wake. */

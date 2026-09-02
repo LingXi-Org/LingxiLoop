@@ -60,22 +60,53 @@ test('every WuKong kind converts exhaustively to canonical role, parts, and JSON
   }
 })
 
-test('structured kinds become Tool UI calls instead of view-level kind branches', () => {
+test('structured kinds become assistant-ui calls instead of view-level kind branches', () => {
   const expected = new Map<LingxiMessageV1['kind'], string>([
-    ['tool_activity', 'progress-tracker'],
+    ['tool_activity', 'host-activity'],
     ['approval', 'approval-card'],
-    ['handoff', 'plan'],
-    ['questionnaire', 'question-flow'],
-    ['poll', 'option-list'],
-    ['artifact', 'progress-tracker'],
-    ['canvas', 'link-preview'],
-    ['learning_mission', 'plan'],
-    ['email', 'message-draft'],
+    ['handoff', 'agent-handoff'],
+    ['questionnaire', 'elicitation-form'],
+    ['poll', 'poll-form'],
+    ['artifact', 'host-activity'],
+    ['canvas', 'canvas-artifact'],
+    ['learning_mission', 'agent-plan'],
+    ['email', 'draft-email'],
   ])
   for (const [kind, toolName] of expected) {
     const message = convertEnvelope(envelope(kind, kindData[kind]), { participants, meId: 'me' })
     assert.equal(message.content.some((part) => part.type === 'tool-call' && part.toolName === toolName), true)
   }
+})
+
+test('handoff, mission, and attachment protocols map directly to their native elements', () => {
+  const handoff = convertEnvelope(envelope('handoff', {
+    title: '核验学习证据', note: '并行梳理错题', status: 'working',
+    fromAgentId: 'agent', toAgentId: 'reviewer', sharedPaths: ['错题记录'],
+  }), { participants, meId: 'me' }).content[0]
+  assert.deepEqual(handoff?.type === 'tool-call' ? { toolName: handoff.toolName, args: handoff.args } : null, {
+    toolName: 'agent-handoff',
+    args: {
+      id: 'handoff-handoff-server', from: 'agent', to: 'reviewer', settled: false,
+    },
+  })
+
+  const mission = convertEnvelope(envelope('learning_mission', {
+    goal: '两周掌握线性代数核心概念', successCriteria: '能够独立解释向量空间', status: 'active',
+  }), { participants, meId: 'me' }).content[0]
+  assert.deepEqual(mission?.type === 'tool-call' ? { toolName: mission.toolName, args: mission.args } : null, {
+    toolName: 'agent-plan',
+    args: {
+      id: 'mission-learning_mission-server',
+      steps: ['两周掌握线性代数核心概念：能够独立解释向量空间'],
+      activeIndex: 0,
+    },
+  })
+
+  const attachment = convertEnvelope(envelope('attachment', kindData.attachment), { participants, meId: 'me' })
+  assert.deepEqual(attachment.content, [{
+    type: 'file', data: 'https://example.com/lesson.pdf', filename: 'lesson.pdf',
+    mimeType: 'application/pdf', sourceType: 'url',
+  }])
 })
 
 test('questionnaires preserve choices and freeform inputs for the question card', () => {
@@ -126,7 +157,7 @@ test('batch conversion is stable, deduplicated, and projects sender grouping', (
   assert.equal(getLingxiMessageMetadata(messages[1]!).groupStart, false)
 })
 
-test('clusters adjacent text, attachments, and Tool UI cards by sender rather than message kind', () => {
+test('clusters adjacent text, attachments, and assistant-ui cards by sender rather than message kind', () => {
   const agentText = envelope('text', {}, { fromUid: 'agent', messageId: 'agent-text', messageSeq: 1, timestamp: 1_767_225_600 })
   const agentCard = envelope('approval', kindData.approval, { fromUid: 'agent', messageId: 'agent-card', messageSeq: 2, timestamp: 1_767_225_610 })
   agentCard.payload = { ...agentCard.payload, clientMsgNo: 'agent-card-client' }
@@ -143,6 +174,25 @@ test('clusters adjacent text, attachments, and Tool UI cards by sender rather th
     { groupStart: true, groupEnd: false, isMine: true },
     { groupStart: false, groupEnd: true, isMine: true },
   ])
+  assert.deepEqual(metadata.map(({ presentation }) => presentation), [
+    'conversation',
+    'special-card',
+    'conversation',
+    'special-card',
+  ])
+})
+
+test('a card-first agent cluster inherits the following bubble chrome once', () => {
+  const card = envelope('approval', kindData.approval, {
+    fromUid: 'agent', messageId: 'agent-card', messageSeq: 1, timestamp: 1_767_225_600,
+  })
+  const text = envelope('text', {}, {
+    fromUid: 'agent', messageId: 'agent-text', messageSeq: 2, timestamp: 1_767_225_610,
+  })
+  const messages = convertEnvelopeBatch([card, text], { participants, meId: 'me' })
+  const chromeAt = messages[1]!.createdAt.toISOString()
+
+  assert.deepEqual(messages.map((message) => getLingxiMessageMetadata(message).clusterChromeAt), [chromeAt, chromeAt])
 })
 
 test('group projection preserves messages whose cluster position did not change', () => {
@@ -166,7 +216,7 @@ test('unknown WuKong kinds fail closed at the transport conversion boundary', ()
 
 test('structured approvals use the assistant-ui approval gate as their only decision path', () => {
   const message = convertEnvelope(envelope('approval', {
-    approval: { id: 'a-self', summary: 'Review', status: 'PENDING' },
+    approval: { id: 'a-self', summary: 'Review', status: 'PENDING', kind: 'external_communication' },
     citations: [{ sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1' }],
   }, { fromUid: 'me' }), { participants, meId: 'me' })
   assert.equal(message.role, 'assistant')
@@ -176,42 +226,120 @@ test('structured approvals use the assistant-ui approval gate as their only deci
     type: 'tool-call',
     toolCallId: 'approval:a-self',
     toolName: 'approval-card',
-    args: { id: 'approval-a-self', title: 'Review', description: '' },
-    argsText: '{"id":"approval-a-self","title":"Review","description":""}',
+    args: {
+      id: 'approval-a-self',
+      question: 'Review',
+      detail: '外部通信',
+      confidenceLabel: '需要你的决定',
+      acceptedLabel: '已批准',
+      rejectedLabel: '已拒绝',
+    },
+    argsText: '{"id":"approval-a-self","question":"Review","detail":"外部通信","confidenceLabel":"需要你的决定","acceptedLabel":"已批准","rejectedLabel":"已拒绝"}',
     approval: { id: 'a-self' },
   })
 })
 
-test('agent text restores knowledge citations as the native cite_claims tool result', () => {
+test('agent text restores the native read_document result without rebuilding citations', () => {
   const input = envelope('text', {
-    citations: [{ sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1' }],
-    confidenceClaims: [{
-      id: 'S1', text: '', confidence: 'grounded', basis: 'Evidence · Quoted text',
-      sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0,
-    }],
+    rag: {
+      claims: [{ id: 'claim-1', text: 'hello', confidence: 'grounded', basis: 'Evidence', markers: ['S1'] }],
+      documentReferences: [{
+        marker: 'S1', sourceId: 'source-1', title: 'Evidence', pages: 7,
+        anchors: [{ page: 7, quote: 'Quoted text' }],
+      }],
+    },
   }, { fromUid: 'agent' })
   input.payload.refs = { runId: 'run-1' }
-  input.payload.body = '[hello](#cite-S1)'
+  input.payload.body = '- [hello](#cite-S1)'
   const message = convertEnvelope(input, { participants, meId: 'me' })
   assert.deepEqual(message.content, [
+    { type: 'text', text: '- [hello](#cite-S1)' },
     {
-      type: 'tool-call',
-      toolCallId: 'cite-claims:text-server',
-      toolName: 'cite_claims',
-      args: {},
-      argsText: '{}',
-      result: { claims: [{
-        id: 'S1', text: '', confidence: 'grounded', basis: 'Evidence · Quoted text',
-        sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0,
-      }] },
+      type: 'tool-call', toolCallId: 'cite-claims:run-1', toolName: 'cite_claims',
+      args: {}, argsText: '{}',
+      result: { claims: [{ id: 'claim-1', text: 'hello', confidence: 'grounded', basis: 'Evidence', markers: ['S1'] }] },
     },
-    { type: 'text', text: '[hello](#cite-S1)' },
+    {
+      type: 'tool-call', toolCallId: 'read-document:run-1:S1', toolName: 'read_document',
+      args: { sourceId: 'source-1', marker: 'S1' },
+      argsText: '{"sourceId":"source-1","marker":"S1"}',
+      result: { title: 'Evidence', pages: 7, anchors: [{ page: 7, quote: 'Quoted text' }] },
+    },
   ])
+  assert.equal(getLingxiMessageMetadata(message).presentation, 'conversation')
+})
+
+test('calendar creation approvals use the native generative event protocol', () => {
+  const message = convertEnvelope(envelope('approval', {
+    id: 'calendar-approval',
+    summary: '确认创建安排：线性代数复习',
+    status: 'PENDING',
+    kind: 'calendar_create',
+    payload: {
+      action: 'calendar.create',
+      args: { title: '线性代数复习', at: '2026-09-04T19:30:00+08:00' },
+    },
+  }), { participants, meId: 'me' })
+  assert.deepEqual(message.content[0], {
+    type: 'tool-call',
+    toolCallId: 'approval:calendar-approval',
+    toolName: 'calendar.create',
+    args: { title: '线性代数复习', at: '2026-09-04T19:30:00+08:00' },
+    argsText: '{"title":"线性代数复习","at":"2026-09-04T19:30:00+08:00"}',
+    approval: { id: 'calendar-approval' },
+  })
+})
+
+test('approval kinds use Chinese recommendation details', () => {
+  const details = [
+    'external_communication',
+    'sensitive_or_destructive_action',
+    'financial_or_irreversible_action',
+  ].map((kind) => {
+    const message = convertEnvelope(envelope('approval', { ...kindData.approval, kind }), { participants, meId: 'me' })
+    const part = message.content[0]
+    assert.equal(part?.type, 'tool-call')
+    return (part!.args as { detail: string }).detail
+  })
+  assert.deepEqual(details, [
+    '外部通信',
+    '敏感或破坏性操作',
+    '财务或不可逆操作',
+  ])
+})
+
+test('teacher briefings map their single wire protocol to native checkpoints', () => {
+  const message = convertEnvelope(envelope('system', {
+    type: 'teacher_briefing',
+    windowStartSequence: 12,
+    windowEndSequence: 20,
+    statistics: { eventCount: 8, attentionCount: 2 },
+  }), { participants, meId: 'me' })
+  assert.deepEqual(message.content[0], {
+    type: 'tool-call',
+    toolCallId: 'briefing:system-server',
+    toolName: 'checkpoint-history',
+    args: {
+      id: 'briefing-system-server',
+      checkpoints: [
+        { id: 'briefing-system-server-eventCount', label: '学习更新', at: '序列 12–20', items: 8 },
+        { id: 'briefing-system-server-attentionCount', label: '需要关注', at: '序列 12–20', items: 2 },
+      ],
+      currentId: 'briefing-system-server-attentionCount',
+    },
+    argsText: '{"id":"briefing-system-server","checkpoints":[{"id":"briefing-system-server-eventCount","label":"学习更新","at":"序列 12–20","items":8},{"id":"briefing-system-server-attentionCount","label":"需要关注","at":"序列 12–20","items":2}],"currentId":"briefing-system-server-attentionCount"}',
+  })
 })
 
 test('agent text rejects retired markers instead of rebuilding confidence from citations', () => {
   const input = envelope('text', {
-    citations: [{ sourceId: 'source-1', sourceTitle: 'Evidence', excerpt: 'Quoted text', position: 0, marker: 'S1' }],
+    rag: {
+      claims: [{ id: 'claim-1', text: 'hello', confidence: 'grounded', basis: 'Evidence', markers: ['S1'] }],
+      documentReferences: [{
+        marker: 'S1', sourceId: 'source-1', title: 'Evidence', pages: 1,
+        anchors: [{ page: 1, quote: 'Quoted text' }],
+      }],
+    },
   }, { fromUid: 'agent' })
   input.payload.refs = { runId: 'run-1' }
   input.payload.body = 'hello [S1]'

@@ -346,7 +346,10 @@ app.all('/api/control/platform/*', async (c) => {
   const link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
   if (!link) return c.json({ error: 'business account is not provisioned' }, 409)
   const suffix = c.req.path.slice('/api/control/platform'.length)
-  return originRequest(c.env, `/api/admin${suffix}${new URL(c.req.url).search}`, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }, { appUserId: link.app_user_id, authUserId: session.user.id })
+  const response = await originRequest(c.env, `/api/admin${suffix}${new URL(c.req.url).search}`, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }, { appUserId: link.app_user_id, authUserId: session.user.id })
+  return response.status === 401
+    ? c.json({ error: 'business API rejected the control-plane gateway identity' }, 502)
+    : response
 })
 
 app.all('/api/*', async (c) => {

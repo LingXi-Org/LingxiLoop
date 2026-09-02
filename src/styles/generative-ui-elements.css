@@ -1,0 +1,83 @@
+/* Direct source: assistant-ui/packages/ui/src/lib/generative-ui-vocabulary-css.ts */
+[data-aui-theme="elements"] {
+  --aui-live: oklch(0.623 0.214 259.815);
+}
+
+.dark [data-aui-theme="elements"] {
+  --aui-live: oklch(0.707 0.165 254.624);
+}
+
+[data-aui-theme="elements"] [data-aui="card"][data-aui-surface],
+[data-aui-theme="elements"] [data-aui="carousel"] [data-aui="card"] {
+  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  border-radius: 20px;
+  background-color: var(--background);
+  box-shadow: none;
+}
+
+.dark [data-aui-theme="elements"] [data-aui="card"][data-aui-surface],
+.dark [data-aui-theme="elements"] [data-aui="carousel"] [data-aui="card"] {
+  background-color: var(--popover);
+  box-shadow: none;
+}
+
+[data-aui-theme="elements"] [data-aui="card-footer"] {
+  border-top: none;
+  padding-top: 0.25rem;
+}
+
+[data-aui-theme="elements"] [data-aui="button"],
+[data-aui-theme="elements"] [data-aui="card-confirm"],
+[data-aui-theme="elements"] [data-aui="card-cancel"] {
+  border: none;
+  border-radius: 9999px;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease,
+    transform 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+[data-aui-theme="elements"] [data-aui="button"]:active,
+[data-aui-theme="elements"] [data-aui="card-confirm"]:active,
+[data-aui-theme="elements"] [data-aui="card-cancel"]:active {
+  transform: scale(0.96);
+}
+
+[data-aui-theme="elements"] [data-aui="button"]:focus-visible,
+[data-aui-theme="elements"] [data-aui="card-confirm"]:focus-visible,
+[data-aui-theme="elements"] [data-aui="card-cancel"]:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--foreground) 20%, transparent);
+  outline-offset: 2px;
+}
+
+[data-aui-theme="elements"] [data-aui="button"][data-aui-style="primary"],
+[data-aui-theme="elements"] [data-aui="card-confirm"] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+[data-aui-theme="elements"] [data-aui="button"][data-aui-style="primary"]:hover,
+[data-aui-theme="elements"] [data-aui="card-confirm"]:hover {
+  background-color: var(--primary);
+  opacity: 0.9;
+}
+
+[data-aui-theme="elements"] [data-aui="button"][data-aui-style="ghost"],
+[data-aui-theme="elements"] [data-aui="card-cancel"] {
+  background-color: transparent;
+  color: var(--muted-foreground);
+}
+
+[data-aui-theme="elements"] [data-aui="button"][data-aui-style="ghost"]:hover,
+[data-aui-theme="elements"] [data-aui="card-cancel"]:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+[data-aui-theme="elements"] [data-aui="divider"] {
+  border-top-color: color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+
+[data-aui-theme="elements"] [data-aui="badge"] {
+  align-self: center;
+  background-color: color-mix(in oklab, var(--foreground) 6%, transparent);
+  color: color-mix(in oklab, var(--foreground) 70%, transparent);
+}

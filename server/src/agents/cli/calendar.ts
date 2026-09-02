@@ -1,15 +1,15 @@
 import { createHash } from 'node:crypto'
 import {
   CalendarApplicationError,
-  calendarApplication,
   type CalendarScope,
   type CreateCalendarEventInput,
+  calendarApplication,
   type RecurrenceRule,
   type UpdateCalendarEventInput,
 } from '../../modules/calendar/index.js'
-import type { CliResult, CliSideEffect } from '../cli-result.js'
 import { resolveAs } from '../cli-identity.js'
 import type { ParsedArgs } from '../cli-parse.js'
+import type { CliResult, CliSideEffect } from '../cli-result.js'
 import { consumeHold, recordHold } from '../seen-boundary.js'
 import { normalizeWorkSubject, type WorkTaskType } from '../work-claims.js'
 
@@ -125,6 +125,15 @@ export function createCalendarCommand(dependencies: CalendarCommandDependencies)
         ].join('\n'))
       }
 
+      if (op === 'get') {
+        const eventId = parsed.positional[1]
+        if (!eventId) return err('usage: calendar get <event_id>')
+        const event = await calendarApplication.get(scope, eventId)
+        return parsed.flags.json
+          ? ok(JSON.stringify(event, null, 2))
+          : ok(`${event.title} at ${event.startAt} (${event.status})`)
+      }
+
       if (op === 'create') {
         const title = parsed.positional.slice(1).join(' ').trim()
         if (!title) return err('usage: calendar create "<title>" --at <iso> [flags]')
@@ -146,8 +155,11 @@ export function createCalendarCommand(dependencies: CalendarCommandDependencies)
         const stableCalendarId = internal.idempotencyKey
           ? `ce-agent-${createHash('sha256').update(`${companyId}:${internal.idempotencyKey}`).digest('hex').slice(0, 32)}`
           : undefined
-        if (stableCalendarId && await calendarApplication.find(scope, stableCalendarId)) {
-          return ok(`scheduled ${stableCalendarId} [replayed]`)
+        const replay = stableCalendarId ? await calendarApplication.find(scope, stableCalendarId) : null
+        if (replay) {
+          return parsed.flags.json
+            ? ok(JSON.stringify(replay, null, 2))
+            : ok(`scheduled ${stableCalendarId} [replayed]`)
         }
 
         const blocked = await tryClaimTenantWork(companyId, me, 'calendar-create', title)
@@ -192,28 +204,29 @@ export function createCalendarCommand(dependencies: CalendarCommandDependencies)
             eventId: stableCalendarId,
             replayExisting: Boolean(stableCalendarId),
           })
+          const sideEffects = [{
+            event: 'calendar.event_created',
+            command: 'calendar create',
+            calendarEventId: event.id,
+            actorId: me,
+            companyId,
+            title,
+            kind,
+            assigneeId,
+            targetConversationId,
+            startAt: event.startAt,
+            recurrence,
+            reminderMinutesBefore: reminder.minutes,
+            reminderChannel: reminder.channel,
+            visibleToUser: true,
+          }]
           return ok(
-            `scheduled ${event.id}: "${title}" at ${event.startAt}`
+            parsed.flags.json ? JSON.stringify(event, null, 2) : `scheduled ${event.id}: "${title}" at ${event.startAt}`
             + `${recurrence ? ` · every ${recurrence.interval} ${recurrence.freq}` : ''}`
             + `${assigneeId ? ` → @${assigneeId}` : ''}`
             + `${reminder.minutes != null ? ` · remind ${reminder.minutes}m before (${reminder.channel})` : ''}`
             + `${isPrivate ? ' · 🔒 private' : ''}`,
-            [{
-              event: 'calendar.event_created',
-              command: 'calendar create',
-              calendarEventId: event.id,
-              actorId: me,
-              companyId,
-              title,
-              kind,
-              assigneeId,
-              targetConversationId,
-              startAt: event.startAt,
-              recurrence,
-              reminderMinutesBefore: reminder.minutes,
-              reminderChannel: reminder.channel,
-              visibleToUser: true,
-            }],
+            sideEffects,
           )
         } finally {
           await releaseTenantWork(companyId, me, 'calendar-create', title)
@@ -271,7 +284,9 @@ export function createCalendarCommand(dependencies: CalendarCommandDependencies)
         else if (parsed.flags.every !== undefined) patch.recurrence = recurrenceFromFlags(parsed.flags)
         if (Object.keys(patch).length === 0) return err('nothing to update — pass at least one calendar field flag')
         const event = await calendarApplication.update(scope, eventId, patch)
-        return ok(`updated ${eventId}: "${event.title}" at ${event.startAt} (${event.status})`, [{
+        return ok(parsed.flags.json
+          ? JSON.stringify(event, null, 2)
+          : `updated ${eventId}: "${event.title}" at ${event.startAt} (${event.status})`, [{
           event: 'calendar.event_updated',
           command: `calendar ${op}`,
           calendarEventId: eventId,
@@ -332,7 +347,7 @@ export function createCalendarCommand(dependencies: CalendarCommandDependencies)
         }])
       }
 
-      return err('usage: calendar <list|create|update|run-now|dispatches|cancel|delete> [...]')
+      return err('usage: calendar <list|get|create|update|run-now|dispatches|cancel|delete> [...]')
     } catch (error) {
       if (error instanceof CalendarApplicationError) {
         if (error.code === 'event_not_found') return err(`no event ${parsed.positional[1] ?? ''}`.trim())

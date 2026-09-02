@@ -7,8 +7,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { collapsePanel, mono, ShimmerLabel, SwapLabel } from "./surfaces";
 import { take } from "./range";
+import { collapsePanel, conversationCardSize, mono, ShimmerLabel, SwapLabel } from "./surfaces";
 
 export interface ReasoningStep {
   title: string;
@@ -43,7 +43,7 @@ export function ReasoningPanel({
       data-slot="reasoning-panel"
       open={open}
       onOpenChange={onOpenChange}
-      className={cn("w-full max-w-sm", className)}
+      className={cn(conversationCardSize.standard, className)}
     >
       <CollapsibleTrigger className="group/trigger text-foreground/55 hover:text-foreground/90 flex items-center gap-1.5 py-1 text-[13.5px] transition-[color,scale] outline-none active:scale-[0.98]">
         <SwapLabel active={streaming ? 0 : 1} className="text-start">

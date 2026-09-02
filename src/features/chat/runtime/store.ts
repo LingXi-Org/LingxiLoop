@@ -172,7 +172,7 @@ export function replacePollData(
 ): void {
   updateConversationMessage(conversationId, messageId, (message) => ({
     ...message,
-    content: message.content.map((part) => part.type === 'tool-call' && part.toolName === 'option-list'
+    content: message.content.map((part) => part.type === 'tool-call' && part.toolName === 'poll-form'
       ? updatePollPart(part, poll, tallies, revision)
       : part),
   }) as ThreadMessage)

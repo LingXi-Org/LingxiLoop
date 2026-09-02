@@ -103,6 +103,13 @@ export const reviewEvaluationRequestSchema = z.object({
   decision: z.enum(['accept', 'reject']),
   reason: z.string().trim().min(1),
 }).strict()
+export const learningScoreBreakdownSchema = z.array(z.object({
+  label: z.string().trim().min(1).max(200),
+  score: z.number().min(0).max(4),
+  weight: z.number().positive(),
+  note: z.string().trim().max(1000).optional(),
+}).strict()).min(1).max(100)
+export type LearningScoreCriterion = z.infer<typeof learningScoreBreakdownSchema>[number]
 export type CreateCourseInput = z.infer<typeof createCourseRequestSchema>
 export type UpdateCourseInput = z.infer<typeof updateCourseRequestSchema>
 export type AddInstitutionalCourseMemberInput = z.infer<typeof addInstitutionalCourseMemberRequestSchema>
@@ -208,7 +215,7 @@ export interface ProposeLearningEvaluationCommand extends LearningAgentRoomScope
   attemptId: string
   demonstratedLevel: number
   confidence: number
-  rubricResults?: unknown[]
+  rubricResults: LearningScoreCriterion[]
   feedback?: string
   sourceEvidenceId?: string
   verifierEvidenceId?: string

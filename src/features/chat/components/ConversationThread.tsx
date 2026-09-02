@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useConversationUi } from '@/stores/conversationUi'
 import { userFacingError } from '@/lib/userFacingError'
 import { chatTransport, useConversationThreadSnapshot } from '../runtime'
+import { ConversationActivity } from './ConversationActivity'
 import { ConversationComposer } from './ConversationComposer'
 import { ConversationMessage } from './ConversationMessage'
 
@@ -69,7 +70,7 @@ export function ConversationThread({
   }, [clearPendingJump, pendingJumpId, snapshot.messages])
 
   return (
-    <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread>
+    <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread>
       <ThreadPrimitive.Viewport ref={viewportRef} data-chat-viewport className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
         {!threadRootId && (
           <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-[10.5px] text-muted-foreground sm:px-4">
@@ -87,6 +88,7 @@ export function ConversationThread({
           </div>
         </ThreadPrimitive.Empty>
         <ThreadPrimitive.Messages components={MESSAGE_COMPONENTS} />
+        {!threadRootId && <ConversationActivity conversationId={conversationId} />}
         <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4">
           {!readOnly && <ConversationComposer
               conversationId={conversationId}

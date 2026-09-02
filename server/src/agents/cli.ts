@@ -2464,8 +2464,9 @@ export async function runStructuredLearningAction(
     }
   } else if (namespace === 'calendar') {
     command = 'calendar'; positional.push(method)
+    if (new Set(['list', 'get', 'create', 'update']).has(method)) flags.json = true
     if (method === 'create') positional.push(stringValue('title'))
-    else if (new Set(['update', 'run-now', 'dispatches', 'cancel', 'delete']).has(method)) {
+    else if (new Set(['get', 'update', 'run-now', 'dispatches', 'cancel', 'delete']).has(method)) {
       positional.push(stringValue('eventId'))
     }
   } else if (namespace === 'polls') {

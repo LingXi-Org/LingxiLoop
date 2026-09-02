@@ -172,7 +172,7 @@ export async function proposeLearningEvaluation(
       attemptId: input.attemptId,
       demonstratedLevel,
       confidence,
-      rubricResults: input.rubricResults ?? [],
+      rubricResults: input.rubricResults,
       feedback: input.feedback?.trim() ?? '',
       evaluatorId: input.agentId,
       status,

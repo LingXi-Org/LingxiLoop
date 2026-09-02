@@ -2,7 +2,6 @@ import { PanelRightCloseIcon, PanelRightOpenIcon } from '@hugeicons/core-free-ic
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ConversationActivity } from '@/features/chat/components/ConversationActivity'
 import { ConversationSearch } from '@/features/chat/components/ConversationSearch'
 import { ConversationThread } from '@/features/chat/components/ConversationThread'
 import { ConversationRuntimeProvider } from '@/features/chat/runtime'
@@ -62,7 +61,6 @@ export function ChatPane({
           )}
         />
         <div data-chat-auxiliary="true">
-          <ConversationActivity conversationId={conversationId} />
           <ConversationSearch conversationId={conversationId} open={searchOpen} onClose={() => setSearchOpen(false)} rootRef={rootRef} />
         </div>
         <ConversationThread conversationId={conversationId} readOnly={conversation.readOnly} />

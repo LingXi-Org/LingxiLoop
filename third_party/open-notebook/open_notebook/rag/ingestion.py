@@ -1,6 +1,7 @@
 """Extraction, chunking, and atomic vector replacement for RAG sources."""
 
 import asyncio
+import re
 from typing import Any
 
 from loguru import logger
@@ -60,6 +61,14 @@ async def replace_source_embeddings(source: Source) -> int:
     chunks = chunk_text(source.full_text)
     if not chunks:
         raise ValueError("Source chunking produced no chunks")
+
+    current_page: int | None = None
+    for index, chunk in enumerate(chunks):
+        page_match = re.search(r"\[\[PAGE\s*:\s*(\d+)\]\]", chunk)
+        if page_match:
+            current_page = int(page_match.group(1))
+        elif current_page is not None:
+            chunks[index] = f"[[PAGE:{current_page}]]\n{chunk}"
 
     embeddings = await generate_embeddings(chunks, source.company_id)
     if len(embeddings) != len(chunks):

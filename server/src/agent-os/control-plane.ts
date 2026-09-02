@@ -33,60 +33,108 @@ function validPartIndex(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
 }
 
-type KnowledgePreviewClaim = {
-  id: string
-  text: ''
-  confidence: 'grounded'
-  basis: string
+type KnowledgeDocumentReference = {
+  marker: string
   sourceId: string
-  sourceTitle: string
-  excerpt: string
-  sourceUrl?: string
-  position: number
+  title: string
+  pages: number
+  anchors: Array<{ page: number; quote: string }>
 }
 
-function parseKnowledgePreviewClaims(value: unknown): KnowledgePreviewClaim[] | null {
-  if (!Array.isArray(value) || value.length > 32) return null
+type KnowledgeConfidenceClaim = {
+  id: string
+  text: string
+  confidence: 'grounded'
+  basis: string
+  markers: string[]
+}
+
+function parseKnowledgeConfidenceClaims(value: unknown): KnowledgeConfidenceClaim[] | null {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 64) return null
   const ids = new Set<string>()
-  const claims: KnowledgePreviewClaim[] = []
+  const claims: KnowledgeConfidenceClaim[] = []
   for (const item of value) {
     if (!item || typeof item !== 'object') return null
     const claim = item as Record<string, unknown>
     if (
       typeof claim.id !== 'string'
-      || !/^S\d+$/.test(claim.id)
+      || !claim.id.trim()
       || ids.has(claim.id)
-      || claim.text !== ''
+      || typeof claim.text !== 'string'
+      || !claim.text.trim()
+      || claim.text.length > 4_000
       || claim.confidence !== 'grounded'
       || typeof claim.basis !== 'string'
       || !claim.basis.trim()
-      || claim.basis.length > 4_000
-      || typeof claim.sourceId !== 'string'
-      || !claim.sourceId.trim()
-      || typeof claim.sourceTitle !== 'string'
-      || !claim.sourceTitle.trim()
-      || typeof claim.excerpt !== 'string'
-      || !claim.excerpt.trim()
-      || claim.basis !== `${claim.sourceTitle} · ${claim.excerpt}`
-      || (claim.sourceUrl !== undefined && typeof claim.sourceUrl !== 'string')
-      || typeof claim.position !== 'number'
-      || !Number.isSafeInteger(claim.position)
-      || claim.position < 0
+      || claim.basis.length > 1_000
+      || !Array.isArray(claim.markers)
+      || claim.markers.length === 0
+      || claim.markers.some((marker) => typeof marker !== 'string' || !/^S\d+$/.test(marker))
+      || new Set(claim.markers).size !== claim.markers.length
     ) return null
     ids.add(claim.id)
     claims.push({
       id: claim.id,
-      text: '',
+      text: claim.text,
       confidence: 'grounded',
       basis: claim.basis,
-      sourceId: claim.sourceId,
-      sourceTitle: claim.sourceTitle,
-      excerpt: claim.excerpt,
-      ...(claim.sourceUrl ? { sourceUrl: claim.sourceUrl } : {}),
-      position: claim.position,
+      markers: claim.markers as string[],
     })
   }
   return claims
+}
+
+function parseKnowledgeDocumentReferences(value: unknown): KnowledgeDocumentReference[] | null {
+  if (!Array.isArray(value) || value.length > 8) return null
+  const markers = new Set<string>()
+  const sourceIds = new Set<string>()
+  const references: KnowledgeDocumentReference[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null
+    const reference = item as Record<string, unknown>
+    if (
+      typeof reference.marker !== 'string'
+      || !/^S\d+$/.test(reference.marker)
+      || markers.has(reference.marker)
+      || typeof reference.sourceId !== 'string'
+      || !reference.sourceId.trim()
+      || sourceIds.has(reference.sourceId)
+      || typeof reference.title !== 'string'
+      || !reference.title.trim()
+      || reference.title.length > 500
+      || typeof reference.pages !== 'number'
+      || !Number.isSafeInteger(reference.pages)
+      || reference.pages < 1
+      || !Array.isArray(reference.anchors)
+      || reference.anchors.length === 0
+      || reference.anchors.length > 24
+    ) return null
+    const pages = reference.pages
+    const anchors = reference.anchors.flatMap((item) => {
+      if (!item || typeof item !== 'object') return []
+      const anchor = item as Record<string, unknown>
+      return typeof anchor.page === 'number'
+        && Number.isSafeInteger(anchor.page)
+        && anchor.page >= 1
+        && anchor.page <= pages
+        && typeof anchor.quote === 'string'
+        && anchor.quote.trim()
+        && anchor.quote.length <= 2_000
+        ? [{ page: anchor.page, quote: anchor.quote }]
+        : []
+    })
+    if (anchors.length !== reference.anchors.length) return null
+    markers.add(reference.marker)
+    sourceIds.add(reference.sourceId)
+    references.push({
+      marker: reference.marker,
+      sourceId: reference.sourceId,
+      title: reference.title,
+      pages,
+      anchors,
+    })
+  }
+  return references
 }
 
 function contextualKnowledgeQuery(
@@ -586,14 +634,24 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
     || typeof event.data !== 'object'
     || Array.isArray(event.data)
   ) { res.status(400).json({ error: 'invalid Agent OS event envelope' }); return }
-  const knowledgeClaims = event.kind === 'knowledge.context.loaded'
-    ? parseKnowledgePreviewClaims((event.data as Record<string, unknown>).previewClaims)
+  const knowledgeClaims = event.kind === 'knowledge.rag.completed'
+    ? parseKnowledgeConfidenceClaims((event.data as Record<string, unknown>).previewClaims)
     : undefined
-  if (event.kind === 'knowledge.context.loaded' && knowledgeClaims === null) {
-    res.status(400).json({ error: 'invalid knowledge preview claims' }); return
+  const knowledgeReferences = event.kind === 'knowledge.rag.completed'
+    ? parseKnowledgeDocumentReferences((event.data as Record<string, unknown>).previewReferences)
+    : undefined
+  const knowledgePartIndexStart = (event.data as Record<string, unknown>).partIndexStart
+  if (event.kind === 'knowledge.rag.completed' && (
+    knowledgeClaims === null || knowledgeReferences === null || !validPartIndex(knowledgePartIndexStart)
+  )) {
+    res.status(400).json({ error: 'invalid native RAG result' }); return
   }
   const ledgerData = { ...(event.data as Record<string, unknown>) }
-  if (event.kind === 'knowledge.context.loaded') delete ledgerData.previewClaims
+  if (event.kind === 'knowledge.rag.completed') {
+    delete ledgerData.previewClaims
+    delete ledgerData.previewReferences
+    ledgerData.ragHash = hash(JSON.stringify({ claims: knowledgeClaims, documentReferences: knowledgeReferences }))
+  }
   await withTransaction(pool, async (db) => {
     await db.query(
     `INSERT INTO agent_runs (id, agent_id, company_id, trigger, status, stage, reasoning_runtime)
@@ -668,19 +726,40 @@ agentOSControlRouter.post('/work/:id/events', safe(async (req, res) => {
       data: { ...data, suppressAgentWake: true },
     },
   )
-  if (event.kind === 'knowledge.context.loaded') {
-    if (knowledgeClaims && knowledgeClaims.length > 0) {
-      await publishPreview([
+  if (event.kind === 'knowledge.rag.completed') {
+    const claimPath = [knowledgePartIndexStart as number]
+    const chunks: AssistantStreamChunk[] = [
+      {
+        type: 'part-start', path: claimPath,
+        part: { type: 'tool-call', toolCallId: `cite-claims:${work.id}`, toolName: 'cite_claims' },
+      },
+      { type: 'text-delta', path: claimPath, textDelta: '{}' },
+      { type: 'tool-call-args-text-finish', path: claimPath },
+      { type: 'result', path: claimPath, result: { claims: knowledgeClaims! }, isError: false },
+      { type: 'part-finish', path: claimPath },
+    ]
+    for (const [index, reference] of knowledgeReferences!.entries()) {
+      const path = [knowledgePartIndexStart as number + index + 1]
+      chunks.push(
         {
-          type: 'part-start', path: [0],
-          part: { type: 'tool-call', toolCallId: `knowledge-${work.id}`, toolName: 'cite_claims' },
+          type: 'part-start', path,
+          part: {
+            type: 'tool-call',
+            toolCallId: `read-document:${work.id}:${reference.marker}`,
+            toolName: 'read_document',
+          },
         },
-        { type: 'text-delta', path: [0], textDelta: '{}' },
-        { type: 'tool-call-args-text-finish', path: [0] },
-        { type: 'result', path: [0], result: { claims: knowledgeClaims }, isError: false },
-        { type: 'part-finish', path: [0] },
-      ])
+        { type: 'text-delta', path, textDelta: JSON.stringify({ sourceId: reference.sourceId, marker: reference.marker }) },
+        { type: 'tool-call-args-text-finish', path },
+        {
+          type: 'result', path,
+          result: { title: reference.title, pages: reference.pages, anchors: reference.anchors },
+          isError: false,
+        },
+        { type: 'part-finish', path },
+      )
     }
+    if (chunks.length > 0) await publishPreview(chunks)
   } else if (event.kind === 'run.started' || event.kind === 'model.started') {
     await publishPreview([{ type: 'step-start', path: [], messageId: previewClientMsgNo }])
   } else if (event.kind === 'model.delta') {
@@ -800,11 +879,37 @@ agentOSControlRouter.post('/work/:id/messages', safe(async (req, res) => {
   if (message.kind !== 'text' || message.refs?.runId !== work.id || !message.body?.trim()) {
     res.status(409).json({ error: 'assistant message is missing its native stream identity or body' }); return
   }
+  const rawRag = message.data?.rag
+  if (rawRag !== undefined && (!rawRag || typeof rawRag !== 'object' || Array.isArray(rawRag))) {
+    res.status(409).json({ error: 'assistant message contains an invalid native RAG result' }); return
+  }
+  const rawRagRecord = rawRag as Record<string, unknown> | undefined
+  const messageClaims = rawRagRecord === undefined ? [] : parseKnowledgeConfidenceClaims(rawRagRecord.claims)
+  const messageReferences = rawRagRecord === undefined ? [] : parseKnowledgeDocumentReferences(rawRagRecord.documentReferences)
+  if (messageClaims === null || messageReferences === null) {
+    res.status(409).json({ error: 'assistant message contains an invalid native RAG result' }); return
+  }
+  const citationPattern = /\[([^\]\n]+)\]\(#cite-(S\d+(?:,S\d+)*)\)/g
+  const citationLinks = [...message.body.matchAll(citationPattern)]
+  const citedMarkers = new Set(citationLinks.flatMap((match) => match[2]!.split(',')))
+  if (
+    citedMarkers.size !== messageReferences.length
+    || messageReferences.some((reference) => !citedMarkers.has(reference.marker))
+    || messageClaims.length !== citationLinks.length
+    || messageClaims.some((claim, index) => (
+      claim.text !== citationLinks[index]![1]
+      || claim.markers.join(',') !== citationLinks[index]![2]
+    ))
+    || (messageClaims.length > 0
+      && message.body.replace(citationPattern, '').split('\n').some((line) => !/^\s*(?:(?:[-+*]|\d+[.)])\s*)?$/.test(line)))
+  ) {
+    res.status(409).json({ error: 'assistant citations do not match the native RAG result' }); return
+  }
   const attemptSequenceStart = Math.max(0, work.fence - 1) * 100_000
   const attemptSequenceEnd = work.fence * 100_000
   const { rows: streamEvents } = await pool.query<{ kind: string; data: Record<string, unknown>; sequence: number }>(
     `SELECT kind,data,sequence FROM agent_events
-      WHERE run_id=$1 AND kind IN ('model.started','model.delta','model.completed')
+      WHERE run_id=$1 AND kind IN ('model.started','model.delta','model.completed','knowledge.rag.completed')
         AND sequence>$2 AND sequence<$3
       ORDER BY sequence`,
     [work.id, attemptSequenceStart, attemptSequenceEnd],
@@ -817,6 +922,14 @@ agentOSControlRouter.post('/work/:id/messages', safe(async (req, res) => {
   const completed = streamEvents.filter((row) => row.kind === 'model.completed')
   if (!streamed || completed.length === 0 || streamed !== message.body.trim()) {
     res.status(409).json({ error: 'assistant final message does not match its native streamed deltas' }); return
+  }
+  const ragEvents = streamEvents.filter((row) => row.kind === 'knowledge.rag.completed')
+  if (
+    ragEvents.length !== (messageReferences.length > 0 ? 1 : 0)
+    || (messageReferences.length > 0
+      && ragEvents[0]?.data.ragHash !== hash(JSON.stringify({ claims: messageClaims, documentReferences: messageReferences })))
+  ) {
+    res.status(409).json({ error: 'assistant final RAG result does not match its native stream' }); return
   }
   const usage = completed.reduce((total, row) => {
     const value = row.data.usage as { inputTokens?: unknown; outputTokens?: unknown } | undefined

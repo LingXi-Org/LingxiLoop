@@ -30,6 +30,7 @@ export interface KnowledgeCitation {
   excerpt: string
   sourceUrl?: string
   position: number
+  page?: number
   marker: string
 }
 

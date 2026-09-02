@@ -3,7 +3,7 @@
 import { FileTextIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
-import { field, mono, paper } from "./surfaces";
+import { conversationCardSize, field, mono, paper } from "./surfaces";
 
 export interface DocumentAnchor {
   page: number;
@@ -38,7 +38,8 @@ export function DocumentReference({
       data-slot="document-reference"
       className={cn(
         paper,
-        "flex w-full max-w-sm flex-col gap-3 rounded-2xl p-3.5",
+        conversationCardSize.standard,
+        "flex flex-col gap-3 rounded-2xl p-3.5",
         className,
       )}
 
@@ -51,7 +52,7 @@ export function DocumentReference({
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-[13.5px] font-medium">{title}</span>
           <span className={cn(mono, "text-foreground/30")}>
-            {pages} pages · {anchors.length} cited
+            {pages} 页 · {anchors.length} 处引用
           </span>
         </div>
       </div>
@@ -71,7 +72,7 @@ export function DocumentReference({
             )}
           >
             <span className={cn(mono, "text-foreground/30")}>
-              p. {anchor.page}
+              第 {anchor.page} 页
             </span>
             <span className="text-foreground/65 border-foreground/15 border-s-2 ps-2 text-xs leading-relaxed break-words">
               {anchor.quote}
