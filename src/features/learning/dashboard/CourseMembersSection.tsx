@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { notifyAction, toastAction } from '@/lib/actionToast'
@@ -21,7 +22,8 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
   const canInvite = canView && space.canInviteMembers
   const canRevoke = canView && space.canRevokeInvitations
   const canRemove = canView && space.canRemoveMembers
-  const canWrite = canInvite || canRevoke || canRemove
+  const canUpdate = canView && space.canUpdateMembers
+  const canWrite = canInvite || canRevoke || canRemove || canUpdate
   const [members, setMembers] = useState<ApiCourseMember[]>([])
   const [invitations, setInvitations] = useState<ApiProjectInvitation[]>([])
   const [createdLink, setCreatedLink] = useState('')
@@ -110,6 +112,29 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
     finally { setBusy(false) }
   }
 
+  const updateMemberRole = async (member: ApiCourseMember, role: ApiCourseMember['role']) => {
+    if (!space.courseId || busy || !canUpdate || role === member.role) return
+    const roleLabel = role === 'teacher' ? '课程管理者' : '学习者'
+    const confirmed = await confirmSensitiveAction({
+      title: '变更课程角色？',
+      description: `${member.name} 将变更为${roleLabel}。`,
+      confirmLabel: '变更角色',
+      tone: 'warning',
+    })
+    if (!confirmed) return
+    setBusy(true)
+    try {
+      await toastAction(learningApi.updateCourseMember(space.courseId, member.id, role), {
+        loading: '正在变更课程角色',
+        success: '课程角色已变更',
+        error: '变更课程角色失败，请稍后重试',
+        description: member.name,
+      })
+      await load()
+    } catch { /* Toast owns the visible error state. */ }
+    finally { setBusy(false) }
+  }
+
   const revokeInvite = async (invitation: ApiProjectInvitation) => {
     if (busy || !canRevoke) return
     const confirmed = await confirmSensitiveAction({
@@ -143,7 +168,7 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
           {loading ? <ResourceSkeleton variant="table" count={5} label="正在加载课程成员" /> : (
             <Table>
               <TableHeader><TableRow><TableHead>成员</TableHead><TableHead>课程角色</TableHead><TableHead>加入时间</TableHead><TableHead><span className="sr-only">操作</span></TableHead></TableRow></TableHeader>
-              <TableBody>{members.map((member) => <TableRow key={member.id}><TableCell><p className="font-medium">{member.name}</p><p className="text-xs text-muted-foreground">{member.email}</p></TableCell><TableCell><Badge variant="secondary">{member.role === 'teacher' ? '课程创建者' : '学习者'}</Badge></TableCell><TableCell>{new Date(member.joinedAt).toLocaleString('zh-CN')}</TableCell><TableCell>{canRemove && member.role === 'learner' && <Button type="button" variant="destructive" size="icon-sm" aria-label={`移除 ${member.name}`} disabled={busy} onClick={() => void removeMember(member)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} /></Button>}</TableCell></TableRow>)}</TableBody>
+              <TableBody>{members.map((member) => <TableRow key={member.id}><TableCell><p className="font-medium">{member.name}</p><p className="text-xs text-muted-foreground">{member.email}</p></TableCell><TableCell>{canUpdate ? <Select value={member.role} disabled={busy} onValueChange={(role) => { if (role === 'teacher' || role === 'learner') void updateMemberRole(member, role) }}><SelectTrigger size="sm" className="min-w-32" aria-label={`变更 ${member.name} 的课程角色`}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="teacher">课程管理者</SelectItem><SelectItem value="learner">学习者</SelectItem></SelectContent></Select> : <Badge variant="secondary">{member.role === 'teacher' ? '课程管理者' : '学习者'}</Badge>}</TableCell><TableCell>{new Date(member.joinedAt).toLocaleString('zh-CN')}</TableCell><TableCell>{canRemove && member.role === 'learner' && <Button type="button" variant="destructive" size="icon-sm" aria-label={`移除 ${member.name}`} disabled={busy} onClick={() => void removeMember(member)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} /></Button>}</TableCell></TableRow>)}</TableBody>
             </Table>
           )}
           {!loading && members.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">暂无课程成员。</p>}

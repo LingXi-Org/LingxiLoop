@@ -21,9 +21,11 @@ import {
 } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { WorkspaceRail } from '@/desktop/WorkspaceRail'
-import type { LearnerLearningOverview, LearningOverview, TeacherLearningOverview } from '@/features/learning/contracts'
+import type { LearnerLearningOverview, LearningOverview, LearningSpace, TeacherLearningOverview } from '@/features/learning/contracts'
+import { CourseSettingsSection } from '@/features/learning/dashboard/CourseSettingsSection'
 import { getLearningDashboardMenu, type LearningDashboardSection } from '@/features/learning/dashboard/navigation'
 import { OverviewSection } from '@/features/learning/dashboard/OverviewSection'
+import { TeacherOverviewDashboard } from '@/features/learning/dashboard/TeacherOverviewDashboard'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { useSettingsDialog } from '@/features/settings/store'
 import { useWorkspace } from '@/features/knowledge/workspace'
@@ -181,6 +183,31 @@ const teacherOverview: TeacherLearningOverview = {
   ],
 }
 
+const teacherSpace: LearningSpace = {
+  companyId: 'fixture-company',
+  projectId: 'fixture-teacher',
+  projectKind: 'TEACHING',
+  courseId: 'fixture-course',
+  title: '产品设计基础',
+  description: '从真实学习证据出发，建立可验证的产品设计能力。',
+  color: '#5266d6',
+  status: 'ACTIVE',
+  perspective: 'teacher',
+  canManage: true,
+  canEditContent: true,
+  canUpdateCourse: true,
+  canInviteMembers: true,
+  canRevokeInvitations: true,
+  canUpdateMembers: true,
+  canRemoveMembers: true,
+  canSubmit: false,
+  canReview: true,
+  lifecycleAction: 'END',
+  studyRoomId: 'fixture-room',
+  isDefault: false,
+  lastVisitedAt: '2026-08-31T08:00:00.000Z',
+}
+
 const scenarioCopy: Record<Scenario, { title: string; scope: string; personal: boolean; perspective: 'learner' | 'teacher' }> = {
   personal: { title: '我的学习', scope: '个人学习区', personal: true, perspective: 'learner' },
   learner: { title: '产品设计基础', scope: '课程学习区', personal: false, perspective: 'learner' },
@@ -278,7 +305,11 @@ function DashboardFixture() {
                   aria-label={`${copy.scope}数据概览`}
                   className="@container/learning-grid h-[calc(100%-3rem)] overflow-y-auto p-4 sm:p-6"
                 >
-                  {section === 'overview' ? <OverviewSection overview={overview} /> : (
+                  {scenario === 'teacher' && section === 'overview' ? (
+                    <TeacherOverviewDashboard space={teacherSpace} />
+                  ) : scenario === 'teacher' && section === 'settings' ? (
+                    <CourseSettingsSection space={teacherSpace} />
+                  ) : section === 'overview' ? <OverviewSection overview={overview} /> : (
                     <div className="grid h-full place-items-center text-sm text-muted-foreground">
                       <p>{menu.find((item) => item.section === section)?.label}页面</p>
                     </div>

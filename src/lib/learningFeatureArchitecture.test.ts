@@ -9,20 +9,28 @@ const readComponent = (name: string) => readFileSync(componentUrl(name), 'utf8')
 
 test('learning dashboard is composed from bounded role-aware sections', () => {
   const shell = readDashboard('LearningDashboardPanel.tsx')
+  const teacherDashboard = readDashboard('TeacherOverviewDashboard.tsx')
   const sections = [
     'OverviewSection.tsx',
     'MissionSection.tsx',
     'TeacherLearnersSection.tsx',
-    'CourseMembersSection.tsx',
+    'TeacherLearningDetailDialog.tsx',
+    'TeacherOverviewDashboard.tsx',
     'CourseSettingsSection.tsx',
+    'CourseProfileSettings.tsx',
+    'CourseContentSettings.tsx',
   ]
 
   assert.ok(shell.split('\n').length < 250)
   for (const section of sections) {
     const source = readDashboard(section)
-    assert.match(shell, new RegExp(section.replace('.tsx', '')))
     assert.ok(source.split('\n').length < 500, `${section} must keep one bounded section owner`)
   }
+  for (const section of ['OverviewSection', 'MissionSection', 'TeacherOverviewDashboard', 'CourseSettingsSection']) {
+    assert.match(shell, new RegExp(section))
+  }
+  assert.match(teacherDashboard, /TeacherLearnersSection/)
+  assert.match(teacherDashboard, /TeacherLearningDetailDialog/)
   assert.match(shell, /space\.perspective/)
   assert.match(readDashboard('navigation.ts'), /PERSONAL_MENU[\s\S]*LEARNER_MENU[\s\S]*TEACHER_MENU/)
 })
@@ -33,8 +41,12 @@ test('learning dashboard composes the required official data primitives', () => 
     'OverviewSection.tsx',
     'MissionSection.tsx',
     'TeacherLearnersSection.tsx',
+    'TeacherLearningDetailDialog.tsx',
+    'TeacherOverviewDashboard.tsx',
     'CourseMembersSection.tsx',
     'CourseSettingsSection.tsx',
+    'CourseProfileSettings.tsx',
+    'CourseContentSettings.tsx',
   ].map(readDashboard).join('\n')
   const reusableSource = [
     'LearningObjectivesSection.tsx',
@@ -49,7 +61,7 @@ test('learning dashboard composes the required official data primitives', () => 
   assert.equal(existsSync(componentUrl('LearningCenter.tsx')), false)
   assert.doesNotMatch(source, /<(?:button|select)\b|<input\b[^>]*type=['"]checkbox['"]/)
   assert.doesNotMatch(source, /\b(?:bg-app|bg-panel|bg-raised|text-ink|border-hairline)\b/)
-  for (const primitive of ['card', 'button', 'chart', 'table', 'progress', 'pagination']) {
+  for (const primitive of ['card', 'button', 'chart', 'table', 'progress', 'pagination', 'dialog', 'empty', 'input-group']) {
     assert.match(source, new RegExp(`@/components/ui/${primitive}`))
   }
   assert.match(source, /@\/components\/ResourceSkeleton/)

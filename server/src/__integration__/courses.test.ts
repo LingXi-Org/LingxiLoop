@@ -142,6 +142,7 @@ interface DashboardSpace {
   canUpdateCourse: boolean
   canInviteMembers: boolean
   canRevokeInvitations: boolean
+  canUpdateMembers: boolean
   canRemoveMembers: boolean
   canSubmit: boolean
   canReview: boolean
@@ -247,6 +248,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
     canUpdateCourse: personal.canUpdateCourse,
     canInviteMembers: personal.canInviteMembers,
     canRevokeInvitations: personal.canRevokeInvitations,
+    canUpdateMembers: personal.canUpdateMembers,
     canRemoveMembers: personal.canRemoveMembers,
     canSubmit: personal.canSubmit,
     canReview: personal.canReview,
@@ -258,6 +260,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
     canUpdateCourse: false,
     canInviteMembers: false,
     canRevokeInvitations: false,
+    canUpdateMembers: false,
     canRemoveMembers: false,
     canSubmit: true,
     canReview: false,
@@ -271,6 +274,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
     canUpdateCourse: activeOwner.canUpdateCourse,
     canInviteMembers: activeOwner.canInviteMembers,
     canRevokeInvitations: activeOwner.canRevokeInvitations,
+    canUpdateMembers: activeOwner.canUpdateMembers,
     canRemoveMembers: activeOwner.canRemoveMembers,
     canSubmit: activeOwner.canSubmit,
     canReview: activeOwner.canReview,
@@ -282,6 +286,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
     canUpdateCourse: true,
     canInviteMembers: true,
     canRevokeInvitations: true,
+    canUpdateMembers: true,
     canRemoveMembers: true,
     canSubmit: false,
     canReview: true,
@@ -298,6 +303,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
     canUpdateCourse: transferPendingSpace.canUpdateCourse,
     canInviteMembers: transferPendingSpace.canInviteMembers,
     canRevokeInvitations: transferPendingSpace.canRevokeInvitations,
+    canUpdateMembers: transferPendingSpace.canUpdateMembers,
     canRemoveMembers: transferPendingSpace.canRemoveMembers,
     lifecycleAction: transferPendingSpace.lifecycleAction,
   }, {
@@ -306,6 +312,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
     canUpdateCourse: false,
     canInviteMembers: false,
     canRevokeInvitations: false,
+    canUpdateMembers: false,
     canRemoveMembers: false,
     lifecycleAction: null,
   })
@@ -400,6 +407,23 @@ test('[integration] learning dashboard crosses Companies only through actor memb
      VALUES ('evaluation-dashboard','co-dashboard-a',$1,'attempt-dashboard',3,0.9,$2,'TEACHER','PENDING')`,
     [courseA.projectId, OWNER],
   )
+
+  const reviews = await responseJson<Array<Record<string, unknown>>>(await fetch(
+    `${ownerUrl}/api/projects/${courseA.projectId}/learning/reviews`,
+    { headers: { 'x-company-id': 'co-dashboard-a' } },
+  ))
+  assert.equal(reviews.length, 1)
+  assert.deepEqual({
+    id: reviews[0]?.id,
+    learnerDisplayName: reviews[0]?.learner_display_name,
+    hasEvidence: Object.hasOwn(reviews[0] ?? {}, 'evidence'),
+    hasRubricResults: Object.hasOwn(reviews[0] ?? {}, 'rubric_results'),
+  }, {
+    id: 'evaluation-dashboard',
+    learnerDisplayName: 'Learner',
+    hasEvidence: false,
+    hasRubricResults: false,
+  })
 
   const teacherOverview = await fetch(
     `${ownerUrl}/api/projects/${courseA.projectId}/learning/overview?windowDays=30`,
@@ -518,6 +542,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
     canUpdateCourse: studentSpace.canUpdateCourse,
     canInviteMembers: studentSpace.canInviteMembers,
     canRevokeInvitations: studentSpace.canRevokeInvitations,
+    canUpdateMembers: studentSpace.canUpdateMembers,
     canRemoveMembers: studentSpace.canRemoveMembers,
     canSubmit: studentSpace.canSubmit,
     canReview: studentSpace.canReview,
@@ -530,6 +555,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
     canUpdateCourse: false,
     canInviteMembers: false,
     canRevokeInvitations: false,
+    canUpdateMembers: false,
     canRemoveMembers: false,
     canSubmit: true,
     canReview: false,
@@ -553,6 +579,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
       canUpdateCourse: readOnlyLearnerSpace.canUpdateCourse,
       canInviteMembers: readOnlyLearnerSpace.canInviteMembers,
       canRevokeInvitations: readOnlyLearnerSpace.canRevokeInvitations,
+      canUpdateMembers: readOnlyLearnerSpace.canUpdateMembers,
       canRemoveMembers: readOnlyLearnerSpace.canRemoveMembers,
       canSubmit: readOnlyLearnerSpace.canSubmit,
       canReview: readOnlyLearnerSpace.canReview,
@@ -565,6 +592,7 @@ test('[integration] learning dashboard crosses Companies only through actor memb
       canUpdateCourse: false,
       canInviteMembers: false,
       canRevokeInvitations: false,
+      canUpdateMembers: false,
       canRemoveMembers: false,
       canSubmit: false,
       canReview: false,

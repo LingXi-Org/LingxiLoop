@@ -195,6 +195,7 @@ test('space capabilities follow Access policy for learner, reviewer, and lifecyc
   assert.match(application, /personal \? null : request\('course:update'\)/)
   assert.match(application, /personal \? null : request\('project_invitation:create'\)/)
   assert.match(application, /personal \? null : request\('project_invitation:revoke'\)/)
+  assert.match(application, /personal \? null : request\('project_member:update'\)/)
   assert.match(application, /personal \? null : request\('project_member:remove'\)/)
   assert.match(application, /request\('learning:submit'\)/)
   assert.match(application, /request\('learning:review'\)/)
@@ -210,6 +211,7 @@ test('space capabilities follow Access policy for learner, reviewer, and lifecyc
     'course:update',
     'project_invitation:create',
     'project_invitation:revoke',
+    'project_member:update',
     'project_member:remove',
   ] as const
   const activeOwner = {

@@ -19,22 +19,30 @@ interface LearningObjectivesSectionProps {
 export function LearningObjectivesSection({
   course, objectives, perspective, mastery, onChanged, onError,
 }: LearningObjectivesSectionProps) {
-  const publishObjective = async (objective: LearningObjective) => {
+  const changeObjectiveStatus = async (
+    objective: LearningObjective,
+    status: 'PUBLISHED' | 'ARCHIVED',
+  ) => {
     if (perspective !== 'teacher' || !course.canManage || !course.canEditContent || !course.courseId) return
+    const publishing = status === 'PUBLISHED'
     const confirmed = await confirmSensitiveAction({
-      title: '发布学习目标？',
-      description: `“${objective.title}”将对课程学习者可见。`,
-      confirmLabel: '发布目标',
-      tone: 'warning',
+      title: publishing ? '发布学习目标？' : '归档学习目标？',
+      description: publishing
+        ? `“${objective.title}”将对课程学习者可见。`
+        : `“${objective.title}”将从当前课程内容中归档。`,
+      confirmLabel: publishing ? '发布目标' : '归档目标',
+      tone: publishing ? 'warning' : 'destructive',
     })
     if (!confirmed) return
     try {
-      await toastAction(learningApi.setObjectiveStatus(course.courseId, objective.id, 'PUBLISHED'), {
-        loading: '正在发布学习目标', success: '学习目标已发布', error: '发布学习目标失败，请稍后重试',
+      await toastAction(learningApi.setObjectiveStatus(course.courseId, objective.id, status), {
+        loading: publishing ? '正在发布学习目标' : '正在归档学习目标',
+        success: publishing ? '学习目标已发布' : '学习目标已归档',
+        error: publishing ? '发布学习目标失败，请稍后重试' : '归档学习目标失败，请稍后重试',
       })
       await onChanged()
     } catch (reason) {
-      onError(userFacingError(reason, '学习目标未能发布，请稍后重试。'))
+      onError(userFacingError(reason, publishing ? '学习目标未能发布，请稍后重试。' : '学习目标未能归档，请稍后重试。'))
     }
   }
 
@@ -76,8 +84,13 @@ export function LearningObjectivesSection({
                   </div>
                 ) : <p className="mt-1 text-xs text-muted-foreground">无需先完成其他目标</p>}
               </div>
-              {perspective === 'teacher' && course.canManage && course.canEditContent && objective.status === 'DRAFT' && course.courseId && (
-                <Button size="sm" onClick={() => void publishObjective(objective)}>发布目标</Button>
+              {perspective === 'teacher' && course.canManage && course.canEditContent && objective.status !== 'ARCHIVED' && course.courseId && (
+                <div className="flex flex-wrap gap-3">
+                  {objective.status === 'DRAFT' && (
+                    <Button size="sm" onClick={() => void changeObjectiveStatus(objective, 'PUBLISHED')}>发布目标</Button>
+                  )}
+                  <Button size="sm" variant="outline" onClick={() => void changeObjectiveStatus(objective, 'ARCHIVED')}>归档目标</Button>
+                </div>
               )}
             </div>
           </CardContent>

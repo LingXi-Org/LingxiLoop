@@ -106,6 +106,7 @@ interface LearningSpaceCapabilities {
   canUpdateCourse: boolean
   canInviteMembers: boolean
   canRevokeInvitations: boolean
+  canUpdateMembers: boolean
   canRemoveMembers: boolean
   canSubmit: boolean
   canReview: boolean
@@ -193,6 +194,7 @@ export async function listLearningSpaces(
       updateCourse,
       inviteMembers,
       revokeInvitations,
+      updateMembers,
       removeMembers,
       submit,
       review,
@@ -202,6 +204,7 @@ export async function listLearningSpaces(
       personal ? null : request('course:update'),
       personal ? null : request('project_invitation:create'),
       personal ? null : request('project_invitation:revoke'),
+      personal ? null : request('project_member:update'),
       personal ? null : request('project_member:remove'),
       request('learning:submit'),
       personal ? null : request('learning:review'),
@@ -212,6 +215,7 @@ export async function listLearningSpaces(
       canUpdateCourse: updateCourse?.allowed ?? false,
       canInviteMembers: inviteMembers?.allowed ?? false,
       canRevokeInvitations: revokeInvitations?.allowed ?? false,
+      canUpdateMembers: updateMembers?.allowed ?? false,
       canRemoveMembers: removeMembers?.allowed ?? false,
       canSubmit: submit.allowed,
       canReview: review?.allowed ?? false,
@@ -225,6 +229,7 @@ export async function listLearningSpaces(
       canUpdateCourse: false,
       canInviteMembers: false,
       canRevokeInvitations: false,
+      canUpdateMembers: false,
       canRemoveMembers: false,
       canSubmit: false,
       canReview: false,

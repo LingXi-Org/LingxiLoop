@@ -61,8 +61,8 @@ export function useLearningDashboardData(projectId: string, perspective: Learnin
       const [objectives, activities, evidence, missions, reviews] = await Promise.all([
         learningApi.listKnowledgeUnits(projectId),
         learningApi.listActivities(projectId),
-        learningApi.listEvidence(projectId),
-        learningApi.listMissions(projectId),
+        perspective === 'teacher' ? Promise.resolve([]) : learningApi.listEvidence(projectId),
+        perspective === 'teacher' ? Promise.resolve([]) : learningApi.listMissions(projectId),
         perspective === 'teacher' && canReview ? learningApi.listReviews(projectId) : Promise.resolve([]),
       ])
       if (requestEpoch !== resourcesRequestEpoch.current) return

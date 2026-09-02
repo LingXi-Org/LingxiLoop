@@ -122,18 +122,17 @@ export async function listPendingLearningEvaluationRecords(
 ) {
   const { rows } = await db.query(
     `SELECT evaluation.id,evaluation.attempt_id,evaluation.demonstrated_level,evaluation.confidence,
-            evaluation.rubric_results,evaluation.feedback,evaluation.created_at,
+            evaluation.feedback,evaluation.status,evaluation.created_at,
             evaluation.source_evidence_id,evaluation.verifier_evidence_id,
             source.author_agent_id AS builder_agent_id,verifier.author_agent_id AS verifier_agent_id,
             verifier.verdict AS verifier_verdict,attempt.learner_id,attempt.activity_id,
-            attempt.assistance,evidence.data AS evidence,activity.title AS activity_title
+            attempt.assistance,user_account.display_name AS learner_display_name,
+            activity.title AS activity_title
        FROM learning_evaluations evaluation
        JOIN learning_attempts attempt
          ON attempt.id=evaluation.attempt_id AND attempt.company_id=evaluation.company_id
         AND attempt.project_id=evaluation.project_id
-       JOIN evidence_records evidence
-         ON evidence.id=attempt.evidence_id AND evidence.company_id=attempt.company_id
-        AND evidence.project_id=attempt.project_id
+       JOIN users user_account ON user_account.id=attempt.learner_id
        LEFT JOIN learning_activities activity ON activity.id=attempt.activity_id
          AND activity.company_id=attempt.company_id AND activity.project_id=attempt.project_id
        LEFT JOIN canvas_assignment_reports source ON source.evidence_id=evaluation.source_evidence_id
