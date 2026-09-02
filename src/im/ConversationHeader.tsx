@@ -24,9 +24,8 @@ export function ConversationHeader({
     <header
       className={cn(
         'im-conversation-header omb-drag z-20 flex shrink-0 items-center border-b border-[var(--im-divider-weak)] bg-card text-card-foreground',
-        mobile ? 'min-h-12 gap-2 px-2' : 'omb-titlebar-safe h-12 gap-3 px-4',
+        mobile ? 'min-h-14 gap-2 px-2' : 'omb-titlebar-safe h-12 gap-3 px-4',
       )}
-      style={mobile ? { paddingTop: 'env(safe-area-inset-top)' } : undefined}
     >
       {onBack && (
         <Button
@@ -34,7 +33,7 @@ export function ConversationHeader({
           variant="ghost"
           size="icon"
           onClick={onBack}
-          className="omb-no-drag shrink-0 text-muted-foreground"
+          className={cn('omb-no-drag shrink-0 text-muted-foreground', mobile && 'size-11')}
           aria-label="返回会话列表"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="size-5">
@@ -44,7 +43,7 @@ export function ConversationHeader({
       )}
       <div className="omb-no-drag flex min-w-0 items-center gap-2.5">
         <ConversationAvatar conversation={conversation} size={mobile ? 28 : 30} variant={variant} />
-        <span className="truncate text-sm font-medium text-foreground">{conversation.title}</span>
+        <span className={cn('truncate font-medium text-foreground', mobile ? 'text-base' : 'text-sm')}>{conversation.title}</span>
       </div>
       {actions && <div className="omb-no-drag ms-auto flex items-center gap-1">{actions}</div>}
     </header>

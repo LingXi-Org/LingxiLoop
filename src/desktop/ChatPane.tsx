@@ -53,9 +53,10 @@ export function ChatPane({
       <main ref={rootRef} className="chat-surface grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden bg-background">
         <ConversationHeader
           conversationId={conversationId}
+          variant={onBackToConversations ? 'mobile' : 'desktop'}
           onBack={onBackToConversations}
           actions={onToggleGroupContext && (
-            <Button type="button" variant="ghost" size="icon-lg" onClick={onToggleGroupContext} aria-label={groupContextOpen ? '收起资料与 Canvas 工作区' : '展开资料与 Canvas 工作区'} aria-controls="desktop-context-workspace" aria-expanded={groupContextOpen} className="text-muted-foreground">
+            <Button type="button" variant="ghost" size="icon-lg" onClick={onToggleGroupContext} aria-label={groupContextOpen ? '收起资料与 Canvas 工作区' : '展开资料与 Canvas 工作区'} aria-controls="conversation-context-workspace" aria-expanded={groupContextOpen} className={onBackToConversations ? 'size-11 text-muted-foreground' : 'text-muted-foreground'} data-context-workspace-trigger>
               <HugeiconsIcon icon={groupContextOpen ? PanelRightCloseIcon : PanelRightOpenIcon} strokeWidth={2} className="size-[18px]" />
             </Button>
           )}

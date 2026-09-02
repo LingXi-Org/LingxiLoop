@@ -55,7 +55,7 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
   }
 
   return (
-    <div className="space-y-6" data-testid="teacher-overview-dashboard">
+    <div className="space-y-3 @min-[48rem]/learning-grid:space-y-6" data-testid="teacher-overview-dashboard">
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>

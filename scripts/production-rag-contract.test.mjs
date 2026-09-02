@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { updateImageTags } from './update-deployment-images.mjs'
+import { buildReleaseRequest } from './trigger-openship-release.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
@@ -154,7 +155,7 @@ test('OpenShip runs one private Agent OS per host and the Worker only on its sel
   assert.doesNotMatch(app, /AGENT_OS_URL/)
 })
 
-test('the single-IP gateway and Worker use only the备案 ingress', () => {
+test('the gateway uses the备案 ingress and the Worker uses its admin domain', () => {
   const gateway = read('deploy/openship/gateway.conf')
   const core = read('deploy/openship/core-state.yml')
   const worker = read('workers/control-plane/wrangler.jsonc')
@@ -166,11 +167,11 @@ test('the single-IP gateway and Worker use only the备案 ingress', () => {
   assert.match(gateway, /proxy_pass http:\/\/10\.20\.0\.2:5200/)
   assert.match(core, /PRIVATE_BIND_IP[^\n]+:5200:5200/)
   assert.doesNotMatch(core, /WUKONG_WS_BIND_IP/)
-  assert.doesNotMatch(worker, /"routes"/)
-  assert.match(worker, /"workers_dev": true/)
+  assert.match(worker, /"routes": \[\{ "pattern": "admin\.lingxilearn\.cn", "custom_domain": true \}\]/)
+  assert.match(worker, /"workers_dev": false/)
   assert.match(worker, /"ORIGIN_BASE_URL": "https:\/\/loop\.lingxilearn\.cn"/)
   assert.match(worker, /"OPENSHIP_BASE_URL": "https:\/\/ops\.christmas1314\.xyz"/)
-  assert.match(worker, /"AUTH_ALLOWED_HOSTS": "loop\.lingxilearn\.cn"/)
+  assert.match(worker, /"AUTH_ALLOWED_HOSTS": "loop\.lingxilearn\.cn,admin\.lingxilearn\.cn"/)
 })
 
 test('main publishes unique tags and updates Compose before Worker deployment', () => {
@@ -179,8 +180,15 @@ test('main publishes unique tags and updates Compose before Worker deployment', 
 
   assert.match(workflow, /update-manifests:[\s\S]*needs: publish/)
   assert.match(workflow, /deploy:[\s\S]*needs: update-manifests/)
-  assert.match(workflow, /control:d1:remote[\s\S]*control:deploy/)
-  assert.doesNotMatch(workflow, /image-digest-|api\/internal\/releases/)
+  assert.match(workflow, /control:d1:remote[\s\S]*wrangler versions upload[\s\S]*wrangler versions deploy/)
+  assert.match(workflow, /wrangler versions deploy[\s\S]*trigger-openship-release\.mjs/)
+  const release = buildReleaseRequest('secret', 'a'.repeat(40), 'b'.repeat(40), 'Example/LingxiLoop')
+  assert.deepEqual(JSON.parse(release.body), {
+    commitSha: 'a'.repeat(40),
+    deployCommitSha: 'b'.repeat(40),
+    imageDigests: Object.fromEntries(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway'].map((name) => [name, `accel.way2api.fun/ghcr.io/example/lingxiloop-${name}:${'a'.repeat(40)}`])),
+  })
+  assert.match(release.signature, /^[\w-]{43}$/)
   assert.doesNotMatch(workflow, /pages deploy|PRODUCTION_SSH|deploy-production\.sh/)
   assert.match(compose, /LINGXILOOP_GATEWAY_HMAC_SECRET: \$\{LINGXILOOP_GATEWAY_HMAC_SECRET:\?/)
   assert.match(compose, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-2\}/)

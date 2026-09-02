@@ -26,7 +26,7 @@ async function withDatabase(run: (database: Pool, connectionString: string) => P
     await run(database, targetUrl.toString())
   } finally {
     await database.end()
-    await admin.query(`DROP DATABASE ${databaseName} WITH (FORCE)`)
+    await admin.query(`DROP DATABASE ${databaseName}`)
     await admin.end()
   }
 }

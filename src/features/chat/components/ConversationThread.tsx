@@ -3,6 +3,7 @@ import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useCallback, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useConversationUi } from '@/stores/conversationUi'
 import { userFacingError } from '@/lib/userFacingError'
 import { chatTransport, useConversationThreadSnapshot } from '../runtime'
@@ -23,6 +24,7 @@ export function ConversationThread({
   compact?: boolean
   readOnly?: boolean
 }) {
+  const isMobile = useIsMobile()
   const snapshot = useConversationThreadSnapshot(conversationId, threadRootId)
   const viewportRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -89,25 +91,32 @@ export function ConversationThread({
         </ThreadPrimitive.Empty>
         <ThreadPrimitive.Messages components={MESSAGE_COMPONENTS} />
         {!threadRootId && <ConversationActivity conversationId={conversationId} />}
-        <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4">
+        {!isMobile && <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4">
           {!readOnly && <ConversationComposer
               conversationId={conversationId}
               compact={compact}
               placeholder={threadRootId ? '在帖子中回复…' : undefined}
             />}
-        </ThreadPrimitive.ViewportFooter>
-        <ThreadPrimitive.ScrollToBottom asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="absolute bottom-24 end-5 z-10 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:invisible"
-            aria-label="滚动到底部"
-          >
-            <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
-          </Button>
-        </ThreadPrimitive.ScrollToBottom>
+        </ThreadPrimitive.ViewportFooter>}
       </ThreadPrimitive.Viewport>
+      {isMobile && !readOnly && <div className="shrink-0 bg-background pt-2" data-mobile-composer-bar>
+        <ConversationComposer
+          conversationId={conversationId}
+          compact={compact}
+          placeholder={threadRootId ? '在帖子中回复…' : undefined}
+        />
+      </div>}
+      <ThreadPrimitive.ScrollToBottom asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="absolute bottom-24 end-5 z-10 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:invisible md:size-9"
+          aria-label="滚动到底部"
+        >
+          <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
+        </Button>
+      </ThreadPrimitive.ScrollToBottom>
     </ThreadPrimitive.Root>
   )
 }

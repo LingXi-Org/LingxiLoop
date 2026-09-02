@@ -7,13 +7,15 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const read = (path: string) => readFileSync(resolve(here, path), 'utf8')
 
-test('settings uses the shadcn sidebar-in-dialog composition with every account section', () => {
+test('settings uses desktop dialog and mobile drawer compositions with every account section', () => {
   const dialog = read('./SettingsDialog.tsx')
 
   assert.match(dialog, /<Dialog open=\{open\} onOpenChange=\{setOpen\}>/)
   assert.match(dialog, /<DialogContent[\s\S]*?<SidebarProvider[\s\S]*?<Sidebar[\s\S]*?<SidebarInset/)
   assert.match(dialog, /onCloseAutoFocus=[\s\S]*SETTINGS_DIALOG_TRIGGER_ID[\s\S]*\.focus\(\)/)
-  assert.doesNotMatch(dialog, /\bDrawer\b|\bSheet\b/)
+  assert.match(dialog, /if \(isMobile\) return \([\s\S]*?<Drawer[\s\S]*?<TabsList/)
+  assert.match(dialog, /data-account'[\s\S]*?'退出登录与账号'/)
+  assert.doesNotMatch(dialog, /\bSheet\b/)
 
   for (const label of ['账号', '外观与声音', '通知', '数据与账号']) {
     assert.ok(dialog.includes(`label: '${label}'`), `missing settings section: ${label}`)

@@ -124,6 +124,7 @@ jobs:
             LINGXILOOP_VERSION=${{ steps.metadata.outputs.version }}
             LINGXILOOP_COMMIT_SHA=${{ github.sha }}
             WUKONG_COMMIT=${{ matrix.wukong_commit }}
+            VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEk9EZhHYeS3szPO
           cache-from: type=gha,scope=${{ matrix.package }}
           cache-to: type=gha,mode=max,scope=${{ matrix.package }}
 
@@ -133,19 +134,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: { contents: write }
+    outputs:
+      commit-sha: ${{ steps.pin.outputs.commit-sha }}
     steps:
       - uses: actions/checkout@v5
         with: { ref: main, fetch-depth: 0 }
       - name: Pin Compose images to the published commit
+        id: pin
         run: |
           git pull --rebase origin main
           node scripts/update-deployment-images.mjs "$GITHUB_SHA"
-          git diff --quiet && exit 0
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add deploy/openship/*.yml docker-compose.production.yml docker-compose.mvp.yml docker-compose.dokploy.yml
-          git commit -m "deploy: pin images to ${GITHUB_SHA} [skip ci]"
-          git push origin HEAD:main
+          if ! git diff --quiet; then
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add deploy/openship/*.yml docker-compose.production.yml docker-compose.mvp.yml docker-compose.dokploy.yml
+            git commit -m "deploy: pin images to ${GITHUB_SHA} [skip ci]"
+            git push origin HEAD:main
+          fi
+          echo "commit-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -164,8 +170,19 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       - name: Deploy Refine and control-plane Worker
-        run: npm run control:deploy
+        run: |
+          npm run admin:build
+          npx wrangler versions upload --config workers/control-plane/wrangler.jsonc --tag "$GITHUB_SHA"
+          npx wrangler versions deploy --config workers/control-plane/wrangler.jsonc --version-tag "$GITHUB_SHA" --yes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
+          VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEk9EZhHYeS3szPO
+      - name: Trigger OpenShip production rollout
+        run: node scripts/trigger-openship-release.mjs
+        env:
+          RELEASE_HMAC_SECRET: ${{ secrets.RELEASE_HMAC_SECRET }}
+          RELEASE_COMMIT_SHA: ${{ github.sha }}
+          RELEASE_DEPLOY_COMMIT_SHA: ${{ needs.update-manifests.outputs.commit-sha }}
+          RELEASE_REPOSITORY: ${{ github.repository }}

@@ -11,6 +11,7 @@
  * 7+ people → 5 around + a "+N" tile in the 6th slot
  */
 import type { CSSProperties } from 'react'
+import { cn } from '@/lib/utils'
 import type { Participant } from '@/types'
 import { Avatar } from './Avatar'
 
@@ -78,16 +79,17 @@ interface Props {
   size?: number
   ringColor?: string
   mode?: 'chat' | 'neutral'
+  className?: string
 }
 
-export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', mode = 'neutral' }: Props) {
+export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', mode = 'neutral', className }: Props) {
   if (ps.length === 0) {
-    return <div className="rounded-full" style={{ width: size, height: size, background: 'var(--ink-100)' }} />
+    return <div className={cn('rounded-full', className)} style={{ width: size, height: size, background: 'var(--ink-100)' }} />
   }
 
   // Single member: just render the regular avatar.
   if (ps.length === 1) {
-    return <SingleTile p={ps[0]} size={size} ringColor={ringColor} mode={mode} />
+    return <SingleTile p={ps[0]} size={size} ringColor={ringColor} mode={mode} className={className} />
   }
 
   const max = 6
@@ -103,7 +105,7 @@ export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', mode = '
 
   return (
     <div
-      className="relative rounded-full overflow-hidden"
+      className={cn('relative overflow-hidden rounded-full', className)}
       style={{
         width: size,
         height: size,
@@ -200,11 +202,12 @@ function OverflowTile({ n, container, cx, cy, d, ringColor }: {
   )
 }
 
-function SingleTile({ p, size, ringColor, mode }: {
+function SingleTile({ p, size, ringColor, mode, className }: {
   p: Participant
   size: number
   ringColor: string
   mode: 'chat' | 'neutral'
+  className?: string
 }) {
-  return <Avatar p={p} size={size} ringColor={ringColor} mode={mode} />
+  return <Avatar p={p} size={size} ringColor={ringColor} mode={mode} className={className} />
 }
