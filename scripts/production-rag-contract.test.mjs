@@ -148,7 +148,29 @@ test('OpenShip runs one private Agent OS per host and the Worker only on its sel
   assert.doesNotMatch(agent, /^ {4}ports:/m)
   assert.match(app, /AGENT_OS_NODE_TIMEOUT_SECONDS: \$\{AGENT_OS_NODE_TIMEOUT_SECONDS:-15}/)
   assert.match(app, /worker:\r?\n {4}<<: \*runtime\r?\n {4}profiles: \[worker]/)
+  assert.match(app, /gateway:\r?\n {4}image: nginx:alpine\r?\n {4}profiles: \[gateway]/)
+  assert.match(app, /127\.0\.0\.1:8080:8080/)
+  assert.match(app, /\.\.\/\.\.\/website:\/usr\/share\/nginx\/html:ro/)
   assert.doesNotMatch(app, /AGENT_OS_URL/)
+})
+
+test('the single-IP gateway and Worker use only the备案 ingress', () => {
+  const gateway = read('deploy/openship/gateway.conf')
+  const core = read('deploy/openship/core-state.yml')
+  const worker = read('workers/control-plane/wrangler.jsonc')
+
+  assert.match(gateway, /server 10\.20\.0\.2:5181/)
+  assert.match(gateway, /server_name lingxilearn\.cn www\.lingxilearn\.cn/)
+  assert.match(gateway, /server_name loop\.lingxilearn\.cn/)
+  assert.match(gateway, /server_name im\.lingxilearn\.cn/)
+  assert.match(gateway, /proxy_pass http:\/\/10\.20\.0\.2:5200/)
+  assert.match(core, /PRIVATE_BIND_IP[^\n]+:5200:5200/)
+  assert.doesNotMatch(core, /WUKONG_WS_BIND_IP/)
+  assert.doesNotMatch(worker, /"routes"/)
+  assert.match(worker, /"workers_dev": true/)
+  assert.match(worker, /"ORIGIN_BASE_URL": "https:\/\/loop\.lingxilearn\.cn"/)
+  assert.match(worker, /"OPENSHIP_BASE_URL": "https:\/\/ops\.christmas1314\.xyz"/)
+  assert.match(worker, /"AUTH_ALLOWED_HOSTS": "loop\.lingxilearn\.cn"/)
 })
 
 test('main publishes unique tags and updates Compose before Worker deployment', () => {

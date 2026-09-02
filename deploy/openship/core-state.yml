@@ -59,7 +59,7 @@ services:
       WK_WEBHOOK_HTTP_ADDR: "${LINGXILOOP_INTERNAL_ORIGIN:?LINGXILOOP_INTERNAL_ORIGIN is required}/webhooks/wukong?token=${WUKONG_WEBHOOK_SECRET:?WUKONG_WEBHOOK_SECRET is required}"
     ports:
       - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5001:5001"
-      - "${WUKONG_WS_BIND_IP:-127.0.0.1}:5200:5200"
+      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5200:5200"
     volumes:
       - wukong-data:/var/lib/wukongim
     healthcheck:

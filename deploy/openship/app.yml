@@ -94,3 +94,25 @@ services:
         condition: service_completed_successfully
     cpus: "0.75"
     mem_limit: 512m
+
+  gateway:
+    image: nginx:alpine
+    profiles: [gateway]
+    restart: unless-stopped
+    depends_on:
+      lingxiloop:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./gateway.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../../website:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    cpus: "0.25"
+    mem_limit: 64m
+    logging: *logging

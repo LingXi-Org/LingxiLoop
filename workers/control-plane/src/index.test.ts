@@ -15,28 +15,28 @@ describe('control-plane trust boundaries', () => {
     expect(tables.results.map((row) => row.name)).toEqual(expect.arrayContaining(['user', 'session', 'app_user_links', 'registration_claims', 'release_requests', 'control_audit']))
     const accountColumns = await env.DB.prepare(`PRAGMA table_info(account)`).all<{ name: string; notnull: number }>()
     expect(accountColumns.results).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'issuer', notnull: 1 })]))
-    const response = await SELF.fetch('https://admin.lingxilearn.cn/api/control/releases')
+    const response = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/control/releases')
     expect(response.status).toBe(401)
   })
 
   it('keeps bootstrap locked behind its secret', async () => {
-    const response = await SELF.fetch('https://admin.lingxilearn.cn/api/internal/bootstrap-admin', {
+    const response = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/internal/bootstrap-admin', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: 'wrong', email: 'admin@example.com' }),
     })
     expect(response.status).toBe(401)
   })
 
   it('rejects cross-site authentication writes and invitation-free registration', async () => {
-    const crossSite = await SELF.fetch('https://admin.lingxilearn.cn/api/auth/sign-in/email', {
+    const crossSite = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/auth/sign-in/email', {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: 'https://attacker.example' },
       body: JSON.stringify({ email: 'user@example.com', password: 'password123' }),
     })
     expect(crossSite.status).toBe(403)
 
-    const noInvite = await SELF.fetch('https://admin.lingxilearn.cn/api/auth/sign-up/email', {
+    const noInvite = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/auth/sign-up/email', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', origin: 'https://admin.lingxilearn.cn' },
+      headers: { 'content-type': 'application/json', origin: 'https://lingxiloop-control-plane.yangyangli0426.workers.dev' },
       body: JSON.stringify({ email: 'user@example.com', name: 'User', password: 'password123' }),
     })
     expect(noInvite.status).toBe(400)
