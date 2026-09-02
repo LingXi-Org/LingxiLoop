@@ -11,7 +11,7 @@ x-quiet-logging: &quiet-logging
 # .env.secrets; CI never creates or overwrites that file.
 
 x-lingxiloop-runtime: &lingxiloop-runtime
-  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:524beb46a0a39be3c69c1cd2451b53c35f45dcc6
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:4102a1525985d3c985df96c3ba9ebcf271aa4892
   pull_policy: always
   env_file:
     - ./.env.secrets
@@ -78,7 +78,7 @@ services:
     logging: *quiet-logging
 
   open-notebook:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:524beb46a0a39be3c69c1cd2451b53c35f45dcc6
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:4102a1525985d3c985df96c3ba9ebcf271aa4892
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -112,7 +112,7 @@ services:
     logging: *quiet-logging
 
   wukongim:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:524beb46a0a39be3c69c1cd2451b53c35f45dcc6
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:4102a1525985d3c985df96c3ba9ebcf271aa4892
     pull_policy: always
     restart: unless-stopped
     env_file:
@@ -202,7 +202,7 @@ services:
     logging: *quiet-logging
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:524beb46a0a39be3c69c1cd2451b53c35f45dcc6
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:4102a1525985d3c985df96c3ba9ebcf271aa4892
     pull_policy: always
     restart: unless-stopped
     env_file:
