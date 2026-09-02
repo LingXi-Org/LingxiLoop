@@ -6,14 +6,14 @@ The workflow publishes five immutable GHCR images (`lingxiloop-server`, `lingxil
 
 Required GitHub `production` configuration:
 
-- Variables: `CLOUDFLARE_ACCOUNT_ID`, `VITE_LINGXILIT_URL=https://openlit.lingxilearn.cn`.
+- Variables: `CLOUDFLARE_ACCOUNT_ID`, `VITE_LINGXILIT_URL=https://openlit.lingxilearn.cn`, `VITE_TURNSTILE_SITE_KEY`.
 - Secrets: `CLOUDFLARE_API_TOKEN`, `RELEASE_HMAC_SECRET`.
 
 The management UI is published at `https://lingxiloop-control-plane.yangyangli0426.workers.dev`.
 Do not add a `lingxilearn.cn` Worker Custom Domain: every备案 hostname must resolve directly to
 `111.229.65.23`.
 
-Required Worker secrets are managed only with `wrangler secret put`: `BETTER_AUTH_SECRET`, `GATEWAY_HMAC_SECRET`, `RELEASE_HMAC_SECRET`, `BOOTSTRAP_ADMIN_TOKEN`, `OPENSHIP_PAT`, `OPENSHIP_PROJECT_ID`, `RESEND_API_KEY`, `RESEND_FROM`, and optional Cloudflare Access service-token values. After the first verified administrator is created through `/api/internal/bootstrap-admin`, delete `BOOTSTRAP_ADMIN_TOKEN` with Wrangler.
+Required Worker secrets are managed only with `wrangler secret put`: `BETTER_AUTH_SECRET`, `GATEWAY_HMAC_SECRET`, `RELEASE_HMAC_SECRET`, `BOOTSTRAP_ADMIN_TOKEN`, `OPENSHIP_PAT`, `OPENSHIP_PROJECT_ID`, `RESEND_API_KEY`, `RESEND_FROM`, `TURNSTILE_SECRET_KEY`, and optional Cloudflare Access service-token values. After the first verified administrator is created through `/api/internal/bootstrap-admin`, delete `BOOTSTRAP_ADMIN_TOKEN` with Wrangler.
 
 `server/src/db/migrations/0001_v1_baseline.sql` remains immutable. The current cutover starts from empty PostgreSQL and D1 databases; PostgreSQL runs all migrations through the one-shot `db-migrate` service before Web/Worker startup. Application processes only check migration readiness.
 

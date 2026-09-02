@@ -56,3 +56,35 @@ test('[integration] invitation validation and provision are transactional and id
     (SELECT use_count FROM company_invitations WHERE token_hash=$3) AS use_count`, [one.appUserId, companyId, hashInvitationToken(TOKEN)])
   assert.deepEqual(state.rows[0], { personal: 1, invited: 1, use_count: 1 })
 })
+
+test('[integration] ordinary provisioning is invitation-free and idempotent', async () => {
+  const body = JSON.stringify({ authUserId: 'auth-personal', email: 'personal@example.com', name: 'Personal User' })
+  const first = await fetch(`${baseUrl}/api/internal/registration/provision`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })
+  const second = await fetch(`${baseUrl}/api/internal/registration/provision`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })
+  assert.equal(first.status, 200)
+  assert.equal(second.status, 200)
+  const one = await first.json() as { appUserId: string }
+  assert.deepEqual(await second.json(), one)
+  const state = await pool.query<{ personal: number; courses: number }>(`SELECT
+    (SELECT COUNT(*)::int FROM companies WHERE type='PERSONAL' AND personal_owner_user_id=$1) AS personal,
+    (SELECT COUNT(*)::int FROM project_memberships WHERE user_id=$1 AND role='STUDENT') AS courses`, [one.appUserId])
+  assert.deepEqual(state.rows[0], { personal: 1, courses: 0 })
+})
+
+test('[integration] project invitation is redeemed during provisioning', async () => {
+  const projectToken = 'registration-project-invite'
+  await pool.query(`INSERT INTO projects(id,company_id,kind,plan_id,name,status,created_by) VALUES('project-registration',$1,'TEACHING','plan-teacher-free','Registration Course','ACTIVE',$2)`, [companyId, INVITER_ID])
+  await pool.query(`INSERT INTO courses(id,company_id,project_id,created_by) VALUES('course-registration',$1,'project-registration',$2)`, [companyId, INVITER_ID])
+  await pool.query(`INSERT INTO project_invitations(token_hash,project_id,company_id,invited_by,email,max_uses,expires_at) VALUES($1,'project-registration',$2,$3,'student@example.com',1,NOW()+INTERVAL '1 day')`, [hashInvitationToken(projectToken), companyId, INVITER_ID])
+
+  const response = await fetch(`${baseUrl}/api/internal/registration/provision`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ authUserId: 'auth-student', email: 'student@example.com', name: 'Student', inviteToken: projectToken, inviteKind: 'project' }),
+  })
+  assert.equal(response.status, 200)
+  const { appUserId } = await response.json() as { appUserId: string }
+  const state = await pool.query<{ membership: number; use_count: number }>(`SELECT
+    (SELECT COUNT(*)::int FROM project_memberships WHERE project_id='project-registration' AND user_id=$1 AND role='STUDENT' AND status='ACTIVE') AS membership,
+    (SELECT use_count FROM project_invitations WHERE token_hash=$2) AS use_count`, [appUserId, hashInvitationToken(projectToken)])
+  assert.deepEqual(state.rows[0], { membership: 1, use_count: 1 })
+})

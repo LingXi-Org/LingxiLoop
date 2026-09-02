@@ -2,6 +2,7 @@ import { Authenticated, Refine } from '@refinedev/core'
 import routerProvider, { CatchAllNavigate, NavigateToResource } from '@refinedev/react-router'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router'
 import { accessControlProvider, authProvider, dataProvider } from './api'
+import { AuthSettingsPage } from './auth-settings-page'
 import { AdminLayout, DashboardPage, ForbiddenPage, LoginPage, ReleaseManagementPage, ResourceDetailPage, ResourceListPage, SearchPage } from './pages'
 import { ADMIN_RESOURCES } from './resources'
 
@@ -26,6 +27,7 @@ export function AdminApp() {
         <Route index element={<DashboardPage />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="releases" element={<ReleaseManagementPage />} />
+        <Route path="authentication" element={<AuthSettingsPage />} />
         <Route path="resources/:resource" element={<ResourceListPage />} />
         <Route path="resources/:resource/:id" element={<ResourceDetailPage />} />
         <Route path="resources" element={<NavigateToResource />} />

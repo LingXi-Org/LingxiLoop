@@ -21,6 +21,7 @@ export default defineWorkersConfig(async () => ({
             OPENSHIP_PROJECT_ID: 'test-project',
             RESEND_API_KEY: 'test-resend-key',
             RESEND_FROM: 'LingxiLoop <test@example.com>',
+            TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA',
           },
         },
       },
