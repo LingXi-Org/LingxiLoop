@@ -181,6 +181,7 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
 test('main publishes unique tags and updates Compose before Worker deployment', () => {
   const workflow = read('.github/workflows/ci.yml')
   const compose = read('docker-compose.production.yml')
+  const serverImage = read('server/docker/lingxiloop-server.Dockerfile')
 
   assert.match(workflow, /update-manifests:[\s\S]*needs: \[changes, publish\]/)
   assert.match(workflow, /deploy:[\s\S]*needs: \[changes, checks\]/)
@@ -189,6 +190,8 @@ test('main publishes unique tags and updates Compose before Worker deployment', 
   assert.match(workflow, /control_migrations == 'true'[\s\S]*control:d1:remote/)
   assert.match(workflow, /update-deployment-images\.mjs "\$GITHUB_SHA" \$\{\{ needs\.changes\.outputs\.packages \}\}/)
   assert.match(workflow, /rollout:[\s\S]*trigger-openship-release\.mjs/)
+  assert.match(workflow, /VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEk9EZhHYeS3szPO/)
+  assert.match(serverImage, /ARG VITE_TURNSTILE_SITE_KEY=""[\s\S]*ENV VITE_TURNSTILE_SITE_KEY=\$\{VITE_TURNSTILE_SITE_KEY\}/)
   const imageDigests = Object.fromEntries(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway']
     .map((name) => [name, `accel.way2api.fun/ghcr.io/example/lingxiloop-${name}:${'a'.repeat(40)}`]))
   const release = buildReleaseRequest('secret', 'a'.repeat(40), 'b'.repeat(40), 'Example/LingxiLoop', imageDigests)

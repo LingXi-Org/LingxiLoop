@@ -117,7 +117,7 @@ export function AuthScreen() {
   return (
     <main className="flex min-h-svh items-center justify-center overflow-y-auto bg-muted p-4 sm:p-6 lg:p-10">
       <WindowDragStrip />
-      <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+      <div className="w-full max-w-lg">
         <Card className="w-full self-center">
           <CardHeader>
             <div className="mb-4 flex items-center gap-3 font-heading font-medium">
@@ -247,27 +247,6 @@ export function AuthScreen() {
           </CardContent>
         </Card>
 
-        <Card aria-label="LingxiLoop 产品介绍" className="hidden min-h-[680px] justify-between bg-primary text-primary-foreground lg:flex">
-          <CardHeader className="gap-6">
-            <div className="flex items-center gap-3 text-sm font-medium"><ProductLogo size={40} rounded /><span>人与智能助教协作的学习空间</span></div>
-            <div className="space-y-3 pt-10">
-              <CardTitle className="max-w-lg text-4xl leading-tight text-primary-foreground">把学习、讨论与创作放进同一个现场</CardTitle>
-              <CardDescription className="max-w-md text-base leading-7 text-primary-foreground/75">和智能助教实时对话，在课程、文档与协作画布之间自然推进工作。</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="rounded-3xl bg-primary-foreground/10 p-5 ring-1 ring-primary-foreground/15">
-              <div className="mb-5 flex items-center justify-between text-xs text-primary-foreground/70"><span>协作中的学习空间</span><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2 rounded-full bg-primary-foreground" />实时</span></div>
-              <div className="grid gap-3">
-                <div className="max-w-[82%] rounded-2xl bg-primary-foreground p-4 text-sm leading-6 text-primary">帮我把今天的讨论整理成下一步行动。</div>
-                <div className="ms-auto max-w-[88%] rounded-2xl bg-primary-foreground/15 p-4 text-sm leading-6">Nova 正在梳理观点，Trace 会补充证据，完成后一起放进协作文档。</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {['课程对话', '协作文档', '实时画布'].map((label) => <div key={label} className="rounded-2xl bg-primary-foreground/10 px-3 py-4 text-center text-xs font-medium ring-1 ring-primary-foreground/10">{label}</div>)}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </main>
   )

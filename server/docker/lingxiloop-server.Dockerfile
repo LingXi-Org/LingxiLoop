@@ -43,8 +43,10 @@ ARG NPM_REGISTRY
 WORKDIR /app
 ARG VITE_PUBLIC_POSTHOG_KEY=""
 ARG VITE_PUBLIC_POSTHOG_HOST=""
+ARG VITE_TURNSTILE_SITE_KEY=""
 ENV VITE_PUBLIC_POSTHOG_KEY=${VITE_PUBLIC_POSTHOG_KEY}
 ENV VITE_PUBLIC_POSTHOG_HOST=${VITE_PUBLIC_POSTHOG_HOST}
+ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
 COPY package.json package-lock.json ./
 # --ignore-scripts: electron-icon-builder transitively pulls
 # phantomjs-prebuilt, whose postinstall extracts a bz2 tarball — but
