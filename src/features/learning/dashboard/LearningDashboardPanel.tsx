@@ -1,89 +1,16 @@
-import { BubbleChatIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { useState } from 'react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
-import { useConversations } from '@/features/conversations/store'
 import { PersonalSourceDrive } from '@/features/knowledge/components/PersonalSourceDrive'
 import { ProjectSourceLibrary } from '@/features/knowledge/components/ProjectSourceLibrary'
 import { userFacingError } from '@/lib/userFacingError'
-import { useApp } from '@/stores/app'
-import { CourseAvatar } from '../components/CourseAvatar'
-import { LearningActivitiesSection } from '../components/LearningActivitiesSection'
-import { LearningEvidenceSection } from '../components/LearningEvidenceSection'
-import { LearningObjectivesSection } from '../components/LearningObjectivesSection'
 import type { LearningCourse, LearningSpace } from '../contracts'
 import { CourseSettingsSection } from './CourseSettingsSection'
-import { MissionSection } from './MissionSection'
+import { DashboardSectionFrame } from './DashboardSectionFrame'
+import { LearnerOverviewDashboard } from './LearnerOverviewDashboard'
 import type { LearningDashboardSection } from './navigation'
-import { OverviewSection } from './OverviewSection'
 import { TeacherOverviewDashboard } from './TeacherOverviewDashboard'
 import { useLearningDashboardData } from './useLearningDashboardData'
-
-const SECTION_COPY: Record<LearningDashboardSection, { title: string; description: string }> = {
-  overview: { title: '学习概览', description: '基于当前学习记录汇总' },
-  plan: { title: '学习计划', description: '持续任务与真实步骤进展' },
-  objectives: { title: '学习目标', description: '目标、成功标准与掌握状态' },
-  missions: { title: '学习任务', description: '课程中的持续学习任务' },
-  activities: { title: '学习活动', description: '课程活动与证据提交' },
-  evidence: { title: '学习证据', description: '尝试、评价与反馈记录' },
-  learners: { title: '学习者', description: '课程学习者的学习记录' },
-  content: { title: '课程内容', description: '课程目标与成功标准' },
-  reviews: { title: '评价审核', description: '核对评价与学习证据' },
-  members: { title: '分享与成员', description: '管理课程访问与邀请' },
-  calendar: { title: '日历', description: '课程与个人安排' },
-  resources: { title: '资料', description: '按工作区管理个人资料' },
-  settings: { title: '课程设置', description: '课程资料与生命周期' },
-}
-
-function DashboardSectionFrame({ space, section, children }: {
-  space: LearningSpace
-  section: LearningDashboardSection
-  children: React.ReactNode
-}) {
-  const copy = SECTION_COPY[section]
-  const conversations = useConversations((state) => state.list)
-  const selectedConversationId = useApp((state) => state.selectedConversationId)
-  const learningConversationId = space.studyRoomId
-    ?? conversations.find((conversation) => conversation.id === selectedConversationId)?.id
-    ?? conversations[0]?.id
-    ?? null
-  return (
-    <div className="@container/learning-grid flex h-full min-h-0 flex-col bg-card text-card-foreground">
-      <header className="flex h-12 shrink-0 items-center gap-3 border-b border-[var(--im-divider-weak)] px-4 @min-[48rem]/learning-grid:px-6">
-        <CourseAvatar courseId={space.courseId ?? space.projectId} title={space.title} size="sm" />
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate font-heading text-sm font-medium">{copy.title}</h1>
-          <p className="sr-only">{copy.description}</p>
-        </div>
-        {section === 'overview' && space.perspective === 'learner' && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!learningConversationId}
-            title={learningConversationId ? '进入当前学习区的课程对话' : '课程对话尚未准备好'}
-            onClick={() => {
-              if (learningConversationId) useApp.getState().selectConversation(learningConversationId)
-            }}
-          >
-            <HugeiconsIcon icon={BubbleChatIcon} strokeWidth={2} />
-            {learningConversationId ? '继续学习对话' : '课程对话准备中'}
-          </Button>
-        )}
-        <Badge variant="secondary">
-          {space.projectKind === 'PERSONAL_LEARNING' ? '个人学习区' : space.perspective === 'teacher' ? '课程创建者' : '学习者'}
-        </Badge>
-      </header>
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 @min-[48rem]/learning-grid:p-6">
-        <div className="mx-auto max-w-7xl">{children}</div>
-      </div>
-    </div>
-  )
-}
 
 export function LearningDashboardPanel({ space, section }: { space: LearningSpace; section: LearningDashboardSection }) {
   if (space.perspective === 'teacher') {
@@ -117,7 +44,7 @@ function LearningDataSection({ space, section }: { space: LearningSpace; section
     resourcesLoading,
     overviewError,
     resourcesError,
-    refreshResources,
+    refreshAll,
   } = useLearningDashboardData(space.projectId, space.perspective, space.canReview)
   const course: LearningCourse = {
     projectId: space.projectId,
@@ -132,30 +59,8 @@ function LearningDataSection({ space, section }: { space: LearningSpace; section
     canSubmit: space.canSubmit,
     canReview: space.canReview,
   }
-
-  const error = section === 'overview' ? overviewError : resourcesError || mutationError
-  const loading = section === 'overview' ? overviewLoading && !overview : resourcesLoading
-
-  let content: React.ReactNode
-  if (loading) {
-    content = section === 'overview'
-      ? <ResourceSkeleton variant="cards" count={6} label="正在加载学习概览" />
-      : <ResourceSkeleton variant="list" count={5} label={`正在加载${SECTION_COPY[section].title}`} />
-  } else if (section === 'overview') {
-    content = overview
-      ? <OverviewSection overview={overview} />
-      : <RetryState message="学习概览暂时不可用。" onRetry={() => window.dispatchEvent(new Event('lingxiloop:learning-updated'))} />
-  } else if (section === 'plan' || section === 'missions') {
-    content = <MissionSection missions={resources.missions} personal={space.projectKind === 'PERSONAL_LEARNING'} />
-  } else if (section === 'objectives') {
-    content = <LearningObjectivesSection course={course} objectives={resources.objectives} perspective={space.perspective} mastery={new Map()} onChanged={refreshResources} onError={(reason) => setMutationError(userFacingError(reason, '学习目标操作未完成，请稍后重试。'))} />
-  } else if (section === 'activities') {
-    content = <LearningActivitiesSection course={course} activities={resources.activities} evidence={resources.evidence} perspective={space.perspective} answers={answers} setAnswers={setAnswers} onChanged={refreshResources} onError={(reason) => setMutationError(userFacingError(reason, '学习活动操作未完成，请稍后重试。'))} />
-  } else if (section === 'evidence') {
-    content = <LearningEvidenceSection evidence={resources.evidence} />
-  } else {
-    content = <RetryState message="当前页面暂不可用。" onRetry={() => window.dispatchEvent(new Event('lingxiloop:learning-updated'))} />
-  }
+  const error = [overviewError, resourcesError, mutationError].filter(Boolean).join('；')
+  const content = <LearnerOverviewDashboard course={course} overview={overview?.perspective === 'learner' ? overview : null} objectives={resources.objectives} activities={resources.activities} evidence={resources.evidence} missions={resources.missions} states={resources.states} loading={overviewLoading || resourcesLoading} answers={answers} setAnswers={setAnswers} onChanged={async () => { setMutationError(''); await refreshAll() }} onError={(reason) => setMutationError(userFacingError(reason, '学习记录未能更新，请稍后重试。'))} />
 
   return (
     <DashboardSectionFrame space={space} section={section}>
@@ -165,8 +70,4 @@ function LearningDataSection({ space, section }: { space: LearningSpace; section
       </div>
     </DashboardSectionFrame>
   )
-}
-
-function RetryState({ message, onRetry }: { message: string; onRetry(): void }) {
-  return <div className="grid min-h-64 place-items-center rounded-3xl border border-dashed p-6 text-center"><div><p className="text-sm text-muted-foreground">{message}</p><Button type="button" variant="outline" className="mt-4" onClick={onRetry}>重新加载</Button></div></div>
 }

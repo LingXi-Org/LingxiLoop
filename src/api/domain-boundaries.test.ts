@@ -186,6 +186,10 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
     'contracts.ts',
     'courseContract.ts',
     'dashboard/LearningDashboardPanel.tsx',
+    'dashboard/DashboardSectionFrame.tsx',
+    'dashboard/LearnerDashboardSummary.tsx',
+    'dashboard/LearnerOverviewDashboard.tsx',
+    'dashboard/learnerDashboardModel.ts',
     'dashboard/OverviewSection.tsx',
     'dashboard/TeacherLearnersSection.tsx',
   ]) {

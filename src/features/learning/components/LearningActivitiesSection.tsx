@@ -14,6 +14,7 @@ interface LearningActivitiesSectionProps {
   course: LearningCourse
   activities: LearningActivity[]
   evidence?: LearningEvidence[]
+  objectiveTitlesById?: ReadonlyMap<string, string>
   perspective: LearningRole
   answers: Record<string, string>
   setAnswers: Dispatch<SetStateAction<Record<string, string>>>
@@ -21,8 +22,18 @@ interface LearningActivitiesSectionProps {
   onError(error: unknown): void
 }
 
+function rubricLabels(rubric: LearningActivity['rubric']): string[] {
+  return rubric.flatMap((entry, index) => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return []
+    const record = entry as Record<string, unknown>
+    const label = [record.criterion, record.title, record.label, record.name, record.description]
+      .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    return label ? [label.trim().slice(0, 160)] : [`评价标准 ${index + 1}`]
+  })
+}
+
 export function LearningActivitiesSection({
-  course, activities, evidence = [], perspective, answers, setAnswers, onChanged, onError,
+  course, activities, evidence = [], objectiveTitlesById, perspective, answers, setAnswers, onChanged, onError,
 }: LearningActivitiesSectionProps) {
   const changeActivityStatus = async (activity: LearningActivity, action: 'publish' | 'close') => {
     if (perspective !== 'teacher' || !course.canManage || !course.canEditContent || !course.courseId) return
@@ -94,10 +105,17 @@ export function LearningActivitiesSection({
           empty: '还没有已提交的活动',
           items: activities.filter((activity) => submittedActivityIds.has(activity.id)),
         },
+        {
+          key: 'closed',
+          label: '已结束',
+          empty: '没有未提交的已结束活动',
+          items: activities.filter((activity) => activity.status === 'CLOSED'
+            && !submittedActivityIds.has(activity.id)),
+        },
       ]
 
   return (
-    <div className="grid items-start gap-4 @min-[72rem]/learning-grid:grid-cols-3">
+    <div className={`grid items-start gap-4 ${perspective === 'teacher' ? '@min-[72rem]/learning-grid:grid-cols-3' : '@min-[44rem]/learning-grid:grid-cols-2'}`}>
       {columns.map((column) => {
         return (
           <section key={column.key} className="space-y-3 rounded-3xl bg-muted/40 p-3" aria-labelledby={`activity-column-${column.key}`}>
@@ -117,6 +135,24 @@ export function LearningActivitiesSection({
                         {EVALUATION_MODE_LABELS[activity.evaluationMode] ?? '评价方式待同步'}
                       </p>
                       {activity.dueAt && <p className="text-xs text-muted-foreground">截止时间：{new Date(activity.dueAt).toLocaleString('zh-CN')}</p>}
+                      {perspective === 'learner' && activity.knowledgeUnitIds.some((id) => objectiveTitlesById?.has(id)) && (
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span>关联目标：</span>
+                          {activity.knowledgeUnitIds.flatMap((id) => objectiveTitlesById?.get(id) ?? []).map((title, index) => (
+                            <Badge key={`${activity.id}-${index}`} variant="outline">{title}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      {perspective === 'learner' && rubricLabels(activity.rubric).length > 0 && (
+                        <div className="rounded-2xl bg-muted p-3">
+                          <p className="text-xs font-medium">评价标准</p>
+                          <ul className="mt-2 list-disc space-y-1 ps-4 text-xs text-muted-foreground">
+                            {rubricLabels(activity.rubric).map((criterion, index) => (
+                              <li key={`${activity.id}-rubric-${index}`}>{criterion}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                     {perspective === 'teacher' && course.canManage && course.canEditContent && (
                       <div className="flex gap-3">
