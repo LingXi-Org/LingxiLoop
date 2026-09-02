@@ -148,9 +148,9 @@ test('OpenShip runs one private Agent OS per host and the Worker only on its sel
   assert.doesNotMatch(agent, /^ {4}ports:/m)
   assert.match(app, /AGENT_OS_NODE_TIMEOUT_SECONDS: \$\{AGENT_OS_NODE_TIMEOUT_SECONDS:-15}/)
   assert.match(app, /worker:\r?\n {4}<<: \*runtime\r?\n {4}profiles: \[worker]/)
-  assert.match(app, /gateway:\r?\n {4}image: nginx:alpine\r?\n {4}profiles: \[gateway]/)
+  assert.match(app, /gateway:\r?\n {4}build:\r?\n {6}context: \.\.\/\.\.\r?\n {6}dockerfile: deploy\/openship\/gateway\.Dockerfile/)
   assert.match(app, /127\.0\.0\.1:8080:8080/)
-  assert.match(app, /\.\.\/\.\.\/website:\/usr\/share\/nginx\/html:ro/)
+  assert.match(read('deploy/openship/gateway.Dockerfile'), /FROM nginx:alpine[\s\S]*COPY website \/usr\/share\/nginx\/html/)
   assert.doesNotMatch(app, /AGENT_OS_URL/)
 })
 
