@@ -177,11 +177,14 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
 test('main publishes unique tags and updates Compose before Worker deployment', () => {
   const workflow = read('.github/workflows/ci.yml')
   const compose = read('docker-compose.production.yml')
+  const serverImage = read('server/docker/lingxiloop-server.Dockerfile')
 
   assert.match(workflow, /update-manifests:[\s\S]*needs: publish/)
   assert.match(workflow, /deploy:[\s\S]*needs: update-manifests/)
   assert.match(workflow, /control:d1:remote[\s\S]*wrangler versions upload[\s\S]*wrangler versions deploy/)
   assert.match(workflow, /wrangler versions deploy[\s\S]*trigger-openship-release\.mjs/)
+  assert.match(workflow, /VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEk9EZhHYeS3szPO/)
+  assert.match(serverImage, /ARG VITE_TURNSTILE_SITE_KEY=""[\s\S]*ENV VITE_TURNSTILE_SITE_KEY=\$\{VITE_TURNSTILE_SITE_KEY\}/)
   const release = buildReleaseRequest('secret', 'a'.repeat(40), 'b'.repeat(40), 'Example/LingxiLoop')
   assert.deepEqual(JSON.parse(release.body), {
     commitSha: 'a'.repeat(40),

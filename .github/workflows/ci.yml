@@ -124,6 +124,7 @@ jobs:
             LINGXILOOP_VERSION=${{ steps.metadata.outputs.version }}
             LINGXILOOP_COMMIT_SHA=${{ github.sha }}
             WUKONG_COMMIT=${{ matrix.wukong_commit }}
+            VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEk9EZhHYeS3szPO
           cache-from: type=gha,scope=${{ matrix.package }}
           cache-to: type=gha,mode=max,scope=${{ matrix.package }}
 
