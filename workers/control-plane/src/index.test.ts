@@ -125,6 +125,7 @@ describe('control-plane trust boundaries', () => {
         incident: null,
         groups: [{ id: 1, name: '公共入口', monitorList: [{ id: 11, name: 'Web' }] }],
         maintenanceList: [],
+        history: { 11: [{ status: 0 }, { status: 1, ping: 26 }] },
         latest: { 11: { status: 1, ping: 26 } },
         uptime: { '11_24': 1 },
       })

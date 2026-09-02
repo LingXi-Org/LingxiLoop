@@ -1,5 +1,16 @@
 # Third-Party Notices
 
+## Kuma Mieru
+
+The Refine service-status dashboard adapts Kuma Mieru's
+`StatusBlockIndicator` and `MonitoringChart` components from commit
+`26a1ed33c1f5bfc77ba51fc61221a0c08dff2134`:
+https://github.com/Alice39s/kuma-mieru
+
+The adapted source is retained in `admin/src/kuma-mieru.tsx` under the Mozilla
+Public License, Version 2.0. The required source-form notice and license URL are
+preserved at the top of that file.
+
 ## Excalidraw Canvas Fonts
 
 LingxiLoop vendors the Assistant, Excalifont, and Xiaolai WOFF2 font assets

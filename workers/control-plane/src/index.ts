@@ -324,9 +324,10 @@ app.get('/api/control/status-page', async (c) => {
       heartbeatList: Record<string, unknown[]>
       uptimeList: Record<string, number>
     }>()
-    const latest = Object.fromEntries(Object.entries(heartbeat.heartbeatList).map(([id, rows]) => [id, rows.at(-1) ?? null]))
+    const history = Object.fromEntries(Object.entries(heartbeat.heartbeatList).map(([id, rows]) => [id, rows.slice(-50)]))
+    const latest = Object.fromEntries(Object.entries(history).map(([id, rows]) => [id, rows.at(-1) ?? null]))
     c.header('cache-control', 'private, no-store')
-    return c.json({ config: page.config, incident: page.incident, groups: page.publicGroupList, maintenanceList: page.maintenanceList, latest, uptime: heartbeat.uptimeList })
+    return c.json({ config: page.config, incident: page.incident, groups: page.publicGroupList, maintenanceList: page.maintenanceList, history, latest, uptime: heartbeat.uptimeList })
   } catch {
     return c.json({ error: 'status provider unavailable' }, 502)
   }
