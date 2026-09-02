@@ -83,6 +83,8 @@ export interface Conversation {
   members: string[]
   /** Explicit agent responsible for ordinary group messages. */
   leaderId: string | null
+  /** Product-managed announcement rooms may be viewed but not replied to. */
+  readOnly?: boolean
   pinned?: boolean
   /** Per-user mute. When true, the conversation suppresses notifications and
    *  is excluded from the global unread total (but its per-row badge still

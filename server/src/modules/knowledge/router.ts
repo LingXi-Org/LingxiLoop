@@ -77,6 +77,19 @@ knowledgeRouter.post('/projects/:id/open', safe(async (req, res) => {
   res.json(await knowledgeApplication.openProject(workspace.companyId, workspace.projectId, workspace.userId))
 }))
 
+knowledgeRouter.get('/projects/:id/learning/resources', safe(async (req, res) => {
+  const workspace = await requireWorkspace(req, String(req.params.id), 'learning:review')
+  try { res.json(await knowledgeApplication.courseReviewSources(workspace)) }
+  catch (error) { mapKnowledgeError(error) }
+}))
+
+knowledgeRouter.get('/projects/:id/learning/resources/:sourceId', safe(async (req, res) => {
+  requireKnowledge()
+  const workspace = await requireWorkspace(req, String(req.params.id), 'learning:review')
+  try { res.json(await knowledgeApplication.courseReviewSource(workspace, String(req.params.sourceId))) }
+  catch (error) { mapKnowledgeError(error) }
+}))
+
 knowledgeRouter.get('/projects/:id/sources', safe(async (req, res) => {
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
   res.json(await knowledgeApplication.sources(workspace))

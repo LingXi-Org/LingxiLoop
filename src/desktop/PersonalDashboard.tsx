@@ -125,7 +125,7 @@ export function PersonalDashboard({
     if (nextView !== view) useApp.getState().setView(nextView)
   }
 
-  const openWorkspace = async (projectId: string) => {
+  const openWorkspace = async (projectId: string, destination: DashboardView = 'learning') => {
     const target = scopes.visible.find((space) => space.projectId === projectId)
     if (!target || (target.projectId === selectedWorkspaceId && target.companyId === selectedCompanyId)) return
     const previous = activeSpace
@@ -136,12 +136,12 @@ export function PersonalDashboard({
           await selectLearningSpace({ companyId: previous.companyId, projectId: previous.projectId }).catch(
             () => undefined,
           )
-          useApp.getState().setView('learning')
+          useApp.getState().setView(view)
         }
         throw reason
       },
     )
-    useApp.getState().setView('learning')
+    useApp.getState().setView(destination)
     try {
       await toastAction(selection, {
         loading: '正在切换学习区',
@@ -210,7 +210,13 @@ export function PersonalDashboard({
           <SidebarInset className="h-full min-h-0 min-w-0 overflow-hidden bg-card text-card-foreground">
             {pagePending || (spacesLoading && !activeSpace) ? <DashboardSkeleton /> : spaceError && !activeSpace ? (
               <div className="p-6"><Alert variant="destructive"><AlertDescription>{spaceError}</AlertDescription></Alert></div>
-            ) : activeSpace ? <LearningDashboardPanel key={activeSpace.projectId} space={activeSpace} section={section} /> : (
+            ) : activeSpace ? <LearningDashboardPanel
+              key={activeSpace.projectId}
+              space={activeSpace}
+              spaces={scopes.visible}
+              section={section}
+              onOpenLearningSpace={(projectId) => void openWorkspace(projectId, 'library')}
+            /> : (
               <div className="grid h-full place-items-center p-6 text-center"><div><p className="font-heading text-base font-medium">{scopes.visible.length > 0 ? '当前学习区不可用' : '还没有学习区'}</p><p className="mt-1 text-sm text-muted-foreground">{scopes.visible.length > 0 ? '请从左上方选择一个可访问的学习区。' : '创建个人学习区或加入课程后会显示在这里。'}</p></div></div>
             )}
           </SidebarInset>

@@ -1,6 +1,6 @@
 import { type ToolCallMessagePart, type ToolCallMessagePartProps, useAuiState } from '@assistant-ui/react'
 import { WrenchIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ToolCall } from '@/components/tool-call'
 import { ToolTimeline } from '@/components/tool-timeline'
 import { ToolFallback } from '@/components/tool-fallback.aui'
@@ -112,9 +112,10 @@ export function NativeToolCall({ args, argsText, result, status, toolName }: Too
 
 export function HostToolTimeline() {
   const [open, setOpen] = useState(false)
-  const calls = useAuiState((state) => state.message.content.filter((part): part is ToolCallMessagePart => (
+  const content = useAuiState((state) => state.message.content)
+  const calls = useMemo(() => content.filter((part): part is ToolCallMessagePart => (
     part.type === 'tool-call' && part.toolCallId.startsWith('host:')
-  )))
+  )), [content])
   const streaming = calls.some((part) => part.result === undefined)
   if (calls.length === 0) return null
   const steps = calls.map((part) => ({

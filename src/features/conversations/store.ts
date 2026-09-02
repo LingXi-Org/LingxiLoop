@@ -153,6 +153,7 @@ function fromApi(c: ApiConversation): Conversation {
     topic: c.topic ?? null,
     members: c.members,
     leaderId: c.leaderId ?? null,
+    readOnly: c.readOnly ?? false,
     pinned: c.pinned,
     muted: c.muted,
     mutedUntil: c.mutedUntil,

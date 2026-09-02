@@ -35,6 +35,14 @@ test('source metadata lists remain readable while the Open Notebook engine is of
   assert.doesNotMatch(conversationList, /requireKnowledge\(\)/)
 })
 
+test('course resource review exposes teacher-only reads without a mutation route', () => {
+  const reviewRoutes = routerSource.match(/get\('\/projects\/:id\/learning\/resources'[\s\S]*?get\('\/projects\/:id\/sources'/)?.[0] ?? ''
+  assert.match(reviewRoutes, /requireWorkspace\(req, String\(req\.params\.id\), 'learning:review'\)/)
+  assert.match(reviewRoutes, /knowledgeApplication\.courseReviewSources/)
+  assert.match(reviewRoutes, /knowledgeApplication\.courseReviewSource/)
+  assert.doesNotMatch(routerSource, /(?:post|put|patch|delete)\('\/projects\/:id\/learning\/resources/)
+})
+
 test('native Open Notebook ingestion accepts the supported attachment contract', () => {
   const previous = process.env.OPEN_NOTEBOOK_ENABLED
   process.env.OPEN_NOTEBOOK_ENABLED = 'true'

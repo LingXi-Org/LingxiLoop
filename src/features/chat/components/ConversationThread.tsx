@@ -15,10 +15,12 @@ export function ConversationThread({
   conversationId,
   threadRootId = null,
   compact = false,
+  readOnly = false,
 }: {
   conversationId: string
   threadRootId?: string | null
   compact?: boolean
+  readOnly?: boolean
 }) {
   const snapshot = useConversationThreadSnapshot(conversationId, threadRootId)
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -86,11 +88,11 @@ export function ConversationThread({
         </ThreadPrimitive.Empty>
         <ThreadPrimitive.Messages components={MESSAGE_COMPONENTS} />
         <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4">
-          <ConversationComposer
-            conversationId={conversationId}
-            compact={compact}
-            placeholder={threadRootId ? '在帖子中回复…' : undefined}
-          />
+          {!readOnly && <ConversationComposer
+              conversationId={conversationId}
+              compact={compact}
+              placeholder={threadRootId ? '在帖子中回复…' : undefined}
+            />}
         </ThreadPrimitive.ViewportFooter>
         <ThreadPrimitive.ScrollToBottom asChild>
           <Button

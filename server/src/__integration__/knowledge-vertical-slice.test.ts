@@ -278,6 +278,27 @@ test('[integration] Source authorization is PROJECT plus only the current user P
     sourceTextCalls: [], retryCalls: [], deleteCalls: [],
   })
 
+  const reviewedSources = await application.courseReviewSources({
+    userId: TEACHER_ID, companyId: COMPANY_ID, projectId: PROJECT_ID,
+  })
+  assert.deepEqual(
+    reviewedSources.map((source) => String(source.id)).sort(),
+    sourceIds.sort(),
+  )
+  const reviewedPrivate = await application.courseReviewSource(
+    { userId: TEACHER_ID, companyId: COMPANY_ID, projectId: PROJECT_ID },
+    studentPrivate.id,
+  )
+  assert.equal(reviewedPrivate.extractedText, 'extracted')
+  assert.equal(typeof reviewedPrivate.ownerName, 'string')
+  await assert.rejects(
+    application.courseReviewSources({
+      userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: PROJECT_ID,
+    }),
+    (error) => error instanceof ForbiddenError && error.status === 403,
+  )
+  sourceTextCalls.length = 0
+
   for (const foreignScope of [
     { userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: SAME_COMPANY_PROJECT_ID },
     { userId: STUDENT_A_ID, companyId: OTHER_COMPANY_ID, projectId: OTHER_PROJECT_ID },

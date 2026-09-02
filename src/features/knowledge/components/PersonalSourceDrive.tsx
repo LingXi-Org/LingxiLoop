@@ -24,6 +24,7 @@ import {
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { LearningSpace } from '@/features/learning/contracts'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
@@ -34,16 +35,32 @@ import { ProjectSourceLibrary } from './ProjectSourceLibrary'
 
 type FolderEditor = { mode: 'create' } | { mode: 'rename'; workspace: WorkspaceSummary }
 
-function folderKind(workspace: WorkspaceSummary): string {
-  if (workspace.kind === 'PERSONAL_LEARNING') return workspace.isDefault ? '默认工作区' : '个人工作区'
-  return workspace.kind === 'TEACHING' ? '我的课程' : '机构课程'
+interface SourceFolder {
+  id: string
+  kind: WorkspaceSummary['kind']
+  name: string
+  description: string
+  status: WorkspaceSummary['status']
+  isDefault: boolean
+  sourceCount?: number
+  perspective?: LearningSpace['perspective']
+  workspace?: WorkspaceSummary
+}
+
+function folderKind(folder: SourceFolder): string {
+  if (folder.kind === 'PERSONAL_LEARNING') return folder.isDefault ? '默认工作区' : '个人工作区'
+  if (folder.kind === 'TEACHING') return folder.perspective === 'teacher' ? '我的课程' : '加入的课程'
+  return '机构课程'
 }
 
 function canManageFolder(workspace: WorkspaceSummary): boolean {
   return workspace.canManage && workspace.kind === 'PERSONAL_LEARNING'
 }
 
-export function PersonalSourceDrive() {
+export function PersonalSourceDrive({ spaces, onOpenLearningSpace }: {
+  spaces: LearningSpace[]
+  onOpenLearningSpace(projectId: string): void
+}) {
   const workspaces = useWorkspace((state) => state.list)
   const loaded = useWorkspace((state) => state.loaded)
   const loading = useWorkspace((state) => state.loading)
@@ -54,12 +71,46 @@ export function PersonalSourceDrive() {
 
   useEffect(() => { if (!loaded && !loading) void load() }, [load, loaded, loading])
 
-  const folders = useMemo(() => workspaces
-    .filter((workspace) => workspace.status !== 'DELETED')
-    .sort((left, right) => Number(right.isDefault) - Number(left.isDefault)
-      || Number(left.status === 'ARCHIVED') - Number(right.status === 'ARCHIVED')
-      || left.name.localeCompare(right.name, 'zh-CN')), [workspaces])
-  const openFolder = folders.find((workspace) => workspace.id === openFolderId) ?? null
+  const folders = useMemo(() => {
+    const byId = new Map<string, SourceFolder>()
+    for (const space of spaces) {
+      if (space.status === 'DELETED') continue
+      byId.set(space.projectId, {
+        id: space.projectId,
+        kind: space.projectKind,
+        name: space.title,
+        description: space.description,
+        status: space.status,
+        isDefault: space.isDefault,
+        perspective: space.perspective,
+      })
+    }
+    for (const workspace of workspaces) {
+      if (workspace.status === 'DELETED') continue
+      byId.set(workspace.id, {
+        ...byId.get(workspace.id),
+        id: workspace.id,
+        kind: workspace.kind,
+        name: workspace.name,
+        description: workspace.description,
+        status: workspace.status,
+        isDefault: workspace.isDefault,
+        sourceCount: workspace.sourceCount,
+        workspace,
+      })
+    }
+    return [...byId.values()].sort((left, right) =>
+      Number(left.kind !== 'PERSONAL_LEARNING') - Number(right.kind !== 'PERSONAL_LEARNING')
+        || Number(right.isDefault) - Number(left.isDefault)
+        || Number(left.status === 'ARCHIVED') - Number(right.status === 'ARCHIVED')
+        || left.name.localeCompare(right.name, 'zh-CN'))
+  }, [spaces, workspaces])
+  const openFolder = workspaces.find((workspace) => workspace.id === openFolderId) ?? null
+
+  const open = (folder: SourceFolder) => {
+    if (folder.kind === 'PERSONAL_LEARNING' && folder.workspace) setOpenFolderId(folder.id)
+    else onOpenLearningSpace(folder.id)
+  }
 
   const archiveFolder = async (workspace: WorkspaceSummary) => {
     if (!await confirmSensitiveAction({
@@ -101,44 +152,42 @@ export function PersonalSourceDrive() {
       projectId={openFolder.id}
       canManage={openFolder.canManage}
       workspaceName={openFolder.name}
+      rootLabel="个人学习资料"
       onBack={() => { setOpenFolderId(null); void load() }}
     />
   }
 
-  return <div className="flex h-full min-h-0 flex-col bg-card text-card-foreground">
-    <div className="flex min-h-20 shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border/60 px-5 py-4 sm:px-7">
-      <div className="min-w-0">
-        <p className="font-heading text-xl font-medium">工作区资料夹</p>
-        <p className="mt-1 text-sm text-muted-foreground">每个文件夹对应一个独立工作区，资料权限不会跨文件夹混用。</p>
-      </div>
-      <Button type="button" size="lg" onClick={() => setEditor({ mode: 'create' })}>
+  return <div className="space-y-5">
+    <div className="flex justify-end">
+      <Button type="button" onClick={() => setEditor({ mode: 'create' })}>
         <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />新建文件夹
       </Button>
     </div>
-    <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
+    <div>
       {loading && folders.length === 0 ? <ResourceSkeleton variant="cards" count={6} label="正在加载工作区资料夹" />
         : storeError && folders.length === 0 ? <Alert variant="destructive"><AlertDescription>{storeError}</AlertDescription></Alert>
           : folders.length === 0 ? <Empty className="min-h-96 border border-dashed">
             <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={Folder01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>还没有工作区文件夹</EmptyTitle><EmptyDescription>创建文件夹后即可上传资料并建立独立知识索引。</EmptyDescription></EmptyHeader>
             <EmptyContent><Button type="button" onClick={() => setEditor({ mode: 'create' })}><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />新建文件夹</Button></EmptyContent>
           </Empty> : <div className="grid gap-5 @container/drive sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {folders.map((workspace) => {
-              const manageable = canManageFolder(workspace)
-              return <ContextMenu key={workspace.id}>
+            {folders.map((folder) => {
+              const workspace = folder.workspace
+              const manageable = workspace ? canManageFolder(workspace) : false
+              return <ContextMenu key={folder.id}>
                 <ContextMenuTrigger asChild>
                   <Card size="sm" className="relative min-h-56 overflow-visible transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg focus-within:ring-2 focus-within:ring-ring">
-                    <button type="button" className="flex h-full w-full flex-col items-start gap-4 px-5 py-5 text-start outline-none" onClick={() => setOpenFolderId(workspace.id)}>
+                    <button type="button" className="flex h-full w-full flex-col items-start gap-4 px-5 py-5 text-start outline-none" onClick={() => open(folder)}>
                       <span className="grid size-20 place-items-center rounded-4xl bg-primary/10 text-primary">
                         <HugeiconsIcon icon={Folder01Icon} strokeWidth={1.5} className="size-12" />
                       </span>
                       <span className="min-w-0 space-y-1">
-                        <span className="block truncate font-heading text-lg font-medium">{workspace.name}</span>
-                        <span className="block line-clamp-2 min-h-10 text-sm text-muted-foreground">{workspace.description || '暂无描述'}</span>
+                        <span className="block truncate font-heading text-lg font-medium">{folder.name}</span>
+                        <span className="block line-clamp-2 min-h-10 text-sm text-muted-foreground">{folder.description || '暂无描述'}</span>
                       </span>
                       <span className="mt-auto flex w-full flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <Badge variant="secondary">{folderKind(workspace)}</Badge>
-                        {workspace.status === 'ARCHIVED' ? <Badge variant="outline">已归档</Badge> : null}
-                        <span className="ms-auto">{workspace.sourceCount} 项资料</span>
+                        <Badge variant="secondary">{folderKind(folder)}</Badge>
+                        {folder.status === 'ARCHIVED' ? <Badge variant="outline">已归档</Badge> : null}
+                        {folder.sourceCount !== undefined ? <span className="ms-auto">{folder.sourceCount} 项资料</span> : null}
                       </span>
                     </button>
                   </Card>
@@ -146,11 +195,11 @@ export function PersonalSourceDrive() {
                 <ContextMenuContent>
                   <ContextMenuItem onSelect={() => setEditor({ mode: 'create' })}><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />新建同级文件夹</ContextMenuItem>
                   <ContextMenuSeparator />
-                  <ContextMenuItem onSelect={() => setOpenFolderId(workspace.id)}><HugeiconsIcon icon={Folder01Icon} strokeWidth={2} />打开文件夹</ContextMenuItem>
-                  {manageable ? <ContextMenuItem onSelect={() => setEditor({ mode: 'rename', workspace })}><HugeiconsIcon icon={Edit02Icon} strokeWidth={2} />重命名</ContextMenuItem> : null}
-                  {manageable && !workspace.isDefault ? <ContextMenuSeparator /> : null}
-                  {manageable && !workspace.isDefault && workspace.status !== 'ARCHIVED' ? <ContextMenuItem variant="destructive" onSelect={() => void archiveFolder(workspace)}><HugeiconsIcon icon={Archive02Icon} strokeWidth={2} />归档文件夹</ContextMenuItem> : null}
-                  {manageable && !workspace.isDefault ? <ContextMenuItem variant="destructive" onSelect={() => void deleteFolder(workspace)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />永久删除</ContextMenuItem> : null}
+                  <ContextMenuItem onSelect={() => open(folder)}><HugeiconsIcon icon={Folder01Icon} strokeWidth={2} />打开文件夹</ContextMenuItem>
+                  {manageable && workspace ? <ContextMenuItem onSelect={() => setEditor({ mode: 'rename', workspace })}><HugeiconsIcon icon={Edit02Icon} strokeWidth={2} />重命名</ContextMenuItem> : null}
+                  {manageable && workspace && !workspace.isDefault ? <ContextMenuSeparator /> : null}
+                  {manageable && workspace && !workspace.isDefault && workspace.status !== 'ARCHIVED' ? <ContextMenuItem variant="destructive" onSelect={() => void archiveFolder(workspace)}><HugeiconsIcon icon={Archive02Icon} strokeWidth={2} />归档文件夹</ContextMenuItem> : null}
+                  {manageable && workspace && !workspace.isDefault ? <ContextMenuItem variant="destructive" onSelect={() => void deleteFolder(workspace)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />永久删除</ContextMenuItem> : null}
                 </ContextMenuContent>
               </ContextMenu>
             })}

@@ -65,7 +65,7 @@ export function ChatPane({
           <ConversationActivity conversationId={conversationId} />
           <ConversationSearch conversationId={conversationId} open={searchOpen} onClose={() => setSearchOpen(false)} rootRef={rootRef} />
         </div>
-        <ConversationThread conversationId={conversationId} />
+        <ConversationThread conversationId={conversationId} readOnly={conversation.readOnly} />
       </main>
     </ConversationRuntimeProvider>
   )

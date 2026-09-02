@@ -12,9 +12,11 @@ import type {
 } from './contracts.js'
 import {
   enqueueSourceJob,
+  findCourseReviewSource,
   findSource,
   insertPersonalLearningProject,
   insertSource,
+  listCourseReviewSources,
   listConversationSources,
   listProjects,
   listSources,
@@ -166,6 +168,16 @@ export class KnowledgeApplication {
     return listSources(this.db, scope.companyId, scope.projectId, scope.userId)
   }
 
+  async courseReviewSources(scope: KnowledgeScope) {
+    const context = await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId, action: 'learning:review', companyId: scope.companyId, projectId: scope.projectId,
+    })
+    if (context.project?.kind === 'PERSONAL_LEARNING') {
+      throw new KnowledgeApplicationError('forbidden', 'course resource review requires a course')
+    }
+    return listCourseReviewSources(this.db, scope.companyId, scope.projectId)
+  }
+
   async conversationSources(scope: KnowledgeScope, conversationId: string) {
     await createPermissionService(this.db).assertCan({
       actorUserId: scope.userId, action: 'knowledge:read', companyId: scope.companyId, projectId: scope.projectId,
@@ -179,6 +191,25 @@ export class KnowledgeApplication {
       actorUserId: scope.userId, action: 'knowledge:read', companyId: scope.companyId, projectId: scope.projectId,
     })
     const source = await findSource(this.db, scope.companyId, scope.projectId, scope.userId, sourceId)
+    if (!source) throw new KnowledgeApplicationError('not_found', 'source not found')
+    const { storageKey, ...payload } = source
+    const extractedText = source.status === 'ready'
+      ? await this.infrastructure.sourceText(sourceId, scope.companyId, scope.projectId, scope.userId)
+      : null
+    const originalFileUrl = source.kind === 'file' && storageKey
+      ? await this.infrastructure.publicUrl(storageKey)
+      : null
+    return { ...payload, extractedText, originalFileUrl }
+  }
+
+  async courseReviewSource(scope: KnowledgeScope, sourceId: string) {
+    const context = await createPermissionService(this.db).assertCan({
+      actorUserId: scope.userId, action: 'learning:review', companyId: scope.companyId, projectId: scope.projectId,
+    })
+    if (context.project?.kind === 'PERSONAL_LEARNING') {
+      throw new KnowledgeApplicationError('forbidden', 'course resource review requires a course')
+    }
+    const source = await findCourseReviewSource(this.db, scope.companyId, scope.projectId, sourceId)
     if (!source) throw new KnowledgeApplicationError('not_found', 'source not found')
     const { storageKey, ...payload } = source
     const extractedText = source.status === 'ready'

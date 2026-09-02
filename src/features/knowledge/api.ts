@@ -43,6 +43,8 @@ export const knowledgeApi = {
     http<{ ok: true }>(`/projects/${encodeURIComponent(projectId)}`, { method: 'PUT', body: JSON.stringify(input) }),
   listProjectSources: (projectId: string) => http<KnowledgeSource[]>(`/projects/${encodeURIComponent(projectId)}/sources`),
   getProjectSource: (projectId: string, sourceId: string) => http<KnowledgeSource>(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}`),
+  listCourseReviewSources: (projectId: string) => http<KnowledgeSource[]>(`/projects/${encodeURIComponent(projectId)}/learning/resources`),
+  getCourseReviewSource: (projectId: string, sourceId: string) => http<KnowledgeSource>(`/projects/${encodeURIComponent(projectId)}/learning/resources/${encodeURIComponent(sourceId)}`),
   uploadProjectSource: (projectId: string, file: File, onPending?: () => void) => uploadSource(`/projects/${encodeURIComponent(projectId)}/sources`, projectId, file, onPending),
   addProjectTextSource: async (projectId: string, input: { title?: string; text: string }) => {
     const fingerprint = JSON.stringify(['text', projectId, input])

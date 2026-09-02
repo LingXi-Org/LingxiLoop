@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { useConversations } from '@/features/conversations/store'
+import { CourseSourceDrive } from '@/features/knowledge/components/CourseSourceDrive'
 import { PersonalSourceDrive } from '@/features/knowledge/components/PersonalSourceDrive'
 import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
@@ -45,7 +46,9 @@ function DashboardSectionFrame({ space, section, children }: {
   section: LearningDashboardSection
   children: React.ReactNode
 }) {
-  const copy = SECTION_COPY[section]
+  const copy = section === 'resources'
+    ? { ...SECTION_COPY.resources, title: space.projectKind === 'PERSONAL_LEARNING' ? '个人学习资料' : '班级资料' }
+    : SECTION_COPY[section]
   const conversations = useConversations((state) => state.list)
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const learningConversationId = space.studyRoomId
@@ -58,7 +61,7 @@ function DashboardSectionFrame({ space, section, children }: {
         <CourseAvatar courseId={space.courseId ?? space.projectId} title={space.title} size="sm" />
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-heading text-sm font-medium">{copy.title}</h1>
-          <p className="sr-only">{copy.description}</p>
+          {section !== 'resources' ? <p className="sr-only">{copy.description}</p> : null}
         </div>
         {section === 'overview' && space.perspective === 'learner' && (
           <Button
@@ -86,9 +89,20 @@ function DashboardSectionFrame({ space, section, children }: {
   )
 }
 
-export function LearningDashboardPanel({ space, section }: { space: LearningSpace; section: LearningDashboardSection }) {
+export function LearningDashboardPanel({ space, spaces, section, onOpenLearningSpace }: {
+  space: LearningSpace
+  spaces: LearningSpace[]
+  section: LearningDashboardSection
+  onOpenLearningSpace(projectId: string): void
+}) {
   if (section === 'calendar') return <CalendarView />
-  if (section === 'resources') return <PersonalSourceDrive />
+  if (section === 'resources') {
+    return <DashboardSectionFrame space={space} section={section}>
+      {space.projectKind === 'PERSONAL_LEARNING'
+        ? <PersonalSourceDrive spaces={spaces} onOpenLearningSpace={onOpenLearningSpace} />
+        : <CourseSourceDrive space={space} />}
+    </DashboardSectionFrame>
+  }
   if (section === 'learners') return <DashboardSectionFrame space={space} section={section}>{space.canReview ? <TeacherLearnersSection projectId={space.projectId} /> : <CapabilityNotice message="当前课程状态下无法查看学习者审核资料。" />}</DashboardSectionFrame>
   if (section === 'members') return <DashboardSectionFrame space={space} section={section}><CourseMembersSection space={space} /></DashboardSectionFrame>
   if (section === 'settings') return <DashboardSectionFrame space={space} section={section}><CourseSettingsSection space={space} /></DashboardSectionFrame>

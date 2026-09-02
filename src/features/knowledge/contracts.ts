@@ -14,6 +14,7 @@ export interface KnowledgeSource {
   isTruncated: boolean
   visibilityScope: 'PRIVATE' | 'PROJECT'
   ownerUserId: string
+  ownerName?: string
   createdBy: string
   createdVia: 'USER' | 'AGENT'
   createdAt: string

@@ -10,7 +10,7 @@ import {
   Upload04Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -62,10 +62,25 @@ function SourceIcon({ source, className }: { source: KnowledgeSource; className?
   return <HugeiconsIcon icon={icon} strokeWidth={1.6} className={className} />
 }
 
-export function ProjectSourceLibrary({ projectId, canManage, workspaceName = '当前工作区', onBack }: {
+export function ProjectSourceLibrary({
+  projectId,
+  canManage,
+  workspaceName = '当前工作区',
+  rootLabel = '个人学习资料',
+  visibilityScope,
+  ownerUserId,
+  readOnly = false,
+  reviewMode = false,
+  onBack,
+}: {
   projectId: string
   canManage: boolean
   workspaceName?: string
+  rootLabel?: string
+  visibilityScope?: KnowledgeSource['visibilityScope']
+  ownerUserId?: string
+  readOnly?: boolean
+  reviewMode?: boolean
   onBack?: () => void
 }) {
   const [sources, setSources] = useState<KnowledgeSource[]>([])
@@ -82,10 +97,14 @@ export function ProjectSourceLibrary({ projectId, canManage, workspaceName = '�
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true)
     setError('')
-    try { setSources(await knowledgeApi.listProjectSources(projectId)) }
+    try {
+      setSources(await (reviewMode
+        ? knowledgeApi.listCourseReviewSources(projectId)
+        : knowledgeApi.listProjectSources(projectId)))
+    }
     catch (reason) { setError(userFacingError(reason, '资料库暂时无法加载，请稍后重试。')) }
     finally { if (initial) setLoading(false) }
-  }, [projectId])
+  }, [projectId, reviewMode])
 
   useEffect(() => {
     setSources([])
@@ -113,13 +132,20 @@ export function ProjectSourceLibrary({ projectId, canManage, workspaceName = '�
   }
   const addUrl = async (url: string, title?: string) => { await knowledgeApi.addProjectUrlSource(projectId, { url, title }); await load() }
   const addText = async (title: string, text: string) => { await knowledgeApi.addProjectTextSource(projectId, { title, text }); await load() }
-  const editable = (source: KnowledgeSource) => canManage || source.createdBy === me?.id
+  const visibleSources = useMemo(() => sources.filter((source) =>
+    (!visibilityScope || source.visibilityScope === visibilityScope)
+      && (!ownerUserId || source.ownerUserId === ownerUserId)), [ownerUserId, sources, visibilityScope])
+  const editable = (source: KnowledgeSource) => !readOnly && (canManage || source.createdBy === me?.id)
 
   const open = async (source: KnowledgeSource) => {
     setSelected(source)
     setDetailLoading(true)
     setDetailError('')
-    try { setSelected(await knowledgeApi.getProjectSource(projectId, source.id)) }
+    try {
+      setSelected(await (reviewMode
+        ? knowledgeApi.getCourseReviewSource(projectId, source.id)
+        : knowledgeApi.getProjectSource(projectId, source.id)))
+    }
     catch (reason) { setDetailError(userFacingError(reason, '资料预览暂时无法加载。')) }
     finally { setDetailLoading(false) }
   }
@@ -149,25 +175,25 @@ export function ProjectSourceLibrary({ projectId, canManage, workspaceName = '�
     } catch { /* Toast owns the visible error state. */ }
   }
 
-  return <div className="flex h-full min-h-0 flex-col bg-card text-card-foreground">
-    <div className="flex min-h-20 shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border/60 px-5 py-4 sm:px-7">
+  return <div className="space-y-5">
+    <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-3">
-        {onBack ? <Button type="button" variant="outline" size="icon" onClick={onBack} aria-label="返回工作区资料夹"><HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} /></Button> : null}
+        {onBack ? <Button type="button" variant="outline" size="icon" onClick={onBack} aria-label={`返回${rootLabel}`}><HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} /></Button> : null}
         <Breadcrumb>
           <BreadcrumbList>
-            <BreadcrumbItem>{onBack ? <BreadcrumbLink asChild><button type="button" onClick={onBack}>工作区资料夹</button></BreadcrumbLink> : <BreadcrumbPage>资料库</BreadcrumbPage>}</BreadcrumbItem>
+            <BreadcrumbItem>{onBack ? <BreadcrumbLink asChild><button type="button" onClick={onBack}>{rootLabel}</button></BreadcrumbLink> : <BreadcrumbPage>{rootLabel}</BreadcrumbPage>}</BreadcrumbItem>
             {onBack ? <><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>{workspaceName}</BreadcrumbPage></BreadcrumbItem></> : null}
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <Button type="button" size="lg" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button>
+      {!readOnly ? <Button type="button" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button> : null}
     </div>
-    <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
-      {loading && sources.length === 0 ? <ResourceSkeleton variant="cards" count={6} label="正在加载资料库" />
-        : error && sources.length === 0 ? <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" onClick={() => void load(true)}>重新加载</Button></AlertDescription></Alert>
-          : sources.length === 0 ? <Empty className="min-h-96 border border-dashed"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>文件夹还是空的</EmptyTitle><EmptyDescription>上传文件、网页或文本后，系统会自动提取内容并建立可检索索引。</EmptyDescription></EmptyHeader><EmptyContent><Button type="button" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button></EmptyContent></Empty>
-            : <><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{sources.map((source) => {
-              const creator = byId[source.createdBy]?.name ?? (source.createdBy === me?.id ? '你' : '一位成员')
+    <div>
+      {loading && visibleSources.length === 0 ? <ResourceSkeleton variant="cards" count={6} label="正在加载资料库" />
+        : error && visibleSources.length === 0 ? <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" onClick={() => void load(true)}>重新加载</Button></AlertDescription></Alert>
+          : visibleSources.length === 0 ? <Empty className="min-h-96 border border-dashed"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>文件夹还是空的</EmptyTitle><EmptyDescription>{readOnly ? '这里还没有可查看的资料。' : '上传文件、网页或文本后，系统会自动提取内容并建立可检索索引。'}</EmptyDescription></EmptyHeader>{!readOnly ? <EmptyContent><Button type="button" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button></EmptyContent> : null}</Empty>
+            : <><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visibleSources.map((source) => {
+              const creator = byId[source.createdBy]?.name ?? source.ownerName ?? (source.createdBy === me?.id ? '你' : '一位成员')
               const busy = source.status === 'upload_pending' || source.status === 'queued' || source.status === 'processing'
               const canEdit = editable(source)
               return <ContextMenu key={source.id}>
@@ -199,7 +225,7 @@ export function ProjectSourceLibrary({ projectId, canManage, workspaceName = '�
             })}</div>{error ? <Alert variant="destructive" className="mt-5"><AlertDescription>{error}</AlertDescription></Alert> : null}</>}
     </div>
 
-    <KnowledgeSourceUploadDialog open={adding} onOpenChange={setAdding} onFiles={uploadFiles} onUrl={addUrl} onText={addText} />
+    {!readOnly ? <KnowledgeSourceUploadDialog open={adding} onOpenChange={setAdding} onFiles={uploadFiles} onUrl={addUrl} onText={addText} /> : null}
     <RenameSourceDialog source={renaming} onOpenChange={(open) => { if (!open) setRenaming(null) }} onSave={async (source, title) => {
       await toastAction(knowledgeApi.renameProjectSource(projectId, source.id, title), { loading: '正在重命名资料', success: '资料已重命名', error: '重命名资料失败' })
       setRenaming(null)

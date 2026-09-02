@@ -6,6 +6,7 @@ export interface ApiConversation {
   topic: string | null
   members: string[]
   leaderId: string | null
+  readOnly?: boolean
   pinned: boolean
   muted: boolean
   mutedUntil: string | null

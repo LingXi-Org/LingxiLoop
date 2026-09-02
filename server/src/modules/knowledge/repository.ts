@@ -27,6 +27,7 @@ export interface KnowledgeSourceRow extends Record<string, unknown> {
   createdByUserId: string
   createdVia: KnowledgeCreatedVia
   ownerUserId: string
+  ownerName?: string
   visibilityScope: KnowledgeVisibilityScope
   sizeBytes: number
 }
@@ -144,6 +145,18 @@ export async function listSources(db: Queryable, companyId: string, projectId: s
   return rows
 }
 
+export async function listCourseReviewSources(db: Queryable, companyId: string, projectId: string) {
+  const { rows } = await db.query(
+    `SELECT ${SOURCE_LIST_SELECT},owner.display_name AS "ownerName"
+       FROM knowledge_sources source
+       JOIN users owner ON owner.id=source.owner_user_id
+      WHERE source.company_id=$1 AND source.project_id=$2 AND source.deleted_at IS NULL
+      ORDER BY source.created_at DESC`,
+    [companyId, projectId],
+  )
+  return rows
+}
+
 export async function listConversationSources(
   db: Queryable,
   args: { companyId: string; projectId: string; userId: string; conversationId: string },
@@ -175,6 +188,22 @@ export async function findSource(
         AND (source.visibility_scope='PROJECT'
           OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4))`,
     [sourceId, companyId, projectId, userId],
+  )
+  return rows[0] ?? null
+}
+
+export async function findCourseReviewSource(
+  db: Queryable,
+  companyId: string,
+  projectId: string,
+  sourceId: string,
+): Promise<KnowledgeSourceRow | null> {
+  const { rows } = await db.query<KnowledgeSourceRow>(
+    `SELECT ${SOURCE_DETAIL_SELECT},owner.display_name AS "ownerName"
+       FROM knowledge_sources source
+       JOIN users owner ON owner.id=source.owner_user_id
+      WHERE source.id=$1 AND source.company_id=$2 AND source.project_id=$3 AND source.deleted_at IS NULL`,
+    [sourceId, companyId, projectId],
   )
   return rows[0] ?? null
 }
