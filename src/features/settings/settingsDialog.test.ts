@@ -37,7 +37,7 @@ test('settings surfaces only existing theme, sound, notification, and account AP
   assert.match(notification, /getNotificationPreferences\(selectedWorkspaceId\)/)
   assert.match(notification, /toastAction\(learningApi\.setNotificationPreferences/)
   assert.doesNotMatch(notification, /设备推送|不可用/)
-  assert.match(dataAccount, /authApi\.logout\(\)/)
+  assert.match(dataAccount, /authApi\.signOut\(\)/)
   assert.match(dataAccount, /promptSensitiveAction/)
   assert.match(dataAccount, /confirmation !== ACCOUNT_DELETE_CONFIRMATION/)
   assert.match(dataAccount, /toastAction\(authApi\.deleteAccount\(\)/)
