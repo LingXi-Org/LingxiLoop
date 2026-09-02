@@ -13,7 +13,7 @@ services:
     working_dir: /home/nonroot
     command: ["start", "--log", "warn", "--user", "open-notebook", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}", "rocksdb:open-notebook.db"]
     volumes:
-      - surreal-data-v3:/home/nonroot
+      - surreal-data:/home/nonroot
     healthcheck:
       test: ["CMD", "/surreal", "is-ready", "--endpoint", "http://localhost:8000"]
       interval: 5s
@@ -104,6 +104,6 @@ services:
     logging: *logging
 
 volumes:
-  surreal-data-v3: {}
+  surreal-data: {}
   open-notebook-data: {}
   agent-os-data: {}
