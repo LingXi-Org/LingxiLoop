@@ -1,17 +1,61 @@
 import { CanAccess, useCustom, useLogout, useOne, useTable } from '@refinedev/core'
-import { Link, Navigate, Outlet, useNavigate, useParams, useSearchParams } from 'react-router'
+import {
+  ActivityIcon,
+  ArrowLeftIcon,
+  BotIcon,
+  BoxesIcon,
+  Building2Icon,
+  ChevronRightIcon,
+  CircleAlertIcon,
+  DatabaseIcon,
+  ExternalLinkIcon,
+  FolderKanbanIcon,
+  GraduationCapIcon,
+  LogOutIcon,
+  RocketIcon,
+  SearchIcon,
+  ShieldCheckIcon,
+  ShieldIcon,
+  UsersIcon,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { ActivityIcon, ArrowLeftIcon, ExternalLinkIcon, LogOutIcon, MenuIcon, RocketIcon, SearchIcon, ShieldIcon } from 'lucide-react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Link, Navigate, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 import { AuthScreen } from '@/components/AuthScreen'
-import { confirmSensitiveAction, promptSensitiveAction } from '@/lib/confirmAction'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
+import { Separator } from '@/components/ui/separator'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { toastAction } from '@/lib/actionToast'
+import { confirmSensitiveAction, promptSensitiveAction } from '@/lib/confirmAction'
 import { API_URL, adminFetch } from './api'
 import { normalizeLingxiLitUrl } from './lingxilit-url'
-import { ADMIN_RESOURCES, GROUP_LABELS, resourceDefinition, type ResourceGroup } from './resources'
+import { ADMIN_RESOURCES, GROUP_LABELS, type ResourceGroup, resourceDefinition } from './resources'
 
 type RecordValue = string | number | boolean | null | Record<string, unknown> | unknown[]
 type AdminRecord = Record<string, RecordValue> & { id: string }
@@ -33,45 +77,86 @@ function isChunkDescriptor(value: RecordValue): value is ChunkDescriptor {
 }
 
 export function AdminLayout() {
-  const [navigationOpen, setNavigationOpen] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const navigate = useNavigate()
   const { mutate: logout, isPending } = useLogout()
   const health = useCustom<{ ok: boolean }>({ url: `${API_URL}/health/dependencies`, method: 'get' })
   const lingxiLitUrl = normalizeLingxiLitUrl(import.meta.env.VITE_LINGXILIT_URL)
-  return <div className="admin-shell">
-    <aside className={navigationOpen ? 'admin-sidebar admin-sidebar-open' : 'admin-sidebar'}>
-      <div className="flex items-center gap-3 px-5 py-5">
-        <div className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground"><ShieldIcon className="size-4" /></div>
-        <div><p className="font-semibold">LingxiLoop</p><p className="text-xs text-muted-foreground">运营后台</p></div>
-      </div>
-      <nav className="min-h-0 flex-1 overflow-y-auto px-3 pb-5" aria-label="后台资源">
-        <Link to="/" className="admin-nav-item" onClick={() => setNavigationOpen(false)}><ActivityIcon className="size-4" />仪表盘</Link>
-        <Link to="/releases" className="admin-nav-item" onClick={() => setNavigationOpen(false)}><RocketIcon className="size-4" />发布管理</Link>
-        {lingxiLitUrl && <a href={lingxiLitUrl} className="admin-nav-item" target="_blank" rel="noopener noreferrer" onClick={() => setNavigationOpen(false)}><ExternalLinkIcon className="size-4" />AI 可观测（LingxiLit）</a>}
-        {(Object.keys(GROUP_LABELS) as ResourceGroup[]).map((group) => <div key={group} className="mt-6 space-y-1">
-          <p className="px-3 pb-2 text-xs font-semibold text-muted-foreground">{GROUP_LABELS[group]}</p>
-          {ADMIN_RESOURCES.filter((resource) => resource.group === group).map((resource) => <Link
-            key={resource.name}
-            to={`/resources/${resource.name}`}
-            className="admin-nav-item"
-            onClick={() => setNavigationOpen(false)}
-          >{resource.label}</Link>)}
-        </div>)}
-      </nav>
-    </aside>
-    {navigationOpen && <button type="button" className="admin-scrim" aria-label="关闭导航" onClick={() => setNavigationOpen(false)} />}
-    <div className="min-w-0 flex-1">
+  const dependencyOk = health.query.data?.data.ok
+  return <SidebarProvider className="admin-shell" style={{ '--sidebar-width': '18rem' } as React.CSSProperties}>
+    <Sidebar variant="inset">
+      <SidebarHeader className="p-3">
+        <Link to="/" className="flex min-w-0 items-center gap-3 rounded-2xl p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm"><ShieldIcon className="size-4" /></span>
+          <span className="min-w-0"><strong className="block truncate font-heading text-sm font-semibold">LingxiLoop</strong><span className="block truncate text-xs text-sidebar-foreground/60">运营控制中心</span></span>
+        </Link>
+      </SidebarHeader>
+      <AdminNavigation lingxiLitUrl={lingxiLitUrl} />
+      <SidebarFooter className="p-3">
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-sidebar-accent/70 px-3 py-2 text-xs">
+          <span className="flex min-w-0 items-center gap-2"><span className={`size-2 shrink-0 rounded-full ${health.query.isLoading ? 'bg-muted-foreground' : dependencyOk ? 'bg-primary' : 'bg-destructive'}`} /><span className="truncate">{health.query.isLoading ? '正在检查依赖' : dependencyOk ? '全部依赖正常' : '依赖存在异常'}</span></span>
+          <Badge variant="outline" className="bg-sidebar">LIVE</Badge>
+        </div>
+        <SidebarMenu>
+          <SidebarMenuItem><SidebarMenuButton disabled={isPending} onClick={() => void confirmSensitiveAction({ title: '退出管理后台？', description: '当前管理会话将结束。', confirmLabel: '退出' }).then((confirmed) => { if (confirmed) logout() })}><LogOutIcon /><span>退出管理后台</span></SidebarMenuButton></SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+    <SidebarInset className="h-svh min-w-0 overflow-hidden">
       <header className="admin-header">
-        <Button variant="ghost" size="icon" className="admin-menu-button" onClick={() => setNavigationOpen(true)} aria-label="打开导航"><MenuIcon /></Button>
-        <div className="min-w-0"><p className="font-semibold">平台运营</p><p className="truncate text-xs text-muted-foreground">跨租户资源与运行状态</p></div>
-        <form className="admin-global-search" onSubmit={(event) => { event.preventDefault(); if (globalSearch.trim().length >= 2) navigate(`/search?q=${encodeURIComponent(globalSearch.trim())}`) }}><SearchIcon /><Input value={globalSearch} onChange={(event) => setGlobalSearch(event.target.value)} placeholder="全局搜索" aria-label="全局搜索" /></form>
-        <span className={health.query.data?.data.ok ? 'admin-health admin-health-ok' : 'admin-health'}>{health.query.data?.data.ok ? '依赖正常' : '依赖异常'}</span>
-        <Button variant="outline" className="ms-auto" disabled={isPending} onClick={() => void confirmSensitiveAction({ title: '退出管理后台？', description: '当前管理会话将结束。', confirmLabel: '退出' }).then((confirmed) => { if (confirmed) logout() })}><LogOutIcon />退出</Button>
+        <SidebarTrigger />
+        <Separator orientation="vertical" className="h-5" />
+        <div className="admin-header-copy"><p>平台运营</p><span>跨租户资源与运行状态</span></div>
+        <form className="admin-global-search" onSubmit={(event) => { event.preventDefault(); if (globalSearch.trim().length >= 2) navigate(`/search?q=${encodeURIComponent(globalSearch.trim())}`) }}>
+          <InputGroup><InputGroupAddon><SearchIcon /></InputGroupAddon><InputGroupInput value={globalSearch} onChange={(event) => setGlobalSearch(event.target.value)} placeholder="搜索用户、公司、项目或课程" aria-label="全局搜索" /></InputGroup>
+        </form>
+        <Badge variant="outline" className="admin-role-badge"><ShieldCheckIcon />平台管理员</Badge>
       </header>
-      <main className="admin-content"><Outlet /></main>
-    </div>
-  </div>
+      <div className="admin-content"><Outlet /></div>
+    </SidebarInset>
+  </SidebarProvider>
+}
+
+const GROUP_ICONS: Record<ResourceGroup, React.ComponentType<{ className?: string }>> = {
+  identity: Building2Icon,
+  learning: GraduationCapIcon,
+  collaboration: BotIcon,
+  operations: BoxesIcon,
+}
+
+function AdminNavigation({ lingxiLitUrl }: { lingxiLitUrl: string | undefined }) {
+  const { pathname } = useLocation()
+  const { setOpenMobile } = useSidebar()
+  const closeNavigation = () => setOpenMobile(false)
+  return <SidebarContent className="px-2 pb-2">
+    <SidebarGroup className="pt-0">
+      <SidebarGroupLabel>工作台</SidebarGroupLabel>
+      <SidebarGroupContent><SidebarMenu>
+        <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname === '/'}><Link to="/" onClick={closeNavigation}><ActivityIcon /><span>运营概览</span></Link></SidebarMenuButton></SidebarMenuItem>
+        <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/releases')}><Link to="/releases" onClick={closeNavigation}><RocketIcon /><span>发布管理</span></Link></SidebarMenuButton></SidebarMenuItem>
+        {lingxiLitUrl && <SidebarMenuItem><SidebarMenuButton asChild><a href={lingxiLitUrl} target="_blank" rel="noopener noreferrer" onClick={closeNavigation}><ExternalLinkIcon /><span>AI 可观测</span></a></SidebarMenuButton></SidebarMenuItem>}
+      </SidebarMenu></SidebarGroupContent>
+    </SidebarGroup>
+    <SidebarGroup className="pt-0">
+      <SidebarGroupLabel>资源目录</SidebarGroupLabel>
+      <SidebarGroupContent><SidebarMenu>
+        {(Object.keys(GROUP_LABELS) as ResourceGroup[]).map((group) => {
+          const GroupIcon = GROUP_ICONS[group]
+          const resources = ADMIN_RESOURCES.filter((resource) => resource.group === group)
+          const active = resources.some((resource) => pathname.startsWith(`/resources/${resource.name}`))
+          return <Collapsible key={group} asChild defaultOpen={active} className="group/collapsible">
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild><SidebarMenuButton isActive={active}><GroupIcon /><span>{GROUP_LABELS[group]}</span><ChevronRightIcon className="ms-auto transition-transform group-data-[state=open]/collapsible:rotate-90" /></SidebarMenuButton></CollapsibleTrigger>
+              <CollapsibleContent><SidebarMenuSub>
+                {resources.map((resource) => <SidebarMenuSubItem key={resource.name}><SidebarMenuSubButton asChild isActive={pathname.startsWith(`/resources/${resource.name}`)}><Link to={`/resources/${resource.name}`} onClick={closeNavigation}><span>{resource.label}</span></Link></SidebarMenuSubButton></SidebarMenuSubItem>)}
+              </SidebarMenuSub></CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+        })}
+      </SidebarMenu></SidebarGroupContent>
+    </SidebarGroup>
+  </SidebarContent>
 }
 
 interface SearchResult { resource: string; id: string; label: string; summary: string | null }
@@ -89,7 +174,7 @@ export function SearchPage() {
   const data = results.query.data?.data.data ?? []
   return <div className="space-y-6"><PageHeading title={`搜索“${query}”`} description="用户、公司、项目与课程" />{data.length === 0
     ? <EmptyPanel message="没有匹配结果" />
-    : <div className="space-y-3">{data.map((item) => <Link className="admin-search-result" key={`${item.resource}:${item.id}`} to={`/resources/${item.resource}/${encodeURIComponent(item.id)}`}><strong>{item.label}</strong><span>{resourceDefinition(item.resource)?.label} · {item.summary ?? item.id}</span></Link>)}</div>}</div>
+    : <ItemGroup>{data.map((item) => <Item asChild variant="outline" key={`${item.resource}:${item.id}`}><Link to={`/resources/${item.resource}/${encodeURIComponent(item.id)}`}><ItemMedia variant="icon" className="grid size-9 place-items-center rounded-xl bg-muted"><SearchIcon /></ItemMedia><ItemContent><ItemTitle>{item.label}<Badge variant="secondary">{resourceDefinition(item.resource)?.label}</Badge></ItemTitle><ItemDescription>{item.summary ?? item.id}</ItemDescription></ItemContent><ChevronRightIcon className="size-4 text-muted-foreground" /></Link></Item>)}</ItemGroup>}</div>
 }
 
 interface DashboardData {
@@ -105,15 +190,18 @@ export function DashboardPage() {
   const data = query.query.data?.data
   if (!data) return <EmptyPanel message="暂无运营数据" />
   const cards = [
-    ['用户', data.counts.users], ['公司', data.counts.companies], ['项目', data.counts.projects],
-    ['活跃运行', data.counts.activeRuns], ['失败任务', data.counts.failedJobs],
+    { label: '用户', value: data.counts.users, description: '平台账户', icon: UsersIcon },
+    { label: '公司', value: data.counts.companies, description: '租户组织', icon: Building2Icon },
+    { label: '项目', value: data.counts.projects, description: '协作空间', icon: FolderKanbanIcon },
+    { label: '活跃运行', value: data.counts.activeRuns, description: 'Agent 正在执行', icon: ActivityIcon },
+    { label: '失败任务', value: data.counts.failedJobs, description: '需要关注', icon: CircleAlertIcon, destructive: true },
   ]
   return <div className="space-y-8">
     <PageHeading title="运营概览" description="关键规模、依赖健康与近期审计" />
-    <section className="admin-card-grid">{cards.map(([label, value]) => <article key={label} className="admin-card"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-3 text-3xl font-semibold tabular-nums">{value}</p></article>)}</section>
+    <section className="admin-card-grid">{cards.map(({ label, value, description, icon: Icon, destructive }) => <Card key={label} size="sm" className="admin-metric-card"><CardContent className="flex items-start justify-between gap-4"><div><p className="text-sm font-medium text-muted-foreground">{label}</p><p className="mt-3 font-heading text-3xl font-semibold tracking-tight tabular-nums">{value}</p><p className="mt-1 text-xs text-muted-foreground">{description}</p></div><span className={destructive ? 'admin-metric-icon admin-metric-icon-destructive' : 'admin-metric-icon'}><Icon /></span></CardContent></Card>)}</section>
     <div className="grid gap-6 xl:grid-cols-2">
-      <section className="admin-panel"><h2 className="font-semibold">依赖健康</h2><div className="mt-4 grid gap-3 sm:grid-cols-2">{Object.entries(data.dependencies).map(([name, healthy]) => <div key={name} className="flex items-center justify-between rounded-xl bg-muted px-4 py-3"><span>{name}</span><span className={healthy ? 'text-primary' : 'text-destructive'}>{healthy ? '正常' : '异常'}</span></div>)}</div></section>
-      <section className="admin-panel"><h2 className="font-semibold">近期审计</h2><div className="mt-4 space-y-3">{data.recentAudit.map((event) => <div key={event.id} className="rounded-xl bg-muted px-4 py-3"><p className="font-medium">{event.kind}</p><p className="mt-1 text-xs text-muted-foreground">{event.user_id ?? '系统'} · {new Date(event.created_at).toLocaleString()}</p></div>)}</div></section>
+      <Card><CardHeader><CardTitle className="text-base">依赖健康</CardTitle><CardDescription>平台关键服务的实时可用状态</CardDescription></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">{Object.entries(data.dependencies).map(([name, healthy]) => <Item key={name} variant="muted" size="sm"><ItemMedia variant="icon"><span className={`size-2 rounded-full ${healthy ? 'bg-primary' : 'bg-destructive'}`} /></ItemMedia><ItemContent><ItemTitle>{name}</ItemTitle></ItemContent><Badge variant={healthy ? 'secondary' : 'destructive'}>{healthy ? '正常' : '异常'}</Badge></Item>)}</CardContent></Card>
+      <Card><CardHeader><CardTitle className="text-base">近期审计</CardTitle><CardDescription>最近发生的平台级操作</CardDescription></CardHeader><CardContent><ItemGroup>{data.recentAudit.map((event) => <Item key={event.id} variant="muted" size="sm"><ItemMedia variant="icon" className="grid size-8 place-items-center rounded-lg bg-background"><ShieldCheckIcon /></ItemMedia><ItemContent><ItemTitle>{event.kind}</ItemTitle><ItemDescription>{event.user_id ?? '系统'} · {new Date(event.created_at).toLocaleString()}</ItemDescription></ItemContent></Item>)}</ItemGroup></CardContent></Card>
     </div>
   </div>
 }
@@ -136,11 +224,11 @@ export function ResourceListPage() {
   if (!resource) return <Navigate to="/" replace />
   return <div className="space-y-6">
     <PageHeading title={resource.label} description={`${GROUP_LABELS[resource.group]} · 全局资源目录`} />
-    <div className="admin-toolbar"><div className="relative w-full max-w-md"><SearchIcon className="pointer-events-none absolute inset-inline-start-3 top-2.5 size-4 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} className="ps-9" placeholder={`搜索${resource.label}`} aria-label={`搜索${resource.label}`} /></div><span className="text-sm text-muted-foreground">{list.result.total ?? rows.length} 条</span></div>
+    <div className="admin-toolbar"><InputGroup className="max-w-md"><InputGroupAddon><SearchIcon /></InputGroupAddon><InputGroupInput value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`搜索${resource.label}`} aria-label={`搜索${resource.label}`} /></InputGroup><Badge variant="outline" className="h-7 px-3 tabular-nums">{list.result.total ?? rows.length} 条记录</Badge></div>
     {list.tableQuery.isLoading && rows.length === 0 ? <ResourceSkeleton variant="table" count={8} label={`正在加载${resource.label}`} />
       : list.tableQuery.isError ? <ErrorPanel message={`无法加载${resource.label}`} retry={() => void list.tableQuery.refetch()} />
         : rows.length === 0 ? <EmptyPanel message={`没有匹配的${resource.label}`} />
-          : <div className="admin-table-wrap"><table className="admin-table"><thead><tr>{columns.map((column) => <th key={column}>{column}</th>)}{resource.detail !== false && <th>操作</th>}</tr></thead><tbody>{rows.map((row) => <tr key={row.id}>{columns.map((column) => <td key={column}><span className="admin-cell-value">{display(row[column])}</span></td>)}{resource.detail !== false && <td><Button asChild variant="outline" size="sm"><Link to={`/resources/${resource.name}/${encodeURIComponent(String(row.id))}`}>查看</Link></Button></td>}</tr>)}</tbody></table></div>}
+          : <Card className="admin-table-card"><Table className="min-w-[56rem]"><TableHeader><TableRow>{columns.map((column) => <TableHead key={column}>{column}</TableHead>)}{resource.detail !== false && <TableHead className="text-end">操作</TableHead>}</TableRow></TableHeader><TableBody>{rows.map((row) => <TableRow key={row.id}>{columns.map((column) => <TableCell key={column} className="max-w-[22rem] align-top whitespace-normal"><span className="admin-cell-value">{display(row[column])}</span></TableCell>)}{resource.detail !== false && <TableCell className="text-end align-top"><Button asChild variant="outline" size="sm"><Link to={`/resources/${resource.name}/${encodeURIComponent(String(row.id))}`}>查看</Link></Button></TableCell>}</TableRow>)}</TableBody></Table></Card>}
     {list.pageCount > 1 && <div className="flex items-center justify-end gap-3"><Button variant="outline" disabled={list.currentPage <= 1} onClick={() => list.setCurrentPage((page) => page - 1)}>上一页</Button><span className="text-sm text-muted-foreground">第 {list.currentPage} / {list.pageCount} 页</span><Button variant="outline" disabled={list.currentPage >= list.pageCount} onClick={() => list.setCurrentPage((page) => page + 1)}>下一页</Button></div>}
   </div>
 }
@@ -209,7 +297,7 @@ export function ResourceDetailPage() {
   return <div className="space-y-6">
     <div><Button asChild variant="ghost" size="sm"><Link to={`/resources/${resource.name}`}><ArrowLeftIcon />返回{resource.label}</Link></Button></div>
     <PageHeading title={titleFor(record)} description={`${resource.label} · ${record.id}`} actions={availableCommands.map((command) => <CanAccess key={command.label} resource={resource.name} action={command.action}><Button variant={command.destructive ? 'destructive' : 'outline'} disabled={pending} onClick={() => void execute(command)}>{command.label}</Button></CanAccess>)} />
-    <section className="admin-detail-grid">{Object.entries(record).map(([key, value]) => <article key={key} className="admin-detail-field"><h2>{key}</h2>{isChunkDescriptor(value) ? <ChunkedField descriptor={value} /> : <pre>{display(value)}</pre>}</article>)}</section>
+    <section className="admin-detail-grid">{Object.entries(record).map(([key, value]) => <Card key={key} size="sm" className="admin-detail-field"><CardHeader><CardTitle className="font-mono text-xs font-medium text-muted-foreground">{key}</CardTitle></CardHeader><CardContent>{isChunkDescriptor(value) ? <ChunkedField descriptor={value} /> : <pre>{display(value)}</pre>}</CardContent></Card>)}</section>
     {resource.name === 'conversations' && <ConversationMessages conversationId={record.id} />}
   </div>
 }
@@ -238,10 +326,10 @@ function ChunkedField({ descriptor }: { descriptor: ChunkDescriptor }) {
 
 function ConversationMessages({ conversationId }: { conversationId: string }) {
   const messages = useCustom<unknown[]>({ url: `${API_URL}/control/platform/conversations/${encodeURIComponent(conversationId)}/messages`, method: 'get' })
-  return <section className="admin-panel"><h2 className="font-semibold">消息正文</h2>{messages.query.isLoading && !messages.query.data
-    ? <ResourceSkeleton variant="list" count={5} className="mt-4" label="正在加载消息正文" />
-    : messages.query.isError ? <div className="mt-4"><ErrorPanel message="无法加载消息正文" retry={() => void messages.query.refetch()} /></div>
-      : <pre className="admin-json mt-4">{JSON.stringify(messages.query.data?.data ?? [], null, 2)}</pre>}</section>
+  return <Card><CardHeader><CardTitle className="text-base">消息正文</CardTitle><CardDescription>会话中的原始消息记录</CardDescription></CardHeader><CardContent>{messages.query.isLoading && !messages.query.data
+    ? <ResourceSkeleton variant="list" count={5} label="正在加载消息正文" />
+    : messages.query.isError ? <ErrorPanel message="无法加载消息正文" retry={() => void messages.query.refetch()} />
+      : <pre className="admin-json">{JSON.stringify(messages.query.data?.data ?? [], null, 2)}</pre>}</CardContent></Card>
 }
 
 function PageHeading({ title, description, actions = [] }: { title: string; description: string; actions?: React.ReactNode[] }) {
@@ -249,11 +337,11 @@ function PageHeading({ title, description, actions = [] }: { title: string; desc
 }
 
 function ErrorPanel({ message, retry }: { message: string; retry: () => void }) {
-  return <div className="admin-state" role="alert"><p>{message}</p><Button variant="outline" onClick={retry}>重试</Button></div>
+  return <Empty className="admin-state" role="alert"><EmptyHeader><EmptyMedia variant="icon"><CircleAlertIcon /></EmptyMedia><EmptyTitle>{message}</EmptyTitle><EmptyDescription>请检查网络或服务状态后重试。</EmptyDescription></EmptyHeader><EmptyContent><Button variant="outline" onClick={retry}>重新加载</Button></EmptyContent></Empty>
 }
 
 function EmptyPanel({ message }: { message: string }) {
-  return <div className="admin-state"><p>{message}</p></div>
+  return <Empty className="admin-state"><EmptyHeader><EmptyMedia variant="icon"><DatabaseIcon /></EmptyMedia><EmptyTitle>{message}</EmptyTitle><EmptyDescription>调整搜索条件，或稍后再回来查看。</EmptyDescription></EmptyHeader></Empty>
 }
 
 export function LoginPage() {
