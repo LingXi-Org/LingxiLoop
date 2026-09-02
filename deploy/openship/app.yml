@@ -106,7 +106,7 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/healthz"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
       interval: 10s
       timeout: 3s
       retries: 20
