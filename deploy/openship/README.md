@@ -55,7 +55,7 @@ map $http_upgrade $connection_upgrade {
 
 upstream lingxiloop_web {
     server 127.0.0.1:5181 max_fails=3 fail_timeout=10s;
-    server 10.0.0.12:5181 max_fails=3 fail_timeout=10s;
+    server 10.20.0.3:5181 max_fails=3 fail_timeout=10s;
 }
 
 server {
@@ -75,7 +75,7 @@ server {
 }
 ```
 
-Replace `10.0.0.12` with Server B's private address. Probe each API with
+Replace `10.20.0.3` if Server B's private address changes. Probe each API with
 `GET /api/health`; dependency status is available at
 `GET /api/health/dependencies`.
 
@@ -97,29 +97,29 @@ Set project-specific values as follows:
 
 ```dotenv
 # app-a
-INSTANCE_ID=web-a
+INSTANCE_ID=app-a
 APP_BIND_IP=127.0.0.1
 # COMPOSE_PROFILES is unset
 
 # app-b
-INSTANCE_ID=web-b
-APP_BIND_IP=<server-b-private-ip>
+INSTANCE_ID=app-b
+APP_BIND_IP=10.20.0.3
 COMPOSE_PROFILES=worker
 
 # agent-os-a
 AGENT_OS_WORKER_ID=agent-os-a
-AGENT_OS_VOLUME_NAME=lingxiloop-agent-os-a-data
+AGENT_OS_VOLUME_NAME=openship-lingxiloop-agent-os-a-agent-os-data
 
 # agent-os-b: preserve the volume created by the former knowledge project
 AGENT_OS_WORKER_ID=agent-os-b
-AGENT_OS_VOLUME_NAME=lingxiloop-knowledge-agent_agent-os-data
+AGENT_OS_VOLUME_NAME=openship-lingxiloop-knowledge-agent-agent-os-data
 ```
 
 Both Agent OS projects use the same `AGENT_OS_SERVICE_TOKEN`, model settings,
 and stable callback origin:
 
 ```dotenv
-LINGXILOOP_CONTROL_PLANE_URL=https://lingxilearn.cn
+LINGXILOOP_CONTROL_PLANE_URL=https://origin-a.lingxilearn.cn
 ```
 
 The knowledge project also uses that origin for the Open Notebook embedding
