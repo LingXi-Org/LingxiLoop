@@ -1,9 +1,11 @@
 import { useCustom } from '@refinedev/core'
 import { ActivityIcon, ExternalLinkIcon, RefreshCwIcon, TriangleAlertIcon } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { API_URL } from './api'
-import { MonitoringChart, StatusBlockIndicator, type KumaHeartbeat } from './kuma-mieru'
+import { type KumaHeartbeat, StatusBlockIndicator } from './kuma-mieru'
 
 const UPTIME_BASE_URL = 'https://uptime.lingxilearn.cn'
+const MonitoringChart = lazy(() => import('./kuma-mieru-chart').then((module) => ({ default: module.MonitoringChart })))
 
 interface StatusMonitor {
   id: number
@@ -44,7 +46,7 @@ export function ServiceStatusPage() {
   const query = useCustom<StatusOverview>({
     url: `${API_URL}/control/status-page`,
     method: 'get',
-    queryOptions: { refetchInterval: 60_000 },
+    queryOptions: { staleTime: 30_000, refetchInterval: 60_000, refetchOnWindowFocus: false },
   })
   const data = query.query.data?.data
   const monitors = data?.groups.flatMap((group) => group.monitorList) ?? []
@@ -140,7 +142,7 @@ export function ServiceStatusPage() {
               </div>
               <div className="min-w-0">
                 <div className="mb-0.5 flex items-center justify-between text-[0.68rem] text-muted-foreground"><span>延迟趋势</span><span className="font-medium tabular-nums text-foreground">{Number.isFinite(heartbeat?.ping) ? `${heartbeat?.ping} ms` : '—'}</span></div>
-                <MonitoringChart heartbeats={history} />
+                <Suspense fallback={<div className="h-16 animate-pulse rounded-md bg-muted/60" aria-label="正在加载延迟趋势" />}><MonitoringChart heartbeats={history} /></Suspense>
               </div>
             </article>
           })}</div>

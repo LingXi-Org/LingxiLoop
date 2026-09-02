@@ -1,5 +1,15 @@
 # Third-Party Notices
 
+## Dokploy
+
+The Refine release dashboard adapts Dokploy's centralized deployment table
+component from commit `261ebb2317c324ae38f90bcacdd888ae06a04590`:
+https://github.com/Dokploy/dokploy/blob/261ebb2317c324ae38f90bcacdd888ae06a04590/apps/dokploy/components/dashboard/deployments/show-deployments-table.tsx
+
+The adapted source is retained in `admin/src/dokploy-deployment-board.tsx`
+under the Apache License, Version 2.0. Copyright 2026-present Dokploy
+Technology, Inc.
+
 ## Kuma Mieru
 
 The Refine service-status dashboard adapts Kuma Mieru's
@@ -7,9 +17,9 @@ The Refine service-status dashboard adapts Kuma Mieru's
 `26a1ed33c1f5bfc77ba51fc61221a0c08dff2134`:
 https://github.com/Alice39s/kuma-mieru
 
-The adapted source is retained in `admin/src/kuma-mieru.tsx` under the Mozilla
-Public License, Version 2.0. The required source-form notice and license URL are
-preserved at the top of that file.
+The adapted source is retained in `admin/src/kuma-mieru.tsx` and
+`admin/src/kuma-mieru-chart.tsx` under the Mozilla Public License, Version 2.0.
+The required source-form notice and license URL are preserved in both files.
 
 ## Excalidraw Canvas Fonts
 

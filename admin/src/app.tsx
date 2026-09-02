@@ -1,11 +1,15 @@
 import { Authenticated, Refine } from '@refinedev/core'
 import routerProvider, { CatchAllNavigate, NavigateToResource } from '@refinedev/react-router'
+import { lazy, type ReactNode, Suspense } from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router'
 import { accessControlProvider, authProvider, dataProvider } from './api'
 import { AuthSettingsPage } from './auth-settings-page'
-import { AdminLayout, DashboardPage, ForbiddenPage, LoginPage, ReleaseManagementPage, ResourceDetailPage, ResourceListPage, SearchPage } from './pages'
+import { AdminLayout, DashboardPage, ForbiddenPage, LoginPage, ResourceDetailPage, ResourceListPage, SearchPage } from './pages'
 import { ADMIN_RESOURCES } from './resources'
-import { ServiceStatusPage } from './status-page'
+
+const ReleaseManagementPage = lazy(() => import('./release-management-page').then((module) => ({ default: module.ReleaseManagementPage })))
+const ServiceStatusPage = lazy(() => import('./status-page').then((module) => ({ default: module.ServiceStatusPage })))
+const deferredPage = (page: ReactNode) => <Suspense fallback={<div className="grid min-h-64 place-items-center text-sm text-muted-foreground" aria-busy="true">正在加载页面…</div>}>{page}</Suspense>
 
 export function AdminApp() {
   return <BrowserRouter><Refine
@@ -27,9 +31,9 @@ export function AdminApp() {
       <Route element={<AdminLayout />}>
         <Route index element={<DashboardPage />} />
         <Route path="search" element={<SearchPage />} />
-        <Route path="releases" element={<ReleaseManagementPage />} />
+        <Route path="releases" element={deferredPage(<ReleaseManagementPage />)} />
         <Route path="authentication" element={<AuthSettingsPage />} />
-        <Route path="status" element={<ServiceStatusPage />} />
+        <Route path="status" element={deferredPage(<ServiceStatusPage />)} />
         <Route path="resources/:resource" element={<ResourceListPage />} />
         <Route path="resources/:resource/:id" element={<ResourceDetailPage />} />
         <Route path="resources" element={<NavigateToResource />} />
