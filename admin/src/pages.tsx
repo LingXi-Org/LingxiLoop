@@ -11,6 +11,7 @@ import {
   ExternalLinkIcon,
   FolderKanbanIcon,
   GraduationCapIcon,
+  KeyRoundIcon,
   LogOutIcon,
   RocketIcon,
   SearchIcon,
@@ -135,6 +136,7 @@ function AdminNavigation({ lingxiLitUrl }: { lingxiLitUrl: string | undefined })
       <SidebarGroupContent><SidebarMenu>
         <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname === '/'}><Link to="/" onClick={closeNavigation}><ActivityIcon /><span>运营概览</span></Link></SidebarMenuButton></SidebarMenuItem>
         <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/releases')}><Link to="/releases" onClick={closeNavigation}><RocketIcon /><span>发布管理</span></Link></SidebarMenuButton></SidebarMenuItem>
+        <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/authentication')}><Link to="/authentication" onClick={closeNavigation}><KeyRoundIcon /><span>身份认证</span></Link></SidebarMenuButton></SidebarMenuItem>
         {lingxiLitUrl && <SidebarMenuItem><SidebarMenuButton asChild><a href={lingxiLitUrl} target="_blank" rel="noopener noreferrer" onClick={closeNavigation}><ExternalLinkIcon /><span>AI 可观测</span></a></SidebarMenuButton></SidebarMenuItem>}
       </SidebarMenu></SidebarGroupContent>
     </SidebarGroup>
@@ -332,7 +334,7 @@ function ConversationMessages({ conversationId }: { conversationId: string }) {
       : <pre className="admin-json">{JSON.stringify(messages.query.data?.data ?? [], null, 2)}</pre>}</CardContent></Card>
 }
 
-function PageHeading({ title, description, actions = [] }: { title: string; description: string; actions?: React.ReactNode[] }) {
+export function PageHeading({ title, description, actions = [] }: { title: string; description: string; actions?: React.ReactNode[] }) {
   return <div className="admin-page-heading"><div className="min-w-0"><h1>{title}</h1><p>{description}</p></div>{actions.length > 0 && <div className="admin-heading-actions">{actions}</div>}</div>
 }
 

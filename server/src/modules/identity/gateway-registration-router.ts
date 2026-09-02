@@ -79,9 +79,10 @@ gatewayRegistrationRouter.post('/internal/registration/provision', safe(async (r
   const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : ''
   const name = typeof req.body?.name === 'string' ? req.body.name.trim() : ''
   const inviteToken = typeof req.body?.inviteToken === 'string' ? req.body.inviteToken : ''
-  const kind = req.body?.inviteKind === 'project' ? 'project' : 'company'
-  if (!email || !name || !inviteToken) throw new HttpError(400, 'email, name and invitation are required')
-  const tokenHash = hashInvitationToken(inviteToken)
+  const kind = req.body?.inviteKind === 'project' || req.body?.inviteKind === 'company' ? req.body.inviteKind : null
+  if (!email || !name) throw new HttpError(400, 'email and name are required')
+  if (Boolean(inviteToken) !== Boolean(kind)) throw new HttpError(400, 'inviteToken and inviteKind must be provided together')
+  const tokenHash = inviteToken ? hashInvitationToken(inviteToken) : null
   const appUserId = await withTransaction(pool, async (db) => {
     const existing = await db.query<{ id: string }>(`SELECT id FROM users WHERE lower(email)=$1 AND deleted_at IS NULL FOR UPDATE`, [email])
     const userId = existing.rows[0]?.id ?? `u-${randomUUID().slice(0, 12)}`
@@ -90,7 +91,7 @@ gatewayRegistrationRouter.post('/internal/registration/provision', safe(async (r
     }
     await provisionPersonalWorkspace(db, userId)
     if (kind === 'company') {
-      const invitation = await lockInvitation(db, tokenHash)
+      const invitation = await lockInvitation(db, tokenHash!)
       if (!invitation) throw new HttpError(404, 'invitation not found')
       const companyStatus = await lockCompany(db, invitation.company_id)
       if (!companyStatus || !['ACTIVE', 'TRIAL'].includes(companyStatus)) throw new HttpError(410, 'company is not accepting members')
@@ -99,8 +100,8 @@ gatewayRegistrationRouter.post('/internal/registration/provision', safe(async (r
         if (invitation.email && invitation.email.toLowerCase() !== email) throw new HttpError(403, 'invitation email mismatch')
         await insertAcceptedMembership(db, { invitation, userId, displayName: name, avatarUrl: null })
       }
-    } else {
-      const invitation = await lockProjectInvitation(db, tokenHash, userId)
+    } else if (kind === 'project') {
+      const invitation = await lockProjectInvitation(db, tokenHash!, userId)
       if (!invitation) throw new HttpError(404, 'invitation not found')
       if (invitation.revoked_at || new Date(invitation.expires_at).getTime() <= Date.now() || invitation.project_status !== 'ACTIVE' || !['ACTIVE', 'TRIAL'].includes(invitation.company_status)) throw new HttpError(410, 'invitation no longer active')
       if (invitation.email && invitation.email.toLowerCase() !== email) throw new HttpError(403, 'invitation email mismatch')
@@ -108,13 +109,13 @@ gatewayRegistrationRouter.post('/internal/registration/provision', safe(async (r
         await joinInvitationCompany(db, { companyId: invitation.company_id, userId, displayName: name, avatarUrl: '' })
       }
       const existingRole = await courseMembershipRole(db, invitation.course_id, userId)
-      if (!await priorProjectAcceptance(db, tokenHash, userId) && !existingRole) {
+      if (!await priorProjectAcceptance(db, tokenHash!, userId) && !existingRole) {
         if (invitation.use_count >= invitation.max_uses) throw new HttpError(410, 'invitation already used')
         const entitlements = await resolvePlanEntitlements(db, invitation.project_plan_id)
         const limit = entitlements.number('teacher.student_limit')
         if (limit !== null && await countActiveProjectStudents(db, invitation.company_id, invitation.project_id) >= limit) throw new HttpError(403, 'student limit reached')
         await insertAcceptedStudentMembership(db, { invitation, userId })
-        await recordProjectAcceptance(db, { tokenHash, userId })
+        await recordProjectAcceptance(db, { tokenHash: tokenHash!, userId })
       }
     }
     return userId

@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { admin } from 'better-auth/plugins'
+import { admin, captcha, emailOTP } from 'better-auth/plugins'
 import { drizzle } from 'drizzle-orm/d1'
 import { Hono, type Context } from 'hono'
 import { authSchema } from './schema'
@@ -14,6 +14,7 @@ type Secrets = {
   OPENSHIP_PROJECT_ID: string
   RESEND_API_KEY: string
   RESEND_FROM: string
+  TURNSTILE_SECRET_KEY: string
   CF_ACCESS_CLIENT_ID?: string
   CF_ACCESS_CLIENT_SECRET?: string
 }
@@ -21,6 +22,12 @@ type Bindings = Env & Secrets
 type Variables = { auth: ReturnType<typeof createAuth>; session: AuthSession }
 type AuthSession = { user: { id: string; name: string; email: string; emailVerified: boolean; role?: string }; session: unknown }
 type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>
+type AuthSettings = {
+  sessionExpiresIn: number
+  otpExpiresIn: number
+  rateLimitWindow: number
+  rateLimitMax: number
+}
 
 const encoder = new TextEncoder()
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -92,33 +99,63 @@ async function originRequest(env: Bindings, path: string, init: RequestInit, ide
   return fetch(url, { ...init, headers })
 }
 
+async function loadAuthSettings(env: Bindings): Promise<AuthSettings> {
+  const row = await env.DB.prepare(`SELECT session_expires_in,otp_expires_in,rate_limit_window,rate_limit_max FROM auth_settings WHERE id=1`).first<{
+    session_expires_in: number
+    otp_expires_in: number
+    rate_limit_window: number
+    rate_limit_max: number
+  }>()
+  if (!row) throw new Error('Better Auth settings are not initialized')
+  return {
+    sessionExpiresIn: row.session_expires_in,
+    otpExpiresIn: row.otp_expires_in,
+    rateLimitWindow: row.rate_limit_window,
+    rateLimitMax: row.rate_limit_max,
+  }
+}
+
 async function provision(env: Bindings, authUser: { id: string; email: string; name: string }): Promise<void> {
   const claim = await env.DB.prepare(
     `SELECT invite_token,invite_kind,status FROM registration_claims WHERE auth_user_id=?`,
   ).bind(authUser.id).first<{ invite_token: string; invite_kind: string; status: string }>()
-  if (!claim || claim.status === 'provisioned') return
-  await env.DB.prepare(`UPDATE registration_claims SET status='provisioning',updated_at=? WHERE auth_user_id=?`)
-    .bind(Date.now(), authUser.id).run()
+  if (claim?.status === 'provisioned') return
+  if (claim) {
+    await env.DB.prepare(`UPDATE registration_claims SET status='provisioning',updated_at=? WHERE auth_user_id=?`)
+      .bind(Date.now(), authUser.id).run()
+  }
+  const body: { authUserId: string; email: string; name: string; inviteToken?: string; inviteKind?: string } = {
+    authUserId: authUser.id,
+    email: authUser.email,
+    name: authUser.name,
+  }
+  if (claim) {
+    body.inviteToken = await openClaim(env.BETTER_AUTH_SECRET, claim.invite_token)
+    body.inviteKind = claim.invite_kind
+  }
   const response = await originRequest(env, '/api/internal/registration/provision', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ authUserId: authUser.id, email: authUser.email, name: authUser.name, inviteToken: await openClaim(env.BETTER_AUTH_SECRET, claim.invite_token), inviteKind: claim.invite_kind }),
+    body: JSON.stringify(body),
   }, { authUserId: authUser.id })
   if (!response.ok) {
     const error = (await response.text()).slice(0, 500)
-    await env.DB.prepare(`UPDATE registration_claims SET status='failed',error=?,updated_at=? WHERE auth_user_id=?`)
-      .bind(error, Date.now(), authUser.id).run()
+    if (claim) {
+      await env.DB.prepare(`UPDATE registration_claims SET status='failed',error=?,updated_at=? WHERE auth_user_id=?`)
+        .bind(error, Date.now(), authUser.id).run()
+    }
     throw new Error(`business user provision failed (${response.status})`)
   }
   const result = await response.json<{ appUserId: string }>()
   const now = Date.now()
-  await env.DB.batch([
+  const statements = [
     env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES(?,?,?) ON CONFLICT(auth_user_id) DO UPDATE SET app_user_id=excluded.app_user_id,provisioned_at=excluded.provisioned_at,suspended_at=NULL`).bind(authUser.id, result.appUserId, now),
-    env.DB.prepare(`UPDATE registration_claims SET status='provisioned',error=NULL,updated_at=? WHERE auth_user_id=?`).bind(now, authUser.id),
-  ])
+  ]
+  if (claim) statements.push(env.DB.prepare(`UPDATE registration_claims SET status='provisioned',error=NULL,updated_at=? WHERE auth_user_id=?`).bind(now, authUser.id))
+  await env.DB.batch(statements)
 }
 
-function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promise<unknown>) => void) {
+function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promise<unknown>) => void, settings: AuthSettings) {
   const origin = new URL(request.url).origin
   const trustedOrigins = env.AUTH_ALLOWED_HOSTS.split(',').map((host) => `https://${host.trim()}`)
   const hostname = new URL(request.url).hostname
@@ -137,13 +174,29 @@ function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promis
       sendResetPassword: async ({ user, url }) => sendEmail(env, { to: user.email, subject: '重置 LingxiLoop 密码', html: `<p><a href="${url}">重置密码</a></p>` }),
     },
     emailVerification: {
-      sendOnSignUp: true,
       autoSignInAfterVerification: false,
-      sendVerificationEmail: async ({ user, url }) => sendEmail(env, { to: user.email, subject: '验证 LingxiLoop 邮箱', html: `<p><a href="${url}">验证邮箱</a></p>` }),
       afterEmailVerification: async (user) => provision(env, user),
     },
-    rateLimit: { enabled: true, storage: 'database', window: 60, max: 60 },
-    plugins: [admin({ defaultRole: 'user', adminRoles: ['admin'] })],
+    session: { expiresIn: settings.sessionExpiresIn },
+    rateLimit: { enabled: true, storage: 'database', window: settings.rateLimitWindow, max: settings.rateLimitMax },
+    plugins: [
+      admin({ defaultRole: 'user', adminRoles: ['admin'] }),
+      emailOTP({
+        overrideDefaultEmailVerification: true,
+        sendVerificationOnSignUp: true,
+        expiresIn: settings.otpExpiresIn,
+        sendVerificationOTP: async ({ email, otp, type }) => {
+          if (type === 'email-verification') {
+            waitUntil(sendEmail(env, { to: email, subject: '验证 LingxiLoop 邮箱', html: `<p>你的邮箱验证码是 <strong>${otp}</strong>，${Math.ceil(settings.otpExpiresIn / 60)} 分钟内有效。</p>` }))
+          }
+        },
+      }),
+      captcha({
+        provider: 'cloudflare-turnstile',
+        secretKey: env.TURNSTILE_SECRET_KEY,
+        endpoints: ['/sign-up/email', '/sign-in/email', '/request-password-reset'],
+      }),
+    ],
     advanced: {
       ipAddress: { ipAddressHeaders: ['cf-connecting-ip'] },
       backgroundTasks: { handler: waitUntil },
@@ -152,7 +205,7 @@ function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promis
 }
 
 app.use('*', async (c, next) => {
-  const auth = createAuth(c.env, c.req.raw, c.executionCtx.waitUntil.bind(c.executionCtx))
+  const auth = createAuth(c.env, c.req.raw, c.executionCtx.waitUntil.bind(c.executionCtx), await loadAuthSettings(c.env))
   c.set('auth', auth)
   const session = await auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null)
   if (session) c.set('session', session as AuthSession)
@@ -161,21 +214,23 @@ app.use('*', async (c, next) => {
 
 app.post('/api/auth/sign-up/email', async (c) => {
   const input = await c.req.json<{ email?: string; password?: string; name?: string; inviteToken?: string; inviteKind?: string }>()
-  if (!input.email || !input.password || !input.name || !input.inviteToken) return c.json({ error: '有效邀请、邮箱、姓名和密码均为必填项' }, 400)
-  const inviteKind = input.inviteKind === 'project' ? 'project' : 'company'
-  const validation = await originRequest(c.env, '/api/internal/registration/invitation', {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ email: input.email, inviteToken: input.inviteToken, inviteKind }),
-  })
-  if (!validation.ok) return c.json({ error: '邀请无效、已过期或与邮箱不匹配' }, validation.status === 404 ? 404 : 403)
+  if (!input.email || !input.password || !input.name) return c.json({ error: '邮箱、姓名和密码均为必填项' }, 400)
+  const inviteToken = input.inviteKind === 'project' ? input.inviteToken?.trim() ?? '' : ''
+  if (inviteToken) {
+    const validation = await originRequest(c.env, '/api/internal/registration/invitation', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: input.email, inviteToken, inviteKind: 'project' }),
+    })
+    if (!validation.ok) return c.json({ error: '邀请无效、已过期或与邮箱不匹配' }, validation.status === 404 ? 404 : 403)
+  }
   const request = new Request(c.req.raw, { body: JSON.stringify({ email: input.email, password: input.password, name: input.name }) })
   const response = await c.get('auth').handler(request)
-  if (response.ok) {
+  if (response.ok && inviteToken) {
     const result = await response.clone().json<{ user?: { id?: string } }>().catch(() => null)
     if (result?.user?.id) {
       const now = Date.now()
       await c.env.DB.prepare(`INSERT INTO registration_claims(auth_user_id,token_hash,invite_token,invite_kind,email,status,created_at,updated_at) VALUES(?,?,?,?,?,'pending',?,?)`)
-        .bind(result.user.id, await sha256(input.inviteToken), await sealClaim(c.env.BETTER_AUTH_SECRET, input.inviteToken), inviteKind, input.email.toLowerCase(), now, now).run()
+        .bind(result.user.id, await sha256(inviteToken), await sealClaim(c.env.BETTER_AUTH_SECRET, inviteToken), 'project', input.email.toLowerCase(), now, now).run()
     }
   }
   return response
@@ -247,6 +302,51 @@ app.get('/api/control/releases', async (c) => {
   if (session instanceof Response) return session
   const { results } = await c.env.DB.prepare(`SELECT * FROM release_requests ORDER BY created_at DESC LIMIT 100`).all()
   return c.json({ data: results })
+})
+
+app.get('/api/control/auth-settings', async (c) => {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  return c.json({
+    ...(await loadAuthSettings(c.env)),
+    locked: {
+      defaultRole: 'user',
+      requireEmailVerification: true,
+      captchaProvider: 'cloudflare-turnstile',
+      captchaEndpoints: ['/sign-up/email', '/sign-in/email', '/request-password-reset'],
+    },
+    secrets: {
+      resend: Boolean(c.env.RESEND_API_KEY && c.env.RESEND_FROM),
+      turnstile: Boolean(c.env.TURNSTILE_SECRET_KEY),
+    },
+  })
+})
+
+app.put('/api/control/auth-settings', async (c) => {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  const reason = c.req.header('x-control-reason')?.trim()
+  if (!reason || reason.length > 280) return c.json({ error: '1–280 字操作原因必填' }, 400)
+  const input = await c.req.json<Partial<AuthSettings>>()
+  const values: AuthSettings = {
+    sessionExpiresIn: Number(input.sessionExpiresIn),
+    otpExpiresIn: Number(input.otpExpiresIn),
+    rateLimitWindow: Number(input.rateLimitWindow),
+    rateLimitMax: Number(input.rateLimitMax),
+  }
+  const valid = Number.isInteger(values.sessionExpiresIn) && values.sessionExpiresIn >= 3600 && values.sessionExpiresIn <= 2592000
+    && Number.isInteger(values.otpExpiresIn) && values.otpExpiresIn >= 60 && values.otpExpiresIn <= 1800
+    && Number.isInteger(values.rateLimitWindow) && values.rateLimitWindow >= 10 && values.rateLimitWindow <= 3600
+    && Number.isInteger(values.rateLimitMax) && values.rateLimitMax >= 5 && values.rateLimitMax <= 1000
+  if (!valid) return c.json({ error: 'Better Auth 配置超出允许范围' }, 400)
+  const now = Date.now()
+  await c.env.DB.batch([
+    c.env.DB.prepare(`UPDATE auth_settings SET session_expires_in=?,otp_expires_in=?,rate_limit_window=?,rate_limit_max=?,updated_at=?,updated_by=? WHERE id=1`)
+      .bind(values.sessionExpiresIn, values.otpExpiresIn, values.rateLimitWindow, values.rateLimitMax, now, session.user.id),
+    c.env.DB.prepare(`INSERT INTO control_audit(id,actor_user_id,action,resource,reason,detail,created_at) VALUES(?,?,?,?,?,?,?)`)
+      .bind(crypto.randomUUID(), session.user.id, 'update', 'better-auth:settings', reason, JSON.stringify(values), now),
+  ])
+  return c.json(values)
 })
 
 app.post('/api/control/platform/users/:id/:action', async (c) => {
