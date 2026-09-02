@@ -1,4 +1,4 @@
-name: LingxiLoop CI and CD
+name: LingxiLoop scoped CI and CD
 
 on:
   pull_request:
@@ -6,6 +6,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      scope:
+        description: Component to verify
+        required: true
+        type: choice
+        options: [web, admin-control, server, agent-os, open-notebook, wukongim, gateway, deployment]
 
 concurrency:
   group: lingxiloop-${{ github.ref }}
@@ -13,28 +19,168 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read
 
 env:
   NODE_VERSION: "22"
 
 jobs:
-  quality:
+  changes:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    outputs:
+      web: ${{ steps.scope.outputs.web }}
+      admin: ${{ steps.scope.outputs.admin }}
+      control: ${{ steps.scope.outputs.control }}
+      server: ${{ steps.scope.outputs.server }}
+      eval_harness: ${{ steps.scope.outputs.eval_harness }}
+      eval_runtime: ${{ steps.scope.outputs.eval_runtime }}
+      integration: ${{ steps.scope.outputs.integration }}
+      deploy_contract: ${{ steps.scope.outputs.deploy_contract }}
+      control_deploy: ${{ steps.scope.outputs.control_deploy }}
+      control_migrations: ${{ steps.scope.outputs.control_migrations }}
+      release: ${{ steps.scope.outputs.release }}
+      checks: ${{ steps.scope.outputs.checks }}
+      publish: ${{ steps.scope.outputs.publish }}
+      images: ${{ steps.scope.outputs.images }}
+      packages: ${{ steps.scope.outputs.packages }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with: { node-version: "22", cache: npm }
-      - run: npm ci
-      - run: npm run version:check
-      - run: npm run lint
-      - run: npm run server:typecheck
-      - run: npm run control:typecheck
-      - run: npm run build
-      - run: npm run admin:build
-      - run: node --test scripts/production-rag-contract.test.mjs
+        with: { fetch-depth: 0 }
+      - uses: dorny/paths-filter@v4
+        id: paths
+        with:
+          predicate-quantifier: some-with-excludes
+          filters: |
+            shared_frontend:
+              - 'package.json'
+              - 'package-lock.json'
+              - 'biome.json'
+            test_runner:
+              - 'scripts/run-tests.mjs'
+            web:
+              - 'src/**'
+              - 'public/**'
+              - 'index.html'
+              - 'vite.config.ts'
+              - 'tsconfig.json'
+              - 'tsconfig.node.json'
+              - 'postcss.config.js'
+              - 'tailwind.config.ts'
+            admin:
+              - 'admin/**'
+              - 'vite.admin.config.ts'
+              - 'tsconfig.admin.json'
+              - 'src/components/GlobalInteractionProvider.tsx'
+              - 'src/components/ResourceSkeleton.tsx'
+              - 'src/components/ui/**'
+              - 'src/lib/actionToast.ts'
+              - 'src/lib/confirmAction.ts'
+            control:
+              - 'workers/control-plane/**'
+              - 'worker-configuration.d.ts'
+            server:
+              - 'server/src/**'
+              - 'server/scripts/**'
+              - 'server/package.json'
+              - 'server/package-lock.json'
+              - 'server/run-integration-tests.mjs'
+              - 'server/tsconfig.json'
+              - 'server/*.conf'
+              - 'server/docker/lingxiloop-server.Dockerfile'
+              - 'server/docker/agent-os.Dockerfile'
+            server_source:
+              - 'server/src/**'
+              - '!server/src/__tests__/**'
+              - '!server/src/__integration__/**'
+              - 'server/package.json'
+              - 'server/package-lock.json'
+              - 'server/*.conf'
+            server_docker:
+              - 'server/docker/lingxiloop-server.Dockerfile'
+            agent_docker:
+              - 'server/docker/agent-os.Dockerfile'
+            agent:
+              - 'server/src/agent-os/**'
+              - 'server/src/bin/agent-os.ts'
+              - 'server/docker/agent-os.Dockerfile'
+            eval_harness:
+              - 'eval/suites/smoke.v1.json'
+              - 'eval/baselines/smoke.v1.json'
+              - 'scripts/run-agent-eval.ts'
+              - 'server/src/__tests__/eval-evaluator.test.ts'
+            eval_runtime:
+              - 'eval/suites/runtime-smoke.v1.json'
+              - 'eval/baselines/runtime-smoke.v1.json'
+              - 'scripts/run-agent-runtime-eval.ts'
+              - 'server/src/__tests__/eval-trace-harness.test.ts'
+            open_notebook:
+              - 'third_party/open-notebook/Dockerfile'
+              - 'third_party/open-notebook/.dockerignore'
+              - 'third_party/open-notebook/pyproject.toml'
+              - 'third_party/open-notebook/uv.lock'
+              - 'third_party/open-notebook/rag_commands.py'
+              - 'third_party/open-notebook/supervisord.rag.conf'
+              - 'third_party/open-notebook/api/__init__.py'
+              - 'third_party/open-notebook/api/middleware.py'
+              - 'third_party/open-notebook/api/rag_*.py'
+              - 'third_party/open-notebook/open_notebook/__init__.py'
+              - 'third_party/open-notebook/open_notebook/config.py'
+              - 'third_party/open-notebook/open_notebook/exceptions.py'
+              - 'third_party/open-notebook/open_notebook/artifact_storage.py'
+              - 'third_party/open-notebook/open_notebook/database/**'
+              - 'third_party/open-notebook/open_notebook/domain/__init__.py'
+              - 'third_party/open-notebook/open_notebook/domain/base.py'
+              - 'third_party/open-notebook/open_notebook/rag/**'
+              - 'third_party/open-notebook/open_notebook/utils/__init__.py'
+              - 'third_party/open-notebook/open_notebook/utils/proxy.py'
+              - 'third_party/open-notebook/open_notebook/utils/url_validation.py'
+            wukongim:
+              - 'server/wukongim/**'
+              - 'server/docker/wukongim.Dockerfile'
+            gateway:
+              - 'deploy/openship/gateway.conf'
+              - 'deploy/openship/gateway.Dockerfile'
+              - 'website/**'
+            deployment:
+              - '.github/workflows/ci.yml'
+              - 'deploy/**'
+              - 'docker-compose.*.yml'
+              - 'scripts/deploy-production.sh'
+              - 'scripts/update-deployment-images.mjs'
+              - 'scripts/ci-scope.mjs'
+              - 'scripts/production-rag-contract.test.mjs'
+            control_migrations:
+              - 'workers/control-plane/migrations/**'
+            release:
+              - 'VERSION'
+      - id: scope
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          MANUAL_SCOPE: ${{ inputs.scope }}
+          SHARED_FRONTEND: ${{ steps.paths.outputs.shared_frontend }}
+          TEST_RUNNER: ${{ steps.paths.outputs.test_runner }}
+          WEB: ${{ steps.paths.outputs.web }}
+          ADMIN: ${{ steps.paths.outputs.admin }}
+          CONTROL: ${{ steps.paths.outputs.control }}
+          SERVER: ${{ steps.paths.outputs.server }}
+          SERVER_SOURCE: ${{ steps.paths.outputs.server_source }}
+          SERVER_DOCKER: ${{ steps.paths.outputs.server_docker }}
+          AGENT_DOCKER: ${{ steps.paths.outputs.agent_docker }}
+          AGENT: ${{ steps.paths.outputs.agent }}
+          EVAL_HARNESS: ${{ steps.paths.outputs.eval_harness }}
+          EVAL_RUNTIME: ${{ steps.paths.outputs.eval_runtime }}
+          OPEN_NOTEBOOK: ${{ steps.paths.outputs.open_notebook }}
+          WUKONGIM: ${{ steps.paths.outputs.wukongim }}
+          GATEWAY: ${{ steps.paths.outputs.gateway }}
+          DEPLOYMENT: ${{ steps.paths.outputs.deployment }}
+          CONTROL_MIGRATIONS: ${{ steps.paths.outputs.control_migrations }}
+          RELEASE: ${{ steps.paths.outputs.release }}
+        run: node scripts/ci-scope.mjs
 
-  unit-eval:
+  checks:
+    needs: changes
+    if: needs.changes.outputs.checks == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     services:
@@ -46,18 +192,36 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with: { node-version: "22", cache: npm }
-      - uses: actions/setup-python@v5
+      - if: needs.changes.outputs.web == 'true' || needs.changes.outputs.admin == 'true' || needs.changes.outputs.control == 'true' || needs.changes.outputs.server == 'true' || needs.changes.outputs.eval_harness == 'true' || needs.changes.outputs.eval_runtime == 'true'
+        run: npm ci
+      - if: needs.changes.outputs.eval_runtime == 'true'
+        uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: python -m pip install --disable-pip-version-check ipython==9.4.0
-      - run: npm ci
-      - run: npm test
-      - run: npm run control:test
-      - run: npm run eval:check
-      - if: always() && hashFiles('artifacts/eval-*.json') != ''
+      - if: needs.changes.outputs.eval_runtime == 'true'
+        run: python -m pip install --disable-pip-version-check ipython==9.4.0
+      - if: needs.changes.outputs.web == 'true'
+        run: npm run lint && npm test && npm run build
+      - if: needs.changes.outputs.admin == 'true'
+        run: npm run admin:lint && npm run admin:test && npm run admin:build
+      - if: needs.changes.outputs.server == 'true'
+        run: npm run server:lint && npm run server:typecheck && npm run server:test
+      - if: needs.changes.outputs.control == 'true'
+        run: npm run control:lint && npm run control:typecheck && npm run control:test
+      - if: needs.changes.outputs.eval_harness == 'true'
+        run: npm run test:eval:harness && npm run eval:harness
+      - if: needs.changes.outputs.eval_runtime == 'true'
+        run: npm run test:eval:runtime && npm run eval:runtime
+      - if: always() && (needs.changes.outputs.eval_harness == 'true' || needs.changes.outputs.eval_runtime == 'true') && hashFiles('artifacts/eval-*.json') != ''
         uses: actions/upload-artifact@v4
-        with: { name: agent-eval, path: "artifacts/eval-*.json", if-no-files-found: error }
+        with: { name: "agent-eval-${{ github.sha }}", path: "artifacts/eval-*.json", if-no-files-found: error }
+      - if: needs.changes.outputs.deploy_contract == 'true'
+        run: node --test scripts/production-rag-contract.test.mjs
+      - if: needs.changes.outputs.release == 'true'
+        run: npm run version:check
 
   integration:
+    needs: changes
+    if: needs.changes.outputs.integration == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -78,7 +242,7 @@ jobs:
       OPENAI_EMBEDDING_MODEL: text-embedding-3-small
       LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
       LINGXILOOP_GATEWAY_HMAC_SECRET: integration-gateway-secret
-      WUKONG_USER_TOKEN_SECRET: integration-wukong-secret
+      WUKONG_USER_TOKEN_SECRET: integration-wukong-user-token-secret
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -88,20 +252,19 @@ jobs:
       - run: npm run test:integration
 
   publish:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [quality, unit-eval, integration]
+    if: >-
+      always() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.changes.outputs.publish == 'true' &&
+      (needs.checks.result == 'success' || needs.checks.result == 'skipped') &&
+      (needs.integration.result == 'success' || needs.integration.result == 'skipped')
+    needs: [changes, checks, integration]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions: { contents: read, packages: write }
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - { package: lingxiloop-server, dockerfile: server/docker/lingxiloop-server.Dockerfile, context: ".", target: "", wukong_commit: "" }
-          - { package: lingxiloop-agent-os, dockerfile: server/docker/agent-os.Dockerfile, context: ".", target: "", wukong_commit: "" }
-          - { package: lingxiloop-wukongim, dockerfile: server/docker/wukongim.Dockerfile, context: ".", target: "", wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47 }
-          - { package: lingxiloop-open-notebook, dockerfile: third_party/open-notebook/Dockerfile, context: ./third_party/open-notebook, target: lingxiloop-rag, wukong_commit: "" }
-          - { package: lingxiloop-gateway, dockerfile: deploy/openship/gateway.Dockerfile, context: ".", target: "", wukong_commit: "" }
+      matrix: ${{ fromJSON(needs.changes.outputs.images) }}
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
@@ -129,8 +292,8 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.package }}
 
   update-manifests:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.publish.result == 'success'
+    needs: [changes, publish]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: { contents: write }
@@ -139,11 +302,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with: { ref: main, fetch-depth: 0 }
-      - name: Pin Compose images to the published commit
+      - name: Pin only the images published by this change
         id: pin
         run: |
           git pull --rebase origin main
-          node scripts/update-deployment-images.mjs "$GITHUB_SHA"
+          node scripts/update-deployment-images.mjs "$GITHUB_SHA" ${{ needs.changes.outputs.packages }}
           if ! git diff --quiet; then
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
@@ -154,8 +317,11 @@ jobs:
           echo "commit-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: update-manifests
+    if: >-
+      always() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.changes.outputs.control_deploy == 'true' && needs.checks.result == 'success'
+    needs: [changes, checks]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: production
@@ -164,7 +330,8 @@ jobs:
       - uses: actions/setup-node@v5
         with: { node-version: "22", cache: npm }
       - run: npm ci
-      - name: Apply D1 migrations
+      - if: needs.changes.outputs.control_migrations == 'true'
+        name: Apply D1 migrations
         run: npm run control:d1:remote
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -179,6 +346,19 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
           VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEk9EZhHYeS3szPO
+
+  rollout:
+    if: >-
+      always() && github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.update-manifests.result == 'success' &&
+      (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
+    needs: [update-manifests, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+        with: { ref: main }
       - name: Trigger OpenShip production rollout
         run: node scripts/trigger-openship-release.mjs
         env:

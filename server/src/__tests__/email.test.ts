@@ -7,7 +7,7 @@
  * break either delivery (subject corruption, lost CC) or security (XSS
  * via HTML email).
  *
- * Run: npm test
+ * Run: node --import tsx --test server/src/__tests__/email.test.ts
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

@@ -18,6 +18,6 @@ Trace the work item from claim through model turn, `ipython`, Host Bridge effect
 
 ## Verify
 
-Add deterministic integration coverage for changed runtime behavior and update Agent Eval when user-visible decisions or traces change. Run `npm run server:typecheck`, relevant unit tests, `npm run eval:check`, and `npm run test:integration`.
+Add deterministic integration coverage for changed runtime behavior and update Agent Eval when user-visible decisions or traces change. Run `npm run server:typecheck`, the owning unit and integration files, and only `npm run eval:runtime` when runtime decisions or traces are affected. Never run the complete test or Eval suites for a localized change.
 
 Report lease/retry impact, Host Bridge authorization impact, ledger impact, and the exact failure behavior.

@@ -22,15 +22,16 @@ The repository contains two versioned smoke suites and baselines:
 - `eval/suites/runtime-smoke.v1.json`
 - `eval/baselines/runtime-smoke.v1.json`
 
-Run the same gate used by CI:
+Run only the gate for the suite you changed:
 
 ```bash
-npm run eval:check
+npm run eval:harness  # evaluator/harness changes
+npm run eval:runtime  # Agent OS runtime changes
 ```
 
-`eval:check` deliberately runs two different gates. `eval:harness` replays frozen observations to verify evaluator, sanitizer, comparison, and report semantics. `eval:runtime` runs the current `AgentOSRuntime` with the repository's in-memory Host, scripted model, and deterministic Kernel/Host Bridge seam before generating observations. Its Cases cover automatic and hybrid evidence, strict IPython and Host Action behavior, Approval boundaries, learning planning, and the Canvas report completion gate. The runtime model asserts current prompt and model-input fragments, so broken prompt/context wiring, routing, RAG, tool selection, or Approval behavior can fail the gate without a live model, network, or external account.
+`eval:harness` replays frozen observations to verify evaluator, sanitizer, comparison, and report semantics. `eval:runtime` runs the current `AgentOSRuntime` with the repository's in-memory Host, scripted model, and deterministic Kernel/Host Bridge seam before generating observations. Its Cases cover automatic and hybrid evidence, strict IPython and Host Action behavior, Approval boundaries, learning planning, and the Canvas report completion gate. The runtime model asserts current prompt and model-input fragments, so broken prompt/context wiring, routing, RAG, tool selection, or Approval behavior can fail the gate without a live model, network, or external account.
 
-Both CLIs compare the run, every observed capability, and every Case against their baseline, append GitHub Job Summary tables, and exit non-zero for a threshold failure or regression. They write `artifacts/eval-harness-report.json` and `artifacts/eval-runtime-smoke-report.json`; CI uploads them together as the `agent-eval-*` artifact.
+Both CLIs compare the run, every observed capability, and every Case against their baseline, append GitHub Job Summary tables, and exit non-zero for a threshold failure or regression. They write `artifacts/eval-harness-report.json` and `artifacts/eval-runtime-smoke-report.json`; CI uploads whichever scoped report was generated.
 
 The generic CLI entry is:
 
@@ -43,7 +44,7 @@ npx tsx scripts/run-agent-eval.ts \
 
 The trusted runtime CLI uses `runtimeScenario` identifiers from its versioned suite. That field is rejected by the generic Eval contract and is not a remote code-execution surface.
 
-Every pull request and `main` run executes the full unit suite and both deterministic Eval gates. Reports are uploaded as `agent-eval-*`; there is no changed-path classifier or reduced Eval path. The repository-local `$agent-eval` skill documents suite/baseline updates, trace sanitization, comparison, and verification rules.
+Pull requests and `main` run only the Eval gate selected by changed paths. The repository-local `$agent-eval` skill documents suite/baseline updates, trace sanitization, comparison, and scoped verification rules.
 
 ## Run an evaluation
 

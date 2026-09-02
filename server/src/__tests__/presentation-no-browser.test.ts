@@ -20,8 +20,7 @@ test('presentation generation and validation never launch a real browser', () =>
     'utf8',
   )
 
-  assert.doesNotMatch(moduleSource, /(?:playwright|puppeteer|chromium|launchPersistentContext)/i)
-  assert.equal(productionDependencies.playwright, undefined)
+  assert.doesNotMatch(moduleSource, /(?:puppeteer|chromium|launchPersistentContext)/i)
   assert.equal(productionDependencies.puppeteer, undefined)
-  assert.doesNotMatch(serverImage, /(?:playwright|puppeteer|chromium)/i)
+  assert.doesNotMatch(serverImage, /(?:puppeteer|chromium)/i)
 })

@@ -27,21 +27,17 @@ LingxiLoop is a stable Web product. Preserve the current architecture unless the
 
 ## Verification
 
-Run the smallest relevant checks while developing, then the complete affected gates before handoff:
+Run only the checks owned by the changed surface; never run repository-wide type checks, tests, builds, or deployment packaging:
 
-```sh
-npm run lint
-npm run typecheck
-npm run server:typecheck
-npm run admin:typecheck
-npm run build
-npm run admin:build
-npm test
-npm run eval:check
-npm run db:migrate && npm run test:integration
-```
+- Web: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
+- Admin/Control: the matching `admin:*` or `control:*` commands only.
+- Server: `npm run server:lint`, `npm run server:typecheck`, `npm run server:test`, plus only the owning integration files.
+- Agent Eval: run only `eval:harness` or `eval:runtime` for the changed suite.
+- Vendored Open Notebook: run commands from its directory and only for its affected backend or frontend.
 
-Database migrations also require the migration integration cases. Agent runtime changes require deterministic Eval coverage.
+Database migrations require the migration integration case and affected domain cases. Agent runtime changes require only their deterministic Eval suite and owning integration cases.
+
+Playwright and browser-automation checks are forbidden in skills and tests. Do not add Playwright dependencies, configuration, snapshots, or test artifacts.
 
 ## Production handoff
 

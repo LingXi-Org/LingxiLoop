@@ -9,7 +9,7 @@
  * Both failure modes are easy to verify in isolation, so do it here
  * rather than waiting for production to catch them.
  *
- * Run: npm test
+ * Run: node --import tsx --test server/src/__tests__/email-gc.test.ts
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

@@ -134,10 +134,6 @@ specs/
 .claude
 .sisyphus
 
-.playwright-mcp/
-
-
-
 *.local.yml
 **/*.local.md
 .harness/

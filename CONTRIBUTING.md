@@ -27,21 +27,8 @@ The Web app is the only supported release surface. Electron is local-development
 
 ## Verify
 
-Run focused checks while iterating, then the complete affected gates:
+Run only the lint, typecheck, test, and build commands for the changed Web, Admin, Control, Server, or vendored Open Notebook surface. Use `test:integration -- --file <owning-test>` for focused integration coverage and only the matching `eval:harness` or `eval:runtime` gate.
 
-```bash
-npm run lint
-npm run typecheck
-npm run server:typecheck
-npm run admin:typecheck
-npm run build
-npm run admin:build
-npm test
-npm run eval:check
-npm run db:migrate
-npm run test:integration
-```
-
-Migration changes require migration integration coverage. Agent behavior changes require deterministic Eval coverage. Browser verification is not part of repository validation or CI. CI always runs the complete matrix; there is no changed-path classifier or local selector.
+Migration changes require their migration and affected domain integration files. Agent behavior changes require the matching deterministic Eval gate. Browser verification is not part of repository validation or CI. CI classifies changed paths and skips unrelated checks, images, migrations, and deployments.
 
 Report security vulnerabilities through [`SECURITY.md`](SECURITY.md), not a public issue. Keep commits and pull requests focused on one logical change.

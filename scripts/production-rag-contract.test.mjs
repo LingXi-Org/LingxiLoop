@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
+import { computeScope } from './ci-scope.mjs'
 import { updateImageTags } from './update-deployment-images.mjs'
-import { buildReleaseRequest } from './trigger-openship-release.mjs'
+import { buildReleaseRequest, deploymentImages } from './trigger-openship-release.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
@@ -35,6 +36,7 @@ test('production Open Notebook receives only the explicit RAG environment', () =
 test('packaged and published stacks select the RAG-only image', () => {
   const packaged = read('docker-compose.mvp.yml')
   const workflow = read('.github/workflows/ci.yml')
+  const scope = read('scripts/ci-scope.mjs')
   const smoke = read('server/scripts/knowledge-rag-smoke.ts')
   const production = read('docker-compose.production.yml')
   const deploy = read('scripts/deploy-production.sh')
@@ -42,12 +44,14 @@ test('packaged and published stacks select the RAG-only image', () => {
   const packagedService = packaged.slice(packaged.indexOf('  open-notebook:'), packaged.indexOf('  wukongim:'))
   assert.match(packagedService, /image: .*lingxiloop-open-notebook/)
   assert.doesNotMatch(packagedService, /build:/)
-  assert.match(workflow, /package: lingxiloop-open-notebook[\s\S]*target: lingxiloop-rag/)
-  assert.match(workflow, /needs: \[quality, unit-eval, integration\]/)
+  assert.match(scope, /'lingxiloop-open-notebook'[\s\S]*'lingxiloop-rag'/)
+  assert.match(workflow, /needs: \[changes, checks, integration\]/)
   assert.match(workflow, /GITHUB_REPOSITORY_OWNER,,/)
   assert.match(workflow, /:\$\{\{ github\.sha \}\}/)
   assert.match(workflow, /platforms: linux\/amd64/)
   assert.match(workflow, /update-deployment-images\.mjs/)
+  assert.match(workflow, /dorny\/paths-filter@v4[\s\S]*predicate-quantifier: some-with-excludes/)
+  assert.doesNotMatch(workflow, /- 'third_party\/open-notebook\/\*\*'/)
   assert.doesNotMatch(workflow, /setup-qemu|:mvp/)
   assert.match(smoke, /createSecondProject/)
   assert.match(smoke, /seedOtherCompany/)
@@ -178,18 +182,25 @@ test('main publishes unique tags and updates Compose before Worker deployment', 
   const workflow = read('.github/workflows/ci.yml')
   const compose = read('docker-compose.production.yml')
 
-  assert.match(workflow, /update-manifests:[\s\S]*needs: publish/)
-  assert.match(workflow, /deploy:[\s\S]*needs: update-manifests/)
+  assert.match(workflow, /update-manifests:[\s\S]*needs: \[changes, publish\]/)
+  assert.match(workflow, /deploy:[\s\S]*needs: \[changes, checks\]/)
+  assert.match(workflow, /rollout:[\s\S]*needs: \[update-manifests, deploy\]/)
   assert.match(workflow, /control:d1:remote[\s\S]*wrangler versions upload[\s\S]*wrangler versions deploy/)
-  assert.match(workflow, /wrangler versions deploy[\s\S]*trigger-openship-release\.mjs/)
-  const release = buildReleaseRequest('secret', 'a'.repeat(40), 'b'.repeat(40), 'Example/LingxiLoop')
+  assert.match(workflow, /control_migrations == 'true'[\s\S]*control:d1:remote/)
+  assert.match(workflow, /update-deployment-images\.mjs "\$GITHUB_SHA" \$\{\{ needs\.changes\.outputs\.packages \}\}/)
+  assert.match(workflow, /rollout:[\s\S]*trigger-openship-release\.mjs/)
+  const imageDigests = Object.fromEntries(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway']
+    .map((name) => [name, `accel.way2api.fun/ghcr.io/example/lingxiloop-${name}:${'a'.repeat(40)}`]))
+  const release = buildReleaseRequest('secret', 'a'.repeat(40), 'b'.repeat(40), 'Example/LingxiLoop', imageDigests)
   assert.deepEqual(JSON.parse(release.body), {
     commitSha: 'a'.repeat(40),
     deployCommitSha: 'b'.repeat(40),
-    imageDigests: Object.fromEntries(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway'].map((name) => [name, `accel.way2api.fun/ghcr.io/example/lingxiloop-${name}:${'a'.repeat(40)}`])),
+    imageDigests,
   })
+  assert.deepEqual(deploymentImages(Object.values(imageDigests).map((image) => `image: ${image}`).join('\n')), imageDigests)
   assert.match(release.signature, /^[\w-]{43}$/)
-  assert.doesNotMatch(workflow, /pages deploy|PRODUCTION_SSH|deploy-production\.sh/)
+  assert.doesNotMatch(workflow, /image-digest-|api\/internal\/releases/)
+  assert.doesNotMatch(workflow, /pages deploy|PRODUCTION_SSH|run: .*deploy-production\.sh/)
   assert.match(compose, /LINGXILOOP_GATEWAY_HMAC_SECRET: \$\{LINGXILOOP_GATEWAY_HMAC_SECRET:\?/)
   assert.match(compose, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-2\}/)
   assert.match(compose, /OPEN_NOTEBOOK_WORKER_MAX_TASKS: \$\{OPEN_NOTEBOOK_WORKER_MAX_TASKS:-1\}/)
@@ -212,4 +223,43 @@ test('all deployable LingxiLoop images use CI-managed unique tags', () => {
     updateImageTags(`image: registry/lingxiloop-server:${'a'.repeat(40)}`, 'b'.repeat(40), ['server']),
     `image: registry/lingxiloop-server:${'b'.repeat(40)}`,
   )
+  assert.equal(
+    updateImageTags(
+      `image: registry/lingxiloop-server:${'a'.repeat(40)}\nimage: registry/lingxiloop-agent-os:${'a'.repeat(40)}`,
+      'b'.repeat(40),
+      ['server'],
+    ),
+    `image: registry/lingxiloop-server:${'b'.repeat(40)}\nimage: registry/lingxiloop-agent-os:${'a'.repeat(40)}`,
+  )
+})
+
+test('CI selects checks and images only for the changed component', () => {
+  const web = computeScope({ web: true })
+  assert.deepEqual(web.images.map(({ manifest }) => manifest), ['server'])
+  assert.equal(web.web, true)
+  assert.equal(web.server, false)
+
+  const server = computeScope({ server: true, serverSource: true })
+  assert.deepEqual(server.images.map(({ manifest }) => manifest), ['server', 'agent-os'])
+  assert.equal(server.integration, true)
+
+  assert.equal(computeScope({ serverDocker: true }).packages, 'server')
+  assert.equal(computeScope({ agentDocker: true }).packages, 'agent-os')
+
+  const knowledge = computeScope({ openNotebook: true })
+  assert.deepEqual(knowledge.images.map(({ manifest }) => manifest), ['open-notebook'])
+  assert.equal(knowledge.deploy_contract, true)
+
+  const control = computeScope({ control: true, controlMigrations: true })
+  assert.deepEqual(control.images, [])
+  assert.equal(control.control_deploy, true)
+  assert.equal(control.control_migrations, true)
+
+  const sharedFrontend = computeScope({ sharedFrontend: true })
+  assert.deepEqual(sharedFrontend.images.map(({ manifest }) => manifest), ['server'])
+  assert.equal(sharedFrontend.server, false)
+
+  const testRunner = computeScope({ testRunner: true })
+  assert.deepEqual(testRunner.images, [])
+  assert.equal(testRunner.server, true)
 })
