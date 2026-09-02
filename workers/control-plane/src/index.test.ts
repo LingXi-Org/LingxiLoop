@@ -1,4 +1,5 @@
 import { applyD1Migrations, env, fetchMock, SELF } from 'cloudflare:test'
+import { hashPassword } from 'better-auth/crypto'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 declare module 'cloudflare:test' {
@@ -91,5 +92,43 @@ describe('control-plane trust boundaries', () => {
       body: JSON.stringify({ email: 'user@example.com', name: 'User', password: 'password123' }),
     })
     expect(noInvite.status).toBe(400)
+  })
+
+  it('proxies Kuma status for an authenticated administrator', async () => {
+    const now = Math.floor(Date.now() / 1000)
+    await env.DB.batch([
+      env.DB.prepare(`INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt,role) VALUES(?,?,?,1,?,?,'admin')`)
+        .bind('status-admin', 'Admin', 'status-admin@example.com', now, now),
+      env.DB.prepare(`INSERT INTO account(id,accountId,providerId,issuer,userId,password,createdAt,updatedAt) VALUES(?,?,'credential','local:credential',?,?,?,?)`)
+        .bind('status-admin-account', 'status-admin', 'status-admin', await hashPassword('password123'), now, now),
+    ])
+    fetchMock.activate()
+    fetchMock.disableNetConnect()
+    fetchMock.get('https://challenges.cloudflare.com')
+      .intercept({ path: '/turnstile/v0/siteverify', method: 'POST' })
+      .reply(200, { success: true })
+    const upstream = fetchMock.get('https://uptime.example.com')
+    upstream.intercept({ path: '/api/status-page/lingxiloop' })
+      .reply(200, { config: { title: 'LingxiLoop 服务状态' }, incident: null, publicGroupList: [{ id: 1, name: '公共入口', monitorList: [{ id: 11, name: 'Web' }] }], maintenanceList: [] })
+    upstream.intercept({ path: '/api/status-page/heartbeat/lingxiloop' })
+      .reply(200, { heartbeatList: { 11: [{ status: 0 }, { status: 1, ping: 26 }] }, uptimeList: { '11_24': 1 } })
+    try {
+      const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
+        body: JSON.stringify({ email: 'status-admin@example.com', password: 'password123' }),
+      })
+      expect(signIn.status).toBe(200)
+      const response = await SELF.fetch('https://admin.example.com/api/control/status-page', { headers: { cookie: signIn.headers.get('set-cookie') ?? '' } })
+      expect(await response.json()).toEqual({
+        config: { title: 'LingxiLoop 服务状态' },
+        incident: null,
+        groups: [{ id: 1, name: '公共入口', monitorList: [{ id: 11, name: 'Web' }] }],
+        maintenanceList: [],
+        latest: { 11: { status: 1, ping: 26 } },
+        uptime: { '11_24': 1 },
+      })
+      fetchMock.assertNoPendingInterceptors()
+    } finally { fetchMock.deactivate() }
   })
 })

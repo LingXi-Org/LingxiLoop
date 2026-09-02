@@ -11,6 +11,7 @@ import {
   ExternalLinkIcon,
   FolderKanbanIcon,
   GraduationCapIcon,
+  HeartPulseIcon,
   KeyRoundIcon,
   LogOutIcon,
   RocketIcon,
@@ -137,6 +138,7 @@ function AdminNavigation({ lingxiLitUrl }: { lingxiLitUrl: string | undefined })
         <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname === '/'}><Link to="/" onClick={closeNavigation}><ActivityIcon /><span>运营概览</span></Link></SidebarMenuButton></SidebarMenuItem>
         <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/releases')}><Link to="/releases" onClick={closeNavigation}><RocketIcon /><span>发布管理</span></Link></SidebarMenuButton></SidebarMenuItem>
         <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/authentication')}><Link to="/authentication" onClick={closeNavigation}><KeyRoundIcon /><span>身份认证</span></Link></SidebarMenuButton></SidebarMenuItem>
+        <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/status')}><Link to="/status" onClick={closeNavigation}><HeartPulseIcon /><span>服务状态</span></Link></SidebarMenuButton></SidebarMenuItem>
         {lingxiLitUrl && <SidebarMenuItem><SidebarMenuButton asChild><a href={lingxiLitUrl} target="_blank" rel="noopener noreferrer" onClick={closeNavigation}><ExternalLinkIcon /><span>AI 可观测</span></a></SidebarMenuButton></SidebarMenuItem>}
       </SidebarMenu></SidebarGroupContent>
     </SidebarGroup>
