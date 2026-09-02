@@ -1,15 +1,12 @@
 import {
   Activity01Icon,
-  BookOpen01Icon,
   Calendar03Icon,
   DashboardSquare01Icon,
   File01Icon,
   Folder01Icon,
   GoalIcon,
   Settings02Icon,
-  Share01Icon,
   Task01Icon,
-  UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 import type { LearningRole } from '../contracts'
 
@@ -55,11 +52,6 @@ const LEARNER_MENU: LearningDashboardMenuItem[] = [
 
 const TEACHER_MENU: LearningDashboardMenuItem[] = [
   { section: 'overview', label: '总览', icon: DashboardSquare01Icon },
-  { section: 'learners', label: '学员', icon: UserGroupIcon },
-  { section: 'content', label: '课程内容', icon: BookOpen01Icon },
-  { section: 'activities', label: '学习活动', icon: Activity01Icon },
-  { section: 'reviews', label: '评价审核', icon: File01Icon },
-  { section: 'members', label: '分享与成员', icon: Share01Icon },
   { section: 'calendar', label: '日历', icon: Calendar03Icon },
   { section: 'resources', label: '资料', icon: Folder01Icon },
   { section: 'settings', label: '课程设置', icon: Settings02Icon },

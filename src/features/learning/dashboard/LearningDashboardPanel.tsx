@@ -8,20 +8,19 @@ import { Button } from '@/components/ui/button'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { useConversations } from '@/features/conversations/store'
 import { PersonalSourceDrive } from '@/features/knowledge/components/PersonalSourceDrive'
+import { ProjectSourceLibrary } from '@/features/knowledge/components/ProjectSourceLibrary'
 import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
 import { CourseAvatar } from '../components/CourseAvatar'
 import { LearningActivitiesSection } from '../components/LearningActivitiesSection'
 import { LearningEvidenceSection } from '../components/LearningEvidenceSection'
 import { LearningObjectivesSection } from '../components/LearningObjectivesSection'
-import { LearningReviewsSection } from '../components/LearningReviewsSection'
 import type { LearningCourse, LearningSpace } from '../contracts'
-import { CourseMembersSection } from './CourseMembersSection'
 import { CourseSettingsSection } from './CourseSettingsSection'
 import { MissionSection } from './MissionSection'
 import type { LearningDashboardSection } from './navigation'
 import { OverviewSection } from './OverviewSection'
-import { TeacherLearnersSection } from './TeacherLearnersSection'
+import { TeacherOverviewDashboard } from './TeacherOverviewDashboard'
 import { useLearningDashboardData } from './useLearningDashboardData'
 
 const SECTION_COPY: Record<LearningDashboardSection, { title: string; description: string }> = {
@@ -87,11 +86,24 @@ function DashboardSectionFrame({ space, section, children }: {
 }
 
 export function LearningDashboardPanel({ space, section }: { space: LearningSpace; section: LearningDashboardSection }) {
+  if (space.perspective === 'teacher') {
+    if (section === 'calendar') return <CalendarView />
+    if (section === 'resources') {
+      return (
+        <ProjectSourceLibrary
+          projectId={space.projectId}
+          canManage={space.canManage}
+          workspaceName={space.title}
+        />
+      )
+    }
+    if (section === 'settings') {
+      return <DashboardSectionFrame space={space} section="settings"><CourseSettingsSection space={space} /></DashboardSectionFrame>
+    }
+    return <DashboardSectionFrame space={space} section="overview"><TeacherOverviewDashboard space={space} /></DashboardSectionFrame>
+  }
   if (section === 'calendar') return <CalendarView />
   if (section === 'resources') return <PersonalSourceDrive />
-  if (section === 'learners') return <DashboardSectionFrame space={space} section={section}>{space.canReview ? <TeacherLearnersSection projectId={space.projectId} /> : <CapabilityNotice message="当前课程状态下无法查看学习者审核资料。" />}</DashboardSectionFrame>
-  if (section === 'members') return <DashboardSectionFrame space={space} section={section}><CourseMembersSection space={space} /></DashboardSectionFrame>
-  if (section === 'settings') return <DashboardSectionFrame space={space} section={section}><CourseSettingsSection space={space} /></DashboardSectionFrame>
   return <LearningDataSection space={space} section={section} />
 }
 
@@ -128,21 +140,19 @@ function LearningDataSection({ space, section }: { space: LearningSpace; section
   if (loading) {
     content = section === 'overview'
       ? <ResourceSkeleton variant="cards" count={6} label="正在加载学习概览" />
-      : <ResourceSkeleton variant={section === 'reviews' ? 'table' : 'list'} count={5} label={`正在加载${SECTION_COPY[section].title}`} />
+      : <ResourceSkeleton variant="list" count={5} label={`正在加载${SECTION_COPY[section].title}`} />
   } else if (section === 'overview') {
     content = overview
       ? <OverviewSection overview={overview} />
       : <RetryState message="学习概览暂时不可用。" onRetry={() => window.dispatchEvent(new Event('lingxiloop:learning-updated'))} />
   } else if (section === 'plan' || section === 'missions') {
     content = <MissionSection missions={resources.missions} personal={space.projectKind === 'PERSONAL_LEARNING'} />
-  } else if (section === 'objectives' || section === 'content') {
+  } else if (section === 'objectives') {
     content = <LearningObjectivesSection course={course} objectives={resources.objectives} perspective={space.perspective} mastery={new Map()} onChanged={refreshResources} onError={(reason) => setMutationError(userFacingError(reason, '学习目标操作未完成，请稍后重试。'))} />
   } else if (section === 'activities') {
     content = <LearningActivitiesSection course={course} activities={resources.activities} evidence={resources.evidence} perspective={space.perspective} answers={answers} setAnswers={setAnswers} onChanged={refreshResources} onError={(reason) => setMutationError(userFacingError(reason, '学习活动操作未完成，请稍后重试。'))} />
   } else if (section === 'evidence') {
     content = <LearningEvidenceSection evidence={resources.evidence} />
-  } else if (section === 'reviews') {
-    content = <LearningReviewsSection course={course} reviews={resources.reviews} progress={[]} onChanged={refreshResources} onError={(reason) => setMutationError(userFacingError(reason, '评价审核操作未完成，请稍后重试。'))} />
   } else {
     content = <RetryState message="当前页面暂不可用。" onRetry={() => window.dispatchEvent(new Event('lingxiloop:learning-updated'))} />
   }
@@ -151,12 +161,6 @@ function LearningDataSection({ space, section }: { space: LearningSpace; section
     <DashboardSectionFrame space={space} section={section}>
       <div className="space-y-4">
         {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-        {space.perspective === 'teacher' && !space.canEditContent && ['content', 'activities'].includes(section) && (
-          <Alert><AlertDescription>你可以查看本课程，但当前状态下不能修改或发布内容。</AlertDescription></Alert>
-        )}
-        {space.perspective === 'teacher' && !space.canReview && section === 'reviews' && (
-          <Alert><AlertDescription>当前课程状态下不能处理评价审核。</AlertDescription></Alert>
-        )}
         {content}
       </div>
     </DashboardSectionFrame>
@@ -165,8 +169,4 @@ function LearningDataSection({ space, section }: { space: LearningSpace; section
 
 function RetryState({ message, onRetry }: { message: string; onRetry(): void }) {
   return <div className="grid min-h-64 place-items-center rounded-3xl border border-dashed p-6 text-center"><div><p className="text-sm text-muted-foreground">{message}</p><Button type="button" variant="outline" className="mt-4" onClick={onRetry}>重新加载</Button></div></div>
-}
-
-function CapabilityNotice({ message }: { message: string }) {
-  return <Alert><AlertDescription>{message}</AlertDescription></Alert>
 }

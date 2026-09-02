@@ -16,8 +16,9 @@ test('joined course menus are derived from the server perspective without a role
   )
   assert.deepEqual(
     getLearningDashboardMenu({ personal: false, perspective: 'teacher' }).map((item) => item.label),
-    ['总览', '学员', '课程内容', '学习活动', '评价审核', '分享与成员', '日历', '资料', '课程设置'],
+    ['总览', '日历', '资料', '课程设置'],
   )
+  assert.equal(isLearningDashboardSectionAvailable('learners', { personal: false, perspective: 'teacher' }), false)
   assert.equal(isLearningDashboardSectionAvailable('settings', { personal: false, perspective: 'learner' }), false)
   assert.equal(isLearningDashboardSectionAvailable('settings', { personal: false, perspective: 'teacher' }), true)
 })
