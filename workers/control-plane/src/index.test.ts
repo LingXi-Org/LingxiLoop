@@ -40,12 +40,14 @@ describe('control-plane trust boundaries', () => {
     fetchMock.activate()
     fetchMock.disableNetConnect()
     const openShip = fetchMock.get('https://openship.example.com')
-    for (const projectId of ['proj_test-a', 'proj_test-b']) {
-      openShip.intercept({
-        path: '/api/proxy/api/deployments', method: 'POST',
-        body: JSON.stringify({ projectId, branch: 'main', commitSha: deployCommitSha, environment: 'production' }),
-      }).reply(201, { id: `dep_${projectId}` })
-    }
+    openShip.intercept({
+      path: '/api/proxy/api/deployments', method: 'POST',
+      body: JSON.stringify({ projectId: 'proj_test-a', branch: 'main', commitSha: deployCommitSha, environment: 'production' }),
+    }).reply(201, { id: 'dep_proj_test-a' })
+    openShip.intercept({
+      path: '/api/proxy/api/deployments', method: 'POST',
+      body: JSON.stringify({ projectId: 'proj_test-b', branch: 'main', commitSha: deployCommitSha, environment: 'production' }),
+    }).reply(202, {})
     try {
       const request = () => SELF.fetch('https://admin.example.com/api/internal/releases', {
         method: 'POST', headers: { 'content-type': 'application/json', 'x-release-signature': signature }, body,
@@ -58,7 +60,7 @@ describe('control-plane trust boundaries', () => {
           status: 'triggered',
           deployments: [
             { projectId: 'proj_test-a', deploymentId: 'dep_proj_test-a' },
-            { projectId: 'proj_test-b', deploymentId: 'dep_proj_test-b' },
+            { projectId: 'proj_test-b', accepted: true },
           ],
         },
       })
@@ -67,7 +69,7 @@ describe('control-plane trust boundaries', () => {
         status: 'triggered',
         openship_deployment_id: JSON.stringify([
           { projectId: 'proj_test-a', deploymentId: 'dep_proj_test-a' },
-          { projectId: 'proj_test-b', deploymentId: 'dep_proj_test-b' },
+          { projectId: 'proj_test-b', accepted: true },
         ]),
         error: null,
       })

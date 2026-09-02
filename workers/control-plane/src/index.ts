@@ -398,7 +398,7 @@ app.post('/api/internal/releases', async (c) => {
   if (!projectIds.length || projectIds.some((id) => !/^proj_[\w-]+$/.test(id))) return c.json({ error: 'invalid OpenShip project configuration' }, 500)
   const existing = await c.env.DB.prepare(`SELECT status,openship_deployment_id FROM release_requests WHERE commit_sha=?`).bind(input.commitSha).first<{ status: string; openship_deployment_id: string | null }>()
   if (existing?.status === 'triggered') return c.json(existing)
-  let previous: Array<{ projectId: string; deploymentId?: string; error?: string }> = []
+  let previous: Array<{ projectId: string; deploymentId?: string; accepted?: boolean; error?: string }> = []
   try {
     const parsed = JSON.parse(existing?.openship_deployment_id ?? '[]') as unknown
     if (Array.isArray(parsed)) previous = parsed as typeof previous
@@ -406,7 +406,7 @@ app.post('/api/internal/releases', async (c) => {
   const now = Date.now()
   if (existing) await c.env.DB.prepare(`UPDATE release_requests SET image_digests=?,status='triggering',error=NULL,updated_at=? WHERE commit_sha=?`).bind(JSON.stringify(input.imageDigests), now, input.commitSha).run()
   else await c.env.DB.prepare(`INSERT INTO release_requests(commit_sha,image_digests,status,created_at,updated_at) VALUES(?,?,'triggering',?,?)`).bind(input.commitSha, JSON.stringify(input.imageDigests), now, now).run()
-  const completed = new Map(previous.filter((item) => item.deploymentId).map((item) => [item.projectId, item]))
+  const completed = new Map(previous.filter((item) => item.deploymentId || item.accepted).map((item) => [item.projectId, item]))
   const attempted = await Promise.all(projectIds.filter((projectId) => !completed.has(projectId)).map(async (projectId) => {
     try {
       const response = await fetch(openShipUrl(c.env, '/deployments'), {
@@ -415,12 +415,12 @@ app.post('/api/internal/releases', async (c) => {
       })
       const result = await response.json().catch(() => ({})) as { id?: string; deploymentId?: string; deployment_id?: string; error?: string; data?: { id?: string } }
       const deploymentId = result.deployment_id ?? result.deploymentId ?? result.id ?? result.data?.id
-      return response.ok && deploymentId ? { projectId, deploymentId } : { projectId, error: result.error ?? `OpenShip ${response.status}` }
+      return response.ok ? deploymentId ? { projectId, deploymentId } : { projectId, accepted: true } : { projectId, error: result.error ?? `OpenShip ${response.status}` }
     } catch { return { projectId, error: 'OpenShip unavailable' } }
   }))
   for (const item of attempted) completed.set(item.projectId, item)
   const deployments = projectIds.map((projectId) => completed.get(projectId) ?? { projectId, error: 'not triggered' })
-  const succeeded = deployments.filter((item) => item.deploymentId).length
+  const succeeded = deployments.filter((item) => item.deploymentId || item.accepted).length
   const status = succeeded === projectIds.length ? 'triggered' : succeeded ? 'partial' : 'failed'
   const error = deployments.filter((item) => item.error).map((item) => `${item.projectId}: ${item.error}`).join('; ') || null
   await c.env.DB.prepare(`UPDATE release_requests SET status=?,openship_deployment_id=?,error=?,updated_at=? WHERE commit_sha=?`)
