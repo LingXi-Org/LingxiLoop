@@ -2,7 +2,7 @@
 
 Pushes to `main` deploy only after lint, all TypeScript checks, builds, unit/integration tests and deterministic Agent Eval pass. No browser-test runner is installed or invoked by this workflow.
 
-The workflow publishes four immutable GHCR digests (`lingxiloop-server`, `lingxiloop-agent-os`, `lingxiloop-wukongim`, `lingxiloop-open-notebook`), applies D1 migrations, builds Refine into Worker Static Assets, deploys `lingxiloop-control-plane`, then signs one idempotent release request with the commit SHA. The Worker passes the digest-pinned image variables to OpenShip; OpenShip owns the Shanghai rollout, health decision and rollback window. GitHub push auto-deploy must remain disabled in OpenShip.
+The workflow publishes five immutable GHCR images (`lingxiloop-server`, `lingxiloop-agent-os`, `lingxiloop-wukongim`, `lingxiloop-open-notebook`, `lingxiloop-gateway`), applies D1 migrations, builds Refine into Worker Static Assets, deploys `lingxiloop-control-plane`, then signs one idempotent release request with the commit SHA. The Worker passes the commit-pinned image variables to OpenShip; OpenShip owns the Shanghai rollout, health decision and rollback window. GitHub push auto-deploy must remain disabled in OpenShip.
 
 Required GitHub `production` configuration:
 

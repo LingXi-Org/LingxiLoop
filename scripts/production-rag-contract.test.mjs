@@ -148,7 +148,7 @@ test('OpenShip runs one private Agent OS per host and the Worker only on its sel
   assert.doesNotMatch(agent, /^ {4}ports:/m)
   assert.match(app, /AGENT_OS_NODE_TIMEOUT_SECONDS: \$\{AGENT_OS_NODE_TIMEOUT_SECONDS:-15}/)
   assert.match(app, /worker:\r?\n {4}<<: \*runtime\r?\n {4}profiles: \[worker]/)
-  assert.match(app, /gateway:\r?\n {4}build:\r?\n {6}context: \.\.\/\.\.\r?\n {6}dockerfile: deploy\/openship\/gateway\.Dockerfile/)
+  assert.match(app, /gateway:\r?\n {4}image: .*lingxiloop-gateway:[0-9a-f]{40}/)
   assert.match(app, /127\.0\.0\.1:8080:8080/)
   assert.match(read('deploy/openship/gateway.Dockerfile'), /FROM nginx:alpine[\s\S]*COPY website \/usr\/share\/nginx\/html/)
   assert.doesNotMatch(app, /AGENT_OS_URL/)
@@ -198,7 +198,7 @@ test('all deployable LingxiLoop images use CI-managed unique tags', () => {
     'docker-compose.dokploy.yml',
   ].map(read).join('\n')
   const references = [...manifests.matchAll(/image:\s+\S*lingxiloop-[^:\s]+:([^\s]+)/g)]
-  assert.equal(references.length, 18)
+  assert.equal(references.length, 19)
   assert.ok(references.every((match) => /^[0-9a-f]{40}$/.test(match[1])))
   assert.equal(
     updateImageTags(`image: registry/lingxiloop-server:${'a'.repeat(40)}`, 'b'.repeat(40), ['server']),

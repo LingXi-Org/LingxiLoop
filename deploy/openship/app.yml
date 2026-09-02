@@ -96,9 +96,8 @@ services:
     mem_limit: 512m
 
   gateway:
-    build:
-      context: ../..
-      dockerfile: deploy/openship/gateway.Dockerfile
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-gateway:e9d82fc7feab6b97f8210c0e61af646e5fd2d4d3
+    pull_policy: always
     profiles: [gateway]
     restart: unless-stopped
     depends_on:

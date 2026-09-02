@@ -101,6 +101,7 @@ jobs:
           - { package: lingxiloop-agent-os, dockerfile: server/docker/agent-os.Dockerfile, context: ".", target: "", wukong_commit: "" }
           - { package: lingxiloop-wukongim, dockerfile: server/docker/wukongim.Dockerfile, context: ".", target: "", wukong_commit: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47 }
           - { package: lingxiloop-open-notebook, dockerfile: third_party/open-notebook/Dockerfile, context: ./third_party/open-notebook, target: lingxiloop-rag, wukong_commit: "" }
+          - { package: lingxiloop-gateway, dockerfile: deploy/openship/gateway.Dockerfile, context: ".", target: "", wukong_commit: "" }
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
