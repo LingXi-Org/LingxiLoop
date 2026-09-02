@@ -161,7 +161,6 @@ function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; m
 }
 
 export function ConversationMessage() {
-  const disableHoverActions = document.documentElement.dataset.disableChatHoverActions === 'true'
   const custom = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
   const text = useAuiState((state) => state.message.content
     .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
@@ -245,7 +244,7 @@ export function ConversationMessage() {
           </div>
         )}
         <div className={cn('relative', standalone ? 'w-full max-w-xl' : 'w-fit max-w-[75%]')}>
-          {!disableHoverActions && <MessageActions metadata={custom} text={text} />}
+          <MessageActions metadata={custom} text={text} />
           <div
             data-message-bubble={standalone ? undefined : custom.isMine ? 'user' : 'assistant'}
             data-message-group-position={groupPosition}
