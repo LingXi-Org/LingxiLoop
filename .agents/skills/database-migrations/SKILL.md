@@ -18,7 +18,7 @@ Treat `server/src/db/migrations/0001_v1_baseline.sql` as immutable. Inspect exis
 ## Verify
 
 - Add or update an integration case for the changed behavior; do not replace behavior coverage with SQL regex tests.
-- Run `npm run server:typecheck`, `npm run db:migrate`, and `npm run test:integration` against PostgreSQL and Redis.
+- Run `npm run server:typecheck`, `npm run db:migrate`, and `npm run test:integration -- --file migration.test.ts` plus only affected domain integration files against PostgreSQL and Redis.
 - Confirm a second `npm run db:migrate` is a no-op and the migration history checksum is unchanged.
 - Report rollout ordering, backfill needs, and whether old binaries remain compatible.
 

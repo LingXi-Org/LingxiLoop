@@ -50,20 +50,9 @@ Compose runs the one-shot `db-migrate` service before Web and Worker.
 
 ## Verification
 
-```powershell
-npm run lint
-npm run typecheck
-npm run server:typecheck
-npm run admin:typecheck
-npm run build
-npm run admin:build
-npm test
-npm run eval:check
-npm run db:migrate
-npm run test:integration
-```
+Run only the commands for the changed surface: Web uses the unprefixed lint/typecheck/test/build commands; Admin, Control, and Server use their matching prefixes; Agent Eval uses either `eval:harness` or `eval:runtime`; integration accepts owning files through `--file`.
 
-CI runs the same three gates for every pull request and `main`: quality/builds, unit plus deterministic Eval, and PostgreSQL/Redis integration. CI does not install or run a browser. A successful `main` publishes server, Agent OS, WuKongIM, and Open Notebook images to `ghcr.io/<repository-owner-lowercase>/` with immutable commit-SHA and rolling `mvp` tags.
+CI classifies changed paths, runs only their checks, and publishes only affected images to `ghcr.io/<repository-owner-lowercase>/` with immutable commit-SHA tags. CI does not install or run a browser.
 
 Production deployment and migration requirements are in [`docs/RELEASE.md`](docs/RELEASE.md). The current domain model is in [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md), and Agent Eval is documented in [`docs/agent-eval.md`](docs/agent-eval.md).
 

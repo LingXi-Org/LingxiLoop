@@ -23,8 +23,12 @@ export function updateImageTags(source, sha, packages) {
 
 if (process.argv[1]?.endsWith('update-deployment-images.mjs')) {
   const sha = process.argv[2] ?? ''
+  const published = new Set(process.argv.slice(3))
+  if (published.size === 0) throw new Error('at least one published package is required')
   for (const [path, packages] of Object.entries(manifests)) {
+    const selected = packages.filter((name) => published.has(name))
+    if (selected.length === 0) continue
     const source = readFileSync(path, 'utf8')
-    writeFileSync(path, updateImageTags(source, sha, packages))
+    writeFileSync(path, updateImageTags(source, sha, selected))
   }
 }

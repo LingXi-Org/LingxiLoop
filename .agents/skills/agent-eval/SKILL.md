@@ -13,4 +13,4 @@ Keep Eval deterministic, reviewable, and safe to upload.
 4. Strip prompts, credentials, tokens, personal data, and unrestricted tool output from traces and reports. Keep identifiers synthetic and payloads bounded.
 5. Keep both gates: `npm run eval:harness` for the harness contract and `npm run eval:runtime` for the real runtime path.
 
-Run `npm run test:eval` and `npm run eval:check`. Runtime changes also require the relevant PostgreSQL/Redis integration tests. Report suite, baseline, thresholds, failures, and generated artifact paths.
+Run only the changed gate: `npm run eval:harness` for harness changes or `npm run eval:runtime` for runtime changes, plus the directly owning evaluator test files. Runtime changes also require only the relevant PostgreSQL/Redis integration files. Report suite, baseline, thresholds, failures, and generated artifact paths.
