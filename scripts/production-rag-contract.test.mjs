@@ -130,7 +130,9 @@ test('normal production deploy revalidates RAG and recreates Agent OS', () => {
 test('OpenShip knowledge services receive writable storage and the control plane URL', () => {
   const compose = read('deploy/openship/knowledge-agent.yml')
 
-  assert.match(compose, /surrealdb:[\s\S]*?working_dir: \/home\/nonroot[\s\S]*?rocksdb:open-notebook\.db/)
+  assert.match(compose, /surrealdb:[\s\S]*?rocksdb:\/home\/nonroot\/open-notebook\.db/)
+  assert.match(compose, /supervisorctl -s unix:\/\/\/tmp\/supervisor\.sock status rag-api/)
+  assert.match(compose, /OPEN_NOTEBOOK_WORKER_MAX_TASKS: "1"/)
   assert.equal((compose.match(/\$\{LINGXILOOP_CONTROL_PLANE_URL:\?/g) ?? []).length, 1)
   assert.doesNotMatch(compose, /^ {2}agent-os:/m)
   assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
