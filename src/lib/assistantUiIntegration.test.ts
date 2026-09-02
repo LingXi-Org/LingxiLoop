@@ -37,6 +37,8 @@ test('chat is a single assistant-ui external-store runtime', () => {
   const artifactCard = read('../components/assistant-ui/elements/artifact-card.tsx')
   const surfaces = read('../components/assistant-ui/elements/surfaces.tsx')
   const generativeStyles = read('../styles/generative-ui-elements.css')
+  const statsDisplay = read('../components/tool-ui/stats-display/stats-display.tsx')
+  const sparkline = read('../components/tool-ui/stats-display/sparkline.tsx')
   assert.match(runtime, /useExternalStoreRuntime<ThreadMessage>/)
   assert.match(model, /schema: 'lingxiloop\.thread-message\.v1'/)
   assert.match(model, /presentation: LingxiMessagePresentation/)
@@ -101,7 +103,8 @@ test('chat is a single assistant-ui external-store runtime', () => {
   assert.match(message, /<ArtifactCard/)
   assert.match(message, /title=\{attachment\.filename\}/)
   assert.doesNotMatch(message, /@\/components\/ui\/attachment/)
-  assert.doesNotMatch(tools, /tool-fallback|tool-ui/)
+  assert.doesNotMatch(tools, /tool-fallback/)
+  assert.match(tools, /@\/components\/tool-ui\/stats-display/)
   assert.match(tools, /ipython: \(\) => null/)
   assert.match(tools, /cite_claims: \(\) => null/)
   assert.match(tools, /read_document: \(\) => null/)
@@ -109,7 +112,11 @@ test('chat is a single assistant-ui external-store runtime', () => {
   assert.match(documentReference, /data-slot="document-reference"/)
   assert.match(tools, /<RecommendationCard/)
   assert.match(tools, /respondToApproval\(\{ approved: true \}\)/)
-  assert.match(tools, /<CheckpointHistory/)
+  assert.match(tools, /<StatsDisplay/)
+  assert.match(tools, /showStats: TeacherBriefingStatsTool/)
+  assert.match(statsDisplay, /data-slot="stats-display"/)
+  assert.match(statsDisplay, /<Sparkline/)
+  assert.match(sparkline, /stroke=\{color\}/)
   assert.match(tools, /<ScoreBreakdown/)
   assert.match(tools, /'learning\.propose_evaluation': ScoreBreakdownTool/)
   assert.doesNotMatch(message, /custom\.citations|citationClaims/)
@@ -154,7 +161,15 @@ test('chat is a single assistant-ui external-store runtime', () => {
   assert.match(runtime, /问答卡片回复/)
   assert.match(tools, /Fallback: \(\) => null/)
   const toolUiDirectory = resolve(here, '../components/tool-ui')
-  assert.equal(existsSync(toolUiDirectory) ? sourceFiles(toolUiDirectory).length : 0, 0)
+  assert.deepEqual(sourceFiles(toolUiDirectory).map((path) => (
+    path.slice(toolUiDirectory.length + 1).replaceAll('\\', '/')
+  )).sort(), [
+    'stats-display/_adapter.tsx',
+    'stats-display/index.tsx',
+    'stats-display/schema.ts',
+    'stats-display/sparkline.tsx',
+    'stats-display/stats-display.tsx',
+  ])
   assert.equal(existsSync(resolve(here, '../components/tool-fallback.aui.tsx')), false)
 })
 

@@ -10,7 +10,7 @@ const SPECIAL_CARD_TOOLS = new Set([
   'agent-plan',
   'canvas-artifact',
   'elicitation-form',
-  'checkpoint-history',
+  'showStats',
   'learning.propose_evaluation',
   'calendar.create',
   'calendar.list',

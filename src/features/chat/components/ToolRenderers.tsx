@@ -6,7 +6,6 @@ import { Avatar } from '@/components/Avatar'
 import { AgentHandoff } from '@/components/assistant-ui/elements/agent-handoff'
 import { AgentPlan } from '@/components/assistant-ui/elements/agent-plan'
 import { ArtifactCard } from '@/components/assistant-ui/elements/artifact-card'
-import { type Checkpoint, CheckpointHistory } from '@/components/assistant-ui/elements/checkpoint-history'
 import {
   type ElicitationField,
   ElicitationForm,
@@ -17,6 +16,8 @@ import { RecommendationCard } from '@/components/assistant-ui/elements/recommend
 import { ScoreBreakdown, type ScoreCriterion } from '@/components/assistant-ui/elements/score-breakdown'
 import { CardSurface, conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
 import { ToolTimeline } from '@/components/assistant-ui/elements/tool-timeline'
+import { StatsDisplay } from '@/components/tool-ui/stats-display'
+import { parseSerializableStatsDisplay } from '@/components/tool-ui/stats-display/schema'
 import { useParticipants } from '@/features/agents/state'
 import type { CalendarEvent } from '@/features/calendar/contracts'
 import {
@@ -293,13 +294,9 @@ export function DraftEmailTool({ args, result, addResult }: ToolCallMessagePartP
     : <div data-aui-theme="elements" data-assistant-ui-id={email.id} className={conversationCardSize.wide}>{content}</div>
 }
 
-export function CheckpointHistoryTool({ args }: ToolCallMessagePartProps) {
-  const value = args as { id: string; checkpoints: Checkpoint[]; currentId: string }
-  return <CheckpointHistory
-    data-assistant-ui-id={value.id}
-    checkpoints={value.checkpoints}
-    currentId={value.currentId}
-  />
+export function TeacherBriefingStatsTool({ args }: ToolCallMessagePartProps) {
+  const value = parseSerializableStatsDisplay(args)
+  return <StatsDisplay {...value} locale="zh-CN" className={`${conversationCardSize.wide} min-w-0`} />
 }
 
 export function ScoreBreakdownTool({ args, result, isError }: ToolCallMessagePartProps) {
@@ -455,7 +452,7 @@ export const CHAT_TOOL_RENDERERS = {
     'agent-plan': AgentPlanTool,
     'canvas-artifact': CanvasArtifactTool,
     'elicitation-form': ElicitationFormTool,
-    'checkpoint-history': CheckpointHistoryTool,
+    showStats: TeacherBriefingStatsTool,
     'learning.propose_evaluation': ScoreBreakdownTool,
     'calendar.create': CreateCalendarEventTool,
     'calendar.list': ViewCalendarEventTool,

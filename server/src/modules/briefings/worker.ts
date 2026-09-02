@@ -8,10 +8,12 @@ import { findTeacherOperationsContextForTeacher } from '../context-threads/publi
 import { summarizeProjectEventWindow } from '../events/public.js'
 import { TEACHER_BRIEFING_POLICY_V1 } from './policy.js'
 import { teacherBriefingIdentity } from './identity.js'
+import { teacherBriefingDashboard } from './dashboard.js'
 import {
   claimTeacherBriefings,
   insertTeacherBriefing,
   listBriefingVisitCandidates,
+  listPreviousTeacherBriefingStatistics,
   lockProjectVisit,
   markTeacherBriefingFailed,
   markTeacherBriefingSent,
@@ -73,6 +75,7 @@ async function deliverPendingBriefings(now: Date): Promise<void> {
   const leaseToken = randomUUID()
   for (const briefing of await withTransaction(pool, (db) => claimTeacherBriefings(db, now, leaseToken))) {
     try {
+      const previousStatistics = await listPreviousTeacherBriefingStatistics(pool, briefing)
       const sent = await sendAgentChannelMessage({
         companyId: briefing.company_id,
         agentId: briefing.agent_id,
@@ -86,10 +89,7 @@ async function deliverPendingBriefings(now: Date): Promise<void> {
           refs: { briefingId: briefing.id, attentionItemIds: briefing.attention_item_ids },
           data: {
             type: 'teacher_briefing',
-            windowStartSequence: briefing.window_start_sequence,
-            windowEndSequence: briefing.window_end_sequence,
-            statistics: briefing.statistics,
-            attentionItemIds: briefing.attention_item_ids,
+            dashboard: teacherBriefingDashboard(briefing, previousStatistics),
           },
         },
       })

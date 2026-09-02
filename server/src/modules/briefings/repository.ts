@@ -134,6 +134,20 @@ export async function claimTeacherBriefings(
   return rows
 }
 
+export async function listPreviousTeacherBriefingStatistics(
+  db: Queryable,
+  briefing: Pick<TeacherBriefingDelivery, 'id' | 'company_id' | 'project_id' | 'teacher_user_id'>,
+): Promise<Record<string, number>[]> {
+  const { rows } = await db.query<{ statistics: Record<string, number> }>(
+    `SELECT statistics FROM teacher_briefings
+      WHERE company_id=$1 AND project_id=$2 AND teacher_user_id=$3
+        AND id<>$4 AND status='SENT'
+      ORDER BY created_at DESC,id DESC LIMIT 7`,
+    [briefing.company_id, briefing.project_id, briefing.teacher_user_id, briefing.id],
+  )
+  return rows.reverse().map((row) => row.statistics)
+}
+
 export async function markTeacherBriefingSent(db: Queryable, args: {
   id: string; leaseToken: string; messageId: string; messageSequence: number
 }): Promise<void> {

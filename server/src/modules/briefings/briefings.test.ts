@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../../db/queryable.js'
+import { teacherBriefingDashboard } from './dashboard.js'
 import { teacherBriefingIdentity } from './identity.js'
 import { TEACHER_BRIEFING_POLICY_V1 } from './policy.js'
 import {
@@ -8,6 +9,25 @@ import {
   markTeacherBriefingSent,
   recordMeaningfulProjectVisit,
 } from './repository.js'
+
+test('teacher briefing dashboard is four token-colored Tool UI stats with real history', () => {
+  const dashboard = teacherBriefingDashboard({
+    id: 'briefing-1', company_id: 'company-1', project_id: 'project-1', teacher_user_id: 'teacher-1',
+    context_thread_id: 'thread-1', client_msg_no: 'briefing-1', summary: '总结',
+    statistics: { eventCount: 18, attentionCount: 3, A: 10, B: 8 },
+    window_start_sequence: '120', window_end_sequence: '184', channel_id: 'channel-1', agent_id: 'agent-1',
+    attention_item_ids: ['attention-1'], lease_token: 'lease-1',
+  }, [{ eventCount: 12, attentionCount: 4, A: 12 }])
+
+  assert.deepEqual(dashboard.stats.map((stat) => ({
+    label: stat.label, value: stat.value, data: stat.sparkline.data, color: stat.sparkline.color,
+  })), [
+    { label: '学习更新', value: 18, data: [12, 18], color: 'var(--chart-1)' },
+    { label: '需要关注', value: 3, data: [4, 3], color: 'var(--chart-2)' },
+    { label: '正常进展', value: 15, data: [8, 15], color: 'var(--chart-3)' },
+    { label: '更新类型', value: 2, data: [1, 2], color: 'var(--chart-4)' },
+  ])
+})
 
 test('the same meaningful visit converges on one Briefing and stable WuKong client message ID', () => {
   const input = {

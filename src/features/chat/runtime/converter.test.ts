@@ -308,26 +308,26 @@ test('approval kinds use Chinese recommendation details', () => {
   ])
 })
 
-test('teacher briefings map their single wire protocol to native checkpoints', () => {
+test('teacher briefings map their four-stat wire protocol directly to Tool UI', () => {
+  const dashboard = {
+    id: 'teacher-briefing-1', role: 'information' as const, title: '学习情况总结', description: '序列 12–20',
+    stats: [
+      { key: 'updates', label: '学习更新', value: 8, sparkline: { data: [6, 8], color: 'var(--chart-1)' } },
+      { key: 'attention', label: '需要关注', value: 2, sparkline: { data: [3, 2], color: 'var(--chart-2)' } },
+      { key: 'normal', label: '正常进展', value: 6, sparkline: { data: [3, 6], color: 'var(--chart-3)' } },
+      { key: 'types', label: '更新类型', value: 2, sparkline: { data: [1, 2], color: 'var(--chart-4)' } },
+    ],
+  }
   const message = convertEnvelope(envelope('system', {
     type: 'teacher_briefing',
-    windowStartSequence: 12,
-    windowEndSequence: 20,
-    statistics: { eventCount: 8, attentionCount: 2 },
+    dashboard,
   }), { participants, meId: 'me' })
   assert.deepEqual(message.content[0], {
     type: 'tool-call',
     toolCallId: 'briefing:system-server',
-    toolName: 'checkpoint-history',
-    args: {
-      id: 'briefing-system-server',
-      checkpoints: [
-        { id: 'briefing-system-server-eventCount', label: '学习更新', at: '序列 12–20', items: 8 },
-        { id: 'briefing-system-server-attentionCount', label: '需要关注', at: '序列 12–20', items: 2 },
-      ],
-      currentId: 'briefing-system-server-attentionCount',
-    },
-    argsText: '{"id":"briefing-system-server","checkpoints":[{"id":"briefing-system-server-eventCount","label":"学习更新","at":"序列 12–20","items":8},{"id":"briefing-system-server-attentionCount","label":"需要关注","at":"序列 12–20","items":2}],"currentId":"briefing-system-server-attentionCount"}',
+    toolName: 'showStats',
+    args: dashboard,
+    argsText: JSON.stringify(dashboard),
   })
 })
 

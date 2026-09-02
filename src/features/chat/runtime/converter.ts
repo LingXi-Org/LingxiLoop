@@ -5,6 +5,7 @@ import type {
   ThreadUserMessagePart,
   ToolCallMessagePart,
 } from '@assistant-ui/react'
+import { parseSerializableStatsDisplay } from '@/components/tool-ui/stats-display/schema'
 import type { ImEnvelope, LingxiMessageV1 } from '@/lib/im/wukong'
 import type { Participant } from '@/types'
 import type {
@@ -347,25 +348,12 @@ function baseParts(envelope: ImEnvelope): ThreadAssistantMessagePart[] {
     }
     case 'system': {
       if (data.type !== 'teacher_briefing') return [{ type: 'text', text: payload.body ?? '' }]
-      const windowStart = finiteNumber(data.windowStartSequence)
-      const windowEnd = finiteNumber(data.windowEndSequence)
-      if (windowStart === null || windowEnd === null) throw new Error('Teacher briefing requires a sequence window')
-      const checkpoints = Object.entries(object(data.statistics)).map(([key, rawValue]) => {
-        const value = finiteNumber(rawValue)
-        if (value === null) throw new Error('Teacher briefing statistics must be finite numbers')
-        return {
-          id: `briefing-${id}-${key}`,
-          label: key === 'eventCount' ? '学习更新' : key === 'attentionCount' ? '需要关注' : key,
-          at: `序列 ${windowStart}–${windowEnd}`,
-          items: value,
-        }
-      })
-      if (checkpoints.length === 0) throw new Error('Teacher briefing requires at least one checkpoint')
-      return [toolCall(`briefing:${id}`, 'checkpoint-history', {
-        id: `briefing-${id}`,
-        checkpoints,
-        currentId: checkpoints[checkpoints.length - 1]!.id,
-      })]
+      const dashboard = parseSerializableStatsDisplay(data.dashboard)
+      const chartTokens = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)']
+      if (dashboard.stats.length !== 4 || dashboard.stats.some((stat, index) => (
+        stat.sparkline?.color !== chartTokens[index]
+      ))) throw new Error('Teacher briefing requires four token-colored statistics')
+      return [toolCall(`briefing:${id}`, 'showStats', dashboard)]
     }
     case 'attachment': {
       const url = string(data.url)
