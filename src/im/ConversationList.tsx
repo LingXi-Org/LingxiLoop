@@ -30,6 +30,7 @@ export function ConversationAvatar({
   size?: number
   variant?: 'desktop' | 'mobile'
 }) {
+  const avatarMotion = 'transition-[width,height] duration-200 ease-out motion-reduce:transition-none'
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
   const noneResolved = conversation.members.length > 0 && conversation.members.every((id) => !byId[id])
@@ -46,7 +47,7 @@ export function ConversationAvatar({
   if (conversation.tag === 'fresh-pulled') {
     return (
       <span
-        className="grid shrink-0 place-items-center rounded-full bg-primary font-semibold text-primary-foreground"
+        className={cn('grid shrink-0 place-items-center rounded-full bg-primary font-semibold text-primary-foreground', avatarMotion)}
         style={{ width: size, height: size }}
       >⌘</span>
     )
@@ -54,17 +55,17 @@ export function ConversationAvatar({
 
   if (conversation.kind === 'group' || members.length > 1) {
     if (members.length === 0) {
-      return <span className="grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground" style={{ width: size, height: size }}>群</span>
+      return <span className={cn('grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground', avatarMotion)} style={{ width: size, height: size }}>群</span>
     }
     return variant === 'mobile'
-      ? <HiveAvatar ps={members} size={size} ringColor="var(--card)" mode="chat" />
+      ? <HiveAvatar ps={members} size={size} ringColor="var(--card)" mode="chat" className={avatarMotion} />
       : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} mode="chat" />
   }
 
   const person = members[0] ?? conversation.members.map((id) => byId[id]).find(Boolean)
-  if (person) return <Avatar p={person} size={size} ringColor="var(--card)" mode="chat" />
+  if (person) return <Avatar p={person} size={size} ringColor="var(--card)" mode="chat" className={avatarMotion} />
   return (
-    <span className="grid shrink-0 place-items-center rounded-full bg-muted font-semibold text-foreground" style={{ width: size, height: size }}>
+    <span className={cn('grid shrink-0 place-items-center rounded-full bg-muted font-semibold text-foreground', avatarMotion)} style={{ width: size, height: size }}>
       {conversation.kind === 'email' ? '邮' : conversation.title.charAt(0).toUpperCase()}
     </span>
   )
@@ -103,7 +104,7 @@ export function ConversationListItemContent({
   )
   return (
     <>
-      <ConversationAvatar conversation={conversation} size={isMobile || !isDirectAgent ? 48 : 54} variant={variant} />
+      <ConversationAvatar conversation={conversation} size={isMobile ? 42 : !isDirectAgent ? 48 : 54} variant={variant} />
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
           <span className={cn('truncate font-semibold', isMobile ? 'text-[16px]' : 'text-[15px]', muted ? 'text-muted-foreground' : 'text-foreground')}>

@@ -14,6 +14,8 @@ import { SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/si
 import { useParticipants } from '@/features/agents/state'
 import { conversationsApi } from '@/features/conversations/api'
 import { isMuted, useConversations } from '@/features/conversations/store'
+import { useWorkspace } from '@/features/knowledge/workspace'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { ConversationListItemContent } from '@/im/ConversationList'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
@@ -42,9 +44,10 @@ ConversationItemGroup.displayName = 'ConversationItemGroup'
 const ConversationListRow = forwardRef<HTMLDivElement, {
   children: React.ReactNode
   selected?: boolean
+  mobile?: boolean
   onSelect: () => void
 } & Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'>>(
-  ({ children, selected = false, onSelect, className, ...props }, ref) => (
+  ({ children, selected = false, mobile = false, onSelect, className, ...props }, ref) => (
     <Item
       ref={ref}
       role="button"
@@ -58,7 +61,8 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
         onSelect()
       }}
       className={cn(
-        'group h-15 min-h-15 max-h-15 cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-xl border-0 px-2 py-1.5 text-left shadow-none',
+        'group cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-xl border-0 text-left shadow-none',
+        mobile ? 'h-17 min-h-17 max-h-17 px-3 py-2' : 'h-15 min-h-15 max-h-15 px-2 py-1.5',
         selected
           ? 'bg-sidebar-accent text-sidebar-accent-foreground'
           : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
@@ -80,17 +84,19 @@ function ConversationMenuItems({ items }: { items: ConversationMenuItem[] }) {
   })
 }
 
-function ConversationRow({ conversation, selected, items }: {
+function ConversationRow({ conversation, selected, items, onConversationSelected }: {
   conversation: Conversation
   selected: boolean
   items: ConversationMenuItem[]
+  onConversationSelected?: (conversationId: string) => void
 }) {
+  const isMobile = useIsMobile()
   const select = useApp((s) => s.selectConversation)
   return (
     <ContextMenu>
     <ContextMenuTrigger asChild>
-      <ConversationListRow selected={selected} onSelect={() => select(conversation.id)}>
-        <ConversationListItemContent conversation={conversation} variant="desktop" />
+      <ConversationListRow mobile={isMobile} selected={selected} onSelect={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}>
+        <ConversationListItemContent conversation={conversation} variant={isMobile ? 'mobile' : 'desktop'} />
       </ConversationListRow>
     </ContextMenuTrigger>
     <ContextMenuContent aria-label="会话操作" className="min-w-[200px]"><ConversationMenuItems items={items} /></ContextMenuContent>
@@ -145,7 +151,9 @@ export function SidebarUserFooter() {
   return <SidebarFooter className="shrink-0 border-t border-[var(--im-divider-weak)] bg-card p-2"><NavUser user={{ name: authUser.name, email: authUser.email, avatar: authParticipant?.avatarUrl }} /></SidebarFooter>
 }
 
-export function ConversationsPane() {
+export function ConversationsPane({ onConversationSelected }: { onConversationSelected?: (conversationId: string) => void } = {}) {
+  const isMobile = useIsMobile()
+  const workspaceTitle = useWorkspace((state) => state.list.find((workspace) => workspace.id === state.selectedId)?.name)
   const list = useConversations((s) => s.list)
   const loaded = useConversations((s) => s.loaded)
   const error = useConversations((s) => s.error)
@@ -267,11 +275,12 @@ export function ConversationsPane() {
 
   return (
     <aside data-slot="sidebar" className="im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card text-card-foreground">
-      <SidebarHeader className="desktop-window-toolbar omb-drag h-12 shrink-0 p-2">
-        <InputGroup className="omb-no-drag h-8 rounded-xl border-transparent bg-input/50 shadow-none">
-          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className="h-8 px-2 text-sm" />
+      <SidebarHeader className={cn('desktop-window-toolbar omb-drag shrink-0', isMobile ? 'gap-2 px-3 pb-2 pt-3' : 'h-12 p-2')}>
+        {isMobile && <h1 className="truncate px-1 font-heading text-xl font-medium text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
+        <InputGroup className={cn('omb-no-drag rounded-xl border-transparent bg-input/50 shadow-none', isMobile ? 'h-10' : 'h-8')}>
+          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className={cn('px-2 text-sm', isMobile ? 'h-10' : 'h-8')} />
           <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4 opacity-50" /></InputGroupAddon>
-          {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
+          {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" className={isMobile ? 'size-8' : undefined} onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
         </InputGroup>
       </SidebarHeader>
 
@@ -282,7 +291,7 @@ export function ConversationsPane() {
             {!searching && resultRows.length === 0 && <p className="px-3 py-5 text-sm text-muted-foreground">没有找到匹配结果</p>}
             <ItemGroup className="!gap-0">
               {resultRows.map((row) => (
-                <ConversationListRow key={row.id} selected={selected === row.id} onSelect={() => { select(row.id); setQuery('') }}>
+                <ConversationListRow key={row.id} mobile={isMobile} selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>
                   <ItemContent className="min-w-0">
                     <ItemTitle className="block w-full truncate text-sm font-medium text-sidebar-foreground">{row.title}</ItemTitle>
                     <ItemDescription className="line-clamp-1 text-xs text-muted-foreground">{row.preview}</ItemDescription>
@@ -298,10 +307,10 @@ export function ConversationsPane() {
             className="h-full"
             data={conversations}
             computeItemKey={(_, conversation) => conversation.id}
-            defaultItemHeight={60}
+            defaultItemHeight={isMobile ? 68 : 60}
             increaseViewportBy={{ top: 500, bottom: 500 }}
             components={{ List: ConversationItemGroup, EmptyPlaceholder: () => error ? <div role="alert" className="px-4 py-10 text-center"><p className="text-sm font-medium text-foreground">会话加载失败</p><p className="mt-1 text-xs text-muted-foreground">{userFacingError(error, '请稍后重试。')}</p><Button type="button" size="sm" className="mt-3" onClick={() => void useConversations.getState().load()}>重试</Button></div> : loaded ? <p className="px-3 py-8 text-center text-sm text-muted-foreground">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
-            itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} />}
+            itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} />}
           />
           </div>
         )}

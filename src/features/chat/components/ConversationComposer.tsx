@@ -111,7 +111,7 @@ export function ConversationComposer({
             <Tooltip>
               <TooltipTrigger asChild>
                 <ComposerPrimitive.AddAttachment asChild>
-                  <Button type="button" variant="ghost" size="icon" className="size-9 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="添加附件">
+                  <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground md:size-9" aria-label="添加附件">
                     <HugeiconsIcon icon={PlusSignIcon} size={20} strokeWidth={2} />
                   </Button>
                 </ComposerPrimitive.AddAttachment>
@@ -124,13 +124,13 @@ export function ConversationComposer({
             autoFocus={!compact}
             submitMode="enter"
             placeholder={placeholder}
-            className="relative max-h-52 min-h-9 flex-1 overflow-y-auto bg-transparent py-1.5 pr-2 pl-1 text-base text-foreground outline-none [&_.aui-lexical-input]:min-h-6 [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-1.5 [&_.aui-lexical-placeholder]:text-muted-foreground"
+            className="relative max-h-52 min-h-11 flex-1 overflow-y-auto bg-transparent py-2.5 pr-2 pl-1 text-base text-foreground outline-none md:min-h-9 md:py-1.5 [&_.aui-lexical-input]:min-h-6 [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-2.5 [&_.aui-lexical-placeholder]:text-muted-foreground md:[&_.aui-lexical-placeholder]:top-1.5"
           />
           <div className="flex shrink-0 items-center gap-1">
             {isRunning && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <ComposerPrimitive.Cancel className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground" aria-label="停止全部智能助教">
+                  <ComposerPrimitive.Cancel className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground md:size-9" aria-label="停止全部智能助教">
                     <span className="size-2.5 rounded-[2px] bg-current" />
                   </ComposerPrimitive.Cancel>
                 </TooltipTrigger>
@@ -140,7 +140,7 @@ export function ConversationComposer({
             <Tooltip>
               <TooltipTrigger asChild>
                 <ComposerPrimitive.Send asChild>
-                  <Button type="submit" size="icon" className="size-9 rounded-full transition-opacity disabled:opacity-30" aria-label="发送">
+                  <Button type="submit" size="icon" className="size-11 rounded-full transition-opacity disabled:opacity-30 md:size-9" aria-label="发送">
                     <HugeiconsIcon icon={ArrowUp02Icon} size={24} strokeWidth={2} />
                   </Button>
                 </ComposerPrimitive.Send>

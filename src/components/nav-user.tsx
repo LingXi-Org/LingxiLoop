@@ -13,12 +13,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { openSettingsDialog, SETTINGS_DIALOG_TRIGGER_ID } from '@/features/settings/store'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
 import { resolveUserAvatarUrl } from '@/lib/userAvatar'
 import { useAuth } from '@/stores/auth'
 
 export function NavUser({ user }: {
   user: { name: string; email: string; avatar?: string | null }
 }) {
+  const isMobile = useIsMobile()
   const fallback = user.name.trim().slice(0, 2).toLocaleUpperCase() || '我'
   const avatarUrl = resolveUserAvatarUrl(user.avatar)
   const signOut = () => {
@@ -27,7 +30,7 @@ export function NavUser({ user }: {
   }
 
   const identity = <>
-    <Avatar className="rounded-lg">
+    <Avatar size={isMobile ? 'sm' : 'default'} className="rounded-lg">
       <AvatarImage className="rounded-lg" src={avatarUrl} alt={user.name} />
       <AvatarFallback className="rounded-lg">{fallback}</AvatarFallback>
     </Avatar>
@@ -37,12 +40,16 @@ export function NavUser({ user }: {
     </div>
   </>
 
+  const accountButton = <Button id={SETTINGS_DIALOG_TRIGGER_ID} type="button" variant="ghost" className={cn('w-full justify-start gap-2 rounded-xl px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground', isMobile ? 'h-12' : 'h-14')} aria-label="打开账户菜单" onClick={isMobile ? () => openSettingsDialog() : undefined}>
+    {identity}
+    <HugeiconsIcon icon={UnfoldMoreIcon} strokeWidth={2} className="ms-auto size-4" />
+  </Button>
+
+  if (isMobile) return accountButton
+
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <Button id={SETTINGS_DIALOG_TRIGGER_ID} type="button" variant="ghost" className="h-14 w-full justify-start gap-2 rounded-xl px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground" aria-label="打开账户菜单">
-        {identity}
-        <HugeiconsIcon icon={UnfoldMoreIcon} strokeWidth={2} className="ms-auto size-4" />
-      </Button>
+      {accountButton}
     </DropdownMenuTrigger>
     <DropdownMenuContent className="min-w-64 rounded-lg" side="right" align="end" sideOffset={8}>
       <DropdownMenuGroup>

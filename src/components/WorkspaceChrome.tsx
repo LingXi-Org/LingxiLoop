@@ -22,6 +22,7 @@ import { knowledgeApi } from '@/features/knowledge/api'
 import { KnowledgeSourceUploadDialog } from '@/features/knowledge/components/KnowledgeSourceUploadDialog'
 import type { KnowledgeSource } from '@/features/knowledge/contracts'
 import { useKnowledgeSources } from '@/features/knowledge/state'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
@@ -140,6 +141,7 @@ export function SourcePanel({ mobile = false, flat = false, toolbar }: { mobile?
 
 /** Mounted at the application shell for source-library details. */
 export function SourceDetailOverlay() {
+  const isMobile = useIsMobile()
   const selectedSource = useKnowledgeSources((state) => state.selectedSource)
   const detailLoading = useKnowledgeSources((state) => state.detailLoading)
   const close = useKnowledgeSources((state) => state.close)
@@ -158,8 +160,15 @@ export function SourceDetailOverlay() {
     } catch { /* toast owns the visible error state */ }
   }
   const open = Boolean(selectedSource)
-  return <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) close() }} direction="right">
-    <DrawerContent className="w-[min(92vw,48rem)] sm:[--drawer-content-width:min(92vw,48rem)]">
+  const closeDetail = () => {
+    close()
+    if (isMobile) window.requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-context-workspace-trigger]')?.focus({ preventScroll: true }))
+  }
+  return <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) closeDetail() }} direction="right">
+    <DrawerContent
+      className={isMobile ? 'data-[vaul-drawer-direction=right]:w-screen data-[vaul-drawer-direction=right]:max-w-none' : 'w-[min(92vw,48rem)] sm:[--drawer-content-width:min(92vw,48rem)]'}
+      style={isMobile ? { top: 'env(safe-area-inset-top)', bottom: 'env(safe-area-inset-bottom)' } : undefined}
+    >
       <DrawerHeader className="border-b border-hairline p-6">
         <div className="flex items-start justify-between gap-4"><div>
           <div className="text-[10px] font-semibold uppercase tracking-wider text-accent">{selectedSource ? statusLabel[selectedSource.status] ?? '状态待同步' : '资料'}</div>

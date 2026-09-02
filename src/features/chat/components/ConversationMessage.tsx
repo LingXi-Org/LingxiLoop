@@ -8,7 +8,7 @@ import {
 } from '@assistant-ui/react'
 import { Copy01Icon, ReplyIcon, SmilePlusIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useMemo, useState } from 'react'
+import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import {
   type MessageAttachmentItem,
@@ -18,7 +18,9 @@ import { MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
 import { TypingIndicator } from '@/components/typing-indicator'
 import { Button } from '@/components/ui/button'
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from '@/components/ui/drawer'
 import { useParticipants } from '@/features/agents/state'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { useConversationUi } from '@/stores/conversationUi'
 import { chatTransport, type LingxiMessageMetadata } from '../runtime'
@@ -131,6 +133,66 @@ function MessageActions({
   )
 }
 
+function MobileMessageActions({
+  metadata,
+  text,
+  open,
+  onOpenChange,
+}: {
+  metadata: LingxiMessageMetadata
+  text: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const aui = useAui()
+  const messageId = useAuiState((state) => state.message.id)
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange} direction="bottom">
+      <DrawerContent className="pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <DrawerTitle className="sr-only">消息操作</DrawerTitle>
+        <DrawerDescription className="sr-only">快速回应、回复或复制这条消息</DrawerDescription>
+        <div className="grid grid-cols-6 gap-1 px-4 pt-4" role="listbox" aria-label="快速回应">
+          {QUICK_REACTIONS.map((emoji) => (
+            <Button
+              key={emoji}
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              className="size-11 rounded-2xl"
+              role="option"
+              aria-label={`使用 ${emoji} 回应`}
+              onClick={() => {
+                onOpenChange(false)
+                void chatTransport.toggleReaction(metadata.conversationId, messageId, emoji)
+              }}
+            >
+              <TwEmoji emoji={emoji} size={20} />
+            </Button>
+          ))}
+        </div>
+        <div className="mt-3 grid gap-1 px-4 pb-2">
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-12 justify-start rounded-2xl"
+            onClick={() => {
+              aui.thread.composer().setQuote({ messageId, text })
+              onOpenChange(false)
+            }}
+          >
+            <HugeiconsIcon icon={ReplyIcon} strokeWidth={2} />回复
+          </Button>
+          <ActionBarPrimitive.Copy asChild>
+            <Button type="button" variant="ghost" className="h-12 justify-start rounded-2xl" onClick={() => onOpenChange(false)}>
+              <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />复制
+            </Button>
+          </ActionBarPrimitive.Copy>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
 function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; messageId: string }) {
   if (metadata.reactions.length === 0) return null
   return (
@@ -161,6 +223,10 @@ function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; m
 }
 
 export function ConversationMessage() {
+  const isMobile = useIsMobile()
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
+  const longPressTimer = useRef<number | null>(null)
+  const longPressOrigin = useRef({ x: 0, y: 0 })
   const custom = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
   const text = useAuiState((state) => state.message.content
     .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
@@ -216,40 +282,73 @@ export function ConversationMessage() {
           ? 'rounded-[6px_18px_18px_18px]'
           : 'rounded-[6px_18px_18px_6px]'
   const standalone = custom.messageKind !== 'text'
+  const cancelLongPress = () => {
+    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
+    longPressTimer.current = null
+  }
+  const startLongPress = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!isMobile || standalone || event.button !== 0) return
+    cancelLongPress()
+    longPressOrigin.current = { x: event.clientX, y: event.clientY }
+    longPressTimer.current = window.setTimeout(() => {
+      longPressTimer.current = null
+      setMobileActionsOpen(true)
+    }, 450)
+  }
+  const moveLongPress = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (Math.hypot(event.clientX - longPressOrigin.current.x, event.clientY - longPressOrigin.current.y) > 8) cancelLongPress()
+  }
+  useEffect(() => () => {
+    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
+  }, [])
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
       data-msg-id={custom.clientMessageId}
       data-find-message-id={custom.clientMessageId}
       className={cn(
-        'group/message flex w-full shrink-0 gap-2.5 px-3 sm:px-4',
+        'group/message flex w-full shrink-0',
+        isMobile ? 'gap-2 px-2.5' : 'gap-2.5 px-3 sm:px-4',
         custom.continuedFromPrevious ? 'pt-px' : 'pt-1.5',
         custom.continuedToNext ? 'pb-px' : 'pb-1.5',
         custom.isMine && 'flex-row-reverse',
       )}
     >
       <div className={cn(
-        'flex w-10 shrink-0 items-end pb-5',
+        'flex shrink-0 items-end',
+        isMobile ? 'w-8 pb-4' : 'w-10 pb-5',
         participant?.kind === 'agent' && 'chat-message-avatar',
         participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
         participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
       )}>
-        {custom.groupEnd && participant && <Avatar p={participant} size={38} ringColor="var(--background)" mode="chat" />}
+        {custom.groupEnd && participant && <Avatar p={participant} size={isMobile ? 32 : 38} ringColor="var(--background)" mode="chat" className="transition-[width,height] duration-200" />}
       </div>
       <div className={cn('flex min-w-0 flex-1 flex-col', custom.isMine && 'items-end')}>
         {custom.groupStart && !custom.isMine && (
-          <div className="mb-1 flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
+          <div className={cn('mb-1 flex items-center gap-2 px-1 text-muted-foreground', isMobile ? 'text-xs' : 'text-[11px]')}>
             <span className="font-medium">{custom.senderName}</span>
             <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>
           </div>
         )}
-        <div className={cn('relative', standalone ? 'w-full max-w-xl' : 'w-fit max-w-[75%]')}>
-          <MessageActions metadata={custom} text={text} />
+        <div className={cn('relative', standalone ? 'w-full max-w-xl' : isMobile ? 'w-fit max-w-[88%]' : 'w-fit max-w-[75%]')}>
+          {!isMobile && <MessageActions metadata={custom} text={text} />}
           <div
             data-message-bubble={standalone ? undefined : custom.isMine ? 'user' : 'assistant'}
             data-message-group-position={groupPosition}
+            onPointerDown={startLongPress}
+            onPointerMove={moveLongPress}
+            onPointerUp={cancelLongPress}
+            onPointerCancel={cancelLongPress}
+            onPointerLeave={cancelLongPress}
+            onContextMenu={(event) => {
+              if (!isMobile || standalone) return
+              event.preventDefault()
+              cancelLongPress()
+              setMobileActionsOpen(true)
+            }}
             className={cn(
-              'relative min-w-0 text-[15px] leading-[1.35] tracking-[-0.01em]',
+              'relative min-w-0 tracking-[-0.01em]',
+              isMobile ? 'text-base leading-[1.5]' : 'text-[15px] leading-[1.35]',
               custom.isMine && !standalone && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-white [&_.typeset]:!text-white [&_.typeset_*]:!text-white'],
               !custom.isMine && !standalone && 'text-foreground',
               standalone && 'grid w-full gap-2',
@@ -282,8 +381,9 @@ export function ConversationMessage() {
             </MessagePrimitive.Error>
           </div>
         </div>
+        {isMobile && !standalone && <MobileMessageActions metadata={custom} text={text} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
         <Reactions metadata={custom} messageId={messageId} />
-        <div className={cn('mt-0.5 flex items-center gap-2 px-1 text-[10px] text-muted-foreground', custom.isMine && 'justify-end')}>
+        <div className={cn('mt-0.5 flex items-center gap-2 px-1 text-muted-foreground', isMobile ? 'text-[11px]' : 'text-[10px]', custom.isMine && 'justify-end')}>
           {custom.isMine && custom.groupEnd && <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
           {custom.isMine && custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}
         </div>

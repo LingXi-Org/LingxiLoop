@@ -62,19 +62,19 @@ function HeroMetric({
   value: number
 }) {
   return (
-    <div className="rounded-3xl bg-primary-foreground/10 p-4 ring-1 ring-primary-foreground/15">
+    <div className="rounded-2xl bg-primary-foreground/10 p-3 ring-1 ring-primary-foreground/15 @min-[48rem]/learning-grid:rounded-3xl @min-[48rem]/learning-grid:p-4">
       <div className="flex items-center gap-2 text-primary-foreground/75">
         <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4" />
         <span className="text-xs">{label}</span>
       </div>
-      <p className="mt-3 font-heading text-3xl font-medium tabular-nums">{value}</p>
+      <p className="mt-2 font-heading text-2xl font-medium tabular-nums @min-[48rem]/learning-grid:mt-3 @min-[48rem]/learning-grid:text-3xl">{value}</p>
     </div>
   )
 }
 
 function ChartEmpty({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-52 place-items-center rounded-3xl bg-muted/60 p-6 text-center text-sm text-muted-foreground">
+    <div className="grid min-h-44 place-items-center rounded-2xl bg-muted/60 p-4 text-center text-sm text-muted-foreground @min-[48rem]/learning-grid:min-h-52 @min-[48rem]/learning-grid:rounded-3xl @min-[48rem]/learning-grid:p-6">
       {children}
     </div>
   )
@@ -125,14 +125,14 @@ export function LearnerDashboardSummary({
             <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
             证据驱动的学习轨迹
           </Badge>
-          <CardTitle className="max-w-3xl text-2xl leading-tight @min-[44rem]/learning-grid:text-3xl">
+          <CardTitle className="max-w-3xl text-xl leading-tight @min-[44rem]/learning-grid:text-3xl">
             每一次真实尝试，都在把学习目标变成可验证的掌握。
           </CardTitle>
           <CardDescription className="max-w-2xl text-primary-foreground/70">
             看板只汇总你的任务、活动提交、评价反馈与复习安排，不使用学习时长、排名或预测数据。
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 @min-[38rem]/learning-grid:grid-cols-2 @min-[60rem]/learning-grid:grid-cols-4">
+        <CardContent className="grid grid-cols-2 gap-3 @min-[60rem]/learning-grid:grid-cols-4">
           <HeroMetric icon={Task01Icon} label="待复习" value={overview?.summary.dueReviews ?? 0} />
           <HeroMetric
             icon={CheckmarkCircle02Icon}
@@ -210,7 +210,7 @@ export function LearnerDashboardSummary({
         </CardHeader>
         <CardContent>
           {trend.length > 0 ? (
-            <ChartContainer config={trendConfig} className="h-56 w-full aspect-auto">
+            <ChartContainer config={trendConfig} className="h-48 w-full aspect-auto @min-[48rem]/learning-grid:h-56">
               <AreaChart accessibilityLayer data={trend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="learner-evidence-fill" x1="0" y1="0" x2="0" y2="1">
@@ -232,7 +232,7 @@ export function LearnerDashboardSummary({
         <CardHeader><CardTitle>掌握结构</CardTitle><CardDescription>目标在等级 0–4 的真实分布</CardDescription></CardHeader>
         <CardContent>
           {mastery.length > 0 ? (
-            <ChartContainer config={masteryConfig} className="h-56 w-full aspect-auto">
+            <ChartContainer config={masteryConfig} className="h-48 w-full aspect-auto @min-[48rem]/learning-grid:h-56">
               <BarChart accessibilityLayer data={mastery} layout="vertical" margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="label" width={48} tickLine={false} axisLine={false} />
@@ -248,7 +248,7 @@ export function LearnerDashboardSummary({
         <CardHeader><CardTitle>完成方式</CardTitle><CardDescription>独立、提示与引导下的证据</CardDescription></CardHeader>
         <CardContent>
           {assistance.some((item) => item.count > 0) ? (
-            <ChartContainer config={assistanceConfig} className="h-56 w-full aspect-auto">
+            <ChartContainer config={assistanceConfig} className="h-48 w-full aspect-auto @min-[48rem]/learning-grid:h-56">
               <PieChart accessibilityLayer>
                 <ChartTooltip content={<ChartTooltipContent nameKey="key" hideLabel />} />
                 <Pie data={assistance} dataKey="count" nameKey="key" innerRadius={42} outerRadius={72} strokeWidth={4} />

@@ -17,13 +17,16 @@ import {
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { CanvasView } from '@/features/canvas/components/CanvasView'
+import { CalendarPeekPane } from '@/features/calendar/components/CalendarPeekPane'
 import { ConversationsPane, SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
 import { useConversations } from '@/features/conversations/store'
 import { DocumentPeekPane } from '@/features/documents/components/DocumentPeekPane'
+import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
 import { PresentationDrawerContent } from '@/features/presentations'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
@@ -63,6 +66,7 @@ function persistSidebarWidth(width: number): void {
  * personal dashboard. Compact object details continue to use the shared Drawer. */
 export function DesktopApp() {
   const { theme } = useTheme()
+  const isMobile = useIsMobile()
   const workspaces = useWorkspace((state) => state.list)
   const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
   const activeWorkspace = workspaces.find((project) => project.id === selectedWorkspaceId)
@@ -74,11 +78,14 @@ export function DesktopApp() {
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
   const openThread = surface?.kind === 'thread' ? surface : null
   const documentId = surface?.kind === 'document' ? surface.documentId : null
+  const calendarEventId = surface?.kind === 'calendar' ? surface.eventId : null
   const canvasId = surface?.kind === 'canvas' ? surface.canvasId : null
   const presentationId = surface?.kind === 'presentation' ? surface.presentationId : null
+  const sourceDetailOpen = useKnowledgeSources((state) => Boolean(state.selectedSource))
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const [groupContextOpen, setGroupContextOpen] = useState(false)
+  const [mobileConversationOpen, setMobileConversationOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
 
@@ -86,7 +93,14 @@ export function DesktopApp() {
     window.lingxiloop?.windowChrome?.setTheme(theme)
   }, [theme])
 
-  useEffect(() => { setGroupContextOpen(Boolean(selectedConversation)) }, [selectedConversation?.id])
+  useEffect(() => {
+    setGroupContextOpen(Boolean(selectedConversation) && !isMobile)
+    if (!selectedConversation) setMobileConversationOpen(false)
+  }, [isMobile, selectedConversation?.id])
+
+  useEffect(() => {
+    if (isMobile && (surface || sourceDetailOpen)) setGroupContextOpen(false)
+  }, [isMobile, sourceDetailOpen, surface])
 
 
   useEffect(() => {
@@ -102,7 +116,7 @@ export function DesktopApp() {
       const visible = useConversations.getState().list
       if (action.id === 'conversation-index') {
         const target = visible[action.index ?? -1]
-        if (target) { event.preventDefault(); useApp.getState().selectConversation(target.id) }
+        if (target) { event.preventDefault(); useApp.getState().selectConversation(target.id); if (isMobile) setMobileConversationOpen(true) }
         return
       }
       if (visible.length === 0) return
@@ -112,14 +126,20 @@ export function DesktopApp() {
       if (!target) return
       event.preventDefault()
       useApp.getState().selectConversation(target.id)
+      if (isMobile) setMobileConversationOpen(true)
     }
     window.addEventListener('keydown', onKeyDown, true)
     return () => window.removeEventListener('keydown', onKeyDown, true)
-  }, [commandPaletteOpen, selectedConversationId, view])
+  }, [commandPaletteOpen, isMobile, selectedConversationId, view])
 
   const dashboardOpen = view !== 'conversations'
   const openDashboard = () => {
     useApp.getState().setView('learning')
+  }
+  const openWorkspace = () => {
+    setMobileConversationOpen(false)
+    setGroupContextOpen(false)
+    useApp.getState().setView('conversations')
   }
   const handleSidebarLayoutChanged = (_layout: Record<string, number>, meta: LayoutChangedMeta) => {
     if (!meta.isUserInteraction) return
@@ -153,36 +173,64 @@ export function DesktopApp() {
       document.querySelector<HTMLElement>(`[data-presentation-open-trigger="${CSS.escape(closingPresentationId)}"]`)?.focus()
     })
   }
+  const focusContextTrigger = () => {
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>('[data-context-workspace-trigger]')?.focus({ preventScroll: true })
+    })
+  }
+  const closeMobileCanvasView = () => {
+    useSurface.getState().closeCanvasPeek()
+    setGroupContextOpen(false)
+    focusContextTrigger()
+  }
+  const closeMobileContext = () => {
+    setGroupContextOpen(false)
+    focusContextTrigger()
+  }
   const contextOpen = Boolean(selectedConversation && groupContextOpen)
-  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || presentationId)
+  const mobileContextOpen = isMobile && contextOpen
+  const drawerCanvasId = isMobile ? canvasId : null
+  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || calendarEventId || presentationId || drawerCanvasId || mobileContextOpen)
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
 
   if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane /> }
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
+  else if (calendarEventId) { drawerTitle = '日历事件'; drawerContent = <CalendarPeekPane /> }
   else if (presentationId) { drawerTitle = 'HTML 演示'; drawerContent = <PresentationDrawerContent presentationId={presentationId} /> }
+  else if (drawerCanvasId) { drawerTitle = 'Canvas'; drawerContent = <CanvasView canvasId={drawerCanvasId} onBack={closeMobileCanvasView} /> }
+  else if (mobileContextOpen && selectedConversation) { drawerTitle = '资料与 Canvas 工作区'; drawerContent = <GroupContextContent conversationId={selectedConversation.id} /> }
 
   const closeDrawer = () => {
     const surfaces = useSurface.getState()
     if (infoParticipantId) surfaces.closeAgentInfo()
     else if (openThread) surfaces.closeThreadView()
     else if (documentId) surfaces.closeDocumentPeek()
+    else if (calendarEventId) surfaces.closeCalendarEventPeek()
     else if (presentationId) closePresentationView()
+    else if (drawerCanvasId) closeMobileCanvasView()
+    else if (mobileContextOpen) closeMobileContext()
   }
+  const drawerOwnsHeader = Boolean(calendarEventId || drawerCanvasId)
+  const fullBleedDrawer = Boolean(presentationId || drawerCanvasId)
+  const mobileChatOpen = isMobile && mobileConversationOpen && Boolean(selectedConversation)
+  const drawerWidth = isMobile
+    ? ' data-[vaul-drawer-direction=right]:w-screen data-[vaul-drawer-direction=right]:max-w-none'
+    : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
   return (
-    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-accent" data-electron={isElectron ? 'true' : 'false'} data-platform={platform}>
-      <WorkspaceRail
-        dashboardActive={dashboardOpen}
-        onOpenDashboard={openDashboard}
-        onOpenWorkspace={() => useApp.getState().setView('conversations')}
-      />
+    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-accent" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
+      {!mobileChatOpen && <WorkspaceRail
+          dashboardActive={dashboardOpen}
+          onOpenDashboard={openDashboard}
+          onOpenWorkspace={openWorkspace}
+        />}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-accent">
-        <div className="omb-drag flex h-5 shrink-0 items-center justify-center gap-1 px-2 text-accent-foreground">
+        {!isMobile && <div className="omb-drag flex h-5 shrink-0 items-center justify-center gap-1 px-2 text-accent-foreground" data-workspace-titlebar>
           {activeWorkspace && <CourseAvatar courseId={activeWorkspace.id} title={activeWorkspace.name} size="sm" className="!size-3 rounded-sm [&_[data-slot=avatar-fallback]]:rounded-sm [&_[data-slot=avatar-image]]:rounded-sm" />}
           <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeProjectName}</span>
-        </div>
+        </div>}
         <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-card text-card-foreground shadow-sm">
           {dashboardOpen ? (
             <PersonalDashboard
@@ -190,6 +238,24 @@ export function DesktopApp() {
               sidebarWidth={sidebarWidth}
               onLayoutChanged={handleSidebarLayoutChanged}
             />
+          ) : isMobile ? (
+            <div className="h-full min-h-0 min-w-0" data-mobile-conversation-page={mobileChatOpen ? 'chat' : 'list'}>
+              {mobileChatOpen ? (
+                <ChatPane
+                  onBackToConversations={() => {
+                    useApp.getState().selectConversation(null)
+                    setMobileConversationOpen(false)
+                  }}
+                  groupContextOpen={contextOpen}
+                  onToggleGroupContext={() => setGroupContextOpen((open) => !open)}
+                />
+              ) : (
+                <div className="flex h-full min-h-0 flex-col bg-card">
+                  <ConversationsPane onConversationSelected={() => setMobileConversationOpen(true)} />
+                  <SidebarUserFooter />
+                </div>
+              )}
+            </div>
           ) : <ResizablePanelGroup
             id={contextOpen ? 'desktop-three-panel-layout' : 'desktop-two-panel-layout'}
             orientation="horizontal"
@@ -209,7 +275,7 @@ export function DesktopApp() {
             {contextOpen && <>
               <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整资料与 Canvas 工作区宽度" title="拖动调整资料与 Canvas 工作区宽度" />
               <ResizablePanel id="context" defaultSize="30%" minSize={CONTEXT_COLUMN_MIN} maxSize={CONTEXT_COLUMN_MAX} className="min-h-0 min-w-0 bg-card">
-                <div id="desktop-context-workspace" className="h-full min-h-0">
+                <div id="conversation-context-workspace" className="h-full min-h-0">
                   {selectedConversation && <GroupContextContent conversationId={selectedConversation.id} />}
                 </div>
               </ResizablePanel>
@@ -219,8 +285,11 @@ export function DesktopApp() {
       </div>
 
       <Drawer open={drawerOpen} onOpenChange={(open) => { if (!open) closeDrawer() }} direction="right">
-        <DrawerContent className={`w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]${presentationId ? ' max-w-none overflow-hidden p-0 before:inset-0 before:rounded-none before:border-0 sm:max-w-none data-[vaul-drawer-direction=right]:w-[min(92vw,72rem)] data-[vaul-drawer-direction=right]:sm:max-w-none' : ''}`}>
-          <DrawerHeader className="border-b border-hairline p-4">
+        <DrawerContent id={mobileContextOpen ? 'conversation-context-workspace' : undefined} className={`${drawerWidth}${fullBleedDrawer ? ' max-w-none overflow-hidden p-0 before:inset-0 before:rounded-none before:border-0 sm:max-w-none' : ''}`} style={isMobile ? { top: 'env(safe-area-inset-top)', bottom: 'env(safe-area-inset-bottom)' } : undefined}>
+          {drawerOwnsHeader ? <>
+            <DrawerTitle className="sr-only">{drawerTitle}</DrawerTitle>
+            <DrawerDescription className="sr-only">{drawerTitle}</DrawerDescription>
+          </> : <DrawerHeader className="border-b border-hairline p-4">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <DrawerTitle className="truncate">{drawerTitle}</DrawerTitle>
@@ -232,12 +301,12 @@ export function DesktopApp() {
                 </Button>
               </DrawerClose>
             </div>
-          </DrawerHeader>
+          </DrawerHeader>}
           <div className="min-h-0 flex-1 overflow-hidden">{drawerContent}</div>
         </DrawerContent>
       </Drawer>
 
-      <Dialog open={Boolean(canvasId)} onOpenChange={(open) => { if (!open) closeCanvasView() }}>
+      <Dialog open={!isMobile && Boolean(canvasId)} onOpenChange={(open) => { if (!open) closeCanvasView() }}>
         <DialogContent showCloseButton={false} className="h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] max-w-none gap-0 overflow-hidden rounded-2xl bg-card p-0 sm:max-w-none">
           <DialogTitle className="sr-only">Canvas</DialogTitle>
           <DialogDescription className="sr-only">协作画布</DialogDescription>

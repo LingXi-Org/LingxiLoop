@@ -103,8 +103,8 @@ function DetailCard({
               {count}
             </Badge>
             <DialogTrigger asChild>
-              <Button type="button" variant="outline" size="sm" aria-label={`查看全部${title}`}>
-                查看全部
+              <Button type="button" variant="outline" size="sm" className="@max-[32rem]/learning-grid:size-9 @max-[32rem]/learning-grid:p-0" aria-label={`查看全部${title}`}>
+                <span className="@max-[32rem]/learning-grid:sr-only">查看全部</span>
                 <ArrowIcon />
               </Button>
             </DialogTrigger>
@@ -214,7 +214,7 @@ export function LearnerOverviewDashboard({
   const missionLabel = personal ? '学习计划' : '学习任务'
 
   return (
-    <div className="grid gap-6 @min-[64rem]/learning-grid:grid-cols-12">
+    <div className="grid gap-3 @min-[48rem]/learning-grid:gap-6 @min-[64rem]/learning-grid:grid-cols-12">
       <LearnerDashboardSummary overview={overview} model={model} missionLabel={missionLabel} />
 
       <DetailCard
