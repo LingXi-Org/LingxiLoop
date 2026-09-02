@@ -5,6 +5,7 @@ import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { hashInvitationToken } from '../http/invitation-token.js'
 import { provisionPersonalWorkspace } from '../modules/companies/public.js'
+import { ensureTeacherPlans } from '../modules/entitlements/public.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
 const INVITER_ID = 'u-registration-inviter'
@@ -73,6 +74,7 @@ test('[integration] ordinary provisioning is invitation-free and idempotent', as
 
 test('[integration] project invitation is redeemed during provisioning', async () => {
   const projectToken = 'registration-project-invite'
+  await ensureTeacherPlans(pool)
   await pool.query(`INSERT INTO projects(id,company_id,kind,plan_id,name,status,created_by) VALUES('project-registration',$1,'TEACHING','plan-teacher-free','Registration Course','ACTIVE',$2)`, [companyId, INVITER_ID])
   await pool.query(`INSERT INTO courses(id,company_id,project_id,created_by) VALUES('course-registration',$1,'project-registration',$2)`, [companyId, INVITER_ID])
   await pool.query(`INSERT INTO project_invitations(token_hash,project_id,company_id,invited_by,email,max_uses,expires_at) VALUES($1,'project-registration',$2,$3,'student@example.com',1,NOW()+INTERVAL '1 day')`, [hashInvitationToken(projectToken), companyId, INVITER_ID])
