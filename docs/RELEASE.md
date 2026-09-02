@@ -11,6 +11,7 @@ Required GitHub `production` configuration:
 
 The management UI is published at `https://admin.lingxilearn.cn`; the Worker preview URL is disabled.
 CI uploads and promotes a Worker Version without rewriting the existing Custom Domain, so its account token does not need zone-route permission. Use the normal `control:deploy` command only when intentionally changing that domain binding.
+The Worker reaches OpenShip through the dashboard's same-origin `/api/proxy/api/*` path; `/api/*` on the management hostname is not the OpenShip API.
 
 Required Worker secrets are managed only with `wrangler secret put`: `BETTER_AUTH_SECRET`, `GATEWAY_HMAC_SECRET`, `RELEASE_HMAC_SECRET`, `BOOTSTRAP_ADMIN_TOKEN`, `OPENSHIP_PAT`, `RESEND_API_KEY`, `RESEND_FROM`, `TURNSTILE_SECRET_KEY`, and optional Cloudflare Access service-token values. The non-secret `OPENSHIP_PROJECT_IDS` list lives in `wrangler.jsonc`. After the first verified administrator is created through `/api/internal/bootstrap-admin`, delete `BOOTSTRAP_ADMIN_TOKEN` with Wrangler.
 

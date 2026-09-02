@@ -275,6 +275,7 @@ app.post('/api/internal/bootstrap-admin', async (c) => {
 
 const openShipRead = /^(?:\/projects(?:\/[^/]+)?|\/servers(?:\/[^/]+)?|\/deployments(?:\/[^/]+(?:\/(?:logs|stream|info|usage|build))?)?)$/
 const openShipWrite = /^\/deployments(?:\/build\/access|\/[^/]+\/(?:redeploy|rollback|cancel|restart|keep|reject))$/
+const openShipUrl = (env: Bindings, path: string) => new URL(`/api/proxy/api${path}`, env.OPENSHIP_BASE_URL)
 
 async function openShip(c: AppContext): Promise<Response> {
   const session = requireAdmin(c)
@@ -288,7 +289,7 @@ async function openShip(c: AppContext): Promise<Response> {
   headers.delete('host')
   if (c.env.CF_ACCESS_CLIENT_ID) headers.set('cf-access-client-id', c.env.CF_ACCESS_CLIENT_ID)
   if (c.env.CF_ACCESS_CLIENT_SECRET) headers.set('cf-access-client-secret', c.env.CF_ACCESS_CLIENT_SECRET)
-  const target = new URL(`/api${path}${new URL(c.req.url).search}`, c.env.OPENSHIP_BASE_URL)
+  const target = openShipUrl(c.env, `${path}${new URL(c.req.url).search}`)
   const response = await fetch(target, { method: c.req.method, headers, body: c.req.method === 'GET' ? null : c.req.raw.body })
   if (c.req.method !== 'GET') c.executionCtx.waitUntil(c.env.DB.prepare(`INSERT INTO control_audit(id,actor_user_id,action,resource,reason,created_at) VALUES(?,?,?,?,?,?)`)
     .bind(crypto.randomUUID(), session.user.id, c.req.method, `openship:${path}`, c.req.header('x-control-reason') ?? null, Date.now()).run().then(() => undefined))
@@ -408,7 +409,7 @@ app.post('/api/internal/releases', async (c) => {
   const completed = new Map(previous.filter((item) => item.deploymentId).map((item) => [item.projectId, item]))
   const attempted = await Promise.all(projectIds.filter((projectId) => !completed.has(projectId)).map(async (projectId) => {
     try {
-      const response = await fetch(new URL('/api/deployments', c.env.OPENSHIP_BASE_URL), {
+      const response = await fetch(openShipUrl(c.env, '/deployments'), {
         method: 'POST', headers: { authorization: `Bearer ${c.env.OPENSHIP_PAT}`, 'content-type': 'application/json' },
         body: JSON.stringify({ projectId, branch: 'main', commitSha: input.deployCommitSha, environment: 'production' }),
       })

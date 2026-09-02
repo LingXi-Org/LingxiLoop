@@ -42,7 +42,7 @@ describe('control-plane trust boundaries', () => {
     const openShip = fetchMock.get('https://openship.example.com')
     for (const projectId of ['proj_test-a', 'proj_test-b']) {
       openShip.intercept({
-        path: '/api/deployments', method: 'POST',
+        path: '/api/proxy/api/deployments', method: 'POST',
         body: JSON.stringify({ projectId, branch: 'main', commitSha: deployCommitSha, environment: 'production' }),
       }).reply(201, { id: `dep_${projectId}` })
     }
