@@ -277,31 +277,64 @@ const openShipRead = /^(?:\/projects(?:\/[^/]+)?|\/servers(?:\/[^/]+)?|\/deploym
 const openShipWrite = /^\/deployments(?:\/build\/access|\/[^/]+\/(?:redeploy|rollback|cancel|restart|keep|reject))$/
 const openShipUrl = (env: Bindings, path: string) => new URL(`/api/proxy/api${path}`, env.OPENSHIP_BASE_URL)
 
-async function openShip(c: AppContext): Promise<Response> {
-  const session = requireAdmin(c)
-  if (session instanceof Response) return session
-  const path = c.req.path.slice('/api/control/openship'.length)
-  const allowed = c.req.method === 'GET' ? openShipRead.test(path) : c.req.method === 'POST' && openShipWrite.test(path)
-  if (!allowed) return c.json({ error: 'OpenShip capability is not exposed' }, 404)
+function openShipHeaders(c: AppContext): Headers {
   const headers = new Headers(c.req.raw.headers)
   headers.set('authorization', `Bearer ${c.env.OPENSHIP_PAT}`)
   headers.delete('cookie')
   headers.delete('host')
   if (c.env.CF_ACCESS_CLIENT_ID) headers.set('cf-access-client-id', c.env.CF_ACCESS_CLIENT_ID)
   if (c.env.CF_ACCESS_CLIENT_SECRET) headers.set('cf-access-client-secret', c.env.CF_ACCESS_CLIENT_SECRET)
+  return headers
+}
+
+async function openShip(c: AppContext): Promise<Response> {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  const path = c.req.path.slice('/api/control/openship'.length)
+  const allowed = c.req.method === 'GET' ? openShipRead.test(path) : c.req.method === 'POST' && openShipWrite.test(path)
+  if (!allowed) return c.json({ error: 'OpenShip capability is not exposed' }, 404)
   const target = openShipUrl(c.env, `${path}${new URL(c.req.url).search}`)
-  const response = await fetch(target, { method: c.req.method, headers, body: c.req.method === 'GET' ? null : c.req.raw.body })
+  const response = await fetch(target, { method: c.req.method, headers: openShipHeaders(c), body: c.req.method === 'GET' ? null : c.req.raw.body })
   if (c.req.method !== 'GET') c.executionCtx.waitUntil(c.env.DB.prepare(`INSERT INTO control_audit(id,actor_user_id,action,resource,reason,created_at) VALUES(?,?,?,?,?,?)`)
     .bind(crypto.randomUUID(), session.user.id, c.req.method, `openship:${path}`, c.req.header('x-control-reason') ?? null, Date.now()).run().then(() => undefined))
   return response
 }
+
+app.get('/api/control/deployment-dashboard', async (c) => {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  const response = await fetch(openShipUrl(c.env, '/deployments?page=1&perPage=30'), { headers: openShipHeaders(c) })
+  if (!response.ok) return c.json({ error: 'OpenShip unavailable' }, 502)
+  const payload = await response.json<{ data?: Array<Record<string, unknown>>; total?: number }>()
+  const rows = Array.isArray(payload.data) ? payload.data : []
+  c.header('cache-control', 'private, no-store')
+  return c.json({
+    data: rows.map((row) => ({
+      id: row.id,
+      projectId: row.projectId,
+      projectName: row.projectName,
+      status: row.status,
+      commitSha: row.commitSha,
+      commitMessage: row.commitMessage,
+      trigger: row.trigger,
+      environment: row.environment,
+      framework: row.framework,
+      buildDurationMs: row.buildDurationMs,
+      version: row.version,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      isActive: row.isActive,
+    })),
+    total: typeof payload.total === 'number' ? payload.total : rows.length,
+  })
+})
 
 app.all('/api/control/openship/*', openShip)
 
 app.get('/api/control/releases', async (c) => {
   const session = requireAdmin(c)
   if (session instanceof Response) return session
-  const { results } = await c.env.DB.prepare(`SELECT * FROM release_requests ORDER BY created_at DESC LIMIT 100`).all()
+  const { results } = await c.env.DB.prepare(`SELECT commit_sha,status,created_at,updated_at FROM release_requests ORDER BY created_at DESC LIMIT 20`).all()
   return c.json({ data: results })
 })
 
@@ -326,7 +359,7 @@ app.get('/api/control/status-page', async (c) => {
     }>()
     const history = Object.fromEntries(Object.entries(heartbeat.heartbeatList).map(([id, rows]) => [id, rows.slice(-50)]))
     const latest = Object.fromEntries(Object.entries(history).map(([id, rows]) => [id, rows.at(-1) ?? null]))
-    c.header('cache-control', 'private, no-store')
+    c.header('cache-control', 'private, max-age=30, stale-while-revalidate=60')
     return c.json({ config: page.config, incident: page.incident, groups: page.publicGroupList, maintenanceList: page.maintenanceList, history, latest, uptime: heartbeat.uptimeList })
   } catch {
     return c.json({ error: 'status provider unavailable' }, 502)

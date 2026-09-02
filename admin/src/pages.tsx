@@ -352,36 +352,6 @@ export function LoginPage() {
   return <AuthScreen />
 }
 
-export function ReleaseManagementPage() {
-  const releases = useCustom<{ data: AdminRecord[] }>({ url: `${API_URL}/control/releases`, method: 'get' })
-  const deployments = useCustom<Record<string, unknown>>({ url: `${API_URL}/control/openship/deployments`, method: 'get' })
-  const deploymentPayload = deployments.query.data?.data as { data?: unknown; deployments?: unknown } | AdminRecord[] | undefined
-  const candidates = Array.isArray(deploymentPayload) ? deploymentPayload : deploymentPayload?.deployments ?? deploymentPayload?.data
-  const rows = Array.isArray(candidates) ? candidates as AdminRecord[] : []
-  const releaseRows = releases.query.data?.data.data ?? []
-  const [selected, setSelected] = useState<string | null>(null)
-  const [stream, setStream] = useState<string[]>([])
-  useEffect(() => {
-    if (!selected) return
-    const events = new EventSource(`${API_URL}/control/openship/deployments/${encodeURIComponent(selected)}/stream`)
-    events.onmessage = (event) => setStream((current) => [...current.slice(-199), event.data])
-    events.onerror = () => events.close()
-    return () => events.close()
-  }, [selected])
-  const mutate = async (deploymentId: string, action: string) => {
-    const reason = await promptSensitiveAction({ title: `${action} 部署？`, description: `部署 ${deploymentId}`, confirmLabel: action, cancelLabel: '取消', inputLabel: '操作原因', inputRequired: true, tone: action === 'rollback' || action === 'cancel' || action === 'reject' ? 'destructive' : undefined })
-    if (!reason) return
-    await toastAction(adminFetch(`/control/openship/deployments/${encodeURIComponent(deploymentId)}/${action}`, { method: 'POST', headers: { 'x-control-reason': reason }, body: JSON.stringify(action === 'redeploy' ? { useExistingCommit: true } : {}) }), { loading: '更新部署状态…', success: `${action} 已提交` })
-    await Promise.all([deployments.query.refetch(), releases.query.refetch()])
-  }
-  return <div className="space-y-6"><PageHeading title="发布管理" description="经 CI 触发 OpenShip，查看部署、日志并处理失败决策。" actions={[<Button key="refresh" variant="outline" onClick={() => void deployments.query.refetch()}>刷新</Button>]} />
-    <Card><CardHeader><CardTitle className="text-base">CI 发布请求</CardTitle><CardDescription>commit SHA 是幂等键，镜像始终按 digest 固定。</CardDescription></CardHeader><CardContent><pre className="max-h-64 overflow-auto whitespace-pre-wrap text-xs">{JSON.stringify(releaseRows, null, 2)}</pre></CardContent></Card>
-    <div className="grid gap-4 xl:grid-cols-2">{rows.map((deployment) => { const id = String(deployment.id ?? deployment.deployment_id); return <Card key={id}><CardHeader><CardTitle className="text-base">{id}</CardTitle><CardDescription>{display(deployment.status ?? null)} · {display(deployment.commit_sha ?? deployment.commit ?? null)}</CardDescription></CardHeader><CardContent className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => setSelected(id)}>实时日志</Button>{['restart', 'redeploy', 'cancel', 'rollback', 'keep', 'reject'].map((action) => <Button key={action} size="sm" variant={action === 'cancel' || action === 'rollback' || action === 'reject' ? 'destructive' : 'outline'} onClick={() => void mutate(id, action)}>{action}</Button>)}</CardContent></Card> })}</div>
-    {rows.length === 0 ? <EmptyPanel message="暂无 OpenShip 部署记录" /> : null}
-    {selected ? <Card><CardHeader><CardTitle>实时日志 · {selected}</CardTitle></CardHeader><CardContent><pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap text-xs">{stream.join('\n')}</pre></CardContent></Card> : null}
-  </div>
-}
-
 export function ForbiddenPage() {
   return <main className="min-h-svh bg-muted flex items-center justify-center p-6"><Card className="w-full max-w-sm"><CardHeader><CardTitle>无平台权限</CardTitle><CardDescription>当前 D1 用户没有管理员角色。</CardDescription></CardHeader><CardContent><Button className="w-full" onClick={() => location.assign('/login')}>返回登录</Button></CardContent></Card></main>
 }

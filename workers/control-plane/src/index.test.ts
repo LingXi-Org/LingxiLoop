@@ -20,6 +20,7 @@ describe('control-plane trust boundaries', () => {
     expect(authSettings).toEqual({ session_expires_in: 604800, otp_expires_in: 300, rate_limit_window: 60, rate_limit_max: 60 })
     const response = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/control/releases')
     expect(response.status).toBe(401)
+    expect((await SELF.fetch('https://admin.example.com/api/control/deployment-dashboard')).status).toBe(401)
     const authSettingsResponse = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/control/auth-settings')
     expect(authSettingsResponse.status).toBe(401)
   })
@@ -112,6 +113,14 @@ describe('control-plane trust boundaries', () => {
       .reply(200, { config: { title: 'LingxiLoop 服务状态' }, incident: null, publicGroupList: [{ id: 1, name: '公共入口', monitorList: [{ id: 11, name: 'Web' }] }], maintenanceList: [] })
     upstream.intercept({ path: '/api/status-page/heartbeat/lingxiloop' })
       .reply(200, { heartbeatList: { 11: [{ status: 0 }, { status: 1, ping: 26 }] }, uptimeList: { '11_24': 1 } })
+    fetchMock.get('https://openship.example.com').intercept({ path: '/api/proxy/api/deployments?page=1&perPage=30' }).reply(200, {
+      data: [{
+        id: 'dep_test', projectId: 'proj_test', projectName: 'app-a', status: 'ready', commitSha: 'a'.repeat(40), commitMessage: 'release', trigger: 'manual',
+        environment: 'production', framework: 'docker-compose', buildDurationMs: 1250, version: 3, createdAt: '2026-09-03T00:00:00.000Z',
+        updatedAt: '2026-09-03T00:00:02.000Z', isActive: true, envVars: { SECRET: 'must-not-leak' }, meta: { composeServices: ['large'] },
+      }],
+      total: 119,
+    })
     try {
       const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
         method: 'POST',
@@ -128,6 +137,15 @@ describe('control-plane trust boundaries', () => {
         history: { 11: [{ status: 0 }, { status: 1, ping: 26 }] },
         latest: { 11: { status: 1, ping: 26 } },
         uptime: { '11_24': 1 },
+      })
+      const deployments = await SELF.fetch('https://admin.example.com/api/control/deployment-dashboard', { headers: { cookie: signIn.headers.get('set-cookie') ?? '' } })
+      expect(await deployments.json()).toEqual({
+        data: [{
+          id: 'dep_test', projectId: 'proj_test', projectName: 'app-a', status: 'ready', commitSha: 'a'.repeat(40), commitMessage: 'release', trigger: 'manual',
+          environment: 'production', framework: 'docker-compose', buildDurationMs: 1250, version: 3, createdAt: '2026-09-03T00:00:00.000Z',
+          updatedAt: '2026-09-03T00:00:02.000Z', isActive: true,
+        }],
+        total: 119,
       })
       fetchMock.assertNoPendingInterceptors()
     } finally { fetchMock.deactivate() }
