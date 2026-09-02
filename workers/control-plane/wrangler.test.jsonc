@@ -13,6 +13,7 @@
   "vars": {
     "ORIGIN_BASE_URL": "https://origin.example.com",
     "OPENSHIP_BASE_URL": "https://openship.example.com",
+    "OPENSHIP_PROJECT_IDS": "proj_test-a,proj_test-b",
     "AUTH_ALLOWED_HOSTS": "loop.example.com,admin.example.com",
     "APP_VERSION": "test"
   }

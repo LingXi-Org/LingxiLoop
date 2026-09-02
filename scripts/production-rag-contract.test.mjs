@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { updateImageTags } from './update-deployment-images.mjs'
+import { buildReleaseRequest } from './trigger-openship-release.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
@@ -179,8 +180,15 @@ test('main publishes unique tags and updates Compose before Worker deployment', 
 
   assert.match(workflow, /update-manifests:[\s\S]*needs: publish/)
   assert.match(workflow, /deploy:[\s\S]*needs: update-manifests/)
-  assert.match(workflow, /control:d1:remote[\s\S]*control:deploy/)
-  assert.doesNotMatch(workflow, /image-digest-|api\/internal\/releases/)
+  assert.match(workflow, /control:d1:remote[\s\S]*wrangler versions upload[\s\S]*wrangler versions deploy/)
+  assert.match(workflow, /wrangler versions deploy[\s\S]*trigger-openship-release\.mjs/)
+  const release = buildReleaseRequest('secret', 'a'.repeat(40), 'b'.repeat(40), 'Example/LingxiLoop')
+  assert.deepEqual(JSON.parse(release.body), {
+    commitSha: 'a'.repeat(40),
+    deployCommitSha: 'b'.repeat(40),
+    imageDigests: Object.fromEntries(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway'].map((name) => [name, `accel.way2api.fun/ghcr.io/example/lingxiloop-${name}:${'a'.repeat(40)}`])),
+  })
+  assert.match(release.signature, /^[\w-]{43}$/)
   assert.doesNotMatch(workflow, /pages deploy|PRODUCTION_SSH|deploy-production\.sh/)
   assert.match(compose, /LINGXILOOP_GATEWAY_HMAC_SECRET: \$\{LINGXILOOP_GATEWAY_HMAC_SECRET:\?/)
   assert.match(compose, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-2\}/)

@@ -1,4 +1,4 @@
-import { applyD1Migrations, env, SELF } from 'cloudflare:test'
+import { applyD1Migrations, env, fetchMock, SELF } from 'cloudflare:test'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 declare module 'cloudflare:test' {
@@ -28,6 +28,51 @@ describe('control-plane trust boundaries', () => {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: 'wrong', email: 'admin@example.com' }),
     })
     expect(response.status).toBe(401)
+  })
+
+  it('fans one signed release out to every OpenShip project exactly once', async () => {
+    const commitSha = 'a'.repeat(40)
+    const deployCommitSha = 'b'.repeat(40)
+    const body = JSON.stringify({ commitSha, deployCommitSha, imageDigests: { server: `server:${commitSha}` } })
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode('test-release-secret'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    const bytes = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body)))
+    const signature = btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
+    fetchMock.activate()
+    fetchMock.disableNetConnect()
+    const openShip = fetchMock.get('https://openship.example.com')
+    for (const projectId of ['proj_test-a', 'proj_test-b']) {
+      openShip.intercept({
+        path: '/api/deployments', method: 'POST',
+        body: JSON.stringify({ projectId, branch: 'main', commitSha: deployCommitSha, environment: 'production' }),
+      }).reply(201, { id: `dep_${projectId}` })
+    }
+    try {
+      const request = () => SELF.fetch('https://admin.example.com/api/internal/releases', {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-release-signature': signature }, body,
+      })
+      const first = await request()
+      expect({ status: first.status, body: await first.json() }).toEqual({
+        status: 202,
+        body: {
+          commitSha,
+          status: 'triggered',
+          deployments: [
+            { projectId: 'proj_test-a', deploymentId: 'dep_proj_test-a' },
+            { projectId: 'proj_test-b', deploymentId: 'dep_proj_test-b' },
+          ],
+        },
+      })
+      expect((await request()).status).toBe(200)
+      expect(await env.DB.prepare(`SELECT status,openship_deployment_id,error FROM release_requests WHERE commit_sha=?`).bind(commitSha).first()).toEqual({
+        status: 'triggered',
+        openship_deployment_id: JSON.stringify([
+          { projectId: 'proj_test-a', deploymentId: 'dep_proj_test-a' },
+          { projectId: 'proj_test-b', deploymentId: 'dep_proj_test-b' },
+        ]),
+        error: null,
+      })
+      fetchMock.assertNoPendingInterceptors()
+    } finally { fetchMock.deactivate() }
   })
 
   it('rejects cross-site authentication writes and registration without CAPTCHA', async () => {

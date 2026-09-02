@@ -11,7 +11,7 @@ type Secrets = {
   RELEASE_HMAC_SECRET: string
   BOOTSTRAP_ADMIN_TOKEN: string
   OPENSHIP_PAT: string
-  OPENSHIP_PROJECT_ID: string
+  OPENSHIP_PROJECT_IDS: string
   RESEND_API_KEY: string
   RESEND_FROM: string
   TURNSTILE_SECRET_KEY: string
@@ -390,27 +390,41 @@ app.all('/api/meta', (c) => originRequest(c.env, c.req.path, { method: c.req.met
 app.post('/api/internal/releases', async (c) => {
   const raw = await c.req.text()
   if (!await secretMatches(await hmac(c.env.RELEASE_HMAC_SECRET, raw), c.req.header('x-release-signature') ?? '')) return c.json({ error: 'invalid release signature' }, 401)
-  const input = JSON.parse(raw) as { commitSha?: string; imageDigests?: Record<string, string> }
-  if (!input.commitSha || !/^[0-9a-f]{40}$/.test(input.commitSha) || !input.imageDigests) return c.json({ error: 'invalid release payload' }, 400)
-  const existing = await c.env.DB.prepare(`SELECT * FROM release_requests WHERE commit_sha=?`).bind(input.commitSha).first()
-  if (existing) return c.json(existing)
+  let input: { commitSha?: string; deployCommitSha?: string; imageDigests?: Record<string, string> }
+  try { input = JSON.parse(raw) as typeof input } catch { return c.json({ error: 'invalid release payload' }, 400) }
+  if (!input.commitSha || !/^[0-9a-f]{40}$/.test(input.commitSha) || !input.deployCommitSha || !/^[0-9a-f]{40}$/.test(input.deployCommitSha) || !input.imageDigests || Array.isArray(input.imageDigests)) return c.json({ error: 'invalid release payload' }, 400)
+  const projectIds = [...new Set(c.env.OPENSHIP_PROJECT_IDS.split(',').map((id) => id.trim()).filter(Boolean))]
+  if (!projectIds.length || projectIds.some((id) => !/^proj_[\w-]+$/.test(id))) return c.json({ error: 'invalid OpenShip project configuration' }, 500)
+  const existing = await c.env.DB.prepare(`SELECT status,openship_deployment_id FROM release_requests WHERE commit_sha=?`).bind(input.commitSha).first<{ status: string; openship_deployment_id: string | null }>()
+  if (existing?.status === 'triggered') return c.json(existing)
+  let previous: Array<{ projectId: string; deploymentId?: string; error?: string }> = []
+  try {
+    const parsed = JSON.parse(existing?.openship_deployment_id ?? '[]') as unknown
+    if (Array.isArray(parsed)) previous = parsed as typeof previous
+  } catch { previous = [] }
   const now = Date.now()
-  await c.env.DB.prepare(`INSERT INTO release_requests(commit_sha,image_digests,status,created_at,updated_at) VALUES(?,?,'triggering',?,?)`)
-    .bind(input.commitSha, JSON.stringify(input.imageDigests), now, now).run()
-  const response = await fetch(new URL('/api/deployments/build/access', c.env.OPENSHIP_BASE_URL), {
-    method: 'POST', headers: { authorization: `Bearer ${c.env.OPENSHIP_PAT}`, 'content-type': 'application/json' },
-    body: JSON.stringify({
-      projectId: c.env.OPENSHIP_PROJECT_ID,
-      branch: 'main',
-      environment: 'production',
-      envVars: { ...input.imageDigests, LINGXILOOP_GATEWAY_HMAC_SECRET: c.env.GATEWAY_HMAC_SECRET },
-    }),
-  })
-  const result = await response.json().catch(() => ({})) as { deployment_id?: string; error?: string }
-  const status = response.ok ? 'triggered' : 'failed'
+  if (existing) await c.env.DB.prepare(`UPDATE release_requests SET image_digests=?,status='triggering',error=NULL,updated_at=? WHERE commit_sha=?`).bind(JSON.stringify(input.imageDigests), now, input.commitSha).run()
+  else await c.env.DB.prepare(`INSERT INTO release_requests(commit_sha,image_digests,status,created_at,updated_at) VALUES(?,?,'triggering',?,?)`).bind(input.commitSha, JSON.stringify(input.imageDigests), now, now).run()
+  const completed = new Map(previous.filter((item) => item.deploymentId).map((item) => [item.projectId, item]))
+  const attempted = await Promise.all(projectIds.filter((projectId) => !completed.has(projectId)).map(async (projectId) => {
+    try {
+      const response = await fetch(new URL('/api/deployments', c.env.OPENSHIP_BASE_URL), {
+        method: 'POST', headers: { authorization: `Bearer ${c.env.OPENSHIP_PAT}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ projectId, branch: 'main', commitSha: input.deployCommitSha, environment: 'production' }),
+      })
+      const result = await response.json().catch(() => ({})) as { id?: string; deploymentId?: string; deployment_id?: string; error?: string; data?: { id?: string } }
+      const deploymentId = result.deployment_id ?? result.deploymentId ?? result.id ?? result.data?.id
+      return response.ok && deploymentId ? { projectId, deploymentId } : { projectId, error: result.error ?? `OpenShip ${response.status}` }
+    } catch { return { projectId, error: 'OpenShip unavailable' } }
+  }))
+  for (const item of attempted) completed.set(item.projectId, item)
+  const deployments = projectIds.map((projectId) => completed.get(projectId) ?? { projectId, error: 'not triggered' })
+  const succeeded = deployments.filter((item) => item.deploymentId).length
+  const status = succeeded === projectIds.length ? 'triggered' : succeeded ? 'partial' : 'failed'
+  const error = deployments.filter((item) => item.error).map((item) => `${item.projectId}: ${item.error}`).join('; ') || null
   await c.env.DB.prepare(`UPDATE release_requests SET status=?,openship_deployment_id=?,error=?,updated_at=? WHERE commit_sha=?`)
-    .bind(status, result.deployment_id ?? null, response.ok ? null : result.error ?? `OpenShip ${response.status}`, Date.now(), input.commitSha).run()
-  return c.json({ commitSha: input.commitSha, status, deploymentId: result.deployment_id ?? null }, response.ok ? 202 : 502)
+    .bind(status, JSON.stringify(deployments), error, Date.now(), input.commitSha).run()
+  return c.json({ commitSha: input.commitSha, status, deployments }, status === 'triggered' ? 202 : 502)
 })
 
 app.all('/api/control/platform/*', async (c) => {
