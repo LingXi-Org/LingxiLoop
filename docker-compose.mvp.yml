@@ -61,7 +61,7 @@ services:
     logging: *quiet-logging
 
   open-notebook:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:e6007887745145e57d3b16524f5802fea01638c6
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -96,7 +96,7 @@ services:
     logging: *quiet-logging
 
   wukongim:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:e6007887745145e57d3b16524f5802fea01638c6
     pull_policy: always
     restart: unless-stopped
     environment:
@@ -116,7 +116,7 @@ services:
     logging: *quiet-logging
 
   db-migrate:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:e6007887745145e57d3b16524f5802fea01638c6
     pull_policy: always
     restart: "no"
     command: ["npm", "run", "db:migrate"]
@@ -134,7 +134,7 @@ services:
     logging: *quiet-logging
 
   lingxiloop:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:e6007887745145e57d3b16524f5802fea01638c6
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -202,7 +202,7 @@ services:
     logging: *quiet-logging
 
   worker:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:e6007887745145e57d3b16524f5802fea01638c6
     pull_policy: always
     restart: unless-stopped
     command: ["npm", "run", "worker:start"]
@@ -224,7 +224,7 @@ services:
     logging: *quiet-logging
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:e6007887745145e57d3b16524f5802fea01638c6
     pull_policy: always
     restart: unless-stopped
     depends_on:
