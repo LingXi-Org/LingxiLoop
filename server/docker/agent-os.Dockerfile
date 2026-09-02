@@ -16,8 +16,9 @@ RUN sed -i "s|http://deb.debian.org|${APT_MIRROR}|g; s|https://deb.debian.org|${
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --registry="$NPM_REGISTRY" --omit=dev --no-audit --no-fund
+COPY server/package.json server/package-lock.json ./
+RUN npm ci --registry="$NPM_REGISTRY" --omit=dev --no-audit --no-fund \
+  && npm cache clean --force
 COPY server ./server
 
 ENV NODE_ENV=production \

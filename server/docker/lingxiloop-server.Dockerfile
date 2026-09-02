@@ -29,12 +29,7 @@ ARG APT_MIRROR=http://mirrors.aliyun.com
 FROM ${NODE_BASE_IMAGE} AS deps
 ARG NPM_REGISTRY
 WORKDIR /app
-COPY package.json package-lock.json ./
-# `--omit=dev` skips devDependencies — that's electron, vite,
-# electron-icon-builder (which transitively pulls phantomjs-prebuilt,
-# whose postinstall fails on linux/arm64), etc. Server runtime only
-# needs the actual runtime deps + tsx (moved out of devDeps for
-# exactly this reason).
+COPY server/package.json server/package-lock.json ./
 RUN npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer-offline
 
 # ─── stage 2: build the web SPA bundle ──────────────────────────────
@@ -87,7 +82,7 @@ WORKDIR /app
 # Copy node_modules from the deps stage first (rare changes → good
 # caching), then the source on top (changes every commit).
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json package-lock.json ./
+COPY --from=deps /app/package.json /app/package-lock.json ./
 COPY server ./server
 # Canvas service deliberately shares these dependency-free domain helpers with
 # the React client. They are loaded by tsx at runtime, so include them in the
