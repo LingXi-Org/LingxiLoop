@@ -19,7 +19,7 @@ x-runtime: &runtime
     DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-8}
     DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
     REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
-    AGENT_OS_URL: ${AGENT_OS_URL:?AGENT_OS_URL is required}
+    AGENT_OS_NODE_TIMEOUT_SECONDS: ${AGENT_OS_NODE_TIMEOUT_SECONDS:-15}
     AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required}
     WUKONG_API_URL: ${WUKONG_API_URL:?WUKONG_API_URL is required}
     WUKONG_WS_URL: ${WUKONG_WS_PUBLIC_URL:?WUKONG_WS_PUBLIC_URL is required}
@@ -86,6 +86,7 @@ services:
 
   worker:
     <<: *runtime
+    profiles: [worker]
     environment: *runtime-environment
     command: ["npm", "run", "worker:start"]
     depends_on:

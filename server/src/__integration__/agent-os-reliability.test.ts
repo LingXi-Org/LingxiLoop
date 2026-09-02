@@ -39,6 +39,7 @@ class IdempotentWukong extends WukongClient {
 
 before(async () => {
   process.env.AGENT_OS_SERVICE_TOKEN = SERVICE_TOKEN
+  process.env.AGENT_OS_NODE_TIMEOUT_SECONDS = '5'
   _setWukongClientForTests(new IdempotentWukong({ apiUrl: 'http://unused', wsUrl: 'ws://unused', apiToken: 'test', webhookSecret: WEBHOOK_SECRET }))
   await ensureSchemaOnce()
   const app = express()
@@ -128,6 +129,23 @@ async function postWebhook(body: string): Promise<Response> {
   return fetch(`${baseUrl}/webhooks/wukong`, {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-wukong-signature': `sha256=${signature}` }, body,
   })
+}
+
+async function claimWork(workerId: string): Promise<AgentWorkItem | null> {
+  const response = await fetch(`${baseUrl}/internal/agent-os/work/claim`, {
+    method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ workerId }),
+  })
+  assert.equal(response.status, 200)
+  return await response.json() as AgentWorkItem | null
+}
+
+async function completeWork(work: AgentWorkItem): Promise<void> {
+  const response = await fetch(`${baseUrl}/internal/agent-os/work/${work.id}/complete`, {
+    method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ fence: work.fence, leaseToken: work.leaseToken, status: 'completed' }),
+  })
+  assert.equal(response.status, 200)
 }
 
 test('[integration] failed webhook dispatch rolls back its receipt and the same event retries', async () => {
@@ -319,6 +337,95 @@ test('[integration] work claims serialize one session while allowing the next af
   })
   assert.equal(completed.status, 200)
   assert.equal((await claim())?.id, ids[1])
+})
+
+test('[integration] two workers keep session affinity and take over with a fresh Home epoch', async () => {
+  const insertQueued = async (id: string, thread: string, order: number) => {
+    await pool.query(
+      `INSERT INTO agent_work_items
+         (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,'message',NOW()+($7 * INTERVAL '1 millisecond'))`,
+      [id, COMPANY, AGENT, CHANNEL, thread, `trigger-${id}`, order],
+    )
+  }
+  const firstA = `affinity-a-${randomUUID()}`
+  const firstB = `affinity-b-${randomUUID()}`
+  await insertQueued(firstA, 'thread-a', 0)
+  await insertQueued(firstB, 'thread-b', 1)
+
+  const claimedA = await claimWork('node-a')
+  const claimedB = await claimWork('node-b')
+  assert.deepEqual(
+    [claimedA && { id: claimedA.id, homeEpoch: claimedA.homeEpoch }, claimedB && { id: claimedB.id, homeEpoch: claimedB.homeEpoch }],
+    [{ id: firstA, homeEpoch: 1 }, { id: firstB, homeEpoch: 1 }],
+  )
+  await completeWork(claimedA!)
+  await completeWork(claimedB!)
+
+  const followup = `affinity-followup-${randomUUID()}`
+  await insertQueued(followup, 'thread-a', 2)
+  assert.equal(await claimWork('node-b'), null, 'a live owner keeps its session affinity')
+  const sameOwner = await claimWork('node-a')
+  assert.deepEqual(sameOwner && { id: sameOwner.id, homeEpoch: sameOwner.homeEpoch }, { id: followup, homeEpoch: 1 })
+  await completeWork(sameOwner!)
+
+  const expired = `affinity-expired-${randomUUID()}`
+  await pool.query(
+    `INSERT INTO agent_work_items
+       (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,fence,leased_by,lease_expires_at,attempts)
+     VALUES ($1,$2,$3,$4,'thread-a',$5,'message','leased',1,'node-a',NOW()-INTERVAL '1 minute',1)`,
+    [expired, COMPANY, AGENT, CHANNEL, `trigger-${expired}`],
+  )
+  await pool.query(`UPDATE agent_os_workers SET last_seen_at=NOW()-INTERVAL '6 seconds' WHERE worker_id='node-a'`)
+  const takenOver = await claimWork('node-b')
+  assert.deepEqual(
+    takenOver && { id: takenOver.id, fence: takenOver.fence, homeEpoch: takenOver.homeEpoch },
+    { id: expired, fence: 2, homeEpoch: 2 },
+  )
+  assert.equal(await claimWork('node-a'), null, 'a returned stale node cannot steal the new owner route')
+  const { rows } = await pool.query<{ worker_id: string; home_epoch: string }>(
+    `SELECT worker_id,home_epoch FROM agent_os_session_routes WHERE session_key=$1`,
+    [`${COMPANY}:${AGENT}:${CHANNEL}:thread-a`],
+  )
+  assert.deepEqual(rows, [{ worker_id: 'node-b', home_epoch: '2' }])
+})
+
+test('[integration] final message validation ignores streamed deltas from an older Fence', async () => {
+  const workId = `stream-retry-${randomUUID()}`
+  const leaseToken = 'stream-retry-token'
+  await pool.query(
+    `INSERT INTO agent_work_items
+       (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at,leased_by)
+     VALUES ($1,$2,$3,$4,$5,'message','leased',2,$6,NOW()+INTERVAL '1 minute','node-b')`,
+    [workId, COMPANY, AGENT, CHANNEL, `trigger-${workId}`, createHash('sha256').update(leaseToken).digest('hex')],
+  )
+  await pool.query(
+    `INSERT INTO agent_runs(id,agent_id,company_id,trigger,status,reasoning_runtime)
+     VALUES($1,$2,$3,'{}'::jsonb,'running','agent-os')`,
+    [workId, AGENT, COMPANY],
+  )
+  for (const [sequence, kind, data] of [
+    [2, 'model.delta', { partType: 'text', delta: 'stale partial' }],
+    [100_001, 'model.started', {}],
+    [100_002, 'model.delta', { partType: 'text', delta: 'Recovered answer' }],
+    [100_003, 'model.completed', { usage: { inputTokens: 3, outputTokens: 2 } }],
+  ] as const) {
+    await pool.query(
+      `INSERT INTO agent_events(id,run_id,agent_id,company_id,kind,level,title,data,sequence)
+       VALUES($1,$2,$3,$4,$5,'info',$5,$6::jsonb,$7)`,
+      [randomUUID(), workId, AGENT, COMPANY, kind, JSON.stringify(data), sequence],
+    )
+  }
+  const message: LingxiMessageV1 = {
+    version: 1, kind: 'text', clientMsgNo: `answer-${workId}`, body: 'Recovered answer',
+    refs: { runId: workId, agentId: AGENT },
+  }
+  const response = await fetch(`${baseUrl}/internal/agent-os/work/${workId}/messages`, {
+    method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ fence: 2, leaseToken, message }),
+  })
+  assert.equal(response.status, 200)
+  assert.deepEqual([...persistedClientMessages], [message.clientMsgNo])
 })
 
 test('[integration] a stopped leased worker stays unclaimable after its lease expires', async () => {

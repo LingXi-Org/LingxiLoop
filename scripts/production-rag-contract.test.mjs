@@ -130,9 +130,23 @@ test('normal production deploy revalidates RAG and recreates Agent OS', () => {
 test('OpenShip knowledge services receive writable storage and the control plane URL', () => {
   const compose = read('deploy/openship/knowledge-agent.yml')
 
-  assert.match(compose, /surrealdb:[\s\S]*?user: root[\s\S]*?rocksdb:\/data\/open-notebook\.db/)
-  assert.equal((compose.match(/\$\{LINGXILOOP_CONTROL_PLANE_URL:\?/g) ?? []).length, 2)
+  assert.match(compose, /surrealdb:[\s\S]*?working_dir: \/home\/nonroot[\s\S]*?rocksdb:open-notebook\.db/)
+  assert.equal((compose.match(/\$\{LINGXILOOP_CONTROL_PLANE_URL:\?/g) ?? []).length, 1)
+  assert.doesNotMatch(compose, /^ {2}agent-os:/m)
   assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
+})
+
+test('OpenShip runs one private Agent OS per host and the Worker only on its selected app project', () => {
+  const agent = read('deploy/openship/agent-os.yml')
+  const app = read('deploy/openship/app.yml')
+
+  assert.match(agent, /AGENT_OS_WORKER_ID: \$\{AGENT_OS_WORKER_ID:\?AGENT_OS_WORKER_ID must be unique}/)
+  assert.match(agent, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-1}/)
+  assert.match(agent, /name: \$\{AGENT_OS_VOLUME_NAME:\?AGENT_OS_VOLUME_NAME is required}/)
+  assert.doesNotMatch(agent, /^ {4}ports:/m)
+  assert.match(app, /AGENT_OS_NODE_TIMEOUT_SECONDS: \$\{AGENT_OS_NODE_TIMEOUT_SECONDS:-15}/)
+  assert.match(app, /worker:\r?\n {4}<<: \*runtime\r?\n {4}profiles: \[worker]/)
+  assert.doesNotMatch(app, /AGENT_OS_URL/)
 })
 
 test('main publishes unique tags and updates Compose before Worker deployment', () => {
@@ -151,6 +165,7 @@ test('main publishes unique tags and updates Compose before Worker deployment', 
 
 test('all deployable LingxiLoop images use CI-managed unique tags', () => {
   const manifests = [
+    'deploy/openship/agent-os.yml',
     'deploy/openship/app.yml',
     'deploy/openship/core-state.yml',
     'deploy/openship/knowledge-agent.yml',

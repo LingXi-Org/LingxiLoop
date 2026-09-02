@@ -1,0 +1,50 @@
+name: lingxiloop-agent-os
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  agent-os:
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:868bcbde28e59a817f12de050ee40d65dd43313b
+    pull_policy: always
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=384
+      LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
+      OTEL_SERVICE_NAME: lingxiloop-agent-os
+      OTEL_DEPLOYMENT_ENVIRONMENT: production
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+      LINGXILIT_PRICING_JSON: ${LINGXILIT_PRICING_JSON:-}
+      AGENT_OS_PORT: "5190"
+      AGENT_OS_WORKER_ID: ${AGENT_OS_WORKER_ID:?AGENT_OS_WORKER_ID must be unique}
+      AGENT_OS_MAX_CONCURRENT_RUNS: ${AGENT_OS_MAX_CONCURRENT_RUNS:-1}
+      AGENT_OS_MAX_KERNELS: ${AGENT_OS_MAX_KERNELS:-4}
+      AGENT_OS_KERNEL_IDLE_MS: ${AGENT_OS_KERNEL_IDLE_MS:-900000}
+      AGENT_OS_SHUTDOWN_GRACE_MS: ${AGENT_OS_SHUTDOWN_GRACE_MS:-20000}
+      AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required}
+      LINGXILOOP_CONTROL_PLANE_URL: ${LINGXILOOP_CONTROL_PLANE_URL:?LINGXILOOP_CONTROL_PLANE_URL is required}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      AGENT_OS_HOMES_ROOT: /var/lib/lingxiloop-agent-os/homes
+    volumes:
+      - agent-os-data:/var/lib/lingxiloop-agent-os
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5190/readyz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    cpus: "1.0"
+    mem_limit: 768m
+    logging: *logging
+
+volumes:
+  agent-os-data:
+    name: ${AGENT_OS_VOLUME_NAME:?AGENT_OS_VOLUME_NAME is required}

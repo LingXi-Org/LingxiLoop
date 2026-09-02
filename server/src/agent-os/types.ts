@@ -67,6 +67,7 @@ export interface MemorySynthesisBatch {
 export interface AgentWorkItem {
   id: string
   fence: number
+  homeEpoch?: number
   companyId: string
   authorizationUserId?: string
   agentId: string

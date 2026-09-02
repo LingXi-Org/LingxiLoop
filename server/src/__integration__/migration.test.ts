@@ -9,6 +9,8 @@ import test from 'node:test'
 import { assertMigrationsCurrent, migrateDatabase } from '../db/migrate.js'
 
 const baselineUrl = new URL('../db/migrations/0001_v1_baseline.sql', import.meta.url)
+const legacyCleanupUrl = new URL('../db/migrations/0002_remove_legacy_identity.sql', import.meta.url)
+const affinityUrl = new URL('../db/migrations/0003_agent_os_session_affinity.sql', import.meta.url)
 
 async function withDatabase(run: (database: Pool, connectionString: string) => Promise<void>): Promise<void> {
   const source = new URL(process.env.INTEGRATION_DATABASE_URL!)
@@ -41,14 +43,47 @@ async function withMigrations(run: (url: URL, directory: string) => Promise<void
 
 test('an empty database reaches the latest schema once and repeated migration is a no-op', async () => {
   await withDatabase(async (database) => {
-    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity'])
+    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     const { rows } = await database.query('SELECT version,name FROM schema_migrations ORDER BY version')
     assert.deepEqual(rows, [
       { version: 1, name: 'v1_baseline' },
       { version: 2, name: 'remove_legacy_identity' },
+      { version: 3, name: 'agent_os_session_affinity' },
     ])
+  })
+})
+
+test('the affinity migration backfills the most recent worker without changing the Home epoch', async () => {
+  await withMigrations(async (migrationsUrl, directory) => {
+    await copyFile(legacyCleanupUrl, join(directory, '0002_remove_legacy_identity.sql'))
+    await withDatabase(async (database) => {
+      await migrateDatabase(database, migrationsUrl)
+      await database.query(
+        `INSERT INTO companies(id,name,slug,type,plan_id)
+         VALUES('migration-company','Migration','migration-company','EDUCATION','plan-personal-free')`,
+      )
+      const sessionKey = 'migration-company:agent:channel:thread'
+      await database.query(
+        `INSERT INTO agent_os_sessions(session_key,company_id,agent_id,channel_id,thread_root_client_msg_no)
+         VALUES($1,'migration-company','agent','channel','thread')`,
+        [sessionKey],
+      )
+      await database.query(
+        `INSERT INTO agent_work_items
+           (id,company_id,agent_id,channel_id,thread_root_client_msg_no,trigger_client_msg_no,reason,status,leased_by,updated_at)
+         VALUES
+           ('migration-work-old','migration-company','agent','channel','thread','trigger-old','message','completed','agent-os-a',NOW()-INTERVAL '1 day'),
+           ('migration-work-new','migration-company','agent','channel','thread','trigger-new','message','completed','agent-os-b',NOW())`,
+      )
+      await copyFile(affinityUrl, join(directory, '0003_agent_os_session_affinity.sql'))
+      assert.deepEqual(await migrateDatabase(database, migrationsUrl), ['0003_agent_os_session_affinity'])
+      const { rows } = await database.query(
+        `SELECT session_key,worker_id,home_epoch FROM agent_os_session_routes`,
+      )
+      assert.deepEqual(rows, [{ session_key: sessionKey, worker_id: 'agent-os-b', home_epoch: '1' }])
+    })
   })
 })
 
@@ -94,11 +129,11 @@ test('concurrent migrators serialize and apply each migration once', async () =>
     try {
       const results = await Promise.all([migrateDatabase(database), migrateDatabase(second)])
       assert.deepEqual(results.map((result) => [...result]).sort((a, b) => b.length - a.length), [
-        ['0001_v1_baseline', '0002_remove_legacy_identity'],
+        ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity'],
         [],
       ])
       const { rows } = await database.query('SELECT COUNT(*)::int AS count FROM schema_migrations')
-      assert.deepEqual(rows, [{ count: 2 }])
+      assert.deepEqual(rows, [{ count: 3 }])
     } finally {
       await second.end()
     }

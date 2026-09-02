@@ -121,9 +121,9 @@ test('OpenShip workers inherit the complete runtime environment', async () => {
   )
   assert.match(compose, /WUKONG_WEBHOOK_SECRET: \$\{WUKONG_WEBHOOK_SECRET:\?/)
   assert.doesNotMatch(compose, /WUKONG_USER_TOKEN_SECRET/)
-  assert.match(compose, /lingxiloop:\n    <<: \*runtime\n    environment: \*runtime-environment/)
-  assert.match(compose, /worker:\n    <<: \*runtime\n    environment: \*runtime-environment/)
-  assert.match(compose, /db-migrate:\n    <<: \*runtime\n    environment:\n      NODE_ENV: production\n      DATABASE_POOL_MAX:[^\n]+\n      DATABASE_URL:/)
+  assert.match(compose, /lingxiloop:\r?\n {4}<<: \*runtime\r?\n {4}environment: \*runtime-environment/)
+  assert.match(compose, /worker:\r?\n {4}<<: \*runtime\r?\n {4}profiles: \[worker]\r?\n {4}environment: \*runtime-environment/)
+  assert.match(compose, /db-migrate:\r?\n {4}<<: \*runtime\r?\n {4}environment:\r?\n {6}NODE_ENV: production\r?\n {6}DATABASE_POOL_MAX:[^\n]+\n {6}DATABASE_URL:/)
   assert.match(compose, /db-migrate:[\s\S]*?restart: on-failure/)
   assert.match(compose, /start_period: 10m/)
   assert.match(compose, /pull_policy: always/)
@@ -134,7 +134,15 @@ test('Open Notebook restarts only after SurrealDB is healthy', async () => {
     new URL('../../../deploy/openship/knowledge-agent.yml', import.meta.url),
     'utf8',
   )
-  assert.match(compose, /depends_on:\n      surrealdb:\n        condition: service_healthy\n        restart: true/)
+  assert.match(compose, /depends_on:\r?\n {6}surrealdb:\r?\n {8}condition: service_healthy\r?\n {8}restart: true/)
+})
+
+test('Agent OS shutdown drains active work instead of cancelling it', async () => {
+  const service = await readFile(new URL('../agent-os/service.ts', import.meta.url), 'utf8')
+  assert.match(service, /claimController\.abort\(\)/)
+  assert.match(service, /runtime\.runWork\(work\)/)
+  assert.match(service, /Promise\.allSettled\(\[polling, \.\.\.active\.values\(\)\]\)/)
+  assert.doesNotMatch(service, /runtime\.runWork\(work, [^)]+\.signal\)/)
 })
 
 test('database pool does not load unrelated application secrets', async () => {

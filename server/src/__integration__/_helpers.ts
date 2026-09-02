@@ -123,6 +123,8 @@ const TABLES_TO_WIPE: readonly string[] = [
   'agent_host_actions',
   'approvals',
   'agent_os_session_leases',
+  'agent_os_session_routes',
+  'agent_os_workers',
   'agent_work_items',
   'agent_os_sessions',
   'agent_memory_evidence',

@@ -31,7 +31,7 @@ const shutdownGraceMs = Number(process.env.AGENT_OS_SHUTDOWN_GRACE_MS ?? 20_000)
 if (!Number.isSafeInteger(shutdownGraceMs) || shutdownGraceMs < 1_000) {
   throw new Error('AGENT_OS_SHUTDOWN_GRACE_MS must be an integer of at least 1000')
 }
-const active = new Map<string, { controller: AbortController; done: Promise<void> }>()
+const active = new Map<string, Promise<void>>()
 const claimController = new AbortController()
 let stopping = false
 
@@ -39,23 +39,19 @@ async function poll(): Promise<void> {
   while (!stopping) {
     try {
       if (active.size >= maxConcurrentRuns) {
-        await Promise.race([...active.values()].map((entry) => entry.done))
+        await Promise.race(active.values())
         continue
       }
       const work = await host.claimWork(claimController.signal)
       if (stopping) {
-        if (work) await host.yieldWork(work).catch((error) => {
-          console.error(`[agent-os] failed to yield work ${work.id} during shutdown:`, error instanceof Error ? error.message : String(error))
-        })
         return
       }
       if (!work) { await new Promise((resolveDelay) => setTimeout(resolveDelay, 750)); continue }
       if (active.has(work.id)) continue
-      const controller = new AbortController()
-      const done = runtime.runWork(work, controller.signal).catch((error) => {
+      const done = runtime.runWork(work).catch((error) => {
         console.error(`[agent-os] work ${work.id} escaped runtime handling:`, error instanceof Error ? error.message : String(error))
       }).finally(() => active.delete(work.id))
-      active.set(work.id, { controller, done })
+      active.set(work.id, done)
       void done
     } catch (error) {
       if (stopping) return
@@ -80,10 +76,9 @@ async function shutdown(): Promise<void> {
   if (stopping) return
   stopping = true
   claimController.abort()
-  for (const { controller } of active.values()) controller.abort()
   let graceTimer: NodeJS.Timeout | undefined
   const timedOut = await Promise.race([
-    Promise.allSettled([polling, ...[...active.values()].map((entry) => entry.done)]).then(() => false),
+    Promise.allSettled([polling, ...active.values()]).then(() => false),
     new Promise<true>((resolveTimeout) => {
       graceTimer = setTimeout(() => resolveTimeout(true), shutdownGraceMs)
       graceTimer.unref?.()

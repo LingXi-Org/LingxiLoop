@@ -318,8 +318,9 @@ export class KernelManager implements KernelExecutor {
     this.sweepTimer.unref?.()
   }
 
-  private key(work: AgentWorkItem): string {
-    return [work.companyId, work.agentId, work.channelId, work.threadRootClientMsgNo ?? '-'].join(':')
+  private key(work: AgentWorkItem, homeEpoch: number): string {
+    const sessionKey = [work.companyId, work.agentId, work.channelId, work.threadRootClientMsgNo ?? '-'].join(':')
+    return homeEpoch === 1 ? sessionKey : `${sessionKey}:home-epoch:${homeEpoch}`
   }
 
   private homeSegment(value: string): string {
@@ -358,7 +359,9 @@ export class KernelManager implements KernelExecutor {
   }
 
   async execute(work: AgentWorkItem, runId: string, cellId: string, code: string, signal?: AbortSignal, options?: KernelExecutionOptions): Promise<KernelExecution> {
-    const key = this.key(work)
+    const homeEpoch = work.homeEpoch ?? 1
+    if (!Number.isSafeInteger(homeEpoch) || homeEpoch < 1) throw new Error('Agent OS home epoch must be a positive integer')
+    const key = this.key(work, homeEpoch)
     let kernel = this.kernels.get(key)
     while (!kernel) {
       if (this.closed) throw new KernelCancelledError(cellId)
@@ -370,9 +373,10 @@ export class KernelManager implements KernelExecutor {
       const safeCompany = this.homeSegment(work.companyId)
       const safeAgent = this.homeSegment(work.agentId)
       const safeSession = this.homeSegment(`${work.channelId}:${work.threadRootClientMsgNo ?? '-'}`)
-      const home = process.platform === 'win32'
+      const sessionHome = process.platform === 'win32'
         ? resolve(this.options.homesRoot, this.homeSegment(key))
         : resolve(this.options.homesRoot, safeCompany, safeAgent, 'sessions', safeSession)
+      const home = homeEpoch === 1 ? sessionHome : resolve(sessionHome, 'epochs', String(homeEpoch))
       kernel = new PersistentKernel(key, home, this.bridge, this.options, () => this.wakeCapacityWaiters())
       this.kernels.set(key, kernel)
     }

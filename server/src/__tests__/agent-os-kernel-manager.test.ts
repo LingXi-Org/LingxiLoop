@@ -108,3 +108,29 @@ test('kernel capacity waits for a busy kernel instead of killing it', async () =
     await rm(homesRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
   }
 })
+
+test('a new Home epoch cannot revive stale variables or files', async () => {
+  const homesRoot = await mkdtemp(resolve(tmpdir(), 'lingxiloop-kernel-epoch-'))
+  const manager = new KernelManager({ execute: async () => ({ ok: true, value: null }) }, {
+    homesRoot,
+    runnerPath: resolve('server/agent-os/kernel_runner.py'),
+    executionTimeoutMs: 30_000,
+    maxKernels: 2,
+  })
+  const firstEpoch = { ...work('epoch'), homeEpoch: 1 }
+  const secondEpoch = { ...firstEpoch, homeEpoch: 2 }
+  try {
+    await manager.execute(firstEpoch, firstEpoch.id, 'cell-1', 'value = 41\nopen("state.txt", "w").write("old")')
+    assert.deepEqual(
+      (await manager.execute(secondEpoch, secondEpoch.id, 'cell-1', 'import pathlib\n[globals().get("value"), pathlib.Path("state.txt").exists()]')).result,
+      [null, false],
+    )
+    assert.deepEqual(
+      (await manager.execute(firstEpoch, firstEpoch.id, 'cell-2', 'import pathlib\n[value, pathlib.Path("state.txt").read_text()]')).result,
+      [41, 'old'],
+    )
+  } finally {
+    manager.close()
+    await rm(homesRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
+  }
+})

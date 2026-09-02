@@ -13,6 +13,7 @@ import { loadLearningTurnContext, loadTeacherTurnContext } from '../modules/lear
 import { CH_ASSISTANT_STREAM, publish } from '../redis.js'
 import { executeActionWithLedger } from './host-action-application.js'
 import { applyMemorySynthesis, buildPromptContext, loadMemorySynthesisBatch, recordMemoryEvidence } from './memory-service.js'
+import { agentOSNodeTimeoutSeconds } from './node-liveness.js'
 import {
   type AgentRunEvent,
   type AgentSessionRecord,
@@ -144,10 +145,11 @@ interface WorkRow {
   no_progress_count: number
 }
 
-function workFromRow(row: WorkRow, leaseToken: string): AgentWorkItem {
+function workFromRow(row: WorkRow, leaseToken: string, homeEpoch?: number): AgentWorkItem {
   return {
     id: row.id,
     fence: Number(row.fence),
+    ...(homeEpoch === undefined ? {} : { homeEpoch }),
     companyId: row.company_id,
     ...(row.authorization_user_id ? { authorizationUserId: row.authorization_user_id } : {}),
     agentId: row.agent_id,
@@ -194,36 +196,73 @@ async function requireLease(req: Request, actionable = false): Promise<{ work: A
 
 agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
   const workerId = String(req.body?.workerId ?? '').trim()
-  if (!workerId) { res.status(400).json({ error: 'workerId required' }); return }
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(workerId)) {
+    res.status(400).json({ error: 'workerId must be 1-128 safe identifier characters' }); return
+  }
+  const nodeTimeoutSeconds = agentOSNodeTimeoutSeconds()
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
+    await client.query(
+      `INSERT INTO agent_os_workers(worker_id,last_seen_at,updated_at) VALUES($1,NOW(),NOW())
+       ON CONFLICT(worker_id) DO UPDATE SET last_seen_at=NOW(),updated_at=NOW()`,
+      [workerId],
+    )
     await client.query(`DELETE FROM agent_os_session_leases WHERE expires_at <= NOW()`)
     const { rows } = await client.query<WorkRow>(
-      `SELECT id, fence, company_id, authorization_user_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason,lane,
-              canvas_id,canvas_assignment_id,created_at,available_at,attempts,preemptions,execution_role,progress_fingerprint,no_progress_count
-         FROM agent_work_items
-         WHERE (status='queued' OR (status='leased' AND lease_expires_at <= NOW()))
-           AND cancel_requested_at IS NULL
-          AND available_at <= NOW()
+      `SELECT work.id, work.fence, work.company_id, work.authorization_user_id, work.agent_id, work.channel_id,
+              work.thread_root_client_msg_no, work.trigger_client_msg_no, work.reason, work.lane,
+              work.canvas_id,work.canvas_assignment_id,work.created_at,work.available_at,work.attempts,work.preemptions,
+              work.execution_role,work.progress_fingerprint,work.no_progress_count
+         FROM agent_work_items work
+         LEFT JOIN agent_os_session_routes session_route
+           ON session_route.session_key=work.company_id || ':' || work.agent_id || ':' || work.channel_id || ':' || COALESCE(work.thread_root_client_msg_no, '-')
+         LEFT JOIN agent_os_workers route_worker ON route_worker.worker_id=session_route.worker_id
+         WHERE (work.status='queued' OR (work.status='leased' AND work.lease_expires_at <= NOW()))
+           AND work.cancel_requested_at IS NULL
+          AND work.available_at <= NOW()
+          AND (session_route.session_key IS NULL OR session_route.worker_id=$1
+               OR route_worker.last_seen_at <= NOW()-make_interval(secs => $2::int))
           AND NOT EXISTS (
             SELECT 1 FROM agent_os_session_leases sl
-             WHERE sl.session_key = agent_work_items.company_id || ':' || agent_work_items.agent_id || ':' ||
-               agent_work_items.channel_id || ':' || COALESCE(agent_work_items.thread_root_client_msg_no, '-')
+             WHERE sl.session_key = work.company_id || ':' || work.agent_id || ':' ||
+               work.channel_id || ':' || COALESCE(work.thread_root_client_msg_no, '-')
                AND sl.expires_at > NOW()
           )
-        ORDER BY CASE lane WHEN 'learner' THEN 4 WHEN 'approval' THEN 3 WHEN 'collaboration' THEN 2 ELSE 1 END DESC,
-                 priority DESC, created_at ASC
-        FOR UPDATE SKIP LOCKED LIMIT 1`,
+        ORDER BY CASE work.lane WHEN 'learner' THEN 4 WHEN 'approval' THEN 3 WHEN 'collaboration' THEN 2 ELSE 1 END DESC,
+                 work.priority DESC, work.created_at ASC
+        FOR UPDATE OF work SKIP LOCKED LIMIT 1`,
+      [workerId, nodeTimeoutSeconds],
     )
     if (!rows[0]) { await client.query('COMMIT'); res.json(null); return }
+    const sessionKey = workSessionKey(rows[0])
+    const { rows: routes } = await client.query<{ home_epoch: string }>(
+      `INSERT INTO agent_os_session_routes(session_key,worker_id,home_epoch,updated_at)
+       VALUES($1,$2,1,NOW())
+       ON CONFLICT(session_key) DO UPDATE
+         SET worker_id=EXCLUDED.worker_id,
+             home_epoch=CASE
+               WHEN agent_os_session_routes.worker_id=EXCLUDED.worker_id THEN agent_os_session_routes.home_epoch
+               ELSE agent_os_session_routes.home_epoch+1
+             END,
+             updated_at=NOW()
+       WHERE agent_os_session_routes.worker_id=EXCLUDED.worker_id
+          OR NOT EXISTS (
+            SELECT 1 FROM agent_os_workers owner
+             WHERE owner.worker_id=agent_os_session_routes.worker_id
+               AND owner.last_seen_at > NOW()-make_interval(secs => $3::int)
+          )
+       RETURNING home_epoch`,
+      [sessionKey, workerId, nodeTimeoutSeconds],
+    )
+    if (!routes[0]) { await client.query('COMMIT'); res.json(null); return }
     const token = randomBytes(32).toString('base64url')
     const proposedFence = Number(rows[0].fence) + 1
     const sessionLease = await client.query(
       `INSERT INTO agent_os_session_leases (session_key, work_id, fence, expires_at)
        VALUES ($1,$2,$3,NOW()+INTERVAL '45 seconds')
        ON CONFLICT (session_key) DO NOTHING RETURNING session_key`,
-      [workSessionKey(rows[0]), rows[0].id, proposedFence],
+      [sessionKey, rows[0].id, proposedFence],
     )
     if (!sessionLease.rows[0]) { await client.query('COMMIT'); res.json(null); return }
     const { rows: claimed } = await client.query<WorkRow>(
@@ -236,7 +275,7 @@ agentOSControlRouter.post('/work/claim', safe(async (req, res) => {
       [rows[0].id, hash(token), workerId],
     )
     await client.query('COMMIT')
-    res.json(workFromRow(claimed[0], token))
+    res.json(workFromRow(claimed[0], token, Number(routes[0].home_epoch)))
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined)
     throw error
@@ -249,10 +288,14 @@ agentOSControlRouter.post('/work/:id/heartbeat', safe(async (req, res) => {
     `WITH renewed AS (
        UPDATE agent_work_items SET lease_expires_at=NOW()+INTERVAL '45 seconds', updated_at=NOW()
         WHERE id=$1 AND fence=$2 AND lease_token_hash=$3 AND status='leased'
-        RETURNING cancel_requested_at, preempt_requested_at, steer_inputs
+        RETURNING cancel_requested_at, preempt_requested_at, steer_inputs, leased_by
      ), session_renewed AS (
        UPDATE agent_os_session_leases SET expires_at=NOW()+INTERVAL '45 seconds', updated_at=NOW()
         WHERE work_id=$1 AND fence=$2 AND EXISTS (SELECT 1 FROM renewed)
+     ), worker_seen AS (
+       INSERT INTO agent_os_workers(worker_id,last_seen_at,updated_at)
+       SELECT leased_by,NOW(),NOW() FROM renewed WHERE leased_by IS NOT NULL
+       ON CONFLICT(worker_id) DO UPDATE SET last_seen_at=NOW(),updated_at=NOW()
      ) SELECT cancel_requested_at, preempt_requested_at, steer_inputs FROM renewed`,
     [work.id, work.fence, hash(work.leaseToken)],
   )
@@ -757,11 +800,14 @@ agentOSControlRouter.post('/work/:id/messages', safe(async (req, res) => {
   if (message.kind !== 'text' || message.refs?.runId !== work.id || !message.body?.trim()) {
     res.status(409).json({ error: 'assistant message is missing its native stream identity or body' }); return
   }
+  const attemptSequenceStart = Math.max(0, work.fence - 1) * 100_000
+  const attemptSequenceEnd = work.fence * 100_000
   const { rows: streamEvents } = await pool.query<{ kind: string; data: Record<string, unknown>; sequence: number }>(
     `SELECT kind,data,sequence FROM agent_events
       WHERE run_id=$1 AND kind IN ('model.started','model.delta','model.completed')
+        AND sequence>$2 AND sequence<$3
       ORDER BY sequence`,
-    [work.id],
+    [work.id, attemptSequenceStart, attemptSequenceEnd],
   )
   const streamed = streamEvents
     .filter((row) => row.kind === 'model.delta' && row.data.partType === 'text' && typeof row.data.delta === 'string')
