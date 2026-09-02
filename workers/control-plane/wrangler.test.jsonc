@@ -13,6 +13,7 @@
   "vars": {
     "ORIGIN_BASE_URL": "https://origin.example.com",
     "OPENSHIP_BASE_URL": "https://openship.example.com",
+    "UPTIME_BASE_URL": "https://uptime.example.com",
     "AUTH_ALLOWED_HOSTS": "loop.example.com,admin.example.com",
     "APP_VERSION": "test"
   }

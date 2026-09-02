@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { admin } from 'better-auth/plugins'
 import { drizzle } from 'drizzle-orm/d1'
-import { Hono, type Context } from 'hono'
+import { type Context, Hono } from 'hono'
 import { authSchema } from './schema'
 
 type Secrets = {
@@ -247,6 +247,33 @@ app.get('/api/control/releases', async (c) => {
   if (session instanceof Response) return session
   const { results } = await c.env.DB.prepare(`SELECT * FROM release_requests ORDER BY created_at DESC LIMIT 100`).all()
   return c.json({ data: results })
+})
+
+app.get('/api/control/status-page', async (c) => {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  try {
+    const [pageResponse, heartbeatResponse] = await Promise.all([
+      fetch(new URL('/api/status-page/lingxiloop', c.env.UPTIME_BASE_URL)),
+      fetch(new URL('/api/status-page/heartbeat/lingxiloop', c.env.UPTIME_BASE_URL)),
+    ])
+    if (!pageResponse.ok || !heartbeatResponse.ok) return c.json({ error: 'status provider unavailable' }, 502)
+    const page = await pageResponse.json<{
+      config: unknown
+      incident: unknown
+      publicGroupList: unknown[]
+      maintenanceList: unknown[]
+    }>()
+    const heartbeat = await heartbeatResponse.json<{
+      heartbeatList: Record<string, unknown[]>
+      uptimeList: Record<string, number>
+    }>()
+    const latest = Object.fromEntries(Object.entries(heartbeat.heartbeatList).map(([id, rows]) => [id, rows.at(-1) ?? null]))
+    c.header('cache-control', 'private, no-store')
+    return c.json({ config: page.config, incident: page.incident, groups: page.publicGroupList, maintenanceList: page.maintenanceList, latest, uptime: heartbeat.uptimeList })
+  } catch {
+    return c.json({ error: 'status provider unavailable' }, 502)
+  }
 })
 
 app.post('/api/control/platform/users/:id/:action', async (c) => {

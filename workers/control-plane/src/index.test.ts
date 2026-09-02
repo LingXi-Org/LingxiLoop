@@ -1,4 +1,5 @@
-import { applyD1Migrations, env, SELF } from 'cloudflare:test'
+import { applyD1Migrations, env, fetchMock, SELF } from 'cloudflare:test'
+import { hashPassword } from 'better-auth/crypto'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 declare module 'cloudflare:test' {
@@ -40,5 +41,45 @@ describe('control-plane trust boundaries', () => {
       body: JSON.stringify({ email: 'user@example.com', name: 'User', password: 'password123' }),
     })
     expect(noInvite.status).toBe(400)
+  })
+
+  it('proxies Kuma status for an authenticated administrator', async () => {
+    const now = Math.floor(Date.now() / 1000)
+    await env.DB.batch([
+      env.DB.prepare(`INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt,role) VALUES(?,?,?,1,?,?,'admin')`)
+        .bind('admin-user', 'Admin', 'admin@example.com', now, now),
+      env.DB.prepare(`INSERT INTO account(id,accountId,providerId,issuer,userId,password,createdAt,updatedAt) VALUES(?,?,'credential','local:credential',?,?,?,?)`)
+        .bind('admin-account', 'admin-user', 'admin-user', await hashPassword('password123'), now, now),
+      env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES(?,?,?)`)
+        .bind('admin-user', 'app-admin', now),
+    ])
+    const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'https://admin.example.com' },
+      body: JSON.stringify({ email: 'admin@example.com', password: 'password123' }),
+    })
+    expect(signIn.status).toBe(200)
+    const cookie = signIn.headers.get('set-cookie')
+    expect(cookie).toContain('__Secure-better-auth.session_token=')
+
+    fetchMock.activate()
+    fetchMock.disableNetConnect()
+    fetchMock.get('https://uptime.example.com')
+      .intercept({ path: '/api/status-page/lingxiloop' })
+      .reply(200, { config: { title: 'LingxiLoop 服务状态' }, incident: null, publicGroupList: [{ id: 1, name: '公共入口', monitorList: [{ id: 11, name: 'Web' }] }], maintenanceList: [] })
+    fetchMock.get('https://uptime.example.com')
+      .intercept({ path: '/api/status-page/heartbeat/lingxiloop' })
+      .reply(200, { heartbeatList: { 11: [{ status: 0 }, { status: 1, ping: 26 }] }, uptimeList: { '11_24': 1 } })
+    const statusPage = await SELF.fetch('https://admin.example.com/api/control/status-page', { headers: { cookie: cookie ?? '' } })
+    expect(await statusPage.json()).toEqual({
+      config: { title: 'LingxiLoop 服务状态' },
+      incident: null,
+      groups: [{ id: 1, name: '公共入口', monitorList: [{ id: 11, name: 'Web' }] }],
+      maintenanceList: [],
+      latest: { 11: { status: 1, ping: 26 } },
+      uptime: { '11_24': 1 },
+    })
+    fetchMock.assertNoPendingInterceptors()
+    fetchMock.deactivate()
   })
 })

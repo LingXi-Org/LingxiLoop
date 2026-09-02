@@ -5,6 +5,7 @@
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  "routes": [{ "pattern": "admin.lingxilearn.cn", "custom_domain": true }],
   "observability": { "enabled": true },
   "assets": {
     "directory": "../../dist-admin",
@@ -21,7 +22,8 @@
   "vars": {
     "ORIGIN_BASE_URL": "https://loop.lingxilearn.cn",
     "OPENSHIP_BASE_URL": "https://ops.christmas1314.xyz",
-    "AUTH_ALLOWED_HOSTS": "loop.lingxilearn.cn",
+    "UPTIME_BASE_URL": "https://uptime.lingxilearn.cn",
+    "AUTH_ALLOWED_HOSTS": "loop.lingxilearn.cn,admin.lingxilearn.cn",
     "APP_VERSION": "0.1.0-beta"
   }
 }

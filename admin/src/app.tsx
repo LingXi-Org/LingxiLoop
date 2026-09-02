@@ -4,6 +4,7 @@ import { BrowserRouter, Outlet, Route, Routes } from 'react-router'
 import { accessControlProvider, authProvider, dataProvider } from './api'
 import { AdminLayout, DashboardPage, ForbiddenPage, LoginPage, ReleaseManagementPage, ResourceDetailPage, ResourceListPage, SearchPage } from './pages'
 import { ADMIN_RESOURCES } from './resources'
+import { ServiceStatusPage } from './status-page'
 
 export function AdminApp() {
   return <BrowserRouter><Refine
@@ -26,6 +27,7 @@ export function AdminApp() {
         <Route index element={<DashboardPage />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="releases" element={<ReleaseManagementPage />} />
+        <Route path="status" element={<ServiceStatusPage />} />
         <Route path="resources/:resource" element={<ResourceListPage />} />
         <Route path="resources/:resource/:id" element={<ResourceDetailPage />} />
         <Route path="resources" element={<NavigateToResource />} />

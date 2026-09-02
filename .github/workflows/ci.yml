@@ -168,4 +168,4 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL }}
+          VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
