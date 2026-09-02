@@ -3,6 +3,7 @@ import { userFacingError } from '@/lib/userFacingError'
 import { learningApi } from '../api'
 import type {
   LearningActivity,
+  LearningDashboard,
   LearningEvidence,
   LearningMission,
   LearningObjective,
@@ -17,6 +18,7 @@ interface LearningDashboardResources {
   evidence: LearningEvidence[]
   missions: LearningMission[]
   reviews: LearningReview[]
+  states: LearningDashboard['states']
 }
 
 const EMPTY_RESOURCES: LearningDashboardResources = {
@@ -25,9 +27,14 @@ const EMPTY_RESOURCES: LearningDashboardResources = {
   evidence: [],
   missions: [],
   reviews: [],
+  states: [],
 }
 
-export function useLearningDashboardData(projectId: string, perspective: LearningRole, canReview: boolean) {
+export function useLearningDashboardData(
+  projectId: string,
+  perspective: LearningRole,
+  canReview: boolean,
+) {
   const overviewRequestEpoch = useRef(0)
   const resourcesRequestEpoch = useRef(0)
   const [overview, setOverview] = useState<LearningOverview | null>(null)
@@ -57,16 +64,47 @@ export function useLearningDashboardData(projectId: string, perspective: Learnin
     const requestEpoch = ++resourcesRequestEpoch.current
     setResourcesLoading(true)
     setResourcesError('')
-    try {
-      const [objectives, activities, evidence, missions, reviews] = await Promise.all([
+    if (perspective === 'learner') {
+      const [objectives, activities, evidence, missions, dashboard] = await Promise.allSettled([
         learningApi.listKnowledgeUnits(projectId),
         learningApi.listActivities(projectId),
         learningApi.listEvidence(projectId),
         learningApi.listMissions(projectId),
+        learningApi.getDashboard(),
+      ])
+      if (requestEpoch !== resourcesRequestEpoch.current) return
+      setResources((current) => ({
+        objectives: objectives.status === 'fulfilled' ? objectives.value : current.objectives,
+        activities: activities.status === 'fulfilled' ? activities.value : current.activities,
+        evidence: evidence.status === 'fulfilled' ? evidence.value : current.evidence,
+        missions: missions.status === 'fulfilled' ? missions.value : current.missions,
+        reviews: [],
+        states:
+          dashboard.status === 'fulfilled'
+            ? dashboard.value.states.filter((state) => state.projectId === projectId)
+            : current.states,
+      }))
+      const failures = [
+        objectives.status === 'rejected' ? `学习目标：${userFacingError(objectives.reason)}` : '',
+        activities.status === 'rejected' ? `课程活动：${userFacingError(activities.reason)}` : '',
+        evidence.status === 'rejected' ? `学习证据：${userFacingError(evidence.reason)}` : '',
+        missions.status === 'rejected' ? `学习任务：${userFacingError(missions.reason)}` : '',
+        dashboard.status === 'rejected' ? `掌握状态：${userFacingError(dashboard.reason)}` : '',
+      ].filter(Boolean)
+      setResourcesError(failures.join('；'))
+      setResourcesLoading(false)
+      return
+    }
+    try {
+      const [objectives, activities, evidence, missions, reviews] = await Promise.all([
+        learningApi.listKnowledgeUnits(projectId),
+        learningApi.listActivities(projectId),
+        perspective === 'teacher' ? Promise.resolve([]) : learningApi.listEvidence(projectId),
+        perspective === 'teacher' ? Promise.resolve([]) : learningApi.listMissions(projectId),
         perspective === 'teacher' && canReview ? learningApi.listReviews(projectId) : Promise.resolve([]),
       ])
       if (requestEpoch !== resourcesRequestEpoch.current) return
-      setResources({ objectives, activities, evidence, missions, reviews })
+      setResources({ objectives, activities, evidence, missions, reviews, states: [] })
     } catch (reason) {
       if (requestEpoch !== resourcesRequestEpoch.current) return
       setResourcesError(userFacingError(reason, '学习内容暂时无法加载，请稍后重试。'))

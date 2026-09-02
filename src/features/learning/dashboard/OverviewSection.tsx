@@ -1,6 +1,8 @@
 import { ChartBarLineIcon, CheckmarkCircle02Icon, Task01Icon, UserGroupIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import type { ReactNode } from 'react'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, Pie, PieChart, XAxis, YAxis } from 'recharts'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   ChartContainer,
@@ -207,7 +209,15 @@ function LearnerOverview({ overview }: { overview: LearnerLearningOverview }) {
   )
 }
 
-function TeacherOverview({ overview }: { overview: TeacherLearningOverview }) {
+function TeacherOverview({
+  overview,
+  onOpenLearner,
+  priority,
+}: {
+  overview: TeacherLearningOverview
+  onOpenLearner?: (learnerId: string) => void
+  priority?: ReactNode
+}) {
   const missions = overview.missionDistribution.map((item) => ({ count: item.count, label: statusLabel(item.status) }))
   const evaluations = overview.evaluationDistribution.map((item) => ({ count: item.count, label: statusLabel(item.status) }))
   const coverage = [
@@ -232,6 +242,45 @@ function TeacherOverview({ overview }: { overview: TeacherLearningOverview }) {
         <OverviewStat label="证据尝试" value={overview.summary.attempts} icon={ChartBarLineIcon} />
         <OverviewStat label="有证据的学习者" value={overview.summary.learnersWithEvidence} icon={CheckmarkCircle02Icon} />
         <OverviewStat label="到期复习" value={overview.summary.dueReviews} icon={Task01Icon} />
+      </div>
+      <div className="grid gap-6 @min-[52rem]/learning-grid:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>需要关注</CardTitle>
+            <CardDescription>由到期复习、待审核与任务状态等现有记录生成</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {overview.attention.map((item) => {
+              const content = (
+                <>
+                  <p className="font-medium">{item.displayName}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {item.reasons.map(attentionReasonLabel).join(' · ')}
+                  </p>
+                </>
+              )
+              return onOpenLearner ? (
+                <Button
+                  key={item.learnerId}
+                  type="button"
+                  variant="ghost"
+                  className="h-auto w-full justify-start rounded-2xl bg-muted p-3 text-start whitespace-normal"
+                  onClick={() => onOpenLearner(item.learnerId)}
+                >
+                  <span className="min-w-0">{content}</span>
+                </Button>
+              ) : (
+                <div key={item.learnerId} className="rounded-2xl bg-muted p-3">
+                  {content}
+                </div>
+              )
+            })}
+            {overview.attention.length === 0 && (
+              <p className="text-sm text-muted-foreground">目前没有需要特别关注的学习者记录。</p>
+            )}
+          </CardContent>
+        </Card>
+        {priority}
       </div>
       <div className="grid gap-6 @min-[52rem]/learning-grid:grid-cols-2">
         <Card>
@@ -271,24 +320,20 @@ function TeacherOverview({ overview }: { overview: TeacherLearningOverview }) {
         <CountBarChart title="学习任务" description="按当前任务状态汇总" data={missions} nameKey="label" />
         <CountBarChart title="评价结果" description={`近 ${overview.windowDays} 天的真实评价结果`} data={evaluations} nameKey="label" />
       </div>
-      <Card>
-        <CardHeader><CardTitle>需要关注</CardTitle><CardDescription>由到期复习、待审核与任务状态等现有记录生成</CardDescription></CardHeader>
-        <CardContent className="space-y-3">
-          {overview.attention.map((item) => (
-            <div key={item.learnerId} className="rounded-2xl bg-muted p-3">
-              <p className="font-medium">{item.displayName}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{item.reasons.map(attentionReasonLabel).join(' · ')}</p>
-            </div>
-          ))}
-          {overview.attention.length === 0 && <p className="text-sm text-muted-foreground">目前没有需要特别关注的学习者记录。</p>}
-        </CardContent>
-      </Card>
     </div>
   )
 }
 
-export function OverviewSection({ overview }: { overview: LearningOverview }) {
+export function OverviewSection({
+  overview,
+  onOpenLearner,
+  teacherPriority,
+}: {
+  overview: LearningOverview
+  onOpenLearner?: (learnerId: string) => void
+  teacherPriority?: ReactNode
+}) {
   return overview.perspective === 'teacher'
-    ? <TeacherOverview overview={overview} />
+    ? <TeacherOverview overview={overview} onOpenLearner={onOpenLearner} priority={teacherPriority} />
     : <LearnerOverview overview={overview} />
 }

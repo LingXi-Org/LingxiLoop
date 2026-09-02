@@ -25,6 +25,10 @@ import type {
 } from './contracts'
 import { normalizeCourseContract } from './courseContract'
 
+type ApiLearningKnowledgeUnit = Omit<LearningObjective, 'prerequisiteIds'> & {
+  prerequisiteKnowledgeUnitIds: string[]
+}
+
 export const learningApi = {
   listCourses: async () => (await http<ApiCourse[]>('/courses')).map(normalizeCourseContract),
   getCourse: (courseId: string) => http<ApiCourse>(`/courses/${encodeURIComponent(courseId)}`),
@@ -90,8 +94,12 @@ export const learningApi = {
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/rooms/${encodeURIComponent(conversationId)}`, {
       method: 'PUT', body: JSON.stringify({ purpose }),
     }),
-  listKnowledgeUnits: (projectId: string) =>
-    http<LearningObjective[]>(`/projects/${encodeURIComponent(projectId)}/learning/knowledge-units`),
+  listKnowledgeUnits: async (projectId: string) =>
+    (await http<ApiLearningKnowledgeUnit[]>(`/projects/${encodeURIComponent(projectId)}/learning/knowledge-units`))
+      .map(({ prerequisiteKnowledgeUnitIds, ...objective }) => ({
+        ...objective,
+        prerequisiteIds: prerequisiteKnowledgeUnitIds,
+      })),
   createObjectives: (courseId: string, objectives: Array<{
     title: string; successCriteria: string; targetLevel?: number; prerequisiteIds?: string[]
   }>) => http<LearningObjective[]>(`/courses/${encodeURIComponent(courseId)}/objectives`, {

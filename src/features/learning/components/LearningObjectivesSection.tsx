@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { toastAction } from '@/lib/actionToast'
@@ -7,34 +8,73 @@ import { learningApi } from '../api'
 import type { LearningCourse, LearningObjective, LearningRole } from '../contracts'
 import { MasteryBadge, statusLabel } from './learningDisplay'
 
+interface LearnerObjectiveDetails {
+  nextReviewAt: string | null
+  activityTitles: string[]
+  missionStepTitles: string[]
+  evidenceCount: number
+}
+
 interface LearningObjectivesSectionProps {
   course: LearningCourse
   objectives: LearningObjective[]
   perspective: LearningRole
   mastery: ReadonlyMap<string, number>
+  learnerDetailsById?: ReadonlyMap<string, LearnerObjectiveDetails>
   onChanged(): Promise<void>
   onError(error: unknown): void
 }
 
+function ObjectiveEvidenceDetails({ details }: { details?: LearnerObjectiveDetails }) {
+  if (!details) return null
+  return (
+    <div className="grid gap-2 rounded-2xl border p-3 text-xs text-muted-foreground">
+      <p>
+        关联证据 <span className="font-medium text-foreground">{details.evidenceCount}</span> 条{' · '}
+        下次复习：{details.nextReviewAt ? new Date(details.nextReviewAt).toLocaleString('zh-CN') : '尚未安排'}
+      </p>
+      {(details.activityTitles.length > 0 || details.missionStepTitles.length > 0) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span>关联来源：</span>
+          {details.activityTitles.map((title, index) => (
+            <Badge key={`activity-${title}-${index}`} variant="outline">活动 · {title}</Badge>
+          ))}
+          {details.missionStepTitles.map((title, index) => (
+            <Badge key={`step-${title}-${index}`} variant="outline">步骤 · {title}</Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function LearningObjectivesSection({
-  course, objectives, perspective, mastery, onChanged, onError,
+  course, objectives, perspective, mastery, learnerDetailsById, onChanged, onError,
 }: LearningObjectivesSectionProps) {
-  const publishObjective = async (objective: LearningObjective) => {
+  const changeObjectiveStatus = async (
+    objective: LearningObjective,
+    status: 'PUBLISHED' | 'ARCHIVED',
+  ) => {
     if (perspective !== 'teacher' || !course.canManage || !course.canEditContent || !course.courseId) return
+    const publishing = status === 'PUBLISHED'
     const confirmed = await confirmSensitiveAction({
-      title: '发布学习目标？',
-      description: `“${objective.title}”将对课程学习者可见。`,
-      confirmLabel: '发布目标',
-      tone: 'warning',
+      title: publishing ? '发布学习目标？' : '归档学习目标？',
+      description: publishing
+        ? `“${objective.title}”将对课程学习者可见。`
+        : `“${objective.title}”将从当前课程内容中归档。`,
+      confirmLabel: publishing ? '发布目标' : '归档目标',
+      tone: publishing ? 'warning' : 'destructive',
     })
     if (!confirmed) return
     try {
-      await toastAction(learningApi.setObjectiveStatus(course.courseId, objective.id, 'PUBLISHED'), {
-        loading: '正在发布学习目标', success: '学习目标已发布', error: '发布学习目标失败，请稍后重试',
+      await toastAction(learningApi.setObjectiveStatus(course.courseId, objective.id, status), {
+        loading: publishing ? '正在发布学习目标' : '正在归档学习目标',
+        success: publishing ? '学习目标已发布' : '学习目标已归档',
+        error: publishing ? '发布学习目标失败，请稍后重试' : '归档学习目标失败，请稍后重试',
       })
       await onChanged()
     } catch (reason) {
-      onError(userFacingError(reason, '学习目标未能发布，请稍后重试。'))
+      onError(userFacingError(reason, publishing ? '学习目标未能发布，请稍后重试。' : '学习目标未能归档，请稍后重试。'))
     }
   }
 
@@ -76,8 +116,14 @@ export function LearningObjectivesSection({
                   </div>
                 ) : <p className="mt-1 text-xs text-muted-foreground">无需先完成其他目标</p>}
               </div>
-              {perspective === 'teacher' && course.canManage && course.canEditContent && objective.status === 'DRAFT' && course.courseId && (
-                <Button size="sm" onClick={() => void publishObjective(objective)}>发布目标</Button>
+              {perspective === 'learner' && <ObjectiveEvidenceDetails details={learnerDetailsById?.get(objective.id)} />}
+              {perspective === 'teacher' && course.canManage && course.canEditContent && objective.status !== 'ARCHIVED' && course.courseId && (
+                <div className="flex flex-wrap gap-3">
+                  {objective.status === 'DRAFT' && (
+                    <Button size="sm" onClick={() => void changeObjectiveStatus(objective, 'PUBLISHED')}>发布目标</Button>
+                  )}
+                  <Button size="sm" variant="outline" onClick={() => void changeObjectiveStatus(objective, 'ARCHIVED')}>归档目标</Button>
+                </div>
               )}
             </div>
           </CardContent>

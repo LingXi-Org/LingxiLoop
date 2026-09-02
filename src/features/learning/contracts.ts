@@ -88,6 +88,7 @@ export interface LearningSpace {
   canUpdateCourse: boolean
   canInviteMembers: boolean
   canRevokeInvitations: boolean
+  canUpdateMembers: boolean
   canRemoveMembers: boolean
   canSubmit: boolean
   canReview: boolean
@@ -379,8 +380,10 @@ export interface LearningReview {
   id: string
   attempt_id: string
   learner_id: string
+  learner_display_name: string
   activity_id: string | null
   activity_title: string | null
+  assistance: 'NONE' | 'HINT' | 'GUIDED'
   demonstrated_level: number
   confidence: number
   feedback: string
@@ -389,8 +392,8 @@ export interface LearningReview {
   builder_agent_id: string | null
   verifier_agent_id: string | null
   verifier_verdict: 'supported' | 'rejected' | 'inconclusive' | null
-  status?: string
-  [key: string]: unknown
+  status: 'PENDING'
+  created_at: string
 }
 
 export interface LearningProgress {

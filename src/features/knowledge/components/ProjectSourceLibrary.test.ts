@@ -10,9 +10,8 @@ const dashboard = read('../../learning/dashboard/LearningDashboardPanel.tsx')
 const desktop = read('../../../desktop/DesktopApp.tsx')
 const api = read('../api.ts')
 
-test('Dashboard library is an independent workspace-folder page instead of a Drawer', () => {
+test('Dashboard resources stay role scoped instead of opening a Drawer', () => {
   assert.match(dashboard, /section === 'resources'[\s\S]*<DashboardSectionFrame[\s\S]*<PersonalSourceDrive[\s\S]*<CourseSourceDrive/)
-  assert.match(dashboard, /'个人学习资料' : '班级资料'/)
   assert.match(desktop, /const dashboardOpen = view !== 'conversations'/)
   assert.doesNotMatch(desktop, /libraryOpen|drawerContent = <PersonalSourceDrive/)
   assert.doesNotMatch(drive, /<Drawer|DrawerContent/)
