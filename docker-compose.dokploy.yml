@@ -7,7 +7,7 @@ x-quiet-logging: &quiet-logging
 # PostgreSQL and Redis intentionally live on the private database server.
 # Application images are assembled from immutable GHCR digests only.
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:5a33ec9a0e2b75f6aea9e62b70487e26d052f41c
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:a7515981a1980d812f4839845de31d36c79a56b8
   pull_policy: always
   environment: &runtime-environment
     NODE_ENV: production
@@ -72,7 +72,7 @@ services:
     logging: *quiet-logging
 
   open-notebook:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:5a33ec9a0e2b75f6aea9e62b70487e26d052f41c
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:a7515981a1980d812f4839845de31d36c79a56b8
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -105,7 +105,7 @@ services:
     logging: *quiet-logging
 
   wukongim:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:5a33ec9a0e2b75f6aea9e62b70487e26d052f41c
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:a7515981a1980d812f4839845de31d36c79a56b8
     pull_policy: always
     restart: unless-stopped
     environment:
@@ -157,7 +157,7 @@ services:
       lingxiloop: { condition: service_healthy }
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:5a33ec9a0e2b75f6aea9e62b70487e26d052f41c
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:a7515981a1980d812f4839845de31d36c79a56b8
     pull_policy: always
     restart: unless-stopped
     environment:
