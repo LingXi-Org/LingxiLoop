@@ -24,7 +24,7 @@ services:
     logging: *logging
 
   open-notebook:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:71f2a9a6ebd136c3c8154129c92357f90dc74460
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:68726b84ccfebd0bd17c9f3417c5cdd06a8285fb
     pull_policy: always
     restart: unless-stopped
     depends_on:
