@@ -31,6 +31,8 @@ type AuthSettings = {
 }
 
 const encoder = new TextEncoder()
+const authSettingsCacheKey = 'https://lingxiloop.invalid/auth-settings'
+const authSettingsCache = () => caches.open('lingxiloop-auth-settings')
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 const releaseImageNames = ['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway'] as const
 const productionTopology: Record<string, readonly string[]> = {
@@ -106,20 +108,27 @@ async function originRequest(env: Bindings, path: string, init: RequestInit, ide
   return fetch(url, { ...init, headers })
 }
 
-async function loadAuthSettings(env: Bindings): Promise<AuthSettings> {
-  const row = await env.DB.prepare(`SELECT session_expires_in,otp_expires_in,rate_limit_window,rate_limit_max FROM auth_settings WHERE id=1`).first<{
+async function loadAuthSettings(c: AppContext): Promise<AuthSettings> {
+  const cache = await authSettingsCache()
+  const cached = await cache.match(authSettingsCacheKey)
+  if (cached) return cached.json<AuthSettings>()
+  const row = await c.env.DB.prepare(`SELECT session_expires_in,otp_expires_in,rate_limit_window,rate_limit_max FROM auth_settings WHERE id=1`).first<{
     session_expires_in: number
     otp_expires_in: number
     rate_limit_window: number
     rate_limit_max: number
   }>()
   if (!row) throw new Error('Better Auth settings are not initialized')
-  return {
+  const settings = {
     sessionExpiresIn: row.session_expires_in,
     otpExpiresIn: row.otp_expires_in,
     rateLimitWindow: row.rate_limit_window,
     rateLimitMax: row.rate_limit_max,
   }
+  c.executionCtx.waitUntil(cache.put(authSettingsCacheKey, Response.json(settings, {
+    headers: { 'cache-control': 'max-age=60' },
+  })))
+  return settings
 }
 
 async function provision(env: Bindings, authUser: { id: string; email: string; name: string }): Promise<void> {
@@ -184,7 +193,7 @@ function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promis
       autoSignInAfterVerification: false,
       afterEmailVerification: async (user) => provision(env, user),
     },
-    session: { expiresIn: settings.sessionExpiresIn },
+    session: { expiresIn: settings.sessionExpiresIn, cookieCache: { enabled: true, maxAge: 60 } },
     rateLimit: { enabled: true, storage: 'database', window: settings.rateLimitWindow, max: settings.rateLimitMax },
     plugins: [
       admin({ defaultRole: 'user', adminRoles: ['admin'] }),
@@ -211,11 +220,28 @@ function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promis
   })
 }
 
-app.use('*', async (c, next) => {
-  const auth = createAuth(c.env, c.req.raw, c.executionCtx.waitUntil.bind(c.executionCtx), await loadAuthSettings(c.env))
+async function attachAuth(c: AppContext) {
+  const auth = createAuth(c.env, c.req.raw, c.executionCtx.waitUntil.bind(c.executionCtx), await loadAuthSettings(c))
   c.set('auth', auth)
-  const session = await auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null)
+  return auth
+}
+
+async function attachSession(c: AppContext, source: 'cache' | 'database') {
+  const auth = await attachAuth(c)
+  const session = await auth.api.getSession({
+    headers: c.req.raw.headers,
+    query: source === 'database' ? { disableCookieCache: true } : undefined,
+  }).catch(() => null)
   if (session) c.set('session', session as AuthSession)
+}
+
+app.use('/api/auth/*', async (c, next) => {
+  await attachAuth(c)
+  await next()
+})
+
+app.use('/api/control/*', async (c, next) => {
+  await attachSession(c, 'database')
   await next()
 })
 
@@ -413,7 +439,7 @@ app.get('/api/control/auth-settings', async (c) => {
   const session = requireAdmin(c)
   if (session instanceof Response) return session
   return c.json({
-    ...(await loadAuthSettings(c.env)),
+    ...(await loadAuthSettings(c)),
     locked: {
       defaultRole: 'user',
       requireEmailVerification: true,
@@ -451,6 +477,7 @@ app.put('/api/control/auth-settings', async (c) => {
     c.env.DB.prepare(`INSERT INTO control_audit(id,actor_user_id,action,resource,reason,detail,created_at) VALUES(?,?,?,?,?,?,?)`)
       .bind(crypto.randomUUID(), session.user.id, 'update', 'better-auth:settings', reason, JSON.stringify(values), now),
   ])
+  await (await authSettingsCache()).delete(authSettingsCacheKey)
   return c.json(values)
 })
 
@@ -558,8 +585,14 @@ app.all('/api/control/platform/*', async (c) => {
   return originRequest(c.env, `/api/admin${suffix}${new URL(c.req.url).search}`, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }, { appUserId: link.app_user_id, authUserId: session.user.id })
 })
 
+app.all('/api/webhooks/*', (c) => originRequest(c.env, c.req.path + new URL(c.req.url).search, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }))
+
+app.use('/api/*', async (c, next) => {
+  await attachSession(c, 'cache')
+  await next()
+})
+
 app.all('/api/*', async (c) => {
-  if (c.req.path.startsWith('/api/webhooks/')) return originRequest(c.env, c.req.path + new URL(c.req.url).search, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body })
   const session = requireSession(c)
   if (session instanceof Response) return session
   let link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()

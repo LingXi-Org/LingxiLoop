@@ -11,6 +11,21 @@ declare module 'cloudflare:test' {
 beforeAll(async () => applyD1Migrations(env.DB, env.TEST_MIGRATIONS))
 
 describe('control-plane trust boundaries', () => {
+  it('proxies public health without initializing auth', async () => {
+    await env.DB.prepare(`DELETE FROM auth_settings WHERE id=1`).run()
+    fetchMock.activate()
+    fetchMock.disableNetConnect()
+    fetchMock.get('https://origin.example.com').intercept({ path: '/api/health' }).reply(200, { ok: true })
+    try {
+      const response = await SELF.fetch('https://admin.example.com/api/health')
+      expect({ status: response.status, body: await response.json() }).toEqual({ status: 200, body: { ok: true } })
+      fetchMock.assertNoPendingInterceptors()
+    } finally {
+      fetchMock.deactivate()
+      await env.DB.prepare(`INSERT INTO auth_settings(id,session_expires_in,otp_expires_in,rate_limit_window,rate_limit_max,updated_at) VALUES(1,604800,300,60,60,0)`).run()
+    }
+  })
+
   it('applies auth/control schema and rejects unauthenticated administration', async () => {
     const tables = await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all<{ name: string }>()
     expect(tables.results.map((row) => row.name)).toEqual(expect.arrayContaining(['user', 'session', 'app_user_links', 'registration_claims', 'release_requests', 'control_audit', 'auth_settings']))
