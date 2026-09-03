@@ -347,8 +347,10 @@ Wrangler 4.127.1 was authenticated to account ID `5b726c2a59696a3536a55589a8fad1
 - Variable `CLOUDFLARE_ACCOUNT_ID`; optional override `VITE_LINGXILIT_URL` defaults to `https://openlit.lingxilearn.cn` in the production deploy job.
 - Node 22.
 - Quality, unit/eval, and PostgreSQL/Redis integration gates before publishing.
-- Immutable linux/amd64 images for server, AgentOS, WuKongIM, Open Notebook, and Gateway. A deployable change publishes only its affected component images; a `VERSION` release publishes all five.
+- Immutable linux/amd64 images for server, AgentOS, WuKongIM, Open Notebook, and Gateway. A deployable change publishes only its affected component images; a `VERSION` release or main-branch manual `workflow_dispatch` with `scope=release` publishes all five.
 - `update-manifests` updates only the published component pins in `deploy/openship/*.yml`, commits SHA pins with `[skip ci]`, and exposes that exact manifest commit SHA to rollout. A deployment-only change retains the current complete image set and still rolls out.
-- `deploy` applies D1 migrations when needed and uploads/promotes the Worker Version. The signed release handler requires all five independently immutable image references, synchronizes all ten image-bearing service rows, and creates deployments for all six LingxiLoop projects through OpenShip's Dashboard proxy API. OpenShip project `autoDeploy` remains disabled.
+- `deploy` applies D1 migrations when needed and uploads/promotes the Worker Version. The signed release handler requires all five independently immutable image references, synchronizes all ten image-bearing service rows, and creates deployments for all six LingxiLoop projects through OpenShip's Dashboard proxy API. The manifest-pin commit is both the release idempotency key and OpenShip deployment commit, so rebuilding the same source commit cannot be mistaken for an earlier rollout. OpenShip project `autoDeploy` remains disabled.
 
 Workflow run `33711770224` tested source/manifest commit `ad9a7f2e8ba3397943babcde1b802edb48e03941`, promoted Worker version `1c19b8d8-0cb5-4979-a3b4-f25a88c3e14e`, retained the four unchanged `b42fef1...` component pins, pinned Gateway to `3b0069a...`, and rolled all six OpenShip projects to `ready`.
+
+Manual release run `33715749321` tested the complete path after commits `303cedb...` and `99f2e43...`: all five images were rebuilt with tag `99f2e43...`, `update-manifests` created `df724bc...`, and six distinct OpenShip deployments reached `ready` at the same version 2.

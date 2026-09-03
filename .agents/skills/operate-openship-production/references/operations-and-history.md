@@ -149,6 +149,9 @@ The 2026-09-03 first-release reset recreated only the current Open Notebook and 
 - Final checks: 16/16 healthy, zero OpenShip issues, zero drift, both AgentOS heartbeats fresh, queue empty, public/private HTTP and WuKongIM WebSocket probes successful.
 - Commit `5d8215c...` removed the old production/Dokploy/manual deployment files, split App A/B manifests, deleted App A's stale Worker/Gateway rows, and restricted admin topology/deployment feeds and Uptime to the current production set.
 - Commit `ad9a7f2...` replaced same-tag cohort selection with complete per-component pins. Workflow `33711770224` rolled all six projects to `ready`, advanced only Gateway to `3b0069a...`, and public auth changed from 404 to JSON HTTP 200.
+- Commit `303cedb...` added a main-only manual `scope=release` path that rebuilds all five images before the usual six-project rollout. Commit `99f2e43...` changed the release idempotency key from the source commit to the generated manifest-pin commit; otherwise a second image batch built from the same source commit could be reported successful without creating new OpenShip deployments.
+- Workflow `33715749321` exercised the corrected path end to end: five `99f2e43...` images, manifest commit `df724bc...`, six new ready deployments, and synchronized OpenShip version 2.
+- OpenShip dashboard `vN` labels are per-project ready-deployment ordinals, not image tags or a shared release number. With explicit authorization to remove debugging history, the six project histories were normalized offline after a 57 MB PGlite backup at `/root/.openship/backups/20260903T1230-openship-pglite`; the current release then advanced all six from version 1 to version 2. Do not repeat this destructive metadata cleanup without a fresh backup and explicit scope.
 
 ## LingxiLit first deployment
 

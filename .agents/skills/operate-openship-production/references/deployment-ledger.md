@@ -1,21 +1,27 @@
 # OpenShip deployment ledger
 
-The historical ledger began with 72 live API records on 2026-09-02 and was extended through the first-release reset on 2026-09-03. The current active IDs are in the first table; older `Active` markers below are historical snapshots retained solely for incident and rollback archaeology. Timestamps are UTC unless stated otherwise.
+The historical ledger began with 72 live API records on 2026-09-02 and was extended through the first-release reset on 2026-09-03. With explicit authorization, the debugging histories for the six LingxiLoop projects were removed from live OpenShip after a management-database backup; older `Active` markers below now exist only in this audit record and the backup, not as live rollback targets. Timestamps are UTC unless stated otherwise.
 
 The conversation also contained `dep_hTwrgkuYccZOs8QT`, but OpenShip returned `NOT_FOUND`; it was a mistyped/nonexistent ID and is not part of the 72-record ledger. Raw-session truncation also produced the partial strings `dep_LGTbj5TasJJbtAu` and `dep_g9i`; their complete real IDs are `dep_LGTbj5TasJJbtAu3` and `dep_g9ieyTk2UUOOcWZi` below.
 
-## 2026-09-03 component-pinned first release — current active
+## 2026-09-03 normalized full release — current active
 
-All six deployments are `ready` at manifest commit `ad9a7f2e8ba3397943babcde1b802edb48e03941`. Server, AgentOS, WuKongIM, and Open Notebook use `b42fef160fe697d46a8818e054f945d1f80953f7`; Gateway uses auth-routing fix `3b0069a17ec0a969d85301b13aba386832001cdc`.
+All six deployments are `ready` at manifest commit `df724bc4228af374bd8b82e8e9b24a887b45286e`, use the complete five-image tag `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`, and display the same OpenShip version.
 
 | Project | Deployment | Version |
 | --- | --- | ---: |
-| `lingxiloop-core-state` | `dep_C82hkdGyP9iHCgOi` | 26 |
-| `lingxiloop-app-a` | `dep_IRPncv9B85bCcaE0` | 20 |
-| `lingxiloop-agent-os-a` | `dep_y8h-s-eQpH141a9b` | 13 |
-| `lingxiloop-app-b` | `dep_R2UaNNG8Win4TkSX` | 24 |
-| `lingxiloop-knowledge-agent` | `dep_ywPSJ1i8m2tzbDjx` | 26 |
-| `lingxiloop-agent-os-b` | `dep_1nt0A5nbtNX0mdU9` | 12 |
+| `lingxiloop-core-state` | `dep_iT9yKagEJZx5c7Kk` | 2 |
+| `lingxiloop-app-a` | `dep_76nu6qPPVvEpHVLg` | 2 |
+| `lingxiloop-agent-os-a` | `dep_T4c4yznrw7z_g3D4` | 2 |
+| `lingxiloop-app-b` | `dep_OKH5Ee2REEGuftcD` | 2 |
+| `lingxiloop-knowledge-agent` | `dep_jLGk3jFOk99ykWkm` | 2 |
+| `lingxiloop-agent-os-b` | `dep_T-G8p8aSNq4nvdY6` | 2 |
+
+The retained version-1 baseline was manifest commit `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`: core `dep_pqbaWTDw-aTzDqZx`, app-a `dep_ioxWXXKuxE3CDrjj`, agent-a `dep_coTKLKTog3ElJtMp`, app-b `dep_B2l8n31CH1vGauBN`, knowledge `dep_0e5mHC5ZRkkvAcqI`, and agent-b `dep_dnSWx6ddYkl6oN_O`. The preceding debugging records were removed only after copying the 57 MB PGlite directory to `/root/.openship/backups/20260903T1230-openship-pglite`.
+
+Manual workflow `33715749321` rebuilt all five images, committed their pins as `df724bc...`, and proved that the corrected manifest-commit idempotency key creates six distinct deployments even when the source commit has been released before.
+
+## Historical first-release records
 
 Knowledge refreshes `dep_eiMcQJR2WmVl-Hmh`, `dep_1ZwHHKT8QRYgUKrE`, `dep_qkKchykS23YHND6y`, and `dep_MOvkcixxvGaZJTBw` were intermediate ready deployments while the stale service environment was reconciled; `dep_Kc4eqjfeLBSUYFly` is final.
 
