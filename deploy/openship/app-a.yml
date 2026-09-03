@@ -7,7 +7,7 @@ x-logging: &logging
     max-file: "3"
 
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:99f2e43cbba78b2ba01dbb9064e0339eac6aad67
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d
   pull_policy: always
   restart: unless-stopped
   environment: &runtime-environment
