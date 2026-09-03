@@ -17,6 +17,7 @@ import {
   listAdminResources,
   type AdminListQuery,
 } from './resources.js'
+import { observabilityDashboard } from './observability-dashboard.js'
 import { changeUserLifecycle } from './user-lifecycle.js'
 
 export const adminRouter = Router()
@@ -115,6 +116,18 @@ adminRouter.get('/dashboard', safe(async (_request, response) => {
     dependencies,
     recentAudit: recentAudit.rows,
   })
+}))
+
+adminRouter.get('/observability', safe(async (request, response) => {
+  const dashboard = await observabilityDashboard(pool)
+  const admin = identity(response)
+  await audit({
+    kind: 'platform_admin.sensitive_read',
+    userId: admin.id,
+    ...requestMetadata(request),
+    detail: { resource: 'agent-runs', view: 'observability-dashboard', limit: 30 },
+  })
+  response.json(dashboard)
 }))
 
 adminRouter.get('/search', safe(async (request, response) => {

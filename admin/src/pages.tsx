@@ -7,8 +7,8 @@ import {
   Building2Icon,
   ChevronRightIcon,
   CircleAlertIcon,
+  ChartNoAxesCombinedIcon,
   DatabaseIcon,
-  ExternalLinkIcon,
   GraduationCapIcon,
   HeartPulseIcon,
   KeyRoundIcon,
@@ -54,7 +54,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction, promptSensitiveAction } from '@/lib/confirmAction'
 import { API_URL, adminFetch } from './api'
-import { normalizeLingxiLitUrl } from './lingxilit-url'
 import { ADMIN_RESOURCES, GROUP_LABELS, type ResourceGroup, resourceDefinition } from './resources'
 
 type RecordValue = string | number | boolean | null | Record<string, unknown> | unknown[]
@@ -81,7 +80,6 @@ export function AdminLayout() {
   const navigate = useNavigate()
   const { mutate: logout, isPending } = useLogout()
   const health = useCustom<{ ok: boolean }>({ url: `${API_URL}/health/dependencies`, method: 'get' })
-  const lingxiLitUrl = normalizeLingxiLitUrl(import.meta.env.VITE_LINGXILIT_URL)
   const dependencyOk = health.query.data?.data.ok
   return <SidebarProvider className="admin-shell" style={{ '--sidebar-width': '18rem' } as React.CSSProperties}>
     <Sidebar variant="inset">
@@ -91,7 +89,7 @@ export function AdminLayout() {
           <span className="min-w-0"><strong className="block truncate font-heading text-sm font-semibold">LingxiLoop</strong><span className="block truncate text-xs text-sidebar-foreground/60">运营控制中心</span></span>
         </Link>
       </SidebarHeader>
-      <AdminNavigation lingxiLitUrl={lingxiLitUrl} />
+      <AdminNavigation />
       <SidebarFooter className="p-3">
         <div className="flex items-center justify-between gap-3 rounded-xl bg-sidebar-accent/70 px-3 py-2 text-xs">
           <span className="flex min-w-0 items-center gap-2"><span className={`size-2 shrink-0 rounded-full ${health.query.isLoading ? 'bg-muted-foreground' : dependencyOk ? 'bg-primary' : 'bg-destructive'}`} /><span className="truncate">{health.query.isLoading ? '正在检查依赖' : dependencyOk ? '全部依赖正常' : '依赖存在异常'}</span></span>
@@ -125,7 +123,7 @@ const GROUP_ICONS: Record<ResourceGroup, React.ComponentType<{ className?: strin
   operations: BoxesIcon,
 }
 
-function AdminNavigation({ lingxiLitUrl }: { lingxiLitUrl: string | undefined }) {
+function AdminNavigation() {
   const { pathname } = useLocation()
   const { setOpenMobile } = useSidebar()
   const closeNavigation = () => setOpenMobile(false)
@@ -137,7 +135,7 @@ function AdminNavigation({ lingxiLitUrl }: { lingxiLitUrl: string | undefined })
         <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/releases')}><Link to="/releases" onClick={closeNavigation}><RocketIcon /><span>发布管理</span></Link></SidebarMenuButton></SidebarMenuItem>
         <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/authentication')}><Link to="/authentication" onClick={closeNavigation}><KeyRoundIcon /><span>身份认证</span></Link></SidebarMenuButton></SidebarMenuItem>
         <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/status')}><Link to="/status" onClick={closeNavigation}><HeartPulseIcon /><span>服务状态</span></Link></SidebarMenuButton></SidebarMenuItem>
-        {lingxiLitUrl && <SidebarMenuItem><SidebarMenuButton asChild><a href={lingxiLitUrl} target="_blank" rel="noopener noreferrer" onClick={closeNavigation}><ExternalLinkIcon /><span>AI 可观测</span></a></SidebarMenuButton></SidebarMenuItem>}
+        <SidebarMenuItem><SidebarMenuButton asChild isActive={pathname.startsWith('/observability')}><Link to="/observability" onClick={closeNavigation}><ChartNoAxesCombinedIcon /><span>AI 可观测</span></Link></SidebarMenuButton></SidebarMenuItem>
       </SidebarMenu></SidebarGroupContent>
     </SidebarGroup>
     <SidebarGroup className="pt-0">

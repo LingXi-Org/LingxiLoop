@@ -10,6 +10,7 @@ import { ADMIN_RESOURCES } from './resources'
 
 const ReleaseManagementPage = lazy(() => import('./release-management-page').then((module) => ({ default: module.ReleaseManagementPage })))
 const ServiceStatusPage = lazy(() => import('./status-page').then((module) => ({ default: module.ServiceStatusPage })))
+const ObservabilityPage = lazy(() => import('./observability-page').then((module) => ({ default: module.ObservabilityPage })))
 const deferredPage = (page: ReactNode) => <Suspense fallback={<div className="grid min-h-64 place-items-center text-sm text-muted-foreground" aria-busy="true">正在加载页面…</div>}>{page}</Suspense>
 
 export function AdminApp() {
@@ -35,6 +36,7 @@ export function AdminApp() {
         <Route path="releases" element={deferredPage(<ReleaseManagementPage />)} />
         <Route path="authentication" element={<AuthSettingsPage />} />
         <Route path="status" element={deferredPage(<ServiceStatusPage />)} />
+        <Route path="observability" element={deferredPage(<ObservabilityPage />)} />
         <Route path="resources/:resource" element={<ResourceListPage />} />
         <Route path="resources/:resource/:id" element={<ResourceDetailPage />} />
         <Route path="resources" element={<NavigateToResource />} />
