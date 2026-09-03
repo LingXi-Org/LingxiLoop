@@ -330,6 +330,7 @@ AUTH_ALLOWED_HOSTS=loop.lingxilearn.cn,admin.lingxilearn.cn
 UPTIME_BASE_URL=https://uptime.lingxilearn.cn
 APP_VERSION=0.1.0-beta
 OPENSHIP_PROJECT_IDS=proj_khiExWfh7Vsj72VO,proj_5uz48XlBkfJQeNC8,proj_29J2mM47umuIfaDK,proj_IsMy2bWVzEZ7JKEf,proj_frnQUaoQY37ejzL-,proj_CVkF0rOULikADQ-7
+OPENSHIP_APP_TARGETS=proj_5uz48XlBkfJQeNC8:svc_Y95Qof0wyIdv7klR,proj_IsMy2bWVzEZ7JKEf:svc_wm0I2fR_uglJGyWb
 ```
 
 D1 binding `DB`, database `lingxiloop-control-plane`, ID `cf22d961-eba4-4d21-b447-4d19ec0ad524`; no pending migrations at the audit.
@@ -348,6 +349,6 @@ Wrangler 4.127.1 was authenticated to account ID `5b726c2a59696a3536a55589a8fad1
 - Quality, unit/eval, and PostgreSQL/Redis integration gates before publishing.
 - Immutable linux/amd64 images for server, AgentOS, WuKongIM, Open Notebook, and Gateway.
 - `update-manifests` invokes `scripts/update-deployment-images.mjs`, commits SHA pins with `[skip ci]`, and exposes that exact manifest commit SHA to the deploy job.
-- `deploy` applies D1 migrations, uploads and promotes a Worker Version tagged with the source commit, then signs one release request. The Worker records it idempotently in D1 and creates deployments for all six LingxiLoop projects through OpenShip's Dashboard proxy API. OpenShip project `autoDeploy` remains disabled.
+- `deploy` applies D1 migrations, uploads and promotes a Worker Version tagged with the source commit, then signs one release request. The Worker records it idempotently in D1, synchronizes the App A/B Web service rows to the pinned server image, and creates deployments for all six LingxiLoop projects through OpenShip's Dashboard proxy API. OpenShip project `autoDeploy` remains disabled.
 
 Workflow run `33698694701` built and tested source commit `62b0772b637e0451deffb133b4f00937fa0cd01d`, published its scoped immutable server image, and promoted Worker version `f8f2c648-7b0c-4cd7-a371-982e4db8c2f1`. Its `update-manifests` and `rollout` jobs were skipped, so this run did not change the six OpenShip application deployments or their image pins.

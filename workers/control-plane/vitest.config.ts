@@ -19,6 +19,7 @@ export default defineWorkersConfig(async () => ({
             BOOTSTRAP_ADMIN_TOKEN: 'test-bootstrap-secret',
             OPENSHIP_PAT: 'test-openship-pat',
             OPENSHIP_PROJECT_IDS: 'proj_test-a,proj_test-b',
+            OPENSHIP_APP_TARGETS: 'proj_test-a:svc_app-a,proj_test-b:svc_app-b',
             RESEND_API_KEY: 'test-resend-key',
             RESEND_FROM: 'LingxiLoop <test@example.com>',
             TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA',

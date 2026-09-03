@@ -72,7 +72,7 @@ For LingxiLoop releases:
 
 1. Keep GitHub-push `autoDeploy=false` on all six LingxiLoop projects. A push must not reach production before CI gates and immutable images finish.
 2. Confirm CI built immutable SHA images for server, AgentOS, WuKongIM, Open Notebook, and Gateway, then committed their pins through `scripts/update-deployment-images.mjs`.
-3. After D1 migration and the exact Worker Version are promoted, let CI send the HMAC-signed release request to `/api/internal/releases`; the Worker fans the manifest commit out to the six configured OpenShip project IDs through `/api/proxy/api/deployments`.
+3. After D1 migration and the exact Worker Version are promoted, let CI send the HMAC-signed release request to `/api/internal/releases`; the Worker first synchronizes the App A/B Web service rows from `OPENSHIP_APP_TARGETS` to the pinned server image, then fans the manifest commit out to the six configured OpenShip project IDs through `/api/proxy/api/deployments`.
 4. Treat OpenShip `202 Accepted` without a deployment ID as accepted, then use OpenShip to verify all six resulting deployments reach `ready`; never equate HTTP acceptance with completion.
 5. Run the PostgreSQL migration first.
 6. Deploy API-A and API-B with the same server image. App A enables only Web; App B enables `worker,gateway`.
