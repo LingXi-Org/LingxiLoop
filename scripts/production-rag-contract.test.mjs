@@ -181,7 +181,7 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
   assert.deepEqual(new Set(imageTargets.map((target) => target.split(':')[0])), new Set(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway']))
 })
 
-test('main publishes one complete cohort and rolls out deployment-only changes', () => {
+test('main publishes changed images and rolls out a complete immutable release', () => {
   const workflow = read('.github/workflows/ci.yml')
   const serverImage = read('server/docker/lingxiloop-server.Dockerfile')
 
@@ -196,7 +196,7 @@ test('main publishes one complete cohort and rolls out deployment-only changes',
   assert.match(workflow, /VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEk9EZhHYeS3szPO/)
   assert.match(serverImage, /ARG VITE_TURNSTILE_SITE_KEY=""[\s\S]*ENV VITE_TURNSTILE_SITE_KEY=\$\{VITE_TURNSTILE_SITE_KEY\}/)
   const imageDigests = Object.fromEntries(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway']
-    .map((name) => [name, `accel.way2api.fun/ghcr.io/example/lingxiloop-${name}:${'a'.repeat(40)}`]))
+    .map((name, index) => [name, `accel.way2api.fun/ghcr.io/example/lingxiloop-${name}:${index ? 'a'.repeat(40) : 'c'.repeat(40)}`]))
   const release = buildReleaseRequest('secret', 'a'.repeat(40), 'b'.repeat(40), 'Example/LingxiLoop', imageDigests)
   assert.deepEqual(JSON.parse(release.body), {
     commitSha: 'a'.repeat(40),
@@ -207,8 +207,8 @@ test('main publishes one complete cohort and rolls out deployment-only changes',
   assert.match(release.signature, /^[\w-]{43}$/)
   assert.throws(() => buildReleaseRequest('secret', 'a'.repeat(40), 'b'.repeat(40), 'Example/LingxiLoop', {
     ...imageDigests,
-    gateway: `accel.way2api.fun/ghcr.io/example/lingxiloop-gateway:${'c'.repeat(40)}`,
-  }), /one cohort/)
+    gateway: 'registry/lingxiloop-gateway:latest',
+  }), /invalid release images/)
   assert.doesNotMatch(workflow, /image-digest-|api\/internal\/releases/)
   assert.doesNotMatch(workflow, /pages deploy|PRODUCTION_SSH|run: .*deploy-production\.sh/)
 })
@@ -224,7 +224,6 @@ test('all deployable LingxiLoop images use CI-managed unique tags', () => {
   const references = [...manifests.matchAll(/image:\s+\S*lingxiloop-[^:\s]+:([^\s]+)/g)]
   assert.equal(references.length, 6)
   assert.ok(references.every((match) => /^[0-9a-f]{40}$/.test(match[1])))
-  assert.equal(new Set(references.map((match) => match[1])).size, 1)
   assert.equal(
     updateImageTags(`image: registry/lingxiloop-server:${'a'.repeat(40)}`, 'b'.repeat(40), ['server']),
     `image: registry/lingxiloop-server:${'b'.repeat(40)}`,
@@ -239,22 +238,21 @@ test('all deployable LingxiLoop images use CI-managed unique tags', () => {
   )
 })
 
-test('CI selects checks by component and publishes one complete image cohort', () => {
-  const cohort = ['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway']
+test('CI selects checks and image publishing by component', () => {
   const web = computeScope({ web: true })
-  assert.deepEqual(web.images.map(({ manifest }) => manifest), cohort)
+  assert.deepEqual(web.images.map(({ manifest }) => manifest), ['server'])
   assert.equal(web.web, true)
   assert.equal(web.server, false)
 
   const server = computeScope({ server: true, serverSource: true })
-  assert.deepEqual(server.images.map(({ manifest }) => manifest), cohort)
+  assert.deepEqual(server.images.map(({ manifest }) => manifest), ['server', 'agent-os'])
   assert.equal(server.integration, true)
 
-  assert.equal(computeScope({ serverDocker: true }).packages, cohort.join(' '))
-  assert.equal(computeScope({ agentDocker: true }).packages, cohort.join(' '))
+  assert.equal(computeScope({ serverDocker: true }).packages, 'server')
+  assert.equal(computeScope({ agentDocker: true }).packages, 'agent-os')
 
   const knowledge = computeScope({ openNotebook: true })
-  assert.deepEqual(knowledge.images.map(({ manifest }) => manifest), cohort)
+  assert.deepEqual(knowledge.images.map(({ manifest }) => manifest), ['open-notebook'])
   assert.equal(knowledge.deploy_contract, true)
 
   const control = computeScope({ control: true, controlMigrations: true })
@@ -263,7 +261,7 @@ test('CI selects checks by component and publishes one complete image cohort', (
   assert.equal(control.control_migrations, true)
 
   const sharedFrontend = computeScope({ sharedFrontend: true })
-  assert.deepEqual(sharedFrontend.images.map(({ manifest }) => manifest), cohort)
+  assert.deepEqual(sharedFrontend.images.map(({ manifest }) => manifest), ['server'])
   assert.equal(sharedFrontend.server, false)
 
   const testRunner = computeScope({ testRunner: true })
@@ -273,4 +271,7 @@ test('CI selects checks by component and publishes one complete image cohort', (
   const deployment = computeScope({ deployment: true })
   assert.deepEqual(deployment.images, [])
   assert.equal(deployment.deploy_contract, true)
+
+  assert.equal(computeScope({}, 'gateway').packages, 'gateway')
+  assert.deepEqual(computeScope({ release: true }).images.map(({ manifest }) => manifest), ['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway'])
 })
