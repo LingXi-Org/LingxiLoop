@@ -1,5 +1,17 @@
 # Third-Party Notices
 
+## Production topology references
+
+The Refine production overview adapts the 2.5D isometric canvas language from
+FossFLOW commit `59d51ec5a0be809522bc7b53cd70a50fc8dffbe6` and the read-only health-overlay
+model from Rackpad commit `05b75b85f3cd168bc95cd3ff8439a20d7c2cb04c`:
+
+- https://github.com/victortassinari/FossFLOW
+- https://github.com/Kobii-git/rackpad
+
+Both references are MIT licensed. No editor or React Flow runtime is bundled;
+the production map is implemented with the project's existing React, SVG and CSS.
+
 ## Dokploy
 
 The Refine release dashboard adapts Dokploy's centralized deployment table

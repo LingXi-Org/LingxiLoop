@@ -9,7 +9,6 @@ import {
   CircleAlertIcon,
   DatabaseIcon,
   ExternalLinkIcon,
-  FolderKanbanIcon,
   GraduationCapIcon,
   HeartPulseIcon,
   KeyRoundIcon,
@@ -18,7 +17,6 @@ import {
   SearchIcon,
   ShieldCheckIcon,
   ShieldIcon,
-  UsersIcon,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
@@ -179,35 +177,6 @@ export function SearchPage() {
   return <div className="space-y-6"><PageHeading title={`搜索“${query}”`} description="用户、公司、项目与课程" />{data.length === 0
     ? <EmptyPanel message="没有匹配结果" />
     : <ItemGroup>{data.map((item) => <Item asChild variant="outline" key={`${item.resource}:${item.id}`}><Link to={`/resources/${item.resource}/${encodeURIComponent(item.id)}`}><ItemMedia variant="icon" className="grid size-9 place-items-center rounded-xl bg-muted"><SearchIcon /></ItemMedia><ItemContent><ItemTitle>{item.label}<Badge variant="secondary">{resourceDefinition(item.resource)?.label}</Badge></ItemTitle><ItemDescription>{item.summary ?? item.id}</ItemDescription></ItemContent><ChevronRightIcon className="size-4 text-muted-foreground" /></Link></Item>)}</ItemGroup>}</div>
-}
-
-interface DashboardData {
-  counts: { users: number; companies: number; projects: number; activeRuns: number; failedJobs: number }
-  dependencies: Record<string, boolean>
-  recentAudit: Array<{ id: number; kind: string; user_id: string | null; created_at: string }>
-}
-
-export function DashboardPage() {
-  const query = useCustom<DashboardData>({ url: `${API_URL}/control/platform/dashboard`, method: 'get' })
-  if (query.query.isLoading && !query.query.data) return <ResourceSkeleton variant="cards" count={5} label="正在加载运营概览" />
-  if (query.query.isError) return <ErrorPanel message="无法加载运营概览" retry={() => void query.query.refetch()} />
-  const data = query.query.data?.data
-  if (!data) return <EmptyPanel message="暂无运营数据" />
-  const cards = [
-    { label: '用户', value: data.counts.users, description: '平台账户', icon: UsersIcon },
-    { label: '公司', value: data.counts.companies, description: '租户组织', icon: Building2Icon },
-    { label: '项目', value: data.counts.projects, description: '协作空间', icon: FolderKanbanIcon },
-    { label: '活跃运行', value: data.counts.activeRuns, description: 'Agent 正在执行', icon: ActivityIcon },
-    { label: '失败任务', value: data.counts.failedJobs, description: '需要关注', icon: CircleAlertIcon, destructive: true },
-  ]
-  return <div className="space-y-8">
-    <PageHeading title="运营概览" description="关键规模、依赖健康与近期审计" />
-    <section className="admin-card-grid">{cards.map(({ label, value, description, icon: Icon, destructive }) => <Card key={label} size="sm" className="admin-metric-card"><CardContent className="flex items-start justify-between gap-4"><div><p className="text-sm font-medium text-muted-foreground">{label}</p><p className="mt-3 font-heading text-3xl font-semibold tracking-tight tabular-nums">{value}</p><p className="mt-1 text-xs text-muted-foreground">{description}</p></div><span className={destructive ? 'admin-metric-icon admin-metric-icon-destructive' : 'admin-metric-icon'}><Icon /></span></CardContent></Card>)}</section>
-    <div className="grid gap-6 xl:grid-cols-2">
-      <Card><CardHeader><CardTitle className="text-base">依赖健康</CardTitle><CardDescription>平台关键服务的实时可用状态</CardDescription></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">{Object.entries(data.dependencies).map(([name, healthy]) => <Item key={name} variant="muted" size="sm"><ItemMedia variant="icon"><span className={`size-2 rounded-full ${healthy ? 'bg-primary' : 'bg-destructive'}`} /></ItemMedia><ItemContent><ItemTitle>{name}</ItemTitle></ItemContent><Badge variant={healthy ? 'secondary' : 'destructive'}>{healthy ? '正常' : '异常'}</Badge></Item>)}</CardContent></Card>
-      <Card><CardHeader><CardTitle className="text-base">近期审计</CardTitle><CardDescription>最近发生的平台级操作</CardDescription></CardHeader><CardContent><ItemGroup>{data.recentAudit.map((event) => <Item key={event.id} variant="muted" size="sm"><ItemMedia variant="icon" className="grid size-8 place-items-center rounded-lg bg-background"><ShieldCheckIcon /></ItemMedia><ItemContent><ItemTitle>{event.kind}</ItemTitle><ItemDescription>{event.user_id ?? '系统'} · {new Date(event.created_at).toLocaleString()}</ItemDescription></ItemContent></Item>)}</ItemGroup></CardContent></Card>
-    </div>
-  </div>
 }
 
 export function ResourceListPage() {
