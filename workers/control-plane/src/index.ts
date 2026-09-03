@@ -12,6 +12,7 @@ type Secrets = {
   BOOTSTRAP_ADMIN_TOKEN: string
   OPENSHIP_PAT: string
   OPENSHIP_PROJECT_IDS: string
+  OPENSHIP_APP_TARGETS: string
   RESEND_API_KEY: string
   RESEND_FROM: string
   TURNSTILE_SECRET_KEY: string
@@ -491,6 +492,8 @@ app.post('/api/internal/releases', async (c) => {
   if (!input.commitSha || !/^[0-9a-f]{40}$/.test(input.commitSha) || !input.deployCommitSha || !/^[0-9a-f]{40}$/.test(input.deployCommitSha) || !input.imageDigests || Array.isArray(input.imageDigests)) return c.json({ error: 'invalid release payload' }, 400)
   const projectIds = [...new Set(c.env.OPENSHIP_PROJECT_IDS.split(',').map((id) => id.trim()).filter(Boolean))]
   if (!projectIds.length || projectIds.some((id) => !/^proj_[\w-]+$/.test(id))) return c.json({ error: 'invalid OpenShip project configuration' }, 500)
+  const appTargets = c.env.OPENSHIP_APP_TARGETS.split(',').map((target) => target.trim().split(':'))
+  if (!input.imageDigests.server || !/^\S*lingxiloop-server:[0-9a-f]{40}$/.test(input.imageDigests.server) || appTargets.some(([projectId, serviceId]) => !projectIds.includes(projectId) || !/^svc_[\w-]+$/.test(serviceId))) return c.json({ error: 'invalid OpenShip app configuration' }, 500)
   const existing = await c.env.DB.prepare(`SELECT status,openship_deployment_id FROM release_requests WHERE commit_sha=?`).bind(input.commitSha).first<{ status: string; openship_deployment_id: string | null }>()
   if (existing?.status === 'triggered') return c.json(existing)
   let previous: Array<{ projectId: string; deploymentId?: string; accepted?: boolean; error?: string }> = []
@@ -501,6 +504,20 @@ app.post('/api/internal/releases', async (c) => {
   const now = Date.now()
   if (existing) await c.env.DB.prepare(`UPDATE release_requests SET image_digests=?,status='triggering',error=NULL,updated_at=? WHERE commit_sha=?`).bind(JSON.stringify(input.imageDigests), now, input.commitSha).run()
   else await c.env.DB.prepare(`INSERT INTO release_requests(commit_sha,image_digests,status,created_at,updated_at) VALUES(?,?,'triggering',?,?)`).bind(input.commitSha, JSON.stringify(input.imageDigests), now, now).run()
+  const syncErrors = (await Promise.all(appTargets.map(async ([projectId, serviceId]) => {
+    try {
+      const response = await fetch(openShipUrl(c.env, `/projects/${projectId}/services/${serviceId}`), {
+        method: 'PATCH', headers: { authorization: `Bearer ${c.env.OPENSHIP_PAT}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ image: input.imageDigests?.server }),
+      })
+      return response.ok ? null : `${projectId}: image sync failed (${response.status})`
+    } catch { return `${projectId}: image sync unavailable` }
+  }))).filter(Boolean)
+  if (syncErrors.length) {
+    const error = syncErrors.join('; ')
+    await c.env.DB.prepare(`UPDATE release_requests SET status='failed',error=?,updated_at=? WHERE commit_sha=?`).bind(error, Date.now(), input.commitSha).run()
+    return c.json({ commitSha: input.commitSha, status: 'failed', error }, 502)
+  }
   const completed = new Map(previous.filter((item) => item.deploymentId || item.accepted).map((item) => [item.projectId, item]))
   const attempted = await Promise.all(projectIds.filter((projectId) => !completed.has(projectId)).map(async (projectId) => {
     try {

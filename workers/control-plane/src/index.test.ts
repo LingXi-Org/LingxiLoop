@@ -36,13 +36,22 @@ describe('control-plane trust boundaries', () => {
   it('fans one signed release out to every OpenShip project exactly once', async () => {
     const commitSha = 'a'.repeat(40)
     const deployCommitSha = 'b'.repeat(40)
-    const body = JSON.stringify({ commitSha, deployCommitSha, imageDigests: { server: `server:${commitSha}` } })
+    const serverImage = `registry.example/lingxiloop-server:${commitSha}`
+    const body = JSON.stringify({ commitSha, deployCommitSha, imageDigests: { server: serverImage } })
     const key = await crypto.subtle.importKey('raw', new TextEncoder().encode('test-release-secret'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
     const bytes = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body)))
     const signature = btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
     fetchMock.activate()
     fetchMock.disableNetConnect()
     const openShip = fetchMock.get('https://openship.example.com')
+    openShip.intercept({
+      path: '/api/proxy/api/projects/proj_test-a/services/svc_app-a', method: 'PATCH',
+      body: JSON.stringify({ image: serverImage }),
+    }).reply(200, { success: true })
+    openShip.intercept({
+      path: '/api/proxy/api/projects/proj_test-b/services/svc_app-b', method: 'PATCH',
+      body: JSON.stringify({ image: serverImage }),
+    }).reply(200, { success: true })
     openShip.intercept({
       path: '/api/proxy/api/deployments', method: 'POST',
       body: JSON.stringify({ projectId: 'proj_test-a', branch: 'main', commitSha: deployCommitSha, environment: 'production' }),
