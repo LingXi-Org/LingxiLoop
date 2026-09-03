@@ -135,11 +135,11 @@ export async function provisionPersonalWorkspace(
   }
   await db.query(
     `INSERT INTO participants (id,kind,name,role,initial,avatar_bg,avatar_url,status,company_id)
-     VALUES ($1,'human',$2,NULL,$3,'#FF8870',$4,'avail',$5)
+     VALUES ($1,'human',$2,NULL,upper(left($2,1)),'#FF8870',$3,'avail',$4)
      ON CONFLICT (id,company_id) DO UPDATE SET
        name=EXCLUDED.name,initial=EXCLUDED.initial,avatar_url=EXCLUDED.avatar_url,
        status='avail',departed_at=NULL`,
-    [user.id, user.display_name, user.display_name.charAt(0).toUpperCase(), user.avatar_url, result.companyId],
+    [user.id, user.display_name, user.avatar_url, result.companyId],
   )
   return result
 }
