@@ -21,6 +21,7 @@ describe('control-plane trust boundaries', () => {
     const response = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/control/releases')
     expect(response.status).toBe(401)
     expect((await SELF.fetch('https://admin.example.com/api/control/deployment-dashboard')).status).toBe(401)
+    expect((await SELF.fetch('https://admin.example.com/api/control/production-topology')).status).toBe(401)
     const authSettingsResponse = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/control/auth-settings')
     expect(authSettingsResponse.status).toBe(401)
   })
@@ -113,13 +114,24 @@ describe('control-plane trust boundaries', () => {
       .reply(200, { config: { title: 'LingxiLoop 服务状态' }, incident: null, publicGroupList: [{ id: 1, name: '公共入口', monitorList: [{ id: 11, name: 'Web' }] }], maintenanceList: [] })
     upstream.intercept({ path: '/api/status-page/heartbeat/lingxiloop' })
       .reply(200, { heartbeatList: { 11: [{ status: 0 }, { status: 1, ping: 26 }] }, uptimeList: { '11_24': 1 } })
-    fetchMock.get('https://openship.example.com').intercept({ path: '/api/proxy/api/deployments?page=1&perPage=30' }).reply(200, {
+    const openShip = fetchMock.get('https://openship.example.com')
+    openShip.intercept({ path: '/api/proxy/api/deployments?page=1&perPage=30' }).reply(200, {
       data: [{
         id: 'dep_test', projectId: 'proj_test', projectName: 'app-a', status: 'ready', commitSha: 'a'.repeat(40), commitMessage: 'release', trigger: 'manual',
         environment: 'production', framework: 'docker-compose', buildDurationMs: 1250, version: 3, createdAt: '2026-09-03T00:00:00.000Z',
         updatedAt: '2026-09-03T00:00:02.000Z', isActive: true, envVars: { SECRET: 'must-not-leak' }, meta: { composeServices: ['large'] },
       }],
       total: 119,
+    })
+    openShip.intercept({ path: '/api/proxy/api/issues/health' }).reply(200, {
+      watching: true,
+      data: [{
+        serviceId: 'svc_api', projectName: 'lingxiloop-app-a', serviceName: 'lingxiloop', serverName: '上海-A',
+        state: 'healthy', observedAt: '2026-09-03T00:42:01.016Z', environment: { SECRET: 'must-not-leak' },
+      }, {
+        serviceId: 'svc_worker', projectName: 'lingxiloop-app-b', serviceName: 'worker', serverName: '上海-B',
+        state: 'down', observedAt: '2026-09-03T00:42:00.929Z', containerId: 'must-not-leak',
+      }],
     })
     try {
       const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
@@ -146,6 +158,17 @@ describe('control-plane trust boundaries', () => {
           updatedAt: '2026-09-03T00:00:02.000Z', isActive: true,
         }],
         total: 119,
+      })
+      const topology = await SELF.fetch('https://admin.example.com/api/control/production-topology', { headers: { cookie: signIn.headers.get('set-cookie') ?? '' } })
+      expect(await topology.json()).toEqual({
+        watching: true,
+        observedAt: '2026-09-03T00:42:01.016Z',
+        summary: { services: 2, healthy: 1, attention: 1, projects: 2, servers: 2 },
+        services: [{
+          id: 'svc_api', project: 'lingxiloop-app-a', service: 'lingxiloop', server: '上海-A', state: 'healthy', observedAt: '2026-09-03T00:42:01.016Z',
+        }, {
+          id: 'svc_worker', project: 'lingxiloop-app-b', service: 'worker', server: '上海-B', state: 'down', observedAt: '2026-09-03T00:42:00.929Z',
+        }],
       })
       fetchMock.assertNoPendingInterceptors()
     } finally { fetchMock.deactivate() }

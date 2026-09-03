@@ -4,7 +4,8 @@ import { lazy, type ReactNode, Suspense } from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router'
 import { accessControlProvider, authProvider, dataProvider } from './api'
 import { AuthSettingsPage } from './auth-settings-page'
-import { AdminLayout, DashboardPage, ForbiddenPage, LoginPage, ResourceDetailPage, ResourceListPage, SearchPage } from './pages'
+import { AdminLayout, ForbiddenPage, LoginPage, ResourceDetailPage, ResourceListPage, SearchPage } from './pages'
+import { ProductionTopologyPage } from './production-topology-page'
 import { ADMIN_RESOURCES } from './resources'
 
 const ReleaseManagementPage = lazy(() => import('./release-management-page').then((module) => ({ default: module.ReleaseManagementPage })))
@@ -29,7 +30,7 @@ export function AdminApp() {
     <Route path="/forbidden" element={<ForbiddenPage />} />
     <Route element={<Authenticated key="admin" fallback={<CatchAllNavigate to="/login" />}><Outlet /></Authenticated>}>
       <Route element={<AdminLayout />}>
-        <Route index element={<DashboardPage />} />
+        <Route index element={<ProductionTopologyPage />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="releases" element={deferredPage(<ReleaseManagementPage />)} />
         <Route path="authentication" element={<AuthSettingsPage />} />

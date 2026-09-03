@@ -329,6 +329,40 @@ app.get('/api/control/deployment-dashboard', async (c) => {
   })
 })
 
+app.get('/api/control/production-topology', async (c) => {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  const response = await fetch(openShipUrl(c.env, '/issues/health'), { headers: openShipHeaders(c) })
+  if (!response.ok) return c.json({ error: 'OpenShip unavailable' }, 502)
+  const payload = await response.json<{ data?: Array<Record<string, unknown>>; watching?: boolean }>()
+  const services = (Array.isArray(payload.data) ? payload.data : []).slice(0, 100).flatMap((row) => {
+    const id = typeof row.serviceId === 'string' ? row.serviceId : ''
+    const project = typeof row.projectName === 'string' ? row.projectName : ''
+    const service = typeof row.serviceName === 'string' ? row.serviceName : ''
+    const server = typeof row.serverName === 'string' ? row.serverName : ''
+    if (!id || !project || !service || !server) return []
+    const state = row.state === 'healthy' || row.state === 'unhealthy' || row.state === 'crash-looping' || row.state === 'down'
+      ? row.state
+      : 'unknown'
+    return [{ id, project, service, server, state, observedAt: typeof row.observedAt === 'string' ? row.observedAt : null }]
+  })
+  const healthy = services.filter((service) => service.state === 'healthy').length
+  const observedAt = services.map((service) => service.observedAt).filter((value): value is string => Boolean(value)).sort().at(-1) ?? null
+  c.header('cache-control', 'private, no-store')
+  return c.json({
+    watching: payload.watching === true,
+    observedAt,
+    summary: {
+      services: services.length,
+      healthy,
+      attention: services.length - healthy,
+      projects: new Set(services.map((service) => service.project)).size,
+      servers: new Set(services.map((service) => service.server)).size,
+    },
+    services,
+  })
+})
+
 app.all('/api/control/openship/*', openShip)
 
 app.get('/api/control/releases', async (c) => {
