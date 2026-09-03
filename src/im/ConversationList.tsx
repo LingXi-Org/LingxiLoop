@@ -132,7 +132,7 @@ export function ConversationListItemContent({
           )}
         </span>
         {(conversation.unread ?? 0) > 0 && (
-          <Badge variant={muted ? 'secondary' : 'default'} className="min-w-5 px-1.5 text-[10px] font-bold tabular-nums">
+          <Badge className="min-w-5 bg-[var(--unread)] px-1.5 text-[10px] font-bold tabular-nums text-[var(--unread-foreground)]">
             {conversation.unread! > 99 ? '99+' : conversation.unread}
           </Badge>
         )}

@@ -14,6 +14,7 @@ const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.m
 
 test('read route requires a durable cursor and retains unseen unread messages', () => {
   assert.match(router, /imMessagesApplication\.markRead/)
+  assert.match(router, /channels\/:id\/read[\s\S]*?'conversation:read'[\s\S]*?imMessagesApplication\.markRead/)
   const markRead = messagesApplication.slice(messagesApplication.indexOf('async markRead'))
   assert.doesNotMatch(markRead, /clearUnread/)
   assert.doesNotMatch(router, /legacy/)

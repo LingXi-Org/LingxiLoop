@@ -259,7 +259,7 @@ function MessageTextPart() {
       className={cn(
         'min-w-0 tracking-[-0.01em]',
         isMobile ? 'text-base leading-[1.5]' : 'text-[15px] leading-[1.35]',
-        metadata.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-white [&_.typeset]:!text-white [&_.typeset_*]:!text-white'],
+        metadata.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-primary-foreground [&_.typeset]:!text-primary-foreground [&_.typeset_*]:!text-primary-foreground'],
         !metadata.isMine && 'text-foreground',
         metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
       )}
@@ -343,6 +343,7 @@ export function ConversationMessage() {
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
       data-msg-id={custom.clientMessageId}
+      data-msg-seq={custom.sequence ?? undefined}
       data-find-message-id={custom.clientMessageId}
       data-message-presentation={custom.presentation}
       data-message-continued-from={custom.continuedFromPrevious}

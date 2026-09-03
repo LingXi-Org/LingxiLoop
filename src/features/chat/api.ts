@@ -2,6 +2,11 @@
 import { http } from '@/api/core/http'
 
 export const messagesApi = {
+  markRead: (conversationId: string, readThroughSeq: number) =>
+    http<{ ok: true; latestSeq: number }>(`/im/channels/${encodeURIComponent(conversationId)}/read`, {
+      method: 'POST',
+      body: JSON.stringify({ readThroughSeq }),
+    }),
   createPoll: (args: {
     clientRequestId: string
     conversationId: string

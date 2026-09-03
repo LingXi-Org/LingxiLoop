@@ -5,7 +5,9 @@ import { useCallback, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useConversationUi } from '@/stores/conversationUi'
+import { useConversations } from '@/features/conversations/store'
 import { userFacingError } from '@/lib/userFacingError'
+import { messagesApi } from '../api'
 import { chatTransport, useConversationThreadSnapshot } from '../runtime'
 import { ConversationActivity } from './ConversationActivity'
 import { ConversationComposer } from './ConversationComposer'
@@ -29,6 +31,7 @@ export function ConversationThread({
   const viewportRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadingOlderRef = useRef(false)
+  const lastReadSequenceRef = useRef(0)
   const pendingJumpId = useConversationUi((state) => state.pendingJumpMessageId)
   const clearPendingJump = useConversationUi((state) => state.clearPendingJump)
 
@@ -59,6 +62,55 @@ export function ConversationThread({
     observer.observe(sentinel)
     return () => observer.disconnect()
   }, [loadOlder, threadRootId])
+
+  useEffect(() => { lastReadSequenceRef.current = 0 }, [conversationId])
+
+  useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport || threadRootId) return
+    const messages = [...viewport.querySelectorAll<HTMLElement>('[data-msg-seq]')]
+    if (messages.length === 0) return
+    const markVisibleMessagesRead = () => {
+      if (document.visibilityState !== 'visible') return
+      const viewportBounds = viewport.getBoundingClientRect()
+      let readThroughSeq = lastReadSequenceRef.current
+      for (const message of messages) {
+        const bounds = message.getBoundingClientRect()
+        if (bounds.bottom <= viewportBounds.top || bounds.top >= viewportBounds.bottom) continue
+        const sequence = Number(message.dataset.msgSeq)
+        if (Number.isSafeInteger(sequence)) readThroughSeq = Math.max(readThroughSeq, sequence)
+      }
+      if (readThroughSeq <= lastReadSequenceRef.current) return
+      const previousSequence = lastReadSequenceRef.current
+      lastReadSequenceRef.current = readThroughSeq
+      void messagesApi.markRead(conversationId, readThroughSeq).then(({ latestSeq }) => {
+        if (lastReadSequenceRef.current !== readThroughSeq) return
+        const unread = Math.max(0, latestSeq - readThroughSeq)
+        useConversations.setState((state) => ({
+          list: state.list.map((conversation) => (
+            conversation.id === conversationId ? { ...conversation, unread: unread || undefined } : conversation
+          )),
+        }))
+      }).catch((error) => {
+        if (lastReadSequenceRef.current === readThroughSeq) lastReadSequenceRef.current = previousSequence
+        console.warn('[chat.read-receipt] failed to advance visible cursor', error)
+      })
+    }
+    let settleTimer: number | undefined
+    const scheduleReadReceipt = () => {
+      window.clearTimeout(settleTimer)
+      settleTimer = window.setTimeout(markVisibleMessagesRead, 120)
+    }
+    const observer = new IntersectionObserver(scheduleReadReceipt, { root: viewport })
+    for (const message of messages) observer.observe(message)
+    document.addEventListener('visibilitychange', scheduleReadReceipt)
+    markVisibleMessagesRead()
+    return () => {
+      window.clearTimeout(settleTimer)
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', scheduleReadReceipt)
+    }
+  }, [conversationId, snapshot.messages, threadRootId])
 
   useEffect(() => {
     if (!pendingJumpId) return

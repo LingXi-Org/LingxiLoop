@@ -1,0 +1,137 @@
+.chat-review {
+  --review-agent-bubble: oklch(0.963 0.002 197.1);
+  --review-user-bubble: oklch(0.527 0.154 150.069);
+  --review-user-foreground: oklch(0.982 0.018 155.826);
+  --review-card-surface: oklch(1 0 0);
+  --review-card-muted: oklch(0.963 0.002 197.1);
+  --review-card-border: oklch(0.925 0.005 214.3);
+}
+
+.dark .chat-review {
+  --review-agent-bubble: color-mix(in oklch, oklch(0.148 0.004 228.8) 94%, oklch(0.987 0.002 197.1));
+  --review-user-bubble: oklch(0.448 0.119 151.328);
+  --review-user-foreground: oklch(0.982 0.018 155.826);
+  --review-card-surface: oklch(0.218 0.008 223.9);
+  --review-card-muted: oklch(0.275 0.011 216.9);
+  --review-card-border: oklch(1 0 0 / 10%);
+}
+
+.chat-review[data-chat-palette='neutral'] {
+  --review-agent-bubble: oklch(0.97 0 0);
+  --review-user-bubble: oklch(0.205 0 0);
+  --review-user-foreground: oklch(0.985 0 0);
+  --review-card-surface: oklch(0.995 0 0);
+  --review-card-muted: oklch(0.97 0 0);
+  --review-card-border: oklch(0.922 0 0);
+}
+
+.dark .chat-review[data-chat-palette='neutral'] {
+  --review-agent-bubble: oklch(0.269 0 0);
+  --review-user-bubble: oklch(0.985 0 0);
+  --review-user-foreground: oklch(0.205 0 0);
+  --review-card-surface: oklch(0.205 0 0);
+  --review-card-muted: oklch(0.269 0 0);
+  --review-card-border: oklch(1 0 0 / 12%);
+}
+
+.chat-review[data-chat-palette='zinc'] {
+  --review-agent-bubble: oklch(0.967 0.001 286.375);
+  --review-user-bubble: oklch(0.21 0.006 285.885);
+  --review-user-foreground: oklch(0.985 0 0);
+  --review-card-surface: oklch(0.995 0.001 286.375);
+  --review-card-muted: oklch(0.967 0.001 286.375);
+  --review-card-border: oklch(0.92 0.004 286.32);
+}
+
+.dark .chat-review[data-chat-palette='zinc'] {
+  --review-agent-bubble: oklch(0.274 0.006 286.033);
+  --review-user-bubble: oklch(0.985 0 0);
+  --review-user-foreground: oklch(0.21 0.006 285.885);
+  --review-card-surface: oklch(0.21 0.006 285.885);
+  --review-card-muted: oklch(0.274 0.006 286.033);
+  --review-card-border: oklch(1 0 0 / 12%);
+}
+
+.chat-review[data-chat-palette='stone'] {
+  --review-agent-bubble: oklch(0.97 0.001 106.424);
+  --review-user-bubble: oklch(0.216 0.006 56.043);
+  --review-user-foreground: oklch(0.985 0.001 106.423);
+  --review-card-surface: oklch(0.995 0.001 106.424);
+  --review-card-muted: oklch(0.97 0.001 106.424);
+  --review-card-border: oklch(0.923 0.003 48.717);
+}
+
+.dark .chat-review[data-chat-palette='stone'] {
+  --review-agent-bubble: oklch(0.268 0.007 34.298);
+  --review-user-bubble: oklch(0.985 0.001 106.423);
+  --review-user-foreground: oklch(0.216 0.006 56.043);
+  --review-card-surface: oklch(0.216 0.006 56.043);
+  --review-card-muted: oklch(0.268 0.007 34.298);
+  --review-card-border: oklch(1 0 0 / 12%);
+}
+
+.chat-review[data-chat-palette='mauve'] {
+  --review-agent-bubble: oklch(0.968 0.006 319.1);
+  --review-user-bubble: oklch(0.265 0.025 318.2);
+  --review-user-foreground: oklch(0.985 0.004 319.4);
+  --review-card-surface: oklch(0.994 0.003 319.4);
+  --review-card-muted: oklch(0.968 0.006 319.1);
+  --review-card-border: oklch(0.918 0.012 318.5);
+}
+
+.dark .chat-review[data-chat-palette='mauve'] {
+  --review-agent-bubble: oklch(0.275 0.018 318.6);
+  --review-user-bubble: oklch(0.91 0.045 318.2);
+  --review-user-foreground: oklch(0.22 0.018 318.6);
+  --review-card-surface: oklch(0.218 0.014 318.5);
+  --review-card-muted: oklch(0.275 0.018 318.6);
+  --review-card-border: oklch(0.82 0.02 318.5 / 18%);
+}
+
+.chat-review[data-chat-palette='olive'] {
+  --review-agent-bubble: oklch(0.969 0.009 107.2);
+  --review-user-bubble: oklch(0.275 0.036 110.1);
+  --review-user-foreground: oklch(0.985 0.008 107.2);
+  --review-card-surface: oklch(0.994 0.005 107.2);
+  --review-card-muted: oklch(0.969 0.009 107.2);
+  --review-card-border: oklch(0.916 0.017 107.1);
+}
+
+.dark .chat-review[data-chat-palette='olive'] {
+  --review-agent-bubble: oklch(0.285 0.025 110.1);
+  --review-user-bubble: oklch(0.9 0.055 107.5);
+  --review-user-foreground: oklch(0.225 0.024 110.1);
+  --review-card-surface: oklch(0.225 0.018 110.1);
+  --review-card-muted: oklch(0.285 0.025 110.1);
+  --review-card-border: oklch(0.82 0.03 107.5 / 18%);
+}
+
+.chat-review .assistant-ui-scope {
+  --bubble-agent: var(--review-agent-bubble);
+}
+
+.chat-review [data-message-bubble='user'] {
+  background-color: var(--review-user-bubble) !important;
+  color: var(--review-user-foreground) !important;
+}
+
+.chat-review [data-message-presentation='special-card'] {
+  --background: var(--review-card-surface);
+  --popover: var(--review-card-surface);
+  --card: var(--review-card-surface);
+  --muted: var(--review-card-muted);
+  --accent: var(--review-card-muted);
+  --border: var(--review-card-border);
+  --input: var(--review-card-border);
+  --primary: var(--review-user-bubble);
+  --primary-foreground: var(--review-user-foreground);
+}
+
+.review-palette-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid var(--review-card-border);
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--review-agent-bubble) 0 50%, var(--review-user-bubble) 50% 100%);
+  box-shadow: 0 0 0 2px var(--background);
+}

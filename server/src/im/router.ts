@@ -144,7 +144,7 @@ imRouter.get('/sends/:clientNonce', safe(async (req, res) => {
 imRouter.post('/channels/:id/read', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const channelId = String(req.params.id)
-  await assertChannelPermission(userId, companyId, channelId, 'conversation:write')
+  await assertChannelPermission(userId, companyId, channelId, 'conversation:read')
   await assertTeacherRoomAccessible(channelId,companyId,userId)
   const { readThroughSeq } = requestInput(imReadRequestSchema, req.body)
   const result = await imMessagesApplication.markRead({ companyId, userId, channelId, readThroughSeq })

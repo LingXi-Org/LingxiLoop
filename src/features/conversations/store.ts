@@ -316,6 +316,13 @@ export function bootConversations() {
       // Read cursors advance only from the visible-range observer in the
       // message store. Arrival alone is not proof that a message was seen.
       void useConversations.getState().reload()
+    } else if (e.type === 'im.read-receipt') {
+      const auth = useAuth.getState()
+      if (e.readerId === auth.user?.id
+        && e.companyId === auth.activeCompanyId
+        && useConversations.getState().list.some((conversation) => conversation.id === e.channelId)) {
+        void useConversations.getState().reload()
+      }
     } else if (e.type === 'conversation.updated') {
       // Surgical patch — apply patch fields to the matching conversation in
       // place without a full network reload.

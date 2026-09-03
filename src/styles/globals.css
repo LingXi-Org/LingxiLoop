@@ -276,8 +276,39 @@ body {
 
 /* Desktop product aliases are compositions of the canonical Luma tokens. */
 .desktop-openmaus {
+  /* Midnight Neutral: the selected shadcn-neutral shell palette. */
+  --background: oklch(0.995 0 0);
+  --foreground: oklch(0.205 0 0);
+  --card: oklch(0.995 0 0);
+  --card-foreground: oklch(0.205 0 0);
+  --popover: oklch(0.995 0 0);
+  --popover-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.995 0 0);
+  --sidebar-foreground: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.556 0 0);
+  --bubble-agent: oklch(0.97 0 0);
+  --workspace-chrome-surface: oklch(0.985 0 0);
+  --unread: oklch(0.527 0.154 150.069);
+  --unread-foreground: oklch(0.982 0.018 155.826);
+  --avail: var(--unread);
   --im-chat-surface: var(--background);
-  --im-nav-surface: var(--accent);
+  --im-nav-surface: var(--background);
   --im-detail-surface: var(--sidebar);
   --im-elevated-surface: var(--card);
   --im-divider: color-mix(in srgb, var(--border) 52%, transparent);
@@ -288,20 +319,56 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.dark .desktop-openmaus {
+  --background: oklch(0.205 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.985 0 0);
+  --sidebar-primary-foreground: oklch(0.205 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.556 0 0);
+  --bubble-agent: oklch(0.269 0 0);
+  --workspace-chrome-surface: oklch(0.205 0 0);
+  --unread: oklch(0.448 0.119 151.328);
+  --unread-foreground: oklch(0.982 0.018 155.826);
+}
+
 .desktop-openmaus .chat-surface {
-  background: var(--card);
+  background: var(--background);
 }
 
 .desktop-openmaus .im-conversations-sidebar {
   border-color: var(--border);
-  background: var(--card);
+  background: var(--background);
   container-name: im-conversations-sidebar;
   container-type: inline-size;
 }
 
 .desktop-openmaus .server-rail {
   border-color: transparent;
-  background: var(--accent);
+  background: var(--workspace-chrome-surface);
+}
+
+.desktop-openmaus [data-workspace-titlebar] {
+  background: var(--workspace-chrome-surface);
 }
 
 .desktop-openmaus .server-rail-scroll {

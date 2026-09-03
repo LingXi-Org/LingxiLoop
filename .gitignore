@@ -26,6 +26,9 @@ dist-admin
 dist-ssr
 /artifacts/eval-*.json
 /artifacts/.env*
+/artifacts/playwright/.playwright-artifacts-*/
+/artifacts/playwright/*/error-context.md
+/artifacts/playwright/*/trace.zip
 
 # Python bytecode cache
 .venv/
