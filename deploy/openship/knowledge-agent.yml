@@ -10,7 +10,10 @@ services:
   surrealdb:
     image: surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011
     restart: unless-stopped
-    command: ["start", "--log", "warn", "--user", "open-notebook", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}", "rocksdb:/home/nonroot/open-notebook.db"]
+    command: ["start", "--log", "warn", "rocksdb:/home/nonroot/open-notebook.db"]
+    environment:
+      SURREAL_USER: open-notebook
+      SURREAL_PASS: ${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}
     volumes:
       - surreal-data:/home/nonroot
     healthcheck:
@@ -49,7 +52,7 @@ services:
       OPENAI_BASE_URL: "${LINGXILOOP_CONTROL_PLANE_URL:?LINGXILOOP_CONTROL_PLANE_URL is required}/internal/open-notebook/v1"
       OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required}
     ports:
-      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5055:5055"
+      - "10.20.0.3:5055:5055"
     volumes:
       - open-notebook-data:/app/data
     healthcheck:

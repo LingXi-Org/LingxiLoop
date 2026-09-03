@@ -136,6 +136,9 @@ test('OpenShip knowledge services receive writable storage and the control plane
   const compose = read('deploy/openship/knowledge-agent.yml')
 
   assert.match(compose, /surrealdb:[\s\S]*?rocksdb:\/home\/nonroot\/open-notebook\.db/)
+  assert.match(compose, /SURREAL_PASS: \$\{OPEN_NOTEBOOK_SURREAL_PASSWORD:\?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}/)
+  assert.doesNotMatch(compose, /--pass/)
+  assert.match(compose, /10\.20\.0\.3:5055:5055/)
   assert.match(compose, /supervisorctl -s unix:\/\/\/tmp\/supervisor\.sock status rag-api/)
   assert.match(compose, /OPEN_NOTEBOOK_WORKER_MAX_TASKS: "1"/)
   assert.equal((compose.match(/\$\{LINGXILOOP_CONTROL_PLANE_URL:\?/g) ?? []).length, 1)
@@ -169,7 +172,7 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
   assert.match(gateway, /server_name loop\.lingxilearn\.cn/)
   assert.match(gateway, /server_name im\.lingxilearn\.cn/)
   assert.match(gateway, /proxy_pass http:\/\/10\.20\.0\.2:5200/)
-  assert.match(core, /PRIVATE_BIND_IP[^\n]+:5200:5200/)
+  assert.match(core, /10\.20\.0\.2:5200:5200/)
   assert.doesNotMatch(core, /WUKONG_WS_BIND_IP/)
   assert.match(worker, /"routes": \[\{ "pattern": "admin\.lingxilearn\.cn", "custom_domain": true \}\]/)
   assert.match(worker, /"workers_dev": false/)

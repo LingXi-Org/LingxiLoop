@@ -11,7 +11,7 @@ x-quiet-logging: &quiet-logging
 # .env.secrets; CI never creates or overwrites that file.
 
 x-lingxiloop-runtime: &lingxiloop-runtime
-  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:fd3246c2ce96711279fdb780a5d33703878cb6c8
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
   pull_policy: always
   env_file:
     - ./.env.secrets
@@ -65,7 +65,10 @@ services:
   surrealdb:
     image: surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011
     restart: unless-stopped
-    command: ["start", "--log", "warn", "--user", "open-notebook", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}", "rocksdb:/data/open-notebook.db"]
+    command: ["start", "--log", "warn", "rocksdb:/data/open-notebook.db"]
+    environment:
+      SURREAL_USER: open-notebook
+      SURREAL_PASS: ${OPEN_NOTEBOOK_SURREAL_PASSWORD:?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}
     volumes:
       - open-notebook-surreal-data:/data
     healthcheck:
@@ -202,7 +205,7 @@ services:
     logging: *quiet-logging
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:fd3246c2ce96711279fdb780a5d33703878cb6c8
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:b42fef160fe697d46a8818e054f945d1f80953f7
     pull_policy: always
     restart: unless-stopped
     env_file:

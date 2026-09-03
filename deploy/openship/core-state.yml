@@ -16,7 +16,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-lingxiloop}
     ports:
-      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5432:5432"
+      - "10.20.0.2:5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -34,7 +34,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--loglevel", "warning", "--maxmemory", "${REDIS_MAXMEMORY:-192mb}", "--maxmemory-policy", "noeviction"]
     ports:
-      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:6379:6379"
+      - "10.20.0.2:6379:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -58,8 +58,8 @@ services:
       WK_CLUSTER_JOIN_TOKEN: ${WK_CLUSTER_JOIN_TOKEN:?WK_CLUSTER_JOIN_TOKEN is required}
       WK_WEBHOOK_HTTP_ADDR: "${LINGXILOOP_INTERNAL_ORIGIN:?LINGXILOOP_INTERNAL_ORIGIN is required}/webhooks/wukong?token=${WUKONG_WEBHOOK_SECRET:?WUKONG_WEBHOOK_SECRET is required}"
     ports:
-      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5001:5001"
-      - "${PRIVATE_BIND_IP:?PRIVATE_BIND_IP is required}:5200:5200"
+      - "10.20.0.2:5001:5001"
+      - "10.20.0.2:5200:5200"
     volumes:
       - wukong-data:/var/lib/wukongim
     healthcheck:
