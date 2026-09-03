@@ -211,6 +211,7 @@ test('Agent OS uses native assistant-ui chunks through one live WebSocket bridge
   assert.match(transport, /applyAssistantStreamChunks/)
   assert.match(transport, /current\.id === `preview-\$\{metadata\.runId\}`/)
   assert.match(transport, /currentMetadata\.messageKind === 'text'/)
+  assert.doesNotMatch(transport, /Rejected unstreamed assistant message/)
   assert.doesNotMatch(transport, /message\.delta|stream\.open/)
   assert.equal(existsSync(resolve(here, '../../server/src/messages/stream-reply.ts')), false)
 })

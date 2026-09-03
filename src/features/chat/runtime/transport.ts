@@ -380,22 +380,6 @@ export class ChatTransport {
       forgetChatOutbox(envelope.clientMsgNo || metadata.clientMessageId)
       updateConversation(envelope.channelId, (state) => {
         const reconcilesStream = metadata.senderKind === 'agent' && metadata.messageKind === 'text' && Boolean(metadata.runId)
-        if (reconcilesStream && metadata.runId) {
-          const preview = state.messages.find((current) => current.id === `preview-${metadata.runId}`)
-          const streamed = preview?.role === 'assistant'
-            ? preview.content
-              .filter((part) => part.type === 'text')
-              .map((part) => part.text)
-              .join('')
-              .trim()
-            : ''
-          const committed = message.role === 'assistant'
-            ? message.content.filter((part) => part.type === 'text').map((part) => part.text).join('').trim()
-            : ''
-          if (!streamed || streamed !== committed) {
-            throw new Error(`Rejected unstreamed assistant message for run ${metadata.runId}`)
-          }
-        }
         const activeRuns = { ...state.activeRuns }
         if (reconcilesStream) {
           for (const id of Object.keys(activeRuns)) {
