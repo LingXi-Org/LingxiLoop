@@ -62,7 +62,7 @@ CI builds only affected LingxiLoop images on linux/amd64 and pushes immutable fu
 - `deploy/openship/core-state.yml`: WuKongIM;
 - `deploy/openship/knowledge-agent.yml`: Open Notebook.
 
-The current active LingxiLoop release uses manifest commit `e129d84c970b4112fa906fdb46d1dfc434b86330`. Server uses `c9324ff389c18f614fbcfc5df5061aff3db37edf`; AgentOS retains `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; WuKongIM and Open Notebook remain pinned to `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway uses `dd717dd234fe47afa0d0d72fcaebd98825d2f361`. The signed release requires all five image references to be present and immutable but does not force unrelated components to share one tag. All six projects run the same manifest.
+The current active LingxiLoop release uses manifest commit `7038ba612bb3331d1f65e9282b153436b29b9396`. Manual full-release workflow `33754222925` rebuilt Server, AgentOS, WuKongIM, Open Notebook, and Gateway with immutable tag `7f16f69be731326e091cc703c850e6b7ee6af6a5`. The signed release requires all five image references to be present and immutable but does not force unrelated components to share one tag. All six projects run the same manifest.
 
 - `9fe3cc645e2998c6201c737d4e4e2db2699cd423`: Gateway health check uses IPv4.
 - `e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29`: first immutable Gateway image; retained as an unused B image.
@@ -200,6 +200,12 @@ CI/CD run `33734932192` passed its required gates, published Server and AgentOS 
 On 2026-09-03, a user message was accepted, AgentOS and its LLM ledger completed successfully, and WuKongIM durably stored the final agent reply, but the browser showed no output. The frontend treated the transient stream preview as mandatory and rejected the authoritative durable reply whenever login, reconnect, or a stream gap caused that preview to be missed. Commit `c9324ff...` removed only that client-side preview dependency while retaining normal run reconciliation; server-side final-message validation remains authoritative.
 
 CI/CD run `33739088290` passed the required checks, published Server tag `c9324ff...`, and generated manifest `1c708cf...`. All six OpenShip deployments reached `ready` at version 5. API-A, API-B, and Worker-B run the new Server image; public `/api/health` returned 200 and the health watcher reported 16/16 healthy workloads with zero outage and zero action-required issues.
+
+## Native tool and question-card prompt contract
+
+On 2026-09-03, production evidence showed a vague but explicit planning request could receive a plain-text diagnostic question because the prompt contract allowed diagnostic questions as text. Commit `bae7c72...` changed the shared AgentOS contract to require `loop.chat.ask` for every blocking question and require the matching native Host action for explicit product operations; `prompt-v5` and the runtime Eval case make that behavior observable and regression-tested.
+
+A concurrent documentation push cancelled the first CI run after its required server checks and runtime Eval passed. The official main-only manual full-release workflow `33754222925` then rebuilt all five images from source `7f16f69...`, generated manifest `7038ba6...`, and fanned out six version-7 deployments. All reached `ready`; both AgentOS containers run the new image, the live container exposes `prompt-v5`, both migration one-shots exited 0, the health watcher reported 16/16 healthy workloads, and public `/api/health` returned 200.
 
 ## Alibaba Mail OTP cutover
 

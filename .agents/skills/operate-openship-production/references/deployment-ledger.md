@@ -4,7 +4,22 @@ The historical ledger began with 72 live API records on 2026-09-02 and was exten
 
 The conversation also contained `dep_hTwrgkuYccZOs8QT`, but OpenShip returned `NOT_FOUND`; it was a mistyped/nonexistent ID and is not part of the 72-record ledger. Raw-session truncation also produced the partial strings `dep_LGTbj5TasJJbtAu` and `dep_g9i`; their complete real IDs are `dep_LGTbj5TasJJbtAu3` and `dep_g9ieyTk2UUOOcWZi` below.
 
-## 2026-09-03 personal-workspace participant repair — current active
+## 2026-09-03 prompt-v5 full release — current active
+
+All six deployments are `ready` at manifest commit `7038ba612bb3331d1f65e9282b153436b29b9396` and OpenShip version 7. The complete five-image set uses source tag `7f16f69be731326e091cc703c850e6b7ee6af6a5` and includes prompt-contract source commit `bae7c72...`.
+
+| Project | Deployment | Version |
+| --- | --- | ---: |
+| `lingxiloop-core-state` | `dep_WWXcu0TAFSJqkY-T` | 7 |
+| `lingxiloop-app-a` | `dep_LcA5W8o1_i3xFHgi` | 7 |
+| `lingxiloop-agent-os-a` | `dep_ZOPgMliFZ6AQ9UPa` | 7 |
+| `lingxiloop-app-b` | `dep_I-ykV_hdUM0kOHiV` | 7 |
+| `lingxiloop-knowledge-agent` | `dep_cMzrvtTdEU7evhal` | 7 |
+| `lingxiloop-agent-os-b` | `dep_EKEXIjA0o1DnWbmP` | 7 |
+
+Workflow `33754222925` published all five immutable images and completed the signed six-project rollout. The active containers, migration exit codes, AgentOS prompt version and heartbeats, OpenShip watcher, Gateway health, and public API were verified after deployment.
+
+## 2026-09-03 personal-workspace participant repair — historical
 
 All six deployments are `ready` at manifest commit `d93432444c96f757a18100de3b3830e7d6d3ba41` and OpenShip version 4. Server and AgentOS use source tag `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; unchanged component pins remain recorded in `current-deployment.md`.
 

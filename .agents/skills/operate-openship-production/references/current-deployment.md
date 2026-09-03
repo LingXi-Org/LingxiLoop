@@ -1,6 +1,6 @@
 # Current production deployment
 
-Snapshot: 2026-09-03 20:10 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and host inspection. Re-read live state before every operation.
+Snapshot: 2026-09-03 20:31 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and targeted container inspection. Re-read live state before every operation.
 
 ## Scope and authority
 
@@ -27,16 +27,16 @@ Both hosts use a 4 GB `/swapfile4g`. Swap is emergency headroom, not normal capa
 
 ## Active LingxiLoop release
 
-All six projects run manifest commit `e129d84c970b4112fa906fdb46d1dfc434b86330`. Server uses immutable tag `c9324ff389c18f614fbcfc5df5061aff3db37edf`; AgentOS retains `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; WuKongIM and Open Notebook retain `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway uses `dd717dd234fe47afa0d0d72fcaebd98825d2f361`. A release must contain all five valid pins, but ordinary component-scoped releases retain valid prior pins for unchanged components.
+All six projects run manifest commit `7038ba612bb3331d1f65e9282b153436b29b9396`. The full release rebuilt Server, AgentOS, WuKongIM, Open Notebook, and Gateway with immutable tag `7f16f69be731326e091cc703c850e6b7ee6af6a5`. A release must contain all five valid pins, but ordinary component-scoped releases retain valid prior pins for unchanged components.
 
 | Project | ID | Host | Compose | Active deployment | OpenShip version |
 | --- | --- | --- | --- | --- | ---: |
-| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | A | `deploy/openship/core-state.yml` | `dep_-yjShnfgP8xM6WV-` | 6 |
-| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | A | `deploy/openship/app-a.yml` | `dep_7QQHlBnyrMpZpqfi` | 6 |
-| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | A | `deploy/openship/agent-os.yml` | `dep_HlsJ6feUZUcVbzsI` | 6 |
-| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | B | `deploy/openship/app-b.yml` | `dep_qPvoPmY-T1JyEj-J` | 6 |
-| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | B | `deploy/openship/knowledge-agent.yml` | `dep_ni8SbfCMH34_aK29` | 6 |
-| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | B | `deploy/openship/agent-os.yml` | `dep_FRB6XFm0kzswTzUZ` | 6 |
+| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | A | `deploy/openship/core-state.yml` | `dep_WWXcu0TAFSJqkY-T` | 7 |
+| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | A | `deploy/openship/app-a.yml` | `dep_LcA5W8o1_i3xFHgi` | 7 |
+| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | A | `deploy/openship/agent-os.yml` | `dep_ZOPgMliFZ6AQ9UPa` | 7 |
+| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | B | `deploy/openship/app-b.yml` | `dep_I-ykV_hdUM0kOHiV` | 7 |
+| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | B | `deploy/openship/knowledge-agent.yml` | `dep_cMzrvtTdEU7evhal` | 7 |
+| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | B | `deploy/openship/agent-os.yml` | `dep_EKEXIjA0o1DnWbmP` | 7 |
 
 LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastructure and are not part of the LingxiLoop release image set.
 
@@ -48,27 +48,28 @@ LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastruc
 | --- | --- | --- | --- | --- |
 | PostgreSQL | `svc_FyL3lC1Sp71oiS6V` | `pgvector/pgvector:pg16` | `10.20.0.2:5432` | `openship-lingxiloop-core-state-postgres-data` |
 | Redis | `svc_qWhTnJjfGysBCR_1` | `redis:7-alpine` | `10.20.0.2:6379` | `openship-lingxiloop-core-state-redis-data` |
-| WuKongIM | `svc_R1qn4zHiKjjfY1An` | `lingxiloop-wukongim:99f2e43...` | `10.20.0.2:5001,5200` | `openship-lingxiloop-core-state-wukong-data` |
-| API-A | `svc_Y95Qof0wyIdv7klR` | `lingxiloop-server:c9324ff...` | `10.20.0.2:5181` | none |
-| db-migrate A | `svc_9RmMHN7M0K1l5Z_1` | `lingxiloop-server:c9324ff...` | exited 0 | none |
-| AgentOS-A | `svc_Q97GKa-vK8cH8O_T` | `lingxiloop-agent-os:e6025ad...` | no host port | `openship-lingxiloop-agent-os-a-agent-os-data` |
+| WuKongIM | `svc_R1qn4zHiKjjfY1An` | `lingxiloop-wukongim:7f16f69...` | `10.20.0.2:5001,5200` | `openship-lingxiloop-core-state-wukong-data` |
+| API-A | `svc_Y95Qof0wyIdv7klR` | `lingxiloop-server:7f16f69...` | `10.20.0.2:5181` | none |
+| db-migrate A | `svc_9RmMHN7M0K1l5Z_1` | `lingxiloop-server:7f16f69...` | exited 0 | none |
+| AgentOS-A | `svc_Q97GKa-vK8cH8O_T` | `lingxiloop-agent-os:7f16f69...` | no host port | `openship-lingxiloop-agent-os-a-agent-os-data` |
 
 ### Server B
 
 | Service | Service ID | Image | Host bind / state | Persistent volume |
 | --- | --- | --- | --- | --- |
-| API-B | `svc_wm0I2fR_uglJGyWb` | `lingxiloop-server:c9324ff...` | loopback `5181` | none |
-| Worker-B | `svc_okKRA-wGrqgFyZAk` | `lingxiloop-server:c9324ff...` | no host port | none |
-| db-migrate B | `svc_70YEsZbgYP34z7Hv` | `lingxiloop-server:c9324ff...` | exited 0 | none |
-| Gateway | `svc_q7ZcH8px3jsB9qnY` | `lingxiloop-gateway:dd717dd...` | `127.0.0.1:8080` | none |
-| AgentOS-B | `svc_rT0BSxd8KVNGSWMU` | `lingxiloop-agent-os:e6025ad...` | no host port | `openship-lingxiloop-agent-os-b-agent-os-data` |
+| API-B | `svc_wm0I2fR_uglJGyWb` | `lingxiloop-server:7f16f69...` | loopback `5181` | none |
+| Worker-B | `svc_okKRA-wGrqgFyZAk` | `lingxiloop-server:7f16f69...` | no host port | none |
+| db-migrate B | `svc_70YEsZbgYP34z7Hv` | `lingxiloop-server:7f16f69...` | exited 0 | none |
+| Gateway | `svc_q7ZcH8px3jsB9qnY` | `lingxiloop-gateway:7f16f69...` | `127.0.0.1:8080` | none |
+| AgentOS-B | `svc_rT0BSxd8KVNGSWMU` | `lingxiloop-agent-os:7f16f69...` | no host port | `openship-lingxiloop-agent-os-b-agent-os-data` |
 | SurrealDB | `svc_yhlLUphCFs8lazC0` | pinned SurrealDB v2 digest | no host port | `openship-lingxiloop-knowledge-agent-surreal-data:/home/nonroot` |
-| Open Notebook | `svc_hmGZIaloXJohVV2r` | `lingxiloop-open-notebook:99f2e43...` | `10.20.0.3:5055` | `openship-lingxiloop-knowledge-agent-open-notebook-data` |
+| Open Notebook | `svc_hmGZIaloXJohVV2r` | `lingxiloop-open-notebook:7f16f69...` | `10.20.0.3:5055` | `openship-lingxiloop-knowledge-agent-open-notebook-data` |
 
 Gateway health uses `127.0.0.1`, never `localhost`. SurrealDB stores RocksDB at `/home/nonroot/open-notebook.db`; credentials are supplied by `SURREAL_USER` and `SURREAL_PASS`, not command arguments. Open Notebook uses `https://loop.lingxilearn.cn/internal/open-notebook/v1`.
 
 ## Verified behavior
 
+- Prompt-contract source commit `bae7c72...` is included in the active `7f16f69...` images. Both AgentOS containers run that image, and the live container contains `PROMPT_CONTRACT_VERSION = 'prompt-v5'`. The contract requires `loop.chat.ask` for blocking questions and native Host actions for explicit product operations. Workflow `33754222925` completed the full release; all six deployments reached `ready` at version 7. Both migration one-shots exited 0, migrations 1 through 4 remain applied, both AgentOS heartbeats were 4 seconds old, and the only leased work was fresh `memory_synthesis` on each node.
 - A user chat turn was accepted, completed by AgentOS, and persisted with its final reply in WuKongIM, but the browser discarded that canonical message when it had missed the transient stream preview. Server tag `c9324ff...` removes that preview dependency: durable final messages now reconcile directly after stream gaps or reconnects. API-A/API-B and Worker-B run the new image healthy; public `/api/health` returns 200 and OpenShip reports 16/16 healthy.
 - Both `db-migrate` one-shots exited 0; PostgreSQL contains schema migrations 1 through 4. Migration 4 backfilled all active personal-company owners into `participants`; the post-rollout gap query returned zero.
 - AgentOS heartbeats were 0-1 seconds old for `agent-os-a` and `agent-os-b`; the work queue was empty. The projects differ only in node identity and volume name after excluding node-specific settings.
@@ -77,7 +78,7 @@ Gateway health uses `127.0.0.1`, never `localhost`. SurrealDB stores RocksDB at 
 - Apex, `www`, `loop`, IM, OpenLit, Uptime, Admin, OpenShip, and Wego probes succeeded. Authoritative DNS sends the six DNS-only application names only to Server B; retired origin names are absent.
 - Server A public 80/443 are closed while private API/WuKongIM flows remain reachable. Server B remains the public-ingress single point of failure.
 - App A's stale Worker/Gateway service rows and containers are absent. Uptime has exactly sixteen active monitors, no inactive or legacy rows, and every latest heartbeat is up.
-- Public `https://loop.lingxilearn.cn/api/auth/get-session` returns JSON HTTP 200 through the Gateway. Anonymous `/api/session` reaches the control-plane authentication layer and returns JSON HTTP 401; public `/api/health` remains HTTP 200 through the signed Worker-to-origin bypass. The running Gateway uses image `dd717dd...` and reuses its TLS connections to the Worker.
+- Public `https://loop.lingxilearn.cn/api/auth/get-session` returns JSON HTTP 200 through the Gateway. Anonymous `/api/session` reaches the control-plane authentication layer and returns JSON HTTP 401; public `/api/health` remains HTTP 200 through the signed Worker-to-origin bypass. The running Gateway uses image `7f16f69...` and reuses its TLS connections to the Worker; its local `/healthz` returned 204.
 
 ## 2026-09-03 control-plane latency repair
 
