@@ -332,6 +332,7 @@ Checked-in non-secret Wrangler configuration:
 ```dotenv
 workers_dev=false
 routes=[{pattern=admin.lingxilearn.cn,custom_domain=true}]
+placement={mode=smart}
 ORIGIN_BASE_URL=https://loop.lingxilearn.cn
 OPENSHIP_BASE_URL=https://ops.christmas1314.xyz
 AUTH_ALLOWED_HOSTS=loop.lingxilearn.cn,admin.lingxilearn.cn
@@ -345,7 +346,7 @@ D1 binding `DB`, database `lingxiloop-control-plane`, ID `cf22d961-eba4-4d21-b44
 
 Required Worker secret names: `ALIYUN_OTP_EMAIL_PASSWORD`, `ALIYUN_SUPPORT_EMAIL_PASSWORD`, `BETTER_AUTH_SECRET`, `GATEWAY_HMAC_SECRET`, `OPENSHIP_PAT`, `RELEASE_HMAC_SECRET`, `TURNSTILE_SECRET_KEY`, and `BOOTSTRAP_ADMIN_TOKEN`. The old `RESEND_API_KEY` and `RESEND_FROM` Worker secrets were deleted after the SMTP cutover. The legacy singular `OPENSHIP_PROJECT_ID` secret may still exist but is unused; project IDs are non-secret checked-in configuration.
 
-Wrangler 4.127.1 was authenticated to account ID `5b726c2a59696a3536a55589a8fad188`. The OAuth scopes allow Worker Versions and D1 deployment but not DNS-record mutation. The Worker Custom Domain remains declared in Wrangler. GitHub Actions run `33721478814` promoted source commit `eaee369baebbb04a0087ab57fc99074422ba2275` as serving Worker version `92525f1e-711e-400c-8c94-003877d6f554` at 100% traffic after the Alibaba SMTP standard-header follow-up. The authenticated admin-only topology and deployment endpoints discard services/projects outside the current production allowlists; `/api/control/status-page` aggregates Kuma's public status JSON, and no Kuma API key is stored in Worker configuration. Earlier observed versions are historical.
+Wrangler 4.127.1 was authenticated to account ID `5b726c2a59696a3536a55589a8fad188`. The OAuth scopes allow Worker Versions and D1 deployment but not DNS-record mutation. The Worker Custom Domain remains declared in Wrangler. GitHub Actions run `33753015826` promoted source commit `dd717dd234fe47afa0d0d72fcaebd98825d2f361` as serving Worker version `90f18aca-a7ed-4e70-be2c-6756bfa2a5a0` at 100% traffic. Smart Placement is enabled; public probes bypass auth initialization, ordinary business sessions use Better Auth's signed 60-second cookie cache, auth settings use a 60-second per-data-center Cache API entry, and control-plane administration always forces database session validation. The authenticated admin-only topology and deployment endpoints discard services/projects outside the current production allowlists; `/api/control/status-page` aggregates Kuma's public status JSON, and no Kuma API key is stored in Worker configuration. Earlier observed versions are historical.
 
 ## GitHub Actions contract
 

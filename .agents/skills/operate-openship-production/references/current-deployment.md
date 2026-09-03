@@ -1,6 +1,6 @@
 # Current production deployment
 
-Snapshot: 2026-09-03 17:38 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and host inspection. Re-read live state before every operation.
+Snapshot: 2026-09-03 20:10 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and host inspection. Re-read live state before every operation.
 
 ## Scope and authority
 
@@ -27,16 +27,16 @@ Both hosts use a 4 GB `/swapfile4g`. Swap is emergency headroom, not normal capa
 
 ## Active LingxiLoop release
 
-All six projects run manifest commit `1c708cfc77ddbdae9b8c5a31886b4a574328e1a5`. Server uses immutable tag `c9324ff389c18f614fbcfc5df5061aff3db37edf`; AgentOS retains `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; WuKongIM and Open Notebook retain `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway retains `d794d15db8cd011ca9c776686a09e17aa66fb628`. A release must contain all five valid pins, but ordinary component-scoped releases retain valid prior pins for unchanged components.
+All six projects run manifest commit `e129d84c970b4112fa906fdb46d1dfc434b86330`. Server uses immutable tag `c9324ff389c18f614fbcfc5df5061aff3db37edf`; AgentOS retains `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; WuKongIM and Open Notebook retain `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway uses `dd717dd234fe47afa0d0d72fcaebd98825d2f361`. A release must contain all five valid pins, but ordinary component-scoped releases retain valid prior pins for unchanged components.
 
 | Project | ID | Host | Compose | Active deployment | OpenShip version |
 | --- | --- | --- | --- | --- | ---: |
-| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | A | `deploy/openship/core-state.yml` | `dep_iBmam4y9InUjtDGK` | 5 |
-| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | A | `deploy/openship/app-a.yml` | `dep_ucraIHSmxuI3aKJt` | 5 |
-| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | A | `deploy/openship/agent-os.yml` | `dep_RGmGZo8wuhVRPvfj` | 5 |
-| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | B | `deploy/openship/app-b.yml` | `dep_V28E-p2C9jTvkuVB` | 5 |
-| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | B | `deploy/openship/knowledge-agent.yml` | `dep_2ooolKmF1MH2giLY` | 5 |
-| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | B | `deploy/openship/agent-os.yml` | `dep_ROWQAxI6eYc4eXYm` | 5 |
+| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | A | `deploy/openship/core-state.yml` | `dep_-yjShnfgP8xM6WV-` | 6 |
+| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | A | `deploy/openship/app-a.yml` | `dep_7QQHlBnyrMpZpqfi` | 6 |
+| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | A | `deploy/openship/agent-os.yml` | `dep_HlsJ6feUZUcVbzsI` | 6 |
+| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | B | `deploy/openship/app-b.yml` | `dep_qPvoPmY-T1JyEj-J` | 6 |
+| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | B | `deploy/openship/knowledge-agent.yml` | `dep_ni8SbfCMH34_aK29` | 6 |
+| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | B | `deploy/openship/agent-os.yml` | `dep_FRB6XFm0kzswTzUZ` | 6 |
 
 LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastructure and are not part of the LingxiLoop release image set.
 
@@ -60,7 +60,7 @@ LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastruc
 | API-B | `svc_wm0I2fR_uglJGyWb` | `lingxiloop-server:c9324ff...` | loopback `5181` | none |
 | Worker-B | `svc_okKRA-wGrqgFyZAk` | `lingxiloop-server:c9324ff...` | no host port | none |
 | db-migrate B | `svc_70YEsZbgYP34z7Hv` | `lingxiloop-server:c9324ff...` | exited 0 | none |
-| Gateway | `svc_q7ZcH8px3jsB9qnY` | `lingxiloop-gateway:d794d15...` | `127.0.0.1:8080` | none |
+| Gateway | `svc_q7ZcH8px3jsB9qnY` | `lingxiloop-gateway:dd717dd...` | `127.0.0.1:8080` | none |
 | AgentOS-B | `svc_rT0BSxd8KVNGSWMU` | `lingxiloop-agent-os:e6025ad...` | no host port | `openship-lingxiloop-agent-os-b-agent-os-data` |
 | SurrealDB | `svc_yhlLUphCFs8lazC0` | pinned SurrealDB v2 digest | no host port | `openship-lingxiloop-knowledge-agent-surreal-data:/home/nonroot` |
 | Open Notebook | `svc_hmGZIaloXJohVV2r` | `lingxiloop-open-notebook:99f2e43...` | `10.20.0.3:5055` | `openship-lingxiloop-knowledge-agent-open-notebook-data` |
@@ -77,7 +77,13 @@ Gateway health uses `127.0.0.1`, never `localhost`. SurrealDB stores RocksDB at 
 - Apex, `www`, `loop`, IM, OpenLit, Uptime, Admin, OpenShip, and Wego probes succeeded. Authoritative DNS sends the six DNS-only application names only to Server B; retired origin names are absent.
 - Server A public 80/443 are closed while private API/WuKongIM flows remain reachable. Server B remains the public-ingress single point of failure.
 - App A's stale Worker/Gateway service rows and containers are absent. Uptime has exactly sixteen active monitors, no inactive or legacy rows, and every latest heartbeat is up.
-- Public `https://loop.lingxilearn.cn/api/auth/get-session` returns JSON HTTP 200 through the Gateway. Anonymous `/api/session` now reaches the control-plane authentication layer and returns JSON HTTP 401 instead of the former Express 404; public `/api/health` remains HTTP 200 through the signed Worker-to-origin bypass. The running Gateway uses image `d794d15...`.
+- Public `https://loop.lingxilearn.cn/api/auth/get-session` returns JSON HTTP 200 through the Gateway. Anonymous `/api/session` reaches the control-plane authentication layer and returns JSON HTTP 401; public `/api/health` remains HTTP 200 through the signed Worker-to-origin bypass. The running Gateway uses image `dd717dd...` and reuses its TLS connections to the Worker.
+
+## 2026-09-03 control-plane latency repair
+
+Unsigned browser API requests were paying a fresh Server B-to-Cloudflare TLS handshake plus unconditional D1 auth initialization on every route. Commit `dd717dd...` added the Gateway's reusable HTTP/1.1 TLS upstream, limited Better Auth/session middleware to routes that require it, cached the small auth-settings row for 60 seconds, enabled Better Auth's signed 60-second cookie cache for ordinary business traffic, retained forced database session validation for `/api/control/*`, and enabled Smart Placement. Workflow `33753015826` promoted Worker version `90f18aca-a7ed-4e70-be2c-6756bfa2a5a0`, published Gateway `dd717dd...`, and rolled manifest `e129d84...` to all six projects at version 6.
+
+After warm-up, ten public samples from the operator path measured median TTFB of 77 ms for HTML, 454 ms for `/api/health`, 812 ms for `/api/auth/get-session`, and 305 ms for an anonymous protected API rejection. Before repair, comparable API medians were about 1.5-1.7 seconds. The remaining occasional outliers are on the public China-to-Cloudflare path; Server B's local API remained 3-5 ms.
 
 ## 2026-09-03 first-release reset
 

@@ -62,7 +62,7 @@ CI builds only affected LingxiLoop images on linux/amd64 and pushes immutable fu
 - `deploy/openship/core-state.yml`: WuKongIM;
 - `deploy/openship/knowledge-agent.yml`: Open Notebook.
 
-The current active LingxiLoop release uses manifest commit `1c708cfc77ddbdae9b8c5a31886b4a574328e1a5`. Server uses `c9324ff389c18f614fbcfc5df5061aff3db37edf`; AgentOS retains `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; WuKongIM and Open Notebook remain pinned to `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway uses `d794d15db8cd011ca9c776686a09e17aa66fb628`. The signed release requires all five image references to be present and immutable but does not force unrelated components to share one tag. All six projects run the same manifest.
+The current active LingxiLoop release uses manifest commit `e129d84c970b4112fa906fdb46d1dfc434b86330`. Server uses `c9324ff389c18f614fbcfc5df5061aff3db37edf`; AgentOS retains `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; WuKongIM and Open Notebook remain pinned to `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway uses `dd717dd234fe47afa0d0d72fcaebd98825d2f361`. The signed release requires all five image references to be present and immutable but does not force unrelated components to share one tag. All six projects run the same manifest.
 
 - `9fe3cc645e2998c6201c737d4e4e2db2699cd423`: Gateway health check uses IPv4.
 - `e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29`: first immutable Gateway image; retained as an unused B image.
