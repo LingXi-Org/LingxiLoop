@@ -1,6 +1,6 @@
 # Uptime Kuma production instance
 
-Snapshot: 2026-09-03 01:09 China Standard Time. Re-read live state before acting.
+Snapshot: 2026-09-03 10:34 China Standard Time. Re-read live state before acting.
 
 ## Runtime
 
@@ -22,7 +22,7 @@ Five groups contain sixteen active monitors:
 - Knowledge/observability: Open Notebook, OpenLit.
 - Operations: Uptime Kuma self-check, OpenShip control plane.
 
-The post-CD 2026-09-03 01:09 check found 16/16 latest heartbeats UP, no incident, and no maintenance window. Monitor URLs are hidden from the public page.
+After the first-release reset, OpenShip reported 16/16 healthy with zero issue or drift, and the public Kuma status page returned HTTP 200. The local authenticated metrics key was unavailable for this check, so no claim is made about a fresh `/metrics` scrape. Monitor URLs are hidden from the public page.
 
 The shared AgentOS monitor checks `agentOs=true` from the dependency endpoint, which means at least one worker heartbeat is fresh. It remained UP during a temporary AgentOS-B deployment outage. Always combine it with OpenShip's per-service health and a database query confirming both `agent-os-a` and `agent-os-b` heartbeat ages; both were 0 seconds after recovery at 22:17 CST.
 
@@ -40,8 +40,8 @@ The shared AgentOS monitor checks `agentOs=true` from the dependency endpoint, w
 
 - DNS-only A to `111.229.65.23`: `lingxilearn.cn`, `www.lingxilearn.cn`, `loop.lingxilearn.cn`, `im.lingxilearn.cn`, `openlit.lingxilearn.cn`, `uptime.lingxilearn.cn`.
 - Approved production exception: `admin.lingxilearn.cn` is a Cloudflare Worker Custom Domain and resolves to Cloudflare A/AAAA addresses.
-- `origin-b.lingxilearn.cn`, `origin.loop.lingxilearn.cn`, and `ops.lingxilearn.cn` are absent.
-- Unresolved legacy DNS: `origin-a.lingxilearn.cn` still resolves through Cloudflare because the live Open Notebook container still uses it. First refresh Open Notebook with the intended `loop` upstream, verify it, then remove the record manually when DNS authority is available. It is not an intended final production domain.
+- `origin-a.lingxilearn.cn`, `origin-b.lingxilearn.cn`, `origin.loop.lingxilearn.cn`, and `ops.lingxilearn.cn` are absent.
+- Open Notebook now uses `https://loop.lingxilearn.cn/internal/open-notebook/v1`; no legacy origin record is needed.
 
 ## Verification caveat
 

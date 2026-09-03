@@ -1,135 +1,96 @@
 # Current production deployment
 
-Snapshot: 2026-09-03 08:24 China Standard Time, checked through OpenShip MCP, Wrangler, GitHub CLI, and HTTP probes. Re-read live state before every operation.
+Snapshot: 2026-09-03 10:34 China Standard Time, checked through OpenShip MCP, GitHub CLI, authoritative DNS, HTTP/WebSocket probes, and host inspection. Re-read live state before every operation.
 
 ## Scope and authority
 
 - OpenShip organization: `org_afbfbb11-78d7-41ee-b644-4b745b486069`.
-- The original seven application projects are Production, Docker runtime, branch `main`, local/self-hosted OpenShip source, and have no GitHub installation ID. The six LingxiLoop projects have `autoDeploy=false`; only the signed post-CI release endpoint fans a verified manifest commit out to them. LingxiLit remains manual. Uptime Kuma was added later as an eighth project and is `always_on`; WegoLibrary is a ninth, management-host-local tracker for port `18081`. Re-read metadata rather than assuming every original setting applies.
-- Active deployments mostly use `cloneStrategy=api-host` because the destination hosts lack a usable GitHub App/PAT identity. This is slower but not a runtime failure.
-- Public ingress and TLS are owned by the OpenShip Edge on Server B. Server A also has an Edge container installed, but it is not the intended public entry.
+- The six LingxiLoop projects are Production Docker projects on branch `main`, use local/self-hosted OpenShip source, and have `autoDeploy=false`. The signed post-CI release endpoint performs the fanout.
+- OpenShip's health watcher is enabled. The current snapshot is 16/16 healthy with zero outage, zero action-required, zero advisory, and no service drift.
+- Server B is the only public application ingress. Server A retains a managed OpenShip Edge for control-plane health but rejects new public-interface TCP connections to 80/443.
 
 ## Hosts
 
 | Role | OpenShip name | Server ID | Public IP | WireGuard | SSH alias | Current placement |
 | --- | --- | --- | --- | --- | --- | --- |
-| A, authoritative state | 上海-A | `f0780369-3b97-4514-9222-6256d9a9acdd` | `182.254.156.84` | `10.20.0.2` | `txy2` | PostgreSQL, Redis, WuKongIM, API-A, AgentOS-A, Edge |
-| B, only public ingress | 上海-B | `cc10e2e8-8cba-42e1-8ff2-564dc9448f50` | `111.229.65.23` | `10.20.0.3` | `txy` | Edge, API-B, Worker, Gateway, AgentOS-B, Open Notebook, SurrealDB, LingxiLit/OpenLit, ClickHouse |
+| A, authoritative state | 上海-A | `f0780369-3b97-4514-9222-6256d9a9acdd` | `182.254.156.84` | `10.20.0.2` | `txy2` | PostgreSQL, Redis, WuKongIM, API-A, AgentOS-A, managed Edge |
+| B, only public ingress | 上海-B | `cc10e2e8-8cba-42e1-8ff2-564dc9448f50` | `111.229.65.23` | `10.20.0.3` | `txy` | Edge, API-B, Worker, Gateway, AgentOS-B, Open Notebook, SurrealDB, LingxiLit/OpenLit, ClickHouse, Uptime Kuma |
 
-OpenShip's management host is separate from the two deployment targets: SSH alias `aly`, public IP `47.93.133.55`, and public URL `https://ops.christmas1314.xyz`. It has 2 vCPU, about 1.6 GB RAM, 1 GB swap, and a 40 GB root disk. OpenShip 0.6.9 runs natively as `openship.service`: CLI `/root/.openship/cli/current`, API `127.0.0.1:4000`, dashboard `127.0.0.1:3002`, and `--managed-edge`. The official `openship-edge` container (`ghcr.io/oblien/openship-edge:0.6.9`) owns host `80/443`. PostgreSQL remains `pgsql.service` under `/www/server/pgsql`. Baota Nginx and panel services are masked or disabled and own no public ports. This host is not an OpenShip Docker Compose stack.
+Capacity at snapshot time:
 
-Host capacity snapshot:
-
-| Host | RAM total | Available | Swap total/used | Root disk | Docker |
-| --- | ---: | ---: | ---: | --- | --- |
-| A | 3655 MB | 2108 MB | 4095/18 MB | 40 GB, 12 GB used, 29% | 29.3.1, `overlayfs`, `/var/lib/docker` |
-| B | 3655 MB | 1614 MB | 4095/199 MB | 40 GB, 14 GB used, 35% | 29.7.2, `overlayfs`, `/var/lib/docker` |
+| Host | RAM total | Available | Swap total/used | Root disk |
+| --- | ---: | ---: | ---: | --- |
+| A | 3655 MB | 2164 MB | 4095/35 MB | 40 GB, 17 GB used, 42% |
+| B | 3655 MB | 1220 MB | 4095/406 MB | 40 GB, 20 GB used, 50% |
 
 Both hosts use a 4 GB `/swapfile4g`. Swap is emergency headroom, not normal capacity.
 
-## OpenShip projects
+## Active LingxiLoop release
 
-| Project | ID | Group | Host | Compose | Active deployment |
-| --- | --- | --- | --- | --- | --- |
-| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | `app_cAckBV8ixw7nDZn1` | A | `deploy/openship/core-state.yml` | `dep_90vcuxBRdiFIO_4X` |
-| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | `app_4Vx5MywbRUJh9xM1` | A | `deploy/openship/app.yml` | `dep_F3TMrJSmIwJtZD0N` |
-| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | `app_Qu5jDwzmWRmSpyAr` | A | `deploy/openship/agent-os.yml` | `dep_SbSh36b_AhyluWJU` |
-| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | `app_j60x6owlFdM2GINr` | B | `deploy/openship/app.yml` | `dep_KUbMexlXVILUu7oO` |
-| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | `app_Lbjj7O9yOUrrz2ZR` | B | `deploy/openship/knowledge-agent.yml` | `dep_wKcttQKTeoopPLAe` |
-| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | `app_z0PWO09lFZzZoN1C` | B | `deploy/openship/agent-os.yml` | `dep_HVN3Y0U3MJGOHwia` |
-| `lingxilit-shanghai-b` | `proj_dbXpzANqY8rPvOVC` | `app_AUYrtzyV0XGDVfd3` | B | `lyyzka/LingxiLit`, `docker-compose.yml` | `dep_mFw8ULd3cELQsl8n` |
-| Uptime Kuma | `proj_sYmlJeYfdwa4K2bQ` | `app_YmX74Uqpg6hSf5J_` | B | manually configured Compose | re-read live deployment |
+All six projects run manifest commit `f02ce00e72ead6743646979d31b659fb8e4fa04a`. Every LingxiLoop-owned image uses the last complete five-image cohort `b42fef160fe697d46a8818e054f945d1f80953f7`; a later partial cohort was not used because Gateway, Open Notebook, and WuKongIM tags did not exist.
 
-All six LingxiLoop projects reached `ready` from manifest commit `8744848d61abbacc8242cc7887cb57345c4bd13b`, which pins the five application images built from source commit `4102a1525985d3c985df96c3ba9ebcf271aa4892`. The OpenShip health watcher reported 16/16 intended workloads healthy. LingxiLit remains an independent release and still runs application image `sha-f3017e23cc0a31753b022c64eb40a837f463d627`.
+| Project | ID | Host | Compose | Active deployment |
+| --- | --- | --- | --- | --- |
+| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | A | `deploy/openship/core-state.yml` | `dep_iwo-MqsxP67r-hoI` |
+| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | A | `deploy/openship/app.yml` | `dep_TSHb2V3tuZZyPg0V` |
+| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | A | `deploy/openship/agent-os.yml` | `dep_T_OVA-RV0bjrtELT` |
+| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | B | `deploy/openship/app.yml` | `dep_vKEdZ18EBjRg6aJb` |
+| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | B | `deploy/openship/knowledge-agent.yml` | `dep_Kc4eqjfeLBSUYFly` |
+| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | B | `deploy/openship/agent-os.yml` | `dep_8RPd_DfaUERoNBxf` |
 
-## Services
+LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastructure and are not part of the LingxiLoop image cohort.
+
+## Runtime services
 
 ### Server A
 
-| Project/service | Service ID | Enabled | Image actually running | CPU / memory | Host bind | Volume |
-| --- | --- | --- | --- | --- | --- | --- |
-| core/postgres | `svc_FyL3lC1Sp71oiS6V` | yes | `pgvector/pgvector:pg16` | 1.25 / 768 MB | `10.20.0.2:5432` | `openship-lingxiloop-core-state-postgres-data` |
-| core/redis | `svc_qWhTnJjfGysBCR_1` | yes | `redis:7-alpine` | 0.25 / 256 MB | `10.20.0.2:6379` | `openship-lingxiloop-core-state-redis-data` |
-| core/wukongim | `svc_R1qn4zHiKjjfY1An` | yes | `lingxiloop-wukongim:ed4d749ce9be62cfd20895b39ac6f5c45c410ecc` | 0.75 / 512 MB | `10.20.0.2:5001,5200` | `openship-lingxiloop-core-state-wukong-data` |
-| app-a/db-migrate | `svc_9RmMHN7M0K1l5Z_1` | yes, one-shot | `lingxiloop-server:4102a152...` | 0.5 / 512 MB | none; exited 0 | none |
-| app-a/lingxiloop | `svc_Y95Qof0wyIdv7klR` | yes | `lingxiloop-server:53572c0e...` | 0.75 / 448 MB | `10.20.0.2:5181` | none |
-| app-a/worker | `svc_F9K5KSm54hoE8sIB` | no | no container | 0.75 / 512 MB if enabled | none | none |
-| app-a/gateway | `svc_a09AL2zBgWR8Mk8Q` | no | no container | 0.25 / 64 MB if enabled | would be loopback 8080 | none |
-| agent-os-a/agent-os | `svc_Q97GKa-vK8cH8O_T` | yes | `lingxiloop-agent-os:4102a152...` | 1.0 / 768 MB | no host port; container 5190 | `openship-lingxiloop-agent-os-a-agent-os-data` |
-
-WuKongIM also listens inside its container on 5100, 5301, 7000, and 19092; those ports are not published to the host.
+| Service | Service ID | Image | Host bind / state | Persistent volume |
+| --- | --- | --- | --- | --- |
+| PostgreSQL | `svc_FyL3lC1Sp71oiS6V` | `pgvector/pgvector:pg16` | `10.20.0.2:5432` | `openship-lingxiloop-core-state-postgres-data` |
+| Redis | `svc_qWhTnJjfGysBCR_1` | `redis:7-alpine` | `10.20.0.2:6379` | `openship-lingxiloop-core-state-redis-data` |
+| WuKongIM | `svc_R1qn4zHiKjjfY1An` | `lingxiloop-wukongim:b42fef1...` | `10.20.0.2:5001,5200` | `openship-lingxiloop-core-state-wukong-data` |
+| API-A | `svc_Y95Qof0wyIdv7klR` | `lingxiloop-server:b42fef1...` | `10.20.0.2:5181` | none |
+| db-migrate A | `svc_9RmMHN7M0K1l5Z_1` | `lingxiloop-server:b42fef1...` | exited 0 | none |
+| AgentOS-A | `svc_Q97GKa-vK8cH8O_T` | `lingxiloop-agent-os:b42fef1...` | no host port | `openship-lingxiloop-agent-os-a-agent-os-data` |
 
 ### Server B
 
-| Project/service | Service ID | Enabled | Image actually running | CPU / memory | Host bind | Volume |
-| --- | --- | --- | --- | --- | --- | --- |
-| app-b/db-migrate | `svc_70YEsZbgYP34z7Hv` | yes, one-shot | `lingxiloop-server:4102a152...` | 0.5 / 512 MB | none; exited 0 | none |
-| app-b/lingxiloop | `svc_wm0I2fR_uglJGyWb` | yes | `lingxiloop-server:4102a152...` | 0.75 / 448 MB | OpenShip runtime `127.0.0.1:20000 -> 5181` | none |
-| app-b/worker | `svc_okKRA-wGrqgFyZAk` | yes | `lingxiloop-server:4102a152...` | 0.75 / 512 MB | none | none |
-| app-b/gateway | `svc_q7ZcH8px3jsB9qnY` | yes | `lingxiloop-gateway:53572c0e...` | 0.25 / 64 MB | `127.0.0.1:8080` | none |
-| knowledge/surrealdb | `svc_yhlLUphCFs8lazC0` | yes | `surrealdb:v2@sha256:d653f6...` | 0.5 / 512 MB | none | named `...-surreal-data` at `/home/nonroot` plus image-declared anonymous `/data` and `/logs` |
-| knowledge/open-notebook | `svc_hmGZIaloXJohVV2r` | yes | `lingxiloop-open-notebook:53572c0e...` | 1.0 / 768 MB | `10.20.0.3:5055` | `openship-lingxiloop-knowledge-agent-open-notebook-data` |
-| agent-os-b/agent-os | `svc_rT0BSxd8KVNGSWMU` | yes | `lingxiloop-agent-os:4102a152...` | 1.0 / 768 MB | no host port; container 5190 | `openship-lingxiloop-agent-os-b-agent-os-data` |
-| LingxiLit/clickhouse | `svc_tsoqLdyhBVm76TPD` | yes | `clickhouse-server:24.4.1` | 0.75 / 640 MB | no host port; container 8123/9000/9009 | `openship-lingxilit-shanghai-b-clickhouse-data` |
-| LingxiLit/openlit | `svc_k2cnIeZumE4FK7AJ` | yes | `lingxilit:sha-f3017e23...` | 0.75 / 512 MB | `127.0.0.1:20001 -> 3000`; private `10.20.0.3:4317,4318` | `openship-lingxilit-shanghai-b-openlit-data` |
-| Uptime Kuma/uptime-kuma | `svc_qjjZezA34IpIYDxp` | yes | `louislam/uptime-kuma:1` | no explicit limit at creation | `127.0.0.1:20002 -> 3001` | `uptime_kuma_data:/app/data` |
+| Service | Service ID | Image | Host bind / state | Persistent volume |
+| --- | --- | --- | --- | --- |
+| API-B | `svc_wm0I2fR_uglJGyWb` | `lingxiloop-server:b42fef1...` | loopback `5181` | none |
+| Worker-B | `svc_okKRA-wGrqgFyZAk` | `lingxiloop-server:b42fef1...` | no host port | none |
+| db-migrate B | `svc_70YEsZbgYP34z7Hv` | `lingxiloop-server:b42fef1...` | exited 0 | none |
+| Gateway | `svc_q7ZcH8px3jsB9qnY` | `lingxiloop-gateway:b42fef1...` | `127.0.0.1:8080` | none |
+| AgentOS-B | `svc_rT0BSxd8KVNGSWMU` | `lingxiloop-agent-os:b42fef1...` | no host port | `openship-lingxiloop-agent-os-b-agent-os-data` |
+| SurrealDB | `svc_yhlLUphCFs8lazC0` | pinned SurrealDB v2 digest | no host port | `openship-lingxiloop-knowledge-agent-surreal-data:/home/nonroot` |
+| Open Notebook | `svc_hmGZIaloXJohVV2r` | `lingxiloop-open-notebook:b42fef1...` | `10.20.0.3:5055` | `openship-lingxiloop-knowledge-agent-open-notebook-data` |
 
-OpenShip maps API-B and OpenLit to loopback ports 20000 and 20001 for Edge routing even though the Compose-facing service definitions use their container ports. Gateway talks to API-B through the Compose service name, so do not hard-code port 20000 in `gateway.conf`.
+Gateway health uses `127.0.0.1`, never `localhost`. SurrealDB stores RocksDB at `/home/nonroot/open-notebook.db`; credentials are supplied by `SURREAL_USER` and `SURREAL_PASS`, not command arguments. Open Notebook uses `https://loop.lingxilearn.cn/internal/open-notebook/v1`.
 
-## Runtime usage snapshot
+## Verified behavior
 
-| Container | CPU | Memory | Block I/O |
-| --- | ---: | ---: | ---: |
-| A AgentOS | 0.30% | 132.7 / 768 MiB | 2.7 MB / 197 kB |
-| A API | 0.51% | 188.3 / 448 MiB | 688 kB / 3.75 MB |
-| A WuKongIM | 3.25% | 132.6 / 512 MiB | 5.84 / 105 MB |
-| A Redis | 0.51% | 4.45 / 256 MiB | 901 / 45 kB |
-| A PostgreSQL | 0.46% | 47.9 / 768 MiB | 6.41 / 84.1 MB |
-| A Edge | 0.01% | 22.8 MiB | 37.4 MB / 520 kB |
-| B Gateway | 0.12% | 5.66 / 64 MiB | 4.37 MB / 4 kB |
-| B OpenLit | 0.18% | 247.2 / 512 MiB | 179 / 50.2 MB |
-| B ClickHouse | 6.37% | 249.2 / 640 MiB | 17.8 / 50.2 MB |
-| B AgentOS | 0.26% | 109.6 / 768 MiB | 762 kB / 23.6 MB |
-| B Open Notebook | 0.34% | 167.3 / 768 MiB | 8.28 / 36.8 MB |
-| B SurrealDB | 4.95% | 63.0 / 512 MiB | 13.3 / 4.38 MB |
-| B Worker | 0.30% | 150.8 / 512 MiB | 41 kB / 23 MB |
-| B API | 7.60% | 192.8 / 448 MiB | 2.33 / 35.5 MB |
-| B Edge | 0.21% | 46.2 MiB | 27.1 MB / 643 kB |
+- Both `db-migrate` one-shots exited 0; PostgreSQL contains schema migrations 1, 2, and 3.
+- AgentOS heartbeats were 0-1 seconds old for `agent-os-a` and `agent-os-b`; the work queue was empty. The projects differ only in node identity and volume name after excluding node-specific settings.
+- Stopping API-A left `loop` healthy through API-B; stopping API-B left it healthy through API-A. Both were restored and healthy.
+- Server B reached API-A and WuKongIM over WireGuard; direct and public WuKongIM WebSocket upgrades returned 101.
+- Apex, `www`, `loop`, IM, OpenLit, Uptime, Admin, OpenShip, and Wego probes succeeded. Authoritative DNS sends the six DNS-only application names only to Server B; retired origin names are absent.
+- Server A public 80/443 are closed while private API/WuKongIM flows remain reachable. Server B remains the public-ingress single point of failure.
 
-Current image sizes: server 613 MB, AgentOS 706 MB, Open Notebook 490 MB, Gateway 96.7 MB, WuKongIM 137 MB, PostgreSQL 616 MB, Redis 57.3 MB, SurrealDB 116 MB, OpenLit 1.14 GB, ClickHouse 815 MB, Edge 317 MB. A still caches the unused old `lingxiloop-server:ed4...` image at 1.62 GB; it is pruneable only after confirming no stopped container or rollback needs it.
+## 2026-09-03 first-release reset
 
-## Live health and coordination
+OpenShip service-row overrides and non-expanded bind variables caused the historical drift. The checked-in manifests now use explicit private host binds for the fixed production topology, and every service row has been reconciled. App A retains an explicit resolved `10.20.0.2:5181` service bind because OpenShip's upstream-accept path does not expand the Compose variable.
 
-- Health watch is enabled every minute and, after Uptime Kuma was added, reports all 16 expected workloads healthy. The two `db-migrate` containers are stopped with exit `0` but represented as healthy one-shots.
-- Both AgentOS workers were at heartbeat age 0 seconds at 22:17 CST: `agent-os-a`, `agent-os-b`.
-- The work queue query returned no grouped rows at snapshot time, meaning no queued/leased items existed.
-- OpenShip issue feed after the automatic deployments: outage 0, action required 0, advisory 6. All advisories are commit/image update drift across the six LingxiLoop projects; inspect actual images before applying any update.
+Changing Open Notebook to the stable `loop` endpoint correctly triggered its stored embedding-contract guard. With explicit no-production-data authorization, operations removed only the Open Notebook and SurrealDB containers and their two named volumes, then redeployed. No backup was created; that old empty Knowledge state is not recoverable. PostgreSQL, Redis, WuKongIM, AgentOS, LingxiLit, and Uptime Kuma data were untouched.
 
-## Drift and inconsistencies to check first
+## Host-managed assets
 
-1. Remote `main` manifest commit `8744848...` pins source image tag `4102a15...`, and every one of the six signed-fanout deployments reached `ready`; this proves CD fanout, not that every locally overridden service row accepted the new tag.
-2. WuKongIM still runs `ed4d749c...`, API-A/Open Notebook/Gateway still run `53572c0e...`, and OpenShip reports upstream image drift toward `4102a15...`. These are service-row/Compose sync overrides, not a current outage. Do not blindly accept all drift: WuKongIM also contains a host-port binding difference, Open Notebook contains environment/healthcheck drift, and Knowledge contains a sensitive SurrealDB command-path drift.
-3. AgentOS-A/B plus API-B, Worker-B, and both migration one-shots accepted `4102a15...`; verify actual running images after every future signed rollout until the remaining service-row overrides are reconciled deliberately.
-4. The live Open Notebook container still has `OPENAI_BASE_URL=https://origin-a.lingxilearn.cn/internal/open-notebook/v1`; the intended stable endpoint is `https://loop.lingxilearn.cn/internal/open-notebook/v1`. Update the project variable and refresh Open Notebook before deleting the legacy origin record.
-5. App-A, App-B, Worker-B, AgentOS-A, and AgentOS-B export telemetry over private OTLP/HTTP to `http://10.20.0.3:4318`. A five-node synthetic trace check was present in ClickHouse after the 2026-09-02 rollout.
-6. SurrealDB's password is embedded in its effective command and OpenShip returns commands unmasked. Never paste or log that command. Prefer changing the deployment model later so the secret is not exposed in metadata.
-7. `deploy/openship/README.md` still says AgentOS-B should reuse the former knowledge-agent volume. Actual production uses `openship-lingxiloop-agent-os-b-agent-os-data`; treat runtime and project environment as authoritative.
+- Server B Edge aliases: `/var/lib/openship/edge/sites-enabled/00-gateway-aliases.conf` and `00-im-gateway.conf`.
+- Server A public-ingress fence: enabled systemd unit `/etc/systemd/system/lingxiloop-private-ingress.service`; it rejects new TCP 80/443 on `eth0` and leaves `wg0` private traffic untouched.
+- Do not edit OpenShip-generated managed route files.
 
-## Host asset files on Server B
+## Other tracked production projects
 
-- Edge: `/var/lib/openship/edge/sites-enabled/00-gateway-aliases.conf`
-- Edge: `/var/lib/openship/edge/sites-enabled/00-im-gateway.conf`
-- Managed routes: `loop-lingxilearn-cn.conf`, `loop-lingxilearn-cn.route.json`, `openlit-lingxilearn-cn.conf`, `openlit-lingxilearn-cn.route.json`
-- LingxiLit assets under `/var/lib/openship/openlit/assets/`: `clickhouse-config.xml`, `clickhouse-init.sh`, `otel-collector-config.yaml`, `pricing.json`
-
-Do not edit OpenShip-generated managed route files. The two `00-*` files are deliberate host-managed aliases documented in the network reference.
-
-## Monitoring project
-
-Uptime Kuma is exposed as `uptime.lingxilearn.cn` through OpenShip domain `dom_KnpiXnifUlWQJrUf`. Its project is `always_on`. Public status page `https://uptime.lingxilearn.cn/status/lingxiloop` contains five groups and sixteen monitors spanning public entry/DNS/TLS, PostgreSQL/Redis/WuKongIM, dependency contract, API-A, shared AgentOS heartbeat, Open Notebook, OpenLit, Uptime, and the OpenShip control plane. The Admin Console monitor targets the owner-confirmed `https://admin.lingxilearn.cn/`; OpenShip reported all sixteen intended workloads healthy at 2026-09-03 08:24 CST, and both the Admin root and `/api/health` returned `200` after deployment. Refine `/status` and `/releases` are deployed in Worker version `f8f2c648-7b0c-4cd7-a371-982e4db8c2f1` from source commit `62b0772b637e0451deffb133b4f00937fa0cd01d`, containing deployment-dashboard commit `36373492365a3cceda7724fbf951ad176fa9244b`. The status and release routes are lazy chunks; the Recharts history chart is a nested lazy chunk, and fingerprinted `/assets/*` responses use a one-year immutable cache. The protected `/api/control/deployment-dashboard` endpoint returns bounded OpenShip deployment summaries without environment variables or raw metadata, and `/releases` links directly to `https://ops.christmas1314.xyz`. Its protected status endpoint reads only Kuma's public status JSON, while each row renders Kuma's own public SVG status badge. The shared AgentOS monitor proves only that at least one worker is alive; it stayed UP while AgentOS-B was temporarily stopped, so individual OpenShip health and both database heartbeat rows remain required for redundancy checks. Monitor URLs are hidden on the public page. API key ID 1 (`dev`) is active and reserved for authenticated Prometheus metrics; its value is never stored in this skill. The SQLite database backups include `/app/data/kuma.db.pre-openship-monitors-20260902184743.bak`, `/app/data/kuma.db.pre-status-page-20260902201452.bak`, `/app/data/kuma.db.pre-finalize-20260902210100.bak`, and `/app/data/kuma.db.pre-api-key-enable-20260902T140428Z.bak`. Do not expose Kuma credentials or database contents. After any control-plane incident or Worker deployment, wait for the next Kuma interval and confirm recovery instead of assuming a successful local curl updates monitoring immediately.
-
-At 22:09 CST, webhook deployment `dep_PZe1CB3mZFJjxjKd` stopped AgentOS-B and stalled while pulling `328990...` from the mirror. It was cancelled, the completed image was started through OpenShip, and AgentOS-B returned healthy with heartbeat age 0. Active deployment remains `dep_MlbbY_uJgbWakRlI`; the cancelled deployment is historical.
-
-## Management-host Wego tracker
-
-WegoLibrary is tracked as OpenShip project `proj_KQmC-0gtQ8DCgHD_` (`framework=docker-compose`, `projectType=docker`, `routeStrategy=loopback-port`, port `18081`, `sleepMode=always_on`) with custom domain `dom_9pGiVkgddoHinLJn`, `golib.christmas1314.xyz`. Its Let's Encrypt YE1 certificate expires 2026-12-01 11:53:39 UTC. The route is stored in `/var/lib/openship/edge/sites-enabled/golib-christmas1314-xyz.conf`; the frontend container proxies `/api` to `backend:8000`. The control-plane route is `/var/lib/openship/edge/sites-enabled/00-ops-control-plane.conf`. Baota's old vhost files remain only as inert rollback material.
+- LingxiLit: project `proj_dbXpzANqY8rPvOVC`, independent image `sha-f3017e23cc0a31753b022c64eb40a837f463d627`.
+- Uptime Kuma: project `proj_sYmlJeYfdwa4K2bQ`, `always_on`, public status `https://uptime.lingxilearn.cn/status/lingxiloop`.
+- WegoLibrary: project `proj_KQmC-0gtQ8DCgHD_`, management-host-local port `18081`, public `golib.christmas1314.xyz`.
+- OpenShip management host: SSH alias `aly`, public `ops.christmas1314.xyz`; OpenShip 0.6.9 runs as `openship.service` with its own managed Edge.

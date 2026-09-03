@@ -1,8 +1,25 @@
 # OpenShip deployment ledger
 
-Snapshot from the live OpenShip deployment API on 2026-09-02. It returned 72 records. Only rows marked active are current; every other row is retained solely for incident and rollback archaeology. Timestamps are UTC.
+The historical ledger began with 72 live API records on 2026-09-02 and was extended through the first-release reset on 2026-09-03. The current active IDs are in the first table; older `Active` markers below are historical snapshots retained solely for incident and rollback archaeology. Timestamps are UTC unless stated otherwise.
 
 The conversation also contained `dep_hTwrgkuYccZOs8QT`, but OpenShip returned `NOT_FOUND`; it was a mistyped/nonexistent ID and is not part of the 72-record ledger. Raw-session truncation also produced the partial strings `dep_LGTbj5TasJJbtAu` and `dep_g9i`; their complete real IDs are `dep_LGTbj5TasJJbtAu3` and `dep_g9ieyTk2UUOOcWZi` below.
+
+## 2026-09-03 first-release reset — current active
+
+All six deployments are `ready` at manifest commit `f02ce00e72ead6743646979d31b659fb8e4fa04a`; every LingxiLoop-owned image uses cohort `b42fef160fe697d46a8818e054f945d1f80953f7`.
+
+| Project | Deployment | Version |
+| --- | --- | ---: |
+| `lingxiloop-core-state` | `dep_iwo-MqsxP67r-hoI` | 24 |
+| `lingxiloop-app-a` | `dep_TSHb2V3tuZZyPg0V` | 18 |
+| `lingxiloop-agent-os-a` | `dep_T_OVA-RV0bjrtELT` | 11 |
+| `lingxiloop-app-b` | `dep_vKEdZ18EBjRg6aJb` | 22 |
+| `lingxiloop-knowledge-agent` | `dep_Kc4eqjfeLBSUYFly` | 24 |
+| `lingxiloop-agent-os-b` | `dep_8RPd_DfaUERoNBxf` | 10 |
+
+Knowledge refreshes `dep_eiMcQJR2WmVl-Hmh`, `dep_1ZwHHKT8QRYgUKrE`, `dep_qkKchykS23YHND6y`, and `dep_MOvkcixxvGaZJTBw` were intermediate ready deployments while the stale service environment was reconciled; `dep_Kc4eqjfeLBSUYFly` is final.
+
+The immediately preceding partial-cohort fanout at commit `761b59402fc4679ee06812a7a3997d16c5616db8` created core `dep_rQzT7dYyhORVSr8k`, app-a `dep_uV9cdt06eMP4uivL`, agent-a `dep_5q58DsNj1e7WwLdB`, app-b `dep_sFFIqqVzFcCz5Wks`, knowledge `dep_WJvuHMm_aVFZgbyq`, and agent-b `dep_a2QhnT4OwmTnvOkK`. It is historical because only Server and AgentOS images existed for its proposed image cohort.
 
 ## 2026-09-02T17:07Z signed CD fanout
 

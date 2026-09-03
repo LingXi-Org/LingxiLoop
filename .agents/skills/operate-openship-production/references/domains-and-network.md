@@ -13,9 +13,9 @@ Because the Tencent Cloud ICP access record permits `lingxilearn.cn` only on Ser
 | `openlit.lingxilearn.cn` | LingxiLit/OpenLit | OpenLit container `3000` through Edge |
 | `uptime.lingxilearn.cn` | Uptime Kuma and public status page | Uptime Kuma container `3001` through Edge |
 
-For those five names, remove AAAA, CNAME, and Cloudflare-proxy records. Remove obsolete `origin-a.lingxilearn.cn`, `origin-b.lingxilearn.cn`, `origin.loop.lingxilearn.cn`, and `ops.lingxilearn.cn` records. OpenShip uses `ops.christmas1314.xyz`.
+For those six names, remove AAAA, CNAME, and Cloudflare-proxy records. Obsolete `origin-a.lingxilearn.cn`, `origin-b.lingxilearn.cn`, `origin.loop.lingxilearn.cn`, and `ops.lingxilearn.cn` records are absent. OpenShip uses `ops.christmas1314.xyz`.
 
-The owner later restored `admin.lingxilearn.cn` as the primary Refine/admin Cloudflare Worker Custom Domain and kept Workers.dev as a fallback. At the 2026-09-02 check it resolved to Cloudflare A/AAAA addresses and returned HTTP 200 from Server B and an external client. This is an explicit exception to the earlier "all `lingxilearn.cn` names terminate on the备案 IP" target; do not silently remove it or claim the DNS-only invariant still covers `admin`. The same audit found the legacy `origin-a.lingxilearn.cn` Cloudflare record still present because the live Open Notebook container still uses it. Refresh Open Notebook to the intended `loop` upstream and verify it before manually deleting this record with DNS credentials that have record-write scope.
+`admin.lingxilearn.cn` is the primary Refine/admin Cloudflare Worker Custom Domain and resolves to Cloudflare A/AAAA addresses. This is the explicit exception to the DNS-only application invariant; do not remove it. Open Notebook now uses `loop`, so no retired origin DNS record is required.
 
 ## Current OpenShip domain objects
 
@@ -39,16 +39,9 @@ Historical/deleted domain objects:
 
 `dom_cua` and `dom_index_module` appeared only as regex false positives in raw tool/code text and are not OpenShip domain IDs.
 
-## Propagation caveat
+## Authoritative DNS state
 
-OpenShip's 17:48 CST health snapshot considered all five retained domains verified and reported no action-required domain issue. A local resolver check shortly afterward still returned:
-
-- apex, `www`, `loop`, and `openlit` -> `111.229.65.23`;
-- `im` -> the old Server A public IP `182.254.156.84`;
-- `admin` and `origin-a` -> Cloudflare proxy A/AAAA addresses;
-- no useful result for `origin-b`, `origin.loop`, or `ops`.
-
-Direct queries to `1.1.1.1` timed out from the workstation. Therefore do not treat either snapshot as conclusive. Query the authoritative nameservers and at least one independent resolver before closing Server A ingress or deleting certificates. The target state remains the table above.
+The 2026-09-03 authoritative check through `autumn.ns.cloudflare.com` returned only `111.229.65.23` for apex, `www`, `loop`, `im`, `openlit`, and `uptime`, with no AAAA or CNAME. `admin` returned the expected Cloudflare A/AAAA records. All four retired origin/ops names returned no A, AAAA, or CNAME.
 
 ## Gateway behavior
 
@@ -90,7 +83,7 @@ Public Server B:
 - 22/tcp only from administrator source ranges;
 - 80/tcp and 443/tcp for OpenShip Edge.
 
-Server A should expose no public 80/443 after authoritative DNS is confirmed. Restrict SSH similarly.
+Server A's managed Edge remains present for OpenShip health, but `/etc/systemd/system/lingxiloop-private-ingress.service` persistently rejects new TCP 80/443 connections on public interface `eth0`; WireGuard `wg0` is unaffected. Restrict SSH similarly.
 
 Private WireGuard flows:
 

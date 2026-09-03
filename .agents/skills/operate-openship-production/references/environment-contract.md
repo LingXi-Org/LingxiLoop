@@ -7,7 +7,7 @@ This file records names, public values, ownership, and equality rules. It intent
 - Local source directory: `D:\Documents\OpenShip`. Its `.txt` files contain plaintext secrets; never commit them, quote their values, attach them to logs, or copy them into this skill.
 - In OpenShip, mark database URLs/passwords, API keys, service tokens, webhook/HMAC secrets, R2 credentials, registry credentials, and OAuth client secrets as secrets.
 - When comparing two projects, compare secret equality through OpenShip metadata or hashes inside the target containers without returning values.
-- OpenShip masks environment fields but does not mask secrets embedded in `command` or `commandArgv`. SurrealDB currently has this exposure; never print its effective command.
+- OpenShip masks environment fields but does not mask secrets embedded in `command` or `commandArgv`. SurrealDB credentials therefore use environment variables; never move them back into its command.
 
 ## Local source files
 
@@ -17,8 +17,8 @@ The filenames are historical and are not reliable ownership boundaries. Select v
 
 `LINGXILOOP_INTERNAL_ORIGIN`, `POSTGRES_DB`, `POSTGRES_PASSWORD`, `POSTGRES_USER`, `PRIVATE_BIND_IP`, `REDIS_MAXMEMORY`, `WK_CLUSTER_JOIN_TOKEN`, `WUKONG_API_TOKEN`, `WUKONG_GOMAXPROCS`, `WUKONG_GOMEMLIMIT`, `WUKONG_WEBHOOK_SECRET`, `WUKONG_WS_BIND_IP`.
 
-- Current core Compose uses `PRIVATE_BIND_IP` for PostgreSQL, Redis, WuKongIM API, and WuKongIM WebSocket. `WUKONG_WS_BIND_IP` is legacy/unused by the checked-in manifest.
-- Server A public services must not use `0.0.0.0`; `PRIVATE_BIND_IP=10.20.0.2` is the target.
+- The OpenShip core manifest uses explicit `10.20.0.2` host binds for PostgreSQL, Redis, WuKongIM API, and WuKongIM WebSocket because OpenShip's upstream-accept path does not expand bind variables. `PRIVATE_BIND_IP` and `WUKONG_WS_BIND_IP` are legacy/unused there.
+- Server A services must never use `0.0.0.0` host binds.
 - `LINGXILOOP_INTERNAL_ORIGIN` points WuKongIM webhooks to API-A over the private network, not to an obsolete public origin hostname.
 
 ### `D:\Documents\OpenShip\db.txt` (200 bytes)
@@ -208,7 +208,6 @@ Project expansion keys:
 POSTGRES_DB
 POSTGRES_USER
 POSTGRES_PASSWORD
-PRIVATE_BIND_IP
 REDIS_MAXMEMORY
 WUKONG_GOMEMLIMIT
 WUKONG_GOMAXPROCS
@@ -222,7 +221,6 @@ Expected non-secret values:
 ```dotenv
 POSTGRES_DB=lingxiloop
 POSTGRES_USER=lingxiloop
-PRIVATE_BIND_IP=10.20.0.2
 REDIS_MAXMEMORY=192mb
 WUKONG_GOMEMLIMIT=320MiB
 WUKONG_GOMAXPROCS=1
@@ -235,7 +233,6 @@ The WuKong webhook is built as `${LINGXILOOP_INTERNAL_ORIGIN}/webhooks/wukong?to
 Project expansion keys:
 
 ```text
-PRIVATE_BIND_IP
 OPEN_NOTEBOOK_SURREAL_PASSWORD
 OPEN_NOTEBOOK_PASSWORD
 OPEN_NOTEBOOK_WORKER_MAX_TASKS
@@ -248,12 +245,11 @@ LINGXILOOP_CONTROL_PLANE_URL
 OPENAI_EMBEDDING_MODEL
 ```
 
-Open Notebook runtime keys additionally include `SURREAL_URL`, `SURREAL_USER`, `SURREAL_PASSWORD`, `SURREAL_NAMESPACE`, `SURREAL_DATABASE`, `OPEN_NOTEBOOK_R2_ENABLED`, `OPENAI_API_KEY`, and `OPENAI_BASE_URL`.
+Open Notebook runtime keys additionally include `SURREAL_URL`, `SURREAL_USER`, `SURREAL_PASSWORD`, `SURREAL_NAMESPACE`, `SURREAL_DATABASE`, `OPEN_NOTEBOOK_R2_ENABLED`, `OPENAI_API_KEY`, and `OPENAI_BASE_URL`. SurrealDB itself receives the same secret as `SURREAL_PASS` and receives `SURREAL_USER=open-notebook`; neither value belongs in its command.
 
 Expected values:
 
 ```dotenv
-PRIVATE_BIND_IP=10.20.0.3
 SURREAL_URL=ws://surrealdb:8000/rpc
 SURREAL_USER=open-notebook
 SURREAL_NAMESPACE=open_notebook
@@ -266,7 +262,7 @@ LINGXILOOP_CONTROL_PLANE_URL=https://loop.lingxilearn.cn
 OPENAI_BASE_URL=https://loop.lingxilearn.cn/internal/open-notebook/v1
 ```
 
-The last value is stale in the current container and still points to `origin-a`; fix it with a refresh deployment, not a restart.
+The stable `loop` values above are active in the current Open Notebook container. The OpenShip Knowledge project no longer needs `PRIVATE_BIND_IP`; its fixed production bind is explicit in the manifest.
 
 ## LingxiLit / OpenLit
 

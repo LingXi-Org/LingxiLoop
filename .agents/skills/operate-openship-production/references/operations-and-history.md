@@ -62,11 +62,11 @@ CI builds five LingxiLoop images on linux/amd64 and pushes immutable full-commit
 - `deploy/openship/knowledge-agent.yml`: Open Notebook;
 - the three legacy production/MVP/Dokploy Compose files.
 
-The current active LingxiLoop release uses manifest commit `0460841394302f76d679aebc5353cff5ce2b13de`, pinning all five application images to source commit `524beb46a0a39be3c69c1cd2451b53c35f45dcc6`. GitHub Actions run `33658014092` passed quality, unit/eval, integration, all image publication, manifest update, Worker deployment, and six-project signed fanout. OpenShip service-row overrides still keep WuKongIM on `ed4d749c...` and API-A, Open Notebook, and Gateway on `53572c0e...`; reconcile those drifts deliberately rather than assuming project readiness changed every image. Earlier relevant commits/tags include:
+The current active LingxiLoop release uses manifest commit `f02ce00e72ead6743646979d31b659fb8e4fa04a`, pinning all five application images to the complete source cohort `b42fef160fe697d46a8818e054f945d1f80953f7`. A transient release from source `761b594...` put Server and AgentOS on `fd3246c...`, but that cohort had no published Gateway, Open Notebook, or WuKongIM tags. Production therefore converged on the last complete cohort instead of inventing missing tags. All six projects now run the same manifest, all owned images have the same tag, and OpenShip reports no drift. Earlier relevant commits/tags include:
 
 - `9fe3cc645e2998c6201c737d4e4e2db2699cd423`: Gateway health check uses IPv4.
 - `e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29`: first immutable Gateway image; retained as an unused B image.
-- `ed4d749ce9be62cfd20895b39ac6f5c45c410ecc`: previous server/AgentOS/Open Notebook/WuKongIM generation; WuKongIM still runs this tag.
+- `ed4d749ce9be62cfd20895b39ac6f5c45c410ecc`: previous server/AgentOS/Open Notebook/WuKongIM generation.
 - `868bcbde28e59a817f12de050ee40d65dd43313b`: older knowledge/AgentOS generation.
 - `e96274a2a6edbbea9ea113ad38dc7be3397bf8fc`, `80fc99743172e55fd56813cbbbab6c6890a2f19c`, `4b6b77b0aa36a67e61b92dcaefea0fc300093ea0`, `a7515981a1980d812f4839845de31d36c79a56b8`, and `c692ff56ee69b50ea1c9320b920c17595562f9be` were observed during intermediate releases.
 
@@ -84,7 +84,7 @@ All LingxiLoop images above used the `accel.way2api.fun/ghcr.io/lyyzka/` mirror 
 
 The 53572 slimming changed the server image from roughly 955 MB/older 1.62 GB storage representation to 613 MB, AgentOS to 706 MB, and Open Notebook to 490 MB. Before slimming, AgentOS/root dependencies included roughly 1.03 GB of `node_modules` and a 153 MB npm cache; very large UI/icon/telemetry/PDF packages were accidentally present. The user handled code-level slimming. Operations should only flag renewed growth, not redesign the application image without a code request.
 
-OpenShip sometimes kept a previous service image even after a project refresh. In one release, API-A remained on `ed4...` until its service row image was explicitly updated and refreshed. Always inspect the running image after a successful deployment.
+OpenShip sometimes kept a previous service image even after a project refresh. In one release, API-A remained on `ed4...` until its service row image was explicitly updated and refreshed. The 2026-09-03 reset reconciled every row, but operators must still inspect running images after every deployment.
 
 ## Signed CI-to-OpenShip release path
 
@@ -136,7 +136,17 @@ Named-volume inventory learned during the session:
 - current B: `openship-lingxiloop-knowledge-agent-surreal-data`, `openship-lingxiloop-knowledge-agent-open-notebook-data`, `openship-lingxiloop-agent-os-b-agent-os-data`, `openship-lingxilit-shanghai-b-clickhouse-data`, `openship-lingxilit-shanghai-b-openlit-data`;
 - historical/obsolete: `openship-lingxiloop-knowledge-agent-agent-os-data`, `openship-lingxiloop-surreal-data`, `openship-openlit-clickhouse-data`, and the deleted Surreal `data-v2` generation.
 
-OpenShip's effective service row still reports a command-path drift and exposes the secret argument unmasked. Fixing that metadata securely is future deployment hygiene; do not echo the command.
+The 2026-09-03 first-release reset recreated only the current Open Notebook and SurrealDB containers and deleted only `openship-lingxiloop-knowledge-agent-open-notebook-data` and `openship-lingxiloop-knowledge-agent-surreal-data`. This was explicitly authorized because production had no data; no backup exists for that discarded state. The deployment recreated both volumes, Open Notebook passed readiness against the stable `loop` endpoint, and SurrealDB now receives `SURREAL_USER`/`SURREAL_PASS` through the environment with no password in command metadata.
+
+## 2026-09-03 first-release drift reset
+
+- Manifest `f02ce00...` made fixed production private binds explicit because OpenShip's upstream-accept path did not expand bind variables. Obsolete project-level `PRIVATE_BIND_IP` values were removed from Core and Knowledge.
+- Gateway health now targets `127.0.0.1`; WuKongIM publishes 5001/5200 only on `10.20.0.2`; Open Notebook publishes 5055 only on `10.20.0.3`.
+- App A keeps one explicit resolved service bind, `10.20.0.2:5181`, to avoid the same parser limitation. This is synchronized local metadata, not active drift.
+- Open Notebook moved from retired `origin-a` to `https://loop.lingxilearn.cn/internal/open-notebook/v1`; the required empty Knowledge reset is recorded above.
+- API-A and API-B were each stopped in turn. The Gateway stayed healthy through the other API, then both nodes were restored.
+- Server A keeps the OpenShip-managed Edge, while enabled unit `lingxiloop-private-ingress.service` rejects public-interface 80/443 and preserves WireGuard traffic. Server B remains the only public ingress.
+- Final checks: 16/16 healthy, zero OpenShip issues, zero drift, both AgentOS heartbeats fresh, queue empty, public/private HTTP and WuKongIM WebSocket probes successful.
 
 ## LingxiLit first deployment
 
@@ -185,7 +195,7 @@ OpenShip's one-domain-per-service behavior required persistent host Edge alias f
 - `restart` does not apply stale environment. Use a refresh deployment.
 - Git clone on destination hosts may fail without credentials and fall back to API-host clone/transfer.
 - Service rows can override Compose and survive project updates. Reconcile drift deliberately; do not blindly accept or discard all changes.
-- OpenShip current issue scan can be green while environment-level application routes are stale, as shown by Open Notebook still using `origin-a`.
+- OpenShip upstream acceptance does not reliably expand variables in host binds. Keep fixed production bind addresses explicit in the OpenShip manifests and verify the resulting service rows.
 
 ## OpenShip control-plane host I/O incident
 
