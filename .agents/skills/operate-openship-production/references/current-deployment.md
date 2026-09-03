@@ -92,6 +92,12 @@ With explicit authorization to discard debugging history, operations stopped onl
 
 Changing Open Notebook to the stable `loop` endpoint correctly triggered its stored embedding-contract guard. With explicit no-production-data authorization, operations removed only the Open Notebook and SurrealDB containers and their two named volumes, then redeployed. No backup was created; that old empty Knowledge state is not recoverable. PostgreSQL, Redis, WuKongIM, AgentOS, LingxiLit, and Uptime Kuma data were untouched.
 
+## 2026-09-03 Alibaba Mail OTP cutover
+
+At 13:15 China Standard Time, the control-plane Worker served version `200f827c-d73f-4f1f-9e7a-c75fe15f3c40` at 100% traffic. OTP and password-reset mail now use TLS SMTP on `smtp.qiye.aliyun.com:465`, authenticating as `no-reply@lingxilearn.cn`; the feedback mailbox credentials for `support@lingxilearn.cn` are also stored as a Worker secret for later product use. Both accounts authenticated successfully, Alibaba SMTP accepted a test delivery from no-reply to support, and POP3 confirmed receipt without exposing message content or credentials. The unused Worker `RESEND_API_KEY` and `RESEND_FROM` secrets were removed; App A/B Resend configuration for the independent agent-email subsystem was not changed.
+
+The Worker custom domain, admin root, admin health, and loop health returned HTTP 200 after deployment. OpenShip remained 16/16 healthy with the watcher enabled. D1 had no pending migrations.
+
 ## Host-managed assets
 
 - Server B Edge aliases: `/var/lib/openship/edge/sites-enabled/00-gateway-aliases.conf` and `00-im-gateway.conf`.

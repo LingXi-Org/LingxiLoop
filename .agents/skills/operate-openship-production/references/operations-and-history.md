@@ -183,6 +183,12 @@ The owner later restored `admin.lingxilearn.cn` as the primary Cloudflare Worker
 
 OpenShip's one-domain-per-service behavior required persistent host Edge alias files for apex, `www`, and IM. The old route IDs and DNS records are documented in the network reference.
 
+## Alibaba Mail OTP cutover
+
+On 2026-09-03, Better Auth OTP and password-reset delivery moved from the control-plane Worker's Resend HTTP call to Alibaba Mail TLS SMTP on port 465. Passwords are supplied only by Worker secrets, and the previous Worker Resend secrets were removed after both mailbox authentication and a no-reply-to-support delivery were verified. App A/B continue to use their separate Resend configuration for agent email. Wrangler on the C-drive worktree repeatedly discovered an unrelated ancestor Yarn PnP manifest; the successful deployment used an isolated D-drive directory with physical temporary dependencies, as the standard junction still resolved back beneath the conflicting PnP path.
+
+The first Worker secret upload used Windows line-oriented stdin and silently stored a trailing newline. Better Auth returned `200` because delivery ran in the request background, while Worker tail exposed Alibaba SMTP `526 Authentication failure`. Rewriting both mailbox secrets in one JSON `wrangler secret bulk` operation removed the newline; a real OTP request for the sole unverified account then completed with no Worker exception. Treat a `200` OTP response as generation acceptance, not proof of SMTP delivery; inspect Worker exceptions when delivery is disputed.
+
 ## Database and state recovery
 
 - PostgreSQL primary: A. Redis and WuKongIM also live only on A.

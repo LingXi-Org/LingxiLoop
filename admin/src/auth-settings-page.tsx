@@ -23,7 +23,7 @@ interface AuthSettings {
     captchaProvider: string
     captchaEndpoints: string[]
   }
-  secrets: { resend: boolean; turnstile: boolean }
+  secrets: { smtp: boolean; turnstile: boolean }
 }
 
 const EDITABLE_FIELDS = [
@@ -78,7 +78,7 @@ export function AuthSettingsPage() {
   return <div className="space-y-6">
     <PageHeading title="身份认证" description="管理 Better Auth 的运行参数并检查关键安全依赖。" />
     <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <StatusCard icon={MailCheckIcon} label="邮件服务" ready={form.secrets.resend} detail="Resend Secret" />
+      <StatusCard icon={MailCheckIcon} label="邮件服务" ready={form.secrets.smtp} detail="阿里企业邮箱 SMTP" />
       <StatusCard icon={ShieldCheckIcon} label="人机验证" ready={form.secrets.turnstile} detail="Cloudflare Turnstile" />
       <StatusCard icon={KeyRoundIcon} label="邮箱验证" ready={form.locked.requireEmailVerification} detail="Email OTP" />
       <StatusCard icon={CheckCircle2Icon} label="默认角色" ready detail={form.locked.defaultRole} />

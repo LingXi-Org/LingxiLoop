@@ -4,6 +4,7 @@ import { admin, captcha, emailOTP } from 'better-auth/plugins'
 import { drizzle } from 'drizzle-orm/d1'
 import { type Context, Hono } from 'hono'
 import { authSchema } from './schema'
+import { sendSmtpEmail } from './smtp'
 
 type Secrets = {
   BETTER_AUTH_SECRET: string
@@ -13,8 +14,7 @@ type Secrets = {
   OPENSHIP_PAT: string
   OPENSHIP_PROJECT_IDS: string
   OPENSHIP_IMAGE_TARGETS: string
-  RESEND_API_KEY: string
-  RESEND_FROM: string
+  ALIYUN_OTP_EMAIL_PASSWORD: string
   TURNSTILE_SECRET_KEY: string
   CF_ACCESS_CLIENT_ID?: string
   CF_ACCESS_CLIENT_SECRET?: string
@@ -87,12 +87,7 @@ async function secretMatches(expected: string, candidate: string): Promise<boole
 }
 
 async function sendEmail(env: Bindings, message: { to: string; subject: string; html: string }): Promise<void> {
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: env.RESEND_FROM, ...message }),
-  })
-  if (!response.ok) throw new Error(`Resend rejected email (${response.status})`)
+  await sendSmtpEmail({ address: 'no-reply@lingxilearn.cn', password: env.ALIYUN_OTP_EMAIL_PASSWORD }, message)
 }
 
 async function originRequest(env: Bindings, path: string, init: RequestInit, identity?: { appUserId?: string; authUserId?: string }): Promise<Response> {
@@ -426,7 +421,7 @@ app.get('/api/control/auth-settings', async (c) => {
       captchaEndpoints: ['/sign-up/email', '/sign-in/email', '/request-password-reset'],
     },
     secrets: {
-      resend: Boolean(c.env.RESEND_API_KEY && c.env.RESEND_FROM),
+      smtp: Boolean(c.env.ALIYUN_OTP_EMAIL_PASSWORD),
       turnstile: Boolean(c.env.TURNSTILE_SECRET_KEY),
     },
   })
