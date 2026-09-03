@@ -11,7 +11,7 @@ x-quiet-logging: &quiet-logging
 # .env.secrets; CI never creates or overwrites that file.
 
 x-lingxiloop-runtime: &lingxiloop-runtime
-  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:fd3246c2ce96711279fdb780a5d33703878cb6c8
   pull_policy: always
   env_file:
     - ./.env.secrets
@@ -202,7 +202,7 @@ services:
     logging: *quiet-logging
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:b42fef160fe697d46a8818e054f945d1f80953f7
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:fd3246c2ce96711279fdb780a5d33703878cb6c8
     pull_policy: always
     restart: unless-stopped
     env_file:

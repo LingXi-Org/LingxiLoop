@@ -7,7 +7,7 @@ x-quiet-logging: &quiet-logging
 # PostgreSQL and Redis intentionally live on the private database server.
 # Application images are assembled from immutable GHCR digests only.
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:fd3246c2ce96711279fdb780a5d33703878cb6c8
   pull_policy: always
   environment: &runtime-environment
     NODE_ENV: production
@@ -157,7 +157,7 @@ services:
       lingxiloop: { condition: service_healthy }
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:b42fef160fe697d46a8818e054f945d1f80953f7
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:fd3246c2ce96711279fdb780a5d33703878cb6c8
     pull_policy: always
     restart: unless-stopped
     environment:

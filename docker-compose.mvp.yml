@@ -116,7 +116,7 @@ services:
     logging: *quiet-logging
 
   db-migrate:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:fd3246c2ce96711279fdb780a5d33703878cb6c8
     pull_policy: always
     restart: "no"
     command: ["npm", "run", "db:migrate"]
@@ -134,7 +134,7 @@ services:
     logging: *quiet-logging
 
   lingxiloop:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:fd3246c2ce96711279fdb780a5d33703878cb6c8
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -202,7 +202,7 @@ services:
     logging: *quiet-logging
 
   worker:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:fd3246c2ce96711279fdb780a5d33703878cb6c8
     pull_policy: always
     restart: unless-stopped
     command: ["npm", "run", "worker:start"]
@@ -224,7 +224,7 @@ services:
     logging: *quiet-logging
 
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:b42fef160fe697d46a8818e054f945d1f80953f7
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:fd3246c2ce96711279fdb780a5d33703878cb6c8
     pull_policy: always
     restart: unless-stopped
     depends_on:
