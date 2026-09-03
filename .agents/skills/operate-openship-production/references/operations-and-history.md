@@ -183,6 +183,12 @@ The owner later restored `admin.lingxilearn.cn` as the primary Cloudflare Worker
 
 OpenShip's one-domain-per-service behavior required persistent host Edge alias files for apex, `www`, and IM. The old route IDs and DNS records are documented in the network reference.
 
+## Login session routing repair
+
+On 2026-09-03, repeated browser sign-ins created valid D1 session rows but the app returned to its login screen. The Gateway sent only `/api/auth/` to the control-plane Worker, so the immediate `/api/session` bootstrap request bypassed authentication, reached Express, and returned 404; `AuthGate` then cleared its local state. PR `#17` changed the Gateway to send all unsigned browser `/api/` traffic through the Worker and route requests carrying the Worker's signed gateway assertion directly to the dual API upstream. The server remains responsible for validating that assertion, so merely supplying the header does not bypass authentication.
+
+CI/CD run `33725928050` published Gateway tag `d794d15db8cd011ca9c776686a09e17aa66fb628`; generated manifest `9ec63f0...` reached `ready` on all six projects at OpenShip version 3. The running Gateway was healthy, anonymous `/api/session` changed from Express 404 to authentication-layer 401 JSON, `/api/auth/get-session` remained 200, and the Worker's signed `/api/health` origin request returned 200. OpenShip reported 16/16 healthy workloads with no outage or action-required issue; six advisory-only source comparisons still referenced the historical `df724bc...` manifest.
+
 ## Alibaba Mail OTP cutover
 
 On 2026-09-03, Better Auth OTP and password-reset delivery moved from the control-plane Worker's Resend HTTP call to Alibaba Mail TLS SMTP on port 465. Passwords are supplied only by Worker secrets, and the previous Worker Resend secrets were removed after both mailbox authentication and a no-reply-to-support delivery were verified. App A/B continue to use their separate Resend configuration for agent email. Wrangler on the C-drive worktree repeatedly discovered an unrelated ancestor Yarn PnP manifest; the successful deployment used an isolated D-drive directory with physical temporary dependencies, as the standard junction still resolved back beneath the conflicting PnP path.
