@@ -53,14 +53,15 @@ Checked-in `deploy/openship/gateway.conf`:
 - exposes host loopback `127.0.0.1:8080` only;
 - `/healthz` returns 204;
 - serves `website/` for apex and `www`;
-- sends `/api/auth/` to `https://admin.lingxilearn.cn`, preserving the public host and HTTPS forwarding headers;
+- sends browser `/api/` requests to `https://admin.lingxilearn.cn`, preserving the public host and HTTPS forwarding headers;
+- sends requests carrying the Worker's signed `x-lingxiloop-gateway` assertion directly to the dual API upstream, where the server verifies the signature, method, path, freshness, and nonce; this prevents Worker-to-`loop` origin requests from recursing;
 - balances `loop` with `least_conn` between `lingxiloop:5181` on App B and `10.20.0.2:5181` on App A;
 - forwards Host, X-Forwarded headers, WebSocket Upgrade/Connection, disables response/request buffering, and gives streaming a 3600-second timeout;
 - retries API upstream errors/timeouts/invalid headers/502/503/504 with two tries;
 - proxies `im` to `10.20.0.2:5200` with WebSocket support and 3600-second timeouts;
 - uses Docker DNS resolver `127.0.0.11` for the local Compose service.
 
-The Gateway image is built from `nginx:alpine`, copies `gateway.conf`, and copies repository `website/` to `/usr/share/nginx/html`. Production runs immutable tag `3b0069a...`; public `/api/auth/get-session` returned JSON HTTP 200 after rollout.
+The Gateway image is built from `nginx:alpine`, copies `gateway.conf`, and copies repository `website/` to `/usr/share/nginx/html`. Production runs immutable tag `d794d15db8cd011ca9c776686a09e17aa66fb628`; public `/api/auth/get-session` returned JSON HTTP 200, anonymous `/api/session` returned authentication-layer JSON HTTP 401 instead of Express 404, and signed `/api/health` origin routing returned HTTP 200 after rollout.
 
 Use `127.0.0.1`, not `localhost`, in the Gateway health check. Alpine/wget selected IPv6 for `localhost` in the failed version, while Nginx listened on IPv4, causing a false unhealthy state. Commit `9fe3cc645e2998c6201c737d4e4e2db2699cd423` fixed this root cause.
 

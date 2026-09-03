@@ -1,12 +1,12 @@
 # Current production deployment
 
-Snapshot: 2026-09-03 12:44 China Standard Time, checked through OpenShip MCP, GitHub CLI, HTTP probes, Uptime SQLite status, and host inspection. Re-read live state before every operation.
+Snapshot: 2026-09-03 15:04 China Standard Time, checked through OpenShip MCP, GitHub CLI, HTTP probes, Uptime SQLite status, and host inspection. Re-read live state before every operation.
 
 ## Scope and authority
 
 - OpenShip organization: `org_afbfbb11-78d7-41ee-b644-4b745b486069`.
 - The six LingxiLoop projects are Production Docker projects on branch `main`, use local/self-hosted OpenShip source, and have `autoDeploy=false`. The signed post-CI release endpoint performs the fanout.
-- OpenShip's health watcher is enabled. The current snapshot is 16/16 healthy with zero outage, zero action-required, zero advisory, and no service drift.
+- OpenShip's health watcher is enabled. The current snapshot is 16/16 healthy with zero outage and zero action-required. Six advisory-only source comparisons show deployed manifest `9ec63f0...` against the historical `df724bc...`; they do not report unhealthy workloads.
 - Server B is the only public application ingress. Server A retains a managed OpenShip Edge for control-plane health but rejects new public-interface TCP connections to 80/443.
 
 ## Hosts
@@ -27,16 +27,16 @@ Both hosts use a 4 GB `/swapfile4g`. Swap is emergency headroom, not normal capa
 
 ## Active LingxiLoop release
 
-All six projects run manifest commit `df724bc4228af374bd8b82e8e9b24a887b45286e`. Server, AgentOS, WuKongIM, Open Notebook, and Gateway all use immutable tag `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`. A release must contain all five valid pins, but ordinary component-scoped releases retain valid prior pins for unchanged components.
+All six projects run manifest commit `9ec63f07eef4d2b305da579c698d097775ef8794`. Server, AgentOS, WuKongIM, and Open Notebook use immutable tag `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway uses `d794d15db8cd011ca9c776686a09e17aa66fb628`. A release must contain all five valid pins, but ordinary component-scoped releases retain valid prior pins for unchanged components.
 
 | Project | ID | Host | Compose | Active deployment | OpenShip version |
 | --- | --- | --- | --- | --- | ---: |
-| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | A | `deploy/openship/core-state.yml` | `dep_iT9yKagEJZx5c7Kk` | 2 |
-| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | A | `deploy/openship/app-a.yml` | `dep_76nu6qPPVvEpHVLg` | 2 |
-| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | A | `deploy/openship/agent-os.yml` | `dep_T4c4yznrw7z_g3D4` | 2 |
-| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | B | `deploy/openship/app-b.yml` | `dep_OKH5Ee2REEGuftcD` | 2 |
-| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | B | `deploy/openship/knowledge-agent.yml` | `dep_jLGk3jFOk99ykWkm` | 2 |
-| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | B | `deploy/openship/agent-os.yml` | `dep_T-G8p8aSNq4nvdY6` | 2 |
+| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | A | `deploy/openship/core-state.yml` | `dep_CrtBP3jC92RqLuw-` | 3 |
+| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | A | `deploy/openship/app-a.yml` | `dep_H9DuLeMvanXr5iOb` | 3 |
+| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | A | `deploy/openship/agent-os.yml` | `dep__szPPtnRYpySzbIS` | 3 |
+| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | B | `deploy/openship/app-b.yml` | `dep_37XfkFaxmnj9f4H7` | 3 |
+| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | B | `deploy/openship/knowledge-agent.yml` | `dep_slvAF1kgr1A_pgXK` | 3 |
+| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | B | `deploy/openship/agent-os.yml` | `dep_6wdynyQ_LmBZIhHC` | 3 |
 
 LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastructure and are not part of the LingxiLoop release image set.
 
@@ -60,7 +60,7 @@ LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastruc
 | API-B | `svc_wm0I2fR_uglJGyWb` | `lingxiloop-server:99f2e43...` | loopback `5181` | none |
 | Worker-B | `svc_okKRA-wGrqgFyZAk` | `lingxiloop-server:99f2e43...` | no host port | none |
 | db-migrate B | `svc_70YEsZbgYP34z7Hv` | `lingxiloop-server:99f2e43...` | exited 0 | none |
-| Gateway | `svc_q7ZcH8px3jsB9qnY` | `lingxiloop-gateway:99f2e43...` | `127.0.0.1:8080` | none |
+| Gateway | `svc_q7ZcH8px3jsB9qnY` | `lingxiloop-gateway:d794d15...` | `127.0.0.1:8080` | none |
 | AgentOS-B | `svc_rT0BSxd8KVNGSWMU` | `lingxiloop-agent-os:99f2e43...` | no host port | `openship-lingxiloop-agent-os-b-agent-os-data` |
 | SurrealDB | `svc_yhlLUphCFs8lazC0` | pinned SurrealDB v2 digest | no host port | `openship-lingxiloop-knowledge-agent-surreal-data:/home/nonroot` |
 | Open Notebook | `svc_hmGZIaloXJohVV2r` | `lingxiloop-open-notebook:99f2e43...` | `10.20.0.3:5055` | `openship-lingxiloop-knowledge-agent-open-notebook-data` |
@@ -76,7 +76,7 @@ Gateway health uses `127.0.0.1`, never `localhost`. SurrealDB stores RocksDB at 
 - Apex, `www`, `loop`, IM, OpenLit, Uptime, Admin, OpenShip, and Wego probes succeeded. Authoritative DNS sends the six DNS-only application names only to Server B; retired origin names are absent.
 - Server A public 80/443 are closed while private API/WuKongIM flows remain reachable. Server B remains the public-ingress single point of failure.
 - App A's stale Worker/Gateway service rows and containers are absent. Uptime has exactly sixteen active monitors, no inactive or legacy rows, and every latest heartbeat is up.
-- Public `https://loop.lingxilearn.cn/api/auth/get-session` returns JSON HTTP 200 through the Gateway; the running Gateway container contains the `/api/auth/` proxy and uses image `99f2e43...`.
+- Public `https://loop.lingxilearn.cn/api/auth/get-session` returns JSON HTTP 200 through the Gateway. Anonymous `/api/session` now reaches the control-plane authentication layer and returns JSON HTTP 401 instead of the former Express 404; public `/api/health` remains HTTP 200 through the signed Worker-to-origin bypass. The running Gateway uses image `d794d15...`.
 
 ## 2026-09-03 first-release reset
 
@@ -101,6 +101,10 @@ The Worker custom domain, admin root, admin health, and loop health returned HTT
 At 13:42, Worker tail proved the original line-oriented secret upload caused Alibaba SMTP `526 Authentication failure`; rewriting both mailbox secrets with JSON `wrangler secret bulk` produced version `8c8933b2-4426-4a5d-a678-03a529bb5496` and a real OTP request completed without exceptions. PR `#14` then committed the SMTP implementation and merged as `a2e032393ac6692134c9b8cc2c35009e495a3fed`. The QQ recipient still reported no delivery; the sender mailbox had no bounce, while an Alibaba-delivered copy proved the generated message lacked `Date` and `Message-ID`.
 
 PR `#15` added both standard headers and merged as `eaee369baebbb04a0087ab57fc99074422ba2275`. GitHub Actions run `33721478814` passed and promoted tagged Worker version `92525f1e-711e-400c-8c94-003877d6f554` at 100% traffic. One post-CD OTP request for the sole unverified QQ account returned `200` with no Worker exception, and an independent no-reply delivery reached the authorized Tencent test mailbox in about 12 seconds. Public health endpoints remained `200`, and OpenShip's watcher remained enabled with 16/16 services healthy.
+
+## 2026-09-03 login session routing repair
+
+Successful browser sign-ins were creating D1 session rows, but the Gateway routed only `/api/auth/` to the control-plane Worker. The app's immediate `/api/session` bootstrap request therefore reached Express directly, returned `404`, and caused `AuthGate` to clear its local state. PR `#17` routed all browser `/api/` traffic through the Worker while sending Worker-signed origin requests directly to the dual API upstream. GitHub Actions run `33725928050` published Gateway image `d794d15db8cd011ca9c776686a09e17aa66fb628`; manifest commit `9ec63f07eef4d2b305da579c698d097775ef8794` reached `ready` on all six projects at OpenShip version 3. Post-rollout probes returned `401` JSON for anonymous `/api/session`, `200` for `/api/auth/get-session`, and `200` for `/api/health`.
 
 ## Host-managed assets
 
