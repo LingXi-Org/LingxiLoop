@@ -62,7 +62,7 @@ CI builds only affected LingxiLoop images on linux/amd64 and pushes immutable fu
 - `deploy/openship/core-state.yml`: WuKongIM;
 - `deploy/openship/knowledge-agent.yml`: Open Notebook.
 
-The current active LingxiLoop release uses manifest commit `d93432444c96f757a18100de3b3830e7d6d3ba41`. Server and AgentOS use `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; WuKongIM and Open Notebook remain pinned to `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway uses `d794d15db8cd011ca9c776686a09e17aa66fb628`. The signed release requires all five image references to be present and immutable but does not force unrelated components to share one tag. All six projects run the same manifest.
+The current active LingxiLoop release uses manifest commit `1c708cfc77ddbdae9b8c5a31886b4a574328e1a5`. Server uses `c9324ff389c18f614fbcfc5df5061aff3db37edf`; AgentOS retains `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; WuKongIM and Open Notebook remain pinned to `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway uses `d794d15db8cd011ca9c776686a09e17aa66fb628`. The signed release requires all five image references to be present and immutable but does not force unrelated components to share one tag. All six projects run the same manifest.
 
 - `9fe3cc645e2998c6201c737d4e4e2db2699cd423`: Gateway health check uses IPv4.
 - `e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29`: first immutable Gateway image; retained as an unused B image.
@@ -194,6 +194,12 @@ CI/CD run `33725928050` published Gateway tag `d794d15db8cd011ca9c776686a09e17aa
 On 2026-09-03, newly registered personal users could not create courses because registration created the user, personal company, memberships, and default project but omitted the owner's human `participants` row. Course creation then failed the `domain_events_actor_company_fkey` constraint when recording the user actor. Commit `e6025ad...` made personal-workspace provisioning idempotently upsert that participant in the registration transaction; migration 4 repaired existing active personal owners.
 
 CI/CD run `33734932192` passed its required gates, published Server and AgentOS tag `e6025ad...`, and generated manifest `d934324...`. All six OpenShip deployments reached `ready` at version 4. Both migration one-shots exited 0, the production gap query returned zero missing participants, API-A/API-B and both AgentOS containers ran the new images healthy, and public `/api/health` returned 200. Server B's image pulls took about eight minutes but completed without intervention or data loss.
+
+## Durable chat reply reconciliation repair
+
+On 2026-09-03, a user message was accepted, AgentOS and its LLM ledger completed successfully, and WuKongIM durably stored the final agent reply, but the browser showed no output. The frontend treated the transient stream preview as mandatory and rejected the authoritative durable reply whenever login, reconnect, or a stream gap caused that preview to be missed. Commit `c9324ff...` removed only that client-side preview dependency while retaining normal run reconciliation; server-side final-message validation remains authoritative.
+
+CI/CD run `33739088290` passed the required checks, published Server tag `c9324ff...`, and generated manifest `1c708cf...`. All six OpenShip deployments reached `ready` at version 5. API-A, API-B, and Worker-B run the new Server image; public `/api/health` returned 200 and the health watcher reported 16/16 healthy workloads with zero outage and zero action-required issues.
 
 ## Alibaba Mail OTP cutover
 
