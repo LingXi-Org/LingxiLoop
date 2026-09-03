@@ -189,6 +189,10 @@ On 2026-09-03, Better Auth OTP and password-reset delivery moved from the contro
 
 The first Worker secret upload used Windows line-oriented stdin and silently stored a trailing newline. Better Auth returned `200` because delivery ran in the request background, while Worker tail exposed Alibaba SMTP `526 Authentication failure`. Rewriting both mailbox secrets in one JSON `wrangler secret bulk` operation removed the newline; a real OTP request for the sole unverified account then completed with no Worker exception. Treat a `200` OTP response as generation acceptance, not proof of SMTP delivery; inspect Worker exceptions when delivery is disputed.
 
+PR `#14` merged the SMTP source as commit `a2e0323...`; CI/CD run `33720582271` promoted tagged Worker version `0299d333-37b2-4b61-99b1-89e673cf3503`. A post-CD OTP request completed with no Worker exceptions, all public health probes returned `200`, and OpenShip remained 16/16 healthy.
+
+The QQ recipient still reported no message and the no-reply inbox had no bounce. A copy delivered inside Alibaba Mail showed Alibaba did not add the absent `Date` or `Message-ID` headers, so the SMTP source was amended to emit both before another external-delivery test.
+
 ## Database and state recovery
 
 - PostgreSQL primary: A. Redis and WuKongIM also live only on A.

@@ -22,6 +22,8 @@ function base64(value: string): string {
 function emailSource(account: SmtpAccount, message: EmailMessage): string {
   const body = base64(message.html).match(/.{1,76}/g)?.join('\r\n') ?? ''
   return [
+    `Date: ${new Date().toUTCString()}`,
+    `Message-ID: <${crypto.randomUUID()}@lingxilearn.cn>`,
     `From: =?UTF-8?B?${base64('LingxiLoop')}?= <${account.address}>`,
     `To: <${message.to}>`,
     `Subject: =?UTF-8?B?${base64(message.subject)}?=`,

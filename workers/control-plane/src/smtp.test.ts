@@ -42,7 +42,7 @@ describe('Alibaba Mail SMTP', () => {
       },
     )
 
-    expect({ writes, closed }).toEqual({
+    expect({ writes: writes.slice(0, 7), closed }).toEqual({
       writes: [
         'EHLO lingxilearn.cn\r\n',
         'AUTH LOGIN\r\n',
@@ -51,10 +51,10 @@ describe('Alibaba Mail SMTP', () => {
         'MAIL FROM:<no-reply@lingxilearn.cn>\r\n',
         'RCPT TO:<student@example.com>\r\n',
         'DATA\r\n',
-        'From: =?UTF-8?B?TGluZ3hpTG9vcA==?= <no-reply@lingxilearn.cn>\r\nTo: <student@example.com>\r\nSubject: =?UTF-8?B?VmVyaWZ5?=\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\nPHA+MTIzNDU2PC9wPg==\r\n.\r\n',
-        'QUIT\r\n',
       ],
       closed: true,
     })
+    expect(writes[7]).toMatch(/^Date: .+ GMT\r\nMessage-ID: <[0-9a-f-]+@lingxilearn\.cn>\r\nFrom: =\?UTF-8\?B\?TGluZ3hpTG9vcA==\?= <no-reply@lingxilearn\.cn>\r\nTo: <student@example\.com>\r\nSubject: =\?UTF-8\?B\?VmVyaWZ5\?=\r\nMIME-Version: 1\.0\r\nContent-Type: text\/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\nPHA\+MTIzNDU2PC9wPg==\r\n\.\r\n$/)
+    expect(writes[8]).toBe('QUIT\r\n')
   })
 })
