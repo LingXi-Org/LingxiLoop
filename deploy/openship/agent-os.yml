@@ -8,7 +8,7 @@ x-logging: &logging
 
 services:
   agent-os:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:7f16f69be731326e091cc703c850e6b7ee6af6a5
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:0cfa406be9eea46c790339bc8730a0da959c58e6
     pull_policy: always
     restart: unless-stopped
     stop_grace_period: 30s
