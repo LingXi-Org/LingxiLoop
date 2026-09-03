@@ -47,22 +47,22 @@ Release order for AgentOS changes:
 
 - `knowledge-agent.yml` now contains only SurrealDB and Open Notebook.
 - `agent-os.yml` is an independently deployable one-service project with required `AGENT_OS_VOLUME_NAME`, no host-published 5190, 1 CPU, 768 MB, and 30-second container stop grace.
-- `app.yml` uses profiles: App A leaves profiles unset; App B uses `COMPOSE_PROFILES=worker,gateway`.
+- `app-a.yml` contains only migration and Web; `app-b.yml` contains migration, Web, Worker, and Gateway. Production uses no Compose profiles.
 - Production contains no WuKongIM demo. Do not add a deletion action for a container that does not exist.
 
 The historical service `svc_U9hxlXJ1nchRbzmk` was the AgentOS embedded in `lingxiloop-knowledge-agent`, published on host 5190 and running image `868bcbde...`. It was removed when the two independent AgentOS projects were created.
 
 ## Image publication and synchronization
 
-CI builds five LingxiLoop images on linux/amd64 and pushes immutable full-commit tags. `scripts/update-deployment-images.mjs` covers:
+CI builds only affected LingxiLoop images on linux/amd64 and pushes immutable full-commit tags. A `VERSION` release builds all five. `scripts/update-deployment-images.mjs` covers:
 
-- `deploy/openship/app.yml`: server, Gateway;
+- `deploy/openship/app-a.yml`: server;
+- `deploy/openship/app-b.yml`: server, Gateway;
 - `deploy/openship/agent-os.yml`: AgentOS;
 - `deploy/openship/core-state.yml`: WuKongIM;
-- `deploy/openship/knowledge-agent.yml`: Open Notebook;
-- the three legacy production/MVP/Dokploy Compose files.
+- `deploy/openship/knowledge-agent.yml`: Open Notebook.
 
-The current active LingxiLoop release uses manifest commit `f02ce00e72ead6743646979d31b659fb8e4fa04a`, pinning all five application images to the complete source cohort `b42fef160fe697d46a8818e054f945d1f80953f7`. A transient release from source `761b594...` put Server and AgentOS on `fd3246c...`, but that cohort had no published Gateway, Open Notebook, or WuKongIM tags. Production therefore converged on the last complete cohort instead of inventing missing tags. All six projects now run the same manifest, all owned images have the same tag, and OpenShip reports no drift. Earlier relevant commits/tags include:
+The current active LingxiLoop release uses manifest commit `ad9a7f2e8ba3397943babcde1b802edb48e03941`. Server, AgentOS, WuKongIM, and Open Notebook remain pinned to `b42fef160fe697d46a8818e054f945d1f80953f7`; Gateway uses `3b0069a17ec0a969d85301b13aba386832001cdc`, which contains the public auth proxy. The signed release requires all five image references to be present and immutable but no longer forces unrelated components to share one tag. All six projects run the same manifest and OpenShip reports no drift.
 
 - `9fe3cc645e2998c6201c737d4e4e2db2699cd423`: Gateway health check uses IPv4.
 - `e409455157529a2cfe2d1bf4cfefd0cfb6fe4f29`: first immutable Gateway image; retained as an unused B image.
@@ -88,7 +88,7 @@ OpenShip sometimes kept a previous service image even after a project refresh. I
 
 ## Signed CI-to-OpenShip release path
 
-All six LingxiLoop projects have GitHub-push `autoDeploy=false`. After CI succeeds, it promotes the exact control-plane Worker Version and sends an HMAC-signed payload containing the source commit, manifest commit, and immutable image references to `https://admin.lingxilearn.cn/api/internal/releases`. The Worker validates the signature and payload, records the request idempotently in D1, and fans it out to the six checked-in project IDs.
+All six LingxiLoop projects have GitHub-push `autoDeploy=false`. After CI succeeds, it promotes the exact control-plane Worker Version and sends an HMAC-signed payload containing the source commit, manifest commit, and complete independently pinned immutable image set to `https://admin.lingxilearn.cn/api/internal/releases`. The Worker validates the signature and payload, synchronizes all ten image-bearing service rows, records the request idempotently in D1, and fans it out to the six checked-in project IDs.
 
 OpenShip's Dashboard proxy is `/api/proxy/api/*`; calling `/api/*` on `ops.christmas1314.xyz` returns `404`. Deployment creation normally returns `202 Accepted` without an ID, so the Worker treats every 2xx as accepted and later OpenShip/health checks establish completion. The first production run revealed both assumptions; fixes `932e14f` and `0f1e4aa` corrected them. Synchronize `RELEASE_HMAC_SECRET` between GitHub's `production` environment and the Worker without reading it back. On Windows, prefer Wrangler secret bulk JSON and allow edge propagation before testing because line-oriented stdin can append a newline.
 
@@ -147,6 +147,8 @@ The 2026-09-03 first-release reset recreated only the current Open Notebook and 
 - API-A and API-B were each stopped in turn. The Gateway stayed healthy through the other API, then both nodes were restored.
 - Server A keeps the OpenShip-managed Edge, while enabled unit `lingxiloop-private-ingress.service` rejects public-interface 80/443 and preserves WireGuard traffic. Server B remains the only public ingress.
 - Final checks: 16/16 healthy, zero OpenShip issues, zero drift, both AgentOS heartbeats fresh, queue empty, public/private HTTP and WuKongIM WebSocket probes successful.
+- Commit `5d8215c...` removed the old production/Dokploy/manual deployment files, split App A/B manifests, deleted App A's stale Worker/Gateway rows, and restricted admin topology/deployment feeds and Uptime to the current production set.
+- Commit `ad9a7f2...` replaced same-tag cohort selection with complete per-component pins. Workflow `33711770224` rolled all six projects to `ready`, advanced only Gateway to `3b0069a...`, and public auth changed from 404 to JSON HTTP 200.
 
 ## LingxiLit first deployment
 
@@ -228,6 +230,6 @@ npm run db:migrate twice
 npm run test:integration
 ```
 
-Deployment contract tests covered the two AgentOS projects, Server B-only Worker profile, reusable volume names, no 5190 mapping, and immutable CI tags. AgentOS integration tests covered migration idempotency, dual-node claims, affinity, healthy-owner protection, timeout takeover/Home epoch, fences, SIGTERM drain, hard-failure reclaim, current-fence stream validation, Host Action idempotency, cancellation, and preemption.
+Deployment contract tests covered the two AgentOS projects, explicit App A/B service sets, reusable volume names, no 5190 mapping, and immutable component-scoped CI tags. AgentOS integration tests covered migration idempotency, dual-node claims, affinity, healthy-owner protection, timeout takeover/Home epoch, fences, SIGTERM drain, hard-failure reclaim, current-fence stream validation, Host Action idempotency, cancellation, and preemption.
 
 The raw session source used for this operational record was `C:\Users\34395\.codex\sessions\2026\09\02\rollout-2026-09-02T08-15-21-01a05f78-674b-7e63-80de-d6f646064a16.jsonl` (about 19.8 MB, 7,648 records). Do not treat encrypted values or secrets embedded in that session as safe to publish.

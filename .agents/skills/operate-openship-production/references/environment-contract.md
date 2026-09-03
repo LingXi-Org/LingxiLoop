@@ -47,7 +47,7 @@ The user identified this as a LingxiLit/OpenLit deployment source, but its conte
 
 - `AGENT_OS_URL` is obsolete. API readiness and dispatch use the shared AgentOS worker heartbeat/work queue; do not configure `AGENT_OS_URL` or `AGENT_OS_ENDPOINTS`.
 - `OPENLIT_PRICING_JSON` must be renamed to `LINGXILIT_PRICING_JSON` for current manifests.
-- `WUKONG_USER_TOKEN_SECRET` may be used by other runtime code but is not present in the current OpenShip `app.yml` environment list; verify code requirements before adding it.
+- `WUKONG_USER_TOKEN_SECRET` may be used by other runtime code but is not present in the current OpenShip App A/B environment lists; verify code requirements before adding it.
 
 ## App A and App B
 
@@ -98,7 +98,7 @@ AGENT_OS_NODE_TIMEOUT_SECONDS
 LINGXILOOP_GATEWAY_HMAC_SECRET
 ```
 
-Compose-only/project expansion values include `APP_BIND_IP`, `COMPOSE_PROFILES`, and `WUKONG_WS_PUBLIC_URL`; inside the container, the last becomes `WUKONG_WS_URL`.
+The only project expansion value is `WUKONG_WS_PUBLIC_URL`; inside the container it becomes `WUKONG_WS_URL`. `APP_BIND_IP` and `COMPOSE_PROFILES` were deleted from both projects because the explicit App A/B manifests own placement and service selection.
 
 Shared current non-secret runtime values:
 
@@ -121,7 +121,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://10.20.0.3:4318
 LINGXILOOP_LOG_LEVEL=warn
 LINGXILOOP_PUBLIC_ORIGIN=https://loop.lingxilearn.cn
 LINGXILOOP_INVITE_BASE_URL=https://loop.lingxilearn.cn
-LINGXILOOP_CORS_ORIGINS=https://lingxiloop-control-plane.yangyangli0426.workers.dev
+LINGXILOOP_CORS_ORIGINS=https://admin.lingxilearn.cn
 R2_PUBLIC_BASE=https://lingxi-assets.way2api.fun
 R2_URL_TTL_SECONDS=3600
 EMAIL_DOMAIN=
@@ -137,10 +137,10 @@ REDIS_URL=redis://10.20.0.2:6379
 
 Node differences:
 
-| Project | `INSTANCE_ID` | `APP_BIND_IP` | `COMPOSE_PROFILES` |
+| Project | `INSTANCE_ID` | Manifest | Host bind / services |
 | --- | --- | --- | --- |
-| App A | `app-a` | `10.20.0.2` | unset; Web only |
-| App B | `app-b` | `127.0.0.1` | `worker,gateway` |
+| App A | `app-a` | `deploy/openship/app-a.yml` | `10.20.0.2:5181`; migration and Web only |
+| App B | `app-b` | `deploy/openship/app-b.yml` | loopback `5181/8080`; migration, Web, Worker, Gateway |
 
 All other app values must be equal. The 2026-09-02 audit found the two running APIs equal for every shared runtime value.
 
@@ -330,14 +330,14 @@ AUTH_ALLOWED_HOSTS=loop.lingxilearn.cn,admin.lingxilearn.cn
 UPTIME_BASE_URL=https://uptime.lingxilearn.cn
 APP_VERSION=0.1.0-beta
 OPENSHIP_PROJECT_IDS=proj_khiExWfh7Vsj72VO,proj_5uz48XlBkfJQeNC8,proj_29J2mM47umuIfaDK,proj_IsMy2bWVzEZ7JKEf,proj_frnQUaoQY37ejzL-,proj_CVkF0rOULikADQ-7
-OPENSHIP_APP_TARGETS=proj_5uz48XlBkfJQeNC8:svc_Y95Qof0wyIdv7klR,proj_IsMy2bWVzEZ7JKEf:svc_wm0I2fR_uglJGyWb
+OPENSHIP_IMAGE_TARGETS=server:proj_5uz48XlBkfJQeNC8:svc_9RmMHN7M0K1l5Z_1,server:proj_5uz48XlBkfJQeNC8:svc_Y95Qof0wyIdv7klR,server:proj_IsMy2bWVzEZ7JKEf:svc_70YEsZbgYP34z7Hv,server:proj_IsMy2bWVzEZ7JKEf:svc_wm0I2fR_uglJGyWb,server:proj_IsMy2bWVzEZ7JKEf:svc_okKRA-wGrqgFyZAk,agent-os:proj_29J2mM47umuIfaDK:svc_Q97GKa-vK8cH8O_T,agent-os:proj_CVkF0rOULikADQ-7:svc_rT0BSxd8KVNGSWMU,wukongim:proj_khiExWfh7Vsj72VO:svc_R1qn4zHiKjjfY1An,open-notebook:proj_frnQUaoQY37ejzL-:svc_hmGZIaloXJohVV2r,gateway:proj_IsMy2bWVzEZ7JKEf:svc_q7ZcH8px3jsB9qnY
 ```
 
 D1 binding `DB`, database `lingxiloop-control-plane`, ID `cf22d961-eba4-4d21-b447-4d19ec0ad524`; no pending migrations at the audit.
 
 Required Worker secret names: `BETTER_AUTH_SECRET`, `GATEWAY_HMAC_SECRET`, `OPENSHIP_PAT`, `RELEASE_HMAC_SECRET`, `RESEND_API_KEY`, `RESEND_FROM`, `TURNSTILE_SECRET_KEY`, and `BOOTSTRAP_ADMIN_TOKEN`. The legacy singular `OPENSHIP_PROJECT_ID` secret may still exist but is unused; project IDs are non-secret checked-in configuration.
 
-Wrangler 4.127.1 was authenticated to account ID `5b726c2a59696a3536a55589a8fad188`. The OAuth scopes allow Worker Versions and D1 deployment but not zone-route mutation, so CI uploads and promotes a version instead of running a route-mutating deploy. The Worker Custom Domain remains declared in Wrangler. Current deployed code version is `f8f2c648-7b0c-4cd7-a371-982e4db8c2f1`, tagged with source commit `62b0772b637e0451deffb133b4f00937fa0cd01d` and serving 100% of traffic. The authenticated admin-only `/api/control/status-page` endpoint aggregates Kuma's public status JSON for the native Refine `/status` page; its rows load Kuma's public SVG status badge directly, and no Kuma API key is stored in Worker configuration. Earlier observed versions are historical.
+Wrangler 4.127.1 was authenticated to account ID `5b726c2a59696a3536a55589a8fad188`. The OAuth scopes allow Worker Versions and D1 deployment but not zone-route mutation, so CI uploads and promotes a version instead of running a route-mutating deploy. The Worker Custom Domain remains declared in Wrangler. Current deployed code version is `1c19b8d8-0cb5-4979-a3b4-f25a88c3e14e`, tagged with source commit `ad9a7f2e8ba3397943babcde1b802edb48e03941` and serving 100% of traffic. The authenticated admin-only topology and deployment endpoints discard services/projects outside the current production allowlists; `/api/control/status-page` aggregates Kuma's public status JSON, and no Kuma API key is stored in Worker configuration. Earlier observed versions are historical.
 
 ## GitHub Actions contract
 
@@ -347,8 +347,8 @@ Wrangler 4.127.1 was authenticated to account ID `5b726c2a59696a3536a55589a8fad1
 - Variable `CLOUDFLARE_ACCOUNT_ID`; optional override `VITE_LINGXILIT_URL` defaults to `https://openlit.lingxilearn.cn` in the production deploy job.
 - Node 22.
 - Quality, unit/eval, and PostgreSQL/Redis integration gates before publishing.
-- Immutable linux/amd64 images for server, AgentOS, WuKongIM, Open Notebook, and Gateway.
-- `update-manifests` invokes `scripts/update-deployment-images.mjs`, commits SHA pins with `[skip ci]`, and exposes that exact manifest commit SHA to the deploy job.
-- `deploy` applies D1 migrations, uploads and promotes a Worker Version tagged with the source commit, then signs one release request. The Worker records it idempotently in D1, synchronizes the App A/B Web service rows to the pinned server image, and creates deployments for all six LingxiLoop projects through OpenShip's Dashboard proxy API. OpenShip project `autoDeploy` remains disabled.
+- Immutable linux/amd64 images for server, AgentOS, WuKongIM, Open Notebook, and Gateway. A deployable change publishes only its affected component images; a `VERSION` release publishes all five.
+- `update-manifests` updates only the published component pins in `deploy/openship/*.yml`, commits SHA pins with `[skip ci]`, and exposes that exact manifest commit SHA to rollout. A deployment-only change retains the current complete image set and still rolls out.
+- `deploy` applies D1 migrations when needed and uploads/promotes the Worker Version. The signed release handler requires all five independently immutable image references, synchronizes all ten image-bearing service rows, and creates deployments for all six LingxiLoop projects through OpenShip's Dashboard proxy API. OpenShip project `autoDeploy` remains disabled.
 
-Workflow run `33698694701` built and tested source commit `62b0772b637e0451deffb133b4f00937fa0cd01d`, published its scoped immutable server image, and promoted Worker version `f8f2c648-7b0c-4cd7-a371-982e4db8c2f1`. Its `update-manifests` and `rollout` jobs were skipped, so this run did not change the six OpenShip application deployments or their image pins.
+Workflow run `33711770224` tested source/manifest commit `ad9a7f2e8ba3397943babcde1b802edb48e03941`, promoted Worker version `1c19b8d8-0cb5-4979-a3b4-f25a88c3e14e`, retained the four unchanged `b42fef1...` component pins, pinned Gateway to `3b0069a...`, and rolled all six OpenShip projects to `ready`.

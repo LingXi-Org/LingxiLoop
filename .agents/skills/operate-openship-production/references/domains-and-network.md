@@ -51,13 +51,14 @@ Checked-in `deploy/openship/gateway.conf`:
 - exposes host loopback `127.0.0.1:8080` only;
 - `/healthz` returns 204;
 - serves `website/` for apex and `www`;
+- sends `/api/auth/` to `https://admin.lingxilearn.cn`, preserving the public host and HTTPS forwarding headers;
 - balances `loop` with `least_conn` between `lingxiloop:5181` on App B and `10.20.0.2:5181` on App A;
 - forwards Host, X-Forwarded headers, WebSocket Upgrade/Connection, disables response/request buffering, and gives streaming a 3600-second timeout;
 - retries API upstream errors/timeouts/invalid headers/502/503/504 with two tries;
 - proxies `im` to `10.20.0.2:5200` with WebSocket support and 3600-second timeouts;
 - uses Docker DNS resolver `127.0.0.11` for the local Compose service.
 
-The Gateway image is built from `nginx:alpine`, copies `gateway.conf`, and copies repository `website/` to `/usr/share/nginx/html`.
+The Gateway image is built from `nginx:alpine`, copies `gateway.conf`, and copies repository `website/` to `/usr/share/nginx/html`. Production runs immutable tag `3b0069a...`; public `/api/auth/get-session` returned JSON HTTP 200 after rollout.
 
 Use `127.0.0.1`, not `localhost`, in the Gateway health check. Alpine/wget selected IPv6 for `localhost` in the failed version, while Nginx listened on IPv4, causing a false unhealthy state. Commit `9fe3cc645e2998c6201c737d4e4e2db2699cd423` fixed this root cause.
 
@@ -74,7 +75,7 @@ For the initial cutover, Server A's valid IM certificate (YE2, expiring 2026-11-
 
 Certbot 2.8.0 was installed on Server B because the first OpenShip certificate attempt failed with `certbot: command not found`. After any manual change run Edge's `openresty -t` and reload only if the check passes.
 
-OpenShip Edge 0.6.9 cannot pull `ghcr.io/oblien/openship-edge:0.6.9` directly due registry denial on these hosts. It runs through `accel.way2api.fun/ghcr.io/oblien/openship-edge:0.6.9` on B; A currently has the direct cached image. The `0.6.9 -> 0.6.9` update advisory is a mirror-comparison false positive, not a service outage.
+OpenShip Edge 0.6.9 runs as the direct `ghcr.io/oblien/openship-edge:0.6.9` image on B; A also has the direct image. Re-read the live image before assuming a registry mirror is required.
 
 ## Network allowlist
 
