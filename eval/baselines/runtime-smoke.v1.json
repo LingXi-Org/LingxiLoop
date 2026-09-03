@@ -16,6 +16,7 @@
       "efficiency": 1
     },
     "caseScores": {
+      "runtime-self-introduction-boundary": 1,
       "runtime-question-card-required": 1,
       "runtime-auto-grounding": 1,
       "runtime-hybrid-grounding": 1,
@@ -40,6 +41,7 @@
     "efficiency": 1
   },
   "caseMinimums": {
+    "runtime-self-introduction-boundary": 1,
     "runtime-question-card-required": 1,
     "runtime-auto-grounding": 1,
     "runtime-hybrid-grounding": 1,

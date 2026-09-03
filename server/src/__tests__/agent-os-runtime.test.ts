@@ -107,6 +107,68 @@ test('an active planning Mission receives the exact add_steps recipe on every mo
   assert.match(modelInput, /every step requires its own non-empty description and successCriteria/)
 })
 
+test('Agent OS projects learning state without tenant, learner, message, or timestamp metadata', async () => {
+  const item = work('context-projection', 'trigger-secret')
+  const host = new MemoryHostAdapter()
+  const runtimeContext = context(item, '请简单介绍一下你自己。')
+  runtimeContext.messages[0]!.authorId = 'author-secret'
+  runtimeContext.learningContext = {
+    project: { id: 'project-secret', kind: 'PERSONAL_LEARNING', title: '我的学习', status: 'ACTIVE' },
+    courseId: 'course-secret',
+    roomPurpose: 'study',
+    actorRole: 'learner',
+    learnerId: 'learner-secret',
+    activeMission: {
+      id: 'mission-actionable',
+      projectId: 'project-secret',
+      learnerId: 'learner-secret',
+      conversationId: 'channel-secret',
+      triggerClientMsgNo: 'trigger-secret',
+      goal: '学习代数',
+      successCriteria: '完成检查',
+      kind: 'STUDY',
+      coordinatorAgentId: 'coordinator-secret',
+      status: 'ACTIVE',
+      steps: [],
+      createdAt: '2026-08-31T00:00:00.000Z',
+      updatedAt: '2026-08-31T00:00:00.000Z',
+    },
+    knowledgeUnits: [{
+      id: 'unit-actionable',
+      projectId: 'project-secret',
+      title: '线性方程',
+      successCriteria: '独立求解',
+      targetLevel: 2,
+      position: 0,
+      status: 'PUBLISHED',
+      prerequisiteKnowledgeUnitIds: [],
+      level: 1,
+      stateStatus: 'LEARNING',
+    }],
+    due: [],
+    pendingTeacherReviews: 0,
+  }
+  host.contexts.set(item.id, runtimeContext)
+  const model = new RecordingModel()
+
+  await new AgentOSRuntime(host, model, new StatefulKernel(), { maxHops: 1, heartbeatMs: 60_000 }).runWork(item)
+
+  const serialized = JSON.stringify(model.items[0])
+  assert.match(serialized, /Authorized learning state/)
+  assert.match(serialized, /我的学习/)
+  assert.match(serialized, /mission-actionable/)
+  for (const secret of [
+    'project-secret',
+    'course-secret',
+    'learner-secret',
+    'author-secret',
+    'channel-secret',
+    'trigger-secret',
+    'coordinator-secret',
+    '2026-08-31T00:00:00.000Z',
+  ]) assert.equal(serialized.includes(secret), false)
+})
+
 test('Agent OS runs multi-hop IPython and keeps the channel session across work items', async () => {
   const first = work('w1', 'm1')
   const second = work('w2', 'm2')
@@ -408,13 +470,12 @@ test('a malformed tool finish retries once through the same native model stream'
   assert.equal(host.messages[0]?.body, 'Recovered answer')
 })
 
-test('Agent OS emits native reasoning and text part identities from model callbacks', async () => {
+test('Agent OS model event surface emits only final text', async () => {
   const item = work('native-parts', 'm-native-parts')
   const host = new MemoryHostAdapter()
   host.contexts.set(item.id, context(item, 'Explain briefly.'))
   const model: AgentModelDriver = {
     run: async (args) => {
-      await args.onReasoningDelta?.('Inspecting context')
       await args.onTextDelta?.('Final answer')
       return {
         output: [{ role: 'assistant', content: 'Final answer' }],
@@ -427,12 +488,11 @@ test('Agent OS emits native reasoning and text part identities from model callba
   }
   await new AgentOSRuntime(host, model, new StatefulKernel(), { heartbeatMs: 60_000 }).runWork(item)
   assert.deepEqual(host.events.filter((event) => event.kind === 'model.delta').map((event) => event.data), [
-    { delta: 'Inspecting context', partType: 'reasoning', partIndex: 0, partStart: true },
-    { delta: 'Final answer', partType: 'text', partIndex: 1, partStart: true, finishPartIndex: 0 },
+    { delta: 'Final answer', partType: 'text', partIndex: 0, partStart: true },
   ])
   const completed = host.events.find((event) => event.kind === 'model.completed')
   assert.ok(completed)
-  assert.equal((completed.data as { finishPartIndex?: number }).finishPartIndex, 1)
+  assert.equal((completed.data as { finishPartIndex?: number }).finishPartIndex, 0)
 })
 
 test('Agent OS rejects model text that bypasses the native delta stream', async () => {

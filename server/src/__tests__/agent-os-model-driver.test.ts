@@ -72,7 +72,7 @@ test('multiple streamed tool calls fail instead of entering invalid history', as
   })
 })
 
-test('OpenAI stream exposes reasoning without creating an invisible whitespace text part', async () => {
+test('OpenAI stream discards provider reasoning and invisible whitespace text', async () => {
   const events = [
     {
       id: 'chatcmpl-reasoning', object: 'chat.completion.chunk', created: 1, model: 'native-test-model',
@@ -92,15 +92,12 @@ test('OpenAI stream exposes reasoning without creating an invisible whitespace t
     },
   ]
   await withGateway(events, async (baseURL, requestBodies) => {
-    const reasoning: string[] = []
     const text: string[] = []
     const result = await new OpenAIChatDriver('Qwen/Qwen3.5-4B', { apiKey: 'test', baseURL }).run({
       instructions: 'System prompt',
       items: [{ role: 'user', content: 'Inspect' }],
-      onReasoningDelta: (delta) => { reasoning.push(delta) },
       onTextDelta: (delta) => { text.push(delta) },
     })
-    assert.deepEqual(reasoning, ['Inspecting'])
     assert.deepEqual(text, [])
     assert.deepEqual(result.output, [{ type: 'function_call', callId: 'call-1', name: 'ipython', arguments: '{"code":"1 + 1"}' }])
     assert.equal(requestBodies[0]?.enable_thinking, false)

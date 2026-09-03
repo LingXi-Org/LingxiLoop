@@ -137,6 +137,7 @@ interface CheckedTurn {
   itemFragments: string[]
   instructionFragments?: string[]
   forbiddenInstructionFragments?: string[]
+  forbiddenItemFragments?: string[]
 }
 
 class ContractCheckingModel implements AgentModelDriver {
@@ -159,6 +160,9 @@ class ContractCheckingModel implements AgentModelDriver {
     const serialized = JSON.stringify(args.items)
     for (const fragment of expected.itemFragments) {
       if (!serialized.includes(fragment)) throw new Error(`runtime Eval model input lost fragment: ${fragment}`)
+    }
+    for (const fragment of expected.forbiddenItemFragments ?? []) {
+      if (serialized.includes(fragment)) throw new Error(`runtime Eval model input exposed forbidden fragment: ${fragment}`)
     }
     const unexpectedTool = expected.result.output.find((item) => 'type' in item
       && item.type === 'function_call'
@@ -404,12 +408,64 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   } else if (scenario === 'calendar-create-approval') {
     runtimeContext.capabilities = ['calendar']
     runtimeContext.promptContextCandidate!.capabilities = ['calendar']
-  } else if (scenario === 'planning-gate' || scenario === 'score-breakdown-evaluation' || scenario === 'question-card-required') {
+  } else if (scenario === 'planning-gate' || scenario === 'score-breakdown-evaluation' || scenario === 'question-card-required' || scenario === 'self-introduction-boundary') {
     runtimeContext.capabilities = ['learning']
     runtimeContext.promptContextCandidate!.capabilities = ['learning']
   }
 
-  if (scenario === 'question-card-required') {
+  if (scenario === 'self-introduction-boundary') {
+    input = '请简单介绍一下你自己。'
+    runtimeContext.persona = {
+      name: 'Eval Tutor',
+      role: '学习助手',
+      instructions: 'Eval deterministic tutor. Keep the learner focused.',
+    }
+    runtimeContext.learnerId = 'learner-secret-eval'
+    runtimeContext.promptContextCandidate = {
+      ...runtimeContext.promptContextCandidate!,
+      persona: runtimeContext.persona,
+      memories: {
+        learner: [{
+          id: 'memory-secret-eval',
+          scopeType: 'learner',
+          scopeId: 'learner-secret-eval',
+          body: '用户正在学习线性代数',
+          kind: 'learning_state',
+          origin: 'explicit',
+          pinned: true,
+          sourceEventIds: ['event-secret-eval'],
+          version: 1,
+          confidence: 1,
+          updatedAt: '2026-08-26T00:00:00.000Z',
+        }],
+        course: [],
+        agentRole: [],
+      },
+    }
+    runtimeContext.learningContext = {
+      project: { id: 'project-secret-eval', kind: 'PERSONAL_LEARNING', title: '我的学习', status: 'ACTIVE' },
+      roomPurpose: 'study',
+      actorRole: 'learner',
+      learnerId: 'learner-secret-eval',
+      knowledgeUnits: [],
+      due: [],
+      pendingTeacherReviews: 0,
+    }
+    turns = [{
+      instructionFragments: [
+        'Your product-visible identity is "Eval Tutor"',
+        'For greetings, self-introductions, and generic questions',
+        'Projects, courses, Missions, memories, teacher state, Canvas work, and learner progress belong to the user or product',
+      ],
+      itemFragments: [input, 'Relevant memory for THIS TURN ONLY', '用户正在学习线性代数', 'Authorized learning state', '我的学习'],
+      forbiddenItemFragments: ['project-secret-eval', 'learner-secret-eval', 'memory-secret-eval', 'event-secret-eval'],
+      result: {
+        output: [{ role: 'assistant', content: '我是 Eval Tutor，LingxiLoop 中的 AI 学习助手，可以帮助你梳理目标、理解知识并完成练习。' }],
+        text: '我是 Eval Tutor，LingxiLoop 中的 AI 学习助手，可以帮助你梳理目标、理解知识并完成练习。',
+        usage: { inputTokens: 36, outputTokens: 24 },
+      },
+    }]
+  } else if (scenario === 'question-card-required') {
     input = '为我规划学习'
     turns = [
       {
@@ -521,7 +577,8 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     turns = [{
       instructionFragments: ['Pulse deterministic teacher agent', 'loop.teacher', 'product-managed Pulse Agent'],
       forbiddenInstructionFragments: ['loop.turn', 'loop.learning is the only', 'loop.canvas is preloaded', 'loop.email'],
-      itemFragments: [input, 'Current teacher context', 'course-eval', 'eval-teacher'],
+      itemFragments: [input, 'Authorized teacher state', 'Runtime Course'],
+      forbiddenItemFragments: ['course-eval', 'eval-teacher', 'project-eval'],
       result: {
         output: [{
           type: 'function_call',
@@ -541,7 +598,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     configureTeacherContext(runtimeContext, item)
     turns = [{
       instructionFragments: ['Never invent learner evidence', 'risk labels, statistics'],
-      itemFragments: [input, 'Current teacher context'],
+      itemFragments: [input, 'Authorized teacher state'],
       result: {
         output: [{ role: 'assistant', content: '现有 Evidence 只有人数与待处理项，无法得出掌握率；我不会把缺失分母推断成百分比。' }],
         text: '现有 Evidence 只有人数与待处理项，无法得出掌握率；我不会把缺失分母推断成百分比。',
@@ -554,7 +611,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     turns = [
       {
         instructionFragments: ['loop.teacher', 'Aggregate before learner drill-down'],
-        itemFragments: [input, 'Current teacher context'],
+        itemFragments: [input, 'Authorized teacher state'],
         result: {
           output: [{
             type: 'function_call',
@@ -593,7 +650,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     configureTeacherContext(runtimeContext, item)
     turns = [{
       instructionFragments: ['evaluation review', 'human approval'],
-      itemFragments: [input, 'Current teacher context'],
+      itemFragments: [input, 'Authorized teacher state'],
       result: {
         output: [{
           type: 'function_call',
@@ -645,26 +702,27 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   } else if (scenario === 'planning-gate') {
     input = 'Start the retrieval mission now.'
     runtimeContext.learningContext = {
-      course: { id: 'course-eval', projectId: 'project-eval', title: 'Runtime Course', status: 'ACTIVE' },
+      project: { id: 'project-eval', kind: 'INSTITUTIONAL_COURSE', title: 'Runtime Course', status: 'ACTIVE' },
+      courseId: 'course-eval',
       roomPurpose: 'study',
       actorRole: 'learner',
       learnerId: 'eval-learner',
       activeMission: {
         id: 'mission-eval',
-        courseId: 'course-eval',
+        projectId: 'project-eval',
         learnerId: 'eval-learner',
         conversationId: item.channelId,
         triggerClientMsgNo: item.triggerClientMsgNo,
         goal: 'Explain retrieval grounding',
         successCriteria: 'Explain and check the evidence source',
-        missionKind: 'STUDY',
+        kind: 'STUDY',
         coordinatorAgentId: item.agentId,
         status: 'PLANNING',
         steps: [],
         createdAt: '2026-08-26T00:00:00.000Z',
         updatedAt: '2026-08-26T00:00:00.000Z',
       },
-      objectives: [],
+      knowledgeUnits: [],
       due: [],
       pendingTeacherReviews: 0,
     }
@@ -722,7 +780,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
       if (action.action === 'learning.add_steps') {
         mission.steps = [{
           id: 'step-eval-check',
-          type: 'CHECK',
+          kind: 'CHECK',
           description: 'Explain the retrieval check',
           successCriteria: 'Names the evidence source',
           status: 'OPEN',
@@ -731,7 +789,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
         return { ok: true, value: { missionId: mission.id, steps: mission.steps } }
       }
       if (action.action === 'learning.finish_planning') {
-        if (!mission.steps.some((step) => step.type === 'CHECK')) return { ok: false, error: 'planning requires a check step' }
+        if (!mission.steps.some((step) => step.kind === 'CHECK')) return { ok: false, error: 'planning requires a check step' }
         mission.status = 'ACTIVE'
         return { ok: true, value: { missionId: mission.id, status: mission.status } }
       }

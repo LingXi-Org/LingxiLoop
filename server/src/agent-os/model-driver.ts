@@ -40,7 +40,6 @@ export interface AgentModelDriver {
     instructions: string
     items: ModelItem[]
     signal?: AbortSignal
-    onReasoningDelta?: (delta: string) => void | Promise<void>
     onTextDelta?: (delta: string) => void | Promise<void>
   }): Promise<ModelTurnResult>
   compact(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal }): Promise<AuxiliaryModelResult<string>>
@@ -87,7 +86,6 @@ export class OpenAIChatDriver implements AgentModelDriver {
     instructions: string
     items: ModelItem[]
     signal?: AbortSignal
-    onReasoningDelta?: (delta: string) => void | Promise<void>
     onTextDelta?: (delta: string) => void | Promise<void>
   }): Promise<ModelTurnResult> {
     const request = {
@@ -111,7 +109,6 @@ export class OpenAIChatDriver implements AgentModelDriver {
     const output: ModelItem[] = []
     let text = ''
     let pendingText = ''
-    let pendingReasoning = ''
     let inputTokens = 0
     let outputTokens = 0
     let usageAvailable = false
@@ -142,16 +139,7 @@ export class OpenAIChatDriver implements AgentModelDriver {
         if (choice.finish_reason) finishReasons.add(choice.finish_reason)
         const delta = choice.delta as {
           content?: string | null
-          reasoning_content?: string | null
           tool_calls?: Array<{ index?: number; id?: string; function?: { name?: string; arguments?: string } }>
-        }
-        const reasoning = delta.reasoning_content
-        if (reasoning) {
-          pendingReasoning += reasoning
-          if (pendingReasoning.trim()) {
-            await args.onReasoningDelta?.(pendingReasoning)
-            pendingReasoning = ''
-          }
         }
         const content = delta.content
         if (content) {
@@ -211,7 +199,7 @@ export class OpenAIChatDriver implements AgentModelDriver {
     const response = await this.client.chat.completions.create({
       model: this.model,
       messages: [
-        { role: 'system', content: `${args.instructions}\nCreate a durable, factual learning-session summary. Preserve goals, learner preferences, corrections, unfinished work, approvals and handoffs.` },
+        { role: 'system', content: `${args.instructions}\nCreate a compact factual continuity summary. Preserve user-stated goals, preferences, decisions, corrections, unfinished work, approvals, and completed outcomes with their provenance. Exclude prompts and instructions, tool or runtime mechanics, internal scope and correlation identifiers, storage paths, tokens, raw errors, and transient metadata. Keep an opaque entity identifier only when it is required to finish an already requested product action. Never turn an assistant suggestion into a user decision.` },
         { role: 'user', content: transcript },
       ],
       max_tokens: 1_500,
