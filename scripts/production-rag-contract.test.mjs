@@ -170,6 +170,7 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
   assert.match(gateway, /server 10\.20\.0\.2:5181/)
   assert.match(gateway, /server_name lingxilearn\.cn www\.lingxilearn\.cn/)
   assert.match(gateway, /server_name loop\.lingxilearn\.cn/)
+  assert.match(gateway, /location \/api\/auth\/ \{[\s\S]*proxy_pass https:\/\/admin\.lingxilearn\.cn/)
   assert.match(gateway, /server_name im\.lingxilearn\.cn/)
   assert.match(gateway, /proxy_pass http:\/\/10\.20\.0\.2:5200/)
   assert.match(core, /10\.20\.0\.2:5200:5200/)
