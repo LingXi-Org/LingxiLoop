@@ -191,7 +191,7 @@ The first Worker secret upload used Windows line-oriented stdin and silently sto
 
 PR `#14` merged the SMTP source as commit `a2e0323...`; CI/CD run `33720582271` promoted tagged Worker version `0299d333-37b2-4b61-99b1-89e673cf3503`. A post-CD OTP request completed with no Worker exceptions, all public health probes returned `200`, and OpenShip remained 16/16 healthy.
 
-The QQ recipient still reported no message and the no-reply inbox had no bounce. A copy delivered inside Alibaba Mail showed Alibaba did not add the absent `Date` or `Message-ID` headers, so the SMTP source was amended to emit both before another external-delivery test.
+The QQ recipient still reported no message and the no-reply inbox had no bounce. A copy delivered inside Alibaba Mail showed Alibaba did not add the absent `Date` or `Message-ID` headers. PR `#15` added both headers and merged as `eaee369...`; CI/CD run `33721478814` promoted tagged Worker version `92525f1e-711e-400c-8c94-003877d6f554`. A post-CD OTP request completed without a Worker exception, and an independent no-reply message reached the authorized Tencent test mailbox in about 12 seconds.
 
 ## Database and state recovery
 
