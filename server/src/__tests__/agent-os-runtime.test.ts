@@ -236,23 +236,29 @@ test('Knowledge contract exposes native IPython operations without external scop
   assert.doesNotMatch(contract, /notebookId=/)
 })
 
-test('a natural learner-facing question remains ordinary text', async () => {
-  const item = work('natural-question', 'natural-question-message')
+test('a blocking learner questionnaire is issued through IPython', async () => {
+  const item = work('blocking-question', 'blocking-question-message')
   const host = new MemoryHostAdapter()
-  host.contexts.set(item.id, context(item, '制定本周高数复习计划'))
-  const question = '你目前复习到哪里？每天大约有多少可用时间？'
-  const model = new ScriptedModelDriver([{
-    output: [{ role: 'assistant', content: question }],
-    text: question,
-    usage: { inputTokens: 1, outputTokens: 1 },
-  }])
+  host.contexts.set(item.id, context(item, '为我规划学习'))
+  const code = 'loop.chat.ask(title="请补充学习目标", items=[{"name":"goal","prompt":"你的学习目标是什么？","required":True,"input":{"label":"学习目标"}}])'
+  const model = new ScriptedModelDriver([
+    {
+      output: [{ type: 'function_call', callId: 'question-card', name: 'ipython', arguments: JSON.stringify({ code }) }],
+      text: '',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    },
+    {
+      output: [{ role: 'assistant', content: '请在提问卡片中补充学习目标。' }],
+      text: '请在提问卡片中补充学习目标。',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    },
+  ])
   const kernel = new StatefulKernel()
 
   await new AgentOSRuntime(host, model, kernel, { heartbeatMs: 60_000 }).runWork(item)
 
-  assert.deepEqual(kernel.cells, [])
-  assert.equal(host.messages[0]?.body, question)
-  assert.match(JSON.stringify(host.events.filter((event) => event.kind === 'model.delta')), /你目前复习到哪里/)
+  assert.deepEqual(kernel.cells, [code])
+  assert.equal(host.messages[0]?.body, '请在提问卡片中补充学习目标。')
 })
 
 test('a recoverable IPython error is returned to the model before its next hop', async () => {

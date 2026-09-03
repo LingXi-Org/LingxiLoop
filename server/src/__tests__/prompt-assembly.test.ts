@@ -26,7 +26,10 @@ test('prompt ordering keeps turn data out of the stable policy and puts personal
   assert.match(prompt, /every step needs its own non-empty description and successCriteria/)
   assert.match(prompt, /Canvas is the only fan-out\/fan-in surface/)
   assert.match(prompt, /loop\.chat\.ask/)
-  assert.match(prompt, /only when missing user input truly blocks progress/)
+  assert.match(prompt, /MUST call loop\.chat\.ask/)
+  assert.match(prompt, /never emit the blocking questions as plain text/)
+  assert.match(prompt, /An explicit request to perform an available product action requires the matching loop\.\* Host action/)
+  assert.doesNotMatch(prompt, /A natural diagnostic or comprehension question may remain ordinary text/)
   assert.match(prompt, /loop\.polls\.create/)
   assert.match(prompt, /cohesive natural paragraphs/)
   assert.match(prompt, /formal document, sourced research/)
@@ -38,6 +41,24 @@ test('prompt ordering keeps turn data out of the stable policy and puts personal
   assert.match(prompt, /rubricResults=\[\{"label":"\.\.\.","score":0\.\.4,"weight":1,"note":"\.\.\."\}\]/)
   assert.match(prompt, /rubricResults is required/)
   assert.match(prompt, /Never announce that a product action, specialist task, Canvas workspace, or durable plan has started/)
+})
+
+test('every product capability forbids replacing its Host action with chat text', () => {
+  const prompt = assembleAgentSystemPrompt({
+    persona: { name: 'Nova', role: 'Learning Coordinator', instructions: 'Coordinate learning.' },
+    capabilities: ['canvas', 'knowledge', 'web', 'files', 'documents', 'email', 'calendar', 'routines'],
+    executionRole: 'coordinator',
+  })
+  for (const contract of [
+    /Canvas specialist work must start and operate the workspace through loop\.canvas Host actions/,
+    /list, add, retry, enable, disable, or delete a source requires the matching Host action/,
+    /search, browse, verify online, or check current information requires loop\.research\.search/,
+    /inspect, search, create, or edit Agent Home files requires loop\.files/,
+    /persisted document requires the matching loop\.documents Host action/,
+    /inspect mail, send, or reply requires the matching loop\.email Host action/,
+    /inspect or change the calendar requires the matching loop\.calendar Host action/,
+    /list, create, pause, or activate an Agent routine requires loop\.routines/,
+  ]) assert.match(prompt, contract)
 })
 
 test('explicit execution role selects verifier or specialist contract independently of persona name', () => {

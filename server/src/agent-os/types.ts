@@ -1,5 +1,5 @@
 export const AGENT_OS_PROTOCOL_VERSION = 1 as const
-export const PROMPT_CONTRACT_VERSION = 'prompt-v4' as const
+export const PROMPT_CONTRACT_VERSION = 'prompt-v5' as const
 export const KNOWLEDGE_CONTRACT_VERSION = 'native-v3' as const
 
 export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary' | 'memory_synthesis'

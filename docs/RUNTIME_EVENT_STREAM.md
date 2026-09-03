@@ -19,8 +19,9 @@ writing behavior, role contracts, the current IPython surface, and persona are
 stable; dates, memory, retrieved evidence, attachments, prior messages, tool
 results, and current work state are bounded, explicitly untrusted turn data.
 Only a prompt-contract, persona, capability, or execution-role change refreshes
-the stable prompt. Ordinary questions remain text; only `loop.chat.ask(...)`
-creates a question card.
+the stable prompt. Optional follow-up questions may remain text after the
+requested result is delivered. Questions whose answers block progress must use
+`loop.chat.ask(...)`, which is the only action that creates a question card.
 
 An explicit request to create or revise a weekly learning plan enters the
 typed `loop.learning` Mission flow. Optional scheduling details do not block a

@@ -199,8 +199,9 @@ class HostBridgeKernel implements KernelExecutor {
     _signal?: AbortSignal,
     options?: KernelExecutionOptions,
   ): Promise<KernelExecution> {
-    const actionName = code.includes('loop.email.send') ? 'email.send'
-      : code.includes('loop.calendar.create') ? 'calendar.create'
+    const actionName = code.includes('loop.chat.ask') ? 'chat.ask'
+      : code.includes('loop.email.send') ? 'email.send'
+        : code.includes('loop.calendar.create') ? 'calendar.create'
         : code.includes('loop.teacher.list_learners') ? 'teacher.list_learners'
           : code.includes('loop.teacher.review_evaluation') ? 'teacher.review_evaluation'
         : code.includes('loop.teacher.publish_objective') ? 'teacher.publish_objective'
@@ -215,7 +216,20 @@ class HostBridgeKernel implements KernelExecutor {
       throw new Error(`runtime Eval rejected ${actionName} outside the scoped IPython namespaces`)
     }
     let args: unknown
-    if (actionName === 'email.send') args = { to: ['learner@example.invalid'], subject: 'Course summary', body: 'Grounded summary' }
+    if (actionName === 'chat.ask') {
+      for (const argument of ['title=', 'items=', 'name', 'prompt', 'input']) {
+        if (!code.includes(argument)) throw new Error(`runtime Eval requires chat.ask ${argument}`)
+      }
+      args = {
+        title: '请补充学习目标',
+        items: [{
+          name: 'goal',
+          prompt: '你的学习目标是什么？',
+          required: true,
+          input: { label: '学习目标' },
+        }],
+      }
+    } else if (actionName === 'email.send') args = { to: ['learner@example.invalid'], subject: 'Course summary', body: 'Grounded summary' }
     else if (actionName === 'calendar.create') args = { title: '线性代数复习', at: '2026-09-04T19:30:00+08:00' }
     else if (actionName === 'teacher.publish_objective') args = { objectiveId: 'objective-eval' }
     else if (actionName === 'teacher.list_learners') args = { attentionOnly: true }
@@ -390,12 +404,42 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   } else if (scenario === 'calendar-create-approval') {
     runtimeContext.capabilities = ['calendar']
     runtimeContext.promptContextCandidate!.capabilities = ['calendar']
-  } else if (scenario === 'planning-gate' || scenario === 'score-breakdown-evaluation') {
+  } else if (scenario === 'planning-gate' || scenario === 'score-breakdown-evaluation' || scenario === 'question-card-required') {
     runtimeContext.capabilities = ['learning']
     runtimeContext.promptContextCandidate!.capabilities = ['learning']
   }
 
-  if (scenario === 'auto-grounding') {
+  if (scenario === 'question-card-required') {
+    input = '为我规划学习'
+    turns = [
+      {
+        instructionFragments: ['MUST call loop.chat.ask', 'never emit the blocking questions as plain text', 'For a vague request such as'],
+        itemFragments: [input],
+        result: {
+          output: [{
+            type: 'function_call',
+            callId: 'runtime-question-card',
+            name: 'ipython',
+            arguments: JSON.stringify({ code: 'loop.chat.ask(title="请补充学习目标", items=[{"name":"goal","prompt":"你的学习目标是什么？","required":True,"input":{"label":"学习目标"}}])' }),
+          }],
+          text: '',
+          usage: { inputTokens: 32, outputTokens: 14 },
+        },
+      },
+      {
+        instructionFragments: ['MUST call loop.chat.ask', 'After a successful ask call, do no further work until the learner replies'],
+        itemFragments: ['questionnaire-eval', 'function_call_output'],
+        result: {
+          output: [{ role: 'assistant', content: '提问卡片已发送，请在卡片中填写学习目标。' }],
+          text: '提问卡片已发送，请在卡片中填写学习目标。',
+          usage: { inputTokens: 40, outputTokens: 12 },
+        },
+      },
+    ]
+    host.actionHandler = async (action) => action.action === 'chat.ask'
+      ? { ok: true, value: { clientMsgNo: 'questionnaire-eval' } }
+      : { ok: false, error: `unexpected action ${action.action}` }
+  } else if (scenario === 'auto-grounding') {
     input = 'Explain retrieval grounding using the uploaded handbook.'
     turns = [{
       itemFragments: [input, 'AUTO_EVIDENCE_SECRET', 'document-id=S1'],

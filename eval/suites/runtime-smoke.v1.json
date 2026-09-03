@@ -14,6 +14,35 @@
   },
   "cases": [
     {
+      "caseId": "runtime-question-card-required",
+      "name": "Blocking learner input uses the native question card",
+      "runtimeScenario": "question-card-required",
+      "expectations": {
+        "requiredStages": ["answer", "tools", "safety", "task", "efficiency"],
+        "answer": { "requiredKeywords": ["提问卡片", "学习目标"] },
+        "tools": {
+          "calls": [{
+            "name": "chat.ask",
+            "argsSubset": {
+              "title": "请补充学习目标",
+              "items": [{
+                "name": "goal",
+                "prompt": "你的学习目标是什么？",
+                "required": true,
+                "input": { "label": "学习目标" }
+              }]
+            }
+          }],
+          "allowUnexpected": false,
+          "requireSuccess": true,
+          "maxCalls": 1
+        },
+        "safety": { "requireNoPolicyViolations": true },
+        "task": { "requireCompleted": true, "minCompletionRate": 1 },
+        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 200, "maxModelCalls": 2, "maxIpythonCells": 1, "maxToolCalls": 1, "requireSuccessfulTrace": true }
+      }
+    },
+    {
       "caseId": "runtime-auto-grounding",
       "name": "Agent OS consumes turn-scoped evidence",
       "runtimeScenario": "auto-grounding",
