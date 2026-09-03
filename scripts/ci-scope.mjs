@@ -46,7 +46,8 @@ export function computeScope(changed = {}, manual = '') {
     wukongim = manual === 'wukongim'
     gateway = manual === 'gateway'
     deployment = manual === 'deployment'
-    controlMigrations = release = false
+    controlMigrations = false
+    release = manual === 'release'
   } else {
     web = enabled('web') || enabled('sharedFrontend') || enabled('testRunner')
     webImage = enabled('web') || enabled('sharedFrontend')

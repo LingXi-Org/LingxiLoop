@@ -185,6 +185,8 @@ test('main publishes changed images and rolls out a complete immutable release',
   const workflow = read('.github/workflows/ci.yml')
   const serverImage = read('server/docker/lingxiloop-server.Dockerfile')
 
+  assert.match(workflow, /options: \[[^\]]*release\]/)
+  assert.equal((workflow.match(/github\.event_name == 'push' \|\| needs\.changes\.outputs\.release == 'true'/g) ?? []).length, 3)
   assert.match(workflow, /update-manifests:[\s\S]*needs: \[changes, checks, publish\]/)
   assert.match(workflow, /needs\.publish\.result == 'success'[\s\S]*needs\.changes\.outputs\.deploy_contract == 'true'/)
   assert.match(workflow, /deploy:[\s\S]*needs: \[changes, checks\]/)
@@ -273,5 +275,6 @@ test('CI selects checks and image publishing by component', () => {
   assert.equal(deployment.deploy_contract, true)
 
   assert.equal(computeScope({}, 'gateway').packages, 'gateway')
+  assert.deepEqual(computeScope({}, 'release').images.map(({ manifest }) => manifest), ['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway'])
   assert.deepEqual(computeScope({ release: true }).images.map(({ manifest }) => manifest), ['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway'])
 })

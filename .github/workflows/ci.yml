@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: Component to verify
+        description: Component to verify, or release to deploy all production projects
         required: true
         type: choice
-        options: [web, admin-control, server, agent-os, open-notebook, wukongim, gateway, deployment]
+        options: [web, admin-control, server, agent-os, open-notebook, wukongim, gateway, deployment, release]
 
 concurrency:
   group: lingxiloop-${{ github.ref }}
@@ -252,7 +252,7 @@ jobs:
   publish:
     if: >-
       always() &&
-      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.changes.outputs.publish == 'true' &&
       (needs.checks.result == 'success' || needs.checks.result == 'skipped') &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped')
@@ -291,7 +291,7 @@ jobs:
 
   update-manifests:
     if: >-
-      always() && github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      always() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       (needs.publish.result == 'success' ||
        (needs.changes.outputs.publish == 'false' && needs.changes.outputs.deploy_contract == 'true' && needs.checks.result == 'success'))
     needs: [changes, checks, publish]
@@ -352,7 +352,7 @@ jobs:
 
   rollout:
     if: >-
-      always() && github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      always() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.update-manifests.result == 'success' &&
       (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
     needs: [update-manifests, deploy]
