@@ -95,7 +95,7 @@ services:
     mem_limit: 512m
 
   gateway:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-gateway:d794d15db8cd011ca9c776686a09e17aa66fb628
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-gateway:dd717dd234fe47afa0d0d72fcaebd98825d2f361
     pull_policy: always
     restart: unless-stopped
     depends_on:
