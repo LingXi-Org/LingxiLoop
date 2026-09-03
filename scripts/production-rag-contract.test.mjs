@@ -195,6 +195,7 @@ test('main publishes changed images and rolls out a complete immutable release',
   assert.match(workflow, /control_migrations == 'true'[\s\S]*control:d1:remote/)
   assert.match(workflow, /update-deployment-images\.mjs "\$GITHUB_SHA" \$\{\{ needs\.changes\.outputs\.packages \}\}/)
   assert.match(workflow, /rollout:[\s\S]*trigger-openship-release\.mjs/)
+  assert.match(workflow, /RELEASE_COMMIT_SHA: \$\{\{ needs\.update-manifests\.outputs\.commit-sha \}\}/)
   assert.match(workflow, /VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEk9EZhHYeS3szPO/)
   assert.match(serverImage, /ARG VITE_TURNSTILE_SITE_KEY=""[\s\S]*ENV VITE_TURNSTILE_SITE_KEY=\$\{VITE_TURNSTILE_SITE_KEY\}/)
   const imageDigests = Object.fromEntries(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway']

@@ -366,6 +366,6 @@ jobs:
         run: node scripts/trigger-openship-release.mjs
         env:
           RELEASE_HMAC_SECRET: ${{ secrets.RELEASE_HMAC_SECRET }}
-          RELEASE_COMMIT_SHA: ${{ github.sha }}
+          RELEASE_COMMIT_SHA: ${{ needs.update-manifests.outputs.commit-sha }}
           RELEASE_DEPLOY_COMMIT_SHA: ${{ needs.update-manifests.outputs.commit-sha }}
           RELEASE_REPOSITORY: ${{ github.repository }}
