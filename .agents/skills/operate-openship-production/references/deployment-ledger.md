@@ -4,18 +4,18 @@ The historical ledger began with 72 live API records on 2026-09-02 and was exten
 
 The conversation also contained `dep_hTwrgkuYccZOs8QT`, but OpenShip returned `NOT_FOUND`; it was a mistyped/nonexistent ID and is not part of the 72-record ledger. Raw-session truncation also produced the partial strings `dep_LGTbj5TasJJbtAu` and `dep_g9i`; their complete real IDs are `dep_LGTbj5TasJJbtAu3` and `dep_g9ieyTk2UUOOcWZi` below.
 
-## 2026-09-03 first-release reset — current active
+## 2026-09-03 component-pinned first release — current active
 
-All six deployments are `ready` at manifest commit `f02ce00e72ead6743646979d31b659fb8e4fa04a`; every LingxiLoop-owned image uses cohort `b42fef160fe697d46a8818e054f945d1f80953f7`.
+All six deployments are `ready` at manifest commit `ad9a7f2e8ba3397943babcde1b802edb48e03941`. Server, AgentOS, WuKongIM, and Open Notebook use `b42fef160fe697d46a8818e054f945d1f80953f7`; Gateway uses auth-routing fix `3b0069a17ec0a969d85301b13aba386832001cdc`.
 
 | Project | Deployment | Version |
 | --- | --- | ---: |
-| `lingxiloop-core-state` | `dep_iwo-MqsxP67r-hoI` | 24 |
-| `lingxiloop-app-a` | `dep_TSHb2V3tuZZyPg0V` | 18 |
-| `lingxiloop-agent-os-a` | `dep_T_OVA-RV0bjrtELT` | 11 |
-| `lingxiloop-app-b` | `dep_vKEdZ18EBjRg6aJb` | 22 |
-| `lingxiloop-knowledge-agent` | `dep_Kc4eqjfeLBSUYFly` | 24 |
-| `lingxiloop-agent-os-b` | `dep_8RPd_DfaUERoNBxf` | 10 |
+| `lingxiloop-core-state` | `dep_C82hkdGyP9iHCgOi` | 26 |
+| `lingxiloop-app-a` | `dep_IRPncv9B85bCcaE0` | 20 |
+| `lingxiloop-agent-os-a` | `dep_y8h-s-eQpH141a9b` | 13 |
+| `lingxiloop-app-b` | `dep_R2UaNNG8Win4TkSX` | 24 |
+| `lingxiloop-knowledge-agent` | `dep_ywPSJ1i8m2tzbDjx` | 26 |
+| `lingxiloop-agent-os-b` | `dep_1nt0A5nbtNX0mdU9` | 12 |
 
 Knowledge refreshes `dep_eiMcQJR2WmVl-Hmh`, `dep_1ZwHHKT8QRYgUKrE`, `dep_qkKchykS23YHND6y`, and `dep_MOvkcixxvGaZJTBw` were intermediate ready deployments while the stale service environment was reconciled; `dep_Kc4eqjfeLBSUYFly` is final.
 

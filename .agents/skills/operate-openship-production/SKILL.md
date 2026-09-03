@@ -1,6 +1,6 @@
 ---
 name: operate-openship-production
-description: Inspect, deploy, upgrade, recover, and audit LingxiLoop's two-server OpenShip production environment and its separate OpenShip control-plane host, including live project/service/deployment IDs, Compose profiles and stale service rows, AgentOS affinity, environment consistency, WireGuard/private ports, the single-ICP-IP Gateway, DNS/TLS and Edge aliases, Cloudflare Workers, LingxiLit/OpenLit, Uptime Kuma, Docker storage recovery, volumes, image drift, and historical deployment failures. Use whenever work touches deploy/openship, OpenShip MCP, production variables or secret sources, Server A or B, the management host, lingxilearn.cn, production images, host cleanup, capacity, failover, or incident response.
+description: Inspect, deploy, upgrade, recover, and audit LingxiLoop's two-server OpenShip production environment and its separate OpenShip control-plane host, including live project/service/deployment IDs, explicit App A/B manifests and stale service rows, AgentOS affinity, environment consistency, WireGuard/private ports, the single-ICP-IP Gateway, DNS/TLS and Edge aliases, Cloudflare Workers, LingxiLit/OpenLit, Uptime Kuma, Docker storage recovery, volumes, image drift, and historical deployment failures. Use whenever work touches deploy/openship, OpenShip MCP, production variables or secret sources, Server A or B, the management host, lingxilearn.cn, production images, host cleanup, capacity, failover, or incident response.
 ---
 
 # Operate LingxiLoop OpenShip Production
@@ -71,18 +71,18 @@ Use this order:
 For LingxiLoop releases:
 
 1. Keep GitHub-push `autoDeploy=false` on all six LingxiLoop projects. A push must not reach production before CI gates and immutable images finish.
-2. Confirm CI built immutable SHA images for server, AgentOS, WuKongIM, Open Notebook, and Gateway, then committed their pins through `scripts/update-deployment-images.mjs`.
-3. After D1 migration and the exact Worker Version are promoted, let CI send the HMAC-signed release request to `/api/internal/releases`; the Worker first synchronizes the App A/B Web service rows from `OPENSHIP_APP_TARGETS` to the pinned server image, then fans the manifest commit out to the six configured OpenShip project IDs through `/api/proxy/api/deployments`.
+2. Confirm CI built immutable SHA images only for changed components, committed those pins through `scripts/update-deployment-images.mjs`, and retained valid immutable pins for every unchanged component.
+3. After D1 migration and the exact Worker Version are promoted, let CI send the HMAC-signed release request to `/api/internal/releases`; the Worker validates a complete five-image set with independently immutable tags, synchronizes all ten image-bearing service rows from `OPENSHIP_IMAGE_TARGETS`, then fans the manifest commit out to the six configured OpenShip project IDs through `/api/proxy/api/deployments`.
 4. Treat OpenShip `202 Accepted` without a deployment ID as accepted, then use OpenShip to verify all six resulting deployments reach `ready`; never equate HTTP acceptance with completion.
 5. Run the PostgreSQL migration first.
-6. Deploy API-A and API-B with the same server image. App A enables only Web; App B enables `worker,gateway`.
+6. Deploy API-A and API-B with the same server image. App A's explicit manifest contains only migration and Web; App B's explicit manifest contains migration, Web, Worker, and Gateway. Production uses no Compose profiles.
 7. Verify both APIs separately before Gateway balancing.
 8. Deploy AgentOS-A and AgentOS-B with the same image, unique worker IDs, one slot, and their own actual named volumes.
 9. Deploy knowledge services only after the shared callback/origin environment is correct.
 10. Deploy LingxiLit independently from `lyyzka/LingxiLit`; it is not a LingxiLoop service image. Preserve the 640 MB ClickHouse and 512 MB OpenLit limits unless live capacity justifies a reviewed change.
 11. Refresh or patch explicit OpenShip service rows when upstream Compose sync does not update the image. Re-read drift and the running image afterward.
 12. Never use a simple restart to apply changed environment; OpenShip can return `SERVICE_CONFIG_STALE`. Use a refresh deployment for the affected service.
-13. Reconcile removed services and profile changes explicitly. OpenShip may retain a stale Worker, Gateway, AgentOS, container, or service row after Compose no longer selects it.
+13. Reconcile removed services explicitly. OpenShip may retain a stale Worker, Gateway, AgentOS, container, or service row after a manifest no longer contains it.
 14. Detach an old public domain before changing its service port to a private bind; OpenShip domain bindings previously forced WuKongIM back to a loopback/public mapping.
 15. Keep Gateway in the CI-built immutable image. OpenShip did not support its relative bind mount reliably. Keep its health check on `127.0.0.1`, not `localhost`, because Alpine resolved the latter to IPv6 while Nginx listened on IPv4.
 16. Normalize host-mounted shell and initialization files to LF before starting Linux containers; CRLF made the LingxiLit ClickHouse initializer exit `126`.
@@ -123,7 +123,7 @@ For domains, route only `loop.lingxilearn.cn` directly through the Gateway servi
 Require all applicable checks:
 
 - OpenShip issues: no outage or action-required item; explain any advisory.
-- Health watch: every intended long-running service healthy; every existing migration container absent or stopped with exit `0`; App A's Worker/Gateway and other profile-excluded rows remain intentionally disabled.
+- Health watch: every intended long-running service healthy; every existing migration container absent or stopped with exit `0`; App A has exactly `db-migrate` and `lingxiloop`, with no Worker/Gateway rows or containers.
 - Runtime images: both APIs equal; both AgentOS instances equal; expected immutable SHA actually running.
 - Environment: API-A/B differ only in node-specific project values; AgentOS differs only in worker ID and volume name; no API has `AGENT_OS_URL`; knowledge and AgentOS callbacks use `loop`.
 - AgentOS: both heartbeats fresh, no unexpected leased work, `5190` absent from host/public ports.

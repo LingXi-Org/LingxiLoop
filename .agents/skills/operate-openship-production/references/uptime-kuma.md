@@ -1,6 +1,6 @@
 # Uptime Kuma production instance
 
-Snapshot: 2026-09-03 10:34 China Standard Time. Re-read live state before acting.
+Snapshot: 2026-09-03 11:46 China Standard Time. Re-read live state before acting.
 
 ## Runtime
 
@@ -22,7 +22,7 @@ Five groups contain sixteen active monitors:
 - Knowledge/observability: Open Notebook, OpenLit.
 - Operations: Uptime Kuma self-check, OpenShip control plane.
 
-After the first-release reset, OpenShip reported 16/16 healthy with zero issue or drift, and the public Kuma status page returned HTTP 200. The local authenticated metrics key was unavailable for this check, so no claim is made about a fresh `/metrics` scrape. Monitor URLs are hidden from the public page.
+After the component-pinned first-release rollout, OpenShip reported 16/16 healthy with zero issue or drift. Direct SQLite verification found exactly sixteen monitors, all active, none legacy/inactive, and every latest heartbeat status equal to `1` (up). The local authenticated metrics key was unavailable for this check, so no claim is made about a fresh `/metrics` scrape. Monitor URLs are hidden from the public page.
 
 The shared AgentOS monitor checks `agentOs=true` from the dependency endpoint, which means at least one worker heartbeat is fresh. It remained UP during a temporary AgentOS-B deployment outage. Always combine it with OpenShip's per-service health and a database query confirming both `agent-os-a` and `agent-os-b` heartbeat ages; both were 0 seconds after recovery at 22:17 CST.
 
