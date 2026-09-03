@@ -43,7 +43,7 @@ export function AgentHandoff({
         <ArrowRightIcon
           className={cn(
             "size-3.5 shrink-0 transition-colors duration-500",
-            settled ? "text-foreground/25" : "text-blue-500 dark:text-blue-400",
+            settled ? "text-foreground/25" : "text-primary",
           )}
         />
         <span
@@ -51,7 +51,7 @@ export function AgentHandoff({
             "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors duration-500",
             settled
               ? cn(field, "text-foreground/80")
-              : "bg-blue-500/12 text-blue-700 dark:bg-blue-400/15 dark:text-blue-300",
+              : "bg-primary/12 text-primary",
           )}
         >
           {toAvatar}

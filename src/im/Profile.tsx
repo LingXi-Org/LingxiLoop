@@ -31,7 +31,7 @@ const STATUS_COLOR: Record<string, string> = {
 function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="border-b border-hairline bg-panel px-5 py-4 last:border-b-0">
-      <h3 className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-accent">{title}</h3>
+      <h3 className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-primary">{title}</h3>
       {children}
     </section>
   )
@@ -137,7 +137,7 @@ export function ParticipantProfile({
             <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">课程智能助教仅在学习区中使用，不支持私聊、创建群聊或收发邮件。</div>
           ) : isSelf ? null : isAgent ? (
             <div className="grid gap-2">
-              <Button type="button" onClick={() => void openLearningThread()} disabled={opening || !projectId} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-accent px-3 text-[12px] font-semibold text-white shadow-soft transition active:scale-[0.97] disabled:opacity-50">
+              <Button type="button" onClick={() => void openLearningThread()} disabled={opening || !projectId} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-3 text-[12px] font-semibold text-primary-foreground shadow-soft transition active:scale-[0.97] disabled:opacity-50">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                 {opening ? '打开中…' : '打开学习线程'}
               </Button>
@@ -152,7 +152,7 @@ export function ParticipantProfile({
         {participant.email && (
           <ProfileSection title="邮箱">
             <Button type="button" onClick={() => void copyEmail()} className="flex w-full items-center gap-2.5 rounded-xl bg-raised px-3 py-2.5 text-left font-mono text-[12px] text-ink">
-              <IMail className="size-4 shrink-0 text-accent" />
+              <IMail className="size-4 shrink-0 text-primary" />
               <span className="min-w-0 flex-1 truncate">{participant.email}</span>
               <span className={cn('text-[9px] font-bold uppercase tracking-wider', copied ? 'text-avail' : 'text-ink-secondary')}>{copied ? '已复制' : '复制'}</span>
             </Button>
@@ -169,7 +169,7 @@ export function ParticipantProfile({
 
         {participant.bio && (
           <ProfileSection title={`关于 ${participant.name}`}>
-            <p className="border-l-2 border-accent pl-3 text-[13px] leading-relaxed text-ink-secondary">{participant.bio}</p>
+            <p className="border-l-2 border-primary pl-3 text-[13px] leading-relaxed text-ink-secondary">{participant.bio}</p>
           </ProfileSection>
         )}
         <div className="h-[max(24px,env(safe-area-inset-bottom))]" />

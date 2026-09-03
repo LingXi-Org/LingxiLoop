@@ -35,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 className="py-2 px-4 rounded-[10px] text-[13px] font-semibold text-white"
                 style={{
                   background: 'linear-gradient(135deg, var(--skype), var(--skype-deep))',
-                  boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.45)',
+                  boxShadow: '0 6px 16px -4px color-mix(in srgb, var(--primary) 45%, transparent)',
                 }}
               >再试一次</Button>
               <Button

@@ -55,10 +55,10 @@ export function ScoreBreakdown({
           className={cn(
             "ms-auto rounded-full px-2 py-0.5 text-xs font-medium",
             ratio >= 0.75
-              ? "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300"
+              ? "bg-primary/12 text-primary"
               : ratio >= 0.5
-                ? "bg-amber-500/12 text-amber-700 dark:text-amber-300"
-                : "bg-red-500/12 text-red-700 dark:text-red-300",
+                ? "bg-chart-1/12 text-chart-1"
+                : "bg-destructive/12 text-destructive",
           )}
         >
           {verdict}
@@ -86,7 +86,7 @@ export function ScoreBreakdown({
             </div>
             <span className="bg-foreground/[0.06] h-[3px] w-full overflow-hidden rounded-full">
               <span
-                className="block h-full rounded-full bg-blue-500 transition-[width] duration-500 motion-reduce:transition-none dark:bg-blue-400"
+                className="block h-full rounded-full bg-primary transition-[width] duration-500 motion-reduce:transition-none"
                 style={{
                   width: `${pct(criterion.score, outOf)}%`,
                 }}

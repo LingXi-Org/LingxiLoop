@@ -288,9 +288,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
       onMouseLeave={() => setHovered(false)}
       className="text-left"
       style={{
-        // Solid opaque card on a transparent BrowserWindow. Mirrors
-        // wails-gui (toast_window_assets/toast.html — `--panel: #ffffff`
-        // + `border: 1px solid rgba(33, 28, 22, 0.12)`, no box-shadow).
+        // Solid preset card on a transparent BrowserWindow.
         //
         // We can't give each toast its own NSWindow inside Electron, so
         // when toasts stack inside ONE window their CSS drop shadows
@@ -299,11 +297,11 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
         // — separation comes from the 1px hairline border + spacing. We
         // do the same; just a tiny low-spread shadow for lift, nothing
         // that extends past the card more than a few pixels.
-        background: '#ffffff',
+        background: 'var(--card)',
         borderRadius: 14,
         padding: '14px 16px',
-        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
-        border: '1px solid rgba(33, 28, 22, 0.12)',
+        boxShadow: '0 2px 6px color-mix(in srgb, var(--foreground) 8%, transparent)',
+        border: '1px solid var(--border)',
         cursor: 'pointer',
         minWidth: 280,
         maxWidth: 340,
@@ -347,7 +345,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
                 // tabular nums, fixed 18px circle. Earlier soft-coral variant
                 // looked like a foreign dialect of the same color family.
                 className="ml-auto inline-grid place-items-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold shrink-0 tabular-nums"
-                style={{ background: 'var(--coral)', color: 'white' }}
+                style={{ background: 'var(--destructive)', color: 'var(--destructive-foreground)' }}
                 title={`本对话有 ${toast.unreadCount} 条未读消息`}
               >{toast.unreadCount}</span>
             )}

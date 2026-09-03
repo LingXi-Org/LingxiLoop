@@ -62,7 +62,7 @@ export function RecommendationCard({
                 {CONFIDENCE_BARS.map((bar) => (
                   <span
                     key={bar}
-                    className="w-1 rounded-full bg-emerald-500/70"
+                    className="w-1 rounded-full bg-primary/70"
                     style={{ height: 6 + bar * 3 }}
                   />
                 ))}
@@ -96,7 +96,7 @@ export function RecommendationCard({
             key="accepted"
             className="fade-in animate-in text-foreground/55 flex items-center gap-2 text-xs duration-300"
           >
-            <CheckIcon className="size-3.5 text-emerald-500" />
+            <CheckIcon className="size-3.5 text-primary" />
             {acceptedLabel}
           </div>
         )}

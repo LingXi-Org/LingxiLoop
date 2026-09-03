@@ -623,7 +623,7 @@ function FrameFeedbackDialog({ frame, onClose }: { frame: CanvasFrame; onClose: 
     })}</div>}
     {comments.length > 0 && <div className="mt-3 space-y-1.5">{comments.map((comment) => <div key={comment.id} className="rounded-md bg-muted px-2.5 py-2 text-xs leading-4 text-muted-foreground">{comment.body}</div>)}</div>}
     <Textarea autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="mt-3 resize-none text-xs" />
-    {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
+    {error && <div className="mt-2 text-[10px] text-destructive">{error}</div>}
     <DialogFooter className="mt-3"><Button type="submit" disabled={!agentId || !body.trim() || busy}><ISend className="size-3.5" />发送反馈</Button></DialogFooter>
   </form></DialogContent></Dialog>
 }
@@ -654,7 +654,7 @@ function CanvasAgentDialog({ onClose }: { onClose: () => void }) {
     <DialogHeader><DialogTitle>在画布中新增工作</DialogTitle><DialogDescription>选择智能助教，并通过 @ 对话把任务加入当前画布。</DialogDescription></DialogHeader>
     <div className="mt-4 flex flex-wrap gap-2">{agents.map((agent) => <Button key={agent.id} type="button" size="sm" variant={agentId === agent.id ? 'default' : 'outline'} onClick={() => setAgentId(agent.id)}><AvatarMini p={agent} size={24} />@{agent.name}</Button>)}</div>
     <Textarea autoFocus value={assignment} onChange={(event) => setAssignment(event.target.value)} rows={4} placeholder="描述希望智能助教在这块画布中完成的工作…" className="mt-4 resize-none text-xs" />
-    {error && <div className="mt-2 text-[10px] text-red-500">{error}</div>}
+    {error && <div className="mt-2 text-[10px] text-destructive">{error}</div>}
     <DialogFooter className="mt-3"><Button type="submit" disabled={!agentId || !assignment.trim() || busy}><ISend className="size-3.5" />@ 智能助教并新增工作</Button></DialogFooter>
   </form></DialogContent></Dialog>
 }

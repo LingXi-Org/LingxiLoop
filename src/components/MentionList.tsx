@@ -61,14 +61,14 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg bg-white border border-stone-200 shadow-lg px-3 py-2 text-xs text-stone-400">
+      <div className="rounded-lg border border-border bg-popover px-3 py-2 text-xs text-muted-foreground shadow-lg">
         没有匹配
       </div>
     )
   }
 
   return (
-    <ItemGroup className="min-w-[220px] max-h-[280px] gap-0 overflow-y-auto rounded-lg border border-stone-200 bg-white py-1 shadow-lg">
+    <ItemGroup className="min-w-[220px] max-h-[280px] gap-0 overflow-y-auto rounded-lg border border-border bg-popover py-1 shadow-lg">
       {items.map((p, i) => (
         <Item
           role="option"
@@ -85,14 +85,14 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
           className={cn(
             'flex-nowrap rounded-none border-0 px-3 py-1.5 text-left text-sm',
             i === selectedIndex
-              ? 'bg-skype/10 text-skype-deep'
-              : 'text-stone-700 hover:bg-stone-50',
+              ? 'bg-accent text-accent-foreground'
+              : 'text-popover-foreground hover:bg-accent',
           )}
         >
           <ItemMedia><Avatar p={p} size={24} animated={false} /></ItemMedia>
           <ItemContent className="min-w-0">
             <ItemTitle className="block w-full truncate font-medium leading-tight">{p.name}</ItemTitle>
-            <ItemDescription className="line-clamp-1 text-[11px] leading-tight text-stone-400">
+            <ItemDescription className="line-clamp-1 text-[11px] leading-tight text-muted-foreground">
               {participantRoleZh(p)}
             </ItemDescription>
           </ItemContent>

@@ -89,8 +89,8 @@ export function ToolTimeline({
                   className="bg-foreground/[0.06] text-foreground/70 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-[11px]"
                 >
                   <span>{stat.file}</span>
-                  {stat.added !== undefined && <span className="text-emerald-600 dark:text-emerald-400">+{stat.added}</span>}
-                  {stat.removed !== undefined && <span className="text-red-600 dark:text-red-400">−{stat.removed}</span>}
+                  {stat.added !== undefined && <span className="text-primary">+{stat.added}</span>}
+                  {stat.removed !== undefined && <span className="text-destructive">−{stat.removed}</span>}
                 </span>
               ))}
             </div>

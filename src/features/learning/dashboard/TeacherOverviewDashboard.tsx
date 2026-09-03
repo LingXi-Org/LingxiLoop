@@ -5,8 +5,16 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { statusLabel } from '../components/learningDisplay'
 import type {
   LearningActivity,
   LearningObjective,
@@ -14,13 +22,12 @@ import type {
   LearningSpace,
   TeacherLearningOverview,
 } from '../contracts'
-import { statusLabel } from '../components/learningDisplay'
-import { OverviewSection } from './OverviewSection'
-import {
-  TeacherLearningDetailDialog,
-  type TeacherDetailView,
-} from './TeacherLearningDetailDialog'
+import { TeacherDashboardSummary } from './TeacherDashboardSummary'
 import { TeacherLearnersSection } from './TeacherLearnersSection'
+import {
+  type TeacherDetailView,
+  TeacherLearningDetailDialog,
+} from './TeacherLearningDetailDialog'
 import { useTeacherOverviewData } from './useTeacherOverviewData'
 
 const REVIEW_PREVIEW_LIMIT = 8
@@ -55,21 +62,24 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
   }
 
   return (
-    <div className="space-y-3 @min-[48rem]/learning-grid:space-y-6" data-testid="teacher-overview-dashboard">
+    <div
+      className="grid gap-3 @min-[48rem]/learning-grid:gap-6 @min-[64rem]/learning-grid:grid-cols-12"
+      data-testid="teacher-overview-dashboard"
+    >
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="@min-[64rem]/learning-grid:col-span-12">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       <CoursePulse space={space} overview={data.overview} />
-      <OverviewSection
+      <TeacherDashboardSummary
         overview={data.overview}
         onOpenLearner={
           space.canReview
             ? (learnerId) => setDetailView({ kind: 'learner', learnerId })
             : undefined
         }
-        teacherPriority={
+        priority={
           <ReviewQueue
             canReview={space.canReview}
             reviews={data.reviews}
@@ -79,13 +89,15 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
       />
       <CourseContentStatus objectives={data.objectives} activities={data.activities} />
       {space.canReview ? (
-        <TeacherLearnersSection
-          projectId={space.projectId}
-          refreshToken={revision}
-          onOpenLearner={(learnerId) => setDetailView({ kind: 'learner', learnerId })}
-        />
+        <div className="@min-[64rem]/learning-grid:col-span-12">
+          <TeacherLearnersSection
+            projectId={space.projectId}
+            refreshToken={revision}
+            onOpenLearner={(learnerId) => setDetailView({ kind: 'learner', learnerId })}
+          />
+        </div>
       ) : (
-        <Alert>
+        <Alert className="@min-[64rem]/learning-grid:col-span-12">
           <AlertDescription>当前课程状态下不能查看学习者审核资料。</AlertDescription>
         </Alert>
       )}
@@ -108,20 +120,18 @@ function CoursePulse({
   overview: TeacherLearningOverview
 }) {
   return (
-    <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-muted/60">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -end-14 -top-20 size-56 rounded-full bg-primary/10"
-      />
-      <CardHeader className="relative">
+    <Card size="sm" className="@min-[64rem]/learning-grid:col-span-12">
+      <CardHeader>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">课程脉搏</Badge>
-          <Badge variant="outline">{statusLabel(space.status)}</Badge>
+          <Badge variant="secondary">课程概况</Badge>
         </div>
         <CardTitle className="text-xl">{space.title}</CardTitle>
         <CardDescription className="max-w-3xl">{space.description || '暂无课程简介'}</CardDescription>
+        <CardAction>
+          <Badge variant="outline">{statusLabel(space.status)}</Badge>
+        </CardAction>
       </CardHeader>
-      <CardContent className="relative text-sm text-muted-foreground">
+      <CardContent className="text-sm text-muted-foreground">
         近 {overview.windowDays} 天 · {overview.summary.attempts} 次证据尝试 ·{' '}
         {overview.summary.learnersWithEvidence}/{overview.summary.learnerCount} 名学习者已有证据
       </CardContent>
@@ -146,7 +156,7 @@ function CourseContentStatus({
   }))
 
   return (
-    <Card>
+    <Card className="@min-[64rem]/learning-grid:col-span-12">
       <CardHeader>
         <CardTitle>课程内容状态</CardTitle>
         <CardDescription>学习目标与课程活动的当前发布状态</CardDescription>

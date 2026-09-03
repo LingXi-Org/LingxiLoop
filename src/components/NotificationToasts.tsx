@@ -375,17 +375,17 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
       style={{
         // Browser-fallback (no Electron notification window). Floats over
         // the app's own UI, so backdrop-filter genuinely blurs the chat
-        // beneath the toast. Slightly translucent white so the frost
+        // beneath the toast. Slightly translucent preset surface so the frost
         // reads, opaque enough that text never loses contrast.
-        background: 'rgba(255, 255, 255, 0.82)',
+        background: 'color-mix(in srgb, var(--card) 82%, transparent)',
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         borderRadius: 14,
         padding: '10px 12px 12px',
-        // Soft sky-tinted shadow + 1px hairline — matches the rest of
+        // Preset-derived shadow + 1px hairline — matches the rest of
         // LingxiLoop's "lifted-card" treatment elsewhere in the app.
-        boxShadow: '0 18px 40px -14px rgba(10, 30, 60, 0.24), 0 6px 14px -8px rgba(10, 30, 60, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.55) inset',
-        border: '1px solid rgba(10, 30, 60, 0.08)',
+        boxShadow: '0 18px 40px -14px color-mix(in srgb, var(--foreground) 24%, transparent), 0 6px 14px -8px color-mix(in srgb, var(--foreground) 14%, transparent), 0 0 0 1px color-mix(in srgb, var(--card-foreground) 8%, transparent) inset',
+        border: '1px solid var(--border)',
         cursor: 'pointer',
         minWidth: 280,
         maxWidth: 340,

@@ -13,7 +13,7 @@ test('learning dashboard is composed from bounded role-aware sections', () => {
   const sections = [
     'DashboardSectionFrame.tsx',
     'LearnerOverviewDashboard.tsx',
-    'OverviewSection.tsx',
+    'TeacherDashboardSummary.tsx',
     'TeacherLearnersSection.tsx',
     'TeacherLearningDetailDialog.tsx',
     'TeacherOverviewDashboard.tsx',
@@ -47,7 +47,7 @@ test('learning dashboard composes the required official data primitives', () => 
     'DashboardSectionFrame.tsx',
     'LearnerOverviewDashboard.tsx',
     'LearnerDashboardSummary.tsx',
-    'OverviewSection.tsx',
+    'TeacherDashboardSummary.tsx',
     'MissionSection.tsx',
     'TeacherLearnersSection.tsx',
     'TeacherLearningDetailDialog.tsx',

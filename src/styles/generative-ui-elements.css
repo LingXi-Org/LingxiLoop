@@ -1,11 +1,5 @@
 /* Direct source: assistant-ui/packages/ui/src/lib/generative-ui-vocabulary-css.ts */
-[data-aui-theme="elements"] {
-  --aui-live: oklch(0.623 0.214 259.815);
-}
-
-.dark [data-aui-theme="elements"] {
-  --aui-live: oklch(0.707 0.165 254.624);
-}
+[data-aui-theme="elements"] { --aui-live: var(--primary); }
 
 [data-aui-theme="elements"] [data-aui="card"][data-aui-surface],
 [data-aui-theme="elements"] [data-aui="carousel"] [data-aui="card"] {

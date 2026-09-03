@@ -175,7 +175,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         style={{
           background: 'var(--cloud)',
           border: '1px solid var(--ink-100)',
-          boxShadow: '0 30px 60px -30px rgba(10, 30, 60, 0.20), 0 0 0 1px rgba(0, 80, 140, 0.04)',
+          boxShadow: '0 30px 60px -30px color-mix(in srgb, var(--foreground) 20%, transparent), 0 0 0 1px color-mix(in srgb, var(--border) 40%, transparent)',
         }}
       >
         <ProductLogo size={56} rounded />
@@ -293,7 +293,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
                   className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-white transition disabled:opacity-60"
                   style={{
                     background: 'var(--skype)',
-                    boxShadow: '0 6px 16px -4px rgba(0, 168, 240, 0.5)',
+                    boxShadow: '0 6px 16px -4px color-mix(in srgb, var(--primary) 50%, transparent)',
                   }}
                 >{busy ? '正在加入…' : `以${inviteRoleLabel(inv.role)}身份加入 ${companyName}`}</Button>
                 <Button

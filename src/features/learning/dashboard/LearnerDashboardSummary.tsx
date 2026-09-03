@@ -2,7 +2,6 @@ import {
   ChartBarLineIcon,
   CheckmarkCircle02Icon,
   GoalIcon,
-  SparklesIcon,
   Task01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -19,14 +18,22 @@ import {
   YAxis,
 } from 'recharts'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@/components/ui/chart'
 import { ASSISTANCE_LABELS } from '../components/learningDisplay'
 import type { LearnerLearningOverview } from '../contracts'
@@ -50,26 +57,6 @@ export function formatLearningDateTime(value: string | undefined | null): string
   if (!value) return '尚未安排时间'
   const date = new Date(value)
   return Number.isFinite(date.getTime()) ? date.toLocaleString('zh-CN') : '时间待同步'
-}
-
-function HeroMetric({
-  icon,
-  label,
-  value,
-}: {
-  icon: typeof Task01Icon
-  label: string
-  value: number
-}) {
-  return (
-    <div className="rounded-2xl bg-primary-foreground/10 p-3 ring-1 ring-primary-foreground/15 @min-[48rem]/learning-grid:rounded-3xl @min-[48rem]/learning-grid:p-4">
-      <div className="flex items-center gap-2 text-primary-foreground/75">
-        <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4" />
-        <span className="text-xs">{label}</span>
-      </div>
-      <p className="mt-2 font-heading text-2xl font-medium tabular-nums @min-[48rem]/learning-grid:mt-3 @min-[48rem]/learning-grid:text-3xl">{value}</p>
-    </div>
-  )
 }
 
 function ChartEmpty({ children }: { children: ReactNode }) {
@@ -116,39 +103,77 @@ export function LearnerDashboardSummary({
   const nextMissionStep = activeMission?.steps.find(
     ({ step }) => step.status !== 'COMPLETED' && step.status !== 'CANCELLED',
   )
+  const metrics = [
+    {
+      label: '待复习',
+      value: overview?.summary.dueReviews ?? 0,
+      detail: '来自真实复习安排',
+      icon: Task01Icon,
+    },
+    {
+      label: '已验证目标',
+      value: overview?.summary.verifiedObjectives ?? 0,
+      detail: '已有可验证掌握证据',
+      icon: CheckmarkCircle02Icon,
+    },
+    {
+      label: `进行中${missionLabel}`,
+      value: overview?.summary.activeMissions ?? 0,
+      detail: '按未完成任务汇总',
+      icon: GoalIcon,
+    },
+    {
+      label: '证据尝试',
+      value: overview?.summary.evidenceAttempts ?? 0,
+      detail: `近 ${overview?.windowDays ?? 30} 天真实提交`,
+      icon: ChartBarLineIcon,
+    },
+  ]
 
   return (
     <>
-      <Card className="relative bg-primary text-primary-foreground ring-primary/20 @min-[64rem]/learning-grid:col-span-8">
+      {metrics.map((metric) => (
+        <Card
+          key={metric.label}
+          className="@container/card bg-linear-to-t from-primary/5 to-card shadow-xs @min-[42rem]/learning-grid:col-span-6 @min-[64rem]/learning-grid:col-span-3"
+        >
+          <CardHeader>
+            <CardDescription>{metric.label}</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              {metric.value}
+            </CardTitle>
+            <CardAction>
+              <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-primary">
+                <HugeiconsIcon icon={metric.icon} strokeWidth={2} className="size-4" />
+              </span>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="text-sm text-muted-foreground">{metric.detail}</CardFooter>
+        </Card>
+      ))}
+
+      <Card className="@min-[64rem]/learning-grid:col-span-8">
         <CardHeader>
-          <Badge variant="secondary" className="w-fit">
-            <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
-            证据驱动的学习轨迹
-          </Badge>
-          <CardTitle className="max-w-3xl text-xl leading-tight @min-[44rem]/learning-grid:text-3xl">
-            每一次真实尝试，都在把学习目标变成可验证的掌握。
-          </CardTitle>
-          <CardDescription className="max-w-2xl text-primary-foreground/70">
-            看板只汇总你的任务、活动提交、评价反馈与复习安排，不使用学习时长、排名或预测数据。
-          </CardDescription>
+          <CardTitle>证据节奏</CardTitle>
+          <CardDescription>近 {overview?.windowDays ?? 30} 天实际提交的学习尝试</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-3 @min-[60rem]/learning-grid:grid-cols-4">
-          <HeroMetric icon={Task01Icon} label="待复习" value={overview?.summary.dueReviews ?? 0} />
-          <HeroMetric
-            icon={CheckmarkCircle02Icon}
-            label="已验证目标"
-            value={overview?.summary.verifiedObjectives ?? 0}
-          />
-          <HeroMetric
-            icon={GoalIcon}
-            label={`进行中${missionLabel}`}
-            value={overview?.summary.activeMissions ?? 0}
-          />
-          <HeroMetric
-            icon={ChartBarLineIcon}
-            label={`近 ${overview?.windowDays ?? 30} 天证据`}
-            value={overview?.summary.evidenceAttempts ?? 0}
-          />
+        <CardContent>
+          {trend.length > 0 ? (
+            <ChartContainer config={trendConfig} className="h-48 w-full aspect-auto @min-[48rem]/learning-grid:h-56">
+              <AreaChart accessibilityLayer data={trend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="learner-evidence-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-attempts)" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="var(--color-attempts)" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={28} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Area dataKey="attempts" type="monotone" fill="url(#learner-evidence-fill)" stroke="var(--color-attempts)" strokeWidth={2} />
+              </AreaChart>
+            </ChartContainer>
+          ) : <ChartEmpty>产生学习证据后，这里会显示趋势。</ChartEmpty>}
         </CardContent>
       </Card>
 
@@ -204,31 +229,6 @@ export function LearnerDashboardSummary({
       </Card>
 
       <Card className="@min-[64rem]/learning-grid:col-span-6">
-        <CardHeader>
-          <CardTitle>证据节奏</CardTitle>
-          <CardDescription>近 {overview?.windowDays ?? 30} 天实际提交的学习尝试</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {trend.length > 0 ? (
-            <ChartContainer config={trendConfig} className="h-48 w-full aspect-auto @min-[48rem]/learning-grid:h-56">
-              <AreaChart accessibilityLayer data={trend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="learner-evidence-fill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-attempts)" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="var(--color-attempts)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={28} />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                <Area dataKey="attempts" type="monotone" fill="url(#learner-evidence-fill)" stroke="var(--color-attempts)" strokeWidth={2} />
-              </AreaChart>
-            </ChartContainer>
-          ) : <ChartEmpty>产生学习证据后，这里会显示趋势。</ChartEmpty>}
-        </CardContent>
-      </Card>
-
-      <Card className="@min-[64rem]/learning-grid:col-span-3">
         <CardHeader><CardTitle>掌握结构</CardTitle><CardDescription>目标在等级 0–4 的真实分布</CardDescription></CardHeader>
         <CardContent>
           {mastery.length > 0 ? (
@@ -244,7 +244,7 @@ export function LearnerDashboardSummary({
         </CardContent>
       </Card>
 
-      <Card className="@min-[64rem]/learning-grid:col-span-3">
+      <Card className="@min-[64rem]/learning-grid:col-span-6">
         <CardHeader><CardTitle>完成方式</CardTitle><CardDescription>独立、提示与引导下的证据</CardDescription></CardHeader>
         <CardContent>
           {assistance.some((item) => item.count > 0) ? (

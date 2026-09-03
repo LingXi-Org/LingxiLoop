@@ -109,11 +109,11 @@ export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', mode = '
       style={{
         width: size,
         height: size,
-        background: 'linear-gradient(135deg, rgba(123, 108, 176, 0.06), rgba(0, 168, 240, 0.08))',
+        background: 'linear-gradient(135deg, color-mix(in srgb, var(--secondary-foreground) 6%, transparent), color-mix(in srgb, var(--primary) 8%, transparent))',
         // Three-layer ring: subtle inner dark hairline (defines the circle
         // against the tiles) → solid white outer band (the "cut" the user
         // asked for) → soft drop shadow under it for depth.
-        boxShadow: 'inset 0 0 0 1.5px rgba(0, 80, 140, 0.10), 0 0 0 2.5px #ffffff, 0 2px 6px rgba(10, 30, 60, 0.10)',
+        boxShadow: 'inset 0 0 0 1.5px color-mix(in srgb, var(--primary) 10%, transparent), 0 0 0 2.5px var(--background), 0 2px 6px color-mix(in srgb, var(--foreground) 10%, transparent)',
       }}
     >
       {tiles.map((p, i) => {

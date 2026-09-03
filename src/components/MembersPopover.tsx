@@ -82,7 +82,7 @@ export function MembersPopover({ members, anchor, triggerRef, onClose }: Props) 
       style={{
         left: anchor.right - 280,
         top: anchor.bottom + 6,
-        boxShadow: '0 12px 32px -10px rgba(10, 30, 60, 0.22), 0 6px 14px -6px rgba(10, 30, 60, 0.14), 0 0 0 1px rgba(0, 80, 140, 0.08)',
+        boxShadow: '0 12px 32px -10px color-mix(in srgb, var(--foreground) 22%, transparent), 0 6px 14px -6px color-mix(in srgb, var(--foreground) 14%, transparent), 0 0 0 1px color-mix(in srgb, var(--border) 80%, transparent)',
       }}
     >
       <div className="px-3 pt-2 pb-1.5 text-[10.5px] font-bold tracking-[0.12em] uppercase text-ink-300">

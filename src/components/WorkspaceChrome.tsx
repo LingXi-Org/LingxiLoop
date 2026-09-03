@@ -60,7 +60,7 @@ function SourceRow({ source, conversationId, flat = false }: { source: Knowledge
       <AttachmentDescription>{sourceKindLabel[source.kind]} · {Math.max(1, Math.round(source.sizeBytes / 1024))} KB · {statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态待同步'}{source.chunkCount ? ` · ${source.chunkCount} 片段` : ''} · {creator}</AttachmentDescription>
     </AttachmentContent>
     <AttachmentActions>
-      {conversationId && source.status === 'ready' && selected ? <AttachmentAction type="button" aria-label={`${source.title} 在本对话中${selected.enabled ? '停用' : '启用'}`} aria-pressed={selected.enabled} title={selected.enabled ? '回答将使用此资料' : '此资料已停用'} onClick={() => void setSourceEnabled(conversationId, source.id, !selected.enabled)} className={selected.enabled ? 'text-emerald-600' : 'text-muted-foreground'}>{selected.enabled ? <IconCheck /> : <IconMinus />}</AttachmentAction> : null}
+      {conversationId && source.status === 'ready' && selected ? <AttachmentAction type="button" aria-label={`${source.title} 在本对话中${selected.enabled ? '停用' : '启用'}`} aria-pressed={selected.enabled} title={selected.enabled ? '回答将使用此资料' : '此资料已停用'} onClick={() => void setSourceEnabled(conversationId, source.id, !selected.enabled)} className={selected.enabled ? 'text-primary' : 'text-muted-foreground'}>{selected.enabled ? <IconCheck /> : <IconMinus />}</AttachmentAction> : null}
       {source.status === 'failed' && <AttachmentAction type="button" size="xs" onClick={() => void retry(source.id)}>重试</AttachmentAction>}
     </AttachmentActions>
     <AttachmentTrigger type="button" onClick={() => void open(source.id)} aria-label={`打开 ${source.title}`} />
@@ -171,19 +171,19 @@ export function SourceDetailOverlay() {
     >
       <DrawerHeader className="border-b border-hairline p-6">
         <div className="flex items-start justify-between gap-4"><div>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-accent">{selectedSource ? statusLabel[selectedSource.status] ?? '状态待同步' : '资料'}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">{selectedSource ? statusLabel[selectedSource.status] ?? '状态待同步' : '资料'}</div>
           <DrawerTitle className="mt-1 text-xl">{selectedSource?.title ?? '资料'}</DrawerTitle>
           <DrawerDescription>资料详情</DrawerDescription>
         </div><DrawerClose asChild><Button type="button" className="size-9 rounded-xl hover:bg-raised" aria-label="关闭资料">×</Button></DrawerClose></div>
       </DrawerHeader>
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
-        {selectedSource && <><div className="mt-5 flex flex-wrap gap-2 text-[10px] text-ink-secondary"><span className="rounded-full bg-raised px-2.5 py-1">{sourceKindLabel[selectedSource.kind]}</span><span className="rounded-full bg-raised px-2.5 py-1">{Math.max(1, Math.round(selectedSource.sizeBytes / 1024))} KB</span>{selectedSource.isTruncated && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">已截断</span>}</div>{selectedSource.originalUrl && <a href={selectedSource.originalUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始网页</a>}{selectedSource.originalFileUrl && <a href={selectedSource.originalFileUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-accent underline">打开原始文件</a>}</>}
+        {selectedSource && <><div className="mt-5 flex flex-wrap gap-2 text-[10px] text-ink-secondary"><span className="rounded-full bg-raised px-2.5 py-1">{sourceKindLabel[selectedSource.kind]}</span><span className="rounded-full bg-raised px-2.5 py-1">{Math.max(1, Math.round(selectedSource.sizeBytes / 1024))} KB</span>{selectedSource.isTruncated && <span className="rounded-full bg-chart-1/15 px-2.5 py-1 text-chart-1">已截断</span>}</div>{selectedSource.originalUrl && <a href={selectedSource.originalUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-primary underline">打开原始网页</a>}{selectedSource.originalFileUrl && <a href={selectedSource.originalFileUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-xs text-primary underline">打开原始文件</a>}</>}
         {detailLoading && !selectedSource
           ? <ResourceSkeleton variant="detail" label="正在加载资料" />
           : selectedSource
             ? <><pre className="mt-5 whitespace-pre-wrap rounded-2xl bg-muted/40 p-4 font-sans text-xs leading-6 text-foreground">{sourceText
               ? sourceText
-              : selectedSource.error ? userFacingError(selectedSource.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可查看抽取文本。'}</pre><Button onClick={() => void removeSelectedSource()} className="mt-5 text-xs font-semibold text-red-600">删除来源</Button></>
+              : selectedSource.error ? userFacingError(selectedSource.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可查看抽取文本。'}</pre><Button onClick={() => void removeSelectedSource()} className="mt-5 text-xs font-semibold text-destructive">删除来源</Button></>
             : null}
       </div>
     </DrawerContent>

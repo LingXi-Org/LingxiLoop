@@ -190,7 +190,7 @@ test('frontend API implementations and consumers stay domain-scoped', async () =
     'dashboard/LearnerDashboardSummary.tsx',
     'dashboard/LearnerOverviewDashboard.tsx',
     'dashboard/learnerDashboardModel.ts',
-    'dashboard/OverviewSection.tsx',
+    'dashboard/TeacherDashboardSummary.tsx',
     'dashboard/TeacherLearnersSection.tsx',
   ]) {
     await access(new URL(`../features/learning/${file}`, import.meta.url))

@@ -123,7 +123,7 @@ export function PresentationViewer({
       </div>
 
       <div className="min-h-0 flex-1 bg-muted/50 p-3 sm:p-5">
-        <div className="relative h-full min-h-64 overflow-hidden rounded-2xl bg-[#f2f0ea] shadow-sm ring-1 ring-border">
+        <div className="relative h-full min-h-64 overflow-hidden rounded-2xl bg-muted shadow-sm ring-1 ring-border">
           {html.status === 'loading' && <ResourceSkeleton variant="media" className="h-full" label="正在加载 HTML 演示" />}
           {html.status === 'error' && (
             <div className="grid h-full place-items-center bg-card px-6">
@@ -159,7 +159,7 @@ export function PresentationViewer({
               referrerPolicy="no-referrer"
               allow="fullscreen"
               allowFullScreen
-              className="h-full w-full border-0 bg-[#f2f0ea]"
+              className="h-full w-full border-0 bg-muted"
             />
           )}
         </div>

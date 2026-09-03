@@ -80,7 +80,7 @@ export function AgentEditor({ agent, onClose }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center p-6"
-      style={{ background: 'rgba(15, 30, 50, 0.55)', backdropFilter: 'blur(6px)' }}
+      style={{ background: 'color-mix(in srgb, var(--foreground) 55%, transparent)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
     >
       <div
@@ -221,7 +221,7 @@ export function AgentEditor({ agent, onClose }: Props) {
             className="px-5 py-2 rounded-[9px] text-[12.5px] font-semibold text-white transition disabled:opacity-50"
             style={{
               background: 'var(--skype)',
-              boxShadow: '0 4px 12px -3px rgba(0, 168, 240, 0.5)',
+              boxShadow: '0 4px 12px -3px color-mix(in srgb, var(--primary) 50%, transparent)',
             }}
           >
             {busy ? "正在保存…" : (editing ? "保存更改" : "创建智能助教")}

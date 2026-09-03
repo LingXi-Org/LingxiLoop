@@ -36,14 +36,14 @@ export function AgentStatus({
       {...props}
     >
       {state === "done" ? (
-        <CheckIcon aria-hidden className="size-3 shrink-0 text-emerald-500" />
+        <CheckIcon aria-hidden className="size-3 shrink-0 text-primary" />
       ) : (
         <span
           aria-hidden
           className={cn(
             "size-1.5 shrink-0 rounded-full motion-reduce:animate-none",
             state === "working"
-              ? "animate-pulse bg-blue-500 dark:bg-blue-400"
+              ? "animate-pulse bg-primary"
               : "bg-foreground/25 animate-pulse",
           )}
         />

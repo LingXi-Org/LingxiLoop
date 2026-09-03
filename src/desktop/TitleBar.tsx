@@ -19,7 +19,7 @@ export function TitleBar() {
       className="grid items-center px-4 border-b border-ink-100"
       style={{
         height: isWindows ? 36 : 44,
-        background: 'linear-gradient(180deg, #FBFDFF 0%, #F1F7FB 100%)',
+        background: 'linear-gradient(180deg, var(--card) 0%, var(--muted) 100%)',
         gridTemplateColumns: `1fr auto 1fr`,
         ...dragStyle,
       }}

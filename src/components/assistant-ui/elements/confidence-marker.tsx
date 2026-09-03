@@ -63,9 +63,9 @@ export function ConfidenceMarkerInline({
           aria-hidden
           className={cn(
             "size-1.5 shrink-0 rounded-full",
-            claim.confidence === "grounded" && "bg-emerald-500",
-            claim.confidence === "inferred" && "bg-amber-500",
-            claim.confidence === "uncertain" && "bg-red-500",
+            claim.confidence === "grounded" && "bg-primary",
+            claim.confidence === "inferred" && "bg-chart-1",
+            claim.confidence === "uncertain" && "bg-destructive",
           )}
         />
         {LABEL[claim.confidence]} · {claim.basis}
@@ -136,9 +136,9 @@ export function ConfidenceMarker({
               aria-hidden
               className={cn(
                 "size-1.5 rounded-full",
-                hovered.confidence === "grounded" && "bg-emerald-500",
-                hovered.confidence === "inferred" && "bg-amber-500",
-                hovered.confidence === "uncertain" && "bg-red-500",
+                hovered.confidence === "grounded" && "bg-primary",
+                hovered.confidence === "inferred" && "bg-chart-1",
+                hovered.confidence === "uncertain" && "bg-destructive",
               )}
             />
             {LABEL[hovered.confidence]} · {hovered.basis}

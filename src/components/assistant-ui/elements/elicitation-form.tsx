@@ -196,7 +196,7 @@ export function ElicitationForm({
         ) : (
           <span className="fade-in animate-in text-foreground/55 flex items-center gap-2 text-xs duration-300">
             {state === "accepted" ? (
-              <><CheckIcon className="size-3.5 text-emerald-500" />{acceptedLabel}</>
+              <><CheckIcon className="size-3.5 text-primary" />{acceptedLabel}</>
             ) : (
               <><XIcon className="text-foreground/45 size-3.5" />已拒绝</>
             )}
