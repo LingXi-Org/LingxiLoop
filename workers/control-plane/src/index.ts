@@ -503,8 +503,7 @@ app.post('/api/internal/releases', async (c) => {
   let input: { commitSha?: string; deployCommitSha?: string; imageDigests?: Record<string, string> }
   try { input = JSON.parse(raw) as typeof input } catch { return c.json({ error: 'invalid release payload' }, 400) }
   if (!input.commitSha || !/^[0-9a-f]{40}$/.test(input.commitSha) || !input.deployCommitSha || !/^[0-9a-f]{40}$/.test(input.deployCommitSha) || !input.imageDigests || Array.isArray(input.imageDigests)) return c.json({ error: 'invalid release payload' }, 400)
-  const imageTags = releaseImageNames.map((name) => input.imageDigests?.[name]?.match(new RegExp(`lingxiloop-${name}:([0-9a-f]{40})$`))?.[1])
-  if (imageTags.some((tag) => !tag) || new Set(imageTags).size !== 1) return c.json({ error: 'release images must use one complete cohort' }, 400)
+  if (releaseImageNames.some((name) => !input.imageDigests?.[name]?.match(new RegExp(`lingxiloop-${name}:[0-9a-f]{40}$`)))) return c.json({ error: 'release images must be complete and immutable' }, 400)
   const projectIds = openShipProjectIds(c.env)
   if (!projectIds.length || projectIds.some((id) => !/^proj_[\w-]+$/.test(id))) return c.json({ error: 'invalid OpenShip project configuration' }, 500)
   const imageTargets = c.env.OPENSHIP_IMAGE_TARGETS.split(',').map((target) => target.trim().split(':'))

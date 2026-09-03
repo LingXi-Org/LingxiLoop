@@ -303,7 +303,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with: { ref: main, fetch-depth: 0 }
-      - name: Pin the complete production image cohort
+      - name: Pin images published by this change
         id: pin
         run: |
           git pull --rebase origin main

@@ -14,7 +14,6 @@ export function deploymentImages(source) {
 export function buildReleaseRequest(secret, commitSha, deployCommitSha, repository, imageDigests) {
   if (!secret || !/^[0-9a-f]{40}$/.test(commitSha) || !/^[0-9a-f]{40}$/.test(deployCommitSha) || !/^[\w.-]+\/[\w.-]+$/.test(repository)) throw new Error('invalid release configuration')
   if (imageNames.some((name) => !new RegExp(`lingxiloop-${name}:[0-9a-f]{40}$`).test(imageDigests[name] ?? ''))) throw new Error('invalid release images')
-  if (new Set(Object.values(imageDigests).map((image) => image.slice(-40))).size !== 1) throw new Error('release images must use one cohort')
   const body = JSON.stringify({ commitSha, deployCommitSha, imageDigests })
   return { body, signature: createHmac('sha256', secret).update(body).digest('base64url') }
 }
