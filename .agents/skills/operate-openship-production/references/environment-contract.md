@@ -49,6 +49,14 @@ The user identified this as a LingxiLit/OpenLit deployment source, but its conte
 - `OPENLIT_PRICING_JSON` must be renamed to `LINGXILIT_PRICING_JSON` for current manifests.
 - `WUKONG_USER_TOKEN_SECRET` may be used by other runtime code but is not present in the current OpenShip App A/B environment lists; verify code requirements before adding it.
 
+### `D:\Documents\OpenShip\mail.txt`
+
+`ALIYUN_OTP_EMAIL_PASSWORD`, `ALIYUN_SUPPORT_EMAIL_PASSWORD`.
+
+- These are local secret sources for the Cloudflare control-plane Worker only. Never add them to App A/B or commit the file.
+- `ALIYUN_OTP_EMAIL_PASSWORD` authenticates `no-reply@lingxilearn.cn`; `ALIYUN_SUPPORT_EMAIL_PASSWORD` authenticates `support@lingxilearn.cn`.
+- Upload both through one JSON `wrangler secret bulk` operation. Do not pipe either value to line-oriented `wrangler secret put` on Windows because the appended newline changes the SMTP password.
+
 ## App A and App B
 
 OpenShip runtime environment keys for API and Worker:
@@ -335,9 +343,9 @@ OPENSHIP_IMAGE_TARGETS=server:proj_5uz48XlBkfJQeNC8:svc_9RmMHN7M0K1l5Z_1,server:
 
 D1 binding `DB`, database `lingxiloop-control-plane`, ID `cf22d961-eba4-4d21-b447-4d19ec0ad524`; no pending migrations at the audit.
 
-Required Worker secret names: `BETTER_AUTH_SECRET`, `GATEWAY_HMAC_SECRET`, `OPENSHIP_PAT`, `RELEASE_HMAC_SECRET`, `RESEND_API_KEY`, `RESEND_FROM`, `TURNSTILE_SECRET_KEY`, and `BOOTSTRAP_ADMIN_TOKEN`. The legacy singular `OPENSHIP_PROJECT_ID` secret may still exist but is unused; project IDs are non-secret checked-in configuration.
+Required Worker secret names: `ALIYUN_OTP_EMAIL_PASSWORD`, `ALIYUN_SUPPORT_EMAIL_PASSWORD`, `BETTER_AUTH_SECRET`, `GATEWAY_HMAC_SECRET`, `OPENSHIP_PAT`, `RELEASE_HMAC_SECRET`, `TURNSTILE_SECRET_KEY`, and `BOOTSTRAP_ADMIN_TOKEN`. The old `RESEND_API_KEY` and `RESEND_FROM` Worker secrets were deleted after the SMTP cutover. The legacy singular `OPENSHIP_PROJECT_ID` secret may still exist but is unused; project IDs are non-secret checked-in configuration.
 
-Wrangler 4.127.1 was authenticated to account ID `5b726c2a59696a3536a55589a8fad188`. The OAuth scopes allow Worker Versions and D1 deployment but not zone-route mutation, so CI uploads and promotes a version instead of running a route-mutating deploy. The Worker Custom Domain remains declared in Wrangler. Current deployed code version is `1c19b8d8-0cb5-4979-a3b4-f25a88c3e14e`, tagged with source commit `ad9a7f2e8ba3397943babcde1b802edb48e03941` and serving 100% of traffic. The authenticated admin-only topology and deployment endpoints discard services/projects outside the current production allowlists; `/api/control/status-page` aggregates Kuma's public status JSON, and no Kuma API key is stored in Worker configuration. Earlier observed versions are historical.
+Wrangler 4.127.1 was authenticated to account ID `5b726c2a59696a3536a55589a8fad188`. The OAuth scopes allow Worker Versions and D1 deployment but not DNS-record mutation. The Worker Custom Domain remains declared in Wrangler. SMTP code version `a1ea9482-960d-4e32-9c7a-049f08fe9dc8` was deployed on 2026-09-03; the final secret removal produced serving version `200f827c-d73f-4f1f-9e7a-c75fe15f3c40` at 100% traffic. The authenticated admin-only topology and deployment endpoints discard services/projects outside the current production allowlists; `/api/control/status-page` aggregates Kuma's public status JSON, and no Kuma API key is stored in Worker configuration. Earlier observed versions are historical.
 
 ## GitHub Actions contract
 
