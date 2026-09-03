@@ -1,10 +1,25 @@
 # OpenShip deployment ledger
 
-The historical ledger began with 72 live API records on 2026-09-02 and was extended through the first-release reset on 2026-09-03. With explicit authorization, the debugging histories for the six LingxiLoop projects were removed from live OpenShip after a management-database backup; older `Active` markers below now exist only in this audit record and the backup, not as live rollback targets. Timestamps are UTC unless stated otherwise.
+The historical ledger began with 72 live API records on 2026-09-02 and was extended through the personal-workspace participant repair on 2026-09-03. With explicit authorization, the debugging histories for the six LingxiLoop projects were removed from live OpenShip after a management-database backup; older `Active` markers below now exist only in this audit record and the backup, not as live rollback targets. Timestamps are UTC unless stated otherwise.
 
 The conversation also contained `dep_hTwrgkuYccZOs8QT`, but OpenShip returned `NOT_FOUND`; it was a mistyped/nonexistent ID and is not part of the 72-record ledger. Raw-session truncation also produced the partial strings `dep_LGTbj5TasJJbtAu` and `dep_g9i`; their complete real IDs are `dep_LGTbj5TasJJbtAu3` and `dep_g9ieyTk2UUOOcWZi` below.
 
-## 2026-09-03 normalized full release — current active
+## 2026-09-03 personal-workspace participant repair — current active
+
+All six deployments are `ready` at manifest commit `d93432444c96f757a18100de3b3830e7d6d3ba41` and OpenShip version 4. Server and AgentOS use source tag `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; unchanged component pins remain recorded in `current-deployment.md`.
+
+| Project | Deployment | Version |
+| --- | --- | ---: |
+| `lingxiloop-core-state` | `dep_9TBMu3iQYHwb98js` | 4 |
+| `lingxiloop-app-a` | `dep_xARxQzSrwTh_QM3v` | 4 |
+| `lingxiloop-agent-os-a` | `dep_ZI7t17WtTQC_N0Jl` | 4 |
+| `lingxiloop-app-b` | `dep_VwtglWeP3ODzstmN` | 4 |
+| `lingxiloop-knowledge-agent` | `dep_0v5JDNmNJAlUT0-1` | 4 |
+| `lingxiloop-agent-os-b` | `dep_PAntKoAhKbnaeoe8` | 4 |
+
+Workflow `33734932192` passed its quality, integration, image publication, manifest, and rollout gates. Both migration one-shots exited 0 and production reported migrations 1 through 4.
+
+## 2026-09-03 normalized full release — historical
 
 All six deployments are `ready` at manifest commit `df724bc4228af374bd8b82e8e9b24a887b45286e`, use the complete five-image tag `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`, and display the same OpenShip version.
 
