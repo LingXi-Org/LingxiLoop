@@ -106,7 +106,7 @@ test('Web composition contains no background scheduler or worker startup', async
 test('every deployment defines an independently runnable worker service', async () => {
   for (const relative of [
     '../../../docker-compose.mvp.yml',
-    '../../../docker-compose.production.yml',
+    '../../../deploy/openship/app-b.yml',
   ]) {
     const compose = await readFile(new URL(relative, import.meta.url), 'utf8')
     assert.match(compose, /^ {2}worker:\s*$/m)
@@ -116,13 +116,13 @@ test('every deployment defines an independently runnable worker service', async 
 
 test('OpenShip workers inherit the complete runtime environment', async () => {
   const compose = await readFile(
-    new URL('../../../deploy/openship/app.yml', import.meta.url),
+    new URL('../../../deploy/openship/app-b.yml', import.meta.url),
     'utf8',
   )
   assert.match(compose, /WUKONG_WEBHOOK_SECRET: \$\{WUKONG_WEBHOOK_SECRET:\?/)
   assert.doesNotMatch(compose, /WUKONG_USER_TOKEN_SECRET/)
   assert.match(compose, /lingxiloop:\r?\n {4}<<: \*runtime\r?\n {4}environment: \*runtime-environment/)
-  assert.match(compose, /worker:\r?\n {4}<<: \*runtime\r?\n {4}profiles: \[worker]\r?\n {4}environment: \*runtime-environment/)
+  assert.match(compose, /worker:\r?\n {4}<<: \*runtime\r?\n {4}environment: \*runtime-environment/)
   assert.match(compose, /db-migrate:\r?\n {4}<<: \*runtime\r?\n {4}environment:\r?\n {6}NODE_ENV: production\r?\n {6}DATABASE_POOL_MAX:[^\n]+\n {6}DATABASE_URL:/)
   assert.match(compose, /db-migrate:[\s\S]*?restart: on-failure/)
   assert.match(compose, /start_period: 10m/)

@@ -1,13 +1,11 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const manifests = {
-  'deploy/openship/app.yml': ['server', 'gateway'],
+  'deploy/openship/app-a.yml': ['server'],
+  'deploy/openship/app-b.yml': ['server', 'gateway'],
   'deploy/openship/agent-os.yml': ['agent-os'],
   'deploy/openship/core-state.yml': ['wukongim'],
   'deploy/openship/knowledge-agent.yml': ['open-notebook'],
-  'docker-compose.production.yml': ['server', 'open-notebook', 'wukongim', 'agent-os'],
-  'docker-compose.mvp.yml': ['server', 'open-notebook', 'wukongim', 'agent-os'],
-  'docker-compose.dokploy.yml': ['server', 'open-notebook', 'wukongim', 'agent-os'],
 }
 
 export function updateImageTags(source, sha, packages) {

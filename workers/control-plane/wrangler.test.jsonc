@@ -15,7 +15,7 @@
     "OPENSHIP_BASE_URL": "https://openship.example.com",
     "UPTIME_BASE_URL": "https://uptime.example.com",
     "OPENSHIP_PROJECT_IDS": "proj_test-a,proj_test-b",
-    "OPENSHIP_APP_TARGETS": "proj_test-a:svc_app-a,proj_test-b:svc_app-b",
+    "OPENSHIP_IMAGE_TARGETS": "server:proj_test-a:svc_app-a,agent-os:proj_test-a:svc_agent-a,wukongim:proj_test-a:svc_wukong,open-notebook:proj_test-b:svc_notebook,gateway:proj_test-b:svc_gateway",
     "AUTH_ALLOWED_HOSTS": "loop.example.com,admin.example.com",
     "APP_VERSION": "test"
   }

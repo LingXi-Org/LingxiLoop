@@ -14,12 +14,13 @@ export function deploymentImages(source) {
 export function buildReleaseRequest(secret, commitSha, deployCommitSha, repository, imageDigests) {
   if (!secret || !/^[0-9a-f]{40}$/.test(commitSha) || !/^[0-9a-f]{40}$/.test(deployCommitSha) || !/^[\w.-]+\/[\w.-]+$/.test(repository)) throw new Error('invalid release configuration')
   if (imageNames.some((name) => !new RegExp(`lingxiloop-${name}:[0-9a-f]{40}$`).test(imageDigests[name] ?? ''))) throw new Error('invalid release images')
+  if (new Set(Object.values(imageDigests).map((image) => image.slice(-40))).size !== 1) throw new Error('release images must use one cohort')
   const body = JSON.stringify({ commitSha, deployCommitSha, imageDigests })
   return { body, signature: createHmac('sha256', secret).update(body).digest('base64url') }
 }
 
 if (process.argv[1]?.endsWith('trigger-openship-release.mjs')) {
-  const manifests = ['app.yml', 'agent-os.yml', 'core-state.yml', 'knowledge-agent.yml']
+  const manifests = ['app-a.yml', 'app-b.yml', 'agent-os.yml', 'core-state.yml', 'knowledge-agent.yml']
     .map((name) => readFileSync(new URL(`../deploy/openship/${name}`, import.meta.url), 'utf8')).join('\n')
   const { body, signature } = buildReleaseRequest(
     process.env.RELEASE_HMAC_SECRET,

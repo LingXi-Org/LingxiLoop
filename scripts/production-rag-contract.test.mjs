@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 import { computeScope } from './ci-scope.mjs'
 import { updateImageTags } from './update-deployment-images.mjs'
@@ -8,8 +8,8 @@ import { buildReleaseRequest, deploymentImages } from './trigger-openship-releas
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
 test('production Open Notebook receives only the explicit RAG environment', () => {
-  const compose = read('docker-compose.production.yml')
-  const service = compose.slice(compose.indexOf('  open-notebook:'), compose.indexOf('  wukongim:'))
+  const compose = read('deploy/openship/knowledge-agent.yml')
+  const service = compose.slice(compose.indexOf('  open-notebook:'))
 
   assert.doesNotMatch(service, /env_file:/)
   for (const variable of [
@@ -24,11 +24,11 @@ test('production Open Notebook receives only the explicit RAG environment', () =
     'OPENAI_EMBEDDING_MODEL',
   ]) assert.match(service, new RegExp(`${variable}:`))
   assert.match(service, /OPENAI_API_KEY: \$\{OPEN_NOTEBOOK_PASSWORD:\?/)
-  assert.match(service, /OPENAI_BASE_URL: http:\/\/lingxiloop:5181\/internal\/open-notebook\/v1/)
+  assert.match(service, /OPENAI_BASE_URL: "\$\{LINGXILOOP_CONTROL_PLANE_URL:\?[^}]+}\/internal\/open-notebook\/v1"/)
   assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{OPENAI_EMBEDDING_MODEL:\?/)
 
-  assert.match(service, /supervisorctl status rag-api/)
-  assert.match(service, /supervisorctl status rag-worker/)
+  assert.match(service, /supervisorctl .* status rag-api/)
+  assert.match(service, /supervisorctl .* status rag-worker/)
   assert.match(service, /http:\/\/localhost:5055\/readyz/)
   assert.doesNotMatch(compose, /SURREAL_EXPERIMENTAL_GRAPHQL/)
 })
@@ -38,8 +38,6 @@ test('packaged and published stacks select the RAG-only image', () => {
   const workflow = read('.github/workflows/ci.yml')
   const scope = read('scripts/ci-scope.mjs')
   const smoke = read('server/scripts/knowledge-rag-smoke.ts')
-  const production = read('docker-compose.production.yml')
-  const deploy = read('scripts/deploy-production.sh')
 
   const packagedService = packaged.slice(packaged.indexOf('  open-notebook:'), packaged.indexOf('  wukongim:'))
   assert.match(packagedService, /image: .*lingxiloop-open-notebook/)
@@ -57,8 +55,10 @@ test('packaged and published stacks select the RAG-only image', () => {
   assert.match(smoke, /seedOtherCompany/)
   assert.match(smoke, /otherProjectSourceId/)
   assert.match(smoke, /otherCompanySourceId/)
-  assert.doesNotMatch(`${production}\n${deploy}`, /KNOWLEDGE_SMOKE_EMBEDDING_CONTROL|CONTROL_TOKEN/)
   assert.doesNotMatch(packaged, /8502/)
+  assert.equal(existsSync(new URL('../docker-compose.production.yml', import.meta.url)), false)
+  assert.equal(existsSync(new URL('../docker-compose.dokploy.yml', import.meta.url)), false)
+  assert.equal(existsSync(new URL('../scripts/deploy-production.sh', import.meta.url)), false)
 })
 
 test('native v1 schema makes source chunks the only searchable Surreal corpus', () => {
@@ -115,21 +115,12 @@ test('the production entrypoint has the exact RAG routes and one worker command'
 test('removed Open Notebook capabilities cannot be re-enabled by deployment configuration', () => {
   const files = [
     '.env.example',
-    'docker-compose.production.yml',
     'docker-compose.mvp.yml',
-    'scripts/deploy-production.sh',
+    'deploy/openship/knowledge-agent.yml',
   ].map(read).join('\n')
 
   assert.doesNotMatch(files, /OPEN_NOTEBOOK_ENCRYPTION_KEY/)
   assert.doesNotMatch(files, /OPEN_NOTEBOOK_(?:CHAT|STRATEGY|ANSWER|FINAL_ANSWER)_MODEL/)
-})
-
-test('normal production deploy revalidates RAG and recreates Agent OS', () => {
-  const deploy = read('scripts/deploy-production.sh')
-  assert.match(deploy, /supervisorctl status rag-api/)
-  assert.match(deploy, /supervisorctl status rag-worker/)
-  assert.match(deploy, /--force-recreate agent-os/)
-  assert.match(deploy, /knowledge-rag-smoke\.ts/)
 })
 
 test('OpenShip knowledge services receive writable storage and the control plane URL', () => {
@@ -148,18 +139,23 @@ test('OpenShip knowledge services receive writable storage and the control plane
 
 test('OpenShip runs one private Agent OS per host and the Worker only on its selected app project', () => {
   const agent = read('deploy/openship/agent-os.yml')
-  const app = read('deploy/openship/app.yml')
+  const appA = read('deploy/openship/app-a.yml')
+  const appB = read('deploy/openship/app-b.yml')
 
   assert.match(agent, /AGENT_OS_WORKER_ID: \$\{AGENT_OS_WORKER_ID:\?AGENT_OS_WORKER_ID must be unique}/)
   assert.match(agent, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-1}/)
   assert.match(agent, /name: \$\{AGENT_OS_VOLUME_NAME:\?AGENT_OS_VOLUME_NAME is required}/)
   assert.doesNotMatch(agent, /^ {4}ports:/m)
-  assert.match(app, /AGENT_OS_NODE_TIMEOUT_SECONDS: \$\{AGENT_OS_NODE_TIMEOUT_SECONDS:-15}/)
-  assert.match(app, /worker:\r?\n {4}<<: \*runtime\r?\n {4}profiles: \[worker]/)
-  assert.match(app, /gateway:\r?\n {4}image: .*lingxiloop-gateway:[0-9a-f]{40}/)
-  assert.match(app, /127\.0\.0\.1:8080:8080/)
+  assert.match(appA, /AGENT_OS_NODE_TIMEOUT_SECONDS: \$\{AGENT_OS_NODE_TIMEOUT_SECONDS:-15}/)
+  assert.match(appA, /10\.20\.0\.2:5181:5181/)
+  assert.doesNotMatch(appA, /^ {2}(?:worker|gateway):/m)
+  assert.doesNotMatch(appA, /COMPOSE_PROFILES|profiles:/)
+  assert.match(appB, /worker:\r?\n {4}<<: \*runtime/)
+  assert.match(appB, /gateway:\r?\n {4}image: .*lingxiloop-gateway:[0-9a-f]{40}/)
+  assert.match(appB, /127\.0\.0\.1:8080:8080/)
+  assert.doesNotMatch(appB, /COMPOSE_PROFILES|profiles:/)
   assert.match(read('deploy/openship/gateway.Dockerfile'), /FROM nginx:alpine[\s\S]*COPY website \/usr\/share\/nginx\/html/)
-  assert.doesNotMatch(app, /AGENT_OS_URL/)
+  assert.doesNotMatch(`${appA}\n${appB}`, /AGENT_OS_URL/)
 })
 
 test('the gateway uses the备案 ingress and the Worker uses its admin domain', () => {
@@ -180,14 +176,17 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
   assert.match(worker, /"ORIGIN_BASE_URL": "https:\/\/loop\.lingxilearn\.cn"/)
   assert.match(worker, /"OPENSHIP_BASE_URL": "https:\/\/ops\.christmas1314\.xyz"/)
   assert.match(worker, /"AUTH_ALLOWED_HOSTS": "loop\.lingxilearn\.cn,admin\.lingxilearn\.cn"/)
+  const imageTargets = worker.match(/"OPENSHIP_IMAGE_TARGETS": "([^"]+)"/)?.[1].split(',') ?? []
+  assert.equal(imageTargets.length, 10)
+  assert.deepEqual(new Set(imageTargets.map((target) => target.split(':')[0])), new Set(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway']))
 })
 
-test('main publishes unique tags and updates Compose before Worker deployment', () => {
+test('main publishes one complete cohort and rolls out deployment-only changes', () => {
   const workflow = read('.github/workflows/ci.yml')
-  const compose = read('docker-compose.production.yml')
   const serverImage = read('server/docker/lingxiloop-server.Dockerfile')
 
-  assert.match(workflow, /update-manifests:[\s\S]*needs: \[changes, publish\]/)
+  assert.match(workflow, /update-manifests:[\s\S]*needs: \[changes, checks, publish\]/)
+  assert.match(workflow, /needs\.publish\.result == 'success'[\s\S]*needs\.changes\.outputs\.deploy_contract == 'true'/)
   assert.match(workflow, /deploy:[\s\S]*needs: \[changes, checks\]/)
   assert.match(workflow, /rollout:[\s\S]*needs: \[update-manifests, deploy\]/)
   assert.match(workflow, /control:d1:remote[\s\S]*wrangler versions upload[\s\S]*wrangler versions deploy/)
@@ -206,26 +205,26 @@ test('main publishes unique tags and updates Compose before Worker deployment', 
   })
   assert.deepEqual(deploymentImages(Object.values(imageDigests).map((image) => `image: ${image}`).join('\n')), imageDigests)
   assert.match(release.signature, /^[\w-]{43}$/)
+  assert.throws(() => buildReleaseRequest('secret', 'a'.repeat(40), 'b'.repeat(40), 'Example/LingxiLoop', {
+    ...imageDigests,
+    gateway: `accel.way2api.fun/ghcr.io/example/lingxiloop-gateway:${'c'.repeat(40)}`,
+  }), /one cohort/)
   assert.doesNotMatch(workflow, /image-digest-|api\/internal\/releases/)
   assert.doesNotMatch(workflow, /pages deploy|PRODUCTION_SSH|run: .*deploy-production\.sh/)
-  assert.match(compose, /LINGXILOOP_GATEWAY_HMAC_SECRET: \$\{LINGXILOOP_GATEWAY_HMAC_SECRET:\?/)
-  assert.match(compose, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-2\}/)
-  assert.match(compose, /OPEN_NOTEBOOK_WORKER_MAX_TASKS: \$\{OPEN_NOTEBOOK_WORKER_MAX_TASKS:-1\}/)
 })
 
 test('all deployable LingxiLoop images use CI-managed unique tags', () => {
   const manifests = [
     'deploy/openship/agent-os.yml',
-    'deploy/openship/app.yml',
+    'deploy/openship/app-a.yml',
+    'deploy/openship/app-b.yml',
     'deploy/openship/core-state.yml',
     'deploy/openship/knowledge-agent.yml',
-    'docker-compose.production.yml',
-    'docker-compose.mvp.yml',
-    'docker-compose.dokploy.yml',
   ].map(read).join('\n')
   const references = [...manifests.matchAll(/image:\s+\S*lingxiloop-[^:\s]+:([^\s]+)/g)]
-  assert.equal(references.length, 19)
+  assert.equal(references.length, 6)
   assert.ok(references.every((match) => /^[0-9a-f]{40}$/.test(match[1])))
+  assert.equal(new Set(references.map((match) => match[1])).size, 1)
   assert.equal(
     updateImageTags(`image: registry/lingxiloop-server:${'a'.repeat(40)}`, 'b'.repeat(40), ['server']),
     `image: registry/lingxiloop-server:${'b'.repeat(40)}`,
@@ -240,21 +239,22 @@ test('all deployable LingxiLoop images use CI-managed unique tags', () => {
   )
 })
 
-test('CI selects checks and images only for the changed component', () => {
+test('CI selects checks by component and publishes one complete image cohort', () => {
+  const cohort = ['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway']
   const web = computeScope({ web: true })
-  assert.deepEqual(web.images.map(({ manifest }) => manifest), ['server'])
+  assert.deepEqual(web.images.map(({ manifest }) => manifest), cohort)
   assert.equal(web.web, true)
   assert.equal(web.server, false)
 
   const server = computeScope({ server: true, serverSource: true })
-  assert.deepEqual(server.images.map(({ manifest }) => manifest), ['server', 'agent-os'])
+  assert.deepEqual(server.images.map(({ manifest }) => manifest), cohort)
   assert.equal(server.integration, true)
 
-  assert.equal(computeScope({ serverDocker: true }).packages, 'server')
-  assert.equal(computeScope({ agentDocker: true }).packages, 'agent-os')
+  assert.equal(computeScope({ serverDocker: true }).packages, cohort.join(' '))
+  assert.equal(computeScope({ agentDocker: true }).packages, cohort.join(' '))
 
   const knowledge = computeScope({ openNotebook: true })
-  assert.deepEqual(knowledge.images.map(({ manifest }) => manifest), ['open-notebook'])
+  assert.deepEqual(knowledge.images.map(({ manifest }) => manifest), cohort)
   assert.equal(knowledge.deploy_contract, true)
 
   const control = computeScope({ control: true, controlMigrations: true })
@@ -263,10 +263,14 @@ test('CI selects checks and images only for the changed component', () => {
   assert.equal(control.control_migrations, true)
 
   const sharedFrontend = computeScope({ sharedFrontend: true })
-  assert.deepEqual(sharedFrontend.images.map(({ manifest }) => manifest), ['server'])
+  assert.deepEqual(sharedFrontend.images.map(({ manifest }) => manifest), cohort)
   assert.equal(sharedFrontend.server, false)
 
   const testRunner = computeScope({ testRunner: true })
   assert.deepEqual(testRunner.images, [])
   assert.equal(testRunner.server, true)
+
+  const deployment = computeScope({ deployment: true })
+  assert.deepEqual(deployment.images, [])
+  assert.equal(deployment.deploy_contract, true)
 })

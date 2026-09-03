@@ -1,0 +1,114 @@
+name: lingxiloop-app-b
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-runtime: &runtime
+  image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
+  pull_policy: always
+  restart: unless-stopped
+  environment: &runtime-environment
+    NODE_ENV: production
+    NODE_OPTIONS: --max-old-space-size=320
+    LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
+    PORT: "5181"
+    INSTANCE_ID: ${INSTANCE_ID:?INSTANCE_ID is required}
+    DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-8}
+    DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
+    AGENT_OS_NODE_TIMEOUT_SECONDS: ${AGENT_OS_NODE_TIMEOUT_SECONDS:-15}
+    AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required}
+    WUKONG_API_URL: ${WUKONG_API_URL:?WUKONG_API_URL is required}
+    WUKONG_WS_URL: ${WUKONG_WS_PUBLIC_URL:?WUKONG_WS_PUBLIC_URL is required}
+    WUKONG_API_TOKEN: ${WUKONG_API_TOKEN:?WUKONG_API_TOKEN is required}
+    WUKONG_WEBHOOK_SECRET: ${WUKONG_WEBHOOK_SECRET:?WUKONG_WEBHOOK_SECRET is required}
+    OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+    OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+    OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+    OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required}
+    OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-}
+    OTEL_DEPLOYMENT_ENVIRONMENT: production
+    OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+    LINGXILIT_PRICING_JSON: ${LINGXILIT_PRICING_JSON:-}
+    LINGXILOOP_PUBLIC_ORIGIN: ${LINGXILOOP_PUBLIC_ORIGIN:?LINGXILOOP_PUBLIC_ORIGIN is required}
+    LINGXILOOP_INVITE_BASE_URL: ${LINGXILOOP_INVITE_BASE_URL:?LINGXILOOP_INVITE_BASE_URL is required}
+    LINGXILOOP_CORS_ORIGINS: ${LINGXILOOP_CORS_ORIGINS:?LINGXILOOP_CORS_ORIGINS is required}
+    LINGXILOOP_GATEWAY_HMAC_SECRET: ${LINGXILOOP_GATEWAY_HMAC_SECRET:?LINGXILOOP_GATEWAY_HMAC_SECRET is required}
+    R2_ENDPOINT: ${R2_ENDPOINT:?R2_ENDPOINT is required}
+    R2_BUCKET: ${R2_BUCKET:?R2_BUCKET is required}
+    R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
+    R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
+    R2_PUBLIC_BASE: ${R2_PUBLIC_BASE:?R2_PUBLIC_BASE is required}
+    R2_URL_SIGNING_SECRET: ${R2_URL_SIGNING_SECRET:?R2_URL_SIGNING_SECRET is required}
+    R2_URL_TTL_SECONDS: ${R2_URL_TTL_SECONDS:-3600}
+    OPEN_NOTEBOOK_ENABLED: "true"
+    OPEN_NOTEBOOK_URL: ${OPEN_NOTEBOOK_URL:?OPEN_NOTEBOOK_URL is required}
+    OPEN_NOTEBOOK_PASSWORD: ${OPEN_NOTEBOOK_PASSWORD:?OPEN_NOTEBOOK_PASSWORD is required}
+    RESEND_API_KEY: ${RESEND_API_KEY:-}
+    RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
+    EMAIL_DOMAIN: ${EMAIL_DOMAIN:-}
+    METRICS_BEARER_TOKEN: ${METRICS_BEARER_TOKEN:-}
+    PRESENTATION_HTML_ENABLED: ${PRESENTATION_HTML_ENABLED:-false}
+  logging: *logging
+
+services:
+  db-migrate:
+    <<: *runtime
+    environment:
+      NODE_ENV: production
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-8}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    restart: on-failure
+    command: ["npm", "run", "db:migrate"]
+    cpus: "0.5"
+    mem_limit: 512m
+
+  lingxiloop:
+    <<: *runtime
+    environment: *runtime-environment
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:5181:5181"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 10m
+    cpus: "0.75"
+    mem_limit: 448m
+
+  worker:
+    <<: *runtime
+    environment: *runtime-environment
+    command: ["npm", "run", "worker:start"]
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+    cpus: "0.75"
+    mem_limit: 512m
+
+  gateway:
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-gateway:b42fef160fe697d46a8818e054f945d1f80953f7
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      lingxiloop:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    cpus: "0.25"
+    mem_limit: 64m
+    logging: *logging
