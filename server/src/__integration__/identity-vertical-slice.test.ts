@@ -66,10 +66,26 @@ test('[integration] ordinary provisioning is invitation-free and idempotent', as
   assert.equal(second.status, 200)
   const one = await first.json() as { appUserId: string }
   assert.deepEqual(await second.json(), one)
-  const state = await pool.query<{ personal: number; courses: number }>(`SELECT
+  const state = await pool.query<{
+    personal: number; courses: number; agents: number; dms: number; rooms: number; project_bound: number
+  }>(`SELECT
     (SELECT COUNT(*)::int FROM companies WHERE type='PERSONAL' AND personal_owner_user_id=$1) AS personal,
-    (SELECT COUNT(*)::int FROM project_memberships WHERE user_id=$1 AND role='STUDENT') AS courses`, [one.appUserId])
-  assert.deepEqual(state.rows[0], { personal: 1, courses: 0 })
+    (SELECT COUNT(*)::int FROM project_memberships WHERE user_id=$1 AND role='STUDENT') AS courses,
+    (SELECT COUNT(*)::int FROM participants participant
+      JOIN companies company ON company.id=participant.company_id
+      WHERE company.personal_owner_user_id=$1 AND participant.kind='agent' AND participant.preset_key IS NOT NULL) AS agents,
+    (SELECT COUNT(*)::int FROM conversations conversation
+      JOIN companies company ON company.id=conversation.company_id
+      WHERE company.personal_owner_user_id=$1 AND conversation.preset_key LIKE 'dm:%') AS dms,
+    (SELECT COUNT(*)::int FROM conversations conversation
+      JOIN companies company ON company.id=conversation.company_id
+      WHERE company.personal_owner_user_id=$1 AND conversation.preset_key LIKE 'room:%') AS rooms,
+    (SELECT COUNT(*)::int FROM conversations conversation
+      JOIN projects project ON project.id=conversation.project_id AND project.company_id=conversation.company_id
+      JOIN companies company ON company.id=conversation.company_id
+      WHERE company.personal_owner_user_id=$1 AND project.is_default=TRUE
+        AND conversation.preset_key IS NOT NULL) AS project_bound`, [one.appUserId])
+  assert.deepEqual(state.rows[0], { personal: 1, courses: 0, agents: 6, dms: 6, rooms: 2, project_bound: 8 })
 })
 
 test('[integration] project invitation is redeemed during provisioning', async () => {

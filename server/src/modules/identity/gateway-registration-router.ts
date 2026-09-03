@@ -14,7 +14,7 @@ import {
   lockCompany,
   lockInvitation,
 } from '../companies/repository.js'
-import { provisionPersonalWorkspace } from '../companies/public.js'
+import { onboardCompanyStarterWorkspace, provisionPersonalWorkspace } from '../companies/public.js'
 import {
   companyMembershipRole,
   countActiveProjectStudents,
@@ -83,13 +83,13 @@ gatewayRegistrationRouter.post('/internal/registration/provision', safe(async (r
   if (!email || !name) throw new HttpError(400, 'email and name are required')
   if (Boolean(inviteToken) !== Boolean(kind)) throw new HttpError(400, 'inviteToken and inviteKind must be provided together')
   const tokenHash = inviteToken ? hashInvitationToken(inviteToken) : null
-  const appUserId = await withTransaction(pool, async (db) => {
+  const provisioned = await withTransaction(pool, async (db) => {
     const existing = await db.query<{ id: string }>(`SELECT id FROM users WHERE lower(email)=$1 AND deleted_at IS NULL FOR UPDATE`, [email])
     const userId = existing.rows[0]?.id ?? `u-${randomUUID().slice(0, 12)}`
     if (!existing.rows[0]) {
       await db.query(`INSERT INTO users(id,email,display_name,email_verified_at) VALUES($1,$2,$3,NOW())`, [userId, email, name])
     }
-    await provisionPersonalWorkspace(db, userId)
+    const personalWorkspace = await provisionPersonalWorkspace(db, userId)
     if (kind === 'company') {
       const invitation = await lockInvitation(db, tokenHash!)
       if (!invitation) throw new HttpError(404, 'invitation not found')
@@ -118,7 +118,8 @@ gatewayRegistrationRouter.post('/internal/registration/provision', safe(async (r
         await recordProjectAcceptance(db, { tokenHash: tokenHash!, userId })
       }
     }
-    return userId
+    return { appUserId: userId, personalCompanyId: personalWorkspace.companyId }
   })
-  res.json({ appUserId })
+  await onboardCompanyStarterWorkspace(provisioned.personalCompanyId)
+  res.json({ appUserId: provisioned.appUserId })
 }))

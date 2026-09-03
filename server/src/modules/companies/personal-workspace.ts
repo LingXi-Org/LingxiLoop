@@ -12,6 +12,7 @@ interface LockedUser {
   id: string
   email: string
   display_name: string
+  avatar_url: string | null
 }
 
 interface PersonalContextRow {
@@ -40,7 +41,7 @@ function personalSlug(email: string, companyId: string): string {
 
 async function lockUser(db: Queryable, userId: string): Promise<LockedUser> {
   const { rows } = await db.query<LockedUser>(
-    `SELECT id,email,display_name FROM users
+    `SELECT id,email,display_name,avatar_url FROM users
       WHERE id=$1 AND deleted_at IS NULL
       FOR UPDATE`,
     [userId],
@@ -102,33 +103,43 @@ export async function provisionPersonalWorkspace(
 ): Promise<PersonalWorkspaceProvisioningResult> {
   const user = await lockUser(db, userId)
   const existing = await findPersonalContext(db, userId)
+  let result: PersonalWorkspaceProvisioningResult
   if (existing) {
     assertCompletePersonalContext(existing)
-    return { companyId: existing.company_id, projectId: existing.project_id!, created: false }
+    result = { companyId: existing.company_id, projectId: existing.project_id!, created: false }
+  } else {
+    const planId = await ensurePersonalFreePlan(db)
+    const companyId = `co-${randomUUID().slice(0, 12)}`
+    const projectId = `project-${randomUUID().slice(0, 18)}`
+    await db.query(
+      `INSERT INTO companies (id,name,slug,type,status,personal_owner_user_id,plan_id)
+       VALUES ($1,$2,$3,'PERSONAL','ACTIVE',$4,$5)`,
+      [companyId, `${user.display_name}'s workspace`, personalSlug(user.email, companyId), user.id, planId],
+    )
+    await db.query(
+      `INSERT INTO company_memberships (company_id,user_id,role,status)
+       VALUES ($1,$2,'OWNER','ACTIVE')`,
+      [companyId, user.id],
+    )
+    await db.query(
+      `INSERT INTO projects (id,company_id,kind,plan_id,name,description,color,status,created_by,is_default)
+       VALUES ($1,$2,'PERSONAL_LEARNING',NULL,'我的学习','个人学习的默认空间','#64748b','ACTIVE',$3,TRUE)`,
+      [projectId, companyId, user.id],
+    )
+    await db.query(
+      `INSERT INTO project_memberships (company_id,project_id,user_id,role,status)
+       VALUES ($1,$2,$3,'OWNER','ACTIVE')`,
+      [companyId, projectId, user.id],
+    )
+    result = { companyId, projectId, created: true }
   }
-
-  const planId = await ensurePersonalFreePlan(db)
-  const companyId = `co-${randomUUID().slice(0, 12)}`
-  const projectId = `project-${randomUUID().slice(0, 18)}`
   await db.query(
-    `INSERT INTO companies (id,name,slug,type,status,personal_owner_user_id,plan_id)
-     VALUES ($1,$2,$3,'PERSONAL','ACTIVE',$4,$5)`,
-    [companyId, `${user.display_name}'s workspace`, personalSlug(user.email, companyId), user.id, planId],
+    `INSERT INTO participants (id,kind,name,role,initial,avatar_bg,avatar_url,status,company_id)
+     VALUES ($1,'human',$2,NULL,$3,'#FF8870',$4,'avail',$5)
+     ON CONFLICT (id,company_id) DO UPDATE SET
+       name=EXCLUDED.name,initial=EXCLUDED.initial,avatar_url=EXCLUDED.avatar_url,
+       status='avail',departed_at=NULL`,
+    [user.id, user.display_name, user.display_name.charAt(0).toUpperCase(), user.avatar_url, result.companyId],
   )
-  await db.query(
-    `INSERT INTO company_memberships (company_id,user_id,role,status)
-     VALUES ($1,$2,'OWNER','ACTIVE')`,
-    [companyId, user.id],
-  )
-  await db.query(
-    `INSERT INTO projects (id,company_id,kind,plan_id,name,description,color,status,created_by,is_default)
-     VALUES ($1,$2,'PERSONAL_LEARNING',NULL,'我的学习','个人学习的默认空间','#64748b','ACTIVE',$3,TRUE)`,
-    [projectId, companyId, user.id],
-  )
-  await db.query(
-    `INSERT INTO project_memberships (company_id,project_id,user_id,role,status)
-     VALUES ($1,$2,$3,'OWNER','ACTIVE')`,
-    [companyId, projectId, user.id],
-  )
-  return { companyId, projectId, created: true }
+  return result
 }
