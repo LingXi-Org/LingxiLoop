@@ -109,7 +109,8 @@ test('presentation resources preserve exclusive loading, error, empty, and ready
   assert.match(drawer, /error && !presentation[\s\S]*?role="alert"/)
   assert.match(drawer, /loaded && !presentation[\s\S]*?演示不可用/)
   assert.match(drawer, /presentation\.status === 'ready'[\s\S]*?<PresentationViewer/)
-  assert.match(card, /loading && !presentation[\s\S]*?<ResourceSkeleton/)
+  assert.match(card, /const meta = loading && !presentation[\s\S]*?error && !presentation[\s\S]*?<ArtifactCard[\s\S]*?meta=\{meta\}/)
+  assert.doesNotMatch(card, /ResourceSkeleton/)
 })
 
 test('outline approval uses revision fencing, sensitive confirmation, and lifecycle Toast', () => {

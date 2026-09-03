@@ -57,3 +57,19 @@ test('settings provides Chinese loading and account menu affordances', () => {
   assert.match(navUser, /@hugeicons\/react/)
   assert.doesNotMatch(navUser, /lucide-react/)
 })
+
+test('mobile conversation routing and Better Auth entry points stay wired', () => {
+  const mobile = read('../../desktop/DesktopApp.tsx')
+  const mobileHook = read('../../hooks/use-mobile.ts')
+  const auth = read('../../components/AuthScreen.tsx')
+  const authApi = read('../../auth/api.ts')
+
+  assert.match(mobileHook, /const MOBILE_BREAKPOINT = 768/)
+  assert.match(mobile, /const mobileChatOpen = isMobile && mobileConversationOpen/)
+  assert.match(mobile, /data-mobile-conversation-page=\{mobileChatOpen \? 'chat' : 'list'\}/)
+  assert.match(mobile, /<ConversationsPane onConversationSelected=\{\(\) => setMobileConversationOpen\(true\)\}/)
+  assert.match(auth, /<TabsTrigger value="login">登录<\/TabsTrigger>/)
+  assert.match(auth, /<TabsTrigger value="signup">注册<\/TabsTrigger>/)
+  assert.match(auth, /const TURNSTILE_SITE_KEY = import\.meta\.env\.VITE_TURNSTILE_SITE_KEY/)
+  assert.match(authApi, /signIn:[\s\S]*signUp:[\s\S]*x-captcha-response/)
+})

@@ -22,6 +22,7 @@ const testsByScope = {
   web: [
     'src/api/transport.test.ts',
     'src/features/presentations/presentationFeature.test.ts',
+    'src/features/settings/settingsDialog.test.ts',
     'src/lib/userVisibleChinese.test.ts',
   ],
 }

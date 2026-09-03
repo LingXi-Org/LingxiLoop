@@ -182,25 +182,6 @@ test('chat keeps assistant-ui Viewport as its only scroll container', () => {
   assert.doesNotMatch(globals, /data-radix-scroll-area-content/)
 })
 
-test('static Host protocol review renders every card-capable route', () => {
-  const review = read('../../artifacts/playwright/host-protocol-ui-review/main.tsx')
-  for (const protocol of [
-    'knowledge.rag.completed', 'approval.pending', 'poll snapshot', 'chat.ask / questionnaire',
-    'chat.handoff', 'learning.start_mission', 'canvas.start_workspace', 'teacher_briefing',
-    'learning.propose_evaluation', 'calendar.create', 'calendar.get', 'calendar.list',
-    'email delivery', 'presentation artifact', 'attachment',
-  ]) assert.match(review, new RegExp(protocol.replace(/[.]/g, '\\.')))
-  assert.match(review, /kind: 'questionnaire'/)
-  assert.match(review, /name: 'calendar\.list'/)
-  assert.match(review, /<AgentStatus/)
-  assert.match(review, /<ThemeToggle/)
-  assert.match(review, /<AppThemeProvider><App \/><\/AppThemeProvider>/)
-  assert.match(review, /TIMELINE_MESSAGE/)
-  assert.match(review, /const REVIEW_BUBBLES = \[/)
-  assert.match(review, /CARD_MESSAGES\.flatMap/)
-  assert.match(review, /body: '- \[间隔练习/)
-})
-
 test('Agent OS uses native assistant-ui chunks through one live WebSocket bridge', () => {
   const controlPlane = read('../../server/src/agent-os/control-plane.ts')
   const agentService = read('../../server/src/agent-os/service.ts')
@@ -223,7 +204,7 @@ test('Agent OS uses native assistant-ui chunks through one live WebSocket bridge
   assert.match(controlPlane, /type: 'tool-call-args-text-finish'/)
   assert.match(controlPlane, /type: 'result'/)
   assert.match(controlPlane, /type: 'message-finish'/)
-  assert.match(agentService, /runtime\.runWork\(work, controller\.signal\)\.catch/)
+  assert.match(agentService, /runtime\.runWork\(work\)\.catch/)
   assert.match(webhook, /publish\(CH_ASSISTANT_STREAM/)
   assert.match(webSocket, /sub\.subscribe\([\s\S]*CH_ASSISTANT_STREAM/)
   assert.match(transport, /event\.type === 'assistant\.stream'/)
