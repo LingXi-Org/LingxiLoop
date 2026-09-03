@@ -1,12 +1,12 @@
 # Current production deployment
 
-Snapshot: 2026-09-03 15:04 China Standard Time, checked through OpenShip MCP, GitHub CLI, HTTP probes, Uptime SQLite status, and host inspection. Re-read live state before every operation.
+Snapshot: 2026-09-03 16:58 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and host inspection. Re-read live state before every operation.
 
 ## Scope and authority
 
 - OpenShip organization: `org_afbfbb11-78d7-41ee-b644-4b745b486069`.
 - The six LingxiLoop projects are Production Docker projects on branch `main`, use local/self-hosted OpenShip source, and have `autoDeploy=false`. The signed post-CI release endpoint performs the fanout.
-- OpenShip's health watcher is enabled. The current snapshot is 16/16 healthy with zero outage and zero action-required. Six advisory-only source comparisons show deployed manifest `9ec63f0...` against the historical `df724bc...`; they do not report unhealthy workloads.
+- OpenShip's health watcher is enabled. The current snapshot is 16/16 healthy with zero outage and zero action-required. Six advisory-only source comparisons do not report unhealthy workloads.
 - Server B is the only public application ingress. Server A retains a managed OpenShip Edge for control-plane health but rejects new public-interface TCP connections to 80/443.
 
 ## Hosts
@@ -27,16 +27,16 @@ Both hosts use a 4 GB `/swapfile4g`. Swap is emergency headroom, not normal capa
 
 ## Active LingxiLoop release
 
-All six projects run manifest commit `9ec63f07eef4d2b305da579c698d097775ef8794`. Server, AgentOS, WuKongIM, and Open Notebook use immutable tag `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway uses `d794d15db8cd011ca9c776686a09e17aa66fb628`. A release must contain all five valid pins, but ordinary component-scoped releases retain valid prior pins for unchanged components.
+All six projects run manifest commit `d93432444c96f757a18100de3b3830e7d6d3ba41`. Server and AgentOS use immutable tag `e6025ad1ecf3bc76dc9a7b7a989a4535cccda33d`; WuKongIM and Open Notebook retain `99f2e43cbba78b2ba01dbb9064e0339eac6aad67`; Gateway retains `d794d15db8cd011ca9c776686a09e17aa66fb628`. A release must contain all five valid pins, but ordinary component-scoped releases retain valid prior pins for unchanged components.
 
 | Project | ID | Host | Compose | Active deployment | OpenShip version |
 | --- | --- | --- | --- | --- | ---: |
-| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | A | `deploy/openship/core-state.yml` | `dep_CrtBP3jC92RqLuw-` | 3 |
-| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | A | `deploy/openship/app-a.yml` | `dep_H9DuLeMvanXr5iOb` | 3 |
-| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | A | `deploy/openship/agent-os.yml` | `dep__szPPtnRYpySzbIS` | 3 |
-| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | B | `deploy/openship/app-b.yml` | `dep_37XfkFaxmnj9f4H7` | 3 |
-| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | B | `deploy/openship/knowledge-agent.yml` | `dep_slvAF1kgr1A_pgXK` | 3 |
-| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | B | `deploy/openship/agent-os.yml` | `dep_6wdynyQ_LmBZIhHC` | 3 |
+| `lingxiloop-core-state` | `proj_khiExWfh7Vsj72VO` | A | `deploy/openship/core-state.yml` | `dep_9TBMu3iQYHwb98js` | 4 |
+| `lingxiloop-app-a` | `proj_5uz48XlBkfJQeNC8` | A | `deploy/openship/app-a.yml` | `dep_xARxQzSrwTh_QM3v` | 4 |
+| `lingxiloop-agent-os-a` | `proj_29J2mM47umuIfaDK` | A | `deploy/openship/agent-os.yml` | `dep_ZI7t17WtTQC_N0Jl` | 4 |
+| `lingxiloop-app-b` | `proj_IsMy2bWVzEZ7JKEf` | B | `deploy/openship/app-b.yml` | `dep_VwtglWeP3ODzstmN` | 4 |
+| `lingxiloop-knowledge-agent` | `proj_frnQUaoQY37ejzL-` | B | `deploy/openship/knowledge-agent.yml` | `dep_0v5JDNmNJAlUT0-1` | 4 |
+| `lingxiloop-agent-os-b` | `proj_CVkF0rOULikADQ-7` | B | `deploy/openship/agent-os.yml` | `dep_PAntKoAhKbnaeoe8` | 4 |
 
 LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastructure and are not part of the LingxiLoop release image set.
 
@@ -49,19 +49,19 @@ LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastruc
 | PostgreSQL | `svc_FyL3lC1Sp71oiS6V` | `pgvector/pgvector:pg16` | `10.20.0.2:5432` | `openship-lingxiloop-core-state-postgres-data` |
 | Redis | `svc_qWhTnJjfGysBCR_1` | `redis:7-alpine` | `10.20.0.2:6379` | `openship-lingxiloop-core-state-redis-data` |
 | WuKongIM | `svc_R1qn4zHiKjjfY1An` | `lingxiloop-wukongim:99f2e43...` | `10.20.0.2:5001,5200` | `openship-lingxiloop-core-state-wukong-data` |
-| API-A | `svc_Y95Qof0wyIdv7klR` | `lingxiloop-server:99f2e43...` | `10.20.0.2:5181` | none |
-| db-migrate A | `svc_9RmMHN7M0K1l5Z_1` | `lingxiloop-server:99f2e43...` | exited 0 | none |
-| AgentOS-A | `svc_Q97GKa-vK8cH8O_T` | `lingxiloop-agent-os:99f2e43...` | no host port | `openship-lingxiloop-agent-os-a-agent-os-data` |
+| API-A | `svc_Y95Qof0wyIdv7klR` | `lingxiloop-server:e6025ad...` | `10.20.0.2:5181` | none |
+| db-migrate A | `svc_9RmMHN7M0K1l5Z_1` | `lingxiloop-server:e6025ad...` | exited 0 | none |
+| AgentOS-A | `svc_Q97GKa-vK8cH8O_T` | `lingxiloop-agent-os:e6025ad...` | no host port | `openship-lingxiloop-agent-os-a-agent-os-data` |
 
 ### Server B
 
 | Service | Service ID | Image | Host bind / state | Persistent volume |
 | --- | --- | --- | --- | --- |
-| API-B | `svc_wm0I2fR_uglJGyWb` | `lingxiloop-server:99f2e43...` | loopback `5181` | none |
-| Worker-B | `svc_okKRA-wGrqgFyZAk` | `lingxiloop-server:99f2e43...` | no host port | none |
-| db-migrate B | `svc_70YEsZbgYP34z7Hv` | `lingxiloop-server:99f2e43...` | exited 0 | none |
+| API-B | `svc_wm0I2fR_uglJGyWb` | `lingxiloop-server:e6025ad...` | loopback `5181` | none |
+| Worker-B | `svc_okKRA-wGrqgFyZAk` | `lingxiloop-server:e6025ad...` | no host port | none |
+| db-migrate B | `svc_70YEsZbgYP34z7Hv` | `lingxiloop-server:e6025ad...` | exited 0 | none |
 | Gateway | `svc_q7ZcH8px3jsB9qnY` | `lingxiloop-gateway:d794d15...` | `127.0.0.1:8080` | none |
-| AgentOS-B | `svc_rT0BSxd8KVNGSWMU` | `lingxiloop-agent-os:99f2e43...` | no host port | `openship-lingxiloop-agent-os-b-agent-os-data` |
+| AgentOS-B | `svc_rT0BSxd8KVNGSWMU` | `lingxiloop-agent-os:e6025ad...` | no host port | `openship-lingxiloop-agent-os-b-agent-os-data` |
 | SurrealDB | `svc_yhlLUphCFs8lazC0` | pinned SurrealDB v2 digest | no host port | `openship-lingxiloop-knowledge-agent-surreal-data:/home/nonroot` |
 | Open Notebook | `svc_hmGZIaloXJohVV2r` | `lingxiloop-open-notebook:99f2e43...` | `10.20.0.3:5055` | `openship-lingxiloop-knowledge-agent-open-notebook-data` |
 
@@ -69,7 +69,7 @@ Gateway health uses `127.0.0.1`, never `localhost`. SurrealDB stores RocksDB at 
 
 ## Verified behavior
 
-- Both `db-migrate` one-shots exited 0; PostgreSQL contains schema migrations 1, 2, and 3.
+- Both `db-migrate` one-shots exited 0; PostgreSQL contains schema migrations 1 through 4. Migration 4 backfilled all active personal-company owners into `participants`; the post-rollout gap query returned zero.
 - AgentOS heartbeats were 0-1 seconds old for `agent-os-a` and `agent-os-b`; the work queue was empty. The projects differ only in node identity and volume name after excluding node-specific settings.
 - Stopping API-A left `loop` healthy through API-B; stopping API-B left it healthy through API-A. Both were restored and healthy.
 - Server B reached API-A and WuKongIM over WireGuard; direct and public WuKongIM WebSocket upgrades returned 101.

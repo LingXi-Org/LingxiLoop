@@ -189,6 +189,12 @@ On 2026-09-03, repeated browser sign-ins created valid D1 session rows but the a
 
 CI/CD run `33725928050` published Gateway tag `d794d15db8cd011ca9c776686a09e17aa66fb628`; generated manifest `9ec63f0...` reached `ready` on all six projects at OpenShip version 3. The running Gateway was healthy, anonymous `/api/session` changed from Express 404 to authentication-layer 401 JSON, `/api/auth/get-session` remained 200, and the Worker's signed `/api/health` origin request returned 200. OpenShip reported 16/16 healthy workloads with no outage or action-required issue; six advisory-only source comparisons still referenced the historical `df724bc...` manifest.
 
+## Personal workspace participant repair
+
+On 2026-09-03, newly registered personal users could not create courses because registration created the user, personal company, memberships, and default project but omitted the owner's human `participants` row. Course creation then failed the `domain_events_actor_company_fkey` constraint when recording the user actor. Commit `e6025ad...` made personal-workspace provisioning idempotently upsert that participant in the registration transaction; migration 4 repaired existing active personal owners.
+
+CI/CD run `33734932192` passed its required gates, published Server and AgentOS tag `e6025ad...`, and generated manifest `d934324...`. All six OpenShip deployments reached `ready` at version 4. Both migration one-shots exited 0, the production gap query returned zero missing participants, API-A/API-B and both AgentOS containers ran the new images healthy, and public `/api/health` returned 200. Server B's image pulls took about eight minutes but completed without intervention or data loss.
+
 ## Alibaba Mail OTP cutover
 
 On 2026-09-03, Better Auth OTP and password-reset delivery moved from the control-plane Worker's Resend HTTP call to Alibaba Mail TLS SMTP on port 465. Passwords are supplied only by Worker secrets, and the previous Worker Resend secrets were removed after both mailbox authentication and a no-reply-to-support delivery were verified. App A/B continue to use their separate Resend configuration for agent email. Wrangler on the C-drive worktree repeatedly discovered an unrelated ancestor Yarn PnP manifest; the successful deployment used an isolated D-drive directory with physical temporary dependencies, as the standard junction still resolved back beneath the conflicting PnP path.
