@@ -1,164 +1,78 @@
-# OpenShip two-server deployment
+# OpenShip production deployment
 
-This is a two-node Agent OS execution plane around one authoritative state
-host. Agent OS workers pull from the PostgreSQL-backed queue; there is no
-Redis router or inbound Agent OS traffic. PostgreSQL leases, fences, session
-affinity, and idempotent Host actions remain the execution contract.
+Production is the six-project, two-server OpenShip topology below. Each role
+has an explicit Compose file; production does not use profiles or the local
+MVP Compose stack.
 
-It is not full host-level HA. Server B is the single备案 public entry point;
-Server A still owns PostgreSQL, Redis, and WuKongIM. Failure of either role can
-require manual recovery. Do not add two-node automatic database or Redis
-failover without an independent witness and fencing.
+| OpenShip project | Compose path | Target | Services |
+| --- | --- | --- | --- |
+| `lingxiloop-core-state` | `deploy/openship/core-state.yml` | Server A | PostgreSQL, Redis, WuKongIM |
+| `lingxiloop-app-a` | `deploy/openship/app-a.yml` | Server A | migration, Web/API |
+| `lingxiloop-agent-os-a` | `deploy/openship/agent-os.yml` | Server A | Agent OS |
+| `lingxiloop-app-b` | `deploy/openship/app-b.yml` | Server B | migration, Web/API, worker, gateway |
+| `lingxiloop-knowledge-agent` | `deploy/openship/knowledge-agent.yml` | Server B | SurrealDB, Open Notebook |
+| `lingxiloop-agent-os-b` | `deploy/openship/agent-os.yml` | Server B | Agent OS |
 
-## Placement
+Keep every project Always On with OpenShip auto-deploy disabled. GitHub Actions
+builds all five LingxiLoop images with one immutable commit tag, pins every
+OpenShip manifest, deploys the control-plane Worker, then sends one signed
+release request that fans out to all six projects. A deployment-only manifest
+change reuses the complete pinned cohort and still performs the six-project
+rollout.
 
-| OpenShip project | Compose path | Target |
-| --- | --- | --- |
-| `lingxiloop-core-state` | `deploy/openship/core-state.yml` | Server A |
-| `lingxiloop-app-a` | `deploy/openship/app.yml` | Server A |
-| `lingxiloop-agent-os-a` | `deploy/openship/agent-os.yml` | Server A |
-| `lingxiloop-app-b` | `deploy/openship/app.yml` | Server B |
-| `lingxiloop-knowledge-agent` | `deploy/openship/knowledge-agent.yml` | Server B |
-| `lingxiloop-agent-os-b` | `deploy/openship/agent-os.yml` | Server B |
+## Network contract
 
-Set **Sleep mode = Always On** for all projects. App A runs Web only. App B
-sets `COMPOSE_PROFILES=worker,gateway`, so it runs one Web, the background
-Worker, and the 64 MB Nginx Gateway. Both Agent OS projects start with one
-execution slot:
-
-```dotenv
-AGENT_OS_MAX_CONCURRENT_RUNS=1
-```
-
-## Private network and entry point
-
-Use the provider VPC or WireGuard between the hosts. Only Server B accepts
-public `80` and `443`; restrict public SSH `22` to administrator source
-addresses. Allow these private flows:
+Server B is the only public application ingress. OpenShip Edge terminates TLS
+and routes the retained hostnames to the gateway on `127.0.0.1:8080`. Private
+traffic is limited to:
 
 | Source | Destination | Ports |
 | --- | --- | --- |
 | Server B | Server A | API-A `5181`, WuKongIM API `5001`, WSS `5200`, PostgreSQL `5432`, Redis `6379` |
 | Server A | Server B | Open Notebook `5055` |
 
-WuKongIM `5200` and API-A `5181` bind only to Server A's `10.20.0.2` address.
-SurrealDB has no host port. Agent OS `5190` is container-local health only and
-must not be opened on either host. The Gateway binds `127.0.0.1:8080` on Server
-B; OpenShip Edge owns public `80/443` and TLS, then routes the four Gateway
-hostnames to port `8080`.
+WuKongIM `5200` and API-A `5181` bind to Server A's `10.20.0.2` address.
+SurrealDB has no host port. Agent OS `5190` remains container-local. The
+gateway serves the apex and `www`, balances `loop` across both APIs, and
+proxies `im` to WuKongIM.
 
-The checked-in `gateway.conf` serves `website/` for the apex and `www`, balances
-`loop` between the local Compose service and `10.20.0.2:5181`, and proxies `im`
-to `10.20.0.2:5200`. Probe each API with `GET /api/health`; dependency status is
-available at `GET /api/health/dependencies`.
-
-All retained `lingxilearn.cn` records are DNS-only A records:
-
-| Hostname | Address | OpenShip target |
-| --- | --- | --- |
-| `lingxilearn.cn`, `www.lingxilearn.cn` | `111.229.65.23` | App B `gateway:8080` |
-| `loop.lingxilearn.cn` | `111.229.65.23` | App B `gateway:8080` |
-| `im.lingxilearn.cn` | `111.229.65.23` | App B `gateway:8080` |
-| `openlit.lingxilearn.cn` | `111.229.65.23` | LingxiLit `openlit:3000` |
-
-Delete `admin`, `origin-a`, `origin-b`, `origin.loop`, and `ops` records plus
-all retained-hostname AAAA/CNAME/proxy records. Management uses
-`https://lingxiloop-control-plane.yangyangli0426.workers.dev`; OpenShip uses
+Retained DNS-only A records point to Server B (`111.229.65.23`):
+`lingxilearn.cn`, `www.lingxilearn.cn`, `loop.lingxilearn.cn`,
+`im.lingxilearn.cn`, and `openlit.lingxilearn.cn`. The admin Worker uses
+`https://admin.lingxilearn.cn`; OpenShip uses
 `https://ops.christmas1314.xyz`.
 
-## Required project values
+## Required values
 
-Both app projects share the same secrets and state endpoints:
+Both app projects share the authoritative state endpoints and secrets:
 
 ```dotenv
-DATABASE_URL=postgresql://lingxiloop:<password>@<server-a-private-ip>:5432/lingxiloop
-REDIS_URL=redis://<server-a-private-ip>:6379
-WUKONG_API_URL=http://<server-a-private-ip>:5001
+DATABASE_URL=postgresql://lingxiloop:<password>@10.20.0.2:5432/lingxiloop
+REDIS_URL=redis://10.20.0.2:6379
+WUKONG_API_URL=http://10.20.0.2:5001
 WUKONG_WS_PUBLIC_URL=wss://im.lingxilearn.cn
-OPEN_NOTEBOOK_URL=http://<server-b-private-ip>:5055
+OPEN_NOTEBOOK_URL=http://10.20.0.3:5055
 AGENT_OS_NODE_TIMEOUT_SECONDS=15
 DATABASE_POOL_MAX=8
 ```
 
-Set project-specific values as follows:
-
-```dotenv
-# app-a
-INSTANCE_ID=app-a
-APP_BIND_IP=10.20.0.2
-# COMPOSE_PROFILES is unset
-
-# app-b
-INSTANCE_ID=app-b
-APP_BIND_IP=127.0.0.1
-COMPOSE_PROFILES=worker,gateway
-
-# agent-os-a
-AGENT_OS_WORKER_ID=agent-os-a
-AGENT_OS_VOLUME_NAME=openship-lingxiloop-agent-os-a-agent-os-data
-
-# agent-os-b: preserve the volume created by the former knowledge project
-AGENT_OS_WORKER_ID=agent-os-b
-AGENT_OS_VOLUME_NAME=openship-lingxiloop-knowledge-agent-agent-os-data
-```
-
-Both Agent OS projects use the same `AGENT_OS_SERVICE_TOKEN`, model settings,
-and stable callback origin:
+Set `INSTANCE_ID=app-a` or `INSTANCE_ID=app-b` in the matching project. Set
+`AGENT_OS_WORKER_ID=agent-os-a` and `agent-os-b` in their matching Agent OS
+projects. Both agents start with `AGENT_OS_MAX_CONCURRENT_RUNS=1` and use the
+same service token, model settings, and callback origin:
 
 ```dotenv
 LINGXILOOP_CONTROL_PLANE_URL=https://loop.lingxilearn.cn
 ```
 
-The knowledge project also uses that origin for the Open Notebook embedding
-proxy. Mark database URLs, tokens, model keys, R2 credentials, and registry
-credentials as OpenShip secrets.
+The knowledge project uses the same origin for its embedding proxy. Store
+database URLs, tokens, model keys, R2 credentials, and registry credentials as
+OpenShip secrets. Do not expose or copy them into source files.
 
-## Migration and cutover
+## Verification
 
-1. Bind App A `5181` and WuKongIM `5200` to `10.20.0.2`, then confirm Server B
-   can reach both private ports.
-2. Deploy App B with `COMPOSE_PROFILES=worker,gateway`. Route apex, `www`,
-   `loop`, and `im` through OpenShip Edge to `gateway:8080`.
-3. Before DNS changes, verify every hostname with
-   `curl --resolve <hostname>:443:111.229.65.23 https://<hostname>/...`.
-4. Deploy the Worker with `workers_dev=true`, no Custom Domain, the `loop`
-   origin, and `ops.christmas1314.xyz` OpenShip upstream.
-5. Set both Agent OS projects and the knowledge project to
-   `LINGXILOOP_CONTROL_PLANE_URL=https://loop.lingxilearn.cn`.
-6. Switch the retained DNS-only A records to `111.229.65.23`, remove legacy
-   domains, verify certificates, then close public `80/443` on Server A.
-
-LingxiLit remains prepared but undeployed while AgentOS-B is enabled: current
-Server B memory is not sufficient to run AgentOS, OpenLit, and ClickHouse
-together safely.
-
-Deploy the same immutable image SHA to both app and both Agent OS projects.
-During future releases update both APIs before the Agent OS images. Old
-binaries ignore the additive affinity tables; new binaries require migration
-readiness before serving.
-
-## Failure and capacity checks
-
-An idle worker refreshes its heartbeat while polling. A busy worker refreshes
-it with the existing work heartbeat. New sessions are claimed by the first
-worker with a free local slot. A healthy session owner retains affinity. After
-15 seconds without a node heartbeat another worker may adopt queued work; an
-in-flight hard failure remains fenced until its 45-second work lease expires.
-Takeover starts a fresh Home epoch, so PostgreSQL/WuKongIM/session history is
-restored but process variables and unpersisted local files are not.
-
-Use the existing health JSON and database state for the first production
-stage:
-
-```sql
-SELECT worker_id, last_seen_at FROM agent_os_workers ORDER BY worker_id;
-SELECT status, COUNT(*) FROM agent_work_items GROUP BY status ORDER BY status;
-SELECT leased_by, COUNT(*) FROM agent_work_items WHERE status='leased' GROUP BY leased_by;
-```
-
-Keep each node at one slot until peak RSS leaves at least about 700 MB free,
-there are no OOM or sustained swap events, load average remains acceptable,
-and P95 run duration does not regress. Only then raise both nodes to two slots.
-
-Production manifests contain no WuKongIM demo container. OpenShip, Nginx,
-WireGuard, and the second Agent OS add no mandatory recurring service cost.
+After every rollout, require all six OpenShip deployments to reach `ready`,
+all expected production services to report healthy, no drift issue, both Agent
+OS heartbeats to be current, and the public Web/API/IM probes to pass. App A
+must contain only `db-migrate` and `lingxiloop`; App B must contain exactly
+`db-migrate`, `lingxiloop`, `worker`, and `gateway`.

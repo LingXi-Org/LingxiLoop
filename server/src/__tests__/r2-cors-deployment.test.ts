@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
 import test from 'node:test'
 // @ts-expect-error The production helper is plain ESM so Node can execute it directly.
 import * as r2CorsPolicy from '../../scripts/r2-cors-policy.mjs'
-
-const readText = (url: URL) => readFileSync(url, 'utf8').replaceAll('\r\n', '\n')
 
 const {
   assertR2CorsRules,
@@ -37,16 +34,4 @@ test('R2 readback validation rejects a policy without required Web PUT access', 
     () => assertR2CorsRules(incomplete, DEFAULT_R2_CORS_ORIGINS),
     /R2 CORS readback verification failed/,
   )
-})
-
-test('production deployment applies and verifies R2 CORS before cutover', () => {
-  const compose = readText(new URL('../../../docker-compose.production.yml', import.meta.url))
-  const deploy = readText(new URL('../../../scripts/deploy-production.sh', import.meta.url))
-  const cors = readText(new URL('../../scripts/r2-cors.mjs', import.meta.url))
-
-  assert.match(compose, /\n {2}r2-cors:\n[\s\S]*command: \["node", "server\/scripts\/r2-cors\.mjs"\]/)
-  assert.match(deploy, /! configure_r2_cors \|\|\n\s+! compose up -d --remove-orphans/)
-  assert.match(compose, /\n {2}db-migrate:\n[\s\S]*command: \["npm", "run", "db:migrate"\]/)
-  assert.match(deploy, /compose --profile tools run --rm --no-deps r2-cors/)
-  assert.match(cors, /assertR2CorsRules\(readback, origins\)/)
 })

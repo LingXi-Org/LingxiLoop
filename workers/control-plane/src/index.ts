@@ -12,7 +12,7 @@ type Secrets = {
   BOOTSTRAP_ADMIN_TOKEN: string
   OPENSHIP_PAT: string
   OPENSHIP_PROJECT_IDS: string
-  OPENSHIP_APP_TARGETS: string
+  OPENSHIP_IMAGE_TARGETS: string
   RESEND_API_KEY: string
   RESEND_FROM: string
   TURNSTILE_SECRET_KEY: string
@@ -32,6 +32,17 @@ type AuthSettings = {
 
 const encoder = new TextEncoder()
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+const releaseImageNames = ['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway'] as const
+const productionTopology: Record<string, readonly string[]> = {
+  'lingxiloop-core-state': ['postgres', 'redis', 'wukongim'],
+  'lingxiloop-app-a': ['db-migrate', 'lingxiloop'],
+  'lingxiloop-agent-os-a': ['agent-os'],
+  'lingxiloop-app-b': ['db-migrate', 'lingxiloop', 'worker', 'gateway'],
+  'lingxiloop-knowledge-agent': ['surrealdb', 'open-notebook'],
+  'lingxiloop-agent-os-b': ['agent-os'],
+  'lingxilit-shanghai-b': ['clickhouse', 'openlit'],
+  'Uptime Kuma': ['uptime-kuma'],
+}
 
 function base64url(bytes: ArrayBuffer | Uint8Array): string {
   const value = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
@@ -277,6 +288,7 @@ app.post('/api/internal/bootstrap-admin', async (c) => {
 const openShipRead = /^(?:\/projects(?:\/[^/]+)?|\/servers(?:\/[^/]+)?|\/deployments(?:\/[^/]+(?:\/(?:logs|stream|info|usage|build))?)?)$/
 const openShipWrite = /^\/deployments(?:\/build\/access|\/[^/]+\/(?:redeploy|rollback|cancel|restart|keep|reject))$/
 const openShipUrl = (env: Bindings, path: string) => new URL(`/api/proxy/api${path}`, env.OPENSHIP_BASE_URL)
+const openShipProjectIds = (env: Bindings) => [...new Set(env.OPENSHIP_PROJECT_IDS.split(',').map((id) => id.trim()).filter(Boolean))]
 
 function openShipHeaders(c: AppContext): Headers {
   const headers = new Headers(c.req.raw.headers)
@@ -307,7 +319,8 @@ app.get('/api/control/deployment-dashboard', async (c) => {
   const response = await fetch(openShipUrl(c.env, '/deployments?page=1&perPage=30'), { headers: openShipHeaders(c) })
   if (!response.ok) return c.json({ error: 'OpenShip unavailable' }, 502)
   const payload = await response.json<{ data?: Array<Record<string, unknown>>; total?: number }>()
-  const rows = Array.isArray(payload.data) ? payload.data : []
+  const projectIds = new Set(openShipProjectIds(c.env))
+  const rows = (Array.isArray(payload.data) ? payload.data : []).filter((row) => typeof row.projectId === 'string' && projectIds.has(row.projectId))
   c.header('cache-control', 'private, no-store')
   return c.json({
     data: rows.map((row) => ({
@@ -326,7 +339,7 @@ app.get('/api/control/deployment-dashboard', async (c) => {
       updatedAt: row.updatedAt,
       isActive: row.isActive,
     })),
-    total: typeof payload.total === 'number' ? payload.total : rows.length,
+    total: rows.length,
   })
 })
 
@@ -341,7 +354,7 @@ app.get('/api/control/production-topology', async (c) => {
     const project = typeof row.projectName === 'string' ? row.projectName : ''
     const service = typeof row.serviceName === 'string' ? row.serviceName : ''
     const server = typeof row.serverName === 'string' ? row.serverName : ''
-    if (!id || !project || !service || !server) return []
+    if (!id || !project || !service || !server || !productionTopology[project]?.includes(service)) return []
     const state = row.state === 'healthy' || row.state === 'unhealthy' || row.state === 'crash-looping' || row.state === 'down'
       ? row.state
       : 'unknown'
@@ -490,10 +503,12 @@ app.post('/api/internal/releases', async (c) => {
   let input: { commitSha?: string; deployCommitSha?: string; imageDigests?: Record<string, string> }
   try { input = JSON.parse(raw) as typeof input } catch { return c.json({ error: 'invalid release payload' }, 400) }
   if (!input.commitSha || !/^[0-9a-f]{40}$/.test(input.commitSha) || !input.deployCommitSha || !/^[0-9a-f]{40}$/.test(input.deployCommitSha) || !input.imageDigests || Array.isArray(input.imageDigests)) return c.json({ error: 'invalid release payload' }, 400)
-  const projectIds = [...new Set(c.env.OPENSHIP_PROJECT_IDS.split(',').map((id) => id.trim()).filter(Boolean))]
+  const imageTags = releaseImageNames.map((name) => input.imageDigests?.[name]?.match(new RegExp(`lingxiloop-${name}:([0-9a-f]{40})$`))?.[1])
+  if (imageTags.some((tag) => !tag) || new Set(imageTags).size !== 1) return c.json({ error: 'release images must use one complete cohort' }, 400)
+  const projectIds = openShipProjectIds(c.env)
   if (!projectIds.length || projectIds.some((id) => !/^proj_[\w-]+$/.test(id))) return c.json({ error: 'invalid OpenShip project configuration' }, 500)
-  const appTargets = c.env.OPENSHIP_APP_TARGETS.split(',').map((target) => target.trim().split(':'))
-  if (!input.imageDigests.server || !/^\S*lingxiloop-server:[0-9a-f]{40}$/.test(input.imageDigests.server) || appTargets.some(([projectId, serviceId]) => !projectIds.includes(projectId) || !/^svc_[\w-]+$/.test(serviceId))) return c.json({ error: 'invalid OpenShip app configuration' }, 500)
+  const imageTargets = c.env.OPENSHIP_IMAGE_TARGETS.split(',').map((target) => target.trim().split(':'))
+  if (new Set(imageTargets.map(([name]) => name)).size !== releaseImageNames.length || imageTargets.some(([name, projectId, serviceId]) => !releaseImageNames.some((imageName) => imageName === name) || !projectIds.includes(projectId) || !/^svc_[\w-]+$/.test(serviceId))) return c.json({ error: 'invalid OpenShip image configuration' }, 500)
   const existing = await c.env.DB.prepare(`SELECT status,openship_deployment_id FROM release_requests WHERE commit_sha=?`).bind(input.commitSha).first<{ status: string; openship_deployment_id: string | null }>()
   if (existing?.status === 'triggered') return c.json(existing)
   let previous: Array<{ projectId: string; deploymentId?: string; accepted?: boolean; error?: string }> = []
@@ -504,14 +519,14 @@ app.post('/api/internal/releases', async (c) => {
   const now = Date.now()
   if (existing) await c.env.DB.prepare(`UPDATE release_requests SET image_digests=?,status='triggering',error=NULL,updated_at=? WHERE commit_sha=?`).bind(JSON.stringify(input.imageDigests), now, input.commitSha).run()
   else await c.env.DB.prepare(`INSERT INTO release_requests(commit_sha,image_digests,status,created_at,updated_at) VALUES(?,?,'triggering',?,?)`).bind(input.commitSha, JSON.stringify(input.imageDigests), now, now).run()
-  const syncErrors = (await Promise.all(appTargets.map(async ([projectId, serviceId]) => {
+  const syncErrors = (await Promise.all(imageTargets.map(async ([name, projectId, serviceId]) => {
     try {
       const response = await fetch(openShipUrl(c.env, `/projects/${projectId}/services/${serviceId}`), {
         method: 'PATCH', headers: { authorization: `Bearer ${c.env.OPENSHIP_PAT}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ image: input.imageDigests?.server }),
+        body: JSON.stringify({ image: input.imageDigests?.[name] }),
       })
-      return response.ok ? null : `${projectId}: image sync failed (${response.status})`
-    } catch { return `${projectId}: image sync unavailable` }
+      return response.ok ? null : `${projectId}/${serviceId}: image sync failed (${response.status})`
+    } catch { return `${projectId}/${serviceId}: image sync unavailable` }
   }))).filter(Boolean)
   if (syncErrors.length) {
     const error = syncErrors.join('; ')

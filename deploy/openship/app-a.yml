@@ -1,4 +1,4 @@
-name: lingxiloop-app
+name: lingxiloop-app-a
 
 x-logging: &logging
   driver: json-file
@@ -15,7 +15,7 @@ x-runtime: &runtime
     NODE_OPTIONS: --max-old-space-size=320
     LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
     PORT: "5181"
-    INSTANCE_ID: ${INSTANCE_ID:?INSTANCE_ID must be unique per app project}
+    INSTANCE_ID: ${INSTANCE_ID:?INSTANCE_ID is required}
     DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-8}
     DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
     REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
@@ -74,7 +74,7 @@ services:
       db-migrate:
         condition: service_completed_successfully
     ports:
-      - "${APP_BIND_IP:-127.0.0.1}:5181:5181"
+      - "10.20.0.2:5181:5181"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 10s
@@ -83,34 +83,3 @@ services:
       start_period: 10m
     cpus: "0.75"
     mem_limit: 448m
-
-  worker:
-    <<: *runtime
-    profiles: [worker]
-    environment: *runtime-environment
-    command: ["npm", "run", "worker:start"]
-    depends_on:
-      db-migrate:
-        condition: service_completed_successfully
-    cpus: "0.75"
-    mem_limit: 512m
-
-  gateway:
-    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-gateway:b42fef160fe697d46a8818e054f945d1f80953f7
-    pull_policy: always
-    profiles: [gateway]
-    restart: unless-stopped
-    depends_on:
-      lingxiloop:
-        condition: service_healthy
-    ports:
-      - "127.0.0.1:8080:8080"
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
-      interval: 10s
-      timeout: 3s
-      retries: 20
-      start_period: 5s
-    cpus: "0.25"
-    mem_limit: 64m
-    logging: *logging

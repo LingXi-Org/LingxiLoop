@@ -68,35 +68,27 @@ export function computeScope(changed = {}, manual = '') {
     release = enabled('release')
   }
 
-  const images = []
-  if (webImage || serverSource || serverDocker || release) {
-    images.push(image('lingxiloop-server', 'server', 'server/docker/lingxiloop-server.Dockerfile'))
-  }
-  if (serverSource || agentDocker || release) {
-    images.push(image('lingxiloop-agent-os', 'agent-os', 'server/docker/agent-os.Dockerfile'))
-  }
-  if (wukongim || release) {
-    images.push(image(
+  const publishCohort = webImage || serverSource || serverDocker || agentDocker || openNotebook || wukongim || gateway || release
+  const images = publishCohort ? [
+    image('lingxiloop-server', 'server', 'server/docker/lingxiloop-server.Dockerfile'),
+    image('lingxiloop-agent-os', 'agent-os', 'server/docker/agent-os.Dockerfile'),
+    image(
       'lingxiloop-wukongim',
       'wukongim',
       'server/docker/wukongim.Dockerfile',
       '.',
       '',
       'c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47',
-    ))
-  }
-  if (openNotebook || release) {
-    images.push(image(
+    ),
+    image(
       'lingxiloop-open-notebook',
       'open-notebook',
       'third_party/open-notebook/Dockerfile',
       './third_party/open-notebook',
       'lingxiloop-rag',
-    ))
-  }
-  if (gateway || release) {
-    images.push(image('lingxiloop-gateway', 'gateway', 'deploy/openship/gateway.Dockerfile'))
-  }
+    ),
+    image('lingxiloop-gateway', 'gateway', 'deploy/openship/gateway.Dockerfile'),
+  ] : []
 
   return {
     web,

@@ -24,7 +24,7 @@
     "OPENSHIP_BASE_URL": "https://ops.christmas1314.xyz",
     "UPTIME_BASE_URL": "https://uptime.lingxilearn.cn",
     "OPENSHIP_PROJECT_IDS": "proj_khiExWfh7Vsj72VO,proj_5uz48XlBkfJQeNC8,proj_29J2mM47umuIfaDK,proj_IsMy2bWVzEZ7JKEf,proj_frnQUaoQY37ejzL-,proj_CVkF0rOULikADQ-7",
-    "OPENSHIP_APP_TARGETS": "proj_5uz48XlBkfJQeNC8:svc_Y95Qof0wyIdv7klR,proj_IsMy2bWVzEZ7JKEf:svc_wm0I2fR_uglJGyWb",
+    "OPENSHIP_IMAGE_TARGETS": "server:proj_5uz48XlBkfJQeNC8:svc_9RmMHN7M0K1l5Z_1,server:proj_5uz48XlBkfJQeNC8:svc_Y95Qof0wyIdv7klR,server:proj_IsMy2bWVzEZ7JKEf:svc_70YEsZbgYP34z7Hv,server:proj_IsMy2bWVzEZ7JKEf:svc_wm0I2fR_uglJGyWb,server:proj_IsMy2bWVzEZ7JKEf:svc_okKRA-wGrqgFyZAk,agent-os:proj_29J2mM47umuIfaDK:svc_Q97GKa-vK8cH8O_T,agent-os:proj_CVkF0rOULikADQ-7:svc_rT0BSxd8KVNGSWMU,wukongim:proj_khiExWfh7Vsj72VO:svc_R1qn4zHiKjjfY1An,open-notebook:proj_frnQUaoQY37ejzL-:svc_hmGZIaloXJohVV2r,gateway:proj_IsMy2bWVzEZ7JKEf:svc_q7ZcH8px3jsB9qnY",
     "AUTH_ALLOWED_HOSTS": "loop.lingxilearn.cn,admin.lingxilearn.cn",
     "APP_VERSION": "0.1.0-beta"
   }

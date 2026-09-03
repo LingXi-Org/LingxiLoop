@@ -4,7 +4,6 @@ import { test } from 'node:test'
 
 const composeFiles = [
   '../../../docker-compose.mvp.yml',
-  '../../../docker-compose.production.yml',
 ]
 
 function serviceBlock(source: string, name: string, next: string): string {

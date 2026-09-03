@@ -144,8 +144,6 @@ jobs:
             deployment:
               - '.github/workflows/ci.yml'
               - 'deploy/**'
-              - 'docker-compose.*.yml'
-              - 'scripts/deploy-production.sh'
               - 'scripts/update-deployment-images.mjs'
               - 'scripts/ci-scope.mjs'
               - 'scripts/production-rag-contract.test.mjs'
@@ -292,8 +290,11 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.package }}
 
   update-manifests:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.publish.result == 'success'
-    needs: [changes, publish]
+    if: >-
+      always() && github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      (needs.publish.result == 'success' ||
+       (needs.changes.outputs.publish == 'false' && needs.changes.outputs.deploy_contract == 'true' && needs.checks.result == 'success'))
+    needs: [changes, checks, publish]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: { contents: write }
@@ -302,15 +303,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with: { ref: main, fetch-depth: 0 }
-      - name: Pin only the images published by this change
+      - name: Pin the complete production image cohort
         id: pin
         run: |
           git pull --rebase origin main
-          node scripts/update-deployment-images.mjs "$GITHUB_SHA" ${{ needs.changes.outputs.packages }}
+          if [ "${{ needs.changes.outputs.publish }}" = "true" ]; then
+            node scripts/update-deployment-images.mjs "$GITHUB_SHA" ${{ needs.changes.outputs.packages }}
+          fi
           if ! git diff --quiet; then
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add deploy/openship/*.yml docker-compose.production.yml docker-compose.mvp.yml docker-compose.dokploy.yml
+            git add deploy/openship/*.yml
             git commit -m "deploy: pin images to ${GITHUB_SHA} [skip ci]"
             git push origin HEAD:main
           fi

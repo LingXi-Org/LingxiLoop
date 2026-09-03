@@ -36,8 +36,9 @@ describe('control-plane trust boundaries', () => {
   it('fans one signed release out to every OpenShip project exactly once', async () => {
     const commitSha = 'a'.repeat(40)
     const deployCommitSha = 'b'.repeat(40)
-    const serverImage = `registry.example/lingxiloop-server:${commitSha}`
-    const body = JSON.stringify({ commitSha, deployCommitSha, imageDigests: { server: serverImage } })
+    const imageDigests = Object.fromEntries(['server', 'agent-os', 'wukongim', 'open-notebook', 'gateway']
+      .map((name) => [name, `registry/lingxiloop-${name}:${commitSha}`]))
+    const body = JSON.stringify({ commitSha, deployCommitSha, imageDigests })
     const key = await crypto.subtle.importKey('raw', new TextEncoder().encode('test-release-secret'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
     const bytes = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body)))
     const signature = btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
@@ -46,11 +47,23 @@ describe('control-plane trust boundaries', () => {
     const openShip = fetchMock.get('https://openship.example.com')
     openShip.intercept({
       path: '/api/proxy/api/projects/proj_test-a/services/svc_app-a', method: 'PATCH',
-      body: JSON.stringify({ image: serverImage }),
+      body: JSON.stringify({ image: imageDigests.server }),
     }).reply(200, { success: true })
     openShip.intercept({
-      path: '/api/proxy/api/projects/proj_test-b/services/svc_app-b', method: 'PATCH',
-      body: JSON.stringify({ image: serverImage }),
+      path: '/api/proxy/api/projects/proj_test-a/services/svc_agent-a', method: 'PATCH',
+      body: JSON.stringify({ image: imageDigests['agent-os'] }),
+    }).reply(200, { success: true })
+    openShip.intercept({
+      path: '/api/proxy/api/projects/proj_test-a/services/svc_wukong', method: 'PATCH',
+      body: JSON.stringify({ image: imageDigests.wukongim }),
+    }).reply(200, { success: true })
+    openShip.intercept({
+      path: '/api/proxy/api/projects/proj_test-b/services/svc_notebook', method: 'PATCH',
+      body: JSON.stringify({ image: imageDigests['open-notebook'] }),
+    }).reply(200, { success: true })
+    openShip.intercept({
+      path: '/api/proxy/api/projects/proj_test-b/services/svc_gateway', method: 'PATCH',
+      body: JSON.stringify({ image: imageDigests.gateway }),
     }).reply(200, { success: true })
     openShip.intercept({
       path: '/api/proxy/api/deployments', method: 'POST',
@@ -126,9 +139,11 @@ describe('control-plane trust boundaries', () => {
     const openShip = fetchMock.get('https://openship.example.com')
     openShip.intercept({ path: '/api/proxy/api/deployments?page=1&perPage=30' }).reply(200, {
       data: [{
-        id: 'dep_test', projectId: 'proj_test', projectName: 'app-a', status: 'ready', commitSha: 'a'.repeat(40), commitMessage: 'release', trigger: 'manual',
+        id: 'dep_test', projectId: 'proj_test-a', projectName: 'app-a', status: 'ready', commitSha: 'a'.repeat(40), commitMessage: 'release', trigger: 'manual',
         environment: 'production', framework: 'docker-compose', buildDurationMs: 1250, version: 3, createdAt: '2026-09-03T00:00:00.000Z',
         updatedAt: '2026-09-03T00:00:02.000Z', isActive: true, envVars: { SECRET: 'must-not-leak' }, meta: { composeServices: ['large'] },
+      }, {
+        id: 'dep_legacy', projectId: 'proj_legacy', projectName: 'legacy', status: 'ready', isActive: true,
       }],
       total: 119,
     })
@@ -140,6 +155,10 @@ describe('control-plane trust boundaries', () => {
       }, {
         serviceId: 'svc_worker', projectName: 'lingxiloop-app-b', serviceName: 'worker', serverName: '上海-B',
         state: 'down', observedAt: '2026-09-03T00:42:00.929Z', containerId: 'must-not-leak',
+      }, {
+        serviceId: 'svc_legacy_worker', projectName: 'lingxiloop-app-a', serviceName: 'worker', serverName: '上海-A', state: 'healthy',
+      }, {
+        serviceId: 'svc_legacy', projectName: 'lingxiloop-legacy', serviceName: 'api', serverName: '上海-A', state: 'healthy',
       }],
     })
     try {
@@ -162,11 +181,11 @@ describe('control-plane trust boundaries', () => {
       const deployments = await SELF.fetch('https://admin.example.com/api/control/deployment-dashboard', { headers: { cookie: signIn.headers.get('set-cookie') ?? '' } })
       expect(await deployments.json()).toEqual({
         data: [{
-          id: 'dep_test', projectId: 'proj_test', projectName: 'app-a', status: 'ready', commitSha: 'a'.repeat(40), commitMessage: 'release', trigger: 'manual',
+          id: 'dep_test', projectId: 'proj_test-a', projectName: 'app-a', status: 'ready', commitSha: 'a'.repeat(40), commitMessage: 'release', trigger: 'manual',
           environment: 'production', framework: 'docker-compose', buildDurationMs: 1250, version: 3, createdAt: '2026-09-03T00:00:00.000Z',
           updatedAt: '2026-09-03T00:00:02.000Z', isActive: true,
         }],
-        total: 119,
+        total: 1,
       })
       const topology = await SELF.fetch('https://admin.example.com/api/control/production-topology', { headers: { cookie: signIn.headers.get('set-cookie') ?? '' } })
       expect(await topology.json()).toEqual({
