@@ -200,7 +200,7 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
     <TooltipProvider delayDuration={120}>
       <nav
         aria-label="工作区"
-        className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-accent pb-2 pt-[26px] text-accent-foreground"
+        className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-[var(--workspace-chrome-surface)] pb-2 pt-[26px] text-foreground"
       >
         <Tooltip>
           <TooltipTrigger asChild>

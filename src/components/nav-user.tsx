@@ -23,7 +23,7 @@ export function NavUser({ user }: {
 }) {
   const isMobile = useIsMobile()
   const fallback = user.name.trim().slice(0, 2).toLocaleUpperCase() || '我'
-  const avatarUrl = resolveUserAvatarUrl(user.avatar)
+  const avatarUrl = resolveUserAvatarUrl(user.avatar, user.email)
   const signOut = () => {
     useAuth.getState().clear()
     void authApi.signOut().catch(() => undefined)

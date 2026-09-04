@@ -143,15 +143,8 @@ export function ConversationThread({
         </ThreadPrimitive.Empty>
         <ThreadPrimitive.Messages components={MESSAGE_COMPONENTS} />
         {!threadRootId && <ConversationActivity conversationId={conversationId} />}
-        {!isMobile && <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mt-auto shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4">
-          {!readOnly && <ConversationComposer
-              conversationId={conversationId}
-              compact={compact}
-              placeholder={threadRootId ? '在帖子中回复…' : undefined}
-            />}
-        </ThreadPrimitive.ViewportFooter>}
       </ThreadPrimitive.Viewport>
-      {isMobile && !readOnly && <div className="shrink-0 bg-background pt-2" data-mobile-composer-bar>
+      {!readOnly && <div className={isMobile ? 'shrink-0 bg-background pt-2' : 'shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4'} data-chat-composer-bar>
         <ConversationComposer
           conversationId={conversationId}
           compact={compact}

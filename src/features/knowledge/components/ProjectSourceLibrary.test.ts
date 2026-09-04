@@ -7,16 +7,34 @@ const drive = read('./PersonalSourceDrive.tsx')
 const courseDrive = read('./CourseSourceDrive.tsx')
 const library = read('./ProjectSourceLibrary.tsx')
 const dashboard = read('../../learning/dashboard/LearningDashboardPanel.tsx')
+const frame = read('../../learning/dashboard/DashboardSectionFrame.tsx')
+const calendar = read('../../calendar/components/CalendarView.tsx')
+const settings = read('../../learning/dashboard/CourseSettingsSection.tsx')
 const desktop = read('../../../desktop/DesktopApp.tsx')
 const api = read('../api.ts')
 
 test('Dashboard resources stay role scoped instead of opening a Drawer', () => {
-  assert.match(dashboard, /section === 'resources'[\s\S]*<DashboardSectionFrame[\s\S]*<PersonalSourceDrive[\s\S]*<CourseSourceDrive/)
+  assert.match(dashboard, /section === 'resources'[\s\S]*<PersonalSourceDrive[\s\S]*<CourseSourceDrive/)
+  assert.match(drive, /<DashboardSectionFrame[\s\S]*section="resources"/)
+  assert.match(courseDrive, /<DashboardSectionFrame[\s\S]*section="resources"/)
   assert.match(desktop, /const dashboardOpen = view !== 'conversations'/)
   assert.doesNotMatch(desktop, /libraryOpen|drawerContent = <PersonalSourceDrive/)
   assert.doesNotMatch(drive, /<Drawer|DrawerContent/)
   assert.doesNotMatch(drive, /font-heading text-xl font-medium">工作区资料夹|每个文件夹对应一个独立工作区/)
   assert.doesNotMatch(`${drive}\n${library}`, /min-h-20[\s\S]*border-b border-border\/60/)
+})
+
+test('Dashboard subsidiary navigation stays in the owning top bar', () => {
+  assert.match(frame, /breadcrumb\?: \{ root: string; current: string; onBack\(\): void \}/)
+  assert.match(courseDrive, /breadcrumb=\{openFolder \? \{ root: '班级资料', current: openFolder\.name/)
+  assert.match(drive, /breadcrumb=\{\{ root: '个人学习资料', current: openFolder\.name/)
+  assert.doesNotMatch(library, /Breadcrumb|ArrowLeft01Icon/)
+  const calendarHeader = calendar.match(/<header[\s\S]*?<\/header>/)?.[0] ?? ''
+  assert.match(calendarHeader, /headerLabel[\s\S]*上一时间段[\s\S]*日历视图[\s\S]*新事件/)
+  assert.match(frame, /headerActions\?: ReactNode[\s\S]*\{headerActions \? <div/)
+  assert.match(settings, /headerActions=\{<TabsList[\s\S]*variant="line"[\s\S]*after:bottom-0/)
+  assert.doesNotMatch(settings, /ResizeObserver|orientation=|group-data-vertical/)
+  assert.doesNotMatch(dashboard, /section="settings"><CourseSettingsSection/)
 })
 
 test('Personal drive aggregates accessible spaces and opens project-scoped source grids', () => {

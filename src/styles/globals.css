@@ -276,13 +276,13 @@ body {
 /* Product aliases inherit the canonical preset instead of redefining a local theme. */
 .desktop-openmaus {
   --bubble-agent: var(--muted);
-  --workspace-chrome-surface: var(--sidebar);
+  --workspace-chrome-surface: color-mix(in oklch, var(--background) 96%, var(--foreground));
   --unread: var(--primary);
   --unread-foreground: var(--primary-foreground);
   --avail: var(--unread);
   --im-chat-surface: var(--background);
-  --im-nav-surface: var(--background);
-  --im-detail-surface: var(--sidebar);
+  --im-nav-surface: var(--sidebar);
+  --im-detail-surface: var(--card);
   --im-elevated-surface: var(--card);
   --im-divider: color-mix(in srgb, var(--border) 52%, transparent);
   --im-divider-weak: color-mix(in srgb, var(--border) 38%, transparent);
@@ -298,7 +298,7 @@ body {
 
 .desktop-openmaus .im-conversations-sidebar {
   border-color: var(--border);
-  background: var(--background);
+  background: var(--sidebar);
   container-name: im-conversations-sidebar;
   container-type: inline-size;
 }
@@ -847,7 +847,7 @@ body {
 
 .desktop-openmaus .im-conversation-header {
   border-color: var(--im-divider-weak);
-  background: var(--card);
+  background: var(--sidebar);
 }
 
 .desktop-openmaus .im-composer-surface {

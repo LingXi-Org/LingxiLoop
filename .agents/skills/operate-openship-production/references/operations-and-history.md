@@ -181,7 +181,13 @@ The application originally used `origin-a`, `origin-b`, direct Server A IM, and 
 
 The owner later restored `admin.lingxilearn.cn` as the primary Cloudflare Worker Custom Domain. Wrangler now declares it explicitly, `AUTH_ALLOWED_HOSTS` includes it, and `workers_dev=false` disables the Workers.dev route. Uptime monitors the custom domain because mainland DNS poisoned the former Workers.dev hostname and caused false outages.
 
-OpenShip's one-domain-per-service behavior required persistent host Edge alias files for apex, `www`, and IM. The old route IDs and DNS records are documented in the network reference.
+OpenShip's one-domain-per-service behavior originally required persistent host Edge alias files for apex, `www`, and IM. Apex and `www` moved to the dedicated static project on 2026-09-04; only IM still uses a host alias. The old route IDs and DNS records are documented in the network reference.
+
+## Landing static-site cutover
+
+On 2026-09-04, OpenShip project `proj_zLjrHA6Bb8KurSS_` deployed `lyyzka/lingxiloop-landing-page` commit `d1b98ab2cfe6f3e2277430d8a32c808c2005ff69` as static release `dep_5QEIBHtbiE16mLlU` on Server B. Domain objects `dom_fyVApndXtudWStuk` and `dom_7lNpif0xxYg3GHnV` own apex and `www`; both are verified with active OpenShip-managed certificates, and `www` redirects to apex.
+
+The first domain cutover still showed the old Gateway website because `/var/lib/openship/edge/sites-enabled/00-gateway-aliases.conf` duplicated both server names and loaded before OpenShip's generated static routes. Operations moved that file to `/var/lib/openship/edge/sites-disabled/00-gateway-aliases.conf.disabled-20260904T074537Z`, passed `openresty -t`, and reloaded Edge. Public apex then returned the static release byte-for-byte (SHA-256 `c4eef61418d8ec060e38964a1614f1664947ebbcf2ab5ff6bee1cd975265ff7d`) with HTTP 200 and title `LingxiLoop – 智能学习工作区`; `www` returned 301 to apex and `loop` health remained 200.
 
 ## Login session routing repair
 

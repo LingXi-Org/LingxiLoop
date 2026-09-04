@@ -25,6 +25,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { LearningSpace } from '@/features/learning/contracts'
+import { DashboardSectionFrame } from '@/features/learning/dashboard/DashboardSectionFrame'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
@@ -57,7 +58,8 @@ function canManageFolder(workspace: WorkspaceSummary): boolean {
   return workspace.canManage && workspace.kind === 'PERSONAL_LEARNING'
 }
 
-export function PersonalSourceDrive({ spaces, onOpenLearningSpace }: {
+export function PersonalSourceDrive({ space, spaces, onOpenLearningSpace }: {
+  space: LearningSpace
   spaces: LearningSpace[]
   onOpenLearningSpace(projectId: string): void
 }) {
@@ -148,16 +150,13 @@ export function PersonalSourceDrive({ spaces, onOpenLearningSpace }: {
   }
 
   if (openFolder) {
-    return <ProjectSourceLibrary
-      projectId={openFolder.id}
-      canManage={openFolder.canManage}
-      workspaceName={openFolder.name}
-      rootLabel="个人学习资料"
-      onBack={() => { setOpenFolderId(null); void load() }}
-    />
+    const closeFolder = () => { setOpenFolderId(null); void load() }
+    return <DashboardSectionFrame space={space} section="resources" breadcrumb={{ root: '个人学习资料', current: openFolder.name, onBack: closeFolder }}>
+      <ProjectSourceLibrary projectId={openFolder.id} canManage={openFolder.canManage} />
+    </DashboardSectionFrame>
   }
 
-  return <div className="space-y-5">
+  return <DashboardSectionFrame space={space} section="resources"><div className="space-y-5">
     <div className="flex justify-end">
       <Button type="button" onClick={() => setEditor({ mode: 'create' })}>
         <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />新建文件夹
@@ -206,7 +205,7 @@ export function PersonalSourceDrive({ spaces, onOpenLearningSpace }: {
           </div>}
     </div>
     <FolderEditorDialog editor={editor} onOpenChange={(open) => { if (!open) setEditor(null) }} onSaved={async (projectId) => { setEditor(null); await load(); setOpenFolderId(projectId) }} />
-  </div>
+  </div></DashboardSectionFrame>
 }
 
 function FolderEditorDialog({ editor, onOpenChange, onSaved }: {

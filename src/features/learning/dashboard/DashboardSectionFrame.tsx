@@ -2,6 +2,14 @@ import { BubbleChatIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { useConversations } from '@/features/conversations/store'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -28,10 +36,14 @@ export const LEARNING_SECTION_COPY: Record<
 export function DashboardSectionFrame({
   space,
   section,
+  breadcrumb,
+  headerActions,
   children,
 }: {
   space: LearningSpace
   section: LearningDashboardSection
+  breadcrumb?: { root: string; current: string; onBack(): void }
+  headerActions?: ReactNode
   children: ReactNode
 }) {
   const isMobile = useIsMobile()
@@ -70,15 +82,16 @@ export function DashboardSectionFrame({
     <div className="@container/learning-grid flex h-full min-h-0 flex-col bg-muted/20 text-card-foreground">
       <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-6 pt-3">
         <div className="mx-auto max-w-7xl">
-          <header className="mb-3 flex items-start gap-3 px-1">
+          <header className="mb-3 flex flex-wrap items-start gap-3 px-1">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-heading text-lg font-medium text-foreground">{copy.title}</h1>
+                {breadcrumb ? <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink asChild><Button type="button" variant="link" className="h-auto p-0 text-base" onClick={breadcrumb.onBack}>{breadcrumb.root}</Button></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage className="text-base">{breadcrumb.current}</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb> : <h1 className="font-heading text-lg font-medium text-foreground">{copy.title}</h1>}
                 <Badge variant="secondary" className="h-5 px-2 text-[10px]">{spaceKindLabel}</Badge>
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">{copy.description}</p>
             </div>
             {conversationAction}
+            {headerActions ? <div className="order-last w-full min-w-0">{headerActions}</div> : null}
           </header>
           <div className="mobile-learning-dashboard [&_.gap-6]:gap-3 [&_.space-y-6]:space-y-3 [&_[data-slot=card]]:gap-4 [&_[data-slot=card]]:rounded-2xl [&_[data-slot=card]]:py-4 [&_[data-slot=card]]:shadow-sm [&_[data-slot=card]]:[--card-spacing:1rem]">
             {children}
@@ -93,9 +106,10 @@ export function DashboardSectionFrame({
       <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[var(--im-divider-weak)] px-3 @min-[48rem]/learning-grid:gap-3 @min-[48rem]/learning-grid:px-6">
         <CourseAvatar courseId={space.courseId ?? space.projectId} title={space.title} size="sm" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-heading text-sm font-medium">{copy.title}</h1>
+          {breadcrumb ? <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink asChild><Button type="button" variant="link" className="h-auto p-0 text-sm" onClick={breadcrumb.onBack}>{breadcrumb.root}</Button></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage className="max-w-72 truncate text-sm">{breadcrumb.current}</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb> : <h1 className="truncate font-heading text-sm font-medium">{copy.title}</h1>}
           <p className="sr-only">{copy.description}</p>
         </div>
+        {headerActions ? <div className="min-w-0 flex-[2] overflow-hidden">{headerActions}</div> : null}
         {conversationAction}
         <Badge variant="secondary" className="@max-[36rem]/learning-grid:hidden">
           {spaceKindLabel}

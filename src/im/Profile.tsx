@@ -95,7 +95,7 @@ export function ParticipantProfile({
   }
 
   return (
-    <aside className="im-profile relative flex h-full min-h-0 flex-col overflow-hidden bg-app">
+    <aside className="im-profile relative flex h-full min-h-0 flex-col overflow-hidden bg-panel">
       <div
         className="absolute inset-x-0 top-0 z-20 flex h-14 items-center border-b border-hairline bg-panel/88 px-2 backdrop-blur-xl"
       >

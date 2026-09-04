@@ -58,12 +58,12 @@ export function ConversationAvatar({
       return <span className={cn('grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground', avatarMotion)} style={{ width: size, height: size }}>群</span>
     }
     return variant === 'mobile'
-      ? <HiveAvatar ps={members} size={size} ringColor="var(--card)" mode="chat" className={avatarMotion} />
+      ? <HiveAvatar ps={members} size={size} ringColor="var(--sidebar)" mode="chat" className={avatarMotion} />
       : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} mode="chat" />
   }
 
   const person = members[0] ?? conversation.members.map((id) => byId[id]).find(Boolean)
-  if (person) return <Avatar p={person} size={size} ringColor="var(--card)" mode="chat" className={avatarMotion} />
+  if (person) return <Avatar p={person} size={size} ringColor="var(--sidebar)" mode="chat" className={avatarMotion} />
   return (
     <span className={cn('grid shrink-0 place-items-center rounded-full bg-muted font-semibold text-foreground', avatarMotion)} style={{ width: size, height: size }}>
       {conversation.kind === 'email' ? '邮' : conversation.title.charAt(0).toUpperCase()}
@@ -76,9 +76,11 @@ export function ConversationAvatar({
  * mute state and unread semantics. */
 export function ConversationListItemContent({
   conversation,
+  selected = false,
   variant = 'desktop',
 }: {
   conversation: Conversation
+  selected?: boolean
   variant?: 'desktop' | 'mobile'
 }) {
   // Zustand's external-store selector must return a stable snapshot when no
@@ -131,7 +133,7 @@ export function ConversationListItemContent({
             </span>
           )}
         </span>
-        {(conversation.unread ?? 0) > 0 && (
+        {!selected && (conversation.unread ?? 0) > 0 && (
           <Badge className="min-w-5 bg-[var(--unread)] px-1.5 text-[10px] font-bold tabular-nums text-[var(--unread-foreground)]">
             {conversation.unread! > 99 ? '99+' : conversation.unread}
           </Badge>

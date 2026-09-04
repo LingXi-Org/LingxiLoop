@@ -96,7 +96,7 @@ function ConversationRow({ conversation, selected, items, onConversationSelected
     <ContextMenu>
     <ContextMenuTrigger asChild>
       <ConversationListRow mobile={isMobile} selected={selected} onSelect={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}>
-        <ConversationListItemContent conversation={conversation} variant={isMobile ? 'mobile' : 'desktop'} />
+        <ConversationListItemContent conversation={conversation} selected={selected} variant={isMobile ? 'mobile' : 'desktop'} />
       </ConversationListRow>
     </ContextMenuTrigger>
     <ContextMenuContent aria-label="会话操作" className="min-w-[200px]"><ConversationMenuItems items={items} /></ContextMenuContent>
@@ -148,7 +148,7 @@ export function SidebarUserFooter() {
   const authUser = useAuth((s) => s.user)
   const authParticipant = useParticipants((s) => authUser ? s.byId[authUser.id] : undefined)
   if (!authUser) return null
-  return <SidebarFooter className="shrink-0 border-t border-[var(--im-divider-weak)] bg-card p-2"><NavUser user={{ name: authUser.name, email: authUser.email, avatar: authParticipant?.avatarUrl }} /></SidebarFooter>
+  return <SidebarFooter className="shrink-0 border-t border-[var(--im-divider-weak)] bg-sidebar p-2"><NavUser user={{ name: authUser.name, email: authUser.email, avatar: authParticipant?.avatarUrl }} /></SidebarFooter>
 }
 
 export function ConversationsPane({ onConversationSelected }: { onConversationSelected?: (conversationId: string) => void } = {}) {
@@ -274,7 +274,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
   }
 
   return (
-    <aside data-slot="sidebar" className="im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card text-card-foreground">
+    <aside data-slot="sidebar" className="im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
       <SidebarHeader className={cn('desktop-window-toolbar omb-drag shrink-0', isMobile ? 'gap-2 px-3 pb-2 pt-3' : 'h-12 p-2')}>
         {isMobile && <h1 className="truncate px-1 font-heading text-xl font-medium text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
         <InputGroup className={cn('omb-no-drag rounded-xl border-transparent bg-input/50 shadow-none', isMobile ? 'h-10' : 'h-8')}>

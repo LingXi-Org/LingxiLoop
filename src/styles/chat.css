@@ -191,8 +191,9 @@
 }
 .im-bubble-markdown :where(table) { font-size: 0.92em; }
 .im-bubble-markdown :where(th, td) { border-color: var(--border); }
-.im-bubble-markdown-agent { gap: 4px; }
+.im-bubble-markdown-agent { align-items: flex-start; gap: 4px; }
 .im-bubble-markdown-agent > * {
+  max-width: 100%;
   border-radius: 6px 18px 18px 6px;
   background: var(--bubble-agent);
   padding: 8px 14px;

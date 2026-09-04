@@ -1,6 +1,10 @@
-export const DEFAULT_USER_AVATAR_URL = 'https://api.dicebear.com/10.x/marbles/svg?seed=tcyjnxy6'
+import { generatedUserAvatarUrl } from './generatedAvatar'
 
-export function resolveUserAvatarUrl(avatarUrl: string | null | undefined): string {
-  return avatarUrl?.trim() || DEFAULT_USER_AVATAR_URL
+const REMOTE_GENERATED_AVATAR = /^https:\/\/(?:api\.dicebear\.com|www\.gravatar\.com)\//
+
+export function resolveUserAvatarUrl(avatarUrl: string | null | undefined, seed: string): string {
+  const configured = avatarUrl?.trim()
+  return configured && !REMOTE_GENERATED_AVATAR.test(configured)
+    ? configured
+    : generatedUserAvatarUrl(seed)
 }
-

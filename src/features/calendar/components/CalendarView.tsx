@@ -689,22 +689,22 @@ export function CalendarView() {
 
   return (
     <div className="@container/calendar flex h-full min-h-0 flex-col bg-card text-card-foreground">
-      <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--im-divider-weak)] px-4">
-        <div className="flex min-w-0 items-center gap-2"><HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} className="size-4 text-muted-foreground" /><h1 className="font-heading text-sm font-medium">日历</h1><span className="hidden truncate text-sm text-muted-foreground @min-[42rem]/calendar:inline">{headerLabel}</span></div>
+      <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b border-[var(--im-divider-weak)] px-3 py-2">
+        <div className="flex min-w-0 flex-1 basis-40 items-center gap-2"><HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} className="size-4 text-muted-foreground" /><h1 className="font-heading text-sm font-medium">日历</h1><span className="hidden truncate text-sm text-muted-foreground @min-[42rem]/calendar:inline">{headerLabel}</span></div>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="上一时间段" onClick={goPrev}><HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} /></Button>
+          <Button type="button" variant="outline" size="sm" onClick={goToday}>今天</Button>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="下一时间段" onClick={goNext}><HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} /></Button>
+        </div>
+        <Tabs value={mode} onValueChange={(value) => setMode(value as ViewMode)}>
+          <TabsList aria-label="日历视图"><TabsTrigger value="day">日</TabsTrigger><TabsTrigger value="week">周</TabsTrigger><TabsTrigger value="month">月</TabsTrigger></TabsList>
+        </Tabs>
         <div className="flex shrink-0 items-center gap-2">
           <Button type="button" size="sm" variant="outline" className="@min-[48rem]/calendar:hidden" onClick={() => setAgendaOpen(true)}><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} data-icon="inline-start" />近期日程</Button>
           <Button type="button" size="sm" onClick={() => openNew()}><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} data-icon="inline-start" />新事件</Button>
         </div>
+        <span className="order-last w-full truncate text-sm font-medium @min-[42rem]/calendar:hidden">{headerLabel}</span>
       </header>
-      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--im-divider-weak)] px-3 py-2">
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="上一时间段" onClick={goPrev}><HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} /></Button>
-        <Button type="button" variant="outline" size="sm" onClick={goToday}>今天</Button>
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="下一时间段" onClick={goNext}><HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} /></Button>
-        <span className="min-w-0 flex-1 truncate text-sm font-medium @min-[42rem]/calendar:hidden">{headerLabel}</span>
-        <Tabs value={mode} onValueChange={(value) => setMode(value as ViewMode)}>
-          <TabsList aria-label="日历视图"><TabsTrigger value="day">日</TabsTrigger><TabsTrigger value="week">周</TabsTrigger><TabsTrigger value="month">月</TabsTrigger></TabsList>
-        </Tabs>
-      </div>
 
       {!loaded ? (
         <div className="grid min-h-0 flex-1 @min-[48rem]/calendar:grid-cols-[minmax(0,1fr)_320px]" role="status" aria-label="正在加载日历">

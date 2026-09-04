@@ -6,8 +6,8 @@ Because the Tencent Cloud ICP access record permits `lingxilearn.cn` only on Ser
 
 | Hostname | Purpose | Runtime target |
 | --- | --- | --- |
-| `lingxilearn.cn` |备案/static website | App B Gateway `8080` |
-| `www.lingxilearn.cn` | redirect to apex | App B Gateway/Edge redirect |
+| `lingxilearn.cn` |备案/static website | OpenShip static project `proj_zLjrHA6Bb8KurSS_` |
+| `www.lingxilearn.cn` | redirect to apex | OpenShip-managed 301 redirect |
 | `loop.lingxilearn.cn` | dual-API product origin | App B Gateway `8080` |
 | `im.lingxilearn.cn` | WuKongIM WSS | App B Gateway `8080` -> A `10.20.0.2:5200` |
 | `openlit.lingxilearn.cn` | LingxiLit/OpenLit | OpenLit container `3000` through Edge |
@@ -19,13 +19,13 @@ For those six names, remove AAAA, CNAME, and Cloudflare-proxy records. Obsolete 
 
 ## Current OpenShip domain objects
 
-Snapshot 2026-09-02:
+Snapshot 2026-09-04:
 
 | Domain | ID | Project/service | State | Certificate |
 | --- | --- | --- | --- | --- |
 | `loop.lingxilearn.cn` | `dom_O5vpPZIQhCOzmEQw` | App B / Gateway `svc_q7ZcH8px3jsB9qnY`, port 8080 | primary, verified, active | Let's Encrypt YE1, expires 2026-12-01 07:46:51 UTC |
-| `lingxilearn.cn` | `dom_k1hZTRzL_Ki9KePm` | App B project object, no service ID | verified, active | YE1, expires 2026-12-01 08:18:00 UTC |
-| `www.lingxilearn.cn` | `dom_nMKMWyXWUKJL6PGu` | App B project object, 301 to apex | verified, active | YE1, expires 2026-12-01 08:18:32 UTC |
+| `lingxilearn.cn` | `dom_fyVApndXtudWStuk` | Landing static project `proj_zLjrHA6Bb8KurSS_`, path `/` | primary, verified, active | YE1, expires 2026-12-01 08:18:00 UTC |
+| `www.lingxilearn.cn` | `dom_7lNpif0xxYg3GHnV` | Landing static project, 301 to apex | verified, active | YE1, expires 2026-12-01 08:18:32 UTC |
 | `im.lingxilearn.cn` | `dom_jicSJwEDrwItddbl` | App B project object, manual Edge target | verified, active | YE1, expires 2026-12-01 08:40:41 UTC |
 | `openlit.lingxilearn.cn` | `dom_yZP6Jg6nj_Q1_kl9` | LingxiLit / OpenLit `svc_k2cnIeZumE4FK7AJ`, port 3000 | primary, verified, active | YE1, expires 2026-12-01 08:08:47 UTC |
 | `uptime.lingxilearn.cn` | `dom_KnpiXnifUlWQJrUf` | Uptime Kuma / `svc_qjjZezA34IpIYDxp`, port 3001 | verified, active | YE2, expires 2026-12-01 09:24:16 UTC |
@@ -36,6 +36,8 @@ Historical/deleted domain objects:
 - `dom_AXuiPWlfXmEAXWtN`: `origin-b.lingxilearn.cn` -> API-B 5181.
 - `dom_QX--127Q527P6iD-`: former Server A `im.lingxilearn.cn` -> WuKongIM 5200.
 - `dom_XDPEY4hprmyZq2h-`: former App B `loop.lingxilearn.cn` -> API-B 5181; replaced by the Gateway-bound object.
+- `dom_k1hZTRzL_Ki9KePm`: former App B apex object; replaced by the landing static project object.
+- `dom_nMKMWyXWUKJL6PGu`: former App B `www` redirect; replaced by the landing static project object.
 
 `dom_cua` and `dom_index_module` appeared only as regex false positives in raw tool/code text and are not OpenShip domain IDs.
 
@@ -67,12 +69,12 @@ Use `127.0.0.1`, not `localhost`, in the Gateway health check. Alpine/wget selec
 
 ## OpenShip Edge aliases
 
-The current OpenShip release preserves only the first Compose custom domain on a service. `loop` is the service-managed Gateway route. Apex, `www`, and `im` use host-managed Edge configuration on Server B:
+`loop`, apex, and `www` now use OpenShip-managed routes. Only IM still needs a host-managed Edge alias on Server B:
 
-- `/var/lib/openship/edge/sites-enabled/00-gateway-aliases.conf` proxies apex to `127.0.0.1:8080` and redirects `www` to apex.
 - `/var/lib/openship/edge/sites-enabled/00-im-gateway.conf` proxies HTTP/HTTPS IM traffic to `127.0.0.1:8080` with WebSocket timeouts.
+- The retired apex/`www` alias is recoverably stored outside `sites-enabled` as `/var/lib/openship/edge/sites-disabled/00-gateway-aliases.conf.disabled-20260904T074537Z`; do not re-enable it while the landing project owns those domains.
 
-Do not edit `loop-lingxilearn-cn.conf` or `openlit-lingxilearn-cn.conf`; OpenShip generates them.
+Do not edit `lingxilearn-cn.conf`, `www-lingxilearn-cn.conf`, `loop-lingxilearn-cn.conf`, or `openlit-lingxilearn-cn.conf`; OpenShip generates them.
 
 For the initial cutover, Server A's valid IM certificate (YE2, expiring 2026-11-30) was copied to `/etc/letsencrypt/manual/im.lingxilearn.cn/{fullchain.pem,privkey.pem}` on B with modes 0644/0600. After DNS verification, Server B obtained a fresh YE1 certificate expiring 2026-12-01 08:40:41 UTC. Ensure the manual IM Edge file follows the renewed certificate path and has an automated or documented renewal/reload path.
 

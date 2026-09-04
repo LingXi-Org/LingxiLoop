@@ -20,15 +20,13 @@ export function LearningDashboardPanel({ space, spaces, section, onOpenLearningS
 }) {
   if (section === 'calendar') return <CalendarView />
   if (section === 'resources') {
-    return <DashboardSectionFrame space={space} section={section}>
-      {space.projectKind === 'PERSONAL_LEARNING'
-        ? <PersonalSourceDrive spaces={spaces} onOpenLearningSpace={onOpenLearningSpace} />
-        : <CourseSourceDrive space={space} />}
-    </DashboardSectionFrame>
+    return space.projectKind === 'PERSONAL_LEARNING'
+      ? <PersonalSourceDrive space={space} spaces={spaces} onOpenLearningSpace={onOpenLearningSpace} />
+      : <CourseSourceDrive space={space} />
   }
   if (space.perspective === 'teacher') {
     if (section === 'settings') {
-      return <DashboardSectionFrame space={space} section="settings"><CourseSettingsSection space={space} /></DashboardSectionFrame>
+      return <CourseSettingsSection space={space} />
     }
     return <DashboardSectionFrame space={space} section="overview"><TeacherOverviewDashboard space={space} /></DashboardSectionFrame>
   }

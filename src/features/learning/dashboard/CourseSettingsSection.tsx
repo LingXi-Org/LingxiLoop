@@ -1,6 +1,6 @@
 import { Archive02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +17,7 @@ import type { ApiCourse, LearningSpace } from '../contracts'
 import { CourseContentSettings } from './CourseContentSettings'
 import { CourseMembersSection } from './CourseMembersSection'
 import { CourseProfileSettings } from './CourseProfileSettings'
+import { DashboardSectionFrame } from './DashboardSectionFrame'
 
 const LIFECYCLE_ACTIONS = {
   END: {
@@ -58,8 +59,6 @@ const SETTINGS_TABS = [
   { value: 'members', label: '成员与邀请' },
   { value: 'status', label: '课程状态' },
 ] as const
-const TAB_TRIGGER_CLASS = 'flex-none group-data-vertical/tabs:w-auto group-data-vertical/tabs:justify-center @min-[56rem]/course-settings:group-data-vertical/tabs:w-full @min-[56rem]/course-settings:group-data-vertical/tabs:justify-start'
-
 export function CourseSettingsSection({ space }: { space: LearningSpace }) {
   const canView = space.perspective === 'teacher' && space.canManage && Boolean(space.courseId)
   const canEdit = canView && space.canUpdateCourse
@@ -67,8 +66,6 @@ export function CourseSettingsSection({ space }: { space: LearningSpace }) {
   const [loading, setLoading] = useState(canView)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [useVerticalTabs, setUseVerticalTabs] = useState(false)
-  const tabsContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!canView || !space.courseId) return
@@ -90,22 +87,12 @@ export function CourseSettingsSection({ space }: { space: LearningSpace }) {
       active = false
     }
   }, [canView, space.courseId])
-  useEffect(() => {
-    const container = tabsContainerRef.current
-    if (!container || typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(([entry]) => {
-      setUseVerticalTabs(entry.contentRect.width >= 56 * 16)
-    })
-    observer.observe(container)
-    return () => observer.disconnect()
-  }, [course])
-
   if (!canView) {
-    return <Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert>
+    return <DashboardSectionFrame space={space} section="settings"><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
   }
-  if (loading) return <ResourceSkeleton variant="detail" label="正在加载课程设置" />
+  if (loading) return <DashboardSectionFrame space={space} section="settings"><ResourceSkeleton variant="detail" label="正在加载课程设置" /></DashboardSectionFrame>
   if (error || !course) {
-    return <Alert variant="destructive"><AlertDescription>{error || '课程设置暂不可用。'}</AlertDescription></Alert>
+    return <DashboardSectionFrame space={space} section="settings"><Alert variant="destructive"><AlertDescription>{error || '课程设置暂不可用。'}</AlertDescription></Alert></DashboardSectionFrame>
   }
 
   const lifecycleAction = course.status === space.status ? space.lifecycleAction : null
@@ -136,22 +123,22 @@ export function CourseSettingsSection({ space }: { space: LearningSpace }) {
   }
 
   return (
-    <div ref={tabsContainerRef} className="@container/course-settings">
-      <Tabs
-        defaultValue="profile"
-        orientation={useVerticalTabs ? 'vertical' : 'horizontal'}
-        className="flex-col gap-6 @min-[56rem]/course-settings:flex-row"
-      >
-        <TabsList
+    <Tabs defaultValue="profile" className="h-full min-h-0 gap-0">
+      <DashboardSectionFrame
+        space={space}
+        section="settings"
+        headerActions={<TabsList
+          variant="line"
           aria-label="课程设置分类"
-          className="w-full justify-start overflow-x-auto group-data-vertical/tabs:flex-row @min-[56rem]/course-settings:w-52 @min-[56rem]/course-settings:shrink-0 @min-[56rem]/course-settings:overflow-visible @min-[56rem]/course-settings:group-data-vertical/tabs:flex-col"
+          className="h-9 w-full justify-start gap-0 overflow-x-auto p-0"
         >
           {SETTINGS_TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className={TAB_TRIGGER_CLASS}>
+            <TabsTrigger key={tab.value} value={tab.value} className="h-9 flex-none rounded-none px-3 text-xs after:bottom-0">
               {tab.label}
             </TabsTrigger>
           ))}
-        </TabsList>
+        </TabsList>}
+      >
         <TabsContent value="profile" className="min-w-0 flex-1">
           <CourseProfileSettings course={course} canEdit={canEdit} onUpdated={setCourse} />
         </TabsContent>
@@ -188,7 +175,7 @@ export function CourseSettingsSection({ space }: { space: LearningSpace }) {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
-    </div>
+      </DashboardSectionFrame>
+    </Tabs>
   )
 }

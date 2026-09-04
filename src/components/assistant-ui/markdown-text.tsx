@@ -31,7 +31,6 @@ const MarkdownTextImpl = ({
     <StreamdownTextPrimitive
       mode="streaming"
       controls
-      animated
       components={components}
       className={segmented ? 'im-bubble-markdown im-bubble-markdown-agent' : 'im-bubble-markdown'}
     />

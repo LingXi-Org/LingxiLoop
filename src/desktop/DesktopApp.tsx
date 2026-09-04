@@ -43,6 +43,7 @@ const LEFT_COLUMN_DEFAULT = 260
 const LEFT_COLUMN_MIN = 240
 const LEFT_COLUMN_MAX = 360
 const MIDDLE_COLUMN_MIN = 320
+const CONTEXT_COLUMN_DEFAULT = 340
 const CONTEXT_COLUMN_MIN = 320
 const CONTEXT_COLUMN_MAX = 720
 
@@ -220,18 +221,18 @@ export function DesktopApp() {
     : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
   return (
-    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-accent" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
+    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
       {!mobileChatOpen && <WorkspaceRail
           dashboardActive={dashboardOpen}
           onOpenDashboard={openDashboard}
           onOpenWorkspace={openWorkspace}
         />}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-accent">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)]">
         {!isMobile && <div className="omb-drag flex h-5 shrink-0 items-center justify-center gap-1 px-2 text-accent-foreground" data-workspace-titlebar>
           {activeWorkspace && <CourseAvatar courseId={activeWorkspace.id} title={activeWorkspace.name} size="sm" className="!size-3 rounded-sm [&_[data-slot=avatar-fallback]]:rounded-sm [&_[data-slot=avatar-image]]:rounded-sm" />}
           <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeProjectName}</span>
         </div>}
-        <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-card text-card-foreground shadow-sm">
+        <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">
           {dashboardOpen ? (
             <PersonalDashboard
               view={view}
@@ -257,7 +258,7 @@ export function DesktopApp() {
               )}
             </div>
           ) : <ResizablePanelGroup
-            id={contextOpen ? 'desktop-three-panel-layout' : 'desktop-two-panel-layout'}
+            id="desktop-conversation-layout"
             orientation="horizontal"
             className="desktop-im-grid min-h-0 min-w-0"
             onLayoutChanged={handleSidebarLayoutChanged}
@@ -269,17 +270,21 @@ export function DesktopApp() {
               </div>
             </ResizablePanel>
             <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整会话列表宽度" title="拖动调整会话列表宽度，双击恢复默认" />
-            <ResizablePanel id="conversation" defaultSize="75%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
-              <ChatPane groupContextOpen={contextOpen} onToggleGroupContext={() => setGroupContextOpen((open) => !open)} />
+            <ResizablePanel id="conversation-workspace" defaultSize="75%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
+              <ResizablePanelGroup id="desktop-conversation-content-layout" orientation="horizontal" className="min-h-0 min-w-0">
+                <ResizablePanel id="conversation" defaultSize="100%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
+                  <ChatPane groupContextOpen={contextOpen} onToggleGroupContext={() => setGroupContextOpen((open) => !open)} />
+                </ResizablePanel>
+                {contextOpen && <>
+                  <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整资料与 Canvas 工作区宽度" title="拖动调整资料与 Canvas 工作区宽度" />
+                  <ResizablePanel id="context" defaultSize={CONTEXT_COLUMN_DEFAULT} minSize={CONTEXT_COLUMN_MIN} maxSize={CONTEXT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0 bg-card">
+                    <div id="conversation-context-workspace" className="h-full min-h-0">
+                      {selectedConversation && <GroupContextContent conversationId={selectedConversation.id} />}
+                    </div>
+                  </ResizablePanel>
+                </>}
+              </ResizablePanelGroup>
             </ResizablePanel>
-            {contextOpen && <>
-              <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整资料与 Canvas 工作区宽度" title="拖动调整资料与 Canvas 工作区宽度" />
-              <ResizablePanel id="context" defaultSize="30%" minSize={CONTEXT_COLUMN_MIN} maxSize={CONTEXT_COLUMN_MAX} className="min-h-0 min-w-0 bg-card">
-                <div id="conversation-context-workspace" className="h-full min-h-0">
-                  {selectedConversation && <GroupContextContent conversationId={selectedConversation.id} />}
-                </div>
-              </ResizablePanel>
-            </>}
           </ResizablePanelGroup>}
         </div>
       </div>

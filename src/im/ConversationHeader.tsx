@@ -23,7 +23,7 @@ export function ConversationHeader({
   return (
     <header
       className={cn(
-        'im-conversation-header omb-drag z-20 flex shrink-0 items-center border-b border-[var(--im-divider-weak)] bg-card text-card-foreground',
+        'im-conversation-header omb-drag z-20 flex shrink-0 items-center border-b border-[var(--im-divider-weak)] bg-sidebar text-sidebar-foreground',
         mobile ? 'min-h-14 gap-2 px-2' : 'omb-titlebar-safe h-12 gap-3 px-4',
       )}
     >

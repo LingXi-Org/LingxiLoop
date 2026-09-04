@@ -41,5 +41,7 @@ test('visible messages advance the durable read cursor and reconcile the unread 
   assert.match(thread, /new IntersectionObserver\(scheduleReadReceipt, \{ root: viewport \}\)/)
   assert.match(thread, /messagesApi\.markRead\(conversationId, readThroughSeq\)/)
   assert.match(thread, /unread: unread \|\| undefined/)
+  assert.match(read('./ConversationList.tsx'), /!selected && \(conversation\.unread \?\? 0\) > 0/)
+  assert.match(read('../features/conversations/components/ConversationsPane.tsx'), /selected=\{selected\}/)
   assert.match(api, /body: JSON\.stringify\(\{ readThroughSeq \}\)/)
 })

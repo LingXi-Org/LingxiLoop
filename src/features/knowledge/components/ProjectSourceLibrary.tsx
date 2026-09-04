@@ -1,5 +1,4 @@
 import {
-  ArrowLeft01Icon,
   Delete02Icon,
   Edit02Icon,
   File01Icon,
@@ -14,14 +13,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -65,23 +56,17 @@ function SourceIcon({ source, className }: { source: KnowledgeSource; className?
 export function ProjectSourceLibrary({
   projectId,
   canManage,
-  workspaceName = '当前工作区',
-  rootLabel = '个人学习资料',
   visibilityScope,
   ownerUserId,
   readOnly = false,
   reviewMode = false,
-  onBack,
 }: {
   projectId: string
   canManage: boolean
-  workspaceName?: string
-  rootLabel?: string
   visibilityScope?: KnowledgeSource['visibilityScope']
   ownerUserId?: string
   readOnly?: boolean
   reviewMode?: boolean
-  onBack?: () => void
 }) {
   const [sources, setSources] = useState<KnowledgeSource[]>([])
   const [loading, setLoading] = useState(true)
@@ -176,18 +161,7 @@ export function ProjectSourceLibrary({
   }
 
   return <div className="space-y-5">
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-3">
-        {onBack ? <Button type="button" variant="outline" size="icon" onClick={onBack} aria-label={`返回${rootLabel}`}><HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} /></Button> : null}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>{onBack ? <BreadcrumbLink asChild><button type="button" onClick={onBack}>{rootLabel}</button></BreadcrumbLink> : <BreadcrumbPage>{rootLabel}</BreadcrumbPage>}</BreadcrumbItem>
-            {onBack ? <><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>{workspaceName}</BreadcrumbPage></BreadcrumbItem></> : null}
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-      {!readOnly ? <Button type="button" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button> : null}
-    </div>
+    {!readOnly ? <div className="flex justify-end"><Button type="button" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button></div> : null}
     <div>
       {loading && visibleSources.length === 0 ? <ResourceSkeleton variant="cards" count={6} label="正在加载资料库" />
         : error && visibleSources.length === 0 ? <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" onClick={() => void load(true)}>重新加载</Button></AlertDescription></Alert>

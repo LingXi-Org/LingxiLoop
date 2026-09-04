@@ -21,6 +21,7 @@ import { useParticipants } from '@/features/agents/state'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { useConversationUi } from '@/stores/conversationUi'
+import type { Participant } from '@/types'
 import { chatTransport, type LingxiMessageMetadata } from '../runtime'
 import { CHAT_TOOL_RENDERERS, HostToolTimeline } from './ToolRenderers'
 
@@ -337,7 +338,16 @@ export function ConversationMessage() {
   const awaitingContent = useAuiState((state) => (
     state.message.status?.type === 'running' && state.message.content.length === 0
   ))
-  const participant = useParticipants((state) => state.byId[custom.senderId])
+  const rosterParticipant = useParticipants((state) => state.byId[custom.senderId])
+  const participant: Participant | undefined = rosterParticipant ?? (custom.senderKind === 'agent' ? {
+    id: custom.senderId,
+    kind: 'agent',
+    name: custom.senderName,
+    initial: custom.senderName.trim().slice(0, 1) || '智',
+    avatarBg: 'transparent',
+    avatarUrl: null,
+    status: 'avail',
+  } : undefined)
   const chromeAt = custom.clusterChromeAt === null ? createdAt : new Date(custom.clusterChromeAt)
   return (
     <MessagePrimitive.Root
@@ -350,9 +360,8 @@ export function ConversationMessage() {
       className={cn(
         'group/message flex w-full shrink-0',
         isMobile ? 'gap-2 px-2.5' : 'gap-2.5 px-3 sm:px-4',
-        '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:-mt-px',
-        '[&[data-message-presentation=conversation]+[data-message-presentation=special-card][data-message-continued-from=true]]:-mt-px',
-        custom.continuedFromPrevious ? isSpecialCard ? 'pt-0' : 'pt-px' : 'pt-1.5',
+        '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
+        custom.continuedFromPrevious ? isSpecialCard ? 'pt-1' : 'pt-px' : 'pt-1.5',
         custom.continuedToNext ? isSpecialCard ? 'pb-0' : 'pb-px' : 'pb-1.5',
         custom.isMine && 'flex-row-reverse',
       )}

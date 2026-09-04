@@ -1,6 +1,6 @@
 # Current production deployment
 
-Snapshot: 2026-09-03 20:31 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and targeted container inspection. Re-read live state before every operation.
+Snapshot: 2026-09-04 15:46 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and targeted container inspection. Re-read live state before every operation.
 
 ## Scope and authority
 
@@ -116,12 +116,13 @@ Successful browser sign-ins were creating D1 session rows, but the Gateway route
 
 ## Host-managed assets
 
-- Server B Edge aliases: `/var/lib/openship/edge/sites-enabled/00-gateway-aliases.conf` and `00-im-gateway.conf`.
+- Server B retains only the host-managed IM alias `/var/lib/openship/edge/sites-enabled/00-im-gateway.conf`; apex and `www` are OpenShip-managed static routes.
 - Server A public-ingress fence: enabled systemd unit `/etc/systemd/system/lingxiloop-private-ingress.service`; it rejects new TCP 80/443 on `eth0` and leaves `wg0` private traffic untouched.
 - Do not edit OpenShip-generated managed route files.
 
 ## Other tracked production projects
 
+- Landing page: project `proj_zLjrHA6Bb8KurSS_`, static deployment `dep_5QEIBHtbiE16mLlU` at commit `d1b98ab2cfe6f3e2277430d8a32c808c2005ff69`, serving `lingxilearn.cn` with `www` redirected to apex.
 - LingxiLit: project `proj_dbXpzANqY8rPvOVC`, independent image `sha-f3017e23cc0a31753b022c64eb40a837f463d627`.
 - Uptime Kuma: project `proj_sYmlJeYfdwa4K2bQ`, `always_on`, public status `https://uptime.lingxilearn.cn/status/lingxiloop`.
 - WegoLibrary: project `proj_KQmC-0gtQ8DCgHD_`, management-host-local port `18081`, public `golib.christmas1314.xyz`.
