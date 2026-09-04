@@ -2,6 +2,12 @@
 
 Snapshot: 2026-09-05 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and targeted container inspection. Re-read live state before every operation.
 
+## WebSocket ticket routing repair
+
+On 2026-09-05, production access logs showed authenticated browsers repeatedly receiving `404` and then Better Auth `429` responses from `POST /api/auth/ws-ticket` while AgentOS work continued normally. The control-plane Worker's broad `/api/auth/*` handler consumed the business WebSocket ticket route before the authenticated origin proxy could handle it.
+
+Commit `5bfe1bf...` added an explicit authenticated origin proxy for that route and a regression test. CI/CD run `33898105455` passed the scoped control-plane checks and deployed Worker version `c18cc97c-3a86-439c-99c2-a58b0bce1208`. After promotion, the same active browser changed from repeated `404` responses to consecutive `200` ticket responses, then stopped reconnecting; anonymous access returns `401`, public health returns `200`, and OpenShip reports 16/16 healthy workloads with no outage or action-required issue.
+
 ## Scope and authority
 
 - OpenShip organization: `org_afbfbb11-78d7-41ee-b644-4b745b486069`.
