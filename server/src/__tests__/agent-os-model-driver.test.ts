@@ -104,6 +104,24 @@ test('OpenAI stream discards provider reasoning and invisible whitespace text', 
   })
 })
 
+test('Qwen aliases disable thinking and remove its provider reasoning envelope', async () => {
+  const events = [{
+    id: 'chatcmpl-qwen', object: 'chat.completion.chunk', created: 1, model: 'qwen3.5-plus',
+    choices: [{ index: 0, delta: { content: '</thinking>\n\n最终回答' }, finish_reason: 'stop' }],
+  }]
+  await withGateway(events, async (baseURL, requestBodies) => {
+    const deltas: string[] = []
+    const result = await new OpenAIChatDriver('qwen3.5-plus', { apiKey: 'test', baseURL }).run({
+      instructions: 'System prompt',
+      items: [{ role: 'user', content: 'Hello' }],
+      onTextDelta: (delta) => { deltas.push(delta) },
+    })
+    assert.equal(requestBodies[0]?.enable_thinking, false)
+    assert.deepEqual(deltas, ['最终回答'])
+    assert.equal(result.text, '最终回答')
+  })
+})
+
 test('empty native stream throws an explicit adapter error with parse diagnostics', async () => {
   const events = [{
     id: 'chatcmpl-empty', object: 'chat.completion.chunk', created: 1, model: 'native-test-model',

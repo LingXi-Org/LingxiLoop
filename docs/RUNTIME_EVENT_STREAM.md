@@ -1,4 +1,6 @@
-# Agent OS event stream
+# LingxiOS v2 event stream
+
+The private control surface exists only below `/internal/agent-os/v2/*`.
 
 Every run emits ordered `AgentRunEvent` records with a per-run `seq`. The
 control plane persists events and mirrors user-visible activity to WuKongIM:
@@ -18,16 +20,23 @@ The stable prompt contract is versioned independently from turn data. Policy,
 writing behavior, role contracts, the current IPython surface, and persona are
 stable; dates, memory, retrieved evidence, attachments, prior messages, tool
 results, and current work state are bounded, explicitly untrusted turn data.
-Only a prompt-contract, persona, capability, or execution-role change refreshes
-the stable prompt. Optional follow-up questions may remain text after the
+Any change in the complete `sourceVersions` map refreshes the stable prompt.
+A prompt-contract upgrade also discards old model history so
+invalid responses from an earlier contract cannot keep steering new turns;
+current durable conversation and product state are projected again as untrusted
+context. Optional follow-up questions may remain text after the
 requested result is delivered. Questions whose answers block progress must use
-`loop.chat.ask(...)`, which is the only action that creates a question card.
+`host.chat.ask(...)`, which is the only action that creates a question card and
+ends the run until the learner submits it. No redundant text acknowledgement is
+generated after the card.
 
 An explicit request to create or revise a weekly learning plan enters the
-typed `loop.learning` Mission flow. Optional scheduling details do not block a
+typed `host.learning` Mission flow. Optional scheduling details do not block a
 reasonable provisional plan, and a weekly plan alone does not justify Canvas.
-Agent OS suppresses and corrects model text that announces specialist, task,
-workflow, or Canvas execution without a corresponding tool turn.
+Before any model text enters the user-visible stream, Agent OS rejects and
+corrects mixed text/tool responses, reasoning or tool markup, SDK code, opaque
+IDs, prose elicitation, and durable-action claims without a successful Host
+result.
 
 Each model request exposes one strict `ipython` function with parallel tool
 calls disabled. Malformed, unknown, or multiple calls execute nothing and
@@ -63,13 +72,15 @@ message is accepted only when its body exactly matches every persisted text
 delta in the run; missing or malformed streams fail instead of falling back to
 direct text.
 IPython remains an internal ledger event and never becomes a conversation part.
-Only typed `loop.*` Host Actions are projected as assistant-ui `tool-call`
+Only typed `host.*` Host Actions are projected as assistant-ui `tool-call`
 parts; the frontend renders those parts with the official ToolCall and
 ToolTimeline registry components.
 Provider `reasoning_content` is a native `reasoning` part and answer `content`
 is a native `text` part; a tool-finish response without a valid tool call fails.
-Qwen 3.5 requests disable provider thinking so their first visible delta is
-answer or tool-call content rather than a second reasoning-only generation.
+Qwen 3.5 requests disable provider thinking for canonical and provider alias
+model names. The adapter also removes the provider's leading reasoning envelope
+before the response contract is evaluated, so an orphan closing tag cannot
+become conversation content.
 History and older-page recovery use WuKongIM's sequence cursor (`beforeSeq`)
 through the authenticated IM adapter. They never fall back to a PostgreSQL
 message table or a second durable message store.

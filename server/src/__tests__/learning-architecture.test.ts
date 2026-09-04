@@ -5,6 +5,8 @@ import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const runtime = readFileSync(new URL('../agent-os/runtime.ts', import.meta.url), 'utf8')
+const coreRuntime = readFileSync(new URL('../../../third_party/lingxios/src/runtime/runtime.ts', import.meta.url), 'utf8')
+const promptContext = readFileSync(new URL('../agent-os/prompt-context.ts', import.meta.url), 'utf8')
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
 const legacyLearningUrl = new URL('../learning/', import.meta.url)
 const legacyServiceUrl = new URL('../learning/service.ts', import.meta.url)
@@ -63,8 +65,7 @@ const teacherManagementRepositorySource = readFileSync(
   new URL('../modules/learning/teacher-management-repository.ts', import.meta.url),
   'utf8',
 )
-const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
-const teacherSdk = readFileSync(new URL('../../agent-os/teacher_sdk.py', import.meta.url), 'utf8')
+const kernel = readFileSync(new URL('../../../third_party/lingxios/kernel/runner.py', import.meta.url), 'utf8')
 
 function productionTypeScriptFiles(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
@@ -291,8 +292,8 @@ test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restric
   assert.match(teacherProvisioningRepositorySource,/JSON\.stringify\(\['ipython'\]\)/)
   assert.match(teacherProvisioningRepositorySource,/learning_project_teacher_agents/)
   assert.match(teacherProvisioningRepositorySource,/learning_course_teacher_rooms/)
-  assert.match(runtime,/allowedNamespaces: \['teacher'\]/)
-  assert.match(kernel,/allowedNamespaces/)
+  assert.match(runtime,/return \[\{ name: 'teacher' \}\]/)
+  assert.match(kernel,/context\.get\("capabilities"\)/)
   assert.match(hostAction,/Pulse may only call teacher\.\*/)
   assert.match(hostAction,/teacher\.\* is reserved for the product-managed Pulse Agent/)
   assert.doesNotMatch(hostAction,/\b(?:SELECT|INSERT INTO|UPDATE|DELETE FROM)\b/)
@@ -300,12 +301,13 @@ test('Pulse is Project-scoped, teacher-room-scoped and IPython namespace restric
 })
 
 test('learning remains an IPython namespace with transient per-turn context', () => {
-  assert.match(kernel, /"learning"/)
-  assert.match(kernel, /if method\.startswith\("_"\):\s+raise AttributeError\(method\)/)
-  assert.match(runtime, /dynamicLearningItems/)
-  assert.match(runtime, /\.\.\.session\.history,\s+\.\.\.dynamicMemoryItems,\s+\.\.\.dynamicKnowledgeItems,\s+\.\.\.dynamicLearningItems,\s+\.\.\.dynamicTeacherItems/)
+  assert.match(kernel, /class _SdkModule/)
+  assert.match(kernel, /method\.startswith\("_"\)/)
+  assert.match(runtime, /dynamicContextItems/)
+  assert.match(promptContext, /Relevant memory for THIS TURN ONLY/)
+  assert.match(promptContext, /Authorized learning state for THIS TURN ONLY/)
   assert.doesNotMatch(runtime, /systemInstructions: `\$\{candidate\.systemInstructions\}[^`]*JSON\.stringify\(context\.learningContext\)/s)
-  assert.match(runtime, /const liveContext = hop === 0 \? context : await this\.host\.loadContext\(work\)/)
+  assert.match(coreRuntime, /const liveContext = hop === 0 \? context : await this\.host\.loadContext\(work\)/)
   assert.match(actions, /planning gate blocked/)
   assert.match(actions, /if \(method === 'ask'\)/)
   assert.match(actions, /kind: 'questionnaire'/)
@@ -324,25 +326,9 @@ test('learning remains an IPython namespace with transient per-turn context', ()
   assert.match(missionApplicationSource, /summary\.reflections < 1/)
 })
 
-test('Pulse exposes a closed typed loop.teacher SDK through the Host Action boundary', () => {
-  const teacherSdkBody = teacherSdk.split('class TeacherSDK:')[1] ?? ''
-  const methods = [...teacherSdkBody.matchAll(/^ {4}def ([a-z_]+)\(/gm)]
-    .map((match) => match[1])
-    .filter((method) => method !== '__init__' && method !== '_call')
-    .sort()
-  assert.deepEqual(methods, [
-    'archive_objective', 'close_activity', 'configure_digest', 'current',
-    'draft_activity', 'draft_objectives', 'get_attempt', 'get_digest_schedule',
-    'get_learner', 'list_activities', 'list_learners', 'list_objectives',
-    'list_reviews', 'list_rooms', 'overview', 'publish_activity',
-    'publish_objective', 'review_evaluation', 'set_learner_membership',
-    'set_room_binding', 'set_teacher_membership', 'transition_course', 'update_course',
-  ])
-  assert.match(teacherSdk, /class TeacherSDK:/)
-  assert.match(teacherSdk, /class ObjectiveDraft\(TypedDict\):/)
-  assert.match(teacherSdk, /ActivityType = Literal\["LESSON", "PRACTICE", "ASSESSMENT", "PROJECT", "REVIEW"\]/)
-  assert.match(teacherSdk, /Literal\["END", "ENTER_READ_ONLY", "ARCHIVE"\]/)
-  assert.doesNotMatch(teacherSdk, /__getattr__|company_id|project_id|course_id|room_id/)
-  assert.match(kernel, /TeacherSDK\(self\) if name == "teacher" else Namespace/)
+test('Pulse uses the generic, capability-gated host.teacher bridge', () => {
+  assert.match(kernel, /SDK_MODULE_NAME = "host"/)
+  assert.match(kernel, /if namespace\.startswith\("_"\) or namespace not in bridge\.capabilities/)
+  assert.doesNotMatch(kernel, /TeacherSDK|company_id|project_id|course_id|room_id/)
   assert.match(actions, /if \(namespace === 'teacher'\) return \{ ok: true, value: await executeTeacherAction/)
 })

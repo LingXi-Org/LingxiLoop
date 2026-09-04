@@ -192,7 +192,7 @@ export async function buildPromptContext(args: {
   const assembledAt = new Date().toISOString()
   const memories = { learner, course, agentRole }
   return {
-    version: 1,
+    version: 2,
     epoch: args.epoch,
     assembledAt,
     persona: args.persona,

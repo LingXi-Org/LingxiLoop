@@ -32,7 +32,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
-      AGENT_OS_HOMES_ROOT: /var/lib/lingxiloop-agent-os/homes
+      AGENT_OS_HOMES_ROOT: /var/lib/lingxiloop-agent-os/v2-homes
     volumes:
       - agent-os-data:/var/lib/lingxiloop-agent-os
     healthcheck:

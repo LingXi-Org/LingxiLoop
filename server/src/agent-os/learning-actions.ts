@@ -401,7 +401,11 @@ async function executeChat(work: AgentWorkItem, method: string, args: Record<str
         },
       },
     }
-    return { ok: true, value: await wukongClient().sendMessage(channelId, Number(args.channelType ?? 2), work.agentId, payload) }
+    return {
+      ok: true,
+      value: await wukongClient().sendMessage(channelId, Number(args.channelType ?? 2), work.agentId, payload),
+      directive: { type: 'defer', reason: 'user' },
+    }
   }
   if (method === 'handoff') {
     const targetAgentId = textArg(args, 'toAgentId')
@@ -539,7 +543,7 @@ async function executeCanvas(
       `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [work.channelId, work.companyId],
     )
     await wukongClient().sendMessage(work.channelId, Number(bindings[0]?.profile?.channelType ?? 2), work.agentId, card)
-    return { ok: true, value: snapshot, directive: { type: 'defer_to_canvas', canvasId: snapshot.id } }
+    return { ok: true, value: snapshot, directive: { type: 'defer', reason: 'canvas', data: { canvasId: snapshot.id } } }
   }
   if (method === 'add_agents') {
     if (!canvasId) throw new Error('canvasId is required')

@@ -1,23 +1,33 @@
 #!/usr/bin/env node
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
-import { MemoryHostAdapter } from '../server/src/agent-os/host-adapter.js'
 import {
+  AgentRuntime,
   ApprovalPendingError,
   type KernelExecutionOptions,
   type KernelExecutor,
-} from '../server/src/agent-os/kernel-manager.js'
+  type HostPort,
+} from '../third_party/lingxios/src/index.js'
+import type {
+  AssistantMessage,
+  HeartbeatResult,
+  KernelExecution,
+  ModelItem,
+  RunEvent,
+  SessionRecord,
+  TurnContext,
+  WorkCompletion,
+  WorkItem,
+} from '../third_party/lingxios/src/protocol/types.js'
 import { type AgentModelDriver, type ModelTurnResult, ScriptedModelDriver } from '../server/src/agent-os/model-driver.js'
 import { assembleAgentSystemPrompt } from '../server/src/agent-os/prompt-assembly.js'
-import { AgentOSRuntime } from '../server/src/agent-os/runtime.js'
+import { LingxiLoopRuntimePolicy } from '../server/src/agent-os/runtime.js'
+import { toLingxiOSWork } from '../server/src/agent-os/protocol-adapter.js'
 import type {
   AgentContext,
-  AgentRunEvent,
   AgentWorkItem,
   HostAction,
   HostActionResult,
-  KernelExecution,
-  ModelItem,
 } from '../server/src/agent-os/types.js'
 import {
   type EvalCaseInput,
@@ -85,7 +95,7 @@ function context(item: AgentWorkItem, input: string): AgentContext {
     }],
     learnerId: 'eval-learner',
     promptContextCandidate: {
-      version: 1,
+      version: 2,
       epoch: 0,
       assembledAt: '2026-08-26T00:00:00.000Z',
       systemInstructions: assembleAgentSystemPrompt({
@@ -151,7 +161,7 @@ class ContractCheckingModel implements AgentModelDriver {
   async run(args: Parameters<AgentModelDriver['run']>[0]): Promise<ModelTurnResult> {
     const expected = this.turns[this.index]
     if (!expected) throw new Error('runtime Eval model received an unexpected extra turn')
-    for (const fragment of expected.instructionFragments ?? ['Eval deterministic tutor', 'loop.knowledge', 'loop.canvas']) {
+    for (const fragment of expected.instructionFragments ?? ['Eval deterministic tutor', 'host.knowledge', 'host.canvas']) {
       if (!args.instructions.includes(fragment)) throw new Error(`runtime Eval prompt contract lost fragment: ${fragment}`)
     }
     for (const fragment of expected.forbiddenInstructionFragments ?? []) {
@@ -174,11 +184,11 @@ class ContractCheckingModel implements AgentModelDriver {
     return await this.delegate.run(args)
   }
 
-  async compact(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal }): Promise<string> {
+  async compact(args: { instructions: string; items: readonly ModelItem[]; signal?: AbortSignal }) {
     return await this.delegate.compact(args)
   }
 
-  async structured(): Promise<unknown> {
+  async structured() {
     return await this.delegate.structured()
   }
 
@@ -189,37 +199,102 @@ class ContractCheckingModel implements AgentModelDriver {
   }
 }
 
+function coreContext(value: AgentContext): TurnContext {
+  const coreWork = toLingxiOSWork(value.work)
+  return {
+    work: coreWork,
+    persona: value.persona,
+    capabilities: value.capabilities ?? [],
+    messages: value.messages.map((message) => ({
+      ref: message.clientMsgNo,
+      authorId: message.authorId,
+      authorName: message.authorName,
+      authorKind: message.authorKind,
+      body: message.body,
+      createdAt: message.createdAt,
+      ...(message.replyToClientMsgNo ? { replyToRef: message.replyToClientMsgNo } : {}),
+    })),
+    ...(value.promptContextCandidate ? { promptContextCandidate: value.promptContextCandidate } : {}),
+    ...(value.pendingApproval ? { pendingApproval: value.pendingApproval } : {}),
+    dynamic: { product: {
+      ...(value.knowledgeContext ? { knowledgeContext: value.knowledgeContext } : {}),
+      ...(value.knowledgeSourceCount === undefined ? {} : { knowledgeSourceCount: value.knowledgeSourceCount }),
+      ...(value.knowledgeIngestionFailure ? { knowledgeIngestionFailure: value.knowledgeIngestionFailure } : {}),
+      ...(value.learningContext ? { learningContext: value.learningContext } : {}),
+      ...(value.teacherContext ? { teacherContext: value.teacherContext } : {}),
+      ...(value.learnerId ? { learnerId: value.learnerId } : {}),
+      ...(value.canvas ? { canvas: value.canvas } : {}),
+      canvasRoster: value.canvasRoster ?? [],
+    } },
+  }
+}
+
+class EvalHost implements HostPort {
+  readonly contexts = new Map<string, AgentContext>()
+  readonly sessions = new Map<string, SessionRecord>()
+  readonly actions: HostAction[] = []
+  readonly events: RunEvent[] = []
+  readonly messages: AssistantMessage[] = []
+  readonly outcomes = new Map<string, WorkCompletion>()
+  actionHandler: (action: HostAction) => Promise<HostActionResult> = async () => ({ ok: true, value: null })
+
+  async claimWork(): Promise<WorkItem | null> { return null }
+  async heartbeat(): Promise<HeartbeatResult> { return { ok: true } }
+  async yieldWork(): Promise<void> {}
+  async loadContext(work: WorkItem): Promise<TurnContext> {
+    const value = this.contexts.get(work.id)
+    if (!value) throw new Error(`missing context for work ${work.id}`)
+    return coreContext(value)
+  }
+  async loadSession(_work: WorkItem, key: string): Promise<SessionRecord | null> {
+    return structuredClone(this.sessions.get(key) ?? null)
+  }
+  async saveSession(_work: WorkItem, session: SessionRecord): Promise<void> {
+    const current = this.sessions.get(session.key)
+    if ((current?.revision ?? 0) !== session.revision) throw new Error('session revision conflict')
+    session.revision += 1
+    this.sessions.set(session.key, structuredClone(session))
+  }
+  async executeAction(_work: WorkItem, action: HostAction): Promise<HostActionResult> {
+    this.actions.push(structuredClone(action))
+    return this.actionHandler(action)
+  }
+  async emitEvent(_work: WorkItem, event: RunEvent): Promise<void> { this.events.push(structuredClone(event)) }
+  async commitMessage(_work: WorkItem, message: AssistantMessage): Promise<void> { this.messages.push(structuredClone(message)) }
+  async completeWork(work: WorkItem, outcome: WorkCompletion): Promise<void> { this.outcomes.set(work.id, { ...outcome }) }
+}
+
 class HostBridgeKernel implements KernelExecutor {
   constructor(
-    private readonly host: MemoryHostAdapter,
+    private readonly host: EvalHost,
     private readonly actionResults: Map<string, HostActionResult>,
   ) {}
 
   async execute(
-    workItem: AgentWorkItem,
+    workItem: WorkItem,
     runId: string,
     cellId: string,
     code: string,
     _signal?: AbortSignal,
     options?: KernelExecutionOptions,
   ): Promise<KernelExecution> {
-    const actionName = code.includes('loop.chat.ask') ? 'chat.ask'
-      : code.includes('loop.email.send') ? 'email.send'
-        : code.includes('loop.calendar.create') ? 'calendar.create'
-        : code.includes('loop.teacher.list_learners') ? 'teacher.list_learners'
-          : code.includes('loop.teacher.review_evaluation') ? 'teacher.review_evaluation'
-        : code.includes('loop.teacher.publish_objective') ? 'teacher.publish_objective'
-          : code.includes('loop.learning.propose_evaluation') ? 'learning.propose_evaluation'
-            : code.includes('loop.learning.add_steps') ? 'learning.add_steps'
-              : code.includes('loop.learning.finish_planning') ? 'learning.finish_planning'
-                : code.includes('loop.canvas.submit_report') ? 'canvas.submit_report'
+    const actionName = code.includes('host.chat.ask') ? 'chat.ask'
+      : code.includes('host.email.send') ? 'email.send'
+        : code.includes('host.calendar.create') ? 'calendar.create'
+        : code.includes('host.teacher.list_learners') ? 'teacher.list_learners'
+          : code.includes('host.teacher.review_evaluation') ? 'teacher.review_evaluation'
+        : code.includes('host.teacher.publish_objective') ? 'teacher.publish_objective'
+          : code.includes('host.learning.propose_evaluation') ? 'learning.propose_evaluation'
+            : code.includes('host.learning.add_steps') ? 'learning.add_steps'
+              : code.includes('host.learning.finish_planning') ? 'learning.finish_planning'
+                : code.includes('host.canvas.submit_report') ? 'canvas.submit_report'
                   : ''
     if (!actionName) throw new Error(`runtime Eval received unsupported IPython code: ${code}`)
     const namespace = actionName.split('.')[0]
-    if (options?.allowedNamespaces && !options.allowedNamespaces.includes(namespace)) {
+    if (options?.capabilities && !options.capabilities.some((grant) => grant.name === namespace)) {
       throw new Error(`runtime Eval rejected ${actionName} outside the scoped IPython namespaces`)
     }
-    let args: unknown
+    let args: Record<string, unknown>
     if (actionName === 'chat.ask') {
       for (const argument of ['title=', 'items=', 'name', 'prompt', 'input']) {
         if (!code.includes(argument)) throw new Error(`runtime Eval requires chat.ask ${argument}`)
@@ -279,8 +354,10 @@ class HostBridgeKernel implements KernelExecutor {
       args,
       idempotencyKey: `${runId}:${cellId}:0`,
     }
+    await options?.onHostAction?.({ stage: 'started', action })
     const result = await this.host.executeAction(workItem, action)
     this.actionResults.set(action.idempotencyKey, structuredClone(result))
+    await options?.onHostAction?.({ stage: 'completed', action, result })
     if (result.approval) throw new ApprovalPendingError(result.approval.id, cellId)
     if (!result.ok) throw new Error(result.error ?? `${actionName} failed`)
     return {
@@ -291,15 +368,16 @@ class HostBridgeKernel implements KernelExecutor {
       durationMs: 2,
       truncated: false,
       artifacts: [],
+      directives: result.directive ? [result.directive] : [],
     }
   }
 }
 
-function eventData(event: AgentRunEvent | undefined): Record<string, unknown> {
+function eventData(event: RunEvent | undefined): Record<string, unknown> {
   return record(event?.data)
 }
 
-function runtimeTrace(events: AgentRunEvent[], actions: HostAction[], input: string): EvalTraceEvent[] {
+function runtimeTrace(events: RunEvent[], actions: HostAction[], input: string): EvalTraceEvent[] {
   const trace: EvalTraceEvent[] = []
   const inputEvent = events.find((event) => event.kind === 'input.loaded')
   if (inputEvent) trace.push({
@@ -378,7 +456,7 @@ function runtimeTrace(events: AgentRunEvent[], actions: HostAction[], input: str
   return trace
 }
 
-function citationsFromEvents(events: AgentRunEvent[]): EvalCitationObservation[] {
+function citationsFromEvents(events: RunEvent[]): EvalCitationObservation[] {
   return events.filter((event) => event.kind === 'knowledge.context.loaded').flatMap((event) => {
     const citations = eventData(event).citations
     return Array.isArray(citations) ? citations.filter((item): item is EvalCitationObservation =>
@@ -397,7 +475,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
         canvasAssignmentId: 'assignment-eval',
       }
     : {})
-  const host = new MemoryHostAdapter()
+  const host = new EvalHost()
   const actionResults = new Map<string, HostActionResult>()
   let input = ''
   let turns: CheckedTurn[] = []
@@ -467,33 +545,22 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     }]
   } else if (scenario === 'question-card-required') {
     input = '为我规划学习'
-    turns = [
-      {
-        instructionFragments: ['MUST call loop.chat.ask', 'never emit the blocking questions as plain text', 'For a vague request such as'],
-        itemFragments: [input],
-        result: {
-          output: [{
-            type: 'function_call',
-            callId: 'runtime-question-card',
-            name: 'ipython',
-            arguments: JSON.stringify({ code: 'loop.chat.ask(title="请补充学习目标", items=[{"name":"goal","prompt":"你的学习目标是什么？","required":True,"input":{"label":"学习目标"}}])' }),
-          }],
-          text: '',
-          usage: { inputTokens: 32, outputTokens: 14 },
-        },
+    turns = [{
+      instructionFragments: ['MUST call host.chat.ask', 'If you are about to write a blocking question', 'For a vague request such as', 'turn ends automatically'],
+      itemFragments: [input],
+      result: {
+        output: [{
+          type: 'function_call',
+          callId: 'runtime-question-card',
+          name: 'ipython',
+          arguments: JSON.stringify({ code: 'host.chat.ask(title="请补充学习目标", items=[{"name":"goal","prompt":"你的学习目标是什么？","required":True,"input":{"label":"学习目标"}}])' }),
+        }],
+        text: '',
+        usage: { inputTokens: 32, outputTokens: 14 },
       },
-      {
-        instructionFragments: ['MUST call loop.chat.ask', 'After a successful ask call, do no further work until the learner replies'],
-        itemFragments: ['questionnaire-eval', 'function_call_output'],
-        result: {
-          output: [{ role: 'assistant', content: '提问卡片已发送，请在卡片中填写学习目标。' }],
-          text: '提问卡片已发送，请在卡片中填写学习目标。',
-          usage: { inputTokens: 40, outputTokens: 12 },
-        },
-      },
-    ]
+    }]
     host.actionHandler = async (action) => action.action === 'chat.ask'
-      ? { ok: true, value: { clientMsgNo: 'questionnaire-eval' } }
+      ? { ok: true, value: { clientMsgNo: 'questionnaire-eval' }, directive: { type: 'defer', reason: 'user' } }
       : { ok: false, error: `unexpected action ${action.action}` }
   } else if (scenario === 'auto-grounding') {
     input = 'Explain retrieval grounding using the uploaded handbook.'
@@ -536,33 +603,33 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   } else if (scenario === 'approval-boundary') {
     input = 'Send the course summary by email.'
     turns = [{
-      instructionFragments: ['Eval deterministic tutor', 'loop.email'],
+      instructionFragments: ['Eval deterministic tutor', 'host.email'],
       itemFragments: [input],
       result: {
         output: [{
           type: 'function_call',
           callId: 'runtime-email',
           name: 'ipython',
-          arguments: JSON.stringify({ code: 'loop.email.send(to=["learner@example.invalid"], subject="Course summary", body="Grounded summary")' }),
+          arguments: JSON.stringify({ code: 'host.email.send(to=["learner@example.invalid"], subject="Course summary", body="Grounded summary")' }),
         }],
         text: '',
         usage: { inputTokens: 28, outputTokens: 10 },
       },
     }]
     host.actionHandler = async (action) => action.action === 'email.send'
-      ? { ok: false, approval: { id: 'approval-runtime-email', status: 'pending' } }
+      ? { ok: false, approval: { id: 'approval-runtime-email', status: 'PENDING' } }
       : { ok: false, error: `unexpected action ${action.action}` }
   } else if (scenario === 'calendar-create-approval') {
     input = 'Schedule a linear algebra review for Friday at 19:30.'
     turns = [{
-      instructionFragments: ['loop.calendar', 'Creating an event always stops for human confirmation'],
+      instructionFragments: ['host.calendar', 'Creating an event always stops for human confirmation'],
       itemFragments: [input],
       result: {
         output: [{
           type: 'function_call',
           callId: 'runtime-calendar-create',
           name: 'ipython',
-          arguments: JSON.stringify({ code: 'loop.calendar.create(title="线性代数复习", at="2026-09-04T19:30:00+08:00")' }),
+          arguments: JSON.stringify({ code: 'host.calendar.create(title="线性代数复习", at="2026-09-04T19:30:00+08:00")' }),
         }],
         text: '',
         usage: { inputTokens: 30, outputTokens: 12 },
@@ -575,8 +642,8 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     input = 'Publish the prepared retrieval objective.'
     configureTeacherContext(runtimeContext, item)
     turns = [{
-      instructionFragments: ['Pulse deterministic teacher agent', 'loop.teacher', 'product-managed Pulse Agent'],
-      forbiddenInstructionFragments: ['loop.turn', 'loop.learning is the only', 'loop.canvas is preloaded', 'loop.email'],
+      instructionFragments: ['Pulse deterministic teacher agent', 'host.teacher', 'product-managed Pulse Agent'],
+      forbiddenInstructionFragments: ['host.turn', 'host.learning is the only', 'host.canvas is preloaded', 'host.email'],
       itemFragments: [input, 'Authorized teacher state', 'Runtime Course'],
       forbiddenItemFragments: ['course-eval', 'eval-teacher', 'project-eval'],
       result: {
@@ -584,14 +651,14 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
           type: 'function_call',
           callId: 'runtime-pulse-publish',
           name: 'ipython',
-          arguments: JSON.stringify({ code: 'loop.teacher.publish_objective(objective_id="objective-eval")' }),
+          arguments: JSON.stringify({ code: 'host.teacher.publish_objective(objective_id="objective-eval")' }),
         }],
         text: '',
         usage: { inputTokens: 36, outputTokens: 12 },
       },
     }]
     host.actionHandler = async (action) => action.action === 'teacher.publish_objective'
-      ? { ok: false, approval: { id: 'approval-runtime-pulse', status: 'pending' } }
+      ? { ok: false, approval: { id: 'approval-runtime-pulse', status: 'PENDING' } }
       : { ok: false, error: `unexpected action ${action.action}` }
   } else if (scenario === 'forbidden-inferred-percentage') {
     input = 'What percentage of learners have mastered retrieval?'
@@ -610,21 +677,21 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     configureTeacherContext(runtimeContext, item)
     turns = [
       {
-        instructionFragments: ['loop.teacher', 'Aggregate before learner drill-down'],
+        instructionFragments: ['host.teacher', 'Aggregate before learner drill-down'],
         itemFragments: [input, 'Authorized teacher state'],
         result: {
           output: [{
             type: 'function_call',
             callId: 'runtime-attention-list',
             name: 'ipython',
-            arguments: JSON.stringify({ code: 'loop.teacher.list_learners(attention_only=True)' }),
+            arguments: JSON.stringify({ code: 'host.teacher.list_learners(attention_only=True)' }),
           }],
           text: '',
           usage: { inputTokens: 34, outputTokens: 10 },
         },
       },
       {
-        instructionFragments: ['loop.teacher', 'Aggregate before learner drill-down'],
+        instructionFragments: ['host.teacher', 'Aggregate before learner drill-down'],
         itemFragments: ['attention-case-eval', 'sourceEventCount', '2'],
         result: {
           output: [{ role: 'assistant', content: '去重后有 1 个 Attention：同一 Case 的两次来源事件已合并。' }],
@@ -657,7 +724,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
           callId: 'runtime-teacher-override',
           name: 'ipython',
           arguments: JSON.stringify({
-            code: 'loop.teacher.review_evaluation(evaluation_id="evaluation-eval", decision="reject", reason="Teacher evidence override")',
+            code: 'host.teacher.review_evaluation(evaluation_id="evaluation-eval", decision="reject", reason="Teacher evidence override")',
           }),
         }],
         text: '',
@@ -665,7 +732,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
       },
     }]
     host.actionHandler = async (action) => action.action === 'teacher.review_evaluation'
-      ? { ok: false, approval: { id: 'approval-runtime-override', status: 'pending' } }
+      ? { ok: false, approval: { id: 'approval-runtime-override', status: 'PENDING' } }
       : { ok: false, error: `unexpected action ${action.action}` }
   } else if (scenario === 'score-breakdown-evaluation') {
     input = 'Grade the recorded learner attempt against its rubric.'
@@ -679,7 +746,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
             callId: 'runtime-score-breakdown',
             name: 'ipython',
             arguments: JSON.stringify({
-              code: 'loop.learning.propose_evaluation(attemptId="attempt-eval", demonstratedLevel=2, confidence=0.9, rubricResults=[{"label":"Concept accuracy","score":2,"weight":1,"note":"Core idea is correct."}])',
+              code: 'host.learning.propose_evaluation(attemptId="attempt-eval", demonstratedLevel=2, confidence=0.9, rubricResults=[{"label":"Concept accuracy","score":2,"weight":1,"note":"Core idea is correct."}])',
             }),
           }],
           text: '',
@@ -728,7 +795,7 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
     }
     turns = [
       {
-        instructionFragments: ['Eval deterministic tutor', 'loop.learning'],
+        instructionFragments: ['Eval deterministic tutor', 'host.learning'],
         itemFragments: [input, 'status', 'PLANNING'],
         result: {
           output: [{ role: 'assistant', content: 'Mission planning is complete.' }],
@@ -737,35 +804,35 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
         },
       },
       {
-        instructionFragments: ['Eval deterministic tutor', 'loop.learning'],
-        itemFragments: ['Planning gate:', 'loop.learning.add_steps'],
+        instructionFragments: ['Eval deterministic tutor', 'host.learning'],
+        itemFragments: ['Planning gate:', 'host.learning.add_steps'],
         result: {
           output: [{
             type: 'function_call',
             callId: 'runtime-learning-add-steps',
             name: 'ipython',
-            arguments: JSON.stringify({ code: 'loop.learning.add_steps(missionId="mission-eval", steps=[{"kind":"CHECK","description":"Explain the retrieval check","successCriteria":"Names the evidence source"}])' }),
+            arguments: JSON.stringify({ code: 'host.learning.add_steps(missionId="mission-eval", steps=[{"kind":"CHECK","description":"Explain the retrieval check","successCriteria":"Names the evidence source"}])' }),
           }],
           text: '',
           usage: { inputTokens: 46, outputTokens: 12 },
         },
       },
       {
-        instructionFragments: ['Eval deterministic tutor', 'loop.learning'],
+        instructionFragments: ['Eval deterministic tutor', 'host.learning'],
         itemFragments: ['step-eval-check', 'PLANNING'],
         result: {
           output: [{
             type: 'function_call',
             callId: 'runtime-learning-finish-planning',
             name: 'ipython',
-            arguments: JSON.stringify({ code: 'loop.learning.finish_planning(missionId="mission-eval")' }),
+            arguments: JSON.stringify({ code: 'host.learning.finish_planning(missionId="mission-eval")' }),
           }],
           text: '',
           usage: { inputTokens: 52, outputTokens: 10 },
         },
       },
       {
-        instructionFragments: ['Eval deterministic tutor', 'loop.learning'],
+        instructionFragments: ['Eval deterministic tutor', 'host.learning'],
         itemFragments: ['ACTIVE', 'function_call_output'],
         result: {
           output: [{ role: 'assistant', content: '规划门已满足：检查步骤已创建，Mission 已激活。' }],
@@ -819,13 +886,13 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
         },
       },
       {
-        itemFragments: ['Completion gate:', 'learning_report_v1', 'loop.canvas.submit_report'],
+        itemFragments: ['Completion gate:', 'learning_report_v1', 'host.canvas.submit_report'],
         result: {
           output: [{
             type: 'function_call',
             callId: 'runtime-canvas-report',
             name: 'ipython',
-            arguments: JSON.stringify({ code: 'loop.canvas.submit_report(finding="Runtime gate verified", evidenceRefs=[{"kind":"source","id":"source-eval"}], confidence=0.94)' }),
+            arguments: JSON.stringify({ code: 'host.canvas.submit_report(finding="Runtime gate verified", evidenceRefs=[{"kind":"source","id":"source-eval"}], confidence=0.94)' }),
           }],
           text: '',
           usage: { inputTokens: 48, outputTokens: 14 },
@@ -872,16 +939,20 @@ async function executeRuntimeCase(testCase: EvalCaseInput): Promise<EvalObservat
   host.contexts.set(item.id, runtimeContext)
   const model = new ContractCheckingModel(turns)
   const startedAt = Date.now()
-  await new AgentOSRuntime(host, model, new HostBridgeKernel(host, actionResults), {
+  await new AgentRuntime(host, model, new HostBridgeKernel(host, actionResults), {
+    policy: new LingxiLoopRuntimePolicy(),
     heartbeatMs: 60_000,
     maxHops: 4,
-  }).runWork(item)
+    promptContractVersion: 'prompt-v7',
+  }).runWork(toLingxiOSWork(item))
   const latencyMs = Math.max(0, Date.now() - startedAt)
   const outcome = host.outcomes.get(item.id)
   if (!outcome) throw new Error(`${testCase.caseId} did not complete through the Agent OS host`)
-  if (outcome.status === 'failed') throw new Error(`${testCase.caseId} failed in Agent OS: ${outcome.error ?? 'unknown error'}`)
+  if (outcome.status === 'failed') throw new Error(
+    `${testCase.caseId} failed in Agent OS: ${outcome.error ?? 'unknown error'}; actions=${host.actions.map((action) => action.action).join(',')}; mission=${runtimeContext.learningContext?.activeMission?.status ?? 'none'}`,
+  )
   model.assertComplete()
-  const answer = outcome.resultText ?? host.messages.find((message) => message.refs?.runId === item.id)?.body ?? ''
+  const answer = outcome.resultText ?? host.messages.find((message) => message.runId === item.id)?.body ?? ''
   const actionCitations = host.actions.flatMap((action) => {
     const result = actionResults.get(action.idempotencyKey)
     return extractKnowledgeCitations(action.action, {

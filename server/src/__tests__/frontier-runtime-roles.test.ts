@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { roleAllowsAction } from '../agent-os/role-policy.js'
 import { assembleAgentSystemPrompt } from '../agent-os/prompt-assembly.js'
-import { IPYTHON_TOOL } from '../agent-os/tool.js'
+import { IPYTHON_TOOL_NAME } from '../../../third_party/lingxios/src/protocol/constants.js'
 import { learningContextContract } from '../agent-os/runtime.js'
 import { preferredLearningMissionCoordinator } from '../modules/learning/application.js'
 
@@ -36,5 +36,5 @@ test('Project learning SDK contract exposes canonical names and exact uppercase 
 })
 
 test('model-visible tool remains the single IPython function',()=>{
-  assert.equal(IPYTHON_TOOL.function.name,'ipython')
+  assert.equal(IPYTHON_TOOL_NAME,'ipython')
 })

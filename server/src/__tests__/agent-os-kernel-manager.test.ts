@@ -3,18 +3,17 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import test from 'node:test'
-import { KernelExecutionError, KernelManager } from '../agent-os/kernel-manager.js'
-import type { AgentWorkItem } from '../agent-os/types.js'
+import { KernelExecutionError, KernelManager } from '../../../third_party/lingxios/src/index.js'
+import type { WorkItem } from '../../../third_party/lingxios/src/protocol/types.js'
 
-function work(channelId: string): AgentWorkItem {
+function work(sessionId: string): WorkItem {
   return {
-    id: `work-${channelId}`, fence: 1, companyId: 'company', agentId: 'agent', channelId,
-    triggerClientMsgNo: `trigger-${channelId}`, reason: 'message', executionRole: 'coordinator',
-    lane: 'learner', leaseToken: `lease-${channelId}`,
+    id: `work-${sessionId}`, fence: 1, homeEpoch: 1, tenantId: 'company', agentId: 'agent', sessionId,
+    triggerRef: `trigger-${sessionId}`, kind: 'turn', lane: 'interactive', leaseToken: `lease-${sessionId}`,
   }
 }
 
-test('real IPython kernels preserve session state and enforce the loop allowlist', async () => {
+test('real IPython kernels preserve session state and enforce the host allowlist', async () => {
   const homesRoot = await mkdtemp(resolve(tmpdir(), 'lingxiloop-kernel-'))
   const hostCalls: string[] = []
   const hostEvents: unknown[] = []
@@ -25,13 +24,13 @@ test('real IPython kernels preserve session state and enforce the loop allowlist
     },
   }, {
     homesRoot,
-    runnerPath: resolve('server/agent-os/kernel_runner.py'),
+    runnerPath: resolve('third_party/lingxios/kernel/runner.py'),
     executionTimeoutMs: 30_000,
     maxOutputChars: 8_000,
     maxKernels: 2,
   })
   const first = work('one')
-  const access = { allowedNamespaces: ['documents'], allowedMethods: { documents: ['read'] } }
+  const access = { capabilities: [{ name: 'documents', methods: ['read'] }] }
   try {
     await manager.execute(first, first.id, 'cell-1', 'value = 41', undefined, access)
     const persisted = await manager.execute(first, first.id, 'cell-2', 'value + 1', undefined, access)
@@ -40,7 +39,7 @@ test('real IPython kernels preserve session state and enforce the loop allowlist
     const isolated = await manager.execute(work('two'), 'work-two', 'cell-1', 'session = "two"\nglobals().get("value")', undefined, access)
     assert.equal(isolated.result, null)
 
-    const hostResult = await manager.execute(first, first.id, 'cell-3', 'loop.documents.read(documentId="doc-1")', undefined, {
+    const hostResult = await manager.execute(first, first.id, 'cell-3', 'host.documents.read(documentId="doc-1")', undefined, {
       ...access,
       onHostAction: async (event) => { hostEvents.push(event) },
     })
@@ -65,7 +64,7 @@ test('real IPython kernels preserve session state and enforce the loop allowlist
     ])
 
     await assert.rejects(
-      manager.execute(first, first.id, 'cell-4', 'loop.documents.delete(documentId="doc-1")', undefined, access),
+      manager.execute(first, first.id, 'cell-4', 'host.documents.delete(documentId="doc-1")', undefined, access),
       KernelExecutionError,
     )
     const large = await manager.execute(first, first.id, 'cell-5', '"x" * 20000', undefined, access)
@@ -89,7 +88,7 @@ test('kernel capacity waits for a busy kernel instead of killing it', async () =
   const homesRoot = await mkdtemp(resolve(tmpdir(), 'lingxiloop-kernel-capacity-'))
   const manager = new KernelManager({ execute: async () => ({ ok: true, value: null }) }, {
     homesRoot,
-    runnerPath: resolve('server/agent-os/kernel_runner.py'),
+    runnerPath: resolve('third_party/lingxios/kernel/runner.py'),
     executionTimeoutMs: 30_000,
     maxKernels: 1,
   })
@@ -113,7 +112,7 @@ test('a new Home epoch cannot revive stale variables or files', async () => {
   const homesRoot = await mkdtemp(resolve(tmpdir(), 'lingxiloop-kernel-epoch-'))
   const manager = new KernelManager({ execute: async () => ({ ok: true, value: null }) }, {
     homesRoot,
-    runnerPath: resolve('server/agent-os/kernel_runner.py'),
+    runnerPath: resolve('third_party/lingxios/kernel/runner.py'),
     executionTimeoutMs: 30_000,
     maxKernels: 2,
   })

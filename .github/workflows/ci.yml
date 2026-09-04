@@ -80,6 +80,7 @@ jobs:
               - 'worker-configuration.d.ts'
             server:
               - 'server/src/**'
+              - 'third_party/lingxios/**'
               - 'server/scripts/**'
               - 'server/package.json'
               - 'server/package-lock.json'
@@ -90,6 +91,7 @@ jobs:
               - 'server/docker/agent-os.Dockerfile'
             server_source:
               - 'server/src/**'
+              - 'third_party/lingxios/**'
               - '!server/src/__tests__/**'
               - '!server/src/__integration__/**'
               - 'server/package.json'
@@ -103,6 +105,7 @@ jobs:
               - 'server/src/agent-os/**'
               - 'server/src/bin/agent-os.ts'
               - 'server/docker/agent-os.Dockerfile'
+              - 'third_party/lingxios/**'
             eval_harness:
               - 'eval/suites/smoke.v1.json'
               - 'eval/baselines/smoke.v1.json'
@@ -113,6 +116,7 @@ jobs:
               - 'eval/baselines/runtime-smoke.v1.json'
               - 'scripts/run-agent-runtime-eval.ts'
               - 'server/src/__tests__/eval-trace-harness.test.ts'
+              - 'third_party/lingxios/**'
             open_notebook:
               - 'third_party/open-notebook/Dockerfile'
               - 'third_party/open-notebook/.dockerignore'
@@ -201,6 +205,8 @@ jobs:
         run: npm run lint && npm test && npm run build
       - if: needs.changes.outputs.admin == 'true'
         run: npm run admin:lint && npm run admin:test && npm run admin:build
+      - if: needs.changes.outputs.server == 'true'
+        run: npm ci --prefix third_party/lingxios && npm --prefix third_party/lingxios run typecheck && npm --prefix third_party/lingxios test
       - if: needs.changes.outputs.server == 'true'
         run: npm run server:lint && npm run server:typecheck && npm run server:test
       - if: needs.changes.outputs.control == 'true'

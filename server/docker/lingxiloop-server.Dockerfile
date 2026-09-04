@@ -2,7 +2,7 @@
 #
 # Serves three surfaces from the same Node process:
 #   /api/*        — JSON API (Express router)
-#   /internal/agent-os/* — private Host Adapter API
+#   /internal/agent-os/v2/* — private LingxiOS control-plane API
 #   everything else — the React SPA bundle (built into /app/dist below)
 #
 # Entry points:
@@ -86,6 +86,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/package-lock.json ./
 COPY server ./server
+COPY third_party/lingxios ./third_party/lingxios
 # Canvas service deliberately shares these dependency-free domain helpers with
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into

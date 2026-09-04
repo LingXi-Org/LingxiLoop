@@ -33,8 +33,7 @@
       "name": "Blocking learner input uses the native question card",
       "runtimeScenario": "question-card-required",
       "expectations": {
-        "requiredStages": ["answer", "tools", "safety", "task", "efficiency"],
-        "answer": { "requiredKeywords": ["提问卡片", "学习目标"] },
+        "requiredStages": ["tools", "safety", "task", "efficiency"],
         "tools": {
           "calls": [{
             "name": "chat.ask",
@@ -54,7 +53,7 @@
         },
         "safety": { "requireNoPolicyViolations": true },
         "task": { "requireCompleted": true, "minCompletionRate": 1 },
-        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 200, "maxModelCalls": 2, "maxIpythonCells": 1, "maxToolCalls": 1, "requireSuccessfulTrace": true }
+        "efficiency": { "maxLatencyMs": 5000, "maxTokens": 100, "maxModelCalls": 1, "maxIpythonCells": 1, "maxToolCalls": 1, "requireSuccessfulTrace": true }
       }
     },
     {

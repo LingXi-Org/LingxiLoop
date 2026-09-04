@@ -44,6 +44,11 @@ type Decision =
   | { kind: 'cancelled'; error: string }
   | { kind: 'decided'; approval: ApprovalResolutionRow }
 
+function actionArgs(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('approval action args are invalid')
+  return value as Record<string, unknown>
+}
+
 export class AgentApprovalApplication {
   constructor(private readonly infrastructure: AgentApprovalInfrastructure) {}
 
@@ -142,7 +147,7 @@ export class AgentApprovalApplication {
           cellId: approval.cell_id,
           callIndex: approval.call_index,
           action: approval.action,
-          args: approval.args,
+          args: actionArgs(approval.args),
           idempotencyKey: approval.idempotency_key,
         })
       }
@@ -197,7 +202,7 @@ export class AgentApprovalApplication {
         cellId: approval.cell_id,
         callIndex: approval.call_index,
         action: approval.action,
-        args: approval.args,
+        args: actionArgs(approval.args),
         idempotencyKey: approval.idempotency_key,
       }
       const executed = await this.infrastructure.executeAction(work, action, true)

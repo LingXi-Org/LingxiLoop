@@ -69,6 +69,16 @@ is retained at `third_party/open-notebook/LICENSE`.
 
 MIT License, Copyright (c) 2024 Luis Novo.
 
+## LingxiOS
+
+LingxiLoop vendors the LingxiOS Agent OS source from commit
+`29aec516f92612e4860d372710e88f38d2e53528`:
+https://github.com/lyyzka/LingxiOS
+
+The source and its local integration notes are retained under
+`third_party/lingxios`. The upstream package metadata declares the MIT license;
+that snapshot did not include a standalone license file.
+
 ## LingXi interactive-lecture-deck
 
 LingxiLoop's deterministic HTML lecture renderer is adapted from the visual,

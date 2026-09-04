@@ -20,10 +20,11 @@ COPY server/package.json server/package-lock.json ./
 RUN npm ci --registry="$NPM_REGISTRY" --omit=dev --no-audit --no-fund \
   && npm cache clean --force
 COPY server ./server
+COPY third_party/lingxios ./third_party/lingxios
 
 ENV NODE_ENV=production \
     AGENT_OS_PYTHON=python3 \
-    AGENT_OS_HOMES_ROOT=/var/lib/lingxiloop-agent-os/homes \
+    AGENT_OS_HOMES_ROOT=/var/lib/lingxiloop-agent-os/v2-homes \
     LINGXILOOP_VERSION=${LINGXILOOP_VERSION} \
     LINGXILOOP_COMMIT_SHA=${LINGXILOOP_COMMIT_SHA}
 

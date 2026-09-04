@@ -1,16 +1,16 @@
 import type OpenAI from 'openai'
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions'
+import { ModelDriverError } from '../../../third_party/lingxios/src/errors.js'
+import type {
+  CompactionResult as AuxiliaryStringResult,
+  ModelDriver,
+  ModelTurnResult,
+  StructuredCallResult as AuxiliaryUnknownResult,
+} from '../../../third_party/lingxios/src/model/driver.js'
 import { createOpenAIClient } from '../llm-client.js'
-import { MODEL_TOOLS } from './tool.js'
 import type { ModelItem } from './types.js'
 
-export type ModelTurnResult = {
-  model?: string
-  output: ModelItem[]
-  text: string
-  usage: { inputTokens: number; outputTokens: number; available?: boolean }
-  diagnostics?: ModelTurnDiagnostics
-}
+export type { ModelTurnResult } from '../../../third_party/lingxios/src/model/driver.js'
 
 export type AuxiliaryModelResult<T> = {
   model: string
@@ -27,24 +27,29 @@ export type ModelTurnDiagnostics = {
   chunkShapes: string[]
 }
 
-export class ModelAdapterError extends Error {
+export class ModelAdapterError extends ModelDriverError {
   constructor(message: string, readonly diagnostics: ModelTurnDiagnostics) {
-    super(message)
+    super(message, diagnostics)
     this.name = 'ModelAdapterError'
   }
 }
 
-export interface AgentModelDriver {
-  readonly modelId?: string
-  run(args: {
-    instructions: string
-    items: ModelItem[]
-    signal?: AbortSignal
-    onTextDelta?: (delta: string) => void | Promise<void>
-  }): Promise<ModelTurnResult>
-  compact(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal }): Promise<AuxiliaryModelResult<string>>
-  structured(args: { instructions: string; input: unknown; signal?: AbortSignal }): Promise<AuxiliaryModelResult<unknown>>
-}
+export type AgentModelDriver = ModelDriver
+
+const IPYTHON_TOOL = {
+  type: 'function',
+  function: {
+    name: 'ipython',
+    description: 'Execute private Python in the persistent session kernel. Product capabilities use host.<namespace>.<method>(keyword=value, ...).',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: { code: { type: 'string', description: 'Executable Python source only, without Markdown fences or user-facing prose.' } },
+      required: ['code'],
+      additionalProperties: false,
+    },
+  },
+} as const
 
 function toChatMessage(item: ModelItem): ChatCompletionMessageParam {
   if ('role' in item) return { role: item.role, content: item.content } as ChatCompletionMessageParam
@@ -58,7 +63,7 @@ function toChatMessage(item: ModelItem): ChatCompletionMessageParam {
   return { role: 'tool', tool_call_id: item.callId, content: item.output }
 }
 
-const CHAT_TOOLS: ChatCompletionTool[] = MODEL_TOOLS.map((tool) => ({
+const CHAT_TOOLS: ChatCompletionTool[] = [IPYTHON_TOOL].map((tool) => ({
   type: 'function',
   function: {
     name: tool.function.name,
@@ -68,9 +73,17 @@ const CHAT_TOOLS: ChatCompletionTool[] = MODEL_TOOLS.map((tool) => ({
   },
 }))
 
+function visibleAssistantContent(raw: string): string {
+  let text = raw
+  const completeReasoning = /^\s*<(think|thinking)>[\s\S]*?<\/\1>\s*/i.exec(text)
+  if (completeReasoning) text = text.slice(completeReasoning[0].length)
+  text = text.replace(/^\s*<\/(?:think|thinking)>\s*/i, '')
+  return text
+}
+
 /** Native OpenAI Chat Completions transport. LingxiLoop owns
  * all history and never relies on provider threads or server-side state. */
-export class OpenAIChatDriver implements AgentModelDriver {
+export class OpenAIChatDriver implements ModelDriver {
   private readonly client: OpenAI
   readonly modelId: string
 
@@ -84,9 +97,9 @@ export class OpenAIChatDriver implements AgentModelDriver {
 
   async run(args: {
     instructions: string
-    items: ModelItem[]
+    items: readonly ModelItem[]
     signal?: AbortSignal
-    onTextDelta?: (delta: string) => void | Promise<void>
+    onTextDelta?: (delta: string) => void
   }): Promise<ModelTurnResult> {
     const request = {
       model: this.model,
@@ -98,7 +111,7 @@ export class OpenAIChatDriver implements AgentModelDriver {
       tool_choice: 'auto',
       parallel_tool_calls: false,
       max_tokens: 4_000,
-      ...(this.model.startsWith('Qwen/Qwen3.5-') ? { enable_thinking: false } : {}),
+      ...(/qwen3\.5/i.test(this.model) ? { enable_thinking: false } : {}),
     } satisfies Parameters<typeof this.client.chat.completions.create>[0] & { enable_thinking?: boolean }
     const stream = await this.client.chat.completions.create({
       ...request,
@@ -107,8 +120,7 @@ export class OpenAIChatDriver implements AgentModelDriver {
     }, { signal: args.signal })
 
     const output: ModelItem[] = []
-    let text = ''
-    let pendingText = ''
+    let rawText = ''
     let inputTokens = 0
     let outputTokens = 0
     let usageAvailable = false
@@ -143,12 +155,7 @@ export class OpenAIChatDriver implements AgentModelDriver {
         }
         const content = delta.content
         if (content) {
-          text += content
-          pendingText += content
-          if (pendingText.trim()) {
-            await args.onTextDelta?.(pendingText)
-            pendingText = ''
-          }
+          rawText += content
         }
         const rawCalls = delta.tool_calls ?? []
         for (const [position, raw] of rawCalls.entries()) {
@@ -162,6 +169,8 @@ export class OpenAIChatDriver implements AgentModelDriver {
       }
     }
     const streamedCalls = [...calls.values()]
+    const text = visibleAssistantContent(rawText)
+    if (text.trim()) await args.onTextDelta?.(text)
     const diagnostics: ModelTurnDiagnostics = {
       chunkCount,
       choiceCount,
@@ -194,7 +203,7 @@ export class OpenAIChatDriver implements AgentModelDriver {
     }
   }
 
-  async compact(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal }): Promise<AuxiliaryModelResult<string>> {
+  async compact(args: { instructions: string; items: readonly ModelItem[]; signal?: AbortSignal }): Promise<AuxiliaryStringResult> {
     const transcript = args.items.map((item) => JSON.stringify(item)).join('\n')
     const response = await this.client.chat.completions.create({
       model: this.model,
@@ -211,7 +220,7 @@ export class OpenAIChatDriver implements AgentModelDriver {
     }
   }
 
-  async structured(args: { instructions: string; input: unknown; signal?: AbortSignal }): Promise<AuxiliaryModelResult<unknown>> {
+  async structured(args: { instructions: string; input: unknown; signal?: AbortSignal }): Promise<AuxiliaryUnknownResult> {
     const response = await this.client.chat.completions.create({
       model: this.model,
       messages: [
@@ -241,10 +250,10 @@ export class ScriptedModelDriver implements AgentModelDriver {
     if (next.text) await args.onTextDelta?.(next.text)
     return structuredClone(next)
   }
-  async compact(args: { items: ModelItem[] }): Promise<AuxiliaryModelResult<string>> {
+  async compact(args: Parameters<AgentModelDriver['compact']>[0]): Promise<AuxiliaryStringResult> {
     return { model: 'scripted', value: `Summary of ${args.items.length} items`, usage: { inputTokens: 0, outputTokens: 0, available: false } }
   }
-  async structured(): Promise<AuxiliaryModelResult<unknown>> {
+  async structured(): Promise<AuxiliaryUnknownResult> {
     return { model: 'scripted', value: { changes: [], approved: true, confidence: 1 }, usage: { inputTokens: 0, outputTokens: 0, available: false } }
   }
 }

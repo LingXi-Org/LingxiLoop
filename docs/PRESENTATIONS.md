@@ -1,7 +1,7 @@
 # Source-grounded HTML presentations
 
 LingxiLoop has one presentation domain and still has one Agent Runtime. A model
-uses the typed `loop.presentations.*` Host Bridge from `ipython`; `ipython`
+uses the typed `host.presentations.*` Host Bridge from `ipython`; `ipython`
 remains the only model-visible tool. Presentation work is asynchronous and is
 owned by the existing PostgreSQL lease/fence Worker pattern.
 

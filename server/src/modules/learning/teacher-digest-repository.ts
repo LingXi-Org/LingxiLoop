@@ -64,7 +64,7 @@ export async function upsertTeacherDigest(
       timezone,status,next_run_at,created_by,approved_by
     ) VALUES(
       $1,$2,$3,$4,'teacher_project_digest','项目学情摘要',
-      'Generate a bounded aggregate teacher digest with loop.teacher.overview. Do not read raw attempts or perform writes.',
+      'Generate a bounded aggregate teacher digest with host.teacher.overview. Do not read raw attempts or perform writes.',
       $5::jsonb,$6,'active',$7,$8,$8
     )
     ON CONFLICT(id) DO UPDATE SET

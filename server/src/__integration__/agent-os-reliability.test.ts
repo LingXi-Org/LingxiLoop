@@ -6,6 +6,7 @@ import express from 'express'
 import { agentOSControlRouter, executeActionWithLedger } from '../agent-os/control-plane.js'
 import { executeLearningAction } from '../agent-os/learning-actions.js'
 import type { AgentWorkItem, HostAction, LingxiMessageV1 } from '../agent-os/types.js'
+import type { AssistantMessage, WorkItem } from '../../../third_party/lingxios/src/protocol/types.js'
 import { sweepAgentWorkWatchdog } from '../agent-os/work-watchdog.js'
 import { pool } from '../db/pool.js'
 import { imRouter } from '../im/router.js'
@@ -87,7 +88,7 @@ beforeEach(async () => {
   )
   await pool.query(
     `INSERT INTO participants (id,company_id,kind,name,role,initial,avatar_bg,status,capabilities)
-     VALUES ($1,$3,'agent','Nova','coach','N','#6d5dfc','avail','["web"]'::jsonb),
+     VALUES ($1,$3,'agent','Nova','coach','N','#6d5dfc','avail','["chat","web"]'::jsonb),
             ($2,$3,'human','Learner','learner','L','#0078c8','avail','[]'::jsonb)`,
     [AGENT, HUMAN, COMPANY],
   )
@@ -131,22 +132,30 @@ async function postWebhook(body: string): Promise<Response> {
   })
 }
 
-async function claimWork(workerId: string): Promise<AgentWorkItem | null> {
-  const response = await fetch(`${baseUrl}/internal/agent-os/work/claim`, {
+async function claimWork(workerId: string): Promise<WorkItem | null> {
+  const response = await fetch(`${baseUrl}/internal/agent-os/v2/work/claim`, {
     method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
     body: JSON.stringify({ workerId }),
   })
   assert.equal(response.status, 200)
-  return await response.json() as AgentWorkItem | null
+  return await response.json() as WorkItem | null
 }
 
-async function completeWork(work: AgentWorkItem): Promise<void> {
-  const response = await fetch(`${baseUrl}/internal/agent-os/work/${work.id}/complete`, {
+async function completeWork(work: WorkItem): Promise<void> {
+  const response = await fetch(`${baseUrl}/internal/agent-os/v2/work/${work.id}/complete`, {
     method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
     body: JSON.stringify({ fence: work.fence, leaseToken: work.leaseToken, status: 'completed' }),
   })
   assert.equal(response.status, 200)
 }
+
+test('[integration] legacy AgentOS v1 control routes are removed', async () => {
+  const response = await fetch(`${baseUrl}/internal/agent-os/work/claim`, {
+    method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ workerId: 'legacy-worker' }),
+  })
+  assert.equal(response.status, 404)
+})
 
 test('[integration] failed webhook dispatch rolls back its receipt and the same event retries', async () => {
   const eventId = `retry-${randomUUID()}`
@@ -239,10 +248,10 @@ test('[integration] session persistence rejects a worker after its fence is supe
     [sessionKey, workId],
   )
   const session = {
-    key: sessionKey, companyId: COMPANY, agentId: AGENT, channelId: CHANNEL,
+    key: sessionKey, tenantId: COMPANY, agentId: AGENT, sessionId: CHANNEL,
     history: [{ role: 'user', content: 'once' }], appliedWorkIds: [workId], revision: 0, compactionEpoch: 0,
   }
-  const save = () => fetch(`${baseUrl}/internal/agent-os/sessions`, {
+  const save = () => fetch(`${baseUrl}/internal/agent-os/v2/sessions`, {
     method: 'PUT', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
     body: JSON.stringify({ workId, fence: 1, leaseToken, session }),
   })
@@ -311,6 +320,31 @@ test('[integration] pending Host Action reuses its sink id after a post-side-eff
   assert.equal(rows[0]?.status, 'succeeded')
 })
 
+test('[integration] concurrent duplicate Host Actions execute once through the product ledger', async () => {
+  const workId = `concurrent-action-${randomUUID()}`
+  const leaseToken = 'concurrent-action-token'
+  await pool.query(
+    `INSERT INTO agent_work_items
+       (id,company_id,authorization_user_id,agent_id,channel_id,trigger_client_msg_no,reason,status,fence,lease_token_hash,lease_expires_at)
+     VALUES($1,$2,$3,$4,$5,$6,'message','leased',1,$7,NOW()+INTERVAL '1 minute')`,
+    [workId, COMPANY, HUMAN, AGENT, CHANNEL, `trigger-${workId}`, createHash('sha256').update(leaseToken).digest('hex')],
+  )
+  const request = () => fetch(`${baseUrl}/internal/agent-os/v2/work/${workId}/actions`, {
+    method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      fence: 1, leaseToken,
+      action: {
+        runId: workId, cellId: 'concurrent', callIndex: 0, action: 'chat.send', args: { body: 'Only once' },
+        idempotencyKey: `${workId}:concurrent:0`,
+      },
+    }),
+  })
+  const responses = await Promise.all([request(), request()])
+  assert.deepEqual(responses.map((response) => response.status), [200, 200])
+  assert.equal(sendAttempts, 1)
+  assert.equal((await pool.query(`SELECT 1 FROM agent_host_actions WHERE work_id=$1 AND status='succeeded'`, [workId])).rowCount, 1)
+})
+
 test('[integration] work claims serialize one session while allowing the next after completion', async () => {
   const ids = [`work-${randomUUID()}`, `work-${randomUUID()}`]
   for (const [index, id] of ids.entries()) {
@@ -321,17 +355,17 @@ test('[integration] work claims serialize one session while allowing the next af
     )
   }
   const claim = async () => {
-    const response = await fetch(`${baseUrl}/internal/agent-os/work/claim`, {
+    const response = await fetch(`${baseUrl}/internal/agent-os/v2/work/claim`, {
       method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
       body: JSON.stringify({ workerId: 'reliability-test' }),
     })
     assert.equal(response.status, 200)
-    return await response.json() as AgentWorkItem | null
+    return await response.json() as WorkItem | null
   }
   const first = await claim()
   assert.equal(first?.id, ids[0])
   assert.equal(await claim(), null, 'a second work item in the same session must stay queued')
-  const completed = await fetch(`${baseUrl}/internal/agent-os/work/${first!.id}/complete`, {
+  const completed = await fetch(`${baseUrl}/internal/agent-os/v2/work/${first!.id}/complete`, {
     method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
     body: JSON.stringify({ fence: first!.fence, leaseToken: first!.leaseToken, status: 'completed' }),
   })
@@ -416,16 +450,15 @@ test('[integration] final message validation ignores streamed deltas from an old
       [randomUUID(), workId, AGENT, COMPANY, kind, JSON.stringify(data), sequence],
     )
   }
-  const message: LingxiMessageV1 = {
-    version: 1, kind: 'text', clientMsgNo: `answer-${workId}`, body: 'Recovered answer',
-    refs: { runId: workId, agentId: AGENT },
+  const message: AssistantMessage = {
+    version: 2, runId: workId, agentId: AGENT, sessionId: CHANNEL, body: 'Recovered answer',
   }
-  const response = await fetch(`${baseUrl}/internal/agent-os/work/${workId}/messages`, {
+  const response = await fetch(`${baseUrl}/internal/agent-os/v2/work/${workId}/messages`, {
     method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
     body: JSON.stringify({ fence: 2, leaseToken, message }),
   })
   assert.equal(response.status, 200)
-  assert.deepEqual([...persistedClientMessages], [message.clientMsgNo])
+  assert.deepEqual([...persistedClientMessages], [`agent-${workId}`])
 })
 
 test('[integration] a stopped leased worker stays unclaimable after its lease expires', async () => {
@@ -436,7 +469,7 @@ test('[integration] a stopped leased worker stays unclaimable after its lease ex
      VALUES ($1,$2,$3,$4,$5,'canvas_worker','leased',NOW()-INTERVAL '1 minute',NOW())`,
     [stoppedWorkId, COMPANY, AGENT, CHANNEL, `stopped-${stoppedWorkId}`],
   )
-  const response = await fetch(`${baseUrl}/internal/agent-os/work/claim`, {
+  const response = await fetch(`${baseUrl}/internal/agent-os/v2/work/claim`, {
     method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
     body: JSON.stringify({ workerId: 'lease-expiry-recovery' }),
   })
@@ -458,7 +491,7 @@ test('[integration] a stopped worker lease cannot execute a Canvas action before
      VALUES ($1,$2,$3,$4,$5,'canvas_worker','leased',4,$6,NOW()+INTERVAL '1 minute',NOW())`,
     [workId, COMPANY, AGENT, CHANNEL, `stopped-${workId}`, createHash('sha256').update(leaseToken).digest('hex')],
   )
-  const response = await fetch(`${baseUrl}/internal/agent-os/work/${workId}/actions`, {
+  const response = await fetch(`${baseUrl}/internal/agent-os/v2/work/${workId}/actions`, {
     method: 'POST', headers: { authorization: `Bearer ${SERVICE_TOKEN}`, 'content-type': 'application/json' },
     body: JSON.stringify({ fence: 4, leaseToken, action: { runId: workId, cellId: 'stopped', callIndex: 0,
       action: 'canvas.create_frame', args: {}, idempotencyKey: `${workId}:stopped:0` } }),

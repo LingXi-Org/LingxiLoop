@@ -1,11 +1,18 @@
 import 'dotenv/config'
 import '../logging.js'
-import http from 'node:http'
+import { resolve } from 'node:path'
+import {
+  AgentRuntime,
+  AgentWorker,
+  HttpHostClient,
+  KernelManager,
+  MetricsRegistry,
+} from '../../../third_party/lingxios/src/index.js'
 import { parseAgentOSConcurrency } from './concurrency-config.js'
-import { HttpHostAdapter } from './host-adapter.js'
-import { KernelManager } from './kernel-manager.js'
+import { createMemoryClient, createMemorySynthesisProcessor } from './memory-processor.js'
 import { OpenAIChatDriver } from './model-driver.js'
-import { AgentOSRuntime } from './runtime.js'
+import { LingxiLoopRuntimePolicy } from './runtime.js'
+import { PROMPT_CONTRACT_VERSION } from './types.js'
 
 function required(name: string): string {
   const value = process.env[name]?.trim()
@@ -13,87 +20,60 @@ function required(name: string): string {
   return value
 }
 
-const port = Number(process.env.AGENT_OS_PORT ?? 5190)
+function positiveInteger(name: string, fallback: number): number {
+  const value = Number(process.env[name] ?? fallback)
+  if (!Number.isSafeInteger(value) || value < 1) throw new Error(`${name} must be a positive integer`)
+  return value
+}
+
+const serviceToken = required('AGENT_OS_SERVICE_TOKEN')
+const controlPlaneRoot = `${required('LINGXILOOP_CONTROL_PLANE_URL').replace(/\/+$/, '')}/internal/agent-os`
 const workerId = process.env.AGENT_OS_WORKER_ID ?? `agent-os-${process.pid}`
-const host = new HttpHostAdapter({
-  baseUrl: required('LINGXILOOP_CONTROL_PLANE_URL'),
-  serviceToken: required('AGENT_OS_SERVICE_TOKEN'),
-  workerId,
-})
+const host = new HttpHostClient({ baseUrl: controlPlaneRoot, serviceToken, workerId })
 const model = new OpenAIChatDriver(required('OPENAI_MODEL'), {
   apiKey: required('OPENAI_API_KEY'),
   baseURL: process.env.OPENAI_BASE_URL?.trim() || 'https://api.openai.com/v1',
 })
-const kernels = new KernelManager({ execute: (work, action) => host.executeAction(work, action) })
-const runtime = new AgentOSRuntime(host, model, kernels)
-const maxConcurrentRuns = parseAgentOSConcurrency(process.env.AGENT_OS_MAX_CONCURRENT_RUNS)
-const shutdownGraceMs = Number(process.env.AGENT_OS_SHUTDOWN_GRACE_MS ?? 20_000)
-if (!Number.isSafeInteger(shutdownGraceMs) || shutdownGraceMs < 1_000) {
-  throw new Error('AGENT_OS_SHUTDOWN_GRACE_MS must be an integer of at least 1000')
-}
-const active = new Map<string, Promise<void>>()
-const claimController = new AbortController()
-let stopping = false
-
-async function poll(): Promise<void> {
-  while (!stopping) {
-    try {
-      if (active.size >= maxConcurrentRuns) {
-        await Promise.race(active.values())
-        continue
-      }
-      const work = await host.claimWork(claimController.signal)
-      if (stopping) {
-        return
-      }
-      if (!work) { await new Promise((resolveDelay) => setTimeout(resolveDelay, 750)); continue }
-      if (active.has(work.id)) continue
-      const done = runtime.runWork(work).catch((error) => {
-        console.error(`[agent-os] work ${work.id} escaped runtime handling:`, error instanceof Error ? error.message : String(error))
-      }).finally(() => active.delete(work.id))
-      active.set(work.id, done)
-      void done
-    } catch (error) {
-      if (stopping) return
-      console.error('[agent-os] poll failed:', error instanceof Error ? error.message : String(error))
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, 2_000))
-    }
-  }
-}
-
-const health = http.createServer((req, res) => {
-  if (req.url === '/readyz' || req.url === '/healthz') {
-    res.writeHead(200, { 'content-type': 'application/json' })
-    res.end(JSON.stringify({ ok: true, workerId, activeRuns: active.size, maxConcurrentRuns, kernels: kernels.size }))
-    return
-  }
-  res.writeHead(404).end()
+const kernels = new KernelManager(
+  { execute: (work, action) => host.executeAction(work, action) },
+  {
+    pythonCommand: process.env.AGENT_OS_PYTHON ?? 'python3',
+    runnerPath: resolve('third_party/lingxios/kernel/runner.py'),
+    homesRoot: process.env.AGENT_OS_HOMES_ROOT ?? resolve('.agent-os-v2/homes'),
+    maxKernels: positiveInteger('AGENT_OS_MAX_KERNELS', 32),
+    executionTimeoutMs: positiveInteger('AGENT_OS_EXECUTION_TIMEOUT_MS', 120_000),
+    maxOutputChars: positiveInteger('AGENT_OS_MAX_OUTPUT_CHARS', 8_000),
+    allowNetwork: false,
+  },
+)
+const runtime = new AgentRuntime(host, model, kernels, {
+  policy: new LingxiLoopRuntimePolicy(),
+  heartbeatMs: positiveInteger('AGENT_OS_HEARTBEAT_MS', 5_000),
+  maxHops: positiveInteger('AGENT_OS_MAX_HOPS', 12),
+  promptContractVersion: PROMPT_CONTRACT_VERSION,
 })
-health.listen(port, () => console.log(`[agent-os] ready on :${port} as ${workerId}`))
-const polling = poll()
+runtime.registerProcessor('memory_synthesis', createMemorySynthesisProcessor(
+  createMemoryClient({ baseUrl: controlPlaneRoot, serviceToken }),
+))
+
+const worker = new AgentWorker({
+  host,
+  runtime,
+  kernels,
+  metrics: new MetricsRegistry(),
+  workerId,
+  healthPort: positiveInteger('AGENT_OS_PORT', 5190),
+  maxConcurrentRuns: parseAgentOSConcurrency(process.env.AGENT_OS_MAX_CONCURRENT_RUNS),
+  shutdownGraceMs: positiveInteger('AGENT_OS_SHUTDOWN_GRACE_MS', 20_000),
+})
+
+await worker.start()
 
 async function shutdown(): Promise<void> {
-  if (stopping) return
-  stopping = true
-  claimController.abort()
-  let graceTimer: NodeJS.Timeout | undefined
-  const timedOut = await Promise.race([
-    Promise.allSettled([polling, ...active.values()]).then(() => false),
-    new Promise<true>((resolveTimeout) => {
-      graceTimer = setTimeout(() => resolveTimeout(true), shutdownGraceMs)
-      graceTimer.unref?.()
-    }),
-  ])
-  if (graceTimer) clearTimeout(graceTimer)
-  if (timedOut) console.error(`[agent-os] shutdown grace period expired after ${shutdownGraceMs}ms`)
-  kernels.close()
-  await new Promise<void>((resolveClose) => {
-    health.close(() => resolveClose())
-    health.closeAllConnections()
-  })
+  await worker.stop()
   process.exit(0)
 }
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
-  process.on(signal, () => { void shutdown() })
+  process.once(signal, () => { void shutdown() })
 }

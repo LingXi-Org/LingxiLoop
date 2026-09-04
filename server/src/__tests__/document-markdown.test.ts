@@ -101,7 +101,7 @@ test('markdownToYXml emits ProseMirror-compatible Yjs nodes', () => {
   const fragment = doc.getXmlFragment('default')
   fragment.push(markdownToYXml('## Done\n\n![Sketch](/uploads/sketch.png)\n\n1. Ship **this**'))
 
-  assert.deepEqual(yXmlFragmentToProsemirrorJSON(fragment), {
+  assert.deepEqual(yXmlFragmentToProsemirrorJSON(fragment as unknown as Parameters<typeof yXmlFragmentToProsemirrorJSON>[0]), {
     type: 'doc',
     content: [
       {

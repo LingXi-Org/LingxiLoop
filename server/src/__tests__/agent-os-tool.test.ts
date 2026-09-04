@@ -1,18 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { IPYTHON_TOOL, MODEL_TOOLS, parseIPythonArguments } from '../agent-os/tool.js'
+import { IPYTHON_TOOL_NAME, KERNEL_SDK_MODULE } from '../../../third_party/lingxios/src/protocol/constants.js'
+import { parseIPythonArguments } from '../../../third_party/lingxios/src/runtime/tool.js'
 
-test('the complete model-visible tool surface is strict IPython', () => {
-  assert.equal(MODEL_TOOLS.length, 1)
-  assert.equal(MODEL_TOOLS[0], IPYTHON_TOOL)
-  assert.equal(IPYTHON_TOOL.function.name, 'ipython')
-  assert.equal(IPYTHON_TOOL.function.strict, true)
-  assert.deepEqual(IPYTHON_TOOL.function.parameters, {
-    type: 'object',
-    properties: { code: { type: 'string', description: 'Executable Python source only, without Markdown fences or user-facing prose. Python state persists across turns; never await loop SDK calls.' } },
-    required: ['code'],
-    additionalProperties: false,
-  })
+test('the model-visible tool and kernel SDK names are the LingxiOS v2 names', () => {
+  assert.equal(IPYTHON_TOOL_NAME, 'ipython')
+  assert.equal(KERNEL_SDK_MODULE, 'host')
 })
 
 test('IPython arguments reject every shape except one non-empty code string', () => {

@@ -113,7 +113,7 @@ function validAgentTask() {
 }
 
 async function assertStatus(response: Response, expected: number): Promise<void> {
-  assert.equal(response.status, expected, response.status === expected ? undefined : await response.text())
+  assert.equal(response.status, expected, response.status === expected ? '' : await response.text())
 }
 
 test('[integration] calendar create stores explicit tenant and workspace ownership', async () => {

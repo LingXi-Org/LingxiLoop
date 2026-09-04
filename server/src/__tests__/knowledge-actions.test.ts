@@ -61,7 +61,7 @@ test('Agent application and provider contain only source management capabilities
   const application = readFileSync(new URL('../modules/knowledge/agent-application.ts', import.meta.url), 'utf8')
   const repository = readFileSync(new URL('../modules/knowledge/agent-repository.ts', import.meta.url), 'utf8')
   const provider = readFileSync(new URL('../modules/knowledge/provider.ts', import.meta.url), 'utf8')
-  const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
+  const kernel = readFileSync(new URL('../../../third_party/lingxios/kernel/runner.py', import.meta.url), 'utf8')
 
   assert.doesNotMatch(application, /from ['"][^'"]*db\/pool\.js['"]|\b(?:pool|db)\.query\b|`\s*(?:SELECT|INSERT|UPDATE|DELETE|WITH)\b/is)
   assert.match(application, /work\.authorizationUserId\?\.trim\(\)[\s\S]*if \(!userId\) throw/)
@@ -71,8 +71,9 @@ test('Agent application and provider contain only source management capabilities
   assert.match(provider, /if \(allowedSources\.size === 0\) return \[\]/)
   assert.doesNotMatch(provider, /search_notes|listNotes|\/api\/notes|\/insights|\/chat\/sessions|\/search\/ask/)
   assert.doesNotMatch(provider, /transformations|async_processing|delete_source/)
-  for (const method of expectedKnowledgeMethods) assert.match(kernel, new RegExp(`"${method}"`))
-  assert.match(kernel, /sys\.modules\["loop"\] = loop/)
+  assert.match(kernel, /SDK_MODULE_NAME = "host"/)
+  assert.match(kernel, /context\.get\("capabilities"\)/)
+  assert.match(kernel, /return bridge\.call\(f"\{namespace\}\.\{method\}"/)
   for (const removed of ['ask', 'create_note', 'create_insight', 'start_source_chat', 'update_source', 'unlink_source']) {
     assert.doesNotMatch(kernel, new RegExp(`"${removed}"`))
   }

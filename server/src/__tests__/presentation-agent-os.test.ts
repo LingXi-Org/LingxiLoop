@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import { assertHostActionPermission, PRESENTATION_ACTION_METHODS } from '../agent-os/authorization.js'
 import { roleAllowsAction } from '../agent-os/role-policy.js'
 import { presentationContextContract } from '../agent-os/runtime.js'
-import { MODEL_TOOLS } from '../agent-os/tool.js'
+import { IPYTHON_TOOL_NAME, KERNEL_SDK_MODULE } from '../../../third_party/lingxios/src/protocol/constants.js'
 import type { AgentWorkItem, HostAction } from '../agent-os/types.js'
 import type { Queryable } from '../db/queryable.js'
 import { ForbiddenError } from '../modules/access/public.js'
@@ -61,16 +61,13 @@ function readOnlyAccessDb(): Queryable {
   }
 }
 
-test('loop.presentations is a closed IPython namespace and adds no model-visible tool', () => {
-  const kernel = readFileSync(new URL('../../agent-os/kernel_runner.py', import.meta.url), 'utf8')
-  const methodBlock = /PRESENTATION_METHODS = frozenset\(\{([\s\S]*?)\}\)/.exec(kernel)?.[1] ?? ''
-  const methods = [...methodBlock.matchAll(/"([a-z_]+)"/g)].map((match) => match[1]).sort()
-  assert.deepEqual(methods, [
-    'approve_outline', 'cancel', 'create', 'get', 'retry', 'revise', 'revise_outline',
-  ])
-  assert.match(kernel, /DEFAULT_NAMESPACES[\s\S]*"presentations"/)
-  assert.match(kernel, /Namespace\(self, name, methods\)/)
-  assert.deepEqual(MODEL_TOOLS.map((tool) => tool.function.name), ['ipython'])
+test('host.presentations is a closed IPython namespace and adds no model-visible tool', () => {
+  const kernel = readFileSync(new URL('../../../third_party/lingxios/kernel/runner.py', import.meta.url), 'utf8')
+  assert.equal(IPYTHON_TOOL_NAME, 'ipython')
+  assert.equal(KERNEL_SDK_MODULE, 'host')
+  assert.match(kernel, /SDK_MODULE_NAME = "host"/)
+  assert.match(kernel, /class HostBridge/)
+  assert.doesNotMatch(kernel, /PRESENTATION_METHODS|DEFAULT_NAMESPACES/)
 })
 
 test('presentation Host Actions retain least privilege and explicit outline approval', () => {

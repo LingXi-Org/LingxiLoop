@@ -16,7 +16,7 @@ test('prompt ordering keeps identity policy above configurable personality and o
     executionRole:'coordinator',
     runtimeContracts: [canvasContextContract([]), knowledgeContextContract(), learningContextContract()],
   })
-  const policy = prompt.indexOf('<policy>')
+  const policy = prompt.indexOf('<non_negotiable_protocol>')
   const identity = prompt.indexOf('# Identity, Context, and Disclosure Boundary')
   const behaviour = prompt.indexOf('# Response and Writing Behaviour')
   const personality = prompt.indexOf('# Role Personality')
@@ -32,12 +32,15 @@ test('prompt ordering keeps identity policy above configurable personality and o
   assert.match(prompt, /add_steps\(missionId=mission\["id"\], steps=/)
   assert.match(prompt, /every step requires its own non-empty description and successCriteria/)
   assert.match(prompt, /Canvas is the only fan-out\/fan-in surface/)
-  assert.match(prompt, /loop\.chat\.ask/)
-  assert.match(prompt, /MUST call loop\.chat\.ask/)
-  assert.match(prompt, /never emit the blocking questions as plain text/)
-  assert.match(prompt, /An explicit request to perform an available product action requires the matching loop\.\* Host action/)
+  assert.match(prompt, /host\.chat\.ask/)
+  assert.match(prompt, /MUST call host\.chat\.ask/)
+  assert.match(prompt, /If you are about to write a blocking question, confirmation, or list of choices in prose, STOP/)
+  assert.match(prompt, /After success the turn ends automatically/)
+  assert.match(prompt, /Emit answer OR exactly one ipython call, never both/)
+  assert.match(prompt, /Visible text contains no reasoning tags/)
+  assert.match(prompt, /An explicit request to perform an available product action requires the matching host\.\* Host action/)
   assert.doesNotMatch(prompt, /A natural diagnostic or comprehension question may remain ordinary text/)
-  assert.match(prompt, /loop\.polls\.create/)
+  assert.match(prompt, /host\.polls\.create/)
   assert.match(prompt, /cohesive natural paragraphs/)
   assert.match(prompt, /formal document, sourced research/)
   assert.match(prompt, /Markdown list markers when the user explicitly requested a list/)
@@ -47,8 +50,8 @@ test('prompt ordering keeps identity policy above configurable personality and o
   assert.match(prompt, /propose_evaluation\(attemptId=/)
   assert.match(prompt, /rubricResults=\[\{"label":"\.\.\.","score":0\.\.4,"weight":1,"note":"\.\.\."\}\]/)
   assert.match(prompt, /rubricResults is required/)
-  assert.match(prompt, /Never announce that a product action, specialist task, Canvas workspace, or durable plan has started/)
-  assert.equal(prompt.match(/loop\.learning is the only education control-plane namespace/g)?.length, 1)
+  assert.match(prompt, /Never claim that a product action, specialist task, Canvas workspace, Mission, or durable plan started, changed, or completed/)
+  assert.equal(prompt.match(/host\.learning is the only education control-plane namespace/g)?.length, 1)
 })
 
 test('configurable personality is quoted and cannot become the final instruction layer', () => {
@@ -75,12 +78,12 @@ test('every product capability forbids replacing its Host action with chat text'
   for (const contract of [
     /Proactively start a Canvas workspace when the request needs multiple learning specialties/,
     /Inspect source status with list_sources\(\)/,
-    /search, browse, verify online, or check current information requires loop\.research\.search/,
-    /inspect, search, create, or edit Agent Home files requires loop\.files/,
-    /persisted document requires the matching loop\.documents Host action/,
-    /inspect mail, send, or reply requires the matching loop\.email Host action/,
-    /inspect or change the calendar requires the matching loop\.calendar Host action/,
-    /list, create, pause, or activate an Agent routine requires loop\.routines/,
+    /search, browse, verify online, or check current information requires host\.research\.search/,
+    /inspect, search, create, or edit Agent Home files requires host\.files/,
+    /persisted document requires the matching host\.documents Host action/,
+    /inspect mail, send, or reply requires the matching host\.email Host action/,
+    /inspect or change the calendar requires the matching host\.calendar Host action/,
+    /list, create, pause, or activate an Agent routine requires host\.routines/,
   ]) assert.match(prompt, contract)
 })
 
@@ -116,11 +119,11 @@ test('calendar protocol requires confirmation and exposes native event viewing',
 
 test('Pulse follows the teacher operations workflow with no learner surface',()=>{
   const prompt=assembleAgentSystemPrompt({persona:{name:'Pulse · Algebra',role:'Teacher Operations',instructions:'Be exact.'},capabilities:['teacher_admin'],executionRole:'coordinator'})
-  assert.ok(prompt.indexOf('<policy>')<prompt.indexOf('# Frontier-style Teacher Operations Workflow'))
+  assert.ok(prompt.indexOf('<non_negotiable_protocol>')<prompt.indexOf('# Frontier-style Teacher Operations Workflow'))
   assert.ok(prompt.indexOf('# Frontier-style Teacher Operations Workflow')<prompt.indexOf('# IPython and Tool Contract'))
-  assert.match(prompt,/preloaded `loop\.teacher` SDK/)
+  assert.match(prompt,/preloaded `host\.teacher` SDK/)
   assert.match(prompt,/Observe current Host-scoped state/)
   assert.match(prompt,/Anti-spin/)
-  assert.doesNotMatch(prompt,/loop\.learning|Canvas is the only fan-out/)
-  assert.doesNotMatch(prompt,/loop\.turn/)
+  assert.doesNotMatch(prompt,/host\.learning|Canvas is the only fan-out/)
+  assert.doesNotMatch(prompt,/host\.turn/)
 })
