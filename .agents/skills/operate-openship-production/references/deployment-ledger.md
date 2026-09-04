@@ -1,5 +1,9 @@
 # OpenShip deployment ledger
 
+## 2026-09-05 LingxiOS v2 plus current frontend release — current active
+
+Workflow `33894303208` built the complete LingxiOS v2 image cohort at `c41b20770cc91cc24dad27781f7fc98258ab5390` and its signed rollout wrote manifest `334f3b0...`. Workflow `33894726684` then released the current frontend/server source `91fd60c366fa10d0aee2321fe4846bbbff58e6b5`, writing manifest `a68934d...`. The AgentOS services were subsequently refreshed to apply the committed v2-homes environment without deleting prior volume data: A `dep_q_9FzMU5HASjikVX`, B `dep_41Cyu7Hv2uf-kOCz`. Both refreshes were ready and production health was 16/16.
+
 The historical ledger began with 72 live API records on 2026-09-02 and was extended through the personal-workspace participant repair on 2026-09-03. With explicit authorization, the debugging histories for the six LingxiLoop projects were removed from live OpenShip after a management-database backup; older `Active` markers below now exist only in this audit record and the backup, not as live rollback targets. Timestamps are UTC unless stated otherwise.
 
 The conversation also contained `dep_hTwrgkuYccZOs8QT`, but OpenShip returned `NOT_FOUND`; it was a mistyped/nonexistent ID and is not part of the 72-record ledger. Raw-session truncation also produced the partial strings `dep_LGTbj5TasJJbtAu` and `dep_g9i`; their complete real IDs are `dep_LGTbj5TasJJbtAu3` and `dep_g9ieyTk2UUOOcWZi` below.

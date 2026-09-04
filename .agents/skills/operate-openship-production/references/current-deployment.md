@@ -1,6 +1,6 @@
 # Current production deployment
 
-Snapshot: 2026-09-04 15:46 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and targeted container inspection. Re-read live state before every operation.
+Snapshot: 2026-09-05 China Standard Time, checked through OpenShip MCP, GitHub Actions, HTTP probes, database queries, and targeted container inspection. Re-read live state before every operation.
 
 ## Scope and authority
 
@@ -27,7 +27,7 @@ Both hosts use a 4 GB `/swapfile4g`. Swap is emergency headroom, not normal capa
 
 ## Active LingxiLoop release
 
-All six projects run manifest commit `6ca0ed8d7dce575d8e6d690cad74e22185cf4bed`. The component-scoped release rebuilt only Server with immutable tag `9a1531d9c72fa29a75a7241ac218889293f3ad0b`; AgentOS remains at `0cfa406...`, and WuKongIM, Open Notebook, and Gateway retain their valid prior pins.
+The current manifest is `a68934d`, created by the frontend release source `91fd60c`. Server runs `91fd60c...`; the LingxiOS v2 AgentOS image remains the verified complete-cohort tag `c41b207...`. Unchanged component pins remain immutable.
 
 | Project | ID | Host | Compose | Active deployment | OpenShip version |
 | --- | --- | --- | --- | --- | ---: |
@@ -51,7 +51,7 @@ LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastruc
 | WuKongIM | `svc_R1qn4zHiKjjfY1An` | `lingxiloop-wukongim:7f16f69...` | `10.20.0.2:5001,5200` | `openship-lingxiloop-core-state-wukong-data` |
 | API-A | `svc_Y95Qof0wyIdv7klR` | `lingxiloop-server:9a1531d...` | `10.20.0.2:5181` | none |
 | db-migrate A | `svc_9RmMHN7M0K1l5Z_1` | `lingxiloop-server:9a1531d...` | exited 0 | none |
-| AgentOS-A | `svc_Q97GKa-vK8cH8O_T` | `lingxiloop-agent-os:0cfa406...` | no host port | `openship-lingxiloop-agent-os-a-agent-os-data` |
+| AgentOS-A | `svc_Q97GKa-vK8cH8O_T` | `lingxiloop-agent-os:c41b207...` | no host port | `openship-lingxiloop-agent-os-a-agent-os-data` |
 
 ### Server B
 
@@ -61,13 +61,16 @@ LingxiLit, Uptime Kuma, and OpenShip Edge are independently versioned infrastruc
 | Worker-B | `svc_okKRA-wGrqgFyZAk` | `lingxiloop-server:9a1531d...` | no host port | none |
 | db-migrate B | `svc_70YEsZbgYP34z7Hv` | `lingxiloop-server:9a1531d...` | exited 0 | none |
 | Gateway | `svc_q7ZcH8px3jsB9qnY` | `lingxiloop-gateway:7f16f69...` | `127.0.0.1:8080` | none |
-| AgentOS-B | `svc_rT0BSxd8KVNGSWMU` | `lingxiloop-agent-os:0cfa406...` | no host port | `openship-lingxiloop-agent-os-b-agent-os-data` |
+| AgentOS-B | `svc_rT0BSxd8KVNGSWMU` | `lingxiloop-agent-os:c41b207...` | no host port | `openship-lingxiloop-agent-os-b-agent-os-data` |
 | SurrealDB | `svc_yhlLUphCFs8lazC0` | pinned SurrealDB v2 digest | no host port | `openship-lingxiloop-knowledge-agent-surreal-data:/home/nonroot` |
 | Open Notebook | `svc_hmGZIaloXJohVV2r` | `lingxiloop-open-notebook:7f16f69...` | `10.20.0.3:5055` | `openship-lingxiloop-knowledge-agent-open-notebook-data` |
 
 Gateway health uses `127.0.0.1`, never `localhost`. SurrealDB stores RocksDB at `/home/nonroot/open-notebook.db`; credentials are supplied by `SURREAL_USER` and `SURREAL_PASS`, not command arguments. Open Notebook uses `https://loop.lingxilearn.cn/internal/open-notebook/v1`.
 
 ## Verified behavior
+
+- LingxiOS v2 is live: both AgentOS services run Node `v20.20.2`, use `/var/lib/lingxiloop-agent-os/v2-homes`, and expose only the v2 internal protocol. The retained old home volume was not deleted.
+- Migration `0005_lingxios_v2_reset.sql` completed; PostgreSQL records migrations 1 through 5. Both AgentOS worker heartbeats were refreshed after the v2-home deployment, Gateway `/healthz` returned 204, and OpenShip health reported 16/16 workloads healthy.
 
 - Prompt-contract source commit `0cfa406...` is included in the active Server and AgentOS images. Both AgentOS containers run that image and directly report `PROMPT_CONTRACT_VERSION = 'prompt-v6'`. The contract requires `loop.chat.ask` for blocking questions and native Host actions for explicit product operations.
 - A user chat turn was accepted, completed by AgentOS, and persisted with its final reply in WuKongIM, but the browser discarded that canonical message when it had missed the transient stream preview. Server tag `c9324ff...` removes that preview dependency: durable final messages now reconcile directly after stream gaps or reconnects. API-A/API-B and Worker-B run the new image healthy; public `/api/health` returns 200 and OpenShip reports 16/16 healthy.

@@ -1,5 +1,11 @@
 # Operations, recovery, and deployment history
 
+## 2026-09-05 LingxiOS v2 and frontend release
+
+Manual full-release workflow `33894303208` published the complete image cohort at `c41b207...`; the signed rollout pinned manifest `334f3b0...`. Migration `0005_lingxios_v2_reset.sql` reset only in-flight AgentOS state and preserved completed work, audit, ledger, product memory, and WuKongIM messages. The final current-workspace frontend release (`91fd60c...`) completed in workflow `33894726684` and pinned manifest `a68934d...`.
+
+Both AgentOS services run the LingxiOS v2 image on Node 20. Their service-row environment was reconciled and refreshed through deployments `dep_q_9FzMU5HASjikVX` and `dep_41Cyu7Hv2uf-kOCz`, so each uses `/var/lib/lingxiloop-agent-os/v2-homes`; the prior home data was retained for the rollback window. Both services reported ready, their worker heartbeats were present, Gateway health returned 204, and OpenShip reported 16/16 healthy workloads.
+
 ## Architecture decision record
 
 The original single-host production Compose put PostgreSQL, Redis, WuKongIM, Open Notebook, SurrealDB, Web, Worker, and AgentOS in one failure domain. The first two-server OpenShip layout separated state and business services but left AgentOS single-active on Server B with one run slot, 1 CPU, and 768 MB; Server B sat near the 4 GB limit.
