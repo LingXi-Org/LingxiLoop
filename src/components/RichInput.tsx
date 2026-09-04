@@ -142,11 +142,11 @@ function makeMentionNode(id: string, info: MentionInfo): HTMLSpanElement {
   chip.style.lineHeight = '1.4'
   chip.style.userSelect = 'none'
   if (id === 'all' || info.kind === 'human') {
-    chip.style.background = 'var(--coral-soft)'
-    chip.style.color = 'var(--coral-deep)'
+    chip.style.background = 'var(--accent)'
+    chip.style.color = 'var(--accent-foreground)'
   } else {
-    chip.style.background = 'var(--sky-50)'
-    chip.style.color = 'var(--skype-deep)'
+    chip.style.background = 'var(--muted)'
+    chip.style.color = 'var(--foreground)'
   }
 
   const avatar = document.createElement('span')
@@ -170,7 +170,7 @@ function makeMentionNode(id: string, info: MentionInfo): HTMLSpanElement {
     img.style.objectFit = 'contain'
     avatar.appendChild(img)
   } else {
-    avatar.style.background = info.avatarBg || 'var(--ink-300)'
+    avatar.style.background = info.avatarBg || 'var(--muted-foreground)'
     avatar.textContent = info.initial.charAt(0)
   }
 
@@ -196,10 +196,7 @@ function serializeNode(root: Node): string {
     if (node.nodeType !== Node.ELEMENT_NODE) return
     const el = node as HTMLElement
     if (el.tagName === 'BR') { out += '\n'; return }
-    // Skype emoji chips — serialize back to their canonical shortcode.
-    // Accept either <span> (current) or <img> (legacy drafts that
-    // pre-date the sprite migration). The marker is the
-    // `data-skype-emoji` attribute, not the tag name.
+    // Skype emoji chips serialize back to their canonical shortcode.
     const skypeKey = el.dataset.skypeEmoji
     if (skypeKey) {
       const meta = findSkypeByKey(skypeKey)

@@ -7,27 +7,23 @@ import {
   CommandList,
   CommandShortcut,
 } from '@/components/ui/command'
+import { useConversations } from '@/features/conversations/store'
 import type { CommandAction } from '@/lib/commands'
 import { useApp } from '@/stores/app'
-import { useConversations } from '@/stores/conversations'
 import { useTheme } from '@/stores/theme'
 import { useUiCommands } from '@/stores/uiCommands'
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const conversations = useConversations((state) => state.list)
-  const toggleTheme = useTheme((state) => state.toggleTheme)
+  const { toggleTheme } = useTheme()
   const actions = useMemo<CommandAction[]>(() => {
     const dispatch = useUiCommands.getState().dispatch
     return [
-      { id: 'conversation-search', label: '搜索会话和消息', keywords: 'search conversations', run: () => dispatch('focus-conversation-search') },
-      { id: 'find-chat', label: '搜索当前对话', keywords: 'find chat', shortcut: '⌘ F', run: () => dispatch('find-chat') },
-      { id: 'focus-composer', label: '聚焦消息输入框', keywords: 'focus composer input', run: () => dispatch('focus-composer') },
-      { id: 'new-group', label: '新建群聊', keywords: 'new group conversation', run: () => dispatch('new-group') },
-      { id: 'agents', label: '打开智能体', keywords: 'agents', run: () => useApp.getState().setView('agents') },
-      { id: 'canvas', label: '打开 Canvas', keywords: 'canvas', run: () => useApp.getState().setView('canvas') },
-      { id: 'library', label: '打开资料库', keywords: 'library documents', run: () => useApp.getState().setView('library') },
-      { id: 'settings', label: '打开设置', keywords: 'settings preferences', run: () => useApp.getState().setView('me') },
-      { id: 'theme', label: '切换浅色 / 深色模式', keywords: 'theme light dark', run: toggleTheme },
+      { id: 'conversation-search', label: '搜索会话和消息', keywords: '搜索 会话 消息', run: () => dispatch('focus-conversation-search') },
+      { id: 'find-chat', label: '搜索当前对话', keywords: '查找 当前 对话', shortcut: '⌘ F', run: () => dispatch('find-chat') },
+      { id: 'focus-composer', label: '聚焦消息输入框', keywords: '输入 消息', run: () => dispatch('focus-composer') },
+      { id: 'library', label: '打开资料库', keywords: '资料 文档', run: () => useApp.getState().setView('library') },
+      { id: 'theme', label: '切换浅色 / 深色模式', keywords: '主题 浅色 深色', run: toggleTheme },
       ...conversations.slice(0, 8).map((conversation, index) => ({
         id: `conversation-${conversation.id}`,
         label: `转到：${conversation.title}`,

@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Agent OS ② 模型循环、IPython、Host Action 与审批恢复",
+    "locale": "zh-CN",
+    "output": "artifacts/agent-os-deep-dive-model-tools.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "column_fit": "spread",
+    "viewBox": [1700, 1640],
+    "views": [
+      { "id": "model-hop", "label": "模型 hop", "focus": ["runtime", "model", "events"], "note": "Agent OS 构造请求、接收流式 delta，并把模型输出变成文本或严格 ipython 调用。" },
+      { "id": "kernel", "label": "持久 Kernel", "focus": ["runtime", "kernelmgr", "python"], "note": "每个 session 复用一个串行 IPython 进程，cell 超时或取消会杀掉并丢弃 kernel。" },
+      { "id": "host-action", "label": "Host Action", "focus": ["python", "bridge", "web", "ledger", "domain"], "note": "loop.* 动作经过最终授权、锁、进度检查和幂等 ledger。" },
+      { "id": "approval", "label": "审批与恢复", "focus": ["web", "ledger", "wukong", "runtime"], "note": "高风险动作暂停并持久化；审批后执行同一 action，再用新的 resume work 恢复。" }
+    ]
+  },
+  "participants": [
+    { "id": "runtime", "type": "backend", "label": "Agent Runtime" },
+    { "id": "model", "type": "cloud", "label": "LLM Provider" },
+    { "id": "events", "type": "messagebus", "label": "Run Events" },
+    { "id": "kernelmgr", "type": "backend", "label": "KernelManager" },
+    { "id": "python", "type": "external", "label": "IPython Kernel" },
+    { "id": "bridge", "type": "security", "label": "Host Adapter" },
+    { "id": "web", "type": "security", "label": "Host Bridge" },
+    { "id": "ledger", "type": "database", "label": "PostgreSQL" },
+    { "id": "domain", "type": "backend", "label": "Domain Service" },
+    { "id": "wukong", "type": "messagebus", "label": "WuKongIM" }
+  ],
+  "segments": [
+    { "from": 150, "to": 482, "label": "A. 一个模型 hop" },
+    { "from": 498, "to": 744, "label": "B. 严格工具解析与 cell 执行" },
+    { "from": 760, "to": 1130, "label": "C. Host Action 安全与幂等闭环" },
+    { "from": 1146, "to": 1548, "label": "D. 审批分支与继续运行" }
+  ],
+  "messages": [
+    { "from": "runtime", "to": "events", "y": 178, "label": "model.started", "variant": "dashed" },
+    { "from": "runtime", "to": "model", "y": 262, "label": "history + tools:[ipython] + max_tokens=4000", "variant": "emphasis" },
+    { "from": "model", "to": "events", "y": 304, "label": "stream model.delta previews", "variant": "dashed" },
+    { "from": "model", "to": "runtime", "y": 346, "label": "assistant text and/or tool arguments", "variant": "return" },
+    { "from": "runtime", "to": "events", "y": 388, "label": "model.completed + usage + diagnostics", "variant": "dashed" },
+    { "from": "runtime", "to": "kernelmgr", "y": 530, "label": "execute cellId=hop-N-call-M", "variant": "emphasis" },
+    { "from": "kernelmgr", "to": "python", "y": 572, "label": "NDJSON execute(code), serialized by tail", "variant": "security" },
+    { "from": "python", "to": "kernelmgr", "y": 656, "label": "stdout/stderr/rich output + artifacts", "variant": "return" },
+    { "from": "kernelmgr", "to": "runtime", "y": 698, "label": "function_call_output or timeout/cancel", "variant": "return" },
+    { "from": "python", "to": "bridge", "y": 790, "label": "loop.namespace.method(args)", "variant": "security" },
+    { "from": "bridge", "to": "web", "y": 832, "label": "HostAction + lease headers", "variant": "security" },
+    { "from": "web", "to": "ledger", "y": 916, "label": "lock Canvas/work/idempotency; check live fence", "variant": "security" },
+    { "from": "web", "to": "ledger", "y": 1000, "label": "insert/replay Host Action ledger", "variant": "emphasis" },
+    { "from": "web", "to": "domain", "y": 1042, "label": "perform idempotent domain side effect", "variant": "emphasis" },
+    { "from": "domain", "to": "ledger", "y": 1084, "label": "persist canonical result", "variant": "emphasis" },
+    { "from": "web", "to": "python", "y": 1122, "label": "return structured result", "variant": "return" },
+    { "from": "web", "to": "ledger", "y": 1176, "label": "approval-required: persist PENDING", "variant": "security" },
+    { "from": "web", "to": "wukong", "y": 1218, "label": "send approval card; mark work awaiting", "variant": "dashed" },
+    { "from": "web", "to": "python", "y": 1260, "label": "approval_pending result", "variant": "return" },
+    { "from": "python", "to": "runtime", "y": 1302, "label": "save session; complete paused work", "variant": "return" },
+    { "from": "wukong", "to": "web", "y": 1344, "label": "human approve / reject / supersede", "variant": "emphasis" },
+    { "from": "web", "to": "domain", "y": 1428, "label": "approved: execute same action identity", "variant": "emphasis" },
+    { "from": "web", "to": "ledger", "y": 1470, "label": "save resolution; enqueue resume-{approvalId}", "variant": "emphasis" },
+    { "from": "web", "to": "runtime", "y": 1512, "label": "new approval-lane work loads resolved result", "variant": "return" },
+    { "from": "runtime", "to": "model", "y": 1554, "label": "continue next hop; never replay original cell", "variant": "emphasis" }
+  ],
+  "activations": [
+    { "participant": "runtime", "from": 172, "to": 1566, "type": "backend" },
+    { "participant": "model", "from": 256, "to": 354, "type": "cloud" },
+    { "participant": "kernelmgr", "from": 524, "to": 706, "type": "backend" },
+    { "participant": "python", "from": 566, "to": 1310, "type": "external" },
+    { "participant": "web", "from": 826, "to": 1520, "type": "security" },
+    { "participant": "ledger", "from": 910, "to": 1490, "type": "database" }
+  ],
+  "cards": [
+    { "dot": "violet", "title": "Agent OS 拥有模型循环", "items": ["模型服务只收到当前 history；服务商不保存 LingxiLoop 会话权威", "每次调用前注入 steer、刷新学习/教师上下文，再以流式 Chat Completions 请求", "最多 12 个 hop；上下文默认 128k，75% 软压缩、90% 硬压缩"] },
+    { "dot": "cyan", "title": "只有 ipython(code)", "items": ["严格 schema 只接受一个非空 code 字符串；其他 tool name 或附加参数不会进入产品层", "模型可以输出文本与工具调用；每个调用按出现顺序串行执行", "函数调用及输出回写 history，下一 hop 由同一 runtime 再次调用模型"] },
+    { "dot": "amber", "title": "持久 IPython 的会话语义", "items": ["session key = company + agent + channel + optional threadRoot；同 key 复用一个 Python 子进程", "globals、imports、变量与文件跨 work 保留；appliedWorkIds 防止重试重复注入用户输入", "每个 kernel 内用 promise tail 串行 cell，避免两个 cell 并发污染 globals"] },
+    { "dot": "rose", "title": "Kernel 资源与隔离", "items": ["默认 cell 超时 120 秒、输出上限 64KiB、idle 90 分钟；超时 SIGKILL，取消 SIGINT 后丢弃 kernel", "Python -I、audit hook、网络/子进程拦截、写路径约束与 Agent Home 隔离减少能力面", "它是解释器级防护，不是面向恶意代码的硬化 OS sandbox；不要把 audit hook 当容器边界"] },
+    { "dot": "orange", "title": "loop.* 能力面", "items": ["chat、memory、skills、files、documents、boards、canvas、calendar、routines、research、email", "knowledge、presentations、learning、polls、turn；teacher 运行只允许 teacher + turn", "具体方法仍由 TypeScript closed-enum 校验和产品授权决定，Python 命名空间不是权限证明"] },
+    { "dot": "emerald", "title": "Host Action 的稳定身份", "items": ["idempotencyKey 必须严格等于 runId:cellId:callIndex；callIndex 从 cell 内第 0 次 loop 调用递增", "锁顺序覆盖共享 Canvas workspace、work 与 idempotency row；同 key 不同 canonical args 被拒绝", "pending action 在进程崩溃后可重新驱动，但最终领域 sink 也必须使用同一幂等身份"] },
+    { "dot": "cyan", "title": "最终授权发生在副作用之前", "items": ["检查 tenant、Agent 活跃状态、work fence、取消状态、human principal、角色、capability 和资源归属", "verifier / reporter 只有窄化的读与报告动作；coordinator / specialist 仍受 capability 与 human permission 限制", "反复执行无进展的敏感动作会被 progress fingerprint 警告或阻止"] },
+    { "dot": "amber", "title": "哪些动作进入审批", "items": ["email.send/reply、routines.create/activate、documents.delete、calendar.delete", "knowledge source 启停/删除、presentation outline 批准，以及 teacher 特定动作", "审批有 TTL；teacher 场景还会重新检查管理关系，旧权限不会随 pending approval 永久继承"] },
+    { "dot": "rose", "title": "审批不是重跑 cell", "items": ["原 work 保存 session 并结束；审批决定后，Web 直接用原 action identity 执行或记录拒绝", "随后创建高优先级 approval lane 的 resume work；新运行把 resolved approval 作为上下文注入", "Supersede 会取消旧审批并创建新的 cellId revision，从而拥有新的动作身份"] },
+    { "dot": "slate", "title": "结束闸门", "items": ["Mission 仍处于 planning 时，只允许少数只读/规划动作，模型不能直接给最终答案", "canvas_worker 必须提交有效 learning_report_v1；它的文本写入 assignment 而不直接发到群聊", "普通 run 无工具调用且闸门通过时才提交最终 LingxiMessageV1"] }
+  ]
+}

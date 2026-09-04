@@ -12,7 +12,11 @@
       "!**/build",
       "!**/release",
       "!**/node_modules",
+      "!artifacts",
+      "!electron-package",
       "!third_party",
+      "!worker-configuration.d.ts",
+      "!**/.wrangler",
       "!**/*.min.js"
     ]
   },
@@ -34,7 +38,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "a11y": {
         "recommended": false
       },
@@ -66,5 +70,17 @@
     "linter": {
       "enabled": false
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/components/ui/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useImportType": "off"
+          }
+        }
+      }
+    }
+  ]
 }

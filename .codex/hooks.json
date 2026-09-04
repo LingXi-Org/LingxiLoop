@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/production-skill-sync.mjs",
+            "timeout": 5,
+            "statusMessage": "Checking production skill synchronization..."
+          }
+        ]
+      }
+    ]
+  }
+}

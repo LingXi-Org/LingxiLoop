@@ -10,10 +10,10 @@ start a thread.
 ## Architecture
 
 ```
-┌──────────────┐  MIME    ┌────────────────────────┐  HMAC-signed JSON   ┌──────────────────┐
-│  Sender MTA  │ ───────► │  Cloudflare            │ ──────────────────► │  lingxiloop-server   │
-│ (gmail, etc) │   MX     │  Email Routing +       │   POST /webhooks/   │  /webhooks/email │
-└──────────────┘          │  workers/email-gate    │   email/inbound     │  /inbound        │
+┌──────────────┐  MIME    ┌────────────────────────┐  Svix-signed event  ┌──────────────────┐
+│  Sender MTA  │ ───────► │  Resend Receiving     │ ──────────────────► │ lingxiloop-server│
+│ (gmail, etc) │   MX     │  + Receiving API      │ POST /webhooks/     │ /webhooks/email  │
+└──────────────┘          │                        │ email/resend        │ /resend          │
                           └────────────────────────┘                     └──────────────────┘
                                                                                  │
                                                                                  ▼ wakes the recipient agent
@@ -34,24 +34,26 @@ start a thread.
                                                                          └──────────────────┘
 ```
 
-- **Inbound**: Cloudflare Email Workers (free) parse MIME and POST signed
-  JSON. The server resolves recipients to agents, threads against
-  In-Reply-To / References, writes to `messages` (kind=`email`) +
-  `email_messages`, and publishes `CH_MESSAGE_NEW` so the recipient agent
+- **Inbound**: Resend Receiving emits a signed `email.received` event. The
+  server verifies the raw request with the endpoint-specific Svix secret,
+  retrieves the complete email and attachments through the Receiving API,
+  resolves recipients to agents, and threads against
+  In-Reply-To / References, writes one authoritative `email_messages` row,
+  and publishes `CH_MESSAGE_NEW` so the recipient agent
   wakes through the existing scheduler.
-- **Outbound**: Resend's HTTP API. Mock mode (RESEND_API_KEY unset)
-  returns a fake message-id and logs — useful for local dev.
+- **Outbound**: Resend's HTTP API. If `RESEND_API_KEY` is absent, outbound
+  mail is explicitly unavailable; production never fabricates delivery or a
+  provider message id.
 
 ## Storage model
 
 - One **conversation** per email thread (`conversations.kind = 'email'`).
-- One **message** per individual email (`messages.kind = 'email'`).
-- One companion **email_messages** row keyed by the messages.id, storing
-  the SMTP-level fields: `smtp_message_id` (RFC 5322 Message-ID without
+- One **email_messages** row per individual email, storing author, body,
+  thread sequence and the SMTP-level fields: `smtp_message_id` (RFC 5322 Message-ID without
   brackets), `in_reply_to`, `references_chain`, `direction` (`in`/`out`),
   `transport_status` (`queued`/`sent`/`failed`/`received`), `subject`,
   `from_addr`, `to_addrs`, `cc_addrs`. The `/conversations/:id/messages`
-  endpoint LEFT-JOINs this and emits a typed `email` field on each
+  endpoint projects this authoritative row into a typed `email` field on each
   message — the renderer never has to reason about JSONB shapes.
 - An **email_contacts** table tracks external addresses we've corresponded
   with so the heartbeat prompt can suggest known recipients.
@@ -81,8 +83,8 @@ Local-part parsing back to `(id, slug)` is unambiguous because
 `safeLocalPart` strips `.` from agent ids — the slug is always the
 substring after the LAST `.` in the local-part.
 
-The worker's `EMAIL_ROOT_DOMAINS` var is the allowlist; mail outside
-it bounces with `550`.
+Resend Receiving owns the domain-level MX boundary. Tenant isolation remains
+inside the recipient resolver and every persisted message carries `companyId`.
 
 ## Setup
 
@@ -92,44 +94,31 @@ Add to `.env`:
 
 ```
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
+RESEND_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxx
 EMAIL_DOMAIN=mail.loop.example.com
-EMAIL_INBOUND_HMAC_SECRET=<openssl rand -hex 32>
 ```
 
 The `participants.email`, `email_messages`, and `email_contacts` tables are
 part of the fixed v1 schema. Initialize a new empty database with
-`npm run db:bootstrap` before starting the server.
+`npm run db:migrate` before starting the server.
 
-### 2. Resend
+### 2. Resend sending and receiving
 
 1. Resend dashboard → API Keys → create one.
-2. Add a sending domain such as `mail.loop.example.com`.
-3. Copy the SPF + DKIM TXT records into your DNS (Cloudflare).
-4. Wait until Resend marks the domain "Verified".
-
-### 3. Cloudflare Email Worker
-
-```bash
-cd workers/email-gate
-npm install
-npx wrangler login
-npx wrangler secret put EMAIL_INBOUND_HMAC_SECRET   # paste server's value
-npx wrangler deploy
-```
-
-Cloudflare dashboard → your zone → **Email → Email Routing**:
-
-1. Enable Email Routing (this writes apex MX records).
-2. **Catch-all** → "Send to a Worker" → `lingxiloop-email-gate`.
-
-That's it — every `*@<EMAIL_DOMAIN>` lands in the worker, which decodes
-the local-part to (id, slug). No per-tenant DNS work.
+2. Add a dedicated receiving subdomain such as `mail.loop.example.com` and
+   publish the MX records shown by Resend. Do not share it with another MX
+   provider.
+3. Configure the same domain for sending and publish Resend's SPF/DKIM records.
+4. Add a webhook subscribing only to `email.received` with Endpoint
+   `https://<api-host>/webhooks/email/resend`.
+5. Copy that webhook's `whsec_...` secret into `RESEND_WEBHOOK_SECRET`.
+   Development and production use separate webhooks and separate secrets.
 
 ### 4. Verify end-to-end
 
 - Send mail to `<known-agent-id>.<company-slug>@mail.loop.example.com` from gmail.
-- `wrangler tail` shows the worker accepting + POSTing.
-- Server logs show `[inbound-email] delivered`.
+- Resend Webhooks shows a successful `email.received` delivery.
+- Server logs show the corresponding inbound delivery.
 - The agent wakes within a few seconds. The agent's next turn sees
   the email in `lingxiloop email inbox` and decides whether to reply.
 
@@ -141,9 +130,8 @@ The repo has two tiers of email tests:
 
 Pure-function coverage — `sanitizeSubject`, `splitReplyAddresses`,
 `sanitizeEmailHtml`, `parseAddress`, `normalizeMessageId`,
-`computeAgentAddress`, plus the Cloudflare Worker helpers
-(`recipientAccepted`, `readArrayHeader`, `toBase64`, `getHeader`) and the
-GC reconciliation (`pickOrphans`). Runs in ~0.5s, no DB / Redis needed.
+`computeAgentAddress`, Resend/Svix verification, Receiving API normalization,
+and GC reconciliation (`pickOrphans`). No DB / Redis is needed.
 
 ### Integration (`npm run test:integration`)
 
@@ -164,22 +152,23 @@ INTEGRATION_DATABASE_URL=postgres://lingxiloop:lingxiloop@localhost:5433/lingxil
 ```
 
 Covers what unit tests can't:
-- **Inbound webhook end-to-end** — HMAC gate, recipient resolution
+- **Inbound webhook end-to-end** — Resend/Svix gate, recipient resolution
   against `participants.email`, `email_messages` + `email_attachments`
-  row writes, idempotent dedup on a re-delivered Message-ID, 404 bounce
-  when no recipient resolves, `Auto-Submitted` flag propagation.
+  row writes, idempotent dedup on a re-delivered Message-ID, acknowledged
+  no-recipient events, and `Auto-Submitted` flag propagation.
 - **Retry worker SQL** — `SELECT … FOR UPDATE SKIP LOCKED` claim,
   backoff progression (60s → 5m → 30m → 2h → 6h → 24h), terminal state
   with `next_retry_at=NULL` after the last step, inbound/sent rows
   correctly ignored.
 
-The runner forces `RESEND_API_KEY=''` (mock mode) so a developer's real
-key in `.env` doesn't accidentally hit the live Resend API with an
-unverified test domain. Tests use `node:test` + `tsx` — no new framework.
+The default suite leaves `RESEND_API_KEY` unset and injects a test-only
+provider function for outbound cases. The seam is explicit per test and reset
+after use; the production provider remains fail-closed and never manufactures
+success. Tests use `node:test` + `tsx` — no new framework.
 
 ### Live Resend (`RESEND_LIVE_TEST=1`)
 
-Opt-in tier that exercises the real Resend HTTP path against the magic
+Opt-in integration test that exercises the real Resend HTTP path against the magic
 sink addresses Resend provides for testing:
 
 | Address | Behavior |
@@ -205,7 +194,7 @@ register as `skipped` rather than running. Sends carry a
 `[LINGXILOOP-LIVE-TEST]` subject prefix so they're identifiable in the
 Resend dashboard.
 
-What live tests catch that mock-mode tests don't:
+What live tests add beyond injected-provider integration:
 
 - Real HTTP path to `api.resend.com` (TLS, headers, response parsing)
 - Resend's validation of `From` / `Reply-To` / `In-Reply-To` /
@@ -218,16 +207,14 @@ webhook, not in the same request).
 
 ## Local dev (no real DNS)
 
-You don't need a real domain to develop. Two paths:
-
-- **Mock mode**: leave `RESEND_API_KEY` blank. `lingxiloop email send` will
-  log + return a fake id. Inbound is harder — there's no good local
-  Email Worker emulator. Use the curl recipe in
-  `workers/email-gate/README.md` to fire mock inbound deliveries.
-
-- **Tunneled real mode**: `cloudflared tunnel --url http://localhost:5181`,
-  point the worker's `LINGXILOOP_INBOUND_URL` at the tunnel, deploy the worker.
-  Real mail to your test domain hits your laptop.
+For a real local end-to-end path, run
+`cloudflared tunnel --url http://localhost:5181` and create a dedicated Resend
+development webhook whose Endpoint is
+`https://<generated-tunnel-host>/webhooks/email/resend`. Subscribe only to
+`email.received`, copy its signing secret into `.env.local` as
+`RESEND_WEBHOOK_SECRET`, and restart the API. A changed tunnel URL requires
+updating the Resend development webhook; the secret belongs to that webhook
+record, not to the URL or API key.
 
 ## Commands available to agents
 

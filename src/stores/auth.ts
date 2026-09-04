@@ -1,61 +1,45 @@
-import type { ServerCapabilities } from '@/api/contracts'
+import type { AuthCompany, AuthUser, ServerCapabilities } from '@/auth/contracts'
+export type { AuthCompany, AuthUser } from '@/auth/contracts'
 /**
- * Auth state — token + current user + active company. Token persists in
- * localStorage so reloads stay signed in. Every API request reads the
- * current token from this store through the shared HTTP transport.
+ * Browser authentication is held only by Better Auth's host-only cookie.
  */
 import { create } from 'zustand'
-export interface AuthCompany {
-  id: string
-  name: string
-  slug: string
-  role: string
-  /** Plan tier of the active company (owner's tier). */
-  tier?: 'free' | 'pro' | 'max' | string
-}
-
-export interface AuthUser {
-  id: string
-  email: string
-  name: string
-  emailVerified?: boolean
-  /** Verified identity providers linked to this account. */
-  providers?: string[]
-}
-
+import { runAuthTeardown } from './authTeardown'
 interface AuthState {
-  token: string | null
+  authenticated: boolean
   user: AuthUser | null
   companies: AuthCompany[]
   activeCompanyId: string | null
+  /** Server-owned Personal Company used for user-created learning spaces. */
+  personalCompanyId: string | null
   ready: boolean   // false until the initial /auth/me probe finishes
   /** Server-driven feature flags. Null until the first /auth/me probe
    *  populates them; consumers should treat null as "don't know yet" and
    *  default to a safe value (usually: hide optional UI). */
   serverCapabilities: ServerCapabilities | null
-  setSession: (token: string, user: AuthUser, companyId: string | null) => void
-  setMe: (user: AuthUser, companies: AuthCompany[], activeCompanyId: string | null) => void
+  setAuthenticated: (user: AuthUser, companyId: string | null) => void
+  setMe: (user: AuthUser, companies: AuthCompany[], activeCompanyId: string) => void
   setServerCapabilities: (caps: ServerCapabilities) => void
   setActiveCompany: (id: string) => void
-  addCompany: (c: AuthCompany) => void
   clear: () => void
   markReady: () => void
 }
 
-const TOKEN_KEY = 'lingxiloop.auth.token'
 const COMPANY_KEY = 'lingxiloop.auth.company'
 
 export const useAuth = create<AuthState>((set) => ({
-  token: localStorage.getItem(TOKEN_KEY),
+  authenticated: false,
   user: null,
   companies: [],
   activeCompanyId: localStorage.getItem(COMPANY_KEY),
+  personalCompanyId: null,
   ready: false,
   serverCapabilities: null,
-  setSession(token, user, companyId) {
-    localStorage.setItem(TOKEN_KEY, token)
+  setAuthenticated(user, companyId) {
+    const previousUserId = useAuth.getState().user?.id
+    if (previousUserId && previousUserId !== user.id) runAuthTeardown()
     if (companyId) localStorage.setItem(COMPANY_KEY, companyId)
-    set({ token, user, activeCompanyId: companyId, ready: true })
+    set({ authenticated: true, user, activeCompanyId: companyId, personalCompanyId: companyId, ready: true })
     // Fresh auth → rebind the WS connection so it carries the new
     // session's ticket instead of staying on whatever it had before.
     void import('@/api/core/realtime').then(({ ws }) => ws.reconnect())
@@ -70,7 +54,7 @@ export const useAuth = create<AuthState>((set) => ({
       ? stored
       : (activeCompanyId && memberIds.has(activeCompanyId) ? activeCompanyId : (companies[0]?.id ?? null))
     if (resolved) localStorage.setItem(COMPANY_KEY, resolved)
-    set({ user, companies, activeCompanyId: resolved })
+    set({ user, companies, activeCompanyId: resolved, personalCompanyId: activeCompanyId })
   },
   setServerCapabilities(caps) {
     set({ serverCapabilities: caps })
@@ -85,57 +69,43 @@ export const useAuth = create<AuthState>((set) => ({
     // — and this is the natural place to handle it.
     void import('@/api/core/realtime').then(({ ws }) => ws.reconnect())
     // Wipe library stores so the Library tab doesn't briefly render the
-    // previous workspace's documents / boards / calendar before the
+    // previous workspace's documents or calendar before the
     // next listXXX() lands. These stores are global singletons that
     // outlive the AuthedApp remount, so a key-change alone doesn't
     // clear them.
     void Promise.all([
-      import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
-      import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
-      import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
+      import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
+      import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },
-  /** Append a freshly-created company to the user's set and switch to it. */
-  addCompany(c) {
-    const prevId = useAuth.getState().activeCompanyId
-    set((s) => ({ companies: [...s.companies, c], activeCompanyId: c.id }))
-    localStorage.setItem(COMPANY_KEY, c.id)
-    // If this is a SWITCH (we already had a company), wipe library
-    // stores too so the new workspace doesn't render the previous
-    // one's data while the first listXXX() is in flight.
-    if (prevId && prevId !== c.id) {
-      void Promise.all([
-        import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
-        import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
-        import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
-      ])
-    }
-  },
   clear() {
-    localStorage.removeItem(TOKEN_KEY)
+    runAuthTeardown()
     localStorage.removeItem(COMPANY_KEY)
-    set({ token: null, user: null, companies: [], activeCompanyId: null, ready: true, serverCapabilities: null })
+    set({
+      authenticated: false,
+      user: null,
+      companies: [],
+      activeCompanyId: null,
+      personalCompanyId: null,
+      ready: true,
+      serverCapabilities: null,
+    })
     // Stale object-URLs from the previous user's avatars would otherwise
     // linger; clear them so the next sign-in doesn't briefly render a
     // dead URL.createObjectURL pointing at a freed blob.
     void import('@/lib/avatarCache').then(({ clearAvatarCache }) => clearAvatarCache())
+    void import('@/features/chat/runtime').then(({ chatTransport }) => chatTransport.disconnect())
     void import('@/api/core/realtime').then(({ ws }) => ws.close())
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([
-      import('./documents').then(({ useDocuments }) => useDocuments.getState().reset()),
-      import('./boards').then(({ useBoards }) => useBoards.getState().reset()),
-      import('./calendar').then(({ useCalendar }) => useCalendar.getState().reset()),
+      import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
+      import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },
   markReady() {
     set({ ready: true })
   },
 }))
-
-/** Sync getter for the API client + WS connection. */
-export function getAuthToken(): string | null {
-  return useAuth.getState().token
-}
 
 /** Sync getter for the current user id. Returns null when no user is signed
  *  in — callers MUST handle that case explicitly. (We never default to a

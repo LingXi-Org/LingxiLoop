@@ -255,9 +255,14 @@ function evaluateRag(observation: EvalObservation, expected: RagExpectations): E
   const findings: EvalFinding[] = []
   const retrieved = new Set(observation.retrievedSourceIds ?? observation.citations?.map((item) => item.sourceId) ?? [])
   const answer = observation.answer ?? ''
-  const markersInAnswer = new Set([...answer.matchAll(/\[(S\d+)\]/gi)].map((match) => match[1].toUpperCase()))
+  const markersInAnswer = new Set([...answer.matchAll(/\[[^\]\n]+\]\(#cite-(S\d+(?:,S\d+)*)\)/gi)]
+    .flatMap((match) => match[1].split(',').map((marker) => marker.toUpperCase())))
+  const citationLinks = [...answer.matchAll(/\[([^\]\n]+)\]\(#cite-(S\d+(?:,S\d+)*)\)/gi)]
   const citationsByMarker = new Map((observation.citations ?? []).filter((item) => item.marker).map((item) => [String(item.marker).toUpperCase(), item.sourceId]))
-  const cited = new Set(observation.citedSourceIds ?? [...markersInAnswer].flatMap((marker) => citationsByMarker.get(marker) ?? []))
+  const cited = new Set([
+    ...(observation.citedSourceIds ?? []),
+    ...[...markersInAnswer].flatMap((marker) => citationsByMarker.get(marker) ?? []),
+  ])
   const required = new Set(expected.requiredSourceIds ?? [])
   let recall: number | null = null
   if (required.size > 0) {
@@ -269,6 +274,18 @@ function evaluateRag(observation: EvalObservation, expected: RagExpectations): E
   }
   if (expected.requireCitations) {
     findings.push(finding('rag.citations_present', cited.size > 0 ? 'pass' : 'fail', cited.size > 0 ? '回答包含来源引用' : '回答缺少来源引用'))
+  }
+  for (const requirement of expected.requiredClaimCitations ?? []) {
+    const linked = citationLinks.some((match) => match[1].includes(requirement.claim)
+      && match[2].split(',').some((marker) => citationsByMarker.get(marker.toUpperCase()) === requirement.sourceId))
+    findings.push(finding(
+      'rag.claim_citation',
+      linked ? 'pass' : 'fail',
+      linked
+        ? `论断已引用预期来源：${requirement.claim}`
+        : `论断没有引用预期来源：${requirement.claim}`,
+      { expected: requirement },
+    ))
   }
   const unknownMarkers = [...markersInAnswer].filter((marker) => !citationsByMarker.has(marker))
   if (markersInAnswer.size > 0 || observation.citations?.length) {

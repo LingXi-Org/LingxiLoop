@@ -15,7 +15,7 @@ function jsonRecord(value: unknown): Record<string, unknown> {
 
 function isEmptyChannelResult(error: unknown): boolean {
   if (!(error instanceof Error)) return false
-  // The pinned WuKongIM v3 compatibility API sends application/store errors
+  // The pinned WuKongIM v3 HTTP API sends application/store errors
   // through writeJSONError, which uses HTTP 400 even for a missing message
   // channel or conversation membership. Older builds used 404/500. All three
   // mean the same thing here: there is no history/unread state yet. Only
@@ -27,6 +27,12 @@ function isEmptyChannelResult(error: unknown): boolean {
 
 function isEmptyChannelDetail(detail: string): boolean {
   return /not[\s_-]*found|no[\s_-]*messages?|channel[^\r\n]{0,40}(?:missing|does not exist)|不存在|未找到|没有消息|无消息/i.test(detail)
+}
+
+function isMissingChannelMembership(error: unknown): boolean {
+  return error instanceof Error
+    && /WuKongIM \/channel\/messagesync returned 400:/i.test(error.message)
+    && /valid channel membership required/i.test(error.message)
 }
 
 export class WukongClient {
@@ -57,7 +63,7 @@ export class WukongClient {
   async upsertChannel(profile: ImChannelProfile): Promise<void> {
     await this.request('/channel', {
       method: 'POST',
-      // WuKongIM v3's compatibility API uses integer switches, not JSON
+      // WuKongIM v3's HTTP API uses integer switches, not JSON
       // booleans. Reset makes reconciliation converge membership exactly and
       // remains safe to replay after a partial cutover.
       body: JSON.stringify({
@@ -85,27 +91,6 @@ export class WukongClient {
       messageId: String(value.message_id ?? value.messageId ?? ''),
       messageSeq: Number(value.message_seq ?? value.messageSeq ?? 0),
     }
-  }
-
-  async emitEvent(args: {
-    channelId: string; channelType: number; fromUid: string; clientMsgNo: string
-    eventId: string; eventType: 'stream.open' | 'stream.delta' | 'stream.close' | 'stream.error' | 'stream.cancel'
-    data: unknown
-  }): Promise<void> {
-    const payload = {
-      ...jsonRecord(args.data),
-      channelId: args.channelId,
-      channelType: args.channelType,
-      fromUid: args.fromUid,
-      clientMsgNo: args.clientMsgNo,
-    }
-    await this.request('/message/event', {
-      method: 'POST', body: JSON.stringify({
-        channel_id: args.channelId, channel_type: args.channelType, from_uid: args.fromUid,
-        client_msg_no: args.clientMsgNo, event_id: args.eventId, event_type: args.eventType,
-        event_key: 'main', visibility: 'user', occurred_at: Date.now(), payload,
-      }),
-    })
   }
 
   async listConversations(uid: string): Promise<Array<{
@@ -172,16 +157,41 @@ export class WukongClient {
     }
   }
 
-  async syncMessages(channelId: string, channelType: number, limit = 80, loginUid = ''): Promise<ImMessage[]> {
+  async syncMessages(
+    channelId: string,
+    channelType: number,
+    limit = 80,
+    loginUid = '',
+    beforeMessageSeq = 0,
+    repairProfile?: ImChannelProfile,
+  ): Promise<ImMessage[]> {
+    if (!Number.isSafeInteger(limit) || limit <= 0) throw new Error('message sync limit must be a positive safe integer')
+    if (!Number.isSafeInteger(beforeMessageSeq) || beforeMessageSeq < 0) {
+      throw new Error('message sync cursor must be a non-negative safe integer')
+    }
+    const requestMessages = () => this.request<unknown>('/channel/messagesync', {
+      method: 'POST', body: JSON.stringify({
+        login_uid: loginUid,
+        channel_id: channelId,
+        channel_type: channelType,
+        start_message_seq: 0,
+        end_message_seq: beforeMessageSeq,
+        limit,
+        pull_mode: 1,
+      }),
+    })
     let value: unknown
     try {
-      value = await this.request<unknown>('/channel/messagesync', {
-        method: 'POST', body: JSON.stringify({ login_uid: loginUid, channel_id: channelId, channel_type: channelType, start_message_seq: 0, end_message_seq: 0, limit, pull_mode: 1 }),
-      })
+      value = await requestMessages()
     } catch (error) {
-      // An empty channel has no sync state yet; expose it as an empty history.
-      if (isEmptyChannelResult(error)) return []
-      throw error
+      if (repairProfile && isMissingChannelMembership(error)) {
+        await this.upsertChannel(repairProfile)
+        value = await requestMessages()
+      } else {
+        // An empty channel has no sync state yet; expose it as an empty history.
+        if (isEmptyChannelResult(error)) return []
+        throw error
+      }
     }
     const root = jsonRecord(value)
     const list = Array.isArray(value) ? value : Array.isArray(root.messages) ? root.messages : []
@@ -192,7 +202,7 @@ export class WukongClient {
       try { payload = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8')) as LingxiMessageV1 }
       catch { payload = { version: 1, kind: 'system', clientMsgNo: String(item.client_msg_no ?? ''), body: encoded } }
       return {
-        messageId: String(item.message_id ?? item.messageId ?? ''),
+        messageId: String(item.message_idstr ?? item.message_id ?? item.messageId ?? ''),
         messageSeq: Number(item.message_seq ?? item.messageSeq ?? 0),
         clientMsgNo: String(item.client_msg_no ?? item.clientMsgNo ?? payload.clientMsgNo ?? ''),
         channelId: String(item.channel_id ?? item.channelId ?? channelId),
@@ -204,24 +214,33 @@ export class WukongClient {
     })
   }
 
-  verifyWebhook(rawBody: Buffer, signature: string | undefined): boolean {
-    if (!this.config.webhookSecret || !signature) return false
+  verifyWebhook(rawBody: Buffer, signature: string | undefined, token?: string): boolean {
+    if (!this.config.webhookSecret) return false
+    if (token && token.length === this.config.webhookSecret.length
+      && timingSafeEqual(Buffer.from(token), Buffer.from(this.config.webhookSecret))) return true
+    if (!signature) return false
     const expected = createHmac('sha256', this.config.webhookSecret).update(rawBody).digest('hex')
     const provided = signature.replace(/^sha256=/, '').toLowerCase()
-    if (provided.length !== expected.length) return false
-    return timingSafeEqual(Buffer.from(provided), Buffer.from(expected))
+    return provided.length === expected.length
+      && timingSafeEqual(Buffer.from(provided), Buffer.from(expected))
   }
 }
 
 let singleton: WukongClient | null = null
 
+function requiredConfig(name: 'WUKONG_API_URL' | 'WUKONG_WS_URL' | 'WUKONG_API_TOKEN' | 'WUKONG_WEBHOOK_SECRET'): string {
+  const value = process.env[name]?.trim()
+  if (!value) throw new Error(`${name} is required`)
+  return value
+}
+
 export function wukongClient(): WukongClient {
   if (!singleton) {
     singleton = new WukongClient({
-      apiUrl: process.env.WUKONG_API_URL ?? 'http://localhost:5001',
-      wsUrl: process.env.WUKONG_WS_URL ?? 'ws://localhost:5200',
-      apiToken: process.env.WUKONG_API_TOKEN ?? 'dev-wukong-api-token',
-      webhookSecret: process.env.WUKONG_WEBHOOK_SECRET ?? 'dev-wukong-webhook-secret',
+      apiUrl: requiredConfig('WUKONG_API_URL'),
+      wsUrl: requiredConfig('WUKONG_WS_URL'),
+      apiToken: requiredConfig('WUKONG_API_TOKEN'),
+      webhookSecret: requiredConfig('WUKONG_WEBHOOK_SECRET'),
     })
   }
   return singleton

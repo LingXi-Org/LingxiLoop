@@ -14,7 +14,7 @@
       "name": "Grounded teaching answer",
       "observation": {
         "input": "Explain why retrieval grounding matters and cite the course handbook.",
-        "answer": "结论：RAG 必须保留可追溯引用。因为检索结果可能不完整，所以回答需要核对来源并标注 [S1]。例如，先确认 sourceId，再验证引用标记，最后给出结论。你能说出为什么这会减少幻觉吗？",
+        "answer": "结论：RAG 必须保留可追溯引用。[因为检索结果可能不完整，所以回答需要核对来源](#cite-S1)。例如，先确认 sourceId，再验证引用标记，最后给出结论。你能说出为什么这会减少幻觉吗？",
         "retrievedSourceIds": ["source-handbook"],
         "citations": [
           { "sourceId": "source-handbook", "chunkId": "chunk-grounding", "marker": "S1", "title": "Course Handbook" }

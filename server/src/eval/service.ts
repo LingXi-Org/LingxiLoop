@@ -1,10 +1,7 @@
 import { randomUUID } from 'node:crypto'
-import type { PoolClient } from 'pg'
-import { pool } from '../db/pool.js'
 import type {
   EvalAgentTurnObservation,
   EvalApprovalObservation,
-  EvalCaseReport,
   EvalCitationObservation,
   EvalObservation,
   EvalRunInput,
@@ -15,90 +12,22 @@ import type {
 } from './contracts.js'
 import { EVAL_DIMENSIONS } from './contracts.js'
 import { evaluateRun } from './evaluator.js'
+import { evalPersistence } from './facade.js'
+import type {
+  AgentEventRow,
+  AgentRunSourceRow,
+  ApprovalRow,
+  DashboardRunRow,
+  HostActionRow,
+} from './repository.js'
 import {
   dedupeCitations,
   extractKnowledgeCitations,
+  sanitizeEvalMetadata,
+  sanitizeEvalObservation,
   sanitizeHostActionArgs,
   sanitizeHostActionResult,
 } from './trace.js'
-
-interface AgentRunSourceRow {
-  id: string
-  agent_id: string
-  status: string
-  run_error: string | null
-  result_text: string | null
-  canvas_id: string | null
-  reason: string | null
-  lane: string | null
-  trigger_client_msg_no: string | null
-  started_at: string
-  finished_at: string | null
-  latency_ms: string | number | null
-  token_count: number
-  input_tokens: number
-  cached_input_tokens: number
-  cache_creation_tokens: number
-  output_tokens: number
-  cost_usd: number
-  model: string | null
-}
-
-interface AgentEventRow {
-  id: string
-  kind: string
-  data: Record<string, unknown>
-  created_at: string
-  sequence: number | null
-}
-
-interface HostActionRow {
-  idempotency_key: string
-  action: string
-  args: unknown
-  result: unknown
-  status: string
-  error: string | null
-  approval_id: string | null
-  cell_id: string
-  call_index: number
-  created_at: string
-  updated_at: string
-}
-
-interface ApprovalRow {
-  id: string
-  action: string
-  status: string
-  requested_at: string
-  resolved_at: string | null
-}
-
-interface DashboardRunRow {
-  id: string
-  suite_key: string
-  suite_name: string
-  version: string
-  commit_sha: string | null
-  prompt_version: string | null
-  model: string | null
-  baseline_run_id: string | null
-  status: string
-  score: number
-  pass_threshold: number
-  case_count: number
-  passed_cases: number
-  failed_cases: number
-  error_cases: number
-  source: string
-  summary: EvalRunReport['summary']
-  metadata: Record<string, unknown>
-  created_by: string
-  created_at: string
-  finished_at: string
-  previous_score: number | null
-  explicit_baseline_score: number | null
-}
 
 export interface EvalDashboardRun {
   id: string
@@ -305,7 +234,9 @@ function buildAgentTrace(args: {
     kind: 'approval',
     label: `Approval · ${approval.action}`,
     action: approval.action,
-    status: approval.status === 'pending' ? 'pending' : approval.status === 'approved' ? 'completed' : 'failed',
+    status: approval.status === 'PENDING' || approval.status === 'APPROVED'
+      ? 'pending'
+      : approval.status === 'EXECUTED' ? 'completed' : 'failed',
     startedAt: approval.requested_at,
     finishedAt: approval.resolved_at ?? undefined,
     durationMs: elapsedMs(approval.requested_at, approval.resolved_at),
@@ -332,48 +263,16 @@ function buildAgentTrace(args: {
 }
 
 async function loadAgentRunObservation(runId: string): Promise<EvalObservation> {
-  const { rows } = await pool.query<AgentRunSourceRow>(
-    `SELECT r.id, r.agent_id, COALESCE(w.status, r.status) AS status, COALESCE(w.error, r.error) AS run_error,
-            w.result_text, w.canvas_id, w.reason, w.lane, w.trigger_client_msg_no,
-            COALESCE(w.lease_started_at, r.started_at) AS started_at,
-            COALESCE(w.finished_at, r.finished_at, r.updated_at) AS finished_at,
-            EXTRACT(EPOCH FROM (COALESCE(w.finished_at, r.finished_at, r.updated_at) -
-              COALESCE(w.lease_started_at, r.started_at))) * 1000 AS latency_ms,
-            r.token_count, r.input_tokens, r.cached_input_tokens,
-            r.cache_creation_tokens, r.output_tokens, r.cost_usd, r.model
-       FROM agent_runs r
-       LEFT JOIN agent_work_items w ON w.id = r.id
-      WHERE r.id = $1
-      LIMIT 1`,
-    [runId],
-  )
-  const run = rows[0]
+  const run = await evalPersistence.findAgentRun(runId)
   if (!run) throw Object.assign(new Error(`Agent OS run not found: ${runId}`), { status: 404 })
 
-  const [eventsResult, hostActionsResult, legacyToolsResult, approvalsResult] = await Promise.all([
-    pool.query<AgentEventRow>(
-      `SELECT id,kind,data,created_at,sequence FROM agent_events
-        WHERE run_id=$1 ORDER BY created_at ASC, sequence ASC NULLS LAST`,
-      [runId],
-    ),
-    pool.query<HostActionRow>(
-      `SELECT idempotency_key,action,args,result,status,error,approval_id,cell_id,call_index,created_at,updated_at
-         FROM agent_host_actions WHERE run_id=$1 ORDER BY created_at ASC`,
-      [runId],
-    ),
-    pool.query<{ name: string; args: unknown; result: unknown; status: string; error: string | null; duration_ms: number | null; created_at: string }>(
-      `SELECT name,args,result,status,error,duration_ms,created_at FROM tool_calls WHERE run_id=$1 ORDER BY created_at ASC`,
-      [runId],
-    ),
-    pool.query<ApprovalRow>(
-      `SELECT a.id,a.action,a.status,a.requested_at,a.resolved_at
-         FROM agent_os_approvals a JOIN agent_host_actions h ON h.approval_id=a.id
-        WHERE h.run_id=$1 ORDER BY a.requested_at ASC`,
-      [runId],
-    ),
+  const [events, hostActions, approvalRows] = await Promise.all([
+    evalPersistence.listAgentEvents(runId),
+    evalPersistence.listHostActions(runId),
+    evalPersistence.listApprovals(runId),
   ])
 
-  const knowledgeEvents = eventsResult.rows.filter((row) => row.kind === 'knowledge.context.loaded')
+  const knowledgeEvents = events.filter((row) => row.kind === 'knowledge.context.loaded')
   const contextCitations = knowledgeEvents.flatMap((row) => {
     const knowledge = jsonRecord(row.data)
     return Array.isArray(knowledge.citations)
@@ -389,15 +288,15 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
         })
       : []
   })
-  const dynamicCitations = hostActionsResult.rows.flatMap((row) => extractKnowledgeCitations(row.action, row.result))
+  const dynamicCitations = hostActions.flatMap((row) => extractKnowledgeCitations(row.action, row.result))
   const citations: EvalCitationObservation[] = dedupeCitations([...contextCitations, ...dynamicCitations])
-  const eventTokenCount = eventsResult.rows
+  const eventTokenCount = events
     .filter((row) => row.kind === 'model.completed')
     .reduce((sum, row) => {
       const usage = jsonRecord(jsonRecord(row.data).usage)
       return sum + (finiteNumber(usage.inputTokens) ?? 0) + (finiteNumber(usage.outputTokens) ?? 0)
     }, 0)
-  const nativeTools: EvalToolCallObservation[] = hostActionsResult.rows.map((row) => ({
+  const nativeTools: EvalToolCallObservation[] = hostActions.map((row) => ({
     id: row.idempotency_key,
     name: row.action,
     args: sanitizeHostActionArgs(row.action, row.args),
@@ -407,17 +306,12 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
     ...(row.approval_id ? { approvalId: row.approval_id } : {}),
     cellId: row.cell_id,
   }))
-  const legacyTools: EvalToolCallObservation[] = legacyToolsResult.rows.map((row) => ({
-    name: row.name,
-    args: sanitizeHostActionArgs(row.name, row.args),
-    result: sanitizeHostActionResult(row.name, row.result),
-    status: row.status === 'ok' ? 'ok' : row.status === 'error' ? 'error' : 'pending',
-    ...(row.duration_ms !== null ? { durationMs: row.duration_ms } : {}),
-  }))
-  const approvals: EvalApprovalObservation[] = approvalsResult.rows.map((row) => ({
+  const approvals: EvalApprovalObservation[] = approvalRows.map((row) => ({
     id: row.id,
     action: row.action,
-    status: row.status === 'approved' || row.status === 'rejected' || row.status === 'pending' ? row.status : 'failed',
+    status: row.status === 'PENDING' ? 'pending'
+      : row.status === 'APPROVED' || row.status === 'EXECUTED' ? 'approved'
+      : row.status === 'REJECTED' ? 'rejected' : 'failed',
     requestedAt: row.requested_at,
     ...(row.resolved_at ? { resolvedAt: row.resolved_at } : {}),
   }))
@@ -433,30 +327,13 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
   let artifacts: NonNullable<EvalObservation['artifacts']> = []
   let completionRate = run.status === 'completed' && run.result_text ? 1 : 0
   if (run.canvas_id) {
-    const [assignments, handoffs, frames] = await Promise.all([
-      pool.query<{
-        id: string; agent_id: string; assignment: string; status: string; started_at: string | null
-        completed_at: string | null; error: string | null
-      }>(
-        `SELECT id,agent_id,assignment,status,started_at,completed_at,error
-           FROM canvas_agent_assignments WHERE canvas_id=$1 ORDER BY created_at ASC`,
-        [run.canvas_id],
-      ),
-      pool.query<{ id: string; actor_id: string; detail: Record<string, unknown>; created_at: string }>(
-        `SELECT id,actor_id,detail,created_at FROM canvas_activity WHERE canvas_id=$1 AND action='handoff' ORDER BY created_at ASC`,
-        [run.canvas_id],
-      ),
-      pool.query<{ id: string; type: string; title: string; created_at: string; updated_at: string }>(
-        `SELECT id,type,title,created_at,updated_at FROM canvas_frames WHERE canvas_id=$1 ORDER BY created_at ASC`,
-        [run.canvas_id],
-      ),
-    ])
+    const { assignments, handoffs, frames } = await evalPersistence.loadCanvasTrace(run.canvas_id)
     const handoffByAgent = new Map<string, string>()
-    for (const handoff of handoffs.rows) {
+    for (const handoff of handoffs) {
       const to = jsonRecord(handoff.detail).toAgentId
       if (typeof to === 'string') handoffByAgent.set(handoff.actor_id, to)
     }
-    agentTurns = assignments.rows.map((row) => ({
+    agentTurns = assignments.map((row) => ({
       agentId: row.agent_id,
       role: row.assignment,
       status: row.status,
@@ -465,7 +342,7 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
       ...(row.completed_at ? { finishedAt: row.completed_at } : {}),
       ...(row.error ? { error: row.error } : {}),
     }))
-    for (const assignment of assignments.rows) canvasTrace.push({
+    for (const assignment of assignments) canvasTrace.push({
       id: assignment.id,
       kind: 'canvas',
       label: `Canvas Worker · ${assignment.agent_id}`,
@@ -478,7 +355,7 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
       output: assignment.error ? { error: assignment.error } : { status: assignment.status },
       metadata: { canvasId: run.canvas_id },
     })
-    for (const handoff of handoffs.rows) canvasTrace.push({
+    for (const handoff of handoffs) canvasTrace.push({
       id: handoff.id,
       kind: 'canvas',
       label: `Canvas Handoff · ${handoff.actor_id}`,
@@ -488,21 +365,21 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
       input: sanitizeHostActionArgs('canvas.handoff', handoff.detail),
       metadata: { canvasId: run.canvas_id },
     })
-    artifacts = frames.rows.map((frame) => ({ id: frame.id, kind: frame.type, title: frame.title }))
-    completionRate = assignments.rows.length
-      ? assignments.rows.filter((assignment) => assignment.status === 'completed').length / assignments.rows.length
+    artifacts = frames.map((frame) => ({ id: frame.id, kind: frame.type, title: frame.title }))
+    completionRate = assignments.length
+      ? assignments.filter((assignment) => assignment.status === 'completed').length / assignments.length
       : completionRate
   }
 
   const tokenBreakdown = run.input_tokens + run.cached_input_tokens + run.cache_creation_tokens + run.output_tokens
   const trace = buildAgentTrace({
     run,
-    events: eventsResult.rows,
-    hostActions: hostActionsResult.rows,
-    approvals: approvalsResult.rows,
+    events,
+    hostActions,
+    approvals: approvalRows,
     canvasEvents: canvasTrace,
   })
-  const inputData = jsonRecord(eventsResult.rows.find((event) => event.kind === 'input.loaded')?.data)
+  const inputData = jsonRecord(events.find((event) => event.kind === 'input.loaded')?.data)
   return {
     input: typeof inputData.text === 'string'
       ? inputData.text
@@ -510,7 +387,7 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
     answer: run.result_text ?? '',
     retrievedSourceIds: [...new Set(citations.map((item) => item.sourceId))],
     citations,
-    toolCalls: [...nativeTools, ...legacyTools],
+    toolCalls: nativeTools,
     agentTurns,
     approvals,
     artifacts,
@@ -522,8 +399,7 @@ async function loadAgentRunObservation(runId: string): Promise<EvalObservation> 
     },
     policyViolations: [],
     latencyMs: finiteNumber(run.latency_ms),
-    tokenCount: tokenBreakdown || run.token_count || eventTokenCount || undefined,
-    costUsd: finiteNumber(run.cost_usd),
+    tokenCount: tokenBreakdown || eventTokenCount || undefined,
     ...(run.run_error ? { error: run.run_error } : {}),
     metadata: {
       sourceAgentRunId: runId,
@@ -556,31 +432,11 @@ function runSource(input: EvalRunInput): string {
   return historical === input.cases.length ? 'agent-os' : 'mixed'
 }
 
-async function persistCase(client: PoolClient, runId: string, item: EvalCaseReport, position: number): Promise<void> {
-  const caseId = `eval-case-${randomUUID()}`
-  await client.query(
-    `INSERT INTO eval_cases
-       (id,eval_run_id,case_key,name,position,source_agent_run_id,status,score,observation,expectations,failure_reasons)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11::jsonb)`,
-    [caseId, runId, item.caseId, item.name, position, item.sourceAgentRunId, item.status, item.score,
-      JSON.stringify(item.observation), JSON.stringify(item.expectations), JSON.stringify(item.failureReasons)],
-  )
-  for (const [stagePosition, stage] of item.stages.entries()) {
-    await client.query(
-      `INSERT INTO eval_stage_results
-         (id,eval_run_id,eval_case_id,stage,position,status,score,duration_ms,findings,metrics,failure_reason)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11)`,
-      [`eval-stage-${randomUUID()}`, runId, caseId, stage.stage, stagePosition, stage.status, stage.score,
-        stage.durationMs, JSON.stringify(stage.findings), JSON.stringify(stage.metrics), stage.failureReason],
-    )
-  }
-}
-
 export async function createEvalRun(input: EvalRunInput, createdBy: string): Promise<{ id: string; report: EvalRunReport }> {
   if (input.baselineRunId) {
-    const baseline = await pool.query<{ suite_key: string }>(`SELECT suite_key FROM eval_runs WHERE id=$1`, [input.baselineRunId])
-    if (!baseline.rows[0]) throw Object.assign(new Error('baseline eval run not found'), { status: 404 })
-    if (baseline.rows[0].suite_key !== input.suiteKey) {
+    const baselineSuite = await evalPersistence.findBaselineSuite(input.baselineRunId)
+    if (!baselineSuite) throw Object.assign(new Error('baseline eval run not found'), { status: 404 })
+    if (baselineSuite !== input.suiteKey) {
       throw Object.assign(new Error('baseline eval run must belong to the same suiteKey'), { status: 409 })
     }
   }
@@ -596,29 +452,22 @@ export async function createEvalRun(input: EvalRunInput, createdBy: string): Pro
       ...(!input.target?.model && observedModels.length ? { model: observedModels.length === 1 ? observedModels[0] : 'mixed' } : {}),
     },
   }
-  const report = evaluateRun(effectiveInput, observations)
-  const id = `eval-${randomUUID()}`
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    await client.query(
-      `INSERT INTO eval_runs
-         (id,suite_key,suite_name,version,commit_sha,prompt_version,model,baseline_run_id,status,score,pass_threshold,case_count,
-          passed_cases,failed_cases,error_cases,source,summary,metadata,created_by,started_at,finished_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18::jsonb,$19,NOW(),NOW())`,
-      [id, report.suiteKey, report.suiteName, report.version, report.target.commitSha ?? null,
-        report.target.promptVersion ?? null, report.target.model ?? null, report.baselineRunId, report.status, report.score,
-        report.passThreshold, report.summary.caseCount, report.summary.passedCases, report.summary.failedCases,
-        report.summary.errorCases, runSource(input), JSON.stringify(report.summary), JSON.stringify(input.metadata ?? {}), createdBy],
-    )
-    for (const [position, item] of report.cases.entries()) await persistCase(client, id, item, position)
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => undefined)
-    throw error
-  } finally {
-    client.release()
+  const evaluatedReport = evaluateRun(effectiveInput, observations)
+  const report: EvalRunReport = {
+    ...evaluatedReport,
+    cases: evaluatedReport.cases.map((item) => ({
+      ...item,
+      observation: sanitizeEvalObservation(item.observation),
+    })),
   }
+  const id = `eval-${randomUUID()}`
+  await evalPersistence.persistEvalRun({
+    id,
+    report,
+    input: { ...input, metadata: sanitizeEvalMetadata(input.metadata) },
+    createdBy,
+    source: runSource(input),
+  })
   return { id, report }
 }
 
@@ -670,28 +519,7 @@ export async function getEvalDashboard(args: { suiteKey?: string; limit?: number
 }> {
   const limit = Math.min(200, Math.max(1, args.limit ?? 80))
   const sinceDays = Math.min(365, Math.max(1, args.sinceDays ?? 90))
-  const params: unknown[] = [sinceDays]
-  let suiteWhere = ''
-  if (args.suiteKey) {
-    params.push(args.suiteKey)
-    suiteWhere = `AND r.suite_key=$${params.length}`
-  }
-  params.push(limit)
-  const { rows } = await pool.query<DashboardRunRow>(
-    `WITH scored AS (
-       SELECT r.*,
-              LAG(r.score) OVER (PARTITION BY r.suite_key ORDER BY r.created_at,r.id) AS previous_score
-         FROM eval_runs r
-        WHERE r.created_at >= NOW() - ($1::double precision * INTERVAL '1 day')
-     )
-     SELECT r.*, baseline.score AS explicit_baseline_score
-       FROM scored r
-       LEFT JOIN eval_runs baseline ON baseline.id=r.baseline_run_id
-      WHERE TRUE ${suiteWhere}
-      ORDER BY r.created_at DESC
-      LIMIT $${params.length}`,
-    params,
-  )
+  const rows = await evalPersistence.listDashboardRuns({ suiteKey: args.suiteKey, limit, sinceDays })
   const runs = rows.map(toDashboardRun)
   const totalRuns = runs.length
   const stageNames = ['answer', 'teaching', 'rag', 'tools', 'safety', 'task', 'collaboration', 'efficiency'] as const
@@ -748,37 +576,22 @@ export async function getEvalRunDetail(id: string): Promise<EvalDashboardRun & {
   failureCategories: string[]
   stages: EvalStageResult[]
 }> }> {
-  const { rows } = await pool.query<DashboardRunRow>(
-    `WITH scored AS (
-       SELECT r.*, LAG(r.score) OVER (PARTITION BY r.suite_key ORDER BY r.created_at,r.id) AS previous_score
-       FROM eval_runs r
-     )
-     SELECT r.*, baseline.score AS explicit_baseline_score
-       FROM scored r LEFT JOIN eval_runs baseline ON baseline.id=r.baseline_run_id
-      WHERE r.id=$1`,
-    [id],
-  )
-  if (!rows[0]) throw Object.assign(new Error('eval run not found'), { status: 404 })
+  const run = await evalPersistence.findDashboardRun(id)
+  if (!run) throw Object.assign(new Error('eval run not found'), { status: 404 })
   const [caseRows, stageRows] = await Promise.all([
-    pool.query<{
-      id: string; case_key: string; name: string; position: number; source_agent_run_id: string | null
-      status: string; score: number; observation: EvalObservation; expectations: Record<string, unknown>; failure_reasons: string[]
-    }>(`SELECT * FROM eval_cases WHERE eval_run_id=$1 ORDER BY position`, [id]),
-    pool.query<{
-      eval_case_id: string; stage: EvalStageResult['stage']; status: EvalStageResult['status']; score: number | null
-      duration_ms: number; findings: EvalStageResult['findings']; metrics: EvalStageResult['metrics']; failure_reason: string | null; position: number
-    }>(`SELECT * FROM eval_stage_results WHERE eval_run_id=$1 ORDER BY eval_case_id,position`, [id]),
+    evalPersistence.listEvalCases(id),
+    evalPersistence.listEvalStages(id),
   ])
   const stagesByCase = new Map<string, EvalStageResult[]>()
-  for (const row of stageRows.rows) {
+  for (const row of stageRows) {
     const list = stagesByCase.get(row.eval_case_id) ?? []
     list.push({ stage: row.stage, status: row.status, score: row.score === null ? null : Number(row.score),
       durationMs: row.duration_ms, findings: row.findings, metrics: row.metrics, failureReason: row.failure_reason })
     stagesByCase.set(row.eval_case_id, list)
   }
   return {
-    ...toDashboardRun(rows[0]),
-    cases: caseRows.rows.map((row) => {
+    ...toDashboardRun(run),
+    cases: caseRows.map((row) => {
       const stages = stagesByCase.get(row.id) ?? []
       return {
         id: row.id,

@@ -1,3 +1,6 @@
+import { NotificationOff01Icon, PinIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Badge } from '@/components/ui/badge'
 import { useEffect } from 'react'
 import { Avatar, AvatarStack } from '@/components/Avatar'
 import { HiveAvatar } from '@/components/HiveAvatar'
@@ -5,14 +8,12 @@ import { PreviewText } from '@/components/PreviewText'
 import { participantRoleZh } from '@/lib/participantRole'
 import { cn } from '@/lib/utils'
 import { useMe } from '@/stores/auth'
-import { isMuted } from '@/stores/conversations'
-import { useMessages } from '@/stores/messages'
-import { useParticipants } from '@/stores/participants'
+import { isMuted } from '@/features/conversations/store'
+import { useConversationPresence } from '@/features/chat/runtime'
+import { useParticipants } from '@/features/agents/state'
 import type { Conversation, Participant } from '@/types'
 
 let lastRosterBackfillAt = 0
-const EMPTY_TYPING_IDS: string[] = []
-
 function backfillRosterOnce() {
   const now = Date.now()
   if (now - lastRosterBackfillAt < 8000) return
@@ -29,6 +30,7 @@ export function ConversationAvatar({
   size?: number
   variant?: 'desktop' | 'mobile'
 }) {
+  const avatarMotion = 'transition-[width,height] duration-200 ease-out motion-reduce:transition-none'
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
   const noneResolved = conversation.members.length > 0 && conversation.members.every((id) => !byId[id])
@@ -45,25 +47,25 @@ export function ConversationAvatar({
   if (conversation.tag === 'fresh-pulled') {
     return (
       <span
-        className="grid shrink-0 place-items-center rounded-full font-semibold text-white"
-        style={{ width: size, height: size, background: 'conic-gradient(from 0deg, #B57BFF, var(--coral), #6B7BE6, var(--gold), #B57BFF)' }}
+        className={cn('grid shrink-0 place-items-center rounded-full bg-primary font-semibold text-primary-foreground', avatarMotion)}
+        style={{ width: size, height: size }}
       >⌘</span>
     )
   }
 
   if (conversation.kind === 'group' || members.length > 1) {
     if (members.length === 0) {
-      return <span className="grid shrink-0 place-items-center rounded-full bg-raised text-ink-secondary" style={{ width: size, height: size }}>群</span>
+      return <span className={cn('grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground', avatarMotion)} style={{ width: size, height: size }}>群</span>
     }
     return variant === 'mobile'
-      ? <HiveAvatar ps={members} size={size} ringColor="var(--panel)" />
-      : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} />
+      ? <HiveAvatar ps={members} size={size} ringColor="var(--sidebar)" mode="chat" className={avatarMotion} />
+      : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} mode="chat" />
   }
 
   const person = members[0] ?? conversation.members.map((id) => byId[id]).find(Boolean)
-  if (person) return <Avatar p={person} size={size} ringColor="var(--panel)" />
+  if (person) return <Avatar p={person} size={size} ringColor="var(--sidebar)" mode="chat" className={avatarMotion} />
   return (
-    <span className="grid shrink-0 place-items-center rounded-full bg-raised font-semibold text-ink" style={{ width: size, height: size }}>
+    <span className={cn('grid shrink-0 place-items-center rounded-full bg-muted font-semibold text-foreground', avatarMotion)} style={{ width: size, height: size }}>
       {conversation.kind === 'email' ? '邮' : conversation.title.charAt(0).toUpperCase()}
     </span>
   )
@@ -74,16 +76,16 @@ export function ConversationAvatar({
  * mute state and unread semantics. */
 export function ConversationListItemContent({
   conversation,
-  variant = 'desktop',
   selected = false,
+  variant = 'desktop',
 }: {
   conversation: Conversation
-  variant?: 'desktop' | 'mobile'
   selected?: boolean
+  variant?: 'desktop' | 'mobile'
 }) {
   // Zustand's external-store selector must return a stable snapshot when no
   // one is typing. A fresh `[]` here causes an infinite render loop in React.
-  const typingIds = useMessages((state) => state.typing[conversation.id] ?? EMPTY_TYPING_IDS)
+  const { typingAgentIds: typingIds } = useConversationPresence(conversation.id)
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
   const muted = isMuted(conversation)
@@ -99,31 +101,42 @@ export function ConversationListItemContent({
     .map((id) => byId[id]?.name?.trim())
     .filter((name): name is string => Boolean(name))
   const isMobile = variant === 'mobile'
-  const isDirectAgent = conversation.kind === 'direct' && conversation.members.some((id) => id !== meId && byId[id]?.kind === 'agent')
-
+  const isDirectAgent = conversation.kind === 'direct' && conversation.members.some(
+    (id) => id !== meId && byId[id]?.kind === 'agent',
+  )
   return (
     <>
-      <ConversationAvatar conversation={conversation} size={isMobile || !isDirectAgent ? 48 : 54} variant={variant} />
+      <ConversationAvatar conversation={conversation} size={isMobile ? 42 : !isDirectAgent ? 48 : 54} variant={variant} />
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
-          {conversation.pinned && !isMobile && <span className={cn('text-[9px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已置顶">◆</span>}
-          <span className={cn('truncate text-[16px] font-semibold', selected ? 'text-white' : muted ? 'text-ink-secondary' : 'text-ink')}>
+          <span className={cn('truncate font-semibold', isMobile ? 'text-[16px]' : 'text-[15px]', muted ? 'text-muted-foreground' : 'text-foreground')}>
             {conversation.title}
           </span>
-          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className={cn('shrink-0 text-[10px] font-normal', selected ? 'text-white/70' : 'text-ink-secondary')}>{role}</span>)}
-          {muted && <span className={cn('shrink-0 text-[11px]', selected ? 'text-white/70' : 'text-ink-secondary')} aria-label="已静音">⌁</span>}
-          {conversation.tag === 'fresh-pulled' && <span className="rounded bg-gold/20 px-1.5 py-0.5 text-[8px] font-bold text-gold-deep">NEW</span>}
+          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[9px] font-normal text-muted-foreground">{role}</span>)}
+          {muted && (
+            <span className="inline-flex size-4 shrink-0 items-center justify-center text-muted-foreground" aria-label="已静音" title="已静音">
+              <HugeiconsIcon icon={NotificationOff01Icon} strokeWidth={2} className="size-3" />
+            </span>
+          )}
+          {conversation.tag === 'fresh-pulled' && <span className="rounded bg-secondary px-1.5 py-0.5 text-[8px] font-bold text-secondary-foreground">新消息</span>}
         </span>
-        <span className={cn('mt-0.5 block truncate text-[14px]', selected ? 'text-white/75' : typingNames.length > 0 ? 'text-accent' : 'text-ink-secondary')}>
+        <span className={cn('mt-0.5 block truncate', isMobile ? 'text-[14px]' : 'text-[13px]', typingNames.length > 0 ? 'text-primary' : 'text-muted-foreground')}>
           {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1 self-center">
-        <span className={cn('text-[12px] tabular-nums', selected ? 'text-white/75' : 'text-ink-secondary')}>{conversation.lastAt}</span>
-        {(conversation.unread ?? 0) > 0 && (
-          <span className={cn('grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-bold leading-5', selected ? 'bg-white text-accent' : muted ? 'bg-raised text-ink-secondary' : 'bg-accent text-white')}>
+        <span className="flex items-center gap-1">
+          <span className={cn('tabular-nums text-muted-foreground', isMobile ? 'text-[12px]' : 'text-[11px]')}>{conversation.lastAt}</span>
+          {conversation.pinned && !isMobile && (
+            <span className="inline-flex size-4 items-center justify-center text-muted-foreground" aria-label="已置顶" title="已置顶">
+              <HugeiconsIcon icon={PinIcon} strokeWidth={2} className="size-3" />
+            </span>
+          )}
+        </span>
+        {!selected && (conversation.unread ?? 0) > 0 && (
+          <Badge className="min-w-5 bg-[var(--unread)] px-1.5 text-[10px] font-bold tabular-nums text-[var(--unread-foreground)]">
             {conversation.unread! > 99 ? '99+' : conversation.unread}
-          </span>
+          </Badge>
         )}
       </span>
     </>

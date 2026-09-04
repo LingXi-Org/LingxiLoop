@@ -1,16 +1,13 @@
+import WKSDK, { MessageContent, type Message as WKMessage } from 'wukongimjssdk'
 import { getServerOrigin } from '@/api/core/http'
-import WKSDK, { MessageContent, type WKEvent, type Message as WKMessage } from 'wukongimjssdk'
 import { lingxiApiFetch } from '@/api/transport'
-import { getActiveCompanyId, getAuthToken } from '@/stores/auth'
-import { isEmptyHistoryDetail, isInternalAgentStatus } from './historyErrors'
-
-export { isInternalAgentStatus } from './historyErrors'
+import { getActiveCompanyId, getMeId } from '@/stores/auth'
 
 export const LINGXI_MESSAGE_CONTENT_TYPE = 1000
 
 export type LingxiMessageV1 = {
   version: 1
-  kind: 'text' | 'attachment' | 'system' | 'tool_activity' | 'approval' | 'handoff' | 'questionnaire' | 'poll' | 'artifact' | 'canvas' | 'learning_mission'
+  kind: 'text' | 'attachment' | 'system' | 'tool_activity' | 'approval' | 'handoff' | 'questionnaire' | 'poll' | 'artifact' | 'canvas' | 'learning_mission' | 'email'
   clientMsgNo: string
   body?: string
   replyToClientMsgNo?: string
@@ -29,22 +26,6 @@ export interface ImEnvelope {
   payload: LingxiMessageV1
 }
 
-export interface ImStreamEvent {
-  id: string
-  type: 'stream.open' | 'stream.delta' | 'stream.close' | 'stream.error' | 'stream.cancel'
-  timestamp: number
-  channelId: string
-  channelType: number
-  fromUid: string
-  clientMsgNo: string
-  kind?: string
-  text?: string
-  delta?: string
-  phase?: 'thinking'
-  queued?: boolean
-  streamSeq?: number
-}
-
 type Bootstrap = { uid: string; token: string; wsUrl: string; apiVersion: 3; sdkVersion: '1.3.5' }
 
 class LingxiContent extends MessageContent {
@@ -58,11 +39,9 @@ class LingxiContent extends MessageContent {
 }
 
 function authHeaders(): Record<string, string> {
-  const token = getAuthToken()
   const companyId = getActiveCompanyId()
   return {
     'content-type': 'application/json',
-    ...(token ? { authorization: `Bearer ${token}` } : {}),
     ...(companyId ? { 'x-company-id': companyId } : {}),
   }
 }
@@ -89,8 +68,11 @@ function fromSdk(message: WKMessage): ImEnvelope {
 export class LingxiImClient {
   private readonly sdk = WKSDK.shared()
   private started = false
+  private boundUid: string | null = null
+  private boundCompanyId: string | null = null
+  private connectingKey: string | null = null
+  private connectPromise: Promise<void> | null = null
   private listeners = new Set<(message: ImEnvelope) => void>()
-  private eventListeners = new Set<(event: ImStreamEvent) => void>()
   private workspaceChannels = new Set<string>()
 
   constructor() {
@@ -100,43 +82,52 @@ export class LingxiImClient {
       if (!this.workspaceChannels.has(converted.channelId)) return
       for (const listener of this.listeners) listener(converted)
     })
-    this.sdk.eventManager.addEventListener((event: WKEvent) => {
-      if (!['stream.open', 'stream.delta', 'stream.close', 'stream.error', 'stream.cancel'].includes(event.type)) return
-      const data = event.dataJson && typeof event.dataJson === 'object' ? event.dataJson as Record<string, unknown> : {}
-      const converted: ImStreamEvent = {
-        id: event.id,
-        type: event.type as ImStreamEvent['type'],
-        timestamp: event.timestamp,
-        channelId: String(data.channelId ?? ''),
-        channelType: Number(data.channelType ?? 2),
-        fromUid: String(data.fromUid ?? ''),
-        clientMsgNo: String(data.clientMsgNo ?? ''),
-        kind: typeof data.kind === 'string' ? data.kind : undefined,
-        text: typeof data.text === 'string' ? data.text : undefined,
-        delta: typeof data.delta === 'string' ? data.delta : undefined,
-        phase: data.phase === 'thinking' ? 'thinking' : undefined,
-        queued: data.queued === true,
-        streamSeq: typeof data.streamSeq === 'number' && Number.isSafeInteger(data.streamSeq) ? data.streamSeq : undefined,
-      }
-      if (!converted.channelId || !converted.fromUid || !converted.clientMsgNo) return
-      if (!this.workspaceChannels.has(converted.channelId)) return
-      for (const listener of this.eventListeners) listener(converted)
-    })
   }
 
   async connect(): Promise<void> {
-    if (this.started && this.sdk.connectManager.connected()) return
-    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/bootstrap`, { headers: authHeaders() })
-    if (!response.ok) throw new Error(`IM bootstrap failed: ${response.status}`)
-    const bootstrap = await response.json() as Bootstrap
-    this.sdk.config.uid = bootstrap.uid
-    this.sdk.config.token = bootstrap.token
-    this.sdk.config.addr = bootstrap.wsUrl
-    this.sdk.connect()
-    this.started = true
+    const uid = getMeId()
+    const companyId = getActiveCompanyId()
+    if (!uid || !companyId) throw new Error('IM connection requires an authenticated workspace')
+    const key = `${uid}:${companyId}`
+    if (this.started
+      && this.boundUid === uid
+      && this.boundCompanyId === companyId) return
+    if (this.connectPromise) {
+      if (this.connectingKey === key) return this.connectPromise
+      try { await this.connectPromise } catch { /* A newer identity retries below. */ }
+      return this.connect()
+    }
+
+    this.connectingKey = key
+    this.connectPromise = (async () => {
+      if (this.started) this.sdk.disconnect()
+      const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/bootstrap`, { headers: authHeaders(), credentials: 'include' })
+      if (!response.ok) throw new Error(`IM bootstrap failed: ${response.status}`)
+      const bootstrap = await response.json() as Bootstrap
+      if (getMeId() !== uid || getActiveCompanyId() !== companyId) {
+        throw new Error('IM identity changed during bootstrap')
+      }
+      this.sdk.config.uid = bootstrap.uid
+      this.sdk.config.token = bootstrap.token
+      this.sdk.config.addr = bootstrap.wsUrl
+      this.sdk.connect()
+      this.started = true
+      this.boundUid = uid
+      this.boundCompanyId = companyId
+    })().finally(() => {
+      this.connectPromise = null
+      this.connectingKey = null
+    })
+    return this.connectPromise
   }
 
-  disconnect(): void { this.sdk.disconnect(); this.started = false }
+  disconnect(): void {
+    this.sdk.disconnect()
+    this.started = false
+    this.boundUid = null
+    this.boundCompanyId = null
+    this.workspaceChannels.clear()
+  }
 
   setWorkspaceChannels(channelIds: Iterable<string>): void {
     this.workspaceChannels = new Set(channelIds)
@@ -147,31 +138,17 @@ export class LingxiImClient {
     return () => this.listeners.delete(listener)
   }
 
-  subscribeEvent(listener: (event: ImStreamEvent) => void): () => void {
-    this.eventListeners.add(listener)
-    return () => this.eventListeners.delete(listener)
+  async history(channelId: string, limit = 80, beforeMessageSeq = 0): Promise<ImEnvelope[]> {
+    const query = new URLSearchParams({ limit: String(limit) })
+    if (beforeMessageSeq > 0) query.set('beforeSeq', String(beforeMessageSeq))
+    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages?${query}`, { headers: authHeaders() })
+    if (!response.ok) throw new Error(`IM history failed: ${response.status}`)
+    return response.json() as Promise<ImEnvelope[]>
   }
 
-  async history(channelId: string, limit = 80): Promise<ImEnvelope[]> {
-    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages?limit=${limit}`, { headers: authHeaders() })
-    if (!response.ok) {
-      const detail = await response.text().catch(() => '')
-      // Older API deployments can forward WuKongIM's empty-channel result as
-      // a 500. It is not a failed transcript: the channel simply has no sync
-      // state yet. Keep genuine server failures visible by requiring an
-      // explicit empty/not-found marker in the response body.
-      if (response.status === 500 && isEmptyHistoryDetail(detail)) return []
-      throw new Error(`IM history failed: ${response.status}`)
-    }
-    const messages = await response.json() as ImEnvelope[]
-    // Older servers persisted the ephemeral run-start preview. Hide those
-    // legacy transport records without suppressing genuine tool activity.
-    return messages.filter((message) => !isInternalAgentStatus(message))
-  }
-
-  async send(channelId: string, payload: LingxiMessageV1, channelType = 2): Promise<ImEnvelope> {
+  async send(channelId: string, payload: LingxiMessageV1): Promise<ImEnvelope> {
     const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages/accept`, {
-      method: 'POST', headers: authHeaders(), body: JSON.stringify({ clientNonce: payload.clientMsgNo, payload, channelType }),
+      method: 'POST', headers: authHeaders(), body: JSON.stringify({ clientNonce: payload.clientMsgNo, payload }),
     })
     if (!response.ok) {
       const detail = await response.text().catch(() => '')

@@ -10,10 +10,9 @@ export function HumanBadge() {
       className="inline-flex items-center text-[10px] font-semibold tracking-wider uppercase px-1.5 py-[1px] rounded-full"
       style={{
         color: 'var(--skype-deep)',
-        background:
-          'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(194,230,251,0.22) 100%)',
-        border: '1px solid rgba(0, 120, 200, 0.1)',
-        boxShadow: 'inset 0 0.5px 0 rgba(255,255,255,0.7)',
+        background: 'color-mix(in srgb, var(--primary) 10%, var(--background))',
+        border: '1px solid color-mix(in srgb, var(--primary) 18%, transparent)',
+        boxShadow: 'inset 0 0.5px 0 color-mix(in srgb, var(--primary-foreground) 70%, transparent)',
       }}
     >
       成员

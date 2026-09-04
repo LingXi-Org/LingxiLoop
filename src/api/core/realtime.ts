@@ -1,7 +1,7 @@
 import type { WsEvent } from '@/api/contracts'
 import { getServerOrigin } from '@/api/core/http'
 import { lingxiApiFetch } from '@/api/transport'
-import { getAuthToken } from '@/stores/auth'
+import { getMeId } from '@/stores/auth'
 
 type Listener = (event: WsEvent) => void
 
@@ -21,14 +21,14 @@ class RealtimeClient {
 
   async connect() {
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return
-    const token = getAuthToken()
-    if (!token) return
+    if (!getMeId()) return
     const generation = this.generation
     let ticket: string
     try {
       const response = await lingxiApiFetch(`${getServerOrigin()}/api/auth/ws-ticket`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
       })
       if (!response.ok) { this.scheduleReconnect(); return }
       ticket = ((await response.json()) as { ticket: string }).ticket
@@ -47,7 +47,9 @@ class RealtimeClient {
       try {
         const data = JSON.parse(event.data) as WsEvent
         this.listeners.forEach((listener) => { listener(data) })
-      } catch { /* Ignore malformed server frames. */ }
+      } catch (error) {
+        console.error('[realtime] rejected malformed server frame', error)
+      }
     }
     socket.onclose = () => {
       if (this.socket !== socket) return

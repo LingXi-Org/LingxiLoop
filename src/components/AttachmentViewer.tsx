@@ -1,30 +1,40 @@
+import { File01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { filesApi } from '@/api/files'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
-import { type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
-import type { Message } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { uploadsApi } from '@/features/platform/api'
+import { type AttachmentPreviewDescriptor, type AttachmentPreviewKind, type AttachmentPreviewState, formatTextPreview, inferTextPreviewFormat, PDF_PREVIEW_MAX_BYTES, readTextPreview, tokenizeJsonPreview } from '@/lib/attachmentPreview'
+import { userFacingError } from '@/lib/userFacingError'
 import { TypesetMarkdown } from './Typeset'
 
 GlobalWorkerOptions.workerSrc ||= pdfWorkerUrl
 
-type Attachment = NonNullable<Message['attachment']>
+type Attachment = AttachmentPreviewDescriptor
 
-async function freshUrl(url: string): Promise<string> {
-  if (/^(data:|blob:)/i.test(url) || url.startsWith('/')) return url
-  try { return (await filesApi.refreshUploadUrl(url)).url } catch { return url }
+async function freshUrl(attachment: Attachment): Promise<string> {
+  if (/^(data:|blob:)/i.test(attachment.url) || attachment.url.startsWith('/')) return attachment.url
+  if (!attachment.key) throw new Error('attachment storage key is missing')
+  return (await uploadsApi.refreshUploadUrl({ key: attachment.key })).url
 }
 
 function ViewerShell({ name, url, onClose, children }: { name: string; url: string; onClose: () => void; children: React.ReactNode }) {
-  return createPortal(
-    <div className="attachment-viewer-backdrop" role="dialog" aria-modal="true" aria-label={`预览 ${name}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section className="attachment-viewer-shell">
-        <header><strong className="min-w-0 truncate">{name}</strong><div className="attachment-viewer-actions"><a href={url} download={name} target="_blank" rel="noreferrer">下载</a><button type="button" onClick={onClose} aria-label="关闭预览">×</button></div></header>
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="flex h-[min(90vh,900px)] max-w-[min(94vw,1200px)] flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="flex-row items-center justify-between border-b px-5 py-4 pr-16">
+          <DialogTitle className="min-w-0 truncate">{name}</DialogTitle>
+          <Button asChild variant="outline" size="sm">
+            <a href={url} download={name} target="_blank" rel="noreferrer">下载</a>
+          </Button>
+        </DialogHeader>
         {children}
-      </section>
-    </div>, document.body,
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -32,7 +42,7 @@ function PdfPage({ pageNumber, document, scale, onVisible }: { pageNumber: numbe
   const hostRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [visible, setVisible] = useState(pageNumber <= 2)
-  const [ratio, setRatio] = useState(1.414)
+  const [ratio, setRatio] = useState(Math.SQRT2)
   useEffect(() => {
     const host = hostRef.current
     if (!host || !('IntersectionObserver' in window)) { setVisible(true); return }
@@ -92,13 +102,13 @@ function PdfViewer({ attachment, url, onClose }: { attachment: Attachment; url: 
     return () => document.removeEventListener('keydown', onKey, true)
   }, [onClose])
   return <ViewerShell name={attachment.name} url={url} onClose={onClose}>
-    <div className="pdf-preview-toolbar"><button type="button" onClick={() => setScale((value) => Math.max(.5, value - .25))}>−</button><span>{Math.round(scale * 100)}%</span><button type="button" onClick={() => setScale((value) => Math.min(4, value + .25))}>＋</button><span className="ml-auto">{pdfDocument ? `${currentPage} / ${pdfDocument.numPages}` : ''}</span></div>
+    <div className="pdf-preview-toolbar"><Button type="button" variant="outline" size="icon-sm" onClick={() => setScale((value) => Math.max(.5, value - .25))}>−</Button><span>{Math.round(scale * 100)}%</span><Button type="button" variant="outline" size="icon-sm" onClick={() => setScale((value) => Math.min(4, value + .25))}>＋</Button><span className="ml-auto">{pdfDocument ? `${currentPage} / ${pdfDocument.numPages}` : ''}</span></div>
     <div className="attachment-viewer-body pdf-preview-body">{error ? <PreviewError message={error} url={url} name={attachment.name} /> : !pdfDocument ? <PreviewLoading /> : Array.from({ length: pdfDocument.numPages }, (_, index) => <PdfPage key={index + 1} pageNumber={index + 1} document={pdfDocument} scale={scale} onVisible={onVisible} />)}</div>
   </ViewerShell>
 }
 
 function PreviewLoading() { return <ResourceSkeleton variant="media" className="h-full p-5" label="正在准备附件预览" /> }
-function PreviewError({ message, url, name }: { message: string; url: string; name: string }) { return <div className="attachment-preview-state" role="alert"><strong>无法显示预览</strong><span>{message}</span><a href={url} download={name} target="_blank" rel="noreferrer">下载文件</a></div> }
+function PreviewError({ message, url, name }: { message: string; url: string; name: string }) { return <Empty className="min-h-full" role="alert"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>无法显示预览</EmptyTitle><EmptyDescription>{message}</EmptyDescription></EmptyHeader><EmptyContent><Button asChild variant="outline"><a href={url} download={name} target="_blank" rel="noreferrer">下载文件</a></Button></EmptyContent></Empty> }
 
 function MarkdownDocument({ source }: { source: string }) {
   return <TypesetMarkdown
@@ -137,7 +147,9 @@ function TextViewer({ attachment, url, onClose }: { attachment: Attachment; url:
     const controller = new AbortController()
     setState({ status: 'loading' })
     void fetch(url, { signal: controller.signal }).then(readTextPreview).then((text) => setState({ status: 'ready', url, text: formatTextPreview(attachment.name, text) })).catch((reason) => {
-      if ((reason as { name?: string }).name !== 'AbortError') setState({ status: 'error', message: reason instanceof Error ? reason.message : String(reason) })
+      if ((reason as { name?: string }).name !== 'AbortError') {
+        setState({ status: 'error', message: userFacingError(reason, '暂时无法预览附件，请下载后查看。') })
+      }
     })
     return () => controller.abort()
   }, [attachment.name, attempt, url])
@@ -145,7 +157,7 @@ function TextViewer({ attachment, url, onClose }: { attachment: Attachment; url:
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); onClose() } }
     document.addEventListener('keydown', onKey, true); return () => document.removeEventListener('keydown', onKey, true)
   }, [onClose])
-  return <ViewerShell name={attachment.name} url={url} onClose={onClose}><div className="attachment-viewer-body text-preview-body">{state.status === 'ready' ? <TextDocument name={attachment.name} source={state.text ?? ''} /> : state.status === 'error' ? <div className="attachment-preview-state" role="alert"><strong>无法显示预览</strong><span>{state.message}</span><button type="button" onClick={() => setAttempt((value) => value + 1)}>重试</button></div> : <PreviewLoading />}</div></ViewerShell>
+  return <ViewerShell name={attachment.name} url={url} onClose={onClose}><div className="attachment-viewer-body text-preview-body">{state.status === 'ready' ? <TextDocument name={attachment.name} source={state.text ?? ''} /> : state.status === 'error' ? <Empty className="min-h-full" role="alert"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>无法显示预览</EmptyTitle><EmptyDescription>{state.message}</EmptyDescription></EmptyHeader><EmptyContent><Button type="button" variant="outline" onClick={() => setAttempt((value) => value + 1)}>重试</Button></EmptyContent></Empty> : <PreviewLoading />}</div></ViewerShell>
 }
 
 function VideoViewer({ attachment, url, onClose }: { attachment: Attachment; url: string; onClose: () => void }) {
@@ -163,7 +175,7 @@ export function AttachmentViewer({ attachment, kind, onClose }: { attachment: At
   useEffect(() => {
     let active = true
     if (!attachment.url) { setError('附件没有可用的下载地址'); return }
-    void freshUrl(attachment.url).then((value) => { if (active) setUrl(value) }).catch(() => { if (active) setError('无法刷新附件地址') })
+    void freshUrl(attachment).then((value) => { if (active) setUrl(value) }).catch(() => { if (active) setError('无法刷新附件地址') })
     return () => { active = false }
   }, [attachment.url])
   if (typeof document === 'undefined') return null

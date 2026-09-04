@@ -22,7 +22,7 @@
  *   node server/scripts/r2-cors.mjs
  *
  * Add extra origins (e.g. a prod web domain) as CLI args — they're merged
- * with the built-in dev/Electron defaults:
+ * with the built-in Web development defaults:
  *
  *   node server/scripts/r2-cors.mjs https://loop.example.com https://admin.loop.example.com
  *
@@ -43,10 +43,9 @@ import {
 } from './r2-cors-policy.mjs'
 
 // Origins that must be allowed to PUT directly to R2. Keep these in sync
-// with how each surface loads its renderer:
+// with how the supported Web surface loads its renderer:
 //   - http://localhost:5173 → browser Vite dev (vite.config.ts `port`)
-//   - http://localhost:5180 → Electron dev renderer (electron/main.cjs DEV_URL)
-//   - app://lingxiloop          → packaged Electron (main.cjs loadURL app://lingxiloop/...)
+//   - http://localhost:5180 → local Electron development renderer
 // Extra origins (prod web, alternate ports, …) come from CLI args.
 const cliArgs = process.argv.slice(2)
 const printOnly = cliArgs.includes('--print')

@@ -23,9 +23,9 @@ test('recognizes standalone @all without prefix collisions', () => {
   })
 })
 
-test('recognizes broadcast mentions next to CJK prose and legacy @everyone', () => {
+test('recognizes native @all next to CJK prose and rejects @everyone', () => {
   assert.equal(parseMentions('请@all 都回答', targets).mentionAll, true)
-  assert.equal(parseMentions('@everyone please answer', targets).mentionAll, true)
+  assert.equal(parseMentions('@everyone please answer', targets).mentionAll, false)
 })
 
 test('ignores emails, URLs, inline code and fenced code', () => {

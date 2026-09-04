@@ -16,10 +16,17 @@
       "efficiency": 1
     },
     "caseScores": {
+      "runtime-self-introduction-boundary": 1,
+      "runtime-question-card-required": 1,
       "runtime-auto-grounding": 1,
-      "runtime-dynamic-rag": 1,
+      "runtime-hybrid-grounding": 1,
       "runtime-approval-boundary": 1,
       "runtime-pulse-approval-boundary": 1,
+      "runtime-calendar-create-approval": 1,
+      "runtime-forbidden-inferred-percentage": 1,
+      "runtime-attention-dedupe": 1,
+      "runtime-teacher-override": 1,
+      "runtime-score-breakdown-evaluation": 1,
       "runtime-learning-planning-gate": 1,
       "runtime-canvas-report-gate": 1
     }
@@ -34,10 +41,17 @@
     "efficiency": 1
   },
   "caseMinimums": {
+    "runtime-self-introduction-boundary": 1,
+    "runtime-question-card-required": 1,
     "runtime-auto-grounding": 1,
-    "runtime-dynamic-rag": 1,
+    "runtime-hybrid-grounding": 1,
     "runtime-approval-boundary": 1,
     "runtime-pulse-approval-boundary": 1,
+    "runtime-calendar-create-approval": 1,
+    "runtime-forbidden-inferred-percentage": 1,
+    "runtime-attention-dedupe": 1,
+    "runtime-teacher-override": 1,
+    "runtime-score-breakdown-evaluation": 1,
     "runtime-learning-planning-gate": 1,
     "runtime-canvas-report-gate": 1
   }

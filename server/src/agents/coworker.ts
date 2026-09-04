@@ -1,10 +1,10 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
-import { CH_MESSAGE_NEW, publish } from '../redis.js'
+import { sendSystemChannelMessage } from '../im/public.js'
 
 export type HandoffStatus = 'pending' | 'accepted' | 'working' | 'completed' | 'blocked'
 export type ApprovalKind = 'external_communication' | 'sensitive_or_destructive_action' | 'financial_or_irreversible_action'
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'expired'
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'EXECUTED'
 
 export interface HandoffSnapshot {
   id: string
@@ -78,32 +78,8 @@ async function conversationGate(conversationId: string, companyId: string, requi
   }
 }
 
-async function publishMessage(message: {
-  id: string; conversationId: string; companyId: string; authorId: string; kind: string; body: string; sequence: number;
-  mentionedIds?: string[]; handoff?: HandoffSnapshot; approval?: ApprovalSnapshot; activation?: 'deliver' | 'trigger'
-}): Promise<void> {
-  await publish(CH_MESSAGE_NEW, {
-    type: 'message.new',
-    conversationId: message.conversationId,
-    companyId: message.companyId,
-    message: {
-      id: message.id,
-      conversationId: message.conversationId,
-      authorId: message.authorId,
-      kind: message.kind,
-      body: message.body,
-      sequence: message.sequence,
-      at: new Date().toISOString(),
-      mentionedIds: message.mentionedIds ?? [],
-      mentionAll: false,
-      handoff: message.handoff,
-      approval: message.approval,
-      activation: message.activation,
-    },
-  })
-}
-
 async function postStructuredMessage(args: {
+  clientNonce: string
   conversationId: string
   companyId: string
   authorId: string
@@ -113,40 +89,38 @@ async function postStructuredMessage(args: {
   handoff?: HandoffSnapshot
   approval?: ApprovalSnapshot
   activation?: 'deliver' | 'trigger'
+  handoffWakeTargetId?: string
+  suppressAgentWake?: boolean
 }): Promise<{ id: string; sequence: number }> {
-  const client = await pool.connect()
-  const id = `m-${randomUUID()}`
-  let sequence = 1
-  try {
-    await client.query('BEGIN')
-    const seq = await client.query<{ seq: number }>(
-      `INSERT INTO conversation_counters (conversation_id, next_sequence)
-       VALUES ($1, 2)
-       ON CONFLICT (conversation_id) DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
-       RETURNING next_sequence - 1 AS seq`, [args.conversationId],
-    )
-    sequence = seq.rows[0]?.seq ?? 1
-    await client.query(
-      `INSERT INTO messages (
-         id, conversation_id, author_id, kind, body, sequence, company_id,
-         mentioned_ids, mention_all, handoff, approval
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,FALSE,$9::jsonb,$10::jsonb)`,
-      [
-        id, args.conversationId, args.authorId, args.kind, args.body, sequence, args.companyId,
-        JSON.stringify(args.mentionedIds ?? []), args.handoff ? JSON.stringify(args.handoff) : null,
-        args.approval ? JSON.stringify(args.approval) : null,
-      ],
-    )
-    await client.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [args.conversationId])
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => undefined)
-    throw error
-  } finally {
-    client.release()
+  let refs: Record<string, string | string[]> | undefined
+  if (args.handoff) refs = {
+    handoffId: args.handoff.id,
+    ...(args.handoffWakeTargetId ? { toAgentId: args.handoffWakeTargetId } : {}),
   }
-  await publishMessage({ id, sequence, ...args })
-  return { id, sequence }
+  else if (args.approval) refs = { approvalId: args.approval.id }
+  const data = {
+    ...(args.handoff ?? args.approval ?? {}),
+    mentionedIds: args.mentionedIds ?? [],
+    mentionAll: false,
+    ...(args.activation ? { activation: args.activation } : {}),
+    ...(args.suppressAgentWake ? { suppressAgentWake: true } : {}),
+  }
+  const result = await sendSystemChannelMessage({
+    companyId: args.companyId,
+    actorId: args.authorId,
+    channelId: args.conversationId,
+    clientNonce: args.clientNonce,
+    payload: {
+      version: 1,
+      kind: args.kind,
+      clientMsgNo: args.clientNonce,
+      body: args.body,
+      refs,
+      data,
+    },
+  })
+  if (result.kind !== 'accepted') throw new Error(`structured IM publication failed: ${result.kind}`)
+  return { id: result.messageId, sequence: result.sequence }
 }
 
 export async function createHandoff(args: {
@@ -177,7 +151,6 @@ export async function createHandoff(args: {
   }
   if (!snapshot.title) throw new Error('handoff title is required')
   const client = await pool.connect()
-  let message: { id: string; sequence: number } | null = null
   let resolvedSnapshot = snapshot
   let resolvedConversationId = args.conversationId
   try {
@@ -197,19 +170,22 @@ export async function createHandoff(args: {
     if (inserted.rows.length === 0) {
       const { rows } = await client.query<{
         id: string; conversation_id: string; from_agent_id: string; to_agent_id: string; title: string; status: HandoffStatus;
-        note: string | null; shared_paths: string[]; browser_targets: string[]; source_message_id: string | null;
-        sequence: number | null
+        note: string | null; shared_paths: string[]; browser_targets: string[]; source_message_id: string | null
       }>(
         `SELECT h.id, h.conversation_id, h.from_agent_id, h.to_agent_id, h.title, h.status, h.note,
-                shared_paths, browser_targets, source_message_id, m.sequence
+                shared_paths, browser_targets, source_message_id
            FROM agent_handoffs h
-           LEFT JOIN messages m ON m.id = h.source_message_id
           WHERE h.idempotency_key = $1 AND h.company_id = $2 AND h.from_agent_id = $3
           LIMIT 1`,
         [args.idempotencyKey?.trim() || null, args.companyId, args.fromAgentId],
       )
       const existing = rows[0]
-      if (!existing?.source_message_id || existing.sequence === null) throw new Error('handoff idempotency conflict did not resolve to a committed message')
+      if (!existing) throw new Error('handoff idempotency conflict did not resolve')
+      if (existing.conversation_id !== args.conversationId
+        || existing.to_agent_id !== args.toAgentId
+        || existing.title !== snapshot.title) {
+        throw new Error('handoff idempotency key was reused with different input')
+      }
       resolvedSnapshot = {
         id: existing.id,
         fromAgentId: existing.from_agent_id,
@@ -221,30 +197,9 @@ export async function createHandoff(args: {
         browserTargets: existing.browser_targets ?? [],
       }
       resolvedConversationId = existing.conversation_id
-      message = { id: existing.source_message_id, sequence: existing.sequence }
       await client.query('COMMIT')
     } else {
-      const seq = await client.query<{ seq: number }>(
-        `INSERT INTO conversation_counters (conversation_id, next_sequence)
-         VALUES ($1, 2)
-         ON CONFLICT (conversation_id) DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
-         RETURNING next_sequence - 1 AS seq`, [args.conversationId],
-      )
-      const sequence = seq.rows[0]?.seq ?? 1
-      const messageId = `m-${randomUUID()}`
-      const body = `Handoff to @${args.toAgentId}: ${snapshot.title}`
-      await client.query(
-        `INSERT INTO messages (
-           id, conversation_id, author_id, kind, body, sequence, company_id,
-           mentioned_ids, mention_all, handoff
-         ) VALUES ($1,$2,$3,'handoff',$4,$5,$6,$7::jsonb,FALSE,$8::jsonb)`,
-        [messageId, args.conversationId, args.fromAgentId, body, sequence, args.companyId,
-          JSON.stringify([args.toAgentId]), JSON.stringify(snapshot)],
-      )
-      await client.query(`UPDATE agent_handoffs SET source_message_id = $2 WHERE id = $1`, [id, messageId])
-      await client.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [args.conversationId])
       await client.query('COMMIT')
-      message = { id: messageId, sequence }
     }
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined)
@@ -253,9 +208,8 @@ export async function createHandoff(args: {
     client.release()
   }
 
-  await publishMessage({
-    id: message.id,
-    sequence: message.sequence,
+  const message = await postStructuredMessage({
+    clientNonce: `handoff:${resolvedSnapshot.id}:created`,
     conversationId: resolvedConversationId,
     companyId: args.companyId,
     authorId: args.fromAgentId,
@@ -263,8 +217,13 @@ export async function createHandoff(args: {
     body: `Handoff to @${resolvedSnapshot.toAgentId}: ${resolvedSnapshot.title}`,
     mentionedIds: [resolvedSnapshot.toAgentId],
     handoff: resolvedSnapshot,
+    handoffWakeTargetId: resolvedSnapshot.toAgentId,
     activation: 'trigger',
   })
+  await pool.query(
+    `UPDATE agent_handoffs SET source_message_id=$2 WHERE id=$1 AND company_id=$3`,
+    [resolvedSnapshot.id, message.id, args.companyId],
+  )
   return { ...resolvedSnapshot, sourceMessageId: message.id }
 }
 
@@ -277,21 +236,18 @@ export async function updateHandoff(args: {
 }): Promise<HandoffSnapshot & { resultMessageId: string | null; conversationId: string }> {
   const client = await pool.connect()
   let snapshot!: HandoffSnapshot
-  let resultMessageId: string | null = null
-  let resultSequence: number | null = null
   let conversationId = ''
   try {
     await client.query('BEGIN')
     const { rows } = await client.query<{
       conversation_id: string; from_agent_id: string; to_agent_id: string; title: string;
       shared_paths: string[]; browser_targets: string[]; note: string | null; status: HandoffStatus;
-      source_message_id: string | null; result_message_id: string | null; result_sequence: number | null
+      result_message_id: string | null
     }>(
       `SELECT h.conversation_id, h.from_agent_id, h.to_agent_id, h.title,
               h.shared_paths, h.browser_targets, h.note, h.status,
-              h.source_message_id, h.result_message_id, result.sequence AS result_sequence
+              h.result_message_id
          FROM agent_handoffs h
-         LEFT JOIN messages result ON result.id = h.result_message_id
         WHERE h.id = $1 AND h.company_id = $2
         FOR UPDATE OF h`, [args.handoffId, args.companyId],
     )
@@ -299,79 +255,51 @@ export async function updateHandoff(args: {
     if (!row) throw new Error('handoff not found')
     if (args.actorAgentId !== row.to_agent_id) throw new Error('only the target agent owns this handoff after creation')
     conversationId = row.conversation_id
-    const terminal = args.status === 'completed' || args.status === 'blocked'
-    if (row.result_message_id) {
-      if (row.status !== args.status) throw new Error(`handoff is already terminal (${row.status})`)
-      snapshot = {
-        id: args.handoffId, fromAgentId: row.from_agent_id, toAgentId: row.to_agent_id,
-        title: row.title, status: row.status, note: row.note,
-        sharedPaths: row.shared_paths ?? [], browserTargets: row.browser_targets ?? [],
-      }
-      resultMessageId = row.result_message_id
-      resultSequence = row.result_sequence
-      await client.query('COMMIT')
-    } else {
-      snapshot = {
-        id: args.handoffId, fromAgentId: row.from_agent_id, toAgentId: row.to_agent_id,
-        title: row.title, status: args.status, note: args.note?.trim() || row.note,
-        sharedPaths: row.shared_paths ?? [], browserTargets: row.browser_targets ?? [],
-      }
+    if (row.result_message_id && row.status !== args.status) {
+      throw new Error(`handoff is already terminal (${row.status})`)
+    }
+    snapshot = {
+      id: args.handoffId, fromAgentId: row.from_agent_id, toAgentId: row.to_agent_id,
+      title: row.title, status: row.result_message_id ? row.status : args.status,
+      note: row.result_message_id ? row.note : args.note?.trim() || row.note,
+      sharedPaths: row.shared_paths ?? [], browserTargets: row.browser_targets ?? [],
+    }
+    if (!row.result_message_id) {
       await client.query(
         `UPDATE agent_handoffs SET status = $3, note = $4, updated_at = NOW()
           WHERE id = $1 AND company_id = $2`,
         [args.handoffId, args.companyId, args.status, snapshot.note],
       )
-      await client.query(
-        `UPDATE messages SET handoff = $2::jsonb WHERE id = $1`,
-        [row.source_message_id, JSON.stringify(snapshot)],
-      )
-      if (terminal) {
-        resultMessageId = `m-${randomUUID()}`
-        const seq = await client.query<{ seq: number }>(
-          `INSERT INTO conversation_counters (conversation_id, next_sequence)
-           VALUES ($1, 2)
-           ON CONFLICT (conversation_id) DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
-           RETURNING next_sequence - 1 AS seq`, [row.conversation_id],
-        )
-        resultSequence = seq.rows[0]?.seq ?? 1
-        const body = `${args.status === 'completed' ? 'Completed' : 'Blocked'} handoff: ${row.title}${snapshot.note ? ` — ${snapshot.note}` : ''}`
-        await client.query(
-          `INSERT INTO messages (
-             id, conversation_id, author_id, kind, body, sequence, company_id,
-             mentioned_ids, mention_all, handoff
-           ) VALUES ($1,$2,$3,'handoff',$4,$5,$6,$7::jsonb,FALSE,$8::jsonb)`,
-          [resultMessageId, row.conversation_id, args.actorAgentId, body, resultSequence,
-            args.companyId, JSON.stringify([row.from_agent_id]), JSON.stringify(snapshot)],
-        )
-        await client.query(
-          `UPDATE agent_handoffs SET result_message_id = $2 WHERE id = $1`,
-          [args.handoffId, resultMessageId],
-        )
-        await client.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [row.conversation_id])
-      }
-      await client.query('COMMIT')
     }
+    await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined)
     throw error
   } finally {
     client.release()
   }
-  if (resultMessageId && resultSequence != null) {
-    await publishMessage({
-      id: resultMessageId,
-      sequence: resultSequence,
-      conversationId,
-      companyId: args.companyId,
-      authorId: args.actorAgentId,
-      kind: 'handoff',
-      body: `${snapshot.status === 'completed' ? 'Completed' : 'Blocked'} handoff: ${snapshot.title}${snapshot.note ? ` — ${snapshot.note}` : ''}`,
-      mentionedIds: [snapshot.fromAgentId],
-      handoff: snapshot,
-      activation: 'trigger',
-    })
+  const body = `${snapshot.status === 'completed' ? 'Completed' : snapshot.status === 'blocked' ? 'Blocked' : 'Updated'} handoff: ${snapshot.title}${snapshot.note ? ` — ${snapshot.note}` : ''}`
+  const terminal = snapshot.status === 'completed' || snapshot.status === 'blocked'
+  const message = await postStructuredMessage({
+    clientNonce: `handoff:${snapshot.id}:${snapshot.status}:${payloadHash(snapshot as unknown as Record<string, unknown>)}`,
+    conversationId,
+    companyId: args.companyId,
+    authorId: args.actorAgentId,
+    kind: 'handoff',
+    body,
+    mentionedIds: [snapshot.fromAgentId],
+    handoff: snapshot,
+    handoffWakeTargetId: terminal ? snapshot.fromAgentId : undefined,
+    suppressAgentWake: !terminal,
+    activation: terminal ? 'trigger' : 'deliver',
+  })
+  if (terminal) {
+    await pool.query(
+      `UPDATE agent_handoffs SET result_message_id=$2 WHERE id=$1 AND company_id=$3`,
+      [snapshot.id, message.id, args.companyId],
+    )
   }
-  return { ...snapshot, resultMessageId, conversationId }
+  return { ...snapshot, resultMessageId: terminal ? message.id : null, conversationId }
 }
 
 export async function listHandoffs(companyId: string, conversationId?: string): Promise<unknown[]> {
@@ -398,10 +326,10 @@ export async function consumeApprovedAction(args: {
 }): Promise<{ approved: boolean; approvalId?: string }> {
   const hash = payloadHash(args.payload)
   const { rows } = await pool.query<{ id: string }>(
-    `UPDATE agent_approvals SET consumed_at = NOW()
+    `UPDATE approvals SET status='EXECUTED',consumed_at=NOW(),executed_at=NOW()
      WHERE id = $1 AND company_id = $2 AND agent_id = $3
-       AND conversation_id = $4 AND run_id = $5 AND action_key = $6
-       AND payload_hash = $7 AND status = 'approved' AND consumed_at IS NULL
+       AND source='COWORKER' AND channel_id = $4 AND run_id = $5 AND action_key = $6
+       AND payload_hash = $7 AND status = 'APPROVED' AND consumed_at IS NULL
      RETURNING id`, [args.approvalId, args.companyId, args.agentId, args.conversationId, args.runId, args.actionKey, hash],
   )
   return rows[0] ? { approved: true, approvalId: rows[0].id } : { approved: false }
@@ -424,59 +352,63 @@ export async function requestApproval(args: {
   await conversationGate(args.conversationId, args.companyId, [args.agentId])
   const hash = payloadHash(args.payload)
   const existing = await pool.query<{
-    id: string; message_id: string; requested_at: string; status: ApprovalStatus
+    id: string; message_id: string | null; requested_at: string; status: ApprovalStatus
   }>(
-    `SELECT a.id, a.message_id, a.requested_at, a.status FROM agent_approvals a
-     WHERE a.company_id = $1 AND a.agent_id = $2 AND a.conversation_id = $3
+    `SELECT a.id, a.message_id, a.requested_at, a.status FROM approvals a
+     WHERE a.company_id = $1 AND a.agent_id = $2 AND a.channel_id = $3 AND a.source='COWORKER'
        AND a.run_id IS NOT DISTINCT FROM $4 AND a.action_key IS NOT DISTINCT FROM $5
-       AND a.payload_hash = $6 AND (
-         a.status = 'pending'
-         OR (a.status = 'rejected' AND NOT EXISTS (
-           SELECT 1 FROM messages m
-           JOIN participants p ON p.id = m.author_id AND p.company_id = $1 AND p.kind = 'human'
-           WHERE m.conversation_id = a.conversation_id AND m.created_at > a.resolved_at
-         ))
-       )
+       AND a.payload_hash = $6 AND a.status = 'PENDING'
      ORDER BY requested_at DESC LIMIT 1`, [args.companyId, args.agentId, args.conversationId, args.runId ?? null, args.actionKey ?? null, hash],
   )
   if (existing.rows[0]) {
-    return {
+    const snapshot: ApprovalSnapshot = {
       id: existing.rows[0].id, agentId: args.agentId, kind: args.kind,
       summary: args.summary, status: existing.rows[0].status, payload: args.payload,
-      requestedAt: String(existing.rows[0].requested_at), messageId: existing.rows[0].message_id,
+      requestedAt: String(existing.rows[0].requested_at),
     }
-  }
-  const id = `approval-${randomUUID()}`
-  const requestedAt = new Date().toISOString()
-  const snapshot: ApprovalSnapshot = {
-    id, agentId: args.agentId, kind: args.kind, summary: args.summary,
-    status: 'pending', payload: args.payload, requestedAt,
-  }
-  await pool.query(
-    `INSERT INTO agent_approvals (
-       id, company_id, agent_id, conversation_id, run_id, kind, summary, payload, payload_hash,
-       action_key, action_index, blocked_action, remaining_actions, input_scope_key
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12::jsonb,$13::jsonb,$14)`,
-    [id, args.companyId, args.agentId, args.conversationId, args.runId ?? null,
-      args.kind, args.summary.trim(), JSON.stringify(args.payload), hash,
-      args.actionKey ?? null, args.actionIndex ?? null, args.blockedAction ? JSON.stringify(args.blockedAction) : null,
-      JSON.stringify(args.remainingActions ?? []), args.inputScopeKey ?? null],
-  )
-  try {
     const message = await postStructuredMessage({
+      clientNonce: `approval:${snapshot.id}:pending`,
       conversationId: args.conversationId,
       companyId: args.companyId,
       authorId: args.agentId,
       kind: 'approval',
       body: args.summary,
       approval: snapshot,
+      suppressAgentWake: true,
     })
-    await pool.query(`UPDATE agent_approvals SET message_id = $2 WHERE id = $1`, [id, message.id])
+    if (existing.rows[0].message_id !== message.id) {
+      await pool.query(`UPDATE approvals SET message_id=$2 WHERE id=$1 AND company_id=$3`, [snapshot.id, message.id, args.companyId])
+    }
     return { ...snapshot, messageId: message.id }
-  } catch (error) {
-    await pool.query(`DELETE FROM agent_approvals WHERE id = $1`, [id]).catch(() => undefined)
-    throw error
   }
+  const id = `approval-${randomUUID()}`
+  const requestedAt = new Date().toISOString()
+  const snapshot: ApprovalSnapshot = {
+    id, agentId: args.agentId, kind: args.kind, summary: args.summary,
+    status: 'PENDING', payload: args.payload, requestedAt,
+  }
+  await pool.query(
+    `INSERT INTO approvals (
+       id, company_id, agent_id, channel_id, source, run_id, kind, summary, payload, payload_hash,
+       action_key, action_index, blocked_action, remaining_actions, input_scope_key
+     ) VALUES ($1,$2,$3,$4,'COWORKER',$5,$6,$7,$8::jsonb,$9,$10,$11,$12::jsonb,$13::jsonb,$14)`,
+    [id, args.companyId, args.agentId, args.conversationId, args.runId ?? null,
+      args.kind, args.summary.trim(), JSON.stringify(args.payload), hash,
+      args.actionKey ?? null, args.actionIndex ?? null, args.blockedAction ? JSON.stringify(args.blockedAction) : null,
+      JSON.stringify(args.remainingActions ?? []), args.inputScopeKey ?? null],
+  )
+  const message = await postStructuredMessage({
+      clientNonce: `approval:${id}:pending`,
+      conversationId: args.conversationId,
+      companyId: args.companyId,
+      authorId: args.agentId,
+      kind: 'approval',
+      body: args.summary,
+      approval: snapshot,
+      suppressAgentWake: true,
+    })
+  await pool.query(`UPDATE approvals SET message_id = $2 WHERE id = $1 AND company_id=$3`, [id, message.id, args.companyId])
+  return { ...snapshot, messageId: message.id }
 }
 
 /** Atomically claim the one continuation paired with an approved card. */
@@ -486,11 +418,11 @@ export async function claimApprovedContinuation(approvalId: string): Promise<App
     action_key: string | null; action_index: number | null; payload: Record<string, unknown>; blocked_action: Record<string, unknown> | null;
     remaining_actions: Record<string, unknown>[] | null; input_scope_key: string | null
   }>(
-    `UPDATE agent_approvals
-        SET continuation_status = 'running', resumed_at = NOW()
-      WHERE id = $1 AND status = 'approved' AND consumed_at IS NULL
-        AND continuation_status = 'pending'
-      RETURNING id, company_id, agent_id, conversation_id, run_id, action_key, action_index,
+    `UPDATE approvals
+        SET continuation_status = 'RUNNING', resumed_at = NOW()
+      WHERE id = $1 AND source='COWORKER' AND status = 'APPROVED' AND consumed_at IS NULL
+        AND continuation_status = 'PENDING'
+      RETURNING id, company_id, agent_id, channel_id AS conversation_id, run_id, action_key, action_index,
         payload, blocked_action, remaining_actions, input_scope_key`,
     [approvalId],
   )
@@ -505,53 +437,68 @@ export async function claimApprovedContinuation(approvalId: string): Promise<App
   }
 }
 
-export async function finishApprovedContinuation(approvalId: string, status: 'completed' | 'failed'): Promise<void> {
-  await pool.query(`UPDATE agent_approvals SET continuation_status = $2 WHERE id = $1`, [approvalId, status])
+export async function finishApprovedContinuation(approvalId: string, status: 'COMPLETED' | 'FAILED'): Promise<void> {
+  await pool.query(`UPDATE approvals SET continuation_status = $2 WHERE id = $1 AND source='COWORKER'`, [approvalId, status])
 }
 
 export async function resolveApproval(args: {
-  companyId: string; userId: string; approvalId: string; decision: 'approved' | 'rejected'
+  companyId: string; userId: string; approvalId: string; decision: 'APPROVED' | 'REJECTED'
 }): Promise<ApprovalSnapshot & { conversationId: string; messageId: string }> {
-  const pending = await pool.query<{ conversation_id: string }>(
-    `SELECT conversation_id FROM agent_approvals
-     WHERE id = $1 AND company_id = $2 AND status = 'pending' LIMIT 1`,
+  const current = await pool.query<{ conversation_id: string }>(
+    `SELECT channel_id AS conversation_id FROM approvals
+     WHERE id = $1 AND company_id = $2 AND source='COWORKER' LIMIT 1`,
     [args.approvalId, args.companyId],
   )
-  if (!pending.rows[0]) throw new Error('pending approval not found')
-  await conversationGate(pending.rows[0].conversation_id, args.companyId, [args.userId])
+  if (!current.rows[0]) throw new Error('approval not found')
+  await conversationGate(current.rows[0].conversation_id, args.companyId, [args.userId])
   const { rows } = await pool.query<{
-    id: string; agent_id: string; conversation_id: string; message_id: string; kind: ApprovalKind;
-    run_id: string | null; summary: string; payload: Record<string, unknown>; requested_at: string
+    id: string; agent_id: string; conversation_id: string; message_id: string | null; kind: ApprovalKind;
+    run_id: string | null; summary: string; payload: Record<string, unknown>; requested_at: string;
+    resolved_at: string; resolved_by: string; status: ApprovalStatus
   }>(
-    `UPDATE agent_approvals SET status = $4, resolved_at = NOW(), resolved_by = $3
-     WHERE id = $1 AND company_id = $2 AND status = 'pending'
-     RETURNING id, agent_id, conversation_id, message_id, run_id, kind, summary, payload, requested_at`,
+    `UPDATE approvals SET status = $4, resolved_at = NOW(), resolved_by = $3
+     WHERE id = $1 AND company_id = $2 AND source='COWORKER' AND status = 'PENDING'
+     RETURNING id, agent_id, channel_id AS conversation_id, message_id, run_id, kind, summary, payload, requested_at,
+               resolved_at, resolved_by, status`,
     [args.approvalId, args.companyId, args.userId, args.decision],
   )
-  const row = rows[0]
-  if (!row) throw new Error('pending approval not found')
-  const resolvedAt = new Date().toISOString()
+  const row = rows[0] ?? (await pool.query<{
+    id: string; agent_id: string; conversation_id: string; message_id: string | null; kind: ApprovalKind;
+    run_id: string | null; summary: string; payload: Record<string, unknown>; requested_at: string;
+    resolved_at: string; resolved_by: string; status: ApprovalStatus
+  }>(
+    `SELECT id,agent_id,channel_id AS conversation_id,message_id,run_id,kind,summary,payload,requested_at,
+            resolved_at,resolved_by,status
+       FROM approvals WHERE id=$1 AND company_id=$2 AND source='COWORKER'`,
+    [args.approvalId, args.companyId],
+  )).rows[0]
+  if (!row || row.status !== args.decision || !row.resolved_at || !row.resolved_by) {
+    throw new Error(`approval is already resolved as ${row?.status ?? 'unknown'}`)
+  }
   const snapshot: ApprovalSnapshot = {
     id: row.id, agentId: row.agent_id, kind: row.kind, summary: row.summary,
     status: args.decision, payload: row.payload, requestedAt: String(row.requested_at),
-    resolvedAt, resolvedBy: args.userId, runId: row.run_id, conversationId: row.conversation_id,
+    resolvedAt: String(row.resolved_at), resolvedBy: row.resolved_by,
+    runId: row.run_id, conversationId: row.conversation_id,
   }
-  await pool.query(`UPDATE messages SET approval = $2::jsonb WHERE id = $1`, [row.message_id, JSON.stringify(snapshot)])
-  const original = await pool.query<{ sequence: number }>(`SELECT sequence FROM messages WHERE id = $1`, [row.message_id])
-  await publishMessage({
-    id: row.message_id,
+  const message = await postStructuredMessage({
+    clientNonce: `approval:${row.id}:${args.decision}`,
     conversationId: row.conversation_id,
     companyId: args.companyId,
     authorId: row.agent_id,
     kind: 'approval',
     body: row.summary,
-    sequence: original.rows[0]?.sequence ?? 1,
     approval: snapshot,
+    suppressAgentWake: true,
   })
+  await pool.query(
+    `UPDATE approvals SET message_id=$2 WHERE id=$1 AND company_id=$3`,
+    [row.id, message.id, args.companyId],
+  )
   // Do not create a fresh wake-up. An approved continuation resumes the
   // suspended run using this exact approval/action identity; rejection
   // terminally completes that same run without executing the blocked action.
-  if (row.run_id && args.decision === 'rejected') {
+  if (row.run_id && args.decision === 'REJECTED') {
     await pool.query(
       `UPDATE agent_runs
        SET status = 'completed', finished_at = COALESCE(finished_at, NOW()), updated_at = NOW(),
@@ -559,9 +506,9 @@ export async function resolveApproval(args: {
        WHERE id = $1 AND status = 'waiting_for_human'`,
       [row.run_id, 'Human rejected approval; blocked action was not executed'],
     )
-    await pool.query(`UPDATE agent_approvals SET continuation_status = 'rejected' WHERE id = $1`, [row.id])
+    await pool.query(`UPDATE approvals SET continuation_status = 'REJECTED' WHERE id = $1`, [row.id])
   }
-  return { ...snapshot, conversationId: row.conversation_id, messageId: row.message_id }
+  return { ...snapshot, conversationId: row.conversation_id, messageId: message.id }
 }
 
 export async function listApprovals(companyId: string, status?: ApprovalStatus): Promise<unknown[]> {
@@ -572,11 +519,11 @@ export async function listApprovals(companyId: string, status?: ApprovalStatus):
     filter = ` AND a.status = $2`
   }
   const { rows } = await pool.query(
-    `SELECT a.id, a.agent_id AS "agentId", a.conversation_id AS "conversationId",
+    `SELECT a.id, a.agent_id AS "agentId", a.channel_id AS "conversationId",
        a.run_id AS "runId", a.message_id AS "messageId", a.kind, a.summary, a.payload,
        a.status, a.requested_at AS "requestedAt", a.resolved_at AS "resolvedAt",
        a.resolved_by AS "resolvedBy", a.consumed_at AS "consumedAt"
-     FROM agent_approvals a WHERE a.company_id = $1${filter}
+     FROM approvals a WHERE a.company_id = $1 AND a.source='COWORKER'${filter}
      ORDER BY a.requested_at DESC LIMIT 100`, params,
   )
   return rows

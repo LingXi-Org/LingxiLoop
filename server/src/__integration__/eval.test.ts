@@ -11,7 +11,7 @@ const RUN = 'run-eval-integration'
 before(ensureSchemaOnce)
 beforeEach(async () => {
   await resetAllTables()
-  await pool.query(`INSERT INTO companies(id,name,slug) VALUES($1,'Eval Integration','eval-integration')`, [COMPANY])
+  await pool.query(`INSERT INTO companies(id,name,slug,type,plan_id) VALUES($1,'Eval Integration','eval-integration','EDUCATION','plan-personal-free')`, [COMPANY])
   await pool.query(
     `INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status)
      VALUES($1,$2,'agent','Eval Agent','tester','E','#0078c8','avail')`,
@@ -20,12 +20,12 @@ beforeEach(async () => {
   await pool.query(
     `INSERT INTO agent_work_items
        (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,status,result_text,lease_started_at,finished_at)
-     VALUES($1,$2,$3,'channel-eval','message-eval','message','completed','Grounded answer [S1]',NOW()-INTERVAL '1 second',NOW())`,
+     VALUES($1,$2,$3,'channel-eval','message-eval','message','completed','[Grounded answer](#cite-S1)',NOW()-INTERVAL '1 second',NOW())`,
     [RUN, COMPANY, AGENT],
   )
   await pool.query(
-    `INSERT INTO agent_runs(id,agent_id,company_id,status,token_count,cost_usd,model,finished_at)
-     VALUES($1,$2,$3,'completed',120,0.001,'fixture-model',NOW())`,
+    `INSERT INTO agent_runs(id,agent_id,company_id,status,input_tokens,output_tokens,model,finished_at)
+     VALUES($1,$2,$3,'completed',80,40,'fixture-model',NOW())`,
     [RUN, AGENT, COMPANY],
   )
 })

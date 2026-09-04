@@ -1,0 +1,273 @@
+.responsive-shell-review {
+  --review-shell: oklch(0.963 0.002 197.1);
+  --review-rail: oklch(0.963 0.002 197.1);
+  --review-workspace: oklch(1 0 0);
+  --review-shell-foreground: oklch(0.218 0.008 223.9);
+  --review-frame: oklch(0.925 0.005 214.3);
+  --review-glow: transparent;
+  --review-agent-bubble: oklch(0.963 0.002 197.1);
+  --review-user-bubble: oklch(0.527 0.154 150.069);
+  --review-user-foreground: oklch(0.982 0.018 155.826);
+  --review-card-surface: oklch(1 0 0);
+  --review-card-muted: oklch(0.963 0.002 197.1);
+  --review-card-border: oklch(0.925 0.005 214.3);
+  --background: var(--review-workspace);
+  --card: var(--review-workspace);
+  --popover: var(--review-card-surface);
+  --muted: var(--review-card-muted);
+  --accent: var(--review-card-muted);
+  --border: var(--review-card-border);
+  --input: var(--review-card-border);
+  --primary: var(--review-user-bubble);
+  --primary-foreground: var(--review-user-foreground);
+  --sidebar: var(--review-workspace);
+  --sidebar-accent: var(--review-card-muted);
+  --sidebar-border: var(--review-card-border);
+  position: relative;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dark .responsive-shell-review {
+  --review-shell: oklch(0.275 0.011 216.9);
+  --review-rail: oklch(0.275 0.011 216.9);
+  --review-workspace: oklch(0.218 0.008 223.9);
+  --review-shell-foreground: oklch(0.987 0.002 197.1);
+  --review-frame: oklch(1 0 0 / 10%);
+  --review-agent-bubble: color-mix(in oklch, oklch(0.148 0.004 228.8) 94%, oklch(0.987 0.002 197.1));
+  --review-user-bubble: oklch(0.448 0.119 151.328);
+  --review-user-foreground: oklch(0.982 0.018 155.826);
+  --review-card-surface: oklch(0.218 0.008 223.9);
+  --review-card-muted: oklch(0.275 0.011 216.9);
+  --review-card-border: oklch(1 0 0 / 10%);
+}
+
+.responsive-shell-review[data-shell-palette='neutral'] {
+  --review-shell: oklch(0.97 0 0);
+  --review-rail: oklch(0.985 0 0);
+  --review-workspace: oklch(0.995 0 0);
+  --review-shell-foreground: oklch(0.205 0 0);
+  --review-frame: oklch(0.87 0 0);
+  --review-glow: oklch(0.556 0 0 / 12%);
+  --review-agent-bubble: oklch(0.97 0 0);
+  --review-user-bubble: oklch(0.205 0 0);
+  --review-user-foreground: oklch(0.985 0 0);
+  --review-card-surface: oklch(0.995 0 0);
+  --review-card-muted: oklch(0.97 0 0);
+  --review-card-border: oklch(0.922 0 0);
+}
+
+.dark .responsive-shell-review[data-shell-palette='neutral'] {
+  --review-shell: oklch(0.145 0 0);
+  --review-rail: oklch(0.205 0 0);
+  --review-workspace: oklch(0.205 0 0);
+  --review-shell-foreground: oklch(0.985 0 0);
+  --review-frame: oklch(1 0 0 / 12%);
+  --review-glow: oklch(1 0 0 / 7%);
+  --review-agent-bubble: oklch(0.269 0 0);
+  --review-user-bubble: oklch(0.985 0 0);
+  --review-user-foreground: oklch(0.205 0 0);
+  --review-card-surface: oklch(0.205 0 0);
+  --review-card-muted: oklch(0.269 0 0);
+  --review-card-border: oklch(1 0 0 / 12%);
+}
+
+.responsive-shell-review[data-shell-palette='zinc'] {
+  --review-shell: oklch(0.967 0.001 286.375);
+  --review-rail: oklch(0.985 0.002 247.839);
+  --review-workspace: oklch(0.995 0.001 286.375);
+  --review-shell-foreground: oklch(0.21 0.006 285.885);
+  --review-frame: oklch(0.871 0.006 286.286);
+  --review-glow: oklch(0.552 0.016 285.938 / 13%);
+  --review-agent-bubble: oklch(0.967 0.001 286.375);
+  --review-user-bubble: oklch(0.21 0.006 285.885);
+  --review-user-foreground: oklch(0.985 0 0);
+  --review-card-surface: oklch(0.995 0.001 286.375);
+  --review-card-muted: oklch(0.967 0.001 286.375);
+  --review-card-border: oklch(0.92 0.004 286.32);
+}
+
+.dark .responsive-shell-review[data-shell-palette='zinc'] {
+  --review-shell: oklch(0.141 0.005 285.823);
+  --review-rail: oklch(0.21 0.006 285.885);
+  --review-workspace: oklch(0.21 0.006 285.885);
+  --review-shell-foreground: oklch(0.985 0 0);
+  --review-frame: oklch(0.705 0.015 286.067 / 18%);
+  --review-glow: oklch(0.705 0.015 286.067 / 10%);
+  --review-agent-bubble: oklch(0.274 0.006 286.033);
+  --review-user-bubble: oklch(0.985 0 0);
+  --review-user-foreground: oklch(0.21 0.006 285.885);
+  --review-card-surface: oklch(0.21 0.006 285.885);
+  --review-card-muted: oklch(0.274 0.006 286.033);
+  --review-card-border: oklch(1 0 0 / 12%);
+}
+
+.responsive-shell-review[data-shell-palette='stone'] {
+  --review-shell: oklch(0.97 0.001 106.424);
+  --review-rail: oklch(0.985 0.001 106.423);
+  --review-workspace: oklch(0.995 0.001 106.424);
+  --review-shell-foreground: oklch(0.216 0.006 56.043);
+  --review-frame: oklch(0.869 0.005 56.366);
+  --review-glow: oklch(0.553 0.013 58.071 / 13%);
+  --review-agent-bubble: oklch(0.97 0.001 106.424);
+  --review-user-bubble: oklch(0.216 0.006 56.043);
+  --review-user-foreground: oklch(0.985 0.001 106.423);
+  --review-card-surface: oklch(0.995 0.001 106.424);
+  --review-card-muted: oklch(0.97 0.001 106.424);
+  --review-card-border: oklch(0.923 0.003 48.717);
+}
+
+.dark .responsive-shell-review[data-shell-palette='stone'] {
+  --review-shell: oklch(0.147 0.004 49.25);
+  --review-rail: oklch(0.216 0.006 56.043);
+  --review-workspace: oklch(0.216 0.006 56.043);
+  --review-shell-foreground: oklch(0.985 0.001 106.423);
+  --review-frame: oklch(0.709 0.01 56.259 / 18%);
+  --review-glow: oklch(0.709 0.01 56.259 / 10%);
+  --review-agent-bubble: oklch(0.268 0.007 34.298);
+  --review-user-bubble: oklch(0.985 0.001 106.423);
+  --review-user-foreground: oklch(0.216 0.006 56.043);
+  --review-card-surface: oklch(0.216 0.006 56.043);
+  --review-card-muted: oklch(0.268 0.007 34.298);
+  --review-card-border: oklch(1 0 0 / 12%);
+}
+
+.responsive-shell-review[data-shell-palette='mauve'] {
+  --review-shell: oklch(0.968 0.006 319.1);
+  --review-rail: oklch(0.985 0.004 319.4);
+  --review-workspace: oklch(0.994 0.003 319.4);
+  --review-shell-foreground: oklch(0.265 0.025 318.2);
+  --review-frame: oklch(0.86 0.025 318.5);
+  --review-glow: oklch(0.59 0.1 318.4 / 14%);
+  --review-agent-bubble: oklch(0.968 0.006 319.1);
+  --review-user-bubble: oklch(0.265 0.025 318.2);
+  --review-user-foreground: oklch(0.985 0.004 319.4);
+  --review-card-surface: oklch(0.994 0.003 319.4);
+  --review-card-muted: oklch(0.968 0.006 319.1);
+  --review-card-border: oklch(0.918 0.012 318.5);
+}
+
+.dark .responsive-shell-review[data-shell-palette='mauve'] {
+  --review-shell: oklch(0.145 0.014 318.5);
+  --review-rail: oklch(0.218 0.014 318.5);
+  --review-workspace: oklch(0.218 0.014 318.5);
+  --review-shell-foreground: oklch(0.96 0.01 319.2);
+  --review-frame: oklch(0.72 0.06 318.5 / 18%);
+  --review-glow: oklch(0.72 0.08 318.5 / 12%);
+  --review-agent-bubble: oklch(0.275 0.018 318.6);
+  --review-user-bubble: oklch(0.91 0.045 318.2);
+  --review-user-foreground: oklch(0.22 0.018 318.6);
+  --review-card-surface: oklch(0.218 0.014 318.5);
+  --review-card-muted: oklch(0.275 0.018 318.6);
+  --review-card-border: oklch(0.82 0.02 318.5 / 18%);
+}
+
+.responsive-shell-review[data-shell-palette='olive'] {
+  --review-shell: oklch(0.969 0.009 107.2);
+  --review-rail: oklch(0.985 0.006 107.2);
+  --review-workspace: oklch(0.994 0.005 107.2);
+  --review-shell-foreground: oklch(0.275 0.036 110.1);
+  --review-frame: oklch(0.85 0.035 107.4);
+  --review-glow: oklch(0.58 0.08 108.3 / 14%);
+  --review-agent-bubble: oklch(0.969 0.009 107.2);
+  --review-user-bubble: oklch(0.275 0.036 110.1);
+  --review-user-foreground: oklch(0.985 0.008 107.2);
+  --review-card-surface: oklch(0.994 0.005 107.2);
+  --review-card-muted: oklch(0.969 0.009 107.2);
+  --review-card-border: oklch(0.916 0.017 107.1);
+}
+
+.dark .responsive-shell-review[data-shell-palette='olive'] {
+  --review-shell: oklch(0.15 0.015 110.1);
+  --review-rail: oklch(0.225 0.018 110.1);
+  --review-workspace: oklch(0.225 0.018 110.1);
+  --review-shell-foreground: oklch(0.96 0.015 107.2);
+  --review-frame: oklch(0.72 0.06 107.5 / 18%);
+  --review-glow: oklch(0.72 0.08 107.5 / 12%);
+  --review-agent-bubble: oklch(0.285 0.025 110.1);
+  --review-user-bubble: oklch(0.9 0.055 107.5);
+  --review-user-foreground: oklch(0.225 0.024 110.1);
+  --review-card-surface: oklch(0.225 0.018 110.1);
+  --review-card-muted: oklch(0.285 0.025 110.1);
+  --review-card-border: oklch(0.82 0.03 107.5 / 18%);
+}
+
+.responsive-shell-review .desktop-openmaus,
+.responsive-shell-review .desktop-openmaus > .flex.flex-1.flex-col,
+.responsive-shell-review .server-rail {
+  background-color: var(--review-shell) !important;
+  color: var(--review-shell-foreground) !important;
+}
+
+.responsive-shell-review .server-rail {
+  background-color: var(--review-rail) !important;
+}
+
+.responsive-shell-review [data-workspace-titlebar] {
+  color: var(--review-shell-foreground) !important;
+}
+
+.responsive-shell-review .desktop-openmaus :is(.chat-surface, .im-conversations-sidebar, .im-conversation-header),
+.responsive-shell-review .desktop-openmaus [data-panel='conversations'] > div {
+  background-color: var(--review-workspace) !important;
+}
+
+.responsive-shell-review .assistant-ui-scope {
+  --bubble-agent: var(--review-agent-bubble);
+}
+
+.responsive-shell-review [data-message-bubble='user'] {
+  background-color: var(--review-user-bubble) !important;
+  color: var(--review-user-foreground) !important;
+}
+
+.responsive-shell-review [data-message-presentation='special-card'] {
+  --background: var(--review-card-surface);
+  --popover: var(--review-card-surface);
+  --card: var(--review-card-surface);
+  --muted: var(--review-card-muted);
+  --accent: var(--review-card-muted);
+  --border: var(--review-card-border);
+  --input: var(--review-card-border);
+  --primary: var(--review-user-bubble);
+  --primary-foreground: var(--review-user-foreground);
+}
+
+.responsive-shell-review .desktop-openmaus > .flex.flex-1.flex-col > .me-2.mb-2 {
+  outline: 1px solid var(--review-frame);
+  box-shadow: 0 18px 52px var(--review-glow);
+}
+
+.responsive-shell-toolbar {
+  position: fixed;
+  z-index: 90;
+  inset-block-start: max(0.75rem, env(safe-area-inset-top));
+  inset-inline-end: max(0.75rem, env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shell-palette-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid var(--review-frame);
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--review-workspace) 0 50%, var(--review-user-bubble) 50% 100%);
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+@media (max-width: 640px) {
+  .responsive-shell-toolbar {
+    inset-block-start: max(0.5rem, env(safe-area-inset-top));
+    inset-inline-end: max(0.5rem, env(safe-area-inset-right));
+  }
+
+  .responsive-shell-toolbar button:first-child {
+    max-width: min(70vw, 15rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

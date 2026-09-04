@@ -13,6 +13,7 @@ import {
   formatAlertContent,
   shouldSuppressAlert,
   notifyAlert,
+  notifyOperationalAlert,
   _resetAlertingForTests,
 } from '../alerting.js'
 
@@ -167,4 +168,18 @@ test('notifyAlert: deduped alerts skip the POST entirely', async () => {
   await notifyAlert(ctx)
   await notifyAlert(ctx)
   assert.equal(fetchCalls, 1, 'duplicate within window must NOT POST')
+})
+
+test('structured operational alerts use the same authoritative webhook path', async () => {
+  env.ALERT_WEBHOOK_URL = 'https://example.invalid/webhook'
+  let capturedBody = ''
+  globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+    capturedBody = String(init?.body ?? '')
+    return new Response(null, { status: 204 })
+  }) as typeof fetch
+
+  await notifyOperationalAlert({ title: 'email terminal failure', detail: 'message lost', level: 'error' })
+
+  assert.match(capturedBody, /application\.error\.email terminal failure/)
+  assert.match(capturedBody, /message lost/)
 })

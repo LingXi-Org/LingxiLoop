@@ -1,17 +1,26 @@
 import { StrictMode, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
+import '@fontsource-variable/inter'
+import '@fontsource-variable/geist'
+import { AppThemeProvider } from './components/AppThemeProvider'
 import { isElectron, isNotificationWindow } from './lib/runtime'
 import './styles/globals.css'
 
 const root = createRoot(document.getElementById('root')!)
 
 function render(Component: ComponentType) {
-  root.render(<StrictMode><Component /></StrictMode>)
+  root.render(<StrictMode><AppThemeProvider><Component /></AppThemeProvider></StrictMode>)
 }
 
 async function renderApp(Component: ComponentType) {
   const { GlobalInteractionProvider } = await import('./components/GlobalInteractionProvider')
-  root.render(<StrictMode><GlobalInteractionProvider><Component /></GlobalInteractionProvider></StrictMode>)
+  root.render(
+    <StrictMode>
+      <AppThemeProvider>
+        <GlobalInteractionProvider><Component /></GlobalInteractionProvider>
+      </AppThemeProvider>
+    </StrictMode>,
+  )
 }
 
 async function boot() {

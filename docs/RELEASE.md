@@ -1,43 +1,20 @@
 # Release and rollback
 
-Production deploys four immutable application images:
+Pushes to `main` deploy only after lint, all TypeScript checks, builds, unit/integration tests and deterministic Agent Eval pass. No browser-test runner is installed or invoked by this workflow.
 
-- `LINGXILOOP_SERVER_IMAGE`
-- `AGENT_OS_IMAGE`
-- `WUKONGIM_IMAGE`
-- `OPEN_NOTEBOOK_IMAGE`
+The workflow publishes five immutable GHCR images (`lingxiloop-server`, `lingxiloop-agent-os`, `lingxiloop-wukongim`, `lingxiloop-open-notebook`, `lingxiloop-gateway`), pins the OpenShip manifests, applies D1 migrations, deploys the Refine/Worker management plane, then signs one idempotent release request. The Worker first synchronizes the App A/B Web service rows to the pinned server image, then starts all six LingxiLoop OpenShip projects from that manifest commit; OpenShip owns the Shanghai rollout, health decision and rollback window. GitHub push auto-deploy must remain disabled so an unverified push cannot deploy early.
 
-All must use `image@sha256:…`. No application service mounts the Docker socket;
-Canvas collaboration is ordinary Postgres state fanned out through the existing
-Redis/WebSocket path. WuKongIM v3 is built from verified commit
-`c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47` and then pinned by image digest.
-Operators provide `.env.secrets`; CI uploads only `.release.next.env`, Compose
-and deployment scripts.
+Required GitHub `production` configuration:
 
-LingxiLoop v1 requires an empty PostgreSQL database. The release has no schema
-upgrade, compatibility ALTER, or data backfill path: discard pre-v1 development
-databases and create a new database. For an external database, run
-`npm run db:bootstrap`; the supplied Compose topology runs the same bootstrap
-before Web startup. Seed data is created separately by the background Worker
-after the schema exists.
+- Variables: `CLOUDFLARE_ACCOUNT_ID`, `VITE_LINGXILIT_URL=https://openlit.lingxilearn.cn`.
+- Secrets: `CLOUDFLARE_API_TOKEN`, `RELEASE_HMAC_SECRET`.
 
-For a new environment, the Compose `db-bootstrap` service creates the schema
-before WuKongIM, Web, Worker, and Agent OS start. Later starts accept only
-the complete marked v1 schema; an unmarked or partial database fails closed.
-Operators then verify `/api/meta`, dependency health, authenticated channel
-access and the release version. Web, Worker, and Agent OS processes never
-execute DDL. Web and Worker use the same server image but have separate Compose
-services, commands, restart policies, and replica counts. Rollback reuses the
-complete v1 schema with the previous digest manifest; it does not attempt an
-in-place schema downgrade.
+The management UI is published at `https://admin.lingxilearn.cn`; the Worker preview URL is disabled.
+CI uploads and promotes a Worker Version without rewriting the existing Custom Domain, so its account token does not need zone-route permission. Use the normal `control:deploy` command only when intentionally changing that domain binding.
+The Worker reaches OpenShip through the dashboard's same-origin `/api/proxy/api/*` path; `/api/*` on the management hostname is not the OpenShip API.
 
-When all four core `R2_*` secrets are configured, the production deployment
-also reconciles the bucket CORS policy before application cutover. The
-deployment image applies the policy and reads it back, requiring presigned
-`PUT` permission for the production web origin plus the Electron renderer
-origin (`app://lingxiloop`).
-Partial R2 configuration or a failed readback aborts the deployment. Operators
-can add comma-separated origins with `R2_CORS_EXTRA_ORIGINS` in `.env.secrets`.
+Required Worker secrets are managed only with `wrangler secret put`: `BETTER_AUTH_SECRET`, `GATEWAY_HMAC_SECRET`, `RELEASE_HMAC_SECRET`, `BOOTSTRAP_ADMIN_TOKEN`, `OPENSHIP_PAT`, `RESEND_API_KEY`, `RESEND_FROM`, `TURNSTILE_SECRET_KEY`, and optional Cloudflare Access service-token values. The non-secret `OPENSHIP_PROJECT_IDS` and `OPENSHIP_IMAGE_TARGETS` lists live in `wrangler.jsonc`. After the first verified administrator is created through `/api/internal/bootstrap-admin`, delete `BOOTSTRAP_ADMIN_TOKEN` with Wrangler.
 
-Desktop artifacts contain only the renderer and Electron shell. Package
-verification rejects server/runtime source and environment files.
+`server/src/db/migrations/0001_v1_baseline.sql` remains immutable. The current cutover starts from empty PostgreSQL and D1 databases; PostgreSQL runs all migrations through the one-shot `db-migrate` service before Web/Worker startup. Application processes only check migration readiness.
+
+Rollback is an OpenShip deployment action exposed in Refine. It changes digest-pinned application images, never reverses PostgreSQL or D1 migrations. Use a database backup paired with the earlier release if a forward-only schema change is incompatible.

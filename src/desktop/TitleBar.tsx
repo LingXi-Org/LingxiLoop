@@ -1,4 +1,4 @@
-import { CloudLogo } from '@/components/Avatar'
+import { ProductLogo } from '@/components/Avatar'
 import { isElectron, isWindows, trafficLightInset } from '@/lib/runtime'
 
 export function TitleBar() {
@@ -19,7 +19,7 @@ export function TitleBar() {
       className="grid items-center px-4 border-b border-ink-100"
       style={{
         height: isWindows ? 36 : 44,
-        background: 'linear-gradient(180deg, #FBFDFF 0%, #F1F7FB 100%)',
+        background: 'linear-gradient(180deg, var(--card) 0%, var(--muted) 100%)',
         gridTemplateColumns: `1fr auto 1fr`,
         ...dragStyle,
       }}
@@ -38,9 +38,9 @@ export function TitleBar() {
         <div style={{ minWidth: reservedLeft }} />
       )}
       <div className="flex items-center justify-center gap-2 font-display font-medium text-[13px] text-ink-700 tracking-wide whitespace-nowrap">
-        <CloudLogo />
+        <ProductLogo />
         <span>LingxiLoop</span>
-        {!isWindows && <em className="font-normal text-ink-500" style={{ fontStyle: 'italic' }}>— 智能体团队的协作空间</em>}
+        {!isWindows && <em className="font-normal text-ink-500" style={{ fontStyle: 'italic' }}>— 智能助教团队的协作空间</em>}
       </div>
       <div className="flex items-center justify-end pr-2">
       </div>

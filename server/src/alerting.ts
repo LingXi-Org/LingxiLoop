@@ -3,7 +3,7 @@
  * uncaughtException handlers in the process entrypoints log the
  * crash to stderr — fine for a local dev box, useless in prod where
  * nobody's tailing logs. Route those through here too so a webhook
- * (Discord-compatible by default) gets a copy and the on-call sees
+ * (Discord webhook JSON by default) gets a copy and the on-call sees
  * the silent crashes.
  *
  * Design goals:
@@ -34,6 +34,12 @@ export interface AlertContext {
   error: unknown
   /** Optional metadata (agentId, runId, etc.) appended as JSON. */
   extras?: Record<string, unknown>
+}
+
+export interface OperationalAlert {
+  title: string
+  detail: string
+  level?: 'warn' | 'error' | 'info'
 }
 
 const DISCORD_CONTENT_MAX = 1950 // Discord caps `content` at 2000 chars
@@ -132,6 +138,15 @@ export async function notifyAlert(ctx: AlertContext): Promise<number | null> {
     } catch { /* see above */ }
     return null
   }
+}
+
+/** Structured application alert adapter. All operational signals share the
+ * same configured webhook, timeout, dedupe and failure policy. */
+export async function notifyOperationalAlert(alert: OperationalAlert): Promise<void> {
+  await notifyAlert({
+    label: `application.${alert.level ?? 'warn'}.${alert.title}`,
+    error: alert.detail,
+  })
 }
 
 /** Reset module-level dedupe state. Test-only — production code must

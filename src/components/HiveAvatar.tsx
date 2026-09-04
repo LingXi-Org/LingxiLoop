@@ -11,6 +11,7 @@
  * 7+ people → 5 around + a "+N" tile in the 6th slot
  */
 import type { CSSProperties } from 'react'
+import { cn } from '@/lib/utils'
 import type { Participant } from '@/types'
 import { Avatar } from './Avatar'
 
@@ -77,17 +78,18 @@ interface Props {
   /** container diameter in px */
   size?: number
   ringColor?: string
-  showStatusOnSingle?: boolean
+  mode?: 'chat' | 'neutral'
+  className?: string
 }
 
-export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', showStatusOnSingle = true }: Props) {
+export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', mode = 'neutral', className }: Props) {
   if (ps.length === 0) {
-    return <div className="rounded-full" style={{ width: size, height: size, background: 'var(--ink-100)' }} />
+    return <div className={cn('rounded-full', className)} style={{ width: size, height: size, background: 'var(--ink-100)' }} />
   }
 
   // Single member: just render the regular avatar.
   if (ps.length === 1) {
-    return <SingleTile p={ps[0]} size={size} ringColor={ringColor} showStatus={showStatusOnSingle} />
+    return <SingleTile p={ps[0]} size={size} ringColor={ringColor} mode={mode} className={className} />
   }
 
   const max = 6
@@ -103,15 +105,15 @@ export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', showStat
 
   return (
     <div
-      className="relative rounded-full overflow-hidden"
+      className={cn('relative overflow-hidden rounded-full', className)}
       style={{
         width: size,
         height: size,
-        background: 'linear-gradient(135deg, rgba(123, 108, 176, 0.06), rgba(0, 168, 240, 0.08))',
+        background: 'linear-gradient(135deg, color-mix(in srgb, var(--secondary-foreground) 6%, transparent), color-mix(in srgb, var(--primary) 8%, transparent))',
         // Three-layer ring: subtle inner dark hairline (defines the circle
         // against the tiles) → solid white outer band (the "cut" the user
         // asked for) → soft drop shadow under it for depth.
-        boxShadow: 'inset 0 0 0 1.5px rgba(0, 80, 140, 0.10), 0 0 0 2.5px #ffffff, 0 2px 6px rgba(10, 30, 60, 0.10)',
+        boxShadow: 'inset 0 0 0 1.5px color-mix(in srgb, var(--primary) 10%, transparent), 0 0 0 2.5px var(--background), 0 2px 6px color-mix(in srgb, var(--foreground) 10%, transparent)',
       }}
     >
       {tiles.map((p, i) => {
@@ -125,6 +127,7 @@ export function HiveAvatar({ ps, size = 44, ringColor = 'var(--cloud)', showStat
             cy={pos.cy}
             d={pos.d}
             ringColor={ringColor}
+            mode={mode}
           />
         )
       })}
@@ -156,13 +159,14 @@ function tileStyle(container: number, cx: number, cy: number, d: number, ringCol
   }
 }
 
-function Tile({ p, container, cx, cy, d, ringColor }: {
+function Tile({ p, container, cx, cy, d, ringColor, mode }: {
   p: Participant
   container: number
   cx: number
   cy: number
   d: number
   ringColor: string
+  mode: 'chat' | 'neutral'
 }) {
   const px = d * container
   return (
@@ -170,7 +174,7 @@ function Tile({ p, container, cx, cy, d, ringColor }: {
       style={tileStyle(container, cx, cy, d, ringColor)}
       className="grid place-items-center"
     >
-      <Avatar p={p} size={px} ringColor={ringColor} showStatus={false} />
+      <Avatar p={p} size={px} ringColor={ringColor} mode={mode} />
     </div>
   )
 }
@@ -198,11 +202,12 @@ function OverflowTile({ n, container, cx, cy, d, ringColor }: {
   )
 }
 
-function SingleTile({ p, size, ringColor, showStatus }: {
+function SingleTile({ p, size, ringColor, mode, className }: {
   p: Participant
   size: number
   ringColor: string
-  showStatus: boolean
+  mode: 'chat' | 'neutral'
+  className?: string
 }) {
-  return <Avatar p={p} size={size} ringColor={ringColor} showStatus={showStatus} />
+  return <Avatar p={p} size={size} ringColor={ringColor} mode={mode} className={className} />
 }

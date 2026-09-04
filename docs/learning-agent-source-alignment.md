@@ -43,11 +43,13 @@ verbatim into this MIT project.
 
 ## Current module boundaries
 
-- `server/src/learning/preset.ts` is the single canonical six-role team and
+- `server/src/modules/learning/preset.ts` is the single canonical six-role team and
   room definition; `onboardCompany.ts` only persists or refreshes it.
-- `src/dev/mockLearningImFixtures.ts` contains education-only conversations;
-  `mockLearningCanvas.ts` implements the same Canvas interactions; `mockIm.ts`
-  only installs both stores atomically.
+- `server/src/modules/learning/router.ts` and `classroom-router.ts` expose the
+  authenticated HTTP boundary; policy checks remain in the learning domain.
+- The renderer consumes real WuKongIM state and the server's read projection.
+  Production learning paths contain no development store or generated fixture
+  branch; tests inject fixtures at their own boundary.
 - The retired Whispers observer/agent-side-channel surface, its old voice
   prompt, private-chat helper and one-shot whisper migration are intentionally
   absent. Canvas assignments and AgentOS work items are the only multi-agent

@@ -1,6 +1,12 @@
-import type { Message } from '@/types'
-
 export type AttachmentPreviewKind = 'image' | 'pdf' | 'audio' | 'video' | 'text' | 'download'
+export interface AttachmentPreviewDescriptor {
+  name: string
+  kind: 'img' | 'pdf' | 'file' | 'fig'
+  url: string
+  key?: string
+  mime?: string
+  size?: number
+}
 export type TextPreviewFormat = 'markdown' | 'json' | 'plain'
 export type JsonPreviewTokenKind = 'key' | 'string' | 'number' | 'boolean' | 'null' | 'plain'
 export type JsonPreviewToken = { value: string; kind: JsonPreviewTokenKind }
@@ -17,7 +23,7 @@ const AUDIO_EXTENSIONS = new Set(['mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac'])
 const VIDEO_EXTENSIONS = new Set(['mp4', 'webm', 'mov', 'm4v', 'ogv'])
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'svg'])
 
-export function inferAttachmentPreview(attachment: NonNullable<Message['attachment']>): AttachmentPreviewKind {
+export function inferAttachmentPreview(attachment: AttachmentPreviewDescriptor): AttachmentPreviewKind {
   const mime = (attachment.mime ?? '').split(';')[0].trim().toLocaleLowerCase()
   const extension = attachment.name.split('.').pop()?.toLocaleLowerCase() ?? ''
   if (attachment.kind === 'img' || mime.startsWith('image/') || IMAGE_EXTENSIONS.has(extension)) return 'image'

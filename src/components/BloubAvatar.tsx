@@ -23,10 +23,12 @@ import { COLOR_BY_ID, SHAPE_BY_ID } from '@/lib/bloub/skins'
 import { STATE_BY_ID, type StateId } from '@/lib/bloub/states'
 import { getBloubClockTime, subscribeBloubClock } from '@/lib/bloub/clock'
 
+type BloubParticipant = Pick<Participant, 'id' | 'name' | 'role' | 'status' | 'statusUpdatedAt'>
+
 /** Each entry into `working` advances a local epoch. Server-driven working
  *  states additionally use statusUpdatedAt, so remounts during one work spell
  *  remain stable while a new server work spell is reseeded. */
-function useWorkingEpoch(participant: Participant, status: string): number {
+function useWorkingEpoch(participant: BloubParticipant, status: string): number {
   const epoch = useRef({ previousStatus: null as string | null, localRound: 0 })
   if (epoch.current.previousStatus !== status) {
     if (status === 'working') epoch.current.localRound += 1
@@ -62,12 +64,22 @@ function useDisplayState(workingSeed: number, status: string, baseState: StateId
 }
 
 interface Props {
-  participant: Participant
+  participant: BloubParticipant
   status: string
   size: number
   paper?: string
   animated?: boolean
+  /** Conversation-facing chat surfaces may reflect live agent activity. */
+  mode?: 'chat' | 'neutral'
   className?: string
+}
+
+const AVATAR_STATUS_LABELS: Record<string, string> = {
+  avail: '可用',
+  working: '工作中',
+  thinking: '思考中',
+  waiting: '等待确认',
+  resting: '休息中',
 }
 
 const STATIC_PHASE: Record<StateId, number> = {
@@ -139,9 +151,14 @@ function Dot({ dot, ink }: { dot: DotRender; ink: string }) {
 }
 
 /** Native React renderer for Bloub's clock-free SVG morph engine. */
-export function BloubAvatar({ participant, status, size, paper = 'var(--paper)', animated = true, className }: Props) {
-  const identity = useMemo(() => getBloubIdentity(participant), [participant.id, participant.role])
-  const baseState = getBloubState(participant, status)
+export function BloubAvatar({ participant, status, size, paper = 'var(--paper)', animated = true, mode = 'neutral', className }: Props) {
+  const participantIdentity = useMemo(() => getBloubIdentity(participant), [participant.id, participant.role])
+  // Outside opted-in chat surfaces, agents deliberately present one quiet,
+  // stable identity. Conversation avatars and transcript rows opt in explicitly.
+  const identity = useMemo(() => (
+    mode === 'chat' ? participantIdentity : { ...participantIdentity, expression: 'neutre' as const }
+  ), [mode, participantIdentity])
+  const baseState = mode === 'chat' ? getBloubState(participant, status) : 'idle'
   const shape = SHAPE_BY_ID.get(identity.shape)?.radii ?? null
   const expression = EXPRESSION_BY_ID.get(identity.expression) ?? null
   const ink = COLOR_BY_ID.get(identity.color)?.hex ?? '#3b93f0'
@@ -149,7 +166,7 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
   const workingSeed = useWorkingEpoch(participant, status)
   const { ref, visible } = useViewportVisibility()
   const reducedMotion = useReducedMotion()
-  const motionEnabled = animated && size >= 24 && visible && !reducedMotion
+  const motionEnabled = mode === 'chat' && animated && size >= 24 && visible && !reducedMotion
   const state = useDisplayState(workingSeed, status, baseState, motionEnabled)
   const phase = STATIC_PHASE[state] + (participantHash % 31) / 100
   // A shared rAF clock keeps the renderer cheap, but sampling every avatar at
@@ -222,7 +239,7 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
       height={size}
       viewBox={`${-DEMI_VIEWBOX} ${-DEMI_VIEWBOX} ${DEMI_VIEWBOX * 2} ${DEMI_VIEWBOX * 2}`}
       role="img"
-      aria-label={`${participant.name} · ${status}`}
+      aria-label={`${participant.name} · ${AVATAR_STATUS_LABELS[status] ?? '状态更新中'}`}
       className={[className, motionEnabled ? 'bloub-avatar-alive' : ''].filter(Boolean).join(' ')}
       style={motionStyle}
       focusable="false"

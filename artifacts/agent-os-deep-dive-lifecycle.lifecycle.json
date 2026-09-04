@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Agent OS ⑥ Work / Run / Session 联合生命周期",
+    "locale": "zh-CN",
+    "output": "artifacts/agent-os-deep-dive-lifecycle.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "viewBox": [1080, 860],
+    "views": [
+      { "id": "main", "label": "主路径", "focus": ["queued", "leased", "run_loop", "final", "completed"], "note": "一条 work 从耐久队列，经双租约、上下文和模型/工具循环，最终提交并释放 session。" },
+      { "id": "waits", "label": "非终态等待", "focus": ["run_loop", "approval", "preempted", "queued"], "note": "审批与抢占都会结束当前执行，但通过新 work 或 requeue 继续，而不是重放旧 cell。" },
+      { "id": "guards", "label": "一致性守卫", "focus": ["leased", "run_loop", "stale"], "note": "lease token、fence、session revision 与 Host Action idempotency 共同拒绝陈旧写入。" },
+      { "id": "terminal", "label": "终态", "focus": ["completed", "cancelled", "failed"], "note": "正常完成、用户取消和不可恢复失败均释放 session lease；只有成功路径产生最终聊天消息。" }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Work + Run 主状态" },
+    { "id": "waiting", "label": "等待 / 协作恢复" },
+    { "id": "guards", "label": "陈旧执行隔离" },
+    { "id": "terminal", "label": "其他终态" }
+  ],
+  "states": [
+    { "id": "queued", "type": "start", "label": "Queued", "sublabel": "lane + priority", "lane": "main", "col": 0, "step": "01", "tag": "durable" },
+    { "id": "leased", "type": "active", "label": "Leased", "sublabel": "work + session lease", "lane": "main", "col": 1, "step": "02", "tag": "45s" },
+    { "id": "run_loop", "type": "decision", "label": "Run Loop", "sublabel": "context → model → ipython", "lane": "main", "col": 2, "step": "03", "tag": "≤12 hops" },
+    { "id": "final", "type": "active", "label": "Final Commit", "sublabel": "one WuKong message", "lane": "main", "col": 3, "step": "04", "tag": "idempotent" },
+    { "id": "completed", "type": "success", "label": "Completed", "sublabel": "session saved", "lane": "main", "col": 4, "step": "05", "tag": "terminal" },
+    { "id": "approval", "type": "waiting", "label": "Awaiting Approval", "sublabel": "resume work later", "lane": "waiting", "col": 0, "tag": "pause" },
+    { "id": "preempted", "type": "waiting", "label": "Preempted", "sublabel": "checkpoint + requeue", "lane": "waiting", "col": 1, "tag": "yield" },
+    { "id": "stale", "type": "failure", "label": "Stale Worker", "sublabel": "fence/revision rejected", "lane": "guards", "col": 2, "yOffset": 78, "tag": "isolated" },
+    { "id": "cancelled", "type": "failure", "label": "Cancelled", "sublabel": "Stop requested", "lane": "terminal", "col": 1, "tag": "terminal" },
+    { "id": "failed", "type": "failure", "label": "Failed", "sublabel": "diagnostics persisted", "lane": "terminal", "col": 2, "tag": "terminal" }
+  ],
+  "transitions": [],
+  "cards": [
+    { "dot": "cyan", "title": "三种同时存在的身份", "items": ["workId：一条耐久任务；runId=workId：本次任务的事件与最终回复身份", "session key：company + agent + channel + threadRoot，跨多个 work 延续历史和 kernel", "cellId/callIndex：一次模型工具执行及其 Host Action 的稳定子身份"] },
+    { "dot": "amber", "title": "Queued → Leased", "items": ["过滤已取消 work 与占用中的 session；FOR UPDATE SKIP LOCKED 允许多 Agent OS replica 并发领取", "按 lane、priority、createdAt 选择；建立 work lease 和 session lease，fence+1", "token 只以 SHA-256 保存；原始 token 仅返回给当前 worker"] },
+    { "dot": "violet", "title": "Leased → Context → Model", "items": ["读取最多 80 条 WuKong 消息、持久人类授权主体、Prompt、记忆、知识、审批和 Canvas", "session revision 防陈旧 checkpoint；appliedWorkIds 防 work 重试重复注入", "run.started 后进入最多 12 hop 的 stream → ipython → tool output 循环"] },
+    { "dot": "emerald", "title": "Model / Tools 循环", "items": ["无工具输出时仍要通过 planning gate 与 Canvas report gate", "有调用时按顺序执行 cell；Host Action 逐个走 fence、权限、角色、进度、幂等与审批", "只要产生 function_call_output 就回到下一 Model Hop，而不是在 Python 内调用模型"] },
+    { "dot": "orange", "title": "Awaiting Approval 不是挂住线程", "items": ["原 work 保存 session 后完成；PENDING approval 与 action ledger 都已持久化", "人类决定后直接解析原 action，再创建 resume-{approvalId} 的 approval-lane work", "恢复运行读到 resolution；旧 cell 和旧 Python 副作用不会被重放"] },
+    { "dot": "amber", "title": "Preempted 不是 Failed", "items": ["高 lane 饥饿时 runtime 先 checkpoint，再 yield 与释放 session lease", "同 work 回 queued 且 fence+1；新 worker 从 session checkpoint 继续", "旧 worker 即使仍存活，也因 fence/revision 进入 Stale Worker 隔离路径"] },
+    { "dot": "rose", "title": "三个终态的回复差异", "items": ["Completed：非 canvas_worker 时提交稳定 agent-{workId} 最终消息，写 evidence，保存 session", "Cancelled：中止模型/cell，不应产生新的产品副作用或最终答复", "Failed：保存 diagnostics 与 run.failed；是否产生用户可见错误由上层投影策略决定"] },
+    { "dot": "slate", "title": "联合状态机的核心不变量", "items": ["任何时刻，一个 session 最多一个 live execution owner", "任何产品副作用必须绑定 live/actionable fence 或已经批准的耐久 action", "任何重试都复用稳定身份并让重复提交收敛，不能依赖模型自行记住“做过了”"] }
+  ]
+}

@@ -1,12 +1,10 @@
 /* eslint-env node */
-const { app, BrowserWindow, Tray, Menu, nativeImage, shell, nativeTheme, screen, ipcMain, globalShortcut, protocol, net } = require('electron')
+const { app, BrowserWindow, Tray, Menu, nativeImage, shell, nativeTheme, screen, ipcMain, protocol, net } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
-const http = require('node:http')
-const crypto = require('node:crypto')
 const { pathToFileURL } = require('node:url')
-const autoUpdater = require('./autoUpdater.cjs')
-const { createAuthNonceGuard } = require('./authNonce.cjs')
+const { registerRendererScheme, rendererFile } = require('./rendererProtocol.cjs')
+const { DEFAULT_WINDOW_STATE, createWindowStateStore } = require('./windowState.cjs')
 
 const isDev = !app.isPackaged
 const DEV_URL = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5180'
@@ -36,96 +34,20 @@ const DEV_URL = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5180'
 // one) work. `supportFetchAPI: true` enables fetch() against same-scheme
 // URLs — the renderer's own JS doesn't need it currently, but leaving it
 // on costs nothing and avoids a future foot-gun.
-protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
-])
+registerRendererScheme(protocol)
 
 /** Resolve the on-disk path for an `app://lingxiloop/<request-path>` URL.
  *  Strips leading slashes from the URL path and joins under the packaged
  *  dist directory. Rejects anything that resolves OUTSIDE dist (path
  *  traversal guard), including requests for any other renderer host. */
-function appProtocolFile(reqUrl) {
-  const u = new URL(reqUrl)
-  if (u.hostname !== 'lingxiloop') return null
-  const distRoot = path.join(__dirname, '..', 'dist')
-  let rel = decodeURIComponent(u.pathname).replace(/^\/+/, '')
-  if (!rel || rel === 'index.html') rel = 'index.html'
-  const resolved = path.normalize(path.join(distRoot, rel))
-  if (!resolved.startsWith(distRoot)) return null
-  return resolved
-}
-
 /** Persistent main-window geometry. Saved on every resize/move/close and
  *  restored on launch — so users get the size + position they had last,
  *  and first-run gets a sensible non-fullscreen default. */
-const WINDOW_STATE_PATH = () => path.join(app.getPath('userData'), 'window-state.json')
-const DEFAULT_WINDOW_STATE = { width: 1480, height: 920, fullscreen: false, maximized: false }
-
-function readWindowState() {
-  try {
-    const raw = fs.readFileSync(WINDOW_STATE_PATH(), 'utf8')
-    const parsed = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) return null
-    return parsed
-  } catch { return null }
-}
-
-function writeWindowState(state) {
-  try { fs.writeFileSync(WINDOW_STATE_PATH(), JSON.stringify(state)) }
-  catch (e) { console.warn('[window-state] save failed', e?.message || e) }
-}
-
-/** Returns `{ x, y, width, height }` if the saved rect intersects a
- *  currently-connected display by at least ~80px on each axis, or null
- *  if the saved position is offscreen (monitor disconnected, etc.). */
-function visibleRect(saved) {
-  if (!saved || typeof saved.x !== 'number' || typeof saved.y !== 'number'
-      || typeof saved.width !== 'number' || typeof saved.height !== 'number') return null
-  const r = { x: saved.x, y: saved.y, width: saved.width, height: saved.height }
-  const displays = screen.getAllDisplays()
-  for (const d of displays) {
-    const wa = d.workArea
-    const interW = Math.min(r.x + r.width, wa.x + wa.width) - Math.max(r.x, wa.x)
-    const interH = Math.min(r.y + r.height, wa.y + wa.height) - Math.max(r.y, wa.y)
-    if (interW >= 80 && interH >= 80) return r
-  }
-  return null
-}
-
-// Expose Chrome DevTools Protocol on a fixed port in dev so external
-// debuggers (electron-mcp, chrome://inspect) can attach. MUST be set
-// BEFORE app.whenReady().
-if (isDev) {
-  app.commandLine.appendSwitch('remote-debugging-port', '9222')
-}
-
-// ============== OAuth loopback: http://127.0.0.1:47823/auth/done ==============
-// Sign-in opens the system browser; after the provider redirects to
-// our prod server's /auth/callback, the server 302s to this tiny
-// local-only HTTP server. The /auth/done HTML page renders a polished
-// "You're signed in" card with an explicit "Open LingxiLoop" button — the
-// button uses the lingxiloop:// deep link to hand the session to the app
-// (works whether the app is currently running or not).
-//
-// Why button + deep link over silent auto-handoff:
-//   - User sees a deliberate "open the app" moment instead of an
-//     invisible POST that doesn't always bring LingxiLoop to front
-//   - Deep link launches the app even if it isn't running yet —
-//     fresh-install + first sign-in works without a manual launch
-//   - The browser tab stays put on the success page, so if LingxiLoop
-//     fails to come forward the user can click again
-//
-// Tokens ride in the URL fragment (#token=…) so they stay out of
-// server access logs and HTTP Referer headers. macOS LaunchServices
-// does log the full deep-link URL — same threat surface as any other
-// lingxiloop:// link, accepted as the cost of an explicit, user-driven
-// handoff. Session TTL stays tight (30d hard / 14d idle).
-//
-// Single-instance lock keeps a stray second `lingxiloop` from binding the
-// same loopback port AND lets deep links routed to a NEW process bounce
-// over to the already-running instance via second-instance event below.
-const LOOPBACK_PORT = 47823
-const DEEP_LINK_SCHEME = 'lingxiloop'
+const windowStateStore = createWindowStateStore({
+  fs,
+  filePath: () => path.join(app.getPath('userData'), 'window-state.json'),
+  displays: () => screen.getAllDisplays(),
+})
 
 const gotSingleInstance = app.requestSingleInstanceLock()
 if (!gotSingleInstance) {
@@ -205,329 +127,9 @@ if (process.platform === 'darwin') {
   // create-path handles repair locally (see createNotificationWindow).
 }
 
-// Register the app as the OS handler for lingxiloop:// links. In dev this
-// only persists until the dev process ends (Electron writes to LSDb
-// each launch); packaged builds get a durable registration via the
-// `build.protocols` entry in package.json.
-if (process.defaultApp) {
-  // `process.defaultApp` is true when Electron is run from CLI (dev).
-  // The argv[1] is the script path — register so macOS knows which
-  // executable to invoke for lingxiloop:// URLs.
-  if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME, process.execPath, [path.resolve(process.argv[1])])
-  }
-} else {
-  app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME)
-}
-
-/** HTML served at /auth/done. Self-contained: no external assets, so
- *  it renders identically online/offline. Shows a "You're signed in"
- *  card with an explicit Open LingxiLoop button — clicking it navigates
- *  to `lingxiloop://auth#token=…` so the OS hands the URL to the running
- *  LingxiLoop app (open-url on macOS, second-instance argv on Win/Linux),
- *  launching it if it isn't already running. */
-const AUTH_DONE_HTML = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LingxiLoop — Signed in</title>
-<style>
-  :root { color-scheme: light; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; height: 100%; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
-    background: linear-gradient(180deg, #F8FBFD 0%, #EDF4F9 100%);
-    display: grid; place-items: center; color: #1A2733;
-  }
-  .card {
-    width: min(420px, calc(100vw - 32px));
-    background: #fff;
-    border-radius: 18px;
-    padding: 40px 32px 32px;
-    box-shadow: 0 30px 60px -30px rgba(10, 30, 60, 0.20), 0 0 0 1px rgba(0, 80, 140, 0.06);
-    text-align: center;
-  }
-  .cloud { font-size: 56px; line-height: 1; margin-bottom: 24px; }
-  h1 { font-size: 22px; font-weight: 500; margin: 0 0 6px; letter-spacing: -0.01em; }
-  .sub { font-style: italic; font-size: 13.5px; color: #65778A; margin: 0 0 28px; }
-  /* Same shape + color story as the website's Download CTA: flat sky-
-     blue rectangle with generous rounding, white label, no gradients,
-     soft tinted shadow. Hover lifts a touch + darkens the surface a
-     hair. */
-  .btn {
-    appearance: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    border: 0;
-    border-radius: 14px;
-    padding: 14px 28px;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: inherit;
-    letter-spacing: 0.005em;
-    color: #fff;
-    background: #0BB3F0;
-    cursor: pointer;
-    transition: transform 140ms ease, background 160ms ease, box-shadow 200ms ease;
-    box-shadow:
-      0 8px 18px -6px rgba(11, 179, 240, 0.55),
-      0 2px 4px rgba(11, 179, 240, 0.20);
-  }
-  .btn:hover {
-    background: #0AA5E0;
-    transform: translateY(-1px);
-    box-shadow:
-      0 12px 24px -6px rgba(11, 179, 240, 0.6),
-      0 3px 6px rgba(11, 179, 240, 0.22);
-  }
-  .btn:active { transform: translateY(0); background: #0997D0; }
-  .btn:disabled {
-    background: #B7D7E6;
-    cursor: default;
-    box-shadow: none;
-    transform: none;
-  }
-  .btn-mark { width: 14px; height: 14px; opacity: 0.9; }
-  .hint { font-size: 11.5px; color: #8B9AAC; margin-top: 20px; font-style: italic; }
-  .ok { color: #34A853; font-weight: 600; }
-  .err { color: #D03A3A; font-size: 13px; margin-top: 16px; }
-</style>
-</head>
-<body>
-  <div class="card">
-    <div class="cloud">☁️</div>
-    <h1 id="h1">You're signed in</h1>
-    <p class="sub" id="sub">Ready when you are.</p>
-    <button id="open" class="btn">
-      <span id="btn-label">Open LingxiLoop</span>
-      <svg class="btn-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M9 6l6 6-6 6"/>
-      </svg>
-    </button>
-    <p class="hint" id="hint">You can close this tab after LingxiLoop opens.</p>
-    <p class="err" id="err" style="display:none"></p>
-  </div>
-<script>
-(() => {
-  // Token must stay in the fragment (out of access logs). Waitlist/error
-  // signals are non-secret and the server prefers query string for them so
-  // they survive cross-origin redirects that drop fragments. Read both so
-  // either shape works.
-  const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
-  const queryParams = new URLSearchParams(location.search);
-  const params = { get: (k) => hashParams.get(k) ?? queryParams.get(k) };
-  const token = params.get('token');
-  const companyId = params.get('companyId');
-  // Single-use nonce the app armed with (round-tripped via the return URL's
-  // query). Threaded back into the deep link so main can verify this handoff
-  // was app-initiated (anti session-fixation).
-  const nonce = params.get('n');
-  const error = params.get('error');
-  const h1 = document.getElementById('h1');
-  const sub = document.getElementById('sub');
-  const btn = document.getElementById('open');
-  const label = document.getElementById('btn-label');
-  const hint = document.getElementById('hint');
-  const err = document.getElementById('err');
-
-  if (error) {
-    h1.textContent = 'Sign-in failed';
-    sub.textContent = '';
-    btn.style.display = 'none';
-    hint.style.display = 'none';
-    err.style.display = 'block';
-    err.textContent = decodeURIComponent(error);
-    return;
-  }
-  // Waitlist gate is on and this email isn't an admin: server enqueued
-  // them instead of minting a session. No token to deep-link, so we
-  // surface the confirmation here in the browser tab the user is already
-  // looking at — same shape as the renderer's WaitlistConfirmedScreen.
-  if (params.get('waitlist') === '1') {
-    const email = params.get('email');
-    h1.textContent = "You're on the waitlist";
-    sub.textContent = email
-      ? 'We saved ' + email + ' and will let you know the moment your account is ready.'
-      : 'We saved your email and will let you know the moment your account is ready.';
-    btn.style.display = 'none';
-    hint.style.display = 'none';
-    return;
-  }
-  if (!token) {
-    h1.textContent = 'No session token';
-    sub.textContent = 'Try signing in again from LingxiLoop.';
-    btn.style.display = 'none';
-    hint.style.display = 'none';
-    return;
-  }
-
-  // Build the deep link. Token + companyId ride in the URL fragment
-  // so they're not URL-encoded as a query string (cleaner) and don't
-  // appear in any web-server access logs along the path (we never
-  // navigate to a remote URL here — the OS routes the lingxiloop:// scheme
-  // directly to the local app).
-  const frag = new URLSearchParams({ token });
-  if (companyId) frag.set('companyId', companyId);
-  if (nonce) frag.set('n', nonce);
-  const deepLink = 'lingxiloop://auth#' + frag.toString();
-
-  let opened = false;
-  btn.addEventListener('click', () => {
-    if (opened) return;
-    opened = true;
-    location.href = deepLink;
-    // Optimistic confirmation — the OS handler is fire-and-forget. If
-    // the app fails to open (e.g. uninstalled), the user can still
-    // click again; we re-enable after a short delay.
-    label.innerHTML = '<span class="ok">✓</span> Opening LingxiLoop…';
-    btn.disabled = true;
-    setTimeout(() => {
-      opened = false;
-      btn.disabled = false;
-      label.textContent = 'Open LingxiLoop again';
-    }, 2500);
-  });
-})();
-</script>
-</body>
-</html>`
-
-// ============== Auth-handoff nonce (anti session-fixation) ==============
-// An inbound `lingxiloop://auth#token=…` deep link is otherwise unauthenticated:
-// any web page the user visits can navigate to that scheme and silently log
-// the app into the ATTACKER's account (session fixation). We defend with a
-// single-use nonce that only the app can originate: the renderer asks main to
-// ARM before opening the browser, threads the nonce through the OAuth return
-// URL (server round-trips it back onto the /auth/done page), and every inbound
-// token must carry the matching armed nonce or it's dropped. A drive-by deep
-// link has no valid nonce because the app never armed for it.
-//
-// The armed state is in-memory: the normal desktop flow keeps the app open
-// across the browser OAuth detour, so it's armed when the token returns. If
-// the user QUITS the app mid-sign-in, a deep link that cold-starts a fresh
-// process finds no armed nonce and is (correctly) dropped — they just sign in
-// again from the now-running app. That rare edge is the accepted cost of not
-// persisting a bearer-handoff credential to disk.
-const AUTH_NONCE_TTL_MS = 10 * 60 * 1000
-const authNonceGuard = createAuthNonceGuard({
-  randomBytes: crypto.randomBytes,
-  timingSafeEqual: crypto.timingSafeEqual,
-  ttlMs: AUTH_NONCE_TTL_MS,
-})
-
-/** Arm for one sign-in and return a fresh nonce the renderer appends to the
- *  OAuth return URL. Supersedes any previous unused nonce. */
-function armAuthHandoff() {
-  return authNonceGuard.arm()
-}
-
-/** Validate + single-use-consume an inbound nonce. Constant-time compare so a
- *  mismatch leaks nothing; invalid callbacks preserve the current attempt,
- *  while a match or expiry clears it. */
-function consumeAuthNonce(nonce) {
-  return authNonceGuard.consume(nonce)
-}
-
-/** Pull token + companyId + nonce out of a `lingxiloop://auth#token=…` URL. The OS
- *  hands us the full URL on open-url / second-instance; we only care
- *  about the fragment. Returns null if the URL isn't auth-shaped. */
-function parseAuthDeepLink(rawUrl) {
-  try {
-    const u = new URL(rawUrl)
-    if (u.protocol !== DEEP_LINK_SCHEME + ':') return null
-    if (u.hostname !== 'auth' && u.pathname !== '//auth' && u.pathname !== '/auth') return null
-    const hash = (u.hash || '').replace(/^#/, '')
-    const params = new URLSearchParams(hash)
-    const token = params.get('token')
-    if (!token || token.length < 8) return null
-    return { token, companyId: params.get('companyId'), nonce: params.get('n') }
-  } catch {
-    return null
-  }
-}
-
-/** Push token+companyId into the renderer — but ONLY for a handoff this app
- *  itself initiated (matching armed nonce). Bringing the main window forward
- *  is the polish touch — the user came from the browser, they want LingxiLoop on
- *  top. An inbound token with a missing/stale/wrong nonce is dropped. */
-function dispatchAuthToken(token, companyId, nonce) {
-  if (!consumeAuthNonce(nonce)) {
-    console.warn('[auth] dropped inbound token: no matching armed nonce (possible drive-by deep link)')
-    return
-  }
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.show()
-    mainWindow.focus()
-    mainWindow.webContents.send('auth:token', { token, companyId })
-  } else {
-    pendingAuthToken = { token, companyId }
-  }
-}
-let pendingAuthToken = null
-
-/** Reference to the auth loopback HTTP server. Held so `before-quit`
- *  can `.close()` it — otherwise the listening socket keeps Node's event
- *  loop alive after all windows close and the user is forced to
- *  Activity-Monitor-kill the process. */
-let authLoopbackServer = null
-
-function startAuthLoopback() {
-  const server = http.createServer((req, res) => {
-    // Cross-origin protection: only accept requests whose Origin (when
-    // present) is empty (top-level navigation) or self. Belt-and-suspenders
-    // against a malicious page on another origin POSTing tokens at us.
-    const origin = req.headers.origin
-    const selfOrigin = `http://127.0.0.1:${LOOPBACK_PORT}`
-    if (origin && origin !== selfOrigin) {
-      res.statusCode = 403; res.end('forbidden'); return
-    }
-    if (req.method === 'GET' && (req.url === '/auth/done' || req.url.startsWith('/auth/done?'))) {
-      res.setHeader('content-type', 'text/html; charset=utf-8')
-      res.end(AUTH_DONE_HTML)
-      return
-    }
-    if (req.method === 'POST' && req.url === '/auth/token') {
-      let body = ''
-      req.on('data', (chunk) => {
-        body += chunk
-        // 4kb cap — token is base64url 32 bytes, companyId ~14 chars.
-        // Anything over this is malicious or buggy.
-        if (body.length > 4096) { req.destroy(); }
-      })
-      req.on('end', () => {
-        try {
-          const parsed = JSON.parse(body)
-          if (typeof parsed?.token !== 'string' || parsed.token.length < 8) {
-            res.statusCode = 400; res.end('bad token'); return
-          }
-          const companyId = typeof parsed.companyId === 'string' ? parsed.companyId : null
-          const nonce = typeof parsed.nonce === 'string' ? parsed.nonce : null
-          dispatchAuthToken(parsed.token, companyId, nonce)
-          res.statusCode = 204; res.end()
-        } catch {
-          res.statusCode = 400; res.end('bad json')
-        }
-      })
-      return
-    }
-    res.statusCode = 404; res.end('not found')
-  })
-  server.on('error', (e) => {
-    console.warn('[auth-loopback] server error', e.message || e)
-  })
-  server.listen(LOOPBACK_PORT, '127.0.0.1', () => {
-    console.log(`[auth-loopback] listening on http://127.0.0.1:${LOOPBACK_PORT}`)
-  })
-  authLoopbackServer = server
-}
-
 // Resolve once — used for `BrowserWindow.icon` (Win/Linux taskbar) and for
 // `app.dock.setIcon` on macOS so the dock / cmd-tab in dev mode show the
-// lingxiloop cloud instead of Electron's default.
+// LingxiLoop avatar instead of Electron's default.
 const ICON_PATH = path.join(app.getAppPath(), 'build', 'icon.png')
 const DOCK_ICON_SIZE = 1024
 const DOCK_UNREAD_DOT = {
@@ -625,102 +227,8 @@ let tray = null
 let trayCleanIcon = null
 let trayUnreadIcon = null
 
-/** Hand-rasterise a cloud silhouette to a BGRA pixel buffer and feed
- *  it to `nativeImage.createFromBitmap`. Why the bytes-level approach:
- *  `nativeImage.createFromDataURL` only decodes raster formats Chromium
- *  knows (PNG/JPEG/WebP/GIF) — SVG data URLs silently produce an empty
- *  image, which is why the old SVG-based tray icon never appeared. Raw
- *  bitmap input has none of those decoder constraints.
- *
- *  Shape: three overlapping circles (left/center/right lobes) on top
- *  of a rounded baseline rectangle — the classic cloud-glyph union,
- *  tuned to read like the brand's pudgy cloud at 22pt menu bar size.
- *  All fill is pure black (B=G=R=0); we drive macOS template-image
- *  inversion via `setTemplateImage(true)` after the fact. The unread
- *  variant adds a small filled circle outside the silhouette in the
- *  upper-right — still pure black so the same template-inversion
- *  pipeline keeps working in dark mode. */
-const TRAY_ICON_SIZE = 64  // generation size; menu bar downsamples to 22pt automatically
-
-function buildTrayCloudBitmap({ dot = false } = {}) {
-  const size = TRAY_ICON_SIZE
-  // Design space is 64 units; scale to the chosen pixel size so we can
-  // tweak TRAY_ICON_SIZE later (e.g. 128 for sharper retina) without
-  // rewriting coordinates.
-  const s = size / 64
-  const lobes = [
-    { cx: 20 * s, cy: 34 * s, r: 10 * s },
-    { cx: 32 * s, cy: 22 * s, r: 14 * s },
-    { cx: 46 * s, cy: 30 * s, r: 11 * s },
-  ]
-  const base = { x: 10 * s, y: 32 * s, w: 44 * s, h: 20 * s, r: 10 * s }
-  const dotCircle = dot ? { cx: 56 * s, cy: 10 * s, r: 7 * s } : null
-
-  const insideCircle = (px, py, c) => {
-    const dx = px - c.cx, dy = py - c.cy
-    return dx * dx + dy * dy <= c.r * c.r
-  }
-  // Rounded-rect inclusion: clamp the test point to the rect's inner
-  // axis-aligned bounding box (deflated by corner radius) and check
-  // distance from that clamped point — exactly the standard SDF for a
-  // rounded box at distance ≤ r.
-  const insideRoundedRect = (px, py, b) => {
-    const closestX = Math.max(b.x + b.r, Math.min(px, b.x + b.w - b.r))
-    const closestY = Math.max(b.y + b.r, Math.min(py, b.y + b.h - b.r))
-    const dx = px - closestX, dy = py - closestY
-    if (dx * dx + dy * dy <= b.r * b.r) return true
-    return px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h &&
-           ((px >= b.x + b.r && px <= b.x + b.w - b.r) || (py >= b.y + b.r && py <= b.y + b.h - b.r))
-  }
-  const inside = (px, py) => {
-    for (const c of lobes) if (insideCircle(px, py, c)) return true
-    if (insideRoundedRect(px, py, base)) return true
-    if (dotCircle && insideCircle(px, py, dotCircle)) return true
-    return false
-  }
-
-  const buf = Buffer.alloc(size * size * 4)
-  // 4×4 supersample for cheap anti-aliasing — at 64×64 this is ~16k
-  // shape-tests, single-digit ms in V8, runs once at boot and once on
-  // first unread. Worth the crispness.
-  const SS = 4
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      let hit = 0
-      for (let sy = 0; sy < SS; sy++) {
-        for (let sx = 0; sx < SS; sx++) {
-          const px = x + (sx + 0.5) / SS
-          const py = y + (sy + 0.5) / SS
-          if (inside(px, py)) hit++
-        }
-      }
-      const alpha = Math.round((hit / (SS * SS)) * 255)
-      const idx = (y * size + x) * 4
-      buf[idx + 0] = 0      // B
-      buf[idx + 1] = 0      // G
-      buf[idx + 2] = 0      // R
-      buf[idx + 3] = alpha  // A — coverage from the supersample
-    }
-  }
-  return buf
-}
-
-function makeTrayImageFromBitmap(buffer) {
-  const img = nativeImage.createFromBitmap(buffer, { width: TRAY_ICON_SIZE, height: TRAY_ICON_SIZE })
-  // Mark as template ONLY on macOS — AppKit then handles all theming
-  // (light/dark menu bar, highlight on click) automatically. On
-  // Win/Linux template-ness is a no-op; the black silhouette renders
-  // as-is, which is the standard look on those platforms too.
-  if (process.platform === 'darwin') {
-    try { img.setTemplateImage(true) } catch { /* swallow */ }
-  }
-  return img
-}
-
-/** Load a pre-rendered tray template PNG. The cloud silhouette + the
- *  unread-badge variant are baked from `public/logo.png` (the real
- *  brand cloud — alpha-transparent background, cloud body as the
- *  largest connected component) by `scripts-gen-tray-icons.py` and
+/** Load a pre-rendered tray template PNG. The canonical avatar artwork and
+ *  unread-badge variant are baked by `scripts-gen-tray-icons.py` and
  *  committed under `build/`:
  *
  *    build/tray-template.png         (22×22 — 1×)
@@ -728,14 +236,12 @@ function makeTrayImageFromBitmap(buffer) {
  *    build/tray-template@3x.png      (66×66 — XDR)
  *    build/tray-template-unread.png  (+ @2x / @3x variants)
  *
- *  Re-run that script after touching `public/logo.png` and the menu
+ *  Re-run that script after regenerating `build/icon.png` and the menu
  *  bar icon tracks. Why baked-on-disk rather than runtime composition:
  *    • `nativeImage.createFromDataURL('data:image/svg+xml,…')` returns
  *      an empty image — Electron decodes only PNG/JPEG/WebP/GIF from
  *      data URLs, so SVG silently fails (which is why the tray icon
  *      disappeared in earlier attempts).
- *    • Largest-connected-component extraction is O(width·height) —
- *      fine once at build time, wasteful on every Electron boot.
  *    • Electron auto-picks the right `@2x`/`@3x` sibling for the
  *      screen's scale factor when you call createFromPath on the 1×
  *      base, so we get pixel-perfect rendering on every display with
@@ -754,15 +260,20 @@ function loadTrayTemplate(suffix) {
   return img
 }
 
+function loadAppIconTrayFallback() {
+  const image = nativeImage.createFromPath(ICON_PATH)
+  return image.isEmpty() ? image : image.resize({ width: 22, height: 22, quality: 'best' })
+}
+
 function getTrayCleanIcon() {
   if (trayCleanIcon) return trayCleanIcon
-  trayCleanIcon = loadTrayTemplate('') ?? makeTrayImageFromBitmap(buildTrayCloudBitmap({ dot: false }))
+  trayCleanIcon = loadTrayTemplate('') ?? loadAppIconTrayFallback()
   return trayCleanIcon
 }
 
 function getTrayUnreadIcon() {
   if (trayUnreadIcon) return trayUnreadIcon
-  trayUnreadIcon = loadTrayTemplate('-unread') ?? makeTrayImageFromBitmap(buildTrayCloudBitmap({ dot: true }))
+  trayUnreadIcon = loadTrayTemplate('-unread') ?? loadAppIconTrayFallback()
   return trayUnreadIcon
 }
 
@@ -982,8 +493,8 @@ function attachDisplayListeners() {
 }
 
 function createWindow() {
-  const saved = readWindowState() ?? DEFAULT_WINDOW_STATE
-  const rect = visibleRect(saved)
+  const saved = windowStateStore.read() ?? DEFAULT_WINDOW_STATE
+  const rect = windowStateStore.visibleRect(saved)
   // Cap initial size to fit comfortably inside the primary display's
   // work area — 90% of work area, with the configured default as the
   // upper ceiling. Without this, the 1480×920 default would exceed
@@ -1070,7 +581,7 @@ function createWindow() {
   const persistState = () => {
     if (!mainWindow || mainWindow.isDestroyed()) return
     const bounds = mainWindow.getNormalBounds()
-    writeWindowState({
+    windowStateStore.write({
       x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
       fullscreen: mainWindow.isFullScreen(),
       maximized: mainWindow.isMaximized(),
@@ -1113,16 +624,6 @@ function createWindow() {
     // unreliable on macOS state-restoration paths.
     if (saved.fullscreen) mainWindow.setFullScreen(true)
     else if (saved.maximized) mainWindow.maximize()
-  })
-
-  // If a token arrived on the loopback server BEFORE the window finished
-  // loading (the user was that fast), flush it now.
-  mainWindow.webContents.once('did-finish-load', () => {
-    if (pendingAuthToken) {
-      const t = pendingAuthToken
-      pendingAuthToken = null
-      mainWindow.webContents.send('auth:token', t)
-    }
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -1306,22 +807,6 @@ ipcMain.handle('app:is-focused', () => {
   return !!(mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused())
 })
 
-// Renderer asks main to open a URL in the user's default browser
-// (used for OAuth — embedded webviews are banned by Google and the
-// experience is better in a familiar browser anyway). Restricted to
-// http/https so a compromised renderer can't shell-out arbitrary URLs.
-ipcMain.handle('auth:open-external', (_event, url) => {
-  if (typeof url !== 'string') return false
-  if (!url.startsWith('http://') && !url.startsWith('https://')) return false
-  void shell.openExternal(url)
-  return true
-})
-
-// Renderer arms a sign-in and gets a single-use nonce to thread through the
-// OAuth return URL; only an inbound token carrying this nonce is accepted
-// (see dispatchAuthToken / consumeAuthNonce — anti session-fixation).
-ipcMain.handle('auth:arm', () => armAuthHandoff())
-
 // NOTIFICATION window asks main to focus a conversation when user clicks
 // a toast. Bring the main window forward + forward the id over to its
 // renderer so the React app selects the conversation.
@@ -1334,59 +819,6 @@ ipcMain.on('notification:focus-convo', (_event, conversationId) => {
   }
 })
 
-// ============== Deep-link routing (lingxiloop://auth#token=…) ==============
-// Three entry points cover all three OSes:
-//   • macOS (running) → `open-url` event
-//   • macOS (cold start by Finder/Safari clicking the link) → `open-url` fires
-//     after whenReady; we also stash the URL via `process.argv` as belt-and-braces
-//   • Windows/Linux (running) → `second-instance` event (because we hold the
-//     single-instance lock, a fresh `lingxiloop lingxiloop://…` invocation bounces here)
-//   • Windows/Linux (cold start) → URL is in `process.argv` at boot
-//
-// Each handler funnels into dispatchAuthToken() which IPCs the renderer
-// and brings the window to front — the same plumbing the (now-deprecated)
-// loopback /auth/token POST used.
-let pendingDeepLink = null
-
-function consumeDeepLink(url) {
-  const parsed = parseAuthDeepLink(url)
-  if (!parsed) return
-  // If main window hasn't loaded yet, dispatchAuthToken stashes the
-  // payload in pendingAuthToken and the did-finish-load hook flushes
-  // it. So we can call it eagerly here regardless of timing.
-  dispatchAuthToken(parsed.token, parsed.companyId, parsed.nonce)
-}
-
-// macOS — single canonical event for all deep-link arrivals (running OR
-// cold start). preventDefault stops Electron's default no-op.
-app.on('open-url', (event, url) => {
-  event.preventDefault()
-  if (!app.isReady()) { pendingDeepLink = url; return }
-  consumeDeepLink(url)
-})
-
-// Windows / Linux — a second `lingxiloop lingxiloop://auth#…` invocation bounces
-// here via the single-instance lock we acquired up top. The URL is the
-// last element of argv per Electron convention.
-app.on('second-instance', (_event, argv) => {
-  const url = argv.find((a) => typeof a === 'string' && a.startsWith(DEEP_LINK_SCHEME + '://'))
-  if (url) consumeDeepLink(url)
-  // Always surface the existing window — the user just clicked something
-  // expecting LingxiLoop to come forward.
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.show()
-    mainWindow.focus()
-  }
-})
-
-// Windows / Linux cold-start path: the URL arrives baked into our own
-// argv. macOS doesn't use argv for this — it uses open-url above.
-{
-  const coldStartUrl = process.argv.find((a) => typeof a === 'string' && a.startsWith(DEEP_LINK_SCHEME + '://'))
-  if (coldStartUrl) pendingDeepLink = coldStartUrl
-}
-
 app.whenReady().then(() => {
   if (process.platform === 'darwin') {
     nativeTheme.themeSource = 'light'
@@ -1396,9 +828,9 @@ app.whenReady().then(() => {
   // API (Electron 25+) — gives us a streaming Response back so the
   // renderer never blocks on whole-bundle buffering. Anything we
   // can't resolve gets a 404. The handler ONLY serves packaged dist
-  // content; appProtocolFile() rejects path-traversal attempts.
+  // content; rendererFile() rejects path-traversal attempts.
   protocol.handle('app', async (request) => {
-    const file = appProtocolFile(request.url)
+    const file = rendererFile(request.url, path.join(__dirname, '..', 'dist'))
     if (!file) return new Response('not found', { status: 404 })
     try {
       return await net.fetch(pathToFileURL(file).toString())
@@ -1438,98 +870,7 @@ app.whenReady().then(() => {
     }
   })
 
-  if (isDev) registerDevShortcuts()
-  startAuthLoopback()
-
-  // Cold-start deep link (Windows/Linux, OR a macOS open-url that
-  // arrived before whenReady resolved). consumeDeepLink stashes into
-  // pendingAuthToken when the renderer isn't ready yet, and the
-  // did-finish-load hook in createWindow flushes that.
-  if (pendingDeepLink) {
-    const url = pendingDeepLink
-    pendingDeepLink = null
-    consumeDeepLink(url)
-  }
-
-  // Wire auto-update. registerIpc() is safe to call even when
-  // unsupported (handlers just return the unsupported status).
-  // initialize() is a no-op when there's no update channel (e.g. dev
-  // without dev-app-update.yml).
-  autoUpdater.registerIpc()
-  autoUpdater.setBeforeInstallHandler(() => {
-    // electron-updater on macOS skips `before-quit` (it goes through
-    // Browser::Shutdown), so our close-to-hide handler would otherwise
-    // intercept the window close and the app would just hide instead of
-    // exiting — Squirrel then waits forever for a quit that never comes
-    // and the update never installs. Flip the flag now and tear down the
-    // auxiliary windows / servers ourselves.
-    appIsQuitting = true
-    if (notificationWindow && !notificationWindow.isDestroyed()) {
-      try { notificationWindow.destroy() } catch { /* swallow */ }
-      notificationWindow = null
-    }
-    if (authLoopbackServer) {
-      try { authLoopbackServer.close() } catch { /* swallow */ }
-      try { authLoopbackServer.closeAllConnections?.() } catch { /* swallow */ }
-      authLoopbackServer = null
-    }
-    if (tray && !tray.isDestroyed?.()) {
-      try { tray.destroy() } catch { /* swallow */ }
-      tray = null
-    }
-  })
-  autoUpdater.initialize()
 })
-
-// =============== Dev-only notification shortcuts ===============
-// Inspired by Alma's debug menu. Press once to test the full pipeline
-// (panel create → vibrancy → entry spring → chime → exit fade) without
-// needing a real agent message round-trip.
-//
-//  - Cmd/Ctrl+Shift+N → single canned toast, cycles through samples
-//  - Cmd/Ctrl+Shift+M → burst of 3 toasts from different convos (test
-//                       the stack + per-toast chime)
-const DEV_SAMPLES = [
-  { authorId: 'iris-a0ab', authorName: 'Iris', conversationTitle: '设计评审', body: 'Mock-up #3 已经发出去了，回头看一眼。' },
-  { authorId: 'atlas-dd9c', authorName: 'Atlas', conversationTitle: 'Strategy', body: 'Got the metrics breakdown ready. Tl;dr: Q3 looks fine, Q4 is the question.' },
-  { authorId: 'bram-0154', authorName: 'Bram', conversationTitle: 'Engineering', body: '把那个 race condition 修了，已经合到 main。' },
-  { authorId: 'nova-6596', authorName: 'Nova', conversationTitle: 'PM check-in', body: 'Quick ping — can you look at the v2 spec when you have a sec?' },
-  { authorId: 'saga', authorName: 'Saga', conversationTitle: 'Direct', body: 'I have a draft of the storyboard. Want to see it now or after standup?' },
-]
-let devSampleIdx = 0
-function makeDevPayload(sample) {
-  const at = Date.now()
-  return {
-    id: `dev-${at}-${Math.random().toString(36).slice(2, 8)}`,
-    conversationId: `dev-${sample.authorId}`,
-    authorId: sample.authorId,
-    authorName: sample.authorName,
-    authorAvatarUrl: null,
-    conversationTitle: sample.conversationTitle,
-    body: sample.body,
-    at,
-  }
-}
-function registerDevShortcuts() {
-  const single = 'CommandOrControl+Shift+N'
-  const burst = 'CommandOrControl+Shift+M'
-  const okSingle = globalShortcut.register(single, () => {
-    const s = DEV_SAMPLES[devSampleIdx % DEV_SAMPLES.length]
-    devSampleIdx += 1
-    pushNotification(makeDevPayload(s))
-  })
-  const okBurst = globalShortcut.register(burst, () => {
-    // Three different conversations so the renderer treats them as
-    // separate toasts (rather than coalescing). Slight stagger so the
-    // spring entrance reads as a cascade, not a snap.
-    for (let i = 0; i < 3; i++) {
-      const s = DEV_SAMPLES[(devSampleIdx + i) % DEV_SAMPLES.length]
-      setTimeout(() => pushNotification(makeDevPayload(s)), i * 160)
-    }
-    devSampleIdx += 3
-  })
-  console.log(`[dev-shortcuts] ${single}=${okSingle ? 'ok' : 'failed'}, ${burst}=${okBurst ? 'ok' : 'failed'}`)
-}
 
 // macOS: Dock-icon click (and Cmd-Tab to a hidden app) fires `activate`.
 // Without this handler the app sits in the Dock with no way back —
@@ -1571,24 +912,10 @@ app.on('before-quit', () => {
     try { notificationWindow.destroy() } catch { /* swallow */ }
     notificationWindow = null
   }
-  if (authLoopbackServer) {
-    try { authLoopbackServer.close() } catch { /* swallow */ }
-    // closeAllConnections is Node 18+ — without it, keep-alive HTTP
-    // clients can hold the port past app exit.
-    try { authLoopbackServer.closeAllConnections?.() } catch { /* swallow */ }
-    authLoopbackServer = null
-  }
   if (tray && !tray.isDestroyed?.()) {
     try { tray.destroy() } catch { /* swallow */ }
     tray = null
   }
-})
-
-app.on('will-quit', () => {
-  // Release the global accelerators so a zombie dev process doesn't
-  // keep them claimed and shadow a fresh `pnpm electron:dev` from
-  // registering them on next launch.
-  globalShortcut.unregisterAll()
 })
 
 // Graceful shutdown on signals — primarily for dev where Ctrl-C in the

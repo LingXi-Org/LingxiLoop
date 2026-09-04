@@ -19,9 +19,9 @@ Or all at once: `make start-all` (status: `make status`, stop: `make stop-all`).
 
 ## Commands
 
-- Tests: `uv run pytest tests/`
-- Python lint/typecheck: `ruff check . --fix` · `uv run python -m mypy .`
-- Frontend (inside `frontend/`): `npm run lint` · `npm run test` · `npm run build`
+- Backend: run `uv run pytest <owning-test-files>`, `ruff check <changed-files>`, and `uv run python -m mypy <affected-package>`.
+- Frontend (inside `frontend/`): run lint and Vitest against changed files; build only this frontend package when its production bundle is affected.
+- Never run backend and frontend gates together unless the change crosses both surfaces.
 - Docker release: `make docker-release` (see `.github/RELEASE_PROCESS.md`)
 
 ## Hard rules

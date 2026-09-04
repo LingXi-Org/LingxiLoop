@@ -8,15 +8,15 @@
  * reply, so users assumed the email feature was half-broken. Now both
  * paths converge on replyInEmailConversation, which builds reply
  * headers from the latest email_messages row in the convo and routes
- * the body through Resend (or mock).
+ * the body through the injected provider seam.
  */
 import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
-import { findOrCreateEmailConversation, persistEmailMessage } from '../email.js'
+import { __setEmailProviderOverrideForTesting, findOrCreateEmailConversation, persistEmailMessage } from '../modules/email/index.js'
 import {
-  buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent,
+  buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent,
   seedUserMembership, teardownAll,
 } from './_helpers.js'
 
@@ -38,17 +38,25 @@ before(async () => {
 
 beforeEach(async () => {
   await resetAllTables()
+  installFakeWukong()
+  __setEmailProviderOverrideForTesting(async () => ({ ok: true, smtpMessageId: `provider-${Date.now()}`, error: null }))
 })
 
 after(async () => {
+  __setEmailProviderOverrideForTesting(null)
   await teardownAll(server)
 })
 
 /** Stand up an email conversation with one inbound row from an external
  *  sender to ME_USER_ID, so a reply has somewhere to thread under. */
 async function seedEmailConvoWithInbound(): Promise<{ companyId: string; conversationId: string; agentId: string }> {
-  const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
+  const { companyId, projectId, agentId, agentEmail } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [companyId, projectId, ME_USER_ID],
+  )
   const conv = await findOrCreateEmailConversation({
     companyId, inReplyTo: null, references: [],
     subject: 'project status', memberIds: [ME_USER_ID, agentId],
@@ -74,23 +82,20 @@ test('[integration] POST /conversations/:id/messages in an email convo auto-prom
     body: JSON.stringify({ body: 'going great — full status attached below.' }),
   })
   assert.equal(res.status, 202)
-  const payload = await res.json() as { id: string; transportStatus: string; mock: boolean }
+  const payload = await res.json() as { id: string; transportStatus: string }
   assert.equal(payload.transportStatus, 'sent')
-  assert.equal(payload.mock, true, 'expect mock mode in default integration env')
 
-  // The new row must be kind='email', direction='out', author=ME, and
+  // The new row must be direction='out', author=ME, and
   // its from_addr must derive from a minted participants.email — NOT a
   // text message.
   const { rows } = await pool.query<{
-    kind: string; direction: string; from_addr: string; auto_submitted: boolean; conversation_id: string;
+    direction: string; from_addr: string; auto_submitted: boolean; conversation_id: string;
   }>(
-    `SELECT m.kind, em.direction, em.from_addr, em.auto_submitted, em.conversation_id
-       FROM messages m JOIN email_messages em ON em.message_id = m.id
-      WHERE m.id = $1`,
+    `SELECT direction, from_addr, auto_submitted, conversation_id
+       FROM email_messages WHERE message_id = $1`,
     [payload.id],
   )
   assert.equal(rows.length, 1)
-  assert.equal(rows[0].kind, 'email', 'auto-promote must write a kind=email row, not kind=text')
   assert.equal(rows[0].direction, 'out')
   assert.equal(rows[0].auto_submitted, false, 'human-driven HTTP reply: autoSubmitted should be false')
   assert.equal(rows[0].conversation_id, conversationId)
@@ -135,9 +140,14 @@ test('[integration] reply continues the thread when the latest row is our own ou
   // OUR OWN outbound (parent.from = self), get an empty TO list, and
   // throw "no remaining recipients". The reply should instead continue
   // the thread to the same recipients we just addressed.
-  const { findOrCreateEmailConversation, persistEmailMessage } = await import('../email.js')
-  const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
+  const { findOrCreateEmailConversation, persistEmailMessage } = await import('../modules/email/index.js')
+  const { companyId, projectId, agentId, agentEmail } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [companyId, projectId, ME_USER_ID],
+  )
 
   // Seed an outbound row from ME to the agent — no inbound replies yet.
   const conv = await findOrCreateEmailConversation({
@@ -174,7 +184,7 @@ test('[integration] reply continues the thread when the latest row is our own ou
     `follow-up TO should preserve the parent's recipients, got: ${JSON.stringify(rows[0].to_addrs)}`)
 })
 
-test('[integration] lingxiloop reply CLI on an email convo auto-promotes via sendViaProvider mock', async () => {
+test('[integration] lingxiloop reply CLI on an email convo uses the injected provider', async () => {
   // Mirror of the HTTP-side auto-promote test, but exercising the
   // `runCli` entrypoint that the agent's `bash` tool actually shells
   // into. Pre-fix this used to silently write a kind='text' row and
@@ -186,18 +196,16 @@ test('[integration] lingxiloop reply CLI on an email convo auto-promotes via sen
   const res = await runCli(['--as', agentId, 'reply', conversationId, 'taking a look now'])
   assert.equal(res.ok, true, `runCli failed: ${res.text}`)
   assert.match(res.text, /replied via email/, 'CLI reports the email auto-promote path')
-  assert.match(res.text, /\(mock\)/, 'mock mode in default integration env')
   assert.equal(res.sideEffects?.[0]?.event, 'message.posted')
   assert.equal(res.sideEffects?.[0]?.command, 'reply')
   assert.equal(res.sideEffects?.[0]?.medium, 'email')
 
   // An outbound email_messages row was written for the agent.
   const { rows: outbound } = await pool.query<{ direction: string; transport_status: string; body: string; auto_submitted: boolean | null }>(
-    `SELECT em.direction, em.transport_status, m.body, em.auto_submitted
-       FROM email_messages em
-       JOIN messages m ON m.id = em.message_id
-      WHERE em.conversation_id = $1 AND m.author_id = $2
-      ORDER BY em.created_at DESC`,
+    `SELECT direction, transport_status, body, auto_submitted
+       FROM email_messages
+      WHERE conversation_id = $1 AND author_id = $2
+      ORDER BY created_at DESC`,
     [conversationId, agentId],
   )
   assert.equal(outbound.length, 1, 'exactly one outbound row for the agent')
@@ -207,26 +215,29 @@ test('[integration] lingxiloop reply CLI on an email convo auto-promotes via sen
   // CLI path stamps autoSubmitted=true → RFC 3834 Auto-Submitted header.
   assert.equal(outbound[0].auto_submitted, true, 'agent CLI replies are auto-submitted=true')
 
-  // The corresponding messages-table row was written as kind='email' (not 'text').
-  const { rows: msgRows } = await pool.query<{ kind: string }>(
-    `SELECT kind FROM messages WHERE conversation_id = $1 AND author_id = $2`,
-    [conversationId, agentId],
-  )
-  assert.equal(msgRows.length, 1)
-  assert.equal(msgRows[0].kind, 'email', 'messages row mirrors the email shape, not a plain text row')
 })
 
-test('[integration] lingxiloop reply CLI on a non-email convo writes a plain text row (no auto-promote)', async () => {
+test('[integration] lingxiloop reply CLI on a domain discussion does not auto-promote to email', async () => {
   // Mirror of the HTTP-side regression test. A direct chat reply
   // through the CLI must NOT accidentally trigger the email path.
   const { runCli } = await import('../agents/cli.js')
-  const { companyId, agentId } = await seedCompanyWithAgent()
+  const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [companyId, projectId, ME_USER_ID],
+  )
   const convId = `direct-cli-${Date.now()}`
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, members, company_id, topic)
-       VALUES ($1, 'direct', $2, $3::jsonb, $4, $5)`,
-    [convId, ME_USER_ID, JSON.stringify([ME_USER_ID, agentId]), companyId, 'direct'],
+    `INSERT INTO conversations (id, kind, title, members, company_id, project_id, topic)
+       VALUES ($1, 'group', $2, $3::jsonb, $4, $5, $6)`,
+    [convId, 'Domain discussion', JSON.stringify([ME_USER_ID, agentId]), companyId, projectId, 'discussion'],
+  )
+  await pool.query(
+    `INSERT INTO im_channel_bindings(channel_id,company_id,profile)
+     VALUES ($1,$2,$3::jsonb)`,
+    [convId, companyId, JSON.stringify({ channelId: convId, channelType: 2, title: 'Domain discussion', members: [ME_USER_ID, agentId] })],
   )
 
   const res = await runCli(['--as', agentId, 'reply', convId, 'plain chat reply'])
@@ -237,37 +248,28 @@ test('[integration] lingxiloop reply CLI on a non-email convo writes a plain tex
     `SELECT 1 FROM email_messages WHERE conversation_id = $1`, [convId],
   )
   assert.equal(emailRows.length, 0, 'no email_messages row for a direct-kind convo')
-  const { rows: msgRows } = await pool.query<{ kind: string; body: string }>(
-    `SELECT kind, body FROM messages WHERE conversation_id = $1 AND author_id = $2`,
-    [convId, agentId],
-  )
-  assert.equal(msgRows.length, 1)
-  assert.equal(msgRows[0].kind, 'text')
-  assert.equal(msgRows[0].body, 'plain chat reply')
 })
 
 test('[integration] non-email conversation POST is retired in favor of WuKongIM', async () => {
   // Chat messages are written through the WuKongIM SDK. The legacy REST
   // endpoint remains available only for email conversations.
-  const { companyId } = await seedCompanyWithAgent()
+  const { companyId, projectId } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
   // Insert a minimal group conversation with the user as a member.
   const convId = `g-test-${Date.now()}`
   await pool.query(
-    `INSERT INTO conversations (id, kind, title, members, company_id, topic)
-     VALUES ($1, 'group', $2, $3::jsonb, $4, $5)`,
-    [convId, 'plain group', JSON.stringify([ME_USER_ID]), companyId, 'group'],
+    `INSERT INTO conversations (id, kind, title, members, company_id, project_id, topic)
+     VALUES ($1, 'group', $2, $3::jsonb, $4, $5, $6)`,
+    [convId, 'plain group', JSON.stringify([ME_USER_ID]), companyId, projectId, 'group'],
   )
   const res = await fetch(`${baseUrl}/api/conversations/${encodeURIComponent(convId)}/messages`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-company-id': companyId },
+    headers: { 'content-type': 'application/json', 'x-company-id': companyId, 'x-project-id': projectId },
     body: JSON.stringify({ body: 'just a chat message' }),
   })
-  assert.equal(res.status, 410)
-  const payload = await res.json() as { error: string; transport: string }
-  assert.equal(payload.transport, 'wukongim')
+  assert.equal(res.status, 404)
   const { rows } = await pool.query<{ n: number }>(
-    `SELECT COUNT(*)::int AS n FROM messages WHERE conversation_id = $1`,
+    `SELECT COUNT(*)::int AS n FROM email_messages WHERE conversation_id = $1`,
     [convId],
   )
   assert.equal(rows[0]?.n, 0)

@@ -9,9 +9,8 @@
  * database and the Cloud SQL disk was auto-growing ~1.3 GB/day.
  *
  * Readers only ever look at recent rows (`lingxiloop log` reads the last
- * ≤100 per agent; observability drill-down and shipping-maintenance look
- * at bounded windows; llm_calls_rollup preserves cost aggregates
- * forever), so old rows are pure dead weight.
+ * ≤100 per agent; observability drill-down and maintenance look
+ * at bounded windows), so old rows are pure dead weight.
  *
  * Strategy: a periodic sweep deletes rows past a per-table retention
  * window, in small ctid batches so locks stay short and vacuums keep up.
@@ -57,14 +56,13 @@ function targets(): SweepTarget[] {
     { table: 'agent_log',    pkCol: 'id',         timeCol: 'created_at', days: env.DB_GC_AGENT_LOG_DAYS },
     { table: 'agent_events', pkCol: 'id',         timeCol: 'created_at', days: env.DB_GC_AGENT_EVENTS_DAYS },
     { table: 'agent_runs',   pkCol: 'id',         timeCol: 'started_at', days: env.DB_GC_AGENT_RUNS_DAYS },
-    { table: 'llm_calls',    pkCol: 'id',         timeCol: 'created_at', days: env.DB_GC_LLM_CALLS_DAYS },
   ]
 }
 
 /** Delete one batch of expired rows. Returns rows deleted (0 = table clean).
  *
  *  Two statements, both index-driven: the victim SELECT walks the bare
- *  time-column index (see db/schema.sql idx_*_created), the DELETE walks the
+ *  time-column index (see the database migrations' idx_*_created), the DELETE walks the
  *  PK index via `= ANY($ids)`. The earlier single-statement form —
  *  `DELETE WHERE ctid IN (subquery)` — planned the outer side as a seq
  *  scan of the whole heap, which on a 31GB table blew the 55s timeout
