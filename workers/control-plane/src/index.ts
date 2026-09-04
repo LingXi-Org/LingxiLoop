@@ -235,6 +235,11 @@ async function attachSession(c: AppContext, source: 'cache' | 'database') {
   if (session) c.set('session', session as AuthSession)
 }
 
+app.post('/api/auth/ws-ticket', async (c) => {
+  await attachSession(c, 'cache')
+  return proxyAppRequest(c)
+})
+
 app.use('/api/auth/*', async (c, next) => {
   await attachAuth(c)
   await next()
@@ -592,7 +597,7 @@ app.use('/api/*', async (c, next) => {
   await next()
 })
 
-app.all('/api/*', async (c) => {
+async function proxyAppRequest(c: AppContext): Promise<Response> {
   const session = requireSession(c)
   if (session instanceof Response) return session
   let link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
@@ -603,6 +608,8 @@ app.all('/api/*', async (c) => {
   if (!link) return c.json({ error: 'business account is not provisioned' }, 409)
   const path = c.req.path === '/api/session' ? '/api/auth/me' : c.req.path
   return originRequest(c.env, path + new URL(c.req.url).search, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }, { appUserId: link.app_user_id, authUserId: session.user.id })
-})
+}
+
+app.all('/api/*', proxyAppRequest)
 
 export default app

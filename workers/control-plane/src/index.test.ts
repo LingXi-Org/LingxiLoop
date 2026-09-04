@@ -48,6 +48,33 @@ describe('control-plane trust boundaries', () => {
     expect(response.status).toBe(401)
   })
 
+  it('proxies websocket tickets instead of sending them to Better Auth', async () => {
+    const now = Math.floor(Date.now() / 1000)
+    await env.DB.batch([
+      env.DB.prepare(`INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,?,?)`)
+        .bind('ws-user', 'WebSocket User', 'ws@example.com', now, now),
+      env.DB.prepare(`INSERT INTO account(id,accountId,providerId,issuer,userId,password,createdAt,updatedAt) VALUES(?,?,'credential','local:credential',?,?,?,?)`)
+        .bind('ws-account', 'ws-user', 'ws-user', await hashPassword('password123'), now, now),
+      env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES(?,?,?)`)
+        .bind('ws-user', 'app-ws-user', now),
+    ])
+    fetchMock.activate()
+    fetchMock.disableNetConnect()
+    fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true })
+    fetchMock.get('https://origin.example.com').intercept({ path: '/api/auth/ws-ticket', method: 'POST' }).reply(200, { ticket: 'ticket-1' })
+    try {
+      const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
+        method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
+        body: JSON.stringify({ email: 'ws@example.com', password: 'password123' }),
+      })
+      const response = await SELF.fetch('https://admin.example.com/api/auth/ws-ticket', {
+        method: 'POST', headers: { cookie: signIn.headers.get('set-cookie') ?? '' },
+      })
+      expect({ status: response.status, body: await response.json() }).toEqual({ status: 200, body: { ticket: 'ticket-1' } })
+      fetchMock.assertNoPendingInterceptors()
+    } finally { fetchMock.deactivate() }
+  })
+
   it('fans one signed release out to every OpenShip project exactly once', async () => {
     const commitSha = 'a'.repeat(40)
     const deployCommitSha = 'b'.repeat(40)
