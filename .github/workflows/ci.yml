@@ -88,6 +88,7 @@ jobs:
               - 'server/tsconfig.json'
               - 'server/*.conf'
               - 'server/docker/lingxiloop-server.Dockerfile'
+              - 'server/docker/lingxiloop-server.Dockerfile.dockerignore'
               - 'server/docker/agent-os.Dockerfile'
             server_source:
               - 'server/src/**'
@@ -99,6 +100,7 @@ jobs:
               - 'server/*.conf'
             server_docker:
               - 'server/docker/lingxiloop-server.Dockerfile'
+              - 'server/docker/lingxiloop-server.Dockerfile.dockerignore'
             agent_docker:
               - 'server/docker/agent-os.Dockerfile'
             agent:
