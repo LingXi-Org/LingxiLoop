@@ -37,6 +37,7 @@ test('v1 schema excludes migration markers and retired host structures', () => {
   assert.doesNotMatch(schema, /CREATE TABLE public\.agent_memory\b/)
   assert.doesNotMatch(schema, /CREATE TABLE public\.(?:computers|computer_events|lingxigraph_steering_receipts)\b/)
   assert.doesNotMatch(schema, /\b(?:computer_id|fast_model|pair_token)\b/)
+  assert.doesNotMatch(schema, /CREATE TABLE public\.eval_(?:runs|cases|stage_results)\b/)
 })
 
 test('v1 defaults preserve current capability and Canvas contracts', () => {

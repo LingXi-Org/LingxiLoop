@@ -30,9 +30,6 @@ export function ensureSchemaOnce(): Promise<void> {
  *  ownership visible; one statement lets PostgreSQL resolve dependencies and
  *  perform a single durability sync instead of one sync per table. */
 const TABLES_TO_WIPE: readonly string[] = [
-  'eval_stage_results',
-  'eval_cases',
-  'eval_runs',
   'course_invitation_acceptances',
   'course_invitations',
   'learning_notification_deliveries',

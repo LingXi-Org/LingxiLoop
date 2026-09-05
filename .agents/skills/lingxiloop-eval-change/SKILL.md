@@ -1,46 +1,17 @@
 ---
 name: lingxiloop-eval-change
-description: Implement, review, or verify LingxiLoop Agent Eval suites, baselines, deterministic runtime gates, evaluator contracts, trace ingestion and sanitization, Eval persistence, or the Admin Eval Dashboard. Use for changes under eval/, server/src/eval/, Eval scripts/tests, Eval API/DB surfaces, or Eval Dashboard paths; use when an Agent OS, prompt, RAG, tool, approval, Canvas, or multi-Agent change needs regression coverage.
+description: Implement, review, or verify LingxiLoop's independent black-box Eval package, datasets, suites, baselines, reports, release gates, model isolation, or telemetry contract. Use for changes under eval/ or docs/agent-eval.md.
 ---
 
 # LingxiLoop Eval Change
 
-Build Eval evidence that can detect a regression in the current Agent behavior, keep observations safe to persist, and run only the owning CI scope.
+`eval/` is an independent black-box package. It must not import AgentOS runtime, prompts, context, kernel, model clients, or control-plane modules.
 
-## Workflow
+1. Read `docs/agent-eval.md` and use the `EvalTarget` contract only.
+2. Keep Candidate and Judge endpoint, credentials, calls, costs and traces separate. Do not read product model configuration.
+3. Version datasets and suites. Promote a reviewed baseline only after inspecting per-case deltas.
+4. Persist replay inputs privately; reports and telemetry use bounded, sanitized fields.
+5. Use deterministic graders for structural checks and Autoevals with the independent Judge client for semantic checks. Missing scores, usage or baseline compatibility fail closed.
+6. Run `npm run eval:check`. For changes outside `eval/`, use `lingxiloop-verify-change` to select the owning checks.
 
-1. Read [references/eval-contracts.md](references/eval-contracts.md) before changing a suite, baseline, runtime observation, persistence, or comparison behavior.
-2. Invoke `$lingxiloop-verify-change` and run its classifier against the intended diff. Confirm Eval paths produce `ci.eval=true`. Accept `ci.evalFocused=true` only when every changed path is Eval-owned. Shared Agent OS, DB, API, Admin shell, or integration-runner files must fail closed to their owning checks; package manifests, workflows, and classifier changes require `ci.fullMatrix=true`.
-3. Choose the lightest truthful execution mode:
-   - Use frozen inline observations only to test evaluator, parser, sanitizer, gate, and report semantics.
-   - Use the deterministic Agent OS runtime harness for merge-blocking behavior coverage. Exercise the real runtime with `MemoryHostAdapter`, `ScriptedModelDriver`, and a deterministic Kernel/Host seam; do not call external models or networks.
-   - Use real-model Eval only for prompt/model quality that deterministic assertions cannot represent. Keep it manual or scheduled unless an explicitly provisioned stable CI contract exists.
-4. Add or update a versioned Case when behavior, a failure mode, or a production bug is newly in scope. Keep inputs, expectations, scenario identity, and thresholds reviewable in `eval/suites/`.
-5. Update a baseline only after the new behavior is intentionally accepted. Never raise/lower a baseline merely to silence a regression. Compare run, dimension, and Case deltas before accepting it.
-6. Preserve the real trace chain: input, decision, model hop, IPython cell, Host Bridge action, Approval/Canvas activity, and final answer. Use runtime durations when available; do not substitute evaluator compute time.
-7. Sanitize before persistence or report creation. RAG results may retain sourceId, chunkId, marker, title, position, and bounded status/count metadata, but never excerpts or retrieved content. Allowlist ordinary tool results and redact secrets, authorization, message bodies, stdout/stderr, and oversized payloads.
-8. Run focused evidence from the matrix below and report which scopes were intentionally skipped. Expand to owning or full-matrix evidence whenever `$lingxiloop-verify-change` classifies a shared/high-risk path or the user asks for it.
-
-## Focused verification
-
-Run these for every Eval change:
-
-```bash
-npm run guard:brand
-npm run guard:agent-os
-npm run guard:llm-tracked
-npm run lint
-npm run server:typecheck
-npm run test:eval
-npm run eval:check
-```
-
-Add `npm run typecheck && npm run build` for the Eval Dashboard. Add `npm run test:integration:eval` when Eval-owned service or persistence behavior changes. The fail-closed classifier is the source of truth for whether full unit, full integration, Compose, vendored Open Notebook, desktop packaging, or the complete matrix is also required.
-
-## Completion bar
-
-- `eval:check` includes both the frozen harness self-test and a deterministic real Agent OS runtime gate.
-- Runtime fixtures fail when required prompt/context input, routing, RAG, tool selection, or Approval behavior no longer reaches the model/runtime seam.
-- Artifacts identify commit, prompt, and model targets and expose per-stage and per-Case regressions.
-- Stored and generated observations pass excerpt/secret checks.
-- CI uploads both Eval reports and runs only the classified scope on pull requests. Package manifest, selector, or workflow changes and `main`, manual, or release callers run the full matrix.
+The AgentOS adapter remains type-only until a separate integration implements it. CI runs package checks only; real-model release gates remain manual or reusable-workflow calls with explicit secrets.

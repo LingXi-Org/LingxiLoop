@@ -17,7 +17,7 @@
  *   4. npm run test:integration
  *
  * Run one or more owning files without enumerating the full suite:
- *   npm run test:integration -- --file eval.test.ts
+ *   npm run test:integration -- --file trust-bff.test.ts
  *
  * If INTEGRATION_DATABASE_URL is unset we print a one-line "skipped" and
  * exit 0 — so this script slots into CI / pre-commit hooks without

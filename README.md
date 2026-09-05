@@ -115,13 +115,9 @@ Web replica count never creates more scheduler, retry, sweeper or GC loops.
 | `server/agent-os/` | Persistent IPython kernel runner |
 | `server/src/im/` | WuKongIM bootstrap, webhook, routing and payload contracts |
 | `server/src/agents/` | Typed learning-domain services used by the Host Bridge |
-| `server/src/eval/` | Deterministic answer, RAG, tool, and multi-Agent evaluation pipeline |
-| `eval/suites/` + `eval/baselines/` | Versioned golden Eval datasets and merge-gating baselines |
-| `scripts/run-agent-eval.ts` | Frozen evaluator/harness self-test and baseline reporter |
-| `scripts/run-agent-runtime-eval.ts` | Deterministic current Agent OS runtime regression gate |
+| `eval/` | Independent, replayable black-box Eval package with versioned suites, baselines, reports and release gates |
 | `src/lib/im/` | Browser-side WuKongIM SDK wrapper |
-| `src/admin/EvalPage.tsx` | Eval run pipeline, failure drill-down, and version comparison dashboard |
-| `.agents/skills/lingxiloop-eval-change/` | Eval suite, baseline, trace-safety, comparison, and focused-CI workflow |
+| `.agents/skills/lingxiloop-eval-change/` | Independent Eval package and release-gate workflow |
 | `scripts/guard-agent-os.mjs` | CI guard for the independent runtime boundary |
 
 The Eval request contract and scoring rules are documented in [`docs/agent-eval.md`](docs/agent-eval.md).

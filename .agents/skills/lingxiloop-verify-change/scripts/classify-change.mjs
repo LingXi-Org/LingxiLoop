@@ -9,17 +9,9 @@ const TIER_ORDER = new Map([
   ['ci-only', 2],
 ])
 
-const EVAL_DASHBOARD_PATHS = new Set([
-  'src/admin/EvalPage.tsx',
-])
-
 function isEvalPath(path) {
   return path.startsWith('eval/')
-    || path.startsWith('server/src/eval/')
-    || /^server\/src\/__(tests|integration)__\/eval(?:-|\.)/.test(path)
-    || /^scripts\/run-agent-(?:runtime-)?eval\.ts$/.test(path)
     || path === 'docs/agent-eval.md'
-    || EVAL_DASHBOARD_PATHS.has(path)
     || path.startsWith('.agents/skills/lingxiloop-eval-change/')
 }
 
@@ -42,7 +34,7 @@ const CATEGORY_DEFINITIONS = [
   },
   {
     id: 'eval',
-    reason: 'Agent Eval suites, harnesses, runtime smoke, persistence, Dashboard, or Eval guidance changed.',
+    reason: 'Independent black-box Eval package, suite, baseline, or guidance changed.',
     matches: isEvalPath,
   },
   {
@@ -144,12 +136,6 @@ export function buildCiPlan(inputPaths) {
   // hunks, so path classification alone must never exempt their owning tests.
   const evalFocused = evalChanged && paths.every(isEvalPath)
   const fullMatrix = paths.some(isFullMatrixPath)
-  const evalPersistence = paths.some((path) => path === 'server/src/__integration__/eval.test.ts'
-    || path === 'server/src/db/schema.sql'
-    || path === 'server/src/db/bootstrap.ts'
-    || path === 'server/src/api/admin-router.ts'
-    || path.startsWith('server/src/eval/'))
-  const dashboard = paths.some((path) => EVAL_DASHBOARD_PATHS.has(path))
   const openNotebook = paths.some((path) => path.startsWith('third_party/open-notebook/'))
   const composeInputs = paths.some((path) => /^docker-compose\..+\.yml$/.test(path)
     || path.startsWith('server/docker/')
@@ -169,8 +155,8 @@ export function buildCiPlan(inputPaths) {
     eval: evalChanged,
     evalFocused,
     fullMatrix,
-    evalPersistence,
-    dashboard,
+    evalPersistence: false,
+    dashboard: false,
     frontend,
     server,
     agentOs,
@@ -180,11 +166,9 @@ export function buildCiPlan(inputPaths) {
     openNotebook,
     compose: composeInputs || (agentOs && !evalFocused),
     desktop,
-    build: dashboard || (frontend && !evalFocused) || (buildRelease && !evalFocused),
+    build: (frontend && !evalFocused) || (buildRelease && !evalFocused),
     fullUnit: !evalFocused && (frontend || server || agentOs || database || buildRelease),
-    integration: evalFocused && evalPersistence
-      ? 'eval'
-      : database || agentOs || integrationInfrastructure ? 'full' : 'none',
+    integration: database || agentOs || integrationInfrastructure ? 'full' : 'none',
   }
 }
 
@@ -197,18 +181,7 @@ function selectChecks(paths, categoryIds, escalations, ci) {
   }
 
   if (has('eval')) {
-    addCheck(checks, 'npm run lint', 'required', 'Eval TypeScript, scripts, fixtures, and Dashboard changes must satisfy Biome.')
-    addCheck(checks, 'npm run server:typecheck', 'required', 'Eval contracts, runtime observation, and persistence are server typed.')
-    addCheck(checks, 'npm run test:eval', 'required', 'Run focused evaluator, trace, harness, and deterministic Agent runtime tests.')
-    addCheck(checks, 'npm run eval:check', 'required', 'Run frozen-harness self-test plus the current Agent OS deterministic regression gate.')
-    addCheck(checks, 'npm run guard:agent-os', 'required', 'The runtime Eval must continue through the strict Agent OS and IPython boundary.')
-    if (ci.evalPersistence) {
-      addCheck(checks, 'npm run test:integration:eval', 'required', 'Eval persistence changed; run only its PostgreSQL/Redis integration contract.')
-    }
-    if (ci.dashboard) {
-      addCheck(checks, 'npm run typecheck', 'required', 'The Eval Dashboard is part of the frontend TypeScript graph.')
-      addCheck(checks, 'npm run build', 'required', 'Bundle the changed Eval Dashboard surface.')
-    }
+    addCheck(checks, 'npm run eval:check', 'required', 'Run the independent black-box Eval package checks and tests.')
   }
 
   if (has('frontend')) {

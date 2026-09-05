@@ -120,39 +120,29 @@ jobs:
       - name: Verify brand contract
         run: npm run guard:brand
       - name: Verify Agent OS architecture
-        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.agent_os == 'true' || needs.classify.outputs.eval == 'true'
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.agent_os == 'true'
         run: npm run guard:agent-os
       - name: Verify universal LLM ledger
-        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.server == 'true' || needs.classify.outputs.agent_os == 'true' || needs.classify.outputs.eval == 'true'
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.server == 'true' || needs.classify.outputs.agent_os == 'true'
         run: npm run guard:llm-tracked
       - name: Verify synchronized version
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.build_release == 'true'
         run: npm run version:check
       - name: Lint changed code domains
-        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.frontend == 'true' || needs.classify.outputs.server == 'true' || needs.classify.outputs.eval == 'true' || needs.classify.outputs.build_release == 'true'
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.frontend == 'true' || needs.classify.outputs.server == 'true' || needs.classify.outputs.build_release == 'true'
         run: npm run lint
       - name: Typecheck frontend
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.frontend == 'true' || needs.classify.outputs.dashboard == 'true'
         run: npm run typecheck
       - name: Typecheck server
-        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.server == 'true' || needs.classify.outputs.eval == 'true'
+        if: needs.classify.outputs.full == 'true' || needs.classify.outputs.server == 'true'
         run: npm run server:typecheck
       - name: Full unit suite
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.full_unit == 'true'
         run: npm test
-      - name: Focused Agent Eval unit tests
-        if: needs.classify.outputs.full != 'true' && needs.classify.outputs.eval == 'true'
-        run: npm run test:eval
-      - name: Agent Eval harness and real runtime regression gates
+      - name: Verify independent black-box Eval
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.eval == 'true'
-        run: npm run eval:check
-      - name: Upload Agent Eval reports
-        if: always() && (needs.classify.outputs.full == 'true' || needs.classify.outputs.eval == 'true')
-        uses: actions/upload-artifact@v4
-        with:
-          name: agent-eval-${{ github.run_attempt }}
-          path: artifacts/eval-*.json
-          if-no-files-found: error
+        run: npm ci --prefix eval && npm run eval:check
       - name: Build changed frontend surface
         if: needs.classify.outputs.full == 'true' || needs.classify.outputs.build == 'true'
         run: npm run build
@@ -206,7 +196,7 @@ jobs:
           if [[ "${{ needs.classify.outputs.full }}" == "true" || "${{ needs.classify.outputs.integration }}" == "full" ]]; then
             npm run test:integration
           else
-            npm run test:integration:eval
+            echo "No server integration scope selected."
           fi
 
   agent-os-compose-smoke:

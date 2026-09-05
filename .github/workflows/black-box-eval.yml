@@ -1,0 +1,59 @@
+name: Black-box Eval release gate
+on:
+  workflow_dispatch:
+    inputs:
+      baseline_file:
+        description: Reviewed portable baseline JSON in this checkout
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      baseline_file:
+        required: true
+        type: string
+    secrets:
+      EVAL_CANDIDATE_API_KEY:
+        required: true
+      EVAL_JUDGE_API_KEY:
+        required: true
+
+permissions:
+  contents: read
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: eval/package-lock.json
+      - run: npm ci --prefix eval
+      - run: npm --prefix eval run check && npm --prefix eval test
+      - name: Evaluate production Candidate with independent Judge
+        working-directory: eval
+        run: npm run eval -- run --suite suites/black-box-smoke.v1.json --dataset datasets/smoke.v1.json --revision "$GITHUB_SHA" --baseline-file "../$BASELINE_FILE"
+        env:
+          BASELINE_FILE: ${{ inputs.baseline_file }}
+          EVAL_CANDIDATE_BASE_URL: https://api.siliconflow.cn/v1
+          EVAL_CANDIDATE_MODEL: Qwen/Qwen3.5-4B
+          EVAL_CANDIDATE_API_KEY: ${{ secrets.EVAL_CANDIDATE_API_KEY }}
+          EVAL_CANDIDATE_INPUT_USD_PER_MILLION: ${{ vars.EVAL_CANDIDATE_INPUT_USD_PER_MILLION }}
+          EVAL_CANDIDATE_OUTPUT_USD_PER_MILLION: ${{ vars.EVAL_CANDIDATE_OUTPUT_USD_PER_MILLION }}
+          EVAL_CANDIDATE_MAX_TOKENS: '1024'
+          EVAL_CANDIDATE_TIMEOUT_MS: '60000'
+          EVAL_JUDGE_BASE_URL: https://api.siliconflow.cn/v1
+          EVAL_JUDGE_MODEL: deepseek-ai/DeepSeek-V4-Pro
+          EVAL_JUDGE_API_KEY: ${{ secrets.EVAL_JUDGE_API_KEY }}
+          EVAL_JUDGE_INPUT_USD_PER_MILLION: ${{ vars.EVAL_JUDGE_INPUT_USD_PER_MILLION }}
+          EVAL_JUDGE_OUTPUT_USD_PER_MILLION: ${{ vars.EVAL_JUDGE_OUTPUT_USD_PER_MILLION }}
+          EVAL_JUDGE_MAX_TOKENS: '4096'
+          EVAL_JUDGE_TIMEOUT_MS: '60000'
+      - uses: actions/upload-artifact@v4
+        if: always() && hashFiles('eval/.state/reports/*') != ''
+        with:
+          name: black-box-eval-${{ github.sha }}
+          path: eval/.state/reports/
+          retention-days: 30

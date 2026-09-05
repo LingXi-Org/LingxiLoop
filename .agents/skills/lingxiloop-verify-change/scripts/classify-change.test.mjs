@@ -51,33 +51,28 @@ test('classifies Agent OS changes with architecture and ledger guards', () => {
   assert.equal(report.escalations.some(({ id }) => id === 'cross-domain'), false)
 })
 
-test('keeps an Eval stack change on the focused deterministic matrix', () => {
+test('keeps an independent Eval package change on its focused matrix', () => {
   const paths = [
-    'eval/suites/smoke.v1.json',
-    'scripts/run-agent-runtime-eval.ts',
-    'server/src/eval/evaluator.ts',
-    'server/src/__integration__/eval.test.ts',
-    'src/admin/EvalPage.tsx',
+    'eval/suites/black-box-smoke.v1.json',
+    'eval/src/runner.ts',
     '.agents/skills/lingxiloop-eval-change/SKILL.md',
   ]
   const report = classifyPaths(paths)
   assert.ok(category(report, 'eval'))
   assert.equal(report.ci.evalFocused, true)
   assert.equal(report.ci.fullMatrix, false)
-  assert.equal(report.ci.integration, 'eval')
-  assert.equal(report.ci.dashboard, true)
+  assert.equal(report.ci.integration, 'none')
+  assert.equal(report.ci.dashboard, false)
   assert.equal(report.ci.compose, false)
   assert.equal(report.ci.desktop, false)
-  assert.equal(check(report, 'npm run test:eval')?.tier, 'required')
   assert.equal(check(report, 'npm run eval:check')?.tier, 'required')
-  assert.equal(check(report, 'npm run test:integration:eval')?.tier, 'required')
   assert.equal(check(report, 'npm run test:integration'), undefined)
   assert.equal(check(report, 'npm test'), undefined)
   assert.equal(report.escalations.some(({ id }) => id === 'full-ci-approximation'), false)
 })
 
 test('fails closed when an Eval diff also changes shared or high-risk files', () => {
-  const evalPath = 'eval/suites/smoke.v1.json'
+  const evalPath = 'eval/suites/black-box-smoke.v1.json'
   const scenarios = [
     { path: 'server/src/agent-os/runtime.ts', integration: 'full', compose: true },
     { path: 'server/src/db/schema.sql', integration: 'full', compose: false },
