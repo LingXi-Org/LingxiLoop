@@ -5,10 +5,10 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "./collapsible";
+} from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { collapsePanel, mono, ShimmerLabel, SwapLabel } from "./surfaces";
 import { take } from "./range";
+import { collapsePanel, conversationCardSize, mono, ShimmerLabel, SwapLabel } from "./surfaces";
 
 export interface ReasoningStep {
   title: string;
@@ -43,24 +43,24 @@ export function ReasoningPanel({
       data-slot="reasoning-panel"
       open={open}
       onOpenChange={onOpenChange}
-      className={cn("w-full max-w-sm", className)}
+      className={cn(conversationCardSize.standard, className)}
     >
       <CollapsibleTrigger className="group/trigger text-foreground/55 hover:text-foreground/90 flex items-center gap-1.5 py-1 text-[13.5px] transition-[color,scale] outline-none active:scale-[0.98]">
         <SwapLabel active={streaming ? 0 : 1} className="text-start">
-          <>
+          <span className="inline-flex items-center gap-1.5">
             <ShimmerLabel
               active={streaming}
               className="relative inline-block leading-none"
             >
-              Thinking
+              正在思考
             </ShimmerLabel>
             {elapsed !== undefined && (
               <span className={cn(mono, "text-foreground/30 tabular-nums")}>
                 {elapsed}
               </span>
             )}
-          </>
-          <>{restingLabel}</>
+          </span>
+          {restingLabel}
         </SwapLabel>
         <ChevronDownIcon className="size-3.5 shrink-0 opacity-60 transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-open/trigger:rotate-180 group-data-panel-open/trigger:rotate-180 motion-reduce:transition-none" />
       </CollapsibleTrigger>
@@ -78,7 +78,7 @@ export function ReasoningPanel({
                   className={cn(
                     "mt-[7px] size-[5px] shrink-0 rounded-full transition-colors duration-300",
                     active
-                      ? "animate-pulse bg-blue-500 dark:bg-blue-400"
+                      ? "animate-pulse bg-primary"
                       : "bg-foreground/20",
                   )}
                 />

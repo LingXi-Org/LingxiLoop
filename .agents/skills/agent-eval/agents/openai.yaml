@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Eval"
+  short_description: "Maintain deterministic Agent Eval gates and reports"
+  default_prompt: "Use $agent-eval to update and verify deterministic Agent Eval coverage."

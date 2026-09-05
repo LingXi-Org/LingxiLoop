@@ -7,16 +7,11 @@
   directory. LingxiLoop does not pull `latest` and does not run the optional
   Open Notebook MCP server.
 
-LingxiLoop-native changes are intentionally part of this source tree:
-
-- stable, unique `Notebook.external_key` provisioning;
-- required Notebook scope plus Source allow/exclude lists on Search and Ask;
-- SurrealDB-level scoped text/vector functions;
-- Ask graph propagation of the resolved Source and Note scope;
-- Notebook-scoped Source Chat verification and the Insight update endpoint
-  required by the typed Host approval surface;
-- private R2 persistence for uploaded Source originals and generated Podcast
-  audio, using LingxiLoop's existing bucket credentials and an isolated prefix.
+LingxiLoop builds only the `lingxiloop-rag` target. Its supported fork surface
+is stable Notebook provisioning, Source creation/extraction, Source-only scoped
+search, the single native-v1 Surreal schema, and private R2 reads. Ask, Notes,
+Insights, Source Chat, Podcasts, the Open Notebook frontend, and the upstream
+migration chain are vendored source only and are not compatibility targets.
 
 Any future upstream refresh must start from a reviewed commit, preserve the
 scope-isolation tests, and update this file and `THIRD_PARTY_NOTICES.md`.

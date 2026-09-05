@@ -1,0 +1,31 @@
+{
+  "name": "lingxi-agentos",
+  "version": "1.0.0",
+  "description": "LingxiOS — a purpose-built, production-grade Agent OS: durable work orchestration, sandboxed code-act kernels, and a policy-extensible agent runtime.",
+  "type": "module",
+  "license": "MIT",
+  "repository": "github:lyyzka/LingxiOS",
+  "files": [
+    "dist/src",
+    "db/schema.sql",
+    "kernel/runner.py"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm test",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test --test-concurrency=1 \"dist/test/**/*.test.js\"",
+    "test:only": "node --test --test-concurrency=1 \"dist/test/**/*.test.js\"",
+    "worker": "node dist/src/worker/main.js",
+    "control-plane": "node dist/src/control-plane/main.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "typescript": "^5.7.0"
+  }
+}

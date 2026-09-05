@@ -1,43 +1,36 @@
 /**
- * Object-storage abstraction. Two backends — `LocalStorage` writes to disk
- * for dev, `R2Storage` (S3-compatible) talks to Cloudflare R2 (or any
- * S3-API bucket) and emits presigned URLs.
- *
- * Why two: local dev shouldn't require a bucket; prod shouldn't require
- * a shared filesystem. Selection is automatic — if all `R2_*` env vars are
- * present we flip to R2, otherwise we fall back to disk. Callers (router,
- * avatar-gen) never care which is active.
+ * Native R2 object storage. Startup fails unless the complete storage
+ * contract is configured; there is no disk or presigned-read alternate.
  *
  * Surface area kept deliberately small:
  *   - `put(key, body, mime)` — write bytes, return the public URL
  *   - `presignPut(key, mime)` — short-lived URL the browser PUTs to
- *   - `publicUrl(key)` — read URL (long-lived if R2_PUBLIC_BASE is set,
- *                       otherwise a short presigned GET)
- *   - `mode` — 'local' | 'r2', surfaced so the API can advertise it
+ *   - `publicUrl(key)` — HMAC-gated read URL for private prefixes
+ *   - `mode` — always `r2`, surfaced so the API can advertise it
  *
  * Keys look like `<prefix>/<uuid>.<ext>`. Prefixes are conventional:
  *   - `attachments/` — user uploads
- *   - `avatars/`     — agent portraits
+ *   - `avatars/`     — human profile images mirrored from identity providers
  */
-import { writeFile, mkdir, readFile, readdir, stat, unlink } from 'node:fs/promises'
-import { join, resolve, dirname } from 'node:path'
 import { createHmac } from 'node:crypto'
 import {
   S3Client, PutObjectCommand, GetObjectCommand,
-  DeleteObjectCommand, ListObjectsV2Command,
+  DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { env } from './env.js'
 
-/** Keys under these prefixes get HMAC-signed URLs when a signing secret is
- *  configured. Other prefixes (e.g. `avatars/`) are served unsigned — they
+/** Keys under these prefixes always get HMAC-signed URLs. Other prefixes
+ *  (e.g. `avatars/`) are served unsigned — they
  *  carry no private user content and benefit from full CDN caching. */
-const SIGNED_PREFIXES = ['attachments/', 'email-attachments/', 'knowledge-sources/']
+const SIGNED_PREFIXES = ['attachments/', 'email-attachments/', 'knowledge-sources/', 'presentation-artifacts/']
 function needsSignature(key: string): boolean {
   return SIGNED_PREFIXES.some((p) => key.startsWith(p))
 }
 
-const STORAGE_KEY_PREFIXES = ['attachments/', 'email-attachments/', 'avatars/', 'knowledge-sources/']
+const STORAGE_KEY_PREFIXES = [
+  'attachments/', 'email-attachments/', 'avatars/', 'knowledge-sources/', 'presentation-artifacts/',
+]
 function isStorageKey(key: string): boolean {
   return STORAGE_KEY_PREFIXES.some((p) => key.startsWith(p))
 }
@@ -49,19 +42,24 @@ function stripQueryAndHash(path: string): string {
 export function normalizeStorageKey(raw: string): string | null {
   try {
     const key = decodeURIComponent(stripQueryAndHash(raw.trim()).replace(/^\/+/, ''))
+    const segments = key.split('/')
+    if (key.length > 1_024 || /[\\%?#\u0000-\u001f\u007f]/.test(key)
+      || segments.some((segment) => !segment || segment === '.' || segment === '..')) return null
     return isStorageKey(key) ? key : null
   } catch {
     return null
   }
 }
 
+function requireStorageKey(raw: string): string {
+  const key = normalizeStorageKey(raw)
+  if (!key) throw new Error('invalid storage key')
+  return key
+}
+
 export function storageKeyFromPublicUrl(raw: string): string | null {
   const value = raw.trim()
   if (!value) return null
-
-  if (value.startsWith('/uploads/')) {
-    return normalizeStorageKey(value.slice('/uploads/'.length))
-  }
 
   if (!env.R2_PUBLIC_BASE) return null
   try {
@@ -88,11 +86,6 @@ export function signedUrlExpiresSoon(raw: string, leewaySeconds = 300): boolean 
   }
 }
 
-/** Local fallback directory. Same path the static handler historically
- *  served from, so existing /uploads/<file> URLs keep working after the
- *  abstraction lands. */
-export const UPLOAD_DIR = resolve(process.cwd(), 'server/uploads')
-
 /** One enumerated object. lastModifiedMs is the storage backend's notion
  *  of when the object was last written — GC uses it to spare keys that
  *  were uploaded recently (the row write may still be in flight). */
@@ -102,97 +95,139 @@ export interface StorageObject {
   lastModifiedMs: number
 }
 
+export interface StorageObjectMetadata {
+  sizeBytes: number
+  contentType: string | null
+  etag: string | null
+  lastModifiedMs: number | null
+}
+
+export interface PresignPutOptions {
+  ttlSeconds?: number
+  contentLength?: number
+}
+
+export class StorageObjectTooLargeError extends Error {
+  constructor(readonly maxBytes: number) {
+    super(`storage object exceeds the ${maxBytes} byte limit`)
+    this.name = 'StorageObjectTooLargeError'
+  }
+}
+
+/** Metadata and bounded reads used at untrusted object-ingestion boundaries. */
+export interface BoundedStorageReader {
+  statObject(key: string): Promise<StorageObjectMetadata>
+  readObjectBounded(key: string, maxBytes: number): Promise<Buffer>
+}
+
 export interface Storage {
-  mode: 'local' | 'r2'
+  mode: 'r2'
   /** Write bytes synchronously from the server side (avatar gen path).
    *  Returns the resolved public URL. */
   put(key: string, body: Buffer, mime: string): Promise<string>
   /** Return a short-lived PUT URL the browser uploads to directly, plus
    *  the public URL the file will be available at after the upload. */
-  presignPut(key: string, mime: string, ttlSeconds?: number): Promise<{ uploadUrl: string; publicUrl: string }>
-  /** Resolve a long-lived public URL for a key. R2 mode emits a presigned
-   *  GET when no public base is configured. */
+  presignPut(
+    key: string,
+    mime: string,
+    options?: number | PresignPutOptions,
+  ): Promise<{ uploadUrl: string; publicUrl: string }>
+  /** Resolve the configured public gateway URL for a key. */
   publicUrl(key: string): Promise<string>
-  /** Read an object into memory. Knowledge-source files are capped at 25 MB
+  /** Read an object into memory. Knowledge-source files are capped at 200 MB
    *  at the API edge, so a bounded Buffer keeps parser APIs simple. */
   readObject(key: string): Promise<Buffer>
   /** Enumerate every object whose key starts with `prefix`. Used by the
-   *  GC sweep to find orphans not referenced by any DB row. Both backends
-   *  walk lazily / paginated under the hood; the caller gets the flat
-   *  list. */
+   *  GC sweep to find orphans not referenced by any DB row. R2 is paginated;
+   *  the caller receives the flattened list. */
   listObjectsByPrefix(prefix: string): Promise<StorageObject[]>
-  /** Best-effort removal of one object. Never throws — returns false if
-   *  the key didn't exist OR the backend complained — so the GC loop
-   *  doesn't stall on a single bad row. */
+  /** Remove one object. Provider failures propagate to the owning job. */
   deleteObject(key: string): Promise<boolean>
 }
 
-class LocalStorage implements Storage {
-  mode = 'local' as const
-
-  async put(key: string, body: Buffer, _mime: string): Promise<string> {
-    const path = join(UPLOAD_DIR, key)
-    await mkdir(dirname(path), { recursive: true })
-    await writeFile(path, body)
-    // Existing static handler mounts UPLOAD_DIR at /uploads/.
-    return `/uploads/${key}`
-  }
-
-  // Local mode has no real presign — the browser still goes through
-  // `POST /uploads` (base64). Callers MUST check `storage.mode` first
-  // and pick the base64 path; this method only exists to satisfy the
-  // interface and will throw if reached.
-  async presignPut(_key: string, _mime: string, _ttl?: number): Promise<{ uploadUrl: string; publicUrl: string }> {
-    throw new Error('presignPut not supported in local mode — POST /uploads (base64) instead')
-  }
-
-  async publicUrl(key: string): Promise<string> {
-    return `/uploads/${key}`
-  }
-
-  async readObject(key: string): Promise<Buffer> {
-    const normalized = normalizeStorageKey(key)
-    if (!normalized) throw new Error('invalid storage key')
-    return readFile(join(UPLOAD_DIR, normalized))
-  }
-
-  async listObjectsByPrefix(prefix: string): Promise<StorageObject[]> {
-    // Knowledge objects use company/project/source subdirectories, while
-    // legacy attachment prefixes are flat. Walk recursively so reconciliation
-    // has the same semantics in local and R2 modes.
-    const root = join(UPLOAD_DIR, prefix)
-    const out: StorageObject[] = []
-    const walk = async (dir: string, relative: string): Promise<void> => {
-      let names: string[]
-      try { names = await readdir(dir) }
-      catch { return }
-      for (const name of names) {
-        const full = join(dir, name)
-        const child = relative ? `${relative}/${name}` : name
-        try {
-          const s = await stat(full)
-          if (s.isDirectory()) { await walk(full, child); continue }
-          if (!s.isFile()) continue
-          out.push({
-            key: `${prefix.replace(/\/+$/, '')}/${child}`,
-            sizeBytes: s.size,
-            lastModifiedMs: s.mtimeMs,
-          })
-        } catch { /* ignore disappeared / unreadable */ }
-      }
-    }
-    await walk(root, '')
-    return out
-  }
-
-  async deleteObject(key: string): Promise<boolean> {
-    const path = join(UPLOAD_DIR, key)
-    try { await unlink(path); return true }
-    catch { return false }
+function validateReadLimit(maxBytes: number): void {
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) {
+    throw new RangeError('maxBytes must be a non-negative safe integer')
   }
 }
 
-class R2Storage implements Storage {
+function bodyChunkBytes(chunk: unknown): Uint8Array {
+  if (typeof chunk === 'string') return Buffer.from(chunk)
+  if (chunk instanceof Uint8Array) return chunk
+  if (chunk instanceof ArrayBuffer) return new Uint8Array(chunk)
+  if (ArrayBuffer.isView(chunk)) {
+    return new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+  }
+  throw new Error('object body yielded an unsupported chunk')
+}
+
+function terminateBody(body: unknown, error: Error): void {
+  if (!body || typeof body !== 'object') return
+  const destroy = (body as { destroy?: (error?: Error) => void }).destroy
+  if (typeof destroy === 'function') {
+    destroy.call(body, error)
+    return
+  }
+  const cancel = (body as { cancel?: (reason?: unknown) => Promise<void> | void }).cancel
+  if (typeof cancel === 'function') void Promise.resolve(cancel.call(body, error)).catch(() => undefined)
+}
+
+/** Buffer a Node or Web SDK response body without ever retaining more than maxBytes. */
+export async function readStorageBodyBounded(body: unknown, maxBytes: number): Promise<Buffer> {
+  validateReadLimit(maxBytes)
+  if (!body) throw new Error('object has no body')
+
+  const chunks: Buffer[] = []
+  let total = 0
+  const append = (chunk: unknown) => {
+    const bytes = bodyChunkBytes(chunk)
+    if (bytes.byteLength > maxBytes - total) {
+      const error = new StorageObjectTooLargeError(maxBytes)
+      terminateBody(body, error)
+      throw error
+    }
+    total += bytes.byteLength
+    chunks.push(Buffer.from(bytes))
+  }
+
+  if (body instanceof Blob) {
+    if (body.size > maxBytes) throw new StorageObjectTooLargeError(maxBytes)
+    return readStorageBodyBounded(body.stream(), maxBytes)
+  }
+
+  const asyncIterable = body as Partial<AsyncIterable<unknown>>
+  if (typeof asyncIterable[Symbol.asyncIterator] === 'function') {
+    for await (const chunk of asyncIterable as AsyncIterable<unknown>) append(chunk)
+    return Buffer.concat(chunks, total)
+  }
+
+  const stream = body as { getReader?: () => ReadableStreamDefaultReader<unknown> }
+  if (typeof stream.getReader === 'function') {
+    const reader = stream.getReader()
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        append(value)
+      }
+    } catch (error) {
+      await reader.cancel(error).catch(() => undefined)
+      throw error
+    } finally {
+      reader.releaseLock()
+    }
+    return Buffer.concat(chunks, total)
+  }
+
+  if (body instanceof Uint8Array || body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
+    append(body)
+    return Buffer.concat(chunks, total)
+  }
+
+  throw new Error('object body is not a supported stream')
+}
+
+class R2Storage implements Storage, BoundedStorageReader {
   mode = 'r2' as const
   private client: S3Client
   private bucket: string
@@ -228,23 +263,33 @@ class R2Storage implements Storage {
   }
 
   async put(key: string, body: Buffer, mime: string): Promise<string> {
+    const normalized = requireStorageKey(key)
     await this.client.send(new PutObjectCommand({
       Bucket: this.bucket,
-      Key: key,
+      Key: normalized,
       Body: body,
       ContentType: mime,
     }))
-    return this.publicUrl(key)
+    return this.publicUrl(normalized)
   }
 
-  async presignPut(key: string, mime: string, ttl = 300): Promise<{ uploadUrl: string; publicUrl: string }> {
+  async presignPut(
+    key: string,
+    mime: string,
+    options: number | PresignPutOptions = {},
+  ): Promise<{ uploadUrl: string; publicUrl: string }> {
+    const normalized = requireStorageKey(key)
+    const { ttlSeconds = 300, contentLength } = typeof options === 'number'
+      ? { ttlSeconds: options, contentLength: undefined }
+      : options
     const cmd = new PutObjectCommand({
       Bucket: this.bucket,
-      Key: key,
+      Key: normalized,
       ContentType: mime,
+      ContentLength: contentLength,
     })
-    const uploadUrl = await getSignedUrl(this.client, cmd, { expiresIn: ttl })
-    const publicUrl = await this.publicUrl(key)
+    const uploadUrl = await getSignedUrl(this.client, cmd, { expiresIn: ttlSeconds })
+    const publicUrl = await this.publicUrl(normalized)
     return { uploadUrl, publicUrl }
   }
 
@@ -273,69 +318,74 @@ class R2Storage implements Storage {
   }
 
   async deleteObject(key: string): Promise<boolean> {
-    try {
-      await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }))
-      return true
-    } catch (e) {
-      console.warn(`[storage] deleteObject(${key}) failed:`, e instanceof Error ? e.message : String(e))
-      return false
-    }
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: requireStorageKey(key) }))
+    return true
   }
 
   async publicUrl(key: string): Promise<string> {
+    const normalized = requireStorageKey(key)
     // Prefer the explicit public base (custom domain). Cache-friendly,
     // no expiry on the URL structure itself. When a signing secret is
-    // configured AND the key falls under a signed prefix, append the
+    // required signing secret and the key falls under a signed prefix, append the
     // HMAC query params — the Cloudflare Worker at the edge validates
     // these before proxying R2 reads.
-    if (this.publicBase) {
-      if (this.signingSecret && needsSignature(key)) {
+    if (needsSignature(normalized)) {
         const exp = Math.floor(Date.now() / 1000) + this.urlTtl
         const sig = createHmac('sha256', this.signingSecret)
-          .update(`${key}:${exp}`).digest('hex')
-        return `${this.publicBase}/${key}?exp=${exp}&sig=${sig}`
-      }
-      return `${this.publicBase}/${key}`
+          .update(`${normalized}:${exp}`).digest('hex')
+        return `${this.publicBase}/${normalized}?exp=${exp}&sig=${sig}`
     }
-    // No public base — fall back to a long-lived presigned GET (works
-    // without a CDN domain; not cacheable; rotates).
-    return getSignedUrl(
-      this.client,
-      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
-      { expiresIn: 60 * 60 * 24 * 7 },  // 7 days
-    )
+    return `${this.publicBase}/${normalized}`
   }
 
   async readObject(key: string): Promise<Buffer> {
-    const normalized = normalizeStorageKey(key)
-    if (!normalized) throw new Error('invalid storage key')
+    const normalized = requireStorageKey(key)
     const response = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: normalized }))
     if (!response.Body) throw new Error('object has no body')
     return Buffer.from(await response.Body.transformToByteArray())
   }
+
+  async statObject(key: string): Promise<StorageObjectMetadata> {
+    const normalized = requireStorageKey(key)
+    const response = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: normalized }))
+    const sizeBytes = response.ContentLength
+    if (sizeBytes === undefined || !Number.isSafeInteger(sizeBytes) || sizeBytes < 0) {
+      throw new Error('object has no valid content length')
+    }
+    return {
+      sizeBytes,
+      contentType: response.ContentType ?? null,
+      etag: response.ETag ?? null,
+      lastModifiedMs: response.LastModified?.getTime() ?? null,
+    }
+  }
+
+  async readObjectBounded(key: string, maxBytes: number): Promise<Buffer> {
+    validateReadLimit(maxBytes)
+    const normalized = requireStorageKey(key)
+    const response = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: normalized }))
+    if (!response.Body) throw new Error('object has no body')
+    if (response.ContentLength !== undefined && response.ContentLength > maxBytes) {
+      const error = new StorageObjectTooLargeError(maxBytes)
+      terminateBody(response.Body, error)
+      throw error
+    }
+    return readStorageBodyBounded(response.Body, maxBytes)
+  }
 }
 
-function buildStorage(): Storage {
-  const have = env.R2_ENDPOINT && env.R2_BUCKET && env.R2_ACCESS_KEY_ID && env.R2_SECRET_ACCESS_KEY
-  if (have) {
-    const signingActive = Boolean(env.R2_URL_SIGNING_SECRET)
-    console.log(
-      `[storage] R2 active · bucket=${env.R2_BUCKET} ` +
-      `publicBase=${env.R2_PUBLIC_BASE || '(presigned GET)'} ` +
-      `signing=${signingActive ? 'on' : 'OFF'}`,
-    )
-    // Loud warning when the public base is set but signing isn't — every
-    // URL under `attachments/` will be unsigned, which the Cloudflare
-    // Worker gate then 403s. Almost always means the server was started
-    // before R2_URL_SIGNING_SECRET landed in .env. Restart fixes it.
-    if (env.R2_PUBLIC_BASE && !signingActive) {
-      console.warn(
-        '[storage] ⚠ R2_PUBLIC_BASE is set but R2_URL_SIGNING_SECRET is empty — ' +
-        'attachment URLs will be emitted UNSIGNED and the cdn gate will 403 them. ' +
-        'Check .env and restart the server.',
-      )
-    }
-    return new R2Storage({
+function buildStorage(): Storage & BoundedStorageReader {
+  const required = {
+    R2_ENDPOINT: env.R2_ENDPOINT,
+    R2_BUCKET: env.R2_BUCKET,
+    R2_ACCESS_KEY_ID: env.R2_ACCESS_KEY_ID,
+    R2_SECRET_ACCESS_KEY: env.R2_SECRET_ACCESS_KEY,
+    R2_PUBLIC_BASE: env.R2_PUBLIC_BASE,
+    R2_URL_SIGNING_SECRET: env.R2_URL_SIGNING_SECRET,
+  }
+  const missing = Object.entries(required).filter(([, value]) => !value).map(([name]) => name)
+  if (missing.length) throw new Error(`native R2 storage configuration missing: ${missing.join(', ')}`)
+  return new R2Storage({
       endpoint: env.R2_ENDPOINT,
       bucket: env.R2_BUCKET,
       accessKeyId: env.R2_ACCESS_KEY_ID,
@@ -343,13 +393,54 @@ function buildStorage(): Storage {
       publicBase: env.R2_PUBLIC_BASE,
       signingSecret: env.R2_URL_SIGNING_SECRET,
       urlTtl: env.R2_URL_TTL_SECONDS,
-    })
-  }
-  console.log('[storage] local mode · server/uploads/ (set R2_* env to use R2)')
-  return new LocalStorage()
+  })
 }
 
-export const storage: Storage = buildStorage()
+let activeStorage: (Storage & Partial<BoundedStorageReader>) | null = null
+
+/** Install the process-wide storage adapter at the composition boundary.
+ * Tests pass an explicit in-memory provider; production calls
+ * `initializeNativeStorage` and therefore still fails before readiness when
+ * the canonical R2 contract is incomplete. */
+export function installStorageProvider(provider: Storage & Partial<BoundedStorageReader>): void {
+  if (activeStorage && activeStorage !== provider) {
+    throw new Error('storage provider is already installed')
+  }
+  activeStorage = provider
+}
+
+export function initializeNativeStorage(): void {
+  if (activeStorage) return
+  installStorageProvider(buildStorage())
+}
+
+function requireStorage(): Storage & Partial<BoundedStorageReader> {
+  if (!activeStorage) throw new Error('storage provider is not installed')
+  return activeStorage
+}
+
+/** Stable delegating port captured by domain applications during module
+ * composition. The provider itself must be installed explicitly before any
+ * process exposes readiness or any test invokes a storage-backed use case. */
+export const storage: Storage & BoundedStorageReader = {
+  get mode() { return requireStorage().mode },
+  put: (...args) => requireStorage().put(...args),
+  presignPut: (...args) => requireStorage().presignPut(...args),
+  publicUrl: (...args) => requireStorage().publicUrl(...args),
+  readObject: (...args) => requireStorage().readObject(...args),
+  statObject: (...args) => {
+    const provider = requireStorage()
+    if (!provider.statObject) throw new Error('storage provider does not support object metadata')
+    return provider.statObject(...args)
+  },
+  readObjectBounded: (...args) => {
+    const provider = requireStorage()
+    if (!provider.readObjectBounded) throw new Error('storage provider does not support bounded reads')
+    return provider.readObjectBounded(...args)
+  },
+  listObjectsByPrefix: (...args) => requireStorage().listObjectsByPrefix(...args),
+  deleteObject: (...args) => requireStorage().deleteObject(...args),
+}
 
 /** Stored attachment shape — mirror of AttachmentPayload in the router.
  *  Defined here so the freshening helper has no circular import. */
@@ -366,17 +457,14 @@ export interface StoredAttachment {
 /** Re-sign an attachment's `url` from its stored `key` so each response
  *  carries a fresh signature. Without this, persisted message URLs would
  *  expire and break historical bubbles after the TTL window. Returns the
- *  input unchanged when no key is stored (legacy local-mode attachments)
- *  or storage doesn't need signing. */
+ *  requires the persisted native storage key. */
 export async function freshenAttachmentUrl<T extends StoredAttachment | null | undefined>(
   att: T,
 ): Promise<T> {
   if (!att) return att
-  // Re-sign from the stored key, or derive it from the (possibly already-signed)
-  // url — older attachments persisted no `key`, and without this they'd be stuck
-  // with a stale signed url that 403s once its TTL lapses.
-  const key = att.key ?? (att.url ? storageKeyFromPublicUrl(att.url) : null)
-  if (!key) return att
+  // Re-sign exclusively from the canonical persisted storage key.
+  const key = att.key
+  if (!key) throw new Error('attachment storage key is required')
   const url = await storage.publicUrl(key)
   if (url === att.url && att.key === key) return att
   return { ...att, url, key } as T

@@ -3,34 +3,34 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import type { PoolClient } from 'pg'
 
-const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8')
 const router = readFileSync(new URL('../im/router.ts', import.meta.url), 'utf8')
 const service = readFileSync(new URL('../im/read-receipts.ts', import.meta.url), 'utf8')
+const application = readFileSync(new URL('../im/read-receipts-application.ts', import.meta.url), 'utf8')
+const repository = readFileSync(new URL('../im/read-receipts-repository.ts', import.meta.url), 'utf8')
+const messagesApplication = readFileSync(new URL('../im/messages-application.ts', import.meta.url), 'utf8')
 const ws = readFileSync(new URL('../ws.ts', import.meta.url), 'utf8')
 const controlPlane = readFileSync(new URL('../agent-os/control-plane.ts', import.meta.url), 'utf8')
 const actions = readFileSync(new URL('../agent-os/learning-actions.ts', import.meta.url), 'utf8')
 
-test('read receipt schema is append-only, range indexed and uniqueness protected', () => {
-  assert.match(schema, /CREATE TABLE public\.im_read_receipt_advances/)
-  assert.match(schema, /PRIMARY KEY \(company_id, channel_id, reader_id, read_through_seq\)/)
-  assert.match(schema, /read_through_seq > previous_read_seq/)
-  assert.match(schema, /idx_im_read_receipt_range/)
-})
-
 test('read route requires a durable cursor and retains unseen unread messages', () => {
-  assert.match(router, /c\.members @> to_jsonb\(ARRAY\[\$3::text\]\)/)
-  assert.doesNotMatch(router, /clearUnread\(userId, channelId, channelType\)/)
+  assert.match(router, /imMessagesApplication\.markRead/)
+  assert.match(router, /channels\/:id\/read[\s\S]*?'conversation:read'[\s\S]*?imMessagesApplication\.markRead/)
+  const markRead = messagesApplication.slice(messagesApplication.indexOf('async markRead'))
+  assert.doesNotMatch(markRead, /clearUnread/)
   assert.doesNotMatch(router, /legacy/)
-  assert.match(router, /setUnread\(userId, channelId, channelType, latestSeq - readThroughSeq\)/)
+  assert.match(messagesApplication, /latestSeq - input\.readThroughSeq/)
+  assert.match(messagesApplication, /infrastructure\.setUnread/)
   assert.match(router, /readThroughSeq exceeds latest channel sequence/)
   assert.match(router, /channels\/:id\/read-receipts/)
 })
 
 test('monotonic service serializes devices and filters departed group members', () => {
-  assert.match(service, /pg_advisory_xact_lock/)
-  assert.match(service, /input\.readThroughSeq <= previousReadSeq/)
-  assert.match(service, /c\.members @> to_jsonb\(ARRAY\[r\.reader_id\]\)/)
-  assert.match(service, /r\.previous_read_seq < \$4 AND r\.read_through_seq >= \$3/)
+  assert.match(repository, /pg_advisory_xact_lock/)
+  assert.match(repository, /input\.readThroughSeq <= previousReadSeq/)
+  assert.match(repository, /conversation\.members @> to_jsonb\(ARRAY\[receipt\.reader_id\]\)/)
+  assert.match(repository, /receipt\.previous_read_seq < \$4 AND receipt\.read_through_seq >= \$3/)
+  assert.doesNotMatch(service, /\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
+  assert.doesNotMatch(application, /\b(?:SELECT|INSERT|UPDATE|DELETE)\b/)
 })
 
 test('WebSocket fan-out enforces both tenant and authenticated recipient', () => {
@@ -51,9 +51,7 @@ test('Agent context and explicit chat.history advance receipts only after histor
 })
 
 test('recordReadReceiptAdvance ignores repeats and appends exact intervals', async () => {
-  process.env.LINGXILOOP_RUNTIME_CLIENT = 'http'
-  process.env.DEEPSEEK_API_KEY ||= 'unit-test-key'
-  const { recordReadReceiptAdvance } = await import('../im/read-receipts.js')
+  const { appendReadReceiptAdvance } = await import('../im/read-receipts-repository.js')
   let current = 0
   const rows: Array<Record<string, unknown>> = []
   const fakeClient = {
@@ -74,10 +72,10 @@ test('recordReadReceiptAdvance ignores repeats and appends exact intervals', asy
       throw new Error(`unexpected SQL: ${sql}`)
     },
   } as unknown as PoolClient
-  const first = await recordReadReceiptAdvance({ companyId: 'company', channelId: 'room', readerId: 'reader', readThroughSeq: 5 }, fakeClient)
-  const repeat = await recordReadReceiptAdvance({ companyId: 'company', channelId: 'room', readerId: 'reader', readThroughSeq: 5 }, fakeClient)
-  const stale = await recordReadReceiptAdvance({ companyId: 'company', channelId: 'room', readerId: 'reader', readThroughSeq: 3 }, fakeClient)
-  const next = await recordReadReceiptAdvance({ companyId: 'company', channelId: 'room', readerId: 'reader', readThroughSeq: 9 }, fakeClient)
+  const first = await appendReadReceiptAdvance(fakeClient, { companyId: 'company', channelId: 'room', readerId: 'reader', readThroughSeq: 5 })
+  const repeat = await appendReadReceiptAdvance(fakeClient, { companyId: 'company', channelId: 'room', readerId: 'reader', readThroughSeq: 5 })
+  const stale = await appendReadReceiptAdvance(fakeClient, { companyId: 'company', channelId: 'room', readerId: 'reader', readThroughSeq: 3 })
+  const next = await appendReadReceiptAdvance(fakeClient, { companyId: 'company', channelId: 'room', readerId: 'reader', readThroughSeq: 9 })
   assert.deepEqual(first && [first.previousReadSeq, first.readThroughSeq], [0, 5])
   assert.equal(repeat, null)
   assert.equal(stale, null)

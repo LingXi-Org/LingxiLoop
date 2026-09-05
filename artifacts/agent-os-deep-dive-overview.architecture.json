@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "LingxiLoop Agent OS 深入总览",
+    "locale": "zh-CN",
+    "output": "artifacts/agent-os-deep-dive-overview.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/lyyzka/LingxiLoop.git",
+      "revision": "ccce8e1fd85eb2b67ced1a7363507858e90ce22d"
+    },
+    "viewBox": [1480, 820],
+    "views": [
+      { "id": "message-entry", "label": "消息进入", "focus": ["clients", "wukong", "web", "pg", "work_queue"], "note": "WuKongIM 保存权威消息；Web 在 post-commit webhook 中事务化生成工作。" },
+      { "id": "runtime-loop", "label": "运行时循环", "focus": ["work_queue", "agent_os", "model", "kernel"], "note": "租约领取后，Agent OS 自己维护历史、模型循环和会话级 IPython kernel。" },
+      { "id": "product-actions", "label": "产品动作", "focus": ["kernel", "host_bridge", "domain_services", "knowledge_canvas"], "note": "模型写 Python；loop.* 经 Host Bridge 重新授权、记账、审批和幂等执行。" },
+      { "id": "authority-map", "label": "权威状态", "focus": ["wukong", "pg", "knowledge_canvas", "agent_home"], "note": "聊天、运行控制、协作知识和 Agent 私有文件各有独立权威。" }
+    ]
+  },
+  "components": [
+    { "id": "clients", "type": "frontend", "label": "Web / Electron", "pos": [30, 310], "size": [160, 72], "sources": [{ "path": "README.md", "label": "产品入口" }] },
+    { "id": "wukong", "type": "messagebus", "label": "WuKongIM", "pos": [220, 310], "size": [165, 72], "sources": [{ "path": "docs/COORDINATION.md", "label": "IM 契约" }] },
+    { "id": "web", "type": "backend", "label": "LingxiLoop Web", "pos": [415, 310], "size": [175, 72], "sources": [{ "path": "server/src/im/webhook-application.ts" }, { "path": "server/src/agent-os/control-plane.ts" }] },
+    { "id": "work_queue", "type": "security", "label": "Work + Session Lease", "pos": [645, 310], "size": [180, 72], "sources": [{ "path": "server/src/agent-os/control-plane.ts" }] },
+    { "id": "agent_os", "type": "backend", "label": "Agent OS Runtime", "pos": [875, 310], "size": [180, 72], "sources": [{ "path": "server/src/agent-os/runtime.ts" }, { "path": "server/src/agent-os/model-driver.ts" }] },
+    { "id": "host_bridge", "type": "security", "label": "Host Bridge", "pos": [1105, 310], "size": [180, 72], "sources": [{ "path": "server/src/agent-os/host-action-application.ts" }, { "path": "server/src/agent-os/authorization.ts" }] },
+    { "id": "domain_services", "type": "backend", "label": "Typed loop.* Services", "pos": [1330, 310], "size": [140, 72], "sources": [{ "path": "server/src/agent-os/learning-actions.ts" }] },
+    { "id": "pg", "type": "database", "label": "PostgreSQL", "pos": [430, 550], "size": [170, 72], "sources": [{ "path": "server/src/db/schema.sql" }] },
+    { "id": "model", "type": "cloud", "label": "LLM Provider", "pos": [850, 80], "size": [185, 72], "sources": [{ "path": "server/src/agent-os/model-driver.ts" }] },
+    { "id": "kernel", "type": "external", "label": "Persistent IPython", "pos": [850, 550], "size": [190, 72], "sources": [{ "path": "server/src/agent-os/kernel-manager.ts" }, { "path": "server/agent-os/kernel_runner.py" }] },
+    { "id": "agent_home", "type": "database", "label": "Agent Home", "pos": [1080, 680], "size": [175, 72], "sources": [{ "path": "server/src/agent-os/kernel-manager.ts" }] },
+    { "id": "knowledge_canvas", "type": "database", "label": "Knowledge + Canvas", "pos": [1295, 550], "size": [175, 72], "sources": [{ "path": "docs/CANVAS.md" }, { "path": "docs/open-notebook-native.md" }] }
+  ],
+  "connections": [
+    { "id": "send", "from": "clients", "to": "wukong", "variant": "emphasis" },
+    { "id": "webhook", "from": "wukong", "to": "web", "variant": "security" },
+    { "id": "enqueue", "from": "web", "to": "work_queue", "variant": "emphasis" },
+    { "id": "claim", "from": "work_queue", "to": "agent_os", "variant": "security" },
+    { "id": "run_action", "from": "agent_os", "to": "host_bridge", "variant": "security" },
+    { "id": "domain_call", "from": "host_bridge", "to": "domain_services", "variant": "emphasis" },
+    { "id": "persist_control", "from": "web", "to": "pg", "variant": "default", "fromSide": "bottom", "toSide": "top" },
+    { "id": "lease_state", "from": "pg", "to": "work_queue", "variant": "security" },
+    { "id": "infer", "from": "agent_os", "to": "model", "variant": "emphasis", "fromSide": "top", "toSide": "bottom" },
+    { "id": "execute", "from": "agent_os", "to": "kernel", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "sdk_call", "from": "kernel", "to": "host_bridge", "variant": "security" },
+    { "id": "private_files", "from": "kernel", "to": "agent_home", "variant": "default" },
+    { "id": "shared_state", "from": "domain_services", "to": "knowledge_canvas", "variant": "default", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Agent OS 是独立进程，不是 Web 请求内的一次 LLM 调用", "items": ["Web 负责 IM 接入、持久控制面和产品能力；Agent OS 进程轮询领取工作", "runId 直接等于耐久 workId；默认最多 8 个并发 run，空队列轮询间隔 750ms", "生产部署只连接产品网络，不直接加入 Open Notebook 知识网络"] },
+    { "dot": "rose", "title": "聊天只有一个权威", "items": ["WuKongIM 负责消息、顺序、成员、线程、已读和离线同步", "PostgreSQL 保存 receipt、work、run、event 与预览索引，但不建立第二套聊天历史", "model.delta 与 activity 是可丢弃预览；一条最终 WuKong 消息覆盖预览"] },
+    { "dot": "violet", "title": "模型只看见一个严格工具", "items": ["工具 schema 固定为 ipython({code})，additionalProperties=false", "Agent OS 自己拥有会话历史、压缩、重试、hop 计数和 tool result 拼接", "所有产品能力通过 kernel 中预加载的 loop.* 命名空间进入模型循环"] },
+    { "dot": "amber", "title": "两个租约与一个 fence", "items": ["work lease 保证同一 work 的执行所有权；session lease 保证同一 Agent 会话串行", "每次重新领取 fence 单调递增，旧 worker 的保存、动作和完成提交都会被拒绝", "45 秒租约由 5 秒 heartbeat 续期；watchdog 可先请求 preempt，再强制 fence"] },
+    { "dot": "emerald", "title": "共享状态，隔离执行", "items": ["Canvas 工作区、任务 DAG、报告与知识属于共享持久状态", "每个 session 有独立 Python 进程、globals、Agent Home 和串行 cell 队列", "协作通过数据库状态、WuKong 消息和显式 Host Action 发生，不共享 kernel"] },
+    { "dot": "orange", "title": "权限边界在 Host Bridge", "items": ["Prompt、角色描述和 SDK 方法列表都不是安全边界", "每个动作都重新检查 tenant、Agent、human principal、capability、角色、资源归属和取消状态", "有副作用的动作使用 runId:cellId:callIndex 幂等键；高风险动作转入耐久审批"] },
+    { "dot": "cyan", "title": "当前代码的关键权威映射", "items": ["WuKongIM：聊天事实；PostgreSQL：控制、租约、事件、动作、审批和记忆", "Open Notebook / SurrealDB：知识摄取与检索；pgvector：Agent 长期记忆", "Redis / WebSocket：实时投影，不是最终事实来源；Agent Home：session 私有文件"] },
+    { "dot": "slate", "title": "阅读顺序", "items": ["本页理解边界；第 2 页看触发与领取；第 3 页看模型、kernel 与 Host Action", "第 4 页看 Stop / Steer / preempt / 恢复；第 5 页看 Canvas；第 6 页看记忆与 Prompt", "最后用生命周期页把所有状态重新串成一张运行状态机"] }
+  ]
+}

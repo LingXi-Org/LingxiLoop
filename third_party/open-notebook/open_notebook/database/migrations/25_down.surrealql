@@ -1,0 +1,166 @@
+-- Restore the scoped mixed-corpus functions from migration 24.
+
+REMOVE FUNCTION IF EXISTS fn::scoped_vector_search;
+REMOVE FUNCTION IF EXISTS fn::scoped_text_search;
+REMOVE INDEX IF EXISTS idx_source_external_key ON TABLE source;
+REMOVE FIELD IF EXISTS ingestion_fingerprint ON TABLE source;
+REMOVE FIELD IF EXISTS external_key ON TABLE source;
+REMOVE FIELD IF EXISTS rag_state ON TABLE source;
+
+DEFINE FUNCTION fn::scoped_vector_search(
+    $query: array<float>,
+    $match_count: int,
+    $sources: bool,
+    $show_notes: bool,
+    $min_similarity: float,
+    $source_ids: array<record>,
+    $note_ids: array<record>
+) {
+    LET $source_embedding_search =
+        IF $sources {(
+            SELECT
+                source.id AS id,
+                source.title AS title,
+                content,
+                source.id AS parent_id,
+                vector::similarity::cosine(embedding, $query) AS similarity
+            FROM source_embedding
+            WHERE source.id IN $source_ids
+              AND embedding != NONE
+              AND array::len(embedding) = array::len($query)
+              AND vector::similarity::cosine(embedding, $query) >= $min_similarity
+            ORDER BY similarity DESC
+            LIMIT $match_count
+        )} ELSE { [] };
+
+    LET $source_insight_search =
+        IF $sources {(
+            SELECT
+                id,
+                insight_type + ' - ' + (source.title OR '') AS title,
+                content,
+                source.id AS parent_id,
+                vector::similarity::cosine(embedding, $query) AS similarity
+            FROM source_insight
+            WHERE source.id IN $source_ids
+              AND embedding != NONE
+              AND array::len(embedding) = array::len($query)
+              AND vector::similarity::cosine(embedding, $query) >= $min_similarity
+            ORDER BY similarity DESC
+            LIMIT $match_count
+        )} ELSE { [] };
+
+    LET $note_content_search =
+        IF $show_notes {(
+            SELECT
+                id,
+                title,
+                content,
+                id AS parent_id,
+                vector::similarity::cosine(embedding, $query) AS similarity
+            FROM note
+            WHERE id IN $note_ids
+              AND embedding != NONE
+              AND array::len(embedding) = array::len($query)
+              AND vector::similarity::cosine(embedding, $query) >= $min_similarity
+            ORDER BY similarity DESC
+            LIMIT $match_count
+        )} ELSE { [] };
+
+    LET $all_results = array::union(
+        array::union($source_embedding_search, $source_insight_search),
+        $note_content_search
+    );
+
+    RETURN (
+        SELECT id, parent_id, title, math::max(similarity) AS similarity,
+               array::flatten(content) AS matches
+        FROM $all_results
+        WHERE id IS NOT NONE
+        GROUP BY id, parent_id, title
+        ORDER BY similarity DESC
+        LIMIT $match_count
+    );
+};
+
+DEFINE FUNCTION fn::scoped_text_search(
+    $query_text: string,
+    $match_count: int,
+    $sources: bool,
+    $show_notes: bool,
+    $source_ids: array<record>,
+    $note_ids: array<record>
+) {
+    LET $source_title_search =
+        IF $sources {(
+            SELECT id, title, search::highlight('`', '`', 1) AS content,
+                   id AS parent_id, math::max(search::score(1)) AS relevance
+            FROM source
+            WHERE id IN $source_ids AND title @1@ $query_text
+            GROUP BY id
+        )} ELSE { [] };
+
+    LET $source_embedding_search =
+        IF $sources {(
+            SELECT source.id AS id, source.title AS title,
+                   search::highlight('`', '`', 1) AS content,
+                   source.id AS parent_id, math::max(search::score(1)) AS relevance
+            FROM source_embedding
+            WHERE source.id IN $source_ids AND content @1@ $query_text
+            GROUP BY id
+        )} ELSE { [] };
+
+    LET $source_full_search =
+        IF $sources {(
+            SELECT id, title, search::highlight('`', '`', 1) AS content,
+                   id AS parent_id, math::max(search::score(1)) AS relevance
+            FROM source
+            WHERE id IN $source_ids AND full_text @1@ $query_text
+            GROUP BY id
+        )} ELSE { [] };
+
+    LET $source_insight_search =
+        IF $sources {(
+            SELECT id, insight_type + ' - ' + (source.title OR '') AS title,
+                   search::highlight('`', '`', 1) AS content,
+                   source.id AS parent_id, math::max(search::score(1)) AS relevance
+            FROM source_insight
+            WHERE source.id IN $source_ids AND content @1@ $query_text
+            GROUP BY id
+        )} ELSE { [] };
+
+    LET $note_title_search =
+        IF $show_notes {(
+            SELECT id, title, search::highlight('`', '`', 1) AS content,
+                   id AS parent_id, math::max(search::score(1)) AS relevance
+            FROM note
+            WHERE id IN $note_ids AND title @1@ $query_text
+            GROUP BY id
+        )} ELSE { [] };
+
+    LET $note_content_search =
+        IF $show_notes {(
+            SELECT id, title, search::highlight('`', '`', 1) AS content,
+                   id AS parent_id, math::max(search::score(1)) AS relevance
+            FROM note
+            WHERE id IN $note_ids AND content @1@ $query_text
+            GROUP BY id
+        )} ELSE { [] };
+
+    LET $source_results = array::union(
+        array::union($source_title_search, $source_embedding_search),
+        array::union($source_full_search, $source_insight_search)
+    );
+    LET $note_results = array::union($note_title_search, $note_content_search);
+    LET $final_results = array::union($source_results, $note_results);
+
+    RETURN (
+        SELECT id, parent_id, title, math::max(relevance) AS relevance,
+               array::flatten(content) AS matches
+        FROM $final_results
+        WHERE id IS NOT NONE
+        GROUP BY id, parent_id, title
+        ORDER BY relevance DESC
+        LIMIT $match_count
+    );
+};

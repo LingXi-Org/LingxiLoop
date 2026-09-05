@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * In-app notification toasts. Shown when a new message arrives while the
  * window is NOT focused (or the user is viewing a different conversation).
@@ -19,8 +20,14 @@ import { useEffect, useRef, useState } from 'react'
 import { ws } from '@/api/core/realtime'
 import { useApp } from '@/stores/app'
 import { useMe } from '@/stores/auth'
-import { useConversations, isMuted } from '@/stores/conversations'
-import { useParticipants } from '@/stores/participants'
+import { isMuted, useConversations } from '@/features/conversations/store'
+import { useParticipants } from '@/features/agents/state'
+import {
+  chatTransport,
+  getLingxiMessageMetadata,
+  messageText,
+  serializeThreadMessage,
+} from '@/features/chat/runtime'
 import { isElectron } from '@/lib/runtime'
 import { playNotificationChime } from '@/lib/chime'
 import { Avatar } from './Avatar'
@@ -90,6 +97,7 @@ export function NotificationToasts() {
   // always reads fresh state without resubscribing on every render.
   const meRef = useRef(meId)
   const focusRef = useRef({ selectedId, view })
+  const seenMentionDeliveriesRef = useRef(new Set<string>())
   useEffect(() => { meRef.current = meId }, [meId])
   useEffect(() => { focusRef.current = { selectedId, view } }, [selectedId, view])
 
@@ -107,18 +115,17 @@ export function NotificationToasts() {
   }, [])
 
   useEffect(() => {
-    const off = ws.on((e) => {
-      if (e.type !== 'message.new') return
-      const m = e.message
+    const offMessage = chatTransport.subscribeMessages((message) => {
+      const metadata = getLingxiMessageMetadata(message)
       // Never toast our own messages.
-      if (m.authorId === meRef.current) return
+      if (metadata.senderId === meRef.current) return
 
       // Skip system rows (joined / left / kicked / etc.) — their body is a
       // structured JSON payload, not prose. The convo already renders them
       // as centered italic context lines; popping a toast that shows the
       // raw JSON (with an authorId that's actually the subject, not a
       // sender) is worse than silent.
-      if (m.kind === 'system') return
+      if (metadata.senderKind === 'system') return
 
       // Notifications fire ONLY when the app is NOT in the foreground.
       // When the user is actively looking at the app, the new message
@@ -130,14 +137,12 @@ export function NotificationToasts() {
       // The WS bridge fans out CH_MESSAGE_NEW for every message in the
       // user's company, including conversations they are not a member of.
       // Those must never produce toast notifications.
-      const convo = useConversations.getState().list.find((c) => c.id === e.conversationId)
+      const convo = useConversations.getState().list.find((c) => c.id === metadata.conversationId)
       if (!convo) return
-      // Exact @mentions are directed alerts: they intentionally bypass the
-      // room mute. The in-app notification path applies the same structured rule.
-      const mentionedMe = Boolean(meRef.current && m.mentionedIds?.includes(meRef.current))
-      if (isMuted(convo) && !mentionedMe) return
+      if (isMuted(convo)) return
       const title = convo.title
       const at = Date.now()
+      const body = messageText(message) || '（无内容）'
       // The conversation list comes from the API; `unread` is the
       // server's snapshot at last poll. The just-arrived message bumps
       // that by one in spirit, so add 1 here. Snapshot, not subscribed —
@@ -151,18 +156,10 @@ export function NotificationToasts() {
       // together instead of the bell preceding the toast by ~300ms.
       const bridge = window.lingxiloop?.notify
       if (isElectron && bridge) {
-        const author = useParticipants.getState().byId[m.authorId]
         bridge.push({
-          id: `toast-${m.id}-${at}`,
-          messageId: m.id,
-          conversationId: e.conversationId,
-          authorId: m.authorId,
-          authorName: author?.name ?? m.authorId,
-          authorAvatarUrl: author?.avatarUrl ?? null,
-          authorInitial: author?.initial ?? (author?.name ?? m.authorId).charAt(0).toUpperCase(),
-          authorAvatarBg: author?.avatarBg,
+          id: `toast-${message.id}-${at}`,
+          message: serializeThreadMessage(message),
           conversationTitle: title,
-          body: m.body || '(empty)',
           at,
           unreadCount,
         })
@@ -174,22 +171,22 @@ export function NotificationToasts() {
       // here because the browser path has no separate notif window to
       // own the bell.
       setToasts((prev) => {
-        const idx = prev.findIndex((t) => t.kind === 'message' && t.conversationId === e.conversationId)
+        const idx = prev.findIndex((t) => t.kind === 'message' && t.conversationId === metadata.conversationId)
         if (idx >= 0) {
           const next = prev.slice()
           next[idx] = {
-            ...next[idx], authorId: m.authorId, body: m.body || '(empty)',
+            ...next[idx], authorId: metadata.senderId, body,
             at, count: next[idx].count + 1, conversationTitle: title,
           }
           return next
         }
         queueMicrotask(playNotificationChime)
         const fresh: Toast = {
-          id: `toast-${m.id}-${at}`,
+          id: `toast-${message.id}-${at}`,
           kind: 'message',
-          conversationId: e.conversationId,
-          authorId: m.authorId,
-          body: m.body || '(empty)',
+          conversationId: metadata.conversationId,
+          authorId: metadata.senderId,
+          body,
           conversationTitle: title,
           at, count: 1,
         }
@@ -211,6 +208,15 @@ export function NotificationToasts() {
       if (e.mentionerId === meRef.current) return
       // Only fire when the current user is on the mentioned list.
       if (!e.mentionedIds.includes(meRef.current ?? '')) return
+      // Delivery retries intentionally reuse the same durable id. Suppress a
+      // replay before it can increment a toast or ring the notification chime.
+      const seenDeliveries = seenMentionDeliveriesRef.current
+      if (seenDeliveries.has(e.deliveryId)) return
+      seenDeliveries.add(e.deliveryId)
+      if (seenDeliveries.size > 256) {
+        const oldest = seenDeliveries.values().next().value
+        if (oldest) seenDeliveries.delete(oldest)
+      }
       const at = Date.now()
       setToasts((prev) => {
         const idx = prev.findIndex((t) => t.kind === 'doc.mention' && t.documentId === e.documentId)
@@ -220,7 +226,7 @@ export function NotificationToasts() {
             ...next[idx], authorId: e.mentionerId,
             at, count: next[idx].count + 1,
             conversationTitle: e.documentTitle,
-            body: `${e.mentionerName} @-mentioned you in “${e.documentTitle}”`,
+            body: `${e.mentionerName} 在“${e.documentTitle}”中提到了你`,
           }
           return next
         }
@@ -230,7 +236,7 @@ export function NotificationToasts() {
           kind: 'doc.mention',
           documentId: e.documentId,
           authorId: e.mentionerId,
-          body: `${e.mentionerName} @-mentioned you in “${e.documentTitle}”`,
+          body: `${e.mentionerName} 在“${e.documentTitle}”中提到了你`,
           conversationTitle: e.documentTitle,
           at, count: 1,
         }
@@ -260,10 +266,10 @@ export function NotificationToasts() {
         }
         queueMicrotask(playNotificationChime)
         const inText = e.leadMinutes <= 1
-          ? 'starting now'
+          ? '即将开始'
           : e.leadMinutes < 60
-            ? `in ${e.leadMinutes} min`
-            : `in ${Math.round(e.leadMinutes / 60)}h`
+            ? `${e.leadMinutes} 分钟后开始`
+            : `${Math.round(e.leadMinutes / 60)} 小时后开始`
         const fresh: Toast = {
           id: `toast-reminder-${e.eventId}-${at}`,
           kind: 'calendar.reminder',
@@ -271,7 +277,7 @@ export function NotificationToasts() {
           occurrenceAt: e.occurrenceAt,
           leadMinutes: e.leadMinutes,
           authorId: '',                          // unused — calendar icon shown
-          body: `Coming up ${inText}`,
+          body: inText,
           conversationTitle: e.title,
           at, count: 1,
         }
@@ -298,7 +304,7 @@ export function NotificationToasts() {
     })
 
     return () => {
-      off()
+      offMessage()
       offMention()
       offReminder()
       offFocus?.()
@@ -313,10 +319,10 @@ export function NotificationToasts() {
     // is already visible-but-unfocused this brings it forward.
     try { window.focus() } catch { /* ignore */ }
     if (t.kind === 'doc.mention' && t.documentId) {
-      setView('documents')
+      setView('library')
       // Lazy-import to avoid pulling the documents store into every
       // boot path even when the user never visits the docs view.
-      void import('@/stores/documents').then(({ useDocuments }) => {
+      void import('@/features/documents/state').then(({ useDocuments }) => {
         useDocuments.getState().select(t.documentId!)
       })
     } else if (t.kind === 'calendar.reminder') {
@@ -361,7 +367,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
   }, [hovered, toast.at, onDismiss])
 
   return (
-    <button
+    <Button
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -369,17 +375,17 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
       style={{
         // Browser-fallback (no Electron notification window). Floats over
         // the app's own UI, so backdrop-filter genuinely blurs the chat
-        // beneath the toast. Slightly translucent white so the frost
+        // beneath the toast. Slightly translucent preset surface so the frost
         // reads, opaque enough that text never loses contrast.
-        background: 'rgba(255, 255, 255, 0.82)',
+        background: 'color-mix(in srgb, var(--card) 82%, transparent)',
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         borderRadius: 14,
         padding: '10px 12px 12px',
-        // Soft sky-tinted shadow + 1px hairline — matches the rest of
+        // Preset-derived shadow + 1px hairline — matches the rest of
         // LingxiLoop's "lifted-card" treatment elsewhere in the app.
-        boxShadow: '0 18px 40px -14px rgba(10, 30, 60, 0.24), 0 6px 14px -8px rgba(10, 30, 60, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.55) inset',
-        border: '1px solid rgba(10, 30, 60, 0.08)',
+        boxShadow: '0 18px 40px -14px color-mix(in srgb, var(--foreground) 24%, transparent), 0 6px 14px -8px color-mix(in srgb, var(--foreground) 14%, transparent), 0 0 0 1px color-mix(in srgb, var(--card-foreground) 8%, transparent) inset',
+        border: '1px solid var(--border)',
         cursor: 'pointer',
         minWidth: 280,
         maxWidth: 340,
@@ -402,14 +408,14 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
             <ICalendar className="w-4 h-4" />
           </div>
         ) : author ? (
-          <Avatar p={author} size={32} ringColor="var(--cloud)" showStatus={false} />
+          <Avatar p={author} size={32} ringColor="var(--cloud)" />
         ) : (
           <div className="w-8 h-8 rounded-full bg-ink-100 shrink-0" />
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="text-[12.5px] font-semibold text-ink-900 truncate">
-              {toast.kind === 'calendar.reminder' ? toast.conversationTitle : (author?.name ?? toast.authorId)}
+              {toast.kind === 'calendar.reminder' ? toast.conversationTitle : (author?.name ?? '成员')}
             </span>
             <span className="text-[10.5px] text-ink-300 italic font-display truncate">
               {toast.kind === 'calendar.reminder' ? "日历提醒" : toast.conversationTitle}
@@ -418,7 +424,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
               <span
                 className="ml-auto text-[9.5px] font-bold py-px px-1.5 rounded-full shrink-0"
                 style={{ background: 'var(--sky-100)', color: 'var(--skype-deep)' }}
-                title={`${toast.count - 1} more message${toast.count - 1 === 1 ? '' : 's'} from this conversation`}
+                title={`本对话还有 ${toast.count - 1} 条消息`}
               >+{toast.count - 1} 更多</span>
             )}
           </div>
@@ -448,6 +454,6 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
           animation: hovered ? 'none' : `lingxiloop-toast-drain ${AUTO_DISMISS_MS}ms linear forwards`,
         }}
       />
-    </button>
+    </Button>
   )
 }

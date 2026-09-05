@@ -1,77 +1,80 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { runStructuredLearningAction } from '../agents/cli.js'
 import { pool } from '../db/pool.js'
-import { wukongClient } from '../im/wukong.js'
 import { advanceAgentReadReceipt } from '../im/read-receipts.js'
-import {
-  addKnowledgeFile,
-  addKnowledgeText,
-  addKnowledgeUrl,
-  askKnowledgeForAgent,
-  createKnowledgeInsight,
-  createKnowledgeNote,
-  deleteKnowledgeInsight,
-  deleteKnowledgeNote,
-  deleteKnowledgeSourceForAgent,
-  getKnowledgeNote,
-  getKnowledgeSourceForAgent,
-  listKnowledgeInsights,
-  listKnowledgeNotes,
-  listKnowledgeSourcesForAgent,
-  retryKnowledgeSourceForAgent,
-  searchKnowledgeForAgent,
-  sendKnowledgeSourceChatMessage,
-  setKnowledgeSourceEnabled,
-  startKnowledgeSourceChat,
-  updateKnowledgeNote,
-  updateKnowledgeInsight,
-  updateKnowledgeSourceForAgent,
-  unlinkKnowledgeSourceForAgent,
-} from '../knowledge/agent-knowledge.js'
+import { wukongClient } from '../im/wukong.js'
 import {
   addCanvasWorkspaceAgents,
   appendCanvasFrameContent,
+  type CanvasMemberInput,
   createCanvasFrame,
   deleteCanvasFrame,
   getCanvasSnapshot,
   handoffCanvasWork,
   listCanvasAvailableAgents,
   setCanvasStatus,
-  submitCanvasReport,
   startCanvasWorkspace,
+  submitCanvasReport,
   updateCanvasFrame,
-  type CanvasMemberInput,
-} from '../canvas/service.js'
-import { readResearch, searchResearch } from './research.js'
-import { recallMemories, verifyExplicitMemory, writeExplicitMemory } from './memory-service.js'
-import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1, MemoryScopeType } from './types.js'
+} from '../modules/canvas/index.js'
+import {
+  addKnowledgeFile,
+  addKnowledgeText,
+  addKnowledgeUrl,
+  deleteKnowledgeSourceForAgent,
+  listKnowledgeSourcesForAgent,
+  retryKnowledgeSourceForAgent,
+  setKnowledgeSourceEnabled,
+} from '../modules/knowledge/public.js'
+import { learningScoreBreakdownSchema } from '../modules/learning/contracts.js'
 import {
   addMissionSteps,
   completeMission,
-  createObjectives,
+  createKnowledgeUnits,
   draftActivity,
+  executeTeacherAction,
   finishMissionPlanning,
   getActivity,
   getMission,
+  type LearningActivityType,
+  type LearningEvaluationMode,
+  type LearningStepStatus,
+  type LearningStepType,
   loadLearningTurnContext,
   proposeEvaluation,
   recordAttempt,
   startMission,
+  teacherActionRequiresApproval,
   updateMissionStep,
-} from '../learning/service.js'
-import type { LearningActivityType, LearningEvaluationMode, LearningStepStatus, LearningStepType } from '../learning/types.js'
-import { executeTeacherAction, teacherActionRequiresApproval } from '../learning/teacher-agent.js'
+} from '../modules/learning/runtime.js'
+import {
+  approvePresentationOutlineForAgent,
+  cancelPresentationForAgent,
+  createPresentationForAgent,
+  getPresentationForAgent,
+  retryPresentationForAgent,
+  revisePresentationForAgent,
+  revisePresentationOutlineForAgent,
+} from '../modules/presentations/public.js'
+import { recallMemories, verifyExplicitMemory, writeExplicitMemory } from './memory-service.js'
+import { readResearch, searchResearch } from './research.js'
+import type { AgentWorkItem, HostAction, HostActionResult, LingxiMessageV1, MemoryScopeType } from './types.js'
 
 const APPROVAL_REQUIRED = new Set([
   'email.send', 'email.reply',
   'routines.create', 'routines.activate',
-  'documents.delete', 'boards.delete', 'calendar.delete',
-  'knowledge.update_source', 'knowledge.set_source_enabled', 'knowledge.unlink_source', 'knowledge.delete_source',
-  'knowledge.update_note', 'knowledge.delete_note', 'knowledge.update_insight', 'knowledge.delete_insight',
+  'documents.delete', 'calendar.create', 'calendar.delete',
+  'knowledge.set_source_enabled', 'knowledge.delete_source',
+  'presentations.approve_outline',
 ])
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
+}
+
+function authorizationUserId(work: AgentWorkItem): string {
+  if (!work.authorizationUserId) throw new Error('Agent work has no persisted human authorization principal')
+  return work.authorizationUserId
 }
 
 function textArg(args: Record<string, unknown>, name: string, required = true): string {
@@ -80,55 +83,94 @@ function textArg(args: Record<string, unknown>, name: string, required = true): 
   return value
 }
 
+function closedArg<const T extends string>(
+  args: Record<string, unknown>,
+  name: string,
+  allowed: readonly T[],
+): T {
+  const value = textArg(args, name)
+  if (!allowed.includes(value as T)) throw new Error(`${name} must be one of ${allowed.join(', ')}`)
+  return value as T
+}
+
+const MISSION_KINDS = ['STUDY','RESEARCH','PROJECT'] as const
+const STEP_KINDS = ['LEARN','PRACTICE','CHECK','REFLECT'] as const
+const STEP_STATUSES = ['OPEN','IN_PROGRESS','COMPLETED','CANCELLED'] as const
+const ACTIVITY_KINDS = ['LESSON','PRACTICE','ASSESSMENT','PROJECT','REVIEW'] as const
+const EVALUATION_MODES = ['AGENT_FORMATIVE','TEACHER_REQUIRED'] as const
+const ASSISTANCE_LEVELS = ['NONE','HINT','GUIDED'] as const
+
 async function executeEducation(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
   const context = await loadLearningTurnContext(work)
-  if (!context) throw new Error('current conversation is not bound to a learning course')
+  if (!context) throw new Error('current conversation is not bound to a project')
   if (method === 'current' || method === 'get_learner_state') return { ok: true, value: context }
-  if (method === 'list_objectives') return { ok: true, value: context.objectives }
+  if (method === 'list_knowledge_units') return { ok: true, value: context.knowledgeUnits }
   if (method === 'list_due') return { ok: true, value: context.due }
   if (method === 'get_mission') {
     const missionId = textArg(args, 'missionId', false)
     if (!missionId) return { ok: true, value: context.activeMission ?? null }
-    return { ok: true, value: await getMission(missionId, context.course.id) }
+    if (!context.learnerId) throw new Error('current learning room has no learner scope')
+    return {
+      ok: true,
+      value: await getMission(missionId, work.companyId, context.project.id, context.learnerId, work.channelId),
+    }
   }
-  if (method === 'get_activity') return { ok: true, value: await getActivity(textArg(args, 'activityId'), context.course.id) }
+  if (method === 'get_activity') return {
+    ok: true,
+    value: await getActivity(textArg(args, 'activityId'), work.companyId, context.project.id),
+  }
   if (method === 'start_mission') return { ok: true, value: await startMission(work, {
     goal: textArg(args, 'goal'), successCriteria: textArg(args, 'successCriteria'),
-    ...(typeof args.missionKind === 'string' ? { missionKind: args.missionKind as 'study'|'research'|'project' } : {}),
+    ...(typeof args.missionKind === 'string'
+      ? { missionKind: closedArg(args, 'missionKind', MISSION_KINDS) }
+      : {}),
     ...(typeof args.sourceClientMsgNo === 'string' ? { sourceClientMsgNo: args.sourceClientMsgNo } : {}),
     ...(args.explicit === true ? { explicit: true } : {}),
   }) }
   if (method === 'add_steps') {
     const steps = Array.isArray(args.steps) ? args.steps.map((item) => record(item)).map((item) => ({
-      type: textArg(item, 'type') as LearningStepType,
+      kind: closedArg(item, 'kind', STEP_KINDS) as LearningStepType,
       description: textArg(item, 'description'), successCriteria: textArg(item, 'successCriteria'),
-      ...(typeof item.objectiveId === 'string' ? { objectiveId: item.objectiveId } : {}),
+      ...(typeof item.knowledgeUnitId === 'string' ? { knowledgeUnitId: item.knowledgeUnitId } : {}),
     })) : []
     return { ok: true, value: await addMissionSteps(work, textArg(args, 'missionId'), steps) }
   }
   if (method === 'finish_planning') return { ok: true, value: await finishMissionPlanning(work, textArg(args, 'missionId')) }
   if (method === 'update_step') return { ok: true, value: await updateMissionStep(work, {
-    missionId: textArg(args, 'missionId'), stepId: textArg(args, 'stepId'), status: textArg(args, 'status') as LearningStepStatus,
+    missionId: textArg(args, 'missionId'), stepId: textArg(args, 'stepId'),
+    status: closedArg(args, 'status', STEP_STATUSES) as LearningStepStatus,
     ...(typeof args.outcome === 'string' ? { outcome: args.outcome } : {}),
-    ...(typeof args.sourceReportId==='string'?{sourceReportId:args.sourceReportId}:{}),
+    ...(typeof args.sourceEvidenceId==='string'?{sourceEvidenceId:args.sourceEvidenceId}:{}),
     ...(typeof args.attemptId==='string'?{attemptId:args.attemptId}:{}),
   }) }
   if (method === 'complete_mission') return { ok: true, value: await completeMission(work, textArg(args, 'missionId')) }
-  if (method === 'draft_objectives') {
-    const objectives = Array.isArray(args.objectives) ? args.objectives.map((item) => record(item)).map((item) => ({
+  if (method === 'draft_knowledge_units') {
+    const knowledgeUnits = Array.isArray(args.knowledgeUnits)
+      ? args.knowledgeUnits.map((item) => record(item)).map((item) => ({
       title: textArg(item, 'title'), successCriteria: textArg(item, 'successCriteria'),
       ...(item.targetLevel !== undefined ? { targetLevel: Number(item.targetLevel) } : {}),
-      ...(Array.isArray(item.prerequisiteIds) ? { prerequisiteIds: item.prerequisiteIds.map(String) } : {}),
+      ...(Array.isArray(item.prerequisiteKnowledgeUnitIds)
+        ? { prerequisiteKnowledgeUnitIds: item.prerequisiteKnowledgeUnitIds.map(String) }
+        : {}),
     })) : []
-    return { ok: true, value: await createObjectives({ courseId: context.course.id, actorId: work.agentId, actorKind: 'agent', objectives }) }
+    return { ok: true, value: await createKnowledgeUnits({
+      companyId: work.companyId,
+      projectId: context.project.id,
+      actorId: work.agentId,
+      actorKind: 'agent',
+      knowledgeUnits,
+    }) }
   }
   if (method === 'draft_activity') return { ok: true, value: await draftActivity({
-    courseId: context.course.id, actorId: work.agentId, title: textArg(args, 'title'), instructions: textArg(args, 'instructions'),
-    type: textArg(args, 'type') as LearningActivityType,
-    ...(typeof args.evaluationMode === 'string' ? { evaluationMode: args.evaluationMode as LearningEvaluationMode } : {}),
+    companyId: work.companyId, projectId: context.project.id, actorId: work.agentId, actorKind: 'agent',
+    title: textArg(args, 'title'), instructions: textArg(args, 'instructions'),
+    kind: closedArg(args, 'kind', ACTIVITY_KINDS) as LearningActivityType,
+    ...(typeof args.evaluationMode === 'string'
+      ? { evaluationMode: closedArg(args, 'evaluationMode', EVALUATION_MODES) as LearningEvaluationMode }
+      : {}),
     ...(args.targetLevel !== undefined ? { targetLevel: Number(args.targetLevel) } : {}),
     ...(Array.isArray(args.rubric) ? { rubric: args.rubric } : {}),
-    ...(Array.isArray(args.objectiveIds) ? { objectiveIds: args.objectiveIds.map(String) } : {}),
+    ...(Array.isArray(args.knowledgeUnitIds) ? { knowledgeUnitIds: args.knowledgeUnitIds.map(String) } : {}),
     ...(typeof args.dueAt === 'string' ? { dueAt: args.dueAt } : {}),
   }) }
   if (method === 'record_attempt') return { ok: true, value: await recordAttempt(work, {
@@ -137,25 +179,27 @@ async function executeEducation(work: AgentWorkItem, method: string, args: Recor
     evidenceClientMsgNos: Array.isArray(args.evidenceClientMsgNos) ? args.evidenceClientMsgNos.map(String) : [],
     documentIds: Array.isArray(args.documentIds) ? args.documentIds.map(String) : [],
     canvasFrameIds: Array.isArray(args.canvasFrameIds) ? args.canvasFrameIds.map(String) : [],
-    assistance: args.assistance === 'hint' || args.assistance === 'guided' ? args.assistance : 'none',
+    assistance: args.assistance === undefined
+      ? 'NONE'
+      : closedArg(args, 'assistance', ASSISTANCE_LEVELS),
   }) }
-  if (method === 'propose_evaluation') return { ok: true, value: await proposeEvaluation(work, {
-    attemptId: textArg(args, 'attemptId'), demonstratedLevel: Number(args.demonstratedLevel), confidence: Number(args.confidence),
-    ...(Array.isArray(args.rubricResults) ? { rubricResults: args.rubricResults } : {}),
-    ...(typeof args.feedback === 'string' ? { feedback: args.feedback } : {}),
-    ...(typeof args.sourceReportId === 'string' ? { sourceReportId: args.sourceReportId } : {}),
-    ...(typeof args.verifierReportId === 'string' ? { verifierReportId: args.verifierReportId } : {}),
-  }) }
+  if (method === 'propose_evaluation') {
+    const rubricResults = learningScoreBreakdownSchema.parse(args.rubricResults)
+    return { ok: true, value: await proposeEvaluation(work, {
+      attemptId: textArg(args, 'attemptId'), demonstratedLevel: Number(args.demonstratedLevel), confidence: Number(args.confidence),
+      rubricResults,
+      ...(typeof args.feedback === 'string' ? { feedback: args.feedback } : {}),
+      ...(typeof args.sourceEvidenceId === 'string' ? { sourceEvidenceId: args.sourceEvidenceId } : {}),
+      ...(typeof args.verifierEvidenceId === 'string' ? { verifierEvidenceId: args.verifierEvidenceId } : {}),
+    }) }
+  }
   throw new Error(`unsupported learning action: ${method}`)
 }
 
-async function executeKnowledge(work: AgentWorkItem, method: string, args: Record<string, unknown>): Promise<HostActionResult> {
+async function executeKnowledge(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
   if (method === 'list_sources') return { ok: true, value: await listKnowledgeSourcesForAgent(work) }
-  if (method === 'get_source') return { ok: true, value: await getKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
-  if (method === 'search') return { ok: true, value: await searchKnowledgeForAgent(work, textArg(args, 'query'), Math.max(1, Math.min(20, Number(args.limit ?? 8)))) }
-  if (method === 'ask') return { ok: true, value: await askKnowledgeForAgent(work, textArg(args, 'question')) }
-  if (method === 'add_text') return { ok: true, value: await addKnowledgeText(work, { title: textArg(args, 'title'), text: textArg(args, 'text') }) }
-  if (method === 'add_url') return { ok: true, value: await addKnowledgeUrl(work, { title: textArg(args, 'title', false) || textArg(args, 'url'), url: textArg(args, 'url') }) }
+  if (method === 'add_text') return { ok: true, value: await addKnowledgeText(work, { title: textArg(args, 'title'), text: textArg(args, 'text'), idempotencyKey: action.idempotencyKey }) }
+  if (method === 'add_url') return { ok: true, value: await addKnowledgeUrl(work, { title: textArg(args, 'title', false) || textArg(args, 'url'), url: textArg(args, 'url'), idempotencyKey: action.idempotencyKey }) }
   if (method === 'add_file') {
     // Agents refer to a committed message, never an arbitrary storage key.
     // The Host resolves the attachment inside the current channel so a guessed
@@ -171,33 +215,108 @@ async function executeKnowledge(work: AgentWorkItem, method: string, args: Recor
     return { ok: true, value: await addKnowledgeFile(work, {
       title: textArg(args, 'title', false) || String(attachment.name ?? '聊天附件'),
       storageKey: String(attachment.key ?? ''), mime: String(attachment.mime ?? ''), size: Number(attachment.size ?? 0),
+      idempotencyKey: action.idempotencyKey,
     }) }
   }
   if (method === 'retry_ingestion') return { ok: true, value: await retryKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
-  if (method === 'update_source') return { ok: true, value: await updateKnowledgeSourceForAgent(work, textArg(args, 'sourceId'), {
-    ...(typeof args.title === 'string' ? { title: args.title } : {}),
-    ...(Array.isArray(args.topics) ? { topics: args.topics.map(String).slice(0, 50) } : {}),
-  }) }
   if (method === 'set_source_enabled') return { ok: true, value: await setKnowledgeSourceEnabled(work, textArg(args, 'sourceId'), args.enabled === true) }
-  if (method === 'unlink_source') return { ok: true, value: await unlinkKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
   if (method === 'delete_source') return { ok: true, value: await deleteKnowledgeSourceForAgent(work, textArg(args, 'sourceId')) }
-  if (method === 'list_notes') return { ok: true, value: await listKnowledgeNotes(work) }
-  if (method === 'get_note') return { ok: true, value: await getKnowledgeNote(work, textArg(args, 'noteId')) }
-  if (method === 'create_note') return { ok: true, value: await createKnowledgeNote(work, { title: textArg(args, 'title', false) || undefined, content: textArg(args, 'content') }) }
-  if (method === 'update_note') return { ok: true, value: await updateKnowledgeNote(work, textArg(args, 'noteId'), {
-    ...(typeof args.title === 'string' ? { title: args.title } : {}), ...(typeof args.content === 'string' ? { content: args.content } : {}),
-  }) }
-  if (method === 'delete_note') return { ok: true, value: await deleteKnowledgeNote(work, textArg(args, 'noteId')) }
-  if (method === 'list_insights') return { ok: true, value: await listKnowledgeInsights(work, textArg(args, 'sourceId')) }
-  if (method === 'create_insight') return { ok: true, value: await createKnowledgeInsight(work, textArg(args, 'sourceId'), textArg(args, 'transformation')) }
-  if (method === 'update_insight') return { ok: true, value: await updateKnowledgeInsight(work, textArg(args, 'insightId'), {
-    ...(typeof args.insightType === 'string' ? { insightType: args.insightType } : {}),
-    ...(typeof args.content === 'string' ? { content: args.content } : {}),
-  }) }
-  if (method === 'delete_insight') return { ok: true, value: await deleteKnowledgeInsight(work, textArg(args, 'insightId')) }
-  if (method === 'start_source_chat') return { ok: true, value: await startKnowledgeSourceChat(work, textArg(args, 'sourceId'), textArg(args, 'title', false) || undefined) }
-  if (method === 'send_source_chat_message') return { ok: true, value: await sendKnowledgeSourceChatMessage(work, textArg(args, 'sessionId'), textArg(args, 'message')) }
   throw new Error(`unsupported knowledge action: ${method}`)
+}
+
+async function executePresentation(
+  work: AgentWorkItem,
+  method: string,
+  args: Record<string, unknown>,
+  action: HostAction,
+): Promise<HostActionResult> {
+  const presentationId = (): string => textArg(args, 'presentationId')
+  const expectedRevision = (): number => {
+    const value = Number(args.expectedRevision)
+    if (!Number.isInteger(value) || value < 0) throw new Error('expectedRevision must be a non-negative integer')
+    return value
+  }
+  const boundedInteger = (name: string, minimum: number, maximum: number): number | undefined => {
+    if (args[name] === undefined) return undefined
+    const value = Number(args[name])
+    if (!Number.isInteger(value) || value < minimum || value > maximum) {
+      throw new Error(`${name} must be an integer between ${minimum} and ${maximum}`)
+    }
+    return value
+  }
+  const stringIds = (name: string): string[] | undefined => {
+    if (args[name] === undefined) return undefined
+    if (!Array.isArray(args[name])) throw new Error(`${name} must be an array`)
+    if (!args[name].every((value) => typeof value === 'string' && value.trim())) {
+      throw new Error(`${name} must contain only non-empty strings`)
+    }
+    const values = args[name].map((value) => value.trim())
+    return [...new Set(values)]
+  }
+
+  if (method === 'create') {
+    const sourceIds = stringIds('sourceIds')
+    const targetSlideCount = boundedInteger('targetSlideCount', 24, 40)
+    return {
+      ok: true,
+      value: await createPresentationForAgent(work, {
+        idempotencyKey: action.idempotencyKey,
+        requirements: textArg(args, 'requirements'),
+        ...(typeof args.title === 'string' && args.title.trim() ? { title: args.title.trim() } : {}),
+        ...(sourceIds ? { sourceIds } : {}),
+        ...(targetSlideCount !== undefined ? { targetSlideCount } : {}),
+        ...(typeof args.language === 'string' && args.language.trim() ? { language: args.language.trim() } : {}),
+      }),
+    }
+  }
+  if (method === 'get') return { ok: true, value: await getPresentationForAgent(work, presentationId()) }
+  if (method === 'revise_outline') {
+    const feedback = textArg(args, 'feedback', false)
+    const targetSlideCount = boundedInteger('targetSlideCount', 3, 40)
+    if (!feedback && targetSlideCount === undefined) {
+      throw new Error('feedback or targetSlideCount is required')
+    }
+    return {
+      ok: true,
+      value: await revisePresentationOutlineForAgent(work, presentationId(), {
+        ...(feedback ? { feedback } : {}),
+        ...(targetSlideCount !== undefined ? { targetSlideCount } : {}),
+        expectedRevision: expectedRevision(),
+        idempotencyKey: action.idempotencyKey,
+      }),
+    }
+  }
+  if (method === 'approve_outline') return {
+    ok: true,
+    value: await approvePresentationOutlineForAgent(work, presentationId(), {
+      expectedRevision: expectedRevision(),
+    }),
+  }
+  if (method === 'revise') {
+    const pageIds = stringIds('pageIds')
+    const sectionIds = stringIds('sectionIds')
+    return {
+      ok: true,
+      value: await revisePresentationForAgent(work, presentationId(), {
+        instruction: textArg(args, 'instruction'),
+        scope: closedArg(args, 'scope', ['page', 'section', 'deck'] as const),
+        ...(pageIds ? { pageIds } : {}),
+        ...(sectionIds ? { sectionIds } : {}),
+        idempotencyKey: action.idempotencyKey,
+      }),
+    }
+  }
+  if (method === 'cancel') return {
+    ok: true,
+    value: await cancelPresentationForAgent(work, presentationId(), { idempotencyKey: action.idempotencyKey }),
+  }
+  if (method === 'retry') return {
+    ok: true,
+    value: await retryPresentationForAgent(work, presentationId(), {
+      idempotencyKey: action.idempotencyKey,
+    }),
+  }
+  throw new Error(`unsupported presentations action: ${method}`)
 }
 
 async function executeChat(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
@@ -282,7 +401,11 @@ async function executeChat(work: AgentWorkItem, method: string, args: Record<str
         },
       },
     }
-    return { ok: true, value: await wukongClient().sendMessage(channelId, Number(args.channelType ?? 2), work.agentId, payload) }
+    return {
+      ok: true,
+      value: await wukongClient().sendMessage(channelId, Number(args.channelType ?? 2), work.agentId, payload),
+      directive: { type: 'defer', reason: 'user' },
+    }
   }
   if (method === 'handoff') {
     const targetAgentId = textArg(args, 'toAgentId')
@@ -295,10 +418,11 @@ async function executeChat(work: AgentWorkItem, method: string, args: Record<str
     const sent = await wukongClient().sendMessage(work.channelId, Number(args.channelType ?? 2), work.agentId, payload)
     await pool.query(
       `INSERT INTO agent_work_items
-         (id, company_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason, priority)
-       VALUES ($1,$2,$3,$4,$5,$6,'handoff',150)
+         (id, company_id, authorization_user_id, agent_id, channel_id, thread_root_client_msg_no, trigger_client_msg_no, reason, priority)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'handoff',150)
        ON CONFLICT (agent_id, trigger_client_msg_no, reason) DO NOTHING`,
-      [randomUUID(), work.companyId, targetAgentId, work.channelId, payload.clientMsgNo, payload.clientMsgNo],
+      [randomUUID(), work.companyId, authorizationUserId(work), targetAgentId,
+        work.channelId, payload.clientMsgNo, payload.clientMsgNo],
     )
     return { ok: true, value: sent }
   }
@@ -328,10 +452,11 @@ async function executeRoutine(work: AgentWorkItem, method: string, args: Record<
     const { rows } = await pool.query(
       `INSERT INTO agent_routines
          (id, company_id, agent_id, channel_id, kind, title, instructions, schedule, timezone, status, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,'paused',$3)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,'paused',$10)
        ON CONFLICT (id) DO UPDATE SET updated_at=agent_routines.updated_at RETURNING *`,
       [id, work.companyId, work.agentId, work.channelId, textArg(args, 'kind'), textArg(args, 'title'),
-        textArg(args, 'instructions'), JSON.stringify(record(args.schedule)), textArg(args, 'timezone', false) || 'Asia/Shanghai'],
+        textArg(args, 'instructions'), JSON.stringify(record(args.schedule)),
+        textArg(args, 'timezone', false) || 'Asia/Shanghai', authorizationUserId(work)],
     )
     return { ok: true, value: rows[0] }
   }
@@ -339,15 +464,15 @@ async function executeRoutine(work: AgentWorkItem, method: string, args: Record<
 }
 
 async function executePoll(work: AgentWorkItem, method: string, args: Record<string, unknown>, action: HostAction): Promise<HostActionResult> {
-  const { castVote, closePoll, createPoll } = await import('../polls.js')
+  const { pollApplication } = await import('../modules/polls/index.js')
   if (method === 'create') {
     const rawOptions = Array.isArray(args.options) ? args.options.map(String) : []
     return {
       ok: true,
-      value: await createPoll({
+      value: await pollApplication.create({
         conversationId: textArg(args, 'channelId', false) || work.channelId,
         companyId: work.companyId,
-        authorId: work.agentId,
+        actorId: work.agentId,
         question: textArg(args, 'question'),
         mode: args.mode === 'multi' ? 'multi' : 'single',
         options: rawOptions,
@@ -361,28 +486,15 @@ async function executePoll(work: AgentWorkItem, method: string, args: Record<str
     const optionIds = Array.isArray(args.optionIds) ? args.optionIds.map(String) : []
     return {
       ok: true,
-      value: await castVote({
-        messageId, companyId: work.companyId, voterParticipantId: work.agentId,
+      value: await pollApplication.vote({
+        messageId, companyId: work.companyId, actorId: work.agentId,
         voterKind: 'agent', optionIds,
       }),
     }
   }
-  if (method === 'close') return { ok: true, value: await closePoll({ messageId, companyId: work.companyId, actorId: work.agentId, reason: 'manual' }) }
+  if (method === 'close') return { ok: true, value: await pollApplication.close({ messageId, companyId: work.companyId, actorId: work.agentId, reason: 'manual' }) }
   if (method === 'show') {
-    const { rows } = await pool.query(
-      `SELECT p.*, COALESCE(v.tallies, '[]'::jsonb) AS tallies
-         FROM im_polls p
-         LEFT JOIN LATERAL (
-           SELECT jsonb_agg(jsonb_build_object('optionId', option_id, 'count', count, 'voterIds', voter_ids)) AS tallies
-             FROM (SELECT option_id, COUNT(*)::int AS count,
-                          array_agg(voter_participant_id ORDER BY voter_participant_id) AS voter_ids
-                     FROM im_poll_votes WHERE poll_client_msg_no=p.poll_client_msg_no GROUP BY option_id) x
-         ) v ON TRUE
-        WHERE p.poll_client_msg_no=$1 AND p.company_id=$2`,
-      [messageId, work.companyId],
-    )
-    if (!rows[0]) throw new Error('poll not found')
-    return { ok: true, value: rows[0] }
+    return { ok: true, value: await pollApplication.show(work.companyId, messageId) }
   }
   throw new Error(`unsupported poll action: ${method}`)
 }
@@ -418,6 +530,7 @@ async function executeCanvas(
       companyId: work.companyId, initiatorAgentId: work.agentId, conversationId: work.channelId,
       triggerClientMsgNo: work.triggerClientMsgNo, title: textArg(args, 'title'), goal: textArg(args, 'goal'),
       members: members(), idempotencyKey: action.idempotencyKey,
+      authorizationUserId: authorizationUserId(work),
     })
     const card: LingxiMessageV1 = {
       version: 1, kind: 'canvas', clientMsgNo: `canvas-card-${snapshot.id}`,
@@ -429,8 +542,8 @@ async function executeCanvas(
     const { rows: bindings } = await pool.query<{ profile: Record<string, unknown> }>(
       `SELECT profile FROM im_channel_bindings WHERE channel_id=$1 AND company_id=$2`, [work.channelId, work.companyId],
     )
-    await wukongClient().sendMessage(work.channelId, Number(bindings[0]?.profile?.channelType ?? 2), work.agentId, card).catch(() => undefined)
-    return { ok: true, value: snapshot, directive: { type: 'defer_to_canvas', canvasId: snapshot.id } }
+    await wukongClient().sendMessage(work.channelId, Number(bindings[0]?.profile?.channelType ?? 2), work.agentId, card)
+    return { ok: true, value: snapshot, directive: { type: 'defer', reason: 'canvas', data: { canvasId: snapshot.id } } }
   }
   if (method === 'add_agents') {
     if (!canvasId) throw new Error('canvasId is required')
@@ -527,14 +640,14 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   const [namespace, method] = action.action.split('.')
   if (!namespace || !method) throw new Error('action must use namespace.method')
   if (namespace === 'teacher') return { ok: true, value: await executeTeacherAction(work, method, args) }
-  const learningContext = await loadLearningTurnContext(work).catch(() => null)
-  if (learningContext?.activeMission?.status === 'planning') {
+  const learningContext = await loadLearningTurnContext(work)
+  if (learningContext?.activeMission?.status === 'PLANNING') {
     const planningAllowed = new Set([
-      'learning.current', 'learning.get_learner_state', 'learning.list_objectives',
+      'learning.current', 'learning.get_learner_state', 'learning.list_knowledge_units',
       'learning.list_due', 'learning.get_mission', 'learning.get_activity',
       'learning.add_steps', 'learning.finish_planning',
-      'knowledge.list_sources', 'knowledge.get_source', 'knowledge.search',
-      'knowledge.ask', 'knowledge.list_notes', 'knowledge.get_note',
+      'knowledge.list_sources',
+      'presentations.get',
       'chat.ask', 'polls.create', 'polls.show',
     ])
     if (!planningAllowed.has(action.action)) {
@@ -547,10 +660,10 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
   if (namespace === 'chat') return executeChat(work, method, args, action)
   if (namespace === 'routines') return executeRoutine(work, method, args, action)
   if (namespace === 'polls') return executePoll(work, method, args, action)
-  if (namespace === 'turn') return { ok: true, value: { status: method, ...args } }
   if (namespace === 'research') return executeResearch(work, method, args)
   if (namespace === 'canvas') return executeCanvas(work, method, args, action)
-  if (namespace === 'knowledge') return executeKnowledge(work, method, args)
+  if (namespace === 'knowledge') return executeKnowledge(work, method, args, action)
+  if (namespace === 'presentations') return executePresentation(work, method, args, action)
   if (namespace === 'learning') return executeEducation(work, method, args)
   if (namespace === 'memory') {
     const rawScope = String(args.scope ?? 'course')
@@ -578,12 +691,15 @@ export async function executeLearningAction(work: AgentWorkItem, action: HostAct
     } }
     throw new Error(`unsupported memory action: ${method}`)
   }
-  const projectId = new Set(['email', 'documents', 'boards', 'calendar']).has(namespace)
+  const projectId = new Set(['email', 'documents', 'calendar']).has(namespace)
     ? (await pool.query<{ project_id: string }>(
       `SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2`,
       [work.channelId, work.companyId],
     )).rows[0]?.project_id
     : undefined
   const result = await runStructuredLearningAction(action.action, args, work.agentId, { idempotencyKey: action.idempotencyKey, ...(projectId ? { projectId } : {}) })
+  if (result.ok && namespace === 'calendar' && new Set(['list', 'get', 'create', 'update']).has(method)) {
+    return { ok: true, value: JSON.parse(result.text) }
+  }
   return result.ok ? { ok: true, value: { text: result.text, sideEffects: result.sideEffects ?? [] } } : { ok: false, error: result.text }
 }

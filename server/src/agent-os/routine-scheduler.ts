@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
-import { nextTeacherDigestRun } from '../learning/teacher-agent.js'
+import { createPermissionService } from '../modules/access/public.js'
+import { nextTeacherDigestRun } from '../modules/learning/runtime.js'
 import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 
 type Schedule = {
@@ -29,29 +30,32 @@ export async function scheduleDueLearningRoutines(now = new Date()): Promise<num
     await client.query('BEGIN')
     const { rows } = await client.query<{
       id: string; company_id: string; agent_id: string; channel_id: string
-      instructions: string; schedule: Schedule; next_run_at: string; timezone: string; kind: string
+      instructions: string; schedule: Schedule; next_run_at: string; timezone: string; kind: string; created_by: string
     }>(
-      `SELECT id, company_id, agent_id, channel_id, instructions, schedule, next_run_at, timezone, kind
+      `SELECT id, company_id, agent_id, channel_id, instructions, schedule, next_run_at, timezone, kind, created_by
          FROM agent_routines
         WHERE status='active' AND next_run_at <= $1
         ORDER BY next_run_at FOR UPDATE SKIP LOCKED LIMIT 50`, [now],
     )
     for (const routine of rows) {
       if (routine.kind === 'teacher_project_digest') {
-        const { rows: eligible } = await client.query(
-          `SELECT 1
+        const { rows: projects } = await client.query<{ project_id: string }>(
+          `SELECT project.id AS project_id
              FROM learning_course_teacher_rooms room
              JOIN courses course ON course.id=room.course_id AND course.company_id=room.company_id
              JOIN projects project ON project.id=course.project_id AND project.company_id=course.company_id
             WHERE room.conversation_id=$1 AND room.company_id=$2
-              AND room.status='active' AND project.status='active'
-              AND EXISTS(
-                SELECT 1 FROM course_members member
-                 WHERE member.course_id=course.id AND member.company_id=course.company_id AND member.role='teacher'
-              )`,
+              AND room.status='active' AND project.status='ACTIVE'
+            LIMIT 1`,
           [routine.channel_id, routine.company_id],
         )
-        if (!eligible[0]) {
+        const authorized = projects[0] && (await createPermissionService(client).can({
+          actorUserId: routine.created_by,
+          action: 'learning:manage',
+          companyId: routine.company_id,
+          projectId: projects[0].project_id,
+        })).allowed
+        if (!authorized) {
           await client.query(
             `UPDATE agent_routines SET status='paused',next_run_at=NULL,updated_at=NOW() WHERE id=$1`,
             [routine.id],
@@ -64,10 +68,10 @@ export async function scheduleDueLearningRoutines(now = new Date()): Promise<num
       const trigger = `routine:${routine.id}:${new Date(routine.next_run_at).toISOString()}`
       await client.query(
         `INSERT INTO agent_work_items
-           (id, company_id, agent_id, channel_id, trigger_client_msg_no, reason, priority, execution_role)
-         VALUES ($1,$2,$3,$4,$5,'routine',80,'coordinator')
+           (id, company_id, authorization_user_id, agent_id, channel_id, trigger_client_msg_no, reason, priority, execution_role)
+         VALUES ($1,$2,$3,$4,$5,$6,'routine',80,'coordinator')
          ON CONFLICT (agent_id, trigger_client_msg_no, reason) DO NOTHING`,
-        [workId, routine.company_id, routine.agent_id, routine.channel_id, trigger],
+        [workId, routine.company_id, routine.created_by, routine.agent_id, routine.channel_id, trigger],
       )
       await client.query(
         `INSERT INTO agent_routine_runs (id, routine_id, work_id, scheduled_at)

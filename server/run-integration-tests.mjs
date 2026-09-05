@@ -132,7 +132,9 @@ if (!LIVE_RESEND) {
   console.log(`[integration] LIVE RESEND mode · domain=${process.env.EMAIL_DOMAIN}`)
 }
 
-if (!process.env.EMAIL_INBOUND_HMAC_SECRET) process.env.EMAIL_INBOUND_HMAC_SECRET = 'integration-test-secret'
+if (!process.env.RESEND_WEBHOOK_SECRET) {
+  process.env.RESEND_WEBHOOK_SECRET = `whsec_${Buffer.alloc(32, 7).toString('base64')}`
+}
 
 // Forward to node --import tsx --test against the integration suite.
 // tsx handles TypeScript; node:test handles the test runner.

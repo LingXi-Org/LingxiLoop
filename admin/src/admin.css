@@ -1,0 +1,257 @@
+@import "../../src/styles/globals.css";
+@source "./**/*.{ts,tsx}";
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.admin-shell {
+  height: 100dvh;
+  min-height: 100dvh;
+  background: var(--sidebar);
+}
+
+.admin-header {
+  z-index: 20;
+  display: flex;
+  min-height: 4rem;
+  flex: none;
+  align-items: center;
+  gap: 0.75rem;
+  border-block-end: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+  padding-inline: clamp(1rem, 2vw, 1.5rem);
+  backdrop-filter: blur(18px) saturate(1.1);
+}
+
+.admin-header-copy {
+  min-width: 0;
+}
+
+.admin-header-copy p {
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.admin-header-copy span {
+  display: block;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-global-search {
+  inline-size: min(30rem, 42vw);
+  margin-inline-start: auto;
+}
+
+.admin-role-badge {
+  height: 1.75rem;
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+}
+
+.admin-content {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--primary) 5%, transparent), transparent 26rem),
+    var(--background);
+  padding: clamp(1.25rem, 3vw, 3rem) clamp(1rem, 3vw, 3rem) calc(2rem + env(safe-area-inset-bottom));
+}
+
+.admin-content > * {
+  width: min(100%, 96rem);
+  margin-inline: auto;
+}
+
+.admin-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 1rem;
+}
+
+.admin-metric-card {
+  min-height: 9.5rem;
+  border: 1px solid color-mix(in srgb, var(--border) 64%, transparent);
+  box-shadow: 0 10px 28px -22px color-mix(in srgb, var(--foreground) 35%, transparent);
+}
+
+.admin-metric-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  place-items: center;
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--primary) 11%, var(--background));
+  color: var(--primary);
+}
+
+.admin-metric-icon > svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.admin-metric-icon-destructive {
+  background: color-mix(in srgb, var(--destructive) 10%, var(--background));
+  color: var(--destructive);
+}
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-table-card {
+  gap: 0;
+  overflow: hidden;
+  padding-block: 0;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  box-shadow: 0 10px 28px -24px color-mix(in srgb, var(--foreground) 32%, transparent);
+}
+
+.admin-table-card [data-slot="table-header"] {
+  background: color-mix(in srgb, var(--muted) 72%, var(--card));
+}
+
+.admin-table-card [data-slot="table-head"] {
+  height: 2.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.admin-table-card [data-slot="table-cell"]:not(:last-child) {
+  min-width: 8rem;
+}
+
+.admin-cell-value {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.admin-page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.admin-page-heading h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
+  font-weight: 620;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.admin-page-heading p {
+  max-width: 48rem;
+  margin-block-start: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.admin-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1rem;
+}
+
+.admin-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.admin-detail-field {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+  box-shadow: 0 8px 22px -22px color-mix(in srgb, var(--foreground) 30%, transparent);
+}
+
+.admin-detail-field pre,
+.admin-json {
+  max-height: 36rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+
+.admin-state {
+  min-height: 18rem;
+  border: 1px dashed var(--border);
+  background: color-mix(in srgb, var(--card) 76%, transparent);
+}
+
+@media (max-width: 64rem) {
+  .admin-role-badge {
+    display: none;
+  }
+
+  .admin-global-search {
+    inline-size: min(26rem, 52vw);
+  }
+}
+
+@media (max-width: 42rem) {
+  .admin-header {
+    padding-inline: 0.75rem;
+  }
+
+  .admin-header-copy {
+    display: none;
+  }
+
+  .admin-global-search {
+    inline-size: auto;
+    flex: 1;
+  }
+
+  .admin-content {
+    padding-block-start: 1.25rem;
+  }
+
+  .admin-toolbar,
+  .admin-page-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-heading-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-shell *,
+  .admin-shell *::before,
+  .admin-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

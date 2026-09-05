@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { createHmac } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 import { afterEach, test } from 'node:test'
+import { parseWukongWebhook } from '../im/webhook-contracts.js'
 import { WukongClient } from '../im/wukong.js'
 
 const originalFetch = globalThis.fetch
@@ -51,11 +53,47 @@ test('WuKong adapter syncs channel history and decodes Lingxi payloads', async (
     }] }), { status: 200 })
   }
   const client = new WukongClient({ apiUrl: 'http://wk:5001', wsUrl: 'ws://wk:5200', apiToken: 'token', webhookSecret: 'secret' })
-  const messages = await client.syncMessages('study', 2, 80, 'student')
+  const messages = await client.syncMessages('study', 2, 80, 'student', 9)
   assert.equal(calls[0]?.url, 'http://wk:5001/channel/messagesync')
   assert.equal(calls[0]?.body.login_uid, 'student')
+  assert.equal(calls[0]?.body.end_message_seq, 9)
+  assert.equal(calls[0]?.body.pull_mode, 1)
   assert.equal(messages[0]?.payload.body, 'learn')
+  assert.equal(messages[0]?.messageId, 'wk-9')
   assert.equal(messages[0]?.clientMsgNo, 'client-9')
+})
+
+test('WuKong history repairs authoritative membership once before retrying', async () => {
+  const calls: Array<{ url: string; body: Record<string, unknown> }> = []
+  globalThis.fetch = async (input, init) => {
+    const url = String(input)
+    calls.push({ url, body: JSON.parse(String(init?.body)) as Record<string, unknown> })
+    if (calls.length === 1) {
+      return new Response('{"msg":"internal/message: valid channel membership required","status":400}', { status: 400 })
+    }
+    return new Response(url.endsWith('/channel/messagesync') ? '{"messages":[]}' : '{}', { status: 200 })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  const profile = { channelId: 'study', channelType: 2 as const, title: 'Study Room', members: ['student', 'nova'] }
+
+  assert.deepEqual(await client.syncMessages('study', 2, 80, 'student', 0, profile), [])
+  assert.deepEqual(calls.map(({ url }) => url), [
+    'http://wk/channel/messagesync',
+    'http://wk/channel',
+    'http://wk/channel/messagesync',
+  ])
+  assert.deepEqual(calls[1]?.body, {
+    channel_id: 'study', channel_type: 2, large: 0, reset: 1, subscribers: ['student', 'nova'],
+  })
+})
+
+test('WuKong history rejects invalid pagination before making a provider request', async () => {
+  let called = false
+  globalThis.fetch = async () => { called = true; return new Response('{}') }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  await assert.rejects(() => client.syncMessages('study', 2, 0), /limit/)
+  await assert.rejects(() => client.syncMessages('study', 2, 80, 'student', -1), /cursor/)
+  assert.equal(called, false)
 })
 
 test('WuKong adapter treats missing empty-channel sync state as empty results', async () => {
@@ -122,28 +160,37 @@ test('WuKong adapter does not hide unrelated HTTP 400 failures', async () => {
   await assert.rejects(() => client.clearUnread('student', 'study', 2), /channel_id cannot be empty/)
 })
 
-test('WuKong stream events include enough routing metadata for the browser', async () => {
-  let body: Record<string, unknown> = {}
-  globalThis.fetch = async (_input, init) => {
-    body = JSON.parse(String(init?.body)) as Record<string, unknown>
-    return new Response('{}', { status: 200 })
-  }
-  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
-  await client.emitEvent({
-    channelId: 'study', channelType: 2, fromUid: 'nova', clientMsgNo: 'preview-1',
-    eventId: 'evt-1', eventType: 'stream.delta', data: { kind: 'text', delta: 'hi' },
-  })
-  assert.deepEqual(body.payload, {
-    kind: 'text', delta: 'hi', channelId: 'study', channelType: 2, fromUid: 'nova', clientMsgNo: 'preview-1',
-  })
-})
-
 test('WuKong webhook signatures are constant-time HMAC contracts', () => {
   const raw = Buffer.from('{"event":"message.committed"}')
   const secret = 'test-webhook-secret'
   const signature = createHmac('sha256', secret).update(raw).digest('hex')
   const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: secret })
   assert.equal(client.verifyWebhook(raw, `sha256=${signature}`), true)
+  assert.equal(client.verifyWebhook(raw, undefined, secret), true)
+  assert.equal(client.verifyWebhook(raw, undefined, 'wrong-secret'), false)
   assert.equal(client.verifyWebhook(raw, 'sha256=deadbeef'), false)
   assert.equal(client.verifyWebhook(Buffer.from('tampered'), `sha256=${signature}`), false)
+})
+
+test('WuKong msg.notify batches normalize to the Agent OS webhook contract', () => {
+  const payload = { version: 1, kind: 'text', clientMsgNo: 'msg-1', body: 'hello' }
+  const parsed = parseWukongWebhook([{
+    message_idstr: '123', channel_id: 'channel-1', from_uid: 'user-1', client_msg_no: 'msg-1',
+    payload: Buffer.from(JSON.stringify({ type: 1000, ...payload })).toString('base64'),
+  }])
+  assert.deepEqual(parsed, {
+    success: true,
+    data: { eventId: 'msg.notify:123', eventType: 'msg.notify', channelId: 'channel-1', fromUid: 'user-1', clientMsgNo: 'msg-1', payload },
+  })
+})
+
+test('production enables authenticated WuKong callbacks without inheriting the local proxy', async () => {
+  const [compose, manifest] = await Promise.all([
+    readFile(new URL('../../../deploy/openship/core-state.yml', import.meta.url), 'utf8'),
+    readFile(new URL('../../../package.json', import.meta.url), 'utf8'),
+  ])
+  assert.match(compose, /WK_WEBHOOK_HTTP_ADDR: .*\/webhooks\/wukong\?token=\$\{WUKONG_WEBHOOK_SECRET:\?/)
+  assert.doesNotMatch(compose, /NODE_USE_ENV_PROXY/)
+  assert.match(manifest, /dev:preview.*NODE_USE_ENV_PROXY=1/)
+  assert.match(manifest, /dev:preview.*--restart-tries -1.*npm:agent-os:dev/)
 })

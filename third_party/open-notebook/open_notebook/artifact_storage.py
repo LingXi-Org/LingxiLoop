@@ -1,33 +1,16 @@
-"""Private durable storage for Open Notebook binary artifacts.
-
-R2 is enabled automatically when LingxiLoop's four core ``R2_*`` variables
-are present.  SurrealDB stores opaque ``r2://`` references; browsers continue
-to download through the authenticated Open Notebook/LingxiLoop APIs.
-"""
+"""R2-only durable storage for native Open Notebook Source artifacts."""
 
 from __future__ import annotations
 
 import mimetypes
 import os
 import tempfile
-import uuid
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import BinaryIO, Optional
 
 R2_SCHEME = "r2://"
-_NAMESPACES = {"sources", "podcasts"}
-
-
-def _truthy(value: str) -> bool:
-    return value.strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _safe_name(value: str) -> str:
-    name = Path(value).name.strip()
-    if not name or name in {".", ".."}:
-        raise ValueError("Invalid artifact filename")
-    return name
+_NAMESPACES = {"sources"}
 
 
 @dataclass
@@ -65,15 +48,13 @@ class ArtifactStore:
                 "R2_SECRET_ACCESS_KEY", ""
             ).strip(),
         }
-        configured = all(required.values())
-        mode = os.environ.get("OPEN_NOTEBOOK_R2_ENABLED", "auto").strip().lower()
-        self.enabled = configured if mode in {"", "auto"} else _truthy(mode)
-        if self.enabled and not configured:
+        if not all(required.values()):
             missing = [name for name, value in required.items() if not value]
             raise RuntimeError(
-                "OPEN_NOTEBOOK_R2_ENABLED requires all R2 settings; missing: "
+                "Open Notebook RAG requires all R2 settings; missing: "
                 + ", ".join(missing)
             )
+        self.enabled = True
 
         prefix = os.environ.get("OPEN_NOTEBOOK_R2_PREFIX", "open-notebook").strip()
         self.prefix = prefix.strip("/")
@@ -82,7 +63,7 @@ class ArtifactStore:
 
         self.bucket = required["bucket"]
         self.client = client
-        if self.enabled and self.client is None:
+        if self.client is None:
             import boto3
 
             self.client = boto3.client(
@@ -104,32 +85,27 @@ class ArtifactStore:
             raise ValueError("Not an R2 artifact reference")
         key = reference[len(R2_SCHEME) :]
         expected = f"{self.prefix}/{namespace}/"
-        if not key.startswith(expected) or ".." in PurePosixPath(key).parts:
+        canonical_source = namespace == "sources" and key.startswith("knowledge-sources/")
+        if (not key.startswith(expected) and not canonical_source) or ".." in PurePosixPath(key).parts:
             raise ValueError("Artifact reference is outside its namespace")
         return key
 
-    def persist_file(
-        self, local_path: str | Path, namespace: str, object_name: Optional[str] = None
-    ) -> str:
-        path = Path(local_path)
-        if not self.enabled:
-            return str(path)
-        filename = _safe_name(object_name or path.name)
-        key = f"{self.prefix}/{namespace}/{uuid.uuid4().hex}/{filename}"
-        extra = {}
-        content_type = mimetypes.guess_type(filename)[0]
-        if content_type:
-            extra["ContentType"] = content_type
-        self.client.upload_file(str(path), self.bucket, key, ExtraArgs=extra or None)
-        return f"{R2_SCHEME}{key}"
-
     def materialize(
-        self, reference: str, namespace: str, local_root: str | Path
+        self,
+        reference: str,
+        namespace: str,
+        local_root: str | Path,
+        max_bytes: int | None = None,
     ) -> MaterializedArtifact:
-        if not self.is_object_reference(reference):
-            path = self._contained_local(reference, local_root)
-            return MaterializedArtifact(path=path)
         key = self._key(reference, namespace)
+        if max_bytes is not None:
+            size = int(
+                self.client.head_object(Bucket=self.bucket, Key=key).get(
+                    "ContentLength", -1
+                )
+            )
+            if size < 0 or size > max_bytes:
+                raise ValueError("Artifact exceeds the source size limit")
         suffix = Path(PurePosixPath(key).name).suffix
         fd, temp_name = tempfile.mkstemp(prefix="open-notebook-", suffix=suffix)
         os.close(fd)
@@ -142,11 +118,6 @@ class ArtifactStore:
             raise
 
     def exists(self, reference: str, namespace: str, local_root: str | Path) -> bool:
-        if not self.is_object_reference(reference):
-            try:
-                return self._contained_local(reference, local_root).is_file()
-            except ValueError:
-                return False
         key = self._key(reference, namespace)
         try:
             self.client.head_object(Bucket=self.bucket, Key=key)
@@ -158,11 +129,8 @@ class ArtifactStore:
             raise
 
     def delete(self, reference: str, namespace: str, local_root: str | Path) -> None:
-        if self.is_object_reference(reference):
-            key = self._key(reference, namespace)
-            self.client.delete_object(Bucket=self.bucket, Key=key)
-            return
-        self._contained_local(reference, local_root).unlink(missing_ok=True)
+        key = self._key(reference, namespace)
+        self.client.delete_object(Bucket=self.bucket, Key=key)
 
     def open_download(self, reference: str, namespace: str) -> ArtifactDownload:
         key = self._key(reference, namespace)
@@ -176,17 +144,6 @@ class ArtifactStore:
             or "application/octet-stream",
             content_length=response.get("ContentLength"),
         )
-
-    @staticmethod
-    def _contained_local(reference: str, local_root: str | Path) -> Path:
-        root = Path(local_root).resolve()
-        path = Path(reference).resolve()
-        try:
-            path.relative_to(root)
-        except ValueError as error:
-            raise ValueError("Artifact path is outside its local root") from error
-        return path
-
 
 _store: Optional[ArtifactStore] = None
 

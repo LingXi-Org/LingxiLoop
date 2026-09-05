@@ -22,10 +22,16 @@ lerna-debug.log*
 # Dependencies
 node_modules
 dist
+dist-admin
 dist-ssr
 /artifacts/eval-*.json
+/artifacts/.env*
+/artifacts/playwright/.playwright-artifacts-*/
+/artifacts/playwright/*/error-context.md
+/artifacts/playwright/*/trace.zip
 
 # Python bytecode cache
+.venv/
 __pycache__/
 *.pyc
 
@@ -70,11 +76,8 @@ server/uploads/
 .release.env
 .release.next.env
 .release.previous.env
+.openlit_apikey
 *.tsbuildinfo
 
-# tsc emissions of vite.config.ts (build artifacts)
-vite.config.js
-vite.config.d.ts
-*.tsbuildinfo
 docs/HANDOFF.md
 android/app/google-services.json

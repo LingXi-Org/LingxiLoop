@@ -1,6 +1,0 @@
-interface:
-  display_name: "LingxiLoop Agent OS Change"
-  short_description: "Change Agent OS without breaking runtime contracts"
-  default_prompt: "Use $lingxiloop-agent-os-change to implement this Agent OS change safely."
-policy:
-  allow_implicit_invocation: true

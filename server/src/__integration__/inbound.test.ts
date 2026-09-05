@@ -1,12 +1,12 @@
 /**
- * Integration test: POST /webhooks/email/inbound end-to-end.
+ * Integration test: POST /webhooks/email/resend end-to-end.
  *
  * Requires a real Postgres + Redis. Run via:
  *   INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \
  *     npm run test:integration
  *
  * What we verify here — the bits a unit test on a pure function CAN'T:
- *   - HMAC signature gate (401 on a mismatched / missing sig)
+ *   - Resend/Svix signature gate
  *   - Recipient resolution against participants.email
  *   - email_messages + email_attachments rows actually land in PG
  *   - Idempotent dedup on a re-delivered Message-ID
@@ -17,16 +17,24 @@ import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import {
   buildTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent,
-  signInboundPayload, teardownAll,
+  registerInboundFixture, signInboundPayload, teardownAll,
 } from './_helpers.js'
 import { pool } from '../db/pool.js'
+import type { Storage } from '../storage.js'
 
 let server: Server
 let baseUrl = ''
+const storedObjects = new Map<string, Buffer>()
+const storageFake: Pick<Storage, 'put'> = {
+  async put(key, body) {
+    storedObjects.set(key, Buffer.from(body))
+    return `https://storage.test/${key}`
+  },
+}
 
 before(async () => {
   await ensureSchemaOnce()
-  const app = await buildTestApp()
+  const app = await buildTestApp(storageFake)
   await new Promise<void>((resolve) => {
     server = createServer(app).listen(0, () => {
       const addr = server.address()
@@ -37,6 +45,7 @@ before(async () => {
 })
 
 beforeEach(async () => {
+  storedObjects.clear()
   await resetAllTables()
 })
 
@@ -46,11 +55,36 @@ after(async () => {
 
 /** Wrap a POST helper so each test stays a one-liner. */
 async function postInbound(body: unknown, opts?: { signature?: string }): Promise<{ status: number; body: any }> {
-  const raw = JSON.stringify(body)
-  const sig = opts?.signature ?? signInboundPayload(raw)
-  const res = await fetch(`${baseUrl}/webhooks/email/inbound`, {
+  const record = body && typeof body === 'object' ? body as Record<string, unknown> : {}
+  const attachments = Array.isArray(record.attachments)
+    ? record.attachments.map((attachment) => ({
+        ...(attachment as Record<string, unknown>),
+        truncated: (attachment as Record<string, unknown>).truncated === true,
+      }))
+    : []
+  const payload = {
+    inReplyTo: null,
+    references: [],
+    cc: [],
+    subject: '',
+    text: '',
+    html: null,
+    rawSizeBytes: 0,
+    autoSubmitted: null,
+    ...record,
+    attachments,
+  }
+  const emailId = registerInboundFixture(payload as never)
+  const raw = JSON.stringify({
+    type: 'email.received',
+    created_at: new Date().toISOString(),
+    data: { email_id: emailId },
+  })
+  const headers = signInboundPayload(raw)
+  if (opts?.signature) headers['svix-signature'] = opts.signature
+  const res = await fetch(`${baseUrl}/webhooks/email/resend`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-lingxiloop-signature': sig },
+    headers: { 'content-type': 'application/json', ...headers },
     body: raw,
   })
   const text = await res.text()
@@ -59,7 +93,7 @@ async function postInbound(body: unknown, opts?: { signature?: string }): Promis
   return { status: res.status, body: parsed }
 }
 
-test('[integration] rejects requests with a bad HMAC signature', async () => {
+test('[integration] rejects requests with a bad Resend signature', async () => {
   const r = await postInbound(
     {
       messageId: 'mid@host',
@@ -68,14 +102,14 @@ test('[integration] rejects requests with a bad HMAC signature', async () => {
       subject: 'hello',
       text: 'body',
     },
-    { signature: 'sha256=deadbeef' },
+    { signature: 'v1,deadbeef' },
   )
-  assert.equal(r.status, 401)
+  assert.equal(r.status, 400)
 })
 
 test('[integration] rejects requests missing the signature header', async () => {
   const raw = JSON.stringify({ messageId: 'mid@host', from: 'alice@external.com', to: ['x@lingxiloop.local'] })
-  const res = await fetch(`${baseUrl}/webhooks/email/inbound`, {
+  const res = await fetch(`${baseUrl}/webhooks/email/resend`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: raw,
@@ -83,7 +117,7 @@ test('[integration] rejects requests missing the signature header', async () => 
   assert.equal(res.status, 400)
 })
 
-test('[integration] returns 404 when no recipient resolves to a known agent', async () => {
+test('[integration] acknowledges a valid event when no recipient resolves to a known agent', async () => {
   await seedCompanyWithAgent({ agentEmail: 'aurora@lingxiloop.local' })
   const r = await postInbound({
     messageId: 'never-delivered@host',
@@ -92,7 +126,8 @@ test('[integration] returns 404 when no recipient resolves to a known agent', as
     subject: 'hi',
     text: 'body',
   })
-  assert.equal(r.status, 404)
+  assert.equal(r.status, 200)
+  assert.equal(r.body.delivery.kind, 'no_recipient')
   // Nothing should land in PG when the address doesn't resolve.
   const { rows } = await pool.query('SELECT count(*)::int AS n FROM email_messages')
   assert.equal(rows[0].n, 0)
@@ -109,7 +144,7 @@ test('[integration] persists email_messages + publishes wake event on resolved r
   })
   assert.equal(r.status, 200)
   assert.equal(r.body.ok, true)
-  assert.equal(r.body.deliveries.length, 1)
+  assert.equal(r.body.delivery.deliveries.length, 1)
 
   // Verify the row landed and is attributed to the right tenant + agent.
   const { rows } = await pool.query<{
@@ -147,7 +182,7 @@ test('[integration] dedups a re-delivered Message-ID', async () => {
   assert.equal(r1.status, 200)
   const r2 = await postInbound(payload)
   assert.equal(r2.status, 200)
-  assert.equal(r2.body.deduplicated, true)
+  assert.equal(r2.body.delivery.kind, 'deduplicated')
   const { rows } = await pool.query('SELECT count(*)::int AS n FROM email_messages WHERE smtp_message_id = $1', ['dup-mid@host'])
   assert.equal(rows[0].n, 1, 'second delivery must not create a second email_messages row')
 })
@@ -171,60 +206,31 @@ test('[integration] flags inbound auto_submitted when worker forwarded the heade
   assert.equal(rows[0].auto_submitted, true)
 })
 
-test('[integration] inbound SES boomerang is deduplicated against the outbound row', async () => {
-  // SES rewrites Message-ID on the wire, so when we send to a lingxiloop-domain
-  // address the boomerang inbound carries an SES-minted id that doesn't
-  // match the smtp_message_id we stored on the outbound. Without echo
-  // dedup, this creates a second conversation with the same message —
-  // the bug the user observed in production. Verify the heuristic catches
-  // it: same from/to/subject within 10 minutes ⇒ inbound returns
-  // deduplicated and writes NO new row.
-  const { findOrCreateEmailConversation, persistEmailMessage, mintMessageId } = await import('../email.js')
-  const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
-  const fromAddrFull = `yetone <user-x@${process.env.EMAIL_DOMAIN}>`
+test('[integration] exact Message-ID dedup is scoped independently to each tenant', async () => {
+  const first = await seedCompanyWithAgent({ companyId: 'c-inbound-first', agentEmail: 'first@lingxiloop.local' })
+  const second = await seedCompanyWithAgent({ companyId: 'c-inbound-second', agentEmail: 'second@lingxiloop.local' })
+  const payload = {
+    messageId: 'shared-delivery@host',
+    from: 'alice@external.com',
+    to: [first.agentEmail, second.agentEmail],
+    subject: 'shared delivery',
+    text: 'one SMTP delivery, two isolated tenants',
+  }
 
-  // Seed the outbound row, as if compose just sent.
-  const conv = await findOrCreateEmailConversation({
-    companyId, inReplyTo: null, references: [],
-    subject: '你好', memberIds: [agentId],
-  })
-  const ourId = mintMessageId()
-  await persistEmailMessage({
-    conversationId: conv.conversationId, companyId, authorId: agentId,
-    direction: 'out', transportStatus: 'sent',
-    smtpMessageId: ourId,
-    inReplyTo: null, references: [],
-    subject: '你好',
-    fromAddr: fromAddrFull,
-    toAddrs: [agentEmail],
-    body: '你好啊',
-  })
+  const delivered = await postInbound(payload)
+  assert.equal(delivered.status, 200)
+  assert.equal(delivered.body.delivery.deliveries.length, 2)
+  const { rows } = await pool.query<{ company_id: string }>(
+    `SELECT company_id FROM email_messages WHERE smtp_message_id=$1 ORDER BY company_id`,
+    ['shared-delivery@host'],
+  )
+  assert.deepEqual(rows.map((row) => row.company_id), [first.companyId, second.companyId])
 
-  // Now fire the boomerang: SES-flavored Message-ID, but same from/to/subject.
-  const sesId = `0106019e2ac91d15-${randomHex(8)}-fa0180f0be6f-000000@ap-northeast-1.amazonses.com`
-  const r = await postInbound({
-    messageId: sesId,
-    from: fromAddrFull,
-    to: [agentEmail],
-    subject: '你好',
-    text: '你好啊',
-  })
-  assert.equal(r.status, 200)
-  assert.equal(r.body.deduplicated, true)
-  assert.equal(r.body.echo, true, 'echo dedup must flag this as the SES boomerang')
-
-  // Confirm: only one conversation, only one email_messages row.
-  const { rows: convs } = await pool.query('SELECT count(*)::int AS n FROM conversations WHERE kind = $1', ['email'])
-  assert.equal(convs[0].n, 1, 'echo dedup should NOT create a second conversation')
-  const { rows: msgs } = await pool.query('SELECT count(*)::int AS n FROM email_messages')
-  assert.equal(msgs[0].n, 1, 'echo dedup should NOT create a second email_messages row')
+  const duplicate = await postInbound(payload)
+  assert.equal(duplicate.status, 200)
+  assert.equal(duplicate.body.delivery.kind, 'deduplicated')
+  assert.deepEqual(new Set(duplicate.body.delivery.companyIds), new Set([first.companyId, second.companyId]))
 })
-
-function randomHex(n: number): string {
-  let s = ''
-  for (let i = 0; i < n; i++) s += Math.floor(Math.random() * 16).toString(16)
-  return s
-}
 
 test('[integration] inbound reply threads back to the original outbound conversation', async () => {
   // Regression test for the threading bug surfaced in production:
@@ -233,7 +239,7 @@ test('[integration] inbound reply threads back to the original outbound conversa
   // must look it up against email_messages.smtp_message_id and reuse the
   // same conversation rather than spawning a new one. Bug version split
   // every reply into a fresh thread.
-  const { findOrCreateEmailConversation, persistEmailMessage, mintMessageId } = await import('../email.js')
+  const { findOrCreateEmailConversation, persistEmailMessage, mintMessageId } = await import('../modules/email/index.js')
   const { companyId, agentId, agentEmail } = await seedCompanyWithAgent()
 
   // 1. Seed the outbound row as if the user just composed + sent.
@@ -305,4 +311,5 @@ test('[integration] inbound attachments land in email_attachments + storage', as
   assert.equal(note.truncated, false)
   assert.ok(note.storage_key && note.storage_key.startsWith('email-attachments/'),
     `expected storage_key under email-attachments/, got: ${note.storage_key}`)
+  assert.equal(storedObjects.get(note.storage_key!)?.toString('utf8'), 'Hello, world')
 })

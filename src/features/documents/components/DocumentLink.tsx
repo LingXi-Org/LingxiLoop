@@ -1,0 +1,40 @@
+import { useEffect } from 'react'
+import { IFile } from '@/components/icons'
+import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
+import { useDocuments } from '../state'
+
+export function DocumentLink({ id }: { id: string }) {
+  const setView = useApp((s) => s.setView)
+  const view = useApp((s) => s.view)
+  const openDocumentPeek = useSurface((s) => s.openDocumentPeek)
+  const selectDocument = useDocuments((s) => s.select)
+  const loaded = useDocuments((s) => s.loaded)
+  const loadDocuments = useDocuments((s) => s.load)
+  const doc = useDocuments((s) => s.list.find((d) => d.id === id))
+  const label = doc?.title?.trim() || '资料'
+
+  useEffect(() => {
+    if (!loaded) void loadDocuments()
+  }, [loadDocuments, loaded])
+
+  return (
+    <a
+      href={`#documents/${id}`}
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        selectDocument(id)
+        if (view === 'conversations') openDocumentPeek(id)
+        else setView('library')
+      }}
+      className="inline-flex max-w-[260px] items-center gap-1.5 rounded-full border border-sky2-100 bg-sky2-50 px-2 py-0.5 text-[13px] font-semibold text-skype-deep no-underline transition hover:border-sky2-200 hover:bg-sky2-100"
+      style={{ verticalAlign: '-0.16em' }}
+      title="打开资料"
+      aria-label={`打开资料 ${label}`}
+    >
+      <IFile className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate">{label}</span>
+    </a>
+  )
+}

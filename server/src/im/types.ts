@@ -17,6 +17,10 @@ export interface ImChannelProfile {
   kind?: 'direct' | 'group'
   title: string
   members: string[]
+  topic?: string | null
+  pinned?: boolean
+  createdAt?: string
+  updatedAt?: string
   leaderAgentId?: string
   presetKey?: string
 }

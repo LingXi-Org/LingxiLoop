@@ -1,0 +1,32 @@
+.brand-avatar--angry .bs-avatar__svg {
+  animation: lingxiloop-brand-angry-emphasis 80ms steps(2, end) infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@keyframes lingxiloop-brand-angry-emphasis {
+  0%,
+  100% {
+    transform: translate3d(-1.8px, -0.5px, 0) rotate(-2.4deg);
+  }
+
+  25% {
+    transform: translate3d(1.6px, 0.7px, 0) rotate(2deg);
+  }
+
+  50% {
+    transform: translate3d(-1.2px, 0.9px, 0) rotate(-1.5deg);
+  }
+
+  75% {
+    transform: translate3d(1.9px, -0.6px, 0) rotate(2.5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-avatar--angry .bs-avatar__svg {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+}

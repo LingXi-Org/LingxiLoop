@@ -1,4 +1,13 @@
-export const AGENT_OS_PROTOCOL_VERSION = 1 as const
+import type {
+  HostAction as LingxiOSHostAction,
+  HostActionResult as LingxiOSHostActionResult,
+  PromptContext,
+} from '../../../third_party/lingxios/src/protocol/types.js'
+
+export { AGENT_OS_PROTOCOL_VERSION } from '../../../third_party/lingxios/src/protocol/constants.js'
+export type { ModelItem } from '../../../third_party/lingxios/src/protocol/types.js'
+export const PROMPT_CONTRACT_VERSION = 'prompt-v7' as const
+export const KNOWLEDGE_CONTRACT_VERSION = 'native-v3' as const
 
 export type AgentWorkReason = 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary' | 'memory_synthesis'
 export type WorkLane = 'learner' | 'approval' | 'collaboration' | 'background'
@@ -20,13 +29,8 @@ export interface PromptMemoryV1 {
   updatedAt: string
 }
 
-export interface PromptContextV1 {
-  version: 1
-  epoch: number
-  assembledAt: string
-  systemInstructions: string
-  persona: { name: string; role: string; instructions: string }
-  capabilities: string[]
+export interface PromptContextV1 extends PromptContext {
+  version: 2
   executionRole: AgentExecutionRole
   memories: {
     learner: PromptMemoryV1[]
@@ -65,7 +69,9 @@ export interface MemorySynthesisBatch {
 export interface AgentWorkItem {
   id: string
   fence: number
+  homeEpoch?: number
   companyId: string
+  authorizationUserId?: string
   agentId: string
   channelId: string
   threadRootClientMsgNo?: string
@@ -101,6 +107,7 @@ export interface AgentContext {
     role: string
     instructions: string
   }
+  capabilities?: string[]
   messages: AgentContextMessage[]
   /** Retrieved for this turn only. Never frozen into PromptContext/session. */
   knowledgeContext?: Array<{
@@ -110,15 +117,16 @@ export interface AgentContext {
     excerpt: string
     sourceUrl?: string
     position: number
+    page?: number
     marker: string
   }>
   knowledgeSourceCount?: number
   /** Degraded attachment ingestion detail for the triggering message. */
   knowledgeIngestionFailure?: string
   /** Fresh course state for this turn only. Never frozen into PromptContext/session. */
-  learningContext?: import('../learning/types.js').LearningTurnContext
+  learningContext?: import('../modules/learning/runtime.js').LearningTurnContext
   /** Fresh teacher-room state for Pulse only. Never frozen into PromptContext/session. */
-  teacherContext?: import('../learning/types.js').TeacherTurnContext
+  teacherContext?: import('../modules/learning/runtime.js').TeacherTurnContext
   summary?: string
   learnerId?: string
   promptContextCandidate?: PromptContextV1
@@ -145,36 +153,8 @@ export interface HostHeartbeat {
   preemptRequested?: boolean
 }
 
-export interface HostAction {
-  runId: string
-  cellId: string
-  callIndex: number
-  action: string
-  args: unknown
-  idempotencyKey: string
-}
-
-export type AgentRunStage = 'started' | 'delta' | 'completed' | 'failed' | 'cancelled'
-
-export interface AgentRunEvent {
-  runId: string
-  seq: number
-  kind: string
-  stage: AgentRunStage
-  visibility: 'user' | 'internal'
-  data: unknown
-}
-
-export interface HostActionResult {
-  ok: boolean
-  value?: unknown
-  error?: string
-  approval?: {
-    id: string
-    status: 'pending'
-  }
-  directive?: { type: 'defer_to_canvas'; canvasId: string }
-}
+export type HostAction = LingxiOSHostAction
+export type HostActionResult = LingxiOSHostActionResult
 
 export interface ApprovalResolution {
   approvalId: string
@@ -182,37 +162,6 @@ export interface ApprovalResolution {
   result?: unknown
   error?: string
 }
-
-export interface KernelExecution {
-  executionId: string
-  stdout: string
-  stderr: string
-  result: unknown
-  durationMs: number
-  truncated: boolean
-  artifacts: Array<{ path: string; size: number; mime: string; sha256: string }>
-  directives?: Array<{ type: 'defer_to_canvas'; canvasId: string }>
-}
-
-export interface AgentSessionRecord {
-  key: string
-  companyId: string
-  agentId: string
-  channelId: string
-  threadRootClientMsgNo?: string
-  summary?: string
-  history: ModelItem[]
-  /** Durable work ids whose dynamic turn input is already present in history. */
-  appliedWorkIds?: string[]
-  revision: number
-  compactionEpoch: number
-  promptContext?: PromptContextV1
-}
-
-export type ModelItem =
-  | { role: 'user' | 'assistant' | 'system'; content: string }
-  | { type: 'function_call'; callId: string; name: 'ipython'; arguments: string }
-  | { type: 'function_call_output'; callId: string; output: string }
 
 export type LingxiMessageKind =
   | 'text'

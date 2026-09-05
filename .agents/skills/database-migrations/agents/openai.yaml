@@ -1,0 +1,4 @@
+interface:
+  display_name: "Database Migrations"
+  short_description: "Evolve LingxiLoop PostgreSQL safely with forward SQL"
+  default_prompt: "Use $database-migrations to implement and verify a forward PostgreSQL migration."

@@ -1,0 +1,51 @@
+export {
+  createResendInboundEmailRouter,
+  emailApplication,
+  getAgentEmailIdentity,
+  getAgentEmailThread,
+  resendInboundEmailRouter,
+  isAgentEmailAddressingConfigured,
+  listAgentEmailContacts,
+  listAgentEmailInbox,
+  replyToAgentEmail,
+  sendAgentEmail,
+  sendCalendarReminderEmail,
+} from './facade.js'
+export { EmailApplicationError } from './application.js'
+export type {
+  AgentEmailCommandIdentity,
+  AgentEmailContact,
+  AgentEmailDeliveryResult,
+  AgentEmailThread,
+  AgentEmailThreadView,
+  EmailHtmlPayload,
+  EmailScope,
+  EmailSendPayload,
+} from './contracts.js'
+export {
+  computeAgentAddress,
+  formatAddress,
+  mintMessageId,
+  normalizeMessageId,
+  parseAddress,
+  sanitizeEmailHtml,
+  sanitizeSubject,
+  splitReplyAddresses,
+} from './addressing.js'
+export {
+  __setEmailProviderOverrideForTesting,
+  assertEmailProviderConfigured,
+  sendViaProvider,
+} from './provider.js'
+export type { ProviderSendResult, SendArgs } from './provider.js'
+export {
+  backfillCompanyAgentAddresses,
+  ensureParticipantAddress,
+  findEmailConversationByMessageIds,
+  findOrCreateEmailConversation,
+  findParticipantByAddress,
+  findUserInCompanyByAuthEmail,
+  persistEmailMessage,
+  recordExternalContact,
+  replyInEmailConversation,
+} from './runtime.js'

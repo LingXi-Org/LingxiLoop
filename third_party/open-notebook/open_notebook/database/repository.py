@@ -118,6 +118,37 @@ async def repo_query(
             raise
 
 
+async def repo_query_statements(
+    query_str: str, vars: Optional[Dict[str, Any]] = None
+) -> List[Any]:
+    """Execute every statement and fail if any raw Surreal result is not OK."""
+
+    async with db_connection() as connection:
+        response = await connection.query_raw(query_str, vars or {})
+        if not isinstance(response, dict):
+            raise RuntimeError("SurrealDB raw query returned an invalid response")
+        if response.get("error") is not None:
+            raise RuntimeError(f"SurrealDB raw query failed: {response['error']}")
+        statements = response.get("result")
+        if not isinstance(statements, list):
+            raise RuntimeError("SurrealDB raw query returned no statement results")
+        results: List[Any] = []
+        failures: List[str] = []
+        for index, statement in enumerate(statements):
+            if not isinstance(statement, dict) or statement.get("status") != "OK":
+                detail = (
+                    statement.get("result") if isinstance(statement, dict) else None
+                )
+                failures.append(
+                    f"SurrealDB statement {index + 1} failed: {detail or 'unknown error'}"
+                )
+            else:
+                results.append(parse_record_ids(statement.get("result")))
+        if failures:
+            raise RuntimeError("; ".join(failures))
+        return results
+
+
 async def repo_create(table: str, data: Dict[str, Any]) -> Dict[str, Any]:
     """Create a new record in the specified table"""
     # Remove 'id' attribute if it exists in data

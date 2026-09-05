@@ -2,9 +2,9 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { mergeRequestHeaders, putPresignedFile } from './transport'
 
-test('caller headers override matching defaults without dropping auth or tenant context', () => {
+test('caller headers override matching defaults without dropping request context', () => {
   const headers = mergeRequestHeaders({
-    authorization: 'Bearer token',
+    'x-request-id': 'request-1',
     'content-type': 'application/json',
     'x-company-id': 'co-1',
     'x-project-id': 'project-1',
@@ -13,7 +13,7 @@ test('caller headers override matching defaults without dropping auth or tenant 
     ['x-custom-header', 'custom'],
   ]))
 
-  assert.equal(headers.get('authorization'), 'Bearer token')
+  assert.equal(headers.get('x-request-id'), 'request-1')
   assert.equal(headers.get('x-company-id'), 'co-1')
   assert.equal(headers.get('x-project-id'), 'project-1')
   assert.equal(headers.get('content-type'), 'text/plain')

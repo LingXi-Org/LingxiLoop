@@ -27,11 +27,11 @@ RUN i=0; until npm ci; do \
 COPY frontend/ ./
 RUN npm run build
 
-# Stage 2: Backend builder
-FROM python:3.12-slim-trixie AS backend-builder
+# Stage 2: Shared backend builder base
+FROM python:3.12-slim-trixie AS backend-builder-base
 
 # Install build dependencies (uv downloads pre-built wheels for most packages)
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
@@ -51,13 +51,26 @@ ENV UV_HTTP_TIMEOUT=120
 COPY pyproject.toml uv.lock ./
 COPY open_notebook/__init__.py ./open_notebook/__init__.py
 
+# Stage 2a: Full upstream backend dependency set
+FROM backend-builder-base AS backend-builder
+
 # Install dependencies (this layer is cached unless dependencies change)
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --group full
 
 # Pre-download tiktoken encoding so the app works offline (issue #264).
 # /app/tiktoken-cache is intentionally outside /app/data/ so that volume mounts
 # of /app/data (for user data persistence) do not hide the pre-baked encoding.
 # config.py reads TIKTOKEN_CACHE_DIR from the environment to pick up this path.
+ENV TIKTOKEN_CACHE_DIR=/app/tiktoken-cache
+RUN mkdir -p /app/tiktoken-cache && \
+    .venv/bin/python -c "import tiktoken; tiktoken.get_encoding('o200k_base')"
+
+# Stage 2b: Production RAG dependency set.  This intentionally excludes chat,
+# transformations, podcasts, credential/model UI providers, and LangGraph.
+FROM backend-builder-base AS rag-backend-builder
+
+RUN uv sync --frozen --no-dev --no-default-groups
+
 ENV TIKTOKEN_CACHE_DIR=/app/tiktoken-cache
 RUN mkdir -p /app/tiktoken-cache && \
     .venv/bin/python -c "import tiktoken; tiktoken.get_encoding('o200k_base')"
@@ -70,12 +83,12 @@ FROM python:3.12-slim-trixie AS runtime-base
 
 # Install only runtime system dependencies (no build tools)
 # Add Node.js 22.x LTS for running the frontend
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
     ffmpeg \
     supervisor \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get -o Acquire::Retries=5 install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv using the official method
@@ -153,6 +166,48 @@ RUN mkdir -p /mydata
 # Enable the surrealdb program in supervisord (appended to the shared config)
 RUN cat /app/supervisord.surrealdb.conf >> /etc/supervisor/conf.d/supervisord.conf
 
-# Stage 6 (default): Regular multi-container image (SurrealDB runs externally).
+# Stage 6: LingxiLoop production RAG image.  It has no Node runtime, frontend
+# artifacts, full API routers, chat graphs, podcast code, or non-RAG command
+# modules.  SurrealDB remains an external service.
+FROM python:3.12-slim-trixie AS lingxiloop-rag
+
+RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
+    supervisor \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=rag-backend-builder /app/.venv /app/.venv
+COPY --from=rag-backend-builder /app/tiktoken-cache /app/tiktoken-cache
+
+COPY open_notebook/__init__.py open_notebook/config.py open_notebook/exceptions.py open_notebook/artifact_storage.py /app/open_notebook/
+COPY open_notebook/database /app/open_notebook/database
+COPY open_notebook/domain/__init__.py open_notebook/domain/base.py /app/open_notebook/domain/
+COPY open_notebook/rag /app/open_notebook/rag
+COPY open_notebook/utils/__init__.py open_notebook/utils/proxy.py open_notebook/utils/url_validation.py /app/open_notebook/utils/
+COPY api/__init__.py api/middleware.py api/rag_auth.py api/rag_models.py api/rag_router.py api/rag_main.py /app/api/
+COPY rag_commands.py /app/rag_commands.py
+COPY supervisord.rag.conf /etc/supervisor/conf.d/supervisord.conf
+
+ENV UV_NO_SYNC=1
+ENV VIRTUAL_ENV=/app/.venv
+ENV TIKTOKEN_CACHE_DIR=/app/tiktoken-cache
+ENV API_HOST=0.0.0.0
+ENV OPEN_NOTEBOOK_RAG_ONLY=1
+ENV OPEN_NOTEBOOK_WORKER_MAX_TASKS=5
+
+RUN mkdir -p /app/data/uploads /var/log/supervisor
+
+EXPOSE 5055
+
+HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=4 \
+    CMD supervisorctl status rag-api | grep -q RUNNING \
+    && supervisorctl status rag-worker | grep -q RUNNING \
+    && curl -fsS http://127.0.0.1:5055/readyz >/dev/null
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+# Stage 7 (default): Regular multi-container image (SurrealDB runs externally).
 # Kept last so a plain `docker build .` produces this variant.
 FROM runtime-base AS runtime

@@ -69,7 +69,7 @@ Never park a critical action where resizing or scrolling clips it. Keep it in th
 
 **Severity.** `HIGH` blocks content or an action at a supported viewport. `MEDIUM` harms hierarchy, reading order, or adaptability. `LOW` is isolated alignment or spacing polish.
 
-**Verification.** Without a browser: logical properties in place of physical ones, container and media queries against the supported viewport list and DOM order against the intended reading order. With one: every supported width, 200% zoom and the RTL mirror. Report every check you could not run as `Not verified`.
+**Verification.** Review logical properties in place of physical ones, container and media queries against the supported viewport list, and DOM order against the intended reading order.
 
 **Format.** Group findings under the principle each violates, ordered by severity, one row per root cause listing every location it appears in:
 

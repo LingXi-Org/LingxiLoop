@@ -225,7 +225,7 @@ export function particles(t: number, scale: number): DotRender[] {
   for (const p of PARTICLES) {
     const u = t - p.birth
     if (u < 0 || u > 0.62) continue
-    const rho = p.rho * Math.pow(0.75, u * 10)
+    const rho = p.rho * 0.75 ** (u * 10)
     const a = p.angle + (u * 100 * Math.PI) / 180
     out.push({
       x: Math.cos(a) * rho * scale,

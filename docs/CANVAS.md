@@ -2,7 +2,11 @@
 
 LingxiLoop Canvas follows one invariant: **shared state, isolated execution**.
 
-The shared boundary contains only task-workspace-scoped Canvas records:
+Each ordinary chat conversation gets one durable Canvas automatically when its
+Canvas workspace is first opened. Users cannot create additional canvases for a
+conversation; the conversation identity is the idempotent ownership key.
+
+The shared boundary contains only conversation-scoped Canvas records:
 
 - `canvases` identifies a durable learning-task workspace and its source conversation, trigger, goal, initiator, and lifecycle. A tenant may retain many historical workspaces.
 - `canvas_frames` stores typed frame geometry, content and revision metadata.
@@ -44,6 +48,18 @@ sandboxed iframe; it never executes in the LingxiLoop application origin.
 Canvas introduces no collaboration container, MCP service, Docker runtime,
 Screen/X11 session, browser profile, or shared filesystem. Agent OS kernels and
 their Agent Homes remain isolated exactly as before.
+
+The server implementation is one vertical slice under `server/src/modules/canvas`:
+`contracts.ts` owns Zod and event/DTO contracts, `router.ts` maps authenticated
+HTTP requests, `application.ts` owns validation, transactions and publication,
+and `repository.ts` owns every parameterized query and lock primitive. Agent OS
+and integration callers import only the public `index.ts`; the former
+`server/src/canvas/service.ts` path does not exist.
+
+The browser implementation is co-located under `src/features/canvas`: API,
+contracts, Zustand state, Canvas-only reducers and business components share
+one feature boundary. HTTP still uses the shared transport and realtime still
+uses the single shared WebSocket client.
 
 The interaction and data model were independently designed after studying
 Doop's public architecture: stable identity colors, presence, task timelines,

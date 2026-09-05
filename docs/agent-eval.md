@@ -72,4 +72,6 @@ Artifacts under `eval/.state/reports/` include aggregate/sample JSON, Markdown a
 
 ## Legacy retirement
 
-Old scripts, suites/baselines, server Eval modules, internal runtime adapters/tests and Admin Eval surfaces are removed. Product learning evaluation is a separate domain and is unchanged. The v1 bootstrap schema no longer defines the old Eval tables. LingxiLoop has no in-place schema upgrade path: an existing database must be backed up, dropped and bootstrapped again by operations before deploying this version. There is no dual-write, backfill, compatibility mode or automatic rollback.
+Old scripts, suites/baselines, server Eval modules, internal runtime adapters/tests and Trust Eval endpoints are removed. Product learning evaluation remains separate and unchanged. Main's applied `0001_v1_baseline.sql` is preserved byte-for-byte. New migration `0006_retire_legacy_eval.sql` retires the three old Eval tables without CASCADE.
+
+Stop old Eval readers/writers and archive required historical Eval results before deployment. Run `npm run db:migrate` before starting the new processes. Old binaries are incompatible with the removed tables; rollback requires the operations backup. Existing signed Trust snapshots remain immutable historical records; new snapshots omit old Eval fields. No production database is modified by this merge.
