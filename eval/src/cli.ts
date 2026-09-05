@@ -8,6 +8,7 @@ import { runJob, validateManifest } from './runner.js'
 import { markdown, type Report } from './report.js'
 import { Store, type Manifest } from './store.js'
 import { exportBaseline, importBaseline } from './baseline.js'
+import { htmlReport } from './html-report.js'
 
 function readJson(path: string): unknown {
   const bytes = readFileSync(path)
@@ -21,7 +22,9 @@ function exportReport(store: Store, jobId: string, directory: string) {
   const report = job.report as Report
   writeFileSync(resolve(directory, `${jobId}.json`), JSON.stringify(report, null, 2), { mode: 0o600 })
   writeFileSync(resolve(directory, `${jobId}.md`), markdown(report), { mode: 0o600 })
-  writeFileSync(resolve(directory, `${jobId}.spans.jsonl`), store.spans(jobId).map(s => JSON.stringify(s)).join('\n'), { mode: 0o600 })
+  const spans = store.spans(jobId)
+  writeFileSync(resolve(directory, `${jobId}.html`), htmlReport(report, spans), { mode: 0o600 })
+  writeFileSync(resolve(directory, `${jobId}.spans.jsonl`), spans.map(s => JSON.stringify(s)).join('\n'), { mode: 0o600 })
   return report
 }
 export async function main(args = process.argv.slice(2)) {
@@ -59,7 +62,7 @@ export async function main(args = process.argv.slice(2)) {
     if (values.baseline && values['baseline-file']) throw new EvaluationError('conflicting_baseline_options')
     const baseline = values['baseline-file'] ? importBaseline(store, readJson(values['baseline-file'])) : values.baseline ?? null
     const manifest: Manifest = old?.manifest ?? {
-      schemaVersion: 1, engine: 'black-box-eval/1', suite, dataset, target: target.identity, judge: judge?.fingerprint ?? null,
+      schemaVersion: 2, engine: 'black-box-eval/2', suite, dataset, target: target.identity, judge: judge?.fingerprint ?? null,
       seed: Number(values.seed ?? '1'), provenance: { revision: required('revision') }, baseline,
     }
     validateManifest(manifest)

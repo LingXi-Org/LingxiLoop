@@ -3,12 +3,12 @@ import { EvaluationError, hash, id, manifestSchema, sampleSchema } from './contr
 import { buildReport } from './report.js'
 import type { Store } from './store.js'
 
-const portableSchema = z.object({ schemaVersion: z.literal(1), name: id, reason: z.string().min(1).max(500),
+const portableSchema = z.object({ schemaVersion: z.literal(2), name: id, reason: z.string().min(1).max(500),
   manifest: manifestSchema, samples: z.array(sampleSchema).min(1).max(100000), digest: z.string().regex(/^[a-f0-9]{64}$/) }).strict()
 export function exportBaseline(store: Store, name: string) {
   const job = store.baseline(name)
   const row = store.db.prepare('SELECT reason FROM baselines WHERE name=?').get(name)!
-  const data = { schemaVersion: 1 as const, name, reason: String(row.reason), manifest: job.manifest, samples: store.samples(job.id) }
+  const data = { schemaVersion: 2 as const, name, reason: String(row.reason), manifest: job.manifest, samples: store.samples(job.id) }
   return { ...data, digest: hash(data) }
 }
 export function importBaseline(store: Store, input: unknown): string {

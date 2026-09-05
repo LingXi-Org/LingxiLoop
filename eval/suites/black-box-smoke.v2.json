@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1, "id": "black-box-smoke", "version": "1",
+  "schemaVersion": 2, "id": "black-box-smoke", "version": "2",
   "dataset": { "id": "smoke", "version": "1" },
   "samples": 2, "concurrency": 2, "timeoutMs": 120000,
   "graders": [
@@ -7,5 +7,5 @@
     { "id": "semantic", "kind": "factuality", "threshold": 0.8 }
   ],
   "gate": { "minScore": 0.9, "minPassRate": 1, "maxScoreDrop": 0.02, "maxCaseDrop": 0.05,
-    "maxP95LatencyMs": 120000, "maxCandidateCostUsd": 1, "maxJudgeCostUsd": 5, "requireBaseline": true }
+    "maxP95LatencyMs": 120000, "maxCandidateCostCny": 1, "maxJudgeCostCny": 5, "requireBaseline": true }
 }

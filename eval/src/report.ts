@@ -25,8 +25,8 @@ export function buildReport(job: Job, samples: Sample[], baseline?: Job) {
   if (score < gate.minScore) reasons.push('score_below_threshold')
   if (passRate < gate.minPassRate) reasons.push('pass_rate_below_threshold')
   if (p95LatencyMs > gate.maxP95LatencyMs) reasons.push('latency_budget_exceeded')
-  if (candidate.costUsd > gate.maxCandidateCostUsd) reasons.push('candidate_cost_budget_exceeded')
-  if (judge.costUsd > gate.maxJudgeCostUsd) reasons.push('judge_cost_budget_exceeded')
+  if (candidate.costCny > gate.maxCandidateCostCny) reasons.push('candidate_cost_budget_exceeded')
+  if (judge.costCny > gate.maxJudgeCostCny) reasons.push('judge_cost_budget_exceeded')
   const eligible = reasons.length === 0
   let comparison: { baselineId: string; scoreDelta?: number; caseDeltas?: { id: string; delta: number }[] } | null = null
   if (!baseline && gate.requireBaseline) reasons.push('baseline_required')
@@ -42,7 +42,7 @@ export function buildReport(job: Job, samples: Sample[], baseline?: Job) {
       if (comparison.caseDeltas.some(c => c.delta < -gate.maxCaseDrop)) reasons.push('case_regression')
     }
   }
-  return { schemaVersion: 1 as const, jobId: job.id, manifestHash: hash(job.manifest), comparisonKey: comparisonKey(job.manifest),
+  return { schemaVersion: 2 as const, jobId: job.id, manifestHash: hash(job.manifest), comparisonKey: comparisonKey(job.manifest),
     engine: job.manifest.engine, revision: job.manifest.provenance.revision, seed: job.manifest.seed,
     suite: { id: job.manifest.suite.id, version: job.manifest.suite.version, digest: hash(job.manifest.suite) },
     dataset: { id: job.manifest.dataset.id, version: job.manifest.dataset.version, digest: hash(job.manifest.dataset) },
@@ -56,7 +56,7 @@ export type Report = ReturnType<typeof buildReport>
 export function markdown(report: Report): string {
   return [`# Black-box Eval ${report.jobId}`, '', `Gate: **${report.gate.passed ? 'PASS' : 'FAIL'}**`,
     `Score: ${report.score.toFixed(4)} · Case pass rate: ${report.passRate.toFixed(4)} · p95: ${report.p95LatencyMs} ms`,
-    `Candidate: $${report.usage.candidate.costUsd.toFixed(6)} · Judge: $${report.usage.judge.costUsd.toFixed(6)}`, '',
+    `Candidate: CNY ${report.usage.candidate.costCny.toFixed(6)} · Judge: CNY ${report.usage.judge.costCny.toFixed(6)}`, '',
     ...report.gate.reasons.map(r => `- ${r}`), '', '| Case | Score | Pass |', '|---|---:|---|',
     ...report.cases.map(c => `| ${c.id} | ${c.score.toFixed(4)} | ${c.passed} |`), '',
     'Provider responses are stochastic; reruns pin inputs/configuration, not identical model outputs.', ''].join('\n')

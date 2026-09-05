@@ -10,7 +10,7 @@ export const modelConfigSchema = z.object({
     return !u.username && !u.password && !u.search && !u.hash && (u.protocol === 'https:' || (u.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(u.hostname)))
   }),
   model: z.string().min(1).max(200), apiKey: z.string().min(1).refine(v => !v.includes('<secret>')),
-  inputUsdPerMillion: z.number().finite().nonnegative(), outputUsdPerMillion: z.number().finite().nonnegative(),
+  inputCnyPerMillion: z.number().finite().nonnegative(), outputCnyPerMillion: z.number().finite().nonnegative(),
   maxTokens: z.number().int().min(1).max(32768), timeoutMs: z.number().int().min(100).max(600000),
 }).strict()
 export type ModelConfig = z.infer<typeof modelConfigSchema>
@@ -19,7 +19,7 @@ export function configFromEnv(role: 'CANDIDATE' | 'JUDGE', env = process.env): M
   const number = (name: string) => env[prefix + name]?.trim() ? Number(env[prefix + name]) : NaN
   const parsed = modelConfigSchema.safeParse({
     baseURL: env[prefix + 'BASE_URL'], model: env[prefix + 'MODEL'], apiKey: env[prefix + 'API_KEY'],
-    inputUsdPerMillion: number('INPUT_USD_PER_MILLION'), outputUsdPerMillion: number('OUTPUT_USD_PER_MILLION'),
+    inputCnyPerMillion: number('INPUT_CNY_PER_MILLION'), outputCnyPerMillion: number('OUTPUT_CNY_PER_MILLION'),
     maxTokens: number('MAX_TOKENS'), timeoutMs: number('TIMEOUT_MS'),
   })
   if (!parsed.success) throw new EvaluationError(`invalid_${role.toLowerCase()}_config`)
@@ -66,7 +66,7 @@ function clientFor(config: ModelConfig, role: 'candidate' | 'judge', signal: Abo
         const usage = z.object({ prompt_tokens: z.number().int().nonnegative(), completion_tokens: z.number().int().nonnegative() }).safeParse(decoded.usage)
         if (!usage.success) throw new EvaluationError('missing_model_usage')
         used = { inputTokens: usage.data.prompt_tokens, outputTokens: usage.data.completion_tokens,
-          costUsd: (usage.data.prompt_tokens * config.inputUsdPerMillion + usage.data.completion_tokens * config.outputUsdPerMillion) / 1_000_000 }
+          costCny: (usage.data.prompt_tokens * config.inputCnyPerMillion + usage.data.completion_tokens * config.outputCnyPerMillion) / 1_000_000 }
         accounting.usage = addUsage(accounting.usage, used)
         return new Response(body, { status: response.status, headers: response.headers })
       } catch (error) {
@@ -77,7 +77,7 @@ function clientFor(config: ModelConfig, role: 'candidate' | 'judge', signal: Abo
           'eval.run.id': scope.runId, 'eval.case.id': scope.caseId, 'eval.sample.index': scope.sample,
           'eval.role': role, 'gen_ai.request.model': config.model, 'server.address': new URL(config.baseURL).hostname,
           'gen_ai.usage.input_tokens': used.inputTokens, 'gen_ai.usage.output_tokens': used.outputTokens,
-          'eval.cost.usd': used.costUsd, 'eval.latency.ms': Date.now() - started,
+          'eval.cost.cny': used.costCny, 'eval.latency.ms': Date.now() - started,
         }, failure))
       }
     },
@@ -105,7 +105,7 @@ export function candidateTarget(raw: ModelConfig): EvalTarget {
 export function semanticJudge(raw: ModelConfig): Judge {
   const config = modelConfigSchema.parse(raw)
   return {
-    fingerprint: hash({ ...publicConfig(config), engine: 'autoevals@0.3.0/Factuality' }),
+    fingerprint: hash({ ...publicConfig(config), engine: 'autoevals@0.3.0/Factuality', useCoT: false }),
     async grade(input, output, expected, signal, requestId) {
       const accounting = { usage: zeroUsage() }
       try {
@@ -113,7 +113,7 @@ export function semanticJudge(raw: ModelConfig): Judge {
         const client = clientFor(config, 'judge', signal, requestId, accounting)
         // Autoevals publishes CJS OpenAI types; the ESM client is the same SDK at runtime.
         const result = await Factuality({ client: client as unknown as NonNullable<Parameters<typeof Factuality>[0]['client']>, model: config.model, input, output, expected,
-          temperature: 0, maxTokens: config.maxTokens })
+          temperature: 0, maxTokens: config.maxTokens, useCoT: false })
         if (result.error || result.score === null || !Number.isFinite(result.score) || result.score < 0 || result.score > 1) throw new EvaluationError('invalid_judge_score')
         return { score: result.score, usage: accounting.usage }
       } catch (error) { throw new ModelError(error instanceof EvaluationError ? error.code : 'judge_api_error', accounting.usage) }
