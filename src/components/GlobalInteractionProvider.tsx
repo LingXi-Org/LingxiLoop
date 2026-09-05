@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { TriangleAlertIcon } from 'lucide-react'
+import { Alert02Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +12,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Toaster } from '@/components/ui/toast'
+import { Toaster } from '@/components/ui/sonner'
 import { Input } from '@/components/ui/input'
 import {
   subscribeSensitiveActions,
@@ -48,7 +49,7 @@ export function GlobalInteractionProvider({ children }: { children: ReactNode })
           <AlertDialogContent size="default">
             <AlertDialogHeader>
               <AlertDialogMedia className={current.tone === 'destructive' ? 'bg-destructive/10 text-destructive' : undefined}>
-                <TriangleAlertIcon aria-hidden="true" />
+                <HugeiconsIcon icon={Alert02Icon} strokeWidth={2} aria-hidden="true" />
               </AlertDialogMedia>
               <AlertDialogTitle>{current.title}</AlertDialogTitle>
               <AlertDialogDescription>{current.description}</AlertDialogDescription>

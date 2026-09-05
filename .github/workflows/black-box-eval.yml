@@ -1,0 +1,92 @@
+name: Black-box Eval live report
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      baseline_file:
+        description: Optional reviewed baseline JSON; without it the release gate remains blocked
+        required: false
+        default: ''
+        type: string
+  workflow_call:
+    inputs:
+      baseline_file:
+        required: false
+        default: ''
+        type: string
+    secrets:
+      EVAL_CANDIDATE_API_KEY:
+        required: true
+      EVAL_JUDGE_API_KEY:
+        required: true
+
+concurrency:
+  group: black-box-live-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+jobs:
+  release-gate:
+    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.label.name == 'run-live-eval')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: eval/package-lock.json
+      - run: npm ci --prefix eval
+      - run: npm --prefix eval run check && npm --prefix eval test
+      - name: Evaluate production Candidate with independent Judge
+        working-directory: eval
+        shell: bash
+        run: |
+          args=(run --suite suites/ci-smoke.v1.json --dataset datasets/ci-smoke.v1.json --revision "$GITHUB_SHA")
+          if [[ -n "$BASELINE_FILE" ]]; then args+=(--baseline-file "../$BASELINE_FILE"); fi
+          npm run eval -- "${args[@]}"
+        env:
+          BASELINE_FILE: ${{ inputs.baseline_file || vars.EVAL_BASELINE_FILE }}
+          EVAL_CANDIDATE_BASE_URL: ${{ vars.EVAL_CANDIDATE_BASE_URL }}
+          EVAL_CANDIDATE_MODEL: ${{ vars.EVAL_CANDIDATE_MODEL }}
+          EVAL_CANDIDATE_API_KEY: ${{ secrets.EVAL_CANDIDATE_API_KEY }}
+          EVAL_CANDIDATE_INPUT_CNY_PER_MILLION: ${{ vars.EVAL_CANDIDATE_INPUT_CNY_PER_MILLION }}
+          EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION: ${{ vars.EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION }}
+          EVAL_CANDIDATE_MAX_TOKENS: ${{ vars.EVAL_CANDIDATE_MAX_TOKENS }}
+          EVAL_CANDIDATE_TIMEOUT_MS: ${{ vars.EVAL_CANDIDATE_TIMEOUT_MS }}
+          EVAL_JUDGE_BASE_URL: ${{ vars.EVAL_JUDGE_BASE_URL }}
+          EVAL_JUDGE_MODEL: ${{ vars.EVAL_JUDGE_MODEL }}
+          EVAL_JUDGE_API_KEY: ${{ secrets.EVAL_JUDGE_API_KEY }}
+          EVAL_JUDGE_INPUT_CNY_PER_MILLION: ${{ vars.EVAL_JUDGE_INPUT_CNY_PER_MILLION }}
+          EVAL_JUDGE_OUTPUT_CNY_PER_MILLION: ${{ vars.EVAL_JUDGE_OUTPUT_CNY_PER_MILLION }}
+          EVAL_JUDGE_MAX_TOKENS: ${{ vars.EVAL_JUDGE_MAX_TOKENS }}
+          EVAL_JUDGE_TIMEOUT_MS: ${{ vars.EVAL_JUDGE_TIMEOUT_MS }}
+      - uses: actions/upload-artifact@v4
+        id: artifacts
+        if: always() && hashFiles('eval/.state/reports/*') != ''
+        with:
+          name: black-box-eval-${{ github.sha }}
+          path: eval/.state/reports/
+          retention-days: 30
+      - name: Publish visual report links and score summary
+        if: always()
+        shell: bash
+        env:
+          REPORT_URL: ${{ steps.artifacts.outputs.artifact-url }}
+        run: |
+          shopt -s nullglob
+          reports=(eval/.state/reports/*.md)
+          if (( ${#reports[@]} == 0 )); then
+            echo '## Black-box Eval: no report generated' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Evaluation did not complete. Check the configuration and evaluation step; release remains blocked.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            for report in "${reports[@]}"; do cat "$report" >> "$GITHUB_STEP_SUMMARY"; done
+            echo 'Costs use configured prices; zero prices produce zero estimates.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [[ -n "$REPORT_URL" ]]; then
+            echo "[Download visual HTML, JSON, Markdown and traces]($REPORT_URL)" >> "$GITHUB_STEP_SUMMARY"
+            echo 'Unzip the artifact and open the HTML file locally. No server or external assets are needed.' >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Agent OS ① 消息触发、路由、入队与任务领取",
+    "locale": "zh-CN",
+    "output": "artifacts/agent-os-deep-dive-trigger-claim.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "column_fit": "spread",
+    "viewBox": [1560, 1420],
+    "views": [
+      { "id": "routing", "label": "确定性路由", "focus": ["client", "wukong", "webhook"], "note": "路由严格按优先级计算，不让模型决定谁被唤醒。" },
+      { "id": "transaction", "label": "事务化入队", "focus": ["webhook", "postgres", "realtime"], "note": "receipt 与 AgentWorkItem 在同一事务中落库，预览只在提交后发布。" },
+      { "id": "claim", "label": "领取与会话互斥", "focus": ["agentos", "control", "postgres"], "note": "SKIP LOCKED、lane 优先级、work lease、session lease 与 fence 一次建立。" },
+      { "id": "context", "label": "上下文装载", "focus": ["agentos", "control", "wukong", "postgres", "knowledge"], "note": "运行前同步权威消息、Prompt、记忆、知识、审批和 Canvas 快照。" }
+    ]
+  },
+  "participants": [
+    { "id": "client", "type": "external", "label": "Human / Client" },
+    { "id": "wukong", "type": "messagebus", "label": "WuKongIM" },
+    { "id": "webhook", "type": "backend", "label": "IM Webhook" },
+    { "id": "postgres", "type": "database", "label": "PostgreSQL" },
+    { "id": "realtime", "type": "messagebus", "label": "Realtime" },
+    { "id": "agentos", "type": "backend", "label": "Agent OS" },
+    { "id": "control", "type": "security", "label": "Control Plane" },
+    { "id": "knowledge", "type": "cloud", "label": "Context Services" }
+  ],
+  "segments": [
+    { "from": 150, "to": 470, "label": "A. 权威消息与确定性路由" },
+    { "from": 486, "to": 710, "label": "B. receipt + work 原子提交" },
+    { "from": 726, "to": 1018, "label": "C. lane-aware claim 与双租约" },
+    { "from": 1034, "to": 1308, "label": "D. 上下文与 session 装载" }
+  ],
+  "messages": [
+    { "from": "client", "to": "wukong", "y": 178, "label": "send message / mention / reply", "variant": "emphasis" },
+    { "from": "wukong", "to": "webhook", "y": 262, "label": "signed post-commit webhook", "variant": "security" },
+    { "from": "webhook", "to": "postgres", "y": 304, "label": "lock receipt(eventId, payloadHash)", "variant": "security" },
+    { "from": "webhook", "to": "postgres", "y": 430, "label": "check attachment knowledge deferral", "variant": "default" },
+    { "from": "webhook", "to": "postgres", "y": 518, "label": "BEGIN: receipt + AgentWorkItem(s)", "variant": "emphasis" },
+    { "from": "postgres", "to": "webhook", "y": 560, "label": "dedupe by agent + clientMsgNo + reason", "variant": "return" },
+    { "from": "webhook", "to": "postgres", "y": 602, "label": "mark receipt processed + COMMIT", "variant": "emphasis" },
+    { "from": "webhook", "to": "realtime", "y": 654, "label": "publish queued preview after commit", "variant": "dashed" },
+    { "from": "agentos", "to": "control", "y": 756, "label": "POST /internal/agent-os/work/claim", "variant": "emphasis" },
+    { "from": "control", "to": "postgres", "y": 798, "label": "delete expired session leases", "variant": "default" },
+    { "from": "control", "to": "postgres", "y": 840, "label": "SELECT ... FOR UPDATE SKIP LOCKED", "variant": "security" },
+    { "from": "postgres", "to": "control", "y": 882, "label": "lane > priority > createdAt candidate", "variant": "return" },
+    { "from": "control", "to": "postgres", "y": 924, "label": "insert session lease; increment fence", "variant": "security" },
+    { "from": "control", "to": "postgres", "y": 966, "label": "hash lease token; lease 45s; attempts+1", "variant": "security" },
+    { "from": "control", "to": "agentos", "y": 1008, "label": "work + raw token + fence", "variant": "return" },
+    { "from": "agentos", "to": "control", "y": 1064, "label": "GET context with lease headers", "variant": "emphasis" },
+    { "from": "control", "to": "wukong", "y": 1106, "label": "sync up to 80 authoritative messages", "variant": "default" },
+    { "from": "control", "to": "postgres", "y": 1148, "label": "persona + capabilities + approvals + Canvas", "variant": "default" },
+    { "from": "control", "to": "knowledge", "y": 1190, "label": "turn-local retrieval + prompt memory", "variant": "default" },
+    { "from": "knowledge", "to": "control", "y": 1232, "label": "bounded context fragments", "variant": "return" },
+    { "from": "control", "to": "agentos", "y": 1274, "label": "AgentContext", "variant": "return" },
+    { "from": "agentos", "to": "control", "y": 1316, "label": "GET/PUT session by exact session key", "variant": "security" }
+  ],
+  "activations": [
+    { "participant": "wukong", "from": 172, "to": 270, "type": "messagebus" },
+    { "participant": "webhook", "from": 256, "to": 668, "type": "backend" },
+    { "participant": "postgres", "from": 298, "to": 660, "type": "database" },
+    { "participant": "agentos", "from": 750, "to": 1330, "type": "backend" },
+    { "participant": "control", "from": 750, "to": 1330, "type": "security" },
+    { "participant": "postgres", "from": 792, "to": 978, "type": "database" },
+    { "participant": "knowledge", "from": 1184, "to": 1240, "type": "cloud" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "触发类型与 lane", "items": ["learner：message / mention；approval：resume；collaboration：handoff / canvas_worker / canvas_summary", "background：routine / memory_synthesis 等；领取顺序 learner(4) > approval(3) > collaboration(2) > background(1)", "同 lane 内再按 priority DESC、created_at ASC；因此它不是简单 FIFO"] },
+    { "dot": "violet", "title": "确定性路由优先级", "items": ["handoff target > @all > 显式 @mentions > Agent 自发消息不扩散", "其后是 reply author > 私聊中的第一个 Agent > 配置 leader", "没有 leader 时按 Nova、Forge 回退；整个过程不调用模型做 triage"] },
+    { "dot": "rose", "title": "Webhook 幂等与攻击面", "items": ["eventId 对应一条 receipt，payloadHash 必须一致；同 ID 不同 digest 返回 409", "产品请求中的 suppressAgentWake 被忽略，不能由调用方绕过唤醒", "签名校验、频道绑定、成员关系和 teacher room 约束发生在入队前"] },
+    { "dot": "emerald", "title": "为什么 receipt 与 work 必须同事务", "items": ["只写 receipt 会吞掉消息；只写 work 会在重试时重复触发", "事务成功后才发布 queued preview，发布失败不会回滚已经耐久的工作", "附件需要摄取时可先创建 knowledge job 并延后 Agent 唤醒"] },
+    { "dot": "amber", "title": "双租约解决两个不同问题", "items": ["work lease：只有一个 worker 能对这条工作推进、动作、保存和完成", "session lease：同 company + agent + channel + threadRoot 的会话一次只执行一个 work", "两个租约都为 45 秒；Agent OS 每 5 秒 heartbeat，旧 token 只保存 hash"] },
+    { "dot": "orange", "title": "monotonic fence 是最终防线", "items": ["重新领取时 fence+1；所有敏感接口带 workId、fence、lease token", "即使旧 worker 没及时收到取消或网络分区，它的 session save 与 Host Action 也会被新 fence 拒绝", "PUT session 还要求 revision 乐观锁，避免同 fence 的陈旧覆盖"] },
+    { "dot": "cyan", "title": "上下文不是一次数据库 JOIN", "items": ["WuKong 同步最多 80 条并推进 Agent 已读；authorizationUserId 必须来自持久的人类发送者", "Prompt 由 persona、能力、角色、策略、日期和记忆组成；知识只在本次 turn 初始检索", "学习/教师上下文可在每个 hop 刷新；审批结果与 Canvas roster/snapshot 同时装载"] },
+    { "dot": "slate", "title": "去重边界", "items": ["AgentWorkItem 唯一键：(agent_id, trigger_client_msg_no, reason)", "相同 WuKong clientMsgNo 的安全重放收敛；不同内容复用 nonce 会产生冲突", "runId=workId，后续 event、Host Action、final clientMsgNo 都从这个稳定身份派生"] }
+  ]
+}

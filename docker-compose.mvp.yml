@@ -48,9 +48,10 @@ services:
     image: surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011
     pull_policy: always
     restart: unless-stopped
-    command: ["start", "--log", "warn", "--user", "${OPEN_NOTEBOOK_SURREAL_USER:-open-notebook}", "--pass", "${OPEN_NOTEBOOK_SURREAL_PASSWORD:-open-notebook-dev}", "rocksdb:/data/open-notebook.db"]
+    command: ["start", "--log", "warn", "rocksdb:/data/open-notebook.db"]
     environment:
-      SURREAL_EXPERIMENTAL_GRAPHQL: "true"
+      SURREAL_USER: ${OPEN_NOTEBOOK_SURREAL_USER:-open-notebook}
+      SURREAL_PASS: ${OPEN_NOTEBOOK_SURREAL_PASSWORD:-open-notebook-dev}
     volumes:
       - open-notebook-surreal-data:/data
     healthcheck:
@@ -63,23 +64,24 @@ services:
     logging: *quiet-logging
 
   open-notebook:
-    build:
-      context: ./third_party/open-notebook
-      target: runtime
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-open-notebook:b42fef160fe697d46a8818e054f945d1f80953f7
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       surrealdb:
         condition: service_healthy
     environment:
-      OPEN_NOTEBOOK_ENCRYPTION_KEY: ${OPEN_NOTEBOOK_ENCRYPTION_KEY:-lingxiloop-local-open-notebook-key}
       OPEN_NOTEBOOK_PASSWORD: ${OPEN_NOTEBOOK_PASSWORD:-lingxiloop-local-open-notebook-password}
       OPEN_NOTEBOOK_WORKER_MAX_TASKS: ${OPEN_NOTEBOOK_WORKER_MAX_TASKS:-5}
-      OPEN_NOTEBOOK_R2_ENABLED: ${OPEN_NOTEBOOK_R2_ENABLED:-auto}
+      OPEN_NOTEBOOK_R2_ENABLED: "true"
       OPEN_NOTEBOOK_R2_PREFIX: ${OPEN_NOTEBOOK_R2_PREFIX:-open-notebook}
-      R2_ENDPOINT: ${R2_ENDPOINT:-}
-      R2_BUCKET: ${R2_BUCKET:-}
-      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
-      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_ENDPOINT: ${R2_ENDPOINT:?R2_ENDPOINT is required}
+      R2_BUCKET: ${R2_BUCKET:?R2_BUCKET is required}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
+      OPENAI_API_KEY: ${OPEN_NOTEBOOK_PASSWORD:-lingxiloop-local-open-notebook-password}
+      OPENAI_BASE_URL: http://lingxiloop:5181/internal/open-notebook/v1
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required in .env}
       SURREAL_URL: ws://surrealdb:8000/rpc
       SURREAL_USER: ${OPEN_NOTEBOOK_SURREAL_USER:-open-notebook}
       SURREAL_PASSWORD: ${OPEN_NOTEBOOK_SURREAL_PASSWORD:-open-notebook-dev}
@@ -88,7 +90,7 @@ services:
     volumes:
       - open-notebook-data:/app/data
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:5055/health"]
+      test: ["CMD-SHELL", "grep -a -l 'surreal-commands-worker' /proc/[0-9]*/cmdline 2>/dev/null | grep -q . && curl -fsS http://localhost:5055/health"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -97,11 +99,12 @@ services:
     logging: *quiet-logging
 
   wukongim:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-wukongim:${LINGXILOOP_IMAGE_TAG:-mvp}
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:b42fef160fe697d46a8818e054f945d1f80953f7
     pull_policy: always
     restart: unless-stopped
     environment:
       WK_NODE_DATA_DIR: /var/lib/wukongim
+      WK_WEBHOOK_HTTP_ADDR: "http://lingxiloop:5181/webhooks/wukong?token=${WUKONG_WEBHOOK_SECRET:-dev-wukong-webhook-secret}"
     volumes:
       - lingxiloop-wukong-data:/var/lib/wukongim
     ports:
@@ -115,22 +118,26 @@ services:
     networks: [lingxiloop-mvp]
     logging: *quiet-logging
 
-  db-bootstrap:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
+  db-migrate:
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
     pull_policy: always
     restart: "no"
-    command: ["npm", "run", "db:bootstrap"]
+    command: ["npm", "run", "db:migrate"]
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://lingxiloop:lingxiloop@postgres:5432/lingxiloop
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required in .env}
+      REDIS_URL: redis://redis:6379
+      WUKONG_USER_TOKEN_SECRET: ${WUKONG_USER_TOKEN_SECRET:?WUKONG_USER_TOKEN_SECRET is required in .env}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required in .env}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required in .env}
+      LINGXILOOP_INVITE_BASE_URL: ${LINGXILOOP_INVITE_BASE_URL:?LINGXILOOP_INVITE_BASE_URL is required}
     networks: [lingxiloop-mvp]
     logging: *quiet-logging
 
   lingxiloop:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -142,7 +149,7 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
-      db-bootstrap:
+      db-migrate:
         condition: service_completed_successfully
     environment: &lingxiloop-environment
       NODE_ENV: production
@@ -156,49 +163,38 @@ services:
       WUKONG_API_TOKEN: ${WUKONG_API_TOKEN:-dev-wukong-api-token}
       WUKONG_WEBHOOK_SECRET: ${WUKONG_WEBHOOK_SECRET:-dev-wukong-webhook-secret}
       WUKONG_USER_TOKEN_SECRET: ${WUKONG_USER_TOKEN_SECRET:?WUKONG_USER_TOKEN_SECRET is required in .env}
-      WUKONG_WEBHOOK_ALLOW_UNSIGNED_INTERNAL: "true"
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required in .env}
-      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
-      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
-      DEEPSEEK_EMBEDDING_MODEL: ${DEEPSEEK_EMBEDDING_MODEL:-}
-      DEEPSEEK_IMAGE_MODEL: ${DEEPSEEK_IMAGE_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required in .env}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required in .env}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+      OTEL_SERVICE_NAME: lingxiloop-web
+      OTEL_DEPLOYMENT_ENVIRONMENT: ${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      LINGXILIT_PRICING_JSON: ${LINGXILIT_PRICING_JSON:-}
       LINGXILOOP_PUBLIC_ORIGIN: ${LINGXILOOP_PUBLIC_ORIGIN:-http://localhost:5181}
-      LINGXILOOP_AUTH_DONE_URL: ${LINGXILOOP_AUTH_DONE_URL:-http://localhost:5181/}
-      LINGXILOOP_AUTH_RETURN_ALLOWLIST: ${LINGXILOOP_AUTH_RETURN_ALLOWLIST:-}
-      LINGXILOOP_INVITE_BASE_URL: ${LINGXILOOP_INVITE_BASE_URL:-}
+      LINGXILOOP_GATEWAY_HMAC_SECRET: ${LINGXILOOP_GATEWAY_HMAC_SECRET:-dev-only-gateway-secret}
+      LINGXILOOP_INVITE_BASE_URL: ${LINGXILOOP_INVITE_BASE_URL:?LINGXILOOP_INVITE_BASE_URL is required}
       LINGXILOOP_CORS_ORIGINS: ${LINGXILOOP_CORS_ORIGINS:-}
-      LINGXI_IDENTITY_ISSUER: ${LINGXI_IDENTITY_ISSUER:-}
-      LINGXI_IDENTITY_CLIENT_ID: ${LINGXI_IDENTITY_CLIENT_ID:-}
-      LINGXI_IDENTITY_CLIENT_SECRET: ${LINGXI_IDENTITY_CLIENT_SECRET:-}
-      LINGXI_IDENTITY_SCOPES: ${LINGXI_IDENTITY_SCOPES:-}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-      PUBLIC_HOST: ${PUBLIC_HOST:-}
-      R2_ENDPOINT: ${R2_ENDPOINT:-}
-      R2_BUCKET: ${R2_BUCKET:-}
-      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
-      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
-      R2_PUBLIC_BASE: ${R2_PUBLIC_BASE:-}
-      R2_URL_SIGNING_SECRET: ${R2_URL_SIGNING_SECRET:-}
+      R2_ENDPOINT: ${R2_ENDPOINT:?R2_ENDPOINT is required}
+      R2_BUCKET: ${R2_BUCKET:?R2_BUCKET is required}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
+      R2_PUBLIC_BASE: ${R2_PUBLIC_BASE:?R2_PUBLIC_BASE is required}
+      R2_URL_SIGNING_SECRET: ${R2_URL_SIGNING_SECRET:?R2_URL_SIGNING_SECRET is required}
       R2_URL_TTL_SECONDS: ${R2_URL_TTL_SECONDS:-}
       SKILLHUB_URL: ${SKILLHUB_URL:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
       EMAIL_DOMAIN: ${EMAIL_DOMAIN:-}
-      EMAIL_INBOUND_HMAC_SECRET: ${EMAIL_INBOUND_HMAC_SECRET:-}
       OPEN_NOTEBOOK_ENABLED: ${OPEN_NOTEBOOK_ENABLED:-true}
       OPEN_NOTEBOOK_URL: http://open-notebook:5055
       OPEN_NOTEBOOK_PASSWORD: ${OPEN_NOTEBOOK_PASSWORD:-lingxiloop-local-open-notebook-password}
-      OPEN_NOTEBOOK_CHAT_MODEL: ${OPEN_NOTEBOOK_CHAT_MODEL:-}
-      OPEN_NOTEBOOK_STRATEGY_MODEL: ${OPEN_NOTEBOOK_STRATEGY_MODEL:-}
-      OPEN_NOTEBOOK_ANSWER_MODEL: ${OPEN_NOTEBOOK_ANSWER_MODEL:-}
-      OPEN_NOTEBOOK_FINAL_ANSWER_MODEL: ${OPEN_NOTEBOOK_FINAL_ANSWER_MODEL:-}
+      PRESENTATION_HTML_ENABLED: ${PRESENTATION_HTML_ENABLED:-false}
     ports:
       # Public by default so the mobile client can reach the API backend.
       - "${LINGXILOOP_BIND_ADDRESS:-0.0.0.0}:${LINGXILOOP_PORT:-5181}:5181"
-    volumes:
-      - lingxiloop-uploads:/app/server/uploads
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 5s
@@ -209,7 +205,7 @@ services:
     logging: *quiet-logging
 
   worker:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-server:${LINGXILOOP_IMAGE_TAG:-mvp}
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:b42fef160fe697d46a8818e054f945d1f80953f7
     pull_policy: always
     restart: unless-stopped
     command: ["npm", "run", "worker:start"]
@@ -222,14 +218,16 @@ services:
         condition: service_healthy
       open-notebook:
         condition: service_healthy
-    environment: *lingxiloop-environment
-    volumes:
-      - lingxiloop-uploads:/app/server/uploads
+      db-migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: *lingxiloop-environment
+      OTEL_SERVICE_NAME: lingxiloop-worker
     networks: [lingxiloop-mvp, lingxiloop-knowledge-internal]
     logging: *quiet-logging
 
   agent-os:
-    image: ${GHCR_ACCELERATOR:-accel.way2api.fun/ghcr.io}/lingxi-org/lingxiloop-agent-os:${LINGXILOOP_IMAGE_TAG:-mvp}
+    image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-agent-os:b42fef160fe697d46a8818e054f945d1f80953f7
     pull_policy: always
     restart: unless-stopped
     depends_on:
@@ -244,9 +242,15 @@ services:
       AGENT_OS_MAX_CONCURRENT_RUNS: ${AGENT_OS_MAX_CONCURRENT_RUNS:-8}
       AGENT_OS_SERVICE_TOKEN: ${AGENT_OS_SERVICE_TOKEN:?AGENT_OS_SERVICE_TOKEN is required in .env}
       LINGXILOOP_CONTROL_PLANE_URL: http://lingxiloop:5181
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required in .env}
-      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
-      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required in .env}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required in .env}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+      OTEL_SERVICE_NAME: lingxiloop-agent-os
+      OTEL_DEPLOYMENT_ENVIRONMENT: ${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      LINGXILIT_PRICING_JSON: ${LINGXILIT_PRICING_JSON:-}
       AGENT_OS_HOMES_ROOT: /var/lib/lingxiloop-agent-os/homes
     volumes:
       - lingxiloop-agent-os-data:/var/lib/lingxiloop-agent-os
@@ -268,7 +272,6 @@ networks:
 volumes:
   lingxiloop-postgres-data: {}
   lingxiloop-redis-data: {}
-  lingxiloop-uploads: {}
   lingxiloop-wukong-data: {}
   lingxiloop-agent-os-data: {}
   open-notebook-surreal-data: {}

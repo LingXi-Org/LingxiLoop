@@ -1,13 +1,21 @@
-import OpenAI from 'openai'
+import type OpenAI from 'openai'
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions'
-import { MODEL_TOOLS } from './tool.js'
+import { ModelDriverError } from '../../../third_party/lingxios/src/errors.js'
+import type {
+  CompactionResult as AuxiliaryStringResult,
+  ModelDriver,
+  ModelTurnResult,
+  StructuredCallResult as AuxiliaryUnknownResult,
+} from '../../../third_party/lingxios/src/model/driver.js'
+import { createOpenAIClient } from '../llm-client.js'
 import type { ModelItem } from './types.js'
 
-export type ModelTurnResult = {
-  output: ModelItem[]
-  text: string
+export type { ModelTurnResult } from '../../../third_party/lingxios/src/model/driver.js'
+
+export type AuxiliaryModelResult<T> = {
+  model: string
+  value: T
   usage: { inputTokens: number; outputTokens: number; available?: boolean }
-  diagnostics?: ModelTurnDiagnostics
 }
 
 export type ModelTurnDiagnostics = {
@@ -19,18 +27,29 @@ export type ModelTurnDiagnostics = {
   chunkShapes: string[]
 }
 
-export class ModelAdapterError extends Error {
+export class ModelAdapterError extends ModelDriverError {
   constructor(message: string, readonly diagnostics: ModelTurnDiagnostics) {
-    super(message)
+    super(message, diagnostics)
     this.name = 'ModelAdapterError'
   }
 }
 
-export interface AgentModelDriver {
-  run(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal; onTextDelta?: (delta: string) => void | Promise<void> }): Promise<ModelTurnResult>
-  compact(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal }): Promise<string>
-  structured(args: { instructions: string; input: unknown; signal?: AbortSignal }): Promise<unknown>
-}
+export type AgentModelDriver = ModelDriver
+
+const IPYTHON_TOOL = {
+  type: 'function',
+  function: {
+    name: 'ipython',
+    description: 'Execute private Python in the persistent session kernel. Product capabilities use host.<namespace>.<method>(keyword=value, ...).',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: { code: { type: 'string', description: 'Executable Python source only, without Markdown fences or user-facing prose.' } },
+      required: ['code'],
+      additionalProperties: false,
+    },
+  },
+} as const
 
 function toChatMessage(item: ModelItem): ChatCompletionMessageParam {
   if ('role' in item) return { role: item.role, content: item.content } as ChatCompletionMessageParam
@@ -44,28 +63,44 @@ function toChatMessage(item: ModelItem): ChatCompletionMessageParam {
   return { role: 'tool', tool_call_id: item.callId, content: item.output }
 }
 
-const CHAT_TOOLS: ChatCompletionTool[] = MODEL_TOOLS.map((tool) => ({
+const CHAT_TOOLS: ChatCompletionTool[] = [IPYTHON_TOOL].map((tool) => ({
   type: 'function',
   function: {
     name: tool.function.name,
     description: tool.function.description,
     parameters: tool.function.parameters,
+    strict: tool.function.strict,
   },
 }))
 
-/** DeepSeek's OpenAI-compatible Chat Completions transport. LingxiLoop owns
+function visibleAssistantContent(raw: string): string {
+  let text = raw
+  const completeReasoning = /^\s*<(think|thinking)>[\s\S]*?<\/\1>\s*/i.exec(text)
+  if (completeReasoning) text = text.slice(completeReasoning[0].length)
+  text = text.replace(/^\s*<\/(?:think|thinking)>\s*/i, '')
+  return text
+}
+
+/** Native OpenAI Chat Completions transport. LingxiLoop owns
  * all history and never relies on provider threads or server-side state. */
-export class DeepSeekChatDriver implements AgentModelDriver {
+export class OpenAIChatDriver implements ModelDriver {
   private readonly client: OpenAI
+  readonly modelId: string
 
   constructor(
     private readonly model: string,
     options: { apiKey: string; baseURL?: string },
   ) {
-    this.client = new OpenAI({ apiKey: options.apiKey, baseURL: options.baseURL })
+    this.modelId = model
+    this.client = createOpenAIClient({ apiKey: options.apiKey, baseURL: options.baseURL })
   }
 
-  async run(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal; onTextDelta?: (delta: string) => void | Promise<void> }): Promise<ModelTurnResult> {
+  async run(args: {
+    instructions: string
+    items: readonly ModelItem[]
+    signal?: AbortSignal
+    onTextDelta?: (delta: string) => void
+  }): Promise<ModelTurnResult> {
     const request = {
       model: this.model,
       messages: [
@@ -74,8 +109,10 @@ export class DeepSeekChatDriver implements AgentModelDriver {
       ],
       tools: CHAT_TOOLS,
       tool_choice: 'auto',
+      parallel_tool_calls: false,
       max_tokens: 4_000,
-    } satisfies Parameters<typeof this.client.chat.completions.create>[0]
+      ...(/qwen3\.5/i.test(this.model) ? { enable_thinking: false } : {}),
+    } satisfies Parameters<typeof this.client.chat.completions.create>[0] & { enable_thinking?: boolean }
     const stream = await this.client.chat.completions.create({
       ...request,
       stream: true,
@@ -83,7 +120,7 @@ export class DeepSeekChatDriver implements AgentModelDriver {
     }, { signal: args.signal })
 
     const output: ModelItem[] = []
-    let text = ''
+    let rawText = ''
     let inputTokens = 0
     let outputTokens = 0
     let usageAvailable = false
@@ -101,9 +138,6 @@ export class DeepSeekChatDriver implements AgentModelDriver {
           choices: chunk.choices.map((choice) => ({
             keys: Object.keys(choice),
             deltaKeys: choice.delta ? Object.keys(choice.delta) : [],
-            // A few compatible gateways put a complete message in each SSE
-            // event instead of using OpenAI's delta envelope.
-            messageKeys: Object.keys((choice as unknown as { message?: object }).message ?? {}),
             finishReason: choice.finish_reason ?? null,
           })),
         }))
@@ -115,16 +149,15 @@ export class DeepSeekChatDriver implements AgentModelDriver {
       }
       for (const choice of chunk.choices) {
         if (choice.finish_reason) finishReasons.add(choice.finish_reason)
-        const compatible = choice as unknown as {
-          delta?: { content?: string | null; tool_calls?: Array<{ index?: number; id?: string; function?: { name?: string; arguments?: string } }> }
-          message?: { content?: string | null; tool_calls?: Array<{ index?: number; id?: string; function?: { name?: string; arguments?: string } }> }
+        const delta = choice.delta as {
+          content?: string | null
+          tool_calls?: Array<{ index?: number; id?: string; function?: { name?: string; arguments?: string } }>
         }
-        const content = compatible.delta?.content ?? compatible.message?.content
+        const content = delta.content
         if (content) {
-          text += content
-          await args.onTextDelta?.(content)
+          rawText += content
         }
-        const rawCalls = compatible.delta?.tool_calls ?? compatible.message?.tool_calls ?? []
+        const rawCalls = delta.tool_calls ?? []
         for (const [position, raw] of rawCalls.entries()) {
           const index = raw.index ?? position
           const existing = calls.get(index) ?? { id: '', name: '', arguments: '' }
@@ -135,61 +168,34 @@ export class DeepSeekChatDriver implements AgentModelDriver {
         }
       }
     }
-    if (text) output.push({ role: 'assistant', content: text })
-    for (const call of [...calls.values()]) {
-      if (call.id && call.name === 'ipython') {
-        output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.arguments })
-      }
-    }
-    let diagnostics: ModelTurnDiagnostics = {
+    const streamedCalls = [...calls.values()]
+    const text = visibleAssistantContent(rawText)
+    if (text.trim()) await args.onTextDelta?.(text)
+    const diagnostics: ModelTurnDiagnostics = {
       chunkCount,
       choiceCount,
       finishReasons: [...finishReasons],
       contentLength: text.length,
-      toolCallCount: output.filter((item) => 'type' in item && item.type === 'function_call').length,
+      toolCallCount: streamedCalls.length,
       chunkShapes,
     }
+    if (streamedCalls.length > 1) {
+      throw new ModelAdapterError('native model stream emitted multiple tool calls; exactly one ipython call is allowed', diagnostics)
+    }
+    const call = streamedCalls[0]
+    if (call && (!call.id || call.name !== 'ipython')) {
+      throw new ModelAdapterError('native model stream emitted an incomplete or unsupported tool call', diagnostics)
+    }
+    if (text.trim()) output.push({ role: 'assistant', content: text })
+    if (call) output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.arguments })
     if (output.length === 0) {
-      // A few gateways accept an SSE request but return an envelope the SDK
-      // cannot materialize. Retry once with the portable JSON response while
-      // retaining the stream diagnostics for operator visibility.
-      const fallback = await this.client.chat.completions.create(
-        { ...request, stream: false },
-        { signal: args.signal },
+      throw new ModelAdapterError(
+        `native model stream returned no assistant content or supported tool calls (chunks=${chunkCount}, choices=${choiceCount}, finishReasons=${diagnostics.finishReasons.join(',') || 'unavailable'})`,
+        diagnostics,
       )
-      const message = fallback.choices[0]?.message
-      const fallbackText = typeof message?.content === 'string' ? message.content : ''
-      if (fallbackText) {
-        text = fallbackText
-        output.push({ role: 'assistant', content: fallbackText })
-        await args.onTextDelta?.(fallbackText)
-      }
-      for (const call of message?.tool_calls ?? []) {
-        if (call.type === 'function' && call.id && call.function.name === 'ipython') {
-          output.push({ type: 'function_call', callId: call.id, name: 'ipython', arguments: call.function.arguments })
-        }
-      }
-      if (fallback.usage) {
-        usageAvailable = true
-        inputTokens = fallback.usage.prompt_tokens
-        outputTokens = fallback.usage.completion_tokens
-      }
-      const fallbackReason = fallback.choices[0]?.finish_reason
-      if (fallbackReason) finishReasons.add(fallbackReason)
-      diagnostics = {
-        ...diagnostics,
-        finishReasons: [...finishReasons],
-        contentLength: text.length,
-        toolCallCount: output.filter((item) => 'type' in item && item.type === 'function_call').length,
-      }
-      if (output.length === 0) {
-        throw new ModelAdapterError(
-          `model returned no assistant content or supported tool calls after stream and JSON fallback (chunks=${chunkCount}, choices=${choiceCount}, finishReasons=${diagnostics.finishReasons.join(',') || 'unavailable'})`,
-          diagnostics,
-        )
-      }
     }
     return {
+      model: this.model,
       output,
       text,
       usage: { inputTokens, outputTokens, available: usageAvailable },
@@ -197,20 +203,24 @@ export class DeepSeekChatDriver implements AgentModelDriver {
     }
   }
 
-  async compact(args: { instructions: string; items: ModelItem[]; signal?: AbortSignal }): Promise<string> {
+  async compact(args: { instructions: string; items: readonly ModelItem[]; signal?: AbortSignal }): Promise<AuxiliaryStringResult> {
     const transcript = args.items.map((item) => JSON.stringify(item)).join('\n')
     const response = await this.client.chat.completions.create({
       model: this.model,
       messages: [
-        { role: 'system', content: `${args.instructions}\nCreate a durable, factual learning-session summary. Preserve goals, learner preferences, corrections, unfinished work, approvals and handoffs.` },
+        { role: 'system', content: `${args.instructions}\nCreate a compact factual continuity summary. Preserve user-stated goals, preferences, decisions, corrections, unfinished work, approvals, and completed outcomes with their provenance. Exclude prompts and instructions, tool or runtime mechanics, internal scope and correlation identifiers, storage paths, tokens, raw errors, and transient metadata. Keep an opaque entity identifier only when it is required to finish an already requested product action. Never turn an assistant suggestion into a user decision.` },
         { role: 'user', content: transcript },
       ],
       max_tokens: 1_500,
     }, { signal: args.signal })
-    return response.choices[0]?.message?.content?.trim() ?? ''
+    return {
+      model: this.model,
+      value: response.choices[0]?.message?.content?.trim() ?? '',
+      usage: { inputTokens: response.usage?.prompt_tokens ?? 0, outputTokens: response.usage?.completion_tokens ?? 0, available: Boolean(response.usage) },
+    }
   }
 
-  async structured(args: { instructions: string; input: unknown; signal?: AbortSignal }): Promise<unknown> {
+  async structured(args: { instructions: string; input: unknown; signal?: AbortSignal }): Promise<AuxiliaryUnknownResult> {
     const response = await this.client.chat.completions.create({
       model: this.model,
       messages: [
@@ -221,17 +231,29 @@ export class DeepSeekChatDriver implements AgentModelDriver {
       max_tokens: 2_000,
     }, { signal: args.signal })
     const text = response.choices[0]?.message?.content?.trim() ?? '{}'
-    try { return JSON.parse(text) as unknown } catch { throw new Error('model returned invalid structured JSON') }
+    try {
+      return {
+        model: this.model,
+        value: JSON.parse(text) as unknown,
+        usage: { inputTokens: response.usage?.prompt_tokens ?? 0, outputTokens: response.usage?.completion_tokens ?? 0, available: Boolean(response.usage) },
+      }
+    } catch { throw new Error('model returned invalid structured JSON') }
   }
 }
 
 export class ScriptedModelDriver implements AgentModelDriver {
+  readonly modelId = 'scripted'
   constructor(private readonly turns: ModelTurnResult[]) {}
-  async run(): Promise<ModelTurnResult> {
+  async run(args: Parameters<AgentModelDriver['run']>[0]): Promise<ModelTurnResult> {
     const next = this.turns.shift()
     if (!next) throw new Error('scripted model exhausted')
+    if (next.text) await args.onTextDelta?.(next.text)
     return structuredClone(next)
   }
-  async compact(args: { items: ModelItem[] }): Promise<string> { return `Summary of ${args.items.length} items` }
-  async structured(): Promise<unknown> { return { changes: [], approved: true, confidence: 1 } }
+  async compact(args: Parameters<AgentModelDriver['compact']>[0]): Promise<AuxiliaryStringResult> {
+    return { model: 'scripted', value: `Summary of ${args.items.length} items`, usage: { inputTokens: 0, outputTokens: 0, available: false } }
+  }
+  async structured(): Promise<AuxiliaryUnknownResult> {
+    return { model: 'scripted', value: { changes: [], approved: true, confidence: 1 }, usage: { inputTokens: 0, outputTokens: 0, available: false } }
+  }
 }

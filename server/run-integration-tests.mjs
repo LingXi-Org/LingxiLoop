@@ -17,7 +17,7 @@
  *   4. npm run test:integration
  *
  * Run one or more owning files without enumerating the full suite:
- *   npm run test:integration -- --file eval.test.ts
+ *   npm run test:integration -- --file trust-bff.test.ts
  *
  * If INTEGRATION_DATABASE_URL is unset we print a one-line "skipped" and
  * exit 0 — so this script slots into CI / pre-commit hooks without
@@ -132,7 +132,9 @@ if (!LIVE_RESEND) {
   console.log(`[integration] LIVE RESEND mode · domain=${process.env.EMAIL_DOMAIN}`)
 }
 
-if (!process.env.EMAIL_INBOUND_HMAC_SECRET) process.env.EMAIL_INBOUND_HMAC_SECRET = 'integration-test-secret'
+if (!process.env.RESEND_WEBHOOK_SECRET) {
+  process.env.RESEND_WEBHOOK_SECRET = `whsec_${Buffer.alloc(32, 7).toString('base64')}`
+}
 
 // Forward to node --import tsx --test against the integration suite.
 // tsx handles TypeScript; node:test handles the test runner.

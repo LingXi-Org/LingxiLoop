@@ -1,22 +1,26 @@
 import { startMemorySynthesisScheduler } from './agent-os/memory-service.js'
 import { startLearningRoutineScheduler } from './agent-os/routine-scheduler.js'
 import { startAgentWorkWatchdog } from './agent-os/work-watchdog.js'
-import { startLlmRollupRefresher } from './agents/llm-rollup.js'
 import { startStaleAgentRunSweeper } from './agents/observability.js'
-import { seedAdmins } from './admin.js'
-import { startCalendarScheduler } from './calendar.js'
-import { startDbGcWorker } from './db-gc.js'
 import { pool } from './db/pool.js'
-import { startEmailGcWorker } from './email-gc.js'
-import { startEmailRetryWorker } from './email-retry.js'
+import { startDbGcWorker } from './db-gc.js'
 import { env } from './env.js'
-import { reconcileLearningChannels } from './im/reconcile.js'
-import { startKnowledgeStorageGc, startKnowledgeWorker } from './knowledge/service.js'
-import { startLearningNotificationScheduler } from './learning/notifications.js'
-import { startPollExpirationSweeper } from './polls.js'
+import { reconcileImChannels, startImChannelReconciliation } from './im/reconcile.js'
+import { startCalendarScheduler } from './modules/calendar/index.js'
+import { startAttentionProjectionWorker } from './modules/attention/public.js'
+import { startTeacherBriefingWorker } from './modules/briefings/public.js'
+import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.js'
+import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
+import { startEducationContractExpiryWorker } from './modules/education/public.js'
+import { startEmailGcWorker, startEmailRetryWorker } from './modules/email/worker.js'
+import { startKnowledgeStorageGc, startKnowledgeWorker } from './modules/knowledge/worker.js'
+import { startLearningEffectWorker } from './modules/learning/worker.js'
+import { startNotificationScheduler } from './modules/notifications/public.js'
+import { startPollExpirationSweeper } from './modules/polls/index.js'
+import { startPresentationStorageGc, startPresentationWorker } from './modules/presentations/public.js'
 import { redis, sub } from './redis.js'
-import { Lifecycle, startWorkerTasks, type ServiceHandle, type WorkerTaskDefinition } from './runtime/lifecycle.js'
-import { seedIfEmpty } from './seed.js'
+import { Lifecycle, type ServiceHandle, startWorkerTasks, type WorkerTaskDefinition } from './runtime/lifecycle.js'
+import { initializeNativeStorage } from './storage.js'
 
 /**
  * Concurrency is part of each task's contract, rather than an accidental
@@ -26,28 +30,34 @@ import { seedIfEmpty } from './seed.js'
  * - idempotent: duplicate ticks converge on the same durable state;
  */
 export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
+  { name: 'attention-projection', concurrency: 'database-lock', start: () => startAttentionProjectionWorker() },
+  { name: 'teacher-briefings', concurrency: 'queue-claim', start: () => startTeacherBriefingWorker() },
   { name: 'learning-routines', concurrency: 'queue-claim', start: () => startLearningRoutineScheduler() },
-  { name: 'learning-notifications', concurrency: 'queue-claim', start: () => startLearningNotificationScheduler() },
+  { name: 'notifications', concurrency: 'queue-claim', start: () => startNotificationScheduler() },
+  { name: 'learning-effects', concurrency: 'queue-claim', start: () => startLearningEffectWorker() },
+  { name: 'company-onboarding-effects', concurrency: 'queue-claim', start: () => startCompanyOnboardingEffectWorker() },
+  { name: 'im-channel-reconciliation', concurrency: 'idempotent', start: () => startImChannelReconciliation() },
   { name: 'agent-work-watchdog', concurrency: 'idempotent', start: () => startAgentWorkWatchdog() },
   { name: 'memory-synthesis', concurrency: 'idempotent', start: () => startMemorySynthesisScheduler() },
   { name: 'email-retry', concurrency: 'queue-claim', start: () => startEmailRetryWorker() },
   { name: 'email-storage-gc', concurrency: 'idempotent', start: () => startEmailGcWorker() },
+  { name: 'document-mention-delivery', concurrency: 'queue-claim', start: () => startDocumentMentionDeliveryWorker() },
+  { name: 'education-contract-expiry', concurrency: 'queue-claim', start: () => startEducationContractExpiryWorker() },
   { name: 'database-gc', concurrency: 'idempotent', start: () => startDbGcWorker() },
   { name: 'knowledge-ingestion', concurrency: 'queue-claim', start: () => startKnowledgeWorker() },
   { name: 'knowledge-storage-gc', concurrency: 'idempotent', start: () => startKnowledgeStorageGc() },
+  { name: 'presentation-generation', concurrency: 'queue-claim', start: () => startPresentationWorker() },
+  { name: 'presentation-storage-gc', concurrency: 'idempotent', start: () => startPresentationStorageGc() },
   { name: 'calendar-dispatch', concurrency: 'idempotent', start: () => startCalendarScheduler() },
   { name: 'poll-expiration', concurrency: 'database-lock', start: () => startPollExpirationSweeper(env.POLL_SWEEP_INTERVAL_MS) },
-  { name: 'llm-rollup', concurrency: 'database-lock', start: () => startLlmRollupRefresher() },
   ...(process.env.ENABLE_AGENT_RUN_SWEEPER === 'false' ? [] : [
     { name: 'stale-agent-runs', concurrency: 'idempotent' as const, start: () => startStaleAgentRunSweeper() },
   ]),
 ]
 
 async function prepareWorkerData(): Promise<void> {
-  await seedIfEmpty()
-  await seedAdmins()
-  const { channels, failures } = await reconcileLearningChannels()
-  console.log(`[worker] reconciled ${channels - failures}/${channels} learning channels`)
+  const { channels, failures } = await reconcileImChannels()
+  console.log(`[worker] reconciled ${channels - failures}/${channels} IM channels`)
 }
 
 export interface WorkerProcessOptions {
@@ -55,6 +65,7 @@ export interface WorkerProcessOptions {
   prepare?: () => Promise<void>
   closePostgres?: () => void | Promise<void>
   closeRedis?: () => void | Promise<void>
+  initializeStorage?: () => void
 }
 
 export async function startWorkerProcess(options: WorkerProcessOptions = {}): Promise<ServiceHandle> {
@@ -65,6 +76,8 @@ export async function startWorkerProcess(options: WorkerProcessOptions = {}): Pr
   lifecycle.addDisposer('redis', options.closeRedis ?? (() => { sub.disconnect(); redis.disconnect() }))
 
   try {
+    const initializeStorage = options.initializeStorage ?? initializeNativeStorage
+    initializeStorage()
     await prepare()
     startWorkerTasks(lifecycle, tasks)
     console.log(`[worker] ready · tasks=${tasks.length}`)

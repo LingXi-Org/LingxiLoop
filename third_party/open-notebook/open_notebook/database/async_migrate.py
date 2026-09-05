@@ -7,7 +7,7 @@ from typing import List
 
 from loguru import logger
 
-from .repository import db_connection, repo_query
+from .repository import db_connection, repo_query, repo_query_statements
 
 
 class AsyncMigration:
@@ -36,8 +36,7 @@ class AsyncMigration:
     async def run(self, bump: bool = True) -> None:
         """Run the migration."""
         try:
-            async with db_connection() as connection:
-                await connection.query(self.sql)
+            await repo_query_statements(self.sql)
 
             if bump:
                 await bump_version()
@@ -106,48 +105,21 @@ class AsyncMigrationManager:
             AsyncMigration.from_file("open_notebook/database/migrations/8.surrealql"),
             AsyncMigration.from_file("open_notebook/database/migrations/9.surrealql"),
             AsyncMigration.from_file("open_notebook/database/migrations/10.surrealql"),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/11.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/12.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/13.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/14.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/15.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/16.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/17.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/18.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/19.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/20.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/21.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/22.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/23.surrealql"
-            ),
-            AsyncMigration.from_file(
-                "open_notebook/database/migrations/24.surrealql"
-            ),
+            AsyncMigration.from_file("open_notebook/database/migrations/11.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/12.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/13.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/14.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/15.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/16.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/17.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/18.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/19.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/20.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/21.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/22.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/23.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/24.surrealql"),
+            AsyncMigration.from_file("open_notebook/database/migrations/25.surrealql"),
         ]
         self.down_migrations = [
             AsyncMigration.from_file(
@@ -222,6 +194,9 @@ class AsyncMigrationManager:
             AsyncMigration.from_file(
                 "open_notebook/database/migrations/24_down.surrealql"
             ),
+            AsyncMigration.from_file(
+                "open_notebook/database/migrations/25_down.surrealql"
+            ),
         ]
         self.runner = AsyncMigrationRunner(
             up_migrations=self.up_migrations,
@@ -266,24 +241,15 @@ class AsyncMigrationManager:
 # Database version management functions
 async def get_latest_version() -> int:
     """Get the latest version from the migrations table."""
-    try:
-        versions = await get_all_versions()
-        if not versions:
-            return 0
-        return max(version["version"] for version in versions)
-    except Exception:
-        # If migrations table doesn't exist, we're at version 0
+    versions = await get_all_versions()
+    if not versions:
         return 0
+    return max(version["version"] for version in versions)
 
 
 async def get_all_versions() -> List[dict]:
     """Get all versions from the migrations table."""
-    try:
-        result = await repo_query("SELECT * FROM _sbl_migrations ORDER BY version;")
-        return result
-    except Exception:
-        # If table doesn't exist, return empty list
-        return []
+    return await repo_query("SELECT * FROM _sbl_migrations ORDER BY version;")
 
 
 async def bump_version() -> None:

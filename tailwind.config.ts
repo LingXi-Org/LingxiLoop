@@ -70,40 +70,35 @@ const config: Config = {
           glow: 'var(--sky2-glow)'
         },
         coral: {
-          DEFAULT: '#FF7A6B',
-          soft: '#FFD9D2',
-          deep: '#C84E3F'
+          DEFAULT: 'var(--destructive)',
+          soft: 'var(--coral-soft)',
+          deep: 'var(--coral-deep)'
         },
         gold: {
-          DEFAULT: '#F4B740',
-          deep: '#BA8418'
+          DEFAULT: 'var(--chart-1)',
+          deep: 'var(--gold-deep)'
         },
         whisper: {
-          '50': '#F6F3FF',
-          '100': '#ECE5FF',
-          '200': '#D9CCFF',
-          DEFAULT: '#7C5CFF',
-          deep: '#4A2D9E'
+          '50': 'var(--whisper-50)',
+          '100': 'var(--whisper-100)',
+          '200': 'var(--whisper-200)',
+          DEFAULT: 'var(--secondary-foreground)',
+          deep: 'var(--whisper-deep)'
         },
         cloud: 'var(--cloud)',
         paper: 'var(--paper)',
-        avail: '#6EC56A',
-        working: '#F4B740',
-        thinking: '#7C5CFF',
-        waiting: '#FF7A6B',
-        resting: '#B8C4D1'
+        avail: 'var(--avail)',
+        working: 'var(--working)',
+        thinking: 'var(--thinking)',
+        waiting: 'var(--waiting)',
+        resting: 'var(--resting)'
       },
       fontFamily: {
         display: [
-          'Manrope',
-          'system-ui',
-          '-apple-system',
-          'sans-serif'
+          'var(--font-heading)'
         ],
         body: [
-          'Manrope',
-          'system-ui',
-          'sans-serif'
+          'var(--font-sans)'
         ],
         mono: [
           'JetBrains Mono',
@@ -111,9 +106,9 @@ const config: Config = {
         ]
       },
       boxShadow: {
-        window: '0 50px 100px -20px rgba(10, 30, 60, 0.25), 0 30px 60px -30px rgba(10, 30, 60, 0.3), 0 0 0 1px rgba(0, 80, 140, 0.06)',
-        pop: '0 12px 28px -8px rgba(0, 80, 140, 0.18), 0 0 0 1px rgba(0, 80, 140, 0.06)',
-        soft: '0 2px 8px -2px rgba(10, 30, 60, 0.08)'
+        window: '0 50px 100px -20px color-mix(in srgb, var(--foreground) 25%, transparent), 0 30px 60px -30px color-mix(in srgb, var(--foreground) 30%, transparent), 0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent)',
+        pop: '0 12px 28px -8px color-mix(in srgb, var(--foreground) 18%, transparent), 0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent)',
+        soft: '0 2px 8px -2px color-mix(in srgb, var(--foreground) 8%, transparent)'
       },
       animation: {
         'pulse-soft': 'pulse-soft 1.5s ease-in-out infinite',

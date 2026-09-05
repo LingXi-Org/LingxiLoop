@@ -3,13 +3,15 @@ import type { PoolClient } from 'pg'
 import { embedText, hasPgVector } from '../agents/embeddings.js'
 import { pool } from '../db/pool.js'
 import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
-import type {
-  AgentWorkItem,
-  MemoryScopeType,
-  MemorySynthesisBatch,
-  MemorySynthesisChange,
-  PromptContextV1,
-  PromptMemoryV1,
+import {
+  KNOWLEDGE_CONTRACT_VERSION,
+  PROMPT_CONTRACT_VERSION,
+  type AgentWorkItem,
+  type MemoryScopeType,
+  type MemorySynthesisBatch,
+  type MemorySynthesisChange,
+  type PromptContextV1,
+  type PromptMemoryV1,
 } from './types.js'
 import { assembleAgentSystemPrompt } from './prompt-assembly.js'
 
@@ -27,20 +29,31 @@ function scopeIdFor(type: MemoryScopeType, args: { learnerId: string; conversati
   return args.agentId
 }
 
-function toPromptMemory(row: MemoryRow, fallbackScope: MemoryScopeType, fallbackId: string): PromptMemoryV1 {
-  const meta = row.meta ?? {}
+function toPromptMemory(row: MemoryRow): PromptMemoryV1 {
+  const meta = row.meta
+  if (!meta) throw new Error(`memory metadata missing: ${row.path}`)
+  if (meta.scopeType !== 'learner' && meta.scopeType !== 'course' && meta.scopeType !== 'agent_role') {
+    throw new Error(`invalid memory scopeType: ${row.path}`)
+  }
+  if (typeof meta.scopeId !== 'string' || !meta.scopeId) throw new Error(`memory scopeId missing: ${row.path}`)
+  if (typeof meta.kind !== 'string' || !meta.kind) throw new Error(`memory kind missing: ${row.path}`)
+  if (meta.origin !== 'explicit' && meta.origin !== 'synthesized') throw new Error(`invalid memory origin: ${row.path}`)
+  if (!Array.isArray(meta.sourceEventIds)) throw new Error(`memory evidence missing: ${row.path}`)
+  if (!Number.isFinite(Number(meta.version)) || !Number.isFinite(Number(meta.confidence))) {
+    throw new Error(`invalid memory version/confidence: ${row.path}`)
+  }
   const segments = row.path.split('/')
   return {
     id: String(segments.at(-1) ?? row.path).replace(/\.md$/, ''),
-    scopeType: (meta.scopeType === 'learner' || meta.scopeType === 'course' || meta.scopeType === 'agent_role') ? meta.scopeType : fallbackScope,
-    scopeId: String(meta.scopeId ?? fallbackId),
+    scopeType: meta.scopeType,
+    scopeId: meta.scopeId,
     body: row.body,
-    kind: String(meta.kind ?? segments[1] ?? 'observation'),
-    origin: meta.origin === 'synthesized' ? 'synthesized' : 'explicit',
+    kind: meta.kind,
+    origin: meta.origin,
     pinned: meta.pinned === true,
-    sourceEventIds: Array.isArray(meta.sourceEventIds) ? meta.sourceEventIds.map(String) : [],
-    version: Math.max(1, Number(meta.version ?? 1)),
-    confidence: Math.max(0, Math.min(1, Number(meta.confidence ?? 1))),
+    sourceEventIds: meta.sourceEventIds.map(String),
+    version: Math.max(1, Number(meta.version)),
+    confidence: Math.max(0, Math.min(1, Number(meta.confidence))),
     ...(typeof meta.validUntil === 'string' ? { validUntil: meta.validUntil } : {}),
     updatedAt: row.updated_at,
   }
@@ -57,7 +70,7 @@ async function recallScope(args: {
         AND CASE WHEN meta->>'validUntil' ~ '^\\d{4}-\\d{2}-\\d{2}T' THEN (meta->>'validUntil')::timestamptz END <= NOW()
       RETURNING agent_id,path,body,meta,updated_at`,
     [args.companyId, args.scopeType, args.scopeId],
-  ).catch(() => ({ rows: [] as MemoryRow[] }))
+  )
   if (args.conversationId && expired.length > 0) {
     for (const memory of expired) {
       const version = Math.max(1, Number(memory.meta?.version ?? 1))
@@ -75,30 +88,35 @@ async function recallScope(args: {
     await enqueuePendingMemorySynthesis(args.companyId, args.agentId, args.conversationId)
   }
   const params: unknown[] = [args.companyId, args.scopeType, args.scopeId]
+  const semanticQuery = args.query.trim()
   let distance = 'NULL::real AS distance'
   let order = `COALESCE((meta->>'pinned')::boolean,false) DESC, updated_at DESC`
-  let legacyRole = ''
-  if (args.scopeType === 'agent_role') {
-    params.push(args.agentId)
-    legacyRole = `OR (agent_id=$${params.length} AND meta->>'scopeType' IS NULL)`
-  }
+  let semanticRecall = false
   params.push(limit)
   const limitParameter = `$${params.length}`
-  const vector = args.query && await hasPgVector() ? await embedText(args.query) : null
-  if (vector) {
-    params.push(vector)
-    distance = `CASE WHEN embedding IS NULL THEN NULL ELSE embedding <=> $${params.length}::vector END AS distance`
-    order = `COALESCE((meta->>'pinned')::boolean,false) DESC, distance ASC NULLS LAST, updated_at DESC`
+  if (semanticQuery) {
+    if (!await hasPgVector()) throw new Error('pgvector extension is required')
+    try {
+      const vector = await embedText(semanticQuery, { companyId: args.companyId, agentId: args.agentId })
+      if (!vector) throw new Error('memory recall embedding is required')
+      params.push(vector)
+      semanticRecall = true
+      distance = `embedding <=> $${params.length}::vector AS distance`
+      order = `COALESCE((meta->>'pinned')::boolean,false) DESC, distance ASC, updated_at DESC`
+    } catch (error) {
+      console.warn('[memory:recall] semantic recall unavailable; using recency:', error instanceof Error ? error.message : String(error))
+    }
   }
   const { rows } = await pool.query<MemoryRow & { distance: number | null }>(
     `SELECT agent_id,path,body,meta,updated_at,${distance}
        FROM agent_workspace
       WHERE company_id=$1 AND path LIKE 'memory/%'
         AND COALESCE(meta->>'status','active')='active'
-        AND (meta->>'scopeType'=$2 AND meta->>'scopeId'=$3 ${legacyRole})
+        AND meta->>'scopeType'=$2 AND meta->>'scopeId'=$3
+        ${semanticRecall ? 'AND embedding IS NOT NULL' : ''}
       ORDER BY ${order} LIMIT ${limitParameter}`, params,
   )
-  return rows.map((row) => toPromptMemory(row, args.scopeType, args.scopeId))
+  return rows.map(toPromptMemory)
 }
 
 export async function recallMemories(args: {
@@ -117,17 +135,15 @@ export async function writeExplicitMemory(args: {
     sourceEventIds: [args.sourceEventId], version: 1, confidence: 1, validUntil: null,
     lastVerifiedAt: new Date().toISOString(), status: 'active', pinned: false,
   }
-  const vector = await hasPgVector() ? await embedText(args.body) : null
-  const { rows } = vector ? await pool.query<MemoryRow>(
+  if (!await hasPgVector()) throw new Error('pgvector extension is required')
+  const vector = await embedText(args.body, { companyId: args.companyId, agentId: args.agentId })
+  if (!vector) throw new Error('memory embedding is required')
+  const { rows } = await pool.query<MemoryRow>(
     `INSERT INTO agent_workspace(agent_id,path,body,meta,embedding,company_id,updated_at)
      VALUES($1,$2,$3,$4::jsonb,$5::vector,$6,NOW()) RETURNING agent_id,path,body,meta,updated_at`,
     [args.agentId, `memory/${kind}/${id}.md`, args.body.trim(), JSON.stringify(meta), vector, args.companyId],
-  ) : await pool.query<MemoryRow>(
-    `INSERT INTO agent_workspace(agent_id,path,body,meta,company_id,updated_at)
-     VALUES($1,$2,$3,$4::jsonb,$5,NOW()) RETURNING agent_id,path,body,meta,updated_at`,
-    [args.agentId, `memory/${kind}/${id}.md`, args.body.trim(), JSON.stringify(meta), args.companyId],
   )
-  return toPromptMemory(rows[0], args.scopeType, args.scopeId)
+  return toPromptMemory(rows[0])
 }
 
 export async function verifyExplicitMemory(args: { companyId: string; id: string }): Promise<boolean> {
@@ -176,7 +192,7 @@ export async function buildPromptContext(args: {
   const assembledAt = new Date().toISOString()
   const memories = { learner, course, agentRole }
   return {
-    version: 1,
+    version: 2,
     epoch: args.epoch,
     assembledAt,
     persona: args.persona,
@@ -187,11 +203,11 @@ export async function buildPromptContext(args: {
       persona: args.persona,
       capabilities: args.capabilities,
       executionRole: args.executionRole,
-      memories,
-      assembledAt,
     }),
     sourceVersions: {
       ...(args.sourceVersions ?? { persona: assembledAt, capabilities: assembledAt }),
+      knowledgeContract: KNOWLEDGE_CONTRACT_VERSION,
+      promptContract: PROMPT_CONTRACT_VERSION,
       learner: learner.map((item) => `${item.id}:${item.version}`).join(','),
       course: course.map((item) => `${item.id}:${item.version}`).join(','),
       agentRole: agentRole.map((item) => `${item.id}:${item.version}`).join(','),
@@ -221,9 +237,11 @@ export async function enqueuePendingMemorySynthesis(companyId?: string, agentId?
   if (companyId) { params.push(companyId); filters.push(`e.company_id=$${params.length}`) }
   if (agentId) { params.push(agentId); filters.push(`e.agent_id=$${params.length}`) }
   if (channelId) { params.push(channelId); filters.push(`e.conversation_id=$${params.length}`) }
-  const { rows } = await pool.query<{ company_id: string; agent_id: string; conversation_id: string; id: string }>(
+  const { rows } = await pool.query<{
+    company_id: string; agent_id: string; conversation_id: string; id: string; authorization_user_id: string
+  }>(
     `SELECT DISTINCT ON (e.company_id,e.agent_id,e.conversation_id)
-            e.company_id,e.agent_id,e.conversation_id,e.id
+            e.company_id,e.agent_id,e.conversation_id,e.id,e.learner_id AS authorization_user_id
        FROM agent_memory_evidence e
       WHERE ${filters.join(' AND ')}
         AND NOT EXISTS (SELECT 1 FROM agent_work_items w WHERE w.company_id=e.company_id AND w.agent_id=e.agent_id
@@ -233,9 +251,10 @@ export async function enqueuePendingMemorySynthesis(companyId?: string, agentId?
   const bucket = Math.floor(Date.now() / 15_000)
   for (const row of rows) {
     await pool.query(
-      `INSERT INTO agent_work_items (id,company_id,agent_id,channel_id,trigger_client_msg_no,reason,priority)
-       VALUES ($1,$2,$3,$4,$5,'memory_synthesis',10) ON CONFLICT (agent_id,trigger_client_msg_no,reason) DO NOTHING`,
-      [`memory-synthesis-${randomUUID()}`, row.company_id, row.agent_id, row.conversation_id, `memory:${row.id}:${bucket}`],
+      `INSERT INTO agent_work_items (id,company_id,authorization_user_id,agent_id,channel_id,trigger_client_msg_no,reason,priority)
+       VALUES ($1,$2,$3,$4,$5,$6,'memory_synthesis',10) ON CONFLICT (agent_id,trigger_client_msg_no,reason) DO NOTHING`,
+      [`memory-synthesis-${randomUUID()}`, row.company_id, row.authorization_user_id,
+        row.agent_id, row.conversation_id, `memory:${row.id}:${bucket}`],
     )
   }
   return rows.length

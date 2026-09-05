@@ -17,6 +17,7 @@
  * - aria: a real button with a descriptive label, focus ring matches the
  *   app's `outline-sky2-300` convention.
  */
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -31,8 +32,10 @@ interface Props {
 export function ScrollToLatestButton({ visible, onClick, bottomOffset = 16, zh = false }: Props) {
   if (!visible) return null
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="icon"
       onClick={onClick}
       aria-label={zh ? '回到最新消息' : "滚动到最新消息"}
       title={zh ? '回到最新消息' : "最新消息"}
@@ -40,23 +43,18 @@ export function ScrollToLatestButton({ visible, onClick, bottomOffset = 16, zh =
         // Positioning: absolute within the chat stream's relative container.
         'absolute right-4 z-20 grid place-items-center',
         // Shape + size — pill, 36×36 default, comfortable touch target.
-        'h-9 w-9 rounded-full',
-        // Surface — paper-toned with a calm sky tint so the pill reads as
-        // "tied to the conversation surface", not a generic floating UI bit.
-        'bg-cloud/95 backdrop-blur-md text-skype-deep',
-        // Border + shadow tune for "lifted off the page" without harshness.
-        'border border-sky2-100 shadow-[0_10px_24px_-12px_rgba(0,80,140,0.35)]',
+        'size-9 rounded-full bg-background/95 text-primary shadow-lg backdrop-blur-md',
         // Interaction — quick fade, gentle scale on press for tactile feel.
-        'transition-all duration-150 hover:bg-cloud hover:border-sky2-200 hover:shadow-[0_14px_30px_-12px_rgba(0,80,140,0.4)]',
+        'transition-all duration-150 hover:bg-accent hover:text-accent-foreground',
         'active:scale-[0.96]',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky2-300 focus-visible:outline-offset-2',
+        'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         // Entrance animation matches other transient overlays.
         'animate-rise',
       )}
       style={{ bottom: bottomOffset }}
     >
       <ChevronDown />
-    </button>
+    </Button>
   )
 }
 

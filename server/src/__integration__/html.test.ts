@@ -20,7 +20,7 @@ import {
   seedUserMembership, teardownAll,
 } from './_helpers.js'
 import { pool } from '../db/pool.js'
-import { findOrCreateEmailConversation, persistEmailMessage } from '../email.js'
+import { findOrCreateEmailConversation, persistEmailMessage } from '../modules/email/index.js'
 
 const ME_USER_ID = 'u-test-html'
 let server: Server
@@ -50,8 +50,13 @@ after(async () => {
  *  with me on the conversation's members list. Returns the messageId we
  *  GET against. */
 async function seedEmailWithHtml(html: string | null): Promise<{ messageId: string; companyId: string }> {
-  const { companyId, agentId } = await seedCompanyWithAgent()
+  const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership(ME_USER_ID, companyId)
+  await pool.query(
+    `INSERT INTO project_memberships(company_id,project_id,user_id,role)
+     VALUES ($1,$2,$3,'OWNER')`,
+    [companyId, projectId, ME_USER_ID],
+  )
   const conv = await findOrCreateEmailConversation({
     companyId, inReplyTo: null, references: [], subject: 'with html',
     memberIds: [ME_USER_ID, agentId],
@@ -103,7 +108,7 @@ test('[integration] returns 404 for an unknown messageId', async () => {
   assert.equal(res.status, 404)
 })
 
-test('[integration] returns 403 when the requester is not a thread member', async () => {
+test('[integration] returns opaque 404 when the requester is not a thread member', async () => {
   // Seed an email row, then REMOVE the user from the conversation's
   // members list so the membership check fails even though the auth
   // header is valid.
@@ -114,5 +119,5 @@ test('[integration] returns 403 when the requester is not a thread member', asyn
     [messageId, 'someone-else'],
   )
   const res = await fetchHtml(messageId, companyId)
-  assert.equal(res.status, 403)
+  assert.equal(res.status, 404)
 })

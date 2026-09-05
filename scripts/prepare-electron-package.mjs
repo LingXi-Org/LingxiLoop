@@ -23,30 +23,6 @@ for (const file of [
   cpSync(new URL(`../build/${file}`, import.meta.url), new URL(`../electron-package/build/${file}`, import.meta.url))
 }
 
-const runtimeModules = [
-  'argparse',
-  'builder-util-runtime',
-  'debug',
-  'electron-updater',
-  'fs-extra',
-  'graceful-fs',
-  'js-yaml',
-  'jsonfile',
-  'lazy-val',
-  'lodash.escaperegexp',
-  'lodash.isequal',
-  'ms',
-  'sax',
-  'semver',
-  'tiny-typed-emitter',
-  'universalify',
-]
-mkdirSync(new URL('../electron-package/node_modules/', import.meta.url), { recursive: true })
-for (const moduleName of runtimeModules) {
-  const destination = new URL(`../electron-package/node_modules/${moduleName}/`, import.meta.url)
-  cpSync(new URL(`../node_modules/${moduleName}/`, import.meta.url), destination, { recursive: true })
-}
-
 const stagedPackage = {
   name: 'lingxiloop',
   private: true,
@@ -55,7 +31,6 @@ const stagedPackage = {
   author: rootPackage.author,
   license: rootPackage.license,
   main: 'electron/main.cjs',
-  dependencies: { 'electron-updater': rootPackage.dependencies['electron-updater'] },
 }
 writeFileSync(new URL('../electron-package/package.json', import.meta.url), `${JSON.stringify(stagedPackage, null, 2)}\n`)
-console.log(`Prepared minimal Electron app: ${runtimeModules.length} runtime modules, version ${rootPackage.version}`)
+console.log(`Prepared local-only Electron app, version ${rootPackage.version}`)

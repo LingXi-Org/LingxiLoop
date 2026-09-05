@@ -1,126 +1,82 @@
-/**
- * DeepSeek protocol client factory — every server-side LLM call goes through here.
- *
- * Routing rules (tenant-aware):
- *
- *   1. If sub2api is configured AND we can resolve the tenant's owner
- *      → that owner's sub2api_api_key → SDK client pointed at the
- *      sub2api DeepSeek-compatible base. Per-user quotas enforced.
- *
- *   2. Else (sub2api unconfigured, or new tenant without a provisioned
- *      key yet) → the single DeepSeek credential and configurable DeepSeek
- *      compatible endpoint. No alternate provider fallback exists.
- *      No quotas — same behavior as pre-sub2api for the default case.
- *
- * Callers pass `tenant` (= company_id). When `tenant` is null (e.g.
- * platform-wide tasks like the avatar regen of a seeded agent before
- * any workspace exists) we always use the legacy path.
- *
- * Per-tenant client cache: SDK client construction is cheap but we
- * call this on every LLM hop. Cache by tenant; invalidate explicitly
- * (e.g. tier change handler) via `invalidateLlmClient(tenant)`.
- *
- * Critical: failures resolving the sub2api key are NEVER fatal — we
- * fall back to the legacy client. A wedged sub2api lookup must not
- * take down agent turns.
- */
-import OpenAI from 'openai'
-import { pool } from './db/pool.js'
+import type OpenAI from 'openai'
 import { env } from './env.js'
-import { sub2apiConfigured, sub2apiOpenAIBaseURL } from './sub2api.js'
+import { createOpenAIClient } from './llm-client.js'
+import { recordLlmCall, type LlmCallContext, type LlmUsage } from './llm-ledger.js'
 
-interface CachedClient {
-  client: OpenAI
-  /** What we built the client from — used for cheap invalidation. */
-  key: string
-  /** unix-ms when the cache entry was minted; expire after 5 min so a
-   *  silent tier change / key rotation doesn't strand the cache forever
-   *  even when the explicit invalidate path is missed. */
-  mintedAt: number
+let testOverride: (() => OpenAI | Promise<OpenAI>) | null = null
+export function __setLlmClientOverrideForTesting(override: typeof testOverride): void {
+  testOverride = override
 }
 
-const CACHE_TTL_MS = 5 * 60_000
-const cache = new Map<string, CachedClient>()
-
-/** Tolerance settings for both the sub2api-routed client AND the legacy
- *  fallback. Production has surfaced "all four agents 502'd at once →
- *  every run failed → fingerprint locks them out" sequences caused by
- *  brief upstream flakiness on sub2api / DeepSeek. The protocol SDK
- *  SDK retries on 5xx + 408 + 429 + network errors out of the box, but
- *  its default ceiling (2) is too thin for the bursty 502 windows we
- *  see; 5 absorbs short outages without making the wall-clock pathological.
- *  Timeout is 5 min — model responses (especially with reasoning) can
- *  legitimately take a couple minutes; the SDK aborts and retries within
- *  this budget. */
-const SDK_MAX_RETRIES = 5
-const SDK_TIMEOUT_MS = 5 * 60_000
-
-/** Test-only override. When set, every {@link getLlmClient} call returns
- *  whatever this function produces. Production code never sets this; it
- *  exists so integration tests can inject a fake protocol client instead of
- *  round-tripping through sub2api / DeepSeek. */
-let testLlmOverride: ((tenant: string | null) => OpenAI | Promise<OpenAI>) | null = null
-export function __setLlmClientOverrideForTesting(fn: typeof testLlmOverride): void {
-  testLlmOverride = fn
+let client: OpenAI | null = null
+async function providerClient(): Promise<OpenAI> {
+  if (testOverride) return testOverride()
+  client ??= createOpenAIClient({ apiKey: env.OPENAI_API_KEY, baseURL: env.OPENAI_BASE_URL })
+  return client
 }
 
-/** Build (and cache) the DeepSeek-compatible client for this tenant. Async because
- *  resolving the tenant's owner_user_id + sub2api_api_key is a DB hop.
- *  Always returns a working client — never throws on lookup failure. */
-export async function getLlmClient(tenant: string | null): Promise<OpenAI> {
-  if (testLlmOverride) return testLlmOverride(tenant)
-  // No tenant context → legacy.
-  if (!tenant || !sub2apiConfigured()) return legacyClient()
-
-  const cached = cache.get(tenant)
-  if (cached && Date.now() - cached.mintedAt < CACHE_TTL_MS) {
-    return cached.client
-  }
-
-  try {
-    const { rows } = await pool.query<{ sub2api_api_key: string | null }>(
-      `SELECT u.sub2api_api_key
-         FROM companies c
-         JOIN users u ON u.id = c.owner_user_id
-        WHERE c.id = $1`,
-      [tenant],
-    )
-    const apiKey = rows[0]?.sub2api_api_key
-    if (!apiKey) {
-      // Tenant exists but owner hasn't been provisioned in sub2api yet.
-      // Cache the legacy fallback briefly so we don't re-query on every
-      // hop, but with a short TTL so the next backfill picks up quickly.
-      const c = legacyClient()
-      cache.set(tenant, { client: c, key: 'legacy', mintedAt: Date.now() })
-      return c
+async function persistTrackedCall(record: Parameters<typeof recordLlmCall>[0]): Promise<void> {
+  let lastError: unknown
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await recordLlmCall(record)
+      return
+    } catch (error) {
+      lastError = error
     }
-    const c = new OpenAI({
-      apiKey,
-      baseURL: sub2apiOpenAIBaseURL(),
-      maxRetries: SDK_MAX_RETRIES,
-      timeout: SDK_TIMEOUT_MS,
-    })
-    cache.set(tenant, { client: c, key: apiKey, mintedAt: Date.now() })
-    return c
-  } catch (e) {
-    console.warn(`[llm] tenant ${tenant} client lookup failed; legacy fallback`, e instanceof Error ? e.message : e)
-    return legacyClient()
   }
+  throw lastError
 }
 
-/** Drop a tenant's cached client. Call from tier-change handlers so the
- *  next LLM hop picks up the swapped key / group. */
-export function invalidateLlmClient(tenant: string): void {
-  cache.delete(tenant)
-}
-
-let _legacy: OpenAI | null = null
-function legacyClient(): OpenAI {
-  if (!_legacy) _legacy = new OpenAI({
-    apiKey: env.DEEPSEEK_API_KEY,
-    baseURL: env.DEEPSEEK_BASE_URL,
-    maxRetries: SDK_MAX_RETRIES,
-    timeout: SDK_TIMEOUT_MS,
+async function tracked<T>(
+  context: LlmCallContext,
+  model: string,
+  operation: (client: OpenAI) => Promise<T>,
+  usageOf: (value: T) => LlmUsage | null = () => null,
+): Promise<T> {
+  const startedAt = Date.now()
+  let value: T
+  try {
+    value = await operation(await providerClient())
+  } catch (error) {
+    await persistTrackedCall({
+      context, model, latencyMs: Date.now() - startedAt, status: 'failed', error, measured: false,
+    })
+    throw error
+  }
+  await persistTrackedCall({
+    context, model, usage: usageOf(value), latencyMs: Date.now() - startedAt, status: 'succeeded',
   })
-  return _legacy
+  return value
+}
+
+export async function createChatCompletion(
+  context: LlmCallContext,
+  request: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
+  options?: OpenAI.RequestOptions,
+): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+  return tracked(
+    context,
+    request.model,
+    async (provider) => provider.chat.completions.create(request, options),
+    (response) => response.usage ?? null,
+  )
+}
+
+export async function createEmbedding(
+  context: LlmCallContext,
+  request: OpenAI.Embeddings.EmbeddingCreateParams,
+): Promise<OpenAI.Embeddings.CreateEmbeddingResponse> {
+  return tracked(context, request.model, async (provider) => provider.embeddings.create(request), (response) => response.usage)
+}
+
+export async function createImage(
+  context: LlmCallContext,
+  request: OpenAI.Images.ImageGenerateParamsNonStreaming & { model: string },
+): Promise<OpenAI.Images.ImagesResponse> {
+  return tracked(context, request.model, async (provider) => provider.images.generate(request))
+}
+
+export function invalidateLlmClient(): void {
+  client = null
 }

@@ -3,9 +3,8 @@
  *
  * Holds participants' avatars as `URL.createObjectURL(blob)` keyed by
  * participant id. Subscribed React components (via `useCachedAvatarSrc`)
- * re-render automatically when the server broadcasts
- * `participants.avatar` for that id (the participants store calls
- * `invalidateAvatar(id)` from its WS listener).
+ * re-render when the roster swaps to a new authoritative URL or the
+ * workspace cache is cleared.
  *
  * Falls back gracefully on fetch failure: the hook just emits the raw
  * remote URL so the browser's native `<img>` fetch can still try.
@@ -66,18 +65,6 @@ function notify(participantId: string | null): void {
   for (const fn of listeners) fn(participantId)
 }
 
-/** Drop a single participant's cached avatar — called by the
- *  participants store when a `participants.avatar` WS event lands.
- *  Subscribed hooks pick up the change and re-fetch with the new URL. */
-export function invalidateAvatar(participantId: string): void {
-  const e = cache.get(participantId)
-  if (e) {
-    cache.delete(participantId)
-    scheduleRevoke(e.objectUrl)
-  }
-  notify(participantId)
-}
-
 /** Drop the entire cache. Used by workspace switch (the participants
  *  store's load() / reset path). Old objectUrls are scheduled for
  *  revoke, not revoked synchronously — see REVOKE_GRACE_MS. */
@@ -92,7 +79,6 @@ export function clearAvatarCache(): void {
  * the raw URL while the first fetch is in flight (so the browser still
  * paints something instead of blanking). Refetches whenever:
  *   - the participant id or URL prop changes, OR
- *   - invalidateAvatar(participantId) is called, OR
  *   - clearAvatarCache() fires.
  *
  * Returns null when the participant has no avatar URL configured.

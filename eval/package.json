@@ -1,0 +1,24 @@
+{
+  "name": "@lingxiloop/black-box-eval",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "eval": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "autoevals": "0.3.0",
+    "openai": "6.37.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "4.21.0",
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Runtime"
+  short_description: "Change the Agent OS runtime without breaking contracts"
+  default_prompt: "Use $agent-runtime to implement and verify an Agent OS runtime change."

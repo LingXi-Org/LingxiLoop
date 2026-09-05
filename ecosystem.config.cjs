@@ -11,7 +11,7 @@
 // caps each log file and lets pm2 rotate it.
 //
 // Usage: `pm2 start ecosystem.config.cjs` (or point BaoTa's "启动文件"
-// at this file instead of directly at `tsx server/src/index.ts`).
+// at this file instead of directly at `tsx server/src/bin/web.ts`).
 // Log rotation additionally requires the pm2-logrotate module:
 //   pm2 install pm2-logrotate
 //   pm2 set pm2-logrotate:max_size 20M
@@ -22,7 +22,7 @@ module.exports = {
     {
       name: 'lingxiloop',
       script: 'node_modules/.bin/tsx',
-      args: 'server/src/index.ts',
+      args: 'server/src/bin/web.ts',
       cwd: __dirname,
       out_file: './logs/lingxiloop-out.log',
       error_file: './logs/lingxiloop-error.log',

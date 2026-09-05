@@ -5,7 +5,7 @@
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
-import { getTrackedLlmClient } from './llm-ledger.js'
+import { createChatCompletion } from '../llm.js'
 import type { ToolResult } from './tools-shared.js'
 
 export type { ToolResult } from './tools-shared.js'
@@ -15,9 +15,8 @@ export async function executeTool(args: {
   agentId: string
   name: string
   argsJson: string
-  messageId?: string | null
   runId?: string | null
-  companyId?: string | null
+  companyId: string
   idempotencyKey?: string
 }): Promise<ToolResult> {
   const startedAt = Date.now()
@@ -27,15 +26,15 @@ export async function executeTool(args: {
   catch { parsed = {} }
 
   await pool.query(
-    `INSERT INTO tool_calls (id, message_id, agent_id, name, args, status, run_id, company_id)
-     VALUES ($1,$2,$3,$4,$5::jsonb,'pending',$6,$7)`,
-    [id, args.messageId ?? null, args.agentId, args.name, JSON.stringify(parsed), args.runId ?? null, args.companyId ?? null],
+    `INSERT INTO tool_calls (id, agent_id, name, args, status, run_id, company_id)
+     VALUES ($1,$2,$3,$4::jsonb,'pending',$5,$6)`,
+    [id, args.agentId, args.name, JSON.stringify(parsed), args.runId ?? null, args.companyId ?? null],
   )
 
   let result: ToolResult
   try {
     result = args.name === 'palette'
-      ? await createPalette(parsed, args.companyId ?? null, args.agentId)
+      ? await createPalette(parsed, args.companyId, args.agentId)
       : {
           ok: false,
           output: null,
@@ -62,17 +61,11 @@ export async function executeTool(args: {
   return result
 }
 
-async function createPalette(args: Record<string, unknown>, companyId: string | null, agentId: string): Promise<ToolResult> {
+async function createPalette(args: Record<string, unknown>, companyId: string, agentId: string): Promise<ToolResult> {
   const startedAt = Date.now()
   const brief = String(args.brief ?? '').trim()
-  const openai = await getTrackedLlmClient({
-    purpose: 'palette',
-    companyId,
-    agentId,
-    extras: { brief: brief.slice(0, 120) },
-  })
-  const response = await openai.chat.completions.create({
-    model: env.DEEPSEEK_MODEL,
+  const response = await createChatCompletion({ purpose: 'palette', companyId, agentId }, {
+    model: env.OPENAI_MODEL,
     messages: [
       { role: 'system', content: 'You produce 5-color hex palettes. Reply ONLY with JSON: {"colors":["#RRGGBB", ...]}. No prose.' },
       { role: 'user', content: `Design brief: ${brief}\n\nReply with JSON only.` },

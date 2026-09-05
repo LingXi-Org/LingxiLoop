@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "ci-smoke",
+  "version": "1",
+  "cases": [
+    { "id": "capital", "input": "Return only the capital city of France, in English.", "expected": "Paris", "tags": ["knowledge"] }
+  ]
+}

@@ -11,12 +11,65 @@
 
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
+import {
+  clearAgentChannelUnread,
+  clearAllAgentUnread,
+  getAgentChannelHistory,
+  getAgentInbox,
+  searchAgentMessages,
+  sendAgentChannelMessage,
+  toggleAgentChannelReaction,
+} from '../im/public.js'
 import { parseMentions } from '../mentions.js'
-import { freshenAttachmentUrl, type StoredAttachment, storage } from '../storage.js'
+import { addAgentConversationMember, leaveAgentConversation } from '../modules/conversations/public.js'
+import { freshenAttachmentUrl, type StoredAttachment, storage, storageKeyFromPublicUrl } from '../storage.js'
+import { createCalendarCommand } from './cli/calendar.js'
+import { createConversationDeliveryCommands } from './cli/conversation-delivery.js'
+import { createConversationMetadataCommands } from './cli/conversation-metadata.js'
+import { createDocumentCommand } from './cli/document.js'
+import { createEmailCommand } from './cli/email.js'
+import { createHelpCommand } from './cli/help.js'
+import {
+  addAgentLog,
+  deleteClimate,
+  deleteMemoryFile,
+  findClimate,
+  listAgentLog,
+  listClimate,
+  listMemoryFiles,
+  saveMemoryFile,
+  toggleMemoryPin,
+  upsertClimate,
+} from './cli/memory-repository.js'
+import { createParticipantDirectoryCommands } from './cli/participant-directory.js'
+import {
+  agentCompanyId,
+  findAvailableProjectId,
+  findConvening,
+  findConversationScope,
+  humanParticipantIds,
+  listAgentConversations,
+  listConversationMembers,
+  listParticipantIdentities,
+  listToolCalls,
+  participantNames,
+} from './cli/repository.js'
+import {
+  createAgentTask,
+  deleteSkillFiles,
+  deleteWorkspaceFile,
+  listAgentTasks,
+  listWorkspaceContents,
+  listWorkspaceFiles,
+  readWorkspaceFile,
+  updateAgentTaskStatus,
+  updateWorkspaceFile,
+  workspaceFileExists,
+  writeWorkspaceFile,
+} from './cli/workspace-repository.js'
 import type { CliResult, CliSideEffect } from './cli-result.js'
 import { createHandoff, requestApproval, updateHandoff, upsertAutonomyRule } from './coworker.js'
 import { stripLoneSurrogates } from './text-safety.js'
-import { enqueueAgentWork } from '../agent-os/enqueue.js'
 
 // Every CLI result flows through ok()/err(), so scrubbing lone UTF-16 surrogates
 // here means CLI output (read by agents as tool results) can never carry a split
@@ -40,11 +93,10 @@ function err(text: string, code = 1): CliResult {
  *  Agent ids are globally unique (partial unique index on
  *  `participants(id) WHERE kind='agent'` + server-side slugify on
  *  /agents POST), so id-only lookup returns the single correct row. */
-async function agentCompany(agentId: string): Promise<string | null> {
-  const { rows } = await pool.query<{ company_id: string | null }>(
-    `SELECT company_id FROM participants WHERE id = $1 LIMIT 1`, [agentId],
-  )
-  return rows[0]?.company_id ?? null
+async function agentCompany(agentId: string): Promise<string> {
+  const companyId = await agentCompanyId(pool, agentId)
+  if (!companyId) throw new Error(`agent ${agentId} has no company`)
+  return companyId
 }
 
 /* ============== argv parsing ============== */
@@ -57,7 +109,8 @@ export { tokenize }
 // import). See the docstring there for the priority order — especially
 // the "ambient runtime id beats any --as the model could smuggle" rule.
 import { resolveAs } from './cli-identity.js'
-import { normalizeWorkSubject, type WorklogEntry, type WorkTaskType } from './work-claims.js'
+import { clearHold, consumeHold, getSeen, recordHold, recordSeen } from './seen-boundary.js'
+import type { WorklogEntry, WorkTaskType } from './work-claims.js'
 /* ============== Worklog plumbing ==============
  *
  * Heavy agent-runtime actions (browser research, document creation, image
@@ -66,12 +119,10 @@ import { normalizeWorkSubject, type WorklogEntry, type WorkTaskType } from './wo
  * lives in Redis and auto-expires; releaseWork() in a finally block
  * cleans up on success or known failure.
  *
- * Failure of the claim subsystem fails open — a Redis hiccup must not
- * block real work. The worst case is two agents do the same thing
- * once, which is what we have today.
+ * Redis coordination is required. Claim failures reject the command so
+ * duplicate work cannot be admitted through an alternate path.
  */
 import { workClaims as worklogClient } from './work-claims.js'
-import { clearHold, consumeHold, getSeen, recordHold, recordSeen } from './seen-boundary.js'
 
 function tenantScopeKey(companyId: string): string {
   return `tenant:${companyId}`
@@ -122,19 +173,6 @@ async function releaseTenantWork(
   })
 }
 
-/** Re-sign one row's attachment from its stored key. Matches the
- *  pattern in api/router.ts so a storage hiccup on one row never
- *  fails the whole list — falls back to the stored (possibly stale)
- *  URL with a warning. */
-async function freshenRowAttachment(row: { id: string; attachment: StoredAttachment | null }): Promise<void> {
-  if (!row.attachment) return
-  try {
-    row.attachment = await freshenAttachmentUrl(row.attachment)
-  } catch (e) {
-    console.warn(`[cli] freshenAttachmentUrl failed for message ${row.id}; falling back to stored URL`, e)
-  }
-}
-
 /** One-line, agent-readable summary of an attachment. */
 function renderAttachment(att: StoredAttachment | null | undefined): string | null {
   if (!att) return null
@@ -142,338 +180,37 @@ function renderAttachment(att: StoredAttachment | null | undefined): string | nu
   return `    ↳ [${att.kind}] ${att.name}${size} → ${att.url}`
 }
 
+function attachmentFromImData(companyId: string, data: Record<string, unknown> | undefined): StoredAttachment | null {
+  if (!data) return null
+  const kind = ['img', 'pdf', 'file', 'fig'].includes(String(data.kind))
+    ? data.kind as StoredAttachment['kind']
+    : null
+  const name = typeof data.name === 'string' ? data.name : null
+  const key = typeof data.key === 'string' ? data.key : null
+  if (!kind || !name || !key?.startsWith(`attachments/${companyId}/`)) return null
+  return {
+    kind,
+    name,
+    key,
+    url: typeof data.url === 'string' ? data.url : '',
+    ...(typeof data.mime === 'string' ? { mime: data.mime } : {}),
+    ...(typeof data.size === 'number' ? { size: data.size } : {}),
+  }
+}
+
+function imTimestamp(timestamp: number): string {
+  const milliseconds = timestamp > 10_000_000_000 ? timestamp : timestamp * 1000
+  return new Date(milliseconds).toISOString()
+}
+
 /* ============== commands ============== */
 
-async function cmdHelp(): Promise<CliResult> {
-  return ok(
-    `lingxiloop — introspect the whole app + manage your private workspace, memory, tasks, log
-
-USAGE:
-  lingxiloop <subcommand> [args...] [flags...]
-
-MAILBOX  (this is how you receive + send messages):
-  inbox [<convo_id>]                — list new messages directed at you, grouped by conversation
-  ack <convo_id>                    — mark that conversation read up to NOW (clear from inbox)
-  ack --all                         — ack every conversation currently in your inbox
-  mute <convo_id> [--for 1h|1d|1w] — stop delivery from a group (direct @mentions and quote-replies still arrive)
-  mute <convo_id> --until <iso>     — stop delivery until a wall-clock time; omit duration to mute forever
-  mute list                         — show your active muted groups and expiry times
-  follow <convo_id>                 — resume normal delivery from a muted group
-  reply <convo_id> "<body>"         — post a message to that conversation as you
-  reply <convo_id> "<body>" --quote <msg_id>
-                                    — post as a quote-reply to <msg_id> (same convo); inbox + messages
-                                      render the quoted-original inline so the room knows the context
-  thread <convo_id> <root_msg_id>   — list every direct reply to one message (the thread under <root_msg_id>)
-  topic <convo_id>                  — read the conversation's topic line
-  topic-set <convo_id> "<text>"     — write/update the topic (any member can; empty body clears it)
-  rename <convo_id> "<title>"       — rename a group (members only; groups only)
-
-INTROSPECTION:
-  whoami [--as <id>]
-  participants [--kind agent|human]
-  conversations [--as <id>]
-  groups [--as <id>]
-  directs [--as <id>]
-  members <convo_id>
-  messages <convo_id> [--tail N] [--thread <root_msg_id>]
-  search <query> [--in <convo_id>] [--limit N]
-  convening <convo_id>
-  tools-log [--agent <id>] [--limit N]
-  participants-status
-
-PRIVATE TO EACH AGENT  (these write/read state owned by --as):
-  memory list [--as <id>] [--about <subject>] [--kind <kind>] [--limit N]
-  memory note <body> [--as <id>] [--about <subject>] [--kind <kind>]
-  memory pin <id>
-  memory delete <id>
-  autonomy remember <convo_id> <scope> <operation> <allow|ask|deny>
-
-  log [--as <id>] [--limit N]
-  log note <body> [--as <id>]
-
-  workspace ls [--as <id>]
-  workspace read <path> [--as <id>]
-  workspace write <path> <body> [--as <id>]
-  workspace edit <path> <old> <new> [--all]    # surgical replace; default fails if old not unique
-  workspace grep <pattern> [-i]                # regex across all your files
-  workspace delete <path> [--as <id>]
-  ws ...                                       # alias for workspace
-
-  tasks list [--as <id>] [--status open|doing|done]
-  tasks add <title> [--as <id>]
-  tasks set <task_id> <status>     # status ∈ open|doing|done|dropped
-
-CALENDAR  (shared schedule + your own self-scheduling tool):
-  # This is also how you SCHEDULE YOURSELF. Set --assignee to your own id
-  # and the dispatcher will wake YOU at --at with --prompt as the brief.
-  # Add --every for recurring schedules. Use this whenever you'd otherwise
-  # tell a user "I'll do X later / tomorrow / every morning" — instead of
-  # promising to come back, schedule the wake so future-you actually does.
-  calendar list [--as <id>] [--all] [--status active|paused|done|cancelled]
-                                   # default scope = events assigned to OR created by --as
-  calendar create "<title>" --at <iso> [--assignee <id>] [--prompt "..."]
-                                       [--in <convo_id>] [--every daily|weekly|monthly|yearly]
-                                       [--interval N] [--byweekday 0,1,2,3,4]
-                                       [--until <iso>] [--count N]
-                                       [--kind personal|agent_task]
-                                       [--remind <minutes>] [--remind-channel toast|email|both]
-                                       [--private]
-                                   # --assignee <self_id> + --prompt "..." = give future-you
-                                   #   a wake-up with that prompt as the brief
-                                   # --every daily|weekly|monthly|yearly = recurring schedule;
-                                   #   pair with --interval / --byweekday / --until / --count
-                                   # --remind 10 fires a heads-up 10 min before each occurrence
-                                   # --private hides the row from everyone except its creator
-                                   #   and assignee (company owner can still see private rows
-                                   #   that involve an agent). Use it for personal reminders
-                                   #   you don't want to clutter the shared calendar.
-                                   # when start_at fires, the prompt is posted into <convo_id>
-                                   # (or the assignee's DM with you) and the assignee is woken
-  calendar update <event_id> [--title "..."] [--at <iso>] [--status active|cancelled|done]
-                             [--private | --public]                # flip the privacy flag
-  calendar run-now <event_id>      # dispatch an event immediately
-  calendar dispatches <event_id>   # inspect dispatch history
-  calendar cancel <event_id>       # stop firings without dropping history
-  calendar delete <event_id>       # hard delete (also wipes dispatch history)
-
-ACTIONS  (each writes to the world, not just your private state):
-  dm <partner_id> <topic> <opening>                open a private 1-on-1 chat with another agent
-  pull-group <title> --members a,b,c --leader a --reason "..." --say "..."   create a new group + post first msg
-  invite <convo_id> <member_id>                    pull a teammate into a group you're in
-  leave <convo_id>                                 leave a group (no-op for direct chats)
-  kick <convo_id> <member_id>                      remove a member from a group you're in
-
-KANBAN  (shared boards — the same ones humans see in the Boards view):
-  kanban ls                                          list every kanban board in this workspace
-  kanban show <board_id>                             full snapshot: columns + cards
-  kanban create "<title>" [--description "..."]     new board, seeded with Todo/Doing/Done columns
-  kanban rename <board_id> --title "..."             rename / re-describe a board
-       [--description "..."]
-  kanban columns <board_id>                          list column ids — needed for \`card add --column\`
-  kanban add-column <board_id> "<title>"             append a new column to a board
-  kanban edit-column <board_id> <column_id>          rename / reorder a column
-       [--title "..."] [--position N]
-  kanban delete-column <board_id> <column_id>        delete a column and its cards
-  kanban delete <board_id>                           drop the board (and its columns + cards)
-  kanban mentions [--peek] [--json]                  list NEW cards/comments where someone @ed YOU since
-                                                     your last check. Run this on every wake when your
-                                                     inbox is empty — you may have been pinged here.
-                                                     Advances a read cursor unless --peek is passed.
-
-  card ls <board_id>                                list every card in a board
-  card show <card_id>                               full card detail + comments
-  card add <board_id> "<title>" --column <col_id>   create a card
-       [--description "..."] [--assign <id>]
-  card move <card_id> --to <column_id>              move a card between columns (the way "done" happens)
-  card claim <card_id>                              ATOMICALLY claim a card before working it (exclusive;
-                                                     fails if someone else already holds it → move on)
-  card assign <card_id> <participant_id|null>       (re)assign a card (agents and humans both work)
-  card rename <card_id> --title "..."               edit a card's title
-       [--description "..."]                        and/or its description
-  card comment <card_id> "<body>"                   append a comment (Markdown OK, @ids parsed)
-  card delete-comment <card_id> <comment_id>         delete your own comment
-  card delete <card_id>                             drop a card
-
-  @mention any participant id (\`@iris\`, \`@yetone\`) in a card title /
-  description / comment — the renderer will chip them and toast the
-  recipient(s) so a human or another agent gets pinged. Agents are
-  first-class assignees too — assign a card to @iris and she'll see it
-  via \`lingxiloop card show\` exactly the way a human does in the UI.
-
-CONTACTS  (workspace + email — use BEFORE assuming you know a name):
-  contacts [<query>] [--as <id>]                   list everyone in this workspace (agents +
-                                                   humans + external mail correspondents),
-                                                   with each teammate's role/function.
-                                                   With a query: substring-search name/id/email/role
-                                                   (e.g. "designer"). No match → ASK the user for the
-                                                   address; DO NOT silently skip the request.
-
-EMAIL  (real external mail — every agent has an address):
-  email whoami [--as <id>]                         your own email address
-  email contacts [<query>] [--as <id>]             same as top-level "contacts" (email-namespaced
-                                                   alias kept for back-compat)
-  email inbox [--unread] [--limit N] [--as <id>]   email threads you're on, latest first
-  email show <conversation_id> [--tail N]          full thread (all messages in order)
-  email send --to <addr|id>[,...] [--cc <...>] --subject "..." --body "..."
-  email reply <message_id> --body "..." [--cc <...>]
-                                                   threaded reply (sets In-Reply-To / References)
-
-DOCUMENTS  (live collaborative docs — humans + agents edit the same page):
-  doc ls [--as <id>]                               list docs in the workspace
-  doc create "<title>" [--body "<markdown>"]       create a doc; body is Markdown
-  doc read <document_id>                           read doc as Markdown-like text
-  doc append <document_id> "<markdown>"            append Markdown blocks
-  doc prepend <document_id> "<markdown>"           prepend Markdown blocks
-  doc image <document_id> <url> [--alt "..."]
-            [--at end|start | --replace "<text>" | --after "<text>" | --before "<text>"]
-                                                   insert an image block. Default
-                                                   is end of doc. Anchored modes
-                                                   place the image relative to
-                                                   the first block whose text
-                                                   contains the given snippet:
-                                                     --replace : swap that
-                                                                 block for the
-                                                                 image (use to
-                                                                 fix a broken
-                                                                 "![alt](url)"
-                                                                 markdown line)
-                                                     --after   : insert below
-                                                                 the matched
-                                                                 block
-                                                     --before  : insert above
-                                                                 the matched
-                                                                 block
-                                                   An anchored mode that misses
-                                                   is an ERROR — no image is
-                                                   inserted. Re-read the doc
-                                                   and pick a more specific
-                                                   snippet.
-                                                   Preferred over an
-                                                   "![alt](url)" markdown block
-                                                   when the URL might wrap onto
-                                                   multiple lines (long presigned
-                                                   CDN links etc.)
-  doc image-delete <document_id>
-                    [--src <url> | --src-contains <substr> | --alt <text>]
-                                                   remove every image block in
-                                                   the doc matching the
-                                                   criterion. Use to clean up
-                                                   duplicate or unwanted
-                                                   illustrations the CLI left
-                                                   behind.
-  doc replace <document_id> --find "..." --replace "..."
-                                                   replace text in existing content
-                                                   (text only — cannot change block
-                                                   structure; see replace-block)
-  doc replace-block <document_id> --anchor "<snippet>" "<markdown>"
-                                                   swap the FIRST block whose text
-                                                   contains the snippet for freshly
-                                                   parsed Markdown blocks. Use to
-                                                   fix structure: e.g. a table that
-                                                   rendered as one flat "|...|"
-                                                   paragraph. Anchor miss = error,
-                                                   nothing changes.
-  doc delete <document_id>                         delete a doc you created
-  Markdown supports headings, lists, quotes, code, links, tables, and image blocks:
-    ![alt text](https://example.com/image.png)
-
-SKILLS  (progressive-disclosure capability packs in your own workspace):
-  skills list                                      list installed skills (name + description only)
-  skills read <name> [<sub-path>]                  load full SKILL.md (or a bundled file)
-  skills create <name> "<description>"             scaffold a new skill
-  skills search <query>                            search SkillHub (requires SKILLHUB_URL)
-  skills install <id_or_url>                       install from SkillHub or any compatible URL
-  skills delete <name>                             remove a skill
-  react <message_id> <emoji>                       toggle an emoji reaction on any message
-  palette "<brief>"                                generate a 5-color hex palette
-  image generate "<prompt>" [--size square|wide|tall]
-                                                   generate an image (gpt-image-2), upload to storage,
-                                                   return signed URL + key for later 'reply --attach <url>'
-
-GLOBAL FLAGS:
-  --json
-  --as <id>                          run as another participant (agents query their own state)
-
-EXAMPLES:
-  lingxiloop groups --as iris
-  lingxiloop memory note "Yetone prefers warm palettes" --about yetone --as iris
-  lingxiloop workspace write drafts/v3.md "# Hero v3..." --as iris
-  lingxiloop workspace edit drafts/v3.md "warmth" "Sunday-morning warmth"
-  lingxiloop dm bram "hero copy" "Want to align before iris paints v4"
-  lingxiloop pull-group "Aurora launch" --members iris,bram,nova --leader iris --reason "Shipping next week" --say "Kickoff?"
-  lingxiloop react msg-abc123 🌤️
-  lingxiloop image generate "a quiet bauhaus poster, ochre and cobalt" --size wide
-  lingxiloop tasks list --as bram --status open
-  lingxiloop calendar create "Follow up with Wei on hero v3" --at 2026-05-25T15:00:00Z --assignee iris --prompt "DM wei and ask if v3 landed"     # one-shot self-schedule
-  lingxiloop calendar create "Daily standup digest" --at 2026-05-24T09:00:00Z --assignee iris --prompt "Summarize yesterday's group activity and post into <convo_id>" --every daily     # recurring self-schedule
-  lingxiloop calendar list --as iris                                          # see what you've already scheduled for yourself`,
-  )
-}
-
-async function cmdWhoami(parsed: ParsedArgs): Promise<CliResult> {
-  const id = resolveAs(parsed)
-  const { rows } = await pool.query<{
-    id: string; kind: string; name: string; role: string | null;
-    status: string; bio: string | null; tools: string[] | null
-  }>(
-    `SELECT id, kind, name, role, status, bio, tools FROM participants WHERE id = $1`,
-    [id],
-  )
-  const p = rows[0]
-  if (!p) return err(`unknown participant: ${id}`)
-  if (parsed.flags.json) return ok(JSON.stringify(p, null, 2))
-
-  const { rows: convos } = await pool.query<{ id: string; title: string; kind: string }>(
-    `SELECT id, title, kind FROM conversations
-      WHERE members @> to_jsonb(ARRAY[$1::text])
-      ORDER BY updated_at DESC`,
-    [id],
-  )
-  const lines = [
-    `id:        ${p.id}`,
-    `name:      ${p.name}`,
-    `kind:      ${p.kind}`,
-    p.role ? `role:      ${p.role}` : '',
-    `status:    ${p.status}`,
-    p.bio ? `bio:       ${p.bio}` : '',
-    p.tools && p.tools.length ? `tools:     ${p.tools.join(', ')}` : '',
-    '',
-    `member of ${convos.length} conversation(s):`,
-    ...convos.map((c) => `  · [${c.kind.padEnd(7)}] ${c.id.padEnd(28)} ${c.title}`),
-  ].filter(Boolean)
-  return ok(lines.join('\n'))
-}
-
-async function cmdParticipants(parsed: ParsedArgs): Promise<CliResult> {
-  // TENANT SCOPE: only this agent's OWN company. Without the company_id filter
-  // this listed every participant in EVERY LingxiLoop company (cross-tenant leak —
-  // agents reported "thousands of resting humans" = all users globally).
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`cannot resolve company for ${me}`)
-  const kind = parsed.flags.kind ? String(parsed.flags.kind) : null
-  const params: unknown[] = [companyId]
-  let where = `WHERE company_id = $1 AND departed_at IS NULL`
-  if (kind) { params.push(kind); where += ` AND kind = $2` }
-  const { rows } = await pool.query<{
-    id: string; kind: string; name: string; role: string | null; status: string; avatar_url: string | null
-  }>(
-    `SELECT id, kind, name, role, status, avatar_url FROM participants ${where} ORDER BY kind DESC, name ASC`,
-    params,
-  )
-  if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-  const lines = [
-    `id              kind   status      role`,
-    `-----------------------------------------------------`,
-  ]
-  for (const r of rows) {
-    lines.push(`${r.id.padEnd(15)} ${r.kind.padEnd(6)} ${r.status.padEnd(11)} ${r.role ?? ''}`)
-    // Surface the avatar URL on its own line when set, so an agent can fetch the
-    // image and view it (\`lingxiloop avatar show <id>\` is the convenience wrapper).
-    if (r.avatar_url) lines.push(`  ↳ avatar: ${r.avatar_url}`)
-  }
-  return ok(lines.join('\n'))
-}
+const cmdHelp = createHelpCommand(ok)
+const { cmdParticipants, cmdStatus, cmdWhoami } = createParticipantDirectoryCommands({ ok, err })
 
 async function cmdConversations(parsed: ParsedArgs, kindFilter?: 'group' | 'direct'): Promise<CliResult> {
   const me = resolveAs(parsed)
-  const params: unknown[] = [me]
-  let kindWhere = ''
-  if (kindFilter) {
-    params.push(kindFilter)
-    kindWhere = `AND kind = $2`
-  }
-  const { rows } = await pool.query<{
-    id: string; kind: string; title: string; subtitle: string | null;
-    members: string[]; tag: string | null;
-    updated_at: string; pulled_by: { agentId?: string } | null
-  }>(
-    `SELECT id, kind, title, subtitle, members, tag, updated_at, pulled_by
-       FROM conversations
-      WHERE members @> to_jsonb(ARRAY[$1::text]) ${kindWhere}
-      ORDER BY updated_at DESC`,
-    params,
-  )
+  const rows = await listAgentConversations(pool, me, kindFilter)
   if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
   if (rows.length === 0) return ok(`(no conversations for ${me})`)
 
@@ -494,23 +231,12 @@ async function cmdConversations(parsed: ParsedArgs, kindFilter?: 'group' | 'dire
 async function cmdMembers(parsed: ParsedArgs): Promise<CliResult> {
   const id = parsed.positional[0]
   if (!id) return err('usage: members <conversation_id>')
-  const { rows } = await pool.query<{ members: string[] }>(
-    `SELECT members FROM conversations WHERE id = $1`,
-    [id],
-  )
-  if (!rows[0]) return err(`unknown conversation: ${id}`)
-  const memberIds = rows[0].members
-  const { rows: peeps } = await pool.query<{
-    id: string; name: string; kind: string; role: string | null; status: string; avatar_url: string | null
-  }>(
-    `SELECT id, name, kind, role, status, avatar_url FROM participants WHERE id = ANY($1::text[])`,
-    [memberIds],
-  )
+  const peeps = await listConversationMembers(pool, id)
+  if (!peeps) return err(`unknown conversation: ${id}`)
   if (parsed.flags.json) return ok(JSON.stringify(peeps, null, 2))
   const memberLines: string[] = []
   for (const p of peeps) {
     memberLines.push(`  · ${p.id.padEnd(12)} ${p.kind.padEnd(6)} ${p.status.padEnd(10)} ${p.name}${p.role ? ` (${p.role})` : ''}`)
-    if (p.avatar_url) memberLines.push(`      ↳ avatar: ${p.avatar_url}`)
   }
   const lines = [
     `${id} has ${peeps.length} member(s):`,
@@ -523,54 +249,62 @@ async function cmdMembers(parsed: ParsedArgs): Promise<CliResult> {
 async function cmdMessages(parsed: ParsedArgs): Promise<CliResult> {
   const id = parsed.positional[0]
   if (!id) return err('usage: messages <conversation_id> [--tail N] [--thread <root_id>]')
+  const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
   const tail = Math.min(200, Math.max(1, Number(parsed.flags.tail ?? 20)))
   // `--thread <root_id>` filters to direct replies of one message. Useful
   // when an agent wants to focus on what's happening in one sub-discussion
   // before deciding how to respond.
   const threadRootId = parsed.flags.thread ? String(parsed.flags.thread) : null
-  const params: unknown[] = [id]
-  let whereExtra = ''
-  if (threadRootId) {
-    params.push(threadRootId)
-    whereExtra = `AND quoted_message_id = $2`
-  }
-  params.push(tail)
-  const limitParam = `$${params.length}`
-  const { rows } = await pool.query<{
-    id: string; author_id: string; kind: string; body: string; sequence: number;
-    created_at: string; attachment: StoredAttachment | null;
-    poll: InboxPollPayload | null;
-    quoted_message_id: string | null;
-    quoted: { id: string; authorId: string; authorName: string; body: string } | null;
-  }>(
-    `SELECT
-        id, author_id, kind, body, sequence, created_at, attachment, poll,
-        quoted_message_id,
-        (
-          SELECT jsonb_build_object(
-            'id', qm.id,
-            'authorId', qm.author_id,
-            'authorName', qm.author_id,
-            'body', LEFT(qm.body, 240)
-          )
-            FROM messages qm
-           WHERE qm.id = messages.quoted_message_id
-             AND qm.conversation_id = messages.conversation_id
-        ) AS quoted
-       FROM messages WHERE conversation_id = $1
-       ${whereExtra}
-       ORDER BY sequence DESC LIMIT ${limitParam}`,
-    params,
-  )
-  for (const row of rows) await freshenRowAttachment(row)
-  const inOrder = rows.reverse()
+  const authoritative = await getAgentChannelHistory({ companyId, agentId: me, channelId: id, limit: 200 })
+  if (!authoritative) return err(`unknown authoritative channel ${id}`)
+  const ordered = [...authoritative].sort((left, right) => left.messageSeq - right.messageSeq)
+  const threadRoot = threadRootId
+    ? ordered.find((message) => message.messageId === threadRootId || message.clientMsgNo === threadRootId)
+    : undefined
+  const threadTargets = new Set([
+    threadRootId,
+    threadRoot?.messageId,
+    threadRoot?.clientMsgNo,
+  ].filter((value): value is string => Boolean(value)))
+  const selected = ordered
+    .filter((message) => !threadRootId || threadTargets.has(message.payload.replyToClientMsgNo ?? ''))
+    .slice(-tail)
+  const authorIds = [...new Set(ordered.map((message) => message.fromUid))]
+  const authorNames = await participantNames(pool, companyId, authorIds)
+  const inOrder = await Promise.all(selected.map(async (message) => {
+    const quotedId = message.payload.replyToClientMsgNo ?? null
+    const quotedMessage = quotedId
+      ? ordered.find((candidate) => candidate.messageId === quotedId || candidate.clientMsgNo === quotedId)
+      : undefined
+    const attachment = attachmentFromImData(companyId, message.payload.data)
+    return {
+      id: message.messageId,
+      author_id: message.fromUid,
+      author_name: authorNames.get(message.fromUid) ?? message.fromUid,
+      kind: message.payload.kind,
+      body: message.payload.body ?? '',
+      sequence: message.messageSeq,
+      created_at: imTimestamp(message.timestamp),
+      attachment: attachment ? await freshenAttachmentUrl(attachment) : null,
+      poll: message.payload.data?.poll as InboxPollPayload | undefined ?? null,
+      quoted_message_id: quotedId,
+      quoted: quotedMessage ? {
+        id: quotedMessage.messageId,
+        authorId: quotedMessage.fromUid,
+        authorName: authorNames.get(quotedMessage.fromUid) ?? quotedMessage.fromUid,
+        body: quotedMessage.payload.body ?? '',
+      } : null,
+    }
+  }))
   // Advance the Redis "seen" boundary — `lingxiloop messages` just showed
   // the agent these rows, so the highest seq here counts as "what I've
   // seen" for the freshness preflight on its next `lingxiloop reply`. Without
   // this, the agent's typical flow `messages → reply` would HOLD on the
-  // very tail it just fetched. Redis-only, fail-open, monotonic.
+  // very tail it just fetched. Redis coordination is monotonic and required.
   if (inOrder.length > 0) {
-    await recordSeen(resolveAs(parsed), id, inOrder[inOrder.length - 1].sequence)
+    await recordSeen(me, id, inOrder[inOrder.length - 1].sequence)
   }
   if (parsed.flags.json) return ok(JSON.stringify(inOrder, null, 2))
   if (inOrder.length === 0) {
@@ -584,7 +318,7 @@ async function cmdMessages(parsed: ParsedArgs): Promise<CliResult> {
   const lines = [header, '']
   for (const m of inOrder) {
     const t = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    const body = m.kind === 'tool' ? `[tool call]` : m.body.slice(0, 280).replace(/\n/g, ' \\n ')
+    const body = m.body.slice(0, 280).replace(/\n/g, ' \\n ')
     lines.push(`  [${m.id}] [${t}] ${m.author_id.padEnd(8)} #${String(m.sequence).padStart(3, ' ')}  ${body}`)
     if (m.quoted_message_id) {
       if (m.quoted) {
@@ -624,16 +358,7 @@ async function cmdThread(parsed: ParsedArgs): Promise<CliResult> {
 async function cmdConvening(parsed: ParsedArgs): Promise<CliResult> {
   const id = parsed.positional[0]
   if (!id) return err('usage: convening <conversation_id>')
-  const { rows } = await pool.query<{
-    pulled_by_id: string; pulled_at: string; headline_lead: string; headline_tail: string;
-    subhead: string; who_and_why: unknown; reasoning: unknown; status: string
-  }>(
-    `SELECT pulled_by_id, pulled_at, headline_lead, headline_tail, subhead,
-            who_and_why, reasoning, status
-       FROM convening_info WHERE conversation_id = $1`,
-    [id],
-  )
-  const c = rows[0]
+  const c = await findConvening(pool, id)
   if (!c) return err(`no convening info for ${id}`)
   if (parsed.flags.json) return ok(JSON.stringify(c, null, 2))
   const reasoning = Array.isArray(c.reasoning) ? c.reasoning.map((r, i) => `  ${i + 1}. ${r}`).join('\n') : ''
@@ -658,27 +383,29 @@ async function cmdConvening(parsed: ParsedArgs): Promise<CliResult> {
 async function cmdSearch(parsed: ParsedArgs): Promise<CliResult> {
   const query = parsed.positional[0]
   if (!query) return err('usage: search <query> [--in <convo_id>] [--limit N]')
+  const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
   const inConvo = parsed.flags.in ? String(parsed.flags.in) : null
   const limit = Math.min(50, Math.max(1, Number(parsed.flags.limit ?? 10)))
-  const params: unknown[] = [`%${query}%`]
-  let whereExtra = ''
-  if (inConvo) {
-    params.push(inConvo)
-    whereExtra = `AND m.conversation_id = $2`
-  }
-  params.push(limit)
-  const limitParam = `$${params.length}`
-  const { rows } = await pool.query<{
-    id: string; conversation_id: string; author_id: string; body: string;
-    created_at: string; attachment: StoredAttachment | null
-  }>(
-    `SELECT m.id, m.conversation_id, m.author_id, m.body, m.created_at, m.attachment
-       FROM messages m
-      WHERE m.body ILIKE $1 ${whereExtra}
-      ORDER BY m.created_at DESC LIMIT ${limitParam}`,
-    params,
-  )
-  for (const row of rows) await freshenRowAttachment(row)
+  const matches = await searchAgentMessages({
+    companyId,
+    agentId: me,
+    query,
+    ...(inConvo ? { channelId: inConvo } : {}),
+    limit,
+  })
+  const authorIds = [...new Set(matches.map((match) => match.message.fromUid))]
+  const names = await participantNames(pool, companyId, authorIds)
+  const rows = matches.map((match) => ({
+    id: match.message.messageId,
+    conversation_id: match.channelId,
+    conversation_title: match.title,
+    author_id: match.message.fromUid,
+    author_name: names.get(match.message.fromUid) ?? match.message.fromUid,
+    body: match.message.payload.body ?? '',
+    created_at: imTimestamp(match.message.timestamp),
+  }))
   if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
   if (rows.length === 0) return ok(`(no matches for "${query}"${inConvo ? ` in ${inConvo}` : ''})`)
   const lines = [`${rows.length} match(es) for "${query}":`, '']
@@ -687,8 +414,6 @@ async function cmdSearch(parsed: ParsedArgs): Promise<CliResult> {
     const idx = m.body.toLowerCase().indexOf(query.toLowerCase())
     const slice = m.body.slice(Math.max(0, idx - 20), idx + 100).replace(/\n/g, ' \\n ')
     lines.push(`  · [${t}] ${m.conversation_id} ${m.author_id}: …${slice}…`)
-    const att = renderAttachment(m.attachment)
-    if (att) lines.push(att)
   }
   return ok(lines.join('\n'))
 }
@@ -696,20 +421,7 @@ async function cmdSearch(parsed: ParsedArgs): Promise<CliResult> {
 async function cmdToolsLog(parsed: ParsedArgs): Promise<CliResult> {
   const agent = parsed.flags.agent ? String(parsed.flags.agent) : null
   const limit = Math.min(50, Math.max(1, Number(parsed.flags.limit ?? 15)))
-  const params: unknown[] = []
-  let where = ''
-  if (agent) { params.push(agent); where = `WHERE agent_id = $1` }
-  params.push(limit)
-  const limitParam = `$${params.length}`
-  const { rows } = await pool.query<{
-    id: string; agent_id: string; name: string; status: string; duration_ms: number | null;
-    args: unknown; created_at: string
-  }>(
-    `SELECT id, agent_id, name, status, duration_ms, args, created_at
-       FROM tool_calls ${where}
-       ORDER BY created_at DESC LIMIT ${limitParam}`,
-    params,
-  )
+  const rows = await listToolCalls(pool, agent, limit)
   if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
   if (rows.length === 0) return ok(`(no tool calls)`)
   return ok([
@@ -720,25 +432,6 @@ async function cmdToolsLog(parsed: ParsedArgs): Promise<CliResult> {
       const argsBrief = JSON.stringify(r.args).slice(0, 100)
       return `  [${t}] ${r.agent_id.padEnd(8)} ${r.name.padEnd(22)} ${r.status.padEnd(7)} ${r.duration_ms ?? '-'}ms  ${argsBrief}`
     }),
-  ].join('\n'))
-}
-
-async function cmdStatus(parsed: ParsedArgs): Promise<CliResult> {
-  // TENANT SCOPE: this agent's own company only (was leaking every agent in
-  // every company — same cross-tenant hole as cmdParticipants).
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`cannot resolve company for ${me}`)
-  const { rows } = await pool.query<{ id: string; name: string; status: string; kind: string }>(
-    `SELECT id, name, status, kind FROM participants
-      WHERE company_id = $1 AND kind = 'agent' AND departed_at IS NULL ORDER BY name ASC`,
-    [companyId],
-  )
-  if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-  return ok([
-    `agent              status`,
-    `-----------------------------`,
-    ...rows.map((r) => `${r.name.padEnd(8)} (${r.id.padEnd(6)})  ${r.status}`),
   ].join('\n'))
 }
 
@@ -809,69 +502,43 @@ function renderPollBlock(messageId: string, poll: InboxPollPayload): string[] {
 }
 
 async function loadInbox(agentId: string): Promise<InboxItem[]> {
-  const { rows } = await pool.query<InboxItem>(
-    `SELECT
-        m.id,
-        m.conversation_id,
-        c.title AS conversation_title,
-        c.kind  AS conversation_kind,
-        c.topic AS conversation_topic,
-        m.author_id,
-        COALESCE(p.name, m.author_id) AS author_name,
-        m.body,
-        m.kind,
-        m.sequence,
-        m.created_at,
-        m.attachment,
-        m.poll,
-        m.quoted_message_id,
-        (
-          SELECT jsonb_build_object(
-            'id', qm.id,
-            'authorId', qm.author_id,
-            'authorName', COALESCE(qp.name, qm.author_id),
-            'kind', qm.kind,
-            'body', LEFT(qm.body, 240),
-            'sequence', qm.sequence
-          )
-            FROM messages qm
-            LEFT JOIN participants qp ON qp.id = qm.author_id AND qp.company_id = c.company_id
-           WHERE qm.id = m.quoted_message_id
-             AND qm.conversation_id = m.conversation_id
-        ) AS quoted
-       FROM messages m
-       JOIN conversations c ON c.id = m.conversation_id
-       LEFT JOIN participants p ON p.id = m.author_id AND p.company_id = c.company_id
-      WHERE c.members @> to_jsonb(ARRAY[$1::text])
-        AND m.author_id <> $1
-        AND m.created_at > COALESCE(
-          (SELECT last_read_at FROM conversation_reads
-            WHERE user_id = $1 AND conversation_id = c.id),
-          '1970-01-01T00:00:00Z'::timestamptz)
-        AND (
-          c.kind = 'direct'
-          OR NOT EXISTS (
-            SELECT 1 FROM conversation_mutes mu
-             WHERE mu.user_id = $1 AND mu.conversation_id = c.id
-               AND (mu.muted_until IS NULL OR mu.muted_until > NOW())
-          )
-          OR EXISTS (
-            SELECT 1 FROM regexp_matches(m.body, '@([[:alnum:]_-]+)', 'g') mention
-             WHERE LOWER(mention[1]) = LOWER($1)
-          )
-          OR EXISTS (
-            SELECT 1 FROM messages quoted
-             WHERE quoted.id = m.quoted_message_id
-               AND quoted.conversation_id = m.conversation_id
-               AND quoted.author_id = $1
-          )
-        )
-      ORDER BY m.created_at ASC
-      LIMIT 200`,
-    [agentId],
-  )
-  for (const row of rows) await freshenRowAttachment(row)
-  return rows
+  const companyId = await agentCompany(agentId)
+  if (!companyId) return []
+  const entries = await getAgentInbox({ companyId, agentId, limit: 200 })
+  const participantIds = [...new Set(entries.flatMap((entry) => [
+    entry.message.fromUid,
+    entry.quotedMessage?.fromUid,
+  ].filter((value): value is string => Boolean(value))))]
+  const names = await participantNames(pool, companyId, participantIds)
+  return Promise.all(entries.map(async (entry): Promise<InboxItem> => {
+    const message = entry.message
+    const quoted = entry.quotedMessage
+    const attachment = attachmentFromImData(companyId, message.payload.data)
+    return {
+      id: message.messageId,
+      conversation_id: entry.channelId,
+      conversation_title: entry.title,
+      conversation_kind: entry.kind,
+      conversation_topic: entry.topic,
+      author_id: message.fromUid,
+      author_name: names.get(message.fromUid) ?? message.fromUid,
+      body: message.payload.body ?? '',
+      kind: message.payload.kind,
+      sequence: message.messageSeq,
+      created_at: imTimestamp(message.timestamp),
+      attachment: attachment ? await freshenAttachmentUrl(attachment) : null,
+      poll: message.payload.data?.poll as InboxPollPayload | undefined ?? null,
+      quoted_message_id: message.payload.replyToClientMsgNo ?? null,
+      quoted: quoted ? {
+        id: quoted.messageId,
+        authorId: quoted.fromUid,
+        authorName: names.get(quoted.fromUid) ?? quoted.fromUid,
+        kind: quoted.payload.kind,
+        body: quoted.payload.body ?? '',
+        sequence: quoted.messageSeq,
+      } : null,
+    }
+  }))
 }
 
 async function cmdInbox(parsed: ParsedArgs): Promise<CliResult> {
@@ -935,36 +602,31 @@ async function cmdInbox(parsed: ParsedArgs): Promise<CliResult> {
  *  on it, pick a different angle) instead of blurting the same thing. */
 async function cmdGlance(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
   const convoId = (typeof parsed.flags['conversation'] === 'string' ? parsed.flags['conversation'] : null)
     ?? parsed.positional[0]
   if (!convoId) return err('usage: glance --conversation <id>  (or: glance <id>)')
 
-  interface RecentRow {
-    id: string
-    author_id: string
-    author_name: string
-    kind: string
-    body: string
-    created_at: string
-    sequence: number
-  }
-  const { rows } = await pool.query<RecentRow>(
-    `SELECT m.id, m.author_id, COALESCE(p.name, m.author_id) AS author_name,
-            m.kind, m.body, m.created_at, m.sequence
-       FROM messages m
-       JOIN conversations c ON c.id = m.conversation_id
-       LEFT JOIN participants p ON p.id = m.author_id AND p.company_id = c.company_id
-      WHERE m.conversation_id = $1
-      ORDER BY m.created_at DESC
-      LIMIT 12`,
-    [convoId],
-  )
-  const recent = rows.reverse()
+  const authoritative = await getAgentChannelHistory({ companyId, agentId: me, channelId: convoId, limit: 12 })
+  if (!authoritative) return err(`unknown authoritative channel ${convoId}`)
+  const ordered = [...authoritative].sort((left, right) => left.messageSeq - right.messageSeq)
+  const authorIds = [...new Set(ordered.map((message) => message.fromUid))]
+  const authorNames = await participantNames(pool, companyId, authorIds)
+  const recent = ordered.map((message) => ({
+    id: message.messageId,
+    author_id: message.fromUid,
+    author_name: authorNames.get(message.fromUid) ?? message.fromUid,
+    kind: message.payload.kind,
+    body: message.payload.body ?? '',
+    created_at: imTimestamp(message.timestamp),
+    sequence: message.messageSeq,
+  }))
 
   // Advance the Redis "seen" boundary — glance just showed the agent
   // these messages, so they count as "seen" for the freshness preflight
-  // on its next `lingxiloop reply`. Same Redis-only, fail-open path as
-  // cmdMessages — never touches conversation_reads.last_read_at.
+  // on its next `lingxiloop reply`. Same required Redis path as
+  // cmdMessages reads only WuKong history and advances this coordination cursor.
   if (recent.length > 0) {
     await recordSeen(me, convoId, recent[recent.length - 1].sequence)
   }
@@ -992,11 +654,9 @@ async function cmdGlance(parsed: ParsedArgs): Promise<CliResult> {
     for (const m of recent) {
       const t = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       const tag = m.author_id === me ? '▸ME' : '   '
-      const body = m.kind === 'tool'
-        ? '[tool call]'
-        : m.kind === 'system'
-          ? '[system]'
-          : m.body.slice(0, 200).replace(/\n/g, ' \\n ')
+      const body = m.kind === 'system'
+        ? '[system]'
+        : m.body.slice(0, 200).replace(/\n/g, ' \\n ')
       lines.push(`  [${m.id}] ${tag} ${t}  ${m.author_name}: ${body}`)
     }
   }
@@ -1005,375 +665,45 @@ async function cmdGlance(parsed: ParsedArgs): Promise<CliResult> {
 
 async function cmdAck(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
+  if (!companyId) return err(`unknown agent ${me} (no company)`)
   if (parsed.flags.all) {
-    // Ack every conversation that currently has unread items for me
-    const items = await loadInbox(me)
-    const convoIds = [...new Set(items.map((i) => i.conversation_id))]
-    for (const id of convoIds) {
-      await pool.query(
-        `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
-         VALUES ($1, $2, NOW())
-         ON CONFLICT (user_id, conversation_id) DO UPDATE SET last_read_at = NOW()`,
-        [me, id],
-      )
-      // Acking = standing down on this conversation. Any un-used HELD
-      // acknowledgement is void — it must not arm a later turn's
-      // preemptive --send-anyway (the 2026-07-08 stale-"6" path).
-      void clearHold(me, `reply:${id}`)
-    }
-    return ok(`acked ${convoIds.length} conversation(s)`)
+    const channelIds = await clearAllAgentUnread({ companyId, agentId: me })
+    for (const channelId of channelIds) void clearHold(me, `reply:${channelId}`)
+    return ok(`acked ${channelIds.length} conversation(s)`)
   }
   const convoId = parsed.positional[0]
   if (!convoId) return err('usage: ack <conversation_id>  OR  ack --all')
-  await pool.query(
-    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
-     VALUES ($1, $2, NOW())
-     ON CONFLICT (user_id, conversation_id) DO UPDATE SET last_read_at = NOW()`,
-    [me, convoId],
-  )
+  const cleared = await clearAgentChannelUnread({ companyId, agentId: me, channelId: convoId })
+  if (!cleared) return err(`unknown authoritative channel ${convoId}`)
   // Standing down — see the --all branch above.
   void clearHold(me, `reply:${convoId}`)
   return ok(`acked ${convoId}`)
 }
 
-function parseMuteUntil(parsed: ParsedArgs): Date | null {
-  const untilRaw = typeof parsed.flags.until === 'string' ? parsed.flags.until : null
-  const forRaw = typeof parsed.flags.for === 'string' ? parsed.flags.for : null
-  if (untilRaw && forRaw) throw new Error('use either --until or --for, not both')
-  if (untilRaw) {
-    const until = new Date(untilRaw)
-    if (Number.isNaN(until.getTime())) throw new Error('invalid --until timestamp')
-    if (until.getTime() <= Date.now()) throw new Error('--until must be in the future')
-    return until
-  }
-  if (!forRaw) return null
-  const match = /^(\d+)(m|h|d|w)$/i.exec(forRaw.trim())
-  if (!match) throw new Error('invalid --for duration (use e.g. 30m, 2h, 1d, or 1w)')
-  const amount = Number(match[1])
-  const unitMs = { m: 60_000, h: 3_600_000, d: 86_400_000, w: 604_800_000 }[match[2].toLowerCase() as 'm' | 'h' | 'd' | 'w']
-  if (amount < 1 || amount * unitMs > 90 * 86_400_000) throw new Error('--for duration must be between 1 minute and 90 days')
-  return new Date(Date.now() + amount * unitMs)
-}
-
-async function cmdMute(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-  if (parsed.positional[0] === 'list') {
-    const { rows } = await pool.query<{ id: string; title: string; muted_until: string | null }>(
-      `SELECT c.id, c.title, mu.muted_until
-         FROM conversation_mutes mu
-         JOIN conversations c ON c.id = mu.conversation_id
-        WHERE mu.user_id = $1 AND c.company_id = $2
-          AND (mu.muted_until IS NULL OR mu.muted_until > NOW())
-        ORDER BY mu.muted_at DESC`,
-      [me, companyId],
-    )
-    if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-    if (rows.length === 0) return ok('(no muted groups)')
-    return ok(rows.map((row) => `• ${row.id}  "${row.title}"  — ${row.muted_until ? `until ${new Date(row.muted_until).toISOString()}` : 'until you follow it'}`).join('\n'))
-  }
-  const conversationId = parsed.positional[0]
-  if (!conversationId) return err('usage: mute <conversation_id> [--for 30m|2h|1d|1w] [--until <iso>]  OR  mute list')
-  let until: Date | null
-  try { until = parseMuteUntil(parsed) } catch (error) { return err(error instanceof Error ? error.message : String(error)) }
-  const { rows } = await pool.query<{ kind: string; title: string; members: string[] }>(
-    `SELECT kind, title, members FROM conversations WHERE id = $1 AND company_id = $2`,
-    [conversationId, companyId],
-  )
-  const conversation = rows[0]
-  if (!conversation) return err(`conversation not found: ${conversationId}`)
-  if (!conversation.members.includes(me)) return err(`you are not a member of ${conversationId}`)
-  if (conversation.kind === 'direct') return err('direct conversations always deliver; mute a group instead')
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    await client.query(
-      `INSERT INTO conversation_mutes (user_id, conversation_id, muted_at, muted_until)
-       VALUES ($1, $2, NOW(), $3)
-       ON CONFLICT (user_id, conversation_id)
-       DO UPDATE SET muted_at = NOW(), muted_until = EXCLUDED.muted_until`,
-      [me, conversationId, until],
-    )
-    // Muting is a deliberate stand-down. Seal the current unread tail so
-    // following later resumes from that point instead of replaying a backlog.
-    await client.query(
-      `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
-       VALUES ($1, $2, NOW())
-       ON CONFLICT (user_id, conversation_id) DO UPDATE SET last_read_at = NOW()`,
-      [me, conversationId],
-    )
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => {})
-    throw error
-  } finally {
-    client.release()
-  }
-  void clearHold(me, `reply:${conversationId}`)
-  const expiry = until ? ` until ${until.toISOString()}` : ' until you follow it again'
-  return ok(
-    `Muted ${conversationId} ("${conversation.title}")${expiry}. ` +
-    `New group messages will not wake you or enter your inbox. A direct @${me} mention or a reply quoting your message still gets through. ` +
-    `Resume with: lingxiloop follow ${conversationId}`,
-  )
-}
-
-async function cmdFollow(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const conversationId = parsed.positional[0]
-  if (!conversationId) return err('usage: follow <conversation_id>')
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-  const { rowCount } = await pool.query(
-    `DELETE FROM conversation_mutes mu USING conversations c
-      WHERE mu.user_id = $1 AND mu.conversation_id = $2
-        AND c.id = mu.conversation_id AND c.company_id = $3`,
-    [me, conversationId, companyId],
-  )
-  return ok(rowCount
-    ? `Following ${conversationId} again. New messages will resume normal inbox delivery.`
-    : `${conversationId} was not muted; normal delivery is already active.`)
-}
-
-async function _cmdShip(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-  const action = parsed.positional[0] ?? 'list'
-  if (action === 'list') {
-    const { rows } = await pool.query<{
-      id: string; title: string; status: string; priority: string; required: number; passed: number; failed: number; release_target: string | null
-    }>(
-      `SELECT f.id, f.title, f.status, f.priority, f.release_target,
-              count(v.id) FILTER (WHERE v.required)::int AS required,
-              count(v.id) FILTER (WHERE v.required AND v.status='passed')::int AS passed,
-              count(v.id) FILTER (WHERE v.status='failed')::int AS failed
-         FROM shipping_features f LEFT JOIN shipping_verifications v ON v.feature_id=f.id
-        WHERE f.company_id=$1 AND f.status <> 'archived'
-        GROUP BY f.id ORDER BY f.updated_at DESC`,
-      [companyId],
-    )
-    if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-    if (rows.length === 0) return ok('(no active shipping contracts)')
-    return ok(rows.map((row) => `${row.id}  [${row.status}]  ${row.title}\n  evidence ${row.passed}/${row.required}${row.failed ? ` · ${row.failed} failed` : ''}${row.release_target ? ` · target ${row.release_target}` : ''}`).join('\n'))
-  }
-  if (action === 'show') {
-    const featureId = parsed.positional[1]
-    if (!featureId) return err('usage: ship show <feature_id>')
-    const { rows: features } = await pool.query(
-      `SELECT id,title,problem,desired_outcome,status,priority,risk_level,release_target,builder_ids
-         FROM shipping_features WHERE id=$1 AND company_id=$2`,
-      [featureId, companyId],
-    )
-    if (!features[0]) return err(`shipping feature not found: ${featureId}`)
-    const [invariants, squares, releases, friction, regressions] = await Promise.all([
-      pool.query(`SELECT id,title,description,kind,required FROM shipping_invariants WHERE feature_id=$1 ORDER BY position`, [featureId]),
-      pool.query(`SELECT id,title,method,required,status,owner_id,verified_by_id,evidence,notes FROM shipping_verifications WHERE feature_id=$1 ORDER BY position`, [featureId]),
-      pool.query(`SELECT id,environment,status,version,commit_sha,readback_status,readback_due_at FROM shipping_releases WHERE feature_id=$1 ORDER BY created_at DESC`, [featureId]),
-      pool.query(`SELECT id,title,severity,frequency,status,occurrence_count FROM shipping_friction_reports WHERE feature_id=$1 ORDER BY last_seen_at DESC`, [featureId]),
-      pool.query(`SELECT id,title,kind,status,command,last_result FROM shipping_regressions WHERE feature_id=$1 ORDER BY updated_at DESC`, [featureId]),
-    ])
-    const snapshot = { ...features[0], invariants: invariants.rows, squares: squares.rows, releases: releases.rows, friction: friction.rows, regressions: regressions.rows }
-    if (parsed.flags.json) return ok(JSON.stringify(snapshot, null, 2))
-    const lines = [`${snapshot.id}  [${snapshot.status}]  ${snapshot.title}`, `Problem: ${snapshot.problem || '—'}`, `Outcome: ${snapshot.desired_outcome || '—'}`, `Builders: ${(snapshot.builder_ids as string[]).map((id) => `@${id}`).join(', ') || '—'}`, '', 'Invariants:']
-    lines.push(...invariants.rows.map((i: any) => `  ${i.required ? '•' : '◦'} ${i.id} [${i.kind}] ${i.title}`))
-    lines.push('', 'Evidence squares:')
-    lines.push(...squares.rows.map((s: any) => `  ${s.status === 'passed' ? '✓' : s.status === 'failed' ? '!' : '·'} ${s.id} [${s.method}/${s.status}] ${s.title} · owner ${s.owner_id ? `@${s.owner_id}` : 'unassigned'}`))
-    lines.push('', `Releases: ${releases.rows.length} · Friction: ${friction.rows.length} · Regressions: ${regressions.rows.length}`)
-    return ok(lines.join('\n'))
-  }
-  if (action === 'create') {
-    const title = parsed.positional[1]?.trim()
-    if (!title) return err('usage: ship create "<title>" --problem "..." --outcome "..." --contract "..." [--builders a,b]')
-    const builderIds = typeof parsed.flags.builders === 'string'
-      ? [...new Set(parsed.flags.builders.split(',').map((id) => id.trim()).filter(Boolean))]
-      : [me]
-    const { rows: builders } = await pool.query<{ id: string }>(`SELECT id FROM participants WHERE company_id=$1 AND id=ANY($2::text[]) AND departed_at IS NULL`, [companyId, builderIds])
-    if (builders.length !== builderIds.length) return err('one or more --builders are not active participants in this company')
-    const id = `ship-${randomUUID()}`
-    const client = await pool.connect()
-    try {
-      await client.query('BEGIN')
-      await client.query(
-        `INSERT INTO shipping_features
-          (id,company_id,title,problem,desired_outcome,contract_summary,builder_ids,created_by,updated_by)
-         VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$8)`,
-        [id, companyId, title, typeof parsed.flags.problem === 'string' ? parsed.flags.problem : '',
-          typeof parsed.flags.outcome === 'string' ? parsed.flags.outcome : '', typeof parsed.flags.contract === 'string' ? parsed.flags.contract : '',
-          JSON.stringify(builderIds), me],
-      )
-      for (const [squareTitle, method, position] of [
-        ['Walk the critical user path', 'user_path', 10],
-        ['Prove trace coverage and diagnostic evidence', 'trace', 20],
-        ['Verify release notes and known gaps', 'release_note', 30],
-      ] as const) {
-        await client.query(
-          `INSERT INTO shipping_verifications (id,feature_id,title,method,required,builder_ids,position,created_by)
-           VALUES ($1,$2,$3,$4,TRUE,$5::jsonb,$6,$7)`,
-          [`sv-${randomUUID()}`, id, squareTitle, method, JSON.stringify(builderIds), position, me],
-        )
-      }
-      await client.query(
-        `INSERT INTO shipping_events (id,company_id,feature_id,actor_id,kind,data)
-         VALUES ($1,$2,$3,$4,'feature.created',$5::jsonb)`,
-        [`se-${randomUUID()}`, companyId, id, me, JSON.stringify({ title, source: 'agent-os-host-bridge' })],
-      )
-      await client.query('COMMIT')
-    } catch (error) {
-      await client.query('ROLLBACK').catch(() => {})
-      throw error
-    } finally { client.release() }
-    return ok(`Created shipping contract ${id} for “${title}”. Three required evidence squares were seeded. Add invariants and assign independent verifiers in the Ship workspace.`)
-  }
-  if (action === 'square') {
-    const [featureId, squareId, status] = parsed.positional.slice(1)
-    if (!featureId || !squareId || !['running','passed','failed','waived'].includes(status ?? '')) return err('usage: ship square <feature_id> <square_id> <running|passed|failed|waived> [--evidence "..."] [--notes "..."]')
-    const { rows } = await pool.query<{ builder_ids: string[]; title: string }>(
-      `SELECT v.builder_ids,v.title FROM shipping_verifications v JOIN shipping_features f ON f.id=v.feature_id
-        WHERE v.id=$1 AND v.feature_id=$2 AND f.company_id=$3`, [squareId, featureId, companyId],
-    )
-    const square = rows[0]
-    if (!square) return err('verification square not found')
-    const completing = status !== 'running'
-    if (completing && square.builder_ids.includes(me)) return err('builder/verifier separation: you cannot complete a square for work you built')
-    const evidence = typeof parsed.flags.evidence === 'string' ? parsed.flags.evidence.trim() : ''
-    const notes = typeof parsed.flags.notes === 'string' ? parsed.flags.notes.trim() : ''
-    if ((status === 'passed' || status === 'failed') && !evidence) return err(`${status} requires --evidence`)
-    if (status === 'waived' && !notes) return err('waived requires --notes with the written reason')
-    const proof = JSON.stringify([{ note: evidence, capturedAt: new Date().toISOString(), via: 'agent-os-host-bridge' }])
-    const client = await pool.connect()
-    try {
-      await client.query('BEGIN')
-      await client.query(
-        `UPDATE shipping_verifications SET status=$1,owner_id=COALESCE(owner_id,$2),verified_by_id=CASE WHEN $3 THEN $2 ELSE verified_by_id END,
-                evidence=CASE WHEN $4<>'' THEN $5::jsonb ELSE evidence END,notes=CASE WHEN $6<>'' THEN $6 ELSE notes END,
-                completed_at=CASE WHEN $3 THEN NOW() ELSE NULL END,updated_at=NOW()
-          WHERE id=$7 AND feature_id=$8`,
-        [status, me, completing, evidence, proof, notes, squareId, featureId],
-      )
-      if (status === 'failed') {
-        await client.query(
-          `INSERT INTO shipping_regressions
-            (id,feature_id,source_verification_id,title,kind,expected,status,created_by)
-           VALUES ($1,$2,$3,$4,'manual_replay',$5,'failing',$6)
-           ON CONFLICT (source_verification_id) WHERE source_verification_id IS NOT NULL
-           DO UPDATE SET status='failing',updated_at=NOW()`,
-          [`rg-${randomUUID()}`, featureId, squareId, `Replay failed square: ${square.title}`,
-            'The behavior proven by this square remains true', me],
-        )
-        await client.query(
-          `INSERT INTO shipping_friction_reports
-            (id,company_id,feature_id,reporter_id,source,source_key,title,description,severity,frequency,status,evidence)
-           VALUES ($1,$2,$3,$4,'verification',$5,$6,$7,'high','once','open',$8::jsonb)
-           ON CONFLICT (company_id,source_key) WHERE source_key IS NOT NULL
-           DO UPDATE SET occurrence_count=shipping_friction_reports.occurrence_count+1,
-                         last_seen_at=NOW(),updated_at=NOW(),status='open',evidence=EXCLUDED.evidence`,
-          [`fr-${randomUUID()}`, companyId, featureId, me, `verification:${squareId}`,
-            `Verification failed: ${square.title}`,
-            'An agent-reported proof failed and was promoted into friction plus a replayable regression.', proof],
-        )
-      }
-      await client.query(`INSERT INTO shipping_events (id,company_id,feature_id,actor_id,kind,data) VALUES ($1,$2,$3,$4,'verification.updated',$5::jsonb)`, [`se-${randomUUID()}`, companyId, featureId, me, JSON.stringify({ id: squareId, status, via: 'agent-os-host-bridge' })])
-      await client.query('COMMIT')
-    } catch (error) {
-      await client.query('ROLLBACK').catch(() => {})
-      throw error
-    } finally { client.release() }
-    return ok(`${squareId} (${square.title}) → ${status}${evidence ? ' with evidence recorded' : ''}.`)
-  }
-  if (action === 'friction') {
-    const featureRaw = parsed.positional[1]
-    const title = parsed.positional[2]?.trim()
-    if (!featureRaw || !title) return err('usage: ship friction <feature_id|none> "<title>" [--description "..."] [--severity low|medium|high|critical]')
-    const featureId = featureRaw === 'none' ? null : featureRaw
-    if (featureId) {
-      const { rows } = await pool.query(`SELECT 1 FROM shipping_features WHERE id=$1 AND company_id=$2`, [featureId, companyId])
-      if (!rows[0]) return err('shipping feature not found')
-    }
-    const severity = typeof parsed.flags.severity === 'string' && ['low','medium','high','critical'].includes(parsed.flags.severity) ? parsed.flags.severity : 'medium'
-    const id = `fr-${randomUUID()}`
-    await pool.query(
-      `INSERT INTO shipping_friction_reports (id,company_id,feature_id,reporter_id,source,title,description,severity)
-       VALUES ($1,$2,$3,$4,'agent-os-host-bridge',$5,$6,$7)`,
-      [id, companyId, featureId, me, title, typeof parsed.flags.description === 'string' ? parsed.flags.description : title, severity],
-    )
-    return ok(`Captured friction ${id}${featureId ? ` on ${featureId}` : ''}. It is now visible in the Ship workspace.`)
-  }
-  if (action === 'regression') {
-    const featureId = parsed.positional[1]
-    const title = parsed.positional[2]?.trim()
-    if (!featureId || !title) return err('usage: ship regression <feature_id> "<title>" [--command "..."] [--expected "..."]')
-    const { rows } = await pool.query(`SELECT 1 FROM shipping_features WHERE id=$1 AND company_id=$2`, [featureId, companyId])
-    if (!rows[0]) return err('shipping feature not found')
-    const id = `rg-${randomUUID()}`
-    await pool.query(
-      `INSERT INTO shipping_regressions (id,feature_id,title,kind,command,expected,status,created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,'active',$7)`,
-      [id, featureId, title, typeof parsed.flags.command === 'string' ? 'automated' : 'manual_replay',
-        typeof parsed.flags.command === 'string' ? parsed.flags.command : null,
-        typeof parsed.flags.expected === 'string' ? parsed.flags.expected : 'Previously verified behavior remains true', me],
-    )
-    return ok(`Created regression asset ${id} on ${featureId}.`)
-  }
-  return err('usage: ship list|show|create|square|friction|regression  (run lingxiloop help for details)')
-}
-
-// Membership system-message + counter helpers live in
-// `agents/membership.ts` so the HTTP endpoints (POST /members,
-// POST /leave) and the agent CLI share one implementation. Importing
-// here re-exposes the names this file already used.
-import { postMembershipSystemMessage } from './membership.js'
+const { cmdFollow, cmdMute } = createConversationDeliveryCommands({ ok, err })
 
 async function cmdLeave(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
   const convoId = parsed.positional[0]
   if (!convoId) return err('usage: leave <conversation_id>')
-
-  const { rows } = await pool.query<{
-    kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
-  }>(
-    `SELECT kind, title, members, company_id, leader_id FROM conversations WHERE id = $1`,
-    [convoId],
-  )
-  const c = rows[0]
-  if (!c) return err(`unknown conversation ${convoId}`)
-  if (c.kind === 'direct') {
-    return err('cannot leave a direct conversation — use `lingxiloop ack` to mute it from your inbox instead')
-  }
-  if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId}`)
-  if (c.leader_id === me) return err(`cannot leave while ${me} is Leader; ask a human member to change the Leader first`)
-
-  // Post the system message BEFORE updating members so the leaving
-  // agent's inbox (filtered by c.members @> [me]) still surfaces this
-  // final row in their next wake — that's how they "perceive" their own
-  // departure cleanly.
-  const systemMessage = await postMembershipSystemMessage({
-    conversationId: convoId,
-    companyId: c.company_id,
-    actorId: me,
-    kind: 'left',
-    participantId: me,
-  })
-
-  const next = c.members.filter((m) => m !== me)
-  await pool.query(
-    `UPDATE conversations SET members = $2::jsonb, updated_at = NOW() WHERE id = $1`,
-    [convoId, JSON.stringify(next)],
-  )
-
-  return ok(`left "${c.title}" (${convoId}); ${next.length} member(s) remain`, [{
+  try {
+    const result = await leaveAgentConversation(me, convoId)
+    return ok(`left "${result.title}" (${convoId}); ${result.members.length} member(s) remain`, [{
     event: 'conversation.membership_changed',
     command: 'leave',
     action: 'left',
     conversationId: convoId,
     actorId: me,
     participantId: me,
-    companyId: c.company_id ?? undefined,
-    systemMessageId: systemMessage.messageId,
-    memberCount: next.length,
+    companyId: result.companyId,
+    systemMessageId: result.systemMessageId,
+    memberCount: result.members.length,
     visibleToUser: true,
-  }])
+    }])
+  } catch (error) {
+    return err(`leave failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 async function cmdInvite(parsed: ParsedArgs): Promise<CliResult> {
@@ -1382,119 +712,24 @@ async function cmdInvite(parsed: ParsedArgs): Promise<CliResult> {
   const target = parsed.positional[1]
   if (!convoId || !target) return err('usage: invite <conversation_id> <member_id>')
   if (target === me) return err(`${me} is already the one inviting`)
-
-  const { rows } = await pool.query<{
-    kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
-  }>(
-    `SELECT kind, title, members, company_id, leader_id FROM conversations WHERE id = $1`,
-    [convoId],
-  )
-  const c = rows[0]
-  if (!c) return err(`unknown conversation ${convoId}`)
-  if (c.kind === 'direct') {
-    return err('cannot invite into a direct conversation — use `lingxiloop pull-group` to start a fresh thread')
-  }
-  if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId} — can't invite into a group you're not in`)
-  if (c.members.includes(target)) return ok(`${target} is already a member of ${convoId}`)
-
-  // Verify the invitee exists in this tenant.
-  const tenant = c.company_id
-  if (tenant) {
-    const { rows: pp } = await pool.query<{ id: string }>(
-      `SELECT id FROM participants WHERE id = $1 AND company_id = $2 LIMIT 1`,
-      [target, tenant],
-    )
-    if (!pp[0]) return err(`${target} is not a participant in this workspace`)
-  }
-
-  const next = [...c.members, target]
-  await pool.query(
-    `UPDATE conversations SET members = $2::jsonb, updated_at = NOW() WHERE id = $1`,
-    [convoId, JSON.stringify(next)],
-  )
-
-  const systemMessage = await postMembershipSystemMessage({
-    conversationId: convoId,
-    companyId: c.company_id,
-    actorId: me,
-    kind: 'joined',
-    participantId: target,
-  })
-
-  return ok(`invited ${target} into "${c.title}" (${convoId}); ${next.length} member(s) total`, [{
+  try {
+    const result = await addAgentConversationMember(me, convoId, target)
+    if (result.alreadyIn) return ok(`${target} is already a member of ${convoId}`)
+    return ok(`invited ${target} into "${result.title}" (${convoId}); ${result.members.length} member(s) total`, [{
     event: 'conversation.membership_changed',
     command: 'invite',
     action: 'joined',
     conversationId: convoId,
     actorId: me,
     participantId: target,
-    companyId: c.company_id ?? undefined,
-    systemMessageId: systemMessage.messageId,
-    memberCount: next.length,
+    companyId: result.companyId,
+    systemMessageId: result.systemMessageId,
+    memberCount: result.members.length,
     visibleToUser: true,
-  }])
-}
-
-async function cmdKick(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const convoId = parsed.positional[0]
-  const target = parsed.positional[1]
-  if (!convoId || !target) return err('usage: kick <conversation_id> <member_id>')
-  if (target === me) return err('use `lingxiloop leave <convo_id>` to leave a group yourself')
-
-  const { rows } = await pool.query<{
-    kind: string; title: string; members: string[]; company_id: string | null; leader_id: string | null
-  }>(
-    `SELECT kind, title, members, company_id, leader_id FROM conversations WHERE id = $1`,
-    [convoId],
-  )
-  const c = rows[0]
-  if (!c) return err(`unknown conversation ${convoId}`)
-  if (c.kind === 'direct') return err('cannot kick from a direct conversation')
-  if (!c.members.includes(me)) return err(`${me} is not a member of ${convoId} — can't kick from a group you're not in`)
-  if (!c.members.includes(target)) return err(`${target} is not a member of ${convoId}`)
-  if (c.leader_id === target) return err(`cannot remove ${target} while they are Leader; ask a human member to change the Leader first`)
-
-  const next = c.members.filter((m) => m !== target)
-  // Refuse to leave a group with just one member as a side-effect of kick —
-  // if there'd only be the actor left, that's "everyone else gone", which
-  // is fine, but require explicit confirmation via --confirm-empty for the
-  // case where the kick removes the LAST other member. Cheap guard against
-  // accidental group-clearing.
-  if (next.length === 1 && !parsed.flags['confirm-empty']) {
-    return err(`kicking ${target} would leave only ${me} in this group; pass --confirm-empty if that's intended`)
+    }])
+  } catch (error) {
+    return err(`invite failed: ${error instanceof Error ? error.message : String(error)}`)
   }
-
-  // Post BEFORE removing the target from members. The mailbox query
-  // filters by current `c.members @> [agentId]`, so if we updated first
-  // the kicked agent would never see the row that explains why their
-  // inbox went quiet on this conversation. Posting first means the
-  // target gets one last wake with this exact message.
-  const systemMessage = await postMembershipSystemMessage({
-    conversationId: convoId,
-    companyId: c.company_id,
-    actorId: me,
-    kind: 'kicked',
-    participantId: target,
-  })
-
-  await pool.query(
-    `UPDATE conversations SET members = $2::jsonb, updated_at = NOW() WHERE id = $1`,
-    [convoId, JSON.stringify(next)],
-  )
-
-  return ok(`kicked ${target} from "${c.title}" (${convoId}); ${next.length} member(s) remain`, [{
-    event: 'conversation.membership_changed',
-    command: 'kick',
-    action: 'kicked',
-    conversationId: convoId,
-    actorId: me,
-    participantId: target,
-    companyId: c.company_id ?? undefined,
-    systemMessageId: systemMessage.messageId,
-    memberCount: next.length,
-    visibleToUser: true,
-  }])
 }
 
 async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
@@ -1518,47 +753,72 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   const quotedMessageId = quoteFlag ? String(quoteFlag).trim() : null
   // Internal, LingxiLoop-generated idempotency key (issue #7) — arrives ONLY
   // via the out-of-band `internal` context (see RunCliInternalContext),
-  // never as an argv flag. No CLI caller (human, legacy bash-tool agent,
+  // never as an argv flag. No CLI caller (human or AgentOS process,
   // untrusted caller can set or spoof this. Enforced via a unique index on
-  // messages.idempotency_key: a retried/duplicate-waked send with the SAME
-  // key lands on the SAME row instead of inserting a second message.
+  // The IM acceptance ledger binds this key to one WuKong client message
+  // identity, so a retried/duplicate-waked send resolves to the same message.
   const idempotencyKey = internal.idempotencyKey?.trim() || null
   if (!convoId || (!body && !hasAttachFlag)) {
     return err('usage: reply <convo_id> "<body>" [--quote <msg_id>] [--attach <url> | --generate-image "<prompt>" [--size square|wide|tall] | --attach-text "<filename>" "<content>" | --attach-bytes "<filename>" --bytes-b64 "<base64>" [--bytes-mime "<mime>"]]')
   }
 
   // Verify the agent is a member of the conversation
-  const { rows: cv } = await pool.query<{ members: string[]; company_id: string; kind: string }>(
-    `SELECT members, company_id, kind FROM conversations WHERE id = $1`, [convoId],
-  )
-  if (!cv[0]) return err(`unknown conversation ${convoId}`)
-  if (!cv[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
-  const companyId = cv[0].company_id
+  const conversation = await findConversationScope(pool, convoId)
+  if (!conversation) return err(`unknown conversation ${convoId}`)
+  if (!conversation.members.includes(me)) return err(`${me} is not a member of ${convoId}`)
+  const companyId = conversation.company_id
+
+  if (conversation.kind === 'email') {
+    if (!body) return err('email replies require a non-empty body')
+    try {
+      const { replyInEmailConversation } = await import('../modules/email/index.js')
+      const result = await replyInEmailConversation({
+        conversationId: convoId, companyId, authorId: me, body, autoSubmitted: true,
+      })
+      if (result.transportStatus !== 'sent') {
+        return err(`email reply persisted as failed: ${result.error} · ${result.messageId}`, 1)
+      }
+      return ok(`replied via email · ${result.messageId}`, [{
+        event: 'message.posted', command: 'reply', medium: 'email',
+        conversationId: convoId, messageId: result.messageId, authorId: me,
+        companyId, visibleToUser: true, transportStatus: result.transportStatus,
+      }])
+    } catch (error) {
+      return err(`email auto-promote failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  const channelHistory = await getAgentChannelHistory({ companyId, agentId: me, channelId: convoId })
+  if (!channelHistory) return err(`unknown authoritative channel ${convoId}`)
+  const history = [...channelHistory].sort((left, right) => left.messageSeq - right.messageSeq)
+  const clientNonce = idempotencyKey
+    ? `agent-reply:${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 48)}`
+    : `agent-reply:${randomUUID()}`
+  const mentionTargets = await listParticipantIdentities(pool, companyId, conversation.members)
+  const participantNameById = new Map(mentionTargets.map((participant) => [participant.id, participant.name]))
 
   // ─── Idempotent replay short-circuit ───────────────────────────────
   // Skips every gate below (anti-monologue, freshness, verbatim-dup) —
   // those are draft-time decision gates and don't apply to a message we
   // already sent. Scoped to plain chat sends; the email auto-promote
   // path below has its own (out-of-scope-for-#7) transport semantics.
-  if (idempotencyKey && cv[0].kind !== 'email') {
-    const { rows: replayed } = await pool.query<{
-      id: string; sequence: number; attachment: unknown; quoted_message_id: string | null
-    }>(`SELECT id, sequence, attachment, quoted_message_id FROM messages WHERE idempotency_key = $1`, [idempotencyKey])
-    if (replayed[0]) {
-      const attachmentNote = replayed[0].attachment ? ` · attached` : ''
-      const quoteNote = replayed[0].quoted_message_id ? ` · quoted ${replayed[0].quoted_message_id}` : ''
-      return ok(`sent (${replayed[0].id}, seq ${replayed[0].sequence})${attachmentNote}${quoteNote} [replayed]`, [{
+  if (idempotencyKey) {
+    const replayed = history.find((message) => message.clientMsgNo === clientNonce)
+    if (replayed) {
+      const attachmentNote = replayed.payload.kind === 'attachment' ? ' · attached' : ''
+      const quoteNote = replayed.payload.replyToClientMsgNo ? ` · quoted ${replayed.payload.replyToClientMsgNo}` : ''
+      return ok(`sent (${replayed.messageId}, seq ${replayed.messageSeq})${attachmentNote}${quoteNote} [replayed]`, [{
         event: 'message.posted',
         command: 'reply',
         medium: 'chat',
         conversationId: convoId,
-        messageId: replayed[0].id,
-        sequence: replayed[0].sequence,
+        messageId: replayed.messageId,
+        sequence: replayed.messageSeq,
         authorId: me,
         companyId,
         visibleToUser: true,
-        attachment: Boolean(replayed[0].attachment),
-        quotedMessageId: replayed[0].quoted_message_id,
+        attachment: replayed.payload.kind === 'attachment',
+        quotedMessageId: replayed.payload.replyToClientMsgNo,
         replayed: true,
       }])
     }
@@ -1587,15 +847,12 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // forces the agent to commit deliberately rather than absent-
   // mindedly continuing to monologue.
   const monologueBypass = Boolean(parsed.flags.continue || parsed.flags.also)
-  if (!monologueBypass && cv[0].members.length > 2) {
-    const { rows: lastMsg } = await pool.query<{ author_id: string; created_at: string }>(
-      `SELECT author_id, created_at FROM messages
-         WHERE conversation_id = $1
-         ORDER BY sequence DESC LIMIT 1`,
-      [convoId],
-    )
-    if (lastMsg[0] && lastMsg[0].author_id === me) {
-      const ageMs = Date.now() - new Date(lastMsg[0].created_at).getTime()
+  if (!monologueBypass && conversation.members.length > 2) {
+    const lastMessage = history.at(-1)
+    if (lastMessage?.fromUid === me) {
+      const sentAt = lastMessage.timestamp > 10_000_000_000
+        ? lastMessage.timestamp : lastMessage.timestamp * 1000
+      const ageMs = Date.now() - sentAt
       const MIN_GAP_MS = 10 * 60 * 1000
       if (ageMs < MIN_GAP_MS) {
         const ageSec = Math.max(1, Math.round(ageMs / 1000))
@@ -1603,48 +860,11 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
           `you already posted in ${convoId} ${ageSec}s ago and nobody has replied yet — ` +
           `you can't post again until someone else speaks. ` +
           `If you have more to say, fold it into your next message when someone responds. ` +
-          `Right now: react on the relevant message (lingxiloop react <message_id> 👀 / ✅ / 🎯), ` +
+          `Right now: react on the relevant message (lingxiloop react ${convoId} <message_id> 👀 / ✅ / 🎯), ` +
           `or set_turn_status done and step back. ` +
           `Override only if it's truly urgent: rerun with --continue.`
         )
       }
-    }
-  }
-
-  // Email conversations: auto-promote into a real email reply rather than
-  // writing a plain text message. The agent's LLM was previously expected
-  // to know to call `lingxiloop email reply <message_id>` for email threads —
-  // unreliable, and the external recipient never saw the reply when it
-  // forgot. This converges both reply surfaces (chat + email) on the
-  // sendViaProvider path. autoSubmitted=true because every CLI reply is
-  // agent-driven by construction.
-  if (cv[0].kind === 'email') {
-    if (!body) {
-      return err('email replies require a non-empty body')
-    }
-    try {
-      const { replyInEmailConversation } = await import('../email.js')
-      const result = await replyInEmailConversation({
-        conversationId: convoId, companyId, authorId: me, body, autoSubmitted: true,
-      })
-      const mockTag = result.mock ? ' (mock)' : ''
-      if (result.transportStatus !== 'sent') {
-        return err(`email reply persisted as failed: ${result.error} · ${result.messageId}`, 1)
-      }
-      return ok(`replied via email${mockTag} · ${result.messageId}`, [{
-        event: 'message.posted',
-        command: 'reply',
-        medium: 'email',
-        conversationId: convoId,
-        messageId: result.messageId,
-        authorId: me,
-        companyId,
-        visibleToUser: true,
-        transportStatus: result.transportStatus,
-        mock: result.mock,
-      }])
-    } catch (e) {
-      return err(`email auto-promote failed: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
@@ -1655,12 +875,8 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // if any non-self message in this conversation has a seq > baseline,
   // HOLD the send and surface the held messages so the agent re-decides.
   //
-  // Why this lives in Redis (NOT in conversation_reads.last_read_at like
-  // the a6e69aa attempt that we reverted): bumping last_read_at corrupted
-  // the inbox SELECT cursor and silent-hung the daemon. This version is
-  // strictly Redis-only with explicit fail-open semantics — if Redis is
-  // down or the key is unset, getSeen returns 0 and the preflight skips
-  // (we'd rather risk one collision than hang the agent).
+  // This state lives only in Redis so it remains independent from the inbox
+  // cursor. Redis errors reject the command; an absent key returns zero.
   //
   // Bypasses match the monologue gate above + send-anyway override:
   //   - 2-member DMs: parallel typing is normal, both replies are valid
@@ -1689,7 +905,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // the agent a HELD envelope for this conversation.
   const sendAnywayFlag = Boolean(parsed.flags['send-anyway'])
   const replyHoldScope = `reply:${convoId}`
-  const preflightApplies = !monologueBypass && cv[0].members.length > 2
+  const preflightApplies = !monologueBypass && conversation.members.length > 2
   const heldAck = sendAnywayFlag
     ? await consumeHold(me, replyHoldScope)
     : { armed: false, heldUpToSeq: null }
@@ -1702,21 +918,15 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     // Saga was HELD at 17:30 drafting "2", yielded — banking the token —
     // and a NEW turn's preemptive --send-anyway consumed it at 17:34,
     // shipping a stale "6" past Nova's 6 and Iris's 7 sight unseen.)
-    const { rows: newer } = await pool.query<{
-      sequence: number; author_id: string; author_name: string | null; body: string
-    }>(
-      `SELECT m.sequence, m.author_id, m.body,
-              COALESCE(p.name, u.display_name) AS author_name
-         FROM messages m
-         LEFT JOIN participants p ON p.id = m.author_id
-         LEFT JOIN users u ON u.id = m.author_id
-        WHERE m.conversation_id = $1
-          AND m.author_id <> $2
-          AND m.sequence > $3
-        ORDER BY m.sequence ASC
-        LIMIT 8`,
-      [convoId, me, heldAck.heldUpToSeq],
-    )
+    const newer = history
+      .filter((message) => message.fromUid !== me && message.messageSeq > heldAck.heldUpToSeq!)
+      .slice(0, 8)
+      .map((message) => ({
+        sequence: message.messageSeq,
+        author_id: message.fromUid,
+        author_name: participantNameById.get(message.fromUid) ?? null,
+        body: message.payload.body ?? '',
+      }))
     if (newer.length > 0) {
       sendAnywayArmed = false
       const maxHeldSeq = newer[newer.length - 1].sequence
@@ -1764,21 +974,15 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     // as before — the wake brief re-establishes the cursor at turn start.
     const baseline = await getSeen(me, convoId)
     if (baseline > 0) {
-      const { rows: newer } = await pool.query<{
-        sequence: number; author_id: string; author_name: string | null; body: string
-      }>(
-        `SELECT m.sequence, m.author_id, m.body,
-                COALESCE(p.name, u.display_name) AS author_name
-           FROM messages m
-           LEFT JOIN participants p ON p.id = m.author_id
-           LEFT JOIN users u ON u.id = m.author_id
-          WHERE m.conversation_id = $1
-            AND m.author_id <> $2
-            AND m.sequence > $3
-          ORDER BY m.sequence ASC
-          LIMIT 8`,
-        [convoId, me, baseline],
-      )
+      const newer = history
+        .filter((message) => message.fromUid !== me && message.messageSeq > baseline)
+        .slice(0, 8)
+        .map((message) => ({
+          sequence: message.messageSeq,
+          author_id: message.fromUid,
+          author_name: participantNameById.get(message.fromUid) ?? null,
+          body: message.payload.body ?? '',
+        }))
       if (newer.length > 0) {
         // Shown ⇒ seen: advance the cursor past what this envelope shows so a
         // considered re-send passes instead of re-holding on the same rows —
@@ -1828,25 +1032,21 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     // only the immediately-prior dup is.
     const draftBodyTrimmed = body.trim()
     if (draftBodyTrimmed.length > 0) {
-      const { rows: lastPeer } = await pool.query<{ sequence: number; author_id: string; author_name: string | null; body: string }>(
-        `SELECT m.sequence, m.author_id, m.body,
-                COALESCE(p.name, u.display_name) AS author_name
-           FROM messages m
-           LEFT JOIN participants p ON p.id = m.author_id
-           LEFT JOIN users u ON u.id = m.author_id
-          WHERE m.conversation_id = $1
-            AND m.author_id <> $2
-            AND m.kind = 'text'
-          ORDER BY m.sequence DESC
-          LIMIT 1`,
-        [convoId, me],
-      )
-      if (lastPeer.length > 0 && lastPeer[0].body.trim() === draftBodyTrimmed) {
+      const lastPeerMessage = [...history].reverse().find((message) => (
+        message.fromUid !== me && message.payload.kind === 'text'
+      ))
+      const lastPeer = lastPeerMessage ? {
+        sequence: lastPeerMessage.messageSeq,
+        author_id: lastPeerMessage.fromUid,
+        author_name: participantNameById.get(lastPeerMessage.fromUid) ?? null,
+        body: lastPeerMessage.payload.body ?? '',
+      } : null
+      if (lastPeer && lastPeer.body.trim() === draftBodyTrimmed) {
         // Advance baseline past this peer post so re-attempt with NEW content
         // doesn't HOLD on the same row again.
-        await recordSeen(me, convoId, lastPeer[0].sequence)
-        await recordHold(me, replyHoldScope, lastPeer[0].sequence)
-        const peer = lastPeer[0]
+        await recordSeen(me, convoId, lastPeer.sequence)
+        await recordHold(me, replyHoldScope, lastPeer.sequence)
+        const peer = lastPeer
         return err(
           `HELD — your draft is VERBATIM IDENTICAL to the most recent peer post in ${convoId}:\n` +
           `  [seq=${peer.sequence}] ${peer.author_name || peer.author_id}: ${peer.body.replace(/\s+/g, ' ').slice(0, 200)}\n\n` +
@@ -1862,34 +1062,14 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   // delete race), the agent should know its quote pointer is bad so it can
   // fix the call rather than ship a silently-quoteless reply.
   let resolvedQuotedId: string | null = null
-  let quotedSummary: { id: string; authorId: string; authorName: string; body: string; sequence: number } | null = null
   if (quotedMessageId) {
-    // Resolve the quoted author's DISPLAY NAME, not just the id. The author can
-    // be an agent/human in `participants` OR a human keyed in `users` (their
-    // user id), so we COALESCE across both — otherwise the quote card shows a
-    // raw id like `u-f92aa4ac-...` instead of the person's name.
-    const { rows: qr } = await pool.query<{
-      id: string; author_id: string; author_name: string | null; body: string; sequence: number
-    }>(
-      `SELECT m.id, m.author_id, m.body, m.sequence,
-              COALESCE(p.name, u.display_name) AS author_name
-         FROM messages m
-         LEFT JOIN participants p ON p.id = m.author_id
-         LEFT JOIN users u ON u.id = m.author_id
-        WHERE m.id = $1 AND m.conversation_id = $2`,
-      [quotedMessageId, convoId],
-    )
-    if (!qr[0]) {
+    const quoted = history.find((message) => (
+      message.messageId === quotedMessageId || message.clientMsgNo === quotedMessageId
+    ))
+    if (!quoted) {
       return err(`--quote target ${quotedMessageId} not found in ${convoId}`)
     }
-    resolvedQuotedId = qr[0].id
-    quotedSummary = {
-      id: qr[0].id,
-      authorId: qr[0].author_id,
-      authorName: qr[0].author_name || qr[0].author_id,
-      body: qr[0].body.slice(0, 240),
-      sequence: qr[0].sequence,
-    }
+    resolvedQuotedId = quoted.messageId
   }
 
   // Optional attachment in three flavors:
@@ -1930,7 +1110,7 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
     // as the body and uses --attach-text to mark it as an attachment.
     const content = String(parsed.flags['attach-text-content'] ?? body)
     if (!filename || !content) return err('--attach-text requires a filename and content')
-    attachment = await saveTextAttachment(filename, content)
+    attachment = await saveTextAttachment(companyId, filename, content)
   } else if (parsed.flags['attach-bytes']) {
     const filename = String(parsed.flags['attach-bytes']).trim().slice(0, 200)
     const b64 = String(parsed.flags['bytes-b64'] ?? '').trim()
@@ -1939,14 +1119,18 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
       : undefined
     if (!filename || !b64) return err('--attach-bytes requires a filename and --bytes-b64 "<base64>"')
     try {
-      attachment = await saveBytesAttachment(filename, b64, mime)
+      attachment = await saveBytesAttachment(companyId, filename, b64, mime)
     } catch (e) {
       return err(`attach-bytes failed: ${e instanceof Error ? e.message : String(e)}`)
     }
   } else if (parsed.flags.attach) {
     const url = String(parsed.flags.attach)
+    const key = storageKeyFromPublicUrl(url)
+    if (!key || !key.startsWith(`attachments/${companyId}/`)) {
+      return err('--attach must reference an attachment already stored in this workspace R2 prefix')
+    }
     const name = parsed.flags['attach-name'] ? String(parsed.flags['attach-name']) : url.split('/').pop() ?? 'attachment'
-    attachment = { url, name, kind: 'img' }
+    attachment = { url: await storage.publicUrl(key), key, name, kind: 'img' }
   }
 
   // If the body was consumed as the text-file content (no separate
@@ -1955,176 +1139,51 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
   const consumedAsTextContent =
     parsed.flags['attach-text'] && !parsed.flags['attach-text-content']
   const finalBody = consumedAsTextContent ? '' : body
-  const { rows: mentionTargets } = await pool.query<{ id: string; name: string }>(
-    `SELECT id, name FROM participants WHERE company_id = $1 AND id = ANY($2::text[])`,
-    [companyId, cv[0].members],
-  )
   const { mentionedIds, mentionAll } = parseMentions(finalBody, mentionTargets)
 
-  // Atomically claim next sequence + check verbatim-dup + INSERT, all in
-  // ONE transaction. The conversation_counters UPSERT takes a row-level
-  // lock (ON CONFLICT DO UPDATE), and that lock stays held until COMMIT —
-  // serializing every concurrent lingxiloop-reply to the same convo through
-  // this critical section. While we hold the lock, we re-check the last
-  // peer message body against our draft (committed visibility — we'll
-  // see any peer INSERT that committed before our sequence claim).
-  // If verbatim-dup, ROLLBACK and return HELD. This closes the TOCTOU
-  // race that the pre-INSERT verbatim check has — two agents 2s apart
-  // both passing read-phase, then both writing.
-  const messageId = `m-${randomUUID()}`
-  let sequence: number
-  const txClient = await pool.connect()
-  try {
-    await txClient.query('BEGIN')
-    const { rows: seqRow } = await txClient.query<{ seq: number }>(
-      `INSERT INTO conversation_counters (conversation_id, next_sequence)
-       VALUES ($1, 2)
-       ON CONFLICT (conversation_id) DO UPDATE SET next_sequence = conversation_counters.next_sequence + 1
-       RETURNING next_sequence - 1 AS seq`,
-      [convoId],
+  const sendResult = await sendAgentChannelMessage({
+    companyId,
+    agentId: me,
+    channelId: convoId,
+    clientNonce,
+    payload: {
+      version: 1,
+      kind: attachment ? 'attachment' : 'text',
+      clientMsgNo: clientNonce,
+      ...(finalBody ? { body: finalBody } : {}),
+      ...(resolvedQuotedId ? { replyToClientMsgNo: resolvedQuotedId } : {}),
+      data: {
+        ...(attachment ?? {}),
+        mentionedIds,
+        mentionAll,
+      },
+    },
+  })
+  if (sendResult.kind === 'channel_not_found') return err(`unknown authoritative channel ${convoId}`)
+  if (sendResult.kind === 'nonce_conflict') return err('reply idempotency key was reused with different content')
+  if (sendResult.kind === 'verbatim_peer') {
+    const peer = sendResult.peer
+    await recordSeen(me, convoId, peer.messageSeq)
+    await recordHold(me, replyHoldScope, peer.messageSeq)
+    return err(
+      `HELD — your draft became VERBATIM IDENTICAL to the most recent peer post while sending:\n` +
+      `  [seq=${peer.messageSeq}] ${participantNameById.get(peer.fromUid) ?? peer.fromUid}: ${(peer.payload.body ?? '').replace(/\s+/g, ' ').slice(0, 200)}\n\n` +
+      `They beat you to it. Re-read the room and choose a different contribution or stay silent.`,
+      2,
     )
-    sequence = seqRow[0]?.seq ?? 1
-    // Atomic verbatim-dup re-check inside the lock: if a peer INSERT
-    // committed during our compose+pre-INSERT window, we see it now.
-    // The pre-INSERT check above is still useful — it short-circuits
-    // most cases and shows the held content; this one closes the race.
-    //
-    // NOTE: this check IGNORES --send-anyway and the 2-member-DM bypass.
-    // Posting content verbatim-identical to the immediately-prior peer
-    // message has NO legitimate use case — even in a DM, repeating the
-    // other party's last sentence verbatim is noise. The other preflight
-    // gate (the seq-baseline seen-cursor) IS bypassable by --send-anyway
-    // (the agent may legitimately answer a specific @-mention despite
-    // post-baseline side-traffic), but verbatim-content-dup is a hard no.
-    // T9 showed an agent using --send-anyway to force a verbatim dup that
-    // it had explicitly internalized as a "standing close play"; the
-    // server has to enforce.
-    // NOTE: this is deliberately NOT gated on !monologueBypass. --continue / --also
-    // is a "follow up on MY OWN messages" intent; it must never let an agent post a
-    // verbatim duplicate of a PEER's immediately-prior message. (Observed 2026-07-26:
-    // ethan was correctly HELD on "4", then re-sent with --continue and the dup landed
-    // next to olivia's "4" — because the old `!monologueBypass` here let it through,
-    // contradicting this check's own "verbatim-dup is a hard no, the server enforces"
-    // contract.) The peer-only query below already exempts genuine self-monologue: a
-    // real follow-up isn't verbatim-identical to a recent PEER post, so it still passes.
-    if (cv[0].members.length > 2) {
-      const draftBodyTrimmed = body.trim()
-      if (draftBodyTrimmed.length > 0) {
-        const { rows: lastPeer } = await txClient.query<{ sequence: number; author_id: string; body: string }>(
-          `SELECT sequence, author_id, body FROM messages
-            WHERE conversation_id = $1 AND author_id <> $2 AND kind = 'text'
-            ORDER BY sequence DESC LIMIT 1`,
-          [convoId, me],
-        )
-        if (lastPeer.length > 0 && lastPeer[0].body.trim() === draftBodyTrimmed) {
-          await txClient.query('ROLLBACK')
-          await recordSeen(me, convoId, lastPeer[0].sequence)
-          await recordHold(me, replyHoldScope, lastPeer[0].sequence)
-          return err(
-            `HELD — verbatim duplicate of the immediately-prior peer post in ${convoId}:\n` +
-            `  [seq=${lastPeer[0].sequence}] ${lastPeer[0].author_id}: ${lastPeer[0].body.replace(/\s+/g, ' ').slice(0, 200)}\n\n` +
-            `They posted the exact same content${sendAnywayFlag ? ' (and --send-anyway does NOT bypass this check — verbatim-dup is never legitimate)' : ''}. Real teammates don't immediately repeat the same word. Pick the NEXT item, a different angle, or stay silent if their post already covers what you wanted.`,
-            2,
-          )
-        }
-      }
-    }
-    const { rows: inserted } = await txClient.query<{ id: string }>(
-      `INSERT INTO messages (id, conversation_id, author_id, kind, body, sequence, attachment, quoted_message_id, company_id, idempotency_key, mentioned_ids, mention_all)
-       VALUES ($1,$2,$3,'text',$4,$5,$6::jsonb,$7,$8,$9,$10::jsonb,$11)
-       ON CONFLICT (idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
-       RETURNING id`,
-      [messageId, convoId, me, finalBody, sequence, attachment ? JSON.stringify(attachment) : null, resolvedQuotedId, companyId, idempotencyKey, JSON.stringify(mentionedIds), mentionAll],
-    )
-    if (idempotencyKey && inserted.length === 0) {
-      // Lost a genuine concurrent race against another execution of the SAME
-      // idempotency key (both passed the pre-check above before either
-      // committed). Don't consume the sequence number we claimed — roll
-      // back and hand back the winner's row as a replay, same as the
-      // pre-check short-circuit above.
-      await txClient.query('ROLLBACK')
-      const { rows: winner } = await pool.query<{
-        id: string; sequence: number; attachment: unknown; quoted_message_id: string | null
-      }>(`SELECT id, sequence, attachment, quoted_message_id FROM messages WHERE idempotency_key = $1`, [idempotencyKey])
-      const w = winner[0]
-      if (!w) throw new Error(`idempotency conflict on ${idempotencyKey} but no row found after rollback`)
-      const attachmentNote = w.attachment ? ` · attached` : ''
-      const quoteNote = w.quoted_message_id ? ` · quoted ${w.quoted_message_id}` : ''
-      return ok(`sent (${w.id}, seq ${w.sequence})${attachmentNote}${quoteNote} [replayed]`, [{
-        event: 'message.posted', command: 'reply', medium: 'chat',
-        conversationId: convoId, messageId: w.id, sequence: w.sequence,
-        authorId: me, companyId, visibleToUser: true,
-        attachment: Boolean(w.attachment), quotedMessageId: w.quoted_message_id, replayed: true,
-      }])
-    }
-    await txClient.query('COMMIT')
-  } catch (e) {
-    await txClient.query('ROLLBACK').catch(() => { /* already failed */ })
-    throw e
-  } finally {
-    txClient.release()
   }
-  await pool.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [convoId])
+  const { messageId, sequence } = sendResult
 
-  // Posting auto-acks me on this conversation (I clearly saw the messages I'm replying to).
-  // Structured Host Bridge batches defer this side effect until every
-  // action succeeds; runAgentTurn then advances only to the inbox messages
-  // that Graph actually consumed.
-  if (!internal.deferReadCursor) {
-    // Anchor the cursor to the message we actually inserted instead of NOW():
-    // using wall-clock time can skip a peer message committed between our
-    // INSERT and this ack, and leaves last_read_message_id stale so a later
-    // monotonic markConversationRead() cannot repair the cursor.
-    await pool.query(
-      `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at, last_read_message_id)
-       SELECT $1, $2, created_at, id FROM messages WHERE id = $3
-       ON CONFLICT (user_id, conversation_id) DO UPDATE SET
-         last_read_at = CASE
-           WHEN ROW(EXCLUDED.last_read_at, EXCLUDED.last_read_message_id)
-              > ROW(conversation_reads.last_read_at, conversation_reads.last_read_message_id)
-           THEN EXCLUDED.last_read_at ELSE conversation_reads.last_read_at END,
-         last_read_message_id = CASE
-           WHEN ROW(EXCLUDED.last_read_at, EXCLUDED.last_read_message_id)
-              > ROW(conversation_reads.last_read_at, conversation_reads.last_read_message_id)
-           THEN EXCLUDED.last_read_message_id ELSE conversation_reads.last_read_message_id END`,
-      [me, convoId, messageId],
-    )
-  }
-  // Advance the Redis "seen" boundary to my own just-inserted seq, so the
+  // Advance the Redis "seen" boundary to the authoritative WuKong sequence, so the
   // freshness preflight on my NEXT lingxiloop reply compares against the post-
   // insertion state (peer messages with seq <= mine are "things I obviously
   // saw"; only seq > mine would trip a HOLD). Pure Redis side-effect — does
-  // NOT touch conversation_reads.last_read_at or anything else loadInbox
-  // depends on.
+  // does not mutate the authoritative WuKong unread state.
   await recordSeen(me, convoId, sequence)
   // Drop any lingering hold token: this send committed WITHOUT the
   // override, so a hold acknowledged-but-unused must not arm a later
   // preemptive --send-anyway in this conversation.
   void clearHold(me, replyHoldScope)
-  // Broadcast — frontend, scheduler, etc. all listen on CH_MESSAGE_NEW
-  const { CH_MESSAGE_NEW, publish } = await import('../redis.js')
-  await publish(CH_MESSAGE_NEW, {
-    type: 'message.new',
-    conversationId: convoId,
-    companyId,
-    message: {
-      id: messageId, conversationId: convoId, authorId: me,
-      kind: 'text', body: finalBody, sequence, at: new Date().toISOString(),
-      attachment: attachment ?? undefined,
-      quotedMessageId: resolvedQuotedId ?? undefined,
-      quoted: quotedSummary ? {
-        id: quotedSummary.id,
-        authorId: quotedSummary.authorId,
-        authorName: quotedSummary.authorName,
-        kind: 'text',
-        body: quotedSummary.body,
-        sequence: quotedSummary.sequence,
-      } : undefined,
-      mentionedIds,
-      mentionAll,
-    },
-  })
-
   const attachmentNote = attachment
     ? ` · attached ${attachment.kind} "${attachment.name}"`
     : ''
@@ -2145,9 +1204,8 @@ async function cmdReply(parsed: ParsedArgs, internal: RunCliInternalContext = {}
 }
 
 /* ─── Image / file generation helpers ───────────────────────────────────
- * Both helpers return an AgentAttachment ready to drop into the messages
- * row. They go through the storage abstraction so URLs are signed when R2
- * + signing is active (production), or local paths in dev.
+ * Both helpers return an AgentAttachment ready for the authoritative WuKong
+ * payload. They go through the authoritative R2 storage abstraction.
  *
  * Failure mode: throw — the caller wraps in a try/catch and returns
  * a CLI error so the agent's bash() call exits non-zero and the agent
@@ -2162,48 +1220,29 @@ const IMAGE_SIZE_MAP: Record<string, '1024x1024' | '1536x1024' | '1024x1536'> = 
 async function generateAndUploadImage(opts: {
   prompt: string
   size: string
-  /** Tenant for sub2api routing. When null, uses the shared DeepSeek
-   * credential. */
-  tenant: string | null
-  /** Agent invoking the tool (for ledger attribution). The peer-agent claim
-   *  on this work uses the same id, so we already have it at every callsite. */
+  tenant: string
   agentId: string
 }): Promise<{ url: string; name: string; kind: 'img'; mime: string; size: number; key: string }> {
-  if (!env.DEEPSEEK_IMAGE_MODEL) {
-    throw new Error('image generation is disabled; configure a DeepSeek gateway image model')
+  if (!env.OPENAI_IMAGE_MODEL) {
+    throw new Error('OPENAI_IMAGE_MODEL is required for image generation')
   }
   const size = IMAGE_SIZE_MAP[opts.size] ?? '1024x1024'
-  // The agent-tool image generation lives on its own purpose so it doesn't
-  // get pooled with avatar regeneration. Both ultimately hit the same image
-  // model but the spend driver is very different (per agent action vs per
-  // agent creation), and the operator will want to slice them apart.
-  const { getTrackedLlmClient } = await import('./llm-ledger.js')
-  const client = await getTrackedLlmClient({
-    purpose: 'agent-image',
-    companyId: opts.tenant, agentId: opts.agentId,
-    extras: { size: opts.size, promptPreview: opts.prompt.slice(0, 120) },
-  })
-  const r = await client.images.generate({
-    model: env.DEEPSEEK_IMAGE_MODEL,
+  // Product image generation uses the tracked LLM image entrypoint.
+  const { createImage } = await import('../llm.js')
+  const r = await createImage({ purpose: 'agent-image', companyId: opts.tenant, agentId: opts.agentId }, {
+    model: env.OPENAI_IMAGE_MODEL,
     prompt: opts.prompt,
     size,
     n: 1,
+    response_format: 'b64_json',
   })
   const first = r.data?.[0]
   const b64 = first?.b64_json
-  const remoteUrl = first?.url
-  let buf: Buffer
-  if (b64) {
-    buf = Buffer.from(b64, 'base64')
-  } else if (remoteUrl) {
-    const fetched = await fetch(remoteUrl)
-    buf = Buffer.from(await fetched.arrayBuffer())
-  } else {
-    throw new Error('image API returned no data')
-  }
+  if (!b64) throw new Error('image provider returned no b64_json data')
+  const buf = Buffer.from(b64, 'base64')
   const { randomUUID } = await import('node:crypto')
   const id = randomUUID().replace(/-/g, '')
-  const key = `attachments/${id}.png`
+  const key = `attachments/${opts.tenant}/${id}.png`
   const url = await storage.put(key, buf, 'image/png')
   // Slug the prompt into a friendly filename for the bubble caption.
   const slug = opts.prompt
@@ -2225,7 +1264,7 @@ async function generateAndUploadImage(opts: {
 }
 
 /** `lingxiloop image generate "<prompt>" [--size square|wide|tall] [--as <id>] [--json]`
- *  Generates an image through an optional DeepSeek gateway image model,
+ *  Generates an image through the configured OpenAI image model,
  *  uploads it to storage, and returns the signed URL + key
  *  so the caller can `lingxiloop reply <c> "<body>" --attach <url>` later.
  *  Decoupled from `reply --generate-image` so an agent can test a
@@ -2244,24 +1283,9 @@ async function cmdImage(parsed: ParsedArgs): Promise<CliResult> {
   if (!prompt) return err('image generate requires a non-empty prompt')
   const size = String(parsed.flags.size ?? 'square')
 
-  // Look up the agent's company so sub2api per-user quota tracking works.
-  // LIMIT 1 — if an agent id exists in multiple companies, we pick any.
-  // That's a stop-gap; for now no agent runs cross-tenant standalone
-  // image gen, so a more principled choice is YAGNI.
-  const { rows: pr } = await pool.query<{ company_id: string | null }>(
-    `SELECT company_id FROM participants WHERE id = $1 LIMIT 1`,
-    [me],
-  )
-  const tenant = pr[0]?.company_id ?? null
-
-  // Tenant-scoped claim by prompt so peer agents don't independently
-  // burn a second image-gen call on the same idea. Only claim when
-  // we know the tenant — otherwise the action would slip past the
-  // dedup table.
-  if (tenant) {
-    const blocked = await tryClaimTenantWork(tenant, me, 'image-generate', prompt)
-    if (blocked) return blocked
-  }
+  const tenant = await agentCompany(me)
+  const blocked = await tryClaimTenantWork(tenant, me, 'image-generate', prompt)
+  if (blocked) return blocked
 
   try {
     const att = await generateAndUploadImage({ prompt, size, tenant, agentId: me })
@@ -2270,7 +1294,7 @@ async function cmdImage(parsed: ParsedArgs): Promise<CliResult> {
       : size === 'tall' ? '1024×1536'
       : '1024×1024'
     return ok([
-      `generated ${dim} · ${Math.round(att.size / 1024)}KB · ${env.DEEPSEEK_IMAGE_MODEL}`,
+      `generated ${dim} · ${Math.round(att.size / 1024)}KB · ${env.OPENAI_IMAGE_MODEL}`,
       `name: ${att.name}`,
       `url:  ${att.url}`,
       `key:  ${att.key}`,
@@ -2281,7 +1305,7 @@ async function cmdImage(parsed: ParsedArgs): Promise<CliResult> {
   } catch (e) {
     return err(`image generation failed: ${e instanceof Error ? e.message : String(e)}`)
   } finally {
-    if (tenant) await releaseTenantWork(tenant, me, 'image-generate', prompt)
+    await releaseTenantWork(tenant, me, 'image-generate', prompt)
   }
 }
 
@@ -2291,6 +1315,7 @@ async function cmdImage(parsed: ParsedArgs): Promise<CliResult> {
  *  zip, audio, binary blob the agent fetched) flows through here. The
  *  agent provides the bytes as base64 and optionally a mime hint. */
 async function saveBytesAttachment(
+  companyId: string,
   filename: string,
   base64: string,
   mimeHint?: string,
@@ -2315,13 +1340,13 @@ async function saveBytesAttachment(
 
   const { randomUUID } = await import('node:crypto')
   const id = randomUUID().replace(/-/g, '')
-  const key = `attachments/${id}.${ext}`
+  const key = `attachments/${companyId}/${id}.${ext}`
   const url = await storage.put(key, buf, mime)
   return { url, key, name: filename, kind, mime, size: buf.length }
 }
 
-/** Best-effort mime guess from a file extension. Returns null for
- *  unknowns so the caller can fall back to a generic octet-stream. */
+/** MIME inference from a file extension. Unknown binary formats use the
+ *  standard application/octet-stream media type. */
 function extToMime(ext: string): string | null {
   switch (ext) {
     // Images
@@ -2359,16 +1384,12 @@ function extToMime(ext: string): string | null {
   }
 }
 
-/** Load a local file for use as an outbound email attachment. Reads the
- *  bytes off the agent's filesystem, uploads them to object storage under
- *  the `email-attachments/` prefix (same prefix the inbound webhook uses
- *  — keeps the renderer's JOIN agnostic to direction), and returns the
- *  combined metadata. The returned `base64` is what we hand to Resend;
- *  the `storageKey` + `publicUrl` are how the recipient's UI downloads
- *  the file after the fact. */
+/** Load a local outbound attachment into the authoritative R2 data plane.
+ *  Resend receives a short-lived URL from the Email domain; the CLI keeps
+ *  only durable object metadata and never carries a second Base64 payload. */
 async function loadEmailAttachmentFromPath(path: string): Promise<{
   filename: string; mimeType: string; sizeBytes: number;
-  base64: string; storageKey: string; publicUrl: string;
+  storageKey: string;
 }> {
   const fs = await import('node:fs/promises')
   const nodePath = await import('node:path')
@@ -2384,19 +1405,13 @@ async function loadEmailAttachmentFromPath(path: string): Promise<{
   const mimeType = extToMime(ext) ?? 'application/octet-stream'
   const id = cryptoMod.randomUUID().replace(/-/g, '')
   const storageKey = `email-attachments/${id}${ext ? '.' + ext : ''}`
-  const publicUrl = await storage.put(storageKey, buf, mimeType)
+  await storage.put(storageKey, buf, mimeType)
   return {
     filename, mimeType, sizeBytes: buf.length,
-    base64: buf.toString('base64'),
-    storageKey, publicUrl,
+    storageKey,
   }
 }
 
-/** Regenerate the calling agent's portrait via the image API. Composes
- *  the same prompt the HTTP endpoint uses, uploads to storage as
- *  `avatars/avatar-<id>-<rand>.png`, and stamps `participants.avatar_url`.
- *  Heavy — image-gen takes several seconds; the bash() tool call will
- *  block for that long. */
 /** `lingxiloop skills <op>` — manage Agent Skills (progressive-disclosure
  *  capability packs) stored in this agent's workspace under
  *  `skills/<name>/`. See server/src/agents/skills.ts for the spec. */
@@ -2424,12 +1439,9 @@ async function cmdSkills(parsed: ParsedArgs): Promise<CliResult> {
     // No sub-path → load the SKILL.md entry-point. With a sub-path,
     // load that bundled file (e.g. `scripts/extract.py`).
     const fullPath = subPath ? `skills/${name}/${subPath}` : `skills/${name}/SKILL.md`
-    const { rows } = await pool.query<{ body: string }>(
-      `SELECT body FROM agent_workspace WHERE agent_id = $1 AND path = $2 LIMIT 1`,
-      [me, fullPath],
-    )
-    if (!rows[0]) return err(`no such file: ${fullPath}`)
-    return ok(rows[0].body)
+    const file = await readWorkspaceFile(pool, me, fullPath)
+    if (!file) return err(`no such file: ${fullPath}`)
+    return ok(file.body)
   }
 
   if (op === 'create') {
@@ -2444,11 +1456,9 @@ async function cmdSkills(parsed: ParsedArgs): Promise<CliResult> {
     if (description.length > 1024) return err('description must be ≤ 1024 characters')
 
     const path = `skills/${name}/SKILL.md`
-    const { rows: existing } = await pool.query<{ path: string }>(
-      `SELECT path FROM agent_workspace WHERE agent_id = $1 AND path = $2 LIMIT 1`,
-      [me, path],
-    )
-    if (existing[0]) return err(`skill "${name}" already exists — use \`lingxiloop workspace edit ${path}\` to modify it, or \`lingxiloop skills delete ${name}\` first`)
+    if (await workspaceFileExists(pool, me, path)) {
+      return err(`skill "${name}" already exists — use \`lingxiloop workspace edit ${path}\` to modify it, or \`lingxiloop skills delete ${name}\` first`)
+    }
 
     const body = `---
 name: ${name}
@@ -2462,11 +1472,7 @@ step-by-step, examples, edge cases. Keep this file under ~500 lines —
 move long reference material into \`references/\` files and load them
 on demand via \`lingxiloop skills read ${name} references/<file>\`._
 `
-    await pool.query(
-      `INSERT INTO agent_workspace (agent_id, path, body, company_id, updated_at)
-       VALUES ($1, $2, $3, $4, NOW())`,
-      [me, path, body, await agentCompany(me)],
-    )
+    await writeWorkspaceFile(pool, { agentId: me, path, body, companyId: await agentCompany(me) })
     return ok(
       `created skill "${name}" at ${path}\n\n` +
       `flesh it out: lingxiloop workspace edit ${path} "<old>" "<new>"\n` +
@@ -2485,18 +1491,14 @@ on demand via \`lingxiloop skills read ${name} references/<file>\`._
   if (op === 'delete') {
     const name = parsed.positional[1]
     if (!name) return err('usage: skills delete <name>')
-    const r = await pool.query(
-      `DELETE FROM agent_workspace
-        WHERE agent_id = $1 AND (path = $2 OR path LIKE $3)`,
-      [me, `skills/${name}/SKILL.md`, `skills/${name}/%`],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no such skill: ${name}`)
-    return ok(`deleted skill "${name}" (${r.rowCount} files removed)`, [{
+    const fileCount = await deleteSkillFiles(pool, me, name)
+    if (fileCount === 0) return err(`no such skill: ${name}`)
+    return ok(`deleted skill "${name}" (${fileCount} files removed)`, [{
       event: 'skill.deleted',
       command: 'skills delete',
       agentId: me,
       skillName: name,
-      fileCount: r.rowCount ?? 0,
+      fileCount,
     }])
   }
 
@@ -2514,8 +1516,7 @@ on demand via \`lingxiloop skills read ${name} references/<file>\`._
       // verbatim so the agent can paste/run it without thinking.
       return ok(hits.map((h) => {
         const meta = [h.version && `v${h.version}`, h.author && `by ${h.author}`].filter(Boolean).join(' · ')
-        const tag = h.install_url ?? h.name
-        return `  ${h.name}${meta ? `  (${meta})` : ''}\n    ${h.description}\n    → lingxiloop skills install ${tag}`
+        return `  ${h.name}${meta ? `  (${meta})` : ''}\n    ${h.description}\n    → lingxiloop skills install ${h.name}`
       }).join('\n\n'))
     } catch (e) {
       return err(`skills search failed: ${e instanceof Error ? e.message : String(e)}`)
@@ -2523,12 +1524,12 @@ on demand via \`lingxiloop skills read ${name} references/<file>\`._
   }
 
   if (op === 'install') {
-    const idOrUrl = parsed.positional[1]
-    if (!idOrUrl) return err('usage: skills install <skill_id_or_install_url>')
+    const skillId = parsed.positional[1]
+    if (!skillId) return err('usage: skills install <skill_id>')
     try {
       const { env } = await import('../env.js')
       const { fetchSkillManifest, installSkillFromManifest } = await import('./skills.js')
-      const manifest = await fetchSkillManifest(idOrUrl, env.SKILLHUB_URL)
+      const manifest = await fetchSkillManifest(skillId, env.SKILLHUB_URL)
       const result = await installSkillFromManifest({ agentId: me, manifest })
       return ok(
         `installed skill "${result.name}" (${result.files} file${result.files === 1 ? '' : 's'})\n` +
@@ -2539,7 +1540,7 @@ on demand via \`lingxiloop skills read ${name} references/<file>\`._
           agentId: me,
           skillName: result.name,
           fileCount: result.files,
-          source: idOrUrl,
+          source: skillId,
         }],
       )
     } catch (e) {
@@ -2553,223 +1554,14 @@ on demand via \`lingxiloop skills read ${name} references/<file>\`._
     '  skills read <name> [<sub-path>]             load full SKILL.md (or a bundled file)\n' +
     '  skills create <name> "<description>"        scaffold a new skill\n' +
     '  skills search <query>                       search the configured SkillHub\n' +
-    '  skills install <id_or_url>                  install a skill from SkillHub (or any compatible URL)\n' +
+    '  skills install <skill_id>                   install a skill from SkillHub\n' +
     '  skills delete <name>                        remove a skill and all its files',
   )
 }
 
-/* ============== email subcommands ==============
- * Real external mail. Each agent has an address (auto-minted from the
- * agent id + their company slug — see server/src/email.ts). Outbound
- * goes through Resend; inbound arrives via the Cloudflare Email Worker
- * + /webhooks/email/inbound and is fanned out as `kind='email'`
- * conversations. The CLI surface mirrors familiar webmail verbs: send,
- * reply, inbox, show, contacts. */
-
-interface EmailContact {
-  participantId: string | null
-  name: string
-  address: string
-  /** 'agent' | 'human' | 'external' — drives the "who is this" hint. */
-  kind: 'agent' | 'human' | 'external'
-  /** The member's function/title (participants.role, e.g. "Designer").
-   *  Null for humans/external contacts who have no role on file. This is
-   *  what lets an agent know WHAT a teammate does, not just their name. */
-  role?: string | null
-}
-
-async function listEmailContacts(
-  companyId: string,
-  viewerId: string,
-  query?: string,
-): Promise<EmailContact[]> {
-  const out: EmailContact[] = []
-  const { computeAgentAddress } = await import('../email.js')
-  // Optional fuzzy filter. Applied uniformly across name / id / email so a
-  // single query like "wey" matches an agent's id, a human's display
-  // name, OR an external email-contacts row. We do the match in JS (after
-  // each block's SQL) rather than per-table SQL ILIKE so the assembled
-  // list stays consistent — and so the predicate matches both
-  // participants.name AND the computed agent address.
-  const q = query?.trim().toLowerCase() ?? ''
-  const matches = (c: EmailContact) => !q
-    || c.name.toLowerCase().includes(q)
-    || c.address.toLowerCase().includes(q)
-    || (c.participantId?.toLowerCase().includes(q) ?? false)
-    || (c.role?.toLowerCase().includes(q) ?? false)
-  // 1. Same-tenant agents (excluding the viewer themselves). Include those
-  // whose participants.email column is still NULL — `/participants` already
-  // exposes a deterministic address for un-minted agents, so the CLI
-  // contact list should match (otherwise a fresh agent is invisible until
-  // someone has emailed them, which is the bootstrap chicken-and-egg).
-  const { rows: agents } = await pool.query<{ id: string; name: string; email: string | null; slug: string; role: string | null }>(
-    `SELECT p.id, p.name, p.email, p.role, c.slug
-       FROM participants p
-       JOIN companies c ON c.id = p.company_id
-      WHERE p.company_id = $1 AND p.kind = 'agent' AND p.departed_at IS NULL
-        AND p.id <> $2
-      ORDER BY p.name ASC`,
-    [companyId, viewerId],
-  )
-  for (const a of agents) {
-    const address = a.email ?? computeAgentAddress(a.id, a.slug)
-    if (!address) continue
-    const c: EmailContact = { participantId: a.id, name: a.name, address, kind: 'agent', role: a.role }
-    if (matches(c)) out.push(c)
-  }
-  // 2. Workspace humans (auth email).
-  const { rows: humans } = await pool.query<{ id: string; display_name: string; email: string }>(
-    `SELECT u.id, u.display_name, u.email
-       FROM users u
-       JOIN company_members cm ON cm.user_id = u.id
-      WHERE cm.company_id = $1 AND u.email IS NOT NULL
-      ORDER BY u.display_name ASC`,
-    [companyId],
-  )
-  for (const h of humans) {
-    const c: EmailContact = { participantId: h.id, name: h.display_name, address: h.email, kind: 'human' }
-    if (matches(c)) out.push(c)
-  }
-  // 3. External addresses we've corresponded with. Without a filter we cap
-  // at the 30 most recent; with a filter we widen the net so a search
-  // can find older correspondents too (still capped to keep memory bounded).
-  const limit = q ? 200 : 30
-  const { rows: ext } = await pool.query<{ address: string; display_name: string | null; message_count: number }>(
-    `SELECT address, display_name, message_count FROM email_contacts
-      WHERE company_id = $1
-      ORDER BY last_seen_at DESC LIMIT $2`,
-    [companyId, limit],
-  )
-  for (const e of ext) {
-    const c: EmailContact = {
-      participantId: null,
-      name: e.display_name ?? e.address,
-      address: e.address,
-      kind: 'external',
-    }
-    if (matches(c)) out.push(c)
-  }
-  return out
-}
-
-/** Resolve a recipient string the agent typed into a real email address.
- *  Accepts: a participant id (looked up in same company), a human user
- *  display id, an explicit "Name <addr>", or a bare address. Returns
- *  the parsed { addr, name } shape or null if unresolvable. */
-async function resolveEmailRecipient(raw: string, viewerCompanyId: string): Promise<{ addr: string; name: string | null } | null> {
-  // Synthetic external:<addr> ids are inbound-author markers only — they
-  // come from senders we don't have a participants row for and have no
-  // routable target by themselves. The agent should write to the bare
-  // address instead (which lives in `email_contacts` and shows up under
-  // `lingxiloop email contacts`).
-  if (raw.startsWith('external:')) return null
-  const { parseAddress, ensureParticipantAddress } = await import('../email.js')
-  const direct = parseAddress(raw)
-  if (direct) return direct
-  // Participant id lookup. Per-kind delivery target:
-  //   - agent  → lingxiloop address (lazy-mint if column still NULL)
-  //   - human  → real auth email (so it lands in their personal inbox)
-  const { rows: pa } = await pool.query<{ name: string; email: string | null; kind: string }>(
-    `SELECT name, email, kind FROM participants
-      WHERE id = $1 AND company_id = $2 AND departed_at IS NULL LIMIT 1`,
-    [raw, viewerCompanyId],
-  )
-  if (pa[0]) {
-    if (pa[0].kind === 'agent') {
-      if (pa[0].email) return { addr: pa[0].email, name: pa[0].name }
-      const ensured = await ensureParticipantAddress(raw, viewerCompanyId)
-      if (ensured) return { addr: ensured.email, name: ensured.displayName }
-    }
-    if (pa[0].kind === 'human') {
-      const { rows: u } = await pool.query<{ email: string | null }>(
-        `SELECT email FROM users WHERE id = $1 LIMIT 1`, [raw],
-      )
-      if (u[0]?.email) return { addr: u[0].email, name: pa[0].name }
-    }
-  }
-  // Direct user-id lookup (caller passed users.id, not participants.id).
-  const { rows: us } = await pool.query<{ display_name: string; email: string }>(
-    `SELECT u.display_name, u.email
-       FROM users u
-       JOIN company_members cm ON cm.user_id = u.id
-      WHERE u.id = $1 AND cm.company_id = $2 LIMIT 1`,
-    [raw, viewerCompanyId],
-  )
-  if (us[0]) return { addr: us[0].email, name: us[0].display_name }
-  return null
-}
-
-interface EmailThreadRow {
-  conversation_id: string
-  title: string
-  updated_at: string
-  unread_count: number
-  last_subject: string | null
-  last_from: string | null
-  last_at: string | null
-  last_body: string | null
-}
-
-async function listAgentEmailThreads(args: {
-  agentId: string
-  companyId: string
-  unreadOnly: boolean
-  limit: number
-}): Promise<EmailThreadRow[]> {
-  // Threads = email conversations the agent is in. We surface the latest
-  // email_messages row per thread for the snippet, and an unread count
-  // computed against conversation_reads.last_read_at (same source of
-  // truth as the chat inbox uses). Keeps the agent's mental model
-  // consistent: "unread" means "you haven't acked this thread since".
-  const { rows } = await pool.query<EmailThreadRow>(
-    `WITH my_threads AS (
-       SELECT c.id, c.title, c.updated_at
-         FROM conversations c
-        WHERE c.kind = 'email'
-          AND c.company_id = $1
-          AND c.members @> to_jsonb(ARRAY[$2::text])
-     ),
-     last_msg AS (
-       SELECT DISTINCT ON (em.conversation_id)
-              em.conversation_id, em.subject, em.from_addr,
-              m.body, m.created_at AS at
-         FROM email_messages em
-         JOIN messages m ON m.id = em.message_id
-        WHERE em.company_id = $1
-        ORDER BY em.conversation_id, em.created_at DESC
-     ),
-     unread AS (
-       SELECT m.conversation_id, COUNT(*)::int AS n
-         FROM messages m
-         LEFT JOIN conversation_reads r
-                ON r.conversation_id = m.conversation_id AND r.user_id = $2
-        WHERE m.kind = 'email'
-          AND m.company_id = $1
-          AND m.author_id <> $2
-          AND (r.last_read_at IS NULL OR m.created_at > r.last_read_at)
-        GROUP BY m.conversation_id
-     )
-     SELECT t.id AS conversation_id, t.title, t.updated_at::text,
-            COALESCE(u.n, 0) AS unread_count,
-            l.subject AS last_subject, l.from_addr AS last_from,
-            l.at::text AS last_at, l.body AS last_body
-       FROM my_threads t
-       LEFT JOIN last_msg l ON l.conversation_id = t.id
-       LEFT JOIN unread   u ON u.conversation_id = t.id
-      WHERE NOT $3 OR COALESCE(u.n, 0) > 0
-      ORDER BY t.updated_at DESC
-      LIMIT $4`,
-    [args.companyId, args.agentId, args.unreadOnly, args.limit],
-  )
-  return rows
-}
-
-/* ============== Polls ====================================================
- * Agents can create polls, cast their own vote, and close polls they
- * authored. All three call the WuKong-backed shared core in ../polls.ts — the HTTP API
- * for human users wraps the same functions, so renderer + agent paths
- * stay in lockstep on validation + broadcast. */
-async function cmdPoll(parsed: ParsedArgs): Promise<CliResult> {
+/* ============== Polls ================================================
+ * Agents create, vote on, inspect, and close native conversation polls. */
+async function cmdPoll(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const sub = parsed.positional[0]
   if (!sub) {
     return err(
@@ -2784,7 +1576,7 @@ async function cmdPoll(parsed: ParsedArgs): Promise<CliResult> {
   const companyId = await agentCompany(me)
   if (!companyId) return err(`unknown agent ${me} (no company)`)
   switch (sub) {
-    case 'create': return cmdPollCreate(parsed, me, companyId)
+    case 'create': return cmdPollCreate(parsed, me, companyId, internal.idempotencyKey)
     case 'vote':   return cmdPollVote(parsed, me, companyId)
     case 'close':  return cmdPollClose(parsed, me, companyId)
     case 'show':   return cmdPollShow(parsed, me, companyId)
@@ -2792,7 +1584,12 @@ async function cmdPoll(parsed: ParsedArgs): Promise<CliResult> {
   }
 }
 
-async function cmdPollCreate(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
+async function cmdPollCreate(
+  parsed: ParsedArgs,
+  me: string,
+  companyId: string,
+  idempotencyKey?: string,
+): Promise<CliResult> {
   const convoId = parsed.positional[1]
   const question = parsed.positional[2]
   const options = parsed.positional.slice(3).map(unescapeChat)
@@ -2808,15 +1605,16 @@ async function cmdPollCreate(parsed: ParsedArgs, me: string, companyId: string):
     return err('--expires-in must be a number of minutes')
   }
   try {
-    const { createPoll } = await import('../polls.js')
-    const created = await createPoll({
+    const { pollApplication } = await import('../modules/polls/index.js')
+    const created = await pollApplication.create({
       conversationId: convoId,
       companyId,
-      authorId: me,
+      actorId: me,
       question: unescapeChat(question),
       mode,
       options,
       expiresInMinutes,
+      idempotencyKey,
     })
     const optsTxt = created.poll.options.map((o) => `  ${o.id} → ${o.text}`).join('\n')
     return ok(
@@ -2850,11 +1648,11 @@ async function cmdPollVote(parsed: ParsedArgs, me: string, companyId: string): P
     return err('provide at least one option id, or pass --clear to retract')
   }
   try {
-    const { castVote } = await import('../polls.js')
-    const event = await castVote({
+    const { pollApplication } = await import('../modules/polls/index.js')
+    const event = await pollApplication.vote({
       messageId,
       companyId,
-      voterParticipantId: me,
+      actorId: me,
       voterKind: 'agent',
       optionIds,
     })
@@ -2875,8 +1673,8 @@ async function cmdPollClose(parsed: ParsedArgs, me: string, companyId: string): 
   const messageId = parsed.positional[1]
   if (!messageId) return err('usage: poll close <message_id>')
   try {
-    const { closePoll } = await import('../polls.js')
-    const event = await closePoll({ messageId, companyId, actorId: me, reason: 'manual' })
+    const { pollApplication } = await import('../modules/polls/index.js')
+    const event = await pollApplication.close({ messageId, companyId, actorId: me, reason: 'manual' })
     if (!event) return ok(`poll ${messageId} was already closed`)
     return ok(`poll ${messageId} closed`)
   } catch (e) {
@@ -2887,638 +1685,37 @@ async function cmdPollClose(parsed: ParsedArgs, me: string, companyId: string): 
 async function cmdPollShow(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
   const messageId = parsed.positional[1]
   if (!messageId) return err('usage: poll show <message_id>')
-  const { rows } = await pool.query<{ poll: { question: string; mode: string; options: Array<{ id: string; text: string }>; expiresAt: string | null; closedAt: string | null } | null; author_id: string }>(
-    `SELECT poll, author_id FROM im_polls
-      WHERE poll_client_msg_no = $1 AND company_id = $2 LIMIT 1`,
-    [messageId, companyId],
-  )
-  const row = rows[0]
-  if (!row || !row.poll) return err(`poll ${messageId} not found`)
-  const { rows: tallyRows } = await pool.query<{ option_id: string; cnt: number; voter_ids: string[] }>(
-    `SELECT option_id, COUNT(*)::int AS cnt,
-            array_agg(voter_participant_id ORDER BY voter_participant_id) AS voter_ids
-       FROM im_poll_votes WHERE poll_client_msg_no = $1 GROUP BY option_id`,
-    [messageId],
-  )
-  const tallyMap = new Map(tallyRows.map((t) => [t.option_id, { cnt: t.cnt, voters: t.voter_ids }]))
-  const lines = row.poll.options.map((o) => {
-    const t = tallyMap.get(o.id) ?? { cnt: 0, voters: [] as string[] }
-    const mine = t.voters.includes(me) ? ' ← you' : ''
-    return `  ${o.id} (${t.cnt}) · ${o.text}${mine}`
-  }).join('\n')
-  const head = [
-    `poll ${messageId} · by ${row.author_id} · mode=${row.poll.mode}`,
-    row.poll.closedAt ? `closed at ${row.poll.closedAt}` : (row.poll.expiresAt ? `expires ${row.poll.expiresAt}` : 'open'),
-    row.poll.question,
-  ].join('\n')
-  return ok(`${head}\n${lines}`)
-}
-
-async function cmdEmail(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
-  const sub = parsed.positional[0]
-  if (!sub) {
-    return err(
-      'usage:\n' +
-      '  email send --to <addr|id>[,<addr|id>...] [--cc <...>] --subject "..." --body "..." [--attach <path>[,<path>...]] [--as <id>]\n' +
-      '  email reply <message_id> --body "..." [--cc <addr|id>...] [--attach <path>[,<path>...]] [--as <id>]\n' +
-      '  email inbox [--unread] [--limit N] [--as <id>]\n' +
-      '  email show <conversation_id> [--tail N] [--as <id>]\n' +
-      '  email contacts [<query>] [--as <id>]   (or just: lingxiloop contacts [<query>])\n' +
-      '  email whoami [--as <id>]   — your own address',
-    )
-  }
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-
-  switch (sub) {
-    case 'whoami':   return cmdEmailWhoami(me)
-    case 'contacts': return cmdEmailContacts(parsed, me, companyId, Boolean(parsed.flags.json))
-    case 'inbox':    return cmdEmailInbox(parsed, me, companyId)
-    case 'show':     return cmdEmailShow(parsed, me, companyId)
-    case 'send':     return cmdEmailSend(parsed, me, companyId, internal.idempotencyKey, internal.projectId)
-    case 'reply':    return cmdEmailReply(parsed, me, companyId, internal.idempotencyKey)
-    default:
-      return err(`unknown email subcommand: ${sub}`)
-  }
-}
-
-async function cmdEmailWhoami(me: string): Promise<CliResult> {
-  const { ensureAgentAddress } = await import('../email.js')
-  const { env } = await import('../env.js')
-  const addr = await ensureAgentAddress(me)
-  if (!addr) {
-    if (!env.EMAIL_DOMAIN) return err('email feature not configured (set EMAIL_DOMAIN)')
-    return err(`no email address available for ${me} (not an agent, or company missing)`)
-  }
-  return ok(`${addr.displayName} <${addr.email}>`)
-}
-
-async function cmdEmailContacts(
-  parsed: ParsedArgs,
-  me: string,
-  companyId: string,
-  json: boolean,
-): Promise<CliResult> {
-  // Optional fuzzy filter: `lingxiloop email contacts wey` matches against
-  // name / id / email (substring, case-insensitive). The empty-result
-  // path explicitly tells the caller that NO contact matches the query
-  // — the agent's LLM uses this signal to ask the user for the address
-  // instead of silently doing nothing.
-  const query = parsed.positional[1]?.trim() ?? ''
-  const list = await listEmailContacts(companyId, me, query)
-  if (json) return ok(JSON.stringify(list, null, 2))
-  if (list.length === 0) {
-    const { env } = await import('../env.js')
-    if (!env.EMAIL_DOMAIN) return ok('(email feature not configured — set EMAIL_DOMAIN to enable)')
-    if (query) {
-      return ok(`(no contacts match "${query}". If the user named someone you don't recognize, ASK them for the email address before guessing — don't silently skip the task.)`)
-    }
-    return ok('(no email contacts yet — invite someone or wait for inbound mail)')
-  }
-  // Width is driven by longest entry per column so long names / addresses
-  // don't get chopped. Cap so a pathological 300-char address can't blow
-  // up the layout — but the cap is generous (60) versus the previous 44.
-  const KIND_W = 8
-  const nameW = Math.min(40, Math.max(12, ...list.map((c) => c.name.length)))
-  // The role column tells the agent WHAT each teammate does — the whole point
-  // of a directory. Width tracks the longest role (capped); falls back to a
-  // header-width minimum so the column header always fits.
-  const roleW = Math.min(24, Math.max(4, ...list.map((c) => (c.role ?? '').length)))
-  const addrW = Math.min(60, Math.max(20, ...list.map((c) => c.address.length)))
-  const lines = [
-    `${'kind'.padEnd(KIND_W)} ${'name'.padEnd(nameW)}  ${'role'.padEnd(roleW)}  ${'address'.padEnd(addrW)}  id`,
-    '-'.repeat(KIND_W + 1 + nameW + 2 + roleW + 2 + addrW + 2 + 6),
-    ...list.map((c) =>
-      `${c.kind.padEnd(KIND_W)} ${c.name.slice(0, nameW).padEnd(nameW)}  ${(c.role ?? '—').slice(0, roleW).padEnd(roleW)}  ${c.address.slice(0, addrW).padEnd(addrW)}  ${c.participantId ?? '—'}`,
-    ),
-  ]
-  return ok(lines.join('\n'))
-}
-
-async function cmdEmailInbox(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
-  const unread = Boolean(parsed.flags.unread)
-  const limit = Math.min(50, Math.max(1, Number(parsed.flags.limit ?? 20)))
-  const threads = await listAgentEmailThreads({ agentId: me, companyId, unreadOnly: unread, limit })
-  if (parsed.flags.json) return ok(JSON.stringify(threads, null, 2))
-  if (threads.length === 0) {
-    // Distinguish "feature not wired" from "feature wired, just empty" so
-    // a fresh agent isn't left guessing whether mail is broken vs quiet.
-    const { env } = await import('../env.js')
-    if (!env.EMAIL_DOMAIN) {
-      return ok('(email feature not configured — set EMAIL_DOMAIN to enable inbound + outbound)')
-    }
-    return ok(unread ? `(no unread email for ${me})` : `(no email threads for ${me} yet)`)
-  }
-  const lines: string[] = []
-  for (const t of threads) {
-    const unreadTag = t.unread_count > 0 ? ` ★${t.unread_count}` : ''
-    // Keep full subject + from — the LLM consumer reads better with all
-    // content visible; truncation only hurt narrow terminals, and those
-    // aren't our audience here.
-    const subject = t.last_subject ?? t.title ?? '(no subject)'
-    const from = t.last_from ?? '?'
-    const snippet = (t.last_body ?? '').slice(0, 240).replace(/\n+/g, ' \\n ')
-    const at = t.last_at ? new Date(t.last_at).toISOString().replace('T', ' ').slice(0, 16) : ''
-    lines.push(`# ${t.conversation_id}${unreadTag}  [${at}]`)
-    lines.push(`  from:    ${from}`)
-    lines.push(`  subject: ${subject}`)
-    if (snippet) lines.push(`  body:    ${snippet}`)
-    lines.push('')
-  }
-  lines.push(`run \`lingxiloop email show <conversation_id>\` to read the full thread, then \`lingxiloop email reply <message_id> --body "..."\` to respond. \`lingxiloop ack <conversation_id>\` clears unread state.`)
-  return ok(lines.join('\n'))
-}
-
-async function cmdEmailShow(parsed: ParsedArgs, me: string, companyId: string): Promise<CliResult> {
-  const convoId = parsed.positional[1]
-  if (!convoId) return err('usage: email show <conversation_id> [--tail N]')
-  const tail = Math.min(50, Math.max(1, Number(parsed.flags.tail ?? 10)))
-  // Confirm membership — agents can only read threads they're on.
-  const { rows: cv } = await pool.query<{ members: string[]; title: string }>(
-    `SELECT members, title FROM conversations
-      WHERE id = $1 AND company_id = $2 AND kind = 'email' LIMIT 1`,
-    [convoId, companyId],
-  )
-  if (!cv[0]) return err(`unknown email thread ${convoId}`)
-  if (!cv[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
-  const { rows: msgs } = await pool.query<{
-    id: string; created_at: string; body: string; from_addr: string;
-    to_addrs: string[]; cc_addrs: string[]; subject: string;
-    smtp_message_id: string | null; in_reply_to: string | null;
-    direction: 'in' | 'out'; transport_status: string;
-  }>(
-    `SELECT m.id, m.created_at::text, m.body,
-            em.from_addr, em.to_addrs, em.cc_addrs, em.subject,
-            em.smtp_message_id, em.in_reply_to, em.direction, em.transport_status
-       FROM messages m
-       JOIN email_messages em ON em.message_id = m.id
-      WHERE m.conversation_id = $1
-      ORDER BY m.sequence DESC
-      LIMIT $2`,
-    [convoId, tail],
-  )
-  msgs.reverse()
-  if (parsed.flags.json) return ok(JSON.stringify({ thread: convoId, title: cv[0].title, messages: msgs }, null, 2))
-  if (msgs.length === 0) return ok(`(thread ${convoId} has no email messages)`)
-  const lines: string[] = [`thread ${convoId}  "${cv[0].title}"`, '']
-  for (const m of msgs) {
-    const at = new Date(m.created_at).toISOString().replace('T', ' ').slice(0, 16)
-    const arrow = m.direction === 'in' ? '↓ in' : '↑ out'
-    lines.push(`────  [${m.id}]  ${arrow}  ${m.transport_status}  ${at}`)
-    lines.push(`from:    ${m.from_addr}`)
-    if (m.to_addrs?.length) lines.push(`to:      ${m.to_addrs.join(', ')}`)
-    if (m.cc_addrs?.length) lines.push(`cc:      ${m.cc_addrs.join(', ')}`)
-    lines.push(`subject: ${m.subject}`)
-    if (m.in_reply_to) lines.push(`in-reply-to: <${m.in_reply_to}>`)
-    lines.push('')
-    lines.push(m.body)
-    lines.push('')
-  }
-  lines.push(`reply with \`lingxiloop email reply ${msgs[msgs.length - 1].id} --body "..."\`.`)
-  return ok(lines.join('\n'))
-}
-
-async function cmdEmailSend(parsed: ParsedArgs, me: string, companyId: string, idempotencyKey?: string, projectId?: string): Promise<CliResult> {
-  const toRaw = parsed.flags.to ? String(parsed.flags.to) : ''
-  const ccRaw = parsed.flags.cc ? String(parsed.flags.cc) : ''
-  const {
-    ensureAgentAddress,
-    formatAddress,
-    sendViaProvider,
-    findOrCreateEmailConversation,
-    persistEmailMessage,
-    mintMessageId,
-    sanitizeSubject,
-  } = await import('../email.js')
-  const subject = sanitizeSubject(unescapeChat(String(parsed.flags.subject ?? '')))
-  const body = unescapeChat(String(parsed.flags.body ?? '')).trim()
-  // --attach takes a comma-separated list of paths (also accepts the same
-  // flag repeated by the agent — bin/lingxiloop collapses repeats into the
-  // last value, so comma is the supported multi-attach syntax here).
-  const attachRaw = parsed.flags.attach ? String(parsed.flags.attach) : ''
-  if (!toRaw || !subject || !body) {
-    return err('usage: email send --to <addr|id>[,...] [--cc <...>] --subject "..." --body "..." [--attach <path>[,<path>...]]')
-  }
-  const attachPaths = attachRaw.split(',').map((s) => s.trim()).filter(Boolean)
-  const loadedAttachments: Awaited<ReturnType<typeof loadEmailAttachmentFromPath>>[] = []
-  for (const p of attachPaths) {
-    try {
-      loadedAttachments.push(await loadEmailAttachmentFromPath(p))
-    } catch (e) {
-      return err(`attachment ${p}: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const sender = await ensureAgentAddress(me)
-  if (!sender) return err('agent has no email address (EMAIL_DOMAIN unset or company missing)')
-
-  const toItems = toRaw.split(',').map((s) => s.trim()).filter(Boolean)
-  const ccItems = ccRaw.split(',').map((s) => s.trim()).filter(Boolean)
-  const toResolved: { addr: string; name: string | null }[] = []
-  const ccResolved: { addr: string; name: string | null }[] = []
-  for (const t of toItems) {
-    const r = await resolveEmailRecipient(t, companyId)
-    if (!r) return err(`can't resolve recipient: ${t}`)
-    toResolved.push(r)
-  }
-  for (const c of ccItems) {
-    const r = await resolveEmailRecipient(c, companyId)
-    if (!r) return err(`can't resolve cc: ${c}`)
-    ccResolved.push(r)
-  }
-  if (toResolved.length === 0) return err('at least one --to recipient required')
-
-  // Recipient agents in this same company become conversation members.
-  const memberIds = new Set<string>([me])
-  for (const r of [...toResolved, ...ccResolved]) {
-    const inHouse = await pool.query<{ id: string }>(
-      `SELECT id FROM participants
-        WHERE LOWER(email) = $1 AND company_id = $2 AND departed_at IS NULL LIMIT 1`,
-      [r.addr, companyId],
-    )
-    if (inHouse.rows[0]) memberIds.add(inHouse.rows[0].id)
-  }
-
-  const actionHash = idempotencyKey ? createHash('sha256').update(idempotencyKey).digest('hex') : ''
-  const messageId = idempotencyKey ? `agent-${actionHash}@lingxiloop.local` : mintMessageId()
-  if (idempotencyKey) {
-    const { rows } = await pool.query<{ message_id: string; conversation_id: string }>(
-      `SELECT message_id, conversation_id FROM email_messages WHERE company_id=$1 AND LOWER(smtp_message_id)=LOWER($2) LIMIT 1`,
-      [companyId, messageId],
-    )
-    if (rows[0]) return ok(`sent (replayed) · ${rows[0].message_id} · thread ${rows[0].conversation_id}`)
-  }
-  const conv = await findOrCreateEmailConversation({
-    companyId,
-    projectId,
-    inReplyTo: null,
-    references: [],
-    subject,
-    memberIds: [...memberIds],
-    idempotencyKey,
-  })
-
-  // Call the provider FIRST so we record sent/failed accurately. If
-  // anything throws we still write a queued/failed row — the agent
-  // shouldn't lose the draft just because Resend hiccuped.
-  const sendRes = await sendViaProvider({
-    from: formatAddress(sender.email, sender.displayName),
-    to: toResolved.map((r) => formatAddress(r.addr, r.name)),
-    cc: ccResolved.length ? ccResolved.map((r) => formatAddress(r.addr, r.name)) : undefined,
-    subject,
-    text: body,
-    messageId,
-    idempotencyKey: idempotencyKey ? `agent-os/${actionHash}` : undefined,
-    autoSubmitted: 'auto-generated',
-    attachments: loadedAttachments.map((a) => ({
-      filename: a.filename, mimeType: a.mimeType, base64: a.base64,
-    })),
-  })
-
-  const persisted = await persistEmailMessage({
-    conversationId: conv.conversationId,
-    companyId,
-    authorId: me,
-    direction: 'out',
-    transportStatus: sendRes.ok ? 'sent' : 'failed',
-    transportError: sendRes.error,
-    smtpMessageId: sendRes.smtpMessageId ?? messageId,
-    inReplyTo: null,
-    references: [],
-    subject,
-    fromAddr: formatAddress(sender.email, sender.displayName),
-    toAddrs: toResolved.map((r) => formatAddress(r.addr, r.name)),
-    ccAddrs: ccResolved.map((r) => formatAddress(r.addr, r.name)),
-    body,
-    autoSubmitted: true,
-    idempotencyKey,
-    attachments: loadedAttachments.map((a) => ({
-      filename: a.filename, mimeType: a.mimeType, sizeBytes: a.sizeBytes,
-      storageKey: a.storageKey,
-    })),
-  })
-
-  if (!sendRes.ok) {
-    return err(`email persisted as failed: ${sendRes.error} · message_id=${persisted.messageId}`, 1)
-  }
-  const mockTag = sendRes.mock ? ' (mock — no real send)' : ''
-  return ok(`sent${mockTag} · ${persisted.messageId} · thread ${conv.conversationId}`, [{
-    event: 'email.sent',
-    command: 'email send',
-    conversationId: conv.conversationId,
-    messageId: persisted.messageId,
-    authorId: me,
-    companyId,
-    subject,
-    to: toResolved.map((r) => r.addr),
-    cc: ccResolved.map((r) => r.addr),
-    attachmentCount: loadedAttachments.length,
-    transportStatus: 'sent',
-    mock: sendRes.mock,
-    visibleToUser: true,
-  }])
-}
-
-async function cmdEmailReply(parsed: ParsedArgs, me: string, companyId: string, idempotencyKey?: string): Promise<CliResult> {
-  const replyTo = parsed.positional[1]
-  const body = unescapeChat(String(parsed.flags.body ?? '')).trim()
-  const attachRaw = parsed.flags.attach ? String(parsed.flags.attach) : ''
-  if (!replyTo || !body) return err('usage: email reply <message_id> --body "..." [--cc <addr|id>...] [--attach <path>[,<path>...]]')
-  const attachPaths = attachRaw.split(',').map((s) => s.trim()).filter(Boolean)
-  const loadedAttachments: Awaited<ReturnType<typeof loadEmailAttachmentFromPath>>[] = []
-  for (const p of attachPaths) {
-    try {
-      loadedAttachments.push(await loadEmailAttachmentFromPath(p))
-    } catch (e) {
-      return err(`attachment ${p}: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  // Pull the original email row and its conversation context.
-  const { rows: orig } = await pool.query<{
-    conversation_id: string
-    smtp_message_id: string | null
-    references_chain: string[]
-    subject: string
-    from_addr: string
-    to_addrs: string[]
-    cc_addrs: string[]
-  }>(
-    `SELECT conversation_id, smtp_message_id, references_chain,
-            subject, from_addr, to_addrs, cc_addrs
-       FROM email_messages WHERE message_id = $1 AND company_id = $2`,
-    [replyTo, companyId],
-  )
-  if (!orig[0]) return err(`unknown email message ${replyTo}`)
-  const o = orig[0]
-  // Confirm membership — same gate as `email show`.
-  const { rows: cv } = await pool.query<{ members: string[] }>(
-    `SELECT members FROM conversations WHERE id = $1`, [o.conversation_id],
-  )
-  if (!cv[0] || !cv[0].members.includes(me)) {
-    return err(`${me} is not a member of thread ${o.conversation_id}`)
-  }
-
-  const {
-    ensureAgentAddress, formatAddress,
-    sendViaProvider, persistEmailMessage, mintMessageId, normalizeMessageId,
-    sanitizeSubject, splitReplyAddresses,
-  } = await import('../email.js')
-  const sender = await ensureAgentAddress(me)
-  if (!sender) return err('agent has no email address (EMAIL_DOMAIN unset or company missing)')
-
-  // Reply-all split: TO = original From, CC = original To+Cc minus self.
-  // Earlier iterations collapsed everyone into TO; that read fine but
-  // dropped the informed-vs.-required signal real clients rely on.
-  const { to: toAddrs, cc: ccFromOriginal } = splitReplyAddresses({
-    originalFrom: o.from_addr,
-    originalTo: o.to_addrs ?? [],
-    originalCc: o.cc_addrs ?? [],
-    selfAddresses: [sender.email],
-  })
-  if (toAddrs.length === 0) return err('no other recipients to reply to')
-
-  // Extra cc from --cc, resolved like in `send` — appended to the
-  // original CC list (self is already filtered out by splitReplyAddresses;
-  // we de-dupe against toAddrs + ccFromOriginal below).
-  const ccItems = parsed.flags.cc ? String(parsed.flags.cc).split(',').map((s) => s.trim()).filter(Boolean) : []
-  const ccResolved: { addr: string; name: string | null }[] = []
-  for (const c of ccItems) {
-    const r = await resolveEmailRecipient(c, companyId)
-    if (!r) return err(`can't resolve cc: ${c}`)
-    ccResolved.push(r)
-  }
-  const extractAddr = (raw: string) => {
-    const m = /<([^>]+)>/.exec(raw)
-    return (m ? m[1] : raw).toLowerCase()
-  }
-  const ccSeen = new Set<string>([
-    sender.email.toLowerCase(),
-    ...toAddrs.map(extractAddr),
-    ...ccFromOriginal.map(extractAddr),
-  ])
-  const ccCombined: string[] = [...ccFromOriginal]
-  for (const r of ccResolved) {
-    if (ccSeen.has(r.addr)) continue
-    ccSeen.add(r.addr)
-    ccCombined.push(formatAddress(r.addr, r.name))
-  }
-
-  const subject = /^(re|fwd|fw)\s*:/i.test(o.subject) ? sanitizeSubject(o.subject) : sanitizeSubject(`Re: ${o.subject}`)
-  const newReferences = [
-    ...(o.references_chain ?? []),
-    ...(o.smtp_message_id ? [o.smtp_message_id] : []),
-  ].filter((x): x is string => Boolean(x))
-  const inReplyTo = o.smtp_message_id ? normalizeMessageId(o.smtp_message_id) : null
-  const actionHash = idempotencyKey ? createHash('sha256').update(idempotencyKey).digest('hex') : ''
-  const messageId = idempotencyKey ? `agent-${actionHash}@lingxiloop.local` : mintMessageId()
-  if (idempotencyKey) {
-    const { rows } = await pool.query<{ message_id: string; conversation_id: string }>(
-      `SELECT message_id, conversation_id FROM email_messages WHERE company_id=$1 AND LOWER(smtp_message_id)=LOWER($2) LIMIT 1`,
-      [companyId, messageId],
-    )
-    if (rows[0]) return ok(`replied (replayed) · ${rows[0].message_id} · thread ${rows[0].conversation_id}`)
-  }
-
-  const sendRes = await sendViaProvider({
-    from: formatAddress(sender.email, sender.displayName),
-    to: toAddrs,
-    cc: ccCombined.length ? ccCombined : undefined,
-    subject,
-    text: body,
-    inReplyTo: inReplyTo ?? undefined,
-    references: newReferences,
-    messageId,
-    idempotencyKey: idempotencyKey ? `agent-os/${actionHash}` : undefined,
-    autoSubmitted: 'auto-replied',
-    attachments: loadedAttachments.map((a) => ({
-      filename: a.filename, mimeType: a.mimeType, base64: a.base64,
-    })),
-  })
-
-  const persisted = await persistEmailMessage({
-    conversationId: o.conversation_id,
-    companyId,
-    authorId: me,
-    direction: 'out',
-    transportStatus: sendRes.ok ? 'sent' : 'failed',
-    transportError: sendRes.error,
-    smtpMessageId: sendRes.smtpMessageId ?? messageId,
-    inReplyTo,
-    references: newReferences,
-    subject,
-    fromAddr: formatAddress(sender.email, sender.displayName),
-    toAddrs,
-    ccAddrs: ccCombined,
-    body,
-    autoSubmitted: true,
-    idempotencyKey,
-    attachments: loadedAttachments.map((a) => ({
-      filename: a.filename, mimeType: a.mimeType, sizeBytes: a.sizeBytes,
-      storageKey: a.storageKey,
-    })),
-  })
-
-  // Auto-ack — replying definitionally means I read the original.
-  await pool.query(
-    `INSERT INTO conversation_reads (user_id, conversation_id, last_read_at)
-     VALUES ($1, $2, NOW())
-     ON CONFLICT (user_id, conversation_id) DO UPDATE SET last_read_at = NOW()`,
-    [me, o.conversation_id],
-  )
-
-  if (!sendRes.ok) return err(`email persisted as failed: ${sendRes.error} · ${persisted.messageId}`, 1)
-  const mockTag = sendRes.mock ? ' (mock)' : ''
-  return ok(`replied${mockTag} · ${persisted.messageId} · thread ${o.conversation_id}`, [{
-    event: 'email.sent',
-    command: 'email reply',
-    conversationId: o.conversation_id,
-    messageId: persisted.messageId,
-    authorId: me,
-    companyId,
-    replyToMessageId: replyTo,
-    subject,
-    to: toAddrs,
-    cc: ccCombined,
-    attachmentCount: loadedAttachments.length,
-    transportStatus: 'sent',
-    mock: sendRes.mock,
-    visibleToUser: true,
-  }])
-}
-
-async function cmdAvatar(parsed: ParsedArgs): Promise<CliResult> {
-  const op = parsed.positional[0]
-  if (op !== 'regen' && op !== 'regenerate' && op !== 'set' && op !== 'show') {
-    return err(
-      'usage:\n' +
-      '  avatar show <participant_id>        view a teammate\'s portrait URL (download + open it to actually see the image)\n' +
-      '  avatar regen [--as <id>]            regenerate your portrait from your persona\n' +
-      '  avatar set <image_url> [--as <id>]  adopt an existing image URL as your portrait',
-    )
-  }
-  const me = resolveAs(parsed)
-
-  // Resolve the agent's tenant — avatar lookups are tenant-scoped (you can only
-  // look at teammates in your own workspace).
-  const { rows } = await pool.query<{ company_id: string; kind: string }>(
-    `SELECT company_id, kind FROM participants WHERE id = $1`, [me],
-  )
-  if (!rows[0]) return err(`unknown participant ${me}`)
-  // `show` is read-only and works for any caller (agent OR human); `regen`/`set`
-  // mutate the caller's OWN portrait, so they stay agent-only.
-  if (op !== 'show' && rows[0].kind !== 'agent') return err('avatar ops are only for agents')
-  const tenant = rows[0].company_id
-
-  if (op === 'show') {
-    const target = parsed.positional[1]
-    if (!target) return err('usage: avatar show <participant_id>')
-    const { rows: t } = await pool.query<{
-      id: string; name: string; role: string | null; kind: string; avatar_url: string | null
-    }>(
-      `SELECT id, name, role, kind, avatar_url FROM participants
-        WHERE id = $1 AND company_id = $2 AND departed_at IS NULL`,
-      [target, tenant],
-    )
-    if (!t[0]) return err(`unknown participant ${target} in this workspace`)
-    const r = t[0]
-    const who = `${r.name} (${r.id}) — ${r.kind}${r.role ? `, ${r.role}` : ''}`
-    if (!r.avatar_url) return ok(`${who}\n(no avatar set)`)
-    // Return the URL and an artifact recipe. The Host Bridge result channel
-    // does not automatically feed image bytes back into the model.
-    return ok(
-      `${who}\n` +
-      `avatar URL: ${r.avatar_url}\n\n` +
-      `To actually SEE the image, save it locally then open it with your image-reading tool:\n` +
-      `  curl -sL '${r.avatar_url}' -o /tmp/${r.id}-avatar\n` +
-      `then inspect \`/tmp/${r.id}-avatar\` as an artifact.`,
-    )
-  }
-
-  if (op === 'set') {
-    const url = parsed.positional[1]
-    if (!url) return err('usage: avatar set <image_url> [--as <id>]')
-    try {
-      const result = await setAgentAvatarFromUrl({ agentId: me, tenant, sourceUrl: url })
-      return ok(`portrait set → ${result.url}`, [{
-        event: 'avatar.updated',
-        command: 'avatar set',
-        agentId: me,
-        companyId: tenant,
-        avatarUrl: result.url,
-      }])
-    } catch (e) {
-      return err(`avatar set failed: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  // op === 'regen' | 'regenerate'
   try {
-    const { generateAndPersistAvatar } = await import('../api/router.js')
-    const { url } = await generateAndPersistAvatar({ agentId: me, tenant })
-    return ok(`new portrait → ${url}`, [{
-      event: 'avatar.updated',
-      command: 'avatar regen',
-      agentId: me,
-      companyId: tenant,
-      avatarUrl: url,
-    }])
-  } catch (e) {
-    return err(`avatar regen failed: ${e instanceof Error ? e.message : String(e)}`)
+    const { pollApplication } = await import('../modules/polls/index.js')
+    const row = await pollApplication.show(companyId, messageId)
+    const tallyMap = new Map(row.tallies.map((tally) => [
+      tally.optionId,
+      { cnt: tally.count, voters: tally.voterIds },
+    ]))
+    const lines = row.poll.options.map((option) => {
+      const tally = tallyMap.get(option.id) ?? { cnt: 0, voters: [] as string[] }
+      const mine = tally.voters.includes(me) ? ' ← you' : ''
+      return `  ${option.id} (${tally.cnt}) · ${option.text}${mine}`
+    }).join('\n')
+    const head = [
+      `poll ${messageId} · by ${row.author_id} · mode=${row.poll.mode}`,
+      row.poll.closedAt ? `closed at ${row.poll.closedAt}` : (row.poll.expiresAt ? `expires ${row.poll.expiresAt}` : 'open'),
+      row.poll.question,
+    ].join('\n')
+    return ok(`${head}\n${lines}`)
+  } catch (error) {
+    return err(`poll show failed: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
 
-/** Fetch an image at `sourceUrl`, validate it, re-upload it under the
- *  agent's `avatars/` storage key, stamp participants.avatar_url, and
- *  broadcast the change so connected clients refresh. The source URL
- *  can be one of our own attachments (e.g. an image the user just sent
- *  the agent) or any external URL — we always re-upload so the canonical
- *  avatar lives under our storage and serves through our CDN. */
-async function setAgentAvatarFromUrl(args: {
-  agentId: string
-  tenant: string
-  sourceUrl: string
-}): Promise<{ url: string }> {
-  if (!/^https?:\/\//.test(args.sourceUrl)) {
-    throw new Error('avatar source must be an http(s) URL')
-  }
-  const MAX_BYTES = 8 * 1024 * 1024  // 8MB ceiling for portraits
-  const fetched = await fetch(args.sourceUrl, { signal: AbortSignal.timeout(15_000) })
-  if (!fetched.ok) throw new Error(`source URL returned ${fetched.status}`)
-  const mime = (fetched.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase()
-  if (!mime.startsWith('image/')) throw new Error(`source URL is not an image (content-type: ${mime || 'unknown'})`)
-  const buf = Buffer.from(await fetched.arrayBuffer())
-  if (buf.length === 0) throw new Error('source image is empty')
-  if (buf.length > MAX_BYTES) throw new Error(`source image too large (${buf.length} > ${MAX_BYTES})`)
-
-  // Pick a sensible extension from the mime so the stored object has a
-  // useful filename and the Worker serves the right content-type.
-  const ext = mime === 'image/jpeg' ? 'jpg'
-            : mime === 'image/webp' ? 'webp'
-            : mime === 'image/gif'  ? 'gif'
-            : mime === 'image/svg+xml' ? 'svg'
-            : 'png'
-  const { storage } = await import('../storage.js')
-  const { randomUUID } = await import('node:crypto')
-  const key = `avatars/avatar-${args.agentId}-${randomUUID().slice(0, 8)}.${ext}`
-  const url = await storage.put(key, buf, mime)
-
-  await pool.query(
-    `UPDATE participants SET avatar_url = $2 WHERE id = $1 AND company_id = $3`,
-    [args.agentId, url, args.tenant],
-  )
-  const { invalidatePersonaCache } = await import('./personas.js')
-  invalidatePersonaCache(args.agentId)
-  const { CH_STATUS, publish } = await import('../redis.js')
-  await publish(CH_STATUS, {
-    type: 'participants.avatar',
-    participantId: args.agentId,
-    avatarUrl: url,
-    companyId: args.tenant,
-  })
-  return { url }
-}
-
+const { cmdEmail } = createEmailCommand({
+  ok,
+  err,
+  agentCompany,
+  loadEmailAttachmentFromPath,
+})
 async function saveTextAttachment(
+  companyId: string,
   filename: string,
   content: string,
 ): Promise<{ url: string; name: string; kind: 'file'; mime: string; size: number; key: string }> {
@@ -3540,127 +1737,12 @@ async function saveTextAttachment(
   const buf = Buffer.from(content, 'utf8')
   const { randomUUID } = await import('node:crypto')
   const id = randomUUID().replace(/-/g, '')
-  const key = `attachments/${id}.${ext}`
+  const key = `attachments/${companyId}/${id}.${ext}`
   const url = await storage.put(key, buf, mime)
   return { url, key, name: filename, kind: 'file', mime, size: buf.length }
 }
 
-async function cmdTopicRead(parsed: ParsedArgs): Promise<CliResult> {
-  const convoId = parsed.positional[0]
-  if (!convoId) return err('usage: topic <conversation_id>')
-  const { rows } = await pool.query<{ topic: string | null; title: string }>(
-    `SELECT topic, title FROM conversations WHERE id = $1`, [convoId],
-  )
-  if (!rows[0]) return err(`unknown conversation ${convoId}`)
-  const t = rows[0].topic
-  if (!t) return ok(`(no topic set on "${rows[0].title}")`)
-  return ok(t)
-}
-
-async function cmdTopicSet(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const convoId = parsed.positional[0]
-  if (!convoId) return err('usage: topic-set <conversation_id> "<text>"  (empty body clears the topic)')
-  const raw = unescapeChat(parsed.positional.slice(1).join(' ')).trim()
-  const topic = raw.length > 0 ? raw.slice(0, 200) : null
-
-  const { rows } = await pool.query<{ members: string[]; company_id: string; project_id: string | null; project_status: string | null }>(
-    `SELECT conversation.members,conversation.company_id,conversation.project_id,project.status AS project_status
-       FROM conversations conversation LEFT JOIN projects project ON project.id=conversation.project_id
-      WHERE conversation.id=$1`, [convoId],
-  )
-  if (!rows[0]) return err(`unknown conversation ${convoId}`)
-  if (!rows[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
-  if (rows[0].project_status === 'archived') return err('archived courses are read-only')
-
-  await pool.query(
-    `UPDATE conversations SET topic = $2, updated_at = NOW() WHERE id = $1`,
-    [convoId, topic],
-  )
-  const { CH_CONVO_UPDATED, publish } = await import('../redis.js')
-  await publish(CH_CONVO_UPDATED, {
-    type: 'conversation.updated',
-    conversationId: convoId,
-    companyId: rows[0].company_id,
-    workspaceId: rows[0].project_id ?? undefined,
-    patch: { topic },
-  })
-  return ok(topic ? `topic set: "${topic}"` : '(topic cleared)', [{
-    event: 'conversation.topic_updated',
-    command: 'topic-set',
-    conversationId: convoId,
-    actorId: me,
-    companyId: rows[0].company_id,
-    topic,
-    visibleToUser: true,
-  }])
-}
-
-/** Rename a group conversation. Members only; groups only (a DM title is
- *  the other person's name). Mirrors the human POST /conversations/:id/title. */
-async function cmdRename(parsed: ParsedArgs): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const convoId = parsed.positional[0]
-  if (!convoId) return err('usage: rename <conversation_id> "<new title>"')
-  const title = unescapeChat(parsed.positional.slice(1).join(' ')).trim().slice(0, 80)
-  if (!title) return err('rename requires a non-empty title')
-
-  const { rows } = await pool.query<{ members: string[]; kind: string; company_id: string; title: string; project_id: string | null; project_status: string | null }>(
-    `SELECT conversation.members,conversation.kind,conversation.company_id,conversation.title,
-            conversation.project_id,project.status AS project_status
-       FROM conversations conversation LEFT JOIN projects project ON project.id=conversation.project_id
-      WHERE conversation.id=$1`, [convoId],
-  )
-  if (!rows[0]) return err(`unknown conversation ${convoId}`)
-  if (rows[0].kind !== 'group') return err(`only group chats can be renamed (${convoId} is a ${rows[0].kind})`)
-  if (!rows[0].members.includes(me)) return err(`${me} is not a member of ${convoId}`)
-  if (rows[0].project_status === 'archived') return err('archived courses are read-only')
-  const currentTitle = rows[0].title
-
-  // Optimistic-concurrency: --if-equals "<expected current title>" lets a caller
-  // declare what title they BELIEVE is current. A mismatch means someone else
-  // already renamed it (or it never matched) → reject so the caller re-reads the
-  // state rather than blindly overwriting. Catches the "I'll rename it for you,
-  // Yulemi" pile-on race where Atlas guesses a different name than Nova.
-  const ifEqualsRaw = parsed.flags['if-equals']
-  if (typeof ifEqualsRaw === 'string') {
-    const ifEquals = unescapeChat(ifEqualsRaw).trim().slice(0, 80)
-    if (currentTitle !== ifEquals) {
-      return err(`stale: current title is "${currentTitle}", you passed --if-equals "${ifEquals}". Re-read with \`lingxiloop conversations\` and decide if you still want to rename.`)
-    }
-  }
-  // IDEMPOTENT no-op: if the title is already what you'd set, return success
-  // WITHOUT firing a conversation.renamed event or broadcasting an update. This
-  // suppresses the noise when N agents all decide to rename to the same string
-  // at the same instant — the chat doesn't see N identical rename events. Only
-  // a TRUE change writes through. (A divergent-names race still last-writer-wins
-  // for the storage; --if-equals is the lever against that.)
-  if (currentTitle === title) {
-    return ok(`(no-op — title was already "${title}")`)
-  }
-
-  await pool.query(
-    `UPDATE conversations SET title = $2, updated_at = NOW() WHERE id = $1`,
-    [convoId, title],
-  )
-  const { CH_CONVO_UPDATED, publish } = await import('../redis.js')
-  await publish(CH_CONVO_UPDATED, {
-    type: 'conversation.updated',
-    conversationId: convoId,
-    companyId: rows[0].company_id,
-    workspaceId: rows[0].project_id ?? undefined,
-    patch: { title },
-  })
-  return ok(`renamed to "${title}" (${convoId})`, [{
-    event: 'conversation.renamed',
-    command: 'rename',
-    conversationId: convoId,
-    actorId: me,
-    companyId: rows[0].company_id,
-    title,
-    visibleToUser: true,
-  }])
-}
+const { cmdRename, cmdTopicRead, cmdTopicSet } = createConversationMetadataCommands({ ok, err })
 
 /* ============== explicit coworker ownership / approval ================== */
 
@@ -3752,16 +1834,13 @@ async function cmdAutonomy(parsed: ParsedArgs): Promise<CliResult> {
   if (!conversationId || !scope || !operation || !['allow', 'ask', 'deny'].includes(mode)) {
     return err('usage: autonomy remember <conversation_id> <scope> <operation> <allow|ask|deny>')
   }
-  const human = await pool.query<{ user_id: string }>(
-    `SELECT m.author_id AS user_id
-       FROM messages m
-       JOIN conversations c ON c.id = m.conversation_id AND c.company_id = $2
-       JOIN participants p ON p.id = m.author_id AND p.company_id = $2 AND p.kind = 'human'
-      WHERE m.conversation_id = $1
-      ORDER BY m.sequence DESC LIMIT 1`,
-    [conversationId, companyId],
-  )
-  const userId = human.rows[0]?.user_id
+  const history = await getAgentChannelHistory({ companyId, agentId: me, channelId: conversationId, limit: 200 })
+  if (!history) return err(`unknown authoritative channel ${conversationId}`)
+  const authorIds = [...new Set(history.map((message) => message.fromUid))]
+  const humanIds = await humanParticipantIds(pool, companyId, authorIds)
+  const userId = [...history]
+    .sort((left, right) => right.messageSeq - left.messageSeq)
+    .find((message) => humanIds.has(message.fromUid))?.fromUid
   if (!userId) return err('autonomy rules require an explicit human instruction in this conversation')
   const rule = await upsertAutonomyRule({
     companyId,
@@ -3807,29 +1886,13 @@ async function cmdMemory(parsed: ParsedArgs): Promise<CliResult> {
   const op = parsed.positional[0]
   const me = resolveAs(parsed)
   if (op === 'list') {
-    const params: unknown[] = [me]
-    let where = `agent_id = $1 AND path LIKE 'memory/%'`
-    if (parsed.flags.about) {
-      params.push(String(parsed.flags.about))
-      where += ` AND meta->>'about' = $${params.length}`
-    }
-    if (parsed.flags.kind) {
-      const k = normalizeMemoryKind(parsed.flags.kind)
-      params.push(`memory/${k}/%`)
-      where += ` AND path LIKE $${params.length}`
-    }
     const limit = Math.min(100, Math.max(1, Number(parsed.flags.limit ?? 20)))
-    params.push(limit)
-    const limitParam = `$${params.length}`
-    const { rows } = await pool.query<{
-      path: string; body: string; meta: Record<string, unknown> | null; updated_at: string
-    }>(
-      `SELECT path, body, meta, updated_at
-         FROM agent_workspace WHERE ${where}
-         ORDER BY COALESCE((meta->>'pinned')::boolean, false) DESC, updated_at DESC
-         LIMIT ${limitParam}`,
-      params,
-    )
+    const rows = await listMemoryFiles(pool, {
+      agentId: me,
+      about: parsed.flags.about ? String(parsed.flags.about) : undefined,
+      kind: parsed.flags.kind ? normalizeMemoryKind(parsed.flags.kind) : undefined,
+      limit,
+    })
     // Path segment encodes the kind; file stem is the id (sans `.md`).
     const parsed_rows = rows.map((r) => {
       const segs = r.path.split('/')
@@ -3860,29 +1923,17 @@ async function cmdMemory(parsed: ParsedArgs): Promise<CliResult> {
     const path = `memory/${kind}/${id}.md`
     const tenant = await agentCompany(me)
     const meta = { type: 'memory', kind, about, pinned: false, source: null, createdAt: new Date().toISOString() }
-    // Compute the embedding before INSERT so the row lands with both
-    // body + vector in one shot. `embedText` returns null on failure
-    // (rate limit, network blip, etc.) — we still write the row so the
-    // memory isn't lost; the next background backfill will fill it in.
+    // Compute the embedding before INSERT so the row lands with both body
+    // and vector atomically. Provider failures fail the command explicitly.
     const { embedText } = await import('./embeddings.js')
-    const embedding = await embedText(body)
-    if (embedding) {
-      await pool.query(
-        `INSERT INTO agent_workspace (agent_id, path, body, meta, embedding, company_id, updated_at)
-         VALUES ($1, $2, $3, $4::jsonb, $5::vector, $6, NOW())`,
-        [me, path, body, JSON.stringify(meta), embedding, tenant],
-      )
-    } else {
-      await pool.query(
-        `INSERT INTO agent_workspace (agent_id, path, body, meta, company_id, updated_at)
-         VALUES ($1, $2, $3, $4::jsonb, $5, NOW())`,
-        [me, path, body, JSON.stringify(meta), tenant],
-      )
-    }
-    await pool.query(
-      `INSERT INTO agent_log (id, agent_id, kind, body, ref) VALUES ($1, $2, 'note', $3, $4::jsonb)`,
-      [`log-${randomUUID().slice(0, 12)}`, me, `noted: ${body.slice(0, 120)}`, JSON.stringify({ memoryId: id, path })],
-    )
+    const embedding = await embedText(body, { companyId: tenant, agentId: me })
+    await saveMemoryFile(pool, { agentId: me, path, body, meta, embedding, companyId: tenant })
+    await addAgentLog(pool, {
+      id: `log-${randomUUID().slice(0, 12)}`,
+      agentId: me,
+      body: `noted: ${body.slice(0, 120)}`,
+      ref: { memoryId: id, path },
+    })
     return ok(`saved memory ${id}`, [{
       event: 'memory.written',
       command: 'memory note',
@@ -3899,31 +1950,20 @@ async function cmdMemory(parsed: ParsedArgs): Promise<CliResult> {
     // Toggle the `pinned` flag in meta JSONB. `||` on jsonb merges keys
     // (right-hand side wins), so we read+rewrite by setting just that
     // key and let Postgres handle the rest.
-    const r = await pool.query<{ meta: Record<string, unknown> }>(
-      `UPDATE agent_workspace
-          SET meta = COALESCE(meta, '{}'::jsonb)
-                   || jsonb_build_object('pinned', NOT COALESCE((meta->>'pinned')::boolean, false))
-        WHERE agent_id = $1 AND path LIKE $2
-        RETURNING meta`,
-      [me, `memory/%/${id}.md`],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no memory ${id} for ${me}`)
-    return ok(`pinned: ${r.rows[0].meta?.pinned}`, [{
+    const meta = await toggleMemoryPin(pool, me, id)
+    if (!meta) return err(`no memory ${id} for ${me}`)
+    return ok(`pinned: ${meta.pinned}`, [{
       event: 'memory.pinned',
       command: 'memory pin',
       memoryId: id,
       agentId: me,
-      pinned: Boolean(r.rows[0].meta?.pinned),
+      pinned: Boolean(meta.pinned),
     }])
   }
   if (op === 'delete') {
     const id = parsed.positional[1]
     if (!id) return err('usage: memory delete <id>')
-    const r = await pool.query(
-      `DELETE FROM agent_workspace WHERE agent_id = $1 AND path LIKE $2`,
-      [me, `memory/%/${id}.md`],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no memory ${id} for ${me}`)
+    if (await deleteMemoryFile(pool, me, id) === 0) return err(`no memory ${id} for ${me}`)
     return ok(`deleted ${id}`, [{
       event: 'memory.deleted',
       command: 'memory delete',
@@ -3946,20 +1986,11 @@ function clamp01(v: unknown): number {
 async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
   const op = parsed.positional[0] ?? 'read'
   const me = resolveAs(parsed)
+  const companyId = await agentCompany(me)
 
   if (op === 'read') {
     const about = parsed.positional[1]
-    const params: unknown[] = [me]
-    let where = `agent_id = $1`
-    if (about) { params.push(about); where += ` AND about_id = $${params.length}` }
-    const { rows } = await pool.query<{
-      about_id: string; affinity: number; trust: number; last_note: string; updated_at: string
-    }>(
-      `SELECT about_id, affinity, trust, last_note, updated_at
-         FROM agent_climate WHERE ${where}
-         ORDER BY updated_at DESC LIMIT 50`,
-      params,
-    )
+    const rows = await listClimate(pool, { companyId, agentId: me, aboutId: about })
     if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
     if (rows.length === 0) {
       return ok(about
@@ -3987,34 +2018,27 @@ async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
     const affinityFlag = parsed.flags.affinity
     const trustFlag = parsed.flags.trust
     // Read prior so we can seed the deltas if the agent didn't supply them.
-    const { rows: prior } = await pool.query<{
-      affinity: number; trust: number; history: unknown
-    }>(
-      `SELECT affinity, trust, history FROM agent_climate WHERE agent_id = $1 AND about_id = $2`,
-      [me, aboutId],
-    )
-    const prevAffinity = prior[0]?.affinity ?? 0
-    const prevTrust = prior[0]?.trust ?? 0
+    const prior = await findClimate(pool, companyId, me, aboutId)
+    const prevAffinity = prior?.affinity ?? 0
+    const prevTrust = prior?.trust ?? 0
     const nextAffinity = affinityFlag !== undefined ? clamp01(affinityFlag) : prevAffinity
     const nextTrust    = trustFlag    !== undefined ? clamp01(trustFlag)    : prevTrust
     // Append a small history entry. Cap history length so it doesn't grow
     // unbounded — keep only the last 20 notes.
-    const prevHistory = Array.isArray(prior[0]?.history) ? prior[0]!.history as Array<unknown> : []
+    const prevHistory = Array.isArray(prior?.history) ? prior.history : []
     const newHistory = [
       ...prevHistory.slice(-19),
       { at: new Date().toISOString(), affinity: nextAffinity, trust: nextTrust, note: note.slice(0, 400) },
     ]
-    await pool.query(
-      `INSERT INTO agent_climate (agent_id, about_id, affinity, trust, last_note, history, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, NOW())
-       ON CONFLICT (agent_id, about_id) DO UPDATE
-         SET affinity = EXCLUDED.affinity,
-             trust    = EXCLUDED.trust,
-             last_note = EXCLUDED.last_note,
-             history   = EXCLUDED.history,
-             updated_at = NOW()`,
-      [me, aboutId, nextAffinity, nextTrust, note.slice(0, 400), JSON.stringify(newHistory)],
-    )
+    await upsertClimate(pool, {
+      companyId,
+      agentId: me,
+      aboutId,
+      affinity: nextAffinity,
+      trust: nextTrust,
+      note: note.slice(0, 400),
+      history: newHistory,
+    })
     return ok(`climate updated: ${me} → ${aboutId}  affinity=${nextAffinity.toFixed(2)}  trust=${nextTrust.toFixed(2)}`, [{
       event: 'climate.updated',
       command: 'climate note',
@@ -4028,11 +2052,9 @@ async function cmdClimate(parsed: ParsedArgs): Promise<CliResult> {
   if (op === 'forget') {
     const aboutId = parsed.positional[1]
     if (!aboutId) return err('usage: climate forget <about_id>')
-    const r = await pool.query(
-      `DELETE FROM agent_climate WHERE agent_id = $1 AND about_id = $2`,
-      [me, aboutId],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no climate to forget for ${me} → ${aboutId}`)
+    if (await deleteClimate(pool, companyId, me, aboutId) === 0) {
+      return err(`no climate to forget for ${me} → ${aboutId}`)
+    }
     return ok(`forgot climate ${me} → ${aboutId}`, [{
       event: 'climate.deleted',
       command: 'climate forget',
@@ -4051,22 +2073,12 @@ async function cmdLog(parsed: ParsedArgs): Promise<CliResult> {
     const body = parsed.positional[1]
     if (!body) return err('usage: log note <body> [--as id]')
     const id = `log-${randomUUID().slice(0, 12)}`
-    await pool.query(
-      `INSERT INTO agent_log (id, agent_id, kind, body) VALUES ($1, $2, 'note', $3)`,
-      [id, me, body],
-    )
+    await addAgentLog(pool, { id, agentId: me, body })
     return ok(`logged ${id}`)
   }
   // list (default)
   const limit = Math.min(100, Math.max(1, Number(parsed.flags.limit ?? 30)))
-  const { rows } = await pool.query<{
-    id: string; kind: string; body: string; ref: unknown; created_at: string
-  }>(
-    `SELECT id, kind, body, ref, created_at
-       FROM agent_log WHERE agent_id = $1
-       ORDER BY created_at DESC LIMIT $2`,
-    [me, limit],
-  )
+  const rows = await listAgentLog(pool, me, limit)
   if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
   if (rows.length === 0) return ok(`(no log entries for ${me})`)
   return ok([
@@ -4088,10 +2100,7 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
   // (agent_id is globally unique) so they don't need it.
   const tenant = await agentCompany(me)
   if (op === 'ls') {
-    const { rows } = await pool.query<{ path: string; updated_at: string }>(
-      `SELECT path, updated_at FROM agent_workspace WHERE agent_id = $1 ORDER BY path ASC`,
-      [me],
-    )
+    const rows = await listWorkspaceFiles(pool, me)
     if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
     if (rows.length === 0) return ok(`(${me}'s workspace is empty)`)
     return ok([
@@ -4103,22 +2112,15 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
   if (op === 'read') {
     const path = parsed.positional[1]
     if (!path) return err('usage: workspace read <path> [--as id]')
-    const { rows } = await pool.query<{ body: string; updated_at: string }>(
-      `SELECT body, updated_at FROM agent_workspace WHERE agent_id = $1 AND path = $2`,
-      [me, path],
-    )
-    if (!rows[0]) return err(`no file at ${path} in ${me}'s workspace`)
-    return ok(rows[0].body)
+    const file = await readWorkspaceFile(pool, me, path)
+    if (!file) return err(`no file at ${path} in ${me}'s workspace`)
+    return ok(file.body)
   }
   if (op === 'write') {
     const path = parsed.positional[1]
     const body = parsed.positional.slice(2).join(' ')
     if (!path || !body) return err('usage: workspace write <path> <body> [--as id]')
-    await pool.query(
-      `INSERT INTO agent_workspace (agent_id, path, body, company_id, updated_at) VALUES ($1, $2, $3, $4, NOW())
-       ON CONFLICT (agent_id, path) DO UPDATE SET body = EXCLUDED.body, company_id = EXCLUDED.company_id, updated_at = NOW()`,
-      [me, path, body, tenant],
-    )
+    await writeWorkspaceFile(pool, { agentId: me, path, body, companyId: tenant })
     return ok(`wrote ${path} (${body.length} chars)`, [{
       event: 'workspace.file_written',
       command: 'workspace write',
@@ -4131,8 +2133,7 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
   if (op === 'delete') {
     const path = parsed.positional[1]
     if (!path) return err('usage: workspace delete <path> [--as id]')
-    const r = await pool.query(`DELETE FROM agent_workspace WHERE agent_id = $1 AND path = $2`, [me, path])
-    if ((r.rowCount ?? 0) === 0) return err(`no file at ${path}`)
+    if (await deleteWorkspaceFile(pool, me, path) === 0) return err(`no file at ${path}`)
     return ok(`deleted ${path}`, [{
       event: 'workspace.file_deleted',
       command: 'workspace delete',
@@ -4146,19 +2147,14 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
     const oldStr = parsed.positional[2]
     const newStr = parsed.positional[3] ?? ''
     if (!path || oldStr === undefined) return err('usage: workspace edit <path> <old> <new> [--as id]')
-    const { rows } = await pool.query<{ body: string }>(
-      `SELECT body FROM agent_workspace WHERE agent_id = $1 AND path = $2`, [me, path],
-    )
-    if (!rows[0]) return err(`no file at ${path}`)
-    const body = rows[0].body
+    const file = await readWorkspaceFile(pool, me, path)
+    if (!file) return err(`no file at ${path}`)
+    const body = file.body
     const occurrences = body.split(oldStr).length - 1
     if (occurrences === 0) return err(`old string not found in ${path}`)
     if (occurrences > 1 && !parsed.flags.all) return err(`old string appears ${occurrences} times in ${path} — pass --all or include more context to make it unique`)
     const next = parsed.flags.all ? body.split(oldStr).join(newStr) : body.replace(oldStr, newStr)
-    await pool.query(
-      `UPDATE agent_workspace SET body = $3, updated_at = NOW() WHERE agent_id = $1 AND path = $2`,
-      [me, path, next],
-    )
+    await updateWorkspaceFile(pool, me, path, next)
     return ok(`edited ${path} (${occurrences} replacement${occurrences === 1 ? '' : 's'})`, [{
       event: 'workspace.file_updated',
       command: 'workspace edit',
@@ -4174,9 +2170,7 @@ async function cmdWorkspace(parsed: ParsedArgs): Promise<CliResult> {
     if (!pattern) return err('usage: workspace grep <pattern> [--as id]')
     let re: RegExp
     try { re = new RegExp(pattern, parsed.flags.i ? 'gi' : 'g') } catch { return err(`bad regex: ${pattern}`) }
-    const { rows } = await pool.query<{ path: string; body: string }>(
-      `SELECT path, body FROM agent_workspace WHERE agent_id = $1 ORDER BY path ASC`, [me],
-    )
+    const rows = await listWorkspaceContents(pool, me)
     const hits: string[] = []
     for (const r of rows) {
       const lines = r.body.split('\n')
@@ -4197,17 +2191,7 @@ async function cmdTasks(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
   if (op === 'list') {
-    const params: unknown[] = [me]
-    let where = `agent_id = $1`
-    if (parsed.flags.status) { params.push(String(parsed.flags.status)); where += ` AND status = $${params.length}` }
-    const { rows } = await pool.query<{
-      id: string; title: string; status: string; due_at: string | null;
-      created_at: string; updated_at: string
-    }>(
-      `SELECT id, title, status, due_at, created_at, updated_at
-         FROM agent_tasks WHERE ${where} ORDER BY status ASC, updated_at DESC`,
-      params,
-    )
+    const rows = await listAgentTasks(pool, me, parsed.flags.status ? String(parsed.flags.status) : undefined)
     if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
     if (rows.length === 0) return ok(`(no tasks for ${me})`)
     return ok([
@@ -4220,10 +2204,7 @@ async function cmdTasks(parsed: ParsedArgs): Promise<CliResult> {
     const title = parsed.positional.slice(1).join(' ')
     if (!title) return err('usage: tasks add <title> [--as id]')
     const id = `task-${randomUUID().slice(0, 12)}`
-    await pool.query(
-      `INSERT INTO agent_tasks (id, agent_id, title) VALUES ($1, $2, $3)`,
-      [id, me, title],
-    )
+    await createAgentTask(pool, id, me, title)
     return ok(`added task ${id}: ${title}`, [{
       event: 'task.created',
       command: 'tasks add',
@@ -4240,11 +2221,7 @@ async function cmdTasks(parsed: ParsedArgs): Promise<CliResult> {
     const status = parsed.positional[2]
     if (!id || !status) return err('usage: tasks set <task_id> <status>')
     if (!['open', 'doing', 'done', 'dropped'].includes(status)) return err(`bad status: ${status}`)
-    const r = await pool.query(
-      `UPDATE agent_tasks SET status = $3, updated_at = NOW() WHERE id = $1 AND agent_id = $2`,
-      [id, me, status],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no task ${id} for ${me}`)
+    if (await updateAgentTaskStatus(pool, id, me, status) === 0) return err(`no task ${id} for ${me}`)
     return ok(`task ${id} → ${status}`, [{
       event: 'task.status_changed',
       command: 'tasks set',
@@ -4267,1440 +2244,50 @@ async function cmdTasks(parsed: ParsedArgs): Promise<CliResult> {
  * tasks/email above.
  */
 
-/** Best-effort WS broadcast for a calendar row change initiated by the
- *  agent CLI. Mirrors the REST `publishCalendarChange` helper in
- *  router.ts so the desktop client patches its Calendar view in real
- *  time whether the change came from a human (HTTP) or an agent (CLI). */
-/** Visibility predicate for the agent CLI. Mirrors the REST helper but
- *  with one simplification: agents can't be company owners, so the
- *  owner-override branch never applies — the predicate collapses to the
- *  basic "public OR I am the author / assignee" form. Caller binds its
- *  participant id at `meIdx`. */
-function cliCalendarVisibilityClause(meIdx: number): string {
-  return `(is_private = false OR created_by = $${meIdx} OR assignee_id = $${meIdx})`
-}
-
-async function publishCalendarCli(args: {
-  companyId: string
-  kind: 'event.created' | 'event.updated' | 'event.deleted' | 'event.dispatched'
-  eventId: string
-  actorId: string
-  workspaceId?: string
-}): Promise<void> {
-  const workspaceId = args.workspaceId ?? (await pool.query<{ project_id: string }>(
-    `SELECT project_id FROM calendar_events WHERE id=$1 AND company_id=$2 LIMIT 1`,
-    [args.eventId, args.companyId],
-  )).rows[0]?.project_id
-  const { CH_CALENDAR_EVENTS, publish } = await import('../redis.js')
-  await publish(CH_CALENDAR_EVENTS, {
-    type: 'calendar.changed',
-    companyId: args.companyId,
-    workspaceId,
-    kind: args.kind,
-    eventId: args.eventId,
-    actorId: args.actorId,
-  })
-}
-
-/** Resolve the workspace inherited from an Agent OS turn. Direct developer
- * CLI calls intentionally fall back to the company's General workspace. */
+/** Resolve the explicit workspace inherited from an Agent OS turn. */
 async function resolveCliProjectId(companyId: string, requested?: string): Promise<string> {
-  const { rows } = await pool.query<{ id: string }>(
-    `SELECT id FROM projects
-      WHERE company_id=$1 AND status <> 'archived'
-        AND (($2::text IS NOT NULL AND id=$2) OR ($2::text IS NULL AND is_general=TRUE))
-      ORDER BY is_general DESC LIMIT 1`,
-    [companyId, requested ?? null],
-  )
-  if (!rows[0]) throw new Error('knowledge workspace is unavailable')
-  return rows[0].id
+  if (!requested) throw new Error('projectId is required')
+  const projectId = await findAvailableProjectId(pool, companyId, requested)
+  if (!projectId) throw new Error('knowledge workspace is unavailable')
+  return projectId
 }
 
-async function cmdCalendar(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
-  const op = parsed.positional[0] ?? 'list'
+const { cmdCalendar } = createCalendarCommand({
+  ok,
+  err,
+  agentCompany,
+  resolveCliProjectId,
+  tryClaimTenantWork,
+  releaseTenantWork,
+})
+async function cmdReact(parsed: ParsedArgs): Promise<CliResult> {
   const me = resolveAs(parsed)
   const companyId = await agentCompany(me)
   if (!companyId) return err(`unknown agent ${me} (no company)`)
-  const projectId = await resolveCliProjectId(companyId, internal.projectId)
-
-  if (!['list', 'create'].includes(op)) {
-    const eventId = parsed.positional[1]
-    if (eventId) {
-      const access = await pool.query(
-        `SELECT 1 FROM calendar_events WHERE id=$1 AND company_id=$2 AND project_id=$3 LIMIT 1`,
-        [eventId, companyId, projectId],
-      )
-      if (!access.rows[0]) return err(`no event ${eventId}`)
-    }
-  }
-
-  if (op === 'list') {
-    // Default scope: events assigned to `me` OR created by `me`. The
-    // `--all` flag widens to every event in the workspace (parity with
-    // the UI's "Workspace" filter).
-    const all = Boolean(parsed.flags.all)
-    const params: unknown[] = [companyId, me, projectId]
-    let where = `company_id = $1 AND project_id = $3`
-    if (all) {
-      // --all widens to the whole workspace, BUT we still hide private
-      // rows the caller isn't authorized to read. The default (narrow)
-      // path is already self-filtered via assignee_id/created_by.
-      where += ` AND ${cliCalendarVisibilityClause(2)}`
-    } else {
-      where += ` AND (assignee_id = $2 OR created_by = $2)`
-    }
-    if (parsed.flags.status) {
-      params.push(String(parsed.flags.status))
-      where += ` AND status = $${params.length}`
-    }
-    const { rows } = await pool.query<{
-      id: string; title: string; kind: string; status: string;
-      assignee_id: string | null; start_at: Date; recurrence: { freq: string; interval: number } | null;
-      target_conversation_id: string | null; is_private: boolean
-    }>(
-      `SELECT id, title, kind, status, assignee_id, start_at, recurrence,
-              target_conversation_id, is_private
-         FROM calendar_events WHERE ${where}
-         ORDER BY start_at ASC LIMIT 200`,
-      params,
-    )
-    if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-    if (rows.length === 0) return ok(`(no calendar events for ${me}${all ? ' [workspace]' : ''})`)
-    return ok([
-      `${rows.length} calendar event(s)${all ? ' in workspace' : ` for ${me}`}:`,
-      '',
-      ...rows.map((r) => {
-        const rep = r.recurrence ? `every ${r.recurrence.interval || 1} ${r.recurrence.freq}` : 'one-shot'
-        const who = r.assignee_id ? ` → @${r.assignee_id}` : ''
-        const lock = r.is_private ? ' 🔒' : ''
-        return `  [${r.status.padEnd(7)}] ${r.id.slice(0, 14).padEnd(15)} ${r.start_at.toISOString().slice(0, 16)} · ${rep}${who}${lock}  ${r.title}`
-      }),
-    ].join('\n'))
-  }
-
-  if (op === 'create') {
-    // usage: calendar create "<title>" --at <iso> [--assignee <id>] [--prompt "..."]
-    //                                  [--in <convo_id>] [--every daily|weekly|monthly|yearly]
-    //                                  [--interval N] [--byweekday 0,1,2] [--until <iso>] [--count N]
-    //                                  [--kind personal|agent_task]
-    const title = parsed.positional.slice(1).join(' ').trim()
-    if (!title) return err('usage: calendar create "<title>" --at <iso> [flags]')
-    const stableCalendarId = internal.idempotencyKey
-      ? `ce-agent-${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
-      : null
-    if (stableCalendarId) {
-      const { rows } = await pool.query(`SELECT 1 FROM calendar_events WHERE id=$1 AND company_id=$2 AND project_id=$3`, [stableCalendarId, companyId, projectId])
-      if (rows[0]) return ok(`scheduled ${stableCalendarId} [replayed]`)
-    }
-    const startStr = parsed.flags.at ? String(parsed.flags.at) : ''
-    if (!startStr) return err('--at <iso-timestamp> is required')
-    const start = new Date(startStr)
-    if (Number.isNaN(start.getTime())) return err(`invalid --at: ${startStr}`)
-    const assigneeId = parsed.flags.assignee ? String(parsed.flags.assignee) : null
-    const agentPrompt = parsed.flags.prompt ? String(parsed.flags.prompt) : null
-    const targetConvo = parsed.flags.in ? String(parsed.flags.in) : null
-    if (targetConvo) {
-      const target = await pool.query(
-        `SELECT 1 FROM conversations WHERE id=$1 AND company_id=$2 AND project_id=$3 LIMIT 1`,
-        [targetConvo, companyId, projectId],
-      )
-      if (!target.rows[0]) return err(`unknown conversation ${targetConvo} in this workspace`)
-    }
-    const kind = parsed.flags.kind === 'personal' ? 'personal' : (assigneeId || agentPrompt ? 'agent_task' : 'personal')
-    if (kind === 'agent_task' && !assigneeId) {
-      return err('agent_task events need an --assignee')
-    }
-    let recurrence: Record<string, unknown> | null = null
-    if (parsed.flags.every) {
-      const freq = String(parsed.flags.every)
-      if (!['daily', 'weekly', 'monthly', 'yearly'].includes(freq)) {
-        return err(`--every must be daily|weekly|monthly|yearly (got: ${freq})`)
-      }
-      const interval = parsed.flags.interval ? Math.max(1, Math.floor(Number(parsed.flags.interval))) : 1
-      const byweekday = parsed.flags.byweekday
-        ? String(parsed.flags.byweekday).split(',').map((s) => Number(s.trim())).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6)
-        : undefined
-      const until = parsed.flags.until ? String(parsed.flags.until) : null
-      const count = parsed.flags.count ? Math.floor(Number(parsed.flags.count)) : null
-      recurrence = { freq, interval, byweekday, until, count }
-    }
-    // Optional reminder. `--remind <minutes>` pairs with `--remind-channel
-    // toast|email|both` (defaults to toast). Either both flags or neither.
-    // --private hides this row from everyone in the workspace except its
-    // created_by (the calling agent) and assignee_id. Useful for personal
-    // reminders an agent sets for itself that would otherwise clutter the
-    // shared calendar.
-    const isPrivate = Boolean(parsed.flags.private)
-    let reminderMinutes: number | null = null
-    let reminderChannel: 'toast' | 'email' | 'both' | null = null
-    if (parsed.flags.remind !== undefined) {
-      const n = Math.floor(Number(parsed.flags.remind))
-      if (!Number.isFinite(n) || n < 0) return err(`--remind must be minutes (got: ${parsed.flags.remind})`)
-      reminderMinutes = n
-      const ch = parsed.flags['remind-channel'] ? String(parsed.flags['remind-channel']) : 'toast'
-      if (ch !== 'toast' && ch !== 'email' && ch !== 'both') {
-        return err(`--remind-channel must be toast|email|both (got: ${ch})`)
-      }
-      reminderChannel = ch
-    }
-
-    // Same two-layer anti-duplicate shape as `doc create`: an in-flight
-    // tenant claim against a CONCURRENT peer creating the same event, plus
-    // a recently-created check against a SEQUENTIAL duplicate (peer created
-    // it seconds ago and already released the claim). One team meeting
-    // scheduled twice is the calendar analog of the double-doc incident.
-    const calBlocked = await tryClaimTenantWork(companyId, me, 'calendar-create', title)
-    if (calBlocked) return calBlocked
-    try {
-      // Private events are exempt on BOTH sides: a private reminder is not
-      // shared work, and we must not leak another agent's private event
-      // title through a HELD envelope.
-      if (!isPrivate) {
-        const normTitle = normalizeWorkSubject(title)
-        const calHoldScope = `calendar-create:${normTitle}`
-        const forceArmed = Boolean(parsed.flags.force) && (await consumeHold(me, calHoldScope)).armed
-        if (!forceArmed) {
-          const { rows: recentDups } = await pool.query<{
-            id: string; title: string; created_by: string; created_at: Date
-          }>(
-            `SELECT id, title, created_by, created_at FROM calendar_events
-              WHERE company_id = $1 AND created_by <> $2 AND project_id = $3
-                AND status = 'active' AND is_private = FALSE
-                AND created_at > NOW() - INTERVAL '15 minutes'
-              ORDER BY created_at DESC LIMIT 50`,
-            [companyId, me, projectId],
-          )
-          const dup = recentDups.find((d) => normalizeWorkSubject(d.title) === normTitle)
-          if (dup) {
-            await recordHold(me, calHoldScope)
-            const ageSec = Math.max(1, Math.round((Date.now() - dup.created_at.getTime()) / 1000))
-            return err(
-              `HELD — event NOT created. ${dup.created_by} already scheduled "${dup.title}" (${dup.id}) ${ageSec}s ago — ` +
-              `this work is DONE; a second copy double-books everyone. ` +
-              `Inspect theirs instead: \`lingxiloop calendar list\` / \`lingxiloop calendar update ${dup.id} ...\` if it needs changes. ` +
-              `If you GENUINELY need a separate same-title event, rerun with --force ` +
-              `(--force only works after you've been shown this hold — passing it preemptively does nothing).`,
-              2,
-            )
-          }
-        }
-      }
-      const id = stableCalendarId ?? `ce-${randomUUID()}`
-      await pool.query(
-        `INSERT INTO calendar_events
-           (id, company_id, project_id, created_by, kind, title, assignee_id,
-            target_conversation_id, agent_prompt, start_at, recurrence,
-            reminder_minutes_before, reminder_channel, status, is_private)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,'active',$14)`,
-        [id, companyId, projectId, me, kind, title, assigneeId, targetConvo, agentPrompt, start,
-         recurrence ? JSON.stringify(recurrence) : null,
-         reminderMinutes, reminderChannel, isPrivate],
-      )
-      await publishCalendarCli({ companyId, kind: 'event.created', eventId: id, actorId: me })
-      return ok(`scheduled ${id}: "${title}" at ${start.toISOString()}${recurrence ? ` · every ${recurrence.interval} ${recurrence.freq}` : ''}${assigneeId ? ` → @${assigneeId}` : ''}${reminderMinutes != null ? ` · remind ${reminderMinutes}m before (${reminderChannel})` : ''}${isPrivate ? ' · 🔒 private' : ''}`, [{
-        event: 'calendar.event_created',
-        command: 'calendar create',
-        calendarEventId: id,
-        actorId: me,
-        companyId,
-        title,
-        kind,
-        assigneeId,
-        targetConversationId: targetConvo,
-        startAt: start.toISOString(),
-        recurrence,
-        reminderMinutesBefore: reminderMinutes,
-        reminderChannel,
-        visibleToUser: true,
-      }])
-    } finally {
-      await releaseTenantWork(companyId, me, 'calendar-create', title)
-    }
-  }
-
-  if (op === 'update' || op === 'edit') {
-    const id = parsed.positional[1]
-    if (!id) return err(`usage: calendar ${op} <event_id> [--title "..."] [--at <iso>] [--status active|cancelled|done] [flags]`)
-    // Privacy guard: same visibility rule as list. Callers who can't see
-    // the row can't modify it. The check is folded into the UPDATE so we
-    // don't pay an extra round trip.
-    {
-      const { rows } = await pool.query(
-        `SELECT 1 FROM calendar_events
-          WHERE id = $1 AND company_id = $2 AND ${cliCalendarVisibilityClause(3)}
-          LIMIT 1`,
-        [id, companyId, me],
-      )
-      if (!rows[0]) return err(`no event ${id}`)
-    }
-    const sets: string[] = []
-    const params: unknown[] = []
-    const push = (column: string, value: unknown) => {
-      params.push(value)
-      sets.push(`${column} = $${params.length}`)
-    }
-    if (parsed.flags.title !== undefined) {
-      const title = String(parsed.flags.title).trim().slice(0, 200)
-      if (!title) return err('--title cannot be empty')
-      push('title', title)
-    }
-    if (parsed.flags.description !== undefined) {
-      push('description', String(parsed.flags.description).slice(0, 4000) || null)
-    }
-    if (parsed.flags.kind !== undefined) {
-      const kind = String(parsed.flags.kind)
-      if (!['personal', 'agent_task'].includes(kind)) return err('--kind must be personal|agent_task')
-      push('kind', kind)
-    }
-    if (parsed.flags.assignee !== undefined) {
-      const assignee = String(parsed.flags.assignee).trim()
-      push('assignee_id', !assignee || assignee === 'null' || assignee === '-' ? null : assignee)
-    }
-    if (parsed.flags.prompt !== undefined) {
-      push('agent_prompt', String(parsed.flags.prompt).slice(0, 8000) || null)
-    }
-    if (parsed.flags.in !== undefined) {
-      const target = String(parsed.flags.in).trim()
-      push('target_conversation_id', !target || target === 'null' || target === '-' ? null : target)
-    }
-    if (parsed.flags.at !== undefined) {
-      const start = new Date(String(parsed.flags.at))
-      if (Number.isNaN(start.getTime())) return err(`invalid --at: ${parsed.flags.at}`)
-      push('start_at', start)
-    }
-    if (parsed.flags.end !== undefined) {
-      const raw = String(parsed.flags.end).trim()
-      if (!raw || raw === 'null' || raw === '-') push('end_at', null)
-      else {
-        const end = new Date(raw)
-        if (Number.isNaN(end.getTime())) return err(`invalid --end: ${raw}`)
-        push('end_at', end)
-      }
-    }
-    if (parsed.flags.status !== undefined) {
-      const status = String(parsed.flags.status)
-      if (!['active', 'cancelled', 'done'].includes(status)) return err('--status must be active|cancelled|done')
-      push('status', status)
-    }
-    if (parsed.flags.remind !== undefined) {
-      const raw = String(parsed.flags.remind).trim()
-      if (!raw || raw === 'null' || raw === '-') push('reminder_minutes_before', null)
-      else {
-        const n = Math.floor(Number(raw))
-        if (!Number.isFinite(n) || n < 0 || n > 14 * 24 * 60) return err(`--remind must be minutes in [0, 20160] (got: ${raw})`)
-        push('reminder_minutes_before', n)
-      }
-    }
-    if (parsed.flags['remind-channel'] !== undefined) {
-      const ch = String(parsed.flags['remind-channel']).trim()
-      if (!ch || ch === 'null' || ch === '-') push('reminder_channel', null)
-      else {
-        if (ch !== 'toast' && ch !== 'email' && ch !== 'both') return err('--remind-channel must be toast|email|both')
-        push('reminder_channel', ch)
-      }
-    }
-    // --private flips the row to private; --public flips it back. Either
-    // wins if both are passed; --private takes precedence (defensive).
-    if (parsed.flags.private !== undefined) push('is_private', true)
-    else if (parsed.flags.public !== undefined) push('is_private', false)
-    if (parsed.flags.every !== undefined || parsed.flags['clear-recurrence'] !== undefined) {
-      if (parsed.flags['clear-recurrence'] !== undefined) {
-        params.push(null)
-        sets.push(`recurrence = $${params.length}::jsonb`)
-      } else {
-        const freq = String(parsed.flags.every)
-        if (!['daily', 'weekly', 'monthly', 'yearly'].includes(freq)) {
-          return err(`--every must be daily|weekly|monthly|yearly (got: ${freq})`)
-        }
-        const interval = parsed.flags.interval ? Math.max(1, Math.floor(Number(parsed.flags.interval))) : 1
-        const byweekday = parsed.flags.byweekday
-          ? String(parsed.flags.byweekday).split(',').map((s) => Number(s.trim())).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6)
-          : undefined
-        const until = parsed.flags.until ? String(parsed.flags.until) : null
-        const count = parsed.flags.count ? Math.floor(Number(parsed.flags.count)) : null
-        params.push(JSON.stringify({ freq, interval, byweekday, until, count }))
-        sets.push(`recurrence = $${params.length}::jsonb`)
-      }
-    }
-    if (sets.length === 0) return err('nothing to update — pass at least one calendar field flag')
-    sets.push('updated_at = NOW()')
-    params.push(id, companyId)
-    const { rows } = await pool.query<{
-      id: string; title: string; kind: string; status: string;
-      assignee_id: string | null; target_conversation_id: string | null; start_at: Date
-    }>(
-      `UPDATE calendar_events SET ${sets.join(', ')}
-        WHERE id = $${params.length - 1} AND company_id = $${params.length}
-        RETURNING id, title, kind, status, assignee_id, target_conversation_id, start_at`,
-      params,
-    )
-    const row = rows[0]
-    if (!row) return err(`no event ${id}`)
-    await publishCalendarCli({ companyId, kind: 'event.updated', eventId: id, actorId: me })
-    return ok(`updated ${id}: "${row.title}" at ${row.start_at.toISOString()} (${row.status})`, [{
-      event: 'calendar.event_updated',
-      command: `calendar ${op}`,
-      calendarEventId: id,
-      actorId: me,
-      companyId,
-      title: row.title,
-      kind: row.kind,
-      status: row.status,
-      assigneeId: row.assignee_id,
-      targetConversationId: row.target_conversation_id,
-      startAt: row.start_at.toISOString(),
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'run-now') {
-    const id = parsed.positional[1]
-    if (!id) return err('usage: calendar run-now <event_id>')
-    // Privacy gate: only people who can see the row can dispatch it.
-    const { rows } = await pool.query(
-      `SELECT id,company_id,project_id,created_by,kind,title,description,assignee_id,
-              target_conversation_id, agent_prompt, start_at, end_at, all_day,
-              recurrence, status, last_fired_at,
-              reminder_minutes_before, reminder_channel,
-              is_private,
-              created_at, updated_at
-         FROM calendar_events
-        WHERE id = $1 AND company_id = $2 AND ${cliCalendarVisibilityClause(3)}`,
-      [id, companyId, me],
-    )
-    if (!rows[0]) return err(`no event ${id}`)
-    const { dispatchEvent } = await import('../calendar.js')
-    const result = await dispatchEvent(rows[0] as import('../calendar.js').CalendarEventRow, new Date())
-    await publishCalendarCli({ companyId, kind: 'event.dispatched', eventId: id, actorId: me })
-    return ok(`dispatched ${id}: ${JSON.stringify(result)}`, [{
-      event: 'calendar.event_dispatched',
-      command: 'calendar run-now',
-      calendarEventId: id,
-      actorId: me,
-      companyId,
-      result,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'dispatches') {
-    const id = parsed.positional[1]
-    if (!id) return err('usage: calendar dispatches <event_id>')
-    const { rows } = await pool.query<{
-      id: string; event_id: string; scheduled_for: Date; dispatched_at: Date;
-      status: string; conversation_id: string | null; message_id: string | null; error: string | null
-    }>(
-      `SELECT cd.id, cd.event_id, cd.scheduled_for, cd.dispatched_at, cd.status,
-              cd.conversation_id, cd.message_id, cd.error
-         FROM calendar_dispatches cd
-         JOIN calendar_events ce ON ce.id = cd.event_id
-        WHERE cd.event_id = $1 AND ce.company_id = $2
-        ORDER BY cd.scheduled_for DESC LIMIT 200`,
-      [id, companyId],
-    )
-    if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-    if (rows.length === 0) return ok(`(no dispatches for ${id})`)
-    return ok([
-      `${rows.length} dispatch(es) for ${id}:`,
-      '',
-      ...rows.map((r) =>
-        `  [${r.status}] ${r.scheduled_for.toISOString()} → ${r.conversation_id ?? '-'} ${r.message_id ?? ''}${r.error ? ` · ${r.error}` : ''}`,
-      ),
-    ].join('\n'))
-  }
-
-  if (op === 'cancel' || op === 'delete') {
-    const id = parsed.positional[1]
-    if (!id) return err(`usage: calendar ${op} <event_id>`)
-    // Visibility guard folded into the WHERE clause: rowCount === 0 maps
-    // to "no event found" regardless of whether the row is missing or
-    // privacy-filtered, so we don't leak existence to non-authorized
-    // callers.
-    const r = await pool.query(
-      op === 'delete'
-        ? `DELETE FROM calendar_events
-            WHERE id = $1 AND company_id = $2 AND ${cliCalendarVisibilityClause(3)}`
-        : `UPDATE calendar_events SET status = 'cancelled', updated_at = NOW()
-            WHERE id = $1 AND company_id = $2 AND ${cliCalendarVisibilityClause(3)}`,
-      [id, companyId, me],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`no event ${id}`)
-    // `cancel` flips status → updated; `delete` drops the row → deleted.
-    // Clients listening on calendar.changed will refetch (or drop the row
-    // from local state) accordingly.
-    await publishCalendarCli({
-      companyId,
-      workspaceId: projectId,
-      kind: op === 'delete' ? 'event.deleted' : 'event.updated',
-      eventId: id,
-      actorId: me,
-    })
-    return ok(`${op === 'delete' ? 'deleted' : 'cancelled'} ${id}`, [{
-      event: op === 'delete' ? 'calendar.event_deleted' : 'calendar.event_cancelled',
-      command: `calendar ${op}`,
-      calendarEventId: id,
-      actorId: me,
-      companyId,
-      visibleToUser: true,
-    }])
-  }
-
-  return err(`usage: calendar <list|create|update|run-now|dispatches|cancel|delete> [...]`)
+  const channelId = parsed.positional[0]
+  const messageId = parsed.positional[1]
+  const emoji = parsed.positional[2]
+  if (!channelId || !messageId || !emoji) return err('usage: react <conversation_id> <message_id> <emoji>')
+  const result = await toggleAgentChannelReaction({ companyId, agentId: me, channelId, messageId, emoji })
+  if (result.kind === 'channel_not_found') return err(`unknown authoritative channel ${channelId}`)
+  if (result.kind === 'message_not_found') return err(`message ${messageId} not found in ${channelId}`)
+  const aggregate = result.reactions.find((reaction) => reaction.emoji === emoji)
+  const action = aggregate?.users.includes(me) ? 'added' : 'removed'
+  return ok(`${action} ${emoji} on ${messageId}`, [{
+    event: 'reaction.updated',
+    command: 'react',
+    visibleToUser: true,
+    actorId: me,
+    conversationId: channelId,
+    messageId,
+    emoji,
+    action,
+  }])
 }
-
-/* ============== kanban boards ==============
- *
- * Same shape as the rest of this file: the agent operates as `me` (the
- * --as participant) inside that participant's tenant. All inserts /
- * updates publish on the `boards` channel so the desktop client + every
- * other connected member sees the change in real time. */
-
-type KanbanMentionTarget = { id: string; name: string }
-
-function cliMentionStartBoundary(text: string, index: number): boolean {
-  if (index <= 0) return true
-  return !/[\w@]/.test(text[index - 1])
-}
-
-function cliMentionEndBoundary(text: string, index: number): boolean {
-  const next = text[index]
-  return !next || !/[a-z0-9_-]/i.test(next)
-}
-
-function cliParseMentionTargets(text: string, targets: KanbanMentionTarget[]): string[] {
-  if (!text) return []
-  const out: string[] = []
-  const seen = new Set<string>()
-  const candidates = targets
-    .flatMap((p) => [
-      { id: p.id, token: p.id },
-      { id: p.id, token: p.name.trim() },
-    ])
-    .filter((candidate) => candidate.token.length > 0)
-    .sort((a, b) => b.token.length - a.token.length)
-  const lower = text.toLowerCase()
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] !== '@' || !cliMentionStartBoundary(text, i)) continue
-    const rest = lower.slice(i + 1)
-    const match = candidates.find((candidate) =>
-      rest.startsWith(candidate.token.toLowerCase()) &&
-      cliMentionEndBoundary(text, i + 1 + candidate.token.length)
-    )
-    const fallback = match ? null : /^@([a-z0-9][a-z0-9_-]{0,63})/i.exec(text.slice(i))
-    const id = match?.id ?? fallback?.[1]?.toLowerCase()
-    if (!id) continue
-    if (id === 'all') continue
-    if (seen.has(id)) continue
-    seen.add(id)
-    out.push(id)
-    i += (match ? match.token.length : fallback![0].length - 1)
-  }
-  return out
-}
-
-/** Same parsing contract as the REST router uses — keep them aligned so an
- *  agent's `card add` and a human's card form parse mentions the same. */
-async function cliParseMentions(companyId: string, text: string): Promise<string[]> {
-  const { rows } = await pool.query<KanbanMentionTarget>(
-    `SELECT id, name
-       FROM participants
-      WHERE company_id = $1
-        AND departed_at IS NULL`,
-    [companyId],
-  )
-  return cliParseMentionTargets(text, rows)
-}
-
-async function publishBoardCli(args: {
-  companyId: string
-  kind:
-    | 'board.created' | 'board.updated' | 'board.deleted'
-    | 'column.created' | 'column.updated' | 'column.deleted'
-    | 'card.created' | 'card.updated' | 'card.moved' | 'card.deleted'
-    | 'comment.created' | 'comment.deleted'
-  boardId: string
-  cardId?: string
-  columnId?: string
-  commentId?: string
-  mentions?: string[]
-  actorId: string
-  workspaceId?: string
-}): Promise<void> {
-  const workspaceId = args.workspaceId ?? (await pool.query<{ project_id: string }>(
-    `SELECT project_id FROM boards WHERE id=$1 AND company_id=$2 LIMIT 1`,
-    [args.boardId, args.companyId],
-  )).rows[0]?.project_id
-  const { CH_BOARDS, publish } = await import('../redis.js')
-  await publish(CH_BOARDS, {
-    type: 'board.changed',
-    companyId: args.companyId,
-    workspaceId,
-    kind: args.kind,
-    boardId: args.boardId,
-    cardId: args.cardId,
-    columnId: args.columnId,
-    commentId: args.commentId,
-    mentions: args.mentions,
-    actorId: args.actorId,
-  })
-}
-
-/** Same shape + intent as the REST helper: wake every agent in
- *  `mentions` who lives in `companyId` and isn't the actor. Best-effort. */
-async function wakeMentionedAgentsCli(args: {
-  companyId: string
-  mentions: string[] | undefined
-  actorId: string
-}): Promise<void> {
-  // This function is invoked as `void wakeMentionedAgentsCli(...)` from
-  // CLI command handlers (kanban/card/doc/calendar). Any throw here
-  // becomes an unhandled rejection on the lingxiloop-server process. Wrap
-  // the whole body so a transient pool.query failure can't crash the
-  // server — the CLI command itself has already succeeded; the wakes
-  // are a best-effort side effect.
-  try {
-    if (!args.mentions || args.mentions.length === 0) return
-    const targets = args.mentions.filter((id) => id !== args.actorId)
-    if (targets.length === 0) return
-    const { rows } = await pool.query<{ id: string }>(
-      `SELECT id FROM participants
-        WHERE kind = 'agent'
-          AND company_id = $1
-          AND id = ANY($2::text[])
-          AND departed_at IS NULL`,
-      [args.companyId, targets],
-    )
-    if (rows.length === 0) return
-    for (const r of rows) {
-      enqueueAgentWork({ companyId: args.companyId, agentId: r.id, reason: 'mention' }).catch((e) => {
-        console.warn(`[kanban-cli] wake ${r.id} failed`, e instanceof Error ? e.message : e)
-      })
-    }
-  } catch (err) {
-    console.warn('[kanban-cli] wakeMentionedAgentsCli failed:', err instanceof Error ? err.message : err)
-  }
-}
-
-async function cmdBoard(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
-  const op = parsed.positional[0] ?? 'ls'
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-  const projectId = await resolveCliProjectId(companyId, internal.projectId)
-
-  if (!['ls', 'list', 'create', 'new'].includes(op)) {
-    const boardId = parsed.positional[1]
-    if (boardId) {
-      const access = await pool.query(
-        `SELECT 1 FROM boards WHERE id=$1 AND company_id=$2 AND project_id=$3 LIMIT 1`,
-        [boardId, companyId, projectId],
-      )
-      if (!access.rows[0]) return err(`board ${boardId} not found`)
-    }
-  }
-
-  if (op === 'ls' || op === 'list') {
-    const { rows } = await pool.query<{
-      id: string; title: string; description: string | null; updated_at: string
-    }>(
-      `SELECT id, title, description, updated_at FROM boards
-        WHERE company_id = $1 AND project_id = $2 ORDER BY updated_at DESC`,
-      [companyId, projectId],
-    )
-    if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-    if (rows.length === 0) return ok(`(no boards in this workspace)`)
-    return ok([
-      `${rows.length} board(s):`,
-      '',
-      ...rows.map((b) => `  ${b.id.padEnd(20)} ${b.title}`),
-    ].join('\n'))
-  }
-
-  if (op === 'show' || op === 'view') {
-    const boardId = parsed.positional[1]
-    if (!boardId) return err('usage: kanban show <board_id>')
-    const b = await pool.query<{
-      id: string; title: string; description: string | null; company_id: string
-    }>(`SELECT id, title, description, company_id FROM boards WHERE id = $1 LIMIT 1`, [boardId])
-    if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
-    const cols = await pool.query<{
-      id: string; title: string; position: number
-    }>(`SELECT id, title, position FROM board_columns WHERE board_id = $1 ORDER BY position ASC`, [boardId])
-    const cards = await pool.query<{
-      id: string; column_id: string; title: string; assignee_id: string | null
-      mentions: string[]; position: number
-    }>(
-      `SELECT id, column_id, title, assignee_id, mentions, position
-         FROM board_cards WHERE board_id = $1 ORDER BY column_id, position ASC`,
-      [boardId],
-    )
-    if (parsed.flags.json) {
-      return ok(JSON.stringify({
-        board: b.rows[0], columns: cols.rows, cards: cards.rows,
-      }, null, 2))
-    }
-    const cardsByCol = new Map<string, typeof cards.rows>()
-    for (const c of cards.rows) {
-      const arr = cardsByCol.get(c.column_id) ?? []
-      arr.push(c); cardsByCol.set(c.column_id, arr)
-    }
-    const lines: string[] = [`# ${b.rows[0].title}  (${b.rows[0].id})`]
-    if (b.rows[0].description) lines.push(b.rows[0].description)
-    for (const col of cols.rows) {
-      const list = cardsByCol.get(col.id) ?? []
-      lines.push('', `## ${col.title}  (${col.id})  · ${list.length} card(s)`)
-      for (const c of list) {
-        const who = c.assignee_id ? `@${c.assignee_id}` : '(unassigned)'
-        const mentions = Array.isArray(c.mentions) && c.mentions.length > 0
-          ? `  · mentions: ${c.mentions.map((m) => '@' + m).join(' ')}`
-          : ''
-        lines.push(`  - ${c.id.padEnd(20)} ${who.padEnd(16)} ${c.title}${mentions}`)
-      }
-    }
-    return ok(lines.join('\n'))
-  }
-
-  if (op === 'create' || op === 'new') {
-    const title = parsed.positional.slice(1).join(' ').trim()
-      || (typeof parsed.flags.title === 'string' ? parsed.flags.title : '')
-    if (!title) return err('usage: kanban create "<title>" [--description "..."]')
-    const stableBoardId = internal.idempotencyKey
-      ? `board-agent-${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
-      : null
-    if (stableBoardId) {
-      const { rows } = await pool.query(`SELECT 1 FROM boards WHERE id=$1 AND company_id=$2 AND project_id=$3`, [stableBoardId, companyId, projectId])
-      if (rows[0]) return ok(`created board ${stableBoardId}: ${title} [replayed]`)
-    }
-    const description = typeof parsed.flags.description === 'string'
-      ? unescapeChat(parsed.flags.description).slice(0, 4000) : null
-    const id = stableBoardId ?? `board-${randomUUID().slice(0, 12)}`
-    const client = await pool.connect()
-    try {
-      await client.query('BEGIN')
-      await client.query(
-        `INSERT INTO boards (id, company_id, project_id, title, description, created_by) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [id, companyId, projectId, title.slice(0, 200), description, me],
-      )
-      const seeds = ['Todo', 'Doing', 'Done']
-      for (let i = 0; i < seeds.length; i++) {
-        await client.query(
-          `INSERT INTO board_columns (id, board_id, title, position) VALUES ($1, $2, $3, $4)`,
-          [stableBoardId ? `col-agent-${createHash('sha256').update(`${internal.idempotencyKey}:${i}`).digest('hex').slice(0, 24)}` : `col-${randomUUID().slice(0, 12)}`, id, seeds[i], (i + 1) * 1000],
-        )
-      }
-      await client.query('COMMIT')
-    } catch (e) {
-      await client.query('ROLLBACK').catch(() => { /* swallow */ })
-      throw e
-    } finally {
-      client.release()
-    }
-    await publishBoardCli({ companyId, kind: 'board.created', boardId: id, actorId: me })
-    return ok(`created board ${id}: ${title}`, [{
-      event: 'kanban.board_created',
-      command: 'kanban create',
-      boardId: id,
-      actorId: me,
-      companyId,
-      title,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'rename' || op === 'edit' || op === 'update') {
-    const boardId = parsed.positional[1]
-    if (!boardId) return err(`usage: kanban ${op} <board_id> --title "..." [--description "..."]`)
-    const b = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM boards WHERE id = $1 LIMIT 1`,
-      [boardId],
-    )
-    if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
-    const sets: string[] = []
-    const params: unknown[] = []
-    let nextTitle: string | undefined
-    if (typeof parsed.flags.title === 'string' || parsed.positional.length > 2) {
-      nextTitle = (typeof parsed.flags.title === 'string'
-        ? unescapeChat(parsed.flags.title)
-        : parsed.positional.slice(2).join(' ')).trim().slice(0, 200)
-      if (!nextTitle) return err('--title cannot be empty')
-      params.push(nextTitle); sets.push(`title = $${params.length}`)
-    }
-    let nextDescription: string | null | undefined
-    if (typeof parsed.flags.description === 'string') {
-      nextDescription = unescapeChat(parsed.flags.description).trim().slice(0, 4000) || null
-      params.push(nextDescription); sets.push(`description = $${params.length}`)
-    }
-    if (sets.length === 0) return err('nothing to update — pass --title or --description')
-    params.push(boardId, companyId)
-    const { rows } = await pool.query<{ title: string; description: string | null }>(
-      `UPDATE boards SET ${sets.join(', ')}, updated_at = NOW()
-        WHERE id = $${params.length - 1} AND company_id = $${params.length}
-        RETURNING title, description`,
-      params,
-    )
-    if (rows.length === 0) return err(`board ${boardId} not found`)
-    await publishBoardCli({ companyId, kind: 'board.updated', boardId, actorId: me })
-    return ok(`updated board ${boardId}: ${rows[0].title}`, [{
-      event: 'kanban.board_updated',
-      command: `kanban ${op}`,
-      boardId,
-      actorId: me,
-      companyId,
-      title: rows[0].title,
-      description: rows[0].description,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'columns' || op === 'cols') {
-    const boardId = parsed.positional[1]
-    if (!boardId) return err('usage: kanban columns <board_id>')
-    const b = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM boards WHERE id = $1 LIMIT 1`, [boardId],
-    )
-    if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
-    const { rows } = await pool.query<{ id: string; title: string }>(
-      `SELECT id, title FROM board_columns WHERE board_id = $1 ORDER BY position ASC`,
-      [boardId],
-    )
-    if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-    return ok(rows.map((c) => `  ${c.id.padEnd(20)} ${c.title}`).join('\n') || '(no columns)')
-  }
-
-  if (op === 'add-column' || op === 'add-col') {
-    const boardId = parsed.positional[1]
-    const title = parsed.positional.slice(2).join(' ').trim()
-    if (!boardId || !title) return err('usage: kanban add-column <board_id> "<title>"')
-    const b = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM boards WHERE id = $1 LIMIT 1`, [boardId],
-    )
-    if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
-    const { rows: posRows } = await pool.query<{ max: number | null }>(
-      `SELECT MAX(position) AS max FROM board_columns WHERE board_id = $1`, [boardId],
-    )
-    const position = (Number(posRows[0]?.max ?? 0)) + 1000
-    const id = `col-${randomUUID().slice(0, 12)}`
-    await pool.query(
-      `INSERT INTO board_columns (id, board_id, title, position) VALUES ($1, $2, $3, $4)`,
-      [id, boardId, title.slice(0, 100), position],
-    )
-    await publishBoardCli({ companyId, kind: 'column.created', boardId, columnId: id, actorId: me })
-    return ok(`added column ${id}: ${title}`, [{
-      event: 'kanban.column_created',
-      command: 'kanban add-column',
-      boardId,
-      columnId: id,
-      actorId: me,
-      companyId,
-      title,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'edit-column' || op === 'rename-column' || op === 'update-column') {
-    const boardId = parsed.positional[1]
-    const columnId = parsed.positional[2]
-    if (!boardId || !columnId) {
-      return err(`usage: kanban ${op} <board_id> <column_id> [--title "..."] [--position N]`)
-    }
-    const b = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM boards WHERE id = $1 LIMIT 1`,
-      [boardId],
-    )
-    if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
-    const sets: string[] = []
-    const params: unknown[] = []
-    if (typeof parsed.flags.title === 'string' || parsed.positional.length > 3) {
-      const title = (typeof parsed.flags.title === 'string'
-        ? unescapeChat(parsed.flags.title)
-        : parsed.positional.slice(3).join(' ')).trim().slice(0, 100)
-      if (!title) return err('--title cannot be empty')
-      params.push(title); sets.push(`title = $${params.length}`)
-    }
-    if (parsed.flags.position !== undefined) {
-      const position = Number(parsed.flags.position)
-      if (!Number.isFinite(position)) return err(`invalid --position: ${parsed.flags.position}`)
-      params.push(position); sets.push(`position = $${params.length}`)
-    }
-    if (sets.length === 0) return err('nothing to update — pass --title or --position')
-    params.push(columnId, boardId)
-    const { rows } = await pool.query<{ title: string; position: number }>(
-      `UPDATE board_columns SET ${sets.join(', ')}
-        WHERE id = $${params.length - 1} AND board_id = $${params.length}
-        RETURNING title, position`,
-      params,
-    )
-    if (rows.length === 0) return err(`column ${columnId} not in board ${boardId}`)
-    await publishBoardCli({ companyId, kind: 'column.updated', boardId, columnId, actorId: me })
-    return ok(`updated column ${columnId}: ${rows[0].title}`, [{
-      event: 'kanban.column_updated',
-      command: `kanban ${op}`,
-      boardId,
-      columnId,
-      actorId: me,
-      companyId,
-      title: rows[0].title,
-      position: rows[0].position,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'delete-column' || op === 'rm-column') {
-    const boardId = parsed.positional[1]
-    const columnId = parsed.positional[2]
-    if (!boardId || !columnId) return err(`usage: kanban ${op} <board_id> <column_id>`)
-    const b = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM boards WHERE id = $1 LIMIT 1`,
-      [boardId],
-    )
-    if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
-    const r = await pool.query(
-      `DELETE FROM board_columns WHERE id = $1 AND board_id = $2`,
-      [columnId, boardId],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`column ${columnId} not in board ${boardId}`)
-    await publishBoardCli({ companyId, kind: 'column.deleted', boardId, columnId, actorId: me })
-    return ok(`deleted column ${columnId}`, [{
-      event: 'kanban.column_deleted',
-      command: `kanban ${op}`,
-      boardId,
-      columnId,
-      actorId: me,
-      companyId,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'delete' || op === 'rm') {
-    const boardId = parsed.positional[1]
-    if (!boardId) return err('usage: kanban delete <board_id>')
-    const r = await pool.query(
-      `DELETE FROM boards WHERE id = $1 AND company_id = $2`,
-      [boardId, companyId],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`board ${boardId} not found`)
-    await publishBoardCli({ companyId, workspaceId: projectId, kind: 'board.deleted', boardId, actorId: me })
-    return ok(`deleted board ${boardId}`, [{
-      event: 'kanban.board_deleted',
-      command: 'kanban delete',
-      boardId,
-      actorId: me,
-      companyId,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'mentions') {
-    // Who @-mentioned me on a kanban (cards + comments) since I last
-    // checked? Reads the read-cursor in board_mention_reads, returns
-    // the unread set, and (unless --peek) advances the cursor to NOW
-    // so the next call only shows what's truly new.
-    const peek = Boolean(parsed.flags.peek)
-    const { rows: cur } = await pool.query<{ last_read_at: string }>(
-      `SELECT last_read_at FROM board_mention_reads WHERE user_id = $1 LIMIT 1`,
-      [me],
-    )
-    const since = cur[0]?.last_read_at ?? '1970-01-01T00:00:00Z'
-    const cardsR = await pool.query<{
-      id: string; board_id: string; column_id: string; title: string
-      updated_at: string; created_by: string
-      board_title: string
-    }>(
-      `SELECT c.id, c.board_id, c.column_id, c.title, c.updated_at, c.created_by,
-              b.title AS board_title
-         FROM board_cards c
-         JOIN boards b ON b.id = c.board_id
-        WHERE b.company_id = $1
-          AND c.updated_at > $2
-          AND c.mentions @> to_jsonb($3::text)
-        ORDER BY c.updated_at DESC
-        LIMIT 50`,
-      [companyId, since, me],
-    )
-    const commentsR = await pool.query<{
-      id: string; card_id: string; body: string; author_id: string
-      created_at: string; board_id: string; card_title: string; board_title: string
-    }>(
-      `SELECT cm.id, cm.card_id, cm.body, cm.author_id, cm.created_at,
-              c.board_id, c.title AS card_title, b.title AS board_title
-         FROM board_card_comments cm
-         JOIN board_cards c ON c.id = cm.card_id
-         JOIN boards b ON b.id = c.board_id
-        WHERE b.company_id = $1
-          AND cm.created_at > $2
-          AND cm.mentions @> to_jsonb($3::text)
-        ORDER BY cm.created_at DESC
-        LIMIT 50`,
-      [companyId, since, me],
-    )
-
-    if (!peek) {
-      await pool.query(
-        `INSERT INTO board_mention_reads (user_id, last_read_at)
-         VALUES ($1, NOW())
-         ON CONFLICT (user_id) DO UPDATE SET last_read_at = NOW()`,
-        [me],
-      )
-    }
-
-    if (parsed.flags.json) {
-      return ok(JSON.stringify({
-        since, cards: cardsR.rows, comments: commentsR.rows,
-      }, null, 2))
-    }
-    if (cardsR.rows.length === 0 && commentsR.rows.length === 0) {
-      return ok(`(no new kanban @-mentions for ${me} since ${since})`)
-    }
-    const lines: string[] = [
-      `${cardsR.rows.length + commentsR.rows.length} new kanban @-mention(s) for ${me}:`,
-    ]
-    if (cardsR.rows.length > 0) {
-      lines.push('', '--- cards ---')
-      for (const c of cardsR.rows) {
-        lines.push(`  ${c.id}  [${c.board_title} / ${c.column_id}]  ${c.title}  · by ${c.created_by} at ${c.updated_at}`)
-      }
-    }
-    if (commentsR.rows.length > 0) {
-      lines.push('', '--- comments ---')
-      for (const cm of commentsR.rows) {
-        lines.push(`  ${cm.id}  on card ${cm.card_id} [${cm.board_title}]  · by ${cm.author_id} at ${cm.created_at}`)
-        lines.push(`    "${cm.body.replace(/\n/g, ' ').slice(0, 200)}"`)
-      }
-    }
-    if (!peek) lines.push('', `(read cursor advanced — next call shows only newer mentions; use --peek to keep it)`)
-    return ok(lines.join('\n'))
-  }
-
-  return err(`usage: kanban <ls|show|create|rename|columns|add-column|edit-column|delete-column|delete|mentions> [...]`)
-}
-
-/** `lingxiloop claim "<unit of work>"` / `lingxiloop unclaim "..."` — the GENERIC, atomic,
- *  exclusive claim (the #1 primitive for
- *  non-divergent collaboration). Before doing any non-trivial unit a peer could
- *  also pick up — running an activity/game, producing a shared deliverable, taking
- *  a phase — CLAIM it. Exactly one agent wins (Redis HSETNX is the atomic gate);
- *  everyone else is told who holds it and to move on. Content-agnostic; coordinate
- *  by giving the SAME unit the SAME name. `--in <convo>` scopes it to a conversation
- *  (so the same name in different rooms doesn't collide); otherwise it's company-wide. */
-async function cmdClaim(parsed: ParsedArgs, mode: 'claim' | 'unclaim'): Promise<CliResult> {
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-  const key = (parsed.positional[0] ?? '').trim()
-  if (!key) return err(`usage: ${mode} "<what you're claiming>" [--in <conversation_id>]${mode === 'claim' ? ' [--ttl <seconds>]' : ''}`)
-  const _convo = typeof parsed.flags['in'] === 'string' ? parsed.flags['in'] : null
-  // The generic string-lock is GONE. A generic conversation/activity claim is
-  // exactly what let agents reserve a counting slot ("claim count-8") and then
-  // sleep-wait for it — both slow and wrong. The only claim that should exist
-  // is a task-claim on a real unit of work. So claiming a
-  // turn / game slot / activity no longer grants a lock: just post the real next
-  // item; the server HOLDs your reply and shows you the newer messages if a peer
-  // moved the room. For a shared DELIVERABLE a peer could duplicate (one doc, one
-  // plan), use a board CARD (`lingxiloop card claim`). unclaim is a harmless no-op.
-  if (mode === 'unclaim') {
-    return ok(`ok — nothing to release. LingxiLoop no longer uses generic claims; just post, the server settles races.`)
-  }
-  return err(
-    `Claiming a turn / game slot / activity is not a thing anymore. ` +
-    `Do NOT reserve a position and wait for it. Read the latest posts and send the REAL next item (\`lingxiloop reply\`); ` +
-    `if a peer moved the room while you composed, the reply comes back HELD with the newer messages — re-read and resend. ` +
-    `That IS the coordination. The only claim that exists is for a genuine shared DELIVERABLE on the board: \`lingxiloop card claim <cardId>\`.`,
-  )
-}
-
-async function cmdCard(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
-  const op = parsed.positional[0] ?? 'ls'
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-  const projectId = await resolveCliProjectId(companyId, internal.projectId)
-
-  /** Look up the boardId behind a cardId AND verify it's in our tenant.
-   *  Returns null if the card doesn't exist or is cross-tenant. */
-  async function resolveCardBoard(cardId: string): Promise<{ boardId: string; columnId: string } | null> {
-    const r = await pool.query<{ board_id: string; column_id: string; company_id: string }>(
-      `SELECT c.board_id, c.column_id, b.company_id
-         FROM board_cards c JOIN boards b ON b.id = c.board_id
-        WHERE c.id = $1 AND b.project_id = $2 LIMIT 1`,
-      [cardId, projectId],
-    )
-    if (r.rows.length === 0 || r.rows[0].company_id !== companyId) return null
-    return { boardId: r.rows[0].board_id, columnId: r.rows[0].column_id }
-  }
-
-  if (op === 'ls' || op === 'list') {
-    const boardId = parsed.positional[1]
-    if (!boardId) return err('usage: card ls <board_id>')
-    const b = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM boards WHERE id = $1 AND project_id = $2 LIMIT 1`, [boardId, projectId],
-    )
-    if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
-    const { rows } = await pool.query<{
-      id: string; column_id: string; title: string; assignee_id: string | null
-      mentions: string[]
-    }>(
-      `SELECT id, column_id, title, assignee_id, mentions
-         FROM board_cards WHERE board_id = $1 ORDER BY column_id, position ASC`,
-      [boardId],
-    )
-    if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-    if (rows.length === 0) return ok('(no cards)')
-    return ok(rows.map((c) => {
-      const who = c.assignee_id ? `@${c.assignee_id}` : '(unassigned)'
-      return `  ${c.id.padEnd(20)} [${c.column_id.slice(0, 16).padEnd(16)}] ${who.padEnd(16)} ${c.title}`
-    }).join('\n'))
-  }
-
-  if (op === 'show') {
-    const cardId = parsed.positional[1]
-    if (!cardId) return err('usage: card show <card_id>')
-    const r = await pool.query<{
-      id: string; board_id: string; column_id: string; title: string
-      description: string | null; assignee_id: string | null; mentions: string[]
-      created_by: string; created_at: string; updated_at: string; company_id: string
-    }>(
-      `SELECT c.id, c.board_id, c.column_id, c.title, c.description,
-              c.assignee_id, c.mentions, c.created_by, c.created_at, c.updated_at,
-              b.company_id
-         FROM board_cards c JOIN boards b ON b.id = c.board_id
-        WHERE c.id = $1 AND b.project_id = $2 LIMIT 1`,
-      [cardId, projectId],
-    )
-    if (r.rows.length === 0 || r.rows[0].company_id !== companyId) return err(`card ${cardId} not found`)
-    const c = r.rows[0]
-    const comments = await pool.query<{
-      id: string; author_id: string; body: string; created_at: string
-    }>(
-      `SELECT id, author_id, body, created_at
-         FROM board_card_comments WHERE card_id = $1 ORDER BY created_at ASC`,
-      [cardId],
-    )
-    if (parsed.flags.json) return ok(JSON.stringify({ card: c, comments: comments.rows }, null, 2))
-    const lines = [
-      `# ${c.title}  (${c.id})`,
-      `  board:    ${c.board_id}`,
-      `  column:   ${c.column_id}`,
-      `  assignee: ${c.assignee_id ?? '(unassigned)'}`,
-      `  created:  ${c.created_at}  by ${c.created_by}`,
-    ]
-    if (Array.isArray(c.mentions) && c.mentions.length > 0) {
-      lines.push(`  mentions: ${c.mentions.map((m) => '@' + m).join(' ')}`)
-    }
-    if (c.description) lines.push('', c.description)
-    if (comments.rows.length > 0) {
-      lines.push('', `--- ${comments.rows.length} comment(s) ---`)
-      for (const cm of comments.rows) {
-        lines.push(`  ${cm.created_at}  ${cm.author_id}: ${cm.body}`)
-      }
-    }
-    return ok(lines.join('\n'))
-  }
-
-  if (op === 'add' || op === 'create') {
-    const boardId = parsed.positional[1]
-    const title = parsed.positional.slice(2).join(' ').trim()
-      || (typeof parsed.flags.title === 'string' ? parsed.flags.title : '')
-    if (!boardId || !title) {
-      return err('usage: card add <board_id> "<title>" --column <col_id> [--description "..."] [--assign <id>]')
-    }
-    const columnId = String(parsed.flags.column ?? parsed.flags.col ?? '').trim()
-    if (!columnId) return err('--column <col_id> required (run `lingxiloop kanban columns <board_id>` to list)')
-    const b = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM boards WHERE id = $1 AND project_id = $2 LIMIT 1`, [boardId, projectId],
-    )
-    if (b.rows.length === 0 || b.rows[0].company_id !== companyId) return err(`board ${boardId} not found`)
-    const colCheck = await pool.query(
-      `SELECT 1 FROM board_columns WHERE id = $1 AND board_id = $2 LIMIT 1`,
-      [columnId, boardId],
-    )
-    if (colCheck.rows.length === 0) return err(`column ${columnId} not in board ${boardId}`)
-    const description = typeof parsed.flags.description === 'string'
-      ? unescapeChat(parsed.flags.description).slice(0, 8000) : null
-    const assignee = typeof parsed.flags.assign === 'string'
-      ? String(parsed.flags.assign).trim() : null
-    const { rows: posRows } = await pool.query<{ max: number | null }>(
-      `SELECT MAX(position) AS max FROM board_cards WHERE column_id = $1`, [columnId],
-    )
-    const position = (Number(posRows[0]?.max ?? 0)) + 1000
-    const mentions = await cliParseMentions(companyId, `${title}\n${description ?? ''}`)
-    const id = `card-${randomUUID().slice(0, 12)}`
-    await pool.query(
-      `INSERT INTO board_cards
-         (id, board_id, column_id, title, description, position, assignee_id, mentions, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)`,
-      [id, boardId, columnId, title.slice(0, 200), description, position, assignee, JSON.stringify(mentions), me],
-    )
-    await pool.query(`UPDATE boards SET updated_at = NOW() WHERE id = $1`, [boardId])
-    await publishBoardCli({
-      companyId, kind: 'card.created', boardId, cardId: id, columnId, mentions, actorId: me,
-    })
-    void wakeMentionedAgentsCli({ companyId, mentions, actorId: me })
-    if (assignee && assignee !== me) {
-      void wakeMentionedAgentsCli({ companyId, mentions: [assignee], actorId: me })
-    }
-    return ok(`added card ${id}: ${title}${mentions.length > 0 ? `  · mentions: ${mentions.map((m) => '@' + m).join(' ')}` : ''}`, [{
-      event: 'kanban.card_created',
-      command: 'card add',
-      boardId,
-      cardId: id,
-      columnId,
-      actorId: me,
-      companyId,
-      assigneeId: assignee,
-      mentions,
-      title,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'move') {
-    const cardId = parsed.positional[1]
-    const toCol = String(parsed.flags.to ?? parsed.flags.column ?? parsed.flags.col ?? '').trim()
-    if (!cardId || !toCol) return err('usage: card move <card_id> --to <column_id>')
-    const home = await resolveCardBoard(cardId)
-    if (!home) return err(`card ${cardId} not found`)
-    const colCheck = await pool.query(
-      `SELECT 1 FROM board_columns WHERE id = $1 AND board_id = $2 LIMIT 1`,
-      [toCol, home.boardId],
-    )
-    if (colCheck.rows.length === 0) return err(`column ${toCol} not in board ${home.boardId}`)
-    const { rows: posRows } = await pool.query<{ max: number | null }>(
-      `SELECT MAX(position) AS max FROM board_cards WHERE column_id = $1`, [toCol],
-    )
-    const position = (Number(posRows[0]?.max ?? 0)) + 1000
-    await pool.query(
-      `UPDATE board_cards SET column_id = $1, position = $2, updated_at = NOW() WHERE id = $3`,
-      [toCol, position, cardId],
-    )
-    await pool.query(`UPDATE boards SET updated_at = NOW() WHERE id = $1`, [home.boardId])
-    await publishBoardCli({
-      companyId, kind: 'card.moved', boardId: home.boardId, cardId, columnId: toCol, actorId: me,
-    })
-    return ok(`moved card ${cardId} → ${toCol}`, [{
-      event: 'kanban.card_moved',
-      command: 'card move',
-      boardId: home.boardId,
-      cardId,
-      fromColumnId: home.columnId,
-      columnId: toCol,
-      actorId: me,
-      companyId,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'assign') {
-    const cardId = parsed.positional[1]
-    const who = parsed.positional[2] // pass "null" or omit to unassign
-    if (!cardId) return err('usage: card assign <card_id> <participant_id|null>')
-    const home = await resolveCardBoard(cardId)
-    if (!home) return err(`card ${cardId} not found`)
-    const assignee = (!who || who.toLowerCase() === 'null' || who === '-') ? null : who.trim()
-    await pool.query(
-      `UPDATE board_cards SET assignee_id = $1, updated_at = NOW() WHERE id = $2`,
-      [assignee, cardId],
-    )
-    await publishBoardCli({
-      companyId, kind: 'card.updated', boardId: home.boardId, cardId, actorId: me,
-    })
-    if (assignee && assignee !== me) {
-      void wakeMentionedAgentsCli({ companyId, mentions: [assignee], actorId: me })
-    }
-    return ok(assignee ? `assigned card ${cardId} → @${assignee}` : `unassigned card ${cardId}`, [{
-      event: 'kanban.card_assigned',
-      command: 'card assign',
-      boardId: home.boardId,
-      cardId,
-      actorId: me,
-      companyId,
-      assigneeId: assignee,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'claim') {
-    // ATOMIC EXCLUSIVE CLAIM (the single most
-    // important primitive for non-divergent collaboration). Win ONLY if the card
-    // is unclaimed, already yours, or its claim has gone STALE (the claimant likely
-    // died / went idle ≥20min without touching it). The WHERE guard is the gate and
-    // rowCount is the SINGLE SOURCE OF TRUTH, so two agents racing the same card can
-    // NEVER both win — exactly one claims it; everyone else is told to move on.
-    const cardId = parsed.positional[1]
-    if (!cardId) return err('usage: card claim <card_id>')
-    const home = await resolveCardBoard(cardId)
-    if (!home) return err(`card ${cardId} not found`)
-    const claimed = await pool.query<{ id: string }>(
-      `UPDATE board_cards SET assignee_id = $1, updated_at = NOW()
-         WHERE id = $2
-           AND (assignee_id IS NULL OR assignee_id = $1
-                OR updated_at < NOW() - INTERVAL '20 minutes')
-       RETURNING id`,
-      [me, cardId],
-    )
-    if ((claimed.rowCount ?? 0) === 0) {
-      const cur = await pool.query<{ assignee_id: string | null }>(
-        `SELECT assignee_id FROM board_cards WHERE id = $1 LIMIT 1`, [cardId],
-      )
-      const holder = cur.rows[0]?.assignee_id
-      return err(`claim failed: card ${cardId} is already being worked by @${holder ?? '?'} — move on to another task`)
-    }
-    await publishBoardCli({ companyId, kind: 'card.updated', boardId: home.boardId, cardId, actorId: me })
-    return ok(`claimed card ${cardId} — it's yours. Do the work, post progress with \`card comment\`, move it with \`card move\`, and release with \`card assign ${cardId} null\` (or move to a done column) when finished.`, [{
-      event: 'kanban.card_claimed',
-      command: 'card claim',
-      boardId: home.boardId,
-      cardId,
-      actorId: me,
-      companyId,
-      assigneeId: me,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'rename' || op === 'edit') {
-    const cardId = parsed.positional[1]
-    if (!cardId) return err('usage: card rename <card_id> --title "..." [--description "..."]')
-    const home = await resolveCardBoard(cardId)
-    if (!home) return err(`card ${cardId} not found`)
-    const cur = await pool.query<{ title: string; description: string | null }>(
-      `SELECT title, description FROM board_cards WHERE id = $1 LIMIT 1`, [cardId],
-    )
-    let nextTitle = cur.rows[0].title
-    let nextDesc = cur.rows[0].description
-    const sets: string[] = []
-    const params: unknown[] = []
-    if (typeof parsed.flags.title === 'string') {
-      nextTitle = unescapeChat(parsed.flags.title).slice(0, 200)
-      params.push(nextTitle); sets.push(`title = $${params.length}`)
-    }
-    if (typeof parsed.flags.description === 'string') {
-      nextDesc = unescapeChat(parsed.flags.description).slice(0, 8000) || null
-      params.push(nextDesc); sets.push(`description = $${params.length}`)
-    }
-    if (sets.length === 0) return err('nothing to update — pass --title or --description')
-    const mentions = await cliParseMentions(companyId, `${nextTitle}\n${nextDesc ?? ''}`)
-    params.push(JSON.stringify(mentions)); sets.push(`mentions = $${params.length}::jsonb`)
-    params.push(cardId)
-    await pool.query(
-      `UPDATE board_cards SET ${sets.join(', ')}, updated_at = NOW() WHERE id = $${params.length}`,
-      params,
-    )
-    await publishBoardCli({
-      companyId, kind: 'card.updated', boardId: home.boardId, cardId, mentions, actorId: me,
-    })
-    void wakeMentionedAgentsCli({ companyId, mentions, actorId: me })
-    return ok(`updated card ${cardId}${mentions.length > 0 ? `  · mentions: ${mentions.map((m) => '@' + m).join(' ')}` : ''}`, [{
-      event: 'kanban.card_updated',
-      command: op === 'rename' ? 'card rename' : 'card edit',
-      boardId: home.boardId,
-      cardId,
-      actorId: me,
-      companyId,
-      mentions,
-      title: nextTitle,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'comment') {
-    const cardId = parsed.positional[1]
-    const body = parsed.positional.slice(2).join(' ').trim()
-      || (typeof parsed.flags.body === 'string' ? unescapeChat(parsed.flags.body) : '')
-    if (!cardId || !body) return err('usage: card comment <card_id> "<body>"')
-    const home = await resolveCardBoard(cardId)
-    if (!home) return err(`card ${cardId} not found`)
-    const mentions = await cliParseMentions(companyId, body)
-    const id = `cmt-${randomUUID().slice(0, 12)}`
-    await pool.query(
-      `INSERT INTO board_card_comments (id, card_id, author_id, body, mentions)
-       VALUES ($1, $2, $3, $4, $5::jsonb)`,
-      [id, cardId, me, body.slice(0, 8000), JSON.stringify(mentions)],
-    )
-    await pool.query(`UPDATE board_cards SET updated_at = NOW() WHERE id = $1`, [cardId])
-    await pool.query(`UPDATE boards SET updated_at = NOW() WHERE id = $1`, [home.boardId])
-    await publishBoardCli({
-      companyId, kind: 'comment.created', boardId: home.boardId, cardId, commentId: id, mentions, actorId: me,
-    })
-    void wakeMentionedAgentsCli({ companyId, mentions, actorId: me })
-    return ok(`commented on ${cardId}${mentions.length > 0 ? `  · mentions: ${mentions.map((m) => '@' + m).join(' ')}` : ''}`, [{
-      event: 'kanban.comment_created',
-      command: 'card comment',
-      boardId: home.boardId,
-      cardId,
-      commentId: id,
-      actorId: me,
-      companyId,
-      mentions,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'delete-comment' || op === 'rm-comment') {
-    const cardId = parsed.positional[1]
-    const commentId = parsed.positional[2]
-    if (!cardId || !commentId) return err(`usage: card ${op} <card_id> <comment_id>`)
-    const home = await resolveCardBoard(cardId)
-    if (!home) return err(`card ${cardId} not found`)
-    const r = await pool.query(
-      `DELETE FROM board_card_comments
-        WHERE id = $1 AND card_id = $2 AND author_id = $3`,
-      [commentId, cardId, me],
-    )
-    if ((r.rowCount ?? 0) === 0) return err(`comment ${commentId} not found or not authored by ${me}`)
-    await publishBoardCli({
-      companyId, kind: 'comment.deleted', boardId: home.boardId, cardId, commentId, actorId: me,
-    })
-    return ok(`deleted comment ${commentId}`, [{
-      event: 'kanban.comment_deleted',
-      command: `card ${op}`,
-      boardId: home.boardId,
-      cardId,
-      commentId,
-      actorId: me,
-      companyId,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'delete' || op === 'rm') {
-    const cardId = parsed.positional[1]
-    if (!cardId) return err('usage: card delete <card_id>')
-    const home = await resolveCardBoard(cardId)
-    if (!home) return err(`card ${cardId} not found`)
-    await pool.query(`DELETE FROM board_cards WHERE id = $1`, [cardId])
-    await publishBoardCli({
-      companyId, kind: 'card.deleted', boardId: home.boardId, cardId, actorId: me,
-    })
-    return ok(`deleted card ${cardId}`, [{
-      event: 'kanban.card_deleted',
-      command: 'card delete',
-      boardId: home.boardId,
-      cardId,
-      actorId: me,
-      companyId,
-      visibleToUser: true,
-    }])
-  }
-
-  return err(`usage: card <ls|show|add|move|assign|rename|comment|delete-comment|delete> [...]`)
-}
-
-/* ============== action subcommands → executeTool() ============== */
-
-/**
- * Map (subcommand, parsed args) to the tool's expected argument shape.
- * Returns the JSON args for executeTool, or an error string.
- */
 function buildToolArgs(toolName: string, parsed: ParsedArgs): { argsJson: string } | { error: string } {
   const pos = parsed.positional
   const f = parsed.flags
   switch (toolName) {
-    case 'react': {
-      const messageId = pos[0]
-      const emoji = pos[1]
-      if (!messageId || !emoji) return { error: 'usage: react <message_id> <emoji>' }
-      return { argsJson: JSON.stringify({ message_id: messageId, emoji }) }
-    }
     case 'dm_with': {
       const partnerId = pos[0]
       const topic = pos[1] ?? (f.topic ? String(f.topic) : '')
@@ -5739,464 +2326,15 @@ function buildToolArgs(toolName: string, parsed: ParsedArgs): { argsJson: string
  * happens automatically — the human's editor sees the agent's cursor
  * + insertion live, as if a remote teammate just typed it.
  */
-async function publishDocChanged(
-  companyId: string,
-  documentId: string,
-  kind: 'document.created' | 'document.updated' | 'document.deleted',
-  actorId: string,
-  requestedWorkspaceId?: string,
-): Promise<void> {
-  const workspaceId = requestedWorkspaceId ?? (await pool.query<{ project_id: string }>(
-    `SELECT project_id FROM documents WHERE id=$1 AND company_id=$2 LIMIT 1`,
-    [documentId, companyId],
-  )).rows[0]?.project_id
-  const { CH_DOCS, publish } = await import('../redis.js')
-  await publish(CH_DOCS, {
-    type: 'doc.changed',
-    kind,
-    companyId,
-    workspaceId,
-    documentId,
-    actorId,
-  })
-}
-
-async function cmdDoc(parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
-  const op = parsed.positional[0] ?? 'ls'
-  const me = resolveAs(parsed)
-  const companyId = await agentCompany(me)
-  if (!companyId) return err(`unknown agent ${me} (no company)`)
-  const projectId = await resolveCliProjectId(companyId, internal.projectId)
-
-  if (!['ls', 'list', 'create', 'new'].includes(op)) {
-    const documentId = parsed.positional[1]
-    if (documentId) {
-      const access = await pool.query(
-        `SELECT 1 FROM documents WHERE id=$1 AND company_id=$2 AND project_id=$3 LIMIT 1`,
-        [documentId, companyId, projectId],
-      )
-      if (!access.rows[0]) return err(`document ${documentId} not found`)
-    }
-  }
-
-  if (op === 'ls' || op === 'list') {
-    const { rows } = await pool.query<{
-      id: string; title: string; created_by: string; updated_at: Date
-    }>(
-      `SELECT id, title, created_by, updated_at FROM documents
-        WHERE company_id = $1 AND project_id = $2 ORDER BY updated_at DESC LIMIT 200`,
-      [companyId, projectId],
-    )
-    if (parsed.flags.json) return ok(JSON.stringify(rows, null, 2))
-    if (rows.length === 0) return ok('(no documents in this workspace)')
-    return ok([
-      `${rows.length} document(s):`,
-      '',
-      ...rows.map((d) => `  ${d.id.padEnd(24)} ${d.title}`),
-    ].join('\n'))
-  }
-
-  if (op === 'create' || op === 'new') {
-    const title = parsed.positional.slice(1).join(' ').trim()
-      || (typeof parsed.flags.title === 'string' ? parsed.flags.title : '')
-      || 'Untitled'
-    const stableDocumentId = internal.idempotencyKey
-      ? `doc_agent_${createHash('sha256').update(internal.idempotencyKey).digest('hex').slice(0, 32)}`
-      : null
-    if (stableDocumentId) {
-      const { rows } = await pool.query(`SELECT 1 FROM documents WHERE id=$1 AND company_id=$2 AND project_id=$3`, [stableDocumentId, companyId, projectId])
-      if (rows[0]) return ok(`created document ${stableDocumentId}: ${title} [replayed]`)
-    }
-
-    // Tenant-scoped claim by title so two agents don't independently
-    // create overlapping docs ("Q3 plan v1", "Q3 plan v2", "Q3 plan
-    // draft"). The title is the dedup key — close-enough titles will
-    // still collide thanks to subject normalization.
-    const blocked = await tryClaimTenantWork(companyId, me, 'doc-create', title)
-    if (blocked) return blocked
-
-    try {
-      // The claim above only guards work IN FLIGHT — it's released the
-      // moment the first creator finishes, so it cannot stop a SEQUENTIAL
-      // duplicate (2026-06-12: nova created+released 《第七天的猫》 at
-      // :17, saga's claim sailed through clean at :22 → two docs). Check
-      // the authoritative table for a same-title doc another agent just
-      // created: if one exists, the work is DONE — point at it instead of
-      // duplicating. This runs inside the claim window, so against a
-      // CONCURRENT creator we either lose the claim (handled above) or
-      // see their committed row here.
-      const normTitle = normalizeWorkSubject(title)
-      const docHoldScope = `doc-create:${normTitle}`
-      const forceArmed = Boolean(parsed.flags.force) && (await consumeHold(me, docHoldScope)).armed
-      if (!forceArmed) {
-        const { rows: recentDups } = await pool.query<{
-          id: string; title: string; created_by: string; created_at: Date
-        }>(
-          `SELECT id, title, created_by, created_at FROM documents
-            WHERE company_id = $1 AND created_by <> $2 AND project_id = $3
-              AND created_at > NOW() - INTERVAL '15 minutes'
-            ORDER BY created_at DESC LIMIT 50`,
-          [companyId, me, projectId],
-        )
-        const dup = recentDups.find((d) => normalizeWorkSubject(d.title) === normTitle)
-        if (dup) {
-          await recordHold(me, docHoldScope)
-          const ageSec = Math.max(1, Math.round((Date.now() - dup.created_at.getTime()) / 1000))
-          return err(
-            `HELD — document NOT created. ${dup.created_by} already created "${dup.title}" (${dup.id}) ${ageSec}s ago — ` +
-            `this work is DONE; a second copy is duplicate clutter. ` +
-            `Build on theirs instead: \`lingxiloop doc read ${dup.id}\` / \`lingxiloop doc append ${dup.id} "..."\`. ` +
-            `If you GENUINELY need a separate doc with this same title, rerun with --force ` +
-            `(--force only works after you've been shown this hold — passing it preemptively does nothing).`,
-            2,
-          )
-        }
-      }
-      const id = stableDocumentId ?? `doc_${randomUUID().replace(/-/g, '').slice(0, 16)}`
-      await pool.query(
-        `INSERT INTO documents (id, company_id, project_id, title, created_by) VALUES ($1, $2, $3, $4, $5)`,
-        [id, companyId, projectId, title.slice(0, 200), me],
-      )
-      // If --body was supplied, seed the doc as one or more paragraphs.
-      // Newlines split, so a multi-line body lands as proper block
-      // structure (not a single 1500-char paragraph) in the rich editor.
-      const body = typeof parsed.flags.body === 'string' ? unescapeChat(parsed.flags.body) : ''
-      if (body) {
-        const { applyAgentEdit } = await import('../documents/rooms.js')
-        await applyAgentEdit(id, companyId, me, [{ kind: 'append', text: body }])
-      }
-      await publishDocChanged(companyId, id, 'document.created', me)
-      return ok(`created document ${id}: ${title}`, [{
-        event: 'document.created',
-        command: 'doc create',
-        documentId: id,
-        actorId: me,
-        companyId,
-        title,
-        bodyLength: body.length,
-        visibleToUser: true,
-      }])
-    } finally {
-      await releaseTenantWork(companyId, me, 'doc-create', title)
-    }
-  }
-
-  if (op === 'read' || op === 'show') {
-    const docId = parsed.positional[1]
-    if (!docId) return err('usage: doc read <document_id>')
-    const { rows } = await pool.query<{ company_id: string; title: string }>(
-      `SELECT company_id, title FROM documents WHERE id = $1 LIMIT 1`, [docId],
-    )
-    if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-    const { readDocumentText } = await import('../documents/rooms.js')
-    const body = await readDocumentText(docId, companyId)
-    if (parsed.flags.json) return ok(JSON.stringify({ id: docId, title: rows[0].title, body }, null, 2))
-    return ok([
-      `# ${rows[0].title}  (${docId})`,
-      '',
-      body || '(empty)',
-    ].join('\n'))
-  }
-
-  if (op === 'share') {
-    const docId = parsed.positional[1]
-    const conversationId = typeof parsed.flags.conversation === 'string'
-      ? parsed.flags.conversation.trim()
-      : ''
-    const comment = typeof parsed.flags.comment === 'string'
-      ? unescapeChat(parsed.flags.comment).trim()
-      : ''
-    if (!docId || !conversationId) {
-      return err('usage: doc share <document_id> --conversation <conversation_id> [--comment "<text>"]')
-    }
-
-    const { rows: documents } = await pool.query<{ title: string }>(
-      `SELECT title FROM documents WHERE id = $1 AND company_id = $2 LIMIT 1`,
-      [docId, companyId],
-    )
-    if (!documents[0]) return err(`document ${docId} not found`)
-
-    const { rows: conversations } = await pool.query<{ members: string[] }>(
-      `SELECT members FROM conversations WHERE id = $1 AND company_id = $2 AND project_id = $3 LIMIT 1`,
-      [conversationId, companyId, projectId],
-    )
-    if (!conversations[0]) return err(`unknown conversation ${conversationId}`)
-    if (!conversations[0].members.includes(me)) {
-      return err(`${me} is not a member of ${conversationId}`)
-    }
-
-    const body = [comment, `文档：${docId}`].filter(Boolean).join('\n\n')
-    const reply = { ...parsed, positional: [conversationId, body] }
-    return await cmdReply(reply, internal)
-  }
-
-  if (op === 'append') {
-    const docId = parsed.positional[1]
-    const text = parsed.positional.slice(2).join(' ').trim()
-      || (typeof parsed.flags.text === 'string' ? unescapeChat(parsed.flags.text) : '')
-    if (!docId || !text) return err('usage: doc append <document_id> "<text>"')
-    const { rows } = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-    )
-    if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-    const { applyAgentEdit } = await import('../documents/rooms.js')
-    await applyAgentEdit(docId, companyId, me, [{ kind: 'append', text }])
-    await publishDocChanged(companyId, docId, 'document.updated', me)
-    return ok(`appended ${text.length} chars to ${docId}`, [{
-      event: 'document.updated',
-      command: 'doc append',
-      documentId: docId,
-      actorId: me,
-      companyId,
-      editKind: 'append',
-      bodyLength: text.length,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'prepend') {
-    const docId = parsed.positional[1]
-    const text = parsed.positional.slice(2).join(' ').trim()
-      || (typeof parsed.flags.text === 'string' ? unescapeChat(parsed.flags.text) : '')
-    if (!docId || !text) return err('usage: doc prepend <document_id> "<text>"')
-    const { rows } = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-    )
-    if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-    const { applyAgentEdit } = await import('../documents/rooms.js')
-    await applyAgentEdit(docId, companyId, me, [{ kind: 'insertParagraph', at: 'start', text }])
-    await publishDocChanged(companyId, docId, 'document.updated', me)
-    return ok(`prepended ${text.length} chars to ${docId}`, [{
-      event: 'document.updated',
-      command: 'doc prepend',
-      documentId: docId,
-      actorId: me,
-      companyId,
-      editKind: 'prepend',
-      bodyLength: text.length,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'image') {
-    // Direct image-block insert. The markdown route (`doc append "![alt](url)"`)
-    // is the more idiomatic affordance but it goes through a line-based regex
-    // that struggles when the URL wraps mid-emit (long presigned attachment
-    // links do this routinely). This subcommand bypasses parsing — agents
-    // pass src + optional alt and get a guaranteed image node.
-    //
-    // Placement is layered: absolute (`--at end|start`, default end) gives
-    // a coarse "drop it somewhere" insert, while anchored placements
-    // (`--replace`, `--after`, `--before`) take a snippet of existing
-    // text and place the image relative to the block containing it. The
-    // killer use case for `--replace` is swapping a previously-emitted
-    // but inert `![alt](url)` markdown paragraph for a real image node:
-    // the agent passes the exact markdown text as the anchor and the
-    // broken text gets replaced by the image inline.
-    const docId = parsed.positional[1]
-    const src = parsed.positional[2]
-      || (typeof parsed.flags.src === 'string' ? unescapeChat(parsed.flags.src) : '')
-    const alt = typeof parsed.flags.alt === 'string' ? unescapeChat(parsed.flags.alt).trim() : ''
-    const replaceAnchor = typeof parsed.flags.replace === 'string' ? unescapeChat(parsed.flags.replace) : ''
-    const afterAnchor = typeof parsed.flags.after === 'string' ? unescapeChat(parsed.flags.after) : ''
-    const beforeAnchor = typeof parsed.flags.before === 'string' ? unescapeChat(parsed.flags.before) : ''
-    const atRaw = typeof parsed.flags.at === 'string' ? parsed.flags.at.trim().toLowerCase() : 'end'
-    if (!docId || !src) return err('usage: doc image <document_id> <url> [--alt "..."] [--at end|start | --replace "..." | --after "..." | --before "..."]')
-    if (!/^https?:\/\//i.test(src)) return err('image url must be http(s)://')
-
-    // Pick the placement mode. Anchored flags win over `--at`. If more
-    // than one anchor is supplied we surface an error rather than pick
-    // arbitrarily — the agent should declare intent unambiguously.
-    const anchors = [
-      ['replace', replaceAnchor],
-      ['after', afterAnchor],
-      ['before', beforeAnchor],
-    ].filter(([, v]) => v) as Array<['replace' | 'after' | 'before', string]>
-    if (anchors.length > 1) {
-      return err(`pass only one of --replace / --after / --before (got ${anchors.length})`)
-    }
-    let placement: { mode: 'start' | 'end' } | { mode: 'replace' | 'after' | 'before'; anchorText: string }
-    if (anchors.length === 1) {
-      placement = { mode: anchors[0][0], anchorText: anchors[0][1] }
-    } else {
-      placement = { mode: atRaw === 'start' ? 'start' : 'end' }
-    }
-
-    const { rows } = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-    )
-    if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-    const { applyAgentEdit, isAnchoredImagePlacement } = await import('../documents/rooms.js')
-    const result = await applyAgentEdit(docId, companyId, me, [{ kind: 'image', src, alt: alt || null, placement }])
-
-    // Anchor miss is a HARD error now — falling back to end-of-doc on a
-    // missed snippet is how the doc collected duplicate inert images
-    // in the first place. Return without firing the change event so the
-    // agent's bash exit code reflects the failure and it knows to retry
-    // with a different snippet (or stop trying).
-    if (isAnchoredImagePlacement(placement) && result.imagePlaced === 'anchor-missed') {
-      const snippet = placement.anchorText.slice(0, 60)
-      return err(`anchor not found in ${docId}: "${snippet}". Re-read the doc and pick a snippet that uniquely identifies the target block — no image was inserted.`)
-    }
-    await publishDocChanged(companyId, docId, 'document.updated', me)
-
-    let where: string
-    if (isAnchoredImagePlacement(placement)) {
-      where = `${placement.mode} block containing "${placement.anchorText.slice(0, 60)}"`
-    } else {
-      where = placement.mode === 'start' ? 'at start' : 'at end'
-    }
-    return ok(`inserted image into ${docId} ${where}`, [{
-      event: 'document.updated',
-      command: 'doc image',
-      documentId: docId,
-      actorId: me,
-      companyId,
-      editKind: 'image',
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'image-delete') {
-    // Counterpart to `doc image`. Used when a doc has duplicate or
-    // unwanted image blocks (e.g. earlier attempts that fell back to
-    // end-of-doc when --replace missed, before the fallback was
-    // removed). Match by exact src, src substring, or alt text.
-    const docId = parsed.positional[1]
-    const srcExact = typeof parsed.flags.src === 'string' ? unescapeChat(parsed.flags.src) : ''
-    const srcContains = typeof parsed.flags['src-contains'] === 'string' ? unescapeChat(parsed.flags['src-contains']) : ''
-    const altMatch = typeof parsed.flags.alt === 'string' ? unescapeChat(parsed.flags.alt) : ''
-    const provided = [srcExact, srcContains, altMatch].filter(Boolean)
-    if (!docId || provided.length === 0) {
-      return err('usage: doc image-delete <document_id> [--src <exact_url> | --src-contains <substr> | --alt <text>]')
-    }
-    if (provided.length > 1) {
-      return err('pass only one of --src / --src-contains / --alt')
-    }
-    const { rows } = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-    )
-    if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-    const match: import('../documents/rooms.js').AgentImageDeleteMatch =
-      srcExact ? { by: 'src', src: srcExact }
-        : srcContains ? { by: 'src-contains', substring: srcContains }
-          : { by: 'alt', alt: altMatch }
-    const { applyAgentEdit } = await import('../documents/rooms.js')
-    const result = await applyAgentEdit(docId, companyId, me, [{ kind: 'imageDelete', match }])
-    if (result.imagesDeleted === 0) {
-      return err(`no images in ${docId} matched the criterion`)
-    }
-    await publishDocChanged(companyId, docId, 'document.updated', me)
-    return ok(`deleted ${result.imagesDeleted} image${result.imagesDeleted === 1 ? '' : 's'} from ${docId}`, [{
-      event: 'document.updated',
-      command: 'doc image-delete',
-      documentId: docId,
-      actorId: me,
-      companyId,
-      editKind: 'image-delete',
-      imagesDeleted: result.imagesDeleted,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'replace') {
-    const docId = parsed.positional[1]
-    const find = typeof parsed.flags.find === 'string' ? unescapeChat(parsed.flags.find) : ''
-    const replace = typeof parsed.flags.replace === 'string' ? unescapeChat(parsed.flags.replace) : ''
-    if (!docId || !find) return err('usage: doc replace <document_id> --find "..." --replace "..."')
-    const { rows } = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-    )
-    if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-    const { applyAgentEdit } = await import('../documents/rooms.js')
-    const r = await applyAgentEdit(docId, companyId, me, [{ kind: 'replace', find, replace }])
-    if (r.replaced === 0) return err(`text not found in ${docId}: ${JSON.stringify(find).slice(0, 80)}`)
-    await publishDocChanged(companyId, docId, 'document.updated', me)
-    return ok(`replaced ${r.replaced} occurrence in ${docId}`, [{
-      event: 'document.updated',
-      command: 'doc replace',
-      documentId: docId,
-      actorId: me,
-      companyId,
-      editKind: 'replace',
-      replaced: r.replaced,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'replace-block') {
-    const docId = parsed.positional[1]
-    const anchor = typeof parsed.flags.anchor === 'string' ? unescapeChat(parsed.flags.anchor) : ''
-    const text = parsed.positional.slice(2).join(' ').trim()
-      || (typeof parsed.flags.text === 'string' ? unescapeChat(parsed.flags.text) : '')
-    if (!docId || !anchor || !text) return err('usage: doc replace-block <document_id> --anchor "<snippet in the block>" "<replacement markdown>"')
-    const { rows } = await pool.query<{ company_id: string }>(
-      `SELECT company_id FROM documents WHERE id = $1 LIMIT 1`, [docId],
-    )
-    if (rows.length === 0 || rows[0].company_id !== companyId) return err(`document ${docId} not found`)
-    const { applyAgentEdit } = await import('../documents/rooms.js')
-    const r = await applyAgentEdit(docId, companyId, me, [{ kind: 'replaceBlock', anchorText: anchor, text }])
-    if (r.blocksReplaced === 0) return err(`no block containing ${JSON.stringify(anchor).slice(0, 80)} in ${docId}`)
-    await publishDocChanged(companyId, docId, 'document.updated', me)
-    return ok(`replaced 1 block in ${docId}`, [{
-      event: 'document.updated',
-      command: 'doc replace-block',
-      documentId: docId,
-      actorId: me,
-      companyId,
-      editKind: 'replace-block',
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'rename') {
-    const docId = parsed.positional[1]
-    const title = parsed.positional.slice(2).join(' ').trim()
-      || (typeof parsed.flags.title === 'string' ? parsed.flags.title : '')
-    if (!docId || !title) return err('usage: doc rename <document_id> "<title>"')
-    const r = await pool.query(
-      `UPDATE documents SET title = $1, updated_at = NOW()
-        WHERE id = $2 AND company_id = $3`,
-      [title.slice(0, 200), docId, companyId],
-    )
-    if (!r.rowCount) return err(`document ${docId} not found`)
-    await publishDocChanged(companyId, docId, 'document.updated', me)
-    return ok(`renamed ${docId} to "${title}"`, [{
-      event: 'document.updated',
-      command: 'doc rename',
-      documentId: docId,
-      actorId: me,
-      companyId,
-      editKind: 'rename',
-      title,
-      visibleToUser: true,
-    }])
-  }
-
-  if (op === 'delete' || op === 'rm') {
-    const docId = parsed.positional[1]
-    if (!docId) return err('usage: doc delete <document_id>')
-    const { rows } = await pool.query<{ created_by: string }>(
-      `SELECT created_by FROM documents WHERE id = $1 AND company_id = $2 LIMIT 1`,
-      [docId, companyId],
-    )
-    if (rows.length === 0) return err(`document ${docId} not found`)
-    if (rows[0].created_by !== me) return err(`only the creator can delete document ${docId}`)
-    await pool.query(`DELETE FROM documents WHERE id = $1`, [docId])
-    await publishDocChanged(companyId, docId, 'document.deleted', me, projectId)
-    return ok(`deleted document ${docId}`, [{
-      event: 'document.deleted',
-      command: 'doc delete',
-      documentId: docId,
-      actorId: me,
-      companyId,
-      visibleToUser: true,
-    }])
-  }
-
-  return err(`unknown doc op: ${op}\nusage: doc {ls|create|read|append|prepend|image|image-delete|replace|rename|delete} ...`)
-}
-
+const { cmdDoc } = createDocumentCommand({
+  ok,
+  err,
+  agentCompany,
+  resolveCliProjectId,
+  tryClaimTenantWork,
+  releaseTenantWork,
+  cmdReply,
+})
 async function runTool(toolName: string, parsed: ParsedArgs, internal: RunCliInternalContext = {}): Promise<CliResult> {
   const built = buildToolArgs(toolName, parsed)
   if ('error' in built) return err(built.error)
@@ -6207,7 +2345,13 @@ async function runTool(toolName: string, parsed: ParsedArgs, internal: RunCliInt
   // RunCliInternalContext. Passed as a first-class executeTool param
   // rather than folded into argsJson so it can never be confused with
   // (or overridden by) a model/CLI-supplied tool argument.
-  const r = await executeTool({ agentId: me, name: toolName, argsJson: built.argsJson, idempotencyKey: internal.idempotencyKey })
+  const r = await executeTool({
+    agentId: me,
+    companyId: await agentCompany(me),
+    name: toolName,
+    argsJson: built.argsJson,
+    idempotencyKey: internal.idempotencyKey,
+  })
   const sideEffects = cliToolSideEffects(toolName, r.output, me)
   if (parsed.flags.json) {
     return r.ok
@@ -6224,16 +2368,6 @@ function cliToolSideEffects(toolName: string, output: unknown, agentId: string):
   if (!output || typeof output !== 'object' || Array.isArray(output)) return undefined
   const o = output as Record<string, unknown>
   switch (toolName) {
-    case 'react':
-      return [{
-        event: 'reaction.updated',
-        command: 'react',
-        visibleToUser: true,
-        actorId: agentId,
-        messageId: String(o.messageId ?? ''),
-        emoji: String(o.emoji ?? ''),
-        action: String(o.action ?? ''),
-      }]
     case 'dm_with':
       return [{
         event: 'conversation.created',
@@ -6262,7 +2396,7 @@ function cliToolSideEffects(toolName: string, output: unknown, agentId: string):
 
 /** Trusted, out-of-band execution context that never travels through argv
  *  (issue #7 review: a plain `--idempotency-key` argv flag is settable by
- *  any legacy/internal caller outside the typed Host Bridge — none of which
+ *  any caller outside the typed Host Bridge — none of which
  *  should be able to spoof a LingxiLoop-generated idempotency key). Only
  *  `executeCommunicationActions()` (via `AgentRuntimeClient.executeCli`'s
  *  `internal` param) ever supplies this — there is no argv flag, CLI help
@@ -6271,10 +2405,6 @@ export interface RunCliInternalContext {
   idempotencyKey?: string
   /** Workspace inherited from the Agent OS trigger conversation. */
   projectId?: string
-  /** Trusted structured-action path only: persist the reply without
-   *  advancing conversation_reads. The turn coordinator owns the cursor
-   *  after the complete action batch succeeds. */
-  deferReadCursor?: boolean
 }
 
 /**
@@ -6332,23 +2462,23 @@ export async function runStructuredLearningAction(
       const value = stringValue(method === 'rename' ? 'title' : 'body', method !== 'read' && method !== 'delete')
       if (value) positional.push(value)
     }
-  } else if (namespace === 'boards') {
-    const isCard = method.startsWith('card-')
-    command = isCard ? 'card' : 'kanban'
-    const operation = method.replace(/^card-/, '')
-    positional.push(operation === 'list' ? 'ls' : operation)
-    const id = stringValue(isCard ? 'cardId' : 'boardId', false)
-    const title = stringValue('title', false)
-    if (id) positional.push(id)
-    if (title) positional.push(title)
   } else if (namespace === 'calendar') {
     command = 'calendar'; positional.push(method)
+    if (new Set(['list', 'get', 'create', 'update']).has(method)) flags.json = true
+    if (method === 'create') positional.push(stringValue('title'))
+    else if (new Set(['get', 'update', 'run-now', 'dispatches', 'cancel', 'delete']).has(method)) {
+      positional.push(stringValue('eventId'))
+    }
   } else if (namespace === 'polls') {
     command = 'poll'; positional.push(method)
     const id = stringValue('messageId', false); if (id) positional.push(id)
   } else if (namespace === 'email') {
     command = 'email'; positional.push(method)
-    const id = stringValue('messageId', false); if (id) positional.push(id)
+    if (method === 'show') positional.push(stringValue('conversationId'))
+    else if (method === 'reply') positional.push(stringValue('messageId'))
+    else if (method === 'contacts') {
+      const query = stringValue('query', false); if (query) positional.push(query)
+    }
   } else {
     return err(`unsupported structured namespace: ${namespace}`)
   }
@@ -6365,10 +2495,8 @@ export async function runStructuredLearningAction(
       case 'skills': return await cmdSkills(parsed)
       case 'workspace': return await cmdWorkspace(parsed)
       case 'doc': return await cmdDoc(parsed, internal)
-      case 'kanban': return await cmdBoard(parsed, internal)
-      case 'card': return await cmdCard(parsed, internal)
       case 'calendar': return await cmdCalendar(parsed, internal)
-      case 'poll': return await cmdPoll(parsed)
+      case 'poll': return await cmdPoll(parsed, internal)
       case 'email': return await cmdEmail(parsed, internal)
       default: return err(`unsupported structured action: ${action}`)
     }
@@ -6423,10 +2551,9 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'autonomy':            return await cmdAutonomy(parsed)
       case 'climate':             return await cmdClimate(parsed)
       case 'log':                 return await cmdLog(parsed)
-      case 'workspace':
-      case 'ws':                  return await cmdWorkspace(parsed)
+      case 'workspace':           return await cmdWorkspace(parsed)
       case 'tasks':               return await cmdTasks(parsed)
-      case 'calendar':            return await cmdCalendar(parsed)
+      case 'calendar':            return await cmdCalendar(parsed, internal)
       // ====== mailbox: how an agent reads + writes the world ======
       case 'inbox':               return await cmdInbox(parsed)
       case 'glance':              return await cmdGlance(parsed)
@@ -6435,41 +2562,16 @@ export async function runCli(argv: string[], internal: RunCliInternalContext = {
       case 'follow':              return await cmdFollow(parsed)
       case 'reply':               return await cmdReply(parsed, internal)
       case 'leave':               return await cmdLeave(parsed)
-      case 'kick':                return await cmdKick(parsed)
       case 'invite':              return await cmdInvite(parsed)
       case 'topic':               return await cmdTopicRead(parsed)
       case 'topic-set':           return await cmdTopicSet(parsed)
       case 'rename':              return await cmdRename(parsed)
-      case 'avatar':              return await cmdAvatar(parsed)
       case 'skills':              return await cmdSkills(parsed)
-      case 'email':               return await cmdEmail(parsed)
-      case 'poll':                return await cmdPoll(parsed)
-      // Top-level alias for `email contacts` — promotes contact lookup
-      // to a discoverable verb. Same logic, same output. Use this when a
-      // user names a person you don't recognize: BEFORE assuming or
-      // silently skipping, run `lingxiloop contacts <query>`.
-      case 'contacts': {
-        const me = resolveAs(parsed)
-        const companyId = await agentCompany(me)
-        if (!companyId) return err(`unknown agent ${me} (no company)`)
-        // cmdEmailContacts reads positional[1] as the query (it expects
-        // to be invoked as `email contacts <query>`, where positional[0]
-        // is 'contacts'). For top-level `lingxiloop contacts <query>` the
-        // outer dispatch has already consumed 'contacts', so positional
-        // is just [<query>]. Prepend a placeholder so the offset lines up.
-        const shimmed = { ...parsed, positional: ['contacts', ...parsed.positional] }
-        return await cmdEmailContacts(shimmed, me, companyId, Boolean(parsed.flags.json))
-      }
+      case 'email':               return await cmdEmail(parsed, internal)
+      case 'poll':                return await cmdPoll(parsed, internal)
       // ====== other actions (each wraps a tool implementation) ======
-      // `kanban` is the canonical verb for the shared boards feature.
-      // `card` for the cards inside them. No CJK aliases — easier to
-      // type in any keyboard mode.
-      case 'claim':               return await cmdClaim(parsed, 'claim')
-      case 'unclaim':             return await cmdClaim(parsed, 'unclaim')
-      case 'kanban':              return await cmdBoard(parsed)
-      case 'card':                return await cmdCard(parsed, internal)
       case 'doc':                 return await cmdDoc(parsed, internal)
-      case 'react':               return await runTool('react', parsed, internal)
+      case 'react':               return await cmdReact(parsed)
       case 'dm':                  return await runTool('dm_with', parsed)
       case 'pull-group':          return await runTool('pull_group', parsed)
       case 'palette':             return await runTool('palette', parsed)

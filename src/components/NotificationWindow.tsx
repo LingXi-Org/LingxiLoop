@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 /**
  * Renderer for the dedicated Electron notification BrowserWindow.
  *
@@ -19,6 +20,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { NotificationPushPayload } from '@/lib/runtime'
+import { BloubAvatar } from '@/components/BloubAvatar'
+import {
+  Avatar as AvatarPrimitive,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar'
 
 // Match wails-gui's tight slide-and-fade (toast_window_assets/toast.html
 // — `transition: opacity 180ms ease-out, transform 180ms ease-out` +
@@ -40,6 +47,19 @@ const AUTO_DISMISS_MS = 12_000
 const MAX_TOASTS = 5
 
 type Toast = NotificationPushPayload
+
+function toastMetadata(toast: Toast) {
+  return toast.message.metadata
+}
+
+function toastBody(toast: Toast): string {
+  return toast.message.content
+    .filter((part): part is Extract<(typeof toast.message.content)[number], { type: 'text' | 'reasoning' }> => (
+      part.type === 'text' || part.type === 'reasoning'
+    ))
+    .map((part) => part.text)
+    .join('\n') || '（无内容）'
+}
 
 export function NotificationWindow() {
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -86,7 +106,7 @@ export function NotificationWindow() {
         // twice — you'd otherwise see three identical Bram cards stacked.
         // toast.id includes a timestamp so React keys stay unique, but
         // messageId is the real identity.
-        if (p.messageId && prev.some((t) => t.messageId === p.messageId)) {
+        if (prev.some((t) => t.message.id === p.message.id)) {
           return prev
         }
         // Append at the BOTTOM. Older toasts stay anchored at the top;
@@ -150,7 +170,7 @@ export function NotificationWindow() {
 
   const dismiss = (id: string) => setToasts((prev) => prev.filter((t) => t.id !== id))
   const onClick = (t: Toast) => {
-    window.lingxiloop?.notify?.focusConvo(t.conversationId)
+    window.lingxiloop?.notify?.focusConvo(toastMetadata(t).conversationId)
     dismiss(t.id)
   }
 
@@ -221,45 +241,35 @@ export function NotificationWindow() {
   )
 }
 
-/**
- * Avatar that mirrors the conversation-list look: portrait when we have
- * one, otherwise the agent's stable color block with their initial. The
- * notification BrowserWindow is a separate renderer (different page from
- * the main app's React tree), so it can't reach into the participants
- * store directly — the main app passes `authorInitial` + `authorAvatarBg`
- * with every push so this fallback is consistent with the convo list.
- */
 function AuthorAvatar({ toast }: { toast: Toast }) {
-  const [imgBroke, setImgBroke] = useState(false)
-  // Reset on every URL change so a fresh toast (possibly reusing this
-  // component slot) gets a clean shot at <img>. Without this, a single
-  // load failure would stick imgBroke=true across subsequent toasts.
-  useEffect(() => { setImgBroke(false) }, [toast.authorAvatarUrl])
-  const hasImg = !!toast.authorAvatarUrl && !imgBroke
-  const initial = (toast.authorInitial ?? toast.authorName.charAt(0) ?? '?').toUpperCase()
+  const metadata = toastMetadata(toast)
+  if (metadata.senderKind === 'agent') {
+    return (
+      <BloubAvatar
+        participant={{
+          id: metadata.senderId,
+          name: metadata.senderName,
+          status: 'avail',
+        }}
+        status="avail"
+        size={32}
+        animated={false}
+        mode="neutral"
+      />
+    )
+  }
+
+  const initial = (metadata.senderName.charAt(0) || '?').toUpperCase()
   return (
-    <div
-      className="w-8 h-8 rounded-full shrink-0 grid place-items-center font-display font-medium text-white text-[13px] overflow-hidden relative"
-      style={{
-        background: hasImg ? 'transparent' : (toast.authorAvatarBg ?? 'var(--ink-300)'),
-        letterSpacing: '-0.02em',
-      }}
-    >
-      {hasImg ? (
-        <img
-          src={toast.authorAvatarUrl!}
-          alt={toast.authorName}
-          className="absolute inset-0 w-full h-full object-cover"
-          onError={() => setImgBroke(true)}
-        />
-      ) : (
-        <span>{initial}</span>
-      )}
-    </div>
+    <AvatarPrimitive>
+      {metadata.senderAvatarUrl ? <AvatarImage src={metadata.senderAvatarUrl} alt={metadata.senderName} /> : null}
+      <AvatarFallback>{initial}</AvatarFallback>
+    </AvatarPrimitive>
   )
 }
 
 function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () => void; onDismiss: () => void }) {
+  const metadata = toastMetadata(toast)
   const [hovered, setHovered] = useState(false)
   useEffect(() => {
     if (hovered) return
@@ -278,9 +288,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
       onMouseLeave={() => setHovered(false)}
       className="text-left"
       style={{
-        // Solid opaque card on a transparent BrowserWindow. Mirrors
-        // wails-gui (toast_window_assets/toast.html — `--panel: #ffffff`
-        // + `border: 1px solid rgba(33, 28, 22, 0.12)`, no box-shadow).
+        // Solid preset card on a transparent BrowserWindow.
         //
         // We can't give each toast its own NSWindow inside Electron, so
         // when toasts stack inside ONE window their CSS drop shadows
@@ -289,11 +297,11 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
         // — separation comes from the 1px hairline border + spacing. We
         // do the same; just a tiny low-spread shadow for lift, nothing
         // that extends past the card more than a few pixels.
-        background: '#ffffff',
+        background: 'var(--card)',
         borderRadius: 14,
         padding: '14px 16px',
-        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
-        border: '1px solid rgba(33, 28, 22, 0.12)',
+        boxShadow: '0 2px 6px color-mix(in srgb, var(--foreground) 8%, transparent)',
+        border: '1px solid var(--border)',
         cursor: 'pointer',
         minWidth: 280,
         maxWidth: 340,
@@ -304,7 +312,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
       {/* Close (×) — appears on hover. stopPropagation so the click
           dismisses without also triggering the toast's main onClick
           (which would focus the convo + dismiss). */}
-      <button
+      <Button
         type="button"
         onClick={(e) => { e.stopPropagation(); onDismiss() }}
         aria-label="驳回"
@@ -319,13 +327,13 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
           transitionDuration: '120ms',
           fontSize: 14, lineHeight: 1, fontWeight: 600,
         }}
-      >×</button>
+      >×</Button>
       <div className="flex items-start gap-2.5 pr-5">
         <AuthorAvatar toast={toast} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="text-[12.5px] font-semibold text-ink-900 truncate">
-              {toast.authorName}
+              {metadata.senderName}
             </span>
             <span className="text-[10.5px] text-ink-300 italic font-display truncate">
               {toast.conversationTitle}
@@ -333,12 +341,12 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
             {toast.unreadCount !== undefined && toast.unreadCount > 1 && (
               <span
                 // Matches the canonical unread chip in the conversation list
-                // (ConversationsPane.tsx:289-300) — solid coral + white digit,
+                // (features/conversations/components/ConversationsPane.tsx) — solid coral + white digit,
                 // tabular nums, fixed 18px circle. Earlier soft-coral variant
                 // looked like a foreign dialect of the same color family.
                 className="ml-auto inline-grid place-items-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold shrink-0 tabular-nums"
-                style={{ background: 'var(--coral)', color: 'white' }}
-                title={`${toast.unreadCount} unread in this conversation`}
+                style={{ background: 'var(--destructive)', color: 'var(--destructive-foreground)' }}
+                title={`本对话有 ${toast.unreadCount} 条未读消息`}
               >{toast.unreadCount}</span>
             )}
           </div>
@@ -351,7 +359,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
               overflow: 'hidden',
             }}
           >
-            {toast.body}
+            {toastBody(toast)}
           </div>
         </div>
       </div>

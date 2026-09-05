@@ -1,15 +1,19 @@
 /** Full Compose smoke for WuKongIM -> durable work -> Agent OS -> final IM reply. */
 import { createHmac, randomUUID } from 'node:crypto'
 import { pool } from '../src/db/pool.js'
-import { reconcileLearningChannels } from '../src/im/reconcile.js'
+import { withTransaction } from '../src/db/transaction.js'
+import {
+  onboardCompanyStarterWorkspace,
+  provisionPersonalWorkspace,
+} from '../src/modules/companies/public.js'
+import { reconcileImChannels } from '../src/im/reconcile.js'
 import { wukongClient } from '../src/im/wukong.js'
-import { onboardStarterAgents } from '../src/onboardCompany.js'
 import type { LingxiMessageV1 } from '../src/agent-os/types.js'
 
 const BASE_URL = process.env.MVP_SMOKE_BASE_URL ?? 'http://localhost:5181'
 const REPLY_TIMEOUT_MS = Number(process.env.MVP_SMOKE_REPLY_TIMEOUT_MS ?? 90_000)
 const suffix = randomUUID().slice(0, 8)
-const companyId = `co-agent-os-smoke-${suffix}`
+let companyId = ''
 const userId = `u-agent-os-smoke-${suffix}`
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
@@ -25,23 +29,17 @@ async function waitForHealth(): Promise<void> {
 }
 
 async function seed(): Promise<{ channelId: string; agentId: string }> {
-  await pool.query(
-    `INSERT INTO users (id,email,display_name,email_verified_at,is_admin,tier)
-     VALUES ($1,$2,'Agent OS Smoke',NOW(),FALSE,'pro')`,
-    [userId, `${userId}@example.invalid`],
-  )
-  await pool.query(
-    `INSERT INTO companies (id,name,slug,owner_user_id) VALUES ($1,'Agent OS Smoke',$2,$3)`,
-    [companyId, `agent-os-smoke-${suffix}`, userId],
-  )
-  await pool.query(`INSERT INTO company_members (company_id,user_id,role) VALUES ($1,$2,'owner')`, [companyId, userId])
-  await pool.query(
-    `INSERT INTO participants (id,kind,name,initial,avatar_bg,status,company_id)
-     VALUES ($1,'human','Agent OS Smoke','A','#0078C8','avail',$2)`,
-    [userId, companyId],
-  )
-  await onboardStarterAgents(companyId)
-  const synced = await reconcileLearningChannels()
+  const provisioned = await withTransaction(pool, async (db) => {
+    await db.query(
+      `INSERT INTO users (id,email,display_name,email_verified_at)
+       VALUES ($1,$2,'Agent OS Smoke',NOW())`,
+      [userId, `${userId}@example.invalid`],
+    )
+    return provisionPersonalWorkspace(db, userId)
+  })
+  companyId = provisioned.companyId
+  await onboardCompanyStarterWorkspace(companyId)
+  const synced = await reconcileImChannels()
   if (synced.failures > 0) throw new Error(`WuKong reconciliation had ${synced.failures} failures`)
   const { rows } = await pool.query<{ channel_id: string; leader_agent_id: string }>(
     `SELECT channel_id, leader_agent_id FROM im_channel_bindings

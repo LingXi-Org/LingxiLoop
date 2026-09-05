@@ -2,13 +2,13 @@
 #
 # Serves three surfaces from the same Node process:
 #   /api/*        — JSON API (Express router)
-#   /internal/agent-os/* — private Host Adapter API
+#   /internal/agent-os/v2/* — private LingxiOS control-plane API
 #   everything else — the React SPA bundle (built into /app/dist below)
 #
 # Entry points:
 #   npm run server:start  →  tsx server/src/bin/web.ts  (HTTP/WS runtime)
 #   npm run worker:start  →  tsx server/src/bin/worker.ts  (background tasks)
-#   npm run db:bootstrap  →  tsx server/src/bootstrap-bin.ts  (empty DB only)
+#   npm run db:migrate  →  tsx server/src/migrate-bin.ts
 #
 # Model turns run only in the separate Agent OS service. The control plane
 # owns product authorization, approvals, WuKong integration and projections.
@@ -29,12 +29,7 @@ ARG APT_MIRROR=http://mirrors.aliyun.com
 FROM ${NODE_BASE_IMAGE} AS deps
 ARG NPM_REGISTRY
 WORKDIR /app
-COPY package.json package-lock.json ./
-# `--omit=dev` skips devDependencies — that's electron, vite,
-# electron-icon-builder (which transitively pulls phantomjs-prebuilt,
-# whose postinstall fails on linux/arm64), etc. Server runtime only
-# needs the actual runtime deps + tsx (moved out of devDeps for
-# exactly this reason).
+COPY server/package.json server/package-lock.json ./
 RUN npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer-offline
 
 # ─── stage 2: build the web SPA bundle ──────────────────────────────
@@ -42,19 +37,16 @@ RUN npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer
 # postcss are available. The output (dist/) is copied into the runtime
 # image; nothing from this stage's node_modules makes it through.
 #
-# VITE_LINGXILOOP_API_BASE is intentionally NOT baked here — the SPA serves
-# from the SAME origin as the API in production, so relative URLs (`/api/...`) work without any
-# baked origin. Builders pointing the SPA at a remote API (e.g. for a
-# separate Cloudflare Pages deploy) should override via --build-arg.
+# The SPA uses same-origin `/api` routes through the control-plane Worker.
 FROM ${NODE_BASE_IMAGE} AS spa-build
 ARG NPM_REGISTRY
 WORKDIR /app
-ARG VITE_LINGXILOOP_API_BASE=""
 ARG VITE_PUBLIC_POSTHOG_KEY=""
 ARG VITE_PUBLIC_POSTHOG_HOST=""
-ENV VITE_LINGXILOOP_API_BASE=${VITE_LINGXILOOP_API_BASE}
+ARG VITE_TURNSTILE_SITE_KEY=""
 ENV VITE_PUBLIC_POSTHOG_KEY=${VITE_PUBLIC_POSTHOG_KEY}
 ENV VITE_PUBLIC_POSTHOG_HOST=${VITE_PUBLIC_POSTHOG_HOST}
+ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
 COPY package.json package-lock.json ./
 # --ignore-scripts: electron-icon-builder transitively pulls
 # phantomjs-prebuilt, whose postinstall extracts a bz2 tarball — but
@@ -92,8 +84,9 @@ WORKDIR /app
 # Copy node_modules from the deps stage first (rare changes → good
 # caching), then the source on top (changes every commit).
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json package-lock.json ./
+COPY --from=deps /app/package.json /app/package-lock.json ./
 COPY server ./server
+COPY third_party/lingxios ./third_party/lingxios
 # Canvas service deliberately shares these dependency-free domain helpers with
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into
@@ -109,6 +102,6 @@ ENV NODE_ENV=production \
     LINGXILOOP_COMMIT_SHA=${LINGXILOOP_COMMIT_SHA}
 
 # tini for PID-1 reaping. Default command runs the server; the
-# production Compose bootstrap job overrides this with `npm run db:bootstrap`.
+# production Compose migration job overrides this with `npm run db:migrate`.
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["npm", "run", "server:start"]

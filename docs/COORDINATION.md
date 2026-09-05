@@ -10,6 +10,14 @@ LingxiLoop uses deterministic wake routing; there is no model-based triage.
 - Agent-authored messages do not fan out unless they contain an explicit
   mention or typed handoff.
 
+Company invitation acceptance commits membership, audit and one tenant-scoped
+member-onboarding effect in the same PostgreSQL transaction. The Worker claims
+that effect with a renewable lease and fence, then creates teammate direct
+channels only through the Conversations public application. A process or
+WuKongIM failure is retried from the durable effect and channel binding; the
+acceptance request never creates a parallel conversation row or requires the
+user to replay a consumed invitation.
+
 WuKongIM assigns message order. A post-commit webhook is validated, deduplicated
 and converted to an `AgentWorkItem` in the same PostgreSQL transaction as its
 receipt. An unprocessed receipt is retryable. The durable queue grants a lease
@@ -32,3 +40,9 @@ work id, cell ids are deterministic, and sink operations receive the same
 idempotency key on crash recovery. Approval resumes only
 that action and injects its synthetic result into the loop; the original cell
 is never replayed.
+
+Pulse cannot set a Course/Project status directly. Its approval-gated
+`transition_course` action accepts only `END`, `ENTER_READ_ONLY`, or `ARCHIVE`;
+the Host re-evaluates the authorizing teacher and delegates to the same
+conditional Project lifecycle application used by HTTP. Invalid jumps and
+repeated side effects therefore fail closed at the domain boundary.

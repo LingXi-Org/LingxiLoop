@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Agent OS ③ 事件、最终回复、Stop / Steer、抢占与故障恢复",
+    "locale": "zh-CN",
+    "output": "artifacts/agent-os-deep-dive-control-recovery.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "column_fit": "spread",
+    "viewBox": [1580, 1660],
+    "views": [
+      { "id": "events", "label": "事件与预览", "focus": ["agentos", "control", "postgres", "realtime", "wukong"], "note": "run event 是可审计事实；delta/activity 被投影为可丢弃预览。" },
+      { "id": "steer", "label": "Steer", "focus": ["client", "web", "postgres", "control", "agentos"], "note": "Steer 进入耐久队列，由 heartbeat 拉取并在下一 hop 成为最高优先级输入。" },
+      { "id": "stop", "label": "Stop", "focus": ["client", "web", "postgres", "control", "agentos", "kernel"], "note": "Stop 设置 cancel_requested_at；heartbeat 中止模型/cell，后续 Host Action 被立即拒绝。" },
+      { "id": "preempt", "label": "抢占与 fence", "focus": ["watchdog", "postgres", "control", "agentos"], "note": "高 lane 等待过久时先协作 yield；超时后强制 requeue 并推进 fence。" },
+      { "id": "final", "label": "唯一最终回复", "focus": ["agentos", "control", "wukong", "realtime", "postgres"], "note": "稳定 clientMsgNo=agent-{workId} 使重试收敛到一条权威消息。" }
+    ]
+  },
+  "participants": [
+    { "id": "client", "type": "external", "label": "Client" },
+    { "id": "web", "type": "backend", "label": "Web API" },
+    { "id": "postgres", "type": "database", "label": "PostgreSQL" },
+    { "id": "control", "type": "security", "label": "Control Plane" },
+    { "id": "agentos", "type": "backend", "label": "Agent OS" },
+    { "id": "kernel", "type": "external", "label": "Model / Kernel" },
+    { "id": "realtime", "type": "messagebus", "label": "Realtime" },
+    { "id": "wukong", "type": "messagebus", "label": "WuKongIM" },
+    { "id": "watchdog", "type": "backend", "label": "Watchdog" }
+  ],
+  "segments": [
+    { "from": 150, "to": 478, "label": "A. 事件写入与即时投影" },
+    { "from": 494, "to": 748, "label": "B. Steer：下一 hop 的最高优先级输入" },
+    { "from": 764, "to": 1048, "label": "C. Stop：取消模型、cell 与动作" },
+    { "from": 1064, "to": 1324, "label": "D. lane 抢占与旧 worker 隔离" },
+    { "from": 1340, "to": 1580, "label": "E. 唯一最终消息与清理" }
+  ],
+  "messages": [
+    { "from": "agentos", "to": "control", "y": 178, "label": "POST event(runId, fence, localSeq)", "variant": "security" },
+    { "from": "control", "to": "postgres", "y": 220, "label": "persist run + unique event sequence", "variant": "emphasis" },
+    { "from": "control", "to": "postgres", "y": 262, "label": "model.completed/failed → llm_calls", "variant": "default" },
+    { "from": "control", "to": "realtime", "y": 304, "label": "model.delta / activity preview", "variant": "dashed" },
+    { "from": "control", "to": "wukong", "y": 346, "label": "activity / approval card projection", "variant": "dashed" },
+    { "from": "agentos", "to": "control", "y": 410, "label": "heartbeat every 5s", "variant": "security" },
+    { "from": "control", "to": "postgres", "y": 452, "label": "renew work + session leases to 45s", "variant": "security" },
+    { "from": "client", "to": "web", "y": 524, "label": "POST /runs/steer + clientRequestId", "variant": "emphasis" },
+    { "from": "web", "to": "postgres", "y": 566, "label": "append durable steer item", "variant": "emphasis" },
+    { "from": "agentos", "to": "control", "y": 608, "label": "next heartbeat", "variant": "security" },
+    { "from": "control", "to": "postgres", "y": 650, "label": "drain steer queue in order", "variant": "default" },
+    { "from": "control", "to": "agentos", "y": 692, "label": "steers[]", "variant": "return" },
+    { "from": "agentos", "to": "kernel", "y": 734, "label": "inject steer before next model hop", "variant": "emphasis" },
+    { "from": "client", "to": "web", "y": 794, "label": "POST /runs/stop", "variant": "emphasis" },
+    { "from": "web", "to": "postgres", "y": 836, "label": "set cancel_requested_at", "variant": "security" },
+    { "from": "agentos", "to": "control", "y": 878, "label": "heartbeat", "variant": "security" },
+    { "from": "control", "to": "agentos", "y": 920, "label": "cancelRequested=true", "variant": "return" },
+    { "from": "agentos", "to": "kernel", "y": 962, "label": "abort model; SIGINT cell; discard kernel", "variant": "security" },
+    { "from": "agentos", "to": "control", "y": 1004, "label": "run.cancelled + complete work", "variant": "emphasis" },
+    { "from": "watchdog", "to": "postgres", "y": 1094, "label": "high lane waits >120s", "variant": "default" },
+    { "from": "watchdog", "to": "postgres", "y": 1136, "label": "set preempt_requested_at on lower lane", "variant": "security" },
+    { "from": "agentos", "to": "control", "y": 1178, "label": "heartbeat sees preempt", "variant": "security" },
+    { "from": "agentos", "to": "control", "y": 1220, "label": "save session then POST yield", "variant": "emphasis" },
+    { "from": "control", "to": "postgres", "y": 1262, "label": "requeue + fence+1 + release session lease", "variant": "security" },
+    { "from": "watchdog", "to": "postgres", "y": 1304, "label": "after 30s grace: force requeue + fence", "variant": "security" },
+    { "from": "agentos", "to": "control", "y": 1370, "label": "POST final message clientMsgNo=agent-{workId}", "variant": "emphasis" },
+    { "from": "control", "to": "wukong", "y": 1412, "label": "persist one LingxiMessageV1", "variant": "emphasis" },
+    { "from": "wukong", "to": "client", "y": 1454, "label": "authoritative sync", "variant": "return" },
+    { "from": "control", "to": "realtime", "y": 1496, "label": "clear previews for run", "variant": "dashed" },
+    { "from": "agentos", "to": "postgres", "y": 1538, "label": "save session + evidence; complete", "variant": "emphasis" },
+    { "from": "postgres", "to": "agentos", "y": 1572, "label": "reject stale fence / stale revision", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "agentos", "from": 172, "to": 1592, "type": "backend" },
+    { "participant": "control", "from": 172, "to": 1510, "type": "security" },
+    { "participant": "kernel", "from": 720, "to": 978, "type": "external" },
+    { "participant": "watchdog", "from": 1088, "to": 1316, "type": "backend" },
+    { "participant": "wukong", "from": 1406, "to": 1466, "type": "messagebus" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "事件序列与 fence 不冲突", "items": ["每个 fence 的本地 event sequence 被偏移到 (fence-1)×100000 的区间", "数据库唯一键 (run_id, sequence) 阻止同 run 重复事件；runId 始终为 workId", "run.started、input.loaded、knowledge.context.loaded、model.*、ipython.*、approval.pending、run.* 都可审计"] },
+    { "dot": "violet", "title": "预览不是第二套消息", "items": ["model.delta 与 activity 允许丢失、重复或晚到，客户端按 run 聚合", "approval/activity 卡可以投影到 WuKong，但聊天正文的最终事实仍只有 LingxiMessageV1", "收到最终权威消息后清理同 run 预览，离线客户端只靠 WuKong 同步也能收敛"] },
+    { "dot": "emerald", "title": "Steer 的语义", "items": ["clientRequestId 使提交幂等；文本进入 work 的耐久 steer queue", "heartbeat 返回所有待处理项，runtime 去重并在下一模型 hop 前优先注入", "Steer 不打断正在执行的 cell，也不重写已经发生的模型历史"] },
+    { "dot": "rose", "title": "Stop 的语义与当前竞态窗口", "items": ["Stop 先设置 cancel_requested_at；下一 heartbeat 使 runtime abort model/cell 并发出 run.cancelled", "Host Action 端点要求 actionable lease，因此取消一落库，新的产品副作用即被拒绝", "当前 final-message 端点只校验 live lease、不检查 cancel_requested_at；在 5 秒 heartbeat 前存在极短的最终消息竞态窗口"] },
+    { "dot": "amber", "title": "协作式抢占与强制接管", "items": ["watchdog 发现高 lane 等待超过默认 120 秒，给低 lane active work 设置 preempt_requested_at", "worker heartbeat 后先保存 session 再 yield；work 延迟 1 秒回队、preemptions+1、fence+1", "30 秒内未 yield，watchdog 强制 requeue 与 fence；旧 worker 的后续写入全部失效"] },
+    { "dot": "orange", "title": "崩溃恢复的幂等层", "items": ["work：稳定 workId + lease/fence；session：revision + appliedWorkIds(最多200)", "Host Action：runId:cellId:callIndex ledger + 领域 sink 幂等；最终消息：agent-{workId}", "这些身份分别处理重新领取、输入重放、cell 后崩溃和最终消息重试，不能互相替代"] },
+    { "dot": "rose", "title": "LLM 记账的当前崩溃窗口", "items": ["模型 driver 先完成 provider 调用并把 model.completed/failed 作为事件发给 Control Plane", "Control Plane 收到事件时才写 llm_calls；若进程在 provider 返回后、事件提交前崩溃，该次调用可能未记账", "因此现实现是 event-mediated accounting，还没有做到跨崩溃的 provider-call exactly-once ledger"] },
+    { "dot": "slate", "title": "故障归类", "items": ["lease lost / stale fence：立即停止，不能提交；preempt：保存后 yield；cancel：中止并终结", "kernel timeout：杀进程并可在后续 hop 重建；model adapter error：记录 diagnostics 并失败", "外部 side effect 后崩溃：重放 pending action，正确性依赖领域 sink 接受同一幂等键"] }
+  ]
+}

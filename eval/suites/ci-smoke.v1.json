@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2, "id": "ci-smoke", "version": "1",
+  "dataset": { "id": "ci-smoke", "version": "1" },
+  "samples": 1, "concurrency": 1, "timeoutMs": 120000,
+  "graders": [
+    { "id": "exact", "kind": "exact", "threshold": 1 },
+    { "id": "semantic", "kind": "factuality", "threshold": 0.8 }
+  ],
+  "gate": { "minScore": 0.9, "minPassRate": 1, "maxScoreDrop": 0.02, "maxCaseDrop": 0.05,
+    "maxP95LatencyMs": 120000, "maxCandidateCostCny": 0.05, "maxJudgeCostCny": 0.15, "requireBaseline": true }
+}

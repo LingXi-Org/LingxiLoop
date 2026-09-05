@@ -7,8 +7,7 @@
  * Cases:
  *   - `memory note <body>` writes an agent_workspace row (with vector
  *     when embedText returns a value) plus an agent_log "note" row
- *   - `memory note <body>` when embedText returns null still writes
- *     the workspace row, just without the vector (graceful degradation)
+ *   - embedding failures reject the write without persisting partial memory
  *   - `memory list` returns the saved rows
  *   - `memory pin <id>` flips the pinned meta flag
  *   - `memory delete <id>` removes the row
@@ -51,13 +50,13 @@ function fakeEmbedding(scalar = 0.001): string {
 test('[integration] scoped learner memory is shared while course and role memory stay isolated', async () => {
   const { companyId, agentId } = await seedCompanyWithAgent({ agentId: 'memory-agent-a' })
   const { agentId: agentB } = await seedCompanyWithAgent({ companyId, agentId: 'memory-agent-b' })
-  __setEmbedTextOverrideForTesting(() => null)
+  __setEmbedTextOverrideForTesting(() => fakeEmbedding())
   await writeExplicitMemory({ companyId, agentId, scopeType: 'learner', scopeId: 'learner-1', body: 'Prefers visual examples', sourceEventId: 'msg-1' })
   await writeExplicitMemory({ companyId, agentId, scopeType: 'course', scopeId: 'course-a', body: 'Working on derivatives', sourceEventId: 'msg-2' })
   await writeExplicitMemory({ companyId, agentId, scopeType: 'agent_role', scopeId: agentId, body: 'Use Socratic questions', sourceEventId: 'msg-3' })
-  assert.equal((await recallMemories({ companyId, agentId: agentB, scopeType: 'learner', scopeId: 'learner-1' })).length, 1)
-  assert.equal((await recallMemories({ companyId, agentId: agentB, scopeType: 'course', scopeId: 'course-b' })).length, 0)
-  assert.equal((await recallMemories({ companyId, agentId: agentB, scopeType: 'agent_role', scopeId: agentB })).length, 0)
+  assert.equal((await recallMemories({ companyId, agentId: agentB, scopeType: 'learner', scopeId: 'learner-1', query: 'visual examples' })).length, 1)
+  assert.equal((await recallMemories({ companyId, agentId: agentB, scopeType: 'course', scopeId: 'course-b', query: 'derivatives' })).length, 0)
+  assert.equal((await recallMemories({ companyId, agentId: agentB, scopeType: 'agent_role', scopeId: agentB, query: 'Socratic questions' })).length, 0)
 })
 
 test('[integration] memory note: writes agent_workspace + agent_log, includes embedding when embedText returns one', async () => {
@@ -102,39 +101,32 @@ test('[integration] memory note: writes agent_workspace + agent_log, includes em
   assert.match(String(log[0].ref?.path ?? ''), /^memory\/observation\//)
 })
 
-test('[integration] memory note: when embedText returns null the row still lands (graceful degradation, embedding column NULL)', async () => {
-  // This is the production failure mode where embeddings.embedText
-  // catches an OpenAI hiccup and returns null. The memory MUST NOT be
-  // dropped — a background backfill fills it in later. We pin that
-  // here: row exists, body intact, embedding NULL.
+test('[integration] memory note rejects provider failure without a partial row', async () => {
   const { agentId } = await seedCompanyWithAgent()
-  __setEmbedTextOverrideForTesting(() => null)
+  __setEmbedTextOverrideForTesting(() => { throw new Error('embedding provider unavailable') })
 
   const res = await runCli([
     '--as', agentId,
     'memory', 'note', 'Embeddings unavailable but I still got noted',
   ])
-  assert.equal(res.ok, true, `runCli memory note failed: ${res.text}`)
+  assert.equal(res.ok, false)
+  assert.match(res.text, /embedding provider unavailable/)
 
   const { rows: ws } = await pool.query<{ body: string; embedding: string | null }>(
     `SELECT body, embedding::text AS embedding FROM agent_workspace WHERE agent_id = $1`,
     [agentId],
   )
-  assert.equal(ws.length, 1)
-  assert.equal(ws[0].body, 'Embeddings unavailable but I still got noted')
-  assert.equal(ws[0].embedding, null, 'embedding column is NULL when embedText returned null')
+  assert.equal(ws.length, 0)
 
-  // The agent_log row still gets written (the journal of work done is
-  // independent of whether the embedding succeeded).
   const { rowCount: logCount } = await pool.query(
     `SELECT 1 FROM agent_log WHERE agent_id = $1`, [agentId],
   )
-  assert.equal(logCount, 1)
+  assert.equal(logCount, 0)
 })
 
 test('[integration] memory list: returns saved notes most-recent-first, pinned items float to top', async () => {
   const { agentId } = await seedCompanyWithAgent()
-  __setEmbedTextOverrideForTesting(() => null)
+  __setEmbedTextOverrideForTesting(() => fakeEmbedding())
 
   // Three notes; pin the second one.
   await runCli(['--as', agentId, 'memory', 'note', 'first thought'])
@@ -168,7 +160,7 @@ test('[integration] memory list: returns saved notes most-recent-first, pinned i
 
 test('[integration] memory delete: removes the row by id', async () => {
   const { agentId } = await seedCompanyWithAgent()
-  __setEmbedTextOverrideForTesting(() => null)
+  __setEmbedTextOverrideForTesting(() => fakeEmbedding())
 
   await runCli(['--as', agentId, 'memory', 'note', 'temporary note'])
   const { rows: before } = await pool.query<{ path: string }>(
@@ -226,7 +218,7 @@ test('[integration] memory note: body without --about uses about=NULL — pinnin
   // Edge case: agents often note something without an --about subject.
   // The meta.about field should be null, not an empty string.
   const { agentId } = await seedCompanyWithAgent()
-  __setEmbedTextOverrideForTesting(() => null)
+  __setEmbedTextOverrideForTesting(() => fakeEmbedding())
 
   await runCli(['--as', agentId, 'memory', 'note', 'untargeted thought'])
   const { rows } = await pool.query<{ meta: Record<string, unknown> }>(
@@ -244,7 +236,7 @@ test('[integration] memory note: identity guard — even with --as, only the cal
   // pulled out of unrelated CLI args.
   const { agentId: agentA } = await seedCompanyWithAgent({ agentId: `agent-a-${randomUUID().slice(0, 6)}` })
   await seedCompanyWithAgent({ companyId: 'c-other', agentId: 'agent-other' })
-  __setEmbedTextOverrideForTesting(() => null)
+  __setEmbedTextOverrideForTesting(() => fakeEmbedding())
 
   await runCli(['--as', agentA, 'memory', 'note', 'mine alone'])
   const { rows: a } = await pool.query<{ body: string }>(

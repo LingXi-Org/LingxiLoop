@@ -7,8 +7,10 @@ import { useEffect, useRef, type RefObject } from 'react'
 import { Avatar } from './Avatar'
 import { HumanBadge } from './HumanBadge'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Item, ItemContent, ItemGroup, ItemMedia, ItemTitle, ItemDescription } from '@/components/ui/item'
 import { useSurface } from '@/stores/surface'
 import { useMe } from '@/stores/auth'
+import { participantRoleZh } from '@/lib/participantRole'
 import type { Participant } from '@/types'
 
 const STATUS_LABEL: Record<string, string> = {
@@ -80,46 +82,54 @@ export function MembersPopover({ members, anchor, triggerRef, onClose }: Props) 
       style={{
         left: anchor.right - 280,
         top: anchor.bottom + 6,
-        boxShadow: '0 12px 32px -10px rgba(10, 30, 60, 0.22), 0 6px 14px -6px rgba(10, 30, 60, 0.14), 0 0 0 1px rgba(0, 80, 140, 0.08)',
+        boxShadow: '0 12px 32px -10px color-mix(in srgb, var(--foreground) 22%, transparent), 0 6px 14px -6px color-mix(in srgb, var(--foreground) 14%, transparent), 0 0 0 1px color-mix(in srgb, var(--border) 80%, transparent)',
       }}
     >
       <div className="px-3 pt-2 pb-1.5 text-[10.5px] font-bold tracking-[0.12em] uppercase text-ink-300">
         {members.length} {members.length === 1 ? "成员" : "成员"}
       </div>
       <ScrollArea style={{ height: Math.min(sorted.length * 48, 400), maxHeight: 'calc(100vh - 96px)' }}>
-        <div className="py-0.5">
+        <ItemGroup className="gap-0 py-0.5">
         {sorted.map((p) => {
           const isYou = p.id === meId
+          const roleLabel = participantRoleZh(p)
           return (
-            <button
+            <Item
               key={p.id}
+              role={isYou ? undefined : 'button'}
+              tabIndex={isYou ? undefined : 0}
+              size="xs"
               onClick={() => {
                 if (!isYou) openInfo(p.id)
                 onClose()
               }}
-              disabled={isYou}
-              className="w-full text-left flex items-center gap-2.5 py-2 px-3 transition hover:bg-sky2-50 disabled:cursor-default disabled:hover:bg-transparent"
+              onKeyDown={(event) => {
+                if (isYou || (event.key !== 'Enter' && event.key !== ' ')) return
+                event.preventDefault(); openInfo(p.id); onClose()
+              }}
+              aria-disabled={isYou || undefined}
+              className="flex-nowrap rounded-none border-0 px-3 py-2 hover:bg-sky2-50 aria-disabled:cursor-default aria-disabled:hover:bg-transparent"
             >
-              <Avatar p={p} size={32} ringColor="var(--cloud)" showStatus={false} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
+              <ItemMedia><Avatar p={p} size={32} ringColor="var(--cloud)" /></ItemMedia>
+              <ItemContent className="min-w-0">
+                <ItemTitle className="flex w-full items-center gap-1.5">
                   <span className="text-[13px] font-semibold text-ink-900 truncate">{p.name}</span>
                   {isYou && <span className="text-[9.5px] font-bold py-px px-1.5 rounded uppercase tracking-wider bg-sky2-100 text-skype-deep">你</span>}
                   {!isYou && p.kind === 'human' && <HumanBadge />}
-                </div>
-                <div className="text-[11.5px] text-ink-500 truncate flex items-center gap-1.5">
+                </ItemTitle>
+                <ItemDescription className="flex items-center gap-1.5 truncate text-[11.5px] text-ink-500">
                   <span
                     className="inline-block w-1.5 h-1.5 rounded-full"
                     style={{ background: STATUS_COLOR[p.status] ?? 'var(--resting)' }}
                   />
-                  {STATUS_LABEL[p.status] ?? 'idle'}
-                  {p.role && <><span className="text-ink-300">·</span><em className="not-italic font-display italic">{p.role}</em></>}
-                </div>
-              </div>
-            </button>
+                  {STATUS_LABEL[p.status] ?? '空闲'}
+                  {roleLabel && <><span className="text-ink-300">·</span><em className="not-italic font-display italic">{roleLabel}</em></>}
+                </ItemDescription>
+              </ItemContent>
+            </Item>
           )
         })}
-        </div>
+        </ItemGroup>
       </ScrollArea>
     </div>
   )

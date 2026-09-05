@@ -12,7 +12,7 @@ DEFINE FIELD IF NOT EXISTS created ON TABLE episode_profile TYPE datetime DEFAUL
 DEFINE FIELD IF NOT EXISTS updated ON TABLE episode_profile TYPE datetime DEFAULT time::now();
 
 -- Create Speaker Profile table
-remove table speaker_profile;
+REMOVE TABLE IF EXISTS speaker_profile;
 DEFINE TABLE IF NOT EXISTS speaker_profile SCHEMAFULL;
 DEFINE FIELD IF NOT EXISTS name ON TABLE speaker_profile TYPE string;
 DEFINE FIELD IF NOT EXISTS description ON TABLE speaker_profile TYPE option<string>;

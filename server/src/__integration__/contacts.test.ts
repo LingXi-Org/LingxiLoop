@@ -1,5 +1,5 @@
 /**
- * Integration test: `lingxiloop contacts [<query>]` lookup.
+ * Integration test: canonical `lingxiloop email contacts [<query>]` lookup.
  *
  * Surfaces the bug the user hit: Nova was asked to email "Wey Gu" and
  * silently produced empty output because Wey Gu wasn't in
@@ -42,7 +42,7 @@ test('[integration] contacts lists same-tenant agents (no query)', async () => {
      ON CONFLICT DO NOTHING`,
     [(await pool.query('SELECT company_id FROM participants WHERE id = $1', [agentId])).rows[0].company_id, 'bram.test@lingxiloop.local'],
   )
-  const text = await runCliText(['contacts', '--as', agentId])
+  const text = await runCliText(['email', 'contacts', '--as', agentId])
   assert.match(text, /bram/i, `expected the other agent in the list; got:\n${text}`)
 })
 
@@ -57,11 +57,11 @@ test('[integration] contacts shows each agent\'s role/function (the directory bu
      ON CONFLICT DO NOTHING`,
     [companyId, 'iris.test@lingxiloop.local'],
   )
-  const text = await runCliText(['contacts', '--as', agentId])
+  const text = await runCliText(['email', 'contacts', '--as', agentId])
   assert.match(text, /Iris/, `expected Iris in the list; got:\n${text}`)
   assert.match(text, /Designer/, `expected Iris's role/function to be shown; got:\n${text}`)
   // And the role is searchable, so "find me the designer" works.
-  const byRole = await runCliText(['contacts', 'designer', '--as', agentId])
+  const byRole = await runCliText(['email', 'contacts', 'designer', '--as', agentId])
   assert.match(byRole, /Iris/, `role query "designer" must find Iris; got:\n${byRole}`)
 })
 
@@ -79,7 +79,7 @@ test('[integration] contacts <query> filters by name substring', async () => {
      ON CONFLICT DO NOTHING`,
     [companyId, 'atlas.test@lingxiloop.local'],
   )
-  const hit = await runCliText(['contacts', 'wey', '--as', agentId])
+  const hit = await runCliText(['email', 'contacts', 'wey', '--as', agentId])
   assert.match(hit, /Wey Gu/, `wey query must find Wey Gu; got:\n${hit}`)
   assert.doesNotMatch(hit, /Atlas/, `wey query must NOT pull in Atlas; got:\n${hit}`)
 })
@@ -92,7 +92,7 @@ test('[integration] contacts <query> filters email_contacts addresses too', asyn
      ON CONFLICT DO NOTHING`,
     [companyId],
   )
-  const hit = await runCliText(['contacts', 'external.org', '--as', agentId])
+  const hit = await runCliText(['email', 'contacts', 'external.org', '--as', agentId])
   assert.match(hit, /someone@external\.org/, `external email query must hit; got:\n${hit}`)
 })
 
@@ -102,16 +102,14 @@ test('[integration] contacts <query> with no match returns the "ask the user" hi
   // After this fix, the lookup returns a clear hint telling the LLM
   // to ASK rather than skip.
   const { agentId } = await seedCompanyWithAgent({ agentId: 'aurora' })
-  const text = await runCliText(['contacts', 'wey gu', '--as', agentId])
+  const text = await runCliText(['email', 'contacts', 'wey gu', '--as', agentId])
   assert.match(text, /no contacts match/i,
     `unmatched query must explicitly say so; got:\n${text}`)
   assert.match(text, /\bASK\b/,
     `unmatched query should nudge the LLM to ASK the user; got:\n${text}`)
 })
 
-test('[integration] email contacts <query> works the same way (alias)', async () => {
-  // Back-compat: `lingxiloop email contacts <query>` should behave identically
-  // to the new top-level `lingxiloop contacts <query>`.
+test('[integration] retired top-level contacts alias is not restored', async () => {
   const { agentId, companyId } = await seedCompanyWithAgent({ agentId: 'aurora' })
   await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
@@ -119,9 +117,8 @@ test('[integration] email contacts <query> works the same way (alias)', async ()
      ON CONFLICT DO NOTHING`,
     [companyId, 'weygu.test@lingxiloop.local'],
   )
-  const direct = await runCliText(['contacts', 'wey', '--as', agentId])
-  const aliased = await runCliText(['email', 'contacts', 'wey', '--as', agentId])
-  // Both should contain Wey Gu.
-  assert.match(direct, /Wey Gu/)
-  assert.match(aliased, /Wey Gu/)
+  const canonical = await runCliText(['email', 'contacts', 'wey', '--as', agentId])
+  const retired = await runCliText(['contacts', 'wey', '--as', agentId])
+  assert.match(canonical, /Wey Gu/)
+  assert.match(retired, /unknown subcommand: contacts/)
 })

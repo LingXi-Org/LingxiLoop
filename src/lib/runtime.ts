@@ -1,26 +1,11 @@
+import type { SerializableThreadMessageSnapshot } from '@/features/chat/runtime'
+
 /** Runtime detection for the supported Electron and Web surfaces. */
 
 export interface NotificationPushPayload {
   id: string
-  /** Underlying message id — used by the notification renderer to
-   *  dedupe identical pushes (e.g. if the WS bus delivers the same
-   *  message.new twice during a flaky reconnect). The toast `id`
-   *  carries a timestamp suffix so React keys stay unique across
-   *  re-pushes, but `messageId` is the actual identity. */
-  messageId: string
-  conversationId: string
-  authorId: string
-  authorName: string
-  authorAvatarUrl?: string | null
-  /** Single uppercase letter used in the avatar fallback when no
-   *  portrait URL is available — mirrors the convo-list avatar style. */
-  authorInitial?: string
-  /** CSS background (color or gradient) for the avatar fallback —
-   *  pulled from `participant.avatarBg`. Each agent has a stable color
-   *  so the fallback always reads as "Bram's avatar", not a blank disc. */
-  authorAvatarBg?: string
+  message: SerializableThreadMessageSnapshot
   conversationTitle: string
-  body: string
   at: number
   /** Conversation-level unread count snapshot at push time. Shown on
    *  the toast only when > 1 — single new messages don't get decorated
@@ -72,72 +57,6 @@ interface LingxiLoopBridge {
     /** Main window subscribes — fires when notif window asks to focus a convo. */
     onFocusConvo: (handler: (conversationId: string) => void) => () => void
   }
-  /** OAuth loopback bridge. Main process opens the user's system
-   *  browser via openExternal(); after the provider chain, our local
-   *  loopback HTTP server (port 47823) catches the redirect, the
-   *  served HTML page POSTs the parsed fragment to /auth/token, and
-   *  onToken fires here so AuthGate can plant the session. */
-  auth?: {
-    openExternal: (url: string) => Promise<boolean>
-    /** Arm a single-use handoff nonce (anti session-fixation). Returns the
-     *  nonce to thread through the OAuth return URL. */
-    arm?: () => Promise<string>
-    onToken: (handler: (payload: { token: string; companyId: string | null }) => void) => () => void
-  }
-  /** Auto-update bridge — ported from alma's pattern. Surfaces
-   *  electron-updater status to the renderer so the React side can
-   *  render the upgrade UI without polling. Unavailable in browser /
-   *  PWA mode (only present when `lingxiloop.isElectron`). */
-  update?: {
-    getAppInfo: () => Promise<AppUpdateInfo>
-    getStatus: () => Promise<AutoUpdateStatus>
-    getInfo: () => Promise<UpdateReleasePayload | null>
-    check: () => Promise<ManualUpdateResult>
-    download: () => Promise<{ ok: boolean; error?: string }>
-    install: () => Promise<{ ok: boolean }>
-    onStatus: (handler: (payload: AutoUpdateStatus) => void) => () => void
-  }
-}
-
-/** Status broadcast on every state change. `idle` is the initial value;
- *  `unsupported` means the running build can't auto-update at all
- *  (PWA, ad-hoc dev, packaged without a feed). */
-export type AutoUpdateKind =
-  | 'idle' | 'checking' | 'update-available' | 'update-not-available'
-  | 'downloading' | 'update-downloaded' | 'error' | 'unsupported'
-
-export interface AutoUpdateStatus {
-  status: AutoUpdateKind
-  version?: string
-  detail?: string
-  percent?: number
-  transferred?: number
-  total?: number
-  bytesPerSecond?: number
-  /** True if the manual "Check for updates" button kicked this off. UI
-   *  uses this to decide whether to surface a "no update" toast (don't
-   *  bother for background checks). */
-  triggeredByUser?: boolean
-}
-
-export type ManualUpdateResult =
-  | { status: 'unsupported'; message?: string }
-  | { status: 'update-available'; version?: string }
-  | { status: 'update-downloaded'; version?: string }
-  | { status: 'update-not-available' }
-  | { status: 'error'; message?: string }
-
-export interface AppUpdateInfo {
-  name: string
-  version: string
-  autoUpdateSupported: boolean
-  autoUpdateStatus: AutoUpdateStatus
-}
-
-export interface UpdateReleasePayload {
-  version: string
-  releaseNotes: string | null
-  releaseDate: string
 }
 
 declare global {
@@ -150,7 +69,7 @@ export const isElectron: boolean = typeof window !== 'undefined' && window.lingx
 
 /** True only for an optional handoff-only `app.*` Web client. The primary Web
  *  origin gets the complete product UI. When this is true we surface sign-in,
- *  waitlist, and a desktop hand-off. The `?webonly=1` escape lets localhost dev
+ *  sign-in and a desktop hand-off. The `?webonly=1` escape lets localhost dev
  *  preview the trimmed shell without /etc/hosts trickery. */
 export const isWebAppHost: boolean = (() => {
   if (typeof window === 'undefined') return false

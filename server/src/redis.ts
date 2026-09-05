@@ -1,3 +1,4 @@
+import type { AssistantStreamChunk } from 'assistant-stream'
 import IORedis from 'ioredis'
 import { env } from './env.js'
 
@@ -31,7 +32,7 @@ sub.on('error', (e) => console.error('[redis sub]', e))
 
 /* === Channel keys === */
 export const CH_MESSAGE_NEW = 'lingxiloop:msg.new'
-export const CH_MESSAGE_DELTA = 'lingxiloop:msg.delta'
+export const CH_ASSISTANT_STREAM = 'lingxiloop:assistant.stream'
 export const CH_TYPING = 'lingxiloop:typing'
 export const CH_STATUS = 'lingxiloop:status'
 export const CH_REACTIONS = 'lingxiloop:reactions'
@@ -39,7 +40,6 @@ export const CH_POLLS = 'lingxiloop:polls'
 export const CH_GROUP_PULLED = 'lingxiloop:group.pulled'
 export const CH_CONVO_UPDATED = 'lingxiloop:convo.updated'
 export const CH_CONVENE = 'lingxiloop:convene'
-export const CH_BOARDS = 'lingxiloop:boards'
 export const CH_DOCS = 'lingxiloop:docs'
 /** Shared Canvas mutations and presence. Frame state stays in Postgres; this
  * channel only carries the small realtime delta to connected workspace peers. */
@@ -170,16 +170,13 @@ export interface MessageNewEvent extends TenantTagged {
   }
 }
 
-export interface MessageDeltaEvent extends TenantTagged {
-  type: 'message.delta'
+export interface AssistantStreamEvent extends TenantTagged {
+  type: 'assistant.stream'
   conversationId: string
   messageId: string
   authorId: string
-  delta: string
-  /** sequence number for this in-flight message; assigned at start */
   sequence: number
-  /** when true, no more deltas — final body has been written to DB */
-  done: boolean
+  chunks: AssistantStreamChunk[]
 }
 
 export interface TypingEvent extends TenantTagged {
@@ -196,15 +193,6 @@ export interface StatusEvent extends TenantTagged {
   participantId: string
   status: string
   statusUpdatedAt?: string
-}
-
-/** Fired when an agent's avatar gets (re-)generated. Clients patch their
- *  local participants store so the new portrait appears without waiting
- *  for the periodic refresh tick. */
-export interface AvatarEvent extends TenantTagged {
-  type: 'participants.avatar'
-  participantId: string
-  avatarUrl: string
 }
 
 /** Fired when a human accepts an invite (or is otherwise newly mirrored
@@ -272,27 +260,6 @@ export interface ConveneEvent extends TenantTagged {
  *  refetch — e.g. an optimistic drag-drop that already moved the card.
  *  Mention targets are echoed too so the notification toaster can chime
  *  for the recipient without diffing the card body. */
-export interface BoardEvent extends TenantTagged {
-  type: 'board.changed'
-  /** what changed. Coarse — the renderer refetches on any of these. */
-  kind:
-    | 'board.created' | 'board.updated' | 'board.deleted'
-    | 'column.created' | 'column.updated' | 'column.deleted'
-    | 'card.created' | 'card.updated' | 'card.moved' | 'card.deleted'
-    | 'comment.created' | 'comment.deleted'
-  boardId: string
-  cardId?: string
-  columnId?: string
-  commentId?: string
-  /** Parsed @-mentions in the changed entity (card title/description or
-   *  comment body). Frontends watch this for "I was just @-mentioned"
-   *  toasts even when the user isn't actively viewing the board. */
-  mentions?: string[]
-  /** Actor who triggered the change — used to suppress self-notifications. */
-  actorId?: string
-  workspaceId?: string
-}
-
 /** Document metadata/listing changed. Content sync still uses the CRDT
  *  doc channels below; this event only tells clients to refresh the
  *  document index so newly-created agent docs appear immediately. */
@@ -359,6 +326,7 @@ export interface DocAwarenessEvent extends TenantTagged {
  *  in `mentionedIds`. */
 export interface DocMentionEvent extends TenantTagged {
   type: 'doc.mention'
+  deliveryId: string
   documentId: string
   documentTitle: string
   mentionerId: string
@@ -418,6 +386,7 @@ export interface PollUpdatedEvent extends TenantTagged {
   type: 'poll.updated'
   conversationId: string
   messageId: string
+  revision: number
   /** Poll payload as stored on messages.poll — includes closedAt when this
    *  event marks the poll as closed. */
   poll: {
@@ -473,10 +442,10 @@ export interface DocAccessRevokedEvent extends TenantTagged {
   userId: string
 }
 
-export type BroadcastEvent = MessageNewEvent | MessageDeltaEvent | TypingEvent
-  | StatusEvent | AvatarEvent | ParticipantAddedEvent | ReactionsEvent
+export type BroadcastEvent = MessageNewEvent | AssistantStreamEvent | TypingEvent
+  | StatusEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
-  | BoardEvent | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
+  | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
   | CalendarEventChangedEvent
   | PollUpdatedEvent
   | DocAccessRevokedEvent

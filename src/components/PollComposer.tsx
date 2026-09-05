@@ -1,22 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { BarChart3Icon, PlusIcon, XIcon } from 'lucide-react'
-import { messagesApi } from '@/api/messages'
+import { Cancel01Icon, ChartBarLineIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { messagesApi } from '@/features/chat/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import {
-  Questionnaire,
-  QuestionnaireActions,
-  QuestionnaireChoice,
-  QuestionnaireChoiceDescription,
-  QuestionnaireChoices,
-  QuestionnaireDescription,
-  QuestionnaireError,
-  QuestionnaireItem,
-  QuestionnaireSubmit,
-  QuestionnaireTitle,
-} from '@/components/ui/questionnaire'
+import { Questionnaire } from '@shadcn/react/questionnaire'
 import { cn } from '@/lib/utils'
+import { userFacingError } from '@/lib/userFacingError'
 
 interface Props {
   onSubmitted: () => void
@@ -42,6 +33,7 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const questionRef = useRef<HTMLInputElement | null>(null)
+  const requestIdRef = useRef<string | null>(null)
 
   useEffect(() => { questionRef.current?.focus() }, [])
   useEffect(() => {
@@ -59,32 +51,37 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
     if (!canSubmit) { setError('请输入问题和至少两个选项。'); return }
     setSubmitting(true)
     setError(null)
+    requestIdRef.current ??= crypto.randomUUID()
     void messagesApi.createPoll({
+      clientRequestId: requestIdRef.current,
       conversationId,
       question: question.trim(),
       mode,
       options: cleanedOptions,
       expiresInMinutes: expireToMinutes(expire),
-    }).then(onSubmitted).catch((reason) => {
-      setError(reason instanceof Error ? reason.message : '创建投票失败')
+    }).then(() => {
+      requestIdRef.current = null
+      onSubmitted()
+    }).catch((reason) => {
+      setError(userFacingError(reason, '创建投票失败，请稍后重试。'))
       setSubmitting(false)
     })
   }
 
   return (
-    <Questionnaire items={MODE_ITEMS} defaultItem="mode" onSubmit={submit} className="mb-2 animate-rise">
+    <Questionnaire.Root items={MODE_ITEMS} defaultItem="mode" onSubmit={submit} className="mb-2 animate-rise">
       <Card className="w-full" size="sm">
         <CardHeader className="grid-cols-[1fr_auto]">
           <div className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-lg bg-primary/10 text-primary"><BarChart3Icon className="size-4" /></span>
+            <span className="grid size-7 place-items-center rounded-lg bg-primary/10 text-primary"><HugeiconsIcon icon={ChartBarLineIcon} strokeWidth={2} className="size-4" /></span>
             <CardTitle>新建投票</CardTitle>
           </div>
-          <Button type="button" variant="ghost" size="icon-xs" onClick={onCancel} aria-label="取消投票"><XIcon /></Button>
+          <Button type="button" variant="ghost" size="icon-xs" onClick={onCancel} aria-label="取消投票"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button>
         </CardHeader>
         <CardContent>
-          <QuestionnaireItem name="mode" required>
-            <QuestionnaireTitle>投票内容</QuestionnaireTitle>
-            <QuestionnaireDescription>输入问题和选项，并选择参与者可以提交一个还是多个答案。</QuestionnaireDescription>
+          <Questionnaire.Item name="mode" required>
+            <Questionnaire.Title>投票内容</Questionnaire.Title>
+            <Questionnaire.Description>输入问题和选项，并选择参与者可以提交一个还是多个答案。</Questionnaire.Description>
             <div className="grid gap-2">
               <Input ref={questionRef} value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="输入投票问题…" maxLength={280} aria-label="投票问题" />
               {options.map((option, index) => (
@@ -97,41 +94,41 @@ export function PollComposer({ onSubmitted, onCancel, conversationId }: Props) {
                     aria-label={`投票选项 ${index + 1}`}
                   />
                   {options.length > MIN_OPTIONS ? (
-                    <Button type="button" variant="ghost" size="icon-xs" onClick={() => setOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`移除选项 ${index + 1}`}><XIcon /></Button>
+                    <Button type="button" variant="ghost" size="icon-xs" onClick={() => setOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`移除选项 ${index + 1}`}><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button>
                   ) : null}
                 </div>
               ))}
               {options.length < MAX_OPTIONS ? (
-                <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => setOptions((current) => [...current, ''])}><PlusIcon />添加选项</Button>
+                <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => setOptions((current) => [...current, ''])}><HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />添加选项</Button>
               ) : null}
             </div>
-            <QuestionnaireChoices className="grid-cols-2">
-              <QuestionnaireChoice value="single" checked={mode === 'single'} onChange={() => setMode('single')}>
-                <span>单选</span><QuestionnaireChoiceDescription>每人选择一个答案</QuestionnaireChoiceDescription>
-              </QuestionnaireChoice>
-              <QuestionnaireChoice value="multi" checked={mode === 'multi'} onChange={() => setMode('multi')}>
-                <span>多选</span><QuestionnaireChoiceDescription>每人可以选择多个答案</QuestionnaireChoiceDescription>
-              </QuestionnaireChoice>
-            </QuestionnaireChoices>
+            <Questionnaire.Choices className="grid grid-cols-2 gap-3">
+              <Questionnaire.Choice value="single" checked={mode === 'single'} onChange={() => setMode('single')} className="rounded-md border border-input p-3">
+                <span>单选</span><Questionnaire.ChoiceLabel className="block text-sm text-muted-foreground">每人选择一个答案</Questionnaire.ChoiceLabel>
+              </Questionnaire.Choice>
+              <Questionnaire.Choice value="multi" checked={mode === 'multi'} onChange={() => setMode('multi')} className="rounded-md border border-input p-3">
+                <span>多选</span><Questionnaire.ChoiceLabel className="block text-sm text-muted-foreground">每人可以选择多个答案</Questionnaire.ChoiceLabel>
+              </Questionnaire.Choice>
+            </Questionnaire.Choices>
             <div className="flex flex-wrap items-center gap-1.5" aria-label="投票有效期">
               <span className="mr-1 text-xs text-muted-foreground">有效期</span>
               {(Object.keys(EXPIRE_LABELS) as ExpireChoice[]).map((choice) => (
                 <Button key={choice} type="button" size="xs" variant={expire === choice ? 'default' : 'outline'} onClick={() => setExpire(choice)}>{EXPIRE_LABELS[choice]}</Button>
               ))}
             </div>
-            <QuestionnaireError>{error ?? '请选择投票模式。'}</QuestionnaireError>
+            <Questionnaire.Error>{error ?? '请选择投票模式。'}</Questionnaire.Error>
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          </QuestionnaireItem>
+          </Questionnaire.Item>
         </CardContent>
         <CardFooter className="justify-end">
-          <QuestionnaireActions className="min-h-0 w-auto grid-cols-[auto_auto]">
+          <div className="flex min-h-0 w-auto gap-2">
             <Button type="button" variant="outline" size="sm" onClick={onCancel}>取消</Button>
-            <QuestionnaireSubmit className={cn('col-start-2', !canSubmit && 'opacity-50')} size="sm" disabled={!canSubmit}>
+            <Questionnaire.Submit className={cn('col-start-2', !canSubmit && 'opacity-50')} disabled={!canSubmit}>
               {submitting ? '发布中…' : '发起投票'}
-            </QuestionnaireSubmit>
-          </QuestionnaireActions>
+            </Questionnaire.Submit>
+          </div>
         </CardFooter>
       </Card>
-    </Questionnaire>
+    </Questionnaire.Root>
   )
 }

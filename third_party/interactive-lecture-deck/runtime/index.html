@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoom Lecture</title>
+<style>
+:root{
+  color-scheme:light;
+  --paper:#fbfaf7;--canvas:#f2f0ea;--outside:#ffffff;--surface:#ffffff;--sunken:#f4f2ec;
+  --ink-1:#23231f;--ink-2:#5f5e5a;--ink-3:#8a8880;
+  --rule:rgba(35,35,31,.14);--rule-strong:rgba(35,35,31,.30);
+  --accent:#534ab7;--accent-soft:#eeedfe;
+  --guide:#2457a6;--guide-2:#194887;--guide-ink:#f7fbff;--guide-muted:#dce9fb;
+  --font-serif:"Songti SC","Source Han Serif SC","Noto Serif SC","SimSun",Georgia,"Times New Roman",serif;
+  --font-sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans SC","Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--outside);color:var(--ink-1);font-family:var(--font-sans)}
+body{user-select:none}
+.runtime{position:relative;width:100%;height:100%;overflow:hidden;background:var(--outside)}
+.viewport{position:absolute;inset:0;overflow:hidden;perspective:1500px;perspective-origin:50% 48%;isolation:isolate;background:var(--outside)}
+.fit-layer{
+  position:absolute;left:50%;top:50%;width:1280px;height:720px;
+  transform-origin:50% 50%;transform:translate(-50%,-50%) scale(var(--fit,1));
+  transform-style:preserve-3d;will-change:transform;
+}
+.interaction-layer{
+  position:absolute;inset:0;width:1280px;height:720px;transform-origin:50% 50%;
+  transform-style:preserve-3d;will-change:transform;
+  transform:translate3d(0,0,0) scale(1) rotateX(0deg) rotateY(0deg);
+}
+.spatial-layer{
+  position:absolute;inset:0;width:1280px;height:720px;transform-origin:50% 50%;
+  transform-style:preserve-3d;will-change:transform;
+  transform:translate3d(0,0,0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+}
+.camera{
+  position:absolute;inset:0;width:1280px;height:720px;transform-origin:0 0;
+  transform-style:preserve-3d;transform:translate3d(0,0,0) scale(1);will-change:transform;
+}
+.slide-frame{
+  position:absolute;inset:0;width:1280px;height:720px;border:0;background:var(--paper);
+  backface-visibility:hidden;transform:translateZ(0);
+  box-shadow:0 20px 58px rgba(35,35,31,.13),0 2px 10px rgba(35,35,31,.06);
+}
+.highlight-layer{position:absolute;inset:0;width:1280px;height:720px;pointer-events:none;transform:translateZ(2px)}
+.anchor-highlight{
+  position:absolute;border:2px solid var(--accent);border-radius:8px;
+  box-shadow:0 0 0 1px rgba(251,250,247,.72) inset;
+  opacity:0;transition:opacity 260ms ease;
+}
+.anchor-highlight.on{opacity:1}
+.anchor-highlight.spotlight{box-shadow:0 0 0 2200px rgba(35,35,31,.34),0 0 0 1px rgba(251,250,247,.72) inset}
+.interaction-surface{position:absolute;z-index:12;inset:0;cursor:grab;touch-action:none;outline:none}
+.interaction-surface.dragging{cursor:grabbing}
+
+.panel{
+  position:absolute;z-index:20;width:400px;max-height:min(590px,calc(100vh - 48px));
+  background:rgba(251,250,247,.988);border:.5px solid rgba(35,35,31,.22);border-radius:12px;
+  box-shadow:0 22px 60px rgba(35,35,31,.15);overflow:hidden;
+  opacity:0;transform:translateY(10px) scale(.985);pointer-events:none;
+  transition:opacity 260ms ease,transform 520ms var(--ease),left 760ms var(--ease),right 760ms var(--ease),top 760ms var(--ease),bottom 760ms var(--ease);
+}
+.panel.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.panel[data-place="right"]{right:28px;top:50%;transform:translateY(calc(-50% + 10px)) scale(.985)}
+.panel[data-place="right"].show{transform:translateY(-50%) scale(1)}
+.panel[data-place="left"]{left:28px;top:50%;transform:translateY(calc(-50% + 10px)) scale(.985)}
+.panel[data-place="left"].show{transform:translateY(-50%) scale(1)}
+.panel[data-place="bottom"]{left:50%;bottom:24px;transform:translate(-50%,10px) scale(.985)}
+.panel[data-place="bottom"].show{transform:translate(-50%,0) scale(1)}
+.panel[data-place="top"]{left:50%;top:24px;transform:translate(-50%,-10px) scale(.985)}
+.panel[data-place="top"].show{transform:translate(-50%,0) scale(1)}
+.panel-head{padding:20px 22px 15px;border-bottom:.5px solid var(--rule);background:rgba(255,255,255,.52)}
+.panel-eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:9px;font:400 11px/1.3 var(--font-mono);letter-spacing:.07em;color:var(--ink-3)}
+.panel-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.panel-title{margin:0;font:500 22px/1.36 var(--font-serif);color:var(--ink-1)}
+.panel-body{padding:18px 22px 21px;max-height:455px;overflow:auto;font:400 16px/1.82 var(--font-sans);color:var(--ink-1);user-select:text}
+.panel-body p{margin:0 0 12px}.panel-body p:last-child{margin-bottom:0}
+.panel-body ul,.panel-body ol{margin:7px 0 12px;padding-left:1.25em}.panel-body li{margin:4px 0}
+.panel-body blockquote{margin:10px 0;padding-left:12px;border-left:2px solid var(--accent);color:var(--ink-2)}
+.panel-body hr{border:0;border-top:.5px solid var(--rule);margin:14px 0}
+.panel-body code{font:400 .94em/1.6 var(--font-mono);padding:1px 5px;border-radius:4px;background:var(--sunken);color:#3c3489}
+.panel-body strong{font-weight:500;color:#332b78}.panel-body em{color:var(--ink-2)}
+.panel-body a{color:var(--accent);text-underline-offset:3px}
+.reveal-token{display:inline;opacity:0;filter:blur(2px);transform:translateY(5px);animation:tokenIn 300ms var(--ease) forwards}
+@keyframes tokenIn{to{opacity:1;filter:blur(0);transform:translateY(0)}}
+
+.onboarding{
+  position:absolute;z-index:60;right:24px;top:24px;width:min(318px,calc(100vw - 32px));
+  background:var(--guide);color:var(--guide-ink);border:1px solid rgba(255,255,255,.16);border-radius:12px;
+  box-shadow:0 18px 48px rgba(25,58,109,.20);overflow:hidden;
+  opacity:0;transform:translateY(-8px) scale(.99);pointer-events:none;
+  transition:opacity 220ms ease,transform 420ms var(--ease);
+}
+.onboarding.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.onboarding-head{display:flex;align-items:center;justify-content:space-between;padding:15px 17px 11px;border-bottom:1px solid rgba(255,255,255,.14)}
+.onboarding-title{margin:0;font:500 16px/1.2 var(--font-sans);letter-spacing:.01em;color:#fff}
+.onboarding-body{padding:12px 17px 13px;display:grid;gap:9px;font:400 13px/1.35 var(--font-sans);color:var(--guide-ink)}
+.guide-row{display:grid;grid-template-columns:106px 1fr;align-items:center;gap:12px}
+.guide-key{font:500 11px/1.2 var(--font-mono);color:#fff;white-space:nowrap}
+.guide-action{color:var(--guide-muted)}
+.onboarding-actions{display:flex;justify-content:flex-end;padding:0 17px 15px}
+.onboarding-btn{border:1px solid rgba(255,255,255,.28);border-radius:7px;background:#fff;color:var(--guide-2);padding:8px 13px;font:500 12px/1 var(--font-sans);cursor:pointer}
+.onboarding-btn:hover{background:#f4f8ff}
+.geometry-probe-fit{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:50% 50%;transform:translate(-50%,-50%) scale(var(--fit,1));transform-style:preserve-3d;opacity:0;pointer-events:none;z-index:-1}
+.geometry-probe-spatial{position:absolute;inset:0;width:1280px;height:720px;transform-origin:50% 50%;transform-style:preserve-3d}
+.geometry-probe-camera{position:absolute;inset:0;width:1280px;height:720px;transform-origin:0 0;transform-style:preserve-3d}
+.geometry-probe-anchor{position:absolute;pointer-events:none;transform:translateZ(2px)}
+
+@media (max-width:700px){.panel{left:16px!important;right:16px!important;width:auto!important;max-width:none;top:auto!important;bottom:16px!important;transform:translateY(10px) scale(.985)!important}.panel.show{transform:translateY(0) scale(1)!important}.onboarding{right:20px;top:20px}}
+@media (prefers-reduced-motion:reduce){.interaction-layer,.camera,.panel,.anchor-highlight,.onboarding{transition:none!important}.reveal-token{opacity:1!important;filter:none!important;transform:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="runtime" id="app">
+  <div class="viewport" id="viewport">
+    <div class="fit-layer" id="fitLayer">
+      <div class="interaction-layer" id="interactionLayer">
+        <div class="spatial-layer" id="spatialLayer">
+          <div class="camera" id="camera">
+            <iframe class="slide-frame" id="frame" title="lecture slide"></iframe>
+            <div class="highlight-layer" id="highlights"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="interaction-surface" id="interactionSurface" aria-label="讲解画布：滚轮缩放，左键拖拽，双击复位，方向键切换" tabindex="0"></div>
+    <aside class="panel" id="panel" data-place="right" aria-live="polite">
+      <div class="panel-head">
+        <div class="panel-eyebrow"><span class="panel-dot"></span><span>课堂讲解</span></div>
+        <h2 class="panel-title" id="panelTitle"></h2>
+      </div>
+      <div class="panel-body" id="panelBody"></div>
+    </aside>
+    <aside class="onboarding" id="onboarding" aria-live="polite" aria-label="操作说明">
+      <div class="onboarding-head"><h2 class="onboarding-title">操作</h2></div>
+      <div class="onboarding-body">
+        <div class="guide-row"><span class="guide-key">→ / Space · ←</span><span class="guide-action">下一步 / 上一步</span></div>
+        <div class="guide-row"><span class="guide-key">鼠标滚轮</span><span class="guide-action">缩放</span></div>
+        <div class="guide-row"><span class="guide-key">左键拖拽</span><span class="guide-action">移动画面</span></div>
+        <div class="guide-row"><span class="guide-key">双击 / 0</span><span class="guide-action">恢复讲解视角</span></div>
+      </div>
+      <div class="onboarding-actions"><button class="onboarding-btn" id="onboardingBtn" type="button">开始</button></div>
+    </aside>
+    <div class="geometry-probe-fit" id="probeFit" aria-hidden="true">
+      <div class="geometry-probe-spatial" id="probeSpatial">
+        <div class="geometry-probe-camera" id="probeCamera"><div class="geometry-probe-anchor" id="probeAnchor"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ZOOM_BUNDLE_START --><script id="zoomLectureBundle" type="application/json">null</script><!-- ZOOM_BUNDLE_END -->
+<script>
+(()=>{
+'use strict';
+const W=1280,H=720,DEPTH={1:1.25,2:1.5,3:1.8,4:2.2,5:3.5,6:5};
+const EASING={zoomOut:'cubic-bezier(.16,1,.3,1)',smooth:'cubic-bezier(.4,0,.2,1)',linear:'linear'};
+const el=id=>document.getElementById(id);
+const viewport=el('viewport'),fitLayer=el('fitLayer'),interactionLayer=el('interactionLayer'),spatialLayer=el('spatialLayer'),cameraEl=el('camera'),frame=el('frame'),highlights=el('highlights');
+const interactionSurface=el('interactionSurface');
+const panel=el('panel'),panelTitle=el('panelTitle'),panelBody=el('panelBody');
+const onboarding=el('onboarding'),onboardingBtn=el('onboardingBtn');
+const probeFit=el('probeFit'),probeSpatial=el('probeSpatial'),probeCamera=el('probeCamera'),probeAnchor=el('probeAnchor');
+let lecture=null,bundle=null,flat=[],cursor=0,currentSlideId=null,fit=1,revealRun=0,spatialAnimation=null,onboardingOpen=true,protectedGuardRun=0;
+let spatialState={x:0,y:0,z:0,yaw:0,pitch:0,roll:0};
+let userView={scale:1,panX:0,panY:0,yaw:0,pitch:0};
+let drag=null;
+
+const DEMO_SLIDE=`<!doctype html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box}html,body{margin:0;width:1280px;height:720px;overflow:hidden;background:#fbfaf7;color:#23231f;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.slide{position:relative;width:1280px;height:720px;padding:62px 72px}.k{font:500 15px ui-monospace,monospace;letter-spacing:.08em;color:#6d6a65}.t{position:absolute;left:72px;top:100px;width:850px;font:500 44px/1.2 Georgia,"Songti SC",serif}.rule{position:absolute;left:72px;right:72px;top:180px;border-top:1px solid #d7d4cc}.node{position:absolute;top:250px;width:300px;height:250px;border:1px solid #c7c3b9;border-radius:8px;padding:28px;background:#fff}.n1{left:82px}.n2{left:490px}.n3{left:898px}.num{font:500 13px ui-monospace,monospace;color:#534ab7}.node h3{font:500 27px/1.25 Georgia,"Songti SC",serif;margin:19px 0 13px}.node p{font:400 16px/1.7 sans-serif;color:#65625e;margin:0}.arrow{position:absolute;top:370px;font:400 34px Georgia,serif;color:#8d8982}.a1{left:424px}.a2{left:832px}</style></head><body><main class="slide"><div class="k">SPATIAL EXPLANATION</div><div class="t">放大不是为了看大，而是为了把因果关系逐层说清。</div><div class="rule"></div><section class="node n1"><div class="num">01</div><h3>输入压力</h3><p>观察请求到达速度如何逼近系统处理能力。</p></section><div class="arrow a1">→</div><section class="node n2"><div class="num">02</div><h3>队列累积</h3><p>真正的转折发生在积压开始持续增长时。</p></section><div class="arrow a2">→</div><section class="node n3"><div class="num">03</div><h3>等待时延</h3><p>最后被看到的延迟，其实是前面累积的结果。</p></section></main></body></html>`;
+const FALLBACK={
+ schemaVersion:'zoom-lecture/v2',
+ deck:{id:'runtime-demo',title:'Spatial UI Runtime 演示',language:'zh-CN',style:'anthropic-academic',canvas:{width:1280,height:720,format:'ppt169'},slideDir:'slides',createdAt:new Date().toISOString()},
+ defaults:{camera:{padding:28},transition:{inMs:980,outMs:700,easing:'zoomOut'},highlight:{style:'outline'},panel:{placement:'auto',width:420}},
+ slides:[{id:'s01',index:1,role:'content',file:'runtime/demo-slide.html',title:'放大不是为了看大，而是为了把因果关系逐层说清',anchors:[
+   {id:'a-demand',label:'输入压力',rect:{x:82,y:250,w:300,h:250}},
+   {id:'a-queue',label:'队列累积',rect:{x:490,y:250,w:300,h:250}},
+   {id:'a-delay',label:'等待时延',rect:{x:898,y:250,w:300,h:250}}
+ ],steps:[
+   {id:'s01-01',order:1,kind:'overview',camera:{mode:'fit'},advance:'manual'},
+   {id:'s01-02',order:2,kind:'zoom',camera:{mode:'anchor',anchorId:'a-demand'},panel:{placement:'right',title:'先找输入端的变化',body:'先看左边。真正重要的不是“请求很多”，而是到达速率开始稳定逼近服务能力。只要系统还有空隙，短暂的高峰并不会立刻变成问题。'},advance:'manual'},
+   {id:'s01-03',order:3,kind:'zoom',camera:{mode:'anchor',anchorId:'a-queue'},panel:{placement:'left',title:'转折发生在队列这里',body:'现在看中间：当输入长期高于处理速度，队列就不再有机会被清空。它像一个不断加水、却来不及排出的容器，后面的时延放大其实从这里已经决定了。'},advance:'manual'},
+   {id:'s01-04',order:4,kind:'zoom',camera:{mode:'anchor',anchorId:'a-delay'},panel:{placement:'left',title:'时延只是最后被看见的结果',body:'右边的时延抬升是结果，不是起点。以后排查性能问题，先回到队列是否持续累积，再去问链路或处理器是不是“变慢”了，判断会更稳。'},advance:'manual'}
+ ]}]
+};
+
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function inlineMd(s){let x=escapeHtml(s);x=x.replace(/`([^`]+)`/g,'<code>$1</code>');x=x.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');x=x.replace(/\*([^*]+)\*/g,'<em>$1</em>');x=x.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');return x;}
+function renderMarkdown(md){
+ const lines=String(md??'').replace(/\r/g,'').split('\n');let out=[],para=[],list=null;
+ const flushPara=()=>{if(para.length){out.push('<p>'+inlineMd(para.join(' '))+'</p>');para=[]}};
+ const flushList=()=>{if(list){out.push(`<${list.type}>`+list.items.map(v=>'<li>'+inlineMd(v)+'</li>').join('')+`</${list.type}>`);list=null}};
+ for(const line of lines){
+  if(!line.trim()){flushPara();flushList();continue}
+  if(/^---+$/.test(line.trim())){flushPara();flushList();out.push('<hr>');continue}
+  const ul=line.match(/^\s*[-*]\s+(.+)/),ol=line.match(/^\s*\d+[.)]\s+(.+)/),quote=line.match(/^>\s?(.+)/),head=line.match(/^#{1,3}\s+(.+)/);
+  if(ul||ol){flushPara();const type=ul?'ul':'ol',val=(ul||ol)[1];if(!list||list.type!==type){flushList();list={type,items:[]}}list.items.push(val);continue}
+  if(quote){flushPara();flushList();out.push('<blockquote>'+inlineMd(quote[1])+'</blockquote>');continue}
+  if(head){flushPara();flushList();out.push('<p><strong>'+inlineMd(head[1])+'</strong></p>');continue}
+  para.push(line.trim());
+ }
+ flushPara();flushList();return out.join('');
+}
+function animateText(root){
+ const run=++revealRun;if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.nodeValue.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+ const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);let parts=[];
+ for(const n of nodes){const text=n.nodeValue;let segs;try{segs=[...new Intl.Segmenter('zh-CN',{granularity:'word'}).segment(text)].map(x=>x.segment)}catch(e){segs=text.split(/(?<=\s)|(?=\s)/)}parts.push({n,segs})}
+ const count=Math.max(1,parts.reduce((a,p)=>a+p.segs.filter(x=>x.trim()).length,0));const gap=Math.min(26,1100/count);let idx=0;
+ for(const part of parts){const frag=document.createDocumentFragment();for(const seg of part.segs){if(!seg.trim()){frag.appendChild(document.createTextNode(seg));continue}const span=document.createElement('span');span.className='reveal-token';span.textContent=seg;span.style.animationDelay=(idx*gap)+'ms';frag.appendChild(span);idx++}if(run===revealRun)part.n.replaceWith(frag)}
+}
+function anchorsById(slide){return Object.fromEntries((slide.anchors||[]).map(a=>[a.id,a]));}
+function resolveCamera(step,slide){
+ if(step.camera.mode==='fit')return{s:1,cx:.5,cy:.5};
+ const anchors=anchorsById(slide),anchor=anchors[step.camera.anchorId];if(!anchor)return{s:1,cx:.5,cy:.5};
+ const r=anchor.rect,dc=lecture.defaults?.camera||{},pad=step.camera.padding??dc.padding??24;
+ let s=step.camera.scale??(step.camera.depth?DEPTH[step.camera.depth]:null)??(dc.depth?DEPTH[dc.depth]:null)??Math.min(W/(r.w+2*pad),H/(r.h+2*pad));
+ s=clamp(s,.24,6);const f=step.camera.focus??{cx:(r.x+r.w/2)/W,cy:(r.y+r.h/2)/H};
+ return{s,cx:clamp(f.cx,0,1),cy:clamp(f.cy,0,1)};
+}
+function materializeCamera(cam){return{...cam,tx:cam.tx??(W/2-cam.cx*W*cam.s),ty:cam.ty??(H/2-cam.cy*H*cam.s)};}
+function cameraTransform(cam){const c=materializeCamera(cam);return `translate3d(${c.tx}px,${c.ty}px,0) scale(${c.s})`;}
+function resolvePlacement(step,cam){const p=step.panel?.placement??lecture.defaults?.panel?.placement??'auto';if(p!=='auto')return p;return cam.cx<=.5?'right':'left';}
+function placementOrder(step,cam){const preferred=resolvePlacement(step,cam),opposite={left:'right',right:'left',top:'bottom',bottom:'top'}[preferred];return[...new Set([preferred,opposite,'right','left','bottom','top'])];}
+function updateFit(){const r=viewport.getBoundingClientRect();fit=Math.min(r.width/W,r.height/H);fit=Math.max(.25,fit);fitLayer.style.setProperty('--fit',fit);probeFit.style.setProperty('--fit',fit);if(lecture)renderStep(false);}
+
+function inferPanelSide(panelRect,viewRect){
+ const pcx=(panelRect.left+panelRect.right)/2,pcy=(panelRect.top+panelRect.bottom)/2,vcx=(viewRect.left+viewRect.right)/2,vcy=(viewRect.top+viewRect.bottom)/2;
+ if(panelRect.width>=viewRect.width*.62)return pcy>=vcy?'bottom':'top';
+ if(panelRect.height>=viewRect.height*.62)return pcx>=vcx?'right':'left';
+ const nx=Math.abs(pcx-vcx)/Math.max(viewRect.width,1),ny=Math.abs(pcy-vcy)/Math.max(viewRect.height,1);if(ny>nx)return pcy>=vcy?'bottom':'top';return pcx>=vcx?'right':'left';
+}
+function protectedRect(panelRect){
+ const vr=viewport.getBoundingClientRect(),outer=26,gap=28,side=inferPanelSide(panelRect,vr);
+ let left=vr.left+outer,right=vr.right-outer,top=vr.top+outer,bottom=vr.bottom-outer;
+ if(side==='right')right=Math.min(right,panelRect.left-gap);
+ else if(side==='left')left=Math.max(left,panelRect.right+gap);
+ else if(side==='bottom')bottom=Math.min(bottom,panelRect.top-gap);
+ else top=Math.max(top,panelRect.bottom+gap);
+ return{left,right,top,bottom,width:Math.max(1,right-left),height:Math.max(1,bottom-top),side};
+}
+function focusRectForStep(step,slide){
+ const map=anchorsById(slide),ids=[step.camera?.anchorId,...(step.highlight?.anchorIds||[])].filter(Boolean),rects=[...new Set(ids)].map(id=>map[id]?.rect).filter(Boolean);
+ if(!rects.length)return null;const x=Math.min(...rects.map(r=>r.x)),y=Math.min(...rects.map(r=>r.y)),right=Math.max(...rects.map(r=>r.x+r.w)),bottom=Math.max(...rects.map(r=>r.y+r.h));
+ return{rect:{x,y,w:right-x,h:bottom-y}};
+}
+function measureProjectedAnchor(anchor,cam,spatial){
+ const r=anchor.rect;Object.assign(probeAnchor.style,{left:r.x+'px',top:r.y+'px',width:r.w+'px',height:r.h+'px'});
+ probeSpatial.style.transform=spatialTransform(spatial);probeCamera.style.transform=cameraTransform(cam);
+ return probeAnchor.getBoundingClientRect();
+}
+function overflowAgainst(rect,safe){return{left:Math.max(0,safe.left-rect.left),right:Math.max(0,rect.right-safe.right),top:Math.max(0,safe.top-rect.top),bottom:Math.max(0,rect.bottom-safe.bottom)};}
+function fitCameraToSafeArea(anchor,baseCam,spatial,safe){
+ let cam=materializeCamera(baseCam),rect;
+ // First reduce only when the projected target itself is larger than the protected region.
+ for(let i=0;i<4;i++){
+  rect=measureProjectedAnchor(anchor,cam,spatial);
+  const rw=(safe.width-6)/Math.max(rect.width,1),rh=(safe.height-6)/Math.max(rect.height,1),ratio=Math.min(1,rw,rh);
+  if(ratio>=.995)break;
+  const next=Math.max(.20,cam.s*ratio*.965);cam={...baseCam,s:next};cam=materializeCamera(cam);
+ }
+ // Then translate the camera. No slide-edge clamp is used: white outside-paper space is allowed.
+ for(let i=0;i<8;i++){
+  rect=measureProjectedAnchor(anchor,cam,spatial);const o=overflowAgainst(rect,safe);
+  if(Math.max(o.left,o.right,o.top,o.bottom)<=1.25)break;
+  if(o.left&&o.right){cam={...baseCam,s:Math.max(.20,cam.s*.94)};cam=materializeCamera(cam);continue}
+  if(o.top&&o.bottom){cam={...baseCam,s:Math.max(.20,cam.s*.94)};cam=materializeCamera(cam);continue}
+  const dx=o.left?o.left:(o.right?-o.right:0),dy=o.top?o.top:(o.bottom?-o.bottom:0);
+  cam.tx+=(dx/Math.max(fit,.25))*.985;cam.ty+=(dy/Math.max(fit,.25))*.985;
+ }
+ rect=measureProjectedAnchor(anchor,cam,spatial);const o=overflowAgainst(rect,safe);
+ return{cam,rect,overflow:Math.max(o.left,o.right,o.top,o.bottom),safe};
+}
+function preparePanel(step){
+ const baseW=step.panel.width??lecture.defaults?.panel?.width??420,screenW=Math.max(340,Math.min(480,baseW*fit));panel.style.width=screenW+'px';
+ panelTitle.textContent=step.panel.title||step.title||'讲解';panelBody.innerHTML=renderMarkdown(step.panel.body);panelBody.scrollTop=0;panel.classList.add('show');
+}
+function chooseProtectedLayout(step,slide,baseCam){
+ const anchor=focusRectForStep(step,slide);if(!step.panel||step.kind!=='zoom'||!anchor)return{cam:materializeCamera(baseCam),place:step.panel?resolvePlacement(step,baseCam):'right',spatial:spatialTarget('right',false)};
+ preparePanel(step);const preferred=resolvePlacement(step,baseCam);let best=null;const oldTransition=panel.style.transition;panel.style.transition='none';
+ for(const place of placementOrder(step,baseCam)){
+  panel.dataset.place=place;const panelRect=panel.getBoundingClientRect(),safe=protectedRect(panelRect);if(safe.width<96||safe.height<96)continue;
+  const actualSide=safe.side,spatial=spatialTarget(actualSide,true),fitResult=fitCameraToSafeArea(anchor,baseCam,spatial,safe);
+  const overlap=!(fitResult.rect.right<=panelRect.left-8||fitResult.rect.left>=panelRect.right+8||fitResult.rect.bottom<=panelRect.top-8||fitResult.rect.top>=panelRect.bottom+8);
+  const score=fitResult.cam.s-(fitResult.overflow*2)-(overlap?100:0)+(place===preferred ? .06 : 0);
+  if(!best||score>best.score)best={...fitResult,place:actualSide,requestedPlace:place,spatial,score};
+ }
+ if(!best){const place=preferred,spatial=spatialTarget(place,true);best={cam:materializeCamera({...baseCam,s:Math.min(baseCam.s,.8)}),place,spatial,score:-999};}
+ panel.dataset.place=best.place;void panel.offsetWidth;panel.style.transition=oldTransition;return best;
+}
+
+function userTransform(v=userView){return `translate3d(${v.panX}px,${v.panY}px,0) scale(${v.scale}) rotateX(${v.pitch}deg) rotateY(${v.yaw}deg)`;}
+function applyUserView(animate=false,ms=260){interactionLayer.style.transition=animate?`transform ${ms}ms var(--ease)`:'none';interactionLayer.style.transform=userTransform();}
+function resetUserView(animate=true,ms=760){userView={scale:1,panX:0,panY:0,yaw:0,pitch:0};applyUserView(animate,ms);}
+function setManualOrientation(){userView.yaw=clamp(userView.panX/92,-5.2,5.2);userView.pitch=clamp(-userView.panY/150,-3.2,3.2);}
+
+function spatialTransform(s){return `translate3d(${s.x}px,${s.y}px,${s.z}px) rotateX(${s.pitch}deg) rotateY(${s.yaw}deg) rotateZ(${s.roll}deg)`;}
+function spatialTarget(place,show){
+ if(!show)return{x:0,y:0,z:0,yaw:0,pitch:0,roll:0};
+ const width=parseFloat(panel.style.width)||400,base=clamp((width/Math.max(fit,.25))*.46+62,112,210);
+ if(place==='right')return{x:-base,y:-7,z:-18,yaw:7.4,pitch:-1.7,roll:-.12};
+ if(place==='left')return{x:base,y:-7,z:-18,yaw:-7.4,pitch:-1.7,roll:.12};
+ if(place==='bottom')return{x:0,y:-92,z:-24,yaw:.7,pitch:-4.4,roll:0};
+ return{x:0,y:92,z:-24,yaw:-.7,pitch:4.4,roll:0};
+}
+function animateSpatial(target,ms=920,animate=true){
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;if(spatialAnimation){spatialAnimation.cancel();spatialAnimation=null}
+ if(!animate||reduced||!spatialLayer.animate){spatialLayer.style.transform=spatialTransform(target);spatialState=target;return}
+ const from=getComputedStyle(spatialLayer).transform==='none'?spatialTransform(spatialState):getComputedStyle(spatialLayer).transform;
+ const sign=Math.sign(target.yaw||spatialState.yaw||target.x||spatialState.x||1);
+ const bridge={x:(spatialState.x+target.x)/2-sign*18,y:(spatialState.y+target.y)/2-4,z:-92,yaw:(spatialState.yaw+target.yaw)/2+sign*3.4,pitch:(spatialState.pitch+target.pitch)/2-1.2,roll:sign*.28};
+ spatialLayer.style.transform=spatialTransform(target);
+ spatialAnimation=spatialLayer.animate([
+  {transform:from,offset:0},
+  {transform:spatialTransform(bridge),offset:.42,easing:'cubic-bezier(.22,.72,.25,1)'},
+  {transform:spatialTransform(target),offset:1,easing:'cubic-bezier(.16,1,.3,1)'}
+ ],{duration:ms,fill:'both'});
+ spatialAnimation.onfinish=()=>{if(spatialAnimation){spatialAnimation.cancel();spatialAnimation=null}spatialLayer.style.transform=spatialTransform(target)};
+ spatialState=target;
+}
+function setSpatialForStep(step,cam,ms,animate=true,layout=null){const show=!!step.panel&&step.kind==='zoom';const target=layout?.spatial??spatialTarget(step.panel?resolvePlacement(step,cam):'right',show);animateSpatial(target,ms,animate);}
+
+function renderHighlights(step,slide){
+ highlights.innerHTML='';if(step.kind!=='zoom')return;const style=step.highlight?.style??lecture.defaults?.highlight?.style??'outline';if(style==='none')return;
+ const ids=step.highlight?.anchorIds?.length?step.highlight.anchorIds:[step.camera.anchorId],map=anchorsById(slide);
+ ids.forEach(id=>{const a=map[id];if(!a)return;const d=document.createElement('div');d.className='anchor-highlight'+(style==='spotlight'?' spotlight':'');Object.assign(d.style,{left:a.rect.x+'px',top:a.rect.y+'px',width:a.rect.w+'px',height:a.rect.h+'px'});highlights.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'))});
+}
+function actualHighlightUnion(){
+ const rects=[...highlights.querySelectorAll('.anchor-highlight')].map(n=>n.getBoundingClientRect()).filter(r=>r.width>0&&r.height>0);if(!rects.length)return null;
+ const left=Math.min(...rects.map(r=>r.left)),top=Math.min(...rects.map(r=>r.top)),right=Math.max(...rects.map(r=>r.right)),bottom=Math.max(...rects.map(r=>r.bottom));return{left,top,right,bottom,width:right-left,height:bottom-top};
+}
+function finalProtectedGuard(step,slide,baseCam,layout,delay=0){
+ const run=++protectedGuardRun;if(!step.panel||step.kind!=='zoom')return;
+ setTimeout(()=>{
+  if(run!==protectedGuardRun)return;const target=focusRectForStep(step,slide);if(!target)return;const panelRect=panel.getBoundingClientRect(),safe=protectedRect(panelRect),actual=actualHighlightUnion()??measureProjectedAnchor(target,layout.cam,layout.spatial);
+  const o=overflowAgainst(actual,safe),overlap=!(actual.right<=panelRect.left-6||actual.left>=panelRect.right+6||actual.bottom<=panelRect.top-6||actual.top>=panelRect.bottom+6);
+  if(Math.max(o.left,o.right,o.top,o.bottom)<=1.5&&!overlap)return;
+  const guardedBase={...baseCam,s:Math.max(.20,Math.min(baseCam.s,(layout.cam?.s??baseCam.s)*.92))},spatial=spatialTarget(safe.side,true),guarded=fitCameraToSafeArea(target,guardedBase,spatial,safe);
+  cameraEl.style.transition='transform 420ms var(--ease)';cameraEl.style.transform=cameraTransform(guarded.cam);animateSpatial(spatial,460,true);
+ },Math.max(0,delay)+70);
+}
+
+function showPanel(step,cam,layout=null){
+ if(!step.panel){panel.classList.remove('show');return}
+ if(!panel.classList.contains('show'))preparePanel(step);if(layout?.place)panel.dataset.place=layout.place;else panel.dataset.place=resolvePlacement(step,cam);
+ requestAnimationFrame(()=>animateText(panelBody));
+}
+function hidePanel(){panel.classList.remove('show');}
+function parseBundle(){
+ try{const raw=el('zoomLectureBundle')?.textContent?.trim();const parsed=raw?JSON.parse(raw):null;return parsed&&parsed.lecture&&parsed.slides?parsed:null}catch(e){console.warn('Invalid embedded lecture bundle',e);return null}
+}
+function slideSource(slide){
+ if(bundle){const key=String(slide.file||'').replace(/^\.\//,'');return bundle.slides[key]??bundle.slides[slide.id]??null}
+ if(lecture===FALLBACK)return DEMO_SLIDE;
+ return null;
+}
+function loadSlide(slide){
+ if(currentSlideId===slide.id)return Promise.resolve(false);currentSlideId=slide.id;
+ const embedded=slideSource(slide);
+ if(embedded!=null)return new Promise(resolve=>{frame.onload=()=>resolve(true);frame.srcdoc=embedded});
+ const url=new URL('../'+String(slide.file||'').replace(/^\.\//,''),document.baseURI).href;
+ return new Promise(resolve=>{frame.onload=()=>resolve(true);frame.src=url});
+}
+async function renderStep(animate=true){
+ if(!flat.length)return;const item=flat[cursor],slide=item.slide,step=item.step;await loadSlide(slide);
+ const baseCam=resolveCamera(step,slide),tr=step.transition||lecture.defaults?.transition||{};const ms=animate?(step.kind==='overview'?(tr.outMs??700):(tr.inMs??980)):0,easing=EASING[tr.easing||'zoomOut']||EASING.zoomOut;
+ if(step.panel&&step.kind==='zoom')preparePanel(step);else hidePanel();
+ const layout=chooseProtectedLayout(step,slide,baseCam),cam=layout.cam??materializeCamera(baseCam);
+ if(animate)resetUserView(true,Math.max(620,ms));else resetUserView(false);
+ cameraEl.style.transition=`transform ${ms}ms ${easing}`;cameraEl.style.transform=cameraTransform(cam);
+ renderHighlights(step,slide);if(step.panel)showPanel(step,cam,layout);else hidePanel();setSpatialForStep(step,cam,Math.max(760,ms),animate,layout);finalProtectedGuard(step,slide,baseCam,layout,ms);
+ document.title=`${lecture.deck?.title||'Zoom Lecture'} · ${slide.title||''}`;
+}
+function flatten(){flat=[];lecture.slides.forEach(slide=>(slide.steps||[]).forEach((step,stepIndex)=>flat.push({slide,step,stepIndex})));}
+function go(delta){const n=clamp(cursor+delta,0,flat.length-1);if(n===cursor)return;cursor=n;renderStep(true);}
+function dismissOnboarding(){if(!onboardingOpen)return;onboardingOpen=false;onboarding.classList.remove('show');interactionSurface.focus({preventScroll:true});}
+
+interactionSurface.addEventListener('wheel',e=>{
+ if(onboardingOpen)return;e.preventDefault();const rect=viewport.getBoundingClientRect(),px=(e.clientX-(rect.left+rect.width/2))/Math.max(fit,.25),py=(e.clientY-(rect.top+rect.height/2))/Math.max(fit,.25);
+ const old=userView.scale,factor=Math.exp(-e.deltaY*.00125),nextScale=clamp(old*factor,.72,2.45),ratio=nextScale/old;
+ userView.panX=px-(px-userView.panX)*ratio;userView.panY=py-(py-userView.panY)*ratio;userView.scale=nextScale;setManualOrientation();applyUserView(true,150);
+},{passive:false});
+interactionSurface.addEventListener('pointerdown',e=>{
+ if(onboardingOpen||e.button!==0)return;e.preventDefault();interactionSurface.setPointerCapture(e.pointerId);interactionSurface.classList.add('dragging');drag={id:e.pointerId,x:e.clientX,y:e.clientY};interactionLayer.style.transition='none';
+});
+interactionSurface.addEventListener('pointermove',e=>{
+ if(!drag||e.pointerId!==drag.id)return;const dx=(e.clientX-drag.x)/Math.max(fit,.25),dy=(e.clientY-drag.y)/Math.max(fit,.25);drag.x=e.clientX;drag.y=e.clientY;userView.panX+=dx/userView.scale;userView.panY+=dy/userView.scale;setManualOrientation();applyUserView(false);
+});
+function finishDrag(e){if(!drag||e.pointerId!==drag.id)return;drag=null;interactionSurface.classList.remove('dragging');applyUserView(true,220);}
+interactionSurface.addEventListener('pointerup',finishDrag);interactionSurface.addEventListener('pointercancel',finishDrag);
+interactionSurface.addEventListener('dblclick',e=>{if(onboardingOpen)return;e.preventDefault();resetUserView(true,620);});
+onboardingBtn.addEventListener('click',dismissOnboarding);
+
+async function boot(){
+ bundle=parseBundle();
+ if(bundle){lecture=bundle.lecture;}
+ else{
+  const q=new URLSearchParams(location.search),src=q.get('lecture')||'../lecture.json';
+  try{const res=await fetch(src,{cache:'no-store'});if(!res.ok)throw new Error(res.status+' '+res.statusText);lecture=await res.json();}
+  catch(err){lecture=FALLBACK;console.info('lecture.json unavailable; using built-in demo. Build a standalone artifact to run a real deck directly from file://',err)}
+ }
+ flatten();updateFit();await renderStep(false);requestAnimationFrame(()=>onboarding.classList.add('show'));
+}
+addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&onboardingOpen){e.preventDefault();dismissOnboarding();return}
+ if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();if(onboardingOpen)dismissOnboarding();go(1)}
+ else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();if(onboardingOpen)dismissOnboarding();go(-1)}
+ else if(e.key==='Home'){if(onboardingOpen)dismissOnboarding();cursor=0;renderStep()}
+ else if(e.key==='End'){if(onboardingOpen)dismissOnboarding();cursor=flat.length-1;renderStep()}
+ else if(e.key==='0'){if(onboardingOpen)dismissOnboarding();resetUserView(true,620)}
+ else if(e.key==='Enter'&&onboardingOpen){e.preventDefault();dismissOnboarding()}
+});
+addEventListener('resize',updateFit);boot();
+})();
+</script>
+</body>
+</html>

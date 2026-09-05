@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repository Review"
+  short_description: "Review repository changes with scoped evidence"
+  default_prompt: "Use $repository-review to perform a read-only, evidence-based repository review."

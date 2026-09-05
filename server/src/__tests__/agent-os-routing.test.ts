@@ -9,7 +9,7 @@ const members: RoutingParticipant[] = [
   { id: 'sage', kind: 'agent', presetKey: 'sage' },
 ]
 
-test('learning routing is deterministic for mentions, replies, handoffs and leader fallback', () => {
+test('learning routing is deterministic for mentions, replies, handoffs and the default leader', () => {
   const base = { authorId: 'student', channelType: 2, members }
   assert.deepEqual(resolveLearningAgentRecipients({ ...base, handoffTargetId: 'forge' }), ['forge'])
   assert.deepEqual(resolveLearningAgentRecipients({ ...base, mentionedIds: ['sage'] }), ['sage'])

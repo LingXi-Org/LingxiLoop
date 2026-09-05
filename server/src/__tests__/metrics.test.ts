@@ -24,12 +24,12 @@ test('renderProm emits zero rows for counters that haven\'t fired yet', () => {
 })
 
 test('inc bumps the counter for the matching labelset', () => {
-  inc('email.send.ok', { mock: false })
-  inc('email.send.ok', { mock: false })
-  inc('email.send.ok', { mock: true })
+  inc('db.gc.deleted', { table: 'messages' })
+  inc('db.gc.deleted', { table: 'messages' })
+  inc('db.gc.deleted', { table: 'email_messages' })
   const out = renderProm()
-  assert.match(out, /email_send_ok\{mock="false"\} 2/)
-  assert.match(out, /email_send_ok\{mock="true"\} 1/)
+  assert.match(out, /db_gc_deleted\{table="messages"\} 2/)
+  assert.match(out, /db_gc_deleted\{table="email_messages"\} 1/)
 })
 
 test('inc on a label-less counter renders without {}', () => {
@@ -43,18 +43,18 @@ test('inc on a label-less counter renders without {}', () => {
 test('labels with quotes/backslashes/newlines are escaped per Prom format', () => {
   // Label values come from caller-provided env strings in some sites;
   // make sure a hostile one can't break the exposition.
-  inc('email.send.fail', { mock: 'hello "world"\\\nbreak' as unknown as boolean })
+  inc('db.gc.failed', { table: 'hello "world"\\\nbreak' })
   const out = renderProm()
   // Each special character should appear as its escaped form.
-  assert.match(out, /mock="hello \\"world\\"\\\\\\nbreak"/)
+  assert.match(out, /table="hello \\"world\\"\\\\\\nbreak"/)
 })
 
 test('renderProm groups multiple labelsets under one HELP/TYPE pair', () => {
-  inc('email.send.ok', { mock: false })
-  inc('email.send.ok', { mock: true })
+  inc('db.gc.deleted', { table: 'messages' })
+  inc('db.gc.deleted', { table: 'email_messages' })
   const out = renderProm()
-  const helps = (out.match(/# HELP email_send_ok /g) ?? []).length
-  const types = (out.match(/# TYPE email_send_ok counter/g) ?? []).length
+  const helps = (out.match(/# HELP db_gc_deleted /g) ?? []).length
+  const types = (out.match(/# TYPE db_gc_deleted counter/g) ?? []).length
   assert.equal(helps, 1, 'HELP header should appear exactly once per counter')
   assert.equal(types, 1, 'TYPE header should appear exactly once per counter')
 })
@@ -64,6 +64,10 @@ test('inc throws on unknown counter names', () => {
   //   the runtime guard catches counters that were renamed but not updated
   //   at the call site.
   assert.throws(() => inc('email.totally.bogus', {}), /unknown counter/)
+})
+
+test('inc rejects labels outside the registered metric contract', () => {
+  assert.throws(() => inc('email.send.ok', { mock: true }), /unexpected label "mock"/)
 })
 
 test('renderProm output ends with a trailing newline', () => {

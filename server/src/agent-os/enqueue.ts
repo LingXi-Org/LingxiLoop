@@ -4,6 +4,7 @@ import type { AgentWorkReason } from './types.js'
 
 export async function enqueueAgentWork(args: {
   companyId: string
+  authorizationUserId: string
   agentId: string
   reason: AgentWorkReason
   triggerClientMsgNo?: string
@@ -23,10 +24,10 @@ export async function enqueueAgentWork(args: {
   const trigger = args.triggerClientMsgNo ?? `domain:${randomUUID()}`
   const { rowCount } = await pool.query(
     `INSERT INTO agent_work_items
-       (id, company_id, agent_id, channel_id, trigger_client_msg_no, reason, priority)
-     VALUES ($1,$2,$3,$4,$5,$6,$7)
+       (id, company_id, authorization_user_id, agent_id, channel_id, trigger_client_msg_no, reason, priority)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
      ON CONFLICT (agent_id, trigger_client_msg_no, reason) DO NOTHING`,
-    [randomUUID(), args.companyId, args.agentId, channelId, trigger, args.reason, args.priority ?? 100],
+    [randomUUID(), args.companyId, args.authorizationUserId, args.agentId, channelId, trigger, args.reason, args.priority ?? 100],
   )
   return rowCount === 1
 }

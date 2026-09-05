@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-process.env.DEEPSEEK_API_KEY ||= 'test-key'
-const { LEARNING_PRESET_VERSION, STARTER_ROOMS, STARTER_TEAM } = await import('../onboardCompany.js')
+process.env.OPENAI_API_KEY ||= 'test-key'
+process.env.OPENAI_EMBEDDING_MODEL ||= 'text-embedding-3-small'
+const { STARTER_ROOMS, STARTER_TEAM } = await import('../modules/companies/onboarding-repository.js')
 
 test('learning preset defines exactly the six required personas', () => {
-  assert.equal(LEARNING_PRESET_VERSION, 8)
   assert.deepEqual(
     STARTER_TEAM.map((agent) => agent.presetKey),
     ['nova', 'sage', 'milo', 'trace', 'scout', 'forge'],
@@ -27,6 +27,7 @@ test('learning preset defines exactly the six required personas', () => {
     assert.doesNotMatch(agent.systemPrompt, /loop\.(learning|canvas)/)
     assert.match(agent.systemPrompt, /specialist|coordinator|verifier/i)
     assert.equal('avatarUrl' in agent, false)
+    assert.equal('avatarBg' in agent, false)
   }
 })
 

@@ -76,49 +76,4 @@ contextBridge.exposeInMainWorld('lingxiloop', {
       return () => ipcRenderer.removeListener('notification:focus-convo', wrapped)
     },
   },
-
-  /**
-   * OAuth loopback plumbing. Sign-in opens the user's system browser
-   * via `auth.openExternal(url)`; after the provider redirects through
-   * our server to http://127.0.0.1:47823/auth/done, the loopback HTML
-   * page POSTs the token to the main process, which IPCs it here.
-   * AuthGate subscribes via `onToken` to plant the session.
-   */
-  auth: {
-    openExternal: (url) => ipcRenderer.invoke('auth:open-external', url),
-    // Arm a single-use nonce before opening the browser; the renderer threads
-    // it through the OAuth return URL so main can verify the inbound token was
-    // app-initiated (anti session-fixation).
-    arm: () => ipcRenderer.invoke('auth:arm'),
-    onToken: (handler) => {
-      const wrapped = (_evt, payload) => handler(payload)
-      ipcRenderer.on('auth:token', wrapped)
-      return () => ipcRenderer.removeListener('auth:token', wrapped)
-    },
-  },
-
-  /**
-   * Auto-update bridge. Mirrors alma's pattern:
-   *   - getAppInfo() — current version + autoupdate capability flag
-   *   - getStatus()  — last broadcast status (idle / checking / available / downloading / downloaded / error)
-   *   - getInfo()    — { version, releaseNotes, releaseDate } for the
-   *                    last detected update
-   *   - check()      — fire a manual check; returns the resolved result
-   *   - download()   — start download (we set autoDownload=false so this is explicit)
-   *   - install()    — quit + install (relaunches at new version)
-   *   - onStatus()   — subscribe to status broadcasts; returns unsubscribe
-   */
-  update: {
-    getAppInfo: () => ipcRenderer.invoke('update:app-info'),
-    getStatus: () => ipcRenderer.invoke('update:status'),
-    getInfo: () => ipcRenderer.invoke('update:info'),
-    check: () => ipcRenderer.invoke('update:check'),
-    download: () => ipcRenderer.invoke('update:download'),
-    install: () => ipcRenderer.invoke('update:install'),
-    onStatus: (handler) => {
-      const wrapped = (_evt, payload) => handler(payload)
-      ipcRenderer.on('auto-update-status', wrapped)
-      return () => ipcRenderer.removeListener('auto-update-status', wrapped)
-    },
-  },
 })
