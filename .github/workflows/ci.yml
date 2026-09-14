@@ -306,6 +306,16 @@ jobs:
             git commit -m "deploy: pin images to ${GITHUB_SHA} [skip ci]"
             git push origin HEAD:main
           fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          deployment_tree=$(printf '040000 tree %s\tdeploy\n' "$(git rev-parse HEAD:deploy)" | git mktree)
+          deployment_parents=()
+          if git ls-remote --exit-code origin refs/heads/codex/production >/dev/null; then
+            git fetch origin refs/heads/codex/production
+            deployment_parents=(-p "$(git rev-parse FETCH_HEAD)")
+          fi
+          deployment_commit=$(git commit-tree "$deployment_tree" "${deployment_parents[@]}" -m "Deploy $(git rev-parse HEAD)")
+          git push origin "$deployment_commit:refs/heads/codex/production"
           echo "commit-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   deploy:
