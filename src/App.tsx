@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { AuthGate } from '@/components/AuthGate'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { NotificationToasts } from '@/components/NotificationToasts'
@@ -10,6 +10,7 @@ import { chatTransport } from '@/features/chat/runtime'
 import { bootParticipants } from '@/features/agents/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { usePrefs } from '@/stores/preferences'
+import { consumeInviteFromUrl, InviteAcceptScreen } from '@/features/companies/components/InviteAcceptScreen'
 
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
 
@@ -68,6 +69,14 @@ function AuthedApp() {
 }
 
 export function App() {
+  const [invitation, setInvitation] = useState(consumeInviteFromUrl)
+  const finishInvitation = useCallback(() => {
+    invitation?.clear()
+    setInvitation(null)
+  }, [invitation])
+  const invitationScreen = invitation
+    ? <InviteAcceptScreen token={invitation.token} onDone={finishInvitation} />
+    : null
   // Force AuthedApp to remount when the user logs in/out OR switches between
   // companies — every store keys off the active tenant, so a clean remount is
   // the simplest way to reload all data without stale rows leaking across.
@@ -75,9 +84,9 @@ export function App() {
   const companyId = useAuth((s) => s.activeCompanyId)
 
   return (
-    <AuthGate>
+    <AuthGate unauthFallback={invitationScreen}>
       <ErrorBoundary>
-        <AuthedApp key={`${userId ?? 'anon'}::${companyId ?? 'none'}`} />
+        {invitationScreen ?? <AuthedApp key={`${userId ?? 'anon'}::${companyId ?? 'none'}`} />}
       </ErrorBoundary>
     </AuthGate>
   )
