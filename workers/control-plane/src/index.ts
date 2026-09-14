@@ -427,14 +427,12 @@ app.post('/api/internal/bootstrap-admin', async (c) => {
   return c.json({ ok: true, removeSecret: 'BOOTSTRAP_ADMIN_TOKEN' })
 })
 
-app.post('/api/control/bootstrap-business-identity', async (c) => {
-  await attachSession(c, 'database')
-  const session = requireAdmin(c)
-  if (session instanceof Response) return session
+async function ensureAdminBusinessIdentity(c: AppContext, session: AuthSession): Promise<{ app_user_id: string } | Response> {
+  const linked = await c.env.DB.prepare(`SELECT app_user_id,suspended_at FROM app_user_links WHERE auth_user_id=?`).bind(session.user.id).first<{ app_user_id: string; suspended_at: number | null }>()
+  if (linked) return linked.suspended_at === null ? { app_user_id: linked.app_user_id } : c.json({ error: 'business account is suspended' }, 403)
+  if (!session.user.emailVerified) return c.json({ error: 'verified email required' }, 403)
   const state = await c.env.DB.prepare(`SELECT admin_user_id FROM bootstrap_state WHERE id=1`).first<{ admin_user_id: string | null }>()
   if (state?.admin_user_id !== session.user.id) return c.json({ error: 'initial administrator required' }, 403)
-  const linked = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=?`).bind(session.user.id).first<{ app_user_id: string }>()
-  if (linked) return c.json({ ok: true, appUserId: linked.app_user_id })
   const response = await originRequest(c.env, '/api/internal/bootstrap/platform-user', {
     method: 'POST', headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ authUserId: session.user.id, email: session.user.email, name: session.user.name }),
@@ -443,9 +441,17 @@ app.post('/api/control/bootstrap-business-identity', async (c) => {
   const { appUserId } = await response.json<{ appUserId: string }>()
   const inUse = await c.env.DB.prepare(`SELECT auth_user_id FROM app_user_links WHERE app_user_id=?`).bind(appUserId).first<{ auth_user_id: string }>()
   if (inUse && inUse.auth_user_id !== session.user.id) return c.json({ error: 'business identity is linked to another administrator' }, 409)
-  await c.env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES(?,?,?)`)
+  await c.env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES(?,?,?) ON CONFLICT DO NOTHING`)
     .bind(session.user.id, appUserId, Date.now()).run()
-  return c.json({ ok: true, appUserId })
+  const saved = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
+  return saved?.app_user_id === appUserId ? saved : c.json({ error: 'business identity changed during initialization' }, 409)
+}
+
+app.post('/api/control/bootstrap-business-identity', async (c) => {
+  const session = requireAdmin(c)
+  if (session instanceof Response) return session
+  const link = await ensureAdminBusinessIdentity(c, session)
+  return link instanceof Response ? link : c.json({ ok: true, appUserId: link.app_user_id })
 })
 
 app.all('/api/mcp', async (c) => {
@@ -594,8 +600,8 @@ app.post('/api/control/platform/users/:id/:action', async (c) => {
   if (action !== 'suspend' && action !== 'restore' && action !== 'delete') return c.json({ error: 'unsupported user lifecycle action' }, 404)
   const reason = (await c.req.json<{ reason?: string }>().catch((): { reason?: string } => ({}))).reason?.trim()
   if (!reason) return c.json({ error: 'reason required' }, 400)
-  const adminLink = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=?`).bind(adminSession.user.id).first<{ app_user_id: string }>()
-  if (!adminLink) return c.json({ error: 'administrator business account is not provisioned' }, 409)
+  const adminLink = await ensureAdminBusinessIdentity(c, adminSession)
+  if (adminLink instanceof Response) return adminLink
   return controlUserLifecycle(c.env, { auth_user_id: adminSession.user.id, app_user_id: adminLink.app_user_id }, c.req.param('id'), action, reason)
 })
 
@@ -605,8 +611,8 @@ app.all('/api/meta', (c) => originRequest(c.env, c.req.path, { method: c.req.met
 app.all('/api/control/platform/*', async (c) => {
   const session = requireAdmin(c)
   if (session instanceof Response) return session
-  const link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
-  if (!link) return c.json({ error: 'business account is not provisioned' }, 409)
+  const link = await ensureAdminBusinessIdentity(c, session)
+  if (link instanceof Response) return link
   const suffix = c.req.path.slice('/api/control/platform'.length)
   return originRequest(c.env, `/api/admin${suffix}${new URL(c.req.url).search}`, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }, { appUserId: link.app_user_id, authUserId: session.user.id, authSessionIssuedAt: new Date(session.session.createdAt).getTime(), platformAdmin: c.req.path.startsWith('/api/control/') && session.user.role === 'admin' })
 })

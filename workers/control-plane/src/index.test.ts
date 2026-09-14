@@ -60,7 +60,7 @@ describe('control-plane trust boundaries', () => {
     expect(response.status).toBe(401)
   })
 
-  it('links only the bootstrap administrator to a signed business identity', async () => {
+  it('initializes concurrent platform reads and preserves administrator identity restrictions', async () => {
     const now = Math.floor(Date.now() / 1000)
     await env.DB.batch([
       env.DB.prepare(`INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt,role) VALUES(?,?,?,1,?,?,'admin')`)
@@ -72,17 +72,30 @@ describe('control-plane trust boundaries', () => {
     fetchMock.activate()
     fetchMock.disableNetConnect()
     fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true })
-    fetchMock.get('https://origin.example.com').intercept({ path: '/api/internal/bootstrap/platform-user', method: 'POST' }).reply(200, { appUserId: 'bootstrap-app-user' })
+    fetchMock.get('https://origin.example.com').intercept({ path: '/api/internal/bootstrap/platform-user', method: 'POST' }).reply(200, { appUserId: 'bootstrap-app-user' }).delay(200).times(2)
     try {
       const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
         method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
         body: JSON.stringify({ email: 'bootstrap-admin@example.com', password: 'password123' }),
       })
-      const response = await SELF.fetch('https://admin.example.com/api/control/bootstrap-business-identity', {
-        method: 'POST', headers: { cookie: signIn.headers.get('set-cookie') ?? '' },
-      })
-      expect(await response.json()).toEqual({ ok: true, appUserId: 'bootstrap-app-user' })
+      const headers = { cookie: signIn.headers.get('set-cookie') ?? '' }
+      for (const view of ['dashboard', 'observability']) {
+        fetchMock.get('https://origin.example.com').intercept({ path: `/api/admin/${view}`, method: 'GET' })
+          .reply(200, { view })
+      }
+      const responses = await Promise.all(['dashboard', 'observability'].map((view) =>
+        SELF.fetch(`https://admin.example.com/api/control/platform/${view}`, { headers })))
+      expect(await Promise.all(responses.map(async (response) => ({ status: response.status, body: await response.json() })))).toEqual([
+        { status: 200, body: { view: 'dashboard' } }, { status: 200, body: { view: 'observability' } },
+      ])
       expect(await env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id='bootstrap-admin'`).first()).toEqual({ app_user_id: 'bootstrap-app-user' })
+      const response = await SELF.fetch('https://admin.example.com/api/control/bootstrap-business-identity', { method: 'POST', headers })
+      expect(await response.json()).toEqual({ ok: true, appUserId: 'bootstrap-app-user' })
+      await env.DB.prepare(`UPDATE app_user_links SET suspended_at=1 WHERE auth_user_id='bootstrap-admin'`).run()
+      expect((await SELF.fetch('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
+      await env.DB.prepare(`DELETE FROM app_user_links WHERE auth_user_id='bootstrap-admin'`).run()
+      await env.DB.prepare(`UPDATE bootstrap_state SET admin_user_id=NULL WHERE id=1`).run()
+      expect((await SELF.fetch('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
       fetchMock.assertNoPendingInterceptors()
     } finally { fetchMock.deactivate() }
   })

@@ -94,7 +94,6 @@ export const authProvider: AuthProvider = {
     if (!session.data) return { authenticated: false, redirectTo: '/login' }
     const role = (session.data.user as { role?: string }).role
     if (role !== 'admin') return { authenticated: false, redirectTo: '/forbidden', logout: false }
-    await fetch('/api/control/bootstrap-business-identity', { method: 'POST', credentials: 'include' })
     return { authenticated: true }
   },
   getIdentity: async () => {
