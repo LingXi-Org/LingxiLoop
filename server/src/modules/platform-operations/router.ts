@@ -142,7 +142,7 @@ adminRouter.get('/dashboard', safe(async (_request, response) => {
       companies: count.companies,
       projects: count.projects,
       activeRuns: operations.active,
-      failedJobs: (failures.rows[0]?.failed_jobs ?? 0) + operations.failures + operations.failedDeliveries + operations.failedUsageDeliveries,
+      failedJobs: (failures.rows[0]?.failed_jobs ?? 0) + operations.failures + operations.failedDeliveries + operations.failedUsageDeliveries + operations.failedMemoryCaptures,
     },
     dependencies,
     recentAudit: recentAudit.rows,
@@ -200,6 +200,10 @@ adminRouter.get('/resources/:resource', safe(async (request, response) => {
     String(request.params.resource),
     request.query as AdminListQuery,
   ))
+}))
+
+adminRouter.get('/runtime-metrics', safe(async (_request,response) => {
+  response.type('text/plain; version=0.0.4').send((await lingxiOSControl()).metrics())
 }))
 
 adminRouter.post('/agent-runs/:id/delivery/:channel/retry', safe(async (request, response) => {

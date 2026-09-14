@@ -1,3 +1,7 @@
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import { pool } from '../db/pool.js'
+import { productRunIdentity } from '../agent-runtime/identity.js'
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import type { ZodType } from 'zod'
 import type { AuthedRequest } from '../auth.js'
@@ -28,12 +32,14 @@ import { receiveAgentRequest } from '../agent-runtime/receive.js'
 import { approvalView } from '../agent-runtime/delivery.js'
 import { loadRuntimeBinding } from '../agent-runtime/context.js'
 import { presentationsApplication } from '../modules/presentations/public.js'
+import { memoryRouter } from '../modules/memory/router.js'
 import {
   isReadReceiptChannelMember,
   listReadReceiptAdvances,
 } from './read-receipts.js'
 
 export const imRouter = Router()
+imRouter.use('/channels/:id/agents/:agentId/runs/:runId/memory',memoryRouter)
 
 function safe(handler: (req: Request & AuthedRequest, res: Response) => Promise<void>): (req: Request & AuthedRequest, res: Response, next: NextFunction) => void {
   return (req, res, next) => { void handler(req, res).catch(next) }
@@ -49,7 +55,7 @@ function requestInput<T>(schema: ZodType<T>, value: unknown): T {
 
 async function identity(req: Request & AuthedRequest): Promise<{ userId: string; companyId: string }> {
   const userId = req.authUserId
-  const companyId = String(req.headers['x-company-id'] ?? '').trim()
+  const companyId = String(req.params.companyId ?? req.headers['x-company-id'] ?? '').trim()
   if (!userId) throw Object.assign(new Error('authentication required'), { status: 401 })
   if (!companyId) throw Object.assign(new Error('x-company-id required'), { status: 400 })
   if (!await imAccessApplication.authorize({ userId, companyId })) {
@@ -85,8 +91,10 @@ async function approvalForCaller(req: Request & AuthedRequest, control: boolean)
   const { userId, companyId } = await identity(req)
   const approval = await (await lingxiOSControl()).readApproval({ tenantId: companyId, principalId: userId, approvalId: String(req.params.id) })
   if (!approval) throw Object.assign(new Error('approval not found'), { status: 404 })
-  await loadRuntimeBinding(approval)
-  await assertChannelPermission(userId, companyId, approval.sessionId, control ? 'agent_run:control' : 'conversation:read')
+  const binding = (await pool.query<{ conversation_id: string }>('SELECT conversation_id FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2 AND principal_id=$3 AND NOT internal', [approval.runId,companyId,userId])).rows[0]
+  if (!binding) throw Object.assign(new Error('approval not found'), { status: 404 })
+  await loadRuntimeBinding({ ...approval, conversationId: binding.conversation_id })
+  await assertChannelPermission(userId, companyId, binding.conversation_id, control ? 'agent_run:control' : 'conversation:read')
   return approval
 }
 
@@ -102,13 +110,48 @@ imRouter.post('/approvals/:id/reconcile', safe(async (req, res) => {
   res.json(await (await lingxiOSControl()).reconcileAction(approval))
 }))
 
+imRouter.get('/channels/:id/runs', safe(async (req, res) => {
+  const { userId, companyId } = await identity(req), conversationId = String(req.params.id)
+  await assertChannelPermission(userId,companyId,conversationId,'conversation:read')
+  const rows = await pool.query(`SELECT run_id AS "runId",agent_id AS "agentId",conversation_id AS "conversationId",thread_id AS "threadId",session_id AS "sessionId"
+    FROM agent_run_bindings WHERE company_id=$1 AND conversation_id=$2 AND principal_id=$3 AND NOT internal
+    ORDER BY created_at DESC,run_id DESC LIMIT 20`, [companyId,conversationId,userId])
+  const app = await lingxiOSControl()
+  const runs = await Promise.all(rows.rows.map(async ({ sessionId, ...target }) => {
+    const run = await app.readRun({ tenantId: companyId,principalId: userId,sessionId,...target,threadId: target.threadId ?? undefined })
+    return run ? { ...target,requestVersion: run.requestVersion,fence: run.fence,status: run.status } : null
+  }))
+  res.json(runs.filter(Boolean))
+}))
+
+// EventSource sends credentials natively; the tenant path is still checked against current membership.
+imRouter.get('/companies/:companyId/channels/:id/agents/:agentId/runs/:runId/stream', safe(async (req, res) => {
+  const { userId, companyId } = await identity(req), conversationId = String(req.params.id)
+  await assertChannelPermission(userId,companyId,conversationId,'conversation:read')
+  const { threadId } = requestInput(lingxiOSRunQuerySchema,req.query)
+  const run = await productRunIdentity({ companyId,conversationId,principalId: userId, agentId: String(req.params.agentId),
+    runId: String(req.params.runId), ...(threadId ? { threadId } : {}) })
+  const cancellation = new AbortController()
+  const close = () => cancellation.abort()
+  res.once('close',close)
+  try {
+    const stream = await (await lingxiOSControl()).streamRun(run,{ signal: cancellation.signal, lastEventId: req.get('last-event-id') })
+    res.status(stream.status)
+    stream.headers.forEach((value,key) => { res.setHeader(key,value) })
+    res.flushHeaders()
+    if (stream.body) await pipeline(Readable.fromWeb(stream.body as import('node:stream/web').ReadableStream<Uint8Array>),res,{ signal: cancellation.signal })
+    else res.end()
+  } catch (error) { if (!cancellation.signal.aborted) throw error }
+  finally { res.off('close',close); cancellation.abort() }
+}))
+
 imRouter.get('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) => {
   const { userId, companyId } = await identity(req)
   const sessionId = String(req.params.id)
   await assertChannelPermission(userId, companyId, sessionId, 'conversation:read')
   const { afterSeq, threadId } = requestInput(lingxiOSRunQuerySchema, req.query)
-  const runIdentity = { tenantId: companyId, sessionId, agentId: String(req.params.agentId), runId: String(req.params.runId), principalId: userId,
-    ...(threadId ? { threadId } : {}) }
+  const runIdentity = await productRunIdentity({ companyId, conversationId: sessionId, agentId: String(req.params.agentId), runId: String(req.params.runId), principalId: userId,
+    ...(threadId ? { threadId } : {}) })
   const app = await lingxiOSControl()
   const state = await app.readRunState(runIdentity)
   if (!state) { res.status(404).json({ error: 'run not found' }); return }
@@ -121,16 +164,16 @@ imRouter.post('/channels/:id/agents/:agentId/runs/:runId/reconcile', safe(async 
   const { userId, companyId } = await identity(req), sessionId = String(req.params.id)
   await assertChannelPermission(userId,companyId,sessionId,'agent_run:control')
   const { actionKey, threadId } = requestInput(lingxiOSReconcileSchema,req.body)
-  res.json(await (await lingxiOSControl()).reconcileAction({ tenantId: companyId, sessionId, principalId: userId,
-    agentId: String(req.params.agentId), runId: String(req.params.runId), actionKey,...threadId ? { threadId } : {} }))
+  res.json(await (await lingxiOSControl()).reconcileAction({ ...await productRunIdentity({ companyId, conversationId: sessionId, principalId: userId,
+    agentId: String(req.params.agentId), runId: String(req.params.runId), ...threadId ? { threadId } : {} }), actionKey }))
 }))
 
 imRouter.get('/channels/:id/agents/:agentId/runs/:runId/artifact', safe(async (req, res) => {
   const { userId, companyId } = await identity(req), sessionId = String(req.params.id)
   await assertChannelPermission(userId, companyId, sessionId, 'conversation:read')
   const { path, threadId } = requestInput(lingxiOSArtifactQuerySchema, req.query)
-  const run = { tenantId: companyId, sessionId, agentId: String(req.params.agentId), runId: String(req.params.runId), principalId: userId,
-    ...(threadId ? { threadId } : {}) }
+  const run = await productRunIdentity({ companyId, conversationId: sessionId, agentId: String(req.params.agentId), runId: String(req.params.runId), principalId: userId,
+    ...(threadId ? { threadId } : {}) })
   const api = await lingxiOSControl(), manifest = (await api.readMessage(run))?.envelope.artifacts.find(item => item.path === path)
   if (!manifest) { res.status(404).json({ error: 'artifact not found' }); return }
   if (manifest.source?.ref.startsWith('document:')) await permissionService.assertCan({ actorUserId: userId, companyId,
@@ -156,16 +199,16 @@ imRouter.patch('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res
   const { userId, companyId } = await identity(req), sessionId = String(req.params.id)
   await assertChannelPermission(userId, companyId, sessionId, 'agent_run:control')
   const { text, threadId } = requestInput(lingxiOSRunRevisionSchema, req.body)
-  res.json({ revised: await (await lingxiOSControl()).revise({ tenantId: companyId, sessionId, principalId: userId,
-    agentId: String(req.params.agentId), runId: String(req.params.runId), ...(threadId ? { threadId } : {}) }, text) })
+  res.json({ revised: await (await lingxiOSControl()).revise(await productRunIdentity({ companyId, conversationId: sessionId, principalId: userId,
+    agentId: String(req.params.agentId), runId: String(req.params.runId), ...(threadId ? { threadId } : {}) }), text) })
 }))
 
 imRouter.post('/channels/:id/agents/:agentId/runs/:runId/delivery/retry', safe(async (req, res) => {
   const { userId, companyId } = await identity(req), sessionId = String(req.params.id)
   await assertChannelPermission(userId, companyId, sessionId, 'agent_run:control')
   const { threadId } = requestInput(lingxiOSRunCancelSchema, req.body ?? {})
-  res.json({ retried: await (await lingxiOSControl()).retryDelivery({ tenantId: companyId, sessionId, principalId: userId,
-    agentId: String(req.params.agentId), runId: String(req.params.runId), ...(threadId ? { threadId } : {}) }) })
+  res.json({ retried: await (await lingxiOSControl()).retryDelivery(await productRunIdentity({ companyId, conversationId: sessionId, principalId: userId,
+    agentId: String(req.params.agentId), runId: String(req.params.runId), ...(threadId ? { threadId } : {}) })) })
 }))
 
 imRouter.delete('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) => {
@@ -174,8 +217,8 @@ imRouter.delete('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, re
   await permissionService.assertCan({ actorUserId: userId, companyId, action: 'agent_run:control',
     resource: { type: 'conversation', id: sessionId } })
   const { threadId } = requestInput(lingxiOSRunCancelSchema, req.body ?? {})
-  const cancelled = await (await lingxiOSControl()).cancel({ tenantId: companyId, principalId: userId, sessionId,
-    agentId: String(req.params.agentId), runId: String(req.params.runId), ...(threadId ? { threadId } : {}) })
+  const cancelled = await (await lingxiOSControl()).cancel(await productRunIdentity({ companyId, principalId: userId, conversationId: sessionId,
+    agentId: String(req.params.agentId), runId: String(req.params.runId), ...(threadId ? { threadId } : {}) }))
   res.json({ cancelled })
 }))
 

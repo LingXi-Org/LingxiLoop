@@ -34,9 +34,13 @@ export function ObservabilityPage() {
   return <div className="space-y-6">
     <PageHeading title="AI 分析" description="从运行质量到模型消耗，持续了解 AI 团队的表现。" actions={[
       <Button key="refresh" variant="outline" disabled={query.query.isFetching} onClick={() => void query.query.refetch()}><RefreshCwIcon />刷新数据</Button>,
+      <Button key="metrics" asChild variant="outline"><a href={`${API_URL}/runtime-metrics`} target="_blank" rel="noopener noreferrer">原生运行指标<ArrowUpRightIcon /></a></Button>,
       ...(openLitUrl ? [<Button key="openlit" asChild><a href={openLitUrl} target="_blank" rel="noopener noreferrer">深度诊断<ArrowUpRightIcon /></a></Button>] : []),
     ]} />
     <div className="admin-overview-tabs"><Link to="/">运营总览</Link><span aria-current="page">AI 分析</span><span className="ms-auto text-xs! text-muted-foreground">过去 24 小时</span></div>
+    <Card><CardHeader><CardTitle>队列与后台处理</CardTitle><CardDescription>原生运行时当前记录的等待和失败情况</CardDescription></CardHeader><CardContent><dl className="grid grid-cols-2 gap-4 md:grid-cols-5">{[
+      ['queued','排队任务'],['waiting','等待任务'],['failed_deliveries','消息投递失败'],['failed_usage_deliveries','用量投递失败'],['failed_memory_captures','记忆捕获失败'],
+    ].map(([key,label]) => <div key={key}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{compactNumber(metricNumber(summary,key))}</dd></div>)}</dl></CardContent></Card>
     <section className="admin-kpi-grid" aria-label="过去 24 小时指标">{[
       { label: '运行总量', value: compactNumber(runs), note: `${compactNumber(metricNumber(summary, 'active'))} 个正在执行`, icon: ActivityIcon, color: 'blue' },
       { label: '运行成功率', value: runs ? `${metricNumber(summary, 'success_rate').toFixed(1)}%` : '—', note: `${compactNumber(metricNumber(summary, 'failures'))} 个失败或取消`, icon: RouteIcon, color: 'emerald' },

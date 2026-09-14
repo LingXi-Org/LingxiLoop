@@ -133,7 +133,7 @@ async function submitCanvasReport(input: {
     const sourceEvidenceIds: string[] = []
     for (const ref of uniqueRefs) {
       const observation = await observeCanvasEvidence(client, { companyId: input.companyId, projectId: work.project_id,
-        canvasId: input.canvasId, conversationId: work.session_id, principalId: input.principalId, ...(input.signal ? { signal: input.signal } : {}) }, ref)
+        canvasId: input.canvasId, conversationId: work.conversation_id, principalId: input.principalId, ...(input.signal ? { signal: input.signal } : {}) }, ref)
       const evidenceId = `evidence-${createHash('sha256').update(JSON.stringify([
         input.companyId, work.project_id, ref.kind, ref.id, observation,
       ])).digest('hex')}`

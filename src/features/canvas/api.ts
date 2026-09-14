@@ -1,5 +1,11 @@
 
 import { http } from '@/api/core/http'
+import type { SharedStateSnapshot, SharedStateResult, SharedStateUpdate, createLingxiOS } from '@lyyzka/lingxios'
+export type CanvasCollaboration = {
+  graphs: NonNullable<Awaited<ReturnType<Awaited<ReturnType<typeof createLingxiOS>>['graphs']['read']>>>[]
+  state: SharedStateSnapshot | null
+  history: { items: Record<string, unknown>[]; nextSeq: number }
+}
 import type {
   CanvasComment,
   CanvasFrame,
@@ -10,6 +16,8 @@ import type {
 } from './contracts'
 
 export const canvasApi = {
+  getCollaboration: (id: string,afterSeq = 0) => http<CanvasCollaboration>(`/canvases/${encodeURIComponent(id)}/collaboration?afterSeq=${afterSeq}`),
+  updateSharedState: (id: string, update: SharedStateUpdate) => http<SharedStateResult>(`/canvases/${encodeURIComponent(id)}/shared-state`,{ method: 'POST',body: JSON.stringify(update) }),
   getCanvas: (canvasId?: string) => http<CanvasSnapshot>(canvasId ? `/canvases/${encodeURIComponent(canvasId)}` : '/canvas'),
   getCanvases: (conversationId?: string) => http<CanvasWorkspaceSummary[]>(`/canvases${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`),
   getConversationCanvas: (conversationId: string) => http<CanvasSnapshot | null>(`/conversations/${encodeURIComponent(conversationId)}/canvas`),

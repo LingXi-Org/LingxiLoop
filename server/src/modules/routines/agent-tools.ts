@@ -1,4 +1,5 @@
-import type { ActionContext, ToolDefinition } from 'lingxios'
+import { productConversationId } from '../../agent-runtime/identity.js'
+import type { ActionContext, ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, compareResource } from '../../agents/tools.js'
 import { routineSchemas } from './contracts.js'
@@ -15,14 +16,14 @@ export function createRoutineTools(control: RoutineControl): ToolDefinition[] {
       async execute(context) { const projectId = await routineScope(context), work = context.work
         const { rows } = await context.database.query(`SELECT * FROM agent_routines WHERE company_id=$1 AND agent_id=$2 AND channel_id=$3
           AND created_by=$4 AND thread_id IS NOT DISTINCT FROM $5 AND project_id IS NOT DISTINCT FROM $6 AND kind<>'teacher_project_digest'
-          ORDER BY created_at DESC,id LIMIT 101`, [work.tenantId,work.agentId,work.sessionId,work.principalId,work.threadId ?? null,projectId])
+          ORDER BY created_at DESC,id LIMIT 101`, [work.tenantId,work.agentId,productConversationId(work),work.principalId,work.threadId ?? null,projectId])
         return { ok: true, value: { routines: rows.slice(0,100), truncated: rows.length > 100 } } } }),
     nativeTool('routines.create', routineSchemas.create, { description: 'Create an approved paused routine; activation requires its own approval.', effect: 'transaction', approval: true, authorize, verify,
       async preview(context, input) { return { ...input, projectId: await routineScope(context), principalId: context.work.principalId, threadId: context.work.threadId ?? null } },
       async execute(context, input) { const id = routineId(context.action.idempotencyKey), work = context.work
         await context.database.query(`INSERT INTO agent_routines(id,company_id,agent_id,channel_id,created_by,approved_by,operator_id,project_id,thread_id,
           kind,title,instructions,schedule,timezone,status) VALUES($1,$2,$3,$4,$5,$5,$3,$6,$7,$8,$9,$10,$11::jsonb,$12,'paused')`,
-          [id,work.tenantId,work.agentId,work.sessionId,work.principalId,await routineScope(context),work.threadId ?? null,
+          [id,work.tenantId,work.agentId,productConversationId(work),work.principalId,await routineScope(context),work.threadId ?? null,
             input.kind,input.title,input.instructions,JSON.stringify(input.schedule),input.timezone])
         return { ok: true, value: await findRoutine(context, id) } } }),
     nativeTool('routines.activate', routineSchemas.activate, { description: 'Activate a routine after approval of its current instructions and schedule.', effect: 'transaction', approval: true, authorize, verify,

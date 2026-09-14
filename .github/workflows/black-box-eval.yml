@@ -26,6 +26,8 @@ on:
         default: ''
         type: string
     secrets:
+      LINGXIOS_PACKAGES_TOKEN:
+        required: false
       EVAL_CANDIDATE_API_KEY:
         required: true
       EVAL_JUDGE_API_KEY:
@@ -37,6 +39,7 @@ concurrency:
 
 permissions:
   contents: read
+  packages: read
 jobs:
   release-gate:
     if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.label.name == 'run-live-eval')
@@ -50,6 +53,8 @@ jobs:
           cache: npm
           cache-dependency-path: eval/package-lock.json
       - run: npm ci --prefix eval
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - run: npm --prefix eval run check && npm --prefix eval test
       - name: Evaluate selected Candidate suite
         working-directory: eval

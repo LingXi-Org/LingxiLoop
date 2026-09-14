@@ -1,7 +1,8 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, type ActionContext, type ActionResult, type ToolDefinition } from 'lingxios'
+import { NoEffectError, type ActionContext, type ActionResult, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
-import { nativeTool, compareResource } from '../../agents/tools.js'
+import { nativeTool, compareResource, authorizeAudienceRead } from '../../agents/tools.js'
 import { createPermissionService } from '../access/public.js'
 import { readAgentChannelMessages } from '../../im/public.js'
 import { createNativeEmailApplications } from './facade.js'
@@ -16,14 +17,17 @@ const key = (context: ActionContext) => `native:${createHash('sha256').update(co
 const application = (context: ActionContext) => createNativeEmailApplications(db(context))
 async function authorize(context: ActionContext, input: Record<string, unknown> = {}) {
   const method = context.action.action.split('.')[1]
+  await authorizeAudienceRead(context,{ action: ['whoami','contacts','inbox'].includes(method) ? 'agent:read' : 'email:read',
+    resource: ['whoami','contacts','inbox'].includes(method) ? { type: 'agent',id: context.work.agentId }
+      : { type: 'conversation',id: typeof input.conversationId === 'string' ? input.conversationId : productConversationId(context.work) } })
   await createPermissionService(db(context), { lockDependencies: true }).assertCan({ actorUserId: context.work.principalId!, companyId: context.work.tenantId,
     action: ['send','reply'].includes(method) ? 'email:write' : ['whoami','contacts','inbox'].includes(method) ? 'agent:read' : 'email:read',
     resource: ['whoami','contacts','inbox'].includes(method) ? { type: 'agent', id: context.work.agentId }
-      : { type: 'conversation', id: typeof input.conversationId === 'string' ? input.conversationId : context.work.sessionId } })
+      : { type: 'conversation', id: typeof input.conversationId === 'string' ? input.conversationId : productConversationId(context.work) } })
 }
 async function attachments(context: ActionContext, refs: string[]): Promise<OutboundAttachmentInput[]> {
   const messages = refs.length ? await readAgentChannelMessages({ companyId: context.work.tenantId, agentId: context.work.agentId,
-    channelId: context.work.sessionId, messageIds: refs, signal: context.signal }) : []
+    channelId: productConversationId(context.work), messageIds: refs, signal: context.signal }) : []
   const resolved = refs.map(ref => {
     const message = messages?.find(row => row.clientMsgNo === ref && row.payload.kind === 'attachment'), data = message?.payload.data
     if (typeof data?.key !== 'string' || !data.key.startsWith(`attachments/${context.work.tenantId}/`)) throw new NoEffectError('committed attachment is unavailable')
@@ -59,15 +63,14 @@ export const emailTools: ToolDefinition[] = [
   nativeTool('email.inbox', schemas.inbox, { description: 'Read email threads authorized for the original human.', effect: 'read', approval: false, authorize,
     async execute(context, input) {
       const value = await application(context).agent.inbox(scope(context), input)
-      for (const thread of value) await createPermissionService(db(context)).assertCan({ actorUserId: context.work.principalId!,
-        companyId: context.work.tenantId, action: 'email:read', resource: { type: 'conversation', id: thread.conversationId } })
+      for (const thread of value) await authorizeAudienceRead(context,{ action: 'email:read', resource: { type: 'conversation', id: thread.conversationId } })
       return { ok: true, value }
     } }),
   nativeTool('email.show', schemas.show, { description: 'Read an authorized email thread.', effect: 'read', approval: false, authorize,
     async execute(context, input) { return { ok: true, value: await application(context).agent.thread(scope(context), input.conversationId, input.limit) } } }),
   nativeTool('email.send', schemas.send, { description: 'Send email after the original human approves resolved recipients, content and attachments.',
     effect: 'uncertain', approval: true, authorize, async preview(context, input) {
-      const project = await context.database.query('SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2', [context.work.sessionId,context.work.tenantId])
+      const project = await context.database.query('SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2', [productConversationId(context.work),context.work.tenantId])
       return { email: await application(context).delivery.previewSend(scope(context), input), body: input.body,
         attachments: await attachments(context, input.attachmentClientMsgNos), projectId: project.rows[0]?.project_id ?? null }
     }, async execute(context, input) {

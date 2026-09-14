@@ -15,6 +15,7 @@ export interface ActiveAgentRun {
 }
 
 export interface ConversationChatState {
+  agentMode: 'chat' | 'read' | 'execute'
   messages: ThreadMessage[]
   typingAgentIds: string[]
   activeRuns: Record<string, ActiveAgentRun>
@@ -30,6 +31,7 @@ interface ChatStoreState {
 }
 
 export const EMPTY_CONVERSATION_CHAT_STATE: ConversationChatState = {
+  agentMode: 'execute',
   messages: [],
   typingAgentIds: [],
   activeRuns: {},
@@ -69,6 +71,7 @@ export function mergeCanonicalMessages(
       byId.set(key,{ ...canonical, status: harnessStatus(harness),
         content: harness.message ? harnessParts(harness) : message.content,
         metadata: { ...canonical.metadata, custom: { ...before,...metadata(canonical), harness,
+          harnessTools: after.harnessTools ?? before.harnessTools,
           harnessControl: after.harnessControl ?? before.harnessControl,
           harnessError: after.harnessError ?? before.harnessError,
           unresolvedActions: after.unresolvedActions ?? before.unresolvedActions } } } as ThreadMessage)

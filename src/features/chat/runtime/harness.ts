@@ -1,32 +1,30 @@
-import type { MessageStatus, ThreadAssistantMessagePart } from '@assistant-ui/react'
-import { consumeAssistantMessage, createRunView, responseSegments, type AssistantMessage, type RunView } from 'lingxios/ui'
+import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
+import { consumeAssistantMessage, createRunView, responseSegments, type AssistantMessage, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import type { ImEnvelope } from '@/lib/im/wukong'
-import type { AssistantStreamChunk } from 'assistant-stream'
-import type { RunEvent } from 'lingxios/ui'
 
-export function readHarnessEvent(chunks: readonly AssistantStreamChunk[], runId: string): { event: RunEvent; threadId: string | null } | undefined {
-  const values = chunks.flatMap(chunk => chunk.type === 'data' && chunk.path.length === 0 && Array.isArray(chunk.data) ? chunk.data : [])
-    .filter(value => value && typeof value === 'object' && !Array.isArray(value) && 'kind' in value && value.kind === 'harness_event')
-  if (!values.length) return undefined
-  if (values.length !== 1) throw new Error('重复运行事件')
-  const value = values[0] as { event?: Partial<RunEvent>; threadId?: unknown }, event = value.event
-  if (!event || event.runId !== runId || !Number.isSafeInteger(event.seq) || Number(event.seq) < 1
-    || event.visibility !== 'user' || typeof event.kind !== 'string' || typeof event.stage !== 'string'
-    || !event.data || typeof event.data !== 'object' || Array.isArray(event.data)
-    || value.threadId !== null && typeof value.threadId !== 'string') throw new Error('运行事件身份或格式不一致')
-  return { event: event as RunEvent, threadId: value.threadId as string | null }
+/** Display projection only: lifecycle, preview and results remain in the native RunView. */
+export function harnessToolParts(runId: string, events: readonly RunEvent[], current: readonly ToolCallMessagePart[] = []): ToolCallMessagePart[] {
+  const calls = new Map(current.map(part => [part.toolCallId,part]))
+  for (const event of events) {
+    if (event.runId !== runId || event.visibility !== 'user') continue
+    const id = event.data.toolCallId
+    if (typeof id !== 'string' || !id.startsWith('host:')) continue
+    if (event.kind === 'tool.started' && typeof event.data.name === 'string' && !calls.has(id)) {
+      calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: event.data.name,args: {},argsText: '{}' })
+    }
+    const previous = calls.get(id)
+    if (event.kind === 'tool.completed' && previous && event.data.result && typeof event.data.result === 'object') {
+      // The timeline needs status only; do not duplicate tool payloads in the message store.
+      calls.set(id,{ ...previous,result: { status: Reflect.get(event.data.result,'status') },isError: event.data.isError === true })
+    }
+  }
+  return [...calls.values()].slice(-256)
 }
-
 export function mergeHarness(current: RunView, incoming: RunView): RunView {
   if (current.runId !== incoming.runId) throw new Error('运行身份不一致')
-  const newer = incoming.requestVersion > current.requestVersion || incoming.requestVersion === current.requestVersion
-    && (incoming.fence > current.fence || incoming.fence === current.fence && incoming.lastSeq > current.lastSeq)
-  let view = newer ? incoming : current
-  const other = newer ? current : incoming
-  if (other.message && other.resultId && other.resultId !== view.resultId) {
-    view = consumeAssistantMessage(view,other.message,{ resultId: other.resultId, fence: other.messageFence })
-  }
-  return { ...view, lastSeq: Math.max(current.lastSeq,incoming.lastSeq),
+  const view = incoming.message && incoming.resultId
+    ? consumeAssistantMessage(current,incoming.message,{ resultId: incoming.resultId,fence: incoming.messageFence }) : current
+  return { ...view,
     ...(incoming.delivery === 'delivered' && incoming.resultId === view.resultId ? { delivery: 'delivered' } : {}) }
 }
 
@@ -35,7 +33,8 @@ export function readHarness(envelope: ImEnvelope): RunView | undefined {
   if (!data?.harness) return undefined
   const runId = envelope.payload.refs?.runId
   if (typeof runId !== 'string' || envelope.payload.refs?.agentId !== envelope.fromUid) throw new Error('运行结果身份不一致')
-  const message: AssistantMessage = { version: 2, runId, agentId: envelope.fromUid, sessionId: envelope.channelId,
+  if (typeof data.harnessSessionId !== 'string' || !data.harnessSessionId) throw new Error('运行 session 身份缺失')
+  const message: AssistantMessage = { version: 2, runId, agentId: envelope.fromUid, sessionId: data.harnessSessionId,
     ...(envelope.payload.replyToClientMsgNo ? { threadId: envelope.payload.replyToClientMsgNo } : {}),
     body: envelope.payload.body ?? '', envelope: data.harness as AssistantMessage['envelope'] }
   return { ...consumeAssistantMessage(createRunView(runId),message,data.harnessCommit as { resultId: string; fence: number }), delivery: 'delivered' }
@@ -45,7 +44,11 @@ export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
   if (view.draft && (view.lifecycle === 'leased' || view.lifecycle === 'queued')) return [{ type: 'text', text: view.draft }]
   if (!view.message) return view.draft ? [{ type: 'text', text: view.draft }] : []
   // Citation provenance is displayed alongside the answer, without inventing a confidence score.
-  return [{ type: 'text', text: responseSegments(view.message.envelope).flatMap(segment => segment.type === 'presentation' ? [] : [segment.text]).join('') }]
+  const segments = responseSegments(view.message.envelope)
+  return [{ type: 'text', text: segments.filter(segment => segment.type !== 'presentation').map(segment => segment.text).join('') },
+    ...segments.flatMap((segment): ThreadAssistantMessagePart[] => segment.type === 'presentation' ? [{ type: 'tool-call',
+      toolCallId: `presentation:${segment.component.hash}`, toolName: segment.component.type,
+      args: segment.component.fields as ToolCallMessagePart['args'], argsText: JSON.stringify(segment.component.fields), result: segment.component }] : [])]
 }
 
 export function harnessStatus(view: RunView): MessageStatus {
@@ -64,7 +67,7 @@ export function harnessLabel(view: RunView): string {
   if (view.lifecycle === 'cancelled') return '已取消'
   if (view.lifecycle === 'failed') return '执行失败'
   if (view.lifecycle === 'queued') return '排队中'
-  if (view.lifecycle === 'leased') return '执行中'
+  if (view.lifecycle === 'leased') return view.draft ? '正文草稿' : '执行中'
   switch (view.goalOutcome?.status) {
     case 'satisfied': return '已完成'
     case 'partial': return '部分完成'

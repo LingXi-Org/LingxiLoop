@@ -1,4 +1,4 @@
-import { countPendingApprovals } from 'lingxios'
+import { countPendingApprovals } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 
 export interface TeacherProvisioningCourse {
@@ -357,5 +357,9 @@ export async function findTeacherAgentSummaryRow(
     [companyId, courseId],
   )
   const row = rows[0]
-  return row ? { ...row, pending: await countPendingApprovals(db, companyId, row.conversation_id) } : undefined
+  if (!row) return undefined
+  const sessions = await db.query<{ session_id: string }>('SELECT DISTINCT session_id FROM agent_run_bindings WHERE company_id=$1 AND conversation_id=$2 AND agent_id=$3', [companyId,row.conversation_id,row.agent_id])
+  let pending = 0
+  for (const session of sessions.rows) pending += await countPendingApprovals(db,companyId,session.session_id)
+  return { ...row,pending }
 }

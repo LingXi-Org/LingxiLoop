@@ -109,7 +109,7 @@ test('observability dashboard returns validated OpenPlait frames with collapsed 
   const response = await observabilityDashboard({
     listRuns: async query => { assert.deepEqual(query, { limit: 30 }); return { items: [run], nextCursor: null } },
     readOperations: async () => ({ periodHours: 24, runs: 5, finished: 4, successes: 3, failures: 1, cancelled: 0, active: 1, queued: 0, waiting: 0,
-      tokens: 1200, costMicros: 120, failedDeliveries: 0, failedUsageDeliveries: 0, averageExecutionMs: 2500,
+      tokens: 1200, costMicros: 120, failedDeliveries: 0, failedUsageDeliveries: 0, failedMemoryCaptures: 0, averageExecutionMs: 2500,
       trend: [{ time: run.createdAt, runs: 5, failures: 1 }],
       models: [{ model: 'gpt-test', calls: 4, tokens: 1200, costMicros: 120, unmeasuredCalls: 1 }] }),
   })
@@ -118,6 +118,7 @@ test('observability dashboard returns validated OpenPlait frames with collapsed 
   assert.deepEqual(response.results.summary.frames[0]?.fields.map((field) => [field.name, field.values]), [
     ['runs', [5]], ['success_rate', [75]], ['average_duration_ms', [2500]], ['tokens', [1200]],
     ['successes', [3]], ['failures', [1]], ['active', [1]],
+    ['queued', [0]], ['waiting', [0]], ['failed_deliveries', [0]], ['failed_usage_deliveries', [0]], ['failed_memory_captures', [0]],
   ])
   assert.deepEqual(response.results.recentRuns.frames[0], {
     name: 'recent-runs',

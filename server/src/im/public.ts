@@ -58,7 +58,6 @@ export async function sendAgentChannelMessage(input: {
     channelId: input.channelId,
     clientNonce: input.clientNonce,
     payload: input.payload,
-    rejectVerbatimPeerBody: input.payload.kind === 'text' ? input.payload.body : undefined,
   })
   if (result.kind === 'verbatim_peer') {
     return { kind: 'verbatim_peer' as const, peer: result.peer }

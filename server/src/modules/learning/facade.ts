@@ -4,7 +4,7 @@ import type { Queryable } from '../../db/queryable.js'
 import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
 import { generateInvitationToken, hashInvitationToken } from '../../http/invitation-token.js'
-import { wukongClient } from '../../im/wukong.js'
+import { syncProductChannel } from '../../agent-runtime/conversations.js'
 import { ensureProjectNotebook, syncProjectNotebookMetadata } from '../knowledge/public.js'
 import {
   closeTeacherRoomForCourse,
@@ -37,7 +37,7 @@ export const learningApplication = new LearningApplication(pool, {
   ensureNotebook: async (projectId, companyId) => { await ensureProjectNotebook(projectId, companyId) },
   syncNotebook: syncProjectNotebookMetadata,
   syncChannel: async (channel) => {
-    await wukongClient().upsertChannel({ channelType: 2, ...channel })
+    await syncProductChannel({ channelType: 2, ...channel })
   },
   revokeDocumentSubscriptions: async (userId, companyId, projectId) => {
     const { revokeUserProjectDocumentSubscriptions } = await import('../../ws.js')

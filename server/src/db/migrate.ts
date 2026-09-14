@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { readFile, readdir } from 'node:fs/promises'
 import type { Pool, PoolClient } from 'pg'
-import { packageResources, releaseVersions } from 'lingxios'
+import { packageResources, releaseVersions } from '@lyyzka/lingxios'
 import { ensureEducationPlan } from '../modules/entitlements/public.js'
 import { pool } from './pool.js'
 
@@ -61,6 +61,10 @@ async function assertRuntimeCurrent(client: PoolClient): Promise<void> {
   if (!row || row.runtime_version !== releaseVersions.runtime || row.schema_version !== releaseVersions.schema
     || row.actual_schema !== releaseVersions.schema || row.protocol_version !== releaseVersions.controlPlane
     || row.schema_sha256 !== schema.hash) throw new Error('installed LingxiOS package/schema mismatch; install a matching package and run the explicit database installation')
+  const tables = [...schema.sql.matchAll(/^CREATE TABLE (lingxios\.[a-z_]+)\s*\(/gm)].map(match => match[1])
+  if (!tables.length) throw new Error('published LingxiOS schema contains no tables')
+  const missing = await client.query('SELECT name FROM unnest($1::text[]) AS name WHERE to_regclass(name) IS NULL', [tables])
+  if (missing.rows.length) throw new Error('installed LingxiOS schema is missing required tables')
 }
 
 interface Migration {

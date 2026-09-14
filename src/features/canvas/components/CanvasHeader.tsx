@@ -8,6 +8,7 @@ import type { CanvasAgentAssignment, CanvasSnapshot } from '../contracts'
 import { canvasStatusLabel, isCanvasAssignmentActive } from '../lib/collaboration'
 import { useCanvas } from '../state'
 import { localizeCanvasStatus } from './canvasLabels'
+import { CanvasCollaboration } from './CanvasCollaboration'
 
 const EXECUTION_ROLE_LABELS: Record<CanvasAgentAssignment['executionRole'], string> = {
   specialist: '执行',
@@ -18,9 +19,11 @@ export function CanvasHeader({ onBack, onFocusFrame }: {
   onBack?: () => void
   onFocusFrame: (frameId: string) => void
 }) {
+  const canvasId = useCanvas(state => state.snapshot?.id)
   return <header data-canvas-header className="canvas-header canvas-main-header absolute inset-x-0 top-0 z-30 flex items-center gap-3 px-3">
     {onBack && <Button type="button" variant="outline" size="icon-sm" onClick={onBack} aria-label="返回对话" className="rounded-full"><IBack className="size-4" /></Button>}
     <CanvasTimeline onFocusFrame={onFocusFrame} />
+    <CanvasCollaboration key={canvasId} />
   </header>
 }
 

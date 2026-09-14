@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Pool } from 'pg'
 import { register } from 'tsx/esm/api'
-import { createLingxiOS } from 'lingxios'
-import { createWorker } from 'lingxios/worker'
+import { createLingxiOS } from '@lyyzka/lingxios'
+import { createWorker } from '@lyyzka/lingxios/worker'
 
 // Public package installation plus the product's actual schema, permissions and Yjs editor.
 const connectionString = process.env.LINGXIOS_NATIVE_TEST_DATABASE_URL
@@ -24,13 +24,16 @@ const { CalendarApplication } = await loader.import('../server/src/modules/calen
 const { pollTools } = await loader.import('../server/src/modules/polls/agent-tools.ts', import.meta.url)
 const { PollApplication } = await loader.import('../server/src/modules/polls/application.ts', import.meta.url)
 const { flushNativeEvents } = await loader.import('../server/src/agents/native-events.ts', import.meta.url)
+const { createProductContext } = await loader.import('../server/src/agent-runtime/context.ts', import.meta.url)
+const { createProductHarness } = await loader.import('../server/src/agent-runtime/harness.ts', import.meta.url)
+const { syncConversationPolicy } = await loader.import('../server/src/agent-runtime/conversations.ts', import.meta.url)
 const directory = await mkdtemp(join(tmpdir(), 'lingxios-native-document-'))
 const imageStorage = { normalizeKey: () => null, keyFromPublicUrl: () => null, signedUrlExpiresSoon: () => false,
   publicUrl: async () => { throw new Error('this text document has no images') } }
-let control, worker, failReceipt = false, mode = 'edit', hop = 0, documentId, firstRevision
+let control, worker, currentIdentity, failReceipt = false, mode = 'edit', hop = 0, documentId, firstRevision
 const delivered = [], events = []
 const query = async (client, sql, params) => {
-  if (failReceipt && /INSERT INTO lingxios\.agent_action_ledger/.test(sql)) { failReceipt = false; throw new Error('injected receipt failure') }
+  if (failReceipt && /INSERT INTO document_updates/.test(sql)) { failReceipt = false; throw new Error('injected document persistence failure') }
   return client.query(sql, params)
 }
 const pool = { query: (sql, params) => query(database, sql, params), connect: async () => {
@@ -44,6 +47,7 @@ const model = {
   modelId: 'deterministic-native-check', contextWindowTokens: 200_000,
   async run() {
     hop++
+    if (mode === 'revoked') throw new Error('revoked membership must fail before model execution')
     if (mode === 'poll') {
       if (hop === 1) return call('polls__create', { question: 'Which lesson?', options: ['Algebra','Geometry'] })
       const row = (await database.query('SELECT poll_client_msg_no,poll FROM im_polls')).rows[0]
@@ -67,7 +71,7 @@ const model = {
     }
     if (hop === 1) return call('documents__create', { title: 42, body: 'Invalid.' })
     if (hop === 2) {
-      assert.equal((await database.query('SELECT COUNT(*)::int AS n FROM lingxios.agent_action_intents')).rows[0].n, 0)
+      assert.equal((await control.readDiagnostics(currentIdentity)).actions.length, 0)
       return call('documents__create', { title: 'Lesson', body: 'Original paragraph.' })
     }
     const document = (await database.query('SELECT id,created_by FROM documents')).rows[0]
@@ -79,12 +83,6 @@ const model = {
     if (hop === 3 || hop === 4) return call('documents__edit', { documentId, expectedRevision: firstRevision,
       operations: [{ kind: 'replace', find: 'Original', replace: 'Updated' }, { kind: 'append', text: 'Second paragraph.' }] })
     if (hop === 5) {
-      await database.query("UPDATE project_memberships SET status='SUSPENDED'")
-      return call('documents__edit', { documentId, expectedRevision: snapshot.revision, operations: [{ kind: 'append', text: 'Forbidden.' }] })
-    }
-    if (hop === 6) {
-      await database.query("UPDATE project_memberships SET status='ACTIVE'")
-      assert.doesNotMatch(snapshot.body, /Forbidden/)
       // The other tool channel reaches exactly the same executor and native read path.
       return call('ipython', { code: `print(host.documents.read(documentId=${JSON.stringify(documentId)}))` })
     }
@@ -105,26 +103,41 @@ try {
   await assertMigrationsCurrent(database)
   await database.query(`
     INSERT INTO users(id,email,display_name) VALUES('human','human@test.invalid','Human');
-    INSERT INTO companies(id,name,slug,type,plan_id,personal_owner_user_id) VALUES('t','Native tools','native-tools','PERSONAL','plan-personal-free','human');
-    INSERT INTO company_memberships(company_id,user_id,role,status) VALUES('t','human','OWNER','ACTIVE');
-    INSERT INTO projects(id,company_id,kind,name,created_by) VALUES('p','t','PERSONAL_LEARNING','Docs','human');
-    INSERT INTO project_memberships(company_id,project_id,user_id,role,status) VALUES('t','p','human','OWNER','ACTIVE');
+    INSERT INTO companies(id,name,slug,type,plan_id) VALUES('t','Native tools','native-tools','EDUCATION','plan-education');
+    INSERT INTO company_memberships(company_id,user_id,role,status) VALUES('t','human','STUDENT','ACTIVE');
+    INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
+      VALUES('contract','t','plan-education','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '1 year',10);
+    INSERT INTO organization_seats(id,company_id,contract_id,user_id,status) VALUES('seat-human','t','contract','human','ACTIVE');
+    WITH period AS (INSERT INTO company_membership_periods(membership_id,role) SELECT id,role FROM company_memberships RETURNING id,membership_id)
+    UPDATE company_memberships member SET period_id=period.id FROM period WHERE member.id=period.membership_id;
+    INSERT INTO projects(id,company_id,kind,name,created_by) VALUES('p','t','INSTITUTIONAL_COURSE','Docs','human');
+    INSERT INTO courses(id,company_id,project_id,created_by) VALUES('course','t','p','human');
+    INSERT INTO project_memberships(company_id,project_id,user_id,role,status) VALUES('t','p','human','STUDENT','ACTIVE');
     INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status,capabilities)
       VALUES('agent','t','agent','Agent','A','blue','avail','["documents","calendar"]'),('human','t','human','Human','H','blue','avail','[]');
     INSERT INTO conversations(id,kind,title,company_id,project_id,members,leader_id) VALUES('room','group','Room','t','p','["human","agent"]','human');
     INSERT INTO im_channel_bindings(company_id,channel_id,profile) VALUES('t','room','{"channelId":"room","channelType":2,"members":["human","agent"]}');
   `)
-  const options = { database: pool, tools: [...createDocumentTools(imageStorage), ...calendarTools, ...pollTools], homesRoot: directory,
+  const tools = [...createDocumentTools(imageStorage), ...calendarTools, ...pollTools]
+  const options = { database: pool, harness: createProductHarness(tools), ...createProductContext(tools), homesRoot: directory,
     modelBudget: { maxModelCalls: 24 }, delivery: { onEvent: async (_work, event, context) => { context.signal.throwIfAborted(); events.push(event) },
-      deliverMessage: async (_work, message, context) => { context.signal.throwIfAborted(); delivered.push(message) } } }
+      deliverMessage: async (_work, message, context) => { context.signal.throwIfAborted(); delivered.push(message); return { messageId: context.im.messageKey } } } }
   control = await createLingxiOS(options)
+  const policy = await syncConversationPolicy(control,'t','room')
+  async function enqueue(messageId,text) {
+    const accepted = await control.conversations.ingest({ tenantId: 't',conversationId: 'room',policyVersion: policy.version,
+      messageId,version: 1,author: { id: 'human',kind: 'human' },text,mentions: ['agent'] },{ mode: 'execute',executionClass: 'operation' })
+    assert.equal(accepted.runs.length,1)
+    currentIdentity = accepted.runs[0]
+    assert.notEqual(currentIdentity.sessionId,'room')
+    return currentIdentity
+  }
   assert.equal('runNext' in control, false)
   worker = createWorker({ controlPlane: control, model, kernel: { homesRoot: directory }, worker: { id: 'native-document-one' } })
-  const identity = { runId: 'document-edit', tenantId: 't', agentId: 'agent', sessionId: 'room', principalId: 'human' }
-  await control.enqueue({ ...identity, id: identity.runId, text: 'Create Lesson, change Original to Updated, append Second paragraph, and attach its current contents.' })
+  const identity = await enqueue('document-edit','Create Lesson, change Original to Updated, append Second paragraph, and attach its current contents.')
   assert.equal(await worker.runNext(), true)
   const message = await control.readMessage(identity)
-  assert.ok(message, JSON.stringify((await database.query('SELECT status,error,goal_outcome FROM lingxios.agent_work_items')).rows))
+  assert.ok(message, JSON.stringify(await control.readRun(identity)))
   assert.equal(message.envelope.goalOutcome.status, 'satisfied', JSON.stringify(message.envelope))
   const artifact = message.envelope.artifacts[0]
   assert.ok(artifact.source.version)
@@ -133,7 +146,7 @@ try {
   assert.match(download.bytes.toString(), /Updated paragraph\./)
   assert.match(download.bytes.toString(), /Second paragraph\./)
   assert.equal(createHash('sha256').update(download.bytes).digest('hex'), artifact.sha256)
-  assert.equal(await control.readArtifact({ ...identity, principalId: 'foreign' }, artifact.path), null)
+  await assert.rejects(control.readArtifact({ ...identity, principalId: 'foreign' }, artifact.path), /capability is unavailable/)
   assert.equal(await control.readArtifact({ ...identity, tenantId: 'foreign' }, artifact.path), null)
   assert.equal(await control.readArtifact(identity, '../document.md'), null)
   const deadline = Date.now() + 10_000
@@ -141,18 +154,27 @@ try {
   assert.equal(await control.readDelivery(identity), 'delivered')
   assert.equal(delivered.length, 1)
   assert.deepEqual(delivered[0].envelope.artifacts, message.envelope.artifacts)
-  const receipts = (await database.query("SELECT intent.intent->'action'->>'action' AS action,result FROM lingxios.agent_action_intents intent JOIN lingxios.agent_action_ledger USING(idempotency_key) WHERE intent.intent->'action'->>'action' LIKE 'documents.%' ORDER BY intent.recorded_at")).rows
+  const receipts = (await control.readDiagnostics(identity)).actions.filter(row => row.action.startsWith('documents.'))
   assert.equal(receipts.filter(row => row.result.executionState === 'no_effect').length, 1)
-  assert.equal(receipts.filter(row => row.action === 'documents.create').length, 1)
-  assert.ok(receipts.some(row => row.action === 'documents.read' && row.result.ok))
+  assert.equal((await database.query('SELECT id FROM documents')).rows.length,1)
+  assert.ok((await control.readEvents(identity)).events.some(event => event.data.name === 'documents.read'))
+
+  mode = 'revoked'; hop = 0
+  const beforeRevocation = await readDocumentSnapshot(database,documentId,'t')
+  await database.query("UPDATE project_memberships SET status='SUSPENDED'")
+  const revoked = await enqueue('revoked-document','Append Forbidden to the document.')
+  assert.equal(await worker.runNext(),true)
+  assert.equal((await control.readRun(revoked)).status,'failed')
+  assert.deepEqual(await readDocumentSnapshot(database,documentId,'t'),beforeRevocation)
+  assert.equal(hop,0)
+  await database.query("UPDATE project_memberships SET status='ACTIVE'")
 
   mode = 'delete'; hop = 0
-  const deletion = { ...identity, runId: 'document-delete' }
-  await control.enqueue({ ...deletion, id: deletion.runId, text: 'Delete the Lesson document after my approval.' })
+  const deletion = await enqueue('document-delete','Delete the Lesson document after my approval.')
   assert.equal(await worker.runNext(), true)
   const waiting = await control.readOutcome(deletion)
   assert.equal(waiting?.status, 'awaiting_approval')
-  const decision = { ...identity, approvalId: waiting.approvalId, approved: true }
+  const decision = { ...deletion, approvalId: waiting.approvalId, approved: true }
   assert.ok((await control.readApproval(decision)).preview.bodySha256)
   await assert.rejects(control.decideApproval({ ...decision, principalId: 'foreign' }), /outside this principal/)
   await worker.stop()
@@ -165,9 +187,9 @@ try {
   assert.ok((await database.query("SELECT id FROM agent_native_event_outbox WHERE event->>'kind'='document.deleted'")).rows.length)
 
   mode = 'poll'; hop = 0
-  await control.enqueue({ ...identity, id: 'native-poll', text: 'Create a poll with Algebra and Geometry, and vote for Algebra.' })
+  const pollIdentity = await enqueue('native-poll','Create a poll with Algebra and Geometry, and vote for Algebra.')
   assert.equal(await worker.runNext(), true)
-  assert.equal((await control.readOutcome({ ...identity, runId: 'native-poll' }))?.status, 'satisfied')
+  assert.equal((await control.readOutcome(pollIdentity))?.status, 'satisfied')
   assert.equal((await database.query('SELECT voter_participant_id FROM im_poll_votes')).rows[0].voter_participant_id, 'agent')
   const publications = []
   const polls = new PollApplication(database, { transaction: work => work(database), publishSnapshot: async row => { publications.push(row); return 1 } })
@@ -176,12 +198,11 @@ try {
   assert.equal(publications.length, 1)
 
   mode = 'calendar'; hop = 0
-  const calendarIdentity = { ...identity, runId: 'native-calendar' }
-  await control.enqueue({ ...identity, id: calendarIdentity.runId, text: 'Create a Lesson calendar event on January 2, 2027 at 10:00 UTC after approval, then rename it Updated lesson.' })
+  const calendarIdentity = await enqueue('native-calendar','Create a Lesson calendar event on January 2, 2027 at 10:00 UTC after approval, then rename it Updated lesson.')
   assert.equal(await worker.runNext(), true)
   const calendarWaiting = await control.readOutcome(calendarIdentity)
   assert.equal(calendarWaiting.status, 'awaiting_approval')
-  await control.decideApproval({ ...identity, approvalId: calendarWaiting.approvalId, approved: true })
+  await control.decideApproval({ ...calendarIdentity, approvalId: calendarWaiting.approvalId, approved: true })
   assert.equal(await worker.runNext(), true)
   assert.equal((await control.readOutcome(calendarIdentity))?.status, 'satisfied')
   assert.deepEqual((await database.query('SELECT title,created_by FROM calendar_events')).rows, [{ title: 'Updated lesson', created_by: 'human' }])

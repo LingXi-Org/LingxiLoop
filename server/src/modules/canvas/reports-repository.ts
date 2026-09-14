@@ -40,10 +40,10 @@ export async function lockReportWork(db: Queryable, args: {
     canvas_assignment_id: string | null
     execution_role: 'specialist' | 'verifier' | 'reporter'
     project_id: string | null
-    principal_id: string; session_id: string; request_version: number
+    principal_id: string; session_id: string; conversation_id: string; request_version: number
   }>(
     `SELECT work.assignment_id AS canvas_assignment_id,work.execution_role,canvas.project_id,
-       work.principal_id,work.session_id,work.request_version
+       work.principal_id,work.session_id,canvas.conversation_id,work.request_version
        FROM canvas_agent_runs work JOIN canvases canvas ON canvas.id=work.canvas_id AND canvas.company_id=work.company_id
        LEFT JOIN canvas_agent_assignments assignment ON assignment.id=work.assignment_id
       WHERE work.work_id=$1 AND work.company_id=$2 AND work.agent_id=$3 AND work.canvas_id=$4

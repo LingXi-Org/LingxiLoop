@@ -1,6 +1,7 @@
 import { pool } from '../db/pool.js'
 import type { LingxiMessageV1 } from './message-types.js'
 import { wukongClient } from './wukong.js'
+import { syncProductChannel } from '../agent-runtime/conversations.js'
 import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
 
 export async function reconcileImChannels(): Promise<{ channels: number; failures: number }> {
@@ -14,7 +15,7 @@ export async function reconcileImChannels(): Promise<{ channels: number; failure
   for (const row of rows) {
     const channelType = row.profile.channelType === 1 ? 1 : 2
     try {
-      await wukongClient().upsertChannel({
+      await syncProductChannel({
         channelId: row.channel_id,
         channelType,
         title: row.profile.title ?? row.channel_id,

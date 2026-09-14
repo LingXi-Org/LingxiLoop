@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { releaseVersions } from 'lingxios'
+import { releaseVersions } from '@lyyzka/lingxios'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { createServer, type Server } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
@@ -87,9 +87,12 @@ test('committed messages remain idempotent and attachments ingest without old Ag
   })
   assert.equal(assignment.status, 200)
   assert.deepEqual((await pool.query(`SELECT to_regclass('public.agent_work_items') AS retired_queue`)).rows, [{ retired_queue: null }])
-  const runs = await (await lingxiOSControl()).listRuns({ tenantId: companyId,sessionId: 'retirement-room',agentId,principalId: 'test-owner' })
+  const binding = (await pool.query<{ run_id: string; session_id: string }>('SELECT run_id,session_id FROM agent_run_bindings WHERE company_id=$1 AND conversation_id=$2', [companyId,'retirement-room'])).rows[0]
+  assert.ok(binding)
+  assert.notEqual(binding.session_id,'retirement-room')
+  const runs = await (await lingxiOSControl()).listRuns({ tenantId: companyId,id: binding.run_id,agentId,principalId: 'test-owner' })
   assert.equal(runs.items[0]?.kind,'canvas_worker')
   assert.equal(runs.items[0]?.status,'queued')
   const meta = await fetch(`${baseUrl}/api/meta`)
-  assert.deepEqual((await meta.json() as { reasoningRuntime: unknown }).reasoningRuntime, { name: 'lingxios',...releaseVersions })
+  assert.deepEqual((await meta.json() as { reasoningRuntime: unknown }).reasoningRuntime, { name: '@lyyzka/lingxios',...releaseVersions })
 })

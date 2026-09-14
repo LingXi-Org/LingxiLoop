@@ -1,8 +1,9 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
 import { isDeepStrictEqual } from 'node:util'
-import { NoEffectError, type ActionContext, type ToolDefinition } from 'lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
-import { nativeTool } from '../../agents/tools.js'
+import { nativeTool, authorizeAudienceRead } from '../../agents/tools.js'
 import { queueNativeEvents } from '../../agents/native-events.js'
 import { createPermissionService } from '../access/public.js'
 import { CalendarApplication } from './application.js'
@@ -10,9 +11,10 @@ import { agentCalendarSchemas, type CalendarChangedEvent } from './contracts.js'
 
 async function scope(context: ActionContext, eventId?: string, write = false) {
   const { work } = context, db = context.database as Queryable
-  const { rows } = await db.query<{ project_id: string }>('SELECT project_id FROM conversations WHERE company_id=$1 AND id=$2 FOR SHARE', [work.tenantId,work.sessionId])
+  const { rows } = await db.query<{ project_id: string }>('SELECT project_id FROM conversations WHERE company_id=$1 AND id=$2 FOR SHARE', [work.tenantId,productConversationId(work)])
   const projectId = rows[0]?.project_id
   if (!projectId || !work.principalId) throw new NoEffectError('calendar project scope is unavailable', 'forbidden')
+  await authorizeAudienceRead(context,{ projectId,action: 'calendar:read',resource: { type: eventId ? 'calendar_event' : 'project',id: eventId ?? projectId } })
   await createPermissionService(db, { lockDependencies: true }).assertCan({ actorUserId: work.principalId, companyId: work.tenantId, projectId,
     action: write ? 'calendar:write' : 'calendar:read', resource: { type: eventId ? 'calendar_event' : 'project', id: eventId ?? projectId } })
   return { companyId: work.tenantId, projectId, userId: work.principalId, actorId: work.agentId }
@@ -57,12 +59,12 @@ export const calendarTools: ToolDefinition[] = [
     authorize: async (context, input) => { await scope(context, input.eventId) },
     async execute(context, input) { const dispatches = await application(context).app.dispatches(await scope(context, input.eventId), input.eventId); return { ok: true, value: { dispatches: dispatches.slice(0,100), truncated: dispatches.length > 100 } } } }),
   nativeTool('calendar.create', agentCalendarSchemas.create, { description: 'Request approval to create a calendar event.', effect: 'transaction', approval: true, verify,
-    authorize: async (context, input) => { await scope(context, undefined, true); await authorizeTarget(context, input.targetConversationId ?? (input.kind === 'agent_task' ? context.work.sessionId : null)) },
+    authorize: async (context, input) => { await scope(context, undefined, true); await authorizeTarget(context, input.targetConversationId ?? (input.kind === 'agent_task' ? productConversationId(context.work) : null)) },
     async preview(context, input) { return JSON.parse(JSON.stringify({ scope: await scope(context, undefined, true), input })) as Record<string, unknown> },
     async execute(context, input) {
       const native = application(context), eventId = 'ce-' + createHash('sha256').update(context.action.idempotencyKey).digest('hex')
       const event = await native.app.create(await scope(context, undefined, true), { ...input,
-        ...(input.kind === 'agent_task' && !input.targetConversationId ? { targetConversationId: context.work.sessionId } : {}) }, { eventId })
+        ...(input.kind === 'agent_task' && !input.targetConversationId ? { targetConversationId: productConversationId(context.work) } : {}) }, { eventId })
       await queueNativeEvents(context, native.events)
       return { ok: true, value: { eventId, event, notification: 'queued' } }
     } }),

@@ -1,4 +1,5 @@
-import { NoEffectError, type ActionContext, type ToolDefinition } from 'lingxios'
+import { productConversationId } from '../../agent-runtime/identity.js'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, compareResource } from '../../agents/tools.js'
 import { queueNativeEvents, type NativeEvent } from '../../agents/native-events.js'
@@ -13,11 +14,12 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
   async function scope(context: ActionContext, write = false) {
     const { work } = context, db = context.database as Queryable
     await createPermissionService(db, { lockDependencies: true }).assertCan({ actorUserId: work.principalId!, companyId: work.tenantId,
-      action: write ? 'canvas:write' : 'conversation:read', resource: { type: 'conversation', id: work.sessionId } })
-    const id = await conversationCanvasId(db, work.tenantId, work.sessionId)
+      action: write ? 'canvas:write' : 'conversation:read', resource: { type: 'conversation', id: productConversationId(work) } })
+    const id = await conversationCanvasId(db, work.tenantId, productConversationId(work))
     const canvas = id ? await canvasById(db, work.tenantId, id) : null
     if (write && canvas && !['active','summarizing'].includes(canvas.status)) throw new NoEffectError('Canvas workspace is no longer active', 'canvas_stopped')
-    if (work.kind === 'canvas_worker') {
+    const assigned = await db.query('SELECT 1 FROM canvas_agent_runs WHERE work_id=$1 AND company_id=$2 AND assignment_id IS NOT NULL', [work.id,work.tenantId])
+    if (work.kind === 'canvas_worker' || assigned.rows.length) {
       const binding = canvas && await lockReportWork(db, { workId: work.id, companyId: work.tenantId, agentId: work.agentId, canvasId: canvas.id })
       if (!binding || binding.principal_id !== work.principalId) throw new NoEffectError('Canvas assignment was replaced or revoked', 'forbidden')
       const dependencies = await db.query<{ work_id: string }>(`SELECT parent.work_id FROM canvas_assignment_dependencies dependency
@@ -31,16 +33,14 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
     return canvas
   }
   function application(context: ActionContext) {
-    const db = context.database as Queryable, events: NativeEvent[] = [], children: string[] = []
+    const db = context.database as Queryable, events: NativeEvent[] = []
     const execution = createCanvasExecution(control, context)
     const api = createCanvasApplication({ db, transaction: run => run(db), withCanvasFence: (_id, run) => run(db),
-      execution: { ...execution, async enqueue(db, canvas, assignment, dependsOn) {
-        await execution.enqueue(db, canvas, assignment, dependsOn); children.push(assignment.work_id!)
-      } },
+      execution,
       missingChannelMessageIds: input => missingAgentChannelMessageIds({ ...input, agentId: input.actorId, signal: context.signal }),
       publishEvent: async event => { events.push(event) },
     })
-    return { api, events, children }
+    return { api, events, execution }
   }
   async function requiredCanvas(context: ActionContext) {
     const canvas = await scope(context)
@@ -49,15 +49,28 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
   }
   const actor = (context: ActionContext) => ({ companyId: context.work.tenantId, actorId: context.work.agentId, actorKind: 'agent' as const })
   async function result(context: ActionContext, native: ReturnType<typeof application>, value: object, canvas: CanvasRow) {
+    const children = await native.execution.flush(context.database as Queryable)
+    if (children.length) {
+      const snapshot = await native.api.getCanvasSnapshot(context.work.tenantId,context.work.agentId,canvas.id)
+      value = context.action.action === 'canvas.handoff' ? { ...value, snapshot } : snapshot
+      for (const event of native.events) {
+        if (event.type !== 'canvas.changed') continue
+        if (event.kind === 'workspace.updated') event.workspace = snapshot
+        if (event.kind === 'assignment.updated' && event.assignment) {
+          const assignmentId = (event.assignment as { id?: string }).id
+          event.assignment = snapshot.assignments.find(assignment => assignment.id === assignmentId) ?? event.assignment
+        }
+      }
+    }
     await queueNativeEvents(context, native.events)
-    if (native.children.length) {
+    if (children.length) {
       const { rows } = await context.database.query('SELECT 1 FROM canvas_agent_runs WHERE work_id=$1 AND canvas_id=$2', [context.work.id,canvas.id])
       if (!rows.length) await bindCanvasRun(context.database as Queryable, { work_id: context.work.id, company_id: context.work.tenantId,
         canvas_id: canvas.id, assignment_id: null, agent_id: context.work.agentId, principal_id: context.work.principalId!,
         session_id: context.work.sessionId, thread_id: context.work.threadId ?? null, request_version: context.requestVersion!, execution_role: 'reporter' })
     }
-    return { ok: true as const, value: { result: value, canvasId: canvas.id }, ...(native.children.length ? {
-      directive: { type: 'defer' as const, reason: 'child', data: { taskRef: native.children[0], taskRefs: native.children } },
+    return { ok: true as const, value: { result: value, canvasId: canvas.id }, ...(children.length ? {
+      directive: await context.waitForChildren(children),
     } : {}) }
   }
   const authorize = async (context: ActionContext) => { await scope(context, !['canvas.current','canvas.available_agents'].includes(context.action.action)) }
@@ -84,7 +97,7 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
   }
   return [
     nativeTool('canvas.current', agentCanvasSchemas.current, { description: 'Read the current Canvas, assignments and reports.', effect: 'read', approval: false, authorize,
-      async execute(context) { return { ok: true, value: await application(context).api.getConversationCanvas(context.work.tenantId, context.work.sessionId, context.work.principalId!) } } }),
+      async execute(context) { return { ok: true, value: await application(context).api.getConversationCanvas(context.work.tenantId, productConversationId(context.work), context.work.principalId!) } } }),
     nativeTool('canvas.available_agents', agentCanvasSchemas.available_agents, { description: 'List Canvas agents.', effect: 'read', approval: false, authorize,
       async execute(context) { return { ok: true, value: await application(context).api.listCanvasAvailableAgents(context.work.tenantId) } } }),
     nativeTool('canvas.create_frame', agentCanvasSchemas.create_frame, { description: 'Create a Canvas frame.', effect: 'transaction', approval: false, authorize, verify,
@@ -105,7 +118,7 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
     nativeTool('canvas.start_workspace', agentCanvasSchemas.start_workspace, { description: 'Start specialist and verifier assignments, then resume to report their results.', effect: 'transaction', approval: false, authorize, verify,
       async execute(context, input) { const native = application(context), work = context.work
         const snapshot = await native.api.startCanvasWorkspace({ ...input, companyId: work.tenantId, initiatorAgentId: work.agentId,
-          conversationId: work.sessionId, triggerClientMsgNo: work.threadId ?? work.triggerRef, idempotencyKey: context.action.idempotencyKey, authorizationUserId: work.principalId! })
+          conversationId: productConversationId(work), triggerClientMsgNo: work.threadId ?? work.triggerRef, idempotencyKey: context.action.idempotencyKey, authorizationUserId: work.principalId! })
         return result(context, native, snapshot, (await canvasById(context.database as Queryable, work.tenantId, snapshot.id))!) } }),
     nativeTool('canvas.assign', agentCanvasSchemas.assign, { description: 'Recruit additional Canvas specialists or verifiers.', effect: 'transaction', approval: false, authorize, verify,
       async execute(context, input) { const canvas = await requiredCanvas(context), native = application(context); return result(context, native,

@@ -1,5 +1,5 @@
 import type { AgentCapability, Status } from '@/types'
-import type { RunSnapshot } from 'lingxios/ui'
+import type { RunSnapshot } from '@lyyzka/lingxios/ui'
 
 export type AgentRunStatus = RunSnapshot['status']
 export type AgentEventLevel = 'debug' | 'info' | 'warn' | 'error'

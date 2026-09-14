@@ -32,6 +32,7 @@ import {
 import {
   compactDocumentUpdates,
   canPersistHumanUpdate,
+  humanWriteAuthorization,
   loadDocumentSnapshot,
   loadDocumentUpdatesAfter,
   lockTenantDocument,
@@ -62,7 +63,7 @@ interface Room {
   loaded: Promise<void>
   /** Only database persistence determines whether an edit is confirmed. */
   pendingEffects: Promise<void>
-  unsaved: Array<{ update: Uint8Array; authorId: string; originId: string; human: boolean; acceptedAt: Date }>
+  unsaved: Array<{ update: Uint8Array; authorId: string; originId: string; human: boolean; authorization: string | null }>
   invalidated: boolean
   publishing: boolean
   cursor: bigint
@@ -153,7 +154,7 @@ class DocumentRoomRuntime {
         const entry = room.unsaved[0]!
         await this.dependencies.transaction(async (db) => {
           if (entry.human) {
-            if (!await canPersistHumanUpdate(db, room.documentId, room.companyId, entry.authorId, entry.acceptedAt)) {
+            if (!await canPersistHumanUpdate(db, room.documentId, room.companyId, entry.authorId, entry.authorization)) {
               room.invalidated = true
               room.unsaved.length = 0
               this.rooms.delete(room.documentId)
@@ -259,7 +260,9 @@ class DocumentRoomRuntime {
           }
         } else {
           const human = typeof updateOrigin === 'object' && updateOrigin !== null && 'human' in updateOrigin
-          room.unsaved.push({ update, authorId, originId, human, acceptedAt: new Date() })
+          const authorization = typeof updateOrigin === 'object' && updateOrigin !== null && 'authorization' in updateOrigin
+            && typeof updateOrigin.authorization === 'string' ? updateOrigin.authorization : null
+          room.unsaved.push({ update, authorId, originId, human, authorization })
           void this.flush(room)
         }
       })
@@ -316,9 +319,11 @@ class DocumentRoomRuntime {
     update: Uint8Array,
   ): Promise<void> {
     const room = await this.getOrCreateRoom(documentId, companyId)
+    const authorization = await this.dependencies.transaction(db => humanWriteAuthorization(db, authorId))
+    if (authorization === null) throw new Error('document writer access revoked; reconnect')
     assertRoomWritable(room, update.byteLength)
     const previous = room.pendingEffects
-    Y.applyUpdate(room.doc, update, { originId, authorId, human: true } as never)
+    Y.applyUpdate(room.doc, update, { originId, authorId, human: true, authorization } as never)
     await (previous === room.pendingEffects ? this.flush(room) : room.pendingEffects)
   }
 

@@ -1,4 +1,4 @@
-import { readRunReference } from 'lingxios'
+import { readRunReference } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import type {
   CreateEvidenceClaimInput,
@@ -111,7 +111,10 @@ export async function modelRunBelongsToProject(
 ): Promise<boolean> {
   const run = await readRunReference(db, companyId, modelRunId)
   if (!run) return false
-  const { rows } = await db.query(`SELECT 1 FROM conversations WHERE company_id=$1 AND project_id=$2 AND id=$3`, [companyId, projectId, run.sessionId])
+  const { rows } = await db.query(`SELECT 1 FROM agent_run_bindings binding
+    JOIN conversations conversation ON conversation.company_id=binding.company_id AND conversation.id=binding.conversation_id
+    WHERE binding.company_id=$1 AND conversation.project_id=$2 AND binding.run_id=$3 AND binding.session_id=$4`,
+  [companyId, projectId, run.runId, run.sessionId])
   return Boolean(rows[0])
 }
 

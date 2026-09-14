@@ -6,6 +6,10 @@ import { AgentApplicationError } from './application.js'
 import { permissionService } from '../access/public.js'
 import { autonomyRequestSchema, createAgentRequestSchema, preferencesRequestSchema, updateAgentRequestSchema } from './contracts.js'
 import { agentApplication } from './facade.js'
+import { assembleHarness } from '@lyyzka/lingxios'
+import { createProductHarness } from '../../agent-runtime/harness.js'
+import { createProductTools } from '../../agent-runtime/tools.js'
+import { lingxiOSControl } from '../../agent-runtime/runtime.js'
 
 export const agentsRouter = Router()
 
@@ -29,6 +33,11 @@ async function respond<T>(work: () => Promise<T>): Promise<T> {
 agentsRouter.get('/participants', safe(async (req, res) => {
   const scope = await requireCompanyArtifactContext(req, 'agent:read')
   res.json(await agentApplication.participants(scope))
+}))
+
+agentsRouter.get('/agents/harness', safe(async (req, res) => {
+  await requireCompanyArtifactContext(req,'agent:read')
+  res.json(assembleHarness(createProductHarness(createProductTools(lingxiOSControl))).context)
 }))
 
 agentsRouter.post('/agents', safe(async (req, res) => {

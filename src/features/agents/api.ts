@@ -1,5 +1,6 @@
 
 import { http } from '@/api/core/http'
+import type { HarnessContext } from '@lyyzka/lingxios'
 import type {
   AgentInput,
   ApiAutonomy,
@@ -8,6 +9,7 @@ import type {
 } from './contracts'
 
 export const agentsApi = {
+  getHarness: () => http<HarnessContext>('/agents/harness'),
   getParticipants: () => http<ApiParticipant[]>('/participants'),
   stopAgentRun: (agentId: string, channelId: string) =>
     http<{ ok: boolean; workId: string }>('/im/runs/stop', {

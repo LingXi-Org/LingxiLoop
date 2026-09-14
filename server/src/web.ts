@@ -17,7 +17,7 @@ import { wukongClient } from './im/wukong.js'
 import { Lifecycle, type ServiceHandle } from './runtime/lifecycle.js'
 import { openNotebookEmbeddingRouter } from './modules/knowledge/embedding-proxy.js'
 import { errorHandler } from './http/errors.js'
-import { lingxiOSControl } from './agent-runtime/runtime.js'
+import { lingxiOSControl, listenLingxiOSControl } from './agent-runtime/runtime.js'
 
 export async function startWebProcess(): Promise<ServiceHandle> {
   // Construct every mandatory infrastructure adapter before exposing HTTP.
@@ -167,6 +167,7 @@ export async function startWebProcess(): Promise<ServiceHandle> {
   })
 
   try {
+    await listenLingxiOSControl()
     const wss = attachWebSocket(server)
     lifecycle.addDisposer('websocket', () => new Promise<void>((resolveClose, rejectClose) => {
       for (const client of wss.clients) client.terminate()

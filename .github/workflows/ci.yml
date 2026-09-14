@@ -51,6 +51,7 @@ jobs:
           predicate-quantifier: some-with-excludes
           filters: |
             shared_frontend:
+              - '.npmrc'
               - 'package.json'
               - 'package-lock.json'
               - 'biome.json'
@@ -78,6 +79,7 @@ jobs:
               - 'workers/control-plane/**'
               - 'worker-configuration.d.ts'
             server:
+              - 'server/.npmrc'
               - 'server/src/**'
               - 'server/scripts/**'
               - 'server/package.json'
@@ -87,6 +89,7 @@ jobs:
               - 'server/*.conf'
               - 'server/docker/lingxiloop-server.Dockerfile'
             server_source:
+              - 'server/.npmrc'
               - 'server/src/**'
               - '!server/src/__tests__/**'
               - '!server/src/__integration__/**'
@@ -169,11 +172,9 @@ jobs:
       - uses: actions/setup-node@v5
         with: { node-version: "22", cache: npm }
       - if: needs.changes.outputs.web == 'true' || needs.changes.outputs.admin == 'true' || needs.changes.outputs.control == 'true' || needs.changes.outputs.server == 'true'
-        run: |
-          printf '%s\n' '@lyyzka:registry=https://npm.pkg.github.com' "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
-          npm ci
+        run: npm ci
         env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - if: needs.changes.outputs.web == 'true'
         run: npm run lint && npm test && npm run build
       - if: needs.changes.outputs.admin == 'true'
@@ -211,17 +212,29 @@ jobs:
       LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
       LINGXILOOP_GATEWAY_HMAC_SECRET: integration-gateway-secret
       WUKONG_USER_TOKEN_SECRET: integration-wukong-user-token-secret
+      AGENT_OS_INPUT_COST_MICROS_PER_MILLION: "1"
+      AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: "1"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with: { node-version: "22", cache: npm }
-      - run: |
-          printf '%s\n' '@lyyzka:registry=https://npm.pkg.github.com' "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
-          npm ci
+      - run: npm ci
         env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - run: npm run db:migrate
       - run: npm run test:integration
+      - name: Native product Worker flows on empty databases
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          LINGXIOS_NATIVE_TEST_REDIS_URL: redis://127.0.0.1:6379
+        run: |
+          for capability in documents canvas learning eval; do
+            createdb "native_${capability}"
+            LINGXIOS_NATIVE_TEST_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/native_${capability}" \
+              node "scripts/test-native-agent-${capability}.mjs"
+          done
 
   publish:
     if: >-
@@ -254,14 +267,14 @@ jobs:
           target: ${{ matrix.target }}
           platforms: linux/amd64
           push: true
+          secrets: |
+            npm_token=${{ matrix.package == 'lingxiloop-server' && (secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN) || '' }}
           tags: ghcr.io/${{ steps.metadata.outputs.owner }}/${{ matrix.package }}:${{ github.sha }}
           build-args: |
             LINGXILOOP_VERSION=${{ steps.metadata.outputs.version }}
             LINGXILOOP_COMMIT_SHA=${{ github.sha }}
             WUKONG_COMMIT=${{ matrix.wukong_commit }}
             VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEsX5eyOl1nAe5i9
-          secrets: |
-            npm_token=${{ github.token }}
           cache-from: type=gha,scope=${{ matrix.package }}
           cache-to: type=gha,mode=max,scope=${{ matrix.package }}
 
@@ -309,6 +322,8 @@ jobs:
       - uses: actions/setup-node@v5
         with: { node-version: "22", cache: npm }
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - if: needs.changes.outputs.control_migrations == 'true'
         name: Apply D1 migrations
         run: npm run control:d1:remote

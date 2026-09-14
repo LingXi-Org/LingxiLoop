@@ -412,6 +412,8 @@ export async function teardownAll(server?: import('node:http').Server): Promise<
   if (server && server.listening) {
     await new Promise<void>((resolve) => server.close(() => resolve()))
   }
+  const { stopLingxiOSControl } = await import('../agent-runtime/runtime.js')
+  await stopLingxiOSControl()
   // Pool + redis are module-level singletons; ending them is fine because
   // the process is about to exit anyway. Catch swallows reentrant-end
   // errors when multiple test files share the singleton.

@@ -241,3 +241,10 @@ export const agentCanvasSchemas = {
     conflictResolution: z.array(z.record(z.string(), z.unknown())).max(32).optional(),
   }).strict().refine(value => Buffer.byteLength(JSON.stringify(value)) <= 32_768, 'report exceeds 32768 bytes'),
 }
+
+export const canvasStateUpdateSchema = z.object({ operationId: z.string().min(1).max(200),changes: z.array(z.union([
+  z.object({ field: z.string().min(1).max(200),expectedVersion: z.number().int().nonnegative(),value: z.unknown() }).strict(),
+  z.object({ field: z.string().min(1).max(200),expectedVersion: z.number().int().nonnegative(),delete: z.literal(true) }).strict(),
+])).min(1).max(64) }).strict()
+
+export const canvasCollaborationQuerySchema = z.object({ afterSeq: z.coerce.number().int().nonnegative().safe().default(0) }).strict()

@@ -1,7 +1,8 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, type ActionContext, type ToolDefinition } from 'lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
-import { nativeTool } from '../../agents/tools.js'
+import { nativeTool, authorizeAudienceRead } from '../../agents/tools.js'
 import { queueNativeEvents } from '../../agents/native-events.js'
 import { createPermissionService } from '../access/public.js'
 import { DocumentsApplication } from './application.js'
@@ -11,7 +12,7 @@ import { agentDocumentSchemas, type DocumentChangedEvent, type DocumentUpdateEve
 async function scope(context: ActionContext, documentId?: string) {
   const { work } = context
   const db = context.database as Queryable
-  const { rows } = await db.query<{ project_id: string }>('SELECT project_id FROM conversations WHERE company_id=$1 AND id=$2 FOR SHARE', [work.tenantId,work.sessionId])
+  const { rows } = await db.query<{ project_id: string }>('SELECT project_id FROM conversations WHERE company_id=$1 AND id=$2 FOR SHARE', [work.tenantId,productConversationId(work)])
   const projectId = rows[0]?.project_id
   if (!projectId || !work.principalId) throw new NoEffectError('document project scope is unavailable', 'forbidden')
   const method = context.action.action.split('.')[1]
@@ -19,11 +20,13 @@ async function scope(context: ActionContext, documentId?: string) {
   const permissions = createPermissionService(db, { lockDependencies: true })
   await permissions.assertCan({ actorUserId: work.principalId, companyId: work.tenantId, projectId,
     action: permission, resource: { type: documentId ? 'document' : 'project', id: documentId ?? projectId } })
+  await authorizeAudienceRead(context,{ projectId, action: 'document:read', resource: { type: documentId ? 'document' : 'project', id: documentId ?? projectId } })
   if (documentId) {
     const current = await db.query<{ conversation_id: string | null }>('SELECT conversation_id FROM documents WHERE company_id=$1 AND project_id=$2 AND id=$3 FOR SHARE', [work.tenantId,projectId,documentId])
     if (!current.rows[0]) throw new NoEffectError('document is outside this project', 'not_found')
     if (current.rows[0].conversation_id) await permissions.assertCan({ actorUserId: work.principalId,
       companyId: work.tenantId, projectId, action: 'conversation:read', resource: { type: 'conversation', id: current.rows[0].conversation_id } })
+    if (current.rows[0].conversation_id) await authorizeAudienceRead(context,{ projectId,action: 'conversation:read',resource: { type: 'conversation',id: current.rows[0].conversation_id } })
   }
   return { companyId: work.tenantId, projectId, userId: work.agentId }
 }
@@ -65,9 +68,9 @@ export function createDocumentTools(imageStorage: DocumentImageStorage): ToolDef
   }
   return [
     nativeTool('documents.list', agentDocumentSchemas.list, { description: 'List authorized project documents.', effect: 'read', approval: false, authorize,
-      async execute(context) { const documents = await application(context).application.list(await scope(context)); return { ok: true, value: { documents: documents.slice(0,100), truncated: documents.length > 100 } } } }),
+      async execute(context) { const documents = await application(context).application.list(await scope(context)); for (const document of documents.slice(0,100)) await scope(context,document.id); return { ok: true, value: { documents: documents.slice(0,100), truncated: documents.length > 100 } } } }),
     nativeTool('documents.recent', agentDocumentSchemas.recent, { description: 'List recent document creations by other participants.', effect: 'read', approval: false, authorize,
-      async execute(context, input) { const documents = await application(context).application.listRecentCreationsByOthers(await scope(context), input.sinceMinutes); return { ok: true, value: { documents: documents.slice(0,100), truncated: documents.length > 100 } } } }),
+      async execute(context, input) { const documents = await application(context).application.listRecentCreationsByOthers(await scope(context), input.sinceMinutes); for (const document of documents.slice(0,100)) await scope(context,document.id); return { ok: true, value: { documents: documents.slice(0,100), truncated: documents.length > 100 } } } }),
     nativeTool('documents.read', agentDocumentSchemas.read, { description: 'Read current document content, revision and content hash.', effect: 'read', approval: false, authorize,
       async execute(context, input) { const document = await read(context, input.documentId); return { ok: true, value: { ...document, body: document.body.slice(0,64_000), bodyTruncated: document.body.length > 64_000 } } } }),
     nativeTool('documents.create', agentDocumentSchemas.create, { description: 'Create a document and downloadable content snapshot.', effect: 'transaction', approval: false, authorize, verify,

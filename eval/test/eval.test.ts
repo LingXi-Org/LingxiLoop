@@ -224,19 +224,18 @@ test('real HTTP Candidate and Autoevals Judge clients isolate credentials, usage
   } finally { store.close(); server.closeAllConnections(); await new Promise<void>(r => server.close(() => r())); rmSync(cliDir, { recursive: true, force: true }) }
 })
 
-test('Eval imports remain inside its package or declared dependencies; AgentOS adapter stays empty', () => {
+test('Eval imports remain inside its package or declared public dependencies', () => {
   const root = resolve(import.meta.dirname, '..')
-  const dependencies = ['autoevals', 'openai', 'zod']
+  const dependencies = Object.keys(JSON.parse(readFileSync(join(root,'package.json'),'utf8')).dependencies) as string[]
   for (const directory of ['src', 'targets']) for (const file of readdirSync(join(root, directory))) {
     if (!file.endsWith('.ts')) continue
     const source = readFileSync(join(root, directory, file), 'utf8')
     for (const match of source.matchAll(/(?:from\s+|import\s*\()(['"])([^'"]+)\1/g)) {
       const specifier = match[2]!
       if (specifier.startsWith('.')) assert(resolve(root, directory, specifier).startsWith(root + '/'.replace('/', process.platform === 'win32' ? '\\' : '/')))
-      else assert(specifier.startsWith('node:') || dependencies.includes(specifier), `${file}: ${specifier}`)
+      else assert(specifier.startsWith('node:') || dependencies.some(name=>specifier===name || specifier.startsWith(`${name}/`)), `${file}: ${specifier}`)
+      if (specifier.startsWith('@lyyzka/lingxios')) assert(['@lyyzka/lingxios','@lyyzka/lingxios/eval','@lyyzka/lingxios/worker','@lyyzka/lingxios/ui'].includes(specifier))
     }
   }
-  const adapter = readFileSync(join(root, 'targets/agent-os.ts'), 'utf8')
-  assert(!/class |function |execute\(/.test(adapter))
   assert(!readFileSync(join(root, 'src/runner.ts'), 'utf8').includes("from './models.js'"))
 })

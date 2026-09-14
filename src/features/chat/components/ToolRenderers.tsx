@@ -25,6 +25,7 @@ import {
   parsePresentationArtifact,
 } from '@/features/presentations'
 import { useSurface } from '@/stores/surface'
+import { getLingxiMessageMetadata } from '../runtime/model'
 
 export function RecommendationCardTool({ args, approval, respondToApproval }: ToolCallMessagePartProps) {
   const value = args as {
@@ -101,6 +102,7 @@ export function HostToolTimeline() {
   const messageId = useAuiState((state) => state.message.id)
   const runId = useAuiState((state) => (state.message.metadata.custom as { runId?: unknown }).runId)
   const messages = useAuiState((state) => state.thread.messages)
+  const running = useAuiState((state) => state.message.status?.type === 'running')
   const { calls, ownerId } = useMemo(() => {
     const currentIndex = messages.findIndex((message) => message.id === messageId)
     if (currentIndex < 0) return { calls: [], ownerId: '' }
@@ -114,18 +116,19 @@ export function HostToolTimeline() {
       while (end + 1 < messages.length && (messages[end]!.metadata.custom as { continuedToNext?: unknown }).continuedToNext === true) end += 1
       related = messages.slice(start, end + 1)
     }
-    const groupedCalls = related.flatMap((message) => message.content.filter((part): part is ToolCallMessagePart => (
+    const groupedCalls = related.flatMap((message) => [...getLingxiMessageMetadata(message).harnessTools ?? [],...message.content.filter((part): part is ToolCallMessagePart => (
+      part.type === 'tool-call' && part.toolCallId.startsWith('host:')
+    ))])
+    const owner = related.find((message) => getLingxiMessageMetadata(message).harnessTools?.length || message.content.some((part) => (
       part.type === 'tool-call' && part.toolCallId.startsWith('host:')
     )))
-    const owner = related.find((message) => message.content.some((part) => (
-      part.type === 'tool-call' && part.toolCallId.startsWith('host:')
-    )))
-    return { calls: groupedCalls, ownerId: owner?.id ?? '' }
+    return { calls: [...new Map(groupedCalls.map(part => [part.toolCallId,part])).values()], ownerId: owner?.id ?? '' }
   }, [messageId, messages, runId])
-  const streaming = calls.some((part) => part.result === undefined)
-  if (calls.length < 2 || ownerId !== messageId) return null
+  const streaming = running && calls.some((part) => part.result === undefined)
+  if (calls.length < 1 || ownerId !== messageId) return null
   const steps = calls.map((part) => ({
-    verb: part.result === undefined ? '调用' : '已调用',
+    verb: (part.result as { status?: string } | undefined)?.status === 'unknown' ? '需确认结果' : part.isError ? '调用失败' : (part.result as { status?: string } | undefined)?.status === 'awaiting-approval' ? '等待审批'
+      : part.result === undefined ? running ? '调用中' : '已中止' : '已调用',
     chip: toolChip(part.toolName, part.args as Record<string, unknown>),
     icon: WrenchIcon,
   }))

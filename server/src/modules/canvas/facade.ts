@@ -5,6 +5,12 @@ import { CH_CANVAS, publish } from '../../redis.js'
 import { createCanvasApplication } from './application.js'
 import { acquireCanvasSharedFence, releaseCanvasSharedFence } from './repository.js'
 import { createCanvasExecution } from './execution.js'
+import { createCanvasRuntime } from './runtime.js'
+import type { SharedStateUpdate } from '@lyyzka/lingxios'
+
+const collaboration = createCanvasRuntime(async () => (await import('../../agent-runtime/runtime.js')).lingxiOSControl())
+export const readCanvasCollaboration = (companyId: string,userId: string,canvasId: string,afterSeq = 0) => collaboration.readCollaboration(pool,companyId,userId,canvasId,afterSeq)
+export const updateCanvasSharedState = (companyId: string,userId: string,canvasId: string,update: SharedStateUpdate) => collaboration.updateSharedState(pool,companyId,userId,canvasId,update)
 
 const canvasApplication = createCanvasApplication({
   db: pool,

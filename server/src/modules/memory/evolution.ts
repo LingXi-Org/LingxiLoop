@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util'
 import { z } from 'zod'
-import type { createLingxiOS, EvolutionBenchmark, EvolutionCase, EvolutionCandidate } from 'lingxios'
-import type { EvolutionEvaluator, WorkProcessorContext } from 'lingxios/worker'
+import type { createLingxiOS, EvolutionBenchmark, EvolutionCase, EvolutionCandidate } from '@lyyzka/lingxios'
+import type { EvolutionEvaluator, WorkProcessorContext } from '@lyyzka/lingxios/worker'
 import { agentDocumentSchemas } from '../documents/contracts.js'
 import { agentCalendarSchemas } from '../calendar/contracts.js'
 

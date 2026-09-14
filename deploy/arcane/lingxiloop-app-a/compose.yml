@@ -1,4 +1,4 @@
-name: lingxiloop-app-a
+name: lingxiloop-app-a-native324
 
 x-logging: &logging
   driver: json-file
@@ -33,6 +33,10 @@ x-runtime: &runtime
     AGENT_OS_MAX_WORK_MS: ${AGENT_OS_MAX_WORK_MS:-1800000}
     AGENT_OS_INPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_INPUT_COST_MICROS_PER_MILLION:?AGENT_OS_INPUT_COST_MICROS_PER_MILLION is required}
     AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION:?AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION is required}
+    SILICONFLOW_USD_CNY_RATE: ${SILICONFLOW_USD_CNY_RATE:?SILICONFLOW_USD_CNY_RATE is required}
+    LINGXIOS_SERVICE_TOKEN: ${LINGXIOS_SERVICE_TOKEN:?LINGXIOS_SERVICE_TOKEN is required}
+    LINGXIOS_CONTROL_HOST: 0.0.0.0
+    LINGXIOS_CONTROL_URL: http://lingxiloop:5182
     OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required}
     OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-}
     OTEL_DEPLOYMENT_ENVIRONMENT: production
@@ -79,7 +83,7 @@ services:
       db-migrate:
         condition: service_completed_successfully
     ports:
-      - "10.20.0.2:5181:5181"
+      - "10.20.0.2:5183:5181"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 10s

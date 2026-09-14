@@ -1,47 +1,15 @@
-import { useEffect, useState } from 'react'
-import { ws } from '@/api/core/realtime'
 import { AgentStatus } from '@/components/assistant-ui/elements/agent-status'
-import { agentsApi } from '@/features/agents/api'
-import type { CoworkerActivity } from '@/features/agents/contracts'
+import { useChatThreadStore } from '../runtime/store'
+import { getLingxiMessageMetadata } from '../runtime/model'
+import { harnessLabel } from '../runtime/harness'
 
 export function ConversationActivity({ conversationId }: { conversationId: string }) {
-  const [events, setEvents] = useState<CoworkerActivity[]>([])
-  useEffect(() => {
-    let cancelled = false
-    setEvents([])
-    const merge = (rows: CoworkerActivity[]) => {
-      if (cancelled) return
-      setEvents((current) => {
-        const byId = new Map(current.map((event) => [event.id, event]))
-        for (const event of rows) byId.set(event.id, event)
-        return [...byId.values()]
-          .sort((left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime())
-          .slice(-12)
-      })
-    }
-    const refresh = () => void agentsApi.getCoworkerActivity(conversationId).then(merge).catch(() => {})
-    refresh()
-    void ws.connect()
-    const off = ws.on((event) => {
-      if (event.type === 'agent.activity' && event.conversationIds.includes(conversationId)) merge([event.activity])
-      else if (event.type === 'hello' || event.type === 'assistant.stream' && event.conversationId === conversationId
-        && event.chunks.some(chunk => chunk.type === 'message-finish' || chunk.type === 'step-start')) refresh()
-    })
-    const timer = window.setInterval(refresh, 60_000)
-    return () => { cancelled = true; off(); window.clearInterval(timer) }
-  }, [conversationId])
-
-  const latestByRun = new Map<string, CoworkerActivity>()
-  for (const event of events) latestByRun.set(event.runId, event)
-  const active = [...latestByRun.values()].reverse()
-    .find((event) => ['queued', 'leased', 'waiting'].includes(event.runStatus))
-  if (!active) return null
+  const messages = useChatThreadStore(state => state.conversations[conversationId]?.messages)
+  const active = messages?.map(getLingxiMessageMetadata).reverse().find(metadata =>
+    metadata.harness && ['queued','leased','waiting'].includes(metadata.harness.lifecycle ?? ''))
+  if (!active?.harness) return null
   return <div className="flex w-full shrink-0 justify-center px-3 py-1.5" data-chat-agent-status>
-    <AgentStatus
-      state={active.runStatus === 'waiting' ? 'waiting' : 'working'}
-      label={`${active.agentName} · ${active.title}`}
-      role="status"
-      aria-live="polite"
-    />
+    <AgentStatus state={active.harness.lifecycle === 'waiting' ? 'waiting' : 'working'}
+      label={`${active.senderName} · ${harnessLabel(active.harness)}`} role="status" aria-live="polite" />
   </div>
 }

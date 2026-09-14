@@ -1,6 +1,7 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 import { isDeepStrictEqual } from 'node:util'
 import { z } from 'zod'
-import { NoEffectError, type ActionContext, type ToolDefinition } from 'lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool } from '../../agents/tools.js'
 import { createPermissionService } from '../access/public.js'
@@ -15,12 +16,12 @@ function application(context: ActionContext) {
 
 async function authorize(context: ActionContext, input: { messageId?: string }) {
   const { work } = context, method = context.action.action.split('.')[1]
-  if (input.messageId && await application(context).conversationId(work.tenantId, input.messageId) !== work.sessionId) {
+  if (input.messageId && await application(context).conversationId(work.tenantId, input.messageId) !== productConversationId(work)) {
     throw new NoEffectError('poll is outside the authorized conversation', 'forbidden')
   }
   await createPermissionService(context.database as Queryable, { lockDependencies: true }).assertCan({ actorUserId: work.principalId!, companyId: work.tenantId,
     action: method === 'show' ? 'poll:read' : method === 'create' ? 'poll:create' : method === 'vote' ? 'poll:vote' : 'poll:close',
-    resource: input.messageId ? { type: 'poll', id: input.messageId } : { type: 'conversation', id: work.sessionId } })
+    resource: input.messageId ? { type: 'poll', id: input.messageId } : { type: 'conversation', id: productConversationId(work) } })
 }
 
 async function result(context: ActionContext, messageId: string) {
@@ -42,7 +43,7 @@ export const pollTools: ToolDefinition[] = [
     authorize: context => authorize(context, {}),
     async execute(context, input) {
       const row = await application(context).persistCreate({ ...input, companyId: context.work.tenantId, actorId: context.work.agentId,
-        conversationId: context.work.sessionId, idempotencyKey: context.action.idempotencyKey })
+        conversationId: productConversationId(context.work), idempotencyKey: context.action.idempotencyKey })
       return result(context, row.poll_client_msg_no)
     } }),
   nativeTool('polls.vote', votePollRequestSchema.extend(messageSchema.shape), { description: 'Replace this agent’s votes in an open poll.', effect: 'transaction', approval: false, authorize, verify,

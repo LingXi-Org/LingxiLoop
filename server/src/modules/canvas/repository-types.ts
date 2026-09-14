@@ -8,6 +8,7 @@ export interface FrameRow {
 }
 
 export interface CanvasRow {
+  shared_state_thread_key?: string | null
   id: string; company_id: string; project_id: string | null; title: string; conversation_id: string | null
   trigger_client_msg_no: string | null; goal: string; initiator_agent_id: string | null
   status: CanvasWorkspaceStatus; origin: string; summary: string | null

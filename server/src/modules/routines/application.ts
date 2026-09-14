@@ -1,12 +1,16 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, type ActionContext, type RunIdentity, type createLingxiOS } from 'lingxios'
+import { NoEffectError, readRunReference, type ActionContext, type RunIdentity, type createLingxiOS } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
 import type { RoutineRow, RoutineRunRow } from './contracts.js'
 
 export type RoutineControl = () => Promise<Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'enqueueJob' | 'readRun' | 'readDelivery' | 'cancel'>>
-export const routineIdentity = (run: RoutineRunRow): RunIdentity => ({ runId: run.work_id, tenantId: run.company_id,
-  agentId: run.agent_id, sessionId: run.channel_id, principalId: run.principal_id, ...(run.thread_id ? { threadId: run.thread_id } : {}) })
+export async function routineIdentity(db: Queryable, run: RoutineRunRow): Promise<RunIdentity> {
+  const identity = await readRunReference(db,run.company_id,run.work_id)
+  if (!identity || identity.agentId !== run.agent_id || identity.principalId !== run.principal_id) throw new Error('routine run identity is unavailable')
+  return identity
+}
 
 export async function authorizeRoutine(db: Queryable, input: { companyId: string; channelId: string; agentId: string; principalId: string }) {
   await createPermissionService(db, { lockDependencies: true }).assertCan({ actorUserId: input.principalId, companyId: input.companyId,
@@ -24,7 +28,7 @@ export async function authorizeRoutine(db: Queryable, input: { companyId: string
 }
 export async function routineScope(context: ActionContext) {
   const work = context.work
-  return authorizeRoutine(context.database as Queryable, { companyId: work.tenantId, channelId: work.sessionId,
+  return authorizeRoutine(context.database as Queryable, { companyId: work.tenantId, channelId: productConversationId(work),
     agentId: work.agentId, principalId: work.principalId! })
 }
 export async function findRoutine(context: ActionContext, id: string) {
@@ -32,7 +36,7 @@ export async function findRoutine(context: ActionContext, id: string) {
   const { rows } = await (context.database as Queryable).query<RoutineRow>(`SELECT * FROM agent_routines
     WHERE id=$1 AND company_id=$2 AND agent_id=$3 AND channel_id=$4 AND created_by=$5 AND thread_id IS NOT DISTINCT FROM $6
       AND project_id IS NOT DISTINCT FROM $7 AND kind<>'teacher_project_digest' FOR UPDATE`,
-    [id,work.tenantId,work.agentId,work.sessionId,work.principalId,work.threadId ?? null,projectId])
+    [id,work.tenantId,work.agentId,productConversationId(work),work.principalId,work.threadId ?? null,projectId])
   if (!rows[0]) throw new NoEffectError('routine is outside this principal and conversation', 'forbidden')
   return rows[0]
 }
@@ -47,6 +51,6 @@ export async function nextRoutineRun(db: Queryable, schedule: Record<string, unk
 }
 export async function cancelRoutineRuns(db: Queryable, control: RoutineControl, id: string, exceptWorkId?: string) {
   const { rows } = await db.query<RoutineRunRow>('SELECT * FROM agent_routine_runs WHERE routine_id=$1 AND settled_at IS NULL ORDER BY scheduled_at LIMIT 32', [id])
-  for (const run of rows) if (run.work_id !== exceptWorkId) await (await control()).cancel(routineIdentity(run), db)
+  for (const run of rows) if (run.work_id !== exceptWorkId) await (await control()).cancel(await routineIdentity(db,run), db)
 }
 export const routineId = (actionId: string) => 'routine-' + createHash('sha256').update(actionId).digest('hex')

@@ -1,7 +1,8 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 import { z } from 'zod'
-import { NoEffectError, type ActionContext, type ToolDefinition } from 'lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
-import { nativeContext, nativeTool, compareResource } from '../../agents/tools.js'
+import { nativeContext, nativeTool, compareResource, authorizeAudienceRead } from '../../agents/tools.js'
 import { queueNativeEvents, type NativeEvent } from '../../agents/native-events.js'
 import { createPermissionService } from '../access/public.js'
 import { teacherAgentSchemas as schemas } from './agent-contracts.js'
@@ -15,12 +16,13 @@ const object = (value: unknown): Record<string, unknown> => value && typeof valu
 
 async function authorize(context: ActionContext, method: Method) {
   if (context.work.kind === 'teacher_digest' && !digestReads.has(method)) throw new NoEffectError('scheduled teacher summaries allow aggregate reads only', 'forbidden')
-  await resolveTeacherScope(nativeContext(context), context.database as Queryable)
+  const scope = await resolveTeacherScope(nativeContext(context), context.database as Queryable)
+  await authorizeAudienceRead(context,{ projectId: scope.projectId,action: 'learning:manage',resource: { type: 'project',id: scope.projectId } })
 }
 
 async function state(context: ActionContext, method: Method, args: Record<string, unknown>, result: unknown) {
   const db = context.database as Queryable, work = context.work
-  const scope = await findTeacherScopeBinding(db, work.tenantId, work.agentId, work.sessionId)
+  const scope = await findTeacherScopeBinding(db, work.tenantId, work.agentId, productConversationId(work))
   if (!scope) throw new NoEffectError('teacher scope no longer exists', 'forbidden')
   await createPermissionService(db).assertCan({ actorUserId: work.principalId!, companyId: work.tenantId,
     action: 'learning:read', resource: { type: 'project', id: scope.project_id } })
@@ -49,7 +51,7 @@ async function state(context: ActionContext, method: Method, args: Record<string
     table = 'projects'; columns = method === 'update_course' ? `id,${Object.keys(args).map(key => key === 'title' ? 'name' : 'description').join(',')}` : 'id,status'
     ids = [scope.project_id]; where = 'id=$2 AND id=ANY($3::text[])'
   }
-  const scopeId = method === 'set_room_binding' ? scope.course_id : method === 'configure_digest' ? work.sessionId : scope.project_id
+  const scopeId = method === 'set_room_binding' ? scope.course_id : method === 'configure_digest' ? productConversationId(work) : scope.project_id
   const { rows } = await db.query(`SELECT ${columns} FROM ${table} WHERE company_id=$1 AND ${where} ORDER BY 1`, [work.tenantId,scopeId,ids])
   return { resource: `${table}:${ids.join(',')}`, observed: { rows: JSON.parse(JSON.stringify(rows)) as unknown[] } }
 }
@@ -67,7 +69,7 @@ function teacherTool<M extends Method>(method: M): ToolDefinition<z.output<(type
     async execute(context, input) {
       const events: NativeEvent[] = [], db = context.database as Queryable
       const result = await executeTeacherAction(nativeContext(context), method, input, db, run => run(db), async () => {
-        events.push({ type: 'im.channel_sync', companyId: context.work.tenantId, channelId: context.work.sessionId })
+        events.push({ type: 'im.channel_sync', companyId: context.work.tenantId, channelId: productConversationId(context.work) })
       })
       if (effect === 'read') return { ok: true, executionState: 'succeeded', value: result }
       await queueNativeEvents(context, events)

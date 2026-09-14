@@ -24,7 +24,6 @@ const testsByScope = {
   web: [
     'src/features/chat/runtime/converter.test.ts',
     'src/features/chat/runtime/store.test.ts',
-    'src/features/chat/runtime/stream.test.ts',
     'src/features/chat/runtime/harness.test.ts',
     'src/api/transport.test.ts',
     'src/features/presentations/presentationFeature.test.ts',

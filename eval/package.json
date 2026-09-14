@@ -12,6 +12,7 @@
     "eval": "tsx src/cli.ts"
   },
   "dependencies": {
+    "@lyyzka/lingxios": "3.2.4",
     "autoevals": "0.3.0",
     "openai": "6.37.0",
     "zod": "4.4.3"

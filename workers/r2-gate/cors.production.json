@@ -1,0 +1,11 @@
+{
+  "rules": [{
+    "allowed": {
+      "origins": ["https://loop.lingxilearn.cn", "https://admin.lingxilearn.cn"],
+      "methods": ["GET", "HEAD", "PUT"],
+      "headers": ["content-type", "content-length", "x-amz-checksum-crc32", "x-amz-sdk-checksum-algorithm"]
+    },
+    "exposeHeaders": ["ETag"],
+    "maxAgeSeconds": 3600
+  }]
+}

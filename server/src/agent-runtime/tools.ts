@@ -1,4 +1,4 @@
-import type { createLingxiOS, ToolDefinition } from 'lingxios'
+import type { createLingxiOS, ToolDefinition } from '@lyyzka/lingxios'
 import { calendarTools } from '../modules/calendar/index.js'
 import { documentTools } from '../modules/documents/public.js'
 import { createCanvasTools } from '../modules/canvas/index.js'

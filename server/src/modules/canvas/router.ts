@@ -1,6 +1,8 @@
 
 import { Router } from 'express'
 import {
+  readCanvasCollaboration,
+  updateCanvasSharedState,
   addCanvasComment,
   assignCanvasWorkspaceWork,
   steerCanvasAssignment,
@@ -20,6 +22,8 @@ import { safe } from '../../http/async-handler.js'
 import { requireCanvasFrameWorkspace, requireCanvasWorkspace, requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import {
+  canvasStateUpdateSchema,
+  canvasCollaborationQuerySchema,
   canvasAppendRequestSchema,
   canvasAssignmentRequestSchema,
   canvasSteerRequestSchema,
@@ -32,6 +36,16 @@ import {
 
 export const canvasRouter = Router()
 const api = canvasRouter
+
+api.get('/canvases/:id/collaboration', safe(async (req,res) => {
+  const { userId,companyId } = await requireCanvasWorkspace(req,String(req.params.id))
+  res.json(await readCanvasCollaboration(companyId,userId,String(req.params.id),canvasCollaborationQuerySchema.parse(req.query).afterSeq))
+}))
+
+api.post('/canvases/:id/shared-state', safe(async (req,res) => {
+  const { userId,companyId } = await requireCanvasWorkspace(req,String(req.params.id),true)
+  res.json(await updateCanvasSharedState(companyId,userId,String(req.params.id),canvasStateUpdateSchema.parse(req.body)))
+}))
 
 /* ============== Shared Canvas (shared state, isolated execution) ======= */
 

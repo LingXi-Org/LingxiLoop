@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'node:crypto'
 import { Router } from 'express'
-import { releaseVersions } from 'lingxios'
+import { releaseVersions } from '@lyyzka/lingxios'
 import { env } from '../../env.js'
 import { safe } from '../../http/async-handler.js'
 import { HttpError } from '../../http/errors.js'
@@ -58,7 +58,7 @@ platformRouter.get('/meta', (_req, res) => {
     product: 'LingxiLoop',
     version: env.APP_VERSION,
     commitSha: env.COMMIT_SHA,
-    reasoningRuntime: { name: 'lingxios', ...releaseVersions },
+    reasoningRuntime: { name: '@lyyzka/lingxios', ...releaseVersions },
   })
 })
 

@@ -15,7 +15,7 @@ import type {
 } from './model'
 import { resolveMessagePresentation } from './model'
 import { readHarness, harnessParts, harnessStatus } from './harness'
-import type { RunView } from 'lingxios/ui'
+import type { RunView } from '@lyyzka/lingxios/ui'
 
 type JsonObject = Record<string, unknown>
 

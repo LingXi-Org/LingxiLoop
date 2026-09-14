@@ -22,7 +22,6 @@ import {
 import { consumeWsTicket } from './modules/identity/public.js'
 import {
   CH_AGENT_ACTIVITY,
-  CH_ASSISTANT_STREAM,
   CH_CALENDAR_EVENTS,
   CH_CALENDAR_REMINDER,
   CH_CANVAS,
@@ -356,7 +355,7 @@ export function attachWebSocket(httpServer: Server) {
   // this list — the room manager handles them, since recipients need to
   // be filtered by doc-subscription, not just company.
   sub.subscribe(
-    COMPANY_ACCESS_REVOKED, CH_ASSISTANT_STREAM,
+    COMPANY_ACCESS_REVOKED,
     CH_STATUS,
     CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
     CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,

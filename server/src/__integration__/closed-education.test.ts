@@ -13,7 +13,7 @@ import { auditInTransaction } from '../modules/identity/public.js'
 import { insertWsTicket, consumeWsTicketByHash } from '../modules/identity/session-repository.js'
 import { insertCourse, addInstitutionalCourseMember } from '../modules/learning/courses-repository.js'
 import { createPermissionService, listActiveActorProjectScopes } from '../modules/access/public.js'
-import { canPersistHumanUpdate } from '../modules/documents/collaboration-repository.js'
+import { canPersistHumanUpdate, humanWriteAuthorization } from '../modules/documents/collaboration-repository.js'
 import { changeUserLifecycle } from '../modules/platform-operations/user-lifecycle.js'
 import { listCalendarReminderRecipients } from '../modules/calendar/repository.js'
 import { findLearningDashboardLearner } from '../modules/learning/teacher-reporting-repository.js'
@@ -160,7 +160,7 @@ test('departure fences pending document writes and reminder recipients across re
   await user('student')
   await accept('student',await studentInvitation('math'),'project')
   await pool.query(`INSERT INTO documents(id,company_id,project_id,title,created_by) VALUES('queued-doc',$1,'math','Doc','student')`,[companyId])
-  const queuedAt = new Date()
+  const queuedAt = await transaction(db => humanWriteAuthorization(db,'student'))
   assert.equal(await transaction((db) => canPersistHumanUpdate(db,'queued-doc',companyId,'student',queuedAt)),true)
   await transaction((db) => removeMemberState(db,companyId,'student'))
   assert.equal(await transaction((db) => canPersistHumanUpdate(db,'queued-doc',companyId,'student',queuedAt)),false)

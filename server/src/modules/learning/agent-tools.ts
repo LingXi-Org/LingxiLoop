@@ -1,7 +1,8 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 import { z } from 'zod'
-import { NoEffectError, type ActionContext, type ToolDefinition } from 'lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
-import { nativeTool, compareResource } from '../../agents/tools.js'
+import { nativeTool, compareResource, audienceHumanIds } from '../../agents/tools.js'
 import { queueNativeEvents } from '../../agents/native-events.js'
 import { readAgentChannelMessages } from '../../im/public.js'
 import { inc } from '../../metrics.js'
@@ -16,14 +17,18 @@ import { proposeLearningEvaluation } from './evaluation-application.js'
 type Method = keyof typeof schemas
 type Input<M extends Method> = z.output<(typeof schemas)[M]>
 const database = (context: ActionContext) => context.database as Queryable
-const roomInput = (context: ActionContext) => ({ companyId: context.work.tenantId, channelId: context.work.sessionId })
+const roomInput = (context: ActionContext) => ({ companyId: context.work.tenantId, channelId: productConversationId(context.work) })
 
 async function scope(context: ActionContext, action: 'learning:read' | 'learning:submit' = 'learning:read') {
   const room = await findLearningRoomState(database(context), roomInput(context))
   if (!room) throw new NoEffectError('conversation is not bound to a learning project')
+  for (const userId of await audienceHumanIds(context)) if (userId !== context.work.principalId) {
+    await createPermissionService(database(context),{ lockDependencies: true }).assertCan({ actorUserId: userId,
+      companyId: room.companyId,projectId: room.projectId,action: 'learning:manage',resource: { type: 'project',id: room.projectId } })
+  }
   await createPermissionService(database(context), { lockDependencies: true }).assertCan({
     actorUserId: context.work.principalId!, companyId: context.work.tenantId, action,
-    resource: { type: 'conversation', id: context.work.sessionId } })
+    resource: { type: 'conversation', id: productConversationId(context.work) } })
   return room
 }
 
@@ -37,14 +42,14 @@ async function mission(context: ActionContext, id?: string) {
   const room = await scope(context)
   if (!id) return (await contextView(context))?.activeMission ?? null
   const result = await findLearningMission(database(context), room.companyId, room.projectId, id)
-  if (!result || result.learnerId !== context.work.principalId || result.conversationId !== context.work.sessionId) throw new NoEffectError('mission is outside the original learner and conversation', 'forbidden')
+  if (!result || result.learnerId !== context.work.principalId || result.conversationId !== productConversationId(context.work)) throw new NoEffectError('mission is outside the original learner and conversation', 'forbidden')
   return result
 }
 
 async function committedMessages(context: ActionContext, ids: string[]) {
   if (!ids.length) return []
   const messages = await readAgentChannelMessages({ companyId: context.work.tenantId, agentId: context.work.agentId,
-    channelId: context.work.sessionId, messageIds: ids, signal: context.signal })
+    channelId: productConversationId(context.work), messageIds: ids, signal: context.signal })
   if (!messages || new Set(messages.map(message => message.messageId)).size !== ids.length
     || messages.some(message => message.fromUid !== context.work.principalId || message.payload.refs?.agentId)) throw new NoEffectError('evidence must be committed messages from the original human', 'forbidden')
   return ids.map(id => ({ ...messages.find(message => message.messageId === id || message.payload.clientMsgNo === id)!, clientMsgNo: id }))
@@ -181,19 +186,19 @@ export const learningTools: ToolDefinition[] = [
         syncMessages: async () => messages.map(message => ({ clientMsgNo: message.clientMsgNo, fromUid: message.fromUid, authoredByAgent: false })),
         metric: inc, enqueueCoordinator: async (_db, child) => {
           const queued = await context.enqueueChild({ id: child.id, agentId: child.coordinatorAgentId, kind: 'mission_coordinator',
-            text: `Plan and coordinate Mission ${child.missionId}: ${input.goal}\nSuccess criteria: ${input.successCriteria}`, meta: { missionId: child.missionId, sourceClientMsgNo: source } })
+            executionClass: 'operation', text: `Plan and coordinate Mission ${child.missionId}: ${input.goal}\nSuccess criteria: ${input.successCriteria}`, meta: { conversationId: child.channelId, missionId: child.missionId, sourceClientMsgNo: source } })
           childId = queued.id
         }, publishMission: async ({ mission, projectId, courseId }) => {
           const clientNonce = `learning-mission-${mission.id}`
           await queueNativeEvents(context, [{ type: 'im.system', companyId: context.work.tenantId, actorId: context.work.agentId,
-            channelId: context.work.sessionId, clientNonce, payload: { version: 1, kind: 'learning_mission', clientMsgNo: clientNonce,
+            channelId: productConversationId(context.work), clientNonce, payload: { version: 1, kind: 'learning_mission', clientMsgNo: clientNonce,
               body: mission.goal, refs: { agentId: context.work.agentId }, data: { missionId: mission.id, projectId, ...(courseId ? { courseId } : {}),
                 goal: mission.goal, successCriteria: mission.successCriteria, kind: mission.kind, coordinatorAgentId: mission.coordinatorAgentId, status: mission.status, suppressAgentWake: true } } }])
         },
       }, { ...roomInput(context), workId: context.work.id, agentId: context.work.agentId, triggerClientMsgNo: source, ...input })
       if (result.learnerId !== context.work.principalId) throw new NoEffectError('Mission principal changed', 'forbidden')
       return { ok: true, executionState: 'succeeded', value: result,
-        ...(childId ? { directive: { type: 'defer' as const, reason: 'child' as const, data: { taskRef: childId } } } : {}) }
+        ...(childId ? { directive: await context.waitForChildren([childId]) } : {}) }
     }, async verify(context, _input, value) {
       const expected = value as { id: string; learnerId: string; goal: string; successCriteria: string; coordinatorAgentId: string }
       return compareResource(`learning_mission:${expected.id}`, { learnerId: expected.learnerId, goal: expected.goal, successCriteria: expected.successCriteria,

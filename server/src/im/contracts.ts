@@ -1,4 +1,5 @@
 import { z } from 'zod'
+export const agentModeSchema = z.enum(['chat','read','execute'])
 export const agentContinuationSchema = z.object({ agentId: z.string().min(1).max(1000), runId: z.string().min(1).max(1000),
   requestVersion: z.number().int().positive().safe() }).strict()
 
@@ -21,6 +22,9 @@ const userMessagePayloadSchema = z.object({
   replyToClientMsgNo: z.string().trim().min(1).optional(),
   data: z.record(z.string(), z.unknown()).optional(),
 }).strict().superRefine((payload, context) => {
+  if (payload.data?.agentMode !== undefined && !agentModeSchema.safeParse(payload.data.agentMode).success) {
+    context.addIssue({ code: 'custom', message: 'invalid agent mode', path: ['data','agentMode'] })
+  }
   if (payload.data?.agentContinuation !== undefined && (payload.kind !== 'text' || !agentContinuationSchema.safeParse(payload.data.agentContinuation).success)) {
     context.addIssue({ code: 'custom', message: 'invalid agent continuation', path: ['data','agentContinuation'] })
   }

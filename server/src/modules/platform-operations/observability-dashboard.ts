@@ -6,7 +6,7 @@ import {
   type DataField,
   type QueryResult,
 } from '@openplait/core'
-import type { createLingxiOS } from 'lingxios'
+import { releaseVersions, type createLingxiOS } from '@lyyzka/lingxios'
 
 const datasource = { kind: 'PostgresDatasource', name: 'lingxiloop', scope: 'dashboard' as const }
 
@@ -73,7 +73,7 @@ const dashboard = (() => {
 })()
 
 function result(name: string, fields: DataField[], length: number): QueryResult {
-  const candidate = { frames: [{ name, fields, length }], metadata: { datasource: 'lingxiloop', adapterVersion: 'lingxios/v2', rowsReturned: length } }
+  const candidate = { frames: [{ name, fields, length }], metadata: { datasource: 'lingxiloop', adapterVersion: `@lyyzka/lingxios/${releaseVersions.runtime}`, rowsReturned: length } }
   const validated = validateQueryResult(candidate)
   if (!validated.valid) throw new Error(`invalid OpenPlait query result: ${JSON.stringify(validated.errors)}`)
   return validated.value
@@ -95,6 +95,11 @@ export async function observabilityDashboard(runtime: Pick<Awaited<ReturnType<ty
         { name: 'successes', type: 'number', values: [Number(summary.successes)] },
         { name: 'failures', type: 'number', values: [Number(summary.failures)] },
         { name: 'active', type: 'number', values: [Number(summary.active)] },
+        { name: 'queued', type: 'number', values: [summary.queued] },
+        { name: 'waiting', type: 'number', values: [summary.waiting] },
+        { name: 'failed_deliveries', type: 'number', values: [summary.failedDeliveries] },
+        { name: 'failed_usage_deliveries', type: 'number', values: [summary.failedUsageDeliveries] },
+        { name: 'failed_memory_captures', type: 'number', values: [summary.failedMemoryCaptures] },
       ], 1),
       trend: result('trend', [
         { name: 'time', type: 'time', values: summary.trend.map((row) => row.time) },

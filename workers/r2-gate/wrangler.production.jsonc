@@ -1,0 +1,10 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "lingxiloop-r2-gate",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "account_id": "5b726c2a59696a3536a55589a8fad188",
+  "workers_dev": false,
+  "routes": [{ "pattern": "assets.lingxilearn.cn", "custom_domain": true }],
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "lingxiloop-native324" }]
+}

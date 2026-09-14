@@ -2,7 +2,7 @@ import { pool } from '../db/pool.js'
 import { CH_CALENDAR_EVENTS, CH_DOCS, CH_DOC_UPDATE, CH_CONVO_UPDATED, CH_REACTIONS, CH_CANVAS, publish } from '../redis.js'
 import { flushNativeEvents } from './native-events.js'
 import { channelProfileForCompany } from '../im/messages-repository.js'
-import { wukongClient } from '../im/wukong.js'
+import { syncProductChannel } from '../agent-runtime/conversations.js'
 import type { ImChannelProfile } from '../im/types.js'
 import { postMembershipSystemMessage } from './membership.js'
 import { clearHold } from './seen-boundary.js'
@@ -24,7 +24,7 @@ export function startNativeEventWorker() {
         }
         case 'im.channel_sync': {
           const profile = await channelProfileForCompany(pool, event)
-          if (profile) await wukongClient(signal).upsertChannel(profile as unknown as ImChannelProfile)
+          if (profile) await syncProductChannel(profile as unknown as ImChannelProfile,signal)
           return
         }
         case 'im.membership': await postMembershipSystemMessage(event); return

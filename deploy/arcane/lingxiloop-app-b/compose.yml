@@ -1,4 +1,4 @@
-name: lingxiloop-app-b
+name: lingxiloop-app-b-native324
 
 x-logging: &logging
   driver: json-file
@@ -37,6 +37,10 @@ x-runtime: &runtime
     AGENT_OS_INPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_INPUT_COST_MICROS_PER_MILLION:?AGENT_OS_INPUT_COST_MICROS_PER_MILLION is required}
     AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION:?AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION is required}
     LINGXIOS_CONTAINER_ISOLATED: "true"
+    SILICONFLOW_USD_CNY_RATE: ${SILICONFLOW_USD_CNY_RATE:?SILICONFLOW_USD_CNY_RATE is required}
+    LINGXIOS_SERVICE_TOKEN: ${LINGXIOS_SERVICE_TOKEN:?LINGXIOS_SERVICE_TOKEN is required}
+    LINGXIOS_CONTROL_HOST: 0.0.0.0
+    LINGXIOS_CONTROL_URL: http://lingxiloop:5182
     OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required}
     OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-}
     OTEL_DEPLOYMENT_ENVIRONMENT: production
@@ -83,7 +87,7 @@ services:
       db-migrate:
         condition: service_completed_successfully
     ports:
-      - "127.0.0.1:5181:5181"
+      - "127.0.0.1:5183:5181"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 10s
@@ -109,7 +113,7 @@ services:
     cpus: "0.75"
     mem_limit: 512m
 
-  gateway:
+  gateway-native324:
     image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-gateway:4d807eac5e285a90a03999d2f476817059c11099
     pull_policy: always
     restart: unless-stopped
@@ -117,7 +121,7 @@ services:
       lingxiloop:
         condition: service_healthy
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8081:8080"
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
       interval: 10s

@@ -1,6 +1,6 @@
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
-import { wukongClient } from '../../im/wukong.js'
+import { syncProductChannel } from '../../agent-runtime/conversations.js'
 import { createPermissionService, isActiveProjectStudent } from '../access/public.js'
 import { ContextThreadsApplication } from './application.js'
 import { findActiveDefaultProjectId, listActiveAgentIds } from './repository.js'
@@ -30,7 +30,7 @@ export const contextThreadsApplication = new ContextThreadsApplication({
     projectId: scope.projectId,
     userId: studentId,
   }),
-  syncChannel: (profile) => wukongClient().upsertChannel(profile),
+  syncChannel: syncProductChannel,
 })
 
 export async function openDefaultLearningContextThread(

@@ -1,3 +1,4 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 /**
  * Public Learning runtime surface consumed by Agent OS and IM approval handling.
  *
@@ -6,7 +7,7 @@
  */
 import type { AgentActionContext, AgentAction } from '../../agents/contracts.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, type WorkItem } from 'lingxios'
+import { NoEffectError, type WorkItem } from '@lyyzka/lingxios'
 import { pool } from '../../db/pool.js'
 import type { Queryable } from '../../db/queryable.js'
 import { withTransaction } from '../../db/transaction.js'
@@ -94,7 +95,7 @@ export async function assertMissionCoordinatorRun(db: Queryable, work: Omit<Work
   const missionId = work.meta?.missionId
   const { rows } = await db.query<{ id: string }>(`SELECT id FROM learning_missions WHERE id=$1 AND company_id=$2
     AND coordinator_agent_id=$3 AND learner_id=$4 AND conversation_id=$5 AND status IN ('PLANNING','ACTIVE','COMPLETED')`,
-    [missionId,work.tenantId,work.agentId,work.principalId,work.sessionId])
+    [missionId,work.tenantId,work.agentId,work.principalId,productConversationId(work)])
   if (!rows[0] || work.id !== `mission-coordinator-${createHash('sha256').update(rows[0].id).digest('hex').slice(0,24)}`) {
     throw new NoEffectError('Mission coordinator or learner scope was revoked', 'forbidden')
   }

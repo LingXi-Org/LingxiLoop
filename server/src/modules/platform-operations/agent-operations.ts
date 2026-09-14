@@ -1,4 +1,4 @@
-import type { createLingxiOS } from 'lingxios'
+import type { createLingxiOS } from '@lyyzka/lingxios'
 import { HttpError } from '../../http/errors.js'
 
 export type PlatformAgentRuntime = Pick<Awaited<ReturnType<typeof createLingxiOS>>,

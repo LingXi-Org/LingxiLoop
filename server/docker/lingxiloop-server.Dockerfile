@@ -15,6 +15,7 @@
 # Build (from repo root):
 #   docker build \
 #     -f server/docker/lingxiloop-server.Dockerfile \
+#     --secret id=npm_token,env=NODE_AUTH_TOKEN \
 #     -t ghcr.io/lingxi-org/lingxiloop-server:dev \
 #     .
 #
@@ -28,12 +29,9 @@ ARG APT_MIRROR=http://mirrors.aliyun.com
 FROM ${NODE_BASE_IMAGE} AS deps
 ARG NPM_REGISTRY
 WORKDIR /app
-COPY server/package.json server/package-lock.json ./
+COPY server/package.json server/package-lock.json server/.npmrc ./
 RUN --mount=type=secret,id=npm_token \
-  NPM_TOKEN="$(cat /run/secrets/npm_token)" && \
-  printf '%s\n' '@lyyzka:registry=https://npm.pkg.github.com' "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" > /tmp/.npmrc && \
-  npm ci --userconfig=/tmp/.npmrc --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer-offline && \
-  rm -f /tmp/.npmrc
+    NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer-offline
 
 # ─── stage 2: build the web SPA bundle ──────────────────────────────
 # Separate stage with FULL devDeps installed so vite + tsc + tailwind +
@@ -50,7 +48,7 @@ ARG VITE_TURNSTILE_SITE_KEY=""
 ENV VITE_PUBLIC_POSTHOG_KEY=${VITE_PUBLIC_POSTHOG_KEY}
 ENV VITE_PUBLIC_POSTHOG_HOST=${VITE_PUBLIC_POSTHOG_HOST}
 ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json .npmrc ./
 # --ignore-scripts: electron-icon-builder transitively pulls
 # phantomjs-prebuilt, whose postinstall extracts a bz2 tarball — but
 # the slim base image has no `bzip2` binary, so the install dies with
@@ -59,10 +57,7 @@ COPY package.json package-lock.json ./
 # optionalDependencies, not a script), so skipping all postinstall
 # scripts is safe in this stage AND faster than apt-get'ing bzip2.
 RUN --mount=type=secret,id=npm_token \
-  NPM_TOKEN="$(cat /run/secrets/npm_token)" && \
-  printf '%s\n' '@lyyzka:registry=https://npm.pkg.github.com' "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" > /tmp/.npmrc && \
-  npm ci --userconfig=/tmp/.npmrc --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts && \
-  rm -f /tmp/.npmrc
+    NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
 COPY src ./src
 COPY public ./public
 COPY index.html ./

@@ -118,6 +118,10 @@ Implement `EvalTarget.identity` and `execute({input, requestId, seed, signal, sc
 
 Artifacts under `eval/.state/reports/` include aggregate/sample JSON, Markdown and JSONL spans. They store output hashes, synthetic IDs and bounded failure codes, never prompts, answers, keys or provider error bodies. Private SQLite under `eval/.state/` retains dataset inputs for replay: protect it with host ACLs, back it up as sensitive data and never upload it publicly. `--db` and `--out` select storage. The static HTML report is included; no separate visualization service is required.
 
+For a native runtime target, `createLingxiOSTarget` in `eval/targets/agent-os.ts` calls the public `@lyyzka/lingxios/eval` `executeRequest` entry. A custom launcher passes an isolated app and Worker, trusted request identity, a fingerprint of the model/harness/fixture configuration, and an explicit CNY-per-USD conversion, then passes the resulting `EvalTarget` to `runJob`. Each sample receives a fresh run/session identity; principal and thread are retained. Cancellation reaches the native run. Pending or estimated native usage fails the sample, as does incomplete execution. USD native usage snapshots are explicitly converted to Eval's CNY units; they are estimates of provider cost, not invoices.
+
+The native target does not execute the legacy tool-sandbox scenarios. Keep their versioned datasets unchanged; use native fixtures in the custom launcher. `scripts/test-native-agent-eval.mjs` exercises the native target with an isolated database and a controlled model. It verifies infrastructure and identity handling, not Candidate semantic quality or a release baseline. Package installation requires the same protected `NODE_AUTH_TOKEN` as the application.
+
 ## Legacy retirement
 
 Old scripts, suites/baselines, server Eval modules, internal runtime adapters/tests and Trust Eval endpoints are removed. Product learning evaluation remains separate and unchanged. Main's applied `0001_v1_baseline.sql` is preserved byte-for-byte. New migration `0006_retire_legacy_eval.sql` retires the three old Eval tables without CASCADE.

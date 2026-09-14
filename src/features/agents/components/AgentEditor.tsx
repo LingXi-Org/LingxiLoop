@@ -40,6 +40,11 @@ export function AgentEditor({ agent, onClose }: Props) {
   const [capabilities, setCapabilities] = useState<AgentCapability[]>(agent?.capabilities ?? DEFAULT_CAPABILITIES)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [harness, setHarness] = useState<Awaited<ReturnType<typeof agentsApi.getHarness>> | null>(null)
+  useEffect(() => { let active = true
+    void agentsApi.getHarness().then(value => { if (active) setHarness(value) }).catch(error => { if (active) setErr(userFacingError(error,'技能配置读取失败')) })
+    return () => { active = false }
+  }, [])
   // Esc to close
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -195,6 +200,12 @@ export function AgentEditor({ agent, onClose }: Props) {
               + 更多能力可通过后续集成扩展
             </div>
           </Field>
+
+          {harness && <Field label="已配置技能" hint="技能随所属能力启用，执行时仍会检查当前权限。">
+            <ul className="space-y-2 text-sm">{harness.skills.filter(skill => skill.actions.every(action =>
+              capabilities.includes((action.startsWith('research.') ? 'web' : action.split('.')[0]) as AgentCapability))).map(skill =>
+              <li key={skill.name}><span className="font-medium">{skill.name}</span><p className="text-muted-foreground">{skill.description}</p></li>)}</ul>
+          </Field>}
 
           <Field label="趣味头像" hint="智能助教使用固定的趣味头像；颜色、形状与表情会随身份和状态变化。">
             <div className="flex items-center gap-3 rounded-[12px] border border-ink-100 bg-white px-4 py-3">

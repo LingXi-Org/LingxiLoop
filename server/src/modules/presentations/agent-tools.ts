@@ -1,6 +1,7 @@
-import { NoEffectError, type ActionContext, type ToolDefinition } from 'lingxios'
+import { productConversationId } from '../../agent-runtime/identity.js'
+import { NoEffectError, type ActionContext, type ToolDefinition, type PresentationDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
-import { nativeContext, nativeTool, compareResource } from '../../agents/tools.js'
+import { nativeContext, nativeTool, compareResource, authorizeAudienceRead, audienceHumanIds } from '../../agents/tools.js'
 import { queueNativeEvents, type NativeEvent } from '../../agents/native-events.js'
 import { env } from '../../env.js'
 import { storage } from '../../storage.js'
@@ -24,12 +25,13 @@ function application(context: ActionContext) {
 
 async function authorize(context: ActionContext, presentationId?: string, write = false) {
   const { work } = context
+  await authorizeAudienceRead(context,{ action: 'knowledge:read',resource: { type: 'conversation',id: productConversationId(work) } })
   await createPermissionService(context.database as Queryable, { lockDependencies: true }).assertCan({
     actorUserId: work.principalId!, companyId: work.tenantId, action: write ? 'knowledge:write' : 'knowledge:read',
-    resource: { type: 'conversation', id: work.sessionId } })
+    resource: { type: 'conversation', id: productConversationId(work) } })
   if (presentationId) {
     // The product API also checks the presentation's project and private owner.
-    await application(context).app.get(work.tenantId, work.principalId!, presentationId)
+    for (const userId of await audienceHumanIds(context)) await application(context).app.get(work.tenantId,userId,presentationId)
     if (write) await context.database.query('SELECT id FROM presentations WHERE company_id=$1 AND id=$2 FOR UPDATE', [work.tenantId,presentationId])
   }
 }
@@ -47,12 +49,25 @@ const verify: ToolDefinition['verify'] = async (context, _input, value) => {
     evidence: { ...result.evidence, phase: current.status, generationComplete: complete } }
 }
 
+export const presentationCard: PresentationDefinition = {
+  type: 'presentation-artifact', version: '1', description: 'An authorized presentation and its current source version.', actions: ['presentations.get'],
+  async authorize(context, reference) {
+    await authorize(context,reference)
+  },
+  async resolve(context, reference) {
+    const current = await application(context).app.get(context.work.tenantId,context.work.principalId!,reference)
+    return { fields: { artifactId: current.id, artifactKind: 'lecture_deck_html', title: current.title },
+      sources: [{ ref: `presentation:${current.id}`, version: current.latestVersion?.id ?? String(current.outlineRevision), observedAt: current.updatedAt }] }
+  },
+}
+
 export const presentationTools: ToolDefinition[] = [
   nativeTool('presentations.create', schemas.create, { description: 'Start the native presentation workflow from authorized knowledge sources. Read its progress and approve the outline before generation.', effect: 'transaction', approval: false, verify,
     async authorize(context, input) {
       await authorize(context, undefined, true)
-      await resolvePresentationCreationScope(context.database as Queryable, { companyId: context.work.tenantId,
-        conversationId: context.work.sessionId, authorizationUserId: context.work.principalId!, ...(input.sourceIds ? { sourceIds: input.sourceIds } : {}) })
+      const scope = await resolvePresentationCreationScope(context.database as Queryable, { companyId: context.work.tenantId,
+        conversationId: productConversationId(context.work), authorizationUserId: context.work.principalId!, ...(input.sourceIds ? { sourceIds: input.sourceIds } : {}) })
+      for (const source of scope.sources) await authorizeAudienceRead(context,{ projectId: scope.projectId,action: 'knowledge:read',resource: { type: 'knowledge_source',id: source.sourceId } })
     },
     async execute(context, input) {
       const native = application(context)

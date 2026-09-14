@@ -1,5 +1,5 @@
-import type { createLingxiOS } from 'lingxios'
-import type { RunEvent, RunState, ResponseEnvelope } from 'lingxios/ui'
+import type { createLingxiOS } from '@lyyzka/lingxios'
+import type { RunEvent, RunState, ResponseEnvelope, RunStreamEvent } from '@lyyzka/lingxios/ui'
 import { API, http } from '@/api/core/http'
 import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId } from '@/stores/auth'
@@ -12,6 +12,22 @@ const path = (target: AgentRunTarget) => `/im/channels/${encodeURIComponent(targ
 const thread = (target: AgentRunTarget): Record<string, string> => target.threadId ? { threadId: target.threadId } : {}
 
 export const harnessApi = {
+  list: (conversationId: string, signal?: AbortSignal) => http<(AgentRunTarget & Pick<RunState['run'], 'requestVersion' | 'fence' | 'status'>)[]>(`/im/channels/${encodeURIComponent(conversationId)}/runs`,{ signal }),
+  subscribe(target: AgentRunTarget, receive: (event: RunStreamEvent) => void, failed: () => void): EventSource {
+    const company = getActiveCompanyId()
+    if (!company) throw new Error('请先选择工作空间')
+    const url = `${API}/im/companies/${encodeURIComponent(company)}${path(target).slice(3)}/stream?${new URLSearchParams(thread(target))}`
+    const source = new EventSource(url,{ withCredentials: true })
+    for (const type of ['state','event','preview','reset']) source.addEventListener(type,(event) => {
+      try {
+        const item = JSON.parse((event as MessageEvent<string>).data) as RunStreamEvent
+        receive(item)
+        if (item.type === 'state' && !['queued','leased','waiting'].includes(item.state.run.status) && item.state.delivery !== 'pending') source.close()
+      } catch { source.close(); failed() }
+    })
+    source.onerror = failed
+    return source
+  },
   read: (target: AgentRunTarget, afterSeq: number, signal?: AbortSignal) => http<AgentRunResponse>(
     `${path(target)}?${new URLSearchParams({ afterSeq: String(afterSeq), ...thread(target) })}`,{ signal }),
   cancel: (target: AgentRunTarget) => http<{ cancelled: boolean }>(path(target),{ method: 'DELETE', body: JSON.stringify(thread(target)) }),

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createRunView } from 'lingxios/ui'
+import { createRunView } from '@lyyzka/lingxios/ui'
 import { Button } from '@/components/ui/button'
 import { harnessApi } from '../runtime/harness-api'
 import { harnessLabel } from '../runtime/harness'
 import type { LingxiMessageMetadata } from '../runtime/model'
 import { chatTransport } from '../runtime/transport'
+import { MemoryManager } from './MemoryManager'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const target = useMemo(() => ({ conversationId: metadata.conversationId, agentId: metadata.senderId, runId: metadata.runId!,
@@ -67,8 +68,15 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
         </p>)}
       </li>)}</ul>
     </details> : null}
+    {envelope?.presentations?.length ? <details className="rounded-lg border border-border px-3 py-2">
+      <summary className="cursor-pointer">卡片来源版本</summary>
+      {envelope.presentations.flatMap(item => item.sources.map(source => <p key={`${item.hash}:${source.ref}`} className="mt-1 break-all">
+        {source.ref} · {source.version} · {source.observedAt}
+      </p>))}
+    </details> : null}
     {metadata.harnessControl && <>
       <div className="flex flex-wrap gap-2">
+        <MemoryManager key={target.runId} target={target} />
         {outcome?.status === 'awaiting_approval' && <>
           <Button type="button" size="sm" disabled={busy} onClick={() => void perform(() => chatTransport.resolveApproval(outcome.approvalId,'approved'))}>批准并继续</Button>
           <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => void perform(() => chatTransport.resolveApproval(outcome.approvalId,'denied'))}>拒绝</Button>

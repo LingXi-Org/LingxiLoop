@@ -1,5 +1,6 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 import { z } from 'zod'
-import type { ActionContext, ToolDefinition } from 'lingxios'
+import type { ActionContext, ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool } from '../../agents/tools.js'
 import { createPermissionService } from '../access/public.js'
@@ -12,7 +13,7 @@ export const researchSchemas = {
 }
 async function authorize(context: ActionContext) {
   await createPermissionService(context.database as Queryable).assertCan({ actorUserId: context.work.principalId!, companyId: context.work.tenantId,
-    action: 'agent:read', resource: { type: 'conversation', id: context.work.sessionId } })
+    action: 'agent:read', resource: { type: 'conversation', id: productConversationId(context.work) } })
 }
 export const researchTools: ToolDefinition[] = [
   nativeTool('research.search', researchSchemas.search, { description: 'Search OpenAlex for public research sources.', effect: 'read', approval: false, authorize,

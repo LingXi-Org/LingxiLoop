@@ -440,7 +440,7 @@ function hitExcerpt(hit: OpenNotebookSearchHit): string {
 }
 
 export async function retrieveKnowledge(args: {
-  companyId: string; conversationId: string; authorizationUserId: string; query: string; contextQuery?: string; limit?: number
+  companyId: string; conversationId: string; authorizationUserId: string; audienceUserIds?: string[]; query: string; contextQuery?: string; limit?: number
 }): Promise<KnowledgeCitation[]> {
   const authorizationUserId = requireAuthorizationUserId(args.authorizationUserId)
   if (!openNotebookEnabled() || !args.query.trim()) return []
@@ -457,12 +457,19 @@ export async function retrieveKnowledge(args: {
     companyId: args.companyId,
     projectId,
   })
-  const sources = await listKnowledgeRetrievalSources(pool, {
+  let sources = await listKnowledgeRetrievalSources(pool, {
     companyId: args.companyId,
     projectId,
     conversationId: args.conversationId,
     authorizationUserId,
   })
+  for (const userId of new Set(args.audienceUserIds ?? [])) {
+    if (userId === authorizationUserId) continue
+    await createPermissionService(pool).assertCan({ actorUserId: userId,action: 'knowledge:read',companyId: args.companyId,projectId })
+    const visible = new Set((await listKnowledgeRetrievalSources(pool,{ companyId: args.companyId,projectId,
+      conversationId: args.conversationId,authorizationUserId: userId })).filter(source => !source.excluded).map(source => source.id))
+    sources = sources.filter(source => visible.has(source.id))
+  }
   if (!sources.length) return []
   const notebookId = await ensureProjectNotebook(projectId, args.companyId)
   const externalIds = sources.filter((source) => !source.excluded).map((source) => source.externalSourceId)

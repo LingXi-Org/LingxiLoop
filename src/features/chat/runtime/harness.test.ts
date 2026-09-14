@@ -1,14 +1,30 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { consumeRunEvent, consumeRunState, type ResponseEnvelope } from 'lingxios/ui'
+import { consumeRunEvent, consumeRunState, consumeRunStreamEvent, type ResponseEnvelope } from '@lyyzka/lingxios/ui'
 import type { ImEnvelope } from '@/lib/im/wukong'
 import type { Participant } from '@/types'
 import { convertEnvelope } from './converter'
-import { harnessParts, harnessStatus, readHarness, readHarnessEvent } from './harness'
+import { harnessParts, harnessStatus, harnessToolParts, readHarness } from './harness'
 import { getLingxiMessageMetadata } from './model'
 import { mergeCanonicalMessages } from './store'
 
 const participants = { agent: { id: 'agent', kind: 'agent', name: '助手' } as Participant }
+
+test('public native tool events project into bounded assistant-ui history and survive committed IM replay', () => {
+  const started = { runId: 'run',seq: 1,kind: 'tool.started',stage: 'started' as const,visibility: 'user' as const,
+    data: { toolCallId: 'host:call',name: 'documents.read' } }
+  const completed = { ...started,seq: 2,kind: 'tool.completed',stage: 'completed' as const,
+    data: { toolCallId: 'host:call',result: { status: 'completed',value: { body: 'Do not duplicate this payload' } },isError: false } }
+  const tools = harnessToolParts('run',[started,completed,{ ...started,visibility: 'internal',data: { toolCallId: 'host:private',name: 'internal' } }])
+  assert.deepEqual(tools,[{ type: 'tool-call',toolCallId: 'host:call',toolName: 'documents.read',args: {},argsText: '{}',result: { status: 'completed' },isError: false }])
+  assert.deepEqual(harnessToolParts('run',[started,completed],tools),tools)
+  assert.deepEqual(harnessToolParts('another-run',[started,completed]),[])
+  const message = convertEnvelope(envelope(1,1),{ participants,meId: 'human' })
+  assert.ok(message.role === 'assistant')
+  const current = { ...message,metadata: { ...message.metadata,custom: { ...getLingxiMessageMetadata(message),harnessTools: tools } } }
+  assert.deepEqual(getLingxiMessageMetadata(mergeCanonicalMessages([current],[message])[0]).harnessTools,tools)
+  assert.equal(harnessToolParts('run',Array.from({length: 300},(_,index)=>({ ...started,seq: index+1,data: { toolCallId: `host:${index}`,name: 'read' } }))).length,256)
+})
 function envelope(version: number, fence: number, outcome: ResponseEnvelope['goalOutcome']['status'] = 'partial'): ImEnvelope {
   const body = '查看[原文](#cite-S1)'
   const harness: ResponseEnvelope = { version: 1, requestVersion: version, body, evidenceSnapshotId: 'evidence',
@@ -23,7 +39,7 @@ function envelope(version: number, fence: number, outcome: ResponseEnvelope['goa
   return { channelId: 'room', channelType: 2, fromUid: 'agent', messageId: `result-${fence}`, clientMsgNo: `result-${fence}`,
     messageSeq: fence, timestamp: 1_767_225_600 + fence,
     payload: { version: 1, kind: 'text', clientMsgNo: `result-${fence}`, body, replyToClientMsgNo: 'thread',
-      refs: { runId: 'run', agentId: 'agent' }, data: { harness, harnessCommit: { resultId: `result-${fence}`, fence } } } }
+      refs: { runId: 'run', agentId: 'agent' }, data: { harness, harnessSessionId: 'native-session', harnessCommit: { resultId: `result-${fence}`, fence } } } }
 }
 
 test('native committed partial answers retain artifact hashes and provenance without appearing complete', () => {
@@ -60,10 +76,11 @@ test('history, API snapshots and later attempts converge to one current message 
   assert.equal(getLingxiMessageMetadata(merged[0]).harnessControl,true)
   const event = { runId: 'run', seq: 200_001, kind: 'run.started', stage: 'started' as const, visibility: 'user' as const, data: {} }
   view = consumeRunEvent(view,event)
-  view = consumeRunEvent(view,{ ...event, seq: 200_002, kind: 'model.delta', data: { partType: 'text', delta: '新版内容' } })
+  view = consumeRunStreamEvent(view,{ type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 3,
+    requestVersion: 3, attemptId: 'attempt', seq: 1, draft: '新版内容' } })
   assert.equal(consumeRunEvent(view,event),view)
   assert.deepEqual(harnessParts(view),[{ type: 'text', text: '新版内容' }])
   assert.equal(view.message?.envelope.artifacts[0].source?.version,'7')
-  assert.deepEqual(readHarnessEvent([{ type: 'data', path: [], data: [{ kind: 'harness_event', event, threadId: 'thread' }] }],'run'),{ event, threadId: 'thread' })
-  assert.throws(() => readHarnessEvent([{ type: 'data', path: [], data: [{ kind: 'harness_event', event, threadId: 'thread' }] }],'other'),/不一致/)
+  view = consumeRunStreamEvent(view,{ type: 'reset', runId: 'run', reason: 'superseded' })
+  assert.equal(view.draft,'')
 })

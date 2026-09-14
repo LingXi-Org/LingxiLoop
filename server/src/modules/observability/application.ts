@@ -1,4 +1,4 @@
-import type { createLingxiOS, RunSnapshot } from 'lingxios'
+import type { createLingxiOS, RunSnapshot } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { activityAgentNames } from './repository.js'
 
@@ -11,7 +11,12 @@ export class ObservabilityApplication {
   constructor(private readonly db: Queryable, private readonly runtime: () => Promise<Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'listRuns'>>) {}
 
   async activity(companyId: string, conversationId: string) {
-    const { items } = await (await this.runtime()).listRuns({ tenantId: companyId, sessionId: conversationId, limit: 12 })
+    const bindings = await this.db.query<{ run_id: string }>('SELECT run_id FROM agent_run_bindings WHERE company_id=$1 AND conversation_id=$2 AND NOT internal ORDER BY created_at DESC LIMIT 12', [companyId,conversationId])
+    const api = await this.runtime(), items = []
+    for (const binding of bindings.rows) {
+      const page = await api.listRuns({ tenantId: companyId, id: binding.run_id, limit: 1 })
+      items.push(...page.items)
+    }
     const names = await activityAgentNames(this.db, companyId, items.map(run => run.identity.agentId))
     return items.reverse().map(run => ({
       id: run.id, runId: run.id, agentId: run.identity.agentId, agentName: names.get(run.identity.agentId) ?? run.identity.agentId,

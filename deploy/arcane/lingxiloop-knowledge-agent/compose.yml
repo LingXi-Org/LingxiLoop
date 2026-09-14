@@ -1,4 +1,4 @@
-name: lingxiloop-knowledge-agent
+name: lingxiloop-knowledge-agent-native324
 
 x-logging: &logging
   driver: json-file
@@ -52,7 +52,7 @@ services:
       OPENAI_BASE_URL: "${LINGXILOOP_CONTROL_PLANE_URL:?LINGXILOOP_CONTROL_PLANE_URL is required}/internal/open-notebook/v1"
       OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:?OPENAI_EMBEDDING_MODEL is required}
     ports:
-      - "10.20.0.3:5055:5055"
+      - "10.20.0.3:5056:5055"
     volumes:
       - open-notebook-data:/app/data
     healthcheck:

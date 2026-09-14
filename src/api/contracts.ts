@@ -60,7 +60,6 @@ export interface ApiConveneTranscript {
 export type WsEvent =
   | { type: 'hello'; instanceId: string; ts: number }
   | { type: 'message.new'; conversationId: string; message: ApiMessage }
-  | { type: 'assistant.stream'; conversationId: string; messageId: string; authorId: string; sequence: number; chunks: AssistantStreamChunk[] }
   | { type: 'im.read-receipt'; companyId: string; channelId: string; readerId: string; previousReadSeq: number; readThroughSeq: number; readAt: string }
   | { type: 'typing'; conversationId: string; agentId: string; done: boolean }
   | { type: 'agent.activity'; conversationIds: string[]; activity: CoworkerActivity }
@@ -131,5 +130,3 @@ export type WsEvent =
       tallies: import('../types.js').PollTally[]
       actorId: string | null
     }
-
-import type { AssistantStreamChunk } from 'assistant-stream'

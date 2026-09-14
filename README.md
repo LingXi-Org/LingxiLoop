@@ -1,6 +1,6 @@
 # LingxiLoop
 
-LingxiLoop uses the published `lingxios@2.1.0` runtime. The Web process owns authenticated ingress and control operations; the Worker is the only process that claims LingxiOS work.
+LingxiLoop uses the published `@lyyzka/lingxios@3.2.4` runtime. The Web process owns authenticated ingress and control operations; the Worker is the only process that claims LingxiOS work.
 
 LingxiLoop is a Web learning-collaboration product with direct messages, Study Rooms, and Labs.
 
@@ -23,6 +23,12 @@ LingxiLoop Worker ───────┘
 ## Local development
 
 Requirements: Node.js 22, PostgreSQL 16 with pgvector, and Redis 7.
+
+The scoped LingxiOS package uses GitHub Packages. Root and server npm configuration read `NODE_AUTH_TOKEN` from the process environment; supply a GitHub token with `read:packages` through your local secret manager. CI uses `LINGXIOS_PACKAGES_TOKEN` when configured, otherwise `GITHUB_TOKEN` (the package must grant this repository Actions access). Docker builds accept `--secret id=npm_token,env=NODE_AUTH_TOKEN`; never pass the token as a build argument or commit its value.
+
+Web serves the official control plane on `LINGXIOS_CONTROL_HOST:LINGXIOS_CONTROL_PORT` (loopback port 5182 by default). Workers connect through `LINGXIOS_CONTROL_URL` using the same random `LINGXIOS_SERVICE_TOKEN` of at least 32 characters. Keep this listener on the private service network. Native preview lives in the Web control plane and is forwarded unchanged as SSE.
+
+For SiliconFlow `deepseek-ai/DeepSeek-V4-Flash`, work-level accounting uses measured tokens with fixed standard rates of CNY 3 input, CNY 0.3 cached input and CNY 9 output per million tokens. There is no time-of-day switching. `SILICONFLOW_USD_CNY_RATE` converts these estimates to the existing USD ledger (development default: 7; production must configure it). CNY amounts and the conversion are retained alongside each measured call. Native budget admission conservatively reserves at the uncached rate; absent cache usage is treated as uncached and marked as unavailable. Provider invoices remain authoritative.
 
 ```powershell
 npm ci

@@ -1,12 +1,13 @@
 import { isDeepStrictEqual } from 'node:util'
-import type { RunVerificationContext, VerificationRecord } from 'lingxios'
+import { readRunReference, type RunVerificationContext, type VerificationRecord, type SharedStateUpdate } from '@lyyzka/lingxios'
+import { syncConversationPolicy } from '../../agent-runtime/conversations.js'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
 import { canvasRunIdentity, type CanvasRunRow, type createCanvasExecution } from './execution.js'
 import { observeCanvasEvidence } from './evidence.js'
 import { canvasById } from './repository.js'
 import type { CanvasEvidenceRef } from './contracts.js'
-import { NoEffectError, type WorkItem } from 'lingxios'
+import { NoEffectError, type WorkItem } from '@lyyzka/lingxios'
 
 export async function loadCanvasRunContext(db: Queryable, work: Omit<WorkItem, 'leaseToken'>) {
   const { rows } = await db.query<CanvasRunRow & { assignment: string | null }>(`SELECT run.*,assignment.assignment
@@ -22,6 +23,32 @@ export async function loadCanvasRunContext(db: Queryable, work: Omit<WorkItem, '
 
 type Control = Parameters<typeof createCanvasExecution>[0]
 export function createCanvasRuntime(control: Control) {
+  async function collaborationScope(db: Queryable, companyId: string, userId: string, canvasId: string, write = false) {
+    await createPermissionService(db).assertCan({ companyId,actorUserId: userId,action: write ? 'canvas:write' : 'canvas:read',resource: { type: 'canvas',id: canvasId } })
+    const canvas = await canvasById(db,companyId,canvasId)
+    if (!canvas?.conversation_id) throw new NoEffectError('canvas not found','not_found')
+    const runtime = await control()
+    await syncConversationPolicy(runtime,companyId,canvas.conversation_id)
+    return { runtime,scope: { tenantId: companyId,conversationId: canvas.conversation_id,principalId: userId,stateId: canvas.id,
+      ...(canvas.shared_state_thread_key ? { threadId: canvas.shared_state_thread_key } : {}) } }
+  }
+  async function readCollaboration(db: Queryable, companyId: string, userId: string, canvasId: string, afterSeq = 0) {
+    const { runtime,scope } = await collaborationScope(db,companyId,userId,canvasId)
+    const bindings = await db.query<{ graph_id: string; parent_work_id: string }>(`SELECT DISTINCT graph_id,parent_work_id FROM canvas_agent_runs
+      WHERE company_id=$1 AND canvas_id=$2 AND principal_id=$3 AND graph_id IS NOT NULL LIMIT 32`, [companyId,canvasId,userId])
+    const graphs = []
+    for (const binding of bindings.rows) {
+      const parent = await readRunReference(db,companyId,binding.parent_work_id)
+      if (parent?.principalId === userId) graphs.push(await runtime.graphs.read(parent,binding.graph_id))
+    }
+    const state = await runtime.sharedState.read(scope)
+    return { graphs: graphs.filter(Boolean),state,history: state ? await runtime.sharedState.history(scope,afterSeq) : { items: [],nextSeq: 0 } }
+  }
+  async function updateSharedState(db: Queryable, companyId: string, userId: string, canvasId: string, update: SharedStateUpdate) {
+    const { runtime,scope } = await collaborationScope(db,companyId,userId,canvasId,true)
+    if (!await runtime.sharedState.read(scope)) await runtime.sharedState.create(scope)
+    return runtime.sharedState.apply(scope,update)
+  }
   async function verify(context: RunVerificationContext): Promise<VerificationRecord[]> {
     const db = context.database as Queryable, { work } = context
     const { rows } = await db.query<CanvasRunRow>('SELECT * FROM canvas_agent_runs WHERE work_id=$1 AND company_id=$2 AND agent_id=$3 AND principal_id=$4',
@@ -80,26 +107,9 @@ export function createCanvasRuntime(control: Control) {
       const api = await control(), identity = canvasRunIdentity(binding), run = await api.readRun(identity)
       if (!run) continue
       if (['queued','leased','waiting'].includes(run.status)) {
-        let pending = false, failed = false
-        if (binding.assignment_id) {
-          const dependencies = await db.query<CanvasRunRow>(`SELECT run.* FROM canvas_assignment_dependencies dependency
-            JOIN canvas_agent_assignments parent ON parent.id=dependency.depends_on_assignment_id
-            JOIN canvas_agent_runs run ON run.work_id=parent.work_id AND run.canvas_id=parent.canvas_id
-            WHERE dependency.assignment_id=$1`, [binding.assignment_id])
-          for (const dependency of dependencies.rows) {
-            const state = await api.readRun(canvasRunIdentity(dependency))
-            if (!state || ['partial','blocked','failed','cancelled'].includes(state.status)) failed = true
-            else if (state.status !== 'succeeded') pending = true
-          }
-        }
-        if (failed) {
-          await api.cancel(identity)
-          await complete({ companyId: binding.company_id, workId: binding.work_id, status: 'cancelled', error: 'Blocked by a failed or stopped dependency' })
-          continue
-        }
         if (binding.assignment_id) await db.query(`UPDATE canvas_agent_assignments SET status=$3,started_at=CASE WHEN $3='working' THEN COALESCE(started_at,NOW()) ELSE started_at END,
           updated_at=NOW() WHERE id=$1 AND work_id=$2 AND status<>$3`,
-          [binding.assignment_id,binding.work_id,pending ? 'blocked' : run.status === 'leased' ? 'working' : run.status === 'waiting' ? 'waiting' : 'queued'])
+          [binding.assignment_id,binding.work_id,run.status === 'leased' ? 'working' : run.status === 'waiting' ? 'waiting' : 'queued'])
         continue
       }
       const message = await api.readMessage(identity)
@@ -108,5 +118,5 @@ export function createCanvasRuntime(control: Control) {
         ...(message ? { resultText: message.body } : {}), ...(run.error ? { error: run.error } : {}) })
     }
   }
-  return { verify, reconcile }
+  return { verify, reconcile, readCollaboration, updateSharedState }
 }

@@ -4,6 +4,7 @@ import type { AgentActionContext, AgentAction } from '../../agents/contracts.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { ImChannelProfile } from '../../im/types.js'
 import { wukongClient } from '../../im/wukong.js'
+import { syncProductChannel } from '../../agent-runtime/conversations.js'
 import { inc } from '../../metrics.js'
 import { auditInTransaction } from '../identity/public.js'
 import { ProjectLifecycleApplication } from '../projects/public.js'
@@ -219,7 +220,7 @@ export async function sendTeacherAgentWelcome(companyId:string,courseId:string,d
 }
 
 export async function syncTeacherRoomMembers(companyId:string,courseId:string,db:Queryable,transaction:TeacherTransaction,
-  syncChannel:(profile:ImChannelProfile)=>Promise<unknown> = profile=>wukongClient().upsertChannel(profile)):Promise<void>{
+  syncChannel:(profile:ImChannelProfile)=>Promise<unknown> = syncProductChannel):Promise<void>{
   const persist=async(persistence:Queryable)=>{
     const room=await findActiveTeacherRoom(persistence,companyId,courseId)
     if(!room)return undefined

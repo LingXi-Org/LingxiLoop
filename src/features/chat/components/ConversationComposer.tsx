@@ -1,3 +1,5 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { updateConversation, useChatThreadStore, type ConversationChatState } from '../runtime/store'
 import {
   AttachmentPrimitive,
   ComposerPrimitive,
@@ -33,6 +35,7 @@ export function ConversationComposer({
   compact?: boolean
   placeholder?: string
 }) {
+  const agentMode = useChatThreadStore(state => state.conversations[conversationId]?.agentMode ?? 'execute')
   const inputRef = useRef<HTMLDivElement>(null)
   const text = useAuiState((state) => state.composer.text)
   const isRunning = useAuiState((state) => state.thread.isRunning)
@@ -107,6 +110,14 @@ export function ConversationComposer({
           </ComposerPrimitive.Attachments>
         </AttachmentGroup>
         <div className="flex items-end gap-1">
+          <Select value={agentMode} onValueChange={(value) => updateConversation(conversationId,state => ({ ...state, agentMode: value as ConversationChatState['agentMode'] }))}>
+            <SelectTrigger className="w-24 shrink-0" aria-label="智能体执行模式"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="chat">仅对话</SelectItem>
+              <SelectItem value="read">只读</SelectItem>
+              <SelectItem value="execute">执行</SelectItem>
+            </SelectContent>
+          </Select>
           <div className="flex shrink-0 items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>

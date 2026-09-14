@@ -2,6 +2,19 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { __setLlmClientOverrideForTesting, createChatCompletion } from '../llm.js'
 import { __setLlmLedgerOverrideForTesting, recordLlmCall } from '../llm-ledger.js'
+import { siliconFlowCost, siliconFlowPricing } from '../agent-runtime/pricing.js'
+
+test('SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rates',()=>{
+  const pricing=siliconFlowPricing(7)
+  const cost=siliconFlowCost({ available: true,inputTokens: 1_000_000,outputTokens: 1_000_000,cachedInputTokens: 500_000 },pricing)
+  assert.equal(cost.costCny,10.65)
+  assert.equal(cost.costUsd,10.65/7)
+  assert.equal(cost.cachedUsageAvailable,true)
+  assert.equal(siliconFlowCost({ available: true,inputTokens: 1_000_000,outputTokens: 0 },pricing).costCny,3)
+  assert.throws(()=>siliconFlowCost({ available: true,inputTokens: 1,outputTokens: 0,cachedInputTokens: 2 },pricing))
+  assert.throws(()=>siliconFlowCost({ available: false,inputTokens: 0,outputTokens: 0 },pricing))
+  assert.throws(()=>siliconFlowPricing(0))
+})
 
 test('every product LLM completion records the authoritative call ledger', async () => {
   const records: Array<Record<string, unknown>> = []

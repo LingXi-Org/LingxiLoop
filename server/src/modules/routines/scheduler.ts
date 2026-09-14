@@ -1,5 +1,6 @@
+import { productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, type WorkItem } from 'lingxios'
+import { NoEffectError, type WorkItem } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { routineInputSchema, type RoutineRow, type RoutineRunRow } from './contracts.js'
 import { authorizeRoutine, nextRoutineRun, routineIdentity, type RoutineControl } from './application.js'
@@ -10,7 +11,7 @@ export async function assertRoutineRun(db: Queryable, work: Omit<WorkItem, 'leas
   const { rows } = await db.query<RoutineRow>(`SELECT routine.* FROM agent_routines routine JOIN agent_routine_runs run ON run.routine_id=routine.id
     WHERE run.work_id=$1 AND routine.company_id=$2 AND run.agent_id=$3 AND run.principal_id=$4 AND run.channel_id=$5
       AND run.thread_id IS NOT DISTINCT FROM $6 AND routine.version=run.routine_version AND routine.status='active'`,
-    [work.id,work.tenantId,work.agentId,work.principalId,work.sessionId,work.threadId ?? null])
+    [work.id,work.tenantId,work.agentId,work.principalId,productConversationId(work),work.threadId ?? null])
   const row = rows[0]
   if (!row) throw new NoEffectError('routine was paused, revised or revoked', 'routine_inactive')
   await prepare(db, row, new Date())
@@ -45,7 +46,7 @@ export async function scheduleRoutines(transaction: <T>(run: (db: Queryable) => 
       FROM agent_routine_runs run JOIN agent_routines routine ON routine.id=run.routine_id WHERE run.settled_at IS NULL
       ORDER BY run.scheduled_at LIMIT 32 FOR UPDATE OF run SKIP LOCKED`)
     for (const run of outstanding.rows) {
-      const identity = routineIdentity(run)
+      const identity = await routineIdentity(db,run)
       if (run.status !== 'active' || run.routine_version !== run.version || run.created_by !== run.principal_id) await api.cancel(identity, db)
       const state = await api.readRun(identity, db)
       if (!state || !['queued','leased','waiting'].includes(state.status)) {
@@ -70,10 +71,10 @@ export async function scheduleRoutines(transaction: <T>(run: (db: Queryable) => 
       if (!pending.rows.length) {
         const scheduledAt = new Date(row.next_run_at!).toISOString()
         const id = 'routine-run-' + createHash('sha256').update(JSON.stringify([row.id,row.version,scheduledAt])).digest('hex')
-        await api.enqueueJob({ id, tenantId: row.company_id, agentId: row.agent_id, sessionId: row.channel_id, principalId: row.created_by,
+        await api.enqueueJob({ id, tenantId: row.company_id, agentId: row.agent_id, sessionId: id, principalId: row.created_by,
           ...(row.thread_id ? { threadId: row.thread_id } : {}), kind: row.kind === 'teacher_project_digest' ? 'teacher_digest' : 'routine',
           lane: 'background', sourceRef: id, text: row.instructions, authorName: row.title,
-          meta: { routineId: row.id, routineVersion: row.version, scheduledAt } }, db)
+          meta: { conversationId: row.channel_id, routineId: row.id, routineVersion: row.version, scheduledAt } }, db)
         await db.query(`INSERT INTO agent_routine_runs(id,routine_id,routine_version,scheduled_at,work_id,company_id,agent_id,channel_id,principal_id,thread_id)
           VALUES($4,$1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
           [row.id,row.version,scheduledAt,id,row.company_id,row.agent_id,row.channel_id,row.created_by,row.thread_id])

@@ -1,6 +1,7 @@
-import { NoEffectError, type ActionContext, type ToolDefinition } from 'lingxios'
+import { productConversationId, assertFrozenAudience } from '../agent-runtime/identity.js'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../db/queryable.js'
-import { nativeTool, compareResource } from '../agents/tools.js'
+import { nativeTool, compareResource, authorizeAudienceRead } from '../agents/tools.js'
 import { queueNativeEvents, type NativeEvent } from '../agents/native-events.js'
 import { createPermissionService } from '../modules/access/public.js'
 import { createMessagesApplication } from '../modules/messages/facade.js'
@@ -10,12 +11,15 @@ import { agentMessageSchemas } from './agent-contracts.js'
 import type { LingxiMessageV1 } from './message-types.js'
 import { appendReadReceiptAdvance } from './read-receipts-repository.js'
 
-const identity = ({ work }: ActionContext) => ({ companyId: work.tenantId, userId: work.agentId, channelId: work.sessionId })
+const identity = ({ work }: ActionContext) => ({ companyId: work.tenantId, userId: work.agentId, channelId: productConversationId(work) })
 const application = (context: ActionContext) => createImMessagesApplication(context.signal)
 async function authorize(context: ActionContext) {
+  if (context.work.conversation?.internal && ['chat.send','chat.ask'].includes(context.action.action)) throw new NoEffectError('internal delegates return results to their parent','forbidden')
+  if (['chat.send','chat.ask'].includes(context.action.action)) await assertFrozenAudience(context.database as Queryable,context.work)
+  await authorizeAudienceRead(context,{ action: 'conversation:read',resource: { type: 'conversation',id: productConversationId(context.work) } })
   await createPermissionService(context.database as Queryable, { lockDependencies: true }).assertCan({ actorUserId: context.work.principalId!,
     companyId: context.work.tenantId, action: ['chat.history','chat.inbox','chat.search'].includes(context.action.action) ? 'conversation:read' : 'conversation:write',
-    resource: { type: 'conversation', id: context.work.sessionId } })
+    resource: { type: 'conversation', id: productConversationId(context.work) } })
 }
 
 async function read(context: ActionContext, messageId: string) {
@@ -70,15 +74,14 @@ export const messageTools: ToolDefinition[] = [
     async verify(context, _input, value) {
       await authorize(context)
       const { rows } = await context.database.query('SELECT COALESCE(MAX(read_through_seq),0)::text AS sequence FROM im_read_receipt_advances WHERE company_id=$1 AND channel_id=$2 AND reader_id=$3',
-        [context.work.tenantId,context.work.sessionId,context.work.agentId])
+        [context.work.tenantId,productConversationId(context.work),context.work.agentId])
       const reached = Number(rows[0]?.sequence) >= Number((value as { readThroughSeq: number }).readThroughSeq)
-      return compareResource(`read:${context.work.sessionId}:${context.work.agentId}`, { reached: true }, { reached })
+      return compareResource(`read:${productConversationId(context.work)}:${context.work.agentId}`, { reached: true }, { reached })
     } }),
   nativeTool('chat.inbox', agentMessageSchemas.inbox, { description: 'Read recent unread messages from authorized conversations.', effect: 'read', approval: false, authorize,
     async execute(context, input) {
       const items = await application(context).inbox({ ...identity(context), ...input })
-      for (const item of items) await createPermissionService(context.database as Queryable).assertCan({ actorUserId: context.work.principalId!,
-        companyId: context.work.tenantId, action: 'conversation:read', resource: { type: 'conversation', id: item.channelId } })
+      for (const item of items) await authorizeAudienceRead(context,{ action: 'conversation:read', resource: { type: 'conversation', id: item.channelId } })
       return { ok: true, value: items }
     } }),
   nativeTool('chat.search', agentMessageSchemas.search, { description: 'Search authoritative messages in this conversation.', effect: 'read', approval: false, authorize,
@@ -89,21 +92,21 @@ export const messageTools: ToolDefinition[] = [
       return { ok: true, value: { cleared: true } }
     },
     async verify(context) { await authorize(context); const inbox = await application(context).inbox({ ...identity(context), limit: 50 });
-      return compareResource(`unread:${context.work.sessionId}`, { cleared: true }, { cleared: !inbox.some(item => item.channelId === context.work.sessionId) }) } }),
+      return compareResource(`unread:${productConversationId(context.work)}`, { cleared: true }, { cleared: !inbox.some(item => item.channelId === productConversationId(context.work)) }) } }),
   nativeTool('chat.react', agentMessageSchemas.react, { description: 'Toggle this agent’s reaction on a committed message.', effect: 'transaction', approval: false, authorize,
     async execute(context, input) {
       const message = await read(context, input.messageId)
       if (!message) throw new NoEffectError('message is unavailable', 'not_found')
       const db = context.database as Queryable, events: NativeEvent[] = []
       const result = await createMessagesApplication(db, work => work(db), async event => { events.push(event) }).toggleWukongReaction({
-        ...identity(context), conversationId: context.work.sessionId, messageId: message.messageId, messageSeq: message.messageSeq, messageAuthorId: message.fromUid, emoji: input.emoji })
+        ...identity(context), conversationId: productConversationId(context.work), messageId: message.messageId, messageSeq: message.messageSeq, messageAuthorId: message.fromUid, emoji: input.emoji })
       await queueNativeEvents(context, events)
       return { ok: true, value: { messageId: message.messageId, reactions: result.reactions } }
     },
     async verify(context, _input, value) {
       await authorize(context)
       const receipt = value as { messageId: string; reactions: unknown }
-      const reactions = await reactionsForWukongMessages(context.database as Queryable, context.work.tenantId, context.work.sessionId, [receipt.messageId])
+      const reactions = await reactionsForWukongMessages(context.database as Queryable, context.work.tenantId, productConversationId(context.work), [receipt.messageId])
       return compareResource(`reaction:${receipt.messageId}`, { reactions: receipt.reactions }, { reactions: reactions[receipt.messageId] ?? [] })
     } }),
 ]
