@@ -44,27 +44,29 @@ try {
   const { createRoutineTools } = await loader.import('../server/src/modules/routines/agent-tools.ts', import.meta.url)
   const { withTransaction } = await loader.import('../server/src/db/transaction.ts', import.meta.url)
   const { ensureTeacherAgentForCourse } = await loader.import('../server/src/modules/learning/teacher-agent-application.ts', import.meta.url)
-  const { ensurePersonalFreePlan } = await loader.import('../server/src/modules/entitlements/public.ts', import.meta.url)
+  const { ensureEducationPlan } = await loader.import('../server/src/modules/entitlements/public.ts', import.meta.url)
   const { WukongClient, _setWukongClientForTests } = await loader.import('../server/src/im/wukong.ts', import.meta.url)
   _setWukongClientForTests(new WukongClient({ apiUrl: `http://127.0.0.1:${im.address().port}`, wsUrl: 'ws://unused', apiToken: 'test', webhookSecret: 'test' }))
-  await ensurePersonalFreePlan(db)
+  await ensureEducationPlan(db)
   await db.query(`INSERT INTO users(id,email,display_name) VALUES('teacher','teacher@test.invalid','Teacher'),('learner','learner@test.invalid','Learner');
-    INSERT INTO companies(id,name,slug,type,plan_id) VALUES('t','Native tools','native-tools','EDUCATION','plan-personal-free');
-    INSERT INTO company_memberships(company_id,user_id,role) VALUES('t','teacher','OWNER'),('t','learner','MEMBER');
+    INSERT INTO companies(id,name,slug,type,plan_id) VALUES('t','Native tools','native-tools','EDUCATION','plan-education');
+    INSERT INTO company_memberships(company_id,user_id,role) VALUES('t','teacher','TEACHER'),('t','learner','STUDENT');
     INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
-      VALUES('contract','t','plan-personal-free','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '1 year',10);
+      VALUES('contract','t','plan-education','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '1 year',10);
     INSERT INTO organization_seats(id,company_id,contract_id,user_id,status)
       VALUES('seat-teacher','t','contract','teacher','ACTIVE'),('seat-learner','t','contract','learner','ACTIVE');
     INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status,capabilities)
       VALUES('teacher','t','human','Teacher','T','#667085','avail','[]'),('learner','t','human','Learner','L','#667085','avail','[]'),
       ('agent','t','agent','Agent','A','#667085','avail','["learning","canvas","routines"]'),('coordinator','t','agent','Coordinator','C','#667085','avail','["learning","canvas"]');
     UPDATE participants SET preset_key='nova' WHERE id='coordinator';
+    WITH period AS (INSERT INTO company_membership_periods(membership_id,role) SELECT id,role FROM company_memberships RETURNING id,membership_id)
+    UPDATE company_memberships member SET period_id=period.id FROM period WHERE member.id=period.membership_id;
     INSERT INTO projects(id,company_id,kind,name,created_by) VALUES('p','t','INSTITUTIONAL_COURSE','Leases','teacher');
     INSERT INTO courses(id,company_id,project_id,created_by) VALUES('course','t','p','teacher');
     INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES('t','p','teacher','TEACHER'),('t','p','learner','STUDENT');
-    INSERT INTO conversations(id,kind,title,members,company_id,project_id) VALUES('study','group','Study','["teacher","learner","agent","coordinator"]','t','p');
+    INSERT INTO conversations(id,kind,title,members,company_id,project_id) VALUES('study','group','Study','["learner","agent","coordinator"]','t','p');
     UPDATE courses SET study_room_conversation_id='study' WHERE id='course';
-    INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES('study','t','{"channelId":"study","channelType":2,"members":["teacher","learner","agent","coordinator"]}');
+    INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES('study','t','{"channelId":"study","channelType":2,"members":["learner","agent","coordinator"]}');
     INSERT INTO documents(id,company_id,project_id,title,created_by) VALUES('evidence-document','t','p','Learner evidence','learner');`)
   const client = await db.connect()
   let teacher
