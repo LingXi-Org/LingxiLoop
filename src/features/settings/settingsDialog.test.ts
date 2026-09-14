@@ -68,3 +68,16 @@ test('mobile conversation routing and Better Auth entry points stay wired', () =
   assert.match(auth, /const TURNSTILE_SITE_KEY = import\.meta\.env\.VITE_TURNSTILE_SITE_KEY/)
   assert.match(authApi, /signIn:[\s\S]*signUp:[\s\S]*x-captcha-response/)
 })
+
+test('invitation landing stays reachable on both sides of the session gate and clears on completion', () => {
+  const app = read('../../App.tsx')
+  const gate = read('../../components/AuthGate.tsx')
+
+  assert.match(app, /useState\(consumeInviteFromUrl\)/)
+  assert.match(app, /invitation\?\.clear\(\)\s+setInvitation\(null\)/)
+  assert.match(app, /invitation\s*\? <InviteAcceptScreen token=\{invitation.token\} onDone=\{finishInvitation\} \/>\s*: null/)
+  assert.match(app, /<AuthGate unauthFallback=\{invitationScreen\}>/)
+  assert.match(app, /\{invitationScreen \?\? <AuthedApp/)
+  assert.match(gate, /authApi.session\(\)/)
+  assert.match(gate, /unauthFallback \?\? <AuthScreen \/>/)
+})
