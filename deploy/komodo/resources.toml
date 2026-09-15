@@ -4,6 +4,7 @@ description = "Declarative production resources"
 [resource_sync.config]
 repo = "lyyzka/LingxiLoop"
 branch = "main"
+git_provider = "accel.way2api.fun/github.com"
 resource_path = ["deploy/komodo/resources.toml"]
 
 [[stack]]
@@ -13,6 +14,7 @@ deploy = true
 server = "shanghai-b"
 repo = "lyyzka/LingxiLoop"
 branch = "main"
+git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/server-b-ingress"
 file_paths = ["compose.yml"]
 environment = "ACME_EMAIL = [[ACME_EMAIL]]"
@@ -25,6 +27,7 @@ after = ["server-b-ingress"]
 server = "shanghai-b"
 repo = "lyyzka/lingxiloop-landing-page"
 branch = "main"
+git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo"
 file_paths = ["compose.yml"]
 
@@ -36,6 +39,7 @@ after = ["server-b-ingress"]
 server = "shanghai-a"
 repo = "lyyzka/LingxiLoop"
 branch = "main"
+git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/lingxiloop-core-state"
 file_paths = ["compose.yml"]
 environment = """
@@ -53,6 +57,7 @@ after = ["lingxiloop-core-state"]
 server = "shanghai-b"
 repo = "lyyzka/LingxiLoop"
 branch = "main"
+git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/lingxiloop-knowledge-agent"
 file_paths = ["compose.yml"]
 environment = """
@@ -74,6 +79,7 @@ after = ["lingxiloop-core-state"]
 server = "shanghai-b"
 repo = "lyyzka/LingxiLit"
 branch = "main"
+git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo"
 file_paths = ["compose.yml"]
 
@@ -85,6 +91,7 @@ after = ["lingxiloop-knowledge-agent", "lingxilit"]
 server = "shanghai-a"
 repo = "lyyzka/LingxiLoop"
 branch = "main"
+git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/lingxiloop-app-a"
 file_paths = ["compose.yml"]
 ignore_services = ["db-migrate"]
@@ -126,6 +133,7 @@ after = ["lingxiloop-app-a"]
 server = "shanghai-b"
 repo = "lyyzka/LingxiLoop"
 branch = "main"
+git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/lingxiloop-app-b"
 file_paths = ["compose.yml"]
 ignore_services = ["db-migrate"]
@@ -167,6 +175,7 @@ after = ["lingxiloop-app-b"]
 server = "shanghai-b"
 repo = "lyyzka/LingxiLoop"
 branch = "main"
+git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/uptime"
 file_paths = ["compose.yml"]
 
