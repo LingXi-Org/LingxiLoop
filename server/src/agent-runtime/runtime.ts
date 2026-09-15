@@ -80,6 +80,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
         await authorizeAudienceRead({ work,database: pool },{ action: 'conversation:read',resource: { type: 'conversation',id: productConversationId(work) } })
         return true
       } },
+      // Memory stays inside trusted Agent execution; the product exposes no manual HTTP surface.
       memory: { contextBudget: { ratio: 0.08, maxTokens: 8000, concurrency: 2, timeoutMs: 10000, optionalRecall: true },
         reflection: { afterInteractions: 5, idleMs: 600000 },
         evolution: { benchmarkId: nativeEvolutionBenchmark.id }, async resolveScopes(work,database,signal) {
