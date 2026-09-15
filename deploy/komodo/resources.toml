@@ -29,6 +29,8 @@ repo = "lyyzka/lingxiloop-landing-page"
 branch = "main"
 git_provider = "accel.way2api.fun/github.com"
 git_account = "lyyzka"
+registry_provider = "accel.way2api.fun"
+registry_account = "lyyzka"
 run_directory = "deploy/komodo"
 file_paths = ["compose.yml"]
 
