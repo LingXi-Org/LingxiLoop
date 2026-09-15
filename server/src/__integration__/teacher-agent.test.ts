@@ -4,6 +4,10 @@ import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
+import { createWorker } from '@lyyzka/lingxios/worker'
+import { lingxiOSControl, stopLingxiOSControl } from '../agent-runtime/runtime.js'
+import { bindProductRun } from '../agent-runtime/identity.js'
+import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import type { Queryable } from '../db/queryable.js'
 import { withTransaction } from '../db/transaction.js'
 import {
@@ -31,6 +35,39 @@ beforeEach(async () => { installFakeWukong(); await resetAllTables() })
 after(async () => { await teardownAll() })
 
 const teacherTransaction = <T>(work: (client: Queryable) => Promise<T>) => withTransaction(pool, work)
+
+test('[integration] Pulse replies over the control plane without memory and rejects revoked membership', async () => {
+  const fixture = await seedTeacherCourse()
+  const pulse = await ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
+  const app = await lingxiOSControl()
+  const policy = await syncConversationPolicy(app,fixture.companyId,pulse.roomId)
+  const accepted = await app.conversations.ingest({ tenantId: fixture.companyId,conversationId: pulse.roomId,
+    policyVersion: policy.version,messageId: 'teacher-memory-regression',version: 1,
+    author: { id: fixture.teacherId,kind: 'human' },text: 'Reply Ready.',mentions: [pulse.agentId] },
+  { mode: 'chat',executionClass: 'conversation',codeExecution: 'disabled' })
+  const run = accepted.runs[0]; assert.ok(run)
+  await bindProductRun(pool,run,pulse.roomId)
+  const identity = { tenantId: fixture.companyId,principalId: fixture.teacherId,agentId: pulse.agentId,sessionId: run.sessionId,workId: run.runId }
+  assert.deepEqual(await app.memory!.scopes(identity),[])
+  const serviceToken = 'teacher-memory-regression-service-token'
+  const port = await app.listenControlPlane({ serviceToken,port: 0,host: '127.0.0.1' })
+  const usage = { available: true,inputTokens: 100,outputTokens: 10 }
+  let calls = 0
+  const worker = createWorker({ controlPlane: { url: `http://127.0.0.1:${port}`,serviceToken },
+    worker: { id: 'teacher-memory-regression' },model: {
+      modelId: 'teacher-memory-fixture',contextWindowTokens: 200000,
+      async run() { calls++; return { output: [{ role: 'assistant',content: 'Ready.' }],text: 'Ready.',model: 'teacher-memory-fixture',usage } },
+      async structured() { return { value: { missing: [] },model: 'teacher-memory-fixture',usage } },
+      async compact() { throw new Error('bounded fixture must not compact') },
+    } })
+  try {
+    assert.equal(await worker.runNext(),true)
+    assert.ok(calls > 0,'teacher context must reach the model over HTTP')
+    assert.ok(await app.readMessage(run),'teacher execution must produce a reply')
+    await pool.query("UPDATE participants SET departed_at=NOW() WHERE company_id=$1 AND id=$2",[fixture.companyId,fixture.teacherId])
+    await assert.rejects(app.memory!.scopes(identity),/memory source identity or membership was revoked/)
+  } finally { await worker.stop(); await stopLingxiOSControl() }
+})
 
 interface Fixture {
   companyId:string
