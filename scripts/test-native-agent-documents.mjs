@@ -104,7 +104,7 @@ try {
   await database.query(`
     INSERT INTO users(id,email,display_name) VALUES('human','human@test.invalid','Human');
     INSERT INTO companies(id,name,slug,type,plan_id) VALUES('t','Native tools','native-tools','EDUCATION','plan-education');
-    INSERT INTO company_memberships(company_id,user_id,role,status) VALUES('t','human','STUDENT','ACTIVE');
+    INSERT INTO company_memberships(company_id,user_id,role,status) VALUES('t','human','TEACHER','ACTIVE');
     INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
       VALUES('contract','t','plan-education','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '1 year',10);
     INSERT INTO organization_seats(id,company_id,contract_id,user_id,status) VALUES('seat-human','t','contract','human','ACTIVE');
@@ -112,7 +112,7 @@ try {
     UPDATE company_memberships member SET period_id=period.id FROM period WHERE member.id=period.membership_id;
     INSERT INTO projects(id,company_id,kind,name,created_by) VALUES('p','t','INSTITUTIONAL_COURSE','Docs','human');
     INSERT INTO courses(id,company_id,project_id,created_by) VALUES('course','t','p','human');
-    INSERT INTO project_memberships(company_id,project_id,user_id,role,status) VALUES('t','p','human','STUDENT','ACTIVE');
+    INSERT INTO project_memberships(company_id,project_id,user_id,role,status) VALUES('t','p','human','TEACHER','ACTIVE');
     INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status,capabilities)
       VALUES('agent','t','agent','Agent','A','blue','avail','["documents","calendar"]'),('human','t','human','Human','H','blue','avail','[]');
     INSERT INTO conversations(id,kind,title,company_id,project_id,members,leader_id) VALUES('room','group','Room','t','p','["human","agent"]','human');
