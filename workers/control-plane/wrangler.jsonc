@@ -16,8 +16,8 @@
   },
   "d1_databases": [{
     "binding": "DB",
-    "database_name": "lingxiloop-control-native324",
-    "database_id": "95bb598a-92ec-4432-b051-52ec706c91ba",
+    "database_name": "lingxiloop-control-plane",
+    "database_id": "28f39c26-09c6-4e93-91e4-978950e40d0d",
     "migrations_dir": "migrations"
   }],
   "vars": {
