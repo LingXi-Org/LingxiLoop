@@ -19,11 +19,12 @@ import { resolveUserAvatarUrl } from '@/lib/userAvatar'
 import { useAuth } from '@/stores/auth'
 
 export function NavUser({ user }: {
-  user: { name: string; email: string; avatar?: string | null }
+  user: { id: string; name: string; email: string; avatar?: string | null }
 }) {
   const isMobile = useIsMobile()
+  const isCompanyAdmin = useAuth((state) => state.companies[0]?.isAdmin === true)
   const fallback = user.name.trim().slice(0, 2).toLocaleUpperCase() || '我'
-  const avatarUrl = resolveUserAvatarUrl(user.avatar, user.email)
+  const avatarUrl = resolveUserAvatarUrl(user.avatar, user.id)
   const signOut = () => {
     useAuth.getState().clear()
     void authApi.signOut().catch(() => undefined)
@@ -40,24 +41,23 @@ export function NavUser({ user }: {
     </div>
   </>
 
-  const accountButton = <Button id={SETTINGS_DIALOG_TRIGGER_ID} type="button" variant="ghost" className={cn('w-full justify-start gap-2 rounded-xl px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground', isMobile ? 'h-12' : 'h-14')} aria-label="打开账户菜单" onClick={isMobile ? () => openSettingsDialog() : undefined}>
+  const accountButton = <Button id={SETTINGS_DIALOG_TRIGGER_ID} type="button" variant="ghost" className={cn('w-full justify-start gap-2 rounded-xl px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground', isMobile ? 'h-12' : 'h-14')} aria-label="打开账户菜单">
     {identity}
     <HugeiconsIcon icon={UnfoldMoreIcon} strokeWidth={2} className="ms-auto size-4" />
   </Button>
-
-  if (isMobile) return accountButton
 
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>
       {accountButton}
     </DropdownMenuTrigger>
-    <DropdownMenuContent className="min-w-64 rounded-lg" side="right" align="end" sideOffset={8}>
+    <DropdownMenuContent className="min-w-64 rounded-lg" side={isMobile ? 'top' : 'right'} align="end" sideOffset={8}>
       <DropdownMenuGroup>
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">{identity}</div>
         </DropdownMenuLabel>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
+      {isCompanyAdmin && <DropdownMenuItem asChild><a href={import.meta.env.DEV ? 'http://localhost:5198' : 'https://admin.lingxilearn.cn'} target="_blank" rel="noopener noreferrer">管理后台</a></DropdownMenuItem>}
       <DropdownMenuItem onSelect={() => openSettingsDialog()}>
         <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} />
         设置

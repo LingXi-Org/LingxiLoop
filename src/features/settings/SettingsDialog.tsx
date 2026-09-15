@@ -1,4 +1,3 @@
-import { CompanySettingsPanel } from './CompanySettingsPanel'
 import {
   Cancel01Icon,
   Database01Icon,
@@ -45,11 +44,10 @@ import type { SettingsSectionId } from './store'
 import { SETTINGS_DIALOG_TRIGGER_ID, useSettingsDialog } from './store'
 
 const SETTINGS_SECTIONS = [
-  { id: 'company', label: '公司与成员', description: '查看公司身份、管理教师和成员。', icon: UserCircleIcon },
   {
     id: 'account',
     label: '账号',
-    description: '查看当前登录账号的资料与验证状态。',
+    description: '修改头像，查看账号资料与验证状态。',
     icon: UserCircleIcon,
   },
   {
@@ -79,7 +77,6 @@ const SETTINGS_SECTIONS = [
 
 function SettingsPanel({ section }: { section: SettingsSectionId }) {
   switch (section) {
-    case 'company': return <CompanySettingsPanel />
     case 'account': return <AccountSettingsPanel />
     case 'appearance-sound': return <AppearanceSoundSettingsPanel />
     case 'notifications': return <NotificationSettingsPanel />
@@ -111,18 +108,16 @@ export function SettingsDialog() {
           onValueChange={(value) => setActiveSection(value as SettingsSectionId)}
           className="min-h-0 flex-1 gap-0"
         >
-          <DrawerHeader className="shrink-0 border-b border-border px-5 pb-3 pt-3 text-start">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <DrawerTitle>{currentSection.label}</DrawerTitle>
-                <DrawerDescription className="mt-0.5 truncate text-xs">{currentSection.description}</DrawerDescription>
-              </div>
-              <DrawerClose asChild>
-                <Button type="button" variant="ghost" size="icon-sm" className="shrink-0 rounded-full" aria-label="关闭设置">
-                  <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-                </Button>
-              </DrawerClose>
+          <DrawerHeader className="relative shrink-0 border-b border-border px-14 pb-3 pt-3 text-center">
+            <div className="min-w-0">
+              <DrawerTitle>{currentSection.label}</DrawerTitle>
+              <DrawerDescription className="mt-0.5 text-xs">{currentSection.description}</DrawerDescription>
             </div>
+            <DrawerClose asChild>
+              <Button type="button" variant="ghost" size="icon-sm" className="absolute end-5 top-3 rounded-full" aria-label="关闭设置">
+                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+              </Button>
+            </DrawerClose>
           </DrawerHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto p-4">

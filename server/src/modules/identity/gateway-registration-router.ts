@@ -1,3 +1,6 @@
+import { requireCompany } from '../../http/request-context.js'
+import { avatarInputSchema } from './contracts.js'
+import { prepareAvatar, saveUserAvatar } from './profile-avatar.js'
 import { randomUUID } from 'node:crypto'
 import { Router } from 'express'
 import { pool } from '../../db/pool.js'
@@ -22,11 +25,20 @@ gatewayRegistrationRouter.get('/auth/me', safe(async (req, res) => {
   if (!user) throw new HttpError(401, 'business user not found')
   if (companies.length !== 1) throw new HttpError(403, 'active company membership required')
   res.json({
-    user: { id: user.id, email: user.email, name: user.display_name, emailVerified: Boolean(user.email_verified_at), providers: ['credential'] },
+    user: { id: user.id, email: user.email, name: user.display_name, avatarUrl: user.avatar_url, avatarSeed: user.avatar_seed, emailVerified: Boolean(user.email_verified_at), providers: ['credential'] },
     companies: companies.map(({ type: _type, ...company }) => company),
     activeCompanyId: companies[0]!.id,
     serverCapabilities: { invitationEmail: true },
   })
+}))
+
+gatewayRegistrationRouter.put('/me/avatar', safe(async (req, res) => {
+  requireGateway(req)
+  const scope = await requireCompany(req)
+  const parsed = avatarInputSchema.safeParse(req.body)
+  if (!parsed.success) throw new HttpError(400, 'invalid avatar')
+  const avatar = await prepareAvatar(pool, scope, parsed.data, 'user')
+  res.json(await withTransaction(pool, (db) => saveUserAvatar(db, scope, avatar)))
 }))
 
 gatewayRegistrationRouter.post(['/session/ws-ticket', '/auth/ws-ticket'], safe(async (req, res) => {

@@ -106,7 +106,10 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
         canReview={space.canReview}
         view={detailView}
         onViewChange={setDetailView}
-        onReviewed={refresh}
+        onReviewed={async () => {
+          await refresh()
+          window.dispatchEvent(new Event('lingxiloop:growth-updated'))
+        }}
       />
     </div>
   )

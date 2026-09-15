@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import type { Queryable } from '../../db/queryable.js'
 import { HttpError } from '../../http/errors.js'
 
@@ -23,6 +24,7 @@ interface AdminResourceDefinition {
 const secretColumns = ['password_hash', 'token_hash', 'lease_token', 'lease_token_hash'] as const
 
 export const ADMIN_RESOURCES = {
+  subscriptions: { label: '订阅', group: 'identity', table: 'subscriptions', idColumn: 'id', companyColumn: 'company_id', statusColumn: 'status', searchColumns: ['id', 'subscriber_user_id', 'plan_id'], orderColumn: 'created_at', total: true },
   users: { label: '用户', group: 'identity', table: 'users', idColumn: 'id', statusColumn: 'suspended_at', searchColumns: ['id', 'email', 'display_name'], orderColumn: 'created_at', detailOmit: ['password_hash'], total: true },
   companies: { label: '公司', group: 'identity', table: 'companies', idColumn: 'id', companyColumn: 'id', statusColumn: 'status', searchColumns: ['id', 'name', 'slug'], orderColumn: 'created_at', total: true },
   'company-memberships': { label: '公司成员', group: 'identity', table: 'company_memberships', idColumn: 'id', companyColumn: 'company_id', statusColumn: 'status', searchColumns: ['id', 'user_id', 'role'], orderColumn: 'created_at', total: true },
@@ -72,11 +74,16 @@ export interface AdminListQuery {
   status?: string
   companyId?: string
   projectId?: string
+  current?: string
   sort?: string
+  userId?: string
+  sourceId?: string
+  activityId?: string
+  attemptId?: string
 }
 
 function definition(name: string): AdminResourceDefinition {
-  const value = ADMIN_RESOURCES[name as AdminResourceName]
+  const value = Object.hasOwn(ADMIN_RESOURCES, name) ? ADMIN_RESOURCES[name as AdminResourceName] : undefined
   if (!value) throw new HttpError(404, 'admin resource not found')
   return value
 }
@@ -107,25 +114,65 @@ export async function listAdminResources(
   resourceName: string,
   query: AdminListQuery,
 ): Promise<{ data: Record<string, unknown>[]; nextCursor: string | null; total?: number }> {
+  const parsed = z.object({
+    current: z.literal('true').optional(), cursor: z.string().max(100).optional(), limit: z.string().max(3).optional(),
+    search: z.string().trim().max(200).optional(), status: z.string().trim().max(100).optional(),
+    companyId: z.string().trim().min(1).max(200).optional(), projectId: z.string().trim().min(1).max(200).optional(),
+    userId: z.string().trim().min(1).max(200).optional(), sourceId: z.string().trim().min(1).max(200).optional(),
+    activityId: z.string().trim().min(1).max(200).optional(), attemptId: z.string().trim().min(1).max(200).optional(),
+    sort: z.enum(['newest', 'oldest', 'id']).optional(),
+  }).strict().safeParse(query)
+  if (!parsed.success) throw new HttpError(400, 'invalid resource filters')
+  query = parsed.data
   const resource = definition(resourceName)
   const limit = safeLimit(query.limit)
   const offset = cursorOffset(query.cursor)
   if (query.search && query.search.trim().length > 200) throw new HttpError(400, 'search is too long')
   if (query.status && !resource.statusColumn) throw new HttpError(400, 'status filter is not available')
-  if (query.companyId && !resource.companyColumn) throw new HttpError(400, 'company filter is not available')
-  if (query.projectId && !resource.projectColumn) throw new HttpError(400, 'project filter is not available')
+  const knowledgeJob = resourceName === 'knowledge-jobs'
+  if (query.companyId && !resource.companyColumn && !knowledgeJob && !['users', 'project-transfers'].includes(resourceName)) throw new HttpError(400, 'company filter is not available')
+  if (query.projectId && !resource.projectColumn && !knowledgeJob) throw new HttpError(400, 'project filter is not available')
   const values: unknown[] = []
   const where: string[] = []
+  if (query.current) {
+    if (!['users', 'companies', 'projects'].includes(resourceName)) throw new HttpError(400, 'current filter is not available')
+    where.push(resourceName === 'users' ? 'item.deleted_at IS NULL' : "item.status<>'DELETED'")
+  }
   const add = (value: unknown): string => { values.push(value); return `$${values.length}` }
 
   if (query.search?.trim()) {
     const parameter = add(`%${query.search.trim()}%`)
     where.push(`(${resource.searchColumns.map((column) => `COALESCE(item.${column}::text,'') ILIKE ${parameter}`).join(' OR ')})`)
   }
-  if (query.status?.trim() && resource.statusColumn) where.push(`item.${resource.statusColumn}::text=${add(query.status.trim())}`)
+  if (resourceName === 'users' && query.status) {
+    if (!['active', 'suspended', 'deleted'].includes(query.status)) throw new HttpError(400, 'invalid user status')
+    where.push(query.status === 'deleted' ? 'item.deleted_at IS NOT NULL' : query.status === 'suspended' ? 'item.deleted_at IS NULL AND item.suspended_at IS NOT NULL' : 'item.deleted_at IS NULL AND item.suspended_at IS NULL')
+  }
+  if (resourceName !== 'users' && query.status?.trim() && resource.statusColumn) where.push(`item.${resource.statusColumn}::text=${add(query.status.trim())}`)
   if (query.companyId?.trim() && resource.companyColumn) where.push(`item.${resource.companyColumn}=${add(query.companyId.trim())}`)
+  if (query.companyId && resourceName === 'users') where.push(`EXISTS (SELECT 1 FROM company_memberships m WHERE m.user_id=item.id AND m.company_id=${add(query.companyId)} AND m.ended_at IS NULL AND m.status='ACTIVE')`)
+  if (query.companyId && resourceName === 'project-transfers') where.push(`EXISTS (SELECT 1 FROM projects p WHERE p.id=item.project_id AND p.company_id=${add(query.companyId)})`)
   if (query.projectId?.trim() && resource.projectColumn) where.push(`item.${resource.projectColumn}=${add(query.projectId.trim())}`)
 
+  const userColumns: Record<string, string> = { 'company-memberships': 'user_id', 'project-memberships': 'user_id', subscriptions: 'subscriber_user_id' }
+  const parentColumns: Record<string, [string, string]> = { sourceId: ['knowledge-jobs', 'source_id'], activityId: ['learning-attempts', 'activity_id'], attemptId: ['learning-evaluations', 'attempt_id'] }
+  if (query.userId) {
+    const column = userColumns[resourceName]
+    if (!column) throw new HttpError(400, 'user filter is not available')
+    where.push(`item.${column}=${add(query.userId)}`)
+  }
+  for (const [key, [owner, column]] of Object.entries(parentColumns)) {
+    const value = query[key as keyof AdminListQuery]
+    if (!value) continue
+    if (owner !== resourceName) throw new HttpError(400, 'parent filter is not available')
+    where.push(`item.${column}=${add(value)}`)
+  }
+  if (knowledgeJob && (query.companyId || query.projectId)) {
+    const scope = ['source.id=item.source_id']
+    if (query.companyId) scope.push(`source.company_id=${add(query.companyId)}`)
+    if (query.projectId) scope.push(`source.project_id=${add(query.projectId)}`)
+    where.push(`EXISTS (SELECT 1 FROM knowledge_sources source WHERE ${scope.join(' AND ')})`)
+  }
   const predicate = where.length ? ` WHERE ${where.join(' AND ')}` : ''
   const orderColumn = resource.orderColumn ?? resource.idColumn
   const ascending = query.sort === 'oldest' || query.sort === 'id'
@@ -158,6 +205,7 @@ export async function listAdminResources(
     )
     response.total = count.rows[0]?.total ?? 0
   }
+  await attachRecordLabels(db, data)
   return response
 }
 
@@ -173,6 +221,7 @@ export async function getAdminResource(
        FROM ${resource.table} item WHERE item.${resource.idColumn}::text=$1 LIMIT 1`,
     [id, omitColumns(resource.detailOmit)],
   )
+  if (result.rows[0]) await attachRecordLabels(db, [result.rows[0].data])
   return result.rows[0] ? { data: result.rows[0].data, sensitive: Boolean(resource.sensitive) } : null
 }
 
@@ -206,4 +255,30 @@ export function adminResourceCatalog() {
       sensitive: Boolean(resource.sensitive),
     }
   })]
+}
+
+export async function attachRecordLabels(db: Queryable, records: Record<string, unknown>[]): Promise<void> {
+  const relations = [['company_id', 'companies', 'name'], ['project_id', 'projects', 'name'], ['user_id', 'users', 'display_name']] as const
+  await Promise.all(relations.map(async ([field, table, label]) => {
+    const ids = [...new Set(records.flatMap(record => typeof record[field] === 'string' ? [record[field]] : []))]
+    if (!ids.length) return
+    const result = await db.query<{ id: string; label: string }>(`SELECT id,${label} AS label FROM ${table} WHERE id=ANY($1::text[])`, [ids])
+    const names = new Map(result.rows.map(row => [row.id, row.label]))
+    for (const record of records) {
+      const name = names.get(String(record[field]))
+      if (name) record[`${field}_label`] = name
+    }
+  }))
+}
+
+export async function resourceSummary(db: Queryable, resource: string, id: string): Promise<{ metrics: Array<{ label: string; value: number; resource: string }> }> {
+  if (!['users', 'companies', 'projects'].includes(resource)) throw new HttpError(404, 'summary is not available')
+  if (!await getAdminResource(db, resource, id)) throw new HttpError(404, 'resource not found')
+  const queries: Record<string, Array<[string, string]>> = {
+    users: [['所属组织', 'SELECT COUNT(*)::int AS count FROM company_memberships WHERE user_id=$1'], ['所属项目', 'SELECT COUNT(*)::int AS count FROM project_memberships WHERE user_id=$1'], ['订阅', 'SELECT COUNT(*)::int AS count FROM subscriptions WHERE subscriber_user_id=$1']],
+    companies: [['成员', 'SELECT COUNT(*)::int AS count FROM company_memberships WHERE company_id=$1'], ['项目', "SELECT COUNT(*)::int AS count FROM projects WHERE company_id=$1 AND status<>'DELETED'"], ['合同', 'SELECT COUNT(*)::int AS count FROM education_contracts WHERE company_id=$1'], ['席位', 'SELECT COUNT(*)::int AS count FROM organization_seats WHERE company_id=$1']],
+    projects: [['成员', 'SELECT COUNT(*)::int AS count FROM project_memberships WHERE project_id=$1'], ['课程', 'SELECT COUNT(*)::int AS count FROM courses WHERE project_id=$1'], ['学习活动', 'SELECT COUNT(*)::int AS count FROM learning_activities WHERE project_id=$1'], ['知识源', 'SELECT COUNT(*)::int AS count FROM knowledge_sources WHERE project_id=$1']],
+  }
+  const related: Record<string, string[]> = { users: ['company-memberships', 'project-memberships', 'subscriptions'], companies: ['company-memberships', 'projects', 'education-contracts', 'organization-seats'], projects: ['project-memberships', 'courses', 'learning-activities', 'knowledge-sources'] }
+  return { metrics: await Promise.all(queries[resource].map(async ([label, sql], index) => ({ label, resource: related[resource][index], value: (await db.query<{ count: number }>(sql, [id])).rows[0].count }))) }
 }

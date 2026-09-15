@@ -5,8 +5,9 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent } from '@/components/ui/card'
+import { ChevronDown } from 'lucide-react'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/dropdown-menu'
 import { projectLifecycleApi } from '@/features/projects/api'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
@@ -54,12 +55,14 @@ const LIFECYCLE_ACTIONS = {
   }
 >
 const SETTINGS_TABS = [
-  { value: 'profile', label: '基本资料' },
-  { value: 'content', label: '课程内容' },
-  { value: 'members', label: '成员与邀请' },
-  { value: 'status', label: '课程状态' },
+  { value: 'profile', label: '基本资料', description: '这些信息会显示给所有课程成员。' },
+  { value: 'content', label: '课程内容', description: '管理学习目标、成功标准与课程活动。' },
+  { value: 'members', label: '成员与邀请', description: '管理课程成员与邀请。' },
+  { value: 'status', label: '课程状态', description: '完成状态变更后，课程权限会随之更新。' },
 ] as const
 export function CourseSettingsSection({ space }: { space: LearningSpace }) {
+  const [section, setSection] = useState('profile')
+  const current = SETTINGS_TABS.find((tab) => tab.value === section) ?? SETTINGS_TABS[0]
   const canView = space.perspective === 'teacher' && space.canManage && Boolean(space.courseId)
   const canEdit = canView && space.canUpdateCourse
   const [course, setCourse] = useState<ApiCourse | null>(null)
@@ -123,37 +126,36 @@ export function CourseSettingsSection({ space }: { space: LearningSpace }) {
   }
 
   return (
-    <Tabs defaultValue="profile" className="h-full min-h-0 gap-0">
-      <DashboardSectionFrame
-        space={space}
-        section="settings"
-        headerActions={<TabsList
-          variant="line"
-          aria-label="课程设置分类"
-          className="h-9 w-full justify-start gap-0 overflow-x-auto p-0"
-        >
-          {SETTINGS_TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="h-9 flex-none rounded-none px-3 text-xs after:bottom-0">
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>}
-      >
-        <TabsContent value="profile" className="min-w-0 flex-1">
+    <DashboardSectionFrame
+      space={space}
+      section="settings"
+      description={current.description}
+      breadcrumb={{ root: '课程设置', onBack: () => setSection('profile'), current: (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 px-1" aria-label={`当前分类：${current.label}，切换课程设置分类`}>
+              <span aria-current="page">{current.label}</span><ChevronDown className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuRadioGroup value={section} onValueChange={setSection}>
+              {SETTINGS_TABS.map((tab) => <DropdownMenuRadioItem key={tab.value} value={tab.value}>{tab.label}</DropdownMenuRadioItem>)}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) }}
+    >
+        {section === 'profile' && <div className="min-w-0">
           <CourseProfileSettings course={course} canEdit={canEdit} onUpdated={setCourse} />
-        </TabsContent>
-        <TabsContent value="content" className="min-w-0 flex-1">
+        </div>}
+        {section === 'content' && <div className="min-w-0">
           <CourseContentSettings space={space} />
-        </TabsContent>
-        <TabsContent value="members" className="min-w-0 flex-1">
+        </div>}
+        {section === 'members' && <div className="min-w-0">
           <CourseMembersSection space={space} />
-        </TabsContent>
-        <TabsContent value="status" className="min-w-0 flex-1">
+        </div>}
+        {section === 'status' && <div className="min-w-0">
           <Card>
-            <CardHeader>
-              <CardTitle>课程状态</CardTitle>
-              <CardDescription>这里只显示服务端允许的下一步，完成后权限会随课程状态更新。</CardDescription>
-            </CardHeader>
             <CardContent className="space-y-4">
               <Badge variant="secondary">{statusLabel(course.status)}</Badge>
               {lifecycle ? (
@@ -174,8 +176,8 @@ export function CourseSettingsSection({ space }: { space: LearningSpace }) {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>}
       </DashboardSectionFrame>
-    </Tabs>
+
   )
 }

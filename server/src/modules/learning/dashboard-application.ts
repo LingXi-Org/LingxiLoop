@@ -18,6 +18,7 @@ import {
   loadLearningLearnerDetailRows,
 } from './dashboard-repository.js'
 import { LearningApplicationError } from './errors.js'
+import { loadLearningGrowthRows } from './growth-repository.js'
 import {
   findLearningDashboardLearner,
   listLearningDashboardLearnerRows,
@@ -129,6 +130,8 @@ function learningSpace(row: LearningSpaceRow, capabilities: LearningSpaceCapabil
     title: row.title,
     description: row.description,
     color: row.color,
+    avatarUrl: row.avatarUrl,
+    avatarSeed: row.avatarSeed,
     status: row.status,
     perspective: row.perspective,
     canManage: row.roleCanManage,
@@ -315,6 +318,21 @@ export async function learningOverview(
       reasons: row.reasons,
     })),
   }
+}
+
+export async function learningGrowth(
+  db: Queryable,
+  scope: LearningScope,
+  projectId: string,
+  input: { cursor?: string; limit: number },
+) {
+  await resolveProjectAccess(db, scope, projectId, 'learning:read')
+  const rows = await loadLearningGrowthRows(db, {
+    companyId: scope.companyId, projectId,
+    cursor: input.cursor, limit: input.limit + 1,
+  })
+  const data = rows.slice(0, input.limit)
+  return { data, nextCursor: rows.length > input.limit ? data.at(-1)?.learnerId ?? null : null }
 }
 
 export async function listLearningLearners(

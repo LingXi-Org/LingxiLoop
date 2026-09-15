@@ -12,6 +12,35 @@ declare module 'cloudflare:test' {
 beforeAll(async () => applyD1Migrations(env.DB, env.TEST_MIGRATIONS))
 
 describe('control-plane trust boundaries', () => {
+  it('company management forwards a signed user identity without promoting the global role', async () => {
+    const now = Math.floor(Date.now() / 1000)
+    await env.DB.batch([
+      env.DB.prepare(`INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt) VALUES('company-admin','Teacher','company-admin@test.local',1,?,?)`).bind(now, now),
+      env.DB.prepare(`INSERT INTO account(id,accountId,providerId,issuer,userId,password,createdAt,updatedAt) VALUES('company-admin-account','company-admin','credential','local:credential','company-admin',?,?,?)`).bind(await hashPassword('password123'), now, now),
+      env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES('company-admin','pg-company-admin',?)`).bind(now),
+    ])
+    fetchMock.activate(); fetchMock.disableNetConnect()
+    fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true })
+    try {
+      const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' }, body: JSON.stringify({ email: 'company-admin@test.local', password: 'password123' }) })
+      const headers = { cookie: signIn.headers.get('set-cookie') ?? '' }
+      for (const [path, originPath] of [['management-session', '/api/admin-management/session'], ['company/resources/projects', '/api/admin-company/resources/projects']]) {
+        fetchMock.get('https://origin.example.com').intercept({ path: originPath, method: 'GET' }).reply(options => {
+          const assertion = new Headers(options.headers as HeadersInit).get('x-lingxiloop-gateway')!
+          const payload = JSON.parse(atob(assertion.split('.')[0].replaceAll('-', '+').replaceAll('_', '/')))
+          expect(payload.appUserId).toBe('pg-company-admin')
+          expect(payload.platformAdmin).not.toBe(true)
+          return { statusCode: 200, data: JSON.stringify({ ok: true }) }
+        })
+        expect((await SELF.fetch(`https://admin.example.com/api/control/${path}`, { headers })).status).toBe(200)
+      }
+      expect((await SELF.fetch('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
+      expect((await SELF.fetch('https://admin.example.com/api/admin-company/resources/users', { headers })).status).toBe(403)
+      await env.DB.prepare(`UPDATE app_user_links SET suspended_at=1 WHERE auth_user_id='company-admin'`).run()
+      expect((await SELF.fetch('https://admin.example.com/api/control/company/dashboard', { headers })).status).toBe(403)
+      fetchMock.assertNoPendingInterceptors()
+    } finally { fetchMock.deactivate() }
+  })
   async function mcp(method: string, params?: Record<string, unknown>, id = 1) {
     return SELF.fetch('https://admin.example.com/api/mcp', {
       method: 'POST',

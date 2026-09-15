@@ -148,7 +148,7 @@ export function SidebarUserFooter() {
   const authUser = useAuth((s) => s.user)
   const authParticipant = useParticipants((s) => authUser ? s.byId[authUser.id] : undefined)
   if (!authUser) return null
-  return <SidebarFooter className="shrink-0 border-t border-[var(--im-divider-weak)] bg-sidebar p-2"><NavUser user={{ name: authUser.name, email: authUser.email, avatar: authParticipant?.avatarUrl }} /></SidebarFooter>
+  return <SidebarFooter className="shrink-0 border-t border-[var(--im-divider-weak)] bg-sidebar p-2"><NavUser user={{ id: authUser.id, name: authUser.name, email: authUser.email, avatar: authUser.avatarUrl ?? authParticipant?.avatarUrl }} /></SidebarFooter>
 }
 
 export function ConversationsPane({ onConversationSelected }: { onConversationSelected?: (conversationId: string) => void } = {}) {

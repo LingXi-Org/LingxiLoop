@@ -16,6 +16,9 @@ export type ProjectStatus =
   | 'DELETED'
 
 export interface WorkspaceSummary {
+  courseId?: string | null
+  avatarUrl?: string | null
+  avatarSeed?: string | null
   id: string
   companyId: string
   kind: ProjectKind

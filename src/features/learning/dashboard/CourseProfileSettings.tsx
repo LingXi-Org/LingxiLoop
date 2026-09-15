@@ -1,6 +1,9 @@
+import { AvatarEditor, type AvatarInput } from '@/features/settings/AvatarEditor'
+import { getCourseAvatarUrl } from '../courseAvatar'
+import { useWorkspace } from '@/features/knowledge/workspace'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -50,7 +53,7 @@ export function CourseProfileSettings({
     if (!confirmed) return
     setBusy(true)
     try {
-      await toastAction(
+      const updated = await toastAction(
         learningApi.updateCourse(course.id, { name, description, color: selectedColor }),
         {
           loading: '正在保存课程设置',
@@ -58,13 +61,22 @@ export function CourseProfileSettings({
           error: '保存课程设置失败，请稍后重试',
         },
       )
-      onUpdated({ ...course, name, description, color: selectedColor })
+      onUpdated({ ...course, name, description, color: selectedColor, ...updated })
+      void useWorkspace.getState().load()
       window.dispatchEvent(new Event('lingxiloop:learning-spaces-updated'))
     } catch {
       /* Toast owns the visible error state. */
     } finally {
       setBusy(false)
     }
+  }
+
+  const saveAvatar = async (avatar: AvatarInput) => {
+    if (!canEdit || busy) throw new Error('当前课程不能修改头像。')
+    const updated = await learningApi.updateCourse(course.id, { avatar })
+    onUpdated({ ...course, ...updated })
+    void useWorkspace.getState().load()
+    window.dispatchEvent(new Event('lingxiloop:learning-spaces-updated'))
   }
 
   const colorOptions = COURSE_COLORS.some(
@@ -75,14 +87,10 @@ export function CourseProfileSettings({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>基本资料</CardTitle>
-        <CardDescription>
-          {canEdit ? '这些信息会显示给所有课程成员。' : '当前课程状态下只能查看基本资料。'}
-        </CardDescription>
-      </CardHeader>
       <CardContent>
         <form onSubmit={updateCourse} className="space-y-6">
+          {!canEdit && <p className="text-sm text-muted-foreground">当前课程状态下只能查看基本资料。</p>}
+          <AvatarEditor kind="course" currentUrl={course.avatarUrl || getCourseAvatarUrl(course.id)} onSave={saveAvatar} disabled={!canEdit || busy} />
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="course-settings-name">课程名称</FieldLabel>

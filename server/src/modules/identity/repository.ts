@@ -3,6 +3,8 @@ import type { Queryable } from '../../db/queryable.js'
 export interface IdentityUserRow {
   id: string
   email: string
+  avatar_seed: string | null
+  avatar_url: string | null
   display_name: string
   email_verified_at: Date | string | null
 }
@@ -19,7 +21,7 @@ export interface IdentityCompanyRow {
 
 export async function findIdentityUser(db: Queryable, userId: string): Promise<IdentityUserRow | null> {
   const { rows } = await db.query<IdentityUserRow>(
-    `SELECT id, email, display_name, email_verified_at
+    `SELECT id, email, display_name, email_verified_at, avatar_seed, avatar_url
        FROM users
       WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL AND departed_at IS NULL
       LIMIT 1`,

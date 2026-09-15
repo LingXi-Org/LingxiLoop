@@ -606,6 +606,26 @@ app.post('/api/control/platform/users/:id/:action', async (c) => {
 app.all('/api/health*', (c) => originRequest(c.env, c.req.path + new URL(c.req.url).search, { method: c.req.method, headers: c.req.raw.headers }))
 app.all('/api/meta', (c) => originRequest(c.env, c.req.path, { method: c.req.method, headers: c.req.raw.headers }))
 
+app.get('/api/control/management-session', async (c) => {
+  const session = requireSession(c)
+  if (session instanceof Response) return session
+  const link = session.user.role === 'admin'
+    ? await ensureAdminBusinessIdentity(c, session)
+    : await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
+  if (link instanceof Response) return link
+  if (!link) return c.json({ error: 'management access required' }, 403)
+  return originRequest(c.env, '/api/admin-management/session', { method: 'GET', headers: c.req.raw.headers }, { appUserId: link.app_user_id, authUserId: session.user.id, authSessionIssuedAt: new Date(session.session.createdAt).getTime(), platformAdmin: session.user.role === 'admin' })
+})
+
+app.all('/api/control/company/*', async (c) => {
+  const session = requireSession(c)
+  if (session instanceof Response) return session
+  const link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
+  if (!link) return c.json({ error: 'management access required' }, 403)
+  const suffix = c.req.path.slice('/api/control/company'.length)
+  return originRequest(c.env, `/api/admin-company${suffix}${new URL(c.req.url).search}`, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }, { appUserId: link.app_user_id, authUserId: session.user.id, authSessionIssuedAt: new Date(session.session.createdAt).getTime() })
+})
+
 app.all('/api/control/platform/*', async (c) => {
   const session = requireAdmin(c)
   if (session instanceof Response) return session
@@ -623,7 +643,7 @@ app.use('/api/*', async (c, next) => {
 })
 
 async function proxyAppRequest(c: AppContext): Promise<Response> {
-  if (/^\/api\/(?:internal|control|admin)(?:\/|$)/i.test(decodeURIComponent(c.req.path))) return c.json({ error: 'internal service route' }, 403)
+  if (/^\/api\/(?:internal|control|admin(?:-company|-management)?)(?:\/|$)/i.test(decodeURIComponent(c.req.path))) return c.json({ error: 'internal service route' }, 403)
   const session = requireSession(c)
   if (session instanceof Response) return session
   const link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()

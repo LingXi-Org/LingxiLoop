@@ -19,9 +19,10 @@ const testsByScope = {
     'server/src/__tests__/lingxilit-observability.test.ts',
     'server/src/__tests__/permission-policy.test.ts',
     'server/src/__tests__/storage-provider.test.ts',
+    'server/src/__tests__/profile-avatar.test.ts',
     'server/src/__tests__/wukong-client.test.ts',
   ],
-  admin: ['admin/src/lingxilit-url.test.ts', 'admin/src/record-presentation.test.ts'],
+  admin: ['admin/src/lingxilit-url.test.ts', 'admin/src/record-presentation.test.ts', 'admin/src/management-session.test.ts'],
   web: [
     'src/features/chat/runtime/converter.test.ts',
     'src/features/chat/runtime/store.test.ts',
@@ -29,6 +30,8 @@ const testsByScope = {
     'src/api/transport.test.ts',
     'src/features/presentations/presentationFeature.test.ts',
     'src/features/settings/settingsDialog.test.ts',
+    'src/features/learning/courseAvatar.test.ts',
+    'src/features/learning/dashboard/learningVineModel.test.ts',
     'src/lib/userVisibleChinese.test.ts',
   ],
 }
