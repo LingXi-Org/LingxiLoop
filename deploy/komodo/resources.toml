@@ -5,6 +5,7 @@ description = "Declarative production resources"
 repo = "lyyzka/LingxiLoop"
 branch = "main"
 git_provider = "accel.way2api.fun/github.com"
+git_account = "lyyzka"
 resource_path = ["deploy/komodo/resources.toml"]
 
 [[stack]]
