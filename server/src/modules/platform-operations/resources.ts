@@ -24,7 +24,6 @@ interface AdminResourceDefinition {
 const secretColumns = ['password_hash', 'token_hash', 'lease_token', 'lease_token_hash'] as const
 
 export const ADMIN_RESOURCES = {
-  subscriptions: { label: '订阅', group: 'identity', table: 'subscriptions', idColumn: 'id', companyColumn: 'company_id', statusColumn: 'status', searchColumns: ['id', 'subscriber_user_id', 'plan_id'], orderColumn: 'created_at', total: true },
   users: { label: '用户', group: 'identity', table: 'users', idColumn: 'id', statusColumn: 'suspended_at', searchColumns: ['id', 'email', 'display_name'], orderColumn: 'created_at', detailOmit: ['password_hash'], total: true },
   companies: { label: '公司', group: 'identity', table: 'companies', idColumn: 'id', companyColumn: 'id', statusColumn: 'status', searchColumns: ['id', 'name', 'slug'], orderColumn: 'created_at', total: true },
   'company-memberships': { label: '公司成员', group: 'identity', table: 'company_memberships', idColumn: 'id', companyColumn: 'company_id', statusColumn: 'status', searchColumns: ['id', 'user_id', 'role'], orderColumn: 'created_at', total: true },
@@ -154,7 +153,7 @@ export async function listAdminResources(
   if (query.companyId && resourceName === 'project-transfers') where.push(`EXISTS (SELECT 1 FROM projects p WHERE p.id=item.project_id AND p.company_id=${add(query.companyId)})`)
   if (query.projectId?.trim() && resource.projectColumn) where.push(`item.${resource.projectColumn}=${add(query.projectId.trim())}`)
 
-  const userColumns: Record<string, string> = { 'company-memberships': 'user_id', 'project-memberships': 'user_id', subscriptions: 'subscriber_user_id' }
+  const userColumns: Record<string, string> = { 'company-memberships': 'user_id', 'project-memberships': 'user_id' }
   const parentColumns: Record<string, [string, string]> = { sourceId: ['knowledge-jobs', 'source_id'], activityId: ['learning-attempts', 'activity_id'], attemptId: ['learning-evaluations', 'attempt_id'] }
   if (query.userId) {
     const column = userColumns[resourceName]
@@ -275,10 +274,10 @@ export async function resourceSummary(db: Queryable, resource: string, id: strin
   if (!['users', 'companies', 'projects'].includes(resource)) throw new HttpError(404, 'summary is not available')
   if (!await getAdminResource(db, resource, id)) throw new HttpError(404, 'resource not found')
   const queries: Record<string, Array<[string, string]>> = {
-    users: [['所属组织', 'SELECT COUNT(*)::int AS count FROM company_memberships WHERE user_id=$1'], ['所属项目', 'SELECT COUNT(*)::int AS count FROM project_memberships WHERE user_id=$1'], ['订阅', 'SELECT COUNT(*)::int AS count FROM subscriptions WHERE subscriber_user_id=$1']],
+    users: [['所属组织', 'SELECT COUNT(*)::int AS count FROM company_memberships WHERE user_id=$1'], ['所属项目', 'SELECT COUNT(*)::int AS count FROM project_memberships WHERE user_id=$1']],
     companies: [['成员', 'SELECT COUNT(*)::int AS count FROM company_memberships WHERE company_id=$1'], ['项目', "SELECT COUNT(*)::int AS count FROM projects WHERE company_id=$1 AND status<>'DELETED'"], ['合同', 'SELECT COUNT(*)::int AS count FROM education_contracts WHERE company_id=$1'], ['席位', 'SELECT COUNT(*)::int AS count FROM organization_seats WHERE company_id=$1']],
     projects: [['成员', 'SELECT COUNT(*)::int AS count FROM project_memberships WHERE project_id=$1'], ['课程', 'SELECT COUNT(*)::int AS count FROM courses WHERE project_id=$1'], ['学习活动', 'SELECT COUNT(*)::int AS count FROM learning_activities WHERE project_id=$1'], ['知识源', 'SELECT COUNT(*)::int AS count FROM knowledge_sources WHERE project_id=$1']],
   }
-  const related: Record<string, string[]> = { users: ['company-memberships', 'project-memberships', 'subscriptions'], companies: ['company-memberships', 'projects', 'education-contracts', 'organization-seats'], projects: ['project-memberships', 'courses', 'learning-activities', 'knowledge-sources'] }
+  const related: Record<string, string[]> = { users: ['company-memberships', 'project-memberships'], companies: ['company-memberships', 'projects', 'education-contracts', 'organization-seats'], projects: ['project-memberships', 'courses', 'learning-activities', 'knowledge-sources'] }
   return { metrics: await Promise.all(queries[resource].map(async ([label, sql], index) => ({ label, resource: related[resource][index], value: (await db.query<{ count: number }>(sql, [id])).rows[0].count }))) }
 }
