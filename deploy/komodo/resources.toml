@@ -191,29 +191,29 @@ executions = [{ execution.type = "RunSync", execution.params.sync = "lingxiloop-
 [[procedure.config.stage]]
 name = "Ingress and landing"
 executions = [
-  { execution.type = "DeployStackIfChanged", execution.params.stack = "server-b-ingress" },
-  { execution.type = "DeployStackIfChanged", execution.params.stack = "landing" },
+  { execution.type = "DeployStack", execution.params.stack = "server-b-ingress" },
+  { execution.type = "DeployStack", execution.params.stack = "landing" },
 ]
 
 [[procedure.config.stage]]
 name = "Core state"
-executions = [{ execution.type = "DeployStackIfChanged", execution.params.stack = "lingxiloop-core-state" }]
+executions = [{ execution.type = "DeployStack", execution.params.stack = "lingxiloop-core-state" }]
 
 [[procedure.config.stage]]
 name = "Knowledge"
 executions = [
-  { execution.type = "DeployStackIfChanged", execution.params.stack = "lingxiloop-knowledge-agent" },
-  { execution.type = "DeployStackIfChanged", execution.params.stack = "lingxilit" },
+  { execution.type = "DeployStack", execution.params.stack = "lingxiloop-knowledge-agent" },
+  { execution.type = "DeployStack", execution.params.stack = "lingxilit" },
 ]
 
 [[procedure.config.stage]]
 name = "Application A"
-executions = [{ execution.type = "DeployStackIfChanged", execution.params.stack = "lingxiloop-app-a" }]
+executions = [{ execution.type = "DeployStack", execution.params.stack = "lingxiloop-app-a" }]
 
 [[procedure.config.stage]]
 name = "Application B"
-executions = [{ execution.type = "DeployStackIfChanged", execution.params.stack = "lingxiloop-app-b" }]
+executions = [{ execution.type = "DeployStack", execution.params.stack = "lingxiloop-app-b" }]
 
 [[procedure.config.stage]]
 name = "Uptime"
-executions = [{ execution.type = "DeployStackIfChanged", execution.params.stack = "uptime" }]
+executions = [{ execution.type = "DeployStack", execution.params.stack = "uptime" }]
