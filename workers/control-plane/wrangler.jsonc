@@ -23,7 +23,8 @@
   "vars": {
     "ORIGIN_BASE_URL": "https://loop.lingxilearn.cn",
     "UPTIME_BASE_URL": "https://uptime.lingxilearn.cn",
-    "ARCANE_BASE_URL": "https://ops.christmas1314.xyz",
+    "KOMODO_BASE_URL": "https://ops.christmas1314.xyz",
+    "KOMODO_TARGETS_JSON": "{\"lingxiloop-core-state\":{\"stack\":\"lingxiloop-core-state\"},\"lingxiloop-app-a\":{\"stack\":\"lingxiloop-app-a\"},\"server-b-ingress\":{\"stack\":\"server-b-ingress\"},\"lingxiloop-app-b\":{\"stack\":\"lingxiloop-app-b\"},\"lingxiloop-knowledge-agent\":{\"stack\":\"lingxiloop-knowledge-agent\"},\"uptime\":{\"stack\":\"uptime\"}}",
     "AUTH_ALLOWED_HOSTS": "loop.lingxilearn.cn,admin.lingxilearn.cn",
     "APP_VERSION": "0.1.0-beta"
   }

@@ -1,4 +1,4 @@
-name: lingxiloop-app-a-native324
+name: lingxiloop-app-a
 
 x-logging: &logging
   driver: json-file

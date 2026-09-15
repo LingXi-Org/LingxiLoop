@@ -1,4 +1,4 @@
-name: lingxiloop-knowledge-agent-native324
+name: lingxiloop-knowledge-agent
 
 x-logging: &logging
   driver: json-file

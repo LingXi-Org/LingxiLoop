@@ -1,10 +1,10 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const manifests = {
-  'deploy/arcane/lingxiloop-app-a/compose.yml': ['server'],
-  'deploy/arcane/lingxiloop-app-b/compose.yml': ['server', 'gateway'],
-  'deploy/arcane/lingxiloop-core-state/compose.yml': ['wukongim'],
-  'deploy/arcane/lingxiloop-knowledge-agent/compose.yml': ['open-notebook'],
+  'deploy/komodo/lingxiloop-app-a/compose.yml': ['server'],
+  'deploy/komodo/lingxiloop-app-b/compose.yml': ['server', 'gateway'],
+  'deploy/komodo/lingxiloop-core-state/compose.yml': ['wukongim'],
+  'deploy/komodo/lingxiloop-knowledge-agent/compose.yml': ['open-notebook'],
 }
 
 export function updateImageTags(source, sha, packages) {

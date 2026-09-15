@@ -109,7 +109,7 @@ test('Web composition contains no background scheduler or worker startup', async
 test('every deployment defines an independently runnable worker service', async () => {
   for (const relative of [
     '../../../docker-compose.mvp.yml',
-    '../../../deploy/arcane/lingxiloop-app-b/compose.yml',
+    '../../../deploy/komodo/lingxiloop-app-b/compose.yml',
   ]) {
     const compose = await readFile(new URL(relative, import.meta.url), 'utf8')
     assert.match(compose, /^ {2}worker:\s*$/m)
@@ -117,9 +117,9 @@ test('every deployment defines an independently runnable worker service', async 
   }
 })
 
-test('Arcane workers inherit the complete runtime environment', async () => {
+test('Komodo workers inherit the complete runtime environment', async () => {
   const compose = await readFile(
-    new URL('../../../deploy/arcane/lingxiloop-app-b/compose.yml', import.meta.url),
+    new URL('../../../deploy/komodo/lingxiloop-app-b/compose.yml', import.meta.url),
     'utf8',
   )
   assert.match(compose, /WUKONG_WEBHOOK_SECRET: \$\{WUKONG_WEBHOOK_SECRET:\?/)
@@ -154,7 +154,7 @@ test('the authenticated product router owns the LingxiOS control surface', async
 
 test('Open Notebook restarts only after SurrealDB is healthy', async () => {
   const compose = await readFile(
-    new URL('../../../deploy/arcane/lingxiloop-knowledge-agent/compose.yml', import.meta.url),
+    new URL('../../../deploy/komodo/lingxiloop-knowledge-agent/compose.yml', import.meta.url),
     'utf8',
   )
   assert.match(compose, /depends_on:\r?\n {6}surrealdb:\r?\n {8}condition: service_healthy\r?\n {8}restart: true/)

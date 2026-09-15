@@ -1,4 +1,4 @@
-name: aly-ingress
+name: control-ingress
 
 services:
   traefik:
@@ -24,16 +24,18 @@ services:
     volumes:
       - ./dynamic.yml:/etc/traefik/dynamic/routes.yml:ro
       - traefik-acme:/letsencrypt
-    networks: [default, arcane-manager, wegolibrary]
+    networks: [default, komodo, wegolibrary]
     restart: unless-stopped
 
 volumes:
-  traefik-acme: {}
+  traefik-acme:
+    external: true
+    name: aly-ingress_traefik-acme
 
 networks:
-  arcane-manager:
+  komodo:
     external: true
-    name: arcane-manager_default
+    name: komodo_default
   wegolibrary:
     external: true
     name: wegolibrary_default

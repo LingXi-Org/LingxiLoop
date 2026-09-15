@@ -123,8 +123,8 @@ jobs:
               - 'server/wukongim/**'
               - 'server/docker/wukongim.Dockerfile'
             gateway:
-              - 'deploy/arcane/lingxiloop-app-b/gateway.conf'
-              - 'deploy/arcane/lingxiloop-app-b/gateway.Dockerfile'
+              - 'deploy/komodo/lingxiloop-app-b/gateway.conf'
+              - 'deploy/komodo/lingxiloop-app-b/gateway.Dockerfile'
               - 'website/**'
             deployment:
               - '.github/workflows/ci.yml'
@@ -302,7 +302,7 @@ jobs:
           if ! git diff --quiet; then
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add deploy/arcane/*/compose.yml
+            git add deploy/komodo/*/compose.yml
             git commit -m "deploy: pin images to ${GITHUB_SHA} [skip ci]"
             git push origin HEAD:main
           fi
@@ -361,10 +361,12 @@ jobs:
     timeout-minutes: 5
     environment: production
     env:
-      ARCANE_GIT_SYNC_WEBHOOK_URLS: ${{ secrets.ARCANE_GIT_SYNC_WEBHOOK_URLS }}
+      KOMODO_WEBHOOK_URL: ${{ secrets.KOMODO_WEBHOOK_URL }}
+      KOMODO_WEBHOOK_SECRET: ${{ secrets.KOMODO_WEBHOOK_SECRET }}
+      KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+      KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
     steps:
       - uses: actions/checkout@v5
         with: { ref: main }
-      - name: Trigger Arcane Git Sync
-        if: env.ARCANE_GIT_SYNC_WEBHOOK_URLS != ''
-        run: node scripts/trigger-arcane-git-sync.mjs
+      - name: Trigger Komodo rollout
+        run: node scripts/trigger-komodo-rollout.mjs

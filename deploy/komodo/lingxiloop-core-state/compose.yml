@@ -1,4 +1,4 @@
-name: lingxiloop-core-state-native324
+name: lingxiloop-core-state
 
 x-logging: &logging
   driver: json-file

@@ -186,7 +186,7 @@ test('WuKong msg.notify batches normalize to the Agent OS webhook contract', () 
 
 test('production enables authenticated WuKong callbacks without inheriting the local proxy', async () => {
   const [compose, manifest] = await Promise.all([
-    readFile(new URL('../../../deploy/arcane/lingxiloop-core-state/compose.yml', import.meta.url), 'utf8'),
+    readFile(new URL('../../../deploy/komodo/lingxiloop-core-state/compose.yml', import.meta.url), 'utf8'),
     readFile(new URL('../../../package.json', import.meta.url), 'utf8'),
   ])
   assert.match(compose, /WK_WEBHOOK_HTTP_ADDR: .*\/webhooks\/wukong\?token=\$\{WUKONG_WEBHOOK_SECRET:\?/)

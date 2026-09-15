@@ -1,9 +1,9 @@
 http:
   routers:
-    arcane:
+    komodo:
       rule: Host(`ops.christmas1314.xyz`)
       entryPoints: [websecure]
-      service: arcane
+      service: komodo
       tls: { certResolver: letsencrypt }
     wegolibrary:
       rule: Host(`golib.christmas1314.xyz`)
@@ -11,9 +11,9 @@ http:
       service: wegolibrary
       tls: { certResolver: letsencrypt }
   services:
-    arcane:
+    komodo:
       loadBalancer:
-        servers: [{ url: http://arcane:3552 }]
+        servers: [{ url: http://core:9120 }]
     wegolibrary:
       loadBalancer:
         servers: [{ url: http://frontend:80 }]

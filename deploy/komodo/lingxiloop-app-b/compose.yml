@@ -1,4 +1,4 @@
-name: lingxiloop-app-b-native324
+name: lingxiloop-app-b
 
 x-logging: &logging
   driver: json-file
@@ -113,7 +113,7 @@ services:
     cpus: "0.75"
     mem_limit: 512m
 
-  gateway-native324:
+  gateway:
     image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-gateway:ee1e6f550fcefa4e81ef2b82fbab414e2d16c838
     pull_policy: always
     restart: unless-stopped

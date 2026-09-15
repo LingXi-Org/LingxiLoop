@@ -18,9 +18,9 @@ type Secrets = {
   SIGILLO_PROVIDER_URL: string
   MCP_SERVICE_TOKEN: string
   MCP_AUTH_USER_ID: string
-  ARCANE_API_KEY: string
-  ARCANE_TARGETS_JSON: string
-  ARCANE_GITOPS_WEBHOOKS: string
+  KOMODO_API_KEY: string
+  KOMODO_API_SECRET: string
+  KOMODO_TARGETS_JSON: string
 }
 type Bindings = Env & Secrets
 type Variables = { auth: ReturnType<typeof createAuth>; session: AuthSession; registrationValidated: boolean }
@@ -478,8 +478,6 @@ app.all('/api/mcp', async (c) => {
   if (!identity) return c.json({ error: 'configured MCP administrator is unavailable' }, 403)
   const platform = (path: string, init: RequestInit = {}) => originRequest(c.env, path, init,
     { authUserId: identity.auth_user_id, appUserId: identity.app_user_id })
-  let webhookSecrets: string[] = []
-  try { webhookSecrets = Object.values(JSON.parse(c.env.ARCANE_GITOPS_WEBHOOKS) as Record<string, unknown>).filter((value): value is string => typeof value === 'string') } catch { /* invalid configuration is reported by its owning tool */ }
   return handleMcpRequest(c.req.raw, c.env, { authUserId: identity.auth_user_id, appUserId: identity.app_user_id }, {
     platform,
     health: async () => {
@@ -498,7 +496,7 @@ app.all('/api/mcp', async (c) => {
       if (!response.ok) throw new Error(`${response.status} ${text.slice(0, 1000)}`)
       return text ? JSON.parse(text) : { ok: true }
     },
-  }, [c.env.MCP_SERVICE_TOKEN, c.env.ARCANE_API_KEY, c.env.ARCANE_GITOPS_WEBHOOKS, ...webhookSecrets,
+  }, [c.env.MCP_SERVICE_TOKEN, c.env.KOMODO_API_KEY, c.env.KOMODO_API_SECRET,
     c.env.BETTER_AUTH_SECRET, c.env.GATEWAY_HMAC_SECRET, c.env.BOOTSTRAP_ADMIN_TOKEN,
     c.env.ALIYUN_OTP_EMAIL_PASSWORD, c.env.TURNSTILE_SECRET_KEY, c.env.SIGILLO_SSO_SECRET])
 })

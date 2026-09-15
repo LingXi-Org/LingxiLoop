@@ -13,8 +13,8 @@
   "vars": {
     "ORIGIN_BASE_URL": "https://origin.example.com",
     "UPTIME_BASE_URL": "https://uptime.example.com",
-    "ARCANE_BASE_URL": "https://ops.example.com",
-    "ARCANE_TARGETS_JSON": "{\"lingxiloop-core-state\":{\"environmentId\":\"a\",\"projectId\":\"core\"},\"lingxiloop-app-a\":{\"environmentId\":\"a\",\"projectId\":\"app-a\"},\"server-b-ingress\":{\"environmentId\":\"b\",\"projectId\":\"ingress\"},\"lingxiloop-app-b\":{\"environmentId\":\"b\",\"projectId\":\"app-b\"},\"lingxiloop-knowledge-agent\":{\"environmentId\":\"b\",\"projectId\":\"knowledge\"},\"uptime\":{\"environmentId\":\"b\",\"projectId\":\"uptime\"}}",
+    "KOMODO_BASE_URL": "https://ops.example.com",
+    "KOMODO_TARGETS_JSON": "{\"lingxiloop-core-state\":{\"stack\":\"lingxiloop-core-state\"},\"lingxiloop-app-a\":{\"stack\":\"lingxiloop-app-a\"},\"server-b-ingress\":{\"stack\":\"server-b-ingress\"},\"lingxiloop-app-b\":{\"stack\":\"lingxiloop-app-b\"},\"lingxiloop-knowledge-agent\":{\"stack\":\"lingxiloop-knowledge-agent\"},\"uptime\":{\"stack\":\"uptime\"}}",
     "MCP_AUTH_USER_ID": "mcp-admin",
     "AUTH_ALLOWED_HOSTS": "loop.example.com,admin.example.com",
     "APP_VERSION": "test"

@@ -2,20 +2,19 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { z } from 'zod'
 import {
-  arcaneTargetNames,
-  type ArcaneEnv,
-  type ArcaneTargetName,
-  inspectArcaneTarget,
-  listArcaneEvents,
-  listArcaneTargets,
-  readArcaneLogs,
-  runArcaneContainerAction,
-  runArcaneProjectAction,
-} from './arcane'
+  komodoTargetNames,
+  type KomodoEnv,
+  type KomodoTargetName,
+  inspectKomodoTarget,
+  listKomodoTargets,
+  listKomodoUpdates,
+  readKomodoLogs,
+  runKomodoStackAction,
+} from './komodo'
 
 type Identity = { authUserId: string; appUserId: string }
 type AuthSettings = { sessionExpiresIn: number; otpExpiresIn: number; rateLimitWindow: number; rateLimitMax: number }
-export type McpEnvironment = ArcaneEnv & { DB: D1Database; APP_VERSION: string }
+export type McpEnvironment = KomodoEnv & { DB: D1Database; APP_VERSION: string }
 export type McpOperations = {
   platform(path: string, init?: RequestInit): Promise<Response>
   health(): Promise<unknown>
@@ -26,7 +25,7 @@ export type McpOperations = {
 
 const reason = z.string().trim().min(1).max(280)
 const requestId = z.string().uuid()
-const targetName = z.enum(arcaneTargetNames)
+const targetName = z.enum(komodoTargetNames)
 const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true } as const
 const mutating = { readOnlyHint: false, destructiveHint: true, idempotentHint: true } as const
 const sensitiveKey = /(?:authorization|cookie|password|secret|credential|api.?key|prompt|envContent|composeContent|overrideContent|includeFiles|environment$|token(?:Hash|Value)?$)/i
@@ -235,40 +234,34 @@ export async function handleMcpRequest(request: Request, env: McpEnvironment, id
   }, (input) => safe(() => command(env, identity, input, 'agent.runtime.maintenance', 'agent-runtime', input,
     () => operations.platform('/api/admin/agent-runtime/maintenance', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(input) }).then(responseJson))))
 
-  server.registerTool('lingxiloop_arcane_targets', {
+  server.registerTool('lingxiloop_komodo_targets', {
     description: 'List the six exact LingxiLoop production targets available to this MCP.', annotations: readOnly,
-  }, () => safe(async () => listArcaneTargets(env)))
+  }, () => safe(async () => listKomodoTargets(env)))
 
-  server.registerTool('lingxiloop_arcane_inspect', {
-    description: 'Read Arcane project, runtime service, and update state for one allowlisted target.',
+  server.registerTool('lingxiloop_komodo_inspect', {
+    description: 'Read Komodo stack, service, and action state for one allowlisted target.',
     inputSchema: { target: targetName }, annotations: readOnly,
-  }, ({ target }) => safe(() => inspectArcaneTarget(env, target)))
+  }, ({ target }) => safe(() => inspectKomodoTarget(env, target)))
 
-  server.registerTool('lingxiloop_arcane_events', {
-    description: 'Read recent Arcane Event Log entries for an allowlisted target environment.',
+  server.registerTool('lingxiloop_komodo_updates', {
+    description: 'Read recent Komodo updates for an allowlisted stack.',
     inputSchema: { target: targetName, limit: z.number().int().min(1).max(100).default(30) }, annotations: readOnly,
-  }, ({ target, limit }) => safe(() => listArcaneEvents(env, target, limit)))
+  }, ({ target, limit }) => safe(() => listKomodoUpdates(env, target, limit)))
 
-  server.registerTool('lingxiloop_arcane_logs', {
-    description: 'Read a bounded, redacted snapshot of project or project-member container logs.',
-    inputSchema: { target: targetName, containerId: z.string().trim().min(1).max(200).optional(), tail: z.number().int().min(1).max(1000).default(200), sinceSeconds: z.number().int().min(1).max(604_800).optional() }, annotations: readOnly,
+  server.registerTool('lingxiloop_komodo_logs', {
+    description: 'Read a bounded, redacted snapshot of stack logs.',
+    inputSchema: { target: targetName, service: z.string().trim().min(1).max(200).optional(), tail: z.number().int().min(1).max(1000).default(200) }, annotations: readOnly,
   }, (input) => safe(async () => {
     await env.DB.prepare(`INSERT INTO control_audit(id,actor_user_id,action,resource,detail,created_at) VALUES(?,?,?,?,?,?)`)
-      .bind(crypto.randomUUID(), identity.authUserId, 'mcp:arcane.logs.read', `arcane:${input.target}`, JSON.stringify({ containerId: input.containerId ?? null, tail: input.tail, sinceSeconds: input.sinceSeconds ?? null }), Date.now()).run()
-    return readArcaneLogs(env, input.target, input)
+      .bind(crypto.randomUUID(), identity.authUserId, 'mcp:komodo.logs.read', `komodo:${input.target}`, JSON.stringify({ service: input.service ?? null, tail: input.tail }), Date.now()).run()
+    return readKomodoLogs(env, input.target, input)
   }))
 
-  server.registerTool('lingxiloop_arcane_project_action', {
-    description: 'Run an allowlisted project lifecycle or GitOps sync action. Destruction and configuration edits are unavailable.',
-    inputSchema: { requestId, reason, target: targetName, action: z.enum(['up', 'down', 'restart', 'redeploy', 'pull', 'update_services', 'git_sync']), services: z.array(z.string().trim().min(1).max(200)).max(50).optional() }, annotations: mutating,
-  }, (input) => safe(() => command(env, identity, input, `arcane.project.${input.action}`, `arcane:${input.target}`, input,
-    () => runArcaneProjectAction(env, input.target as ArcaneTargetName, input.action, input.services))))
-
-  server.registerTool('lingxiloop_arcane_container_action', {
-    description: 'Start, stop, restart, pause, or unpause a container after verifying it belongs to the allowlisted project.',
-    inputSchema: { requestId, reason, target: targetName, containerId: z.string().trim().min(1).max(200), action: z.enum(['start', 'stop', 'restart', 'pause', 'unpause']) }, annotations: mutating,
-  }, (input) => safe(() => command(env, identity, input, `arcane.container.${input.action}`, `arcane:${input.target}:container:${input.containerId}`, input,
-    () => runArcaneContainerAction(env, input.target as ArcaneTargetName, input.containerId, input.action))))
+  server.registerTool('lingxiloop_komodo_stack_action', {
+    description: 'Deploy, start, stop, or restart an allowlisted Komodo stack. Destruction and configuration edits are unavailable.',
+    inputSchema: { requestId, reason, target: targetName, action: z.enum(['deploy', 'start', 'stop', 'restart']) }, annotations: mutating,
+  }, (input) => safe(() => command(env, identity, input, `komodo.stack.${input.action}`, `komodo:${input.target}`, input,
+    () => runKomodoStackAction(env, input.target as KomodoTargetName, input.action))))
 
   const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true })
   await server.connect(transport)

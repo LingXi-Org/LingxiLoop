@@ -7,7 +7,7 @@ import { updateImageTags } from './update-deployment-images.mjs'
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
 test('production Open Notebook receives only the explicit RAG environment', () => {
-  const compose = read('deploy/arcane/lingxiloop-knowledge-agent/compose.yml')
+  const compose = read('deploy/komodo/lingxiloop-knowledge-agent/compose.yml')
   const service = compose.slice(compose.indexOf('  open-notebook:'))
 
   assert.doesNotMatch(service, /env_file:/)
@@ -115,15 +115,15 @@ test('removed Open Notebook capabilities cannot be re-enabled by deployment conf
   const files = [
     '.env.example',
     'docker-compose.mvp.yml',
-    'deploy/arcane/lingxiloop-knowledge-agent/compose.yml',
+    'deploy/komodo/lingxiloop-knowledge-agent/compose.yml',
   ].map(read).join('\n')
 
   assert.doesNotMatch(files, /OPEN_NOTEBOOK_ENCRYPTION_KEY/)
   assert.doesNotMatch(files, /OPEN_NOTEBOOK_(?:CHAT|STRATEGY|ANSWER|FINAL_ANSWER)_MODEL/)
 })
 
-test('Arcane knowledge services receive writable storage and the control plane URL', () => {
-  const compose = read('deploy/arcane/lingxiloop-knowledge-agent/compose.yml')
+test('Komodo knowledge services receive writable storage and the control plane URL', () => {
+  const compose = read('deploy/komodo/lingxiloop-knowledge-agent/compose.yml')
 
   assert.match(compose, /surrealdb:[\s\S]*?rocksdb:\/home\/nonroot\/open-notebook\.db/)
   assert.match(compose, /SURREAL_PASS: \$\{OPEN_NOTEBOOK_SURREAL_PASSWORD:\?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}/)
@@ -136,24 +136,24 @@ test('Arcane knowledge services receive writable storage and the control plane U
   assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
 })
 
-test('Arcane runs the Worker only on its selected app project', () => {
-  const appA = read('deploy/arcane/lingxiloop-app-a/compose.yml')
-  const appB = read('deploy/arcane/lingxiloop-app-b/compose.yml')
+test('Komodo runs the Worker only on its selected app project', () => {
+  const appA = read('deploy/komodo/lingxiloop-app-a/compose.yml')
+  const appB = read('deploy/komodo/lingxiloop-app-b/compose.yml')
 
   assert.match(appA, /10\.20\.0\.2:5183:5181/)
   assert.doesNotMatch(appA, /^ {2}(?:worker|gateway):/m)
   assert.doesNotMatch(appA, /COMPOSE_PROFILES|profiles:/)
   assert.match(appB, /worker:\r?\n {4}<<: \*runtime/)
-  assert.match(appB, /gateway-native324:\r?\n {4}image: .*lingxiloop-gateway:[0-9a-f]{40}/)
+  assert.match(appB, /gateway:\r?\n {4}image: .*lingxiloop-gateway:[0-9a-f]{40}/)
   assert.match(appB, /127\.0\.0\.1:8081:8080/)
   assert.doesNotMatch(appB, /COMPOSE_PROFILES|profiles:/)
-  assert.doesNotMatch(read('deploy/arcane/lingxiloop-app-b/gateway.Dockerfile'), /COPY website/)
+  assert.doesNotMatch(read('deploy/komodo/lingxiloop-app-b/gateway.Dockerfile'), /COPY website/)
   assert.doesNotMatch(`${appA}\n${appB}`, /AGENT_OS_URL/)
 })
 
 test('the gateway uses the备案 ingress and the Worker uses its admin domain', () => {
-  const gateway = read('deploy/arcane/lingxiloop-app-b/gateway.conf')
-  const core = read('deploy/arcane/lingxiloop-core-state/compose.yml')
+  const gateway = read('deploy/komodo/lingxiloop-app-b/gateway.conf')
+  const core = read('deploy/komodo/lingxiloop-core-state/compose.yml')
   const worker = read('workers/control-plane/wrangler.jsonc')
 
   assert.match(gateway, /server 10\.20\.0\.2:5183/)
@@ -171,19 +171,15 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
   assert.match(worker, /"AUTH_ALLOWED_HOSTS": "loop\.lingxilearn\.cn,admin\.lingxilearn\.cn"/)
 })
 
-test('Arcane control plane and ingress keep management sockets private', () => {
-  const manager = read('deploy/arcane/arcane-manager/compose.yml')
-  const agent = read('deploy/arcane/arcane-agent/compose.yml')
-  const alyIngress = read('deploy/arcane/aly-ingress/compose.yml')
-  const appIngress = read('deploy/arcane/server-b-ingress/compose.yml')
-  const appRoutes = read('deploy/arcane/server-b-ingress/dynamic.yml')
+test('Komodo control plane and ingress keep management sockets private', () => {
+  const manager = read('deploy/komodo/core/compose.yml')
+  const alyIngress = read('deploy/komodo/control-ingress/compose.yml')
+  const appIngress = read('deploy/komodo/server-b-ingress/compose.yml')
+  const appRoutes = read('deploy/komodo/server-b-ingress/dynamic.yml')
 
-  assert.match(manager, /manager:v2\.10\.2/)
-  assert.match(agent, /agent:v2\.10\.2/)
-  assert.match(manager, /127\.0\.0\.1:3552:3552/)
-  assert.match(agent, /EDGE_TRANSPORT: poll/)
-  assert.doesNotMatch(agent, /3553:3553/)
-  assert.match(`${manager}\n${agent}`, /wollomatic\/socket-proxy:1\.13\.1/)
+  assert.match(manager, /komodo-core:2\.3\.3/)
+  assert.match(manager, /127\.0\.0\.1:9120:9120/)
+  assert.doesNotMatch(manager, /docker\.sock/)
   assert.doesNotMatch(`${alyIngress}\n${appIngress}`, /docker\.sock|providers\.docker/)
   assert.match(appIngress, /80:80[\s\S]*443:443/)
   for (const host of ['lingxilearn.cn', 'www.lingxilearn.cn', 'loop.lingxilearn.cn', 'im.lingxilearn.cn', 'openlit.lingxilearn.cn', 'uptime.lingxilearn.cn']) {
@@ -204,8 +200,8 @@ test('main publishes changed images and rolls out a complete immutable release',
   assert.match(workflow, /control:d1:remote[\s\S]*wrangler versions upload[\s\S]*wrangler versions deploy/)
   assert.match(workflow, /control_migrations == 'true'[\s\S]*control:d1:remote/)
   assert.match(workflow, /update-deployment-images\.mjs "\$GITHUB_SHA" \$\{\{ needs\.changes\.outputs\.packages \}\}/)
-  assert.match(workflow, /rollout:[\s\S]*trigger-arcane-git-sync\.mjs/)
-  assert.match(workflow, /ARCANE_GIT_SYNC_WEBHOOK_URLS: \$\{\{ secrets\.ARCANE_GIT_SYNC_WEBHOOK_URLS \}\}/)
+  assert.match(workflow, /rollout:[\s\S]*trigger-komodo-rollout\.mjs/)
+  assert.match(workflow, /KOMODO_WEBHOOK_SECRET: \$\{\{ secrets\.KOMODO_WEBHOOK_SECRET \}\}/)
   assert.match(workflow, /VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEsX5eyOl1nAe5i9/)
   assert.match(serverImage, /ARG VITE_TURNSTILE_SITE_KEY=""[\s\S]*ENV VITE_TURNSTILE_SITE_KEY=\$\{VITE_TURNSTILE_SITE_KEY\}/)
   assert.doesNotMatch(workflow, /RELEASE_HMAC_SECRET|api\/internal\/releases/)
@@ -214,10 +210,10 @@ test('main publishes changed images and rolls out a complete immutable release',
 
 test('all deployable LingxiLoop images use CI-managed unique tags', () => {
   const manifests = [
-    'deploy/arcane/lingxiloop-app-a/compose.yml',
-    'deploy/arcane/lingxiloop-app-b/compose.yml',
-    'deploy/arcane/lingxiloop-core-state/compose.yml',
-    'deploy/arcane/lingxiloop-knowledge-agent/compose.yml',
+    'deploy/komodo/lingxiloop-app-a/compose.yml',
+    'deploy/komodo/lingxiloop-app-b/compose.yml',
+    'deploy/komodo/lingxiloop-core-state/compose.yml',
+    'deploy/komodo/lingxiloop-knowledge-agent/compose.yml',
   ].map(read).join('\n')
   const references = [...manifests.matchAll(/image:\s+\S*lingxiloop-[^:\s]+:([^\s]+)/g)]
   assert.equal(references.length, 5)

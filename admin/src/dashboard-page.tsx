@@ -31,7 +31,7 @@ export function DashboardPage() {
   return <div className="space-y-6">
     <PageHeading title={`你好，${identity.data?.name ?? '管理员'}`} description="欢迎回到管理工作空间。平台运营与服务动态，尽在眼前。" actions={[
       <Button key="refresh" variant="outline" onClick={refresh} disabled={platformQuery.query.isFetching || analyticsQuery.query.isFetching}><RefreshCwIcon />刷新数据</Button>,
-      <Button key="arcane" asChild><a href="https://ops.christmas1314.xyz" target="_blank" rel="noopener noreferrer">Arcane<ArrowUpRightIcon /></a></Button>,
+      <Button key="komodo" asChild><a href="https://ops.christmas1314.xyz" target="_blank" rel="noopener noreferrer">Komodo<ArrowUpRightIcon /></a></Button>,
       <Button key="uptime" asChild variant="outline"><a href="https://uptime.lingxilearn.cn" target="_blank" rel="noopener noreferrer">Uptime<ArrowUpRightIcon /></a></Button>,
     ]} />
     <div className="admin-overview-tabs"><span aria-current="page">运营总览</span><Link to="/observability">AI 分析</Link><time className="ms-auto hidden sm:block">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</time></div>

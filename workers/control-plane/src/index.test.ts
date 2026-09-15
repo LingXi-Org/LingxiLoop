@@ -278,8 +278,8 @@ describe('control-plane trust boundaries', () => {
     expect((await initialized.json() as { result: { serverInfo: { name: string } } }).result.serverInfo.name).toBe('lingxiloop-production-operations')
     const listed = await mcp('tools/list')
     const toolNames = ((await listed.json() as { result: { tools: Array<{ name: string }> } }).result.tools).map((tool) => tool.name)
-    expect(toolNames).toEqual(expect.arrayContaining(['lingxiloop_admin_resource_list', 'lingxiloop_agent_run_cancel', 'lingxiloop_arcane_logs']))
-    const targets = await mcp('tools/call', { name: 'lingxiloop_arcane_targets', arguments: {} }, 2)
+    expect(toolNames).toEqual(expect.arrayContaining(['lingxiloop_admin_resource_list', 'lingxiloop_agent_run_cancel', 'lingxiloop_komodo_logs']))
+    const targets = await mcp('tools/call', { name: 'lingxiloop_komodo_targets', arguments: {} }, 2)
     const targetsBody = await targets.json() as { result: { content: Array<{ text: string }> } }
     expect(Object.keys(JSON.parse(targetsBody.result.content[0]!.text))).toEqual([
       'lingxiloop-core-state', 'lingxiloop-app-a', 'server-b-ingress', 'lingxiloop-app-b', 'lingxiloop-knowledge-agent', 'uptime',
@@ -290,17 +290,17 @@ describe('control-plane trust boundaries', () => {
     fetchMock.get('https://origin.example.com').intercept({ path: '/api/admin/resources/users/user-1', method: 'GET' })
       .reply(200, { name: 'visible', token: 'upstream-token', nested: { prompt: 'private prompt', environment: ['PASSWORD=private'] } })
     fetchMock.get('https://origin.example.com').intercept({ path: '/api/admin/agent-runs/run-1/cancel', method: 'POST' }).reply(200, { cancelled: true })
-    fetchMock.get('https://ops.example.com').intercept({ path: '/api/environments/b/projects/app-b/runtime', method: 'GET' })
-      .reply(200, { data: { runtimeServices: [{ containerId: 'container-1', containerName: 'lingxiloop-app-b-server-1' }] } })
-    fetchMock.get('https://ops.example.com').intercept({ path: '/api/events/environment/b?search=lingxiloop-app-b&sort=createdAt&order=desc&limit=100', method: 'GET' })
-      .reply(200, { data: [{ resourceId: 'container-1', title: 'allowed' }, { resourceId: 'other-project', title: 'blocked' }] })
+    fetchMock.get('https://ops.example.com').intercept({ path: '/read/GetStack', method: 'POST' })
+      .reply(200, { _id: { $oid: 'stack-b' }, name: 'lingxiloop-app-b' })
+    fetchMock.get('https://ops.example.com').intercept({ path: '/read/ListUpdates', method: 'POST' })
+      .reply(200, { updates: [{ target: { type: 'Stack', id: 'stack-b' }, operation: 'DeployStack' }] })
     try {
       const record = await mcp('tools/call', { name: 'lingxiloop_admin_resource_get', arguments: { resource: 'users', id: 'user-1' } }, 3)
       const recordBody = await record.json() as { result: { content: Array<{ text: string }> } }
       expect(JSON.parse(recordBody.result.content[0]!.text)).toEqual({ name: 'visible', token: '[REDACTED]', nested: { prompt: '[REDACTED]', environment: '[REDACTED]' } })
-      const events = await mcp('tools/call', { name: 'lingxiloop_arcane_events', arguments: { target: 'lingxiloop-app-b', limit: 10 } }, 6)
+      const events = await mcp('tools/call', { name: 'lingxiloop_komodo_updates', arguments: { target: 'lingxiloop-app-b', limit: 10 } }, 6)
       const eventsBody = await events.json() as { result: { content: Array<{ text: string }> } }
-      expect(JSON.parse(eventsBody.result.content[0]!.text)).toEqual({ data: [{ resourceId: 'container-1', title: 'allowed' }] })
+      expect(JSON.parse(eventsBody.result.content[0]!.text)).toEqual({ updates: [{ target: { type: 'Stack', id: 'stack-b' }, operation: 'DeployStack' }] })
       const args = { requestId: '11111111-1111-4111-8111-111111111111', reason: 'test recovery', runId: 'run-1' }
       const first = await mcp('tools/call', { name: 'lingxiloop_agent_run_cancel', arguments: args }, 4)
       const firstBody = await first.json() as { result: { content: Array<{ text: string }> } }
