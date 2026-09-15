@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8')
@@ -48,6 +48,13 @@ test('protocol and service errors are mapped at user-visible boundaries', () => 
   assert.doesNotMatch(knowledge, /\?\? source\.stage/)
   assert.match(tool, /userFacingError\(toolPart\.errorText, "工具执行失败，请稍后重试。"\)/)
   assert.match(conversationThread, /userFacingError\(snapshot\.error, '消息加载失败，请稍后重试。'\)/)
+})
+
+test('memory management remains an Agent-only capability', () => {
+  const details = read('../features/chat/components/HarnessDetails.tsx')
+  assert.doesNotMatch(details, /MemoryManager|管理记忆/)
+  assert.equal(existsSync(new URL('../features/chat/components/MemoryManager.tsx', import.meta.url)), false)
+  assert.equal(existsSync(new URL('../features/chat/runtime/memory-api.ts', import.meta.url)), false)
 })
 
 test('browser entry points keep their fixed product copy in Chinese', () => {

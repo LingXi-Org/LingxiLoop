@@ -32,14 +32,12 @@ import { receiveAgentRequest } from '../agent-runtime/receive.js'
 import { approvalView } from '../agent-runtime/delivery.js'
 import { loadRuntimeBinding } from '../agent-runtime/context.js'
 import { presentationsApplication } from '../modules/presentations/public.js'
-import { memoryRouter } from '../modules/memory/router.js'
 import {
   isReadReceiptChannelMember,
   listReadReceiptAdvances,
 } from './read-receipts.js'
 
 export const imRouter = Router()
-imRouter.use('/channels/:id/agents/:agentId/runs/:runId/memory',memoryRouter)
 
 function safe(handler: (req: Request & AuthedRequest, res: Response) => Promise<void>): (req: Request & AuthedRequest, res: Response, next: NextFunction) => void {
   return (req, res, next) => { void handler(req, res).catch(next) }

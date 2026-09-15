@@ -5,7 +5,6 @@ import { harnessApi } from '../runtime/harness-api'
 import { harnessLabel } from '../runtime/harness'
 import type { LingxiMessageMetadata } from '../runtime/model'
 import { chatTransport } from '../runtime/transport'
-import { MemoryManager } from './MemoryManager'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const target = useMemo(() => ({ conversationId: metadata.conversationId, agentId: metadata.senderId, runId: metadata.runId!,
@@ -76,7 +75,6 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
     </details> : null}
     {metadata.harnessControl && <>
       <div className="flex flex-wrap gap-2">
-        <MemoryManager key={target.runId} target={target} />
         {outcome?.status === 'awaiting_approval' && <>
           <Button type="button" size="sm" disabled={busy} onClick={() => void perform(() => chatTransport.resolveApproval(outcome.approvalId,'approved'))}>批准并继续</Button>
           <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => void perform(() => chatTransport.resolveApproval(outcome.approvalId,'denied'))}>拒绝</Button>
