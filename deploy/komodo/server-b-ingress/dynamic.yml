@@ -31,7 +31,7 @@ http:
         servers: [{ url: http://landing:80 }]
     gateway:
       loadBalancer:
-        servers: [{ url: http://gateway-native324:8080 }]
+        servers: [{ url: http://gateway:8080 }]
     openlit:
       loadBalancer:
         servers: [{ url: http://openlit:3000 }]
