@@ -23,7 +23,7 @@ test('production Open Notebook receives only the explicit RAG environment', () =
     'OPENAI_EMBEDDING_MODEL',
   ]) assert.match(service, new RegExp(`${variable}:`))
   assert.match(service, /OPENAI_API_KEY: \$\{OPEN_NOTEBOOK_PASSWORD:\?/)
-  assert.match(service, /OPENAI_BASE_URL: "\$\{LINGXILOOP_CONTROL_PLANE_URL:\?[^}]+}\/internal\/open-notebook\/v1"/)
+  assert.match(service, /OPENAI_BASE_URL: "\$\{LINGXILOOP_PUBLIC_ORIGIN:\?[^}]+}\/internal\/open-notebook\/v1"/)
   assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{OPENAI_EMBEDDING_MODEL:\?/)
 
   assert.match(service, /supervisorctl .* status rag-api/)
@@ -131,7 +131,7 @@ test('Komodo knowledge services receive writable storage and the control plane U
   assert.match(compose, /10\.20\.0\.3:5056:5055/)
   assert.match(compose, /supervisorctl -s unix:\/\/\/tmp\/supervisor\.sock status rag-api/)
   assert.match(compose, /OPEN_NOTEBOOK_WORKER_MAX_TASKS: "1"/)
-  assert.equal((compose.match(/\$\{LINGXILOOP_CONTROL_PLANE_URL:\?/g) ?? []).length, 1)
+  assert.equal((compose.match(/\$\{LINGXILOOP_PUBLIC_ORIGIN:\?/g) ?? []).length, 1)
   assert.doesNotMatch(compose, /^ {2}agent-os:/m)
   assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
 })
