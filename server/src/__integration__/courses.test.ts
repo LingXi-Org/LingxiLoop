@@ -1,3 +1,5 @@
+import { storage } from '../storage.js'
+import type { LearningGrowthLearner } from '../modules/learning/growth-repository.js'
 import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
@@ -600,4 +602,200 @@ test('[integration] removing a course member revokes an existing document WebSoc
   socket.off('message', capture)
   assert.equal(receivedUpdates.length, 0)
   socket.close()
+})
+
+test('[integration] shared vine credits real evidence once, preserves the whole journey and isolates course peers', async () => {
+  await seedCompany()
+  const course = await createCourse('Growth')
+  const otherCourse = await createCourse('Other growth')
+  await inviteAndAccept(course.projectId)
+  const peer = 'u-growth-peer'
+  await pool.query(`INSERT INTO users(id,email,display_name) VALUES($1,'peer@test.local','Peer')`, [peer])
+  await seedUserMembership(peer, 'co-courses', { role: 'STUDENT' })
+  await pool.query(`INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES('co-courses',$1,$2,'STUDENT')`, [course.projectId, peer])
+  await pool.query(
+    `INSERT INTO learning_activities(id,company_id,project_id,title,instructions,kind,status,created_by)
+     SELECT id,'co-courses',$1,id,'Private instructions','PRACTICE','PUBLISHED',$2
+       FROM unnest(ARRAY['growth-a','growth-b','growth-rejected','growth-missing']) id`,
+    [course.projectId, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO learning_knowledge_units(id,company_id,project_id,title,success_criteria,target_level,status,created_by)
+     VALUES('growth-unit','co-courses',$1,'Private objective','Private criteria',3,'PUBLISHED',$2)`,
+    [course.projectId, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO learning_states(company_id,project_id,user_id,knowledge_unit_id,level,status,last_evidence_at)
+     VALUES('co-courses',$1,$2,'growth-unit',3,'VERIFIED','2025-03-01T00:00:00Z')`,
+    [course.projectId, LEARNER],
+  )
+  for (const [id, activity, assistance, status, evaluated] of [
+    ['guided', 'growth-a', 'GUIDED', 'EVALUATED', true],
+    ['hint', 'growth-a', 'HINT', 'EVALUATED', true],
+    ['independent', 'growth-a', 'NONE', 'EVALUATED', true],
+    ['repeat', 'growth-a', 'NONE', 'EVALUATED', true],
+    ['pending', 'growth-b', 'NONE', 'SUBMITTED', false],
+    ['rejected', 'growth-rejected', 'NONE', 'REJECTED', true],
+    ['mismatched', 'growth-missing', 'NONE', 'SUBMITTED', false],
+  ] as const) {
+    await pool.query(
+      `INSERT INTO evidence_records(id,company_id,project_id,level,derivation,kind,subject_user_id,data,created_by_type,created_by_id)
+       VALUES($1,'co-courses',$2,'L1','OBSERVED','activity_submission',$3,'{"answer":"PRIVATE_LEARNER_WORK"}','USER',$3)`,
+      [`evidence-${id}`, course.projectId, id === 'mismatched' ? peer : LEARNER],
+    )
+    await pool.query(
+      `INSERT INTO learning_attempts(id,company_id,project_id,learner_id,activity_id,assistance,evidence_id,status,submitted_at)
+       VALUES($1,'co-courses',$2,$3,$4,$5,$6,$7,'2025-01-01T00:00:00Z')`,
+      [`attempt-${id}`, course.projectId, LEARNER, activity, assistance, `evidence-${id}`, status],
+    )
+    await pool.query(
+      `INSERT INTO learning_evaluations(id,company_id,project_id,attempt_id,demonstrated_level,confidence,evaluator_id,evaluator_kind,status)
+       VALUES($1,'co-courses',$2,$3,2,0.9,$4,'TEACHER',$5)`,
+      [`evaluation-${id}`, course.projectId, `attempt-${id}`, OWNER, evaluated ? 'ACCEPTED' : 'PENDING'],
+    )
+  }
+  await pool.query(
+    `INSERT INTO learning_missions(id,company_id,project_id,learner_id,conversation_id,trigger_client_msg_no,goal,success_criteria,created_by)
+     VALUES('growth-mission','co-courses',$1,$2,$3,'growth-trigger','Private mission','Private criteria',$4)`,
+    [course.projectId, LEARNER, course.studyRoomId, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO learning_mission_steps(id,company_id,project_id,mission_id,kind,description,success_criteria)
+     VALUES('growth-a','co-courses',$1,'growth-mission','PRACTICE','Private step','Private criteria')`,
+    [course.projectId],
+  )
+  await pool.query(
+    `INSERT INTO evidence_records(id,company_id,project_id,level,derivation,kind,subject_user_id,data,created_by_type,created_by_id)
+     VALUES('growth-step-evidence','co-courses',$1,'L1','OBSERVED','mission_work',$2,'{}','USER',$2)`,
+    [course.projectId, LEARNER],
+  )
+  await pool.query(
+    `INSERT INTO learning_attempts(id,company_id,project_id,learner_id,mission_step_id,assistance,evidence_id,status,submitted_at)
+     VALUES('growth-step-attempt','co-courses',$1,$2,'growth-a','HINT','growth-step-evidence','EVALUATED','2025-02-01T00:00:00Z')`,
+    [course.projectId, LEARNER],
+  )
+  await pool.query(
+    `INSERT INTO learning_evaluations(id,company_id,project_id,attempt_id,demonstrated_level,confidence,evaluator_id,evaluator_kind,status)
+     VALUES('growth-step-evaluation','co-courses',$1,'growth-step-attempt',2,0.9,$2,'TEACHER','ACCEPTED')`,
+    [course.projectId, OWNER],
+  )
+  const headers = { 'x-company-id': 'co-courses' }
+  const growth = async (base = learnerUrl, suffix = '') => responseJson<{ data: LearningGrowthLearner[]; nextCursor: string | null }>(
+    await fetch(`${base}/api/projects/${course.projectId}/learning/growth${suffix}`, { headers }),
+  )
+  const initial = await growth()
+  assert.deepEqual(initial, await growth(ownerUrl))
+  assert.deepEqual(initial.data.map(({ learnerId, points, evidenceCount, acceptedCount, independentCount, masteryPoints }) => (
+    { learnerId, points, evidenceCount, acceptedCount, independentCount, masteryPoints }
+  )), [
+    { learnerId: LEARNER, points: 21, evidenceCount: 3, acceptedCount: 2, independentCount: 1, masteryPoints: 9 },
+    { learnerId: peer, points: 0, evidenceCount: 0, acceptedCount: 0, independentCount: 0, masteryPoints: 0 },
+  ])
+  assert.deepEqual(initial.data[0].waypoints, [
+    { position: 6, evidenceCount: 1, objectiveCount: 0 },
+    { position: 7, evidenceCount: 1, objectiveCount: 0 },
+    { position: 12, evidenceCount: 1, objectiveCount: 0 },
+    { position: 21, evidenceCount: 0, objectiveCount: 1 },
+  ])
+  assert.doesNotMatch(JSON.stringify(initial), /PRIVATE_LEARNER_WORK|Private objective|Private instructions|email|feedback|rubric|evidenceId/)
+  await pool.query(`UPDATE learning_evaluations SET status='PENDING' WHERE id IN ('evaluation-independent','evaluation-repeat')`)
+  assert.equal((await growth()).data[0].points, 20)
+  await pool.query(`UPDATE learning_evaluations SET status='PENDING' WHERE id='evaluation-hint'`)
+  assert.equal((await growth()).data[0].points, 19)
+  await pool.query(`UPDATE learning_evaluations SET demonstrated_level=0 WHERE id='evaluation-guided'`)
+  assert.equal((await growth()).data[0].points, 16)
+  await pool.query(`UPDATE learning_evaluations SET status='ACCEPTED',demonstrated_level=2 WHERE id IN ('evaluation-independent','evaluation-repeat','evaluation-hint','evaluation-guided')`)
+  const first = await growth(learnerUrl, '?limit=1')
+  assert.equal(first.data.length, 1)
+  assert.equal(first.nextCursor, LEARNER)
+  const second = await growth(learnerUrl, `?limit=1&cursor=${encodeURIComponent(first.nextCursor!)}`)
+  assert.deepEqual(second.data.map((item) => item.learnerId), [peer])
+  assert.equal(second.nextCursor, null)
+  const invalid = await fetch(`${learnerUrl}/api/projects/${course.projectId}/learning/growth?limit=101`, { headers })
+  assert.equal(invalid.status, 400)
+  const foreign = await fetch(`${learnerUrl}/api/projects/${otherCourse.projectId}/learning/growth`, { headers })
+  assert.equal(foreign.status, 404)
+  await pool.query(
+    `INSERT INTO learning_activities(id,company_id,project_id,title,instructions,kind,status,created_by)
+     SELECT 'growth-extra-'||n,'co-courses',$1,'Practice','','PRACTICE','PUBLISHED',$2 FROM generate_series(1,70) n`,
+    [course.projectId, OWNER],
+  )
+  await pool.query(
+    `INSERT INTO evidence_records(id,company_id,project_id,level,derivation,kind,subject_user_id,data,created_by_type,created_by_id)
+     SELECT 'growth-evidence-'||n,'co-courses',$1,'L1','OBSERVED','activity_submission',$2,'{}','USER',$2 FROM generate_series(1,70) n`,
+    [course.projectId, LEARNER],
+  )
+  await pool.query(
+    `INSERT INTO learning_attempts(id,company_id,project_id,learner_id,activity_id,evidence_id)
+     SELECT 'growth-attempt-'||n,'co-courses',$1,$2,'growth-extra-'||n,'growth-evidence-'||n FROM generate_series(1,70) n`,
+    [course.projectId, LEARNER],
+  )
+  const history = (await growth()).data[0]
+  assert.equal(history.points, 91)
+  assert.equal(history.waypoints.length, 64)
+  assert.equal(history.waypoints.at(-1)?.position, 91)
+  assert.equal(history.waypoints.reduce((count, point) => count + point.evidenceCount, 0), 73)
+  assert.equal(history.waypoints.reduce((count, point) => count + point.objectiveCount, 0), 1)
+
+  await pool.query(`UPDATE company_memberships SET status='SUSPENDED' WHERE company_id='co-courses' AND user_id=$1`, [peer])
+  assert.deepEqual((await growth()).data.map((item) => item.learnerId), [LEARNER])
+  await pool.query(`UPDATE project_memberships SET status='SUSPENDED' WHERE company_id='co-courses' AND project_id=$1 AND user_id=$2`, [course.projectId, LEARNER])
+  assert.deepEqual((await growth(ownerUrl)).data, [])
+  assert.equal((await fetch(`${learnerUrl}/api/projects/${course.projectId}/learning/growth`, { headers })).status, 403)
+})
+
+
+
+test('[integration] profile and course avatars persist, share across views and enforce upload ownership and course lifecycle', async () => {
+  await seedCompany()
+  const course = await createCourse('Avatars')
+  await inviteAndAccept(course.projectId)
+  const headers = { 'content-type': 'application/json', 'x-company-id': 'co-courses' }
+  const changeProfile = (input: unknown, base = ownerUrl) => fetch(`${base}/api/me/avatar`, { method: 'PUT', headers, body: JSON.stringify(input) })
+  const changeCourse = (input: unknown, base = ownerUrl) => fetch(`${base}/api/courses/${course.id}`, { method: 'PATCH', headers, body: JSON.stringify(input) })
+  const generated = await responseJson<{ avatarUrl: string; avatarSeed: string }>(await changeProfile({ seed: 'marbles-test' }))
+  assert.equal(generated.avatarSeed, 'marbles-test')
+  assert.ok(generated.avatarUrl.startsWith('data:image/svg+xml'))
+  assert.equal((await pool.query('SELECT avatar_url FROM participants WHERE id=$1 AND company_id=$2', [OWNER, 'co-courses'])).rows[0].avatar_url, generated.avatarUrl)
+  const me = await responseJson<{ user: { avatarUrl: string; avatarSeed: string } }>(await fetch(`${ownerUrl}/api/auth/me`))
+  assert.deepEqual({ avatarUrl: me.user.avatarUrl, avatarSeed: me.user.avatarSeed }, generated)
+  assert.equal((await changeProfile({ seed: 'other', userId: LEARNER })).status, 400)
+  const courseAvatar = await responseJson<{ avatarUrl: string; avatarSeed: string }>(await changeCourse({ avatar: { seed: 'planets-test' } }))
+  assert.equal(courseAvatar.avatarSeed, 'planets-test')
+  const courseRead = await responseJson<{ avatarUrl: string; avatarSeed: string }>(await fetch(`${learnerUrl}/api/courses/${course.id}`, { headers }))
+  assert.equal(courseRead.avatarUrl, courseAvatar.avatarUrl)
+  const spaces = await responseJson<{ data: Array<{ projectId: string; avatarUrl: string }> }>(await fetch(`${learnerUrl}/api/learning/spaces`, { headers }))
+  assert.equal(spaces.data.find((item) => item.projectId === course.projectId)?.avatarUrl, courseAvatar.avatarUrl)
+  const projects = await responseJson<Array<{ id: string; avatarUrl: string }>>(await fetch(`${learnerUrl}/api/projects`, { headers }))
+  assert.equal(projects.find((item) => item.id === course.projectId)?.avatarUrl, courseAvatar.avatarUrl)
+  assert.equal((await changeCourse({ avatar: { seed: 'forbidden' } }, learnerUrl)).status, 403)
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==', 'base64')
+  const upload = async (mime: string, body: Buffer) => {
+    const signed = await responseJson<{ key: string }>(await fetch(`${ownerUrl}/api/uploads/presign`, {
+      method: 'POST', headers, body: JSON.stringify({ name: 'avatar.png', mime, size: body.length }),
+    }))
+    await storage.put(signed.key, body, mime)
+    return signed.key
+  }
+  const key = await upload('image/png', png)
+  assert.equal((await changeProfile({ key }, learnerUrl)).status, 403)
+  assert.equal((await changeProfile({ key: 'attachments/another-company/unknown.png' })).status, 403)
+  assert.equal((await changeProfile({ key: await upload('image/gif', png) })).status, 415)
+  assert.equal((await changeProfile({ key: await upload('image/png', Buffer.from('not a picture')) })).status, 415)
+  assert.equal((await changeProfile({ key: await upload('image/png', Buffer.alloc(5 * 1024 * 1024 + 1)) })).status, 413)
+  const unchanged = await responseJson<{ user: { avatarUrl: string } }>(await fetch(`${ownerUrl}/api/auth/me`))
+  assert.equal(unchanged.user.avatarUrl, generated.avatarUrl)
+  const uploaded = await responseJson<{ avatarUrl: string; avatarSeed: null }>(await changeProfile({ key }))
+  assert.match(uploaded.avatarUrl, /\/avatars\/co-courses\//)
+  assert.equal(uploaded.avatarSeed, null)
+  const savedCourse = await responseJson<{ avatarUrl: string; avatarSeed: null }>(await changeCourse({ avatar: { key } }))
+  assert.match(savedCourse.avatarUrl, /\/avatars\/co-courses\//)
+  assert.equal(savedCourse.avatarSeed, null)
+  assert.notEqual(savedCourse.avatarUrl, uploaded.avatarUrl)
+  // Changing the still-valid presigned source cannot change an already saved avatar.
+  await storage.put(key, Buffer.from('replacement'), 'image/png')
+  assert.deepEqual(await storage.readObject(new URL(uploaded.avatarUrl).pathname.slice(1)), png)
+  await pool.query("UPDATE projects SET status='READ_ONLY' WHERE id=$1", [course.projectId])
+  assert.equal((await changeCourse({ avatar: { seed: 'readonly' } })).status, 403)
+  assert.equal((await pool.query('SELECT avatar_url FROM projects WHERE id=$1', [course.projectId])).rows[0].avatar_url, savedCourse.avatarUrl)
 })

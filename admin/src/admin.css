@@ -73,6 +73,8 @@ body { margin: 0; background: var(--background); color: var(--foreground); }
 .admin-global-search { inline-size: min(25rem, 36vw); margin-inline-start: auto; }
 .admin-global-search [data-slot="input-group"] { background: var(--muted); border-color: transparent; box-shadow: none; }
 .admin-role-badge { height: 1.75rem; background: var(--card); font-size: .7rem; }
+.admin-header-actions { display: flex; align-items: center; gap: .75rem; margin-inline-start: auto; flex-shrink: 0; }
+.admin-global-search + .admin-header-actions { margin-inline-start: 0; }
 .admin-content { min-height: 0; flex: 1; overflow-y: auto; background: var(--background); padding: clamp(1.25rem, 2.5vw, 2rem) clamp(1rem, 2.5vw, 2rem) calc(1rem + env(safe-area-inset-bottom)); }
 .admin-content > * { width: min(100%, 92rem); margin-inline: auto; }
 .admin-content [data-slot="card"] { min-width: 0; border: 1px solid var(--border); box-shadow: 0 2px 3px #12264403; border-radius: .85rem; }
@@ -158,3 +160,7 @@ body { margin: 0; background: var(--background); color: var(--foreground); }
 .admin-content [data-slot="card-header"] { border-start-start-radius: .85rem; border-start-end-radius: .85rem; }
 
 .admin-shell [data-slot="button"], .admin-login [data-slot="button"], .admin-shell [data-slot="input-group"], .admin-shell [data-slot="input"] { border-radius: .5rem; }
+
+.admin-workspace-tabs { display: flex; flex-wrap: wrap; gap: .5rem; padding-block-end: 1rem; border-block-end: 1px solid var(--border); }
+.admin-table-card { overflow-x: auto; }
+.admin-content details > summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }

@@ -16,6 +16,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { useApp } from '@/stores/app'
 import { CourseAvatar } from '../components/CourseAvatar'
 import type { LearningSpace } from '../contracts'
+import { LearningGrowthVine } from './LearningGrowthVine'
 import type { LearningDashboardSection } from './navigation'
 
 export const LEARNING_SECTION_COPY: Record<
@@ -38,11 +39,13 @@ export function DashboardSectionFrame({
   section,
   breadcrumb,
   headerActions,
+  description,
   children,
 }: {
   space: LearningSpace
   section: LearningDashboardSection
-  breadcrumb?: { root: string; current: string; onBack(): void }
+  breadcrumb?: { root: string; current: ReactNode; onBack(): void }
+  description?: string
   headerActions?: ReactNode
   children: ReactNode
 }) {
@@ -74,23 +77,31 @@ export function DashboardSectionFrame({
     </Button>
   )
 
+  const content = section === 'overview' ? (
+    <div className="space-y-4 @min-[48rem]/learning-grid:space-y-6">
+      <LearningGrowthVine key={`${space.companyId}:${space.projectId}`} space={space} />
+      {children}
+    </div>
+  ) : children
+
   if (isMobile) return (
     <div className="@container/learning-grid flex h-full min-h-0 flex-col bg-muted/20 text-card-foreground">
       <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-6 pt-3">
         <div className="mx-auto max-w-7xl">
           <header className="mb-3 flex flex-wrap items-start gap-3 px-1">
+            <CourseAvatar avatarUrl={space.avatarUrl} courseId={space.courseId ?? space.projectId} title={space.title} size="sm" />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                {breadcrumb ? <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink asChild><Button type="button" variant="link" className="h-auto p-0 text-base" onClick={breadcrumb.onBack}>{breadcrumb.root}</Button></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage className="text-base">{breadcrumb.current}</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb> : <h1 className="font-heading text-lg font-medium text-foreground">{copy.title}</h1>}
+                {breadcrumb ? <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink asChild><Button type="button" variant="link" className="h-auto p-0 text-base" onClick={breadcrumb.onBack}>{breadcrumb.root}</Button></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem>{typeof breadcrumb.current === 'string' ? <BreadcrumbPage>{breadcrumb.current}</BreadcrumbPage> : breadcrumb.current}</BreadcrumbItem></BreadcrumbList></Breadcrumb> : <h1 className="font-heading text-lg font-medium text-foreground">{copy.title}</h1>}
                 <Badge variant="secondary" className="h-5 px-2 text-[10px]">{spaceKindLabel}</Badge>
               </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">{copy.description}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{description ?? copy.description}</p>
             </div>
             {conversationAction}
             {headerActions ? <div className="order-last w-full min-w-0">{headerActions}</div> : null}
           </header>
           <div className="mobile-learning-dashboard [&_.gap-6]:gap-3 [&_.space-y-6]:space-y-3 [&_[data-slot=card]]:gap-4 [&_[data-slot=card]]:rounded-2xl [&_[data-slot=card]]:py-4 [&_[data-slot=card]]:shadow-sm [&_[data-slot=card]]:[--card-spacing:1rem]">
-            {children}
+            {content}
           </div>
         </div>
       </div>
@@ -99,11 +110,11 @@ export function DashboardSectionFrame({
 
   return (
     <div className="@container/learning-grid flex h-full min-h-0 flex-col bg-card text-card-foreground">
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[var(--im-divider-weak)] px-3 @min-[48rem]/learning-grid:gap-3 @min-[48rem]/learning-grid:px-6">
-        <CourseAvatar courseId={space.courseId ?? space.projectId} title={space.title} size="sm" />
+      <header className="flex min-h-14 shrink-0 items-center gap-2 py-1 border-b border-[var(--im-divider-weak)] px-3 @min-[48rem]/learning-grid:gap-3 @min-[48rem]/learning-grid:px-6">
+        <CourseAvatar avatarUrl={space.avatarUrl} courseId={space.courseId ?? space.projectId} title={space.title} size="sm" />
         <div className="min-w-0 flex-1">
-          {breadcrumb ? <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink asChild><Button type="button" variant="link" className="h-auto p-0 text-sm" onClick={breadcrumb.onBack}>{breadcrumb.root}</Button></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage className="max-w-72 truncate text-sm">{breadcrumb.current}</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb> : <h1 className="truncate font-heading text-sm font-medium">{copy.title}</h1>}
-          <p className="sr-only">{copy.description}</p>
+          {breadcrumb ? <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink asChild><Button type="button" variant="link" className="h-auto p-0 text-sm" onClick={breadcrumb.onBack}>{breadcrumb.root}</Button></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem>{typeof breadcrumb.current === 'string' ? <BreadcrumbPage>{breadcrumb.current}</BreadcrumbPage> : breadcrumb.current}</BreadcrumbItem></BreadcrumbList></Breadcrumb> : <h1 className="truncate font-heading text-sm font-medium">{copy.title}</h1>}
+          <p className="text-xs text-muted-foreground">{description ?? copy.description}</p>
         </div>
         {headerActions ? <div className="min-w-0 flex-[2] overflow-hidden">{headerActions}</div> : null}
         {conversationAction}
@@ -112,7 +123,7 @@ export function DashboardSectionFrame({
         </Badge>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-4 @min-[48rem]/learning-grid:p-6">
-        <div className="mx-auto max-w-7xl">{children}</div>
+        <div className="mx-auto max-w-7xl">{content}</div>
       </div>
     </div>
   )

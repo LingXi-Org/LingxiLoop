@@ -8,6 +8,7 @@ import {
   createActivityRequestSchema,
   createObjectivesRequestSchema,
   importLearningActivitiesRequestSchema,
+  learningGrowthQuerySchema,
   learningLearnersQuerySchema,
   learningOverviewQuerySchema,
   learningSpacesQuerySchema,
@@ -67,6 +68,13 @@ classroomRouter.get('/projects/:projectId/learning/overview', safe(async (req, r
   const scope = await requireProjectPermission(req, projectId, 'learning:read')
   const input = parse(learningOverviewQuerySchema.safeParse(req.query))
   res.json(await respond(() => learningApplication.overview(scope, projectId, input.windowDays)))
+}))
+
+classroomRouter.get('/projects/:projectId/learning/growth', safe(async (req, res) => {
+  const projectId = String(req.params.projectId)
+  const scope = await requireProjectPermission(req, projectId, 'learning:read')
+  const input = parse(learningGrowthQuerySchema.safeParse(req.query))
+  res.json(await respond(() => learningApplication.growth(scope, projectId, input)))
 }))
 
 classroomRouter.get('/projects/:projectId/learning/learners', safe(async (req, res) => {

@@ -1,6 +1,7 @@
 export type AdminRecord = Record<string, unknown> & { id: string }
 
 export const FIELD_LABELS: Record<string, string> = {
+  seat_limit: '席位上限', ends_at: '结束时间', current_period_end: '订阅到期', failed_at: '失败时间', channel: '投递渠道', executionMs: '执行耗时', costMicros: '费用（微单位）', createdAt: '创建时间',
   id: '记录编号', name: '名称', title: '标题', display_name: '姓名', email: '邮箱', subject: '主题',
   status: '状态', role: '角色', kind: '类型', type: '类型', description: '描述', summary: '摘要',
   created_at: '创建时间', updated_at: '更新时间', deleted_at: '删除时间', suspended_at: '停用时间',
@@ -31,13 +32,14 @@ export const FIELD_LABELS: Record<string, string> = {
 export function fieldLabel(key: string): string { return FIELD_LABELS[key] ?? key.replaceAll('_', ' ') }
 
 export function recordTitle(record: AdminRecord): string {
-  for (const key of ['display_name', 'name', 'title', 'email', 'subject', 'summary', 'goal', 'model', 'kind']) {
+  for (const key of ['display_name', 'name', 'title', 'email', 'subject', 'summary', 'goal', 'model', 'kind', 'user_id_label', 'project_id_label', 'source_id_label']) {
     if (typeof record[key] === 'string' && record[key]) return String(record[key])
   }
   return record.id
 }
 
 export const STATUS_LABELS: Record<string, string> = {
+  teacher: '教师', student: '学生', processing: '处理中', sending: '发送中', leased: '执行中', waiting: '等待中', partial: '部分完成', blocked: '受阻',
   active: '有效', ready: '已就绪', healthy: '健康', completed: '已完成', success: '成功', succeeded: '成功',
   approved: '已批准', delivered: '已送达', sent: '已发送', verified: '已验证', triggered: '已触发',
   failed: '失败', error: '错误', unhealthy: '异常', down: '离线', 'crash-looping': '反复崩溃',
@@ -87,6 +89,35 @@ export function recordImage(record: AdminRecord): string | undefined {
 // Explicit priorities keep content, credentials and large payloads out of directory columns.
 const RESOURCE_COLUMNS: Record<string, string[]> = {
   users: ['email', 'status', 'last_login_at', 'created_at'],
+  'company-memberships': ['user_id', 'company_id', 'role', 'status'],
+  'project-memberships': ['user_id', 'project_id', 'role', 'status'],
+  'company-invitations': ['email', 'role', 'expires_at', 'created_at'],
+  'project-invitations': ['email', 'expires_at', 'created_at'],
+  'organization-units': ['company_id', 'status', 'created_at'],
+  'governance-policies': ['kind', 'policy_version', 'created_at'],
+  'education-contracts': ['plan_id', 'status', 'seat_limit', 'ends_at'],
+  'organization-seats': ['user_id', 'status', 'assigned_at'],
+  subscriptions: ['plan_id', 'status', 'current_period_end'],
+  'project-transfers': ['source_company_id', 'target_company_id', 'status', 'created_at'],
+  courses: ['company_id', 'project_id', 'created_at'],
+  'knowledge-units': ['status', 'project_id', 'created_at'],
+  'learning-activities': ['status', 'project_id', 'created_at'],
+  'learning-missions': ['status', 'project_id', 'created_at'],
+  'learning-cases': ['user_id', 'status', 'created_at'],
+  'evidence-records': ['kind', 'project_id', 'created_at'],
+  'trust-snapshots': ['audience_level', 'dataset_release', 'created_at'],
+  participants: ['kind', 'company_id', 'status', 'updated_at'],
+  'agent-routines': ['agent_id', 'status', 'created_at'],
+  'agent-deliveries': ['channel', 'company_id', 'error', 'failed_at'],
+  conversations: ['kind', 'company_id', 'project_id', 'created_at'],
+  documents: ['company_id', 'project_id', 'updated_at'],
+  canvases: ['status', 'project_id', 'created_at'],
+  presentations: ['status', 'project_id', 'created_at'],
+  'notification-deliveries': ['status', 'recipient_user_id', 'error', 'created_at'],
+  'knowledge-sources': ['kind', 'status', 'project_id', 'created_at'],
+  'knowledge-jobs': ['source_id', 'status', 'last_error', 'created_at'],
+  'audit-events': ['kind', 'user_id', 'company_id', 'created_at'],
+  'webhook-receipts': ['event_type', 'error', 'received_at'],
   companies: ['type', 'status', 'plan_id', 'created_at'],
   projects: ['kind', 'status', 'company_id', 'created_at'],
   'llm-calls': ['status', 'input_tokens', 'output_tokens', 'duration_ms', 'created_at'],
@@ -97,9 +128,8 @@ const RESOURCE_COLUMNS: Record<string, string[]> = {
   'calendar-events': ['status', 'start_at', 'end_at', 'project_id'],
 }
 
-export function recordColumns(rows: AdminRecord[], resource = ''): string[] {
-  const priorities = RESOURCE_COLUMNS[resource] ?? ['email', 'status', 'transport_status', 'role', 'kind', 'type', 'model', 'company_id', 'project_id', 'user_id', 'agent_id', 'plan_id', 'purpose', 'operation', 'event_type', 'created_at', 'started_at', 'updated_at', 'received_at', 'submitted_at', 'assigned_at']
-  return priorities.filter((key) => rows.some((row) => key in row)).slice(0, 5)
+export function recordColumns(_rows: AdminRecord[], resource = ''): string[] {
+  return RESOURCE_COLUMNS[resource] ?? ['status', 'company_id', 'project_id', 'created_at']
 }
 
 export function accountStatus(record: AdminRecord): string {

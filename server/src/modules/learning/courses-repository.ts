@@ -11,6 +11,7 @@ export async function listCourses(db: Queryable, companyId: string, userId: stri
             course.study_room_conversation_id AS "studyRoomId",course.created_at AS "createdAt",
             project.id AS "projectId",project.kind AS "projectKind",
             project.name,project.description,project.color,project.status,
+            project.avatar_url AS "avatarUrl",project.avatar_seed AS "avatarSeed",
             project.created_at AS "projectCreatedAt",project.updated_at AS "updatedAt",
             LOWER(company_member.role) AS "companyRole",
             CASE WHEN company_member.is_admin THEN 'teacher'
@@ -123,6 +124,7 @@ export async function findCourse(db: Queryable, courseId: string, companyId: str
     `SELECT course.id,course.company_id AS "companyId",course.project_id AS "projectId",
             course.created_by AS "createdBy",course.study_room_conversation_id AS "studyRoomId",
             project.name,project.description,project.color,project.status,
+            project.avatar_url AS "avatarUrl",project.avatar_seed AS "avatarSeed",
             project.kind AS "projectKind",
             LOWER(company_member.role) AS "companyRole",
             CASE WHEN company_member.is_admin THEN 'teacher'
@@ -176,12 +178,17 @@ export async function courseManager(
 
 export async function updateCourseMetadata(db: Queryable, args: {
   courseId: string; companyId: string; projectId: string; patch: UpdateCourseInput
+  avatar?: { avatarSeed: string | null; avatarUrl: string }
 }): Promise<void> {
   const values: unknown[] = []
   const sets: string[] = []
   for (const [field, column] of Object.entries({ name: 'name', description: 'description', color: 'color' }) as Array<[keyof UpdateCourseInput, string]>) {
     if (!Object.hasOwn(args.patch, field)) continue
     values.push(args.patch[field]); sets.push(`${column}=$${values.length}`)
+  }
+  if (args.avatar) {
+    values.push(args.avatar.avatarSeed); sets.push(`avatar_seed=$${values.length}`)
+    values.push(args.avatar.avatarUrl); sets.push(`avatar_url=$${values.length}`)
   }
   values.push(args.projectId, args.companyId)
   await db.query(

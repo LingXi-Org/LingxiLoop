@@ -10,6 +10,8 @@ export interface LearningSpaceRow {
   courseId: string | null
   title: string
   description: string
+  avatarUrl?: string | null
+  avatarSeed?: string | null
   color: string | null
   status: ProjectStatus
   perspective: 'learner' | 'teacher'
@@ -43,6 +45,7 @@ export async function listLearningSpaceRows(
      SELECT project.company_id AS "companyId",project.id AS "projectId",
             project.kind AS "projectKind",course.id AS "courseId",project.name AS title,
             project.description,project.color,project.status,
+            project.avatar_url AS "avatarUrl",project.avatar_seed AS "avatarSeed",
             CASE WHEN authorized_scope."projectRole" = 'TEACHER'
                  THEN 'teacher' ELSE 'learner' END AS perspective,
             (authorized_scope."projectRole" = 'TEACHER') AS "roleCanManage",

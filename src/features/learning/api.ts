@@ -11,6 +11,7 @@ import type {
   LearningDashboard,
   LearningDelivery,
   LearningEvidence,
+  LearningGrowthLearner,
   LearningMission,
   LearningNotificationPreferences,
   LearningObjective,
@@ -38,8 +39,8 @@ export const learningApi = {
       headers: companyId ? { 'x-company-id': companyId } : undefined,
       body: JSON.stringify(input),
     }),
-  updateCourse: (courseId: string, input: { name?: string; description?: string; color?: string }) =>
-    http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  updateCourse: (courseId: string, input: { name?: string; description?: string; color?: string; avatar?: { seed: string } | { key: string } }) =>
+    http<{ ok: true; avatarUrl?: string; avatarSeed?: string | null }>(`/courses/${encodeURIComponent(courseId)}`, { method: 'PATCH', body: JSON.stringify(input) }),
   listCourseMembers: (courseId: string) =>
     http<ApiCourseMember[]>(`/courses/${encodeURIComponent(courseId)}/members`),
   updateCourseMember: (courseId: string, userId: string, role: 'teacher' | 'learner') =>
@@ -64,6 +65,14 @@ export const learningApi = {
   },
   getOverview: (projectId: string, windowDays = 30) =>
     http<LearningOverview>(`/projects/${encodeURIComponent(projectId)}/learning/overview?windowDays=${windowDays}`),
+  getGrowth: (projectId: string, input: { cursor?: string; signal?: AbortSignal } = {}) => {
+    const params = new URLSearchParams({ limit: '100' })
+    if (input.cursor) params.set('cursor', input.cursor)
+    return http<CursorPage<LearningGrowthLearner>>(
+      `/projects/${encodeURIComponent(projectId)}/learning/growth?${params}`,
+      { signal: input.signal },
+    )
+  },
   listLearners: (projectId: string, input: {
     cursor?: string
     limit?: number

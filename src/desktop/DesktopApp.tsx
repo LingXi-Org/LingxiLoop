@@ -227,7 +227,7 @@ export function DesktopApp() {
         />}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)]">
         {!isMobile && <div className="omb-drag flex h-5 shrink-0 items-center justify-center gap-1 px-2 text-accent-foreground" data-workspace-titlebar>
-          {activeWorkspace && <CourseAvatar courseId={activeWorkspace.id} title={activeWorkspace.name} size="sm" className="!size-3 rounded-sm [&_[data-slot=avatar-fallback]]:rounded-sm [&_[data-slot=avatar-image]]:rounded-sm" />}
+          {activeWorkspace && <CourseAvatar avatarUrl={activeWorkspace.avatarUrl} courseId={activeWorkspace.courseId ?? activeWorkspace.id} title={activeWorkspace.name} size="sm" className="!size-3 rounded-sm [&_[data-slot=avatar-fallback]]:rounded-sm [&_[data-slot=avatar-image]]:rounded-sm" />}
           <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeProjectName}</span>
         </div>}
         <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">

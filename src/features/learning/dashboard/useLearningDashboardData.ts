@@ -146,6 +146,7 @@ export function useLearningDashboardData(
     refreshResources,
     refreshAll: async () => {
       await Promise.all([refreshOverview(), refreshResources()])
+      window.dispatchEvent(new Event('lingxiloop:growth-updated'))
     },
   }
 }

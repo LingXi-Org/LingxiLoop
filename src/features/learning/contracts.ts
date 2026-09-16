@@ -2,6 +2,8 @@ import type { ApiInvitationPreviewStatus } from '@/features/companies/contracts'
 import type { ProjectKind, ProjectStatus } from '@/types'
 
 export interface ApiCourse {
+  avatarUrl?: string | null
+  avatarSeed?: string | null
   id: string
   companyId: string
   projectId: string
@@ -74,6 +76,8 @@ export interface ApiProjectInvitationAccept {
 export type LearningRole = 'teacher' | 'learner'
 
 export interface LearningSpace {
+  avatarUrl?: string | null
+  avatarSeed?: string | null
   companyId: string
   projectId: string
   projectKind: ProjectKind
@@ -106,6 +110,24 @@ export interface CursorPage<T> {
 export interface LearningCountByLevel {
   level: number
   count: number
+}
+
+export interface LearningGrowthWaypoint {
+  position: number
+  evidenceCount: number
+  objectiveCount: number
+}
+
+export interface LearningGrowthLearner {
+  learnerId: string
+  displayName: string
+  avatarUrl: string | null
+  points: number
+  evidenceCount: number
+  acceptedCount: number
+  independentCount: number
+  masteryPoints: number
+  waypoints: LearningGrowthWaypoint[]
 }
 
 export interface LearningCountByStatus {

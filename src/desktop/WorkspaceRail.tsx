@@ -71,7 +71,8 @@ function WorkspaceRailItem({ workspace, active, pending, onSelect }: {
           />
           <CourseAvatar
             key={workspace.id}
-            courseId={workspace.id}
+            courseId={workspace.courseId ?? workspace.id}
+            avatarUrl={workspace.avatarUrl}
             title={workspace.name}
             className={cn(
               'size-9 rounded-lg transition-transform duration-150 group-active:scale-95 [&_[data-slot=avatar-fallback]]:rounded-lg [&_[data-slot=avatar-image]]:rounded-lg',

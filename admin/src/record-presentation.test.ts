@@ -10,8 +10,8 @@ import { accountStatus, formatValue, recordColumns, recordImage, recordTitle, re
 test('resource directories select useful columns without exposing raw payloads', () => {
   const user = { id: 'user-1', display_name: '林溪', email: 'lin@example.test', password_hash: 'private', data: { large: true }, created_at: '2026-09-06T00:00:00Z' }
   assert.equal(recordTitle(user), '林溪')
-  assert.deepEqual(recordColumns([user]), ['email', 'created_at'])
-  assert.deepEqual(recordColumns([]), [])
+  assert.deepEqual(recordColumns([user], 'users'), ['email', 'status', 'last_login_at', 'created_at'])
+  assert.deepEqual(recordColumns([], 'users'), recordColumns([user], 'users'))
   assert.equal(recordTitle({ id: 'untitled', name: { unexpected: true } }), 'untitled')
   assert.deepEqual([statusTone('ACTIVE'), statusTone('FAILED'), statusTone('deploying'), statusTone('new-state')], ['success', 'danger', 'warning', 'neutral'])
   assert.deepEqual([accountStatus({ id: 'a' }), accountStatus({ id: 'b', suspended_at: '2026-09-01' }), accountStatus({ id: 'c', suspended_at: '2026-09-01', deleted_at: '2026-09-02' })], ['active', 'suspended', 'deleted'])
@@ -41,11 +41,26 @@ test('detail values use semantic fields and escape user content instead of rende
   assert.match(html, /有效/)
   assert.match(html, /&lt;script&gt;/)
   assert.doesNotMatch(html, /<script>|<pre>/)
-  assert.match(html, /resources\/companies\/company%2Fa/)
+  assert.match(html, /organizations\/companies\/company%2Fa/)
   assert.match(html, /启用/)
 })
 
 test('missing and invalid numeric data stay distinct from successful results', () => {
   assert.deepEqual([formatValue(null), formatValue(false), formatValue(0), formatValue({ nested: true }), formatValue([1, 2])], ['—', '否', '0', '1 项属性', '2 项内容'])
   assert.deepEqual([metricNumber({ count: '12' }, 'count'), metricNumber({ count: 'invalid' }, 'count'), metricNumber({}, 'count')], [12, 0, 0])
+})
+
+
+test('workspace navigation preserves every resource under a business owner', async () => {
+  const { ADMIN_RESOURCES } = await import('./resources.js')
+  const { WORKSPACES, recordPath, resourceArea, relationGroups, listParameters } = await import('./workspace-model.js')
+  assert.equal(WORKSPACES.length, 6)
+  for (const resource of ADMIN_RESOURCES) {
+    assert.ok(WORKSPACES.some(item => item.path === resourceArea(resource.name)))
+    assert.ok(recordPath(resource.name, 'id/a').endsWith('/id%2Fa'))
+  }
+  assert.deepEqual(relationGroups('users'), { '组织与项目': ['company-memberships', 'project-memberships'], '订阅': ['subscriptions'] })
+  assert.equal(recordPath('companies'), '/organizations')
+  assert.equal(recordPath('knowledge-jobs'), '/projects/knowledge-jobs')
+  assert.equal(listParameters(new URLSearchParams('tab=学习&search=示例&companyId=other&cursor=MjA&previous=-'), { companyId: 'owner' }).toString(), 'search=%E7%A4%BA%E4%BE%8B&companyId=owner&cursor=MjA')
 })

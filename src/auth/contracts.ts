@@ -12,6 +12,8 @@ export type CompanyStatus =
   | 'OFFBOARDED' | 'RETENTION' | 'ARCHIVED' | 'DELETED'
 
 export interface AuthUser {
+  avatarUrl?: string | null
+  avatarSeed?: string | null
   id: string
   email: string
   name: string

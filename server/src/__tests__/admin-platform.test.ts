@@ -35,7 +35,9 @@ test('admin resource lists enforce bounds and return an opaque next cursor', asy
   assert.equal(calls[0]!.params[0], '%lingxi%')
 
   await assert.rejects(() => listAdminResources(db, 'companies', { limit: '101' }), /between 1 and 100/)
-  await assert.rejects(() => listAdminResources(db, 'knowledge-jobs', { companyId: 'tenant' }), /not available/)
+  await listAdminResources(db, 'users', { companyId: 'tenant' })
+  assert.match(calls.at(-2)!.sql, /EXISTS \(SELECT 1 FROM company_memberships/)
+  assert.ok(calls.at(-2)!.params.includes('tenant'))
   await assert.rejects(() => listAdminResources(db, 'companies', { cursor: 'not-a-cursor' }), /invalid cursor/)
 })
 
@@ -51,7 +53,7 @@ test('native delivery operations page failures and retry only a validated identi
     data: [{ id: '["event","one"]' },{ id: '["event","two"]' }],
     nextCursor: Buffer.from('6').toString('base64url'),
   })
-  assert.deepEqual(calls[0]?.params,[null,null,3,4])
+  assert.deepEqual(calls[0]?.params,[null,null,3,4,null])
   assert.equal(await retryNativeDelivery(db,'["event","event-1"]'),true)
   assert.match(calls[1]?.sql ?? '',/agent_native_event_outbox/)
   assert.equal(await retryNativeDelivery(db,'["ingress","message-1","agent-1"]'),true)
@@ -167,4 +169,61 @@ test('platform Agent operations resolve the authoritative run identity', async (
     { approvalId: 'approval-1', runId: 'run-1', approved: true })
   assert.deepEqual(calls.find(([name]) => name === 'revise')?.[1], [identity, 'new direction'])
   assert.deepEqual(calls.find(([name]) => name === 'readApproval')?.[1], { approvalId: 'approval-1', tenantId: 'company-1', principalId: 'user-1' })
+})
+
+
+test('admin association filters are exact, validated and preserve knowledge ownership', async () => {
+  const calls: Array<{ sql: string; params: readonly unknown[] }> = []
+  const db = { query: async (sql: string, params: readonly unknown[] = []) => {
+    calls.push({ sql, params })
+    return { rows: sql.includes('COUNT(*)') ? [{ total: 0 }] : [] }
+  } } as unknown as Queryable
+  await listAdminResources(db, 'company-memberships', { userId: 'u-1' })
+  assert.match(calls[0].sql, /item.user_id=\$1/)
+  assert.equal(calls[0].params[0], 'u-1')
+  calls.length = 0
+  await listAdminResources(db, 'knowledge-jobs', { companyId: 'co-a', projectId: 'p-a', sourceId: 's-a' })
+  assert.match(calls[0].sql, /EXISTS \(SELECT 1 FROM knowledge_sources source WHERE source.id=item.source_id AND source.company_id=\$2 AND source.project_id=\$3\)/)
+  assert.deepEqual(calls[0].params.slice(0, 3), ['s-a', 'co-a', 'p-a'])
+  calls.length = 0
+  await listAdminResources(db, 'users', { status: 'suspended' })
+  assert.match(calls[0].sql, /item.deleted_at IS NULL AND item.suspended_at IS NOT NULL/)
+  await assert.rejects(() => listAdminResources(db, 'users', { status: 'ACTIVE' }), /invalid user status/)
+  await assert.rejects(() => listAdminResources(db, 'users', { userId: 'u' }), /user filter/)
+  await assert.rejects(() => listAdminResources(db, 'users', { search: ['bad'] } as never), /invalid resource filters/)
+  await assert.rejects(() => listAdminResources(db, 'toString', {}), /not found/)
+})
+
+test('admin record names resolve in batches and secret fields remain omitted', async () => {
+  const calls: string[] = []
+  const db = { query: async (sql: string) => {
+    calls.push(sql)
+    if (sql.startsWith('SELECT id,name')) return { rows: [{ id: 'co-a', label: 'School A' }] }
+    if (sql.includes('COUNT(*)')) return { rows: [{ total: 2 }] }
+    return { rows: [{ data: { id: 'p-1', company_id: 'co-a' } }, { data: { id: 'p-2', company_id: 'co-a' } }] }
+  } } as unknown as Queryable
+  const result = await listAdminResources(db, 'projects', {})
+  assert.deepEqual(result.data.map(row => row.company_id_label), ['School A', 'School A'])
+  assert.equal(calls.filter(sql => sql.startsWith('SELECT id,name')).length, 1)
+  assert.match(calls[0], /to_jsonb\(item\)-/)
+})
+
+
+test('administrator command auditing accepts Chinese reasons in JSON bodies', async (context) => {
+  const { pool } = await import('../db/pool.js')
+  const { platformAdminCommandAuditMiddleware } = await import('../modules/platform-operations/command-audit.js')
+  let detail: Record<string, unknown> | undefined
+  context.mock.method(pool, 'query', async (sql: string, values: unknown[] = []) => {
+    if (sql.startsWith('INSERT INTO audit_events')) detail = JSON.parse(String(values[5]))
+    return { rows: [{ id: 'admin', email: 'admin@example.test', display_name: 'Admin' }] }
+  })
+  let finished = () => {}
+  let nextCalled = false
+  platformAdminCommandAuditMiddleware({ method: 'POST', authUserId: 'admin', path: '/projects/p/archive', headers: {}, socket: {}, body: { reason: '  中文操作原因  ' } } as never,
+    { statusCode: 200, on: (_event: string, callback: () => void) => { finished = callback } } as never,
+    () => { nextCalled = true })
+  assert.equal(nextCalled, true)
+  finished()
+  await new Promise<void>(resolve => setImmediate(resolve))
+  assert.deepEqual(detail, { method: 'POST', path: '/projects/p/archive', projectId: null, reason: '中文操作原因', status: 200 })
 })

@@ -1,3 +1,4 @@
+import { avatarInputSchema } from '../identity/contracts.js'
 import { z } from 'zod'
 
 // Data-only public contract used by Company onboarding without loading the
@@ -11,6 +12,7 @@ export const createCourseRequestSchema = z.object({
 }).strict()
 
 export const updateCourseRequestSchema = z.object({
+  avatar: avatarInputSchema.optional(),
   name: z.string().trim().min(1, 'name required').max(80).optional(),
   description: z.string().trim().max(1000).optional(),
   color: z.string().max(200).optional(),
@@ -39,6 +41,11 @@ export const learningSpacesQuerySchema = z.object({
 
 export const learningOverviewQuerySchema = z.object({
   windowDays: z.coerce.number().int().min(1).max(365).default(30),
+}).strict()
+
+export const learningGrowthQuerySchema = z.object({
+  cursor: z.string().min(1).max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(100),
 }).strict()
 
 const queryBooleanSchema = z.union([z.boolean(), z.enum(['true', 'false'])])

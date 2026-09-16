@@ -35,6 +35,7 @@ export async function listProjects(db: Queryable, companyId: string, userId: str
   const { rows } = await db.query<Record<string, unknown> & { id: string }>(
     `SELECT project.id,project.company_id AS "companyId",project.kind,project.plan_id AS "planId",
             project.name,project.description,project.color,project.status,
+            project.avatar_url AS "avatarUrl",project.avatar_seed AS "avatarSeed",
             project.created_by AS "createdBy",project.is_default AS "isDefault",
             project.created_at AS "createdAt",project.updated_at AS "updatedAt",
             project.archived_at AS "archivedAt",visit.visited_at AS "lastVisitedAt",

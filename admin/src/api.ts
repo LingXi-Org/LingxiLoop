@@ -10,6 +10,26 @@ import type {
   HttpError,
 } from '@refinedev/core'
 import { createAuthClient } from 'better-auth/react'
+import { QueryClient } from '@tanstack/react-query'
+import { useSyncExternalStore } from 'react'
+
+export const adminQueryClient = new QueryClient()
+export interface ManagementSession { mode: 'platform' | 'company'; companyId: string | null; companyName?: string; capabilities: Record<string, boolean>; resources?: string[]; user: { id: string; name: string; email: string } }
+let management: ManagementSession | null = null
+const listeners = new Set<() => void>()
+function setManagement(value: ManagementSession | null) { management = value; for (const listener of listeners) listener() }
+export function useManagementSession() { return useSyncExternalStore(callback => { listeners.add(callback); return () => { listeners.delete(callback) } }, () => management) }
+export function canReadResource(resource: string) { return management?.mode === 'platform' || management?.resources?.includes(resource) === true }
+export function managementPath(path: string) {
+  if (management?.mode !== 'company') return path
+  return /^\/(companies|projects)\//.test(path) ? `/control/company/business${path}` : path.replace('/control/platform', '/control/company')
+}
+export async function refreshManagementSession() {
+  const session = await adminFetch<ManagementSession>('/control/management-session')
+  if (management && (management.mode !== session.mode || management.companyId !== session.companyId || management.user.id !== session.user.id)) adminQueryClient.clear()
+  setManagement(session)
+  return session
+}
 
 export const API_URL = '/api'
 export const adminAuthClient = createAuthClient({ baseURL: location.origin, basePath: '/api/auth' })
@@ -19,10 +39,17 @@ function httpError(statusCode: number, message: string): HttpError {
 }
 
 export async function adminFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  path = managementPath(path)
   const headers = new Headers(init.headers)
   headers.set('content-type', 'application/json')
   const response = await fetch(`${API_URL}${path}`, { ...init, credentials: 'include', headers })
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      setManagement(null)
+      await adminQueryClient.cancelQueries()
+      adminQueryClient.clear()
+      if (location.pathname !== '/login' && location.pathname !== '/forbidden') location.replace(response.status === 401 ? '/login' : '/forbidden')
+    }
     const payload = await response.json().catch(() => null) as { error?: string } | null
     throw httpError(response.status, payload?.error ?? `${response.status} ${response.statusText}`)
   }
@@ -86,19 +113,16 @@ export const authProvider: AuthProvider = {
     return response.ok ? { success: true, redirectTo: '/login' } : { success: false, error: httpError(response.status, payload.error ?? '注册失败') }
   },
   logout: async () => {
+    setManagement(null); adminQueryClient.clear()
     await adminAuthClient.signOut()
     return { success: true, redirectTo: '/login' }
   },
   check: async () => {
-    const session = await adminAuthClient.getSession()
-    if (!session.data) return { authenticated: false, redirectTo: '/login' }
-    const role = (session.data.user as { role?: string }).role
-    if (role !== 'admin') return { authenticated: false, redirectTo: '/forbidden', logout: false }
-    return { authenticated: true }
+    try { await refreshManagementSession(); return { authenticated: true } }
+    catch (error) { return { authenticated: false, redirectTo: (error as HttpError).statusCode === 401 ? '/login' : '/forbidden', logout: false } }
   },
   getIdentity: async () => {
-    const session = await adminAuthClient.getSession()
-    return session.data?.user ?? null
+    return management?.user ?? null
   },
   onError: async (error) => {
     const status = (error as HttpError).statusCode
@@ -110,6 +134,11 @@ export const authProvider: AuthProvider = {
 
 export const accessControlProvider: AccessControlProvider = {
   can: async ({ resource, action }) => {
+    if (management?.mode === 'company') {
+      if (action === 'list' || action === 'show') return { can: !!resource && canReadResource(resource) }
+      if (resource === 'companies') return { can: management.capabilities[({ activate: 'activateCompany', 'enter-read-only': 'readOnlyCompany', archive: 'archiveCompany' } as Record<string, string>)[action]] === true }
+      return { can: resource === 'projects' || resource === 'agent-runs' && action === 'retry' }
+    }
     const session = await adminAuthClient.getSession()
     if ((session.data?.user as { role?: string } | undefined)?.role !== 'admin') return { can: false, reason: '需要 D1 管理员角色' }
     if (action === 'list' || action === 'show') return { can: true }

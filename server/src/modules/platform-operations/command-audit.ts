@@ -27,9 +27,11 @@ export function platformAdminCommandAuditMiddleware(
           method: request.method,
           path: request.path,
           projectId: typeof request.headers['x-project-id'] === 'string' ? request.headers['x-project-id'] : null,
-          reason: typeof request.headers['x-platform-admin-reason'] === 'string'
-            ? request.headers['x-platform-admin-reason'].slice(0, 280)
-            : null,
+          reason: typeof request.body?.reason === 'string'
+            ? request.body.reason.trim().slice(0, 280)
+            : typeof request.headers['x-platform-admin-reason'] === 'string'
+              ? request.headers['x-platform-admin-reason'].slice(0, 280)
+              : null,
           status: response.statusCode,
         },
       })

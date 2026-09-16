@@ -1,3 +1,4 @@
+import { prepareAvatar } from '../identity/public.js'
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { type ProjectKind, projectKindBelongsToCompanyType } from '../../domain/public.js'
@@ -32,6 +33,7 @@ import {
 } from './curriculum-application.js'
 import {
   learningAttemptDetail,
+  learningGrowth,
   learningLearnerDetail,
   learningOverview,
   listLearningLearners,
@@ -153,6 +155,10 @@ export class LearningApplication {
 
   overview(scope: LearningScope, projectId: string, windowDays: number) {
     return learningOverview(this.db, scope, projectId, windowDays)
+  }
+
+  growth(scope: LearningScope, projectId: string, input: { cursor?: string; limit: number }) {
+    return learningGrowth(this.db, scope, projectId, input)
   }
 
   learners(scope: LearningScope, projectId: string, input: LearningLearnersQuery) {
@@ -293,9 +299,10 @@ export class LearningApplication {
   }
 
   async updateCourse(userId: string, courseId: string, patch: UpdateCourseInput) {
-    await this.infrastructure.transaction(async (db) => {
+    const avatar = await this.infrastructure.transaction(async (db) => {
       const manager = await this.manager(userId, courseId, 'course:update', db, true)
-      await updateCourseMetadata(db, { courseId, companyId: manager.companyId, projectId: manager.projectId, patch })
+      const avatar = patch.avatar ? await prepareAvatar(db, { companyId: manager.companyId, userId }, patch.avatar, 'course') : undefined
+      await updateCourseMetadata(db, { courseId, companyId: manager.companyId, projectId: manager.projectId, patch, avatar })
       await this.infrastructure.auditInTransaction(db, {
         kind: 'course_update', userId, companyId: manager.companyId,
         detail: { courseId, ...patch },
@@ -306,8 +313,9 @@ export class LearningApplication {
         kind: 'course_metadata.sync',
         payload: { projectId: manager.projectId, studyRoom: patch.name !== undefined },
       })
+      return avatar
     })
-    return { ok: true as const }
+    return { ok: true as const, ...avatar }
   }
 
   async members(userId: string, courseId: string) {

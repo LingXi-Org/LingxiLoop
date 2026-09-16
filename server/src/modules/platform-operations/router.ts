@@ -14,6 +14,7 @@ import { audit } from '../identity/public.js'
 import { platformApplication } from '../platform/facade.js'
 import { requirePlatformAdmin, type PlatformAdminIdentity } from './authorization.js'
 import {
+  resourceSummary,
   adminResourceCatalog,
   cursorOffset,
   getAdminResource,
@@ -43,6 +44,7 @@ const continuationSchema = commandSchema.extend({ inputId: z.string().trim().min
   requestVersion: z.number().int().positive(), text: z.string().trim().min(1).max(8000) }).strict()
 const INLINE_CONTENT_LIMIT = 100_000
 const runQuerySchema = z.object({
+  period: z.literal('24h').optional(),
   companyId: z.string().trim().min(1).max(200).optional(),
   search: z.string().trim().max(200).optional(), cursor: z.string().max(5000).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50), sort: z.enum(['newest','oldest','id']).optional(),
@@ -118,7 +120,7 @@ adminRouter.get('/resources', (_request, response) => {
 })
 
 adminRouter.get('/dashboard', safe(async (_request, response) => {
-  const [counts, failures, recentAudit, dependencies, operations] = await Promise.all([
+  const [counts, failures, recentAudit, dependencies, operations] = await Promise.allSettled([
     pool.query<{
       users: number
       companies: number
@@ -127,25 +129,29 @@ adminRouter.get('/dashboard', safe(async (_request, response) => {
           (SELECT COUNT(*)::int FROM users WHERE deleted_at IS NULL) AS users,
           (SELECT COUNT(*)::int FROM companies WHERE status<>'DELETED') AS companies,
           (SELECT COUNT(*)::int FROM projects WHERE status<>'DELETED') AS projects`),
-    pool.query<{ failed_jobs: number }>(`SELECT
-          (SELECT COUNT(*)::int FROM knowledge_source_jobs WHERE status='failed')+
-          (SELECT COUNT(*)::int FROM notification_deliveries WHERE status='FAILED') AS failed_jobs`),
+    pool.query<{ knowledge: number; notifications: number; deliveries: number }>(`SELECT
+          (SELECT COUNT(*)::int FROM knowledge_source_jobs WHERE status='failed') AS knowledge,
+          (SELECT COUNT(*)::int FROM notification_deliveries WHERE status='FAILED') AS notifications,
+          (SELECT COUNT(*)::int FROM agent_native_event_outbox WHERE failed_at IS NOT NULL AND delivered_at IS NULL) +
+          (SELECT COUNT(*)::int FROM lingxios_ingress_outbox WHERE failed_at IS NOT NULL AND delivered_at IS NULL) AS deliveries`),
     pool.query(`SELECT id,user_id,company_id,kind,detail,created_at
                   FROM audit_events ORDER BY created_at DESC,id DESC LIMIT 10`),
     platformApplication.dependencyReadiness(),
     lingxiOSControl().then(runtime => runtime.readOperations()),
   ])
-  const count = counts.rows[0] ?? { users: 0, companies: 0, projects: 0, active_runs: 0 }
+  const count = counts.status === 'fulfilled' ? counts.value.rows[0] : null
+  const failed = failures.status === 'fulfilled' ? failures.value.rows[0] : null
+  const runtime = operations.status === 'fulfilled' ? operations.value : null
   response.json({
-    counts: {
-      users: count.users,
-      companies: count.companies,
-      projects: count.projects,
-      activeRuns: operations.active,
-      failedJobs: (failures.rows[0]?.failed_jobs ?? 0) + operations.failures + operations.failedDeliveries + operations.failedUsageDeliveries + operations.failedMemoryCaptures,
-    },
-    dependencies,
-    recentAudit: recentAudit.rows,
+    counts: { users: count?.users ?? null, companies: count?.companies ?? null, projects: count?.projects ?? null,
+      activeRuns: runtime?.active ?? null,
+      failedJobs: failed && runtime ? failed.knowledge + failed.notifications + runtime.failures + runtime.failedDeliveries + runtime.failedUsageDeliveries + runtime.failedMemoryCaptures : null },
+    attention: { runs: runtime?.failures ?? null, deliveries: failed?.deliveries ?? null,
+      knowledge: failed?.knowledge ?? null, notifications: failed?.notifications ?? null },
+    modules: { counts: counts.status, failures: failures.status, runtime: operations.status, dependencies: dependencies.status, audit: recentAudit.status },
+    dependencies: dependencies.status === 'fulfilled' ? dependencies.value : null,
+    recentAudit: recentAudit.status === 'fulfilled' ? recentAudit.value.rows : null,
+    observedAt: new Date().toISOString(),
   })
 }))
 
@@ -166,14 +172,14 @@ adminRouter.get('/search', safe(async (request, response) => {
   if (search.length < 2 || search.length > 100) throw new HttpError(400, 'q must be between 2 and 100 characters')
   const pattern = `%${search}%`
   const [users, companies, projects, courses] = await Promise.all([
-    pool.query(`SELECT 'users' AS resource,id,email AS label,display_name AS summary
+    pool.query(`SELECT 'users' AS resource,id,display_name AS label,email AS summary,CASE WHEN suspended_at IS NULL THEN 'active' ELSE 'suspended' END AS status
                   FROM users WHERE deleted_at IS NULL AND (email ILIKE $1 OR display_name ILIKE $1) LIMIT 5`, [pattern]),
-    pool.query(`SELECT 'companies' AS resource,id,name AS label,slug AS summary
+    pool.query(`SELECT 'companies' AS resource,id,name AS label,slug AS summary,status
                   FROM companies WHERE name ILIKE $1 OR slug ILIKE $1 LIMIT 5`, [pattern]),
-    pool.query(`SELECT 'projects' AS resource,id,name AS label,description AS summary
-                  FROM projects WHERE name ILIKE $1 OR description ILIKE $1 LIMIT 5`, [pattern]),
-    pool.query(`SELECT 'courses' AS resource,id,id AS label,created_by AS summary
-                  FROM courses WHERE id ILIKE $1 OR created_by ILIKE $1 LIMIT 5`, [pattern]),
+    pool.query(`SELECT 'projects' AS resource,p.id,p.name AS label,p.description AS summary,p.status,c.name AS company_name
+                  FROM projects p LEFT JOIN companies c ON c.id=p.company_id WHERE p.name ILIKE $1 OR p.description ILIKE $1 LIMIT 5`, [pattern]),
+    pool.query(`SELECT 'courses' AS resource,course.id,COALESCE(p.name,course.id) AS label,course.created_by AS summary,c.name AS company_name
+                  FROM courses course LEFT JOIN projects p ON p.id=course.project_id LEFT JOIN companies c ON c.id=course.company_id WHERE course.id ILIKE $1 OR p.name ILIKE $1 OR course.created_by ILIKE $1 LIMIT 5`, [pattern]),
   ])
   response.json({ data: [...users.rows, ...companies.rows, ...projects.rows, ...courses.rows] })
 }))
@@ -181,18 +187,22 @@ adminRouter.get('/search', safe(async (request, response) => {
 adminRouter.get('/resources/:resource', safe(async (request, response) => {
   if (request.params.resource === 'agent-deliveries') {
     const query = z.object({ companyId: z.string().max(200).optional(),cursor: z.string().max(100).optional(),
-      limit: z.coerce.number().int().min(1).max(100).default(50) }).strip().parse(request.query)
+      limit: z.coerce.number().int().min(1).max(100).default(50), search: z.string().trim().max(200).optional(),
+      sort: z.enum(['newest', 'oldest']).optional() }).strict().parse(request.query)
     response.json(await listNativeDeliveryFailures(pool,{ ...query,offset: cursorOffset(query.cursor) }))
     return
   }
   if (request.params.resource === 'agent-runs') {
     const parsed = runQuerySchema.safeParse(request.query)
     if (!parsed.success) throw new HttpError(400, 'invalid run filters')
-    const { companyId, sort, cursor, ...query } = parsed.data
+    const { companyId, sort, cursor, period, ...query } = parsed.data
+    if (period && sort && sort !== "newest") throw new HttpError(400, "period requires newest order")
     const offset = cursorOffset(cursor)
     if (offset > 10000) throw new HttpError(400, 'run pagination is limited to 10000 rows; narrow the filters')
     const result = await (await lingxiOSControl()).listRuns({ ...query, tenantId: companyId, offset, order: sort })
-    response.json({ data: result.items, nextCursor: result.nextCursor ? Buffer.from(String(offset + query.limit)).toString('base64url') : null })
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000
+    const data = period ? result.items.filter(item => Date.parse(item.createdAt) >= cutoff) : result.items
+    response.json({ data, nextCursor: result.nextCursor && data.length === result.items.length ? Buffer.from(String(offset + query.limit)).toString('base64url') : null })
     return
   }
   response.json(await listAdminResources(
@@ -308,6 +318,10 @@ adminRouter.get('/resources/:resource/:id/content/:field', safe(async (request, 
     nextCursor: end < content.length ? Buffer.from(String(end)).toString('base64url') : null,
     length: content.length,
   })
+}))
+
+adminRouter.get('/resources/:resource/:id/summary', safe(async (request, response) => {
+  response.json(await resourceSummary(pool, String(request.params.resource), String(request.params.id)))
 }))
 
 adminRouter.get('/resources/:resource/:id', safe(async (request, response) => {

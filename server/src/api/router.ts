@@ -4,7 +4,7 @@ import { authMiddleware } from '../auth.js'
 import { errorHandler } from '../http/errors.js'
 import { imRouter } from '../im/router.js'
 import { agentsRouter } from '../modules/agents/router.js'
-import { adminRouter, platformAdminCommandAuditMiddleware } from '../modules/platform-operations/public.js'
+import { adminRouter, companyAdminRouter, managementRouter, platformAdminCommandAuditMiddleware } from '../modules/platform-operations/public.js'
 import { calendarRouter } from '../modules/calendar/router.js'
 import { canvasRouter } from '../modules/canvas/router.js'
 import { companiesRouter } from '../modules/companies/router.js'
@@ -30,6 +30,8 @@ export const api = Router()
 api.use(authMiddleware as never)
 api.use(gatewayRegistrationRouter)
 api.use('/admin', adminRouter)
+api.use('/admin-company', companyAdminRouter)
+api.use('/admin-management', managementRouter)
 api.use(platformAdminCommandAuditMiddleware)
 api.use(platformRouter)
 api.use(filesRouter)

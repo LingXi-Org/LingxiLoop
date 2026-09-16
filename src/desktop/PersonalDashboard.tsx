@@ -169,7 +169,7 @@ export function PersonalDashboard({
       <SelectContent>
         {scopes.courses.map((space) => (
           <SelectItem key={space.projectId} value={space.projectId}>
-            <span className="flex min-w-0 items-center gap-2"><CourseAvatar courseId={space.courseId ?? space.projectId} title={space.title} size="sm" /><span className="truncate">{space.title}</span></span>
+            <span className="flex min-w-0 items-center gap-2"><CourseAvatar avatarUrl={space.avatarUrl} courseId={space.courseId ?? space.projectId} title={space.title} size="sm" /><span className="truncate">{space.title}</span></span>
           </SelectItem>
         ))}
       </SelectContent>
