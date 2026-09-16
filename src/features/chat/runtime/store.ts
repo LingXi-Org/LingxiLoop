@@ -15,7 +15,6 @@ export interface ActiveAgentRun {
 }
 
 export interface ConversationChatState {
-  agentMode: 'chat' | 'read' | 'execute'
   messages: ThreadMessage[]
   typingAgentIds: string[]
   activeRuns: Record<string, ActiveAgentRun>
@@ -31,7 +30,6 @@ interface ChatStoreState {
 }
 
 export const EMPTY_CONVERSATION_CHAT_STATE: ConversationChatState = {
-  agentMode: 'execute',
   messages: [],
   typingAgentIds: [],
   activeRuns: {},

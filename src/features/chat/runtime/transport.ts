@@ -319,7 +319,6 @@ export class ChatTransport {
       ...(quotedMessageId ? { replyToClientMsgNo: quotedMessageId } : {}),
       data: {
         ...(attachment ?? {}),
-        agentMode: useChatThreadStore.getState().conversations[conversationId]?.agentMode ?? 'execute',
         mentionedIds: mentionedAgentIds(text),
         mentionAll: hasBroadcastMention(text),
       },

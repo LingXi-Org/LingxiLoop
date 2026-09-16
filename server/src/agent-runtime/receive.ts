@@ -11,7 +11,6 @@ import { loadRuntimeBinding } from './context.js'
 import { syncConversationPolicy } from './conversations.js'
 import { bindProductRun, productRunIdentity } from './identity.js'
 import { parseMentions } from '../mentions.js'
-import { agentModeSchema } from '../im/contracts.js'
 
 export interface AgentRequest {
   companyId: string; agentId: string; channelId: string; clientMsgNo: string
@@ -105,11 +104,9 @@ export async function receiveAgentRequest(input: AgentRequest) {
   const mentions = parsed.mentionAll || message.payload.data?.mentionAll === true
     ? policy.participants.filter(member => member.kind === 'agent').map(member => member.id)
     : [...new Set([...parsed.mentionedIds,...mentionedIds])]
-  const mode = agentModeSchema.parse(message.payload.data?.agentMode ?? 'execute')
   const accepted = await api.conversations.ingest({ tenantId: input.companyId, conversationId: input.channelId,
     policyVersion: policy.version, messageId: input.clientMsgNo, version: 1, author: { id: message.fromUid, kind: 'human' },
-    text, mentions, attachments: files, ...(threadId ? { threadId } : {}) }, { mode,
-    executionClass: mode === 'chat' ? 'conversation' : 'operation' })
+    text, mentions, attachments: files, ...(threadId ? { threadId } : {}) }, { mode: 'execute', executionClass: 'operation' })
   for (const run of accepted.runs) await bindProductRun(pool,run,input.channelId)
   return accepted
 }
