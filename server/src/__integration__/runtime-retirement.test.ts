@@ -79,6 +79,15 @@ test('committed messages remain idempotent and attachments ingest without old Ag
   await assert.rejects(application.process({ ...event, eventId: 'outsider', fromUid: 'outsider' }), /not a bound channel member/)
 
   const headers = { 'content-type': 'application/json', 'x-company-id': companyId, 'x-project-id': projectId }
+  for (const kind of ['attachment','text'] as const) {
+    const clientNonce = `batch-http-${kind}`
+    const response = await fetch(`${baseUrl}/api/im/channels/retirement-room/messages/accept`, { method: 'POST',headers,
+      body: JSON.stringify({ clientNonce,payload: { version: 1,kind,clientMsgNo: clientNonce,body: 'Batch input',
+        data: { ...event.payload.data,suppressAgentWake: true } } }) })
+    assert.equal(response.status,202)
+    const accepted = await response.json() as { echo: { payload: { data: Record<string,unknown> } } }
+    assert.equal(accepted.echo.payload.data.suppressAgentWake,kind === 'attachment' ? true : undefined)
+  }
   const canvas = await fetch(`${baseUrl}/api/conversations/retirement-room/canvas`, { method: 'POST', headers })
   assert.equal(canvas.status, 201)
   const { id } = await canvas.json() as { id: string }

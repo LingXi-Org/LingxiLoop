@@ -272,7 +272,7 @@ imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {
     version: 1, kind: parsedPayload.kind, clientMsgNo: clientNonce,
     ...(parsedPayload.body ? { body: parsedPayload.body } : {}),
     ...(parsedPayload.replyToClientMsgNo ? { replyToClientMsgNo: parsedPayload.replyToClientMsgNo } : {}),
-    data: safeData,
+    data: { ...safeData, ...(parsedPayload.kind === 'attachment' && rawData.suppressAgentWake === true ? { suppressAgentWake: true } : {}) },
   }
   const result = await imMessagesApplication.acceptUserMessage({
     companyId, userId, channelId, clientNonce, payload,
