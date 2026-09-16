@@ -7,6 +7,26 @@ import pytest
 from pydantic import ValidationError
 
 
+@pytest.mark.asyncio
+async def test_extracted_pdf_text_drops_null_bytes_before_persistence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from open_notebook.rag import extraction
+
+    monkeypatch.setattr(
+        extraction,
+        "_extract_file",
+        lambda _: extraction.ExtractedContent(
+            title="Paper", content="[[PAGE:1]]\n学习\x00资料\nEvidence"
+        ),
+    )
+    assert await extraction.extract_content(file_path="paper.pdf") == (
+        extraction.ExtractedContent(title="Paper", content="[[PAGE:1]]\n学习资料\nEvidence")
+    )
+    with pytest.raises(extraction.InvalidInputError, match="produced no text"):
+        await extraction.extract_content(content="\x00 \n")
+
+
 def test_route_table_is_exact() -> None:
     from api.rag_main import app
 

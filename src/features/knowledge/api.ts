@@ -9,11 +9,21 @@ import type {
   KnowledgeSource,
 } from './contracts'
 
-const sourceRequestKeys = new Map<string, string>()
+const sourceRequestKeys = new Map<string, { key: string; sourceId?: string }>()
 function sourceRequestKey(fingerprint: string): string {
-  const key = sourceRequestKeys.get(fingerprint) ?? crypto.randomUUID()
-  sourceRequestKeys.set(fingerprint, key)
-  return key
+  const request = sourceRequestKeys.get(fingerprint) ?? { key: crypto.randomUUID() }
+  sourceRequestKeys.set(fingerprint, request)
+  return request.key
+}
+
+async function deleteSource(path: string, sourceId: string): Promise<{ ok: boolean }> {
+  const result = await http<{ ok: boolean }>(path, { method: 'DELETE' })
+  if (result.ok) {
+    for (const [fingerprint, request] of sourceRequestKeys) {
+      if (request.sourceId === sourceId) sourceRequestKeys.delete(fingerprint)
+    }
+  }
+  return result
 }
 
 async function uploadSource(basePath: string, fingerprintScope: string, file: File, onPending?: () => void): Promise<void> {
@@ -25,6 +35,8 @@ async function uploadSource(basePath: string, fingerprintScope: string, file: Fi
   const signed = await http<{ id: string; uploadUrl: string; mime: string; size: number }>(`${basePath}/upload/presign`, {
     method: 'POST', body: JSON.stringify({ idempotencyKey: sourceRequestKey(fingerprint), name: file.name, mime, size: file.size }),
   })
+  const request = sourceRequestKeys.get(fingerprint)
+  if (request) request.sourceId = signed.id
   onPending?.()
   const response = await putPresignedFile(signed.uploadUrl, file, mime)
   if (!response.ok) throw new Error(`source upload failed: ${response.status}`)
@@ -58,7 +70,7 @@ export const knowledgeApi = {
   },
   retryProjectSource: (projectId: string, sourceId: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}/retry`, { method: 'POST' }),
   renameProjectSource: (projectId: string, sourceId: string, title: string) => http<{ ok: true }>(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}`, { method: 'PATCH', body: JSON.stringify({ title }) }),
-  deleteProjectSource: (projectId: string, sourceId: string) => http<{ ok: boolean }>(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}`, { method: 'DELETE' }),
+  deleteProjectSource: (projectId: string, sourceId: string) => deleteSource(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}`, sourceId),
   listSources: (conversationId: string) => http<KnowledgeSource[]>(`/conversations/${encodeURIComponent(conversationId)}/sources`),
   getSource: (conversationId: string, sourceId: string) => http<KnowledgeSource>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}`),
   addTextSource: async (conversationId: string, input: { title?: string; text: string }) => {
@@ -75,7 +87,7 @@ export const knowledgeApi = {
   },
   uploadKnowledgeFile: (conversationId: string, file: File, onPending?: () => void) => uploadSource(`/conversations/${encodeURIComponent(conversationId)}/sources`, conversationId, file, onPending),
   retrySource: (conversationId: string, sourceId: string) => http<{ ok: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}/retry`, { method: 'POST' }),
-  deleteSource: (conversationId: string, sourceId: string) => http<{ ok: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}`, { method: 'DELETE' }),
+  deleteSource: (conversationId: string, sourceId: string) => deleteSource(`/conversations/${encodeURIComponent(conversationId)}/sources/${encodeURIComponent(sourceId)}`, sourceId),
   getConversationSources: async (conversationId: string): Promise<ConversationSourceSelection> => {
     const sources = await http<KnowledgeSource[]>(`/conversations/${encodeURIComponent(conversationId)}/sources`)
     return { conversationId, sources: sources.map((source) => ({ sourceId: source.id, title: source.title, status: source.status, enabled: (source as KnowledgeSource & { enabled?: boolean }).enabled !== false })) }

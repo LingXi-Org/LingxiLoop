@@ -342,4 +342,8 @@ async def extract_content(
         extracted = ExtractedContent(title=None, content=content)
     if len(extracted.content.encode("utf-8")) > MAX_SOURCE_BYTES:
         raise InvalidInputError("Extracted text exceeds the 200 MiB limit")
-    return extracted
+    # PDF text can contain NULs that SurrealDB stores but cannot serialize back.
+    text = extracted.content.replace("\x00", "")
+    if not text.strip():
+        raise InvalidInputError("Source extraction produced no text")
+    return ExtractedContent(title=extracted.title, content=text)
