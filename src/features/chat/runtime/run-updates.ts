@@ -45,7 +45,8 @@ export function applyRunUpdate(
   // A snapshot restores the same turn position after a page reload.
   if (before && before.positionAfter === undefined && !Number.isFinite(startedAt)) delete custom.positionAfter
   const message: ThreadMessage = { id, role: 'assistant', createdAt,
-    content: harnessParts(view), status: harnessStatus(view), metadata: {
+    content: current?.role === 'assistant' && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed')
+      && view.resultId === before?.harness?.resultId ? current.content : harnessParts(view), status: harnessStatus(view), metadata: {
       unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], ...current?.metadata, custom,
     } }
   const activeRuns = { ...state.activeRuns }

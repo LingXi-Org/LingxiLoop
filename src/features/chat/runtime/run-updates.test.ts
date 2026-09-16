@@ -82,6 +82,24 @@ test('committed replies ignore duplicate snapshots and stale deltas without regr
   assert.equal(needsRunStream('succeeded', 'pending'), true)
 })
 
+test('paragraph deltas are immediate, replay is idempotent and cancellation retains visible text', () => {
+  let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: snapshot('run', 'leased') })
+  state = applyRunUpdate(state, target, event('第一段'))
+  const delta: RunStreamEvent = { type: 'preview', preview: { kind: 'delta', runId: 'run', fence: 1,
+    requestVersion: 1, attemptId: 'attempt', fromSeq: 1, seq: 2, delta: '\n\n第二段 **正在' } }
+  state = applyRunUpdate(state, target, delta)
+  state = applyRunUpdate(state, target, delta)
+  const content = [{ type: 'text', text: '第一段\n\n第二段 **正在' }]
+  assert.deepEqual(state.messages[0]!.content, content)
+  state = applyRunUpdate(state, target, { type: 'event', event: { runId: 'run', seq: 3,
+    kind: 'run.cancelled', stage: 'completed', visibility: 'user', data: {} } })
+  state = applyRunUpdate(state, target, { type: 'state', state: snapshot('run', 'cancelled') })
+  assert.deepEqual(state.messages[0]!.content, content)
+  assert.deepEqual(state.messages[0]!.status, { type: 'incomplete', reason: 'cancelled' })
+  assert.deepEqual(mergeCanonicalMessages(state.messages, state.messages)[0]!.content, content)
+  assert.deepEqual(state.activeRuns, {})
+})
+
 test('a reply at the page boundary leaves room for subsequently loaded older history', () => {
   const state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: snapshot() }, participants.agent)
   const messages = mergeCanonicalMessages(state.messages, [user('older', 1, 1000), user('newer', 3, 3000)])
@@ -92,6 +110,7 @@ test('initial history publishes complete run snapshots together and subscribes o
   resetChatThreadStore()
   const subscribed: string[] = []
   const callbacks = new Map<string, (item: RunStreamEvent) => void>()
+  const cancelled: string[] = []
   let finishSecond!: (state: RunState) => void
   const second = new Promise<RunState>(resolve => { finishSecond = resolve })
   mock.module('@/api/core/realtime', { namedExports: { ws: {} } })
@@ -101,6 +120,11 @@ test('initial history publishes complete run snapshots together and subscribes o
   mock.module('@/stores/auth', { namedExports: { getMeId: () => 'human', getActiveCompanyId: () => null } })
   mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: { history: async () => [] } } })
   mock.module('./harness-api', { namedExports: { harnessApi: {
+    cancel: async ({ runId }: typeof target) => {
+      cancelled.push(runId)
+      if (runId === 'reject') throw new Error('unavailable')
+      return { cancelled: true }
+    },
     list: async () => ['run', 'second', 'active'].map(runId => ({ ...target, runId, requestVersion: 1, fence: 1,
       status: runId === 'active' ? 'leased' : 'succeeded' })),
     read: async ({ runId }: typeof target) => ({ ...(runId === 'second' ? await second : snapshot(runId, runId === 'active' ? 'leased' : 'succeeded')),
@@ -139,6 +163,20 @@ test('initial history publishes complete run snapshots together and subscribes o
     await transport.reloadConversation('room')
     assert.deepEqual(subscribed, ['active'])
     assert.equal(useChatThreadStore.getState().conversations.room!.messages.length, 3)
+    let cancelState = EMPTY_CONVERSATION_CHAT_STATE
+    for (const [runId, status, canControl] of [
+      ['queued', 'queued', true], ['active', 'leased', true], ['waiting', 'waiting', true],
+      ['forbidden', 'leased', false], ['reject', 'leased', true], ['done', 'succeeded', true],
+    ] as const) {
+      const response = { ...snapshot(runId, status), events: [], nextSeq: 0, canControl, diagnostics: {} as never }
+      cancelState = applyRunUpdate(cancelState, { ...target, runId }, { type: 'state', state: response }, participants.agent, response)
+    }
+    useChatThreadStore.setState({ conversations: { room: cancelState } })
+    const stopping = transport.cancel('room')
+    assert.equal(transport.cancel('room'), stopping)
+    await assert.rejects(stopping, /部分任务未能停止/)
+    assert.deepEqual(cancelled, ['queued', 'active', 'waiting', 'reject'])
+    assert.equal(metadata(useChatThreadStore.getState().conversations.room!.messages.find(message => metadata(message).runId === 'queued')!).harness?.lifecycle, 'succeeded')
   } finally {
     unsubscribe()
     globalThis.EventSource = originalEventSource

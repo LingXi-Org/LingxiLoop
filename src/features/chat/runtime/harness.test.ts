@@ -10,6 +10,18 @@ import { mergeCanonicalMessages } from './store'
 
 const participants = { agent: { id: 'agent', kind: 'agent', name: '助手' } as Participant }
 
+test('native response text and presentation cards retain segment order and stable identities', () => {
+  const view = readHarness(envelope(1, 1))!
+  const first = { type: 'card', version: '1', reference: 'first', fields: { title: '第一张' }, sources: [], hash: 'first' }
+  const second = { ...first, reference: 'second', fields: { title: '第二张' }, hash: 'second' }
+  view.message!.envelope.presentations = [first, second]
+  const parts = harnessParts(view)
+  assert.deepEqual(parts, [{ type: 'text', text: '查看原文' }, ...[first, second].map(component => ({
+    type: 'tool-call', toolCallId: `presentation:${component.hash}`, toolName: 'card',
+    args: component.fields, argsText: JSON.stringify(component.fields), result: component,
+  }))])
+})
+
 test('public native tool events project into bounded assistant-ui history and survive committed IM replay', () => {
   const started = { runId: 'run',seq: 1,kind: 'tool.started',stage: 'started' as const,visibility: 'user' as const,
     data: { toolCallId: 'host:call',name: 'documents.read' } }

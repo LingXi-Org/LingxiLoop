@@ -23,6 +23,11 @@ import { useUiCommand } from '@/stores/uiCommands'
 import { useTypingEmitter } from '../useTypingEmitter'
 import { ComposerLexicalInput } from './ComposerLexicalInput'
 import { ComposerTriggers } from './ComposerTriggers'
+import { chatTransport } from '../runtime/transport'
+import { useChatThreadStore } from '../runtime/store'
+import { canCancelRun } from '../runtime/harness'
+import { getLingxiMessageMetadata } from '../runtime/model'
+import { userFacingError } from '@/lib/userFacingError'
 
 export function ConversationComposer({
   conversationId,
@@ -35,7 +40,17 @@ export function ConversationComposer({
 }) {
   const inputRef = useRef<HTMLDivElement>(null)
   const text = useAuiState((state) => state.composer.text)
-  const isRunning = useAuiState((state) => state.thread.isRunning)
+  const canCancel = useChatThreadStore((state) => state.conversations[conversationId]?.messages
+    .some(message => canCancelRun(getLingxiMessageMetadata(message))) ?? false)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
+  const cancel = async () => {
+    setCancelling(true)
+    setCancelError(null)
+    try { await chatTransport.cancel(conversationId) }
+    catch (error) { setCancelError(userFacingError(error, '任务未能停止，请重试。')) }
+    finally { setCancelling(false) }
+  }
   const [pollOpen, setPollOpen] = useState(false)
   const uiCommand = useUiCommand()
   const finalizeTyping = useTypingEmitter(conversationId, text)
@@ -52,6 +67,7 @@ export function ConversationComposer({
 
   return (
     <div className={compact ? 'px-3 pb-3' : 'w-full px-3 pb-4 pt-2 sm:px-4'}>
+      {cancelError && <p role="alert" className="mb-2 px-2 text-xs text-destructive">{cancelError}</p>}
       {pollOpen ? (
         <PollComposer conversationId={conversationId} onSubmitted={closePoll} onCancel={closePoll} />
       ) : (
@@ -127,12 +143,12 @@ export function ConversationComposer({
             className="relative max-h-52 min-h-11 flex-1 overflow-y-auto bg-transparent py-2.5 pr-2 pl-1 text-base text-foreground outline-none md:min-h-9 md:py-1.5 [&_.aui-lexical-input]:min-h-6 [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-2.5 [&_.aui-lexical-placeholder]:text-muted-foreground md:[&_.aui-lexical-placeholder]:top-1.5"
           />
           <div className="flex shrink-0 items-center gap-1">
-            {isRunning && (
+            {canCancel && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <ComposerPrimitive.Cancel className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground md:size-9" aria-label="停止全部智能助教">
+                  <Button type="button" disabled={cancelling} onClick={() => void cancel()} className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground md:size-9" aria-label="停止全部智能助教" aria-busy={cancelling}>
                     <span className="size-2.5 rounded-[2px] bg-current" />
-                  </ComposerPrimitive.Cancel>
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top">停止当前会话中的全部智能助教</TooltipContent>
               </Tooltip>

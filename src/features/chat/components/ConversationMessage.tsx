@@ -242,7 +242,7 @@ function MessageTextPart() {
   useEffect(() => () => {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
-  return <div className={cn('relative w-fit', isMobile ? 'max-w-[88%]' : 'max-w-[75%]', metadata.isMine && 'ms-auto')}>
+  return <div className={cn('relative min-w-0 w-fit', isMobile ? 'max-w-full' : 'max-w-[85%]', metadata.isMine && 'ms-auto')}>
     {!isMobile && <MessageActions metadata={metadata} text={text} />}
     <div
       data-message-bubble={metadata.isMine ? 'user' : 'assistant'}

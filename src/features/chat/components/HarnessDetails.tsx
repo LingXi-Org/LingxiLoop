@@ -24,7 +24,6 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
 
   return <section aria-label="任务结果与操作" className="mt-2 grid w-full max-w-xl gap-2 text-xs text-muted-foreground empty:hidden">
     {view.lifecycle === 'failed' && <p role="status">回复未能完成，请稍后重试。</p>}
-    {view.lifecycle !== 'failed' && (outcome?.status === 'partial' || outcome?.status === 'blocked') && <p role="status">本次请求尚未全部完成。</p>}
     {outcome?.question && <p className="text-sm text-foreground">{outcome.question}</p>}
     {envelope?.artifacts.length ? <div className="grid gap-2" aria-label="交付附件">
       {envelope.artifacts.map(artifact => <div key={artifact.path} className="rounded-lg border border-border px-3 py-2">
@@ -44,13 +43,12 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
         </p>)}
       </li>)}</ul>
     </details> : null}
-    {metadata.harnessControl && (active || view.delivery === 'failed') && <>
+    {metadata.harnessControl && ((active && outcome?.status === 'awaiting_approval') || view.delivery === 'failed') && <>
       <div className="flex flex-wrap gap-2">
         {outcome?.status === 'awaiting_approval' && <>
           <Button type="button" size="sm" disabled={busy} onClick={() => void perform(() => chatTransport.resolveApproval(outcome.approvalId,'approved'))}>批准并继续</Button>
           <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => void perform(() => chatTransport.resolveApproval(outcome.approvalId,'denied'))}>拒绝</Button>
         </>}
-        {active && <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => void perform(() => harnessApi.cancel(target))}>取消任务</Button>}
         {view.delivery === 'failed' && <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button>}
       </div>
     </>}

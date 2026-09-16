@@ -1,7 +1,7 @@
 "use client"
 
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
-import { useAuiState } from '@assistant-ui/react'
+import { Block, type BlockProps } from 'streamdown'
 import { memo, type ComponentProps, useMemo } from 'react'
 import {
   type ConfidenceClaim,
@@ -10,6 +10,10 @@ import {
 
 export type MarkdownConfidenceClaim = ConfidenceClaim & { markers: readonly string[] }
 
+const BubbleBlock = memo((props: BlockProps) => props.content.trim() ? (
+  <div className="im-markdown-bubble"><Block {...props} /></div>
+) : null)
+
 const MarkdownTextImpl = ({
   segmented = false,
   confidenceClaims,
@@ -17,7 +21,6 @@ const MarkdownTextImpl = ({
   segmented?: boolean
   confidenceClaims?: readonly MarkdownConfidenceClaim[]
 }) => {
-  const running = useAuiState((state) => state.message.status?.type === 'running')
   const components = useMemo<StreamdownTextPrimitiveProps['components']>(() => {
     if (!confidenceClaims) return undefined
     return {
@@ -31,7 +34,9 @@ const MarkdownTextImpl = ({
 
   return <div className="im-bubble-markdown-host" data-find-content>
     <StreamdownTextPrimitive
-      mode={running ? "streaming" : "static"}
+      mode="streaming"
+      smooth={false}
+      BlockComponent={segmented ? BubbleBlock : undefined}
       controls
       components={components}
       className={segmented ? 'im-bubble-markdown im-bubble-markdown-agent' : 'im-bubble-markdown'}

@@ -1,6 +1,13 @@
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { consumeAssistantMessage, createRunView, responseSegments, type AssistantMessage, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import type { ImEnvelope } from '@/lib/im/wukong'
+import type { LingxiMessageMetadata } from './model'
+
+export function canCancelRun(metadata: LingxiMessageMetadata): boolean {
+  return metadata.harnessControl === true && Boolean(metadata.runId)
+    && metadata.messageKind === 'text'
+    && ['queued', 'leased', 'waiting'].includes(metadata.harness?.lifecycle ?? '')
+}
 
 /** Display projection only: lifecycle, preview and results remain in the native RunView. */
 export function harnessToolParts(runId: string, events: readonly RunEvent[], current: readonly ToolCallMessagePart[] = []): ToolCallMessagePart[] {
@@ -45,10 +52,18 @@ export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
   if (!view.message) return view.draft ? [{ type: 'text', text: view.draft }] : []
   // Citation provenance is displayed alongside the answer, without inventing a confidence score.
   const segments = responseSegments(view.message.envelope)
-  return [{ type: 'text', text: segments.filter(segment => segment.type !== 'presentation').map(segment => segment.text).join('') },
-    ...segments.flatMap((segment): ThreadAssistantMessagePart[] => segment.type === 'presentation' ? [{ type: 'tool-call',
+  const parts: ThreadAssistantMessagePart[] = []
+  for (const segment of segments) {
+    if (segment.type === 'presentation') parts.push({ type: 'tool-call',
       toolCallId: `presentation:${segment.component.hash}`, toolName: segment.component.type,
-      args: segment.component.fields as ToolCallMessagePart['args'], argsText: JSON.stringify(segment.component.fields), result: segment.component }] : [])]
+      args: segment.component.fields as ToolCallMessagePart['args'], argsText: JSON.stringify(segment.component.fields), result: segment.component })
+    else {
+      const previous = parts.at(-1)
+      if (previous?.type === 'text') parts[parts.length - 1] = { ...previous, text: previous.text + segment.text }
+      else if (segment.text) parts.push({ type: 'text', text: segment.text })
+    }
+  }
+  return parts
 }
 
 export function harnessStatus(view: RunView): MessageStatus {

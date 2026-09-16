@@ -33,6 +33,7 @@ import {
 } from './store'
 import { harnessApi, type AgentRunResponse, type AgentRunTarget } from './harness-api'
 import { applyRunUpdate, needsRunStream } from './run-updates'
+import { canCancelRun } from './harness'
 
 const TYPING_STALE_MS = 45_000
 
@@ -161,6 +162,7 @@ function oldestSequence(messages: readonly ThreadMessage[]): number | null {
 }
 
 export class ChatTransport {
+  private readonly cancellations = new Map<string, Promise<void>>()
   private booted = false
   private readonly typingTimers = new Map<string, number>()
   private readonly runStreams = new Map<string, EventSource>()
@@ -372,13 +374,24 @@ export class ChatTransport {
     removeConversationMessage(conversationId, messageId)
   }
 
-  async cancel(conversationId: string): Promise<void> {
+  cancel(conversationId: string): Promise<void> {
+    const pending = this.cancellations.get(conversationId)
+    if (pending) return pending
     const state = useChatThreadStore.getState().conversations[conversationId]
-    await Promise.all(Object.values(state?.activeRuns ?? {}).map(run => {
-      const message = state?.messages.find(message => message.id === run.messageId)
-      const threadId = message && messageMetadata(message).threadRootId
-      return harnessApi.cancel({ conversationId,agentId: run.agentId,runId: run.id,...threadId ? { threadId } : {} })
-    }))
+    const targets = (state?.messages ?? []).map(messageMetadata).filter(canCancelRun)
+    const operation = Promise.allSettled(targets.map(async message => {
+      const target = { conversationId, agentId: message.senderId, runId: message.runId!,
+        ...(message.threadRootId ? { threadId: message.threadRootId } : {}) }
+      await harnessApi.cancel(target)
+      await this.refreshRun(target)
+      const refreshed = useChatThreadStore.getState().conversations[conversationId]?.messages
+        .find(item => messageMetadata(item).runId === target.runId && messageMetadata(item).senderId === target.agentId)
+      if (refreshed && messageMetadata(refreshed).harnessError) throw new Error('任务状态暂时无法同步')
+    })).then(results => {
+      if (results.some(result => result.status === 'rejected')) throw new Error('部分任务未能停止，请重试。')
+    }).finally(() => this.cancellations.delete(conversationId))
+    this.cancellations.set(conversationId, operation)
+    return operation
   }
 
   async toggleReaction(conversationId: string, messageId: string, emoji: string): Promise<void> {
