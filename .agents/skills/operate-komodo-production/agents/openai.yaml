@@ -1,0 +1,3 @@
+interface:
+  display_name: "Operate Komodo Production"
+  short_description: "Operate LingxiLoop production through Komodo"
