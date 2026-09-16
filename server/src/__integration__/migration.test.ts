@@ -45,7 +45,7 @@ async function withMigrations(run: (url: URL, directory: string) => Promise<void
 
 test('an empty database reaches the latest schema once and repeated migration is a no-op', async () => {
   await withDatabase(async (database) => {
-    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars'])
+    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     const { rows } = await database.query('SELECT version,name FROM schema_migrations ORDER BY version')
@@ -64,6 +64,7 @@ test('an empty database reaches the latest schema once and repeated migration is
       { version: 12, name: 'lingxios_3_2' },
       { version: 13, name: 'native_collaboration' },
       { version: 14, name: 'profile_avatars' },
+      { version: 15, name: 'lingxios_3_2_6' },
     ])
     const { rows: evalSchema } = await database.query(`SELECT
       to_regclass('public.eval_jobs') AS jobs,
@@ -81,6 +82,21 @@ test('an empty database reaches the latest schema once and repeated migration is
     await database.query("UPDATE lingxios_installation SET schema_sha256=repeat('0',64)")
     await assert.rejects(assertMigrationsCurrent(database), /package\/schema mismatch/)
 
+  })
+})
+
+test('3.2.4 upgrades only its runtime registration and preserves existing data', async () => {
+  await withDatabase(async database => {
+    await migrateDatabase(database)
+    await database.query('DELETE FROM schema_migrations WHERE version=15')
+    await database.query("UPDATE lingxios_installation SET runtime_version='3.2.4'")
+    await database.query("INSERT INTO users(id,email,display_name) VALUES('preserved-user','preserved@example.test','Preserved')")
+    const before = (await database.query('SELECT schema_version,protocol_version,schema_sha256 FROM lingxios_installation')).rows
+    assert.deepEqual(await migrateDatabase(database),['0015_lingxios_3_2_6'])
+    assert.deepEqual(await migrateDatabase(database),[])
+    await assertMigrationsCurrent(database)
+    assert.deepEqual((await database.query('SELECT schema_version,protocol_version,schema_sha256 FROM lingxios_installation')).rows,before)
+    assert.deepEqual((await database.query("SELECT id FROM users WHERE id='preserved-user'")).rows,[{ id: 'preserved-user' }])
   })
 })
 
@@ -176,11 +192,11 @@ test('concurrent migrators serialize and apply each migration once', async () =>
     try {
       const results = await Promise.all([migrateDatabase(database), migrateDatabase(second)])
       assert.deepEqual(results.map((result) => [...result]).sort((a, b) => b.length - a.length), [
-        ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars'],
+        ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6'],
         [],
       ])
       const { rows } = await database.query('SELECT COUNT(*)::int AS count FROM schema_migrations')
-      assert.deepEqual(rows, [{ count: 14 }])
+      assert.deepEqual(rows, [{ count: 15 }])
     } finally {
       await second.end()
     }

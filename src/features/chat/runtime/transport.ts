@@ -34,6 +34,7 @@ import {
 import { harnessApi, type AgentRunResponse, type AgentRunTarget } from './harness-api'
 import { applyRunUpdate, needsRunStream } from './run-updates'
 import { canCancelRun } from './harness'
+import { attachmentMessages } from './attachment-messages'
 
 const TYPING_STALE_MS = 45_000
 
@@ -61,14 +62,6 @@ function quoteIdFromAppend(message: AppendMessage): string | null {
   if (!quote || typeof quote !== 'object') return null
   const messageId = (quote as { messageId?: unknown }).messageId
   return typeof messageId === 'string' ? messageId : null
-}
-
-function attachmentFromAppend(message: AppendMessage): UploadedAttachment | null {
-  const attachment = message.attachments?.[0]
-  if (!attachment) return null
-  const uploaded = (attachment as unknown as { apiAttachment?: UploadedAttachment }).apiAttachment
-  if (!uploaded) throw new Error('Composer attachment is not uploaded')
-  return uploaded
 }
 
 function mentionedAgentIds(body: string): string[] {
@@ -301,9 +294,30 @@ export class ChatTransport {
 
   async sendAppend(conversationId: string, message: AppendMessage, threadRootId: string | null): Promise<void> {
     const text = textFromAppend(message)
-    const attachment = attachmentFromAppend(message)
+    const attachments = (message.attachments ?? []).map(attachment => {
+      const uploaded = (attachment as unknown as { apiAttachment?: UploadedAttachment }).apiAttachment
+      if (!uploaded) throw new Error('Composer attachment is not uploaded')
+      return uploaded
+    })
     const quotedMessageId = threadRootId ?? quoteIdFromAppend(message)
-    await this.send(conversationId, text, attachment, quotedMessageId)
+    if (!attachments.length) { await this.send(conversationId, text, null, quotedMessageId); return }
+    const payloads = attachmentMessages(attachments, text, quotedMessageId,
+      { mentionedIds: mentionedAgentIds(text), mentionAll: hasBroadcastMention(text) })
+    for (const payload of payloads) rememberChatOutbox({ conversationId, clientMessageId: payload.clientMsgNo,
+      payload: payload as unknown as Record<string, unknown>, createdAt: new Date().toISOString() })
+    setConversationMessages(conversationId, payloads.map((payload, index) =>
+      optimisticMessage(conversationId, payload.clientMsgNo, payload.body ?? '', attachments[index], quotedMessageId)))
+    try {
+      for (const [index, payload] of payloads.entries()) {
+        if (!await this.send(conversationId, payload.body ?? '', attachments[index], quotedMessageId, payload.clientMsgNo, payload)) {
+          throw new Error('Attachment submission is incomplete')
+        }
+      }
+    } catch {
+      for (const entry of readChatOutbox().filter(entry => payloads.some(payload => payload.clientMsgNo === entry.clientMessageId))) {
+        markDelivery(conversationId, entry.clientMessageId, 'failed')
+      }
+    }
   }
 
   async send(
@@ -358,8 +372,14 @@ export class ChatTransport {
     if (!entry) throw new Error('Failed message is no longer present in the outbox')
     const payload = entry.payload as unknown as LingxiMessageV1
     const data = payload.data ?? {}
+    for (const dependency of Array.isArray(data.attachmentClientMsgNos) ? data.attachmentClientMsgNos : []) {
+      if (dependency !== messageId && typeof dependency === 'string'
+        && readChatOutbox().some(item => item.clientMessageId === dependency && item.conversationId === conversationId)) {
+        await this.retry(conversationId, dependency)
+      }
+    }
     const attachment = payload.kind === 'attachment' ? data as unknown as UploadedAttachment : null
-    await this.send(
+    const sent = await this.send(
       conversationId,
       payload.body ?? '',
       attachment,
@@ -367,6 +387,7 @@ export class ChatTransport {
       messageId,
       payload,
     )
+    if (!sent) throw new Error('消息尚未发送，请重试。')
   }
 
   discard(conversationId: string, messageId: string): void {
@@ -635,16 +656,7 @@ export class ChatTransport {
           this.commitEnvelope(status.echo)
           continue
         }
-        const payload = entry.payload as unknown as LingxiMessageV1
-        const attachment = payload.kind === 'attachment' ? payload.data as unknown as UploadedAttachment : null
-        await this.send(
-          entry.conversationId,
-          payload.body ?? '',
-          attachment,
-          payload.replyToClientMsgNo ?? null,
-          entry.clientMessageId,
-          payload,
-        )
+        await this.retry(entry.conversationId, entry.clientMessageId)
       } catch (error) {
         console.warn('[chat.transport] outbox recovery deferred', error)
       }

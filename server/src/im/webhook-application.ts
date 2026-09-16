@@ -76,7 +76,7 @@ export class WukongWebhookApplication {
         await completeWebhookReceipt(db, input.eventId)
         return { ok: true, ignored: true }
       }
-      if (input.payload.data?.suppressAgentWake === true) {
+      if (input.payload.data?.suppressAgentWake === true && input.payload.kind !== 'attachment') {
         await completeWebhookReceipt(db, input.eventId)
         return { ok: true, ignored: true, reason: 'product-state update' }
       }
@@ -160,7 +160,7 @@ export class WukongWebhookApplication {
             ...(input.payload.replyToClientMsgNo
               ? { threadRootClientMsgNo: input.payload.replyToClientMsgNo }
               : {}),
-            recipients: recipients.map(agentId => ({ agentId, reason: 'knowledge_ready' })),
+            recipients: [],
           })
           knowledgeSourceId = ingestion.sourceId
           deferAgentWake = ingestion.deferAgentWake

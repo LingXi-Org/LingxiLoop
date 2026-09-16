@@ -48,6 +48,7 @@ export function readHarness(envelope: ImEnvelope): RunView | undefined {
 }
 
 export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
+  if (view.lifecycle === 'failed' && !view.message) return []
   if (view.draft && (view.lifecycle === 'leased' || view.lifecycle === 'queued')) return [{ type: 'text', text: view.draft }]
   if (!view.message) return view.draft ? [{ type: 'text', text: view.draft }] : []
   // Citation provenance is displayed alongside the answer, without inventing a confidence score.
@@ -74,7 +75,7 @@ export function harnessStatus(view: RunView): MessageStatus {
     case 'awaiting_input': case 'awaiting_approval': case 'delegated': return { type: 'requires-action', reason: 'tool-calls' }
     case 'partial': case 'blocked': return { type: 'incomplete', reason: 'other' }
     case 'satisfied': return { type: 'complete', reason: 'stop' }
-    default: return { type: 'running' }
+    default: return view.lifecycle === 'succeeded' ? { type: 'incomplete', reason: 'error' } : { type: 'running' }
   }
 }
 
@@ -90,6 +91,22 @@ export function harnessLabel(view: RunView): string {
     case 'awaiting_input': return '等待补充信息'
     case 'awaiting_approval': return '等待审批'
     case 'delegated': return '等待协作任务'
-    default: return '正在读取状态'
+    default: return view.lifecycle === 'succeeded' ? '结果状态缺失' : '正在读取状态'
   }
+}
+
+export function harnessFailure(reason: string): string {
+  const messages: Record<string, string> = {
+    'Model call, token, cost or execution-time budget exhausted': '本次执行的模型调用、字数、费用或时间预算已耗尽。',
+    'Content acceptance correction budget exhausted': '答复仍有未满足的要求，内容修正次数已用尽。',
+    'Final assessment protocol correction exhausted': '模型未能按要求生成有效的答复格式，修正次数已用尽。',
+    'Final response assessment is invalid': '答复的完成情况检查格式无效，尚未验证全部要求。',
+    'Tool protocol correction exhausted': '模型未能生成有效的工具调用，修正次数已用尽。',
+    'Tool execution failed after bounded correction': '工具执行失败，修正次数已用尽。',
+    'Tool execution timed out': '工具执行超时。',
+    'No valid answer was produced for the current request': '本次请求没有生成可交付的有效答复。',
+    'Model returned an invalid response format': '模型返回了无效的答复格式。',
+  }
+  if (reason.startsWith('Model provider request failed')) return `模型服务请求失败${reason.match(/\(HTTP \d+\)/)?.[0] ?? ''}。`
+  return messages[reason] ?? reason.slice(0,2000)
 }

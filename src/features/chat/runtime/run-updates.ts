@@ -41,11 +41,13 @@ export function applyRunUpdate(
     harnessTools: item.type === 'event' ? harnessToolParts(target.runId, [item.event], before?.harnessTools) : before?.harnessTools,
     harnessReplaySeq: response?.nextSeq ?? view.lastSeq,
     ...(response ? { harnessControl: response.canControl, harnessError: response.run.error ?? undefined } : {}),
+    ...(item.type === 'event' && item.event.kind === 'run.failed' && typeof item.event.data.error === 'string'
+      ? { harnessError: item.event.data.error } : {}),
   }
   // A snapshot restores the same turn position after a page reload.
   if (before && before.positionAfter === undefined && !Number.isFinite(startedAt)) delete custom.positionAfter
   const message: ThreadMessage = { id, role: 'assistant', createdAt,
-    content: current?.role === 'assistant' && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed')
+    content: current?.role === 'assistant' && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed' && before?.harness?.message)
       && view.resultId === before?.harness?.resultId ? current.content : harnessParts(view), status: harnessStatus(view), metadata: {
       unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], ...current?.metadata, custom,
     } }

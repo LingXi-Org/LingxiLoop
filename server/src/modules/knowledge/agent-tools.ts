@@ -1,13 +1,15 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
+import { createHash } from 'node:crypto'
 import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { storage } from '../../storage.js'
-import { nativeTool, nativeContext, compareResource, authorizeAudienceRead } from '../../agents/tools.js'
+import { nativeTool, nativeContext, compareResource, authorizeAudienceRead, audienceHumanIds } from '../../agents/tools.js'
 import { readAgentChannelMessages } from '../../im/public.js'
 import { createPermissionService } from '../access/public.js'
 import { createKnowledgeAgentApplication } from './agent-application.js'
 import { agentKnowledgeSchemas as schemas } from './contracts.js'
 import { findKnowledgeRetrievalProject } from './retrieval-repository.js'
+import { getKnowledgeSourceText, retrieveKnowledge } from './runtime.js'
 
 const db = (context: ActionContext) => context.database as Queryable
 const application = (context: ActionContext) => createKnowledgeAgentApplication(db(context), {
@@ -20,7 +22,7 @@ async function authorize(context: ActionContext, input: Record<string, unknown> 
     ...(typeof input.sourceId === 'string' ? { resource: { type: 'knowledge_source',id: input.sourceId } } : {}) })
   const method = context.action.action.split('.')[1]
   await createPermissionService(db(context), { lockDependencies: true }).assertCan({ actorUserId: context.work.principalId!, companyId: context.work.tenantId, projectId,
-    action: ['list_sources','check_source'].includes(method) ? 'knowledge:read' : ['retry_ingestion','set_source_enabled','delete_source'].includes(method) ? 'knowledge:manage' : 'knowledge:write',
+    action: ['list_sources','check_source','search','read_source'].includes(method) ? 'knowledge:read' : ['retry_ingestion','set_source_enabled','delete_source'].includes(method) ? 'knowledge:manage' : 'knowledge:write',
     ...(typeof input.sourceId === 'string' ? { resource: { type: 'knowledge_source', id: input.sourceId } } : {}) })
 }
 async function read(context: ActionContext, sourceId: string) {
@@ -34,6 +36,40 @@ async function verifyCreated(context: ActionContext, input: Record<string, unkno
 }
 const transaction = { effect: 'transaction' as const, approval: false, authorize }
 export const knowledgeTools: ToolDefinition[] = [
+  nativeTool('knowledge.search', schemas.search, { description: 'Search the enabled knowledge sources visible to every reader in this conversation. Returns source excerpts; cite the runtime-assigned #cite-Sn markers and use read_source for more context.',
+    effect: 'read', approval: false, authorize, async execute(context, input) {
+      const hits = await retrieveKnowledge({ companyId: context.work.tenantId, conversationId: productConversationId(context.work),
+        authorizationUserId: context.work.principalId!, audienceUserIds: await audienceHumanIds(context), ...input })
+      const sources = await application(context).listKnowledgeSourcesForAgent(nativeContext(context)) as Array<{ id: string; version: string }>
+      const versions = new Map(sources.map(source => [source.id,source.version]))
+      for (const hit of hits) {
+        if (!versions.has(hit.sourceId)) throw new NoEffectError('knowledge source changed during search','resource_conflict')
+        await authorizeAudienceRead(context,{ action: 'knowledge:read',resource: { type: 'knowledge_source',id: hit.sourceId } })
+      }
+      const evidence = hits.map(hit => ({ sourceId: hit.sourceId, sourceVersion: versions.get(hit.sourceId)!,
+        chunkId: hit.chunkId, title: hit.sourceTitle, excerpt: hit.excerpt, truncated: true,
+        ...(hit.sourceUrl ? { url: hit.sourceUrl } : {}) }))
+      return { ok: true, value: { status: evidence.length ? 'matched' : 'no_matches', matches: evidence }, evidence }
+    } }),
+  nativeTool('knowledge.read_source', schemas.read_source, { description: 'Read a bounded range of an enabled source in this workspace. Returns actual text, version and nextOffset; continue reading when truncated. Metadata alone is not source content.',
+    effect: 'read', approval: false, authorize, async execute(context, input) {
+      const source = await read(context,input.sourceId)
+      const excluded = await db(context).query(`SELECT 1 FROM conversation_source_exclusions WHERE source_id=$1
+        AND conversation_id=$2 AND user_id=ANY($3::text[]) LIMIT 1`,
+      [input.sourceId,productConversationId(context.work),await audienceHumanIds(context)])
+      if (!source || source.enabled !== true || excluded.rows.length) throw new NoEffectError('knowledge source is unavailable or excluded','forbidden')
+      if (source.status !== 'ready') return { ok: true, value: { sourceId: input.sourceId, status: source.status, textAvailable: false } }
+      const projectId = await findKnowledgeRetrievalProject(db(context),context.work.tenantId,productConversationId(context.work),context.work.principalId!)
+      const text = await getKnowledgeSourceText(input.sourceId,context.work.tenantId,projectId!,context.work.principalId!)
+      if (!text?.trim()) return { ok: true, value: { sourceId: input.sourceId, status: 'empty', textAvailable: false } }
+      if (input.offset > text.length) throw new NoEffectError('source offset exceeds text length')
+      const excerpt = text.slice(input.offset,input.offset+input.limit), nextOffset = input.offset + excerpt.length
+      const sourceVersion = `sha256:${createHash('sha256').update(text).digest('hex')}`
+      const evidence = excerpt.trim() ? [{ sourceId: input.sourceId, sourceVersion, title: String(source.title),
+        chunkId: `${input.sourceId}:${input.offset}:${nextOffset}`, excerpt, truncated: input.offset > 0 || nextOffset < text.length }] : []
+      return { ok: true, value: { sourceId: input.sourceId, sourceVersion, status: 'ready', text: excerpt,
+        offset: input.offset, nextOffset, textLength: text.length, truncated: nextOffset < text.length }, evidence }
+    } }),
   nativeTool('knowledge.list_sources', schemas.list_sources, { description: 'Read sources visible to the original human in the current workspace.', effect: 'read', approval: false, authorize,
     async execute(context) {
       const sources = await application(context).listKnowledgeSourcesForAgent(nativeContext(context))

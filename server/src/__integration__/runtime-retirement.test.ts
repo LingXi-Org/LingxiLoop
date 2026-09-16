@@ -69,7 +69,7 @@ test('committed messages remain idempotent and attachments ingest without old Ag
   assert.deepEqual(ingestions, [{
     companyId, projectId, conversationId: 'retirement-room', clientMsgNo: 'retirement-message',
     createdBy: 'test-owner', title: 'notes.pdf', mime: 'application/pdf', size: 128,
-    storageKey: `attachments/${companyId}/notes.pdf`, recipients: [{ agentId, reason: 'knowledge_ready' }],
+    storageKey: `attachments/${companyId}/notes.pdf`, recipients: [],
   }])
   assert.deepEqual(wakes, [{ eventId: 'retirement-event', companyId, channelId: 'retirement-room',
     clientMsgNo: 'retirement-message', payload: event.payload, recipients: [agentId], knowledgeSourceId: 'attachment-source' }])

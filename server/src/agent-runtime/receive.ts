@@ -1,9 +1,7 @@
 import { createHash } from 'node:crypto'
-import { decodeSourceText, extractDocumentText, type RequestAttachment } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
-import { readAgentChannelMessages, agentContinuationSchema } from '../im/public.js'
-import type { ImMessageEnvelope } from '../im/messages-application.js'
-import { storage } from '../storage.js'
+import { getAgentChannelHistory, readAgentChannelMessages, agentContinuationSchema } from '../im/public.js'
+import { attachmentMessageIdsSchema } from '../im/contracts.js'
 import { resolveCalendarAgentRequest } from '../modules/calendar/index.js'
 import { resolveAgentHandoffWake } from '../modules/agents/index.js'
 import { lingxiOSControl } from './runtime.js'
@@ -11,6 +9,7 @@ import { loadRuntimeBinding } from './context.js'
 import { syncConversationPolicy } from './conversations.js'
 import { bindProductRun, productRunIdentity } from './identity.js'
 import { parseMentions } from '../mentions.js'
+import { readRequestAttachments, selectRequestAttachments, unavailableAttachmentIds } from './attachments.js'
 
 export interface AgentRequest {
   companyId: string; agentId: string; channelId: string; clientMsgNo: string
@@ -20,26 +19,6 @@ export interface AgentRequest {
   /** Required when a human invokes the HTTP continuation endpoint. */
   authenticatedUserId?: string
   signal?: AbortSignal
-}
-
-async function attachments(messages: ImMessageEnvelope[], ids: string[], companyId: string, signal: AbortSignal): Promise<RequestAttachment[]> {
-  if (ids.length > 20) throw new Error('request supports at most 20 attachments')
-  const result: RequestAttachment[] = []
-  for (const id of ids) {
-    const message = messages.find(item => item.clientMsgNo === id), data = message?.payload.data
-    if (message?.payload.kind !== 'attachment' || typeof data?.key !== 'string' || !data.key.startsWith(`attachments/${companyId}/`)
-      || typeof data.name !== 'string' || !data.name.trim() || typeof data.mime !== 'string' || !Number.isSafeInteger(data.size)
-      || Number(data.size) < 0 || Number(data.size) > 16 * 1024 * 1024) throw new Error('invalid committed attachment')
-    const bytes = Uint8Array.from(await storage.readObjectBounded(data.key, 16 * 1024 * 1024, signal))
-    if (bytes.length !== data.size) throw new Error('attachment bytes differ from the committed size')
-    const mime = data.mime.split(';')[0].trim().toLowerCase()
-    const text = mime.startsWith('text/') || ['application/json','application/xml'].includes(mime) ? decodeSourceText(bytes)
-      : mime === 'application/pdf' ? await extractDocumentText(bytes, 'pdf', signal)
-      : mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? await extractDocumentText(bytes, 'docx', signal) : undefined
-    result.push({ id, sourceVersion: `sha256:${createHash('sha256').update(bytes).digest('hex')}`,
-      name: data.name, mimeType: data.mime, size: bytes.length, ...(text === undefined ? {} : { text }) })
-  }
-  return result
 }
 
 /** Recover the author and payload from committed IM, including messages outside recent history. */
@@ -75,12 +54,26 @@ export async function receiveAgentRequest(input: AgentRequest) {
   const human = (await pool.query<{ name: string }>("SELECT name FROM participants WHERE company_id=$1 AND id=$2 AND kind='human' AND departed_at IS NULL",
     [input.companyId,message.fromUid])).rows[0]
   if (!human) throw new Error('request author is not an active human')
-  const attachmentIds = [...new Set([...(input.attachmentClientMsgNos ?? []), ...(message.payload.kind === 'attachment' ? [input.clientMsgNo] : [])])]
-  const files = await attachments(messages!, attachmentIds, input.companyId, signal)
-  const text = message.payload.kind === 'text' ? message.payload.body?.trim()
-    : `Use the committed attachment "${String(message.payload.data?.name)}" to help with the current conversation.`
-  if (!text) throw new Error('request text is empty')
+  const policy = await syncConversationPolicy(api, input.companyId, input.channelId)
   const threadId = message.payload.replyToClientMsgNo
+  const explicitIds = [...new Set([...(input.attachmentClientMsgNos ?? []),
+    ...attachmentMessageIdsSchema.parse(message.payload.data?.attachmentClientMsgNos ?? [])])]
+  const related = await readAgentChannelMessages({ ...input, messageIds: [...new Set([...explicitIds,...threadId ? [threadId] : []])], signal }) ?? []
+  const quoted = related.find(item => item.clientMsgNo === threadId || item.messageId === threadId)
+  if (quoted?.payload.kind === 'attachment') explicitIds.push(quoted.clientMsgNo)
+  if (quoted?.payload.data?.attachmentClientMsgNos) explicitIds.push(...attachmentMessageIdsSchema.parse(quoted.payload.data.attachmentClientMsgNos))
+  const history = await getAgentChannelHistory({ ...input, limit: 80, beforeSequence: message.messageSeq + 1 }) ?? []
+  const allMessages = [...messages!, ...related, ...history]
+  const attachmentIds = selectRequestAttachments(message, explicitIds, allMessages)
+  const missingIds = attachmentIds.filter(id => !allMessages.some(item => item.clientMsgNo === id))
+  if (missingIds.length) allMessages.push(...await readAgentChannelMessages({ ...input, messageIds: missingIds, signal }) ?? [])
+  const audienceIds = policy.participants.filter(member => member.kind === 'human' && member.capabilities.includes('read')).map(member => member.id)
+  const unavailable = await unavailableAttachmentIds(pool,input.companyId,input.channelId,attachmentIds,audienceIds)
+  const files = await readRequestAttachments(allMessages, attachmentIds.filter(id => !unavailable.has(id) || explicitIds.includes(id)
+    || id === input.clientMsgNo), input.companyId, signal, unavailable)
+  const text = message.payload.body?.trim() || (message.payload.kind === 'attachment'
+    ? `Use the committed attachment "${String(message.payload.data?.name)}" to help with the current conversation.` : undefined)
+  if (!text) throw new Error('request text is empty')
   const savedContinuation = message.payload.data?.agentContinuation === undefined ? undefined : agentContinuationSchema.parse(message.payload.data.agentContinuation)
   if (savedContinuation && (savedContinuation.agentId !== input.agentId || input.continuation
     && (input.continuation.runId !== savedContinuation.runId || input.continuation.requestVersion !== savedContinuation.requestVersion))) {
@@ -95,7 +88,6 @@ export async function receiveAgentRequest(input: AgentRequest) {
       inputId: input.clientMsgNo, text, attachments: files })
     return { id: result.workId, deduplicated: result.status === 'already_resumed' }
   }
-  const policy = await syncConversationPolicy(api, input.companyId, input.channelId)
   if (threadId) await api.conversations.registerThread({ tenantId: input.companyId, conversationId: input.channelId, threadId, policyVersion: policy.version })
   const members = (await pool.query<{ id: string; name: string; kind: 'human' | 'agent' }>(
     'SELECT id,name,kind FROM participants WHERE company_id=$1 AND id=ANY($2::text[])', [input.companyId,policy.participants.map(member => member.id)])).rows

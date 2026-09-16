@@ -29,6 +29,7 @@ const testsByScope = {
     'src/features/chat/runtime/store.test.ts',
     'src/features/chat/runtime/harness.test.ts',
     'src/features/chat/runtime/run-updates.test.ts',
+    'src/features/chat/runtime/attachment-messages.test.ts',
     'src/api/transport.test.ts',
     'src/features/knowledge/api.test.ts',
     'src/features/presentations/presentationFeature.test.ts',

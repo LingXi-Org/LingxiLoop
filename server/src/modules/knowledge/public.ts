@@ -18,7 +18,7 @@ export {
   validateKnowledgeUrl,
 } from './policy.js'
 export type { KnowledgeCitation, KnowledgeSourceStatus } from './runtime.js'
-export { openNotebookClient } from './provider.js'
+export { openNotebookClient, OpenNotebookError } from './provider.js'
 import { knowledgeAgentApplication } from './facade.js'
 export { knowledgeTools } from './agent-tools.js'
 

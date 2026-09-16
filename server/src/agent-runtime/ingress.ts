@@ -3,7 +3,7 @@ import type { LingxiMessageV1 } from '../im/message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import { pool } from '../db/pool.js'
 import { receiveAgentRequest } from './receive.js'
-import { agentContinuationSchema } from '../im/contracts.js'
+import { agentContinuationSchema, attachmentMessageIdsSchema } from '../im/contracts.js'
 
 export interface AgentWakeInput {
   eventId: string
@@ -16,10 +16,10 @@ export interface AgentWakeInput {
 }
 
 export async function enqueueAgentWakes(db: Queryable, input: AgentWakeInput): Promise<number> {
+  if (input.payload.data?.suppressAgentWake === true) return 0
   let kind: 'message' | 'handoff' | 'calendar'
   let recipients = input.recipients
-  let attachments: string[] = []
-  let available = true
+  let attachments = attachmentMessageIdsSchema.parse(input.payload.data?.attachmentClientMsgNos ?? [])
   if (input.payload.kind === 'text') {
     kind = 'message'
     if (input.payload.data?.agentContinuation !== undefined) {
@@ -28,10 +28,9 @@ export async function enqueueAgentWakes(db: Queryable, input: AgentWakeInput): P
     }
   }
   else if (input.payload.kind === 'handoff') kind = 'handoff'
-  else if (input.payload.kind === 'attachment' && input.knowledgeSourceId) {
+  else if (input.payload.kind === 'attachment') {
     kind = 'message'
-    attachments = [input.clientMsgNo]
-    available = false
+    attachments = attachmentMessageIdsSchema.parse([...new Set([...attachments, input.clientMsgNo])])
   } else if (input.payload.kind === 'system'
     && typeof input.payload.data?.calendarEventId === 'string'
     && typeof input.payload.data?.scheduledFor === 'string') {
@@ -60,7 +59,7 @@ export async function enqueueAgentWakes(db: Queryable, input: AgentWakeInput): P
          AND lingxios_ingress_outbox.knowledge_source_id IS NOT DISTINCT FROM EXCLUDED.knowledge_source_id
        RETURNING event_id`,
       [input.eventId, agentId, input.companyId, input.channelId, input.clientMsgNo, kind, attachments,
-        input.knowledgeSourceId ?? null, available],
+        input.knowledgeSourceId ?? null, true],
     )
     if (rowCount !== 1) throw new Error('WuKong event identity was reused with a different Agent wake')
     inserted++

@@ -5,6 +5,7 @@ import { harnessApi } from '../runtime/harness-api'
 import { userFacingError } from '@/lib/userFacingError'
 import type { LingxiMessageMetadata } from '../runtime/model'
 import { chatTransport } from '../runtime/transport'
+import { harnessFailure, harnessLabel } from '../runtime/harness'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const target = useMemo(() => ({ conversationId: metadata.conversationId, agentId: metadata.senderId, runId: metadata.runId!,
@@ -23,7 +24,12 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
   }
 
   return <section aria-label="任务结果与操作" className="mt-2 grid w-full max-w-xl gap-2 text-xs text-muted-foreground empty:hidden">
-    {view.lifecycle === 'failed' && <p role="status">回复未能完成，请稍后重试。</p>}
+    {!active && <p role="status">{harnessLabel(view)}</p>}
+    {metadata.harnessError && <p role="alert">{harnessFailure(metadata.harnessError)}</p>}
+    {outcome && 'gaps' in outcome && outcome.gaps?.length ? <details open className="rounded-lg border border-border px-3 py-2">
+      <summary className="cursor-pointer">未完成原因</summary>
+      <ul className="mt-2 list-disc space-y-1 pl-4">{[...new Set(outcome.gaps)].map(gap => <li key={gap}>{harnessFailure(gap)}</li>)}</ul>
+    </details> : null}
     {outcome?.question && <p className="text-sm text-foreground">{outcome.question}</p>}
     {envelope?.artifacts.length ? <div className="grid gap-2" aria-label="交付附件">
       {envelope.artifacts.map(artifact => <div key={artifact.path} className="rounded-lg border border-border px-3 py-2">

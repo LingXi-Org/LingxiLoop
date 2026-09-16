@@ -34,6 +34,17 @@ const event = (draft: string): RunStreamEvent => ({ type: 'preview', preview: {
   kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', seq: 1, draft,
 } })
 
+test('a failure clears uncommitted previews and active state while preserving the specific error', () => {
+  let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
+  state = applyRunUpdate(state,target,event('尚未验收的草稿'),participants.agent)
+  state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 8,kind: 'run.failed',stage: 'failed',visibility: 'user',
+    data: { error: 'Final assessment protocol correction exhausted' } } },participants.agent)
+  assert.deepEqual(state.activeRuns,{})
+  assert.deepEqual(state.messages[0].content,[])
+  assert.deepEqual(state.messages[0].status,{ type: 'incomplete',reason: 'error' })
+  assert.equal(metadata(state.messages[0]).harnessError,'Final assessment protocol correction exhausted')
+})
+
 test('a live reply stays between user turns through streaming, acknowledgements and canonical delivery', () => {
   let state = { ...EMPTY_CONVERSATION_CHAT_STATE, messages: [user('first', 1, 1000)] }
   state = applyRunUpdate(state, target, { type: 'state', state: snapshot('run', 'leased') }, participants.agent)

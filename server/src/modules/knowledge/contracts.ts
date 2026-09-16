@@ -38,6 +38,9 @@ const expectedSource = z.object({ enabled: z.boolean().optional(), status: z.str
   .strict().refine(value => Object.keys(value).length > 0, 'expected source fields are required')
 export const agentKnowledgeSchemas = {
   list_sources: z.object({}).strict(),
+  search: z.object({ query: z.string().trim().min(1).max(4000), limit: z.number().int().min(1).max(8).default(8) }).strict(),
+  read_source: z.object({ sourceId, offset: z.number().int().nonnegative().safe().default(0),
+    limit: z.number().int().min(1).max(16_000).default(16_000) }).strict(),
   check_source: z.object({ sourceId, expected: expectedSource }).strict(),
   add_text: createSourceRequestSchema.options[0].omit({ kind: true, idempotencyKey: true }).extend({ title: updateSourceRequestSchema.shape.title,
     text: createSourceRequestSchema.options[0].shape.text.max(200_000) }).strict(),
