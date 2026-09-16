@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils'
 import { useConversationUi } from '@/stores/conversationUi'
 import type { Participant } from '@/types'
 import { chatTransport, type LingxiMessageMetadata } from '../runtime'
-import { CHAT_TOOL_RENDERERS, HostToolTimeline } from './ToolRenderers'
+import { CHAT_TOOL_RENDERERS } from './ToolRenderers'
 import { HarnessDetails } from './HarnessDetails'
 
 function ReasoningPart({ status }: ReasoningMessagePartProps) {
@@ -350,6 +350,9 @@ export function ConversationMessage() {
     status: 'avail',
   } : undefined)
   const chromeAt = custom.clusterChromeAt === null ? createdAt : new Date(custom.clusterChromeAt)
+  // The external runtime adds an empty assistant placeholder after a mid-run user turn.
+  // Real replies come from the transport and already carry their own typing state.
+  if (custom.schema !== 'lingxiloop.thread-message.v1') return null
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
@@ -403,7 +406,6 @@ export function ConversationMessage() {
               }}
             />)}
           </div>}
-          <HostToolTimeline />
           <MessagePrimitive.Parts
             components={{
               Text: MessageTextPart,

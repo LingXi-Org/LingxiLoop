@@ -55,6 +55,8 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   conversationId: string
   clientMessageId: string
   sequence: number | null
+  /** Keep a live reply at its original turn when its IM receipt arrives later. */
+  positionAfter?: string | null
   senderId: string
   senderName: string
   senderKind: 'human' | 'agent' | 'system'

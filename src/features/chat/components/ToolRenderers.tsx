@@ -1,7 +1,6 @@
-import { type ToolCallMessagePart, type ToolCallMessagePartProps, useAuiState } from '@assistant-ui/react'
+import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { renderGenerativeUI, type UIElement, type UISpec } from '@assistant-ui/react-generative-ui'
-import { WrenchIcon } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { AgentHandoff } from '@/components/assistant-ui/elements/agent-handoff'
 import { AgentPlan } from '@/components/assistant-ui/elements/agent-plan'
@@ -15,7 +14,6 @@ import { styledGenerativeUILibrary } from '@/components/assistant-ui/elements/ge
 import { RecommendationCard } from '@/components/assistant-ui/elements/recommendation-card'
 import { ScoreBreakdown, type ScoreCriterion } from '@/components/assistant-ui/elements/score-breakdown'
 import { CardSurface, conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
-import { ToolTimeline } from '@/components/assistant-ui/elements/tool-timeline'
 import { StatsDisplay } from '@/components/tool-ui/stats-display'
 import { parseSerializableStatsDisplay } from '@/components/tool-ui/stats-display/schema'
 import { useParticipants } from '@/features/agents/state'
@@ -25,7 +23,6 @@ import {
   parsePresentationArtifact,
 } from '@/features/presentations'
 import { useSurface } from '@/stores/surface'
-import { getLingxiMessageMetadata } from '../runtime/model'
 
 export function RecommendationCardTool({ args, approval, respondToApproval }: ToolCallMessagePartProps) {
   const value = args as {
@@ -89,58 +86,6 @@ export function PollFormTool({ args, result, addResult }: ToolCallMessagePartPro
     onAccept={() => {
       if (!missing) addResult(selection)
     }}
-  />
-}
-
-function toolChip(toolName: string, args: Record<string, unknown>): string {
-  const value = Object.values(args).find((item) => typeof item === 'string' || typeof item === 'number')
-  return value === undefined ? toolName : String(value).slice(0, 80)
-}
-
-export function HostToolTimeline() {
-  const [open, setOpen] = useState(false)
-  const messageId = useAuiState((state) => state.message.id)
-  const runId = useAuiState((state) => (state.message.metadata.custom as { runId?: unknown }).runId)
-  const messages = useAuiState((state) => state.thread.messages)
-  const running = useAuiState((state) => state.message.status?.type === 'running')
-  const { calls, ownerId } = useMemo(() => {
-    const currentIndex = messages.findIndex((message) => message.id === messageId)
-    if (currentIndex < 0) return { calls: [], ownerId: '' }
-    let related = typeof runId === 'string' && runId
-      ? messages.filter((message) => (message.metadata.custom as { runId?: unknown }).runId === runId)
-      : [messages[currentIndex]!]
-    if (!(typeof runId === 'string' && runId)) {
-      let start = currentIndex
-      let end = currentIndex
-      while (start > 0 && (messages[start]!.metadata.custom as { continuedFromPrevious?: unknown }).continuedFromPrevious === true) start -= 1
-      while (end + 1 < messages.length && (messages[end]!.metadata.custom as { continuedToNext?: unknown }).continuedToNext === true) end += 1
-      related = messages.slice(start, end + 1)
-    }
-    const groupedCalls = related.flatMap((message) => [...getLingxiMessageMetadata(message).harnessTools ?? [],...message.content.filter((part): part is ToolCallMessagePart => (
-      part.type === 'tool-call' && part.toolCallId.startsWith('host:')
-    ))])
-    const owner = related.find((message) => getLingxiMessageMetadata(message).harnessTools?.length || message.content.some((part) => (
-      part.type === 'tool-call' && part.toolCallId.startsWith('host:')
-    )))
-    return { calls: [...new Map(groupedCalls.map(part => [part.toolCallId,part])).values()], ownerId: owner?.id ?? '' }
-  }, [messageId, messages, runId])
-  const streaming = running && calls.some((part) => part.result === undefined)
-  if (calls.length < 1 || ownerId !== messageId) return null
-  const steps = calls.map((part) => ({
-    verb: (part.result as { status?: string } | undefined)?.status === 'unknown' ? '需确认结果' : part.isError ? '调用失败' : (part.result as { status?: string } | undefined)?.status === 'awaiting-approval' ? '等待审批'
-      : part.result === undefined ? running ? '调用中' : '已中止' : '已调用',
-    chip: toolChip(part.toolName, part.args as Record<string, unknown>),
-    icon: WrenchIcon,
-  }))
-  return <ToolTimeline
-    steps={steps}
-    visibleSteps={steps.length}
-    streaming={streaming}
-    open={open}
-    onOpenChange={setOpen}
-    restingLabel={`${steps.length} 个工具步骤`}
-    activeLabel="正在工作"
-    stats={[]}
   />
 }
 

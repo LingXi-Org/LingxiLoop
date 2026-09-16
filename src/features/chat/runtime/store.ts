@@ -48,7 +48,7 @@ function metadata(message: ThreadMessage): LingxiMessageMetadata {
   return getLingxiMessageMetadata(message)
 }
 
-function messageKey(message: ThreadMessage): string {
+export function messageKey(message: ThreadMessage): string {
   const value = metadata(message)
   return value.senderKind === 'agent' && value.messageKind === 'text' && value.runId
     ? JSON.stringify(['run',value.conversationId,value.senderId,value.runId,value.threadRootId])
@@ -75,14 +75,31 @@ export function mergeCanonicalMessages(
           unresolvedActions: after.unresolvedActions ?? before.unresolvedActions } } } as ThreadMessage)
     } else if (!before?.harness || after.harness) byId.set(key,message)
   }
-  return projectMessageGroups([...byId.values()].sort((left, right) => {
+  for (const message of current) {
+    const key = messageKey(message), next = byId.get(key)
+    if (next && metadata(message).positionAfter !== undefined) {
+      byId.set(key, { ...patchMetadata(next, { positionAfter: metadata(message).positionAfter }), createdAt: message.createdAt })
+    }
+  }
+  const positioned = [...byId.values()].filter(message => metadata(message).positionAfter !== undefined)
+  const sorted = [...byId.values()].filter(message => metadata(message).positionAfter === undefined).sort((left, right) => {
     const leftSequence = metadata(left).sequence
     const rightSequence = metadata(right).sequence
     if (leftSequence !== null && rightSequence !== null && leftSequence !== rightSequence) return leftSequence - rightSequence
     if (leftSequence !== null && rightSequence === null) return -1
     if (leftSequence === null && rightSequence !== null) return 1
     return left.createdAt.getTime() - right.createdAt.getTime()
-  }))
+  })
+  const tails = new Map<string | null, string>()
+  for (const message of positioned) {
+    const anchor = metadata(message).positionAfter!
+    const after = tails.get(anchor) ?? anchor
+    const index = after === null ? -1 : sorted.findIndex(item => messageKey(item) === after)
+    const fallback = sorted.findIndex(item => item.createdAt > message.createdAt)
+    sorted.splice(index >= 0 ? index + 1 : fallback < 0 ? sorted.length : fallback, 0, message)
+    tails.set(anchor, messageKey(message))
+  }
+  return projectMessageGroups(sorted)
 }
 
 function patchMetadata(
