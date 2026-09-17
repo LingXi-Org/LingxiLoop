@@ -79,6 +79,7 @@ jobs:
               - 'workers/control-plane/**'
               - 'worker-configuration.d.ts'
             server:
+              - 'scripts/test-native-agent-*.mjs'
               - 'server/.npmrc'
               - 'server/src/**'
               - 'server/scripts/**'
@@ -89,6 +90,7 @@ jobs:
               - 'server/*.conf'
               - 'server/docker/lingxiloop-server.Dockerfile'
             server_source:
+              - 'scripts/test-native-agent-*.mjs'
               - 'server/.npmrc'
               - 'server/src/**'
               - '!server/src/__tests__/**'

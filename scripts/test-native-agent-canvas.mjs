@@ -102,7 +102,7 @@ try {
         if(hop===3) return call('canvas__create_frame',{frame:{type:'markdown',title:'Forbidden reporter edit',content:'Must not be created.'}})
         if(hop===4) {
           assert.equal((await db.query('SELECT id FROM canvas_frames')).rows.length,1)
-          assert.equal(JSON.parse(request.items.filter(item=>item.type==='function_call_output').at(-1).output).result.executionState,'rejected')
+          assert.equal(JSON.parse(request.items.filter(item=>item.type==='function_call_output').at(-1).output).executionState,'rejected')
           const reports=(await db.query("SELECT id FROM canvas_assignment_reports WHERE author_agent_id IN ('agent','verifier') AND assignment_id IS NOT NULL")).rows
           assert.equal(reports.length,2,JSON.stringify(await Promise.all((await db.query('SELECT work_id FROM canvas_agent_runs WHERE assignment_id IS NOT NULL')).rows.map(async row => control.readDiagnostics(await readRunReference(db,'t',row.work_id))))))
           return call('canvas__submit_report',{finding:'Builder and independent verifier agree.',confidence:0.9,evidenceRefs:[],consumedReportIds:reports.map(row=>row.id)})
