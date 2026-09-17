@@ -7,7 +7,7 @@ import { directoryTools, handoffTools } from '../modules/agents/index.js'
 import { researchTools } from '../modules/research/index.js'
 import { pollTools } from '../modules/polls/index.js'
 import { conversationTools } from '../modules/conversations/public.js'
-import { messageTools } from '../im/public.js'
+import { createMessageTools } from '../im/public.js'
 import { knowledgeTools } from '../modules/knowledge/public.js'
 import { emailTools } from '../modules/email/index.js'
 import { presentationTools } from '../modules/presentations/public.js'
@@ -15,6 +15,6 @@ import { createRoutineTools } from '../modules/routines/public.js'
 
 export function createProductTools(control: () => ReturnType<typeof createLingxiOS>): ToolDefinition[] {
   return [...calendarTools, ...documentTools, ...createCanvasTools(control), ...learningTools, ...teacherTools,
-    ...directoryTools, ...handoffTools, ...researchTools, ...pollTools, ...conversationTools, ...messageTools,
+    ...directoryTools, ...handoffTools, ...researchTools, ...pollTools, ...conversationTools, ...createMessageTools(control),
     ...knowledgeTools, ...emailTools, ...presentationTools, ...createRoutineTools(control)]
 }

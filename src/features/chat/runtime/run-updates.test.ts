@@ -34,6 +34,63 @@ const event = (draft: string): RunStreamEvent => ({ type: 'preview', preview: {
   kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', seq: 1, draft,
 } })
 
+function sent(id: string, sequence: number, runId = 'run'): ImEnvelope {
+  return { channelId: 'room',channelType: 2,fromUid: 'agent',messageId: id,clientMsgNo: id,
+    messageSeq: sequence,timestamp: (epoch + sequence * 1000) / 1000,
+    payload: { version: 1,kind: 'text',clientMsgNo: id,body: id,refs: { runId,agentId: 'agent' } } }
+}
+
+test('sent bubbles, native final citations and interleaved users survive replay and reload in IM order', () => {
+  const first = user('first',1,1000), followup = user('followup',4,4000)
+  const bubbles = [sent('lead-in',2),sent('example',3)].map(envelope => convertEnvelope(envelope,{ participants,meId: 'human' }))
+  let state = applyRunUpdate({ ...EMPTY_CONVERSATION_CHAT_STATE,messages: [first] },target,
+    { type: 'state',state: snapshot('run','leased') },participants.agent)
+  state = { ...state,messages: mergeCanonicalMessages(state.messages,[...bubbles,followup]) }
+  state = applyRunUpdate(state,target,event('最后一步'),participants.agent)
+  assert.deepEqual(state.messages.map(message => message.id),['first','lead-in','example','preview-run','followup'])
+  assert.equal(Object.keys(state.activeRuns).length,1)
+
+  const completed = snapshot()
+  const body = '最后的结论见[资料](#cite-S1)'
+  completed.message!.body = body
+  completed.message!.envelope.body = body
+  completed.message!.envelope.citations = [{ start: 6,end: body.length,text: '资料',markers: ['S1'],support: 'not_assessed',
+    sources: [{ sourceId: 'source',sourceVersion: 'v1',chunkIds: ['chunk'] }] }]
+  state = applyRunUpdate(state,target,{ type: 'state',state: completed },participants.agent)
+  const envelope = sent('result-run',5)
+  envelope.payload.body = body
+  envelope.payload.data = { harness: completed.message!.envelope,harnessSessionId: 'session',harnessCommit: { resultId: 'result-run',fence: 1 } }
+  const result = convertEnvelope(envelope,{ participants,meId: 'human' })
+  state = { ...state,messages: mergeCanonicalMessages(state.messages,[result,...bubbles,result]) }
+  state = applyRunUpdate(state,target,event('旧草稿'),participants.agent)
+  assert.deepEqual(state.messages.map(message => message.id),['first','lead-in','example','followup','result-run'])
+  assert.deepEqual(state.messages.at(-1)!.content,result.content)
+  assert.deepEqual(state.activeRuns,{})
+  assert.deepEqual(state.messages.slice(1,3).map(message => message.content),bubbles.map(message => message.content))
+
+  const reloaded = applyRunUpdate({ ...EMPTY_CONVERSATION_CHAT_STATE,
+    messages: mergeCanonicalMessages([],[result,followup,...bubbles,first]) },target,{ type: 'state',state: completed },participants.agent)
+  assert.deepEqual(reloaded.messages.map(message => [message.id,message.content,metadata(message).sequence]),
+    state.messages.map(message => [message.id,message.content,metadata(message).sequence]))
+})
+
+test('a run discovered after a sent bubble owns a separate preview and cannot erase sent text on cancellation or failure', () => {
+  const bubble = convertEnvelope(sent('already-sent',1),{ participants,meId: 'human' })
+  for (const kind of ['run.cancelled','run.failed'] as const) {
+    let state = applyRunUpdate({ ...EMPTY_CONVERSATION_CHAT_STATE,messages: [bubble] },target,
+      { type: 'state',state: snapshot('run','leased') },participants.agent)
+    state = applyRunUpdate(state,target,event('尚未发送的部分'),participants.agent)
+    state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 3,kind,
+      stage: kind === 'run.failed' ? 'failed' : 'completed',visibility: 'user',data: { error: 'fixture failure' } } },participants.agent)
+    assert.deepEqual(state.messages.map(message => message.id),['already-sent','preview-run'])
+    assert.deepEqual(state.messages[0].content,bubble.content)
+    assert.equal(metadata(state.messages[0]).harness,undefined)
+    assert.equal(state.messages[0].status?.type,'complete')
+    assert.deepEqual(state.activeRuns,{})
+    assert.equal(state.messages[1].status?.type,'incomplete')
+  }
+})
+
 test('a failure clears uncommitted previews and active state while preserving the specific error', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
   state = applyRunUpdate(state,target,event('尚未验收的草稿'),participants.agent)
@@ -153,14 +210,17 @@ test('initial history publishes complete run snapshots together and subscribes o
   const subscribed: string[] = []
   const callbacks = new Map<string, (item: RunStreamEvent) => void>()
   const cancelled: string[] = []
+  let receiveIm!: (envelope: ImEnvelope) => void
+  const imHistory: ImEnvelope[] = []
   let finishSecond!: (state: RunState) => void
   const second = new Promise<RunState>(resolve => { finishSecond = resolve })
-  mock.module('@/api/core/realtime', { namedExports: { ws: {} } })
+  mock.module('@/api/core/realtime', { namedExports: { ws: { connect: async () => {},on: () => () => {} } } })
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
   mock.module('@/features/agents/state', { namedExports: { useParticipants: { getState: () => ({ byId: participants }) } } })
   mock.module('@/features/chat/api', { namedExports: { messagesApi: {} } })
   mock.module('@/stores/auth', { namedExports: { getMeId: () => 'human', getActiveCompanyId: () => null } })
-  mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: { history: async () => [] } } })
+  mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: { history: async () => imHistory,
+    connect: async () => {},disconnect: () => {},subscribe: (receive: typeof receiveIm) => { receiveIm = receive; return () => {} } } } })
   mock.module('./harness-api', { namedExports: { harnessApi: {
     cancel: async ({ runId }: typeof target) => {
       cancelled.push(runId)
@@ -177,9 +237,12 @@ test('initial history publishes complete run snapshots together and subscribes o
     },
   } } })
   const originalEventSource = globalThis.EventSource
+  const originalWindow = globalThis.window
   globalThis.EventSource = { CLOSED: 2 } as typeof EventSource
+  globalThis.window = { setInterval: () => 0,clearInterval: () => {},clearTimeout: () => {} } as unknown as Window & typeof globalThis
   const { ChatTransport, filterThreadMessages } = await import('./transport')
   const transport = new ChatTransport()
+  transport.boot()
   const batches: string[][] = []
   const unsubscribe = useChatThreadStore.subscribe(state => {
     if (state.conversations.room?.loaded) batches.push(state.conversations.room.messages.map(message => message.id))
@@ -205,6 +268,21 @@ test('initial history publishes complete run snapshots together and subscribes o
     await transport.reloadConversation('room')
     assert.deepEqual(subscribed, ['active'])
     assert.equal(useChatThreadStore.getState().conversations.room!.messages.length, 3)
+    const activeBefore = useChatThreadStore.getState().conversations.room!
+    useChatThreadStore.setState({ conversations: { room: { ...activeBefore,typingAgentIds: ['agent'] } } })
+    imHistory.push(sent('active-lead-in',10,'active'),sent('active-example',11,'active'))
+    for (const envelope of [...imHistory,...imHistory]) receiveIm(envelope)
+    const afterSend = useChatThreadStore.getState().conversations.room!
+    assert.deepEqual(afterSend.activeRuns,activeBefore.activeRuns)
+    assert.deepEqual(afterSend.typingAgentIds,['agent'])
+    assert.deepEqual(afterSend.messages.slice(-3).map(message => message.id),['active-lead-in','active-example','preview-active'])
+    callbacks.get('active')!({ type: 'preview',preview: { ...(event('新的末条回复') as Extract<RunStreamEvent,{ type: 'preview' }>).preview,
+      runId: 'active',seq: 2 } })
+    await transport.reloadConversation('room')
+    const replayed = useChatThreadStore.getState().conversations.room!
+    assert.equal(replayed.messages.length,5)
+    assert.deepEqual(replayed.messages.filter(message => !metadata(message).harness).map(message => message.content),
+      [[{ type: 'text',text: 'active-lead-in' }],[{ type: 'text',text: 'active-example' }]])
     let cancelState = EMPTY_CONVERSATION_CHAT_STATE
     for (const [runId, status, canControl] of [
       ['queued', 'queued', true], ['active', 'leased', true], ['waiting', 'waiting', true],
@@ -221,7 +299,9 @@ test('initial history publishes complete run snapshots together and subscribes o
     assert.equal(metadata(useChatThreadStore.getState().conversations.room!.messages.find(message => metadata(message).runId === 'queued')!).harness?.lifecycle, 'succeeded')
   } finally {
     unsubscribe()
+    transport.disconnect()
     globalThis.EventSource = originalEventSource
+    globalThis.window = originalWindow
     mock.restoreAll()
   }
 })

@@ -6,6 +6,7 @@ import type { Queryable } from '../db/queryable.js'
 import { createPermissionService, type PermissionRequest } from '../modules/access/public.js'
 import type { AgentActionContext } from './contracts.js'
 import { assignedHandoff } from '../modules/agents/handoff-repository.js'
+import { resolveTeacherScope } from '../modules/learning/teacher-agent-application.js'
 
 export function compareResource(resource: string, expected: Record<string, unknown>, actual: object) {
   // Receipts cross a JSON boundary; PostgreSQL Date values must compare in that same representation.
@@ -59,12 +60,17 @@ export async function authorizeAgent(context: ActionContext) {
   const agent = rows[0], namespace = context.action.action.split('.')[0]
   const capability = namespace === 'research' ? 'web' : namespace === 'presentations' ? 'knowledge' : namespace
   const assigned = ['handoffs.list','handoffs.update'].includes(context.action.action) && !!await assignedHandoff(db,work)
-  if (!agent || agent.teacher_managed !== (namespace === 'teacher')
+  const teacherChat = context.action.action === 'chat.send' && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
+  if (!agent || (agent.teacher_managed ? namespace !== 'teacher' && !teacherChat : namespace === 'teacher')
     || !['teacher', 'memory', 'chat', 'polls', 'directory'].includes(namespace) && !agent.capabilities.includes(capability) && !assigned) {
     throw new NoEffectError('agent capability or membership was revoked', 'forbidden')
   }
   await createPermissionService(db, { lockDependencies: true }).assertCan({ actorUserId: work.principalId,
     companyId: work.tenantId, action: 'conversation:read', resource: { type: 'conversation', id: productConversationId(work) } })
+  if (agent.teacher_managed && teacherChat) {
+    const scope = await resolveTeacherScope(nativeContext(context),db)
+    await authorizeAudienceRead(context,{ projectId: scope.projectId,action: 'learning:manage',resource: { type: 'project',id: scope.projectId } })
+  }
   return agent
 }
 

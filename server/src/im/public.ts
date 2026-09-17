@@ -1,7 +1,7 @@
 import type { LingxiMessageV1 } from './message-types.js'
 import type { ImMessageEnvelope } from './messages-application.js'
 import { createImMessagesApplication, imMessagesApplication } from './messages-facade.js'
-export { messageTools } from './agent-tools.js'
+export { createMessageTools } from './agent-tools.js'
 
 export function getAgentChannelHistory(input: {
   companyId: string

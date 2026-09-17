@@ -89,7 +89,7 @@ export async function persistTeacherProvisioning(
       $1,$2,'agent',$3,$4,'P','transparent','avail',
       '项目级教师专用智能体；负责课程管理与学情汇总',$5::jsonb,$6::jsonb,$7,$8
     )
-    ON CONFLICT(id,company_id) DO UPDATE SET
+    ON CONFLICT(company_id,preset_key) WHERE preset_key IS NOT NULL DO UPDATE SET
       name=EXCLUDED.name,role=EXCLUDED.role,tools=EXCLUDED.tools,
       capabilities=EXCLUDED.capabilities,system_prompt=EXCLUDED.system_prompt,
       departed_at=NULL`,

@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict'
+import { installRecordingWukong } from './_recording-wukong.js'
 import { seedMembershipPeriod } from './_helpers.js'
 import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { createWorker } from '@lyyzka/lingxios/worker'
+import type { ActionContext } from '@lyyzka/lingxios'
 import { lingxiOSControl, stopLingxiOSControl } from '../agent-runtime/runtime.js'
+import { createProductContext } from '../agent-runtime/context.js'
+import { createProductTools } from '../agent-runtime/tools.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import type { Queryable } from '../db/queryable.js'
@@ -35,6 +39,48 @@ beforeEach(async () => { installFakeWukong(); await resetAllTables() })
 after(async () => { await teardownAll() })
 
 const teacherTransaction = <T>(work: (client: Queryable) => Promise<T>) => withTransaction(pool, work)
+
+test('[integration] Pulse can send conversational messages only in its active authorized teacher room', async t => {
+  const im = await installRecordingWukong()
+  t.after(async () => { await stopLingxiOSControl(); await im.close() })
+  const fixture = await seedTeacherCourse()
+  const pulse = await ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
+  const api = await lingxiOSControl(), policy = await syncConversationPolicy(api,fixture.companyId,pulse.roomId)
+  const source = { messageId: 'teacher-style',version: 1 }
+  const accepted = await api.conversations.ingest({ tenantId: fixture.companyId,conversationId: pulse.roomId,
+    policyVersion: policy.version,...source,author: { id: fixture.teacherId,kind: 'human' },text: '解释班级情况。',mentions: [pulse.agentId] })
+  const run = accepted.runs[0]; assert.ok(run)
+  const work: ActionContext['work'] = { id: run.runId,tenantId: fixture.companyId,agentId: pulse.agentId,
+    principalId: fixture.teacherId,sessionId: run.sessionId,kind: 'turn',lane: 'interactive',triggerRef: source.messageId,
+    fence: 1,homeEpoch: 1,createdAt: new Date().toISOString(),meta: { text: '解释班级情况。' },
+    conversation: { conversationId: pulse.roomId,policyVersion: policy.version,source,internal: false,
+      audience: { visibility: 'conversation',participantIds: policy.participants.map(member => member.id) } } }
+  const tools = createProductTools(lingxiOSControl), product = createProductContext(tools)
+  const loaded = await product.contextProvider.loadContext(work)
+  assert.match(loaded.productRules ?? '',/User-facing IM conversation/)
+  assert.deepEqual((await product.capabilityResolver.resolve(work)).filter(grant => grant.name === 'chat'),[{ name: 'chat',methods: ['send'] }])
+  const input = { body: '先从班级整体情况看起。' }, send = tools.find(tool => tool.action === 'chat.send')!
+  const context = { work,database: pool,signal: AbortSignal.timeout(15000),requestVersion: 1,
+    action: { runId: run.runId,cellId: 'teacher-send',callIndex: 0,action: 'chat.send',args: input,idempotencyKey: 'teacher-style-send' },
+  } as unknown as ActionContext
+  await send.authorize(context,input)
+  assert.equal((await send.execute(context,input)).ok,true)
+  assert.deepEqual((await pool.query(`SELECT input->>'text' AS body,outcome->>'reason' AS reason
+    FROM lingxios.agent_im_messages WHERE tenant_id=$1 AND conversation_id=$2 AND input->'author'->>'kind'='agent'`,
+  [fixture.companyId,pulse.roomId])).rows,[{ body: input.body,reason: 'agent_message' }])
+  await assert.rejects(send.authorize({ ...context,work: { ...work,kind: 'teacher_digest',lane: 'background' } },input),/capability or membership/)
+  await assert.rejects(send.authorize({ ...context,work: { ...work,lane: 'background' } },input),/capability or membership/)
+  await assert.rejects(send.authorize({ ...context,work: { ...work,conversation: { ...work.conversation!,internal: true } } },input),/capability or membership/)
+  await assert.rejects(tools.find(tool => tool.action === 'chat.ask')!.authorize({ ...context,
+    action: { ...context.action,action: 'chat.ask' } },{}),/capability or membership/)
+  await pool.query("UPDATE learning_course_teacher_rooms SET status='closed' WHERE company_id=$1 AND conversation_id=$2",[fixture.companyId,pulse.roomId])
+  await assert.rejects(send.authorize(context,input),/closed/)
+  await pool.query("UPDATE learning_course_teacher_rooms SET status='active' WHERE company_id=$1 AND conversation_id=$2",[fixture.companyId,pulse.roomId])
+  await pool.query("UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id=$2 AND user_id=$3",[fixture.companyId,fixture.projectId,fixture.teacherId])
+  await assert.rejects(send.authorize(context,input))
+  assert.equal((await pool.query('SELECT count(*)::integer AS count FROM im_send_acceptances WHERE company_id=$1',[fixture.companyId])).rows[0].count,1)
+  await stopLingxiOSControl()
+})
 
 test('[integration] Pulse replies over the control plane without memory and rejects revoked membership', async () => {
   const fixture = await seedTeacherCourse()

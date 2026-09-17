@@ -2,7 +2,7 @@ import type { ThreadMessage } from '@assistant-ui/react'
 import { create } from 'zustand'
 import { getLingxiMessageMetadata, type LingxiMessageMetadata } from './model'
 import { projectMessageGroups } from './converter'
-import { harnessParts, harnessStatus, mergeHarness } from './harness'
+import { harnessParts, harnessStatus, isRunMessage, mergeHarness } from './harness'
 
 export const CHAT_HISTORY_PAGE_SIZE = 80
 
@@ -48,11 +48,13 @@ function metadata(message: ThreadMessage): LingxiMessageMetadata {
   return getLingxiMessageMetadata(message)
 }
 
+function runKey(value: LingxiMessageMetadata): string {
+  return JSON.stringify(['run',value.conversationId,value.senderId,value.runId,value.threadRootId])
+}
+
 export function messageKey(message: ThreadMessage): string {
   const value = metadata(message)
-  return value.senderKind === 'agent' && value.messageKind === 'text' && value.runId
-    ? JSON.stringify(['run',value.conversationId,value.senderId,value.runId,value.threadRootId])
-    : value.clientMessageId || message.id
+  return isRunMessage(value) ? runKey(value) : value.clientMessageId || message.id
 }
 
 export function mergeCanonicalMessages(
@@ -82,6 +84,19 @@ export function mergeCanonicalMessages(
     if (next && metadata(message).positionAfter !== undefined) {
       byId.set(key, { ...patchMetadata(next, { positionAfter: metadata(message).positionAfter }), createdAt: message.createdAt })
     }
+  }
+  const lastSentByRun = new Map<string, ThreadMessage>()
+  for (const message of byId.values()) {
+    const value = metadata(message)
+    if (value.senderKind !== 'agent' || value.messageKind !== 'text' || !value.runId || value.harness || value.sequence === null) continue
+    const previous = lastSentByRun.get(runKey(value))
+    if (!previous || value.sequence > metadata(previous).sequence!) lastSentByRun.set(runKey(value),message)
+  }
+  for (const [key,message] of byId) {
+    const value = metadata(message), lastSent = lastSentByRun.get(runKey(value))
+    if (!isRunMessage(value) || !lastSent) continue
+    // Sent bubbles use IM order; only the pending final reply needs an anchor after the latest bubble.
+    byId.set(key,patchMetadata(message,{ positionAfter: value.sequence === null ? messageKey(lastSent) : undefined }))
   }
   const positioned = [...byId.values()].filter(message => metadata(message).positionAfter !== undefined)
   const sorted = [...byId.values()].filter(message => metadata(message).positionAfter === undefined).sort((left, right) => {

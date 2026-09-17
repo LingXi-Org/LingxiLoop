@@ -22,6 +22,7 @@ import {
   type ConversationChatState,
   markDelivery,
   mergeCanonicalMessages,
+  messageKey,
   removeConversationMessage,
   replaceMessageReactions,
   replacePollData,
@@ -33,7 +34,7 @@ import {
 } from './store'
 import { harnessApi, type AgentRunResponse, type AgentRunTarget } from './harness-api'
 import { applyRunUpdate, needsRunStream } from './run-updates'
-import { canCancelRun } from './harness'
+import { canCancelRun, isRunMessage } from './harness'
 import { attachmentMessages } from './attachment-messages'
 
 const TYPING_STALE_MS = 45_000
@@ -406,7 +407,7 @@ export class ChatTransport {
       await harnessApi.cancel(target)
       await this.refreshRun(target)
       const refreshed = useChatThreadStore.getState().conversations[conversationId]?.messages
-        .find(item => messageMetadata(item).runId === target.runId && messageMetadata(item).senderId === target.agentId)
+        .find(item => messageMetadata(item).runId === target.runId && messageMetadata(item).senderId === target.agentId && isRunMessage(messageMetadata(item)))
       if (refreshed && messageMetadata(refreshed).harnessError) throw new Error('任务状态暂时无法同步')
     })).then(results => {
       if (results.some(result => result.status === 'rejected')) throw new Error('部分任务未能停止，请重试。')
@@ -464,7 +465,7 @@ export class ChatTransport {
       if (signal.aborted) return
       updateConversation(target.conversationId,state => ({ ...state, messages: state.messages.map(message => {
         const meta = messageMetadata(message)
-        if (meta.runId !== target.runId || meta.messageKind !== 'text') return message
+        if (meta.runId !== target.runId || !isRunMessage(meta)) return message
         const inaccessible = /\(40[134]\)/.test(String(error))
         return { ...message, metadata: { ...message.metadata, custom: { ...meta,
           ...(inaccessible ? { harnessControl: false } : {}), harnessError: inaccessible ? undefined : '运行状态暂时无法同步，请重试' } } } as ThreadMessage
@@ -483,10 +484,10 @@ export class ChatTransport {
       let accepted = true
       updateConversation(envelope.channelId, (state) => {
         const messages = mergeCanonicalMessages(state.messages, [message])
-        const merged = metadata.runId && messages.find(value => messageMetadata(value).runId === metadata.runId && messageMetadata(value).messageKind === 'text')
+        const merged = messages.find(value => messageKey(value) === messageKey(message))
         const view = merged && messageMetadata(merged).harness
         if (metadata.harness && view && view.resultId !== metadata.harness.resultId) { accepted = false; return state }
-        const reconcilesStream = metadata.senderKind === 'agent' && metadata.messageKind === 'text' && Boolean(metadata.runId)
+        const reconcilesStream = isRunMessage(metadata)
         const activeRuns = { ...state.activeRuns }
         if (reconcilesStream) {
           for (const [id,run] of Object.entries(activeRuns)) {
@@ -534,7 +535,7 @@ export class ChatTransport {
         requestVersion: view.requestVersion, fence: view.fence, status: view.lifecycle ?? 'queued' })
     }
     const reads = [...targets.values()].filter(target => {
-      const meta = messages.map(messageMetadata).find(meta => meta.runId === target.runId && meta.messageKind === 'text')
+      const meta = messages.map(messageMetadata).find(meta => meta.runId === target.runId && isRunMessage(meta))
       const view = meta?.harness
       return !view || meta.harnessControl === undefined || view.requestVersion !== target.requestVersion
         || view.fence !== target.fence || view.lifecycle !== target.status || view.delivery === 'pending'
@@ -599,10 +600,10 @@ export class ChatTransport {
     let reconnect = false
     updateConversation(target.conversationId,state => {
       const previous = state.messages.find(message => messageMetadata(message).runId === target.runId
-        && messageMetadata(message).messageKind === 'text')
+        && isRunMessage(messageMetadata(message)))
       const next = applyRunUpdate(state, target, item, useParticipants.getState().byId[target.agentId])
       const view = next.messages.find(message => messageMetadata(message).runId === target.runId
-        && messageMetadata(message).messageKind === 'text')
+        && isRunMessage(messageMetadata(message)))
       reconnect = item.type === 'preview' && item.preview.kind === 'delta'
         && (!previous || messageMetadata(previous).harness !== messageMetadata(view!).harness)
         && messageMetadata(view!).harness?.preview === null

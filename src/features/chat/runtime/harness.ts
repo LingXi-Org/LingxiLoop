@@ -4,6 +4,11 @@ import type { ImEnvelope } from '@/lib/im/wukong'
 import type { LingxiMessageMetadata } from './model'
 import type { MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
 
+/** chat.send messages can share a run ID without owning that run's preview or lifecycle. */
+export function isRunMessage(metadata: LingxiMessageMetadata): boolean {
+  return metadata.senderKind === 'agent' && metadata.messageKind === 'text' && Boolean(metadata.runId && metadata.harness)
+}
+
 export function canCancelRun(metadata: LingxiMessageMetadata): boolean {
   return metadata.harnessControl === true && Boolean(metadata.runId)
     && metadata.messageKind === 'text'

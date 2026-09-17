@@ -1,7 +1,7 @@
 import { productConversationId, assertFrozenAudience } from '../agent-runtime/identity.js'
-import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition, type createLingxiOS } from '@lyyzka/lingxios'
 import type { Queryable } from '../db/queryable.js'
-import { nativeTool, compareResource, authorizeAudienceRead } from '../agents/tools.js'
+import { nativeTool, compareResource, authorizeAgent, authorizeAudienceRead } from '../agents/tools.js'
 import { queueNativeEvents, type NativeEvent } from '../agents/native-events.js'
 import { createPermissionService } from '../modules/access/public.js'
 import { createMessagesApplication } from '../modules/messages/facade.js'
@@ -42,7 +42,8 @@ const communication = {
     const result = await application(context).acceptAgentMessage({ ...identity(context), clientNonce: outgoing.clientMsgNo, payload: outgoing,
       ...(outgoing.kind === 'text' ? { rejectVerbatimPeerBody: outgoing.body } : {}) })
     if (result.kind !== 'accepted') throw new NoEffectError(`message rejected: ${result.kind}`, result.kind)
-    return { ok: true as const, value: { ...result.echo, duplicate: result.duplicate } }
+    const value: Record<string, unknown> = { ...result.echo, duplicate: result.duplicate }
+    return { ok: true as const, value }
   },
   async reconcile(context: ActionContext, input: Record<string, unknown>) {
     const outgoing = payload(context, input), message = await read(context, outgoing.clientMsgNo)
@@ -59,8 +60,41 @@ const communication = {
   },
 }
 
-export const messageTools: ToolDefinition[] = [
-  nativeTool('chat.send', agentMessageSchemas.send, { ...communication, description: 'Send an original message in this conversation.' }),
+export function createMessageTools(control: () => ReturnType<typeof createLingxiOS>): ToolDefinition[] {
+  async function recordSentMessage(context: ActionContext, messageId: unknown, body: string) {
+    const { work } = context
+    if (!work.conversation) return
+    try {
+      if (typeof messageId !== 'string' || !messageId) throw new Error('committed IM message identity is missing')
+      await authorizeAgent(context)
+      await authorize(context)
+      const api = await control()
+      await api.conversations.ingest({ tenantId: work.tenantId,conversationId: productConversationId(work),
+        policyVersion: work.conversation.policyVersion,
+        audience: work.conversation.audience.visibility === 'conversation' ? { visibility: 'conversation' }
+          : { visibility: 'participants',participantIds: work.conversation.audience.participantIds },
+        messageId,version: 1,author: { id: work.agentId,kind: 'agent' },text: body,
+        ...(work.threadId ? { threadId: work.threadId } : {}),replyTo: work.conversation.source })
+    } catch (cause) {
+      // A send has already committed: even a later authorization failure is not a NoEffectError.
+      throw new Error('committed message history synchronization failed',{ cause })
+    }
+  }
+  return [
+  nativeTool('chat.send', agentMessageSchemas.send, { ...communication,
+    semanticVersion: '2',
+    description: 'Send one settled conversational message now. Use distinct messages for useful lead-in thoughts, then finish with the native final response without repeating them. Keep reviewed conclusions, citations and complete deliverables in the final result.',
+    async execute(context, input) {
+      const result = await communication.execute(context,input)
+      await recordSentMessage(context,result.value.messageId,input.body)
+      return result
+    },
+    async reconcile(context, input) {
+      const result = await communication.reconcile(context,input)
+      // IM may have committed before history ingestion failed; recover the same receipt, never resend it.
+      if (result) await recordSentMessage(context,result.value.messageId,input.body)
+      return result
+    } }),
   nativeTool('chat.ask', agentMessageSchemas.ask, { ...communication, description: 'Send an interactive questionnaire with unique questions and choices.' }),
   nativeTool('chat.history', agentMessageSchemas.history, { description: 'Read a bounded page of messages and advance the agent’s read receipt.', effect: 'transaction', approval: false, authorize,
     async execute(context, input) {
@@ -110,3 +144,4 @@ export const messageTools: ToolDefinition[] = [
       return compareResource(`reaction:${receipt.messageId}`, { reactions: receipt.reactions }, { reactions: reactions[receipt.messageId] ?? [] })
     } }),
 ]
+}

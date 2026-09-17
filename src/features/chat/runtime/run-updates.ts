@@ -2,7 +2,7 @@ import type { ThreadMessage } from '@assistant-ui/react'
 import { consumeRunStreamEvent, createRunView, type RunStreamEvent } from '@lyyzka/lingxios/ui'
 import type { Participant } from '@/types'
 import type { AgentRunResponse, AgentRunTarget } from './harness-api'
-import { harnessParts, harnessStatus, harnessToolParts } from './harness'
+import { harnessParts, harnessStatus, harnessToolParts, isRunMessage } from './harness'
 import { getLingxiMessageMetadata as metadata, type LingxiMessageMetadata } from './model'
 import { mergeCanonicalMessages, messageKey, type ConversationChatState } from './store'
 
@@ -19,7 +19,7 @@ export function applyRunUpdate(
   response?: AgentRunResponse,
 ): ConversationChatState {
   const current = state.messages.find(message => metadata(message).runId === target.runId
-    && metadata(message).senderId === target.agentId && metadata(message).messageKind === 'text')
+    && metadata(message).senderId === target.agentId && isRunMessage(metadata(message)))
   const before = current && metadata(current)
   const view = consumeRunStreamEvent(before?.harness ?? createRunView(target.runId), item)
   const id = current?.id ?? `preview-${target.runId}`
@@ -28,6 +28,11 @@ export function applyRunUpdate(
     : Number.isFinite(startedAt) ? new Date(startedAt) : current?.createdAt ?? new Date()
   const positionAt = Number.isFinite(startedAt) ? new Date(startedAt) : createdAt
   const predecessor = state.messages.filter(message => message !== current && message.createdAt <= positionAt).at(-1)
+  const lastSent = state.messages.filter(message => {
+    const value = metadata(message)
+    return value.runId === target.runId && value.senderId === target.agentId && value.messageKind === 'text'
+      && !value.harness && value.sequence !== null && value.threadRootId === (target.threadId ?? null)
+  }).at(-1)
   const custom: LingxiMessageMetadata = {
     schema: 'lingxiloop.thread-message.v1', conversationId: target.conversationId, clientMessageId: id,
     sequence: null,
@@ -36,7 +41,8 @@ export function applyRunUpdate(
     presentation: 'conversation', quotedMessageId: target.threadId ?? null, quote: null, reactions: [], replyCount: 0,
     threadRootId: target.threadId ?? null, groupStart: true, groupEnd: true, continuedFromPrevious: false,
     continuedToNext: false, clusterChromeAt: null, ...before,
-    positionAfter: before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
+    positionAfter: lastSent ? before?.sequence != null ? undefined : messageKey(lastSent)
+      : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
     runId: target.runId, harness: view,
     harnessTools: item.type === 'event' ? harnessToolParts(target.runId, [item.event], before?.harnessTools) : before?.harnessTools,
     harnessReplaySeq: response?.nextSeq ?? view.lastSeq,
@@ -45,7 +51,7 @@ export function applyRunUpdate(
       ? { harnessError: item.event.data.error } : {}),
   }
   // A snapshot restores the same turn position after a page reload.
-  if (before && before.positionAfter === undefined && !Number.isFinite(startedAt)) delete custom.positionAfter
+  if (before && before.positionAfter === undefined && !Number.isFinite(startedAt) && !lastSent) delete custom.positionAfter
   const message: ThreadMessage = { id, role: 'assistant', createdAt,
     content: current?.role === 'assistant' && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed' && before?.harness?.message)
       && view.resultId === before?.harness?.resultId ? current.content : harnessParts(view), status: harnessStatus(view), metadata: {
