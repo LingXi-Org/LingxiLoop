@@ -19,7 +19,6 @@ export default defineWorkersConfig(async () => ({
             TEST_MIGRATIONS: await readD1Migrations(resolve(here, 'migrations')),
             BETTER_AUTH_SECRET: 'test-better-auth-secret-that-is-long-enough',
             GATEWAY_HMAC_SECRET: 'test-gateway-secret',
-            BOOTSTRAP_ADMIN_TOKEN: 'test-bootstrap-secret',
             ALIYUN_OTP_EMAIL_PASSWORD: 'test-email-password',
             TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA',
             SIGILLO_SSO_SECRET: 'test-sigillo-sso-secret',

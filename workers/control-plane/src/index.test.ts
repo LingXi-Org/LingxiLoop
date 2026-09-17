@@ -317,7 +317,12 @@ describe('control-plane trust boundaries', () => {
     fetchMock.activate()
     fetchMock.disableNetConnect()
     fetchMock.get('https://origin.example.com').intercept({ path: '/api/admin/resources/users/user-1', method: 'GET' })
-      .reply(200, { name: 'visible', token: 'upstream-token', nested: { prompt: 'private prompt', environment: ['PASSWORD=private'] } })
+      .reply(options => {
+        const assertion = new Headers(options.headers as HeadersInit).get('x-lingxiloop-gateway')!
+        const payload = JSON.parse(atob(assertion.split('.')[0].replaceAll('-', '+').replaceAll('_', '/')))
+        expect(payload.platformAdmin).toBe(true)
+        return { statusCode: 200, data: JSON.stringify({ name: 'visible', token: 'upstream-token', nested: { prompt: 'private prompt', environment: ['PASSWORD=private'] } }) }
+      })
     fetchMock.get('https://origin.example.com').intercept({ path: '/api/admin/agent-runs/run-1/cancel', method: 'POST' }).reply(200, { cancelled: true })
     fetchMock.get('https://ops.example.com').intercept({ path: '/read/GetStack', method: 'POST' })
       .reply(200, { _id: { $oid: 'stack-b' }, name: 'lingxiloop-app-b' })

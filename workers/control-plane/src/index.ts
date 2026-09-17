@@ -477,7 +477,7 @@ app.all('/api/mcp', async (c) => {
     .bind(c.env.MCP_AUTH_USER_ID).first<{ auth_user_id: string; app_user_id: string }>()
   if (!identity) return c.json({ error: 'configured MCP administrator is unavailable' }, 403)
   const platform = (path: string, init: RequestInit = {}) => originRequest(c.env, path, init,
-    { authUserId: identity.auth_user_id, appUserId: identity.app_user_id })
+    { authUserId: identity.auth_user_id, appUserId: identity.app_user_id, platformAdmin: true })
   return handleMcpRequest(c.req.raw, c.env, { authUserId: identity.auth_user_id, appUserId: identity.app_user_id }, {
     platform,
     health: async () => {

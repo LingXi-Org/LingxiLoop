@@ -160,7 +160,7 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
   assert.match(gateway, /server_name loop\.lingxilearn\.cn/)
   assert.match(gateway, /upstream control_plane \{[\s\S]*server admin\.lingxilearn\.cn:443 resolve;[\s\S]*keepalive 32;/)
   assert.match(gateway, /location \/api\/ \{[\s\S]*\$http_x_lingxiloop_gateway[\s\S]*return 418;[\s\S]*proxy_pass https:\/\/control_plane;[\s\S]*proxy_ssl_name admin\.lingxilearn\.cn;[\s\S]*proxy_set_header Connection "";/)
-  assert.match(gateway, /location @origin_api \{[\s\S]*proxy_pass http:\/\/lingxiloop_web/)
+  assert.match(gateway, /location @origin_api \{[\s\S]*proxy_pass http:\/\/\$lingxiloop_api_upstream;/)
   assert.match(gateway, /server_name im\.lingxilearn\.cn/)
   assert.match(gateway, /proxy_pass http:\/\/10\.20\.0\.2:5201/)
   assert.match(core, /10\.20\.0\.2:5201:5200/)
@@ -169,6 +169,25 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
   assert.match(worker, /"workers_dev": false/)
   assert.match(worker, /"ORIGIN_BASE_URL": "https:\/\/loop\.lingxilearn\.cn"/)
   assert.match(worker, /"AUTH_ALLOWED_HOSTS": "loop\.lingxilearn\.cn,admin\.lingxilearn\.cn"/)
+})
+
+test('live chat streams reach the worker preview owner through both unbuffered proxy hops', () => {
+  const gateway = read('deploy/komodo/lingxiloop-app-b/gateway.conf')
+  const routing = gateway.match(/map \$uri \$lingxiloop_api_upstream \{([^}]+)\}/)?.[1]
+  assert.ok(routing)
+  assert.match(routing, /default lingxiloop_web;/)
+  const route = new RegExp(routing.match(/~(\S+) lingxiloop_realtime;/)?.[1] ?? '(?!)')
+  assert.ok(route.test('/api/im/companies/company/channels/room/agents/agent/runs/run/stream'))
+  assert.ok(!route.test('/api/im/channels/room/agents/agent/runs/run'))
+  const owner = gateway.match(/upstream lingxiloop_realtime \{([^}]+)\}/)?.[1]
+  assert.ok(owner)
+  assert.deepEqual(owner.match(/server [^;]+;/g), ['server lingxiloop:5181 resolve;'])
+  assert.match(read('deploy/komodo/lingxiloop-app-b/compose.yml'), /LINGXIOS_CONTROL_URL: http:\/\/lingxiloop:5182/)
+  for (const location of ['location /api/', 'location @origin_api']) {
+    const block = gateway.slice(gateway.indexOf(location), gateway.indexOf('\n    }', gateway.indexOf(location)))
+    assert.match(block, /proxy_buffering off;/)
+    assert.match(block, /proxy_read_timeout 3600s;/)
+  }
 })
 
 test('Komodo control plane and ingress keep management sockets private', () => {

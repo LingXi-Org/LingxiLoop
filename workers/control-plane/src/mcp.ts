@@ -37,7 +37,7 @@ function redact(value: unknown, secrets: string[]): unknown {
       .replace(/Bearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED]')
       .replace(/(https?:\/\/)[^/\s@]+@/gi, '$1[REDACTED]@')
       .replace(/([?&](?:token|key|secret)=)[^&\s]+/gi, '$1[REDACTED]')
-    for (const secret of secrets) if (secret.length >= 8) text = text.replaceAll(secret, '[REDACTED]')
+    for (const secret of secrets) if (secret?.length >= 8) text = text.replaceAll(secret, '[REDACTED]')
     return text
   }
   if (Array.isArray(value)) return value.map((item) => redact(item, secrets))
