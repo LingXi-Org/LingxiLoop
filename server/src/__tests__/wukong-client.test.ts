@@ -53,14 +53,41 @@ test('WuKong adapter syncs channel history and decodes Lingxi payloads', async (
     }] }), { status: 200 })
   }
   const client = new WukongClient({ apiUrl: 'http://wk:5001', wsUrl: 'ws://wk:5200', apiToken: 'token', webhookSecret: 'secret' })
-  const messages = await client.syncMessages('study', 2, 80, 'student', 9)
+  const messages = await client.syncMessages('study', 2, 80, 'student', 10)
   assert.equal(calls[0]?.url, 'http://wk:5001/channel/messagesync')
   assert.equal(calls[0]?.body.login_uid, 'student')
-  assert.equal(calls[0]?.body.end_message_seq, 9)
-  assert.equal(calls[0]?.body.pull_mode, 1)
+  assert.equal(calls[0]?.body.start_message_seq, 9)
+  assert.equal(calls[0]?.body.end_message_seq, 0)
+  assert.equal(calls[0]?.body.pull_mode, 0)
   assert.equal(messages[0]?.payload.body, 'learn')
   assert.equal(messages[0]?.messageId, 'wk-9')
   assert.equal(messages[0]?.clientMsgNo, 'client-9')
+})
+
+test('WuKong history starts at the latest page and walks older pages without overlap', async () => {
+  let calls = 0
+  globalThis.fetch = async (_input, init) => {
+    calls++
+    const request = JSON.parse(String(init?.body))
+    // Pinned WuKongIM: down=0, inclusive start (0 means latest), exclusive end.
+    const sequences = Array.from({ length: 5 }, (_, index) => index + 1)
+      .filter(sequence => request.pull_mode === 0
+        ? (!request.start_message_seq || sequence <= request.start_message_seq) && sequence > request.end_message_seq
+        : sequence >= request.start_message_seq && (!request.end_message_seq || sequence < request.end_message_seq))
+    const page = request.pull_mode === 0 ? sequences.slice(-request.limit) : sequences.slice(0, request.limit)
+    return Response.json({ messages: page.map(message_seq => ({ message_seq, payload: Buffer.from('{"version":1,"kind":"text"}').toString('base64') })) })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  const pages: number[][] = []
+  let before = 0
+  for (;;) {
+    const page = await client.syncMessages('study', 2, 2, 'student', before)
+    if (!page.length) break
+    pages.push(page.map(message => message.messageSeq))
+    before = Math.min(...page.map(message => message.messageSeq))
+  }
+  assert.deepEqual(pages, [[4, 5], [2, 3], [1]])
+  assert.equal(calls, 3)
 })
 
 test('WuKong history repairs authoritative membership once before retrying', async () => {

@@ -175,16 +175,17 @@ export class WukongClient {
     if (!Number.isSafeInteger(beforeMessageSeq) || beforeMessageSeq < 0) {
       throw new Error('message sync cursor must be a non-negative safe integer')
     }
+    if (beforeMessageSeq === 1) return []
     const requestMessages = () => this.request<unknown>('/channel/messagesync', {
       signal,
       method: 'POST', body: JSON.stringify({
         login_uid: loginUid,
         channel_id: channelId,
         channel_type: channelType,
-        start_message_seq: 0,
-        end_message_seq: beforeMessageSeq,
+        start_message_seq: beforeMessageSeq ? beforeMessageSeq - 1 : 0,
+        end_message_seq: 0,
         limit,
-        pull_mode: 1,
+        pull_mode: 0,
       }),
     })
     let value: unknown

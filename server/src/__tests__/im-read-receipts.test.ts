@@ -34,7 +34,7 @@ test('monotonic service serializes devices and filters departed group members', 
 test('WebSocket fan-out enforces both tenant and authenticated recipient', () => {
   assert.match(ws, /channel === CH_IM_READ_RECEIPTS/)
   assert.match(ws, /recipientIds\.includes\(c\.userId\)/)
-  assert.match(ws, /if \(!c\.companies\.has\(companyId\)\) continue/)
+  assert.match(ws, /if \(!c\.companies\.has\(companyId\) \|\| !await socketAuthorized\(c\)\) continue/)
   assert.match(ws, /recipientIds: _internalRecipients/)
 })
 
