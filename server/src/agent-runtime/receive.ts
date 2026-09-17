@@ -98,7 +98,7 @@ export async function receiveAgentRequest(input: AgentRequest) {
     : [...new Set([...parsed.mentionedIds,...mentionedIds])]
   const accepted = await api.conversations.ingest({ tenantId: input.companyId, conversationId: input.channelId,
     policyVersion: policy.version, messageId: input.clientMsgNo, version: 1, author: { id: message.fromUid, kind: 'human' },
-    text, mentions, attachments: files, ...(threadId ? { threadId } : {}) }, { mode: 'execute', executionClass: 'operation' })
+    text, mentions, attachments: files, ...(threadId ? { threadId } : {}) }, { mode: 'execute', deliveryMode: 'auto', executionClass: 'operation' })
   for (const run of accepted.runs) await bindProductRun(pool,run,input.channelId)
   return accepted
 }

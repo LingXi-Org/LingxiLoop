@@ -59,6 +59,7 @@ test('attachment questions and history use committed bytes, wake once and retain
     assert.ok('runs' in accepted && accepted.runs.length === 1)
     const run = (await pool.query('SELECT meta FROM lingxios.agent_work_items WHERE id=$1',[accepted.runs[0].runId])).rows[0]
     assert.equal(run.meta.text,last.payload.body)
+    assert.equal(run.meta.deliveryMode,'auto')
     assert.deepEqual(run.meta.attachments.map((item: { text: string }) => item.text),[text,text])
     await receiveAgentRequest(input)
     assert.equal(Number((await pool.query('SELECT count(*) FROM lingxios.agent_work_items WHERE id=$1',[accepted.runs[0].runId])).rows[0].count),1)
