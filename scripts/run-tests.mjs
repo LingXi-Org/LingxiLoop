@@ -14,6 +14,7 @@ const testsByScope = {
     'server/src/__tests__/entitlement-resolver.test.ts',
     'server/src/__tests__/llm-ledger.test.ts',
     'server/src/__tests__/agent-tool-registry.test.ts',
+    'server/src/__tests__/confidence-citations.test.ts',
     'server/src/__tests__/native-evolution.test.ts',
     'server/src/__tests__/memory-scopes.test.ts',
     'server/src/__tests__/lingxilit-observability.test.ts',

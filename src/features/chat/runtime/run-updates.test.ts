@@ -95,16 +95,24 @@ test('committed replies ignore duplicate snapshots and stale deltas without regr
 
 test('citation projections agree across snapshots and IM replay and disappear before the next draft', () => {
   const completed = snapshot()
-  const body = '来自[资料](#cite-S1)'
+  const body = '建议[间隔复习](#cite-S1)'
   completed.message!.body = body
   completed.message!.envelope.body = body
-  completed.message!.envelope.citations = [{ start: 2, end: body.length, text: '资料', markers: ['S1'], support: 'not_assessed',
+  completed.message!.envelope.citations = [{ start: 2, end: body.length, text: '间隔复习', markers: ['S1'], support: 'not_assessed',
     sources: [{ sourceId: 'doc', sourceVersion: 'v1', chunkIds: ['chunk'] }] }]
+  completed.message!.envelope.citationEvidence = [{ marker: 'S1', sourceId: 'doc', sourceVersion: 'v1', chunkId: 'chunk',
+    title: '学习指南', excerpt: '间隔复习有助于记忆。' }]
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: completed }, participants.agent)
   const im: ImEnvelope = { channelId: 'room', channelType: 2, fromUid: 'agent', messageId: 'committed', clientMsgNo: 'committed', messageSeq: 1, timestamp: epoch,
     payload: { version: 1, kind: 'text', clientMsgNo: 'committed', body, refs: { runId: 'run', agentId: 'agent' },
       data: { harness: completed.message!.envelope, harnessSessionId: 'session', harnessCommit: { resultId: 'result-run', fence: 1 } } } }
   const replay = convertEnvelope(im, { participants, meId: 'human' })
+  assert.deepEqual(state.messages[0].content, replay.content)
+  const claims = state.messages[0].content.find(part => part.type === 'tool-call' && part.toolName === 'cite_claims')
+  assert.ok(claims?.type === 'tool-call')
+  assert.deepEqual(claims.result, { claims: [{ id: 'run:result-run:2', text: '间隔复习', confidence: 'grounded',
+    markers: ['S1'], start: 2, end: body.length, basis: '学习指南\n间隔复习有助于记忆。' }] })
+  state = applyRunUpdate(state, target, { type: 'state', state: structuredClone(completed) }, participants.agent)
   assert.deepEqual(state.messages[0].content, replay.content)
   state = applyRunUpdate(state, target, event('过期草稿'), participants.agent)
   assert.deepEqual(state.messages[0].content, replay.content)

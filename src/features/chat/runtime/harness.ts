@@ -53,6 +53,7 @@ export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
   if (view.lifecycle === 'leased' || view.lifecycle === 'queued') return view.draft ? [{ type: 'text', text: view.draft }] : []
   if (!view.message) return view.draft ? [{ type: 'text', text: view.draft }] : []
   const segments = responseSegments(view.message.envelope)
+  const evidence = view.message.envelope.citationEvidence
   const parts: ThreadAssistantMessagePart[] = []
   const claims: MarkdownConfidenceClaim[] = []
   for (const segment of segments) {
@@ -69,7 +70,10 @@ export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
         }
         claims.push({ id: `${view.runId}:${view.resultId}:${annotation.start}`, text: segment.text,
           confidence: 'grounded', markers: annotation.markers, start: annotation.start, end: annotation.end,
-          basis: annotation.sources.map(source => `${source.sourceId} · 版本 ${source.sourceVersion}${source.truncated ? ' · 来源节选' : ''}`).join('；') })
+          basis: evidence === undefined
+            ? annotation.sources.map(source => `${source.sourceId} · 版本 ${source.sourceVersion}${source.truncated ? ' · 来源节选' : ''}`).join('；')
+            : evidence.filter(item => annotation.markers.includes(item.marker))
+              .map(item => `${item.title}${item.truncated ? '（来源节选）' : ''}\n${item.excerpt}`).join('\n\n') })
       }
       const previous = parts.at(-1)
       if (previous?.type === 'text') parts[parts.length - 1] = { ...previous, text: previous.text + text }

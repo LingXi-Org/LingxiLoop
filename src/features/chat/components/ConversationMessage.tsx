@@ -200,6 +200,9 @@ function MessageTextPart() {
   const longPressOrigin = useRef({ x: 0, y: 0 })
   const bodyRef = useRef<HTMLDivElement>(null)
   const metadata = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
+  const inlineCitations = Boolean(metadata.harness && (!metadata.harness.message
+    || ['queued', 'leased'].includes(metadata.harness.lifecycle ?? '')
+    || metadata.harness.message.envelope.citationEvidence !== undefined))
   const rawText = useAuiState((state) => state.message.content
     .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
     .map((part) => part.text)
@@ -211,6 +214,15 @@ function MessageTextPart() {
     return Array.isArray(claims) ? claims as MarkdownConfidenceClaim[] : undefined
   })
   const getText = () => {
+    if (inlineCitations) {
+      const ranges = Array.from(bodyRef.current?.querySelectorAll<HTMLElement>('[data-citation-start]') ?? []).flatMap(node => {
+        const start = Number(node.dataset.citationStart), end = Number(node.dataset.citationEnd)
+        const link = /^\[([\s\S]+)\]\(#cite-[^)]*\)$/.exec(rawText.slice(start, end))
+        return link && Number.isSafeInteger(start) && Number.isSafeInteger(end) && end <= rawText.length
+          ? [{ start, end, text: node.dataset.citationHidden ? '' : link[1] }] : []
+      })
+      return confidenceCopyText(rawText, ranges)
+    }
     const renderedIds = new Set(Array.from(bodyRef.current?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [], node => node.dataset.confidenceId))
     return confidenceCopyText(rawText, confidenceClaims?.filter(claim => renderedIds.has(claim.id)))
   }
@@ -275,7 +287,7 @@ function MessageTextPart() {
         metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
       )}
     >
-      <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} />
+      <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations} />
     </div>
     {isMobile && <MobileMessageActions metadata={metadata} getText={getText} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
   </div>

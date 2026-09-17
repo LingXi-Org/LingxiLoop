@@ -7,13 +7,13 @@ import { ConfidenceMarker } from './elements/confidence-marker'
 
 function Text() { return <MarkdownText segmented /> }
 function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
-function Preview({ text, running, claims }: { text: string; running: boolean; claims?: MarkdownConfidenceClaim[] }) {
+function Preview({ text, running, claims, inlineCitations }: { text: string; running: boolean; claims?: MarkdownConfidenceClaim[]; inlineCitations?: boolean }) {
   const messages: ThreadMessage[] = [{ id: 'reply', role: 'assistant', createdAt: new Date(0),
     content: [{ type: 'text', text }], status: running ? { type: 'running' } : { type: 'complete', reason: 'stop' },
     metadata: { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], custom: {} } }]
   const runtime = useExternalStoreRuntime({ messages, isRunning: running, onNew: async () => {} })
-  function CitedMessage() { return <MessagePrimitive.Parts components={{ Text: () => <MarkdownText segmented confidenceClaims={claims} /> }} /> }
-  return <AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{ AssistantMessage: claims ? CitedMessage : Message, UserMessage: Message }} /></AssistantRuntimeProvider>
+  function CitedMessage() { return <MessagePrimitive.Parts components={{ Text: () => <MarkdownText segmented confidenceClaims={claims} inlineCitations={inlineCitations} /> }} /> }
+  return <AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{ AssistantMessage: claims || inlineCitations ? CitedMessage : Message, UserMessage: Message }} /></AssistantRuntimeProvider>
 }
 
 test('streamed paragraphs have no blank bubbles and keep their structure when complete', () => {
@@ -78,4 +78,53 @@ test('copying and quoting strip only supplied citation spans', () => {
   assert.equal(confidenceCopyText(text), text)
   const html = renderToStaticMarkup(<Preview text="没有引用" running={false} />)
   assert.doesNotMatch(html, /confidence-basis|data-confidence-id/)
+})
+
+test('new citations underline answer wording and consume internal links before Link rendering', () => {
+  const text = '开头😀 [**间隔复习**有助于记忆](#cite-S1,S1)。\n\n- [使用 `retrieval` 练习](#cite-S2)\n\n| 内容 |\n| --- |\n| [主动回忆](#cite-S1,S2) |\n\n[未匹配的正文](#cite-S9) 与 [官网](https://example.com)\n\n`[代码](#cite-S1)`'
+  const matches = [...text.matchAll(/\[([^\]\n]+)\]\(#cite-(S\d+(?:,S\d+)*)\)/g)]
+  const claims = matches.slice(0, 3).map((match, index) => ({ id: `claim:${index}`, text: match[1], confidence: 'grounded' as const,
+    basis: '学习指南\n实际检索的原文。', markers: [...new Set(match[2].split(','))], start: match.index, end: match.index + match[0].length }))
+  const html = renderToStaticMarkup(<Preview text={text} running={false} claims={claims} inlineCitations />)
+  assert.equal((html.match(/data-confidence-id=/g) ?? []).length, 3)
+  assert.equal((html.match(/data-streamdown="link"/g) ?? []).length, 1)
+  assert.doesNotMatch(html, /data-slot="confidence-basis"|h-32/)
+  assert.match(html, /data-streamdown="strong">间隔复习/)
+  assert.match(html, /<code[^>]*>retrieval<\/code>/)
+  assert.match(html, /<table/)
+  assert.match(html, /未匹配的正文/)
+  assert.match(html, /\[代码\]\(#cite-S1\)/)
+  assert.doesNotMatch(html, /href="#cite|【S\d/)
+  const spans = [...html.matchAll(/data-citation-start="(\d+)" data-citation-end="(\d+)"/g)]
+    .map(match => { const start = Number(match[1]), end = Number(match[2]); return { start, end, text: /^\[([\s\S]+)\]\(#cite-[^)]*\)$/.exec(text.slice(start, end))![1] } })
+  assert.equal(spans.length, 4)
+  const copied = confidenceCopyText(text, spans)
+  assert.match(copied, /开头😀 \*\*间隔复习\*\*有助于记忆/)
+  assert.match(copied, /使用 `retrieval` 练习/)
+  assert.equal((copied.match(/#cite-/g) ?? []).length, 1)
+})
+
+test('new drafts show only body text and never activate citation navigation or stale confidence', () => {
+  for (const running of [true, false]) {
+    const html = renderToStaticMarkup(<Preview text={'[间隔复习](#cite-S1) [【S2】](#cite-S2) [**【S2】**](#cite-S2)\n\n第二段'} running={running} inlineCitations />)
+    assert.match(html, /间隔复习/)
+    assert.match(html, /第二段/)
+    assert.doesNotMatch(html, /data-streamdown="link"|data-confidence-id|confidence-basis|【S2】/)
+    assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 2)
+  }
+  const claims = [{ id: 'source', text: '间隔复习', confidence: 'grounded' as const, basis: '来源标题\n原文第一段。\n<script>只是原文</script>' }]
+  const html = renderToStaticMarkup(<ConfidenceMarker claims={claims} hoveredId="source" onHover={() => {}} />)
+  assert.match(html, /原文第一段。/)
+  assert.match(html, /&lt;script&gt;只是原文&lt;\/script&gt;/)
+  assert.doesNotMatch(html, /<script>/)
+})
+
+test('cached Markdown processors keep each message and regenerated claim identity separate', () => {
+  const text = '[间隔复习有助记忆](#cite-S1)'
+  for (const id of ['message-a', 'message-b', 'message-a-retry']) {
+    const claim = { id, text: '间隔复习有助记忆', confidence: 'grounded' as const, basis: `原文 ${id}`, markers: ['S1'], start: 0, end: text.length }
+    const html = renderToStaticMarkup(<Preview text={text} running={false} claims={[claim]} inlineCitations />)
+    assert.deepEqual([...html.matchAll(/data-confidence-id="([^"]+)"/g)].map(match => match[1]), [id])
+    assert.doesNotMatch(html, /data-streamdown="link"/)
+  }
 })

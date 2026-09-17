@@ -97,14 +97,23 @@ test('native citations keep occurrence identities, all source versions and trunc
     basis: annotation.sources.length === 1 ? 'source-a · 版本 v1' : 'source-a · 版本 v1；source-b · 版本 v2 · 来源节选',
   })))
   assert.equal(new Set(claims.map(claim => claim.id)).size, 3)
+  view.message!.envelope.citationEvidence = [
+    { marker: 'S1', sourceId: 'source-a', sourceVersion: 'v1', chunkId: 'a', title: '甲资料', excerpt: '甲的原始段落。' },
+    { marker: 'S2', sourceId: 'source-b', sourceVersion: 'v2', chunkId: 'b', title: '乙资料', excerpt: '乙的原始段落。', truncated: true },
+  ]
+  const modern = harnessParts(view).at(-1)!
+  assert.ok(modern.type === 'tool-call')
+  assert.deepEqual(modern.result, { claims: claims.map((claim, index) => ({ ...claim,
+    basis: index === 2 ? '甲资料\n甲的原始段落。\n\n乙资料（来源节选）\n乙的原始段落。' : '甲资料\n甲的原始段落。' })) })
   view.lifecycle = 'queued'
   assert.deepEqual(harnessParts(view), [])
   view.draft = '新的草稿'
   assert.deepEqual(harnessParts(view), [{ type: 'text', text: '新的草稿' }])
   view.lifecycle = 'succeeded'
   view.message!.envelope.citations[0].sources = []
-  assert.throws(() => harnessParts(view), /source provenance/)
+  assert.throws(() => harnessParts(view), /recorded sources/)
   view.message!.envelope.citations = []
+  view.message!.envelope.citationEvidence = []
   view.message!.envelope.body = '无引用'
   assert.deepEqual(harnessParts(view), [{ type: 'text', text: '无引用' }])
 })
