@@ -108,6 +108,7 @@ async function recordModelCall(observation: ModelCallObservation): Promise<void>
       ...(binding ? { conversationId: binding.conversation_id } : {}),
       source: 'agent-os' as const,
       extras: { callId: observation.callId, pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
+        ...(usage?.reasoningTokens !== undefined ? { reasoningTokens: usage.reasoningTokens } : {}),
         ...(billing ? { providerPricing: pricing,...billing } : {}),
         ...(observation.instructionsSha256 ? { instructionsSha256: observation.instructionsSha256 } : {}),
         ...(observation.threadId ? { threadId: observation.threadId } : {}),
