@@ -214,7 +214,10 @@ function ragParts(data: JsonObject, body: string, runId: string): ToolCallMessag
     || references.some(({ marker }) => !citedIds.has(marker))
   ) throw new Error('Citation links and document references must identify the same evidence')
   return [
-    toolCall(`cite-claims:${runId}`, 'cite_claims', {}, { claims }),
+    toolCall(`cite-claims:${runId}`, 'cite_claims', {}, { claims: claims.map((claim, index) => ({
+      ...claim, id: `${runId}:${citationLinks[index]!.index}`, start: citationLinks[index]!.index,
+      end: citationLinks[index]!.index + citationLinks[index]![0].length,
+    })) }),
     ...references.map((reference) => toolCall(
       `read-document:${runId}:${reference.marker}`,
       'read_document',

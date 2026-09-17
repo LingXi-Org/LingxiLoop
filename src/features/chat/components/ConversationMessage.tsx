@@ -9,10 +9,11 @@ import {
 import { Copy01Icon, ReplyIcon, SmilePlusIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { Avatar } from '@/components/Avatar'
 import { ArtifactCard } from '@/components/assistant-ui/elements/artifact-card'
 import { conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
-import { type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
+import { confidenceCopyText, type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
 import { TypingIndicator } from '@/components/typing-indicator'
 import { Button } from '@/components/ui/button'
@@ -60,12 +61,17 @@ function QuotePart({ text, messageId }: { text: string; messageId: string }) {
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '🙏', '🔥'] as const
 
+async function copyMessageText(text: string) {
+  try { await navigator.clipboard.writeText(text) }
+  catch { toast.error('复制失败，请重试') }
+}
+
 function MessageActions({
   metadata,
-  text,
+  getText,
 }: {
   metadata: LingxiMessageMetadata
-  text: string
+  getText: () => string
 }) {
   const aui = useAui()
   const messageId = useAuiState((state) => state.message.id)
@@ -82,7 +88,7 @@ function MessageActions({
         className="size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
         aria-label="回复"
         onClick={(event) => {
-          aui.thread.composer().setQuote({ messageId, text })
+          aui.thread.composer().setQuote({ messageId, text: getText() })
           event.currentTarget.blur()
         }}
       >
@@ -122,23 +128,21 @@ function MessageActions({
           </div>
         )}
       </div>
-      <ActionBarPrimitive.Copy asChild>
-        <Button type="button" variant="ghost" size="icon-xs" className="size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground" aria-label="复制" onClick={(event) => event.currentTarget.blur()}>
-          <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />
-        </Button>
-      </ActionBarPrimitive.Copy>
+      <Button type="button" variant="ghost" size="icon-xs" className="size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground" aria-label="复制" onClick={(event) => { void copyMessageText(getText()); event.currentTarget.blur() }}>
+        <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />
+      </Button>
     </ActionBarPrimitive.Root>
   )
 }
 
 function MobileMessageActions({
   metadata,
-  text,
+  getText,
   open,
   onOpenChange,
 }: {
   metadata: LingxiMessageMetadata
-  text: string
+  getText: () => string
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -174,17 +178,15 @@ function MobileMessageActions({
             variant="ghost"
             className="h-12 justify-start rounded-2xl"
             onClick={() => {
-              aui.thread.composer().setQuote({ messageId, text })
+              aui.thread.composer().setQuote({ messageId, text: getText() })
               onOpenChange(false)
             }}
           >
             <HugeiconsIcon icon={ReplyIcon} strokeWidth={2} />回复
           </Button>
-          <ActionBarPrimitive.Copy asChild>
-            <Button type="button" variant="ghost" className="h-12 justify-start rounded-2xl" onClick={() => onOpenChange(false)}>
-              <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />复制
-            </Button>
-          </ActionBarPrimitive.Copy>
+          <Button type="button" variant="ghost" className="h-12 justify-start rounded-2xl" onClick={() => { void copyMessageText(getText()); onOpenChange(false) }}>
+            <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />复制
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>
@@ -196,8 +198,9 @@ function MessageTextPart() {
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
   const longPressTimer = useRef<number | null>(null)
   const longPressOrigin = useRef({ x: 0, y: 0 })
+  const bodyRef = useRef<HTMLDivElement>(null)
   const metadata = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
-  const text = useAuiState((state) => state.message.content
+  const rawText = useAuiState((state) => state.message.content
     .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
     .map((part) => part.text)
     .join('\n'))
@@ -207,6 +210,10 @@ function MessageTextPart() {
     const claims = (part.result as { claims?: unknown }).claims
     return Array.isArray(claims) ? claims as MarkdownConfidenceClaim[] : undefined
   })
+  const getText = () => {
+    const renderedIds = new Set(Array.from(bodyRef.current?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [], node => node.dataset.confidenceId))
+    return confidenceCopyText(rawText, confidenceClaims?.filter(claim => renderedIds.has(claim.id)))
+  }
   const groupPosition = metadata.groupStart
     ? metadata.groupEnd ? 'single' : 'start'
     : metadata.groupEnd ? 'end' : 'middle'
@@ -229,6 +236,7 @@ function MessageTextPart() {
   }
   const startLongPress = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!isMobile || event.button !== 0) return
+    if (event.target instanceof Element && event.target.closest('[data-confidence-id], [data-slot="confidence-basis"]')) return
     cancelLongPress()
     longPressOrigin.current = { x: event.clientX, y: event.clientY }
     longPressTimer.current = window.setTimeout(() => {
@@ -243,8 +251,9 @@ function MessageTextPart() {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
   return <div className={cn('relative min-w-0 w-fit', isMobile ? 'max-w-full' : 'max-w-[85%]', metadata.isMine && 'ms-auto')}>
-    {!isMobile && <MessageActions metadata={metadata} text={text} />}
+    {!isMobile && <MessageActions metadata={metadata} getText={getText} />}
     <div
+      ref={bodyRef}
       data-message-bubble={metadata.isMine ? 'user' : 'assistant'}
       data-message-group-position={groupPosition}
       onPointerDown={startLongPress}
@@ -268,7 +277,7 @@ function MessageTextPart() {
     >
       <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} />
     </div>
-    {isMobile && <MobileMessageActions metadata={metadata} text={text} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
+    {isMobile && <MobileMessageActions metadata={metadata} getText={getText} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
   </div>
 }
 

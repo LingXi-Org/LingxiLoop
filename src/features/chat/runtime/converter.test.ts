@@ -257,7 +257,7 @@ test('agent text restores the native read_document result without rebuilding cit
     {
       type: 'tool-call', toolCallId: 'cite-claims:run-1', toolName: 'cite_claims',
       args: {}, argsText: '{}',
-      result: { claims: [{ id: 'claim-1', text: 'hello', confidence: 'grounded', basis: 'Evidence', markers: ['S1'] }] },
+      result: { claims: [{ id: 'run-1:2', text: 'hello', confidence: 'grounded', basis: 'Evidence', markers: ['S1'], start: 2, end: 19 }] },
     },
     {
       type: 'tool-call', toolCallId: 'read-document:run-1:S1', toolName: 'read_document',

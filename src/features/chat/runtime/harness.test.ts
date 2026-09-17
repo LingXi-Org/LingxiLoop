@@ -7,6 +7,7 @@ import { convertEnvelope } from './converter'
 import { harnessParts, harnessStatus, harnessToolParts, readHarness } from './harness'
 import { getLingxiMessageMetadata } from './model'
 import { mergeCanonicalMessages } from './store'
+import type { MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
 
 const participants = { agent: { id: 'agent', kind: 'agent', name: '助手' } as Participant }
 
@@ -16,7 +17,7 @@ test('native response text and presentation cards retain segment order and stabl
   const second = { ...first, reference: 'second', fields: { title: '第二张' }, hash: 'second' }
   view.message!.envelope.presentations = [first, second]
   const parts = harnessParts(view)
-  assert.deepEqual(parts, [{ type: 'text', text: '查看原文' }, ...[first, second].map(component => ({
+  assert.deepEqual(parts.slice(0, -1), [{ type: 'text', text: '查看[原文](#cite-S1)' }, ...[first, second].map(component => ({
     type: 'tool-call', toolCallId: `presentation:${component.hash}`, toolName: 'card',
     args: component.fields, argsText: JSON.stringify(component.fields), result: component,
   }))])
@@ -58,13 +59,54 @@ test('native committed partial answers retain artifact hashes and provenance wit
   const native = envelope(1,1), message = convertEnvelope(native,{ participants, meId: 'human' })
   const meta = getLingxiMessageMetadata(message)
   assert.deepEqual(message.status,{ type: 'incomplete', reason: 'other' })
-  assert.deepEqual(message.content,[{ type: 'text', text: '查看原文' }])
+  assert.deepEqual(message.content, [
+    { type: 'text', text: '查看[原文](#cite-S1)' },
+    { type: 'tool-call', toolCallId: 'cite-claims:run:result-1', toolName: 'cite_claims', args: {}, argsText: '{}',
+      result: { claims: [{ id: 'run:result-1:2', text: '原文', confidence: 'grounded', markers: ['S1'], start: 2, end: 16,
+        basis: 'doc · 版本 revision-7' }] } },
+  ])
   assert.deepEqual(meta.harness?.message?.envelope,native.payload.data?.harness)
   assert.equal(meta.harness?.delivery,'delivered')
   for (const status of ['awaiting_input','awaiting_approval','delegated'] as const) {
     assert.deepEqual(harnessStatus(readHarness(envelope(1,1,status))!),{ type: 'requires-action', reason: 'tool-calls' })
   }
   assert.throws(() => readHarness({ ...native, payload: { ...native.payload, refs: { runId: 'run', agentId: 'other' } } }),/身份/)
+})
+
+test('native citations keep occurrence identities, all source versions and truncation, without grading support', () => {
+  const view = readHarness(envelope(1, 1))!
+  const body = '[甲](#cite-S1)\n\n- [乙](#cite-S1)\n- [丙](#cite-S1,S2)'
+  const sources = [
+    { sourceId: 'source-a', sourceVersion: 'v1', chunkIds: ['a'] },
+    { sourceId: 'source-b', sourceVersion: 'v2', chunkIds: ['b'], truncated: true as const },
+  ]
+  const annotations = [...body.matchAll(/\[([^\]]+)\]\(#cite-([^)]*)\)/g)].map(match => ({
+    start: match.index, end: match.index + match[0].length, text: match[1], markers: match[2].split(','),
+    sources: match[2].includes(',') ? sources : sources.slice(0, 1), support: 'not_assessed' as const,
+  }))
+  view.message!.envelope = { ...view.message!.envelope, body, citations: annotations }
+  const parts = harnessParts(view)
+  assert.deepEqual(parts[0], { type: 'text', text: body })
+  const part = parts.at(-1)!
+  assert.equal(part.type, 'tool-call')
+  if (part.type !== 'tool-call') return
+  const claims = (part.result as { claims: MarkdownConfidenceClaim[] }).claims
+  assert.deepEqual(claims, annotations.map(annotation => ({
+    id: `run:result-1:${annotation.start}`, text: annotation.text, confidence: 'grounded',
+    markers: annotation.markers, start: annotation.start, end: annotation.end,
+    basis: annotation.sources.length === 1 ? 'source-a · 版本 v1' : 'source-a · 版本 v1；source-b · 版本 v2 · 来源节选',
+  })))
+  assert.equal(new Set(claims.map(claim => claim.id)).size, 3)
+  view.lifecycle = 'queued'
+  assert.deepEqual(harnessParts(view), [])
+  view.draft = '新的草稿'
+  assert.deepEqual(harnessParts(view), [{ type: 'text', text: '新的草稿' }])
+  view.lifecycle = 'succeeded'
+  view.message!.envelope.citations[0].sources = []
+  assert.throws(() => harnessParts(view), /source provenance/)
+  view.message!.envelope.citations = []
+  view.message!.envelope.body = '无引用'
+  assert.deepEqual(harnessParts(view), [{ type: 'text', text: '无引用' }])
 })
 
 test('history, API snapshots and later attempts converge to one current message without restoring an old wait', () => {

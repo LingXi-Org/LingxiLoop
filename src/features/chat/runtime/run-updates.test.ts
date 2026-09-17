@@ -93,6 +93,29 @@ test('committed replies ignore duplicate snapshots and stale deltas without regr
   assert.equal(needsRunStream('succeeded', 'pending'), true)
 })
 
+test('citation projections agree across snapshots and IM replay and disappear before the next draft', () => {
+  const completed = snapshot()
+  const body = '来自[资料](#cite-S1)'
+  completed.message!.body = body
+  completed.message!.envelope.body = body
+  completed.message!.envelope.citations = [{ start: 2, end: body.length, text: '资料', markers: ['S1'], support: 'not_assessed',
+    sources: [{ sourceId: 'doc', sourceVersion: 'v1', chunkIds: ['chunk'] }] }]
+  let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: completed }, participants.agent)
+  const im: ImEnvelope = { channelId: 'room', channelType: 2, fromUid: 'agent', messageId: 'committed', clientMsgNo: 'committed', messageSeq: 1, timestamp: epoch,
+    payload: { version: 1, kind: 'text', clientMsgNo: 'committed', body, refs: { runId: 'run', agentId: 'agent' },
+      data: { harness: completed.message!.envelope, harnessSessionId: 'session', harnessCommit: { resultId: 'result-run', fence: 1 } } } }
+  const replay = convertEnvelope(im, { participants, meId: 'human' })
+  assert.deepEqual(state.messages[0].content, replay.content)
+  state = applyRunUpdate(state, target, event('过期草稿'), participants.agent)
+  assert.deepEqual(state.messages[0].content, replay.content)
+  const next: RunState = { ...completed, run: { ...completed.run, status: 'queued', requestVersion: 2, fence: 2 } }
+  state = applyRunUpdate(state, target, { type: 'state', state: next }, participants.agent)
+  assert.deepEqual(state.messages[0].content, [])
+  state = applyRunUpdate(state, target, { type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 2,
+    requestVersion: 2, attemptId: 'next', seq: 1, draft: '新的草稿' } }, participants.agent)
+  assert.deepEqual(state.messages[0].content, [{ type: 'text', text: '新的草稿' }])
+})
+
 test('paragraph deltas are immediate, replay is idempotent and cancellation retains visible text', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: snapshot('run', 'leased') })
   state = applyRunUpdate(state, target, event('第一段'))

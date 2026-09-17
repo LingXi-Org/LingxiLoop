@@ -2,6 +2,7 @@ import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } f
 import { consumeAssistantMessage, createRunView, responseSegments, type AssistantMessage, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import type { ImEnvelope } from '@/lib/im/wukong'
 import type { LingxiMessageMetadata } from './model'
+import type { MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
 
 export function canCancelRun(metadata: LingxiMessageMetadata): boolean {
   return metadata.harnessControl === true && Boolean(metadata.runId)
@@ -49,21 +50,34 @@ export function readHarness(envelope: ImEnvelope): RunView | undefined {
 
 export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
   if (view.lifecycle === 'failed' && !view.message) return []
-  if (view.draft && (view.lifecycle === 'leased' || view.lifecycle === 'queued')) return [{ type: 'text', text: view.draft }]
+  if (view.lifecycle === 'leased' || view.lifecycle === 'queued') return view.draft ? [{ type: 'text', text: view.draft }] : []
   if (!view.message) return view.draft ? [{ type: 'text', text: view.draft }] : []
-  // Citation provenance is displayed alongside the answer, without inventing a confidence score.
   const segments = responseSegments(view.message.envelope)
   const parts: ThreadAssistantMessagePart[] = []
+  const claims: MarkdownConfidenceClaim[] = []
   for (const segment of segments) {
     if (segment.type === 'presentation') parts.push({ type: 'tool-call',
       toolCallId: `presentation:${segment.component.hash}`, toolName: segment.component.type,
       args: segment.component.fields as ToolCallMessagePart['args'], argsText: JSON.stringify(segment.component.fields), result: segment.component })
     else {
+      const text = segment.type === 'citation'
+        ? view.message.envelope.body.slice(segment.annotation.start, segment.annotation.end) : segment.text
+      if (segment.type === 'citation') {
+        const { annotation } = segment
+        if (!annotation.sources.length || annotation.sources.some(source => !source.sourceId || !source.sourceVersion)) {
+          throw new Error('Citation requires recorded source provenance')
+        }
+        claims.push({ id: `${view.runId}:${view.resultId}:${annotation.start}`, text: segment.text,
+          confidence: 'grounded', markers: annotation.markers, start: annotation.start, end: annotation.end,
+          basis: annotation.sources.map(source => `${source.sourceId} · 版本 ${source.sourceVersion}${source.truncated ? ' · 来源节选' : ''}`).join('；') })
+      }
       const previous = parts.at(-1)
-      if (previous?.type === 'text') parts[parts.length - 1] = { ...previous, text: previous.text + segment.text }
-      else if (segment.text) parts.push({ type: 'text', text: segment.text })
+      if (previous?.type === 'text') parts[parts.length - 1] = { ...previous, text: previous.text + text }
+      else if (text) parts.push({ type: 'text', text })
     }
   }
+  if (claims.length) parts.push({ type: 'tool-call', toolCallId: `cite-claims:${view.runId}:${view.resultId}`,
+    toolName: 'cite_claims', args: {}, argsText: '{}', result: { claims } })
   return parts
 }
 

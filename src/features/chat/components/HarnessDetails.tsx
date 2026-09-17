@@ -39,16 +39,6 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
         </Button>
       </div>)}
     </div> : null}
-    {envelope?.citations.length ? <details className="rounded-lg border border-border px-3 py-2">
-      <summary className="cursor-pointer">引用来源（{envelope.citations.length}）</summary>
-      <p className="mt-2">已记录来源版本；引用是否充分支持回答尚未评定。</p>
-      <ul className="mt-2 space-y-2">{envelope.citations.map(citation => <li key={citation.start}>
-        <p className="text-foreground">{citation.text}</p>
-        {citation.sources.map(source => <p key={`${source.sourceId}:${source.sourceVersion}`} className="break-all">
-          {source.sourceId} · 版本 {source.sourceVersion}{source.truncated ? ' · 来源节选' : ''}
-        </p>)}
-      </li>)}</ul>
-    </details> : null}
     {metadata.harnessControl && ((active && outcome?.status === 'awaiting_approval') || view.delivery === 'failed') && <>
       <div className="flex flex-wrap gap-2">
         {outcome?.status === 'awaiting_approval' && <>
