@@ -1,0 +1,40 @@
+http:
+  routers:
+    landing:
+      rule: Host(`lingxilearn.cn`) || Host(`www.lingxilearn.cn`)
+      entryPoints: [websecure]
+      service: landing
+      tls: { certResolver: letsencrypt }
+    loop:
+      rule: Host(`loop.lingxilearn.cn`)
+      entryPoints: [websecure]
+      service: gateway
+      tls: { certResolver: letsencrypt }
+    im:
+      rule: Host(`im.lingxilearn.cn`)
+      entryPoints: [websecure]
+      service: gateway
+      tls: { certResolver: letsencrypt }
+    openlit:
+      rule: Host(`openlit.lingxilearn.cn`)
+      entryPoints: [websecure]
+      service: openlit
+      tls: { certResolver: letsencrypt }
+    uptime:
+      rule: Host(`uptime.lingxilearn.cn`)
+      entryPoints: [websecure]
+      service: uptime
+      tls: { certResolver: letsencrypt }
+  services:
+    landing:
+      loadBalancer:
+        servers: [{ url: http://landing:80 }]
+    gateway:
+      loadBalancer:
+        servers: [{ url: http://gateway:8080 }]
+    openlit:
+      loadBalancer:
+        servers: [{ url: http://openlit:3000 }]
+    uptime:
+      loadBalancer:
+        servers: [{ url: http://uptime-kuma:3001 }]

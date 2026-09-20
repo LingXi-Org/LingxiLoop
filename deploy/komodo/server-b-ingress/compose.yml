@@ -1,0 +1,33 @@
+name: server-b-ingress
+
+services:
+  traefik:
+    image: accel.way2api.fun/docker.io/library/traefik:v3.7.1
+    container_name: lingxiloop-traefik
+    command:
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?ACME_EMAIL is required}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --log.level=WARN
+      - --accesslog=true
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./dynamic.yml:/etc/traefik/dynamic/routes.yml:ro
+      - traefik-acme:/letsencrypt
+    networks: [ingress]
+    restart: unless-stopped
+
+volumes:
+  traefik-acme: {}
+
+networks:
+  ingress:
+    name: lingxiloop-ingress

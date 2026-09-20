@@ -1,0 +1,25 @@
+name: uptime
+
+services:
+  uptime-kuma:
+    image: accel.way2api.fun/docker.io/louislam/uptime-kuma:2.3.2
+    restart: unless-stopped
+    volumes:
+      - uptime-data:/app/data
+    healthcheck:
+      test: [CMD-SHELL, "extra/healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    cpus: "0.25"
+    mem_limit: 256m
+    networks: [default, ingress]
+
+volumes:
+  uptime-data: {}
+
+networks:
+  ingress:
+    external: true
+    name: lingxiloop-ingress

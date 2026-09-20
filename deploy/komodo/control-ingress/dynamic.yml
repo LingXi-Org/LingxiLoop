@@ -1,0 +1,19 @@
+http:
+  routers:
+    komodo:
+      rule: Host(`ops.christmas1314.xyz`)
+      entryPoints: [websecure]
+      service: komodo
+      tls: { certResolver: letsencrypt }
+    wegolibrary:
+      rule: Host(`golib.christmas1314.xyz`)
+      entryPoints: [websecure]
+      service: wegolibrary
+      tls: { certResolver: letsencrypt }
+  services:
+    komodo:
+      loadBalancer:
+        servers: [{ url: http://core:9120 }]
+    wegolibrary:
+      loadBalancer:
+        servers: [{ url: http://frontend:80 }]

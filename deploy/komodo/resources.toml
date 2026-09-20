@@ -1,0 +1,228 @@
+[[resource_sync]]
+name = "lingxiloop-production"
+description = "Declarative production resources"
+[resource_sync.config]
+repo = "lyyzka/LingxiLoop"
+branch = "main"
+git_provider = "accel.way2api.fun/github.com"
+git_account = "lyyzka"
+resource_path = ["deploy/komodo/resources.toml"]
+
+[[stack]]
+name = "server-b-ingress"
+deploy = true
+[stack.config]
+server = "shanghai-b"
+repo = "lyyzka/LingxiLoop"
+branch = "main"
+git_provider = "accel.way2api.fun/github.com"
+run_directory = "deploy/komodo/server-b-ingress"
+file_paths = ["compose.yml"]
+environment = "ACME_EMAIL = [[ACME_EMAIL]]"
+
+[[stack]]
+name = "landing"
+deploy = true
+after = ["server-b-ingress"]
+[stack.config]
+server = "shanghai-b"
+repo = "lyyzka/lingxiloop-landing-page"
+branch = "main"
+git_provider = "accel.way2api.fun/github.com"
+git_account = "lyyzka"
+registry_provider = "ghcr.io"
+registry_account = "lyyzka"
+run_directory = "deploy/komodo"
+file_paths = ["compose.yml"]
+
+[[stack]]
+name = "lingxiloop-core-state"
+deploy = true
+after = ["server-b-ingress"]
+[stack.config]
+server = "shanghai-a"
+repo = "lyyzka/LingxiLoop"
+branch = "main"
+git_provider = "accel.way2api.fun/github.com"
+run_directory = "deploy/komodo/lingxiloop-core-state"
+file_paths = ["compose.yml"]
+environment = """
+POSTGRES_PASSWORD = [[POSTGRES_PASSWORD]]
+WK_CLUSTER_JOIN_TOKEN = [[WK_CLUSTER_JOIN_TOKEN]]
+WUKONG_WEBHOOK_SECRET = [[WUKONG_WEBHOOK_SECRET]]
+LINGXILOOP_INTERNAL_ORIGIN = [[LINGXILOOP_INTERNAL_ORIGIN]]
+"""
+
+[[stack]]
+name = "lingxiloop-knowledge-agent"
+deploy = true
+after = ["lingxiloop-core-state"]
+[stack.config]
+server = "shanghai-b"
+repo = "lyyzka/LingxiLoop"
+branch = "main"
+git_provider = "accel.way2api.fun/github.com"
+run_directory = "deploy/komodo/lingxiloop-knowledge-agent"
+file_paths = ["compose.yml"]
+environment = """
+LINGXILOOP_PUBLIC_ORIGIN = [[LINGXILOOP_PUBLIC_ORIGIN]]
+OPEN_NOTEBOOK_PASSWORD = [[OPEN_NOTEBOOK_PASSWORD]]
+OPEN_NOTEBOOK_SURREAL_PASSWORD = [[OPEN_NOTEBOOK_SURREAL_PASSWORD]]
+OPENAI_EMBEDDING_MODEL = [[OPENAI_EMBEDDING_MODEL]]
+R2_ENDPOINT = [[R2_ENDPOINT]]
+R2_BUCKET = [[R2_BUCKET]]
+R2_ACCESS_KEY_ID = [[R2_ACCESS_KEY_ID]]
+R2_SECRET_ACCESS_KEY = [[R2_SECRET_ACCESS_KEY]]
+"""
+
+[[stack]]
+name = "lingxilit"
+deploy = true
+after = ["lingxiloop-core-state"]
+[stack.config]
+server = "shanghai-b"
+repo = "lyyzka/LingxiLit"
+branch = "main"
+git_provider = "accel.way2api.fun/github.com"
+run_directory = "deploy/komodo"
+file_paths = ["compose.yml"]
+
+[[stack]]
+name = "lingxiloop-app-a"
+deploy = true
+after = ["lingxiloop-knowledge-agent", "lingxilit"]
+[stack.config]
+server = "shanghai-a"
+repo = "lyyzka/LingxiLoop"
+branch = "main"
+git_provider = "accel.way2api.fun/github.com"
+run_directory = "deploy/komodo/lingxiloop-app-a"
+file_paths = ["compose.yml"]
+ignore_services = ["db-migrate"]
+environment = """
+INSTANCE_ID = app-a
+LINGXIOS_R2_BUCKET = [[LINGXIOS_R2_BUCKET]]
+LINGXIOS_R2_ACCESS_KEY_ID = [[LINGXIOS_R2_ACCESS_KEY_ID]]
+LINGXIOS_R2_SECRET_ACCESS_KEY = [[LINGXIOS_R2_SECRET_ACCESS_KEY]]
+DATABASE_URL = [[DATABASE_URL]]
+REDIS_URL = [[REDIS_URL]]
+WUKONG_API_URL = [[WUKONG_API_URL]]
+WUKONG_WS_PUBLIC_URL = [[WUKONG_WS_PUBLIC_URL]]
+WUKONG_API_TOKEN = [[WUKONG_API_TOKEN]]
+WUKONG_WEBHOOK_SECRET = [[WUKONG_WEBHOOK_SECRET]]
+WUKONG_USER_TOKEN_SECRET = [[WUKONG_USER_TOKEN_SECRET]]
+OPENAI_API_KEY = [[OPENAI_API_KEY]]
+OPENAI_BASE_URL = [[OPENAI_BASE_URL]]
+OPENAI_EMBEDDING_MODEL = [[OPENAI_EMBEDDING_MODEL]]
+AGENT_OS_INPUT_COST_MICROS_PER_MILLION = [[AGENT_OS_INPUT_COST_MICROS_PER_MILLION]]
+AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION = [[AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION]]
+SILICONFLOW_USD_CNY_RATE = [[SILICONFLOW_USD_CNY_RATE]]
+LINGXIOS_SERVICE_TOKEN = [[LINGXIOS_SERVICE_TOKEN]]
+LINGXILOOP_PUBLIC_ORIGIN = [[LINGXILOOP_PUBLIC_ORIGIN]]
+LINGXILOOP_INVITE_BASE_URL = [[LINGXILOOP_INVITE_BASE_URL]]
+LINGXILOOP_CORS_ORIGINS = [[LINGXILOOP_CORS_ORIGINS]]
+LINGXILOOP_GATEWAY_HMAC_SECRET = [[LINGXILOOP_GATEWAY_HMAC_SECRET]]
+R2_ENDPOINT = [[R2_ENDPOINT]]
+R2_BUCKET = [[R2_BUCKET]]
+R2_ACCESS_KEY_ID = [[R2_ACCESS_KEY_ID]]
+R2_SECRET_ACCESS_KEY = [[R2_SECRET_ACCESS_KEY]]
+R2_PUBLIC_BASE = [[R2_PUBLIC_BASE]]
+R2_URL_SIGNING_SECRET = [[R2_URL_SIGNING_SECRET]]
+OPEN_NOTEBOOK_URL = [[OPEN_NOTEBOOK_URL]]
+OPEN_NOTEBOOK_PASSWORD = [[OPEN_NOTEBOOK_PASSWORD]]
+"""
+
+[[stack]]
+name = "lingxiloop-app-b"
+deploy = true
+after = ["lingxiloop-app-a"]
+[stack.config]
+server = "shanghai-b"
+repo = "lyyzka/LingxiLoop"
+branch = "main"
+git_provider = "accel.way2api.fun/github.com"
+run_directory = "deploy/komodo/lingxiloop-app-b"
+file_paths = ["compose.yml"]
+ignore_services = ["db-migrate"]
+environment = """
+INSTANCE_ID = app-b
+LINGXIOS_R2_BUCKET = [[LINGXIOS_R2_BUCKET]]
+LINGXIOS_R2_ACCESS_KEY_ID = [[LINGXIOS_R2_ACCESS_KEY_ID]]
+LINGXIOS_R2_SECRET_ACCESS_KEY = [[LINGXIOS_R2_SECRET_ACCESS_KEY]]
+DATABASE_URL = [[DATABASE_URL]]
+REDIS_URL = [[REDIS_URL]]
+WUKONG_API_URL = [[WUKONG_API_URL]]
+WUKONG_WS_PUBLIC_URL = [[WUKONG_WS_PUBLIC_URL]]
+WUKONG_API_TOKEN = [[WUKONG_API_TOKEN]]
+WUKONG_WEBHOOK_SECRET = [[WUKONG_WEBHOOK_SECRET]]
+WUKONG_USER_TOKEN_SECRET = [[WUKONG_USER_TOKEN_SECRET]]
+OPENAI_API_KEY = [[OPENAI_API_KEY]]
+OPENAI_BASE_URL = [[OPENAI_BASE_URL]]
+OPENAI_EMBEDDING_MODEL = [[OPENAI_EMBEDDING_MODEL]]
+AGENT_OS_INPUT_COST_MICROS_PER_MILLION = [[AGENT_OS_INPUT_COST_MICROS_PER_MILLION]]
+AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION = [[AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION]]
+SILICONFLOW_USD_CNY_RATE = [[SILICONFLOW_USD_CNY_RATE]]
+LINGXIOS_SERVICE_TOKEN = [[LINGXIOS_SERVICE_TOKEN]]
+LINGXILOOP_PUBLIC_ORIGIN = [[LINGXILOOP_PUBLIC_ORIGIN]]
+LINGXILOOP_INVITE_BASE_URL = [[LINGXILOOP_INVITE_BASE_URL]]
+LINGXILOOP_CORS_ORIGINS = [[LINGXILOOP_CORS_ORIGINS]]
+LINGXILOOP_GATEWAY_HMAC_SECRET = [[LINGXILOOP_GATEWAY_HMAC_SECRET]]
+R2_ENDPOINT = [[R2_ENDPOINT]]
+R2_BUCKET = [[R2_BUCKET]]
+R2_ACCESS_KEY_ID = [[R2_ACCESS_KEY_ID]]
+R2_SECRET_ACCESS_KEY = [[R2_SECRET_ACCESS_KEY]]
+R2_PUBLIC_BASE = [[R2_PUBLIC_BASE]]
+R2_URL_SIGNING_SECRET = [[R2_URL_SIGNING_SECRET]]
+OPEN_NOTEBOOK_URL = [[OPEN_NOTEBOOK_URL]]
+OPEN_NOTEBOOK_PASSWORD = [[OPEN_NOTEBOOK_PASSWORD]]
+"""
+
+[[stack]]
+name = "uptime"
+deploy = true
+after = ["lingxiloop-app-b"]
+[stack.config]
+server = "shanghai-b"
+repo = "lyyzka/LingxiLoop"
+branch = "main"
+git_provider = "accel.way2api.fun/github.com"
+run_directory = "deploy/komodo/uptime"
+file_paths = ["compose.yml"]
+
+[[procedure]]
+name = "lingxiloop-production-rollout"
+description = "Refresh resources and deploy production in dependency order"
+
+[[procedure.config.stage]]
+name = "Sync configuration"
+executions = [{ execution.type = "RunSync", execution.params.sync = "lingxiloop-production" }]
+
+[[procedure.config.stage]]
+name = "Ingress and landing"
+executions = [
+  { execution.type = "DeployStack", execution.params.stack = "server-b-ingress" },
+  { execution.type = "DeployStack", execution.params.stack = "landing" },
+]
+
+[[procedure.config.stage]]
+name = "Core state"
+executions = [{ execution.type = "DeployStack", execution.params.stack = "lingxiloop-core-state" }]
+
+[[procedure.config.stage]]
+name = "Knowledge"
+executions = [
+  { execution.type = "DeployStack", execution.params.stack = "lingxiloop-knowledge-agent" },
+  { execution.type = "DeployStack", execution.params.stack = "lingxilit" },
+]
+
+[[procedure.config.stage]]
+name = "Application A"
+executions = [{ execution.type = "DeployStack", execution.params.stack = "lingxiloop-app-a" }]
+
+[[procedure.config.stage]]
+name = "Application B"
+executions = [{ execution.type = "DeployStack", execution.params.stack = "lingxiloop-app-b" }]
+
+[[procedure.config.stage]]
+name = "Uptime"
+executions = [{ execution.type = "DeployStack", execution.params.stack = "uptime" }]

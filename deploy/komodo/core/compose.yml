@@ -1,0 +1,43 @@
+name: komodo
+
+services:
+  mongo:
+    image: mongo:8.0
+    command: --quiet --wiredTigerCacheSizeGB 0.25
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${KOMODO_DATABASE_USERNAME:?KOMODO_DATABASE_USERNAME is required}
+      MONGO_INITDB_ROOT_PASSWORD: ${KOMODO_DATABASE_PASSWORD:?KOMODO_DATABASE_PASSWORD is required}
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    labels:
+      komodo.skip: ""
+
+  core:
+    image: ghcr.io/moghtech/komodo-core:2.3.3
+    init: true
+    restart: unless-stopped
+    depends_on: [mongo]
+    environment:
+      KOMODO_HOST: https://ops.christmas1314.xyz
+      KOMODO_DATABASE_ADDRESS: mongo:27017
+      KOMODO_DATABASE_USERNAME: ${KOMODO_DATABASE_USERNAME:?KOMODO_DATABASE_USERNAME is required}
+      KOMODO_DATABASE_PASSWORD: ${KOMODO_DATABASE_PASSWORD:?KOMODO_DATABASE_PASSWORD is required}
+      KOMODO_LOCAL_AUTH: "true"
+      KOMODO_ENABLE_NEW_USERS: "false"
+      KOMODO_INIT_ADMIN_USERNAME: admin
+      KOMODO_INIT_ADMIN_PASSWORD: ${KOMODO_ADMIN_PASSWORD:?KOMODO_ADMIN_PASSWORD is required}
+      KOMODO_JWT_SECRET: ${KOMODO_JWT_SECRET:?KOMODO_JWT_SECRET is required}
+      KOMODO_WEBHOOK_SECRET: ${KOMODO_WEBHOOK_SECRET:?KOMODO_WEBHOOK_SECRET is required}
+      KOMODO_TIMEZONE: Asia/Shanghai
+    volumes:
+      - keys:/config/keys
+      - /etc/komodo/backups:/backups
+    ports:
+      - 127.0.0.1:9120:9120
+
+volumes:
+  mongo-data: {}
+  mongo-config: {}
+  keys: {}
