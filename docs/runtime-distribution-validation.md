@@ -43,4 +43,24 @@ CPU 为进程累计 user+system 时间；Worker CPU 不包含 Python 子进程�
 
 两个节点总内存各约 3.57GiB；A 可用 1749MiB、B 可用 1157MiB。旧 A Web 约 411/448MiB，B Worker 约 456/512MiB，因此生产 Web/Worker 限额统一为 640MiB（基准使用更小的 512MiB Worker 限额）。A 新增预算约 1024MiB，B 增加约 320MiB；PostgreSQL 与 WuKongIM 限额保持原值。数据库连接 30/100，新增 Worker 池上限 8。
 
-切换前共有 39 个终态任务，无 queued/leased/waiting；三个旧运行时目录均为 0 文件，已提交产物 0、Python 步骤 0，不需要迁移文件内容。专用私有 R2 桶已验证无公共域名、r2.dev 关闭，跨客户端 S3 写入/读取/删除通过。生产切换与 HTTPS 验收待完成后记录。
+切换前共有 39 个终态任务，无 queued/leased/waiting；三个旧运行时目录均为 0 文件，已提交产物 0、Python 步骤 0，不需要迁移文件内容。专用私有 R2 桶已验证无公共域名、r2.dev 关闭，跨客户端 S3 写入/读取/删除通过。
+
+## 生产发布与验收
+
+2026-09-20 完成发布。SDK [发布工作流](https://github.com/lyyzka/LingxiOS/actions/runs/35483733961)和 LingxiLoop [主分支 CI/CD](https://github.com/lyyzka/LingxiLoop/actions/runs/35485088121)均成功；实际运行的应用与网关镜像固定为 `f1fda64e70d69eb0959f1eda9b269c794add890d`。主分支运行确实执行了各组件及集成检查；较早的分支手动 `release` 运行仅执行部署契约和版本检查，不计作完整 CI。
+
+切换先通过 Komodo 停止入口、旧 Worker 和两控制面，复核任务排空后备份 PostgreSQL。备份位于 PostgreSQL 持久卷的 `/var/lib/postgresql/data/runtime-upgrade-backups/3.2.13-to-3.3.0-20260920T110920/product.dump`，16,573,574 字节，`pg_restore --list` 校验通过，SHA-256 为 `518752e0a2c933e551808fdbe20831586a03909d65639c927721df4a3db5bae1`。数据库迁移成功，实查 schema 11。入口随既有发布流程在服务启动后恢复，再完成以下隔离测试租户验收。
+
+| 生产验证 | 证据 |
+|---|---|
+| Komodo 发布 | procedure `6aaf4e3ed8838102d0f39906` 为 `Complete / success=true`；补充部署专用 Redis 的 update `6aaf4ec1d8838102d0f39924` 同样成功 |
+| 双控制面 SSE | 4 条真实 HTTPS 流打开期间，同一运行的 Redis 通知频道有 2 个控制面订阅者；长正文测试四条流均收到正文预览与最终结果，每条 3 个不重复持久事件；携带最后游标重连新增持久事件为 0 |
+| 双 Worker | 第二轮 3 个任务全部 succeeded，A 完成 1 个、B 完成 2 个；后续固定长正文任务也 succeeded |
+| 任意节点读取 | 分别直连 A、B 的鉴权 HTTP 产物接口，4 个成功运行的文件内容与 SHA-256 全部一致；公网 HTTPS 下载亦通过 |
+| 跨节点目录恢复 | 全站无 queued/leased/waiting 后停止 A Worker；B 接管相同会话，执行 Python 文件校验并下载原文件，任务 succeeded；`homeEpoch` 从 1 增至 2，检查点 generation 从 9 增至 18 |
+| 恢复后文件 | `runtime-check.txt` 的 SHA-256 仍为 `4073423039968117dd3ef943860bfd488312e227cf26ac931c3b2f23a469a0a1`，已删除文件未恢复；未重写原文件 |
+| 恢复正常容量 | 停止 A 的 update `6aaf545cd8838102d0f39a4e`、恢复 A 的 update `6aaf5519d8838102d0f39a76` 均成功；最终两个 Web、两个 Worker、网关及专用 Redis 全部 healthy，应用容器 OOM=false、自动重启数 0 |
+
+真实模型验收保留所有结果：首轮 6 请求中 3 个成功，另 3 个因脚本 180 秒等待上限取消；改为 3 请求批次、360 秒等待后全部成功。短回复测试未观察到正文预览；一次长回复因内容校验器返回无法确认而 partial，随后固定候选 JSON 长正文通过预览及成功终态校验。没有放宽产品内容校验或鉴权。验证脚本曾遗漏关闭自己的 Redis 订阅客户端，已补齐并回收两个仅用于验证的进程；后续节点下载、恢复及账号停用脚本均正常退出。
+
+最终两个测试账号已停用，测试数据与检查点保留用于审计。全站无排队、执行或等待任务；PostgreSQL 连接为 41/100，节点可用内存 A 约 1385MiB、B 约 1292MiB。公网 `/healthz` 返回 204，`/api/health` 返回 200 且 `ok=true`。本次仍不消除入口网关、PostgreSQL、WuKongIM 等共享依赖的单点故障。
