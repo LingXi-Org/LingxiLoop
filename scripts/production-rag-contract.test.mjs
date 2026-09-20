@@ -136,12 +136,23 @@ test('Komodo knowledge services receive writable storage and the control plane U
   assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
 })
 
-test('Komodo runs the Worker only on its selected app project', () => {
+test('Komodo runs isolated workers on both app nodes with bounded drain and readiness', () => {
   const appA = read('deploy/komodo/lingxiloop-app-a/compose.yml')
   const appB = read('deploy/komodo/lingxiloop-app-b/compose.yml')
 
   assert.match(appA, /10\.20\.0\.2:5183:5181/)
-  assert.doesNotMatch(appA, /^ {2}(?:worker|gateway):/m)
+  assert.doesNotMatch(appA, /^ {2}gateway:/m)
+  assert.match(appA, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-1\}/)
+  assert.match(appA, /AGENT_OS_RESERVED_INTERACTIVE_RUNS: "0"/)
+  assert.match(appB, /AGENT_OS_RESERVED_INTERACTIVE_RUNS: "1"/)
+  for (const app of [appA, appB]) {
+    assert.match(app, /worker:\r?\n {4}<<: \*runtime/)
+    assert.match(app, /read_only: true/)
+    assert.match(app, /stop_grace_period: 150s/)
+    assert.match(app, /localhost:5190\/readyz/)
+    assert.match(app, /LINGXIOS_R2_BUCKET:/)
+    assert.match(app, /LINGXIOS_REALTIME_REDIS_URL: redis:\/\/10\.20\.0\.2:6381/)
+  }
   assert.doesNotMatch(appA, /COMPOSE_PROFILES|profiles:/)
   assert.match(appB, /worker:\r?\n {4}<<: \*runtime/)
   assert.match(appB, /gateway:\r?\n {4}image: .*lingxiloop-gateway:[0-9a-f]{40}/)
@@ -171,7 +182,7 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
   assert.match(worker, /"AUTH_ALLOWED_HOSTS": "loop\.lingxilearn\.cn,admin\.lingxilearn\.cn"/)
 })
 
-test('live chat streams reach the worker preview owner through both unbuffered proxy hops', () => {
+test('live chat streams balance independently across both nodes through unbuffered proxy hops', () => {
   const gateway = read('deploy/komodo/lingxiloop-app-b/gateway.conf')
   const routing = gateway.match(/map \$uri \$lingxiloop_api_upstream \{([^}]+)\}/)?.[1]
   assert.ok(routing)
@@ -181,7 +192,11 @@ test('live chat streams reach the worker preview owner through both unbuffered p
   assert.ok(!route.test('/api/im/channels/room/agents/agent/runs/run'))
   const owner = gateway.match(/upstream lingxiloop_realtime \{([^}]+)\}/)?.[1]
   assert.ok(owner)
-  assert.deepEqual(owner.match(/server [^;]+;/g), ['server lingxiloop:5181 resolve;'])
+  assert.deepEqual(owner.match(/server [^;]+;/g), ['server lingxiloop:5181 resolve max_fails=2 fail_timeout=5s;', 'server 10.20.0.2:5183 max_fails=2 fail_timeout=5s;'])
+  assert.match(owner, /least_conn;/)
+  assert.match(owner, /keepalive 32;/)
+  assert.match(gateway, /proxy_connect_timeout 3s;/)
+  assert.doesNotMatch(gateway, /proxy_next_upstream[^;]*non_idempotent/)
   assert.match(read('deploy/komodo/lingxiloop-app-b/compose.yml'), /LINGXIOS_CONTROL_URL: http:\/\/lingxiloop:5182/)
   for (const location of ['location /api/', 'location @origin_api']) {
     const block = gateway.slice(gateway.indexOf(location), gateway.indexOf('\n    }', gateway.indexOf(location)))

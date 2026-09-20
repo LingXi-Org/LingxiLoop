@@ -80,6 +80,7 @@ jobs:
               - 'worker-configuration.d.ts'
             server:
               - 'scripts/test-native-agent-*.mjs'
+              - 'scripts/test-distributed-realtime.mjs'
               - 'server/.npmrc'
               - 'server/src/**'
               - 'server/scripts/**'
@@ -91,6 +92,7 @@ jobs:
               - 'server/docker/lingxiloop-server.Dockerfile'
             server_source:
               - 'scripts/test-native-agent-*.mjs'
+              - 'scripts/test-distributed-realtime.mjs'
               - 'server/.npmrc'
               - 'server/src/**'
               - '!server/src/__tests__/**'
@@ -209,6 +211,7 @@ jobs:
       INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
       REDIS_URL: redis://127.0.0.1:6379
+      LINGXIOS_TEST_REDIS_URL: redis://127.0.0.1:6379
       OPENAI_API_KEY: integration-test-key
       OPENAI_EMBEDDING_MODEL: text-embedding-3-small
       LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
@@ -225,6 +228,10 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - run: npm run db:migrate
       - run: npm run test:integration
+      - name: Distributed SSE with a real Redis restart
+        run: node --import tsx scripts/test-distributed-realtime.mjs
+        env:
+          LINGXIOS_BENCH_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
       - name: Native product Worker flows on empty databases
         env:
           PGHOST: 127.0.0.1

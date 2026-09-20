@@ -37,15 +37,21 @@ async function applyRuntimeUpgrade(client: PoolClient): Promise<void> {
   const { rows } = await client.query<{ version: number }>(
     'SELECT version FROM lingxios.schema_version WHERE singleton',
   )
-  const current = rows[0]?.version
-  if (current !== releaseVersions.schema) {
-    if (current !== 9 || releaseVersions.schema !== 10) {
+  let current = rows[0]?.version
+  while (current !== releaseVersions.schema) {
+    const resources = packageResources()
+    const migrations = current === 9 ? [resources.migration010]
+      : current === 10 ? [resources.migration011, resources.migration012, resources.migration013] : []
+    if (!migrations.length || current! > releaseVersions.schema) {
       throw new Error(`unsupported LingxiOS schema upgrade from ${current} to ${releaseVersions.schema}`)
     }
-    const packaged = await readFile(packageResources().migration010, 'utf8')
-    const body = /^--[^\n]*\nBEGIN;\s*\n([\s\S]*?)\nCOMMIT;\s*$/.exec(packaged)?.[1]
-    if (!body) throw new Error('invalid packaged LingxiOS migration 010')
-    await client.query(body)
+    for (const migration of migrations) {
+      const packaged = await readFile(migration, 'utf8')
+      const body = /^(?:--[^\n]*\n)+BEGIN;\s*\n([\s\S]*?)\nCOMMIT;\s*$/.exec(packaged)?.[1]
+      if (!body) throw new Error('invalid packaged LingxiOS migration')
+      await client.query(body)
+    }
+    current = (await client.query<{ version: number }>('SELECT version FROM lingxios.schema_version WHERE singleton')).rows[0]?.version
   }
   const schema = await runtimeSchema()
   await client.query(`UPDATE public.lingxios_installation
@@ -200,7 +206,8 @@ export async function migrateDatabase(
           await client.query(`INSERT INTO public.lingxios_installation(runtime_version,schema_version,protocol_version,schema_sha256)
             VALUES($1,$2,$3,$4)`, [releaseVersions.runtime,releaseVersions.schema,releaseVersions.controlPlane,schema.hash])
         }
-        if (migration.version === RUNTIME_UPGRADE_VERSION && migration.name === 'lingxios_3_2') {
+        if (migration.version === RUNTIME_UPGRADE_VERSION && migration.name === 'lingxios_3_2'
+          || migration.version === 24 && migration.name === 'lingxios_3_3_0') {
           await applyRuntimeUpgrade(client)
         }
         await client.query('SET search_path TO public')

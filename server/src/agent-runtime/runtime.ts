@@ -17,6 +17,8 @@ import { productConversationId, assertFrozenAudience } from './identity.js'
 import { authorizeAudienceRead } from '../agents/tools.js'
 import { loadRuntimeBinding } from './context.js'
 import { siliconFlowCost, siliconFlowPricing } from './pricing.js'
+import { createRealtimeStore } from './realtime-store.js'
+import { createRuntimeObjectStore } from './object-store.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -65,15 +67,24 @@ const common = () => {
 } }
 
 let control: ReturnType<typeof createLingxiOS> | undefined
+let previewStore: ReturnType<typeof createRealtimeStore> | undefined
+let objectStore: ReturnType<typeof createRuntimeObjectStore> | undefined
 
 /** Web/API ownership: ingress, reads, cancellation and approval continuation only. */
 export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
   if (!control) {
+    const previewUrl = process.env.LINGXIOS_REALTIME_REDIS_URL?.trim()
+    const bucket = process.env.LINGXIOS_R2_BUCKET?.trim()
+    if (env.NODE_ENV === 'production' && (!previewUrl || !bucket)) throw new Error('production requires dedicated realtime Redis and a private runtime bucket')
+    if (previewUrl === env.REDIS_URL) throw new Error('realtime Redis must be separate from business Redis')
+    objectStore = bucket ? createRuntimeObjectStore(bucket) : undefined
+    previewStore = previewUrl ? createRealtimeStore(previewUrl) : undefined
     const harness = createProductHarness(createProductTools(lingxiOSControl))
     const { tools } = assembleHarness(harness)
     control = createLingxiOS({ ...common(), harness, ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
-      realtime: { async allowDraft(work) {
+      ...(objectStore ? { objects: objectStore, workspace: {} } : {}),
+      realtime: { ...(previewStore ? { store: previewStore } : {}), async allowDraft(work) {
         if (work.conversation?.internal) return false
         await loadRuntimeBinding({ ...work, conversationId: productConversationId(work) })
         await assertFrozenAudience(pool,work)
@@ -88,7 +99,10 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
         if (scopes.length) await (await lingxiOSControl()).freezeEvolutionBenchmark(work.tenantId,nativeEvolutionBenchmark)
         return scopes
       } }, verifyRun: createCanvasRuntime(lingxiOSControl).verify,
-      homesRoot: process.env.AGENT_OS_HOMES_ROOT?.trim() || '.agent-os/homes' })
+      homesRoot: process.env.AGENT_OS_HOMES_ROOT?.trim() || '.agent-os/homes' }).catch(error => {
+        previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined; control = undefined
+        throw error
+      })
   }
   return control
 }
@@ -135,7 +149,8 @@ let worker: ReturnType<typeof createWorker> | undefined
 export async function stopLingxiOSControl(): Promise<void> {
   const current = control
   control = undefined
-  if (current) await (await current).stop()
+  try { if (current) await (await current).stop() }
+  finally { previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined }
 }
 
 export function lingxiOSServiceToken(): string {
@@ -152,14 +167,17 @@ export async function listenLingxiOSControl() {
 /** Worker ownership: the sole in-process agent runner; PostgreSQL leases fence replicas. */
 export async function startLingxiOSWorker() {
   if (worker) throw new Error('LingxiOS worker already started in this process')
+  const concurrency = positiveInteger('AGENT_OS_MAX_CONCURRENT_RUNS', 2)
   const options = {
     modelBudget: common().modelBudget,
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),
     model: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL,
       reasoningEffort: 'high' as const },
-    worker: { id: `lingxiloop-${env.INSTANCE_ID}`, concurrency: positiveInteger('AGENT_OS_MAX_CONCURRENT_RUNS', 2), reservedInteractiveRuns: 1 },
-    resources: { model: 2, python: 1 },
+    worker: { id: `lingxiloop-${env.INSTANCE_ID}`, concurrency,
+      reservedInteractiveRuns: modelRate('AGENT_OS_RESERVED_INTERACTIVE_RUNS', concurrency > 1 ? 1 : 0),
+      healthPort: positiveInteger('AGENT_OS_WORKER_PORT', 5190), shutdownGraceMs: positiveInteger('AGENT_OS_SHUTDOWN_GRACE_MS', 120000) },
+    resources: { model: positiveInteger('AGENT_OS_MODEL_CONCURRENCY', 2), python: 1 },
     performance: { checkpointDedup: true, promptCache: true, asyncCompaction: true, onDemandAttachments: true },
     evolutionEvaluator: createNativeEvolutionEvaluator(lingxiOSControl),
     processors: { canvas_worker: 'conversation', canvas_summary: 'conversation', routine: 'conversation',
@@ -173,7 +191,8 @@ export async function startLingxiOSWorker() {
     env: { ...process.env, AGENT_OS_MODEL_API_KEY: env.OPENAI_API_KEY } })
   if (!readiness.ready) throw new Error(`LingxiOS worker readiness failed: ${readiness.checks.filter(check => check.status !== 'passed').map(check => check.name).join(', ')}`)
   const app = createWorker(options)
-  await app.start()
+  try { await app.start() }
+  catch (error) { await app.stop(); throw error }
   worker = app
   const cancellation = new AbortController(), canvas = createCanvasRuntime(lingxiOSControl)
   let pending: Promise<unknown> | undefined
@@ -190,12 +209,12 @@ export async function startLingxiOSWorker() {
   tick()
   return { stop: async () => {
     clearInterval(timer); cancellation.abort(); await app.stop()
-    await (await lingxiOSControl()).stop()
     if (pending) {
       let timeout: ReturnType<typeof setTimeout> | undefined
       await Promise.race([pending,new Promise<void>(resolve => { timeout = setTimeout(resolve,5000) })])
       if (timeout) clearTimeout(timeout)
     }
+    await stopLingxiOSControl()
     if (worker === app) { worker = undefined; control = undefined }
   } }
 }

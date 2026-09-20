@@ -47,6 +47,23 @@ services:
     mem_limit: 256m
     logging: *logging
 
+  realtime-redis:
+    image: accel.way2api.fun/docker.io/library/redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "no", "--save", "", "--loglevel", "warning", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "10.20.0.2:6381:6379"
+    read_only: true
+    tmpfs: [/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    cpus: "0.25"
+    mem_limit: 192m
+    logging: *logging
+
   wukongim:
     image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-wukongim:ee1e6f550fcefa4e81ef2b82fbab414e2d16c838
     pull_policy: always
