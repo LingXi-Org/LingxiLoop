@@ -126,7 +126,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
       'SELECT id,updated_at FROM knowledge_sources WHERE company_id=$1 AND id=ANY($2::text[])', [work.tenantId,retrieval.map(item => item.sourceId)]) : { rows: [] }
     const versionBySource = new Map(versions.rows.map(row => [row.id, new Date(row.updated_at).toISOString()]))
     const evidence = retrieval.map(item => ({ marker: item.marker, sourceId: item.sourceId, sourceVersion: versionBySource.get(item.sourceId)!,
-      chunkId: item.chunkId, title: item.sourceTitle, excerpt: item.excerpt, ...(item.sourceUrl ? { url: item.sourceUrl } : {}) }))
+      chunkId: item.chunkId, title: item.sourceTitle, excerpt: item.excerpt, truncated: true, ...(item.sourceUrl ? { url: item.sourceUrl } : {}) }))
     if (capabilities.includes('learning')) for (const userId of await audienceHumanIds({ work,database: pool })) if (userId !== work.principalId) {
       await permissionService.assertCan({ actorUserId: userId,companyId: work.tenantId,action: 'learning:manage',
         resource: { type: 'conversation',id: productConversationId(work) } })

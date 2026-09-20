@@ -436,7 +436,7 @@ export function startKnowledgeStorageGc(): WorkerTaskHandle | null {
 
 function hitExcerpt(hit: OpenNotebookSearchHit): string {
   const value = hit.matches ?? hit.content ?? ''
-  return (Array.isArray(value) ? value.join('\n') : String(value)).replace(/`/g, '').trim().slice(0, 2_000)
+  return (Array.isArray(value) ? value.join('\n') : String(value)).trim().slice(0, 2_000)
 }
 
 export async function retrieveKnowledge(args: {
@@ -511,14 +511,10 @@ export async function retrieveKnowledge(args: {
         : {}),
     }]
   }).slice(0, args.limit ?? 8)
-  const markers = new Map<string, string>()
-  for (const citation of citations) {
-    if (!markers.has(citation.sourceId)) markers.set(citation.sourceId, `S${markers.size + 1}`)
-  }
   const markedCitations = citations.map((citation, position) => ({
     ...citation,
     position,
-    marker: markers.get(citation.sourceId)!,
+    marker: `S${position + 1}`,
   }))
   if (markedCitations.length) inc('knowledge.retrieval.hits', undefined, markedCitations.length)
   else inc('knowledge.retrieval.miss')

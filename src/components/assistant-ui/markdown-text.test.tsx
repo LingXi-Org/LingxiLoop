@@ -80,6 +80,19 @@ test('copying and quoting strip only supplied citation spans', () => {
   assert.doesNotMatch(html, /confidence-basis|data-confidence-id/)
 })
 
+test('citation excerpts render safe compact Markdown while source titles remain literal', () => {
+  const claim = { id: 'first', text: '结论', confidence: 'grounded' as const, basis: 'legacy fallback', evidence: [
+    { marker: 'S1', chunkId: 'one', title: '**标题** <img src=x>', truncated: true,
+      excerpt: '**重点**\n\n- 列表\n\n> 引用\n\n`inline`\n\n```js\nconst x = 1\n```\n\n| 列 |\n| --- |\n| 值 |\n\n[安全](https://example.com) [危险](javascript:alert%281%29)\n\n<script>alert(1)</script>\n\n![图片](https://example.com/track.png)' },
+    { marker: 'S2', chunkId: 'two', title: '第二片段', excerpt: '另一个段落。' },
+  ] }
+  const html = renderToStaticMarkup(<ConfidenceMarker claims={[claim]} hoveredId="first" onHover={() => {}} />)
+  for (const pattern of [/<strong>重点<\/strong>/, /<ul>/, /<blockquote>/, /<code>inline<\/code>/,
+    /<pre>/, /<table/, /overflow-x-auto/, /href="https:\/\/example.com"/, /\*\*标题\*\* &lt;img src=x&gt;/, /节选/, /第二片段/]) assert.match(html, pattern)
+  assert.doesNotMatch(html, /<script|<img|javascript:|legacy fallback/)
+  assert.equal((html.match(/<section/g) ?? []).length, 2)
+})
+
 test('new citations underline answer wording and consume internal links before Link rendering', () => {
   const text = '开头😀 [**间隔复习**有助于记忆](#cite-S1,S1)。\n\n- [使用 `retrieval` 练习](#cite-S2)\n\n| 内容 |\n| --- |\n| [主动回忆](#cite-S1,S2) |\n\n[未匹配的正文](#cite-S9) 与 [官网](https://example.com)\n\n`[代码](#cite-S1)`'
   const matches = [...text.matchAll(/\[([^\]\n]+)\]\(#cite-(S\d+(?:,S\d+)*)\)/g)]

@@ -81,8 +81,10 @@ export function mergeCanonicalMessages(
   }
   for (const message of current) {
     const key = messageKey(message), next = byId.get(key)
-    if (next && metadata(message).positionAfter !== undefined) {
+    if (next && metadata(next).sequence === null && metadata(message).positionAfter !== undefined) {
       byId.set(key, { ...patchMetadata(next, { positionAfter: metadata(message).positionAfter }), createdAt: message.createdAt })
+    } else if (next && metadata(next).sequence !== null && metadata(next).positionAfter !== undefined) {
+      byId.set(key, patchMetadata(next, { positionAfter: undefined }))
     }
   }
   const lastSentByRun = new Map<string, ThreadMessage>()

@@ -77,8 +77,8 @@ export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
           confidence: 'grounded', markers: annotation.markers, start: annotation.start, end: annotation.end,
           basis: evidence === undefined
             ? annotation.sources.map(source => `${source.sourceId} · 版本 ${source.sourceVersion}${source.truncated ? ' · 来源节选' : ''}`).join('；')
-            : evidence.filter(item => annotation.markers.includes(item.marker))
-              .map(item => `${item.title}${item.truncated ? '（来源节选）' : ''}\n${item.excerpt}`).join('\n\n') })
+            : '',
+          ...(evidence === undefined ? {} : { evidence: evidence.filter(item => annotation.markers.includes(item.marker)) }) })
       }
       const previous = parts.at(-1)
       if (previous?.type === 'text') parts[parts.length - 1] = { ...previous, text: previous.text + text }

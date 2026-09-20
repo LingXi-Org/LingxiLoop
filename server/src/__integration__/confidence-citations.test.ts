@@ -4,6 +4,8 @@ import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { createLingxiOS, type CitationEvidence } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
+import { z } from 'zod'
+import { nativeTool } from '../agents/tools.js'
 import { pool } from '../db/pool.js'
 import { createProductContext, ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { createProductDelivery } from '../agent-runtime/delivery.js'
@@ -14,7 +16,13 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 before(async () => { await ensureSchemaOnce(); await resetAllTables() })
 after(async () => { await teardownAll() })
 
-test('product correction commits frozen excerpts and preserves them in IM delivery and authenticated reconnects', async () => {
+test('product correction commits frozen excerpts and preserves them in IM delivery and authenticated reconnects', async (t) => {
+  const notebookEnabled = process.env.OPEN_NOTEBOOK_ENABLED
+  process.env.OPEN_NOTEBOOK_ENABLED = 'false'
+  t.after(() => {
+    if (notebookEnabled === undefined) delete process.env.OPEN_NOTEBOOK_ENABLED
+    else process.env.OPEN_NOTEBOOK_ENABLED = notebookEnabled
+  })
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   const conversationId = 'citation-room', members = ['test-owner', agentId]
@@ -24,22 +32,39 @@ test('product correction commits frozen excerpts and preserves them in IM delive
     [conversationId, companyId, JSON.stringify({ channelType: 2, members }), agentId])
   await pool.query(`INSERT INTO knowledge_sources(id,company_id,project_id,conversation_id,title,kind,status,visibility_scope,owner_user_id,created_by_user_id,created_via)
     VALUES('source',$1,$2,$3,'学习指南','text','ready','PRIVATE','test-owner','test-owner','USER')`, [companyId, projectId, conversationId])
-  const evidence: CitationEvidence[] = [{ marker: 'S1', sourceId: 'source', sourceVersion: 'v1', chunkId: 'chunk',
-    title: '学习指南', excerpt: '将复习分散到不同日期，有助于长期记忆。', truncated: true }]
-  const frozen = structuredClone(evidence), product = createProductContext([])
-  const application = createLingxiOS({ database: pool, ...product,
+  const evidence: CitationEvidence[] = ['将复习分散到不同日期，有助于长期记忆。', '通过 `retrieval` 主动回忆。', '结合间隔复习与主动回忆。']
+    .map((excerpt, index) => ({ marker: `S${index + 1}`, sourceId: 'source', sourceVersion: 'v1', chunkId: `chunk-${index + 1}`,
+      title: '学习指南', excerpt, truncated: true }))
+  const frozen = structuredClone(evidence)
+  const appended = { ...frozen[0], marker: 'S4', chunkId: 'chunk-4', excerpt: '根据练习结果调整复习间隔。' }
+  const expectedEvidence = [...frozen, appended]
+  const search = nativeTool('knowledge.search', z.object({}).strict(), {
+    description: 'Read citation fixture excerpts', effect: 'read', approval: false,
+    async authorize() {},
+    async execute() {
+      const evidence = [frozen[0], appended].map(({ marker: _marker, ...item }) => item)
+      return { ok: true, value: { matches: evidence }, evidence }
+    },
+  })
+  await pool.query("UPDATE participants SET capabilities='[\"knowledge\"]'::jsonb WHERE id=$1", [agentId])
+  const product = createProductContext([search])
+  const application = createLingxiOS({ database: pool, ...product, tools: [search],
     contextProvider: { ...product.contextProvider, async loadContext(work) {
       return { ...await product.contextProvider.loadContext(work), evidence }
     } }, delivery: createProductDelivery(() => application) })
   const api = await application
   let calls = 0
-  const body = '建议[**分散安排**复习](#cite-S1)，并[隔天回顾](#cite-S1)。'
+  const body = '建议[**分散安排**复习](#cite-S1)，并[隔天回顾](#cite-S1)，[主动回忆](#cite-S2)，[结合练习](#cite-S1,S3)，[调整间隔](#cite-S4)。'
   const worker = createWorker({ controlPlane: api, policy: new ProductRuntimePolicy(),
     modelBudget: { inputCostMicrosPerMillion: 1, outputCostMicrosPerMillion: 1 },
     model: { modelId: 'citation-fixture', contextWindowTokens: 200000, async run(request) {
       calls++
       if (calls === 1) evidence[0].excerpt = '后来更新的内容，不应替换已冻结节选。'
-      else assert.match(JSON.stringify(request.items), /supported answer wording/)
+      else if (calls === 2) {
+        assert.match(JSON.stringify(request.items), /supported answer wording/)
+        return { text: '', output: [{ type: 'function_call', callId: 'citation-search', name: 'knowledge__search', arguments: '{}' }],
+          usage: { available: true, inputTokens: 100, outputTokens: 30 } }
+      }
       const text = calls === 1 ? '建议复习[【S1】](#cite-S1)' : body
       return { text, output: [{ role: 'assistant', content: text }], usage: { available: true, inputTokens: 100, outputTokens: 30 } }
     }, async structured() { throw new Error('unexpected auxiliary call') }, async compact() { throw new Error('unexpected compaction') } } })
@@ -49,7 +74,7 @@ test('product correction commits frozen excerpts and preserves them in IM delive
     const chunks = []
     for await (const chunk of request) chunks.push(chunk)
     const sent = JSON.parse(Buffer.concat(chunks).toString())
-    assert.deepEqual(JSON.parse(Buffer.from(sent.payload, 'base64').toString()).data.harness.citationEvidence, frozen)
+    assert.deepEqual(JSON.parse(Buffer.from(sent.payload, 'base64').toString()).data.harness.citationEvidence, expectedEvidence)
     response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ message_id: 'im-result', message_seq: 1 }))
   })
   try {
@@ -62,11 +87,20 @@ test('product correction commits frozen excerpts and preserves them in IM delive
       messageId: 'citation-request', version: 1, author: { id: 'test-owner', kind: 'human' }, text: '如何安排复习？', mentions: [agentId] })
     const identity = accepted.runs[0]
     assert.ok(identity)
-    assert.equal(await worker.runNext(), true)
+    // The local database clock can lag the process that schedules the work.
+    const workDeadline = Date.now() + 10_000
+    let executed = await worker.runNext()
+    while (!executed && Date.now() < workDeadline) {
+      await delay(50)
+      executed = await worker.runNext()
+    }
+    assert.equal(executed, true)
     const result = { message: await api.readMessage(identity) }
-    assert.equal(calls, 2)
+    assert.equal(calls, 3)
     assert.equal(result.message?.body, body)
-    assert.deepEqual(result.message?.envelope.citationEvidence, frozen)
+    assert.deepEqual(result.message?.envelope.citationEvidence, expectedEvidence)
+    assert.deepEqual(result.message?.envelope.citations.map(citation => citation.sources.map(source => source.chunkIds)),
+      [[['chunk-1']], [['chunk-1']], [['chunk-2']], [['chunk-1'], ['chunk-3']], [['chunk-4']]])
     const deadline = Date.now() + 5000
     while (await api.readDelivery(identity) === 'pending' && Date.now() < deadline) await delay(25)
     assert.equal(await api.readDelivery(identity), 'delivered')

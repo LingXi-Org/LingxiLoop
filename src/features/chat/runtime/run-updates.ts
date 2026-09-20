@@ -10,7 +10,7 @@ export function needsRunStream(status: string | null, delivery?: string | null):
   return status === 'queued' || status === 'leased' || status === 'waiting' || delivery === 'pending'
 }
 
-/** Both HTTP snapshots and SSE updates project into the same message and position. */
+/** HTTP snapshots and SSE updates share one message; committed IM order is authoritative. */
 export function applyRunUpdate(
   state: ConversationChatState,
   target: AgentRunTarget,
@@ -24,7 +24,7 @@ export function applyRunUpdate(
   const view = consumeRunStreamEvent(before?.harness ?? createRunView(target.runId), item)
   const id = current?.id ?? `preview-${target.runId}`
   const startedAt = item.type === 'state' ? Date.parse(item.state.run.createdAt) : NaN
-  const createdAt = before?.positionAfter !== undefined ? current!.createdAt
+  const createdAt = before?.sequence != null || before?.positionAfter !== undefined ? current!.createdAt
     : Number.isFinite(startedAt) ? new Date(startedAt) : current?.createdAt ?? new Date()
   const positionAt = Number.isFinite(startedAt) ? new Date(startedAt) : createdAt
   const predecessor = state.messages.filter(message => message !== current && message.createdAt <= positionAt).at(-1)
@@ -41,7 +41,7 @@ export function applyRunUpdate(
     presentation: 'conversation', quotedMessageId: target.threadId ?? null, quote: null, reactions: [], replyCount: 0,
     threadRootId: target.threadId ?? null, groupStart: true, groupEnd: true, continuedFromPrevious: false,
     continuedToNext: false, clusterChromeAt: null, ...before,
-    positionAfter: lastSent ? before?.sequence != null ? undefined : messageKey(lastSent)
+    positionAfter: before?.sequence != null ? undefined : lastSent ? messageKey(lastSent)
       : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
     runId: target.runId, harness: view,
     harnessTools: item.type === 'event' ? harnessToolParts(target.runId, [item.event], before?.harnessTools) : before?.harnessTools,
@@ -50,7 +50,7 @@ export function applyRunUpdate(
     ...(item.type === 'event' && item.event.kind === 'run.failed' && typeof item.event.data.error === 'string'
       ? { harnessError: item.event.data.error } : {}),
   }
-  // A snapshot restores the same turn position after a page reload.
+  // Only previews need a time-based anchor; delivered messages retain their IM sequence.
   if (before && before.positionAfter === undefined && !Number.isFinite(startedAt) && !lastSent) delete custom.positionAfter
   const message: ThreadMessage = { id, role: 'assistant', createdAt,
     content: current?.role === 'assistant' && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed' && before?.harness?.message)

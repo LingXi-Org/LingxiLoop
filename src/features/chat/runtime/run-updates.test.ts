@@ -102,7 +102,7 @@ test('a failure clears uncommitted previews and active state while preserving th
   assert.equal(metadata(state.messages[0]).harnessError,'Final assessment protocol correction exhausted')
 })
 
-test('a live reply stays between user turns through streaming, acknowledgements and canonical delivery', () => {
+test('a live reply keeps its anchor until canonical delivery establishes IM order', () => {
   let state = { ...EMPTY_CONVERSATION_CHAT_STATE, messages: [user('first', 1, 1000)] }
   state = applyRunUpdate(state, target, { type: 'state', state: snapshot('run', 'leased') }, participants.agent)
   state = applyRunUpdate(state, target, event('正在回答'), participants.agent)
@@ -118,13 +118,13 @@ test('a live reply stays between user turns through streaming, acknowledgements 
     custom: { ...metadata(preview), clientMessageId: 'result-run', sequence: 3, positionAfter: undefined } } } as ThreadMessage
   state = { ...state, messages: mergeCanonicalMessages(state.messages, [committed]) }
   state = applyRunUpdate(state, target, delta, participants.agent)
-  assert.deepEqual(state.messages.map(message => message.id), ['first', 'result-run', 'followup'])
-  assert.deepEqual(state.messages[1]!.content, [{ type: 'text', text: 'run 的完整历史回复' }])
+  assert.deepEqual(state.messages.map(message => message.id), ['first', 'followup', 'result-run'])
+  assert.deepEqual(state.messages[2]!.content, [{ type: 'text', text: 'run 的完整历史回复' }])
   assert.deepEqual(state.messages.map(message => [metadata(message).groupStart, metadata(message).groupEnd]),
-    [[true, true], [true, true], [true, true]])
+    [[true, false], [false, true], [true, true]])
 })
 
-test('snapshots restore turn order after reload and older history does not move the reply', () => {
+test('snapshots preserve IM order after reload and older history does not move the reply', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: snapshot() }, participants.agent)
   const reply = state.messages[0]!
   const canonical = { ...reply, createdAt: new Date(epoch + 4000), metadata: { ...reply.metadata,
@@ -132,8 +132,31 @@ test('snapshots restore turn order after reload and older history does not move 
   state = { ...state, messages: mergeCanonicalMessages([], [user('first', 1, 1000), user('followup', 2, 3000), canonical]) }
   state = applyRunUpdate(state, target, { type: 'state', state: snapshot() }, participants.agent)
   state = { ...state, messages: mergeCanonicalMessages(state.messages, [user('older', 0, 0)]) }
-  assert.deepEqual(state.messages.map(message => message.id), ['older', 'first', 'preview-run', 'followup'])
-  assert.equal(state.messages[2]!.status?.type, 'complete')
+  assert.deepEqual(state.messages.map(message => message.id), ['older', 'first', 'followup', 'preview-run'])
+  assert.equal(state.messages[3]!.status?.type, 'complete')
+  assert.equal(state.messages[3]!.createdAt.getTime(), epoch + 4000)
+})
+
+test('reload keeps interleaved user clusters when run start times disagree with committed message order', () => {
+  const messages: ThreadMessage[] = []
+  for (let turn = 1; turn <= 3; turn++) {
+    messages.push(user(`user-${turn}`, turn * 2 - 1, turn * 1000))
+    const completed = snapshot(`run-${turn}`)
+    const envelope = sent(`reply-${turn}`, turn * 2, `run-${turn}`)
+    envelope.payload.body = completed.message!.body
+    envelope.payload.data = { harness: completed.message!.envelope, harnessSessionId: 'session',
+      harnessCommit: { resultId: `result-run-${turn}`, fence: 1 } }
+    messages.push(convertEnvelope(envelope, { participants, meId: 'human' }))
+  }
+  let state = { ...EMPTY_CONVERSATION_CHAT_STATE, messages: mergeCanonicalMessages([], messages) }
+  for (const turn of [3, 1, 2, 1]) {
+    state = applyRunUpdate(state, { ...target, runId: `run-${turn}` },
+      { type: 'state', state: snapshot(`run-${turn}`) }, participants.agent)
+  }
+  assert.deepEqual(state.messages.map(message => [message.id, message.createdAt]),
+    messages.map(message => [message.id, message.createdAt]))
+  assert.deepEqual(state.messages.map(message => [metadata(message).groupStart, metadata(message).groupEnd]),
+    messages.map(() => [true, true]))
 })
 
 test('committed replies ignore duplicate snapshots and stale deltas without regressing content', () => {
@@ -168,7 +191,7 @@ test('citation projections agree across snapshots and IM replay and disappear be
   const claims = state.messages[0].content.find(part => part.type === 'tool-call' && part.toolName === 'cite_claims')
   assert.ok(claims?.type === 'tool-call')
   assert.deepEqual(claims.result, { claims: [{ id: 'run:result-run:2', text: '间隔复习', confidence: 'grounded',
-    markers: ['S1'], start: 2, end: body.length, basis: '学习指南\n间隔复习有助于记忆。' }] })
+    markers: ['S1'], start: 2, end: body.length, basis: '', evidence: completed.message!.envelope.citationEvidence }] })
   state = applyRunUpdate(state, target, { type: 'state', state: structuredClone(completed) }, participants.agent)
   assert.deepEqual(state.messages[0].content, replay.content)
   state = applyRunUpdate(state, target, event('过期草稿'), participants.agent)

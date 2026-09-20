@@ -104,7 +104,14 @@ test('native citations keep occurrence identities, all source versions and trunc
   const modern = harnessParts(view).at(-1)!
   assert.ok(modern.type === 'tool-call')
   assert.deepEqual(modern.result, { claims: claims.map((claim, index) => ({ ...claim,
-    basis: index === 2 ? '甲资料\n甲的原始段落。\n\n乙资料（来源节选）\n乙的原始段落。' : '甲资料\n甲的原始段落。' })) })
+    basis: '', evidence: view.message!.envelope.citationEvidence!.slice(0, index === 2 ? 2 : 1) })) })
+  const legacyChunk = { ...view.message!.envelope.citationEvidence[0], chunkId: 'a2', excerpt: '同一编号的历史片段。' }
+  view.message!.envelope.citationEvidence.push(legacyChunk)
+  sources[0].chunkIds.push('a2')
+  const legacy = harnessParts(view).at(-1)!
+  assert.ok(legacy.type === 'tool-call')
+  assert.deepEqual((legacy.result as { claims: MarkdownConfidenceClaim[] }).claims[0].evidence,
+    [view.message!.envelope.citationEvidence[0], legacyChunk])
   view.lifecycle = 'queued'
   assert.deepEqual(harnessParts(view), [])
   view.draft = '新的草稿'
@@ -116,6 +123,27 @@ test('native citations keep occurrence identities, all source versions and trunc
   view.message!.envelope.citationEvidence = []
   view.message!.envelope.body = '无引用'
   assert.deepEqual(harnessParts(view), [{ type: 'text', text: '无引用' }])
+})
+
+test('distinct chunks of one PDF remain specific across repeated and combined citations', () => {
+  const view = readHarness(envelope(1, 1))!
+  const body = '[甲](#cite-S1) [乙](#cite-S2) [再次引用甲](#cite-S1) [综合](#cite-S1,S3)'
+  const evidence = ['甲片段', '乙片段', '丙片段'].map((excerpt, index) => ({
+    marker: `S${index + 1}`, sourceId: 'same-pdf', sourceVersion: 'v1', chunkId: `chunk-${index + 1}`,
+    title: 'Understanding Attention', excerpt, truncated: true,
+  }))
+  const citations = [...body.matchAll(/\[([^\]]+)\]\(#cite-([^)]*)\)/g)].map(match => ({
+    start: match.index, end: match.index + match[0].length, text: match[1], markers: match[2].split(','),
+    support: 'not_assessed' as const,
+    sources: match[2].split(',').map(marker => ({ sourceId: 'same-pdf', sourceVersion: 'v1',
+      chunkIds: evidence.filter(item => item.marker === marker).map(item => item.chunkId), truncated: true as const })),
+  }))
+  view.message!.envelope = { ...view.message!.envelope, body, citations, citationEvidence: evidence }
+  const result = harnessParts(view).at(-1)!
+  assert.ok(result.type === 'tool-call')
+  const claims = (result.result as { claims: MarkdownConfidenceClaim[] }).claims
+  assert.deepEqual(claims.map(claim => claim.evidence), [[evidence[0]], [evidence[1]], [evidence[0]], [evidence[0], evidence[2]]])
+  assert.equal(new Set(claims.map(claim => claim.id)).size, 4)
 })
 
 test('history, API snapshots and later attempts converge to one current message without restoring an old wait', () => {

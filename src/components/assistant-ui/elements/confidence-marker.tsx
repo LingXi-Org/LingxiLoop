@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useId, useRef, type ComponentProp
 import { cn } from "@/lib/utils";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { floating, mono } from "./surfaces";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export type Confidence = "grounded" | "inferred" | "uncertain";
 
@@ -12,6 +14,13 @@ export interface ConfidenceClaim {
   text: string;
   confidence: Confidence;
   basis: string;
+  evidence?: readonly {
+    marker: string;
+    chunkId: string;
+    title: string;
+    excerpt: string;
+    truncated?: boolean;
+  }[];
 }
 
 const UNDERLINE: Record<Confidence, string> = {
@@ -102,9 +111,23 @@ export function ConfidenceMarker({
     }, floatingBasis ? 150 : 0);
   };
   useEffect(() => () => clearTimeout(closeTimer.current), []);
-  const basis = hovered && <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+  const basis = hovered && (hovered.evidence?.length ? <div className="space-y-3">
+    {hovered.evidence.map((item) => <section key={`${item.marker}:${item.chunkId}`} className="min-w-0 space-y-2 [overflow-wrap:anywhere]">
+      <div className="flex items-baseline gap-2 text-xs">
+        <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground">{item.marker}</span>
+        <span className="min-w-0 font-medium">{item.title}</span>
+        {item.truncated && <span className="shrink-0 text-muted-foreground">节选</span>}
+      </div>
+      <div className="space-y-2 text-[13px] leading-relaxed [&_p]:my-2 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_blockquote]:border-s-2 [&_blockquote]:border-border [&_blockquote]:ps-3 [&_blockquote]:text-muted-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:font-mono [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-2 [&_pre_code]:p-0 [&_th]:border-b [&_th]:border-border [&_th]:px-2 [&_th]:py-1 [&_td]:px-2 [&_td]:py-1 [&_a]:underline [&_a]:underline-offset-2 [&_a]:focus-visible:outline [&_a]:focus-visible:outline-ring [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold">
+        <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{
+          table: ({ children }) => <div className="max-w-full overflow-x-auto"><table className="w-full text-start">{children}</table></div>,
+          img: ({ alt }) => <span className="text-muted-foreground">{alt}</span>,
+        }}>{item.excerpt}</ReactMarkdown>
+      </div>
+    </section>)}
+  </div> : <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
     {LABEL[hovered.confidence]} · {hovered.basis}
-  </span>;
+  </span>);
   return (
     <ConfidenceContext.Provider value={{ hoveredId, basisId, leave, show: (id, element, point) => {
       cancelClose();
@@ -138,7 +161,7 @@ export function ConfidenceMarker({
           <PopoverAnchor virtualRef={anchor} />
           <PopoverContent ref={panel} data-slot="confidence-basis" aria-label="引用依据" tabIndex={0}
             side="bottom" align="start" sideOffset={12} collisionPadding={12} updatePositionStrategy="always"
-            className="w-96 max-w-[calc(100vw-24px)] max-h-[min(16rem,var(--radix-popover-content-available-height))] overflow-auto rounded-xl p-3 text-sm leading-5 motion-reduce:animate-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+            className="w-96 max-w-[calc(100vw-24px)] max-h-[min(20rem,var(--radix-popover-content-available-height))] overflow-auto rounded-xl p-3 text-sm leading-5 shadow-md data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 motion-reduce:animate-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
             onOpenAutoFocus={(event) => event.preventDefault()} onCloseAutoFocus={(event) => event.preventDefault()}
             onEscapeKeyDown={() => {
               if (panel.current?.contains(document.activeElement)) location.current?.element.focus();
@@ -160,7 +183,7 @@ export function ConfidenceMarker({
           aria-label="引用依据"
         >
           <div id={basisId} role="status" aria-live="polite">
-            {hovered && <span className={cn(floating, mono,
+            {hovered && <div className={cn(floating, mono,
               "text-foreground/70 inline-flex max-w-full items-start gap-1.5 rounded-2xl px-2.5 py-1.5",
             )}>
               <span aria-hidden className={cn("mt-1 size-1.5 shrink-0 rounded-full",
@@ -168,8 +191,8 @@ export function ConfidenceMarker({
                 hovered.confidence === "inferred" && "bg-amber-500",
                 hovered.confidence === "uncertain" && "bg-red-500",
               )} />
-              <span className="min-w-0">{basis}</span>
-            </span>}
+              <div className="min-w-0">{basis}</div>
+            </div>}
           </div>
         </div>}
       </div>
