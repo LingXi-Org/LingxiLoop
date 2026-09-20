@@ -34,7 +34,7 @@ test('an oversized persisted conversation compacts, records every call and accep
   }
   const run = await enqueue('initial')
   const history = [{ role: 'user', content: 'old-context-中文😀'.repeat(15000) },
-    ...Array.from({ length: 20 }, () => ({ role: 'user', content: 'Recent observation' }))]
+    ...Array.from({ length: 14 }, () => ({ role: 'user', content: 'Recent observation' }))]
   await pool.query(`INSERT INTO lingxios.agent_os_sessions(session_key,tenant_id,agent_id,session_id,history,revision)
     VALUES($1,$2,$3,$4,$5::jsonb,1)`, [JSON.stringify([companyId, agentId, run.sessionId, null]), companyId, agentId, run.sessionId, JSON.stringify(history)])
   let chunks = 0
