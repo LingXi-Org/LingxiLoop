@@ -1,5 +1,12 @@
 # LingxiLoop
 
+灵犀学习协作平台，将私聊、Study Rooms 和 Labs 集成到浏览器工作台中，并通过 LingxiOS 执行持久化 Agent 任务。
+
+Part of [LingXi · 灵犀](https://github.com/LingXi-Org). The organization repository is [LingXi-Org/LingxiLoop](https://github.com/LingXi-Org/LingxiLoop).
+
+- [LingxiOS](https://github.com/LingXi-Org/LingxiOS): the independent agent execution runtime consumed through its published package.
+- [LingxiLit](https://github.com/LingXi-Org/LingxiLit): the organization's OpenLIT-based AI observability project.
+
 LingxiLoop uses the published `@lyyzka/lingxios@3.2.4` runtime. The Web process owns authenticated ingress and control operations; the Worker is the only process that claims LingxiOS work.
 
 LingxiLoop is a Web learning-collaboration product with direct messages, Study Rooms, and Labs.
