@@ -58,6 +58,8 @@ test('[integration] Pulse can send conversational messages only in its active au
   const tools = createProductTools(lingxiOSControl), product = createProductContext(tools)
   const loaded = await product.contextProvider.loadContext(work)
   assert.match(loaded.productRules ?? '',/User-facing IM conversation/)
+  assert.match(loaded.productRules ?? '',/answer from them without tools when they are sufficient/)
+  assert.match(JSON.stringify(loaded.dynamic?.teacherContext),/"learners":1/)
   assert.deepEqual((await product.capabilityResolver.resolve(work)).filter(grant => grant.name === 'chat'),[{ name: 'chat',methods: ['send'] }])
   const input = { body: '先从班级整体情况看起。' }, send = tools.find(tool => tool.action === 'chat.send')!
   const context = { work,database: pool,signal: AbortSignal.timeout(15000),requestVersion: 1,
