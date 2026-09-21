@@ -446,7 +446,7 @@ jobs:
       (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
     needs: [changes, update-manifests, deploy]
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 35
     environment: production
     env:
       KOMODO_WEBHOOK_URL: ${{ secrets.KOMODO_WEBHOOK_URL }}

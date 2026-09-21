@@ -255,6 +255,14 @@ for (const [version, pending] of [['3.3.0', 25], ['3.3.1', 26], ['3.3.2', 28]] a
   })
 })
 
+test('a recorded runtime patch repairs a stale LingxiOS schema before serving', async () => {
+  await withDatabase(async database => {
+    await migrateDatabase(database)
+    await restoreSchema10(database, '3.3.4')
+    await migrateDatabase(database)
+    await assertMigrationsCurrent(database)
+  })
+})
 test('the affinity migration backfills the most recent worker without changing the Home epoch', async () => {
   await withMigrations(async (migrationsUrl, directory) => {
     await copyFile(legacyCleanupUrl, join(directory, '0002_remove_legacy_identity.sql'))

@@ -10,8 +10,8 @@ const MIGRATION_FILE = /^(\d{4})_([a-z0-9][a-z0-9_-]*)\.sql$/
 const LOCK_KEY = 1_282_006_534
 const NATIVE_INSTALL_VERSION = 10
 const RUNTIME_UPGRADE_VERSION = 12
-// Historical schema gates precede the explicit runtime-only patch migrations.
 const RUNTIME_SCHEMA_RELEASE = '3.3.0'
+// Historical schema gates precede the explicit runtime-only patch migrations.
 const retiredTables = ['approvals','agent_events','agent_runs','agent_host_actions','agent_os_session_leases',
   'agent_os_session_routes','agent_os_workers','agent_os_sessions','agent_work_items','agent_workspace',
   'agent_memory_evidence','agent_autonomy_rules','agent_action_executions','agent_tasks','agent_triages','tool_calls',
@@ -35,7 +35,7 @@ async function runtimeSchema() {
   return { sql, hash: createHash('sha256').update(sql).digest('hex') }
 }
 
-async function applyRuntimeUpgrade(client: PoolClient): Promise<void> {
+async function applyRuntimeUpgrade(client: PoolClient, runtimeVersion = RUNTIME_SCHEMA_RELEASE): Promise<void> {
   const { rows } = await client.query<{ version: number }>(
     'SELECT version FROM lingxios.schema_version WHERE singleton',
   )
@@ -58,7 +58,7 @@ async function applyRuntimeUpgrade(client: PoolClient): Promise<void> {
   const schema = await runtimeSchema()
   await client.query(`UPDATE public.lingxios_installation
     SET runtime_version=$1,schema_version=$2,protocol_version=$3,schema_sha256=$4,installed_at=NOW()
-    WHERE singleton`, [RUNTIME_SCHEMA_RELEASE,releaseVersions.schema,releaseVersions.controlPlane,schema.hash])
+    WHERE singleton`, [runtimeVersion,releaseVersions.schema,releaseVersions.controlPlane,schema.hash])
 }
 
 async function assertRuntimeCurrent(client: PoolClient): Promise<void> {
@@ -225,7 +225,14 @@ export async function migrateDatabase(
       }
     }
     if (cutover) await client.query('COMMIT')
-    if (installsRuntime) await assertRuntimeCurrent(client)
+    if (installsRuntime) {
+      const current = (await client.query<{ version: number }>('SELECT version FROM lingxios.schema_version WHERE singleton')).rows[0]?.version
+      if (current !== releaseVersions.schema) {
+        await client.query('BEGIN')
+        try { await applyRuntimeUpgrade(client, releaseVersions.runtime); await client.query('COMMIT') } catch (error) { await client.query('ROLLBACK'); throw error }
+      }
+      await assertRuntimeCurrent(client)
+    }
     await client.query('BEGIN')
     try {
       await client.query('SET search_path TO public')
