@@ -70,6 +70,10 @@ test('product correction commits frozen excerpts and preserves them in IM delive
     }, async structured() { throw new Error('unexpected auxiliary call') }, async compact() { throw new Error('unexpected compaction') } } })
   const server = createServer(await buildApiTestApp('test-owner'))
   const im = createServer(async (request, response) => {
+    if (request.url === '/channel/messagesync') {
+      response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ messages: [] }))
+      return
+    }
     assert.equal(request.url, '/message/send')
     const chunks = []
     for await (const chunk of request) chunks.push(chunk)
