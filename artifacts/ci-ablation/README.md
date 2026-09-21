@@ -104,3 +104,12 @@ Electron 安装包与旧前端构建入口的删除属于维护和依赖收益�
 当前全部 Web 改动（含审批、附件、投票、画布与演示卡片）的所属 lint、81 项测试、类型检查及构建通过。附件标签的旧源码断言已随组件提取更新位置。CI 契约与选择器 17 项通过，actionlint 通过。
 
 发布前核对到 GitHub 仓库已迁入 `LingXi-Org`，清单更新脚本现会使用实际发布组织更新所选镜像的命名空间，并保留加速器前缀和未重建镜像；已有测试补充覆盖该情况。Komodo 和 Cloudflare 身份通过 Sigillo prod 核实，三个受影响 Compose 完成本地结构校验。GitHub Actions 缺少部署凭据的限制仍需通过授权的 Sigillo 运维流程完成交付，不能以镜像发布成功代替生产部署成功。
+
+### 2026-09-21 发布验证
+
+- 产品提交 `6ae991549592f037c8df33feb8b00054623c718c`；镜像清单提交 `86d1e3f`。
+- [本次 CI](https://github.com/LingXi-Org/LingxiLoop/actions/runs/35562472617) 的 checks、integration、两个镜像发布及清单更新通过。常规集成 159 项：158 通过、1 跳过、0 失败。五项重型脚本按新默认范围跳过，不记为通过。
+- GitHub 部署任务缺少 `CLOUDFLARE_API_TOKEN`；本地通过 Sigillo prod 发布 Admin/Control，Worker 版本 `7f26610e-2225-44a4-bebd-a60a85d3c10d`，100% 流量，新页面资源及健康接口核验通过。
+- 首次 Komodo 操作 `6ab0bb5bd8838102d0f3e238` 虽完成，但实际仍使用旧仓库路径对应的旧清单，不能作为本次版本交付证据。已用 `72afa2e` 将资源声明中的本仓库迁至 `LingXi-Org/LingxiLoop`，保留现有加速器，并通过官方 CLI 更新资源同步来源。16 项部署契约检查通过；该提交 CI checks 通过，rollout 因 GitHub 缺少 Komodo 凭据失败，随后通过 Sigillo 重启有序部署。
+- 发布提交之后其他工作继续产生的会话功能编辑留在工作区，不属于上述已验证发布快照。
+- 最终 Komodo 更新 [`6ab0bc72d8838102d0f3e27d`](https://ops.christmas1314.xyz/updates/6ab0bc72d8838102d0f3e27d) 已达到 `Complete`、`success: true`。应用 A/B 的 API、Worker 以及 RAG 均运行 `6ae9915` 镜像且健康，两台 `db-migrate` 均退出 0；SurrealDB 与网关健康。公网 `/api/meta` 返回完整发布提交及 LingxiOS `3.3.2`，产品和 Admin `/api/health` 均返回 `ok: true`。
