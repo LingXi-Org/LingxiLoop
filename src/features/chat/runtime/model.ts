@@ -1,5 +1,6 @@
 import type { ThreadMessage, ToolCallMessagePart } from '@assistant-ui/react'
 import type { RunView } from '@lyyzka/lingxios/ui'
+import type { RunMemory } from './memory'
 
 export type LingxiDeliveryStatus = 'sending' | 'sent' | 'failed'
 export type LingxiMessagePresentation = 'conversation' | 'special-card'
@@ -70,6 +71,7 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   harnessTools?: ToolCallMessagePart[]
   harnessControl?: boolean
   harnessReplaySeq?: number
+  memory?: RunMemory
   harnessError?: string
   unresolvedActions?: Array<{ actionKey: string; action: string }>
   quotedMessageId: string | null

@@ -74,6 +74,7 @@ export function mergeCanonicalMessages(
           : harness.message ? harnessParts(harness) : message.content,
         metadata: { ...canonical.metadata, custom: { ...before,...metadata(canonical), harness,
           harnessTools: after.harnessTools ?? before.harnessTools,
+          memory: after.memory ?? before.memory,
           harnessControl: after.harnessControl ?? before.harnessControl,
           harnessError: after.harnessError ?? before.harnessError,
           unresolvedActions: after.unresolvedActions ?? before.unresolvedActions } } } as ThreadMessage)

@@ -18,7 +18,7 @@ before(async()=>{
 })
 after(async()=>{ await worker?.stop();await teardownAll(server) })
 
-test('native memory is Agent-only and preserves reviewed versioned writes',async()=>{
+test('native memory writes remain Agent-only and preserve reviewed versioned writes',async()=>{
   const { companyId,projectId,agentId }=await seedCompanyWithAgent()
   await seedUserMembership('test-owner',companyId)
   const conversationId='memory-room',members=['test-owner',agentId]

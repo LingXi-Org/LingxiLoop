@@ -468,7 +468,7 @@ export class ChatTransport {
         if (meta.runId !== target.runId || !isRunMessage(meta)) return message
         const inaccessible = /\(40[134]\)/.test(String(error))
         return { ...message, metadata: { ...message.metadata, custom: { ...meta,
-          ...(inaccessible ? { harnessControl: false } : {}), harnessError: inaccessible ? undefined : '运行状态暂时无法同步，请重试' } } } as ThreadMessage
+          ...(inaccessible ? { harnessControl: false, memory: undefined } : {}), harnessError: inaccessible ? undefined : '运行状态暂时无法同步，请重试' } } } as ThreadMessage
       }) }))
     }).finally(() => { if (this.runReads.get(key) === promise) this.runReads.delete(key) })
     this.runReads.set(key,promise)

@@ -137,6 +137,32 @@ test('snapshots preserve IM order after reload and older history does not move t
   assert.equal(state.messages[3]!.createdAt.getTime(), epoch + 4000)
 })
 
+test('committed memory summaries belong to the main run reply and survive HTTP replay and IM merging', () => {
+  const events = [
+    { runId: 'run', seq: 1, kind: 'tool.started', stage: 'started' as const, visibility: 'user' as const,
+      data: { toolCallId: 'host:memory', name: 'memory.apply' } },
+    { runId: 'run', seq: 2, kind: 'tool.completed', stage: 'completed' as const, visibility: 'user' as const,
+      data: { toolCallId: 'host:memory', result: { status: 'completed', value: {
+        documents: [{ id: 'memory', description: '喜欢中文', status: 'active', body: 'private' }], deleted: [],
+      } } } },
+  ]
+  const response = { ...snapshot(), events, nextSeq: 2, diagnostics: null, canControl: true }
+  const state = applyRunUpdate({ ...EMPTY_CONVERSATION_CHAT_STATE,
+    messages: [convertEnvelope(sent('lead-in', 1), { participants, meId: 'human' })] }, target,
+  { type: 'state', state: response }, participants.agent, response)
+  assert.equal(metadata(state.messages[0]).memory, undefined)
+  const main = state.messages[1], memory = metadata(main).memory
+  assert.deepEqual(memory?.chips, [{ id: 'memory', text: '喜欢中文' }])
+  const committed = { ...main, id: 'canonical', metadata: { ...main.metadata,
+    custom: { ...metadata(main), sequence: 2, clientMessageId: 'canonical', memory: undefined } } } as ThreadMessage
+  const merged = mergeCanonicalMessages(state.messages, [committed])
+  assert.deepEqual(metadata(merged[1]).memory, memory)
+  assert.deepEqual(applyRunUpdate({ ...state, messages: merged }, target, { type: 'state', state: response }, participants.agent, response)
+    .messages.map(message => metadata(message).memory), [undefined, memory])
+  const stale = { ...response, memory: { chips: [{ id: 'memory', text: 'stale' }], calls: {}, revision: 1 } }
+  assert.deepEqual(metadata(applyRunUpdate(state, target, { type: 'state', state: stale }, participants.agent, stale).messages[1]).memory, memory)
+})
+
 test('reload keeps interleaved user clusters when run start times disagree with committed message order', () => {
   const messages: ThreadMessage[] = []
   for (let turn = 1; turn <= 3; turn++) {

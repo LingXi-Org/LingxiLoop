@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { Avatar } from '@/components/Avatar'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { ProgressCard } from '@/components/assistant-ui/elements/progress-card'
+import { MemoryChips } from '@/components/assistant-ui/elements/memory-chips'
 import { confidenceCopyText, type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
 import { TypingIndicator } from '@/components/typing-indicator'
@@ -425,6 +426,8 @@ export function ConversationMessage() {
               tools: CHAT_TOOL_RENDERERS,
             }}
           />
+          {custom.harness && custom.memory && <MemoryChips fresh chips={custom.memory.chips}
+            unavailable={Object.values(custom.memory.calls).some(call => call.unavailable)} className="mt-2 max-w-xl" />}
           {custom.senderKind === 'agent' && custom.messageKind === 'text' && custom.runId && <HarnessDetails metadata={custom} />}
           {!custom.harness && <MessagePrimitive.Error>
             <div className="mt-2 text-xs text-destructive">消息生成失败</div>

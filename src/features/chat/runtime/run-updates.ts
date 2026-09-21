@@ -5,6 +5,7 @@ import type { AgentRunResponse, AgentRunTarget } from './harness-api'
 import { harnessParts, harnessStatus, harnessToolParts, isRunMessage } from './harness'
 import { getLingxiMessageMetadata as metadata, type LingxiMessageMetadata } from './model'
 import { mergeCanonicalMessages, messageKey, type ConversationChatState } from './store'
+import { projectRunMemory } from './memory'
 
 export function needsRunStream(status: string | null, delivery?: string | null): boolean {
   return status === 'queued' || status === 'leased' || status === 'waiting' || delivery === 'pending'
@@ -44,6 +45,9 @@ export function applyRunUpdate(
     positionAfter: before?.sequence != null ? undefined : lastSent ? messageKey(lastSent)
       : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
     runId: target.runId, harness: view,
+    memory: response?.memory
+      ? response.memory.revision >= (before?.memory?.revision ?? 0) ? response.memory : before?.memory
+      : projectRunMemory(target.runId, response?.events ?? (item.type === 'event' ? [item.event] : []), before?.memory),
     harnessTools: item.type === 'event' ? harnessToolParts(target.runId, [item.event], before?.harnessTools) : before?.harnessTools,
     harnessReplaySeq: response?.nextSeq ?? view.lastSeq,
     ...(response ? { harnessControl: response.canControl, harnessError: response.run.error ?? undefined } : {}),
