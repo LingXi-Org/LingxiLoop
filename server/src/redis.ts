@@ -66,6 +66,7 @@ export const CH_CALENDAR_EVENTS = 'lingxiloop:calendar.events'
  * tenant-scoped WebSocket path as messages; raw reasoning/tool payloads never
  * enter this channel. */
 export const CH_AGENT_ACTIVITY = 'lingxiloop:agent.activity'
+export const CH_AGENT_RUN_AVAILABLE = 'lingxiloop:agent.run.available'
 /** Durable IM read-cursor advances. The WS bridge additionally filters these
  * by authenticated recipient id before stripping the internal recipient list. */
 export const CH_IM_READ_RECEIPTS = 'lingxiloop:im.read-receipts'
@@ -414,6 +415,17 @@ export interface AgentActivityEvent extends TenantTagged {
   }
 }
 
+export interface AgentRunAvailableEvent {
+  type: 'agent.run.available'
+  companyId: string
+  conversationId: string
+  agentId: string
+  runId: string
+  threadId?: string
+  /** Internal routing identity; never forwarded to browsers. */
+  principalId: string
+}
+
 export interface ImReadReceiptEvent extends TenantTagged {
   type: 'im.read-receipt'
   companyId: string
@@ -439,6 +451,7 @@ export type BroadcastEvent = MessageNewEvent | TypingEvent
   | PollUpdatedEvent
   | DocAccessRevokedEvent
   | AgentActivityEvent
+  | AgentRunAvailableEvent
   | ImReadReceiptEvent
 
 export async function publish(channel: string, event: BroadcastEvent): Promise<void> {

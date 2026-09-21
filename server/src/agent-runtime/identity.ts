@@ -1,6 +1,16 @@
 import { NoEffectError, readRunReference, type RunIdentity, type WorkItem } from '@lyyzka/lingxios'
 import type { Queryable } from '../db/queryable.js'
 import { pool } from '../db/pool.js'
+import { CH_AGENT_RUN_AVAILABLE, publish, redis } from '../redis.js'
+
+export function notifyRunAvailable(identity: RunIdentity, conversationId: string): void {
+  // Notifications are repairable hints; never queue them while Redis is disconnected or block a model turn.
+  if (!identity.principalId || redis.status !== 'ready') return
+  void publish(CH_AGENT_RUN_AVAILABLE, { type: 'agent.run.available', companyId: identity.tenantId,
+    principalId: identity.principalId, conversationId, agentId: identity.agentId, runId: identity.runId,
+    ...(identity.threadId ? { threadId: identity.threadId } : {}) })
+    .catch(() => console.warn('[lingxios] run notification unavailable; discovery will recover', { runId: identity.runId }))
+}
 
 /** Product jobs explicitly bind their room; native IM and delegates carry WorkConversation. */
 export function productConversationId(work: Pick<WorkItem, 'conversation' | 'meta'>): string {
@@ -25,9 +35,10 @@ export async function bindProductRun(db: Queryable, identity: RunIdentity, conve
     WHERE agent_run_bindings.company_id=EXCLUDED.company_id AND agent_run_bindings.conversation_id=EXCLUDED.conversation_id
       AND agent_run_bindings.session_id=EXCLUDED.session_id AND agent_run_bindings.agent_id=EXCLUDED.agent_id
       AND agent_run_bindings.principal_id=EXCLUDED.principal_id AND agent_run_bindings.thread_id IS NOT DISTINCT FROM EXCLUDED.thread_id
-      AND agent_run_bindings.internal=EXCLUDED.internal RETURNING run_id`,
+      AND agent_run_bindings.internal=EXCLUDED.internal RETURNING run_id,(xmax=0) AS inserted`,
   [identity.runId,identity.tenantId,conversationId,identity.sessionId,identity.agentId,identity.principalId,identity.threadId ?? null,internal])
   if (result.rows.length !== 1) throw new Error('runtime product binding changed')
+  if (result.rows[0].inserted && !internal) notifyRunAvailable(identity, conversationId)
 }
 
 /** The authenticated route supplies a product channel; the stored runtime identity is authoritative. */

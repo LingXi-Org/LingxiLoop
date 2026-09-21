@@ -63,6 +63,7 @@ export type WsEvent =
   | { type: 'im.read-receipt'; companyId: string; channelId: string; readerId: string; previousReadSeq: number; readThroughSeq: number; readAt: string }
   | { type: 'typing'; conversationId: string; agentId: string; done: boolean }
   | { type: 'agent.activity'; conversationIds: string[]; activity: CoworkerActivity }
+  | { type: 'agent.run.available'; companyId: string; conversationId: string; agentId: string; runId: string; threadId?: string }
   | { type: 'participants.status'; participantId: string; status: Status; statusUpdatedAt?: string }
   | { type: 'participants.added'; conversationId?: string; participant: {
       id: string; kind: 'human' | 'agent'; name: string; role: string | null;

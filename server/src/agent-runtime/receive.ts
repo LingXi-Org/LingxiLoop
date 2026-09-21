@@ -7,7 +7,7 @@ import { resolveAgentHandoffWake } from '../modules/agents/index.js'
 import { lingxiOSControl } from './runtime.js'
 import { loadRuntimeBinding } from './context.js'
 import { syncConversationPolicy } from './conversations.js'
-import { bindProductRun, productRunIdentity } from './identity.js'
+import { bindProductRun, productRunIdentity, notifyRunAvailable } from './identity.js'
 import { parseMentions } from '../mentions.js'
 import { readRequestAttachments, selectRequestAttachments, unavailableAttachmentIds } from './attachments.js'
 
@@ -86,6 +86,7 @@ export async function receiveAgentRequest(input: AgentRequest) {
     const run = await productRunIdentity({ companyId: input.companyId, conversationId: input.channelId, agentId: input.agentId, runId: continuation.runId, principalId: message.fromUid, ...(threadId ? { threadId } : {}) })
     const result = await api.continueInput({ ...run, ...continuation,
       inputId: input.clientMsgNo, text, attachments: files })
+    notifyRunAvailable(run, input.channelId)
     return { id: result.workId, deduplicated: result.status === 'already_resumed' }
   }
   if (threadId) await api.conversations.registerThread({ tenantId: input.companyId, conversationId: input.channelId, threadId, policyVersion: policy.version })

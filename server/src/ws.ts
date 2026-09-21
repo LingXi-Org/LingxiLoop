@@ -22,6 +22,7 @@ import {
 import { consumeWsTicket } from './modules/identity/public.js'
 import {
   CH_AGENT_ACTIVITY,
+  CH_AGENT_RUN_AVAILABLE,
   CH_CALENDAR_EVENTS,
   CH_CALENDAR_REMINDER,
   CH_CANVAS,
@@ -359,7 +360,7 @@ export function attachWebSocket(httpServer: Server) {
     CH_STATUS,
     CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
     CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
-    CH_IM_READ_RECEIPTS,
+    CH_IM_READ_RECEIPTS, CH_AGENT_RUN_AVAILABLE,
   ).then((count) => {
     console.log(`[ws] subscribed to ${count} redis channels`)
   })
@@ -430,6 +431,17 @@ export function attachWebSocket(httpServer: Server) {
       }
       if (projectViewers && !projectViewers.has(c.userId)) continue
       let outbound = payload
+      if (channel === CH_AGENT_RUN_AVAILABLE) {
+        if (parsed.type !== 'agent.run.available' || parsed.principalId !== c.userId
+          || typeof parsed.conversationId !== 'string' || !parsed.conversationId
+          || typeof parsed.agentId !== 'string' || !parsed.agentId || typeof parsed.runId !== 'string' || !parsed.runId
+          || parsed.threadId !== undefined && (typeof parsed.threadId !== 'string' || !parsed.threadId)) continue
+        const decision = await permissionService.can({ actorUserId: c.userId, companyId, action: 'conversation:read',
+          resource: { type: 'conversation', id: parsed.conversationId } })
+        if (!decision.allowed) continue
+        const { principalId: _internalPrincipal, ...publicEvent } = parsed
+        outbound = JSON.stringify(publicEvent)
+      }
       if (channel === CH_IM_READ_RECEIPTS) {
         const recipientIds = Array.isArray(parsed.recipientIds)
           ? parsed.recipientIds.filter((value): value is string => typeof value === 'string')

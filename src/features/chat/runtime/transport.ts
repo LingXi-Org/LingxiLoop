@@ -15,7 +15,7 @@ import {
   lingxiIm,
 } from '@/lib/im/wukong'
 import { userFacingError } from '@/lib/userFacingError'
-import { getMeId } from '@/stores/auth'
+import { getActiveCompanyId, getMeId } from '@/stores/auth'
 import { convertEnvelope, convertEnvelopeBatch, projectMessageGroups } from './converter'
 import { type LingxiMessageMetadata, resolveMessagePresentation } from './model'
 import { forgetChatOutbox, readChatOutbox, rememberChatOutbox } from './outbox'
@@ -524,6 +524,9 @@ export class ChatTransport {
   private async readRunSnapshots(conversationId: string, messages: readonly ThreadMessage[]) {
     const signal = AbortSignal.any([this.connection.signal, AbortSignal.timeout(30_000)])
     const listed = await harnessApi.list(conversationId, signal).catch(() => [])
+    if (signal.aborted) return []
+    // Subscribe before history/diagnostic pagination so it cannot hide a short reply.
+    for (const target of listed) if (needsRunStream(target.status)) this.subscribeRun(target)
     const targets = new Map(listed.map(target => [target.runId, target]))
     for (const message of messages) {
       const meta = messageMetadata(message), view = meta.harness
@@ -582,6 +585,7 @@ export class ChatTransport {
 
   private subscribeRun(target: AgentRunTarget): void {
     const key = target.runId
+    if (this.runStreams.get(key)?.readyState === EventSource.CLOSED) this.runStreams.delete(key)
     if (this.runStreams.has(key) || this.connection.signal.aborted) return
     if (this.runStreams.size >= 128) {
       const oldest = this.runStreams.keys().next().value!
@@ -616,6 +620,16 @@ export class ChatTransport {
   }
 
   private applyWorkspaceEvent(event: WsEvent): void {
+    if (event.type === 'agent.run.available') {
+      const state = useChatThreadStore.getState().conversations[event.conversationId]
+      if (event.companyId === getActiveCompanyId() && (state?.loaded || state?.isLoading)) {
+        const target = { conversationId: event.conversationId, agentId: event.agentId, runId: event.runId,
+          ...(event.threadId ? { threadId: event.threadId } : {}) }
+        this.subscribeRun(target)
+        void this.refreshRun(target)
+      }
+      return
+    }
     if (event.type === 'hello') {
       for (const [conversationId, state] of Object.entries(useChatThreadStore.getState().conversations)) {
         if (state.loaded) void this.reloadConversation(conversationId)
