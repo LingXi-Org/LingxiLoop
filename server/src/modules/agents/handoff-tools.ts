@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { NoEffectError, readRunReference, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, compareResource } from '../../agents/tools.js'
-import { queueNativeEvents } from '../../agents/native-events.js'
+import { publishHandoffProgress } from './handoff-progress.js'
 import { readAgentChannelMessages } from '../../im/public.js'
 import { createPermissionService } from '../access/public.js'
 import { pool } from '../../db/pool.js'
@@ -31,10 +31,10 @@ export const handoffSchemas = {
 }
 interface Handoff {
   id: string; fromAgentId: string; toAgentId: string; title: string; status: string; note: string | null
-  contextMessageIds: string[]; parentWorkId: string; childWorkId: string; requestVersion: number
+  contextMessageIds: string[]; parentWorkId: string; childWorkId: string; requestVersion: number; runSettled: boolean
 }
 const select = `SELECT id,from_agent_id AS "fromAgentId",to_agent_id AS "toAgentId",title,status,note,
-  context_message_ids AS "contextMessageIds",parent_work_id AS "parentWorkId",child_work_id AS "childWorkId",request_version AS "requestVersion"
+  context_message_ids AS "contextMessageIds",parent_work_id AS "parentWorkId",child_work_id AS "childWorkId",request_version AS "requestVersion",run_settled AS "runSettled"
   FROM agent_handoffs WHERE company_id=$1 AND conversation_id=$2 AND principal_id=$3 AND thread_id IS NOT DISTINCT FROM $4`
 async function read(context: ActionContext, handoffId: string, lock = false): Promise<Handoff> {
   const { rows } = await (context.database as Queryable).query<Handoff>(`${select} AND id=$5${lock ? ' FOR UPDATE' : ''}`,
@@ -49,14 +49,8 @@ async function authorize(context: ActionContext) {
     resource: { type: 'conversation', id: productConversationId(context.work) } })
 }
 async function publish(context: ActionContext, value: Handoff) {
-  if (context.work.conversation?.internal) return
   await assertFrozenAudience(context.database as Queryable,context.work)
-  const clientNonce = `handoff:${createHash('sha256').update(context.action.idempotencyKey).digest('hex')}`
-  await queueNativeEvents(context, [{ type: 'im.system', companyId: context.work.tenantId, actorId: context.work.agentId,
-    channelId: productConversationId(context.work), clientNonce, payload: { version: 1, kind: 'handoff', clientMsgNo: clientNonce,
-      body: `${value.status}: ${value.title}${value.note ? ` — ${value.note}` : ''}`, refs: { handoffId: value.id },
-      ...(context.work.threadId ? { replyToClientMsgNo: context.work.threadId } : {}),
-      data: { ...value, sharedPaths: [], browserTargets: [], suppressAgentWake: true, activation: 'deliver' } } }])
+  await publishHandoffProgress(context.database as Queryable,context.work.tenantId,value.id)
 }
 
 export const handoffTools: ToolDefinition[] = [
@@ -78,17 +72,17 @@ export const handoffTools: ToolDefinition[] = [
       if (input.contextMessageIds.length) {
         const messages = await readAgentChannelMessages({ companyId: context.work.tenantId, agentId: context.work.agentId,
           channelId: productConversationId(context.work), messageIds: input.contextMessageIds, signal: context.signal })
-        if (new Set(messages?.map(message => message.messageId)).size !== new Set(input.contextMessageIds).size) throw new NoEffectError('handoff context messages are unavailable')
+        if (input.contextMessageIds.some(id => !messages?.some(message => message.messageId === id || message.clientMsgNo === id))) throw new NoEffectError('handoff context messages are unavailable')
       }
       const handoffId = `handoff-${createHash('sha256').update(context.action.idempotencyKey).digest('hex').slice(0,32)}`
       const child = await context.enqueueChild({ id: `${handoffId}:work`, agentId: input.toAgentId, kind: 'handoff',
         text: [`Handoff: ${input.title}`, input.note ?? '', input.contextMessageIds.length ? `Context message IDs: ${input.contextMessageIds.join(', ')}` : ''].filter(Boolean).join('\n'),
         executionClass: 'operation', meta: { conversationId: productConversationId(context.work), handoffId, contextMessageIds: input.contextMessageIds } })
       await context.database.query(`INSERT INTO agent_handoffs(id,company_id,conversation_id,from_agent_id,to_agent_id,title,context_message_ids,note,
-        status,idempotency_key,principal_id,parent_work_id,child_work_id,request_version,thread_id)
-        VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8,'working',$9,$10,$11,$12,$13,$14)`,
+        status,idempotency_key,principal_id,parent_work_id,child_work_id,request_version,thread_id,visible)
+        VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8,'queued',$9,$10,$11,$12,$13,$14,$15)`,
       [handoffId,context.work.tenantId,productConversationId(context.work),context.work.agentId,input.toAgentId,input.title,JSON.stringify(input.contextMessageIds),
-        input.note ?? null,context.action.idempotencyKey,context.work.principalId,context.work.id,child.id,context.requestVersion,context.work.threadId ?? null])
+        input.note ?? null,context.action.idempotencyKey,context.work.principalId,context.work.id,child.id,context.requestVersion,context.work.threadId ?? null,!context.work.conversation?.internal])
       const value = await read(context, handoffId)
       await publish(context, value)
       return { ok: true, value, directive: await context.waitForChildren([child.id]) }
@@ -97,16 +91,16 @@ export const handoffTools: ToolDefinition[] = [
       const expected = value as Handoff, actual = await read(context, expected.id)
       return compareResource(`handoff:${expected.id}`, { childWorkId: expected.childWorkId, toAgentId: expected.toAgentId }, actual)
     } }),
-  nativeTool('handoffs.update', handoffSchemas.update, { description: 'Record the target agent’s handoff progress; the parent resumes only after the child task ends.',
+  nativeTool('handoffs.update', handoffSchemas.update, { description: 'Record progress; a completed request stays working until the actual child run succeeds. The parent resumes only after the child task ends.',
     effect: 'transaction', approval: false, async authorize(context, input) {
       await authorize(context)
       const row = await read(context, input.handoffId)
       if (row.toAgentId !== context.work.agentId || row.childWorkId !== context.work.id) throw new NoEffectError('only the assigned child task can update this handoff', 'forbidden')
     }, async execute(context, input) {
       const row = await read(context, input.handoffId, true)
-      if (['completed','blocked'].includes(row.status) && row.status !== input.status) throw new NoEffectError('handoff is already terminal')
-      await context.database.query('UPDATE agent_handoffs SET status=$2,note=$3,updated_at=NOW() WHERE id=$1',
-        [row.id,input.status,input.note ?? row.note])
+      if (row.runSettled) throw new NoEffectError('handoff is already terminal')
+      await context.database.query('UPDATE agent_handoffs SET status=$2,note=$3,progress_version=progress_version+1,updated_at=NOW() WHERE id=$1',
+        [row.id,input.status === 'completed' ? 'working' : input.status,input.note ?? row.note])
       const value = await read(context, row.id)
       await publish(context, value)
       return { ok: true, value }

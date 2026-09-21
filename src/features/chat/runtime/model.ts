@@ -4,6 +4,7 @@ import type { RunMemory } from './memory'
 
 export type LingxiDeliveryStatus = 'sending' | 'sent' | 'failed'
 export type LingxiMessagePresentation = 'conversation' | 'special-card'
+export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number }
 
 const SPECIAL_CARD_TOOLS = new Set([
   'approval-card',
@@ -11,6 +12,7 @@ const SPECIAL_CARD_TOOLS = new Set([
   'agent-handoff',
   'agent-plan',
   'canvas-artifact',
+  'canvas-progress',
   'elicitation-form',
   'showStats',
   'learning.propose_evaluation',
@@ -51,11 +53,25 @@ export interface LingxiQuoteMetadata {
   sequence: number | null
 }
 
+/** Business snapshots keep their first IM anchor while newer versions replace their content. */
+export function mergeProgressMessage(before: ThreadMessage, after: ThreadMessage): ThreadMessage {
+  const previous = getLingxiMessageMetadata(before), next = getLingxiMessageMetadata(after)
+  const newer = next.progress!.version > previous.progress!.version
+    || next.progress!.version === previous.progress!.version && next.progress!.sequence > previous.progress!.sequence
+  const value = newer ? after : before
+  const anchor = (next.sequence ?? Infinity) < (previous.sequence ?? Infinity) ? after : before
+  const anchorMetadata = getLingxiMessageMetadata(anchor)
+  return { ...value, id: anchor.id, createdAt: anchor.createdAt,
+    metadata: { ...value.metadata, custom: { ...getLingxiMessageMetadata(value), sequence: anchorMetadata.sequence,
+      clientMessageId: anchorMetadata.clientMessageId } } } as ThreadMessage
+}
+
 export interface LingxiMessageMetadata extends Record<string, unknown> {
   schema: 'lingxiloop.thread-message.v1'
   conversationId: string
   clientMessageId: string
   sequence: number | null
+  progress?: { key: string; version: number; sequence: number }
   /** Keep a live reply at its original turn when its IM receipt arrives later. */
   positionAfter?: string | null
   senderId: string
@@ -68,7 +84,7 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   presentation: LingxiMessagePresentation
   runId: string | null
   harness?: RunView
-  harnessTools?: ToolCallMessagePart[]
+  harnessTools?: HarnessToolPart[]
   harnessControl?: boolean
   harnessReplaySeq?: number
   memory?: RunMemory

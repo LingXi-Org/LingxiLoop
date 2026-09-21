@@ -86,7 +86,8 @@ test('handoff, mission, and attachment protocols map directly to their native el
   assert.deepEqual(handoff?.type === 'tool-call' ? { toolName: handoff.toolName, args: handoff.args } : null, {
     toolName: 'agent-handoff',
     args: {
-      id: 'handoff-handoff-server', from: 'agent', to: 'reviewer', settled: false,
+      id: 'handoff-handoff-server', fromAgentId: 'agent', toAgentId: 'reviewer', title: '核验学习证据', status: 'working',
+      updatedAt: '2026-01-01T00:00:00.000Z',
     },
   })
 
@@ -97,8 +98,8 @@ test('handoff, mission, and attachment protocols map directly to their native el
     toolName: 'agent-plan',
     args: {
       id: 'mission-learning_mission-server',
-      steps: ['两周掌握线性代数核心概念：能够独立解释向量空间'],
-      activeIndex: 0,
+      goal: '两周掌握线性代数核心概念', successCriteria: '能够独立解释向量空间', coordinatorAgentId: '', status: 'active', steps: [],
+      updatedAt: '2026-01-01T00:00:00.000Z',
     },
   })
 

@@ -1,6 +1,6 @@
 import type { ThreadMessage } from '@assistant-ui/react'
 import { create } from 'zustand'
-import { getLingxiMessageMetadata, type LingxiMessageMetadata } from './model'
+import { getLingxiMessageMetadata, mergeProgressMessage, type LingxiMessageMetadata } from './model'
 import { projectMessageGroups } from './converter'
 import { harnessParts, harnessStatus, isRunMessage, mergeHarness } from './harness'
 
@@ -54,7 +54,8 @@ function runKey(value: LingxiMessageMetadata): string {
 
 export function messageKey(message: ThreadMessage): string {
   const value = metadata(message)
-  return isRunMessage(value) ? runKey(value) : value.clientMessageId || message.id
+  return value.progress ? JSON.stringify(['progress',value.conversationId,value.progress.key])
+    : isRunMessage(value) ? runKey(value) : value.clientMessageId || message.id
 }
 
 export function mergeCanonicalMessages(
@@ -65,7 +66,9 @@ export function mergeCanonicalMessages(
   for (const message of [...current, ...incoming]) {
     const key = messageKey(message), previous = byId.get(key)
     const before = previous && metadata(previous), after = metadata(message)
-    if (previous && before?.harness && after.harness && message.role === 'assistant') {
+    if (previous && before?.progress && after.progress) {
+      byId.set(key,mergeProgressMessage(previous,message))
+    } else if (previous && before?.harness && after.harness && message.role === 'assistant') {
       const harness = mergeHarness(before.harness,after.harness)
       const canonical = harness.resultId === before.harness.resultId && before.sequence !== null ? previous : message
       byId.set(key,{ ...canonical, status: harnessStatus(harness),

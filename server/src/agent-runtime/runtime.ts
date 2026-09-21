@@ -11,6 +11,7 @@ import { createCanvasRuntime, completeCanvasWork } from '../modules/canvas/index
 import { resolveMemoryScopes } from '../modules/memory/public.js'
 import { nativeEvolutionBenchmark, createNativeEvolutionEvaluator } from '../modules/memory/evolution.js'
 import { scheduleRoutines } from '../modules/routines/public.js'
+import { reconcileHandoffs } from '../modules/agents/handoff-progress.js'
 import { withTransaction } from '../db/transaction.js'
 import { createProductHarness } from './harness.js'
 import { productConversationId, assertFrozenAudience } from './identity.js'
@@ -148,9 +149,9 @@ let worker: ReturnType<typeof createWorker> | undefined
 
 export async function stopLingxiOSControl(): Promise<void> {
   const current = control
-  control = undefined
   try { if (current) await (await current).stop() }
-  finally { previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined }
+  // In-flight memory callbacks must retain this control while its jobs drain.
+  finally { control = undefined; previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined }
 }
 
 export function lingxiOSServiceToken(): string {
@@ -201,6 +202,7 @@ export async function startLingxiOSWorker() {
     pending = Promise.allSettled([
       scheduleRoutines(run => withTransaction(pool, run), lingxiOSControl),
       canvas.reconcile(pool, completeCanvasWork, cancellation.signal),
+      reconcileHandoffs(pool, run => withTransaction(pool, run), lingxiOSControl, cancellation.signal),
     ]).then(results => { for (const result of results) if (result.status === 'rejected') console.error('[lingxios] product scheduling failed', result.reason instanceof Error ? result.reason.name : 'error') })
       .finally(() => { pending = undefined })
   }

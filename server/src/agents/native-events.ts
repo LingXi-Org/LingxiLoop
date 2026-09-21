@@ -17,10 +17,14 @@ export type NativeEvent = CalendarChangedEvent | DocumentChangedEvent | Document
   | { type: 'im.system'; companyId: string; actorId: string; channelId: string; clientNonce: string; payload: LingxiMessageV1 }
 
 export async function queueNativeEvents(context: ActionContext, events: NativeEvent[]): Promise<void> {
-  for (const event of events) await context.database.query(`INSERT INTO agent_native_event_outbox(id,company_id,work_id,event)
+  await persistNativeEvents(context.database as Queryable, { key: context.action.idempotencyKey, companyId: context.work.tenantId, workId: context.work.id }, events)
+}
+
+export async function persistNativeEvents(db: Queryable, input: { key: string; companyId: string; workId: string }, events: NativeEvent[]): Promise<void> {
+  for (const event of events) await db.query(`INSERT INTO agent_native_event_outbox(id,company_id,work_id,event)
     VALUES($1,$2,$3,$4::jsonb) ON CONFLICT DO NOTHING`, [
-    `${context.action.idempotencyKey}:${createHash('sha256').update(JSON.stringify(event)).digest('hex')}`,
-    context.work.tenantId, context.work.id, JSON.stringify(event),
+    `${input.key}:${createHash('sha256').update(JSON.stringify(event)).digest('hex')}`,
+    input.companyId, input.workId, JSON.stringify(event),
   ])
 }
 

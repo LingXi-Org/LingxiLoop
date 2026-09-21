@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 2,
+  "id": "education-autonomy",
+  "version": "4",
+  "dataset": {
+    "id": "education-autonomy",
+    "version": "4"
+  },
+  "samples": 1,
+  "concurrency": 1,
+  "timeoutMs": 240000,
+  "graders": [
+    {
+      "id": "initiative",
+      "kind": "tool_behavior",
+      "dimension": "initiative",
+      "threshold": 1
+    },
+    {
+      "id": "completion",
+      "kind": "task_success",
+      "threshold": 0.8
+    },
+    {
+      "id": "restraint",
+      "kind": "tool_behavior",
+      "dimension": "restraint",
+      "threshold": 1
+    },
+    {
+      "id": "efficiency",
+      "kind": "tool_behavior",
+      "dimension": "efficiency",
+      "threshold": 1,
+      "diagnostic": true
+    }
+  ],
+  "toolBudget": {
+    "maxModelCalls": 16,
+    "maxToolCalls": 16,
+    "maxOutputTokens": 1536,
+    "maxSampleCostCny": 0.3
+  },
+  "gate": {
+    "minScore": 0.85,
+    "minPassRate": 0.8,
+    "maxScoreDrop": 0.05,
+    "maxCaseDrop": 0.25,
+    "maxP95LatencyMs": 240000,
+    "maxCandidateCostCny": 6.6,
+    "maxJudgeCostCny": 2.2,
+    "requireBaseline": true,
+    "requiredGraders": [
+      "initiative",
+      "restraint"
+    ]
+  }
+}

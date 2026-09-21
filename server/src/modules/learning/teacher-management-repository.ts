@@ -32,7 +32,7 @@ export async function updateTeacherCourseMetadata(
         WHERE course.company_id=$1 AND course.id=$2
           AND participant.id=project_agent.agent_id
           AND participant.company_id=project_agent.company_id`,
-      [input.companyId, input.courseId, `Pulse · ${input.title}`.slice(0, 80)],
+      [input.companyId, input.courseId, '望远'],
     )
   }
   return rows[0]

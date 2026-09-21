@@ -28,6 +28,8 @@ import {
 } from './repository.js'
 import type { LearningMission, LearningMissionKind, LearningTurnContext } from './types.js'
 import { getLearningMission } from './mission-lifecycle-application.js'
+import { isTeacherRoom } from './visibility.js'
+import { publishMissionProgress } from './mission-progress.js'
 
 export {
   addLearningMissionSteps,
@@ -140,6 +142,7 @@ export async function assignLearningMissionCoordinator(
       'mission or eligible learning/canvas coordinator not found',
     )
   }
+  await publishMissionProgress(db, { companyId: input.companyId, projectId: project.projectId, missionId: input.missionId })
   return getLearningMission(db, input.companyId, project.projectId, input.missionId)
 }
 
@@ -182,10 +185,10 @@ export async function startLearningMission(
   input: StartLearningMissionCommand,
 ): Promise<LearningMission> {
   const room = await requireLearningRoomState(db, input)
-  if (room.purpose !== 'study' && input.explicit !== true) {
+  if (await isTeacherRoom(input.channelId, input.companyId, db)) {
     throw new LearningApplicationError(
       'forbidden',
-      'automatic missions are allowed only in study-scoped project conversations; explicit learner requests may opt in elsewhere',
+      'teacher management conversations cannot create learning Missions',
     )
   }
   const triggerClientMsgNo = input.sourceClientMsgNo?.trim() || input.triggerClientMsgNo

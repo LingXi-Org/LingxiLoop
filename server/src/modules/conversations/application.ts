@@ -152,7 +152,7 @@ export class ConversationsApplication {
 
   async setLeader(scope: ConversationScope, conversationId: string, leaderId: string) {
     if (await hasManagedPulse(this.db, scope.companyId, [leaderId])) {
-      throw new ConversationApplicationError('managed_pulse', 'Pulse can only belong to its provisioned teacher room')
+      throw new ConversationApplicationError('managed_pulse', '望远 can only belong to its provisioned teacher room')
     }
     const profile = await this.mutate(scope, conversationId, async (db, conversation, binding) => {
       if (conversation.kind !== 'group') throw new ConversationApplicationError('not_group', 'only group chats have a leader')
@@ -351,7 +351,7 @@ export class ConversationsApplication {
       participantId, companyId: scope.companyId, projectId: scope.projectId,
     })) throw new ConversationApplicationError('invalid_members', `unknown participant: ${participantId}`)
     if (await hasManagedPulse(this.db, scope.companyId, [participantId])) {
-      throw new ConversationApplicationError('managed_pulse', 'Pulse can only belong to its provisioned teacher room')
+      throw new ConversationApplicationError('managed_pulse', '望远 can only belong to its provisioned teacher room')
     }
     let alreadyIn = false
     const profile = await this.mutate(scope, conversationId, async (db, conversation, binding) => {

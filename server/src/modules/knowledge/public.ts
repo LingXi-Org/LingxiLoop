@@ -7,6 +7,7 @@ export {
   getKnowledgeSourceText,
   knowledgeEngineHealth,
   retrieveKnowledge,
+  retrieveKnowledgeState,
   retryKnowledgeSource,
   syncProjectNotebookMetadata,
 } from './runtime.js'

@@ -54,7 +54,7 @@ export async function assertNotManagedPulse(
   db: Queryable = pool,
 ): Promise<void> {
   if (await isManagedPulse(agentId, companyId, db)) {
-    throw new HttpError(403, 'Pulse is managed by the learning control plane')
+    throw new HttpError(403, '望远 is managed by the learning control plane')
   }
 }
 

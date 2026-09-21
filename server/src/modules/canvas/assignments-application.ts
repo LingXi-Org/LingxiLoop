@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
+import { publishCanvasProgress } from './progress.js'
 import type { CanvasActivityKind } from '../../../../src/lib/canvasEventKinds.js'
 import { parseCanvasActivityKind } from '../../../../src/lib/canvasEventKinds.js'
 import { assertCanvasDependencyDAG, canvasAgentColor, canvasWorkArea } from '../../canvas/orchestration.js'
@@ -222,6 +223,7 @@ export function createCanvasAssignmentsApplication(context: CanvasAssignmentsApp
       const existing = await listAssignments(transactionDb, canvas.id)
       await insertCanvasMembers(transactionDb, { canvas, members: input.members, existing }, execution)
       await touchCanvas(transactionDb, canvas.id)
+      await publishCanvasProgress(transactionDb,input.companyId,canvas.id)
     })
     const snapshot = await getCanvasSnapshot(input.companyId, input.actorId, input.canvasId)
     await publishCanvas(input.companyId, {
@@ -270,6 +272,7 @@ export function createCanvasAssignmentsApplication(context: CanvasAssignmentsApp
         }
       }
       await touchCanvas(transactionDb, canvas.id)
+      await publishCanvasProgress(transactionDb,input.companyId,canvas.id)
     })
     const snapshot = await getCanvasSnapshot(input.companyId, input.actorId, input.canvasId)
     await publishAssignments(input.companyId, input.canvasId)
@@ -368,6 +371,7 @@ export function createCanvasAssignmentsApplication(context: CanvasAssignmentsApp
         detail,
       })
       await touchCanvas(transactionDb, canvas.id)
+      await publishCanvasProgress(transactionDb,input.companyId,canvas.id)
       return toActivity(activityRow)
     })
     const snapshot = await getCanvasSnapshot(input.companyId, input.fromAgentId, input.canvasId)
@@ -410,7 +414,9 @@ export function createCanvasAssignmentsApplication(context: CanvasAssignmentsApp
         const assignment = await lockAssignment(transactionDb, input.canvasId, input.agentId)
         if (!canvas || !assignment) throw new Error('active canvas assignment not found')
         await execution.cancel(transactionDb, canvas, assignment.work_id)
-        return stopCanvasAssignmentState(transactionDb, input)
+        const activity = await stopCanvasAssignmentState(transactionDb, input)
+        await publishCanvasProgress(transactionDb,input.companyId,input.canvasId)
+        return activity
       },
     ))
     await publishAssignments(input.companyId, input.canvasId)

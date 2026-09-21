@@ -439,18 +439,30 @@ function hitExcerpt(hit: OpenNotebookSearchHit): string {
   return (Array.isArray(value) ? value.join('\n') : String(value)).trim().slice(0, 2_000)
 }
 
-export async function retrieveKnowledge(args: {
+interface KnowledgeRetrievalInput {
   companyId: string; conversationId: string; authorizationUserId: string; audienceUserIds?: string[]; query: string; contextQuery?: string; limit?: number
-}): Promise<KnowledgeCitation[]> {
+}
+export interface KnowledgeRetrievalResult {
+  status: 'matched' | 'no_matches' | 'no_sources' | 'processing' | 'unavailable' | 'not_applicable'
+  citations: KnowledgeCitation[]
+  processingSources?: number
+}
+
+export async function retrieveKnowledge(args: KnowledgeRetrievalInput): Promise<KnowledgeCitation[]> {
+  return (await retrieveKnowledgeState(args)).citations
+}
+
+export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Promise<KnowledgeRetrievalResult> {
   const authorizationUserId = requireAuthorizationUserId(args.authorizationUserId)
-  if (!openNotebookEnabled() || !args.query.trim()) return []
+  if (!args.query.trim()) return { status: 'not_applicable', citations: [] }
+  if (!openNotebookEnabled()) return { status: 'unavailable', citations: [] }
   const projectId = await findKnowledgeRetrievalProject(
     pool,
     args.companyId,
     args.conversationId,
     authorizationUserId,
   )
-  if (!projectId) return []
+  if (!projectId) return { status: 'not_applicable', citations: [] }
   await createPermissionService(pool).assertCan({
     actorUserId: authorizationUserId,
     action: 'knowledge:read',
@@ -462,18 +474,21 @@ export async function retrieveKnowledge(args: {
     projectId,
     conversationId: args.conversationId,
     authorizationUserId,
+    includePending: true,
   })
   for (const userId of new Set(args.audienceUserIds ?? [])) {
     if (userId === authorizationUserId) continue
     await createPermissionService(pool).assertCan({ actorUserId: userId,action: 'knowledge:read',companyId: args.companyId,projectId })
     const visible = new Set((await listKnowledgeRetrievalSources(pool,{ companyId: args.companyId,projectId,
-      conversationId: args.conversationId,authorizationUserId: userId })).filter(source => !source.excluded).map(source => source.id))
+      conversationId: args.conversationId,authorizationUserId: userId,includePending: true })).filter(source => !source.excluded).map(source => source.id))
     sources = sources.filter(source => visible.has(source.id))
   }
-  if (!sources.length) return []
+  sources = sources.filter(source => !source.excluded)
+  const processingSources = sources.filter(source => ['queued','processing'].includes(source.status)).length
+  sources = sources.filter(source => source.status === 'ready' && source.externalSourceId)
+  if (!sources.length) return { status: processingSources ? 'processing' : 'no_sources', citations: [], processingSources }
   const notebookId = await ensureProjectNotebook(projectId, args.companyId)
-  const externalIds = sources.filter((source) => !source.excluded).map((source) => source.externalSourceId)
-  if (!externalIds.length) return []
+  const externalIds = sources.map((source) => source.externalSourceId!)
   inc('knowledge.retrieval.queries')
   const searchStartedAt = Date.now()
   let rankedHits: OpenNotebookSearchHit[]
@@ -518,7 +533,7 @@ export async function retrieveKnowledge(args: {
   }))
   if (markedCitations.length) inc('knowledge.retrieval.hits', undefined, markedCitations.length)
   else inc('knowledge.retrieval.miss')
-  return markedCitations
+  return { status: markedCitations.length ? 'matched' : processingSources ? 'processing' : 'no_matches', citations: markedCitations, processingSources }
 }
 
 /** Insert an idempotent attachment ingestion and persist the deferred Agent wake. */

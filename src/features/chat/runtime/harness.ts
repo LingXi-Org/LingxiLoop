@@ -1,7 +1,7 @@
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { consumeAssistantMessage, createRunView, responseSegments, type AssistantMessage, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import type { ImEnvelope } from '@/lib/im/wukong'
-import type { LingxiMessageMetadata } from './model'
+import type { HarnessToolPart, LingxiMessageMetadata } from './model'
 import type { MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
 
 /** chat.send messages can share a run ID without owning that run's preview or lifecycle. */
@@ -16,19 +16,21 @@ export function canCancelRun(metadata: LingxiMessageMetadata): boolean {
 }
 
 /** Display projection only: lifecycle, preview and results remain in the native RunView. */
-export function harnessToolParts(runId: string, events: readonly RunEvent[], current: readonly ToolCallMessagePart[] = []): ToolCallMessagePart[] {
+export function harnessToolParts(runId: string, events: readonly RunEvent[], current: readonly HarnessToolPart[] = []): HarnessToolPart[] {
   const calls = new Map(current.map(part => [part.toolCallId,part]))
-  for (const event of events) {
+  for (const event of [...events].sort((a,b) => a.seq-b.seq)) {
     if (event.runId !== runId || event.visibility !== 'user') continue
     const id = event.data.toolCallId
     if (typeof id !== 'string' || !id.startsWith('host:')) continue
     if (event.kind === 'tool.started' && typeof event.data.name === 'string' && !calls.has(id)) {
-      calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: event.data.name,args: {},argsText: '{}' })
+      calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: event.data.name,args: {},argsText: '{}',eventSeq: event.seq })
     }
     const previous = calls.get(id)
-    if (event.kind === 'tool.completed' && previous && event.data.result && typeof event.data.result === 'object') {
-      // The timeline needs status only; do not duplicate tool payloads in the message store.
-      calls.set(id,{ ...previous,result: { status: Reflect.get(event.data.result,'status') },isError: event.data.isError === true })
+    if (event.kind === 'tool.completed' && previous && event.seq > (previous.eventSeq ?? 0) && event.data.result && typeof event.data.result === 'object') {
+      const result = event.data.result, value = Reflect.get(result,'value')
+      // Retain retrieval status, never duplicate source text or prompts in UI state.
+      calls.set(id,{ ...previous,eventSeq: event.seq,result: { status: Reflect.get(result,'status'),
+        ...(previous.toolName.startsWith('knowledge.') && value && typeof value === 'object' ? { sourceStatus: Reflect.get(value,'status') } : {}) },isError: event.data.isError === true })
     }
   }
   return [...calls.values()].slice(-256)

@@ -9,7 +9,8 @@ import { createPermissionService } from '../access/public.js'
 import { createKnowledgeAgentApplication } from './agent-application.js'
 import { agentKnowledgeSchemas as schemas } from './contracts.js'
 import { findKnowledgeRetrievalProject } from './retrieval-repository.js'
-import { getKnowledgeSourceText, retrieveKnowledge } from './runtime.js'
+import { getKnowledgeSourceText, retrieveKnowledgeState } from './runtime.js'
+import { OpenNotebookError } from './provider.js'
 
 const db = (context: ActionContext) => context.database as Queryable
 const application = (context: ActionContext) => createKnowledgeAgentApplication(db(context), {
@@ -38,8 +39,12 @@ const transaction = { effect: 'transaction' as const, approval: false, authorize
 export const knowledgeTools: ToolDefinition[] = [
   nativeTool('knowledge.search', schemas.search, { description: 'Search the enabled knowledge sources visible to every reader in this conversation. Returns source excerpts; cite the runtime-assigned #cite-Sn markers and use read_source for more context.',
     effect: 'read', approval: false, authorize, async execute(context, input) {
-      const hits = await retrieveKnowledge({ companyId: context.work.tenantId, conversationId: productConversationId(context.work),
-        authorizationUserId: context.work.principalId!, audienceUserIds: await audienceHumanIds(context), ...input })
+      const retrieval = await retrieveKnowledgeState({ companyId: context.work.tenantId, conversationId: productConversationId(context.work),
+        authorizationUserId: context.work.principalId!, audienceUserIds: await audienceHumanIds(context), ...input }).catch(error => {
+          if (!(error instanceof OpenNotebookError)) throw error
+          return { status: 'unavailable' as const, citations: [] }
+        })
+      const hits = retrieval.citations
       const sources = await application(context).listKnowledgeSourcesForAgent(nativeContext(context)) as Array<{ id: string; version: string }>
       const versions = new Map(sources.map(source => [source.id,source.version]))
       for (const hit of hits) {
@@ -49,7 +54,8 @@ export const knowledgeTools: ToolDefinition[] = [
       const evidence = hits.map(hit => ({ sourceId: hit.sourceId, sourceVersion: versions.get(hit.sourceId)!,
         chunkId: hit.chunkId, title: hit.sourceTitle, excerpt: hit.excerpt, truncated: true,
         ...(hit.sourceUrl ? { url: hit.sourceUrl } : {}) }))
-      return { ok: true, value: { status: evidence.length ? 'matched' : 'no_matches', matches: evidence }, evidence }
+      return { ok: true, value: { status: retrieval.status, matches: evidence,
+        ...('processingSources' in retrieval ? { processingSources: retrieval.processingSources } : {}) }, evidence }
     } }),
   nativeTool('knowledge.read_source', schemas.read_source, { description: 'Read a bounded range of an enabled source in this workspace. Returns actual text, version and nextOffset; continue reading when truncated. Metadata alone is not source content.',
     effect: 'read', approval: false, authorize, async execute(context, input) {
@@ -60,7 +66,12 @@ export const knowledgeTools: ToolDefinition[] = [
       if (!source || source.enabled !== true || excluded.rows.length) throw new NoEffectError('knowledge source is unavailable or excluded','forbidden')
       if (source.status !== 'ready') return { ok: true, value: { sourceId: input.sourceId, status: source.status, textAvailable: false } }
       const projectId = await findKnowledgeRetrievalProject(db(context),context.work.tenantId,productConversationId(context.work),context.work.principalId!)
-      const text = await getKnowledgeSourceText(input.sourceId,context.work.tenantId,projectId!,context.work.principalId!)
+      let text: string | null
+      try { text = await getKnowledgeSourceText(input.sourceId,context.work.tenantId,projectId!,context.work.principalId!) }
+      catch (error) {
+        if (!(error instanceof OpenNotebookError)) throw error
+        return { ok: true, value: { sourceId: input.sourceId, status: 'unavailable', textAvailable: false } }
+      }
       if (!text?.trim()) return { ok: true, value: { sourceId: input.sourceId, status: 'empty', textAvailable: false } }
       if (input.offset > text.length) throw new NoEffectError('source offset exceeds text length')
       const excerpt = text.slice(input.offset,input.offset+input.limit), nextOffset = input.offset + excerpt.length
@@ -70,13 +81,20 @@ export const knowledgeTools: ToolDefinition[] = [
       return { ok: true, value: { sourceId: input.sourceId, sourceVersion, status: 'ready', text: excerpt,
         offset: input.offset, nextOffset, textLength: text.length, truncated: nextOffset < text.length }, evidence }
     } }),
-  nativeTool('knowledge.list_sources', schemas.list_sources, { description: 'Read sources visible to the original human in the current workspace.', effect: 'read', approval: false, authorize,
+  nativeTool('knowledge.list_sources', schemas.list_sources, { description: 'Read sources visible to every conversation reader in the current workspace.', effect: 'read', approval: false, authorize,
     async execute(context) {
       const sources = await application(context).listKnowledgeSourcesForAgent(nativeContext(context))
+      const readers = await audienceHumanIds(context), permissions = createPermissionService(db(context), { lockDependencies: true })
+      const excluded = new Set((await db(context).query<{ source_id: string }>(`SELECT source_id FROM conversation_source_exclusions
+        WHERE conversation_id=$1 AND user_id=ANY($2::text[])`,[productConversationId(context.work),readers])).rows.map(row => row.source_id))
+      const visible = []
       for (const source of sources) if (source && typeof source === 'object' && typeof Reflect.get(source,'id') === 'string') {
-        await authorizeAudienceRead(context,{ action: 'knowledge:read',resource: { type: 'knowledge_source',id: String(Reflect.get(source,'id')) } })
+        const id = String(Reflect.get(source,'id'))
+        const allowed = await Promise.all(readers.map(actorUserId => permissions.can({ actorUserId, companyId: context.work.tenantId,
+          action: 'knowledge:read', resource: { type: 'knowledge_source', id } })))
+        if (allowed.every(result => result.allowed)) visible.push({ ...source, enabled: Reflect.get(source,'enabled') === true && !excluded.has(id) })
       }
-      return { ok: true,value: sources }
+      return { ok: true,value: visible }
     } }),
   nativeTool('knowledge.check_source', schemas.check_source, { description: 'Read back selected source fields against expected values.', effect: 'read', approval: false, authorize,
     async execute(context, input) {

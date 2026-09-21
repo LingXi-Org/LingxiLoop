@@ -13,7 +13,7 @@ test('retrieval numbers distinct chunks of one PDF and preserves Markdown after 
   const query = async (sql: string) => {
     if (sql.includes('FROM conversations')) return { rows: [{ project_id: 'project' }] }
     if (sql.includes('FROM knowledge_sources')) return { rows: [{ id: 'pdf', title: 'Understanding Attention',
-      external_source_id: 'external-pdf', original_url: null, excluded: false }] }
+      status: 'ready', external_source_id: 'external-pdf', original_url: null, excluded: false }] }
     if (sql.includes('FROM knowledge_notebook_bindings')) return { rows: [{ external_notebook_id: 'notebook', state: 'ready' }] }
     if (sql.includes('pg_advisory_')) return { rows: [] }
     throw new Error(`unexpected query: ${sql}`)

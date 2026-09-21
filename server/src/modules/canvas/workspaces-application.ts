@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { publishCanvasProgress } from './progress.js'
 import { parseCanvasActivityKind } from '../../../../src/lib/canvasEventKinds.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { CanvasEvent } from '../../redis.js'
@@ -233,6 +234,7 @@ export function createCanvasWorkspacesApplication(context: CanvasWorkspacesAppli
       const { rows } = await transactionDb.query<CanvasRunRow>('SELECT * FROM canvas_agent_runs WHERE canvas_id=$1 AND company_id=$2', [input.canvasId,input.companyId])
       for (const run of rows) await execution.cancel(transactionDb, canvas, run.work_id)
       await stopCanvasWorkspaceState(transactionDb, input.companyId, input.canvasId)
+      await publishCanvasProgress(transactionDb,input.companyId,input.canvasId)
     })
     await publishCanvas(input.companyId, {
       kind: 'workspace.updated',

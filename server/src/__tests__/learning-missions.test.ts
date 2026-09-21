@@ -39,7 +39,8 @@ function accessFixture(
   text: string,
   params: readonly unknown[] | undefined,
 ): { rows: unknown[]; rowCount?: number } | null {
-  if (/SELECT id,email,email_verified_at,deleted_at,suspended_at FROM users/.test(text)) {
+  if (text.trimStart().startsWith('SELECT 1 FROM learning_course_teacher_rooms')) return { rows: [] }
+  if (/SELECT id,email,email_verified_at,deleted_at,COALESCE\(suspended_at,departed_at\) AS suspended_at FROM users/.test(text)) {
     return { rows: [{
       id: params?.[0], email: `${params?.[0]}@example.com`, email_verified_at: new Date(),
       deleted_at: null, suspended_at: null,
@@ -55,7 +56,7 @@ function accessFixture(
     const personal = params?.[0] === 'personal-project'
     return { rows: [{
       id: personal ? 'personal-project' : 'project-1', company_id: 'company-1',
-      kind: personal ? 'PERSONAL_LEARNING' : 'TEACHING', plan_id: null, status: 'ACTIVE',
+      kind: 'TEACHING', plan_id: null, status: 'ACTIVE',
     }] }
   }
   if (/NULL::text AS leader_id,status AS resource_status FROM projects WHERE id=\$1/.test(text)) {
@@ -67,17 +68,16 @@ function accessFixture(
     }] }
   }
   if (/SELECT id,type,status,plan_id FROM companies/.test(text)) {
-    return { rows: [{ id: 'company-1', type: 'PERSONAL', status: 'ACTIVE', plan_id: 'plan-1' }] }
+    return { rows: [{ id: 'company-1', type: 'EDUCATION', status: 'ACTIVE', plan_id: 'plan-1' }] }
   }
-  if (/SELECT role,status FROM company_memberships/.test(text)) {
-    return { rows: [{ role: 'MEMBER', status: 'ACTIVE' }] }
+  if (/SELECT role,status,is_admin AS "isAdmin" FROM company_memberships/.test(text)) {
+    return { rows: [{ role: 'STUDENT', status: 'ACTIVE' }] }
   }
-  if (/SELECT role,status FROM project_memberships/.test(text)) {
+  if (text.includes('FROM organization_seats seat')) return { rows: [{ plan_id: 'plan-1' }] }
+  if (/SELECT p.role,p.status FROM project_memberships p/.test(text)) {
     const userId = String(params?.[2] ?? '')
-    const projectId = String(params?.[1] ?? '')
     return { rows: [{
-      role: projectId === 'personal-project' ? 'OWNER'
-        : userId.includes('teacher') ? 'TEACHER' : 'STUDENT',
+      role: userId.includes('teacher') || userId === 'personal-owner' ? 'TEACHER' : 'STUDENT',
       status: 'ACTIVE',
     }] }
   }
@@ -214,13 +214,13 @@ test('mission completion updates only active or paused state', async () => {
   assert.match(statement, /status IN \('ACTIVE','PAUSED'\)/)
 })
 
-test('Personal mission start needs no Course and publishes the committed project Mission', async () => {
+for (const purpose of ['study','lab','discussion']) test(`project ${purpose} conversation starts a Mission without explicit tool instructions`, async () => {
   const statements: string[] = []
   const db = queryable((text) => {
     statements.push(text)
     if (text.includes('FROM conversations conversation')) return { rows: [{
       company_id: 'company-1', course_id: null, project_id: 'personal-project',
-      project_kind: 'PERSONAL_LEARNING', project_title: 'My Learning', project_status: 'ACTIVE', purpose: 'study',
+      project_kind: 'TEACHING', project_title: 'My Learning', project_status: 'ACTIVE', purpose,
     }] }
     if (text.includes('FROM im_channel_bindings')) return { rows: [{ channel_type: 2 }] }
     if (text.includes('FROM project_memberships')) return { rows: [{ role: 'learner' }] }
@@ -347,7 +347,7 @@ test('learning turn context binds state and active mission reads to the room pro
   assert.equal(context?.pendingTeacherReviews, 0)
 })
 
-test('Personal project context needs no Course and hard-bounds every model-visible collection', async () => {
+test('project context hard-bounds every model-visible collection', async () => {
   const long = 'x'.repeat(12_000)
   const units = Array.from({ length: 25 }, (_, index) => ({
     id: `unit-${index}-${long}`,
@@ -377,7 +377,7 @@ test('Personal project context needs no Course and hard-bounds every model-visib
   const db = queryable((text) => {
     if (text.includes('FROM conversations conversation')) return { rows: [{
       company_id: 'company-1', course_id: null, project_id: 'personal-project',
-      project_kind: 'PERSONAL_LEARNING', project_title: long, project_status: 'ACTIVE', purpose: 'study',
+      project_kind: 'TEACHING', project_title: long, project_status: 'ACTIVE', purpose: 'study',
     }] }
     if (text.includes('FROM learning_knowledge_units unit')) return { rows: units }
     if (text.includes('FROM learning_states state')) return { rows: [] }
@@ -399,7 +399,7 @@ test('Personal project context needs no Course and hard-bounds every model-visib
     syncMessages: async () => { throw new Error('explicit actor must not sync messages') },
   }, {
     companyId: 'company-1', channelId: 'personal-room', agentId: 'nova',
-    triggerClientMsgNo: 'message-1', actorId: 'personal-owner',
+    triggerClientMsgNo: 'message-1', actorId: 'learner-1',
   })
 
   assert.equal(context?.courseId, undefined)
@@ -484,7 +484,7 @@ test('independent Canvas verification resolves canonical Evidence IDs in one Pro
   assert.match(statement, /verifier\.evidence_id=verifier_evidence\.id/)
 })
 
-test('Personal owner can reject a project evaluation and still finalize the attempt', async () => {
+test('teacher can reject a project evaluation and still finalize the attempt', async () => {
   const calls: Array<{ text: string; params: readonly unknown[] | undefined }> = []
   const db = queryable((text, params) => {
     calls.push({ text, params })
@@ -529,8 +529,9 @@ test('learning state and pending review reads carry explicit tenant and project 
   assert.match(calls[1]?.text ?? '', /evaluation\.company_id=\$1 AND evaluation\.project_id=\$2/)
 })
 
-test('membership management refuses to remove the final tenant-scoped teacher', async () => {
-  const db = queryable((text) => {
+test('membership management scopes suspension to the authorized course and tenant', async () => {
+  let suspended: readonly unknown[] | undefined
+  const db = queryable((text, params) => {
     if (text.includes('FROM courses course JOIN projects project')) return { rows: [{
       company_id: 'company-1', company_role: 'member', course_role: 'teacher',
       project_id: 'project-1', status: 'ACTIVE',
@@ -538,14 +539,15 @@ test('membership management refuses to remove the final tenant-scoped teacher', 
     if (text.includes('SELECT project_id FROM courses')) return { rows: [{ project_id: 'project-1' }] }
     if (text.includes('SELECT 1 FROM company_memberships')) return { rows: [{ exists: 1 }] }
     if (text.includes('SELECT role FROM project_memberships')) return { rows: [{ role: 'TEACHER' }] }
-    if (text.includes('SELECT COUNT(*)::int AS count FROM project_memberships')) return { rows: [{ count: 1 }] }
+    if (text.includes("UPDATE project_memberships SET status='SUSPENDED'")) { suspended = params; return { rowCount: 1 } }
     throw new Error(`unexpected query: ${text}`)
   })
 
-  await assert.rejects(() => setLearningCourseMembership(db, async (work) => work(db), {
+  await setLearningCourseMembership(db, async (work) => work(db), {
     companyId: 'company-1', courseId: 'course-1', managerId: 'teacher-1',
     userId: 'teacher-1', role: 'teacher', enabled: false,
-  }), /cannot remove the final course teacher/)
+  })
+  assert.deepEqual(suspended,['project-1','company-1','teacher-1'])
 })
 
 test('room binding authorizes the manager and persists one tenant-scoped project room', async () => {

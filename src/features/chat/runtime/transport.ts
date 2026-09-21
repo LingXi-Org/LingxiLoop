@@ -7,6 +7,8 @@ import { useParticipants } from '@/features/agents/state'
 import { messagesApi } from '@/features/chat/api'
 import { toastAction } from '@/lib/actionToast'
 import { hasBroadcastMention } from '@/lib/chatMessages'
+import { parseMentions } from '@/lib/mentions'
+import { useConversations } from '@/features/conversations/store'
 import {
   type ImEnvelope,
   type LingxiMessageV1,
@@ -65,14 +67,10 @@ function quoteIdFromAppend(message: AppendMessage): string | null {
   return typeof messageId === 'string' ? messageId : null
 }
 
-function mentionedAgentIds(body: string): string[] {
-  return Object.values(useParticipants.getState().byId)
-    .filter((participant) => participant.kind === 'agent')
-    .filter((participant) => [participant.id, participant.name].some((label) => {
-      const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      return new RegExp(`(^|\\s)@${escaped}(?=\\s|$|[.,!?，。！？])`, 'i').test(body)
-    }))
-    .map((participant) => participant.id)
+function mentionedAgentIds(body: string, conversationId: string): string[] {
+  const members = useConversations.getState().list.find(room => room.id === conversationId)?.members ?? []
+  const roster = Object.values(useParticipants.getState().byId).filter(participant => members.includes(participant.id))
+  return parseMentions(body, roster).mentionedIds.filter(id => useParticipants.getState().byId[id]?.kind === 'agent')
 }
 
 function optimisticMessage(
@@ -303,7 +301,7 @@ export class ChatTransport {
     const quotedMessageId = threadRootId ?? quoteIdFromAppend(message)
     if (!attachments.length) { await this.send(conversationId, text, null, quotedMessageId); return }
     const payloads = attachmentMessages(attachments, text, quotedMessageId,
-      { mentionedIds: mentionedAgentIds(text), mentionAll: hasBroadcastMention(text) })
+      { mentionedIds: mentionedAgentIds(text, conversationId), mentionAll: hasBroadcastMention(text) })
     for (const payload of payloads) rememberChatOutbox({ conversationId, clientMessageId: payload.clientMsgNo,
       payload: payload as unknown as Record<string, unknown>, createdAt: new Date().toISOString() })
     setConversationMessages(conversationId, payloads.map((payload, index) =>
@@ -341,7 +339,7 @@ export class ChatTransport {
       ...(quotedMessageId ? { replyToClientMsgNo: quotedMessageId } : {}),
       data: {
         ...(attachment ?? {}),
-        mentionedIds: mentionedAgentIds(text),
+        mentionedIds: mentionedAgentIds(text, conversationId),
         mentionAll: hasBroadcastMention(text),
       },
     }

@@ -266,6 +266,7 @@ test('initial history publishes complete run snapshots together and subscribes o
   mock.module('@/api/core/realtime', { namedExports: { ws: { connect: async () => {},on: () => () => {} } } })
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
   mock.module('@/features/agents/state', { namedExports: { useParticipants: { getState: () => ({ byId: participants }) } } })
+  mock.module('@/features/conversations/store', { namedExports: { useConversations: { getState: () => ({ list: [{ id: 'room', members: ['human', 'agent'] }] }) } } })
   mock.module('@/features/chat/api', { namedExports: { messagesApi: {} } })
   mock.module('@/stores/auth', { namedExports: { getMeId: () => 'human', getActiveCompanyId: () => null } })
   mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: { history: async () => imHistory,

@@ -1,9 +1,9 @@
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { renderGenerativeUI, type UIElement, type UISpec } from '@assistant-ui/react-generative-ui'
 import { useState } from 'react'
-import { Avatar } from '@/components/Avatar'
-import { AgentHandoff } from '@/components/assistant-ui/elements/agent-handoff'
-import { AgentPlan } from '@/components/assistant-ui/elements/agent-plan'
+import { Plan } from '@/components/tool-ui/plan'
+import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
+import { canvasProgress, handoffProgress, missionPlan } from '../runtime/task-progress'
 import { PollCard } from '@/components/assistant-ui/elements/poll-card'
 import { CanvasArtifactCard } from '@/features/canvas/components/CanvasArtifactCard'
 import {
@@ -141,35 +141,18 @@ export function ElicitationFormTool({ args, result, addResult }: ToolCallMessage
 }
 
 export function AgentPlanTool({ args }: ToolCallMessagePartProps) {
-  const value = args as { id: string; steps: string[]; activeIndex: number }
-  return <AgentPlan
-    data-assistant-ui-id={value.id}
-    steps={value.steps}
-    activeIndex={value.activeIndex}
-  />
+  const names = useParticipants(state => state.byId)
+  return <Plan {...missionPlan(args, names)} />
 }
 
 export function AgentHandoffTool({ args }: ToolCallMessagePartProps) {
-  const value = args as {
-    id: string
-    from: string
-    to: string
-    settled: boolean
-  }
-  const from = useParticipants((state) => state.byId[value.from])
-  const to = useParticipants((state) => state.byId[value.to])
-  const loaded = useParticipants((state) => state.loaded)
-  if (!loaded) return null
-  if (from?.kind !== 'agent' || to?.kind !== 'agent') throw new Error('智能体交接协议引用了无效智能体')
-  return <AgentHandoff
-    data-assistant-ui-id={value.id}
-    from={from.name}
-    to={to.name}
-    fromAvatar={<Avatar p={from} size={18} animated={false} />}
-    toAvatar={<Avatar p={to} size={18} animated={false} />}
-    settled={value.settled}
-    className="mx-auto"
-  />
+  const names = useParticipants(state => state.byId)
+  return <ProgressTracker {...handoffProgress(args, names)} />
+}
+
+export function CanvasProgressTool({ args }: ToolCallMessagePartProps) {
+  const names = useParticipants(state => state.byId)
+  return <ProgressTracker {...canvasProgress(args, names)} />
 }
 
 interface DraftEmailArgs {
@@ -383,6 +366,7 @@ export const CHAT_TOOL_RENDERERS = {
     'agent-handoff': AgentHandoffTool,
     'agent-plan': AgentPlanTool,
     'canvas-artifact': CanvasArtifactTool,
+    'canvas-progress': CanvasProgressTool,
     'elicitation-form': ElicitationFormTool,
     showStats: TeacherBriefingStatsTool,
     'learning.propose_evaluation': ScoreBreakdownTool,

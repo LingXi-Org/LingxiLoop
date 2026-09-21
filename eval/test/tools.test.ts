@@ -205,7 +205,7 @@ test('serial runs pass remaining spend to the next sample and stop after a budge
 })
 
 test('semantic suites validate; verification reads see current state and duplicate writes do not execute', () => {
-  for (const name of ['tool-initiative.v2', 'tool-boundaries.v2', 'tool-recovery.v2', 'education-autonomy.v1', 'education-autonomy.v2', 'education-autonomy.v3']) {
+  for (const name of ['tool-initiative.v2', 'tool-boundaries.v2', 'tool-recovery.v2', 'education-autonomy.v1', 'education-autonomy.v2', 'education-autonomy.v3', 'education-autonomy.v4']) {
     const data = datasetSchema.parse(read(`../datasets/${name}.json`)), config = suiteSchema.parse(read(`../suites/${name}.json`))
     manifestSchema.parse(manifest({ dataset: data, suite: config, judge: 'offline-judge' }))
     for (const c of data.cases) validateScenario(c.scenario!)

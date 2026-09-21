@@ -665,13 +665,13 @@ export class LearningApplication {
     input: MissionCoordinatorInput,
   ) {
     await this.assertCourseScope(scope, courseId, 'learning:manage')
-    return this.classroom(() => assignLearningMissionCoordinator(this.db, {
+    return this.classroom(() => this.infrastructure.transaction(db => assignLearningMissionCoordinator(db, {
       companyId: scope.companyId,
       courseId,
       missionId,
       teacherId: scope.userId,
       agentId: input.agentId,
-    }))
+    })))
   }
 
   async evidence(scope: LearningScope, courseId: string, learnerId = scope.userId) {

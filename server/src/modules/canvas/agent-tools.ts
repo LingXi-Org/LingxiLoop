@@ -8,6 +8,7 @@ import { createPermissionService } from '../access/public.js'
 import { createCanvasApplication } from './application.js'
 import { agentCanvasSchemas } from './contracts.js'
 import { bindCanvasRun, createCanvasExecution, type CanvasRunRow } from './execution.js'
+import { publishCanvasProgress } from './progress.js'
 import { canvasById, conversationCanvasId, findFrame, lockReportWork, type CanvasRow } from './repository.js'
 
 export function createCanvasTools(control: Parameters<typeof createCanvasExecution>[0]): ToolDefinition[] {
@@ -69,6 +70,7 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
         canvas_id: canvas.id, assignment_id: null, agent_id: context.work.agentId, principal_id: context.work.principalId!,
         session_id: context.work.sessionId, thread_id: context.work.threadId ?? null, request_version: context.requestVersion!, execution_role: 'reporter' })
     }
+    await publishCanvasProgress(context.database as Queryable,context.work.tenantId,canvas.id)
     return { ok: true as const, value: { result: value, canvasId: canvas.id }, ...(children.length ? {
       directive: await context.waitForChildren(children),
     } : {}) }
@@ -99,7 +101,7 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
     nativeTool('canvas.current', agentCanvasSchemas.current, { description: 'Read the current Canvas, assignments and reports.', effect: 'read', approval: false, authorize,
       async execute(context) { return { ok: true, value: await application(context).api.getConversationCanvas(context.work.tenantId, productConversationId(context.work), context.work.principalId!) } } }),
     nativeTool('canvas.available_agents', agentCanvasSchemas.available_agents, { description: 'List Canvas agents.', effect: 'read', approval: false, authorize,
-      async execute(context) { return { ok: true, value: await application(context).api.listCanvasAvailableAgents(context.work.tenantId) } } }),
+      async execute(context) { return { ok: true, value: await application(context).api.listCanvasAvailableAgents(context.work.tenantId, productConversationId(context.work)) } } }),
     nativeTool('canvas.create_frame', agentCanvasSchemas.create_frame, { description: 'Create a Canvas frame.', effect: 'transaction', approval: false, authorize, verify,
       async execute(context, input) { const canvas = await requiredCanvas(context), native = application(context); return result(context, native,
         await native.api.createCanvasFrame({ ...actor(context), canvasId: canvas.id, frame: input.frame, idempotencyKey: context.action.idempotencyKey }), canvas) } }),

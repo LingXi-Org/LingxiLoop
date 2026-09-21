@@ -125,7 +125,7 @@ test('native knowledge tools read beyond previews, page actual text and enforce 
   await assert.rejects(invoke('knowledge.read_source',{ sourceId: 'answer-source',offset: text.length+1 }),/offset/)
   searchMock.mock.mockImplementation(async () => { throw new OpenNotebookError('provider unavailable',503) })
   const product = createProductContext(knowledgeTools)
-  assert.deepEqual((await product.contextProvider.loadContext(work)).dynamic?.knowledgeRetrieval,{ status: 'unavailable' })
+  assert.deepEqual((await product.contextProvider.loadContext(work)).dynamic?.knowledgeRetrieval,{ status: 'unavailable',matchedChunks: 0 })
   const request: RequestSnapshot = { version: 1,workId: work.id,tenantId: companyId,sessionId: work.sessionId,authorId: 'test-owner',
     sourceRef: 'request',originalText: 'Find the recorded value.',attachments: [],revisions: [],
     evidence: { version: 1,id: 'knowledge-evidence',items: search.evidence!.map((item,index) => ({ ...item,marker: `S${index+1}` })) } }

@@ -104,7 +104,7 @@ export class WukongWebhookApplication {
           throw new Error('teacher room requires current course teacher membership')
         }
         if (author?.kind === 'agent' && input.fromUid !== teacherRoom.agent_id) {
-          throw new Error('only the registered Pulse Agent may write as an Agent in this room')
+          throw new Error('only the registered 望远 Agent may write as an Agent in this room')
         }
       }
       const refs = input.payload.refs ?? {}
@@ -127,12 +127,12 @@ export class WukongWebhookApplication {
           ? refs.toAgentId : undefined,
       })
       if (teacherRoom && recipients.some((agentId) => agentId !== teacherRoom.agent_id)) {
-        throw new Error('teacher room can wake only its registered Pulse Agent')
+        throw new Error('teacher room can wake only its registered 望远 Agent')
       }
       if (!teacherRoom && await containsManagedTeacherAgent(db, {
         companyId: binding.company_id,
         agentIds: recipients,
-      })) throw new Error('Pulse can only be invoked from its registered teacher room')
+      })) throw new Error('望远 can only be invoked from its registered teacher room')
       let knowledgeSourceId: string | undefined
       let deferAgentWake = false
       if (input.payload.kind === 'attachment' && !teacherRoom) {

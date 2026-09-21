@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { publishCanvasProgress } from './progress.js'
 import type { CanvasActivityKind } from '../../../../src/lib/canvasEventKinds.js'
 import type { AgentExecutionRole } from '../../agents/contracts.js'
 import type { Queryable } from '../../db/queryable.js'
@@ -191,7 +192,11 @@ async function assertCanvasWorkReportReady(workId:string,companyId:string):Promi
 async function completeCanvasWork(input: {
   workId: string; companyId: string; status: 'completed' | 'failed' | 'cancelled'; resultText?: string; error?: string
 }): Promise<void> {
-  const state = await transaction((client) => completeCanvasWorkState(client, input))
+  const state = await transaction(async client => {
+    const state = await completeCanvasWorkState(client, input)
+    if (state.canvasId) await publishCanvasProgress(client,input.companyId,state.canvasId)
+    return state
+  })
   if (!state.canvasId) return
   if (state.workspace) {
     await publishCanvas(input.companyId, {

@@ -196,7 +196,7 @@ test('knowledge retrieval builds the Open Notebook allowlist before search', asy
         rows: [{
           id: 'source-private',
           title: 'Private source',
-          external_source_id: 'source:private',
+          status: 'ready', external_source_id: 'source:private',
           original_url: null,
           excluded: false,
         }],
@@ -215,7 +215,7 @@ test('knowledge retrieval builds the Open Notebook allowlist before search', asy
   assert.deepEqual(sources, [{
     id: 'source-private',
     title: 'Private source',
-    externalSourceId: 'source:private',
+    status: 'ready', externalSourceId: 'source:private',
     originalUrl: null,
     excluded: false,
   }])
@@ -224,5 +224,5 @@ test('knowledge retrieval builds the Open Notebook allowlist before search', asy
   assert.match(calls[0]!.text, /source\.visibility_scope='PROJECT'/)
   assert.match(calls[0]!.text, /source\.visibility_scope='PRIVATE' AND source\.owner_user_id=\$4/)
   assert.match(calls[0]!.text, /exclusion\.user_id=\$4/)
-  assert.deepEqual(calls[0]!.params, ['conversation-1', 'company-1', 'project-1', 'user-1'])
+  assert.deepEqual(calls[0]!.params, ['conversation-1', 'company-1', 'project-1', 'user-1', false])
 })

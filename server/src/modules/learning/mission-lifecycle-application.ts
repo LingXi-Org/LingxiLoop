@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { publishMissionProgress } from './mission-progress.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { AddLearningMissionStepInput, LearningAgentRoomScope } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
@@ -83,6 +84,7 @@ export async function addLearningMissionSteps(
     if (await countLearningMissionSteps(client, missionScope) < 1) {
       throw new LearningApplicationError('conflict', 'mission requires at least one checkable step')
     }
+    await publishMissionProgress(client,missionScope)
   })
   return getLearningMission(db, room.companyId, room.projectId, missionId)
 }
@@ -109,6 +111,7 @@ export async function finishLearningMissionPlanning(
     if (!await activateLearningMission(client, missionScope)) {
       throw new LearningApplicationError('conflict', 'Mission planning state changed')
     }
+    await publishMissionProgress(client,missionScope)
   })
   return getLearningMission(db, room.companyId, room.projectId, missionId)
 }
@@ -145,6 +148,7 @@ export async function updateLearningMissionStep(
       projectId: room.projectId,
       ...input,
     })) throw new LearningApplicationError('not_found', 'mission step or completion evidence not found')
+    await publishMissionProgress(client,{ companyId: room.companyId, projectId: room.projectId, missionId: input.missionId })
   })
   return getLearningMission(db, room.companyId, room.projectId, input.missionId)
 }
@@ -170,6 +174,7 @@ export async function completeLearningMission(
     if (!await completeLearningMissionRecord(client, missionScope)) {
       throw new LearningApplicationError('conflict', 'Mission state changed before completion')
     }
+    await publishMissionProgress(client,missionScope)
   })
   return getLearningMission(db, room.companyId, room.projectId, missionId)
 }

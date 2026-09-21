@@ -13,7 +13,7 @@ import type {
   LingxiQuoteMetadata,
   LingxiReactionMetadata,
 } from './model'
-import { resolveMessagePresentation } from './model'
+import { mergeProgressMessage, resolveMessagePresentation } from './model'
 import { readHarness, harnessParts, harnessStatus } from './harness'
 import type { RunView } from '@lyyzka/lingxios/ui'
 
@@ -59,7 +59,6 @@ function messageId(envelope: ImEnvelope): string {
   const { payload } = envelope
   if (payload.kind === 'poll') return String(payload.refs?.pollClientMsgNo ?? payload.clientMsgNo)
   if (payload.kind === 'approval' && payload.refs?.approvalId) return `approval-${payload.refs.approvalId}`
-  if (payload.kind === 'handoff' && payload.refs?.handoffId) return `handoff-${payload.refs.handoffId}`
   return envelope.messageId || payload.clientMsgNo
 }
 
@@ -390,26 +389,37 @@ function baseParts(envelope: ImEnvelope, harness?: RunView): ThreadAssistantMess
       return [pollPart(id, data)]
     case 'questionnaire':
       return [questionnairePart(id, data)]
-    case 'handoff':
-      return [toolCall(`handoff:${id}`, 'agent-handoff', {
-        id: `handoff-${id}`,
-        from: string(data.fromAgentId),
-        to: string(data.toAgentId),
-        settled: /complete|accepted/i.test(string(data.status)),
+    case 'handoff': {
+      const taskId = string(payload.refs?.handoffId, string(data.id, id))
+      return [toolCall(`handoff:${taskId}`, 'agent-handoff', {
+        id: `handoff-${taskId}`,
+        fromAgentId: string(data.fromAgentId), toAgentId: string(data.toAgentId),
+        title: string(data.title,payload.body), status: string(data.status,'queued'),
+        updatedAt: string(data.updatedAt,timestamp(envelope.timestamp).toISOString()),
       })]
-    case 'canvas':
-      return [toolCall(`canvas:${id}`, 'canvas-artifact', {
-        id: `canvas-${id}`,
+    }
+    case 'canvas': {
+      const taskId = string(data.canvasId, id)
+      return [...(Array.isArray(data.assignments) ? [toolCall(`canvas-progress:${taskId}`, 'canvas-progress', {
+        id: `canvas-progress-${taskId}`, title: string(data.title,payload.body), goal: string(data.goal),
+        status: string(data.status,'active'), coordinatorAgentId: string(data.coordinatorAgentId), assignments: data.assignments,
+        updatedAt: string(data.updatedAt,timestamp(envelope.timestamp).toISOString()),
+      })] : []), toolCall(`canvas:${taskId}`, 'canvas-artifact', {
+        id: `canvas-${taskId}`,
         title: string(data.title, payload.body || '画布'),
         description: string(data.goal),
         href: `lingxiloop://canvas/${encodeURIComponent(string(data.canvasId))}`,
       })]
-    case 'learning_mission':
-      return [toolCall(`mission:${id}`, 'agent-plan', {
-        id: `mission-${id}`,
-        steps: [[string(data.goal, payload.body || '完成学习任务'), string(data.successCriteria)].filter(Boolean).join('：')],
-        activeIndex: /complete/i.test(string(data.status)) ? 1 : 0,
+    }
+    case 'learning_mission': {
+      const taskId = string(data.missionId, id)
+      return [toolCall(`mission:${taskId}`, 'agent-plan', {
+        id: `mission-${taskId}`,
+        goal: string(data.goal, payload.body || '完成学习任务'), successCriteria: string(data.successCriteria),
+        coordinatorAgentId: string(data.coordinatorAgentId), status: string(data.status,'PLANNING'), steps: Array.isArray(data.steps) ? data.steps : [],
+        updatedAt: string(data.updatedAt,timestamp(envelope.timestamp).toISOString()),
       })]
+    }
     case 'email': {
       const email = object(data.email ?? data)
       const transportStatus = string(email.transportStatus)
@@ -447,11 +457,16 @@ function buildMetadata(
 ): LingxiMessageMetadata {
   const data = object(envelope.payload.data)
   const quoted = quote(data, envelope.payload.replyToClientMsgNo)
+  const entityId = envelope.payload.kind === 'handoff' ? string(envelope.payload.refs?.handoffId,string(data.id))
+    : envelope.payload.kind === 'learning_mission' ? string(data.missionId) : envelope.payload.kind === 'canvas' ? string(data.canvasId) : ''
   return {
     schema: 'lingxiloop.thread-message.v1',
     conversationId: envelope.channelId,
     clientMessageId: envelope.payload.clientMsgNo || envelope.clientMsgNo,
     sequence: Number.isSafeInteger(envelope.messageSeq) && envelope.messageSeq > 0 ? envelope.messageSeq : null,
+    ...(entityId ? { progress: { key: `${envelope.payload.kind}:${entityId}`,
+      version: Number.isSafeInteger(data.progressVersion) && Number(data.progressVersion) >= 0 ? Number(data.progressVersion) : 0,
+      sequence: envelope.messageSeq } } : {}),
     ...senderMetadata(envelope, context),
     delivery: 'sent',
     messageKind: envelope.payload.kind,
@@ -580,10 +595,13 @@ export function convertEnvelopeBatch(
   const byId = new Map<string, ThreadMessage>()
   for (const envelope of envelopes) {
     const message = convertEnvelope(envelope, context)
-    const current = byId.get(message.id)
+    const progress = (message.metadata.custom as LingxiMessageMetadata).progress
+    const key = progress ? JSON.stringify([envelope.channelId,progress.key]) : message.id
+    const current = byId.get(key)
     const currentSequence = current ? (current.metadata.custom as LingxiMessageMetadata).sequence ?? 0 : -1
     const nextSequence = (message.metadata.custom as LingxiMessageMetadata).sequence ?? 0
-    if (!current || nextSequence >= currentSequence) byId.set(message.id, message)
+    if (current && progress) byId.set(key,mergeProgressMessage(current,message))
+    else if (!current || nextSequence >= currentSequence) byId.set(key, message)
   }
   return projectMessageGroups([...byId.values()].sort((left, right) => {
     const leftSequence = (left.metadata.custom as LingxiMessageMetadata).sequence

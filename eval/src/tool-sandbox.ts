@@ -21,6 +21,8 @@ export const toolCatalog = {
   research__search: tool('Search OpenAlex for public research sources.', z.object({ query, limit: z.number().int().min(1).max(20).default(8) }).strict()),
   research__read: tool('Read a public research source.', z.object({ url: z.url().max(2048) }).strict()),
   knowledge__list_sources: tool('Read sources visible to the original human in the current workspace.', empty),
+  knowledge__search: tool('Search enabled course sources visible to every conversation reader; returns observed excerpts and retrieval status.', z.object({ query: z.string().trim().min(1).max(4000), limit: z.number().int().min(1).max(8).default(8) }).strict()),
+  knowledge__read_source: tool('Read actual text from an enabled course source with recorded provenance, or its processing/unavailable state.', z.object({ sourceId: ref.max(200), offset: z.number().int().nonnegative().safe().default(0), limit: z.number().int().min(1).max(16000).default(16000) }).strict()),
   knowledge__retry_ingestion: tool('Queue another native ingestion attempt.', z.object({ sourceId: ref.max(200) }).strict()),
   knowledge__delete_source: tool('Delete a source after human approval.', z.object({ sourceId: ref.max(200) }).strict()),
   calendar__list: tool('List calendar events within a range of at most 366 days.', z.object({ from: query, to: query }).strict().refine(({ from, to }) => {

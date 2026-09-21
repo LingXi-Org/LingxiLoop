@@ -8,6 +8,7 @@ import { observeCanvasEvidence } from './evidence.js'
 import { canvasById } from './repository.js'
 import type { CanvasEvidenceRef } from './contracts.js'
 import { NoEffectError, type WorkItem } from '@lyyzka/lingxios'
+import { publishCanvasProgress } from './progress.js'
 
 export async function loadCanvasRunContext(db: Queryable, work: Omit<WorkItem, 'leaseToken'>) {
   const { rows } = await db.query<CanvasRunRow & { assignment: string | null }>(`SELECT run.*,assignment.assignment
@@ -110,6 +111,7 @@ export function createCanvasRuntime(control: Control) {
         if (binding.assignment_id) await db.query(`UPDATE canvas_agent_assignments SET status=$3,started_at=CASE WHEN $3='working' THEN COALESCE(started_at,NOW()) ELSE started_at END,
           updated_at=NOW() WHERE id=$1 AND work_id=$2 AND status<>$3`,
           [binding.assignment_id,binding.work_id,run.status === 'leased' ? 'working' : run.status === 'waiting' ? 'waiting' : 'queued'])
+        await publishCanvasProgress(db,binding.company_id,binding.canvas_id)
         continue
       }
       const message = await api.readMessage(identity)

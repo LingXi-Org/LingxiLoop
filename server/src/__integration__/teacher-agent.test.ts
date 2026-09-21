@@ -10,6 +10,7 @@ import type { ActionContext } from '@lyyzka/lingxios'
 import { lingxiOSControl, stopLingxiOSControl } from '../agent-runtime/runtime.js'
 import { createProductContext } from '../agent-runtime/context.js'
 import { createProductTools } from '../agent-runtime/tools.js'
+import { openNotebookClient } from '../modules/knowledge/provider.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import type { Queryable } from '../db/queryable.js'
@@ -65,6 +66,29 @@ test('[integration] Pulse can send conversational messages only in its active au
   const context = { work,database: pool,signal: AbortSignal.timeout(15000),requestVersion: 1,
     action: { runId: run.runId,cellId: 'teacher-send',callIndex: 0,action: 'chat.send',args: input,idempotencyKey: 'teacher-style-send' },
   } as unknown as ActionContext
+  assert.equal(loaded.persona?.name,'望远')
+  assert.deepEqual((await product.capabilityResolver.resolve(work)).find(grant => grant.name === 'knowledge')?.methods,
+    ['search','read_source','list_sources'])
+  const previous = process.env.OPEN_NOTEBOOK_ENABLED
+  process.env.OPEN_NOTEBOOK_ENABLED = 'true'
+  t.after(() => { if (previous === undefined) delete process.env.OPEN_NOTEBOOK_ENABLED; else process.env.OPEN_NOTEBOOK_ENABLED = previous })
+  await pool.query(`INSERT INTO knowledge_sources(id,company_id,project_id,conversation_id,title,kind,status,visibility_scope,owner_user_id,created_by_user_id,created_via,external_source_id)
+    VALUES('teacher-source',$1,$2,$3,'教学资料','text','ready','PROJECT',$4,$4,'USER','source:teacher')`,[fixture.companyId,fixture.projectId,pulse.roomId,fixture.teacherId])
+  await pool.query(`INSERT INTO knowledge_notebook_bindings(project_id,company_id,external_key,external_notebook_id,state)
+    VALUES($1,$2,$1,'notebook:teacher','ready')`,[fixture.projectId,fixture.companyId])
+  t.mock.method(openNotebookClient,'getSource',async () => ({ id: 'source:teacher',full_text: '本课程采用分层练习。' }))
+  t.mock.method(openNotebookClient,'search',async () => [{ id: 'chunk:teacher',parent_id: 'source:teacher',content: '本课程采用分层练习。' }])
+  for (const action of ['knowledge.search','knowledge.read_source','knowledge.list_sources']) {
+    const tool = tools.find(tool => tool.action === action)!, readContext = { ...context,action: { ...context.action,action } }
+    const args = tool.parse(action === 'knowledge.search' ? { query: '练习形式' } : action === 'knowledge.read_source' ? { sourceId: 'teacher-source' } : {})
+    await tool.authorize(readContext,args)
+    const result = await tool.execute(readContext,args)
+    assert.equal(result.ok,true)
+    if (action !== 'knowledge.list_sources') assert.equal(result.evidence?.[0].excerpt,'本课程采用分层练习。')
+    await assert.rejects(tool.authorize({ ...readContext,work: { ...work,kind: 'teacher_digest',lane: 'background' } },{}),/capability or membership/)
+  }
+  const write = tools.find(tool => tool.action === 'knowledge.add_text')!
+  await assert.rejects(write.authorize({ ...context,action: { ...context.action,action: 'knowledge.add_text' } },{}),/capability or membership/)
   await send.authorize(context,input)
   assert.equal((await send.execute(context,input)).ok,true)
   assert.deepEqual((await pool.query(`SELECT input->>'text' AS body,outcome->>'reason' AS reason
@@ -216,7 +240,7 @@ test('[integration] concurrent provisioning creates one Project Pulse and one Co
   assert.equal(rows[0]?.agents,1)
   assert.equal(rows[0]?.rooms,1)
   assert.deepEqual(rows[0]?.tools,['ipython'])
-  assert.deepEqual(rows[0]?.capabilities,['teacher_admin'])
+  assert.deepEqual(rows[0]?.capabilities,['teacher_admin','knowledge'])
   assert.deepEqual(new Set(rows[0]?.members),new Set([fixture.teacherId,results[0]!.agentId]))
   assert.equal(rows[0]?.members.includes(fixture.learnerId),false)
   assert.equal(rows[0]?.subtitle,'教师 · 1')

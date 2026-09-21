@@ -29,7 +29,7 @@ test('public native tool events project into bounded assistant-ui history and su
   const completed = { ...started,seq: 2,kind: 'tool.completed',stage: 'completed' as const,
     data: { toolCallId: 'host:call',result: { status: 'completed',value: { body: 'Do not duplicate this payload' } },isError: false } }
   const tools = harnessToolParts('run',[started,completed,{ ...started,visibility: 'internal',data: { toolCallId: 'host:private',name: 'internal' } }])
-  assert.deepEqual(tools,[{ type: 'tool-call',toolCallId: 'host:call',toolName: 'documents.read',args: {},argsText: '{}',result: { status: 'completed' },isError: false }])
+  assert.deepEqual(tools,[{ type: 'tool-call',toolCallId: 'host:call',toolName: 'documents.read',args: {},argsText: '{}',result: { status: 'completed' },isError: false,eventSeq: 2 }])
   assert.deepEqual(harnessToolParts('run',[started,completed],tools),tools)
   assert.deepEqual(harnessToolParts('another-run',[started,completed]),[])
   const message = convertEnvelope(envelope(1,1),{ participants,meId: 'human' })

@@ -54,12 +54,15 @@ export async function insertComment(db: Queryable, args: {
   return rows[0]
 }
 
-export async function availableAgents(db: Queryable, companyId: string) {
+export async function availableAgents(db: Queryable, companyId: string, conversationId: string) {
   const { rows } = await db.query<{ id: string; name: string; role: string | null; status: string | null }>(
-    `SELECT id,name,role,status FROM participants
-      WHERE company_id=$1 AND kind='agent' AND departed_at IS NULL AND capabilities @> '["canvas"]'::jsonb
-      ORDER BY name`,
-    [companyId],
+    `SELECT agent.id,agent.name,agent.role,agent.status FROM participants agent
+      JOIN im_channel_bindings channel ON channel.company_id=agent.company_id AND channel.channel_id=$2
+      WHERE agent.company_id=$1 AND agent.kind='agent' AND agent.departed_at IS NULL AND agent.capabilities @> '["canvas"]'::jsonb
+        AND channel.profile->'members' ? agent.id
+        AND NOT EXISTS(SELECT 1 FROM learning_project_teacher_agents teacher WHERE teacher.company_id=agent.company_id AND teacher.agent_id=agent.id)
+      ORDER BY agent.name`,
+    [companyId, conversationId],
   )
   return rows
 }

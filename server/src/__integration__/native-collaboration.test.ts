@@ -8,9 +8,9 @@ import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { bindProductRun, productRunIdentity, assertFrozenAudience } from '../agent-runtime/identity.js'
 import { authorizeAudienceRead } from '../agents/tools.js'
-import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
-before(async () => { await ensureSchemaOnce(); await resetAllTables() })
+before(async () => { await ensureSchemaOnce(); await resetAllTables(); installFakeWukong() })
 let worker: ReturnType<typeof createWorker> | undefined
 const modelStop = new AbortController()
 after(async () => { modelStop.abort(); await worker?.stop(); await teardownAll() })

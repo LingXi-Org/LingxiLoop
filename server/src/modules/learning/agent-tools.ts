@@ -1,9 +1,9 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
-import { z } from 'zod'
+import type { z } from 'zod'
 import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, compareResource, audienceHumanIds } from '../../agents/tools.js'
-import { queueNativeEvents } from '../../agents/native-events.js'
+import { publishMissionProgress } from './mission-progress.js'
 import { readAgentChannelMessages } from '../../im/public.js'
 import { inc } from '../../metrics.js'
 import { createPermissionService } from '../access/public.js'
@@ -178,7 +178,7 @@ export const learningTools: ToolDefinition[] = [
   nativeTool('learning.start_mission', schemas.start_mission, { description: 'Create a learner Mission and its coordinator child in the same transaction.',
     effect: 'transaction', approval: false, authorize: async context => { await scope(context, 'learning:submit') },
     async execute(context, input) {
-      const source = input.sourceClientMsgNo ?? context.work.triggerRef
+      const source = input.sourceClientMsgNo ?? (typeof context.work.meta?.sourceClientMsgNo === 'string' ? context.work.meta.sourceClientMsgNo : context.work.triggerRef)
       const messages = await committedMessages(context, [source]), db = database(context)
       if (messages[0]?.payload.kind !== 'text') throw new NoEffectError('a Mission requires the original learner’s committed text')
       let childId: string | undefined
@@ -188,13 +188,8 @@ export const learningTools: ToolDefinition[] = [
           const queued = await context.enqueueChild({ id: child.id, agentId: child.coordinatorAgentId, kind: 'mission_coordinator',
             executionClass: 'operation', text: `Plan and coordinate Mission ${child.missionId}: ${input.goal}\nSuccess criteria: ${input.successCriteria}`, meta: { conversationId: child.channelId, missionId: child.missionId, sourceClientMsgNo: source } })
           childId = queued.id
-        }, publishMission: async ({ mission, projectId, courseId }) => {
-          const clientNonce = `learning-mission-${mission.id}`
-          await queueNativeEvents(context, [{ type: 'im.system', companyId: context.work.tenantId, actorId: context.work.agentId,
-            channelId: productConversationId(context.work), clientNonce, payload: { version: 1, kind: 'learning_mission', clientMsgNo: clientNonce,
-              body: mission.goal, refs: { agentId: context.work.agentId }, data: { missionId: mission.id, projectId, ...(courseId ? { courseId } : {}),
-                goal: mission.goal, successCriteria: mission.successCriteria, kind: mission.kind, coordinatorAgentId: mission.coordinatorAgentId, status: mission.status, suppressAgentWake: true } } }])
-        },
+        }, publishMission: async ({ mission, projectId }) => publishMissionProgress(db, {
+          companyId: context.work.tenantId, projectId, missionId: mission.id, workId: context.work.id }),
       }, { ...roomInput(context), workId: context.work.id, agentId: context.work.agentId, triggerClientMsgNo: source, ...input })
       if (result.learnerId !== context.work.principalId) throw new NoEffectError('Mission principal changed', 'forbidden')
       return { ok: true, executionState: 'succeeded', value: result,

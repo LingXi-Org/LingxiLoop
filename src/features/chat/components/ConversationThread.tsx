@@ -12,6 +12,7 @@ import { chatTransport, useConversationThreadSnapshot } from '../runtime'
 import { ConversationActivity } from './ConversationActivity'
 import { ConversationComposer } from './ConversationComposer'
 import { ConversationMessage } from './ConversationMessage'
+import { ConversationStart } from './ConversationStart'
 import { ConversationMemory } from './ConversationMemory'
 import { getLingxiMessageMetadata } from '../runtime/model'
 
@@ -134,7 +135,9 @@ export function ConversationThread({
       <ThreadPrimitive.Viewport ref={viewportRef} data-chat-viewport className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
         {!threadRootId && (
           <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-[10.5px] text-muted-foreground sm:px-4">
-            {snapshot.isLoadingOlder ? '正在加载更早的消息…' : snapshot.hasMoreOlder ? '' : '会话开始'}
+            {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
+              <ConversationStart createdAt={snapshot.messages[0]?.createdAt} />
+            )}
           </div>
         )}
         <ThreadPrimitive.Empty>

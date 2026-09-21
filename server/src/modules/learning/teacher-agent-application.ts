@@ -76,10 +76,7 @@ import type {
   TeacherTurnContext,
 } from './types.js'
 
-const PULSE_PRESET_VERSION = 2
-const PULSE_CAPABILITIES = ['teacher_admin'] as const
-const PULSE_ROLE = '教学运营与学情汇总'
-const PULSE_PROMPT = `You are Pulse, the product-managed Project teacher operations Agent. Work only in the registered teacher room. Observe current Host-scoped facts, identify the smallest requested management operation, execute reversible routine operations or submit approval-gated operations, then report the exact durable result. Aggregate before drilling into an individual learner. Never contact learners, enter Study Rooms, teach, invent evidence, infer hidden traits, or use Canvas, handoffs, email, memory, learning Missions, or general routines. Scheduled turns are read-only summaries.`
+import { TEACHER_PRESET_VERSION, TEACHER_CAPABILITIES, TEACHER_ROLE, TEACHER_PROMPT } from './teacher-preset.js'
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 const APPROVAL_METHODS = new Set([
   'publish_objective', 'publish_activity', 'close_activity', 'archive_objective',
@@ -197,11 +194,11 @@ export async function ensureTeacherAgentForCourse(companyId: string,courseId: st
     if (!course) throw new Error('non-archived course not found')
     const agentId=`pulse-${stableSegment(`${companyId}:${course.projectId}`)}`
     const roomId=`teacher-${stableSegment(courseId)}`
-    const displayName=`Pulse · ${course.projectName}`.slice(0,80)
+    const displayName='望远'
     const resolvedAgentId=await findProjectTeacherAgentId(persistence,companyId,course.projectId)??agentId
     const result=await persistTeacherProvisioning(persistence,{
-      ...course,courseId,agentId:resolvedAgentId,roomId,displayName,role:PULSE_ROLE,
-      capabilities:PULSE_CAPABILITIES,prompt:PULSE_PROMPT,presetVersion:PULSE_PRESET_VERSION,
+      ...course,courseId,agentId:resolvedAgentId,roomId,displayName,role:TEACHER_ROLE,
+      capabilities:TEACHER_CAPABILITIES,prompt:TEACHER_PROMPT,presetVersion:TEACHER_PRESET_VERSION,
     })
     if(result.created)inc('learning.teacher_agent.provisioned')
     return {agentId:resolvedAgentId,roomId,created:result.created}
@@ -214,7 +211,7 @@ export async function sendTeacherAgentWelcome(companyId:string,courseId:string,d
   if(!descriptor)return
   await wukongClient().sendMessage(descriptor.conversationId,2,descriptor.agentId,{
     version:1,kind:'system',clientMsgNo:`teacher-welcome-${courseId}`,
-    body:`Pulse 已就绪：我可以汇总“${descriptor.courseTitle}”的学情、管理草稿与成员，并把关键变更提交给教师审批。`,
+    body:`望远已就绪：我可以汇总“${descriptor.courseTitle}”的学情、检索课程资料、管理草稿与成员，并把关键变更提交给教师审批。`,
     refs:{agentId:descriptor.agentId},data:{suppressAgentWake:true},
   })
 }

@@ -1,3 +1,4 @@
+import { LEARNING_PERSONA_KEYS } from './preset.js'
 import { HttpError } from '../../http/errors.js'
 import type { Queryable } from '../../db/queryable.js'
 import { type ProjectRole, projectRoleFromLearningWire } from '../../domain/access/public.js'
@@ -55,8 +56,8 @@ export async function insertCourse(db: Queryable, args: {
   )
   const { rows: agents } = await db.query<{ id: string; preset_key: string }>(
     `SELECT id,preset_key FROM participants
-      WHERE company_id=$1 AND kind='agent' AND preset_key IN ('nova','sage','milo','trace') AND departed_at IS NULL`,
-    [args.companyId],
+      WHERE company_id=$1 AND kind='agent' AND preset_key=ANY($2::text[]) AND departed_at IS NULL`,
+    [args.companyId, LEARNING_PERSONA_KEYS],
   )
   const memberIds = [args.userId, ...agents.map((agent) => agent.id)]
   const leaderId = agents.find((agent) => agent.preset_key === 'nova')?.id ?? agents[0]?.id ?? null
@@ -210,7 +211,7 @@ export async function updateCourseMetadata(db: Queryable, args: {
          ON pulse.project_id=course.project_id AND pulse.company_id=course.company_id
       WHERE course.id=$1 AND course.company_id=$2
         AND participant.id=pulse.agent_id AND participant.company_id=pulse.company_id`,
-      [args.courseId, args.companyId, `Pulse · ${args.patch.name}`.slice(0, 80)],
+      [args.courseId, args.companyId, '望远'],
     )
   }
 }

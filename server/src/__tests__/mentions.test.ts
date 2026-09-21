@@ -42,3 +42,12 @@ test('uses token boundaries for prefix-like member ids', () => {
     mentionAll: false,
   })
 })
+
+test('Chinese prose may immediately follow a unique longest roster name', () => {
+  const roster = [{ id: 'sage', name: '明理' }, { id: 'scout', name: '寻知' }, { id: 'long', name: '明理老师' }]
+  assert.deepEqual(parseMentions('@明理请解释，请@寻知查资料 @明理老师讲解 @sage讲解', roster), {
+    mentionedIds: ['sage', 'scout', 'long'], mentionAll: false,
+  })
+  assert.deepEqual(parseMentions('@明理请解释', [...roster, { id: 'custom', name: '明理' }]).mentionedIds, [])
+  assert.deepEqual(parseMentions('`@明理请解释` https://test/@寻知查资料 a@明理.cn', roster).mentionedIds, [])
+})

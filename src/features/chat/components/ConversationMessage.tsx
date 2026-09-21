@@ -1,15 +1,13 @@
 import {
-  ActionBarPrimitive,
   MessagePrimitive,
   type ReasoningMessagePartProps,
   type SourceMessagePartProps,
   useAui,
   useAuiState,
 } from '@assistant-ui/react'
-import { Copy01Icon, ReplyIcon, SmilePlusIcon } from '@hugeicons/core-free-icons'
+import { Copy01Icon, ReplyIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
 import { Avatar } from '@/components/Avatar'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { ProgressCard } from '@/components/assistant-ui/elements/progress-card'
@@ -27,6 +25,7 @@ import type { Participant } from '@/types'
 import { chatTransport, type LingxiMessageMetadata } from '../runtime'
 import { CHAT_TOOL_RENDERERS } from './ToolRenderers'
 import { HarnessDetails } from './HarnessDetails'
+import { copyMessageText, MessageActions } from './MessageActions'
 
 function ReasoningPart({ status }: ReasoningMessagePartProps) {
   return <ProgressCard title="处理进度" steps={[{
@@ -58,80 +57,6 @@ function QuotePart({ text, messageId }: { text: string; messageId: string }) {
 }
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '🙏', '🔥'] as const
-
-async function copyMessageText(text: string) {
-  try { await navigator.clipboard.writeText(text) }
-  catch { toast.error('复制失败，请重试') }
-}
-
-function MessageActions({
-  metadata,
-  getText,
-}: {
-  metadata: LingxiMessageMetadata
-  getText: () => string
-}) {
-  const aui = useAui()
-  const messageId = useAuiState((state) => state.message.id)
-  const [showReactions, setShowReactions] = useState(false)
-  return (
-    <ActionBarPrimitive.Root className={cn(
-      'absolute top-1/2 z-30 flex -translate-y-1/2 items-center gap-0.5 bg-transparent text-foreground opacity-0 invisible transition-opacity group-hover/message:visible group-hover/message:opacity-100',
-      metadata.isMine ? 'end-full me-2' : 'start-full ms-2',
-    )} role="toolbar" aria-label="消息操作" onMouseLeave={() => setShowReactions(false)}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-xs"
-        className="size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-        aria-label="回复"
-        onClick={(event) => {
-          aui.thread.composer().setQuote({ messageId, text: getText() })
-          event.currentTarget.blur()
-        }}
-      >
-        <HugeiconsIcon icon={ReplyIcon} strokeWidth={2} />
-      </Button>
-      <div className="relative">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          className="size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-          aria-label="添加表情"
-          aria-expanded={showReactions}
-          onClick={() => setShowReactions((open) => !open)}
-        >
-          <HugeiconsIcon icon={SmilePlusIcon} strokeWidth={2} />
-        </Button>
-        {showReactions && (
-          <div className="absolute bottom-full start-1/2 z-40 mb-2 flex -translate-x-1/2 items-center gap-0.5 rounded-[10px] border border-border bg-popover p-1 shadow-md" role="listbox" aria-label="选择消息表情">
-            {QUICK_REACTIONS.map((emoji) => (
-              <Button
-                key={emoji}
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                className="size-8 rounded-lg transition-transform hover:scale-125 hover:bg-accent"
-                role="option"
-                aria-label={`使用 ${emoji} 回应`}
-                onClick={() => {
-                  setShowReactions(false)
-                  void chatTransport.toggleReaction(metadata.conversationId, messageId, emoji)
-                }}
-              >
-                <TwEmoji emoji={emoji} size={18} />
-              </Button>
-            ))}
-          </div>
-        )}
-      </div>
-      <Button type="button" variant="ghost" size="icon-xs" className="size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground" aria-label="复制" onClick={(event) => { void copyMessageText(getText()); event.currentTarget.blur() }}>
-        <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />
-      </Button>
-    </ActionBarPrimitive.Root>
-  )
-}
 
 function MobileMessageActions({
   metadata,
@@ -261,7 +186,7 @@ function MessageTextPart() {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
   return <div className={cn('relative min-w-0 w-fit', isMobile ? 'max-w-full' : 'max-w-[85%]', metadata.isMine && 'ms-auto')}>
-    {!isMobile && <MessageActions metadata={metadata} getText={getText} />}
+    {!isMobile && <MessageActions isMine={metadata.isMine} getText={getText} />}
     <div
       ref={bodyRef}
       data-message-bubble={metadata.isMine ? 'user' : 'assistant'}

@@ -1,3 +1,4 @@
+import { LEARNING_PERSONA_KEYS } from './preset.js'
 import type { Queryable } from '../../db/queryable.js'
 
 export async function listLearningProjectSummaries(db: Queryable, companyId: string, userId: string) {
@@ -201,8 +202,8 @@ export async function syncStudyRoomMembers(db: Queryable, args: {
      UNION
      SELECT participant.id FROM participants participant
       WHERE participant.company_id=$2 AND participant.kind='agent'
-        AND participant.preset_key IN ('nova','sage','milo','trace') AND participant.departed_at IS NULL`,
-    [args.courseId, args.companyId],
+        AND participant.preset_key=ANY($3::text[]) AND participant.departed_at IS NULL`,
+    [args.courseId, args.companyId, LEARNING_PERSONA_KEYS],
   )
   const members = rows.map((row) => row.id)
   await db.query(

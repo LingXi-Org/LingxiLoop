@@ -8,6 +8,8 @@ import type { LingxiMessageMetadata } from '../runtime/model'
 import { chatTransport } from '../runtime/transport'
 import { harnessLabel } from '../runtime/harness'
 import { DeliveryCard, RunProgressCard } from './RunResultCards'
+import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
+import { knowledgeProgress } from '../runtime/task-progress'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const target = useMemo(() => ({ conversationId: metadata.conversationId, agentId: metadata.senderId, runId: metadata.runId!,
@@ -15,6 +17,7 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
   [metadata.conversationId,metadata.senderId,metadata.runId,metadata.threadRootId])
   const view = metadata.harness ?? createRunView(target.runId)
   const outcome = view.goalOutcome, envelope = view.message?.envelope
+  const retrieval = knowledgeProgress(target.runId, metadata.harnessTools ?? [], view.lifecycle, metadata.senderName)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const active = view.lifecycle === 'queued' || view.lifecycle === 'leased' || view.lifecycle === 'waiting'
@@ -28,6 +31,7 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
   }
 
   return <section aria-label="任务结果与操作" className="mt-2 grid w-full max-w-xl gap-2 text-xs text-muted-foreground empty:hidden">
+    {retrieval && <ProgressTracker {...retrieval} />}
     {needsAttention ? <RunProgressCard view={view} error={metadata.harnessError}>
       {metadata.harnessControl && view.delivery === 'failed' && <div className="mt-3 flex justify-end"><Button type="button" size="sm" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button></div>}
     </RunProgressCard> : !active && <p role="status">{harnessLabel(view)}</p>}

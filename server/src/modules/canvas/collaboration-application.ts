@@ -132,8 +132,8 @@ async function addCanvasComment(input: {
   return comment
 }
 
-async function listCanvasAvailableAgents(companyId: string): Promise<Array<{ id: string; name: string; role: string; status: string }>> {
-  const rows = await availableAgents(db, companyId)
+async function listCanvasAvailableAgents(companyId: string, conversationId: string): Promise<Array<{ id: string; name: string; role: string; status: string }>> {
+  const rows = await availableAgents(db, companyId, conversationId)
   return rows.map((row) => ({ id: row.id, name: row.name, role: row.role ?? 'Learning Agent', status: row.status ?? 'available' }))
 }
   return { addCanvasComment, listCanvasAvailableAgents, setCanvasStatus }
