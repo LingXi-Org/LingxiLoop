@@ -2,7 +2,7 @@
 name = "lingxiloop-production"
 description = "Declarative production resources"
 [resource_sync.config]
-repo = "lyyzka/LingxiLoop"
+repo = "LingXi-Org/LingxiLoop"
 branch = "main"
 git_provider = "accel.way2api.fun/github.com"
 git_account = "lyyzka"
@@ -13,7 +13,7 @@ name = "server-b-ingress"
 deploy = true
 [stack.config]
 server = "shanghai-b"
-repo = "lyyzka/LingxiLoop"
+repo = "LingXi-Org/LingxiLoop"
 branch = "main"
 git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/server-b-ingress"
@@ -41,7 +41,7 @@ deploy = true
 after = ["server-b-ingress"]
 [stack.config]
 server = "shanghai-a"
-repo = "lyyzka/LingxiLoop"
+repo = "LingXi-Org/LingxiLoop"
 branch = "main"
 git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/lingxiloop-core-state"
@@ -59,7 +59,7 @@ deploy = true
 after = ["lingxiloop-core-state"]
 [stack.config]
 server = "shanghai-b"
-repo = "lyyzka/LingxiLoop"
+repo = "LingXi-Org/LingxiLoop"
 branch = "main"
 git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/lingxiloop-knowledge-agent"
@@ -93,7 +93,7 @@ deploy = true
 after = ["lingxiloop-knowledge-agent", "lingxilit"]
 [stack.config]
 server = "shanghai-a"
-repo = "lyyzka/LingxiLoop"
+repo = "LingXi-Org/LingxiLoop"
 branch = "main"
 git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/lingxiloop-app-a"
@@ -138,7 +138,7 @@ deploy = true
 after = ["lingxiloop-app-a"]
 [stack.config]
 server = "shanghai-b"
-repo = "lyyzka/LingxiLoop"
+repo = "LingXi-Org/LingxiLoop"
 branch = "main"
 git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/lingxiloop-app-b"
@@ -183,7 +183,7 @@ deploy = true
 after = ["lingxiloop-app-b"]
 [stack.config]
 server = "shanghai-b"
-repo = "lyyzka/LingxiLoop"
+repo = "LingXi-Org/LingxiLoop"
 branch = "main"
 git_provider = "accel.way2api.fun/github.com"
 run_directory = "deploy/komodo/uptime"
