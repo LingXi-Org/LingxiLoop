@@ -34,6 +34,11 @@ describe('control-plane trust boundaries', () => {
         })
         expect((await SELF.fetch(`https://admin.example.com/api/control/${path}`, { headers })).status).toBe(200)
       }
+      fetchMock.get('https://origin.example.com').intercept({ path: '/api/im/companies/company/channels/channel/agents/agent/runs/run/stream', method: 'GET' })
+        .reply(200, 'event: preview\ndata: {}\n\n', { headers: { 'content-type': 'text/event-stream; charset=utf-8' } })
+      const stream = await SELF.fetch('https://admin.example.com/api/im/companies/company/channels/channel/agents/agent/runs/run/stream', { headers })
+      expect({ encoding: stream.headers.get('content-encoding'), body: await stream.text() })
+        .toEqual({ encoding: 'identity', body: 'event: preview\ndata: {}\n\n' })
       expect((await SELF.fetch('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
       expect((await SELF.fetch('https://admin.example.com/api/admin-company/resources/users', { headers })).status).toBe(403)
       await env.DB.prepare(`UPDATE app_user_links SET suspended_at=1 WHERE auth_user_id='company-admin'`).run()

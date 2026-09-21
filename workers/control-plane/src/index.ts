@@ -100,7 +100,11 @@ async function originRequest(env: Bindings, path: string, init: RequestInit, ide
   const payload = base64url(encoder.encode(JSON.stringify(assertion)))
   const headers = new Headers(init.headers)
   headers.set('x-lingxiloop-gateway', `${payload}.${await hmac(env.GATEWAY_HMAC_SECRET, payload)}`)
-  return fetch(url, { ...init, headers })
+  const response = await fetch(url, { ...init, headers })
+  if (!response.headers.get('content-type')?.includes('text/event-stream')) return response
+  const streamedHeaders = new Headers(response.headers)
+  streamedHeaders.set('content-encoding', 'identity')
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers: streamedHeaders })
 }
 
 async function loadAuthSettings(c: AppContext): Promise<AuthSettings> {
