@@ -25,6 +25,65 @@ interface BindingRow {
   preset_key: string | null
 }
 
+export async function listEligibleConversationParticipants(
+  db: Queryable,
+  args: { companyId: string; projectId: string; ids: string[] },
+): Promise<ParticipantRow[]> {
+  const { rows } = await db.query<ParticipantRow>(
+    `SELECT participant.id,participant.kind,participant.name,participant.departed_at
+       FROM participants participant
+      WHERE participant.company_id=$1 AND participant.id=ANY($3::text[])
+        AND participant.departed_at IS NULL
+        AND NOT EXISTS (SELECT 1 FROM learning_project_teacher_agents managed
+          WHERE managed.company_id=$1 AND managed.agent_id=participant.id)
+        AND (participant.kind='agent' OR EXISTS (
+          SELECT 1 FROM project_memberships member
+          JOIN company_memberships company_member
+            ON company_member.company_id=member.company_id AND company_member.user_id=member.user_id
+           AND company_member.status='ACTIVE' AND company_member.ended_at IS NULL
+           AND company_member.period_id=member.company_period_id
+          WHERE member.company_id=$1 AND member.project_id=$2 AND member.user_id=participant.id
+            AND member.status='ACTIVE'))`,
+    [args.companyId, args.projectId, args.ids],
+  )
+  return rows
+}
+
+export async function findDirectConversation(
+  db: Queryable,
+  args: { companyId: string; projectId: string; members: string[] },
+): Promise<ConversationRow | null> {
+  // Both participants use the same lock, including when they start a chat at once.
+  await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [
+    JSON.stringify(['direct', args.companyId, args.projectId, [...args.members].sort()]),
+  ])
+  const { rows } = await db.query<ConversationRow>(
+    `SELECT conversation.id,conversation.kind,conversation.title,conversation.topic,
+            conversation.members,conversation.leader_id,conversation.pinned,conversation.project_id
+       FROM conversations conversation
+      WHERE conversation.company_id=$1 AND conversation.project_id=$2 AND conversation.kind='direct'
+        AND conversation.members @> $3::jsonb AND jsonb_array_length(conversation.members)=2
+        AND NOT EXISTS (SELECT 1 FROM context_threads context
+          WHERE context.company_id=$1 AND context.channel_id=conversation.id)
+      ORDER BY conversation.created_at,conversation.id LIMIT 1`,
+    [args.companyId, args.projectId, JSON.stringify(args.members)],
+  )
+  return rows[0] ?? null
+}
+
+export async function insertConversation(
+  db: Queryable,
+  args: { companyId: string; conversation: ConversationRow },
+): Promise<void> {
+  const conversation = args.conversation
+  await db.query(
+    `INSERT INTO conversations (id,company_id,project_id,kind,title,members,leader_id,pinned)
+     VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,FALSE)`,
+    [conversation.id, args.companyId, conversation.project_id, conversation.kind,
+      conversation.title, JSON.stringify(conversation.members), conversation.leader_id],
+  )
+}
+
 export async function listParticipants(
   db: Queryable,
   companyId: string,

@@ -33,6 +33,7 @@ export interface ApiParticipant {
   model?: string | null
   email?: string | null
   departedAt?: string | null
+  managed?: boolean
 }
 
 export interface AgentInput {

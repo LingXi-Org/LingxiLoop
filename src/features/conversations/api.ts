@@ -3,6 +3,10 @@ import { http } from '@/api/core/http'
 import type { ApiConversation, ConversationSearchResults } from './contracts'
 
 export const conversationsApi = {
+  create: (projectId: string, input: { participantIds: string[]; title?: string }) =>
+    http<{ id: string; created: boolean }>(`/projects/${encodeURIComponent(projectId)}/conversations`, {
+      method: 'POST', body: JSON.stringify(input),
+    }),
   search: (query: string, signal?: AbortSignal) =>
     http<ConversationSearchResults>(`/search?q=${encodeURIComponent(query)}`, { signal }),
   getConversations: () => http<ApiConversation[]>('/im/channels'),

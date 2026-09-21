@@ -25,6 +25,7 @@ import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import type { Conversation, Participant } from '@/types'
 import type { ConversationSearchResults } from '../contracts'
+import { NewConversationDialog } from './NewConversationDialog'
 
 interface ConversationMenuItem {
   label: string
@@ -61,8 +62,8 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
         onSelect()
       }}
       className={cn(
-        'group cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-xl border-0 text-left shadow-none',
-        mobile ? 'h-17 min-h-17 max-h-17 px-3 py-2' : 'h-15 min-h-15 max-h-15 px-2 py-1.5',
+        'im-navigation-row group cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-xl border-0 text-left shadow-none',
+        mobile ? 'px-3 py-2' : 'px-2 py-1.5',
         selected
           ? 'bg-sidebar-accent text-sidebar-accent-foreground'
           : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
@@ -153,6 +154,8 @@ export function SidebarUserFooter() {
 
 export function ConversationsPane({ onConversationSelected }: { onConversationSelected?: (conversationId: string) => void } = {}) {
   const isMobile = useIsMobile()
+  const companyId = useAuth((state) => state.activeCompanyId)
+  const projectId = useWorkspace((state) => state.selectedId)
   const workspaceTitle = useWorkspace((state) => state.list.find((workspace) => workspace.id === state.selectedId)?.name)
   const list = useConversations((s) => s.list)
   const loaded = useConversations((s) => s.loaded)
@@ -275,16 +278,21 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
 
   return (
     <aside data-slot="sidebar" className="im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
-      <SidebarHeader className={cn('desktop-window-toolbar omb-drag shrink-0', isMobile ? 'gap-2 px-3 pb-2 pt-3' : 'h-12 p-2')}>
-        {isMobile && <h1 className="truncate px-1 font-heading text-xl font-medium text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
-        <InputGroup className={cn('omb-no-drag rounded-xl border-transparent bg-input/50 shadow-none', isMobile ? 'h-10' : 'h-8')}>
+      <SidebarHeader className="desktop-window-toolbar omb-drag shrink-0 gap-0 p-0">
+        {isMobile && <h1 className="h-12 shrink-0 truncate px-4 font-heading text-xl font-medium leading-[48px] text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
+        <div className={cn('im-navigation-row flex min-w-0 items-center gap-2', isMobile ? 'px-3' : 'px-2')}>
+        <InputGroup className={cn('omb-no-drag min-w-0 flex-1 rounded-xl border-transparent bg-input/50 shadow-none', isMobile ? 'h-10' : 'h-8')}>
           <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className={cn('px-2 text-sm', isMobile ? 'h-10' : 'h-8')} />
           <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4 opacity-50" /></InputGroupAddon>
           {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" className={isMobile ? 'size-8' : undefined} onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
         </InputGroup>
+        {companyId && projectId && <NewConversationDialog key={`${companyId}:${projectId}`} companyId={companyId} projectId={projectId} isMobile={isMobile} onCreated={(id) => {
+          setQuery(''); select(id); onConversationSelected?.(id)
+        }} />}
+        </div>
       </SidebarHeader>
 
-      <SidebarContent className="gap-0 px-2 pb-2 pt-0.5">
+      <SidebarContent className="gap-0 px-2 pb-2 pt-0">
         {query.trim() ? (
           <div className="h-full overflow-y-auto">
             {searching && <ResourceSkeleton variant="list" count={4} compact label="正在搜索会话" />}

@@ -58,7 +58,7 @@ function WorkspaceRailItem({ workspace, active, pending, onSelect }: {
           disabled={pending}
           aria-label={`切换到${workspace.name}`}
           aria-current={active ? 'page' : undefined}
-          className="group relative h-15 min-h-15 max-h-15 w-full shrink-0 rounded-none hover:bg-transparent"
+          className="im-navigation-row group relative w-full rounded-none hover:bg-transparent"
         >
           <span
             aria-hidden
@@ -186,8 +186,9 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
     <TooltipProvider delayDuration={120}>
       <nav
         aria-label="工作区"
-        className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-[var(--workspace-chrome-surface)] pb-2 pt-[26px] text-foreground"
+        className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-[var(--workspace-chrome-surface)] pb-2 pt-[var(--im-navigation-top)] text-foreground"
       >
+        <div className="im-navigation-row flex w-full items-center justify-center">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -201,7 +202,7 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
                 onOpenDashboard()
               }}
               className={cn(
-                'mb-[6px] size-9 shrink-0 translate-x-px overflow-hidden rounded-lg bg-transparent p-0 hover:bg-transparent',
+                'size-9 shrink-0 translate-x-px overflow-hidden rounded-lg bg-transparent p-0 hover:bg-transparent',
                 dashboardActive && 'ring-2 ring-sidebar-primary/40 ring-offset-2 ring-offset-accent',
               )}
             >
@@ -210,13 +211,14 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={10}>学习看板</TooltipContent>
         </Tooltip>
-        <div className="server-rail-scroll flex min-h-0 w-full translate-x-px flex-1 flex-col items-center overflow-y-auto overflow-x-hidden pb-3 pt-0.5">
+        </div>
+        <div className="server-rail-scroll flex min-h-0 w-full translate-x-px flex-1 flex-col items-center overflow-y-auto overflow-x-hidden pb-3">
           <WorkspaceRailGroup workspaces={visible} dashboardActive={dashboardActive} activeId={activeId} pendingId={pendingId} onSelect={(id) => void handleSelect(id)} />
           {canCreate && <Dialog open={createOpen} onOpenChange={(open) => {
             setCreateOpen(open)
             if (!open) setCreateError(null)
           }}>
-            <div className="flex h-15 min-h-15 max-h-15 w-full shrink-0 items-center justify-center">
+            <div className="im-navigation-row flex w-full items-center justify-center">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DialogTrigger asChild>

@@ -275,6 +275,8 @@ body {
 
 /* Product aliases inherit the canonical preset instead of redefining a local theme. */
 .desktop-openmaus {
+  --im-navigation-row-height: 60px;
+  --im-navigation-top: 20px;
   --bubble-agent: var(--muted);
   --workspace-chrome-surface: color-mix(in oklch, var(--background) 96%, var(--foreground));
   --unread: var(--primary);
@@ -294,6 +296,18 @@ body {
 
 .desktop-openmaus .chat-surface {
   background: var(--background);
+}
+
+.desktop-openmaus[data-mobile='true'] {
+  --im-navigation-row-height: 68px;
+  --im-navigation-top: 48px;
+}
+
+.desktop-openmaus .im-navigation-row {
+  height: var(--im-navigation-row-height);
+  min-height: var(--im-navigation-row-height);
+  max-height: var(--im-navigation-row-height);
+  flex-shrink: 0;
 }
 
 .desktop-openmaus .im-conversations-sidebar {
@@ -865,12 +879,8 @@ body {
   padding-right: max(20px, calc(100vw - env(titlebar-area-x, 100vw) - env(titlebar-area-width, 0px)));
 }
 
-/* Windows uses the native caption buttons supplied by titleBarOverlay. Keep
-   the shared Telegram-sized header instead of compressing its search field. */
+/* Keep the Windows search toolbar on the shared navigation row grid. */
 .desktop-openmaus[data-electron='true'][data-platform^='win'] .desktop-window-toolbar {
-  height: 64px;
-  min-height: 64px;
-  padding: 8px 13px;
   background: var(--panel);
 }
 .desktop-openmaus[data-electron='true'][data-platform^='win'] .desktop-chat-toolbar {

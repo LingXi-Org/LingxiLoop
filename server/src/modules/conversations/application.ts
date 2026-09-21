@@ -1,7 +1,9 @@
+import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { ImChannelProfile } from '../../im/types.js'
 import type {
   ConversationScope,
+  CreateConversationInput,
   ConversationUpdatedEvent,
   SearchBuckets,
   TypingEvent,
@@ -9,10 +11,13 @@ import type {
 import {
   findActiveAgentCompanyId,
   findConversation,
+  findDirectConversation,
   findBindingForUpdate,
   findConversationForUpdate,
   findAgentConversationContext,
   hasManagedPulse,
+  insertConversation,
+  listEligibleConversationParticipants,
   listActiveConversationMutes,
   listParticipants,
   participantAllowedInProject,
@@ -46,6 +51,7 @@ export class ConversationApplicationError extends Error {
 export interface ConversationInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
   syncChannel(profile: ImChannelProfile): Promise<void>
+  openLearningThread(scope: ConversationScope, agentId: string): Promise<{ channelId: string; created: boolean }>
   publishUpdated(event: ConversationUpdatedEvent): Promise<void>
   publishTyping(event: TypingEvent): Promise<void>
   isTeacherRoom(companyId: string, conversationId: string): Promise<boolean>
@@ -91,6 +97,49 @@ export class ConversationsApplication {
     private readonly db: Queryable,
     private readonly infrastructure: ConversationInfrastructure,
   ) {}
+
+  async create(scope: ConversationScope, input: CreateConversationInput): Promise<{ id: string; created: boolean }> {
+    if (input.participantIds.includes(scope.userId)) {
+      throw new ConversationApplicationError('invalid_members', 'participants must not include yourself')
+    }
+    const members = [scope.userId, ...input.participantIds]
+    const result = await this.infrastructure.transaction(async (db) => {
+      const participants = await listEligibleConversationParticipants(db, { ...scope, ids: members })
+      if (participants.length !== members.length) {
+        throw new ConversationApplicationError('invalid_members', 'participants must be active in this workspace')
+      }
+      const actor = participants.find((participant) => participant.id === scope.userId)
+      if (actor?.kind !== 'human') throw new ConversationApplicationError('invalid_members', 'active user required')
+      const other = participants.find((participant) => participant.id === input.participantIds[0])!
+      if (input.participantIds.length === 1 && other.kind === 'agent') return { kind: 'learning', agentId: other.id } as const
+
+      const existing = input.participantIds.length === 1
+        ? await findDirectConversation(db, { ...scope, members }) : null
+      const conversation: ConversationRow = existing ?? {
+        id: `conversation-${randomUUID()}`, kind: input.participantIds.length === 1 ? 'direct' : 'group',
+        title: input.participantIds.length === 1 ? other.name : input.title || members
+          .map((id) => participants.find((participant) => participant.id === id)!.name).join('、').slice(0, 80),
+        topic: null, members, leader_id: null, pinned: false, project_id: scope.projectId,
+      }
+      if (!existing) await insertConversation(db, { companyId: scope.companyId, conversation })
+      const binding = existing ? await findBindingForUpdate(db, scope.companyId, conversation.id) : null
+      const profile = { ...profileFor(conversation), ...binding?.profile } as ImChannelProfile
+      // Older ordinary direct conversations may not have an IM binding yet.
+      if (!binding) {
+        await upsertBinding(db, scope.companyId, profile, conversation.leader_id, null)
+      }
+      return { kind: 'conversation', id: conversation.id, created: !existing, profile } as const
+    })
+    if (result.kind === 'learning') {
+      const thread = await this.infrastructure.openLearningThread(scope, result.agentId)
+      return { id: thread.channelId, created: thread.created }
+    }
+    // The committed binding is retried by the existing IM reconciliation worker.
+    await this.infrastructure.syncChannel(result.profile).catch(() => {
+      console.warn('[conversations] committed channel awaits reconciliation')
+    })
+    return { id: result.id, created: result.created }
+  }
 
   async authorizeDocumentShare(
     scope: ConversationScope,

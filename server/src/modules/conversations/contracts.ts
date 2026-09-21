@@ -2,6 +2,13 @@ import { z } from 'zod'
 
 const participantIdSchema = z.string().trim().min(1).max(200)
 
+export const createConversationRequestSchema = z.object({
+  participantIds: z.array(participantIdSchema).min(1).max(49)
+    .refine((ids) => new Set(ids).size === ids.length, 'participants must be unique'),
+  title: z.string().trim().max(80).optional(),
+}).strict()
+export type CreateConversationInput = z.infer<typeof createConversationRequestSchema>
+
 export const leaderRequestSchema = z.object({ leaderId: participantIdSchema }).strict()
 export const titleRequestSchema = z.object({ title: z.string().trim().min(1).max(80) }).strict()
 export const topicRequestSchema = z.object({

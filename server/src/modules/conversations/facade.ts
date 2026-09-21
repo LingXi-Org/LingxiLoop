@@ -5,12 +5,14 @@ import { withTransaction } from '../../db/transaction.js'
 import { syncProductChannel } from '../../agent-runtime/conversations.js'
 import { searchMemberMessages } from '../../im/public.js'
 import { isTeacherRoom } from '../learning/public.js'
+import { openLearningContextThread } from '../context-threads/public.js'
 import { CH_CONVO_UPDATED, CH_TYPING, publish } from '../../redis.js'
 import { ConversationsApplication, type ConversationInfrastructure } from './application.js'
 
 export const conversationInfrastructure: ConversationInfrastructure = {
   transaction: (work) => withTransaction(pool, work),
   syncChannel: syncProductChannel,
+  openLearningThread: (scope, agentId) => openLearningContextThread({ ...scope, agentId }),
   publishUpdated: (event) => publish(CH_CONVO_UPDATED, event),
   publishTyping: (event) => publish(CH_TYPING, event),
   isTeacherRoom: (companyId, conversationId) => isTeacherRoom(conversationId, companyId),

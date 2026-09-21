@@ -75,6 +75,7 @@ function fromApi(p: ApiParticipant): Participant {
     systemPrompt: p.systemPrompt ?? undefined,
     email: p.email ?? null,
     departedAt: p.departedAt ?? null,
+    managed: p.managed ?? false,
   }
 }
 

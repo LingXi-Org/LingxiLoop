@@ -4,12 +4,14 @@ import { requireConversationMember } from '../../http/authorization.js'
 import { HttpError } from '../../http/errors.js'
 import {
   requireCompanyArtifactContext,
+  requireWorkspace,
 } from '../../http/request-context.js'
 import type { PermissionAction } from '../access/public.js'
 import { permissionService } from '../access/public.js'
 import { ConversationApplicationError } from './application.js'
 import {
   addMemberRequestSchema,
+  createConversationRequestSchema,
   leaderRequestSchema,
   muteRequestSchema,
   pinRequestSchema,
@@ -48,6 +50,17 @@ function mapApplicationError(error: unknown): never {
         : 400
   throw new HttpError(status, error.message)
 }
+
+conversationsRouter.post('/projects/:projectId/conversations', safe(async (req, res) => {
+  const scope = await requireWorkspace(req, String(req.params.projectId), 'conversation:write')
+  const input = parse(createConversationRequestSchema.safeParse(req.body ?? {}))
+  try {
+    const result = await conversationsApplication.create(scope, input)
+    res.status(result.created ? 201 : 200).json(result)
+  } catch (error) {
+    mapApplicationError(error)
+  }
+}))
 
 conversationsRouter.post('/conversations/:id/leader', safe(async (req, res) => {
   const conversationId = String(req.params.id)
