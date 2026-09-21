@@ -9,6 +9,11 @@ stored in Komodo after being supplied from Sigillo; no `.env` file is committed.
 The release workflow pins immutable images, syncs this resource file, and runs
 the ordered `lingxiloop-production-rollout` procedure.
 
+Before applying `0027_learning_collaboration`, drain affected interactive,
+handoff, Mission and Canvas runs before changing the default rooms' members.
+Then migrate, restart Web/API and workers, and let the existing IM channel
+reconciliation restore membership. Do not change a running task's frozen audience.
+
 Browser uploads also require the R2 bucket CORS policy in `../r2/cors.json`.
 When provisioning or replacing the production bucket, apply it to the runtime
 `R2_BUCKET` using `sigillo run -p <project-id> -c prod -- node
