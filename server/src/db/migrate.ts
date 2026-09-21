@@ -226,11 +226,8 @@ export async function migrateDatabase(
     }
     if (cutover) await client.query('COMMIT')
     if (installsRuntime) {
-      const current = (await client.query<{ version: number }>('SELECT version FROM lingxios.schema_version WHERE singleton')).rows[0]?.version
-      if (current !== releaseVersions.schema) {
-        await client.query('BEGIN')
-        try { await applyRuntimeUpgrade(client, releaseVersions.runtime); await client.query('COMMIT') } catch (error) { await client.query('ROLLBACK'); throw error }
-      }
+      await client.query('BEGIN')
+      try { await applyRuntimeUpgrade(client, releaseVersions.runtime); await client.query('COMMIT') } catch (error) { await client.query('ROLLBACK'); throw error }
       await assertRuntimeCurrent(client)
     }
     await client.query('BEGIN')
