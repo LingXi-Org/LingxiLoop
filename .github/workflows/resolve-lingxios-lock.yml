@@ -1,0 +1,24 @@
+name: resolve LingxiOS lock
+on:
+  push:
+    branches: [codex/resolve-lingxios-3-3-4]
+permissions:
+  contents: read
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+      - run: npm install @lyyzka/lingxios@3.3.4 --package-lock-only --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingxios-3-3-4-lock
+          path: |
+            package.json
+            package-lock.json
