@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const testsByScope = {
@@ -38,7 +39,6 @@ const testsByScope = {
     'src/features/settings/settingsDialog.test.ts',
     'src/features/learning/courseAvatar.test.ts',
     'src/features/learning/dashboard/learningVineModel.test.ts',
-    'src/lib/userVisibleChinese.test.ts',
   ],
 }
 
@@ -47,7 +47,14 @@ if (!Object.hasOwn(testsByScope, scope)) {
   console.error(`usage: node scripts/run-tests.mjs <${Object.keys(testsByScope).join('|')}>`)
   process.exit(2)
 }
-const testFiles = testsByScope[scope].map((file) => resolve(file))
+const changedFiles = JSON.parse(process.env.CI_TEST_FILES || '[]')
+const prefix = { web: 'src/', admin: 'admin/', server: 'server/src/' }[scope]
+if (!Array.isArray(changedFiles) || changedFiles.some((file) =>
+  typeof file !== 'string' || !file.startsWith(prefix) || file.includes('..') || file.includes('\\') ||
+  !/\.test\.tsx?$/.test(file) || file.startsWith('server/src/__integration__/'),
+)) throw new Error('CI_TEST_FILES must contain test paths belonging to the selected scope')
+// Deleted tests appear in the diff too; changed tests outside the smoke list still run.
+const testFiles = [...new Set([...testsByScope[scope], ...changedFiles.filter(existsSync)])].map((file) => resolve(file))
 
 const child = spawn(
   process.execPath,

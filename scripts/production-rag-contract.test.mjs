@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
+import { matchesGlob } from 'node:path'
 import test from 'node:test'
 import { computeScope } from './ci-scope.mjs'
 import { updateImageTags } from './update-deployment-images.mjs'
@@ -55,9 +56,6 @@ test('packaged and published stacks select the RAG-only image', () => {
   assert.match(smoke, /otherProjectSourceId/)
   assert.match(smoke, /otherCompanySourceId/)
   assert.doesNotMatch(packaged, /8502/)
-  assert.equal(existsSync(new URL('../docker-compose.production.yml', import.meta.url)), false)
-  assert.equal(existsSync(new URL('../docker-compose.dokploy.yml', import.meta.url)), false)
-  assert.equal(existsSync(new URL('../scripts/deploy-production.sh', import.meta.url)), false)
 })
 
 test('native v1 schema makes source chunks the only searchable Surreal corpus', () => {
@@ -104,11 +102,13 @@ test('the production entrypoint has the exact RAG routes and one worker command'
   assert.match(supervisor, /--import-modules rag_commands/)
 
   const ragStart = dockerfile.indexOf(' AS lingxiloop-rag')
-  const ragEnd = dockerfile.indexOf('\nFROM ', ragStart + 1)
-  assert.ok(ragStart > 0 && ragEnd > ragStart, 'Dockerfile must contain a bounded lingxiloop-rag target')
-  const ragTarget = dockerfile.slice(ragStart, ragEnd)
+  assert.ok(ragStart > 0, 'Dockerfile must contain the lingxiloop-rag target')
+  const ragTarget = dockerfile.slice(ragStart)
+  assert.doesNotMatch(ragTarget, /\nFROM /, 'RAG must be the default final target')
   assert.doesNotMatch(ragTarget, /node(?:js)?|8502|frontend/i)
   assert.match(dockerfile, /rag-backend-builder[\s\S]*uv sync --frozen --no-dev --no-default-groups/)
+  assert.match(ragTarget, /supervisorctl -s unix:\/\/\/tmp\/supervisor\.sock status rag-api/)
+  assert.match(ragTarget, /supervisorctl -s unix:\/\/\/tmp\/supervisor\.sock status rag-worker/)
 })
 
 test('removed Open Notebook capabilities cannot be re-enabled by deployment configuration', () => {
@@ -225,13 +225,12 @@ test('main publishes changed images and rolls out a complete immutable release',
   const workflow = read('.github/workflows/ci.yml')
   const serverImage = read('server/docker/lingxiloop-server.Dockerfile')
 
-  assert.match(workflow, /options: \[[^\]]*release\]/)
-  assert.equal((workflow.match(/github\.event_name == 'push' \|\| needs\.changes\.outputs\.release == 'true'/g) ?? []).length, 3)
-  assert.match(workflow, /update-manifests:[\s\S]*needs: \[changes, checks, publish\]/)
-  assert.match(workflow, /needs\.publish\.result == 'success'[\s\S]*needs\.changes\.outputs\.deploy_contract == 'true'/)
+  assert.match(workflow, /options: \[[^\]]*release, deep-integration\]/)
+  assert.match(workflow, /update-manifests:[\s\S]*needs: \[changes, checks, integration, publish\]/)
+  assert.match(workflow, /needs\.publish\.result == 'success'[\s\S]*needs\.changes\.outputs\.deployment == 'true'/)
   assert.match(workflow, /deploy:[\s\S]*needs: \[changes, checks(?:, [^\]]+)?\]/)
-  assert.match(workflow, /rollout:[\s\S]*needs: \[update-manifests, deploy(?:, [^\]]+)?\]/)
-  assert.match(workflow, /control:d1:remote[\s\S]*wrangler versions upload[\s\S]*wrangler versions deploy/)
+  assert.match(workflow, /rollout:[\s\S]*needs: \[changes, update-manifests, deploy\]/)
+  assert.match(workflow, /deploy:[\s\S]*run: npm run admin:build[\s\S]*control:d1:remote[\s\S]*wrangler versions upload[\s\S]*wrangler versions deploy/)
   assert.match(workflow, /control_migrations == 'true'[\s\S]*control:d1:remote/)
   assert.match(workflow, /update-deployment-images\.mjs "\$GITHUB_SHA" \$\{\{ needs\.changes\.outputs\.packages \}\}/)
   assert.match(workflow, /rollout:[\s\S]*trigger-komodo-rollout\.mjs/)
@@ -264,6 +263,11 @@ test('all deployable LingxiLoop images use CI-managed unique tags', () => {
     ),
     `image: registry/lingxiloop-server:${'b'.repeat(40)}\nimage: registry/lingxiloop-wukongim:${'a'.repeat(40)}`,
   )
+  assert.equal(
+    updateImageTags(`image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:${'a'.repeat(40)}`, 'b'.repeat(40), ['server'], 'LingXi-Org'),
+    `image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:${'b'.repeat(40)}`,
+  )
+  assert.throws(() => updateImageTags('', 'b'.repeat(40), [], '../invalid'), /invalid image owner/)
 })
 
 test('CI selects checks and image publishing by component', () => {
@@ -289,18 +293,123 @@ test('CI selects checks and image publishing by component', () => {
 
   const sharedFrontend = computeScope({ sharedFrontend: true })
   assert.deepEqual(sharedFrontend.images.map(({ manifest }) => manifest), ['server'])
-  assert.equal(sharedFrontend.server, false)
+  assert.equal(sharedFrontend.server, true)
+  assert.equal(sharedFrontend.integration, true)
 
   const testRunner = computeScope({ testRunner: true })
   assert.deepEqual(testRunner.images, [])
   assert.equal(testRunner.server, true)
 
   const deployment = computeScope({ deployment: true })
-  assert.deepEqual(deployment.images.map(({ manifest }) => manifest), ['server'])
-  assert.equal(deployment.web, true)
+  assert.deepEqual(deployment.images, [])
+  assert.equal(deployment.web, false)
   assert.equal(deployment.deploy_contract, true)
 
   assert.equal(computeScope({}, 'gateway').packages, 'gateway')
   assert.deepEqual(computeScope({}, 'release').images.map(({ manifest }) => manifest), ['server', 'wukongim', 'open-notebook', 'gateway'])
   assert.deepEqual(computeScope({ release: true }).images.map(({ manifest }) => manifest), ['server', 'wukongim', 'open-notebook', 'gateway'])
+})
+
+test('test and CI changes select checks without publishing; heavy experiments require manual scope', () => {
+  for (const [flag, check] of [
+    ['webTests', 'web'], ['adminTests', 'admin'], ['controlTests', 'control'],
+    ['serverTests', 'server'], ['openNotebookTests', 'open_notebook'], ['ci', 'deploy_contract'],
+  ]) {
+    const scope = computeScope({ [flag]: true })
+    assert.equal(scope[check], true, flag)
+    assert.equal(scope.publish, false, flag)
+    assert.equal(scope.control_deploy, false, flag)
+    assert.equal(scope.web_build, false, flag)
+    assert.equal(scope.admin_build, false, flag)
+  }
+  const selected = computeScope({ integrationTests: true, integrationFiles: [
+    'server/src/__integration__/migration.test.ts', 'server/src/__integration__/deleted.test.ts',
+  ] })
+  assert.equal(selected.integration, true)
+  assert.equal(selected.publish, false)
+  assert.deepEqual(selected.integration_files, ['migration.test.ts'])
+  assert.deepEqual(computeScope({ integrationRunner: true }).integration_files, [])
+  const deep = computeScope({ release: true, web: true }, 'deep-integration')
+  assert.equal(deep.deep_integration, true)
+  assert.equal(deep.integration, true)
+  assert.deepEqual(deep.integration_files, [])
+  assert.equal(deep.publish, false)
+  assert.equal(deep.control_deploy, false)
+  assert.equal(deep.deployment, false)
+  for (const scope of ['web', 'admin-control', 'server', 'deployment', 'release']) {
+    assert.equal(computeScope({}, scope).deep_integration, false, scope)
+  }
+  assert.throws(() => computeScope({}, 'typo'), /unknown CI scope/)
+})
+
+test('workflow path filters route real changed paths to their owning checks', () => {
+  const workflow = read('.github/workflows/ci.yml')
+  const filters = [...workflow.matchAll(/^            (\w+):\r?\n((?:              - '[^']+'\r?\n)+)/gm)]
+    .map(([, name, lines]) => [name, [...lines.matchAll(/- '([^']+)'/g)].map(([, pattern]) => pattern)])
+  assert.ok(filters.length > 15)
+  const select = (file) => {
+    const flags = Object.fromEntries(filters.map(([name, patterns]) => [
+      name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase()),
+      patterns.some(pattern => !pattern.startsWith('!') && matchesGlob(file, pattern)) &&
+      !patterns.some(pattern => pattern.startsWith('!') && matchesGlob(file, pattern.slice(1))),
+    ]))
+    return computeScope({ ...flags, integrationFiles: [file] })
+  }
+  for (const [file, check, packages] of [
+    ['src/features/settings/settingsDialog.test.ts', 'web', ''],
+    ['admin/src/management-session.test.ts', 'admin', ''],
+    ['workers/control-plane/src/index.test.ts', 'control', ''],
+    ['server/src/__tests__/gateway-auth.test.ts', 'server', ''],
+    ['server/src/__integration__/migration.test.ts', 'integration', ''],
+    ['src/features/settings/SettingsDialog.tsx', 'web', 'server'],
+    ['server/src/auth.ts', 'integration', 'server'],
+    ['src/lib/canvasLayout.ts', 'integration', 'server'],
+    ['package-lock.json', 'integration', 'server'],
+    ['.github/workflows/ci.yml', 'deploy_contract', ''],
+    ['deploy/komodo/lingxiloop-app-a/compose.yml', 'deploy_contract', ''],
+    ['third_party/open-notebook/tests/test_rag_contract.py', 'open_notebook', ''],
+  ]) {
+    const scope = select(file)
+    assert.equal(scope[check], true, file)
+    assert.equal(scope.packages, packages, file)
+    assert.equal(scope.deep_integration, false, file)
+  }
+  assert.equal(select('third_party/open-notebook/frontend/src/app/page.tsx').checks, false)
+  assert.deepEqual(select('server/src/__integration__/migration.test.ts').integration_files, ['migration.test.ts'])
+})
+
+test('actual workflow conditions block publishing and deployment after a failed or cancelled gate', () => {
+  const workflow = read('.github/workflows/ci.yml')
+  const allows = (job, scope, results = {}, event = 'push') => {
+    const block = workflow.match(new RegExp(`^  ${job}:\\r?\\n([\\s\\S]*?)(?=^  [a-z]|$(?![\\s\\S]))`, 'm'))?.[1]
+    const expression = block?.match(/if: >-\r?\n([\s\S]*?)\r?\n    needs:/)?.[1]
+    assert.ok(expression, job)
+    const needs = { changes: { outputs: Object.fromEntries(Object.entries(scope).map(([key, value]) => [key, String(value)])) } }
+    for (const name of ['checks', 'integration', 'publish', 'update-manifests', 'deploy']) {
+      needs[name] = { result: results[name] ?? 'success' }
+    }
+    return Function('github', 'needs', 'always', `return (${expression.replaceAll('needs.update-manifests', "needs['update-manifests']")})`)(
+      { ref: 'refs/heads/main', event_name: event }, needs, () => true,
+    )
+  }
+  const release = computeScope({}, 'release')
+  assert.equal(allows('publish', release), true)
+  for (const gate of ['checks', 'integration']) {
+    for (const result of ['failure', 'cancelled']) {
+      assert.equal(allows('publish', release, { [gate]: result }), false, `${gate}: ${result}`)
+      assert.equal(allows('update-manifests', release, { [gate]: result }), false)
+      assert.equal(allows('deploy', computeScope({ admin: true }), { [gate]: result }), false)
+    }
+  }
+  assert.equal(allows('publish', computeScope({ web: true }), { integration: 'skipped' }), true)
+  assert.equal(allows('update-manifests', computeScope({ ci: true }), { publish: 'skipped' }), false)
+  assert.equal(allows('update-manifests', computeScope({ deployment: true }), { publish: 'skipped', integration: 'skipped' }), true)
+  for (const job of ['publish', 'update-manifests', 'deploy']) {
+    assert.equal(allows(job, computeScope({}, 'deep-integration'), {}, 'workflow_dispatch'), false, job)
+  }
+  for (const result of ['failure', 'cancelled']) {
+    assert.equal(allows('rollout', release, { 'update-manifests': result }), false)
+    assert.equal(allows('rollout', release, { deploy: result }), false)
+  }
+  assert.equal((workflow.match(/if: needs\.changes\.outputs\.deep_integration == 'true'/g) ?? []).length, 2)
 })

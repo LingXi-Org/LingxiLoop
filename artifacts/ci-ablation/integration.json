@@ -1,0 +1,177 @@
+[
+  {
+    "name": "migrate",
+    "seconds": 12.1790472,
+    "exit": 0,
+    "signal": null,
+    "tests": 0,
+    "pass": 0,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "name": "regular-integration",
+    "seconds": 600.06738,
+    "exit": null,
+    "signal": "SIGTERM",
+    "status": "incomplete-timeout",
+    "completedSubtests": 69,
+    "note": "Local harness stopped at 600 seconds without final TAP summary; not a successful suite."
+  },
+  {
+    "name": "heavy-1-realtime",
+    "seconds": 9.7843339,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-1-documents",
+    "seconds": 42.3674036,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-1-canvas",
+    "seconds": 30.644245499999997,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-1-learning",
+    "seconds": 50.50135339999999,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-1-eval",
+    "seconds": 25.819788400000018,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-1-candidate-auto",
+    "status": "skipped",
+    "seconds": 0,
+    "commands": 0,
+    "reason": "manual deep-integration only"
+  },
+  {
+    "name": "heavy-2-realtime",
+    "seconds": 9.984977700000018,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-2-documents",
+    "seconds": 30.229263199999988,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-2-canvas",
+    "seconds": 26.852685499999993,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-2-learning",
+    "seconds": 48.45638920000003,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-2-eval",
+    "seconds": 25.063767699999968,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-2-candidate-auto",
+    "status": "skipped",
+    "seconds": 0,
+    "commands": 0,
+    "reason": "manual deep-integration only"
+  },
+  {
+    "name": "heavy-3-realtime",
+    "seconds": 8.772306199999992,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-3-documents",
+    "seconds": 35.1446765,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-3-canvas",
+    "seconds": 30.292516000000003,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-3-learning",
+    "seconds": 33.703491800000016,
+    "exit": 1,
+    "signal": null,
+    "status": "failed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-3-eval",
+    "seconds": 21.298289300000004,
+    "exit": 0,
+    "signal": null,
+    "status": "passed",
+    "scripts": 1,
+    "framework": "plain node:assert script; no TAP summary"
+  },
+  {
+    "name": "heavy-3-candidate-auto",
+    "status": "skipped",
+    "seconds": 0,
+    "commands": 0,
+    "reason": "manual deep-integration only"
+  }
+]

@@ -1,3 +1,5 @@
+> **LingxiLoop vendored profile:** only the `lingxiloop-rag` image is built (also the default Docker target). Use `make build` and `make test`; the root LingxiLoop workflow owns releases. Full upstream frontend/single-container build and test entrypoints have been removed. The upstream documentation below is retained as reference and does not describe supported deployment commands for this copy.
+
 <a id="readme-top"></a>
 
 <!-- [![Contributors][contributors-shield]][contributors-url] -->

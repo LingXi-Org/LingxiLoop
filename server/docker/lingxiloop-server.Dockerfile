@@ -49,13 +49,8 @@ ENV VITE_PUBLIC_POSTHOG_KEY=${VITE_PUBLIC_POSTHOG_KEY}
 ENV VITE_PUBLIC_POSTHOG_HOST=${VITE_PUBLIC_POSTHOG_HOST}
 ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
 COPY package.json package-lock.json .npmrc ./
-# --ignore-scripts: electron-icon-builder transitively pulls
-# phantomjs-prebuilt, whose postinstall extracts a bz2 tarball — but
-# the slim base image has no `bzip2` binary, so the install dies with
-# `tar (child): bzip2: Cannot exec`. Vite/tsc/tailwind/postcss don't
-# need any postinstall (esbuild's platform native lands via
-# optionalDependencies, not a script), so skipping all postinstall
-# scripts is safe in this stage AND faster than apt-get'ing bzip2.
+# The Web build uses optional platform packages and needs no install scripts;
+# skip Electron's binary download in this stage too.
 RUN --mount=type=secret,id=npm_token \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
 COPY src ./src

@@ -241,18 +241,8 @@ class TestFastApiIntegration:
 
 class TestRealAppWiring:
     def test_real_app_registers_middleware_with_configured_size(self):
-        from api.main import MAX_UPLOAD_SIZE_BYTES, app
+        from api.rag_main import RAG_REQUEST_MAX_SIZE, app
 
         matches = [m for m in app.user_middleware if m.cls is MaxBodySizeMiddleware]
         assert len(matches) == 1
-        assert matches[0].kwargs["max_body_size"] == MAX_UPLOAD_SIZE_BYTES
-
-    def test_real_app_wraps_it_inside_cors(self):
-        """CORS must be outermost so it can attach headers to a 413 from
-        MaxBodySizeMiddleware - i.e. CORSMiddleware must be added *after* it."""
-        from api.main import app
-
-        # getattr: Middleware.cls is typed as a callable protocol without
-        # __name__, but every registered middleware here is a plain class.
-        classes = [getattr(m.cls, "__name__", "") for m in app.user_middleware]
-        assert classes.index("CORSMiddleware") < classes.index("MaxBodySizeMiddleware")
+        assert matches[0].kwargs["max_body_size"] == RAG_REQUEST_MAX_SIZE

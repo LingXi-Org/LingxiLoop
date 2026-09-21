@@ -1,0 +1,177 @@
+[
+  {
+    "name": "lint",
+    "seconds": 2.0789463,
+    "exit": 0,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "admin-lint",
+    "seconds": 1.1392903,
+    "exit": 0,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "server-lint",
+    "seconds": 1.7343631,
+    "exit": 0,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "control-lint",
+    "seconds": 1.0245659999999999,
+    "exit": 0,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "server-typecheck",
+    "seconds": 20.3738595,
+    "exit": 0,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "control-typecheck",
+    "seconds": 9.211825400000002,
+    "exit": 0,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "admin-test",
+    "seconds": 4.289799099999996,
+    "exit": 0,
+    "tests": 8,
+    "skipped": 0
+  },
+  {
+    "name": "control-test",
+    "seconds": 56.991009,
+    "exit": 1,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "changed-server-tests",
+    "seconds": 82.3347733,
+    "exit": 0,
+    "tests": 77,
+    "skipped": 0
+  },
+  {
+    "name": "changed-web-tests",
+    "seconds": 26.522758300000017,
+    "exit": 1,
+    "tests": 72,
+    "skipped": 0
+  },
+  {
+    "name": "test-selectors",
+    "seconds": 1.4567064000000245,
+    "exit": 0,
+    "tests": 1,
+    "skipped": 0
+  },
+  {
+    "name": "ci-contract",
+    "seconds": 0.46757569999998666,
+    "exit": 0,
+    "tests": 16,
+    "skipped": 0
+  },
+  {
+    "name": "actionlint",
+    "seconds": 1.6857407999999996,
+    "exit": 0,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "rag-tests",
+    "seconds": 46.711835699999995,
+    "exit": 1,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "rag-lint",
+    "seconds": 1.095030299999984,
+    "exit": 1,
+    "tests": 0,
+    "skipped": 0
+  },
+  {
+    "name": "changed-web-tests-final",
+    "exit": 0,
+    "tests": 13,
+    "skipped": 0,
+    "seconds": 0.8537812,
+    "command": "node --import tsx --test <four modified non-default Web test files>"
+  },
+  {
+    "name": "rag-tests-final",
+    "exit": 0,
+    "tests": 116,
+    "skipped": 0,
+    "seconds": 2.21,
+    "command": "uv run --frozen --python 3.12 pytest -q"
+  },
+  {
+    "name": "rag-lint-final",
+    "exit": 0,
+    "command": "uv run --frozen --python 3.12 ruff check tests"
+  },
+  {
+    "name": "control-test-linux-final",
+    "exit": 0,
+    "tests": 12,
+    "skipped": 0,
+    "seconds": 21.05,
+    "command": "npm run control:test; Linux node:22-bookworm-slim, frozen package-lock.json, original tsconfig mounted"
+  },
+  {
+    "name": "final-ci-contract-and-selectors",
+    "exit": 0,
+    "tests": 17,
+    "fail": 0,
+    "skipped": 0,
+    "seconds": 2.2327224
+  },
+  {
+    "name": "final-mixed-web-guards",
+    "exit": 0,
+    "tests": 17,
+    "fail": 0,
+    "skipped": 0,
+    "seconds": 0.622325
+  },
+  {
+    "name": "final-mixed-web-lint-and-actionlint",
+    "exit": 0
+  },
+  {
+    "name": "combined-release-web",
+    "exit": 0,
+    "tests": 81,
+    "pass": 81,
+    "fail": 0,
+    "skipped": 0,
+    "checks": [
+      "lint",
+      "typecheck",
+      "build"
+    ]
+  },
+  {
+    "name": "combined-release-ci-contract-and-selectors",
+    "exit": 0,
+    "tests": 17,
+    "pass": 17,
+    "fail": 0,
+    "skipped": 0
+  }
+]

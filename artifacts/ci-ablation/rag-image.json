@@ -1,0 +1,23 @@
+[
+  {
+    "name": "rag-image-build",
+    "seconds": 3.7480637000000003,
+    "exit": 0
+  },
+  {
+    "name": "rag-image-contents-and-fail-closed",
+    "seconds": 3.6316870000000003,
+    "exit": 0
+  },
+  {
+    "name": "rag-supervisor",
+    "seconds": 0.5311352000000006,
+    "exit": 0
+  },
+  {
+    "name": "rag-startup-http-contract",
+    "exit": 0,
+    "checks": 7,
+    "liveModelCalls": 0
+  }
+]

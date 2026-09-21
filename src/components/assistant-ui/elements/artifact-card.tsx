@@ -1,7 +1,8 @@
 "use client"
 
 import { ArrowUpRightIcon, FileTextIcon } from "lucide-react"
-import type { ComponentProps } from "react"
+import type { ComponentProps, ReactNode } from "react"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { conversationCardSize, mono, paper, ShimmerLabel } from "./surfaces"
 
@@ -10,6 +11,10 @@ export function ArtifactCard({
   meta,
   generating = false,
   words = 0,
+  preview,
+  icon,
+  onOpen,
+  openLabel = "打开",
   className,
   ...props
 }: Omit<ComponentProps<"div">, "children" | "title" | "meta" | "generating" | "words"> & {
@@ -17,20 +22,26 @@ export function ArtifactCard({
   meta: string
   generating?: boolean
   words?: number
+  preview?: ReactNode
+  icon?: ReactNode
+  onOpen?: () => void
+  openLabel?: string
 }) {
   return (
     <div
       data-slot="artifact-card"
       className={cn(
         paper,
-        conversationCardSize.compact,
-        "group flex cursor-pointer items-center gap-3 rounded-[20px] p-3.5 transition-transform duration-150 hover:-translate-y-px active:scale-[0.98]",
+        preview ? conversationCardSize.standard : conversationCardSize.compact,
+        "group overflow-hidden rounded-[6px_18px_18px_6px] text-foreground",
         className,
       )}
       {...props}
     >
-      <span className="bg-foreground/[0.05] text-foreground/45 flex size-9 shrink-0 items-center justify-center rounded-xl">
-        <FileTextIcon className={cn("size-4", generating && "animate-pulse motion-reduce:animate-none")} />
+      {preview && <div data-slot="artifact-preview" className="relative aspect-video overflow-hidden bg-muted">{preview}</div>}
+      <div className="flex items-center gap-3 p-3.5">
+      <span aria-hidden className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-xl [&_svg]:size-4">
+        {icon ?? <FileTextIcon className={cn("size-4", generating && "animate-pulse motion-reduce:animate-none")} />}
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13.5px] font-medium">{title}</p>
@@ -41,10 +52,11 @@ export function ArtifactCard({
             <span className="tabular-nums">{words} 字</span>
           </p>
         ) : (
-          <p className={cn(mono, "fade-in blur-in-[2px] animate-in text-foreground/40 duration-300 motion-reduce:animate-none")}>{meta}</p>
+          <p className={cn(mono, "text-muted-foreground")}>{meta}</p>
         )}
       </div>
-      <ArrowUpRightIcon className="text-foreground/35 size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+      </div>
+      {onOpen && <div className="flex justify-end px-3.5 pb-3.5"><Button type="button" size="sm" onClick={onOpen} aria-label={`${openLabel}：${title}`}>{openLabel}<ArrowUpRightIcon aria-hidden className="size-3.5" /></Button></div>}
     </div>
   )
 }

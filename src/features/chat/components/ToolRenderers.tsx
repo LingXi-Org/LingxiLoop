@@ -4,14 +4,15 @@ import { useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { AgentHandoff } from '@/components/assistant-ui/elements/agent-handoff'
 import { AgentPlan } from '@/components/assistant-ui/elements/agent-plan'
-import { ArtifactCard } from '@/components/assistant-ui/elements/artifact-card'
+import { PollCard } from '@/components/assistant-ui/elements/poll-card'
+import { CanvasArtifactCard } from '@/features/canvas/components/CanvasArtifactCard'
 import {
   type ElicitationField,
   ElicitationForm,
   type ElicitationValue,
 } from '@/components/assistant-ui/elements/elicitation-form'
 import { styledGenerativeUILibrary } from '@/components/assistant-ui/elements/generative-ui'
-import { RecommendationCard } from '@/components/assistant-ui/elements/recommendation-card'
+import { ApprovalCard } from '@/components/assistant-ui/elements/approval-card'
 import { ScoreBreakdown, type ScoreCriterion } from '@/components/assistant-ui/elements/score-breakdown'
 import { CardSurface, conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
 import { StatsDisplay } from '@/components/tool-ui/stats-display'
@@ -24,28 +25,24 @@ import {
 } from '@/features/presentations'
 import { useSurface } from '@/stores/surface'
 
-export function RecommendationCardTool({ args, approval, respondToApproval }: ToolCallMessagePartProps) {
+export function ApprovalCardTool({ args, approval, respondToApproval }: ToolCallMessagePartProps) {
   const value = args as {
     id: string
     question: string
     detail: string
-    confidenceLabel: string
-    acceptedLabel: string
-    rejectedLabel: string
   }
-  const pending = approval?.approved === undefined
+  if (!approval) return null
+  const pending = approval.approved === undefined
   return (
-    <RecommendationCard
+    <ApprovalCard
       data-assistant-ui-id={value.id}
-      state={pending ? 'idle' : 'accepted'}
-      question={value.question}
-      confidenceLabel={value.confidenceLabel}
-      acceptedLabel={approval?.approved ? value.acceptedLabel : value.rejectedLabel}
-      onAccept={pending ? () => respondToApproval({ approved: true }) : undefined}
-      onAlternatives={pending ? () => respondToApproval({ approved: false }) : undefined}
-    >
-      {value.detail}
-    </RecommendationCard>
+      approved={approval.approved}
+      title="操作审批"
+      summary={value.question}
+      context={[{ label: '类型', value: value.detail }]}
+      onApprove={pending ? () => respondToApproval({ approved: true }) : undefined}
+      onDeny={pending ? () => respondToApproval({ approved: false }) : undefined}
+    />
   )
 }
 
@@ -57,7 +54,8 @@ export function PollFormTool({ args, result, addResult }: ToolCallMessagePartPro
     if (typeof value.id !== 'string' || typeof value.label !== 'string') throw new Error('投票协议包含无效选项')
     return {
       value: value.id,
-      label: [value.label, typeof value.description === 'string' ? value.description : ''].filter(Boolean).join(' · '),
+      label: value.label,
+      description: typeof value.description === 'string' ? value.description : undefined,
       disabled: closed || value.disabled === true,
     }
   }) : []
@@ -70,22 +68,15 @@ export function PollFormTool({ args, result, addResult }: ToolCallMessagePartPro
     ? result as string | string[]
     : undefined
   const value = submitted ?? selection
-  const missing = value.length === 0
-  return <ElicitationForm
-    data-assistant-ui-id={raw.id}
-    server={raw.title}
-    message={raw.selectionMode === 'multi' ? '请选择一项或多项。' : '请选择一项。'}
-    fields={[{
-      name: 'selection', label: '候选项', value, kind: 'choice', options,
-      required: true, multiple: raw.selectionMode === 'multi',
-    }]}
-    state={submitted !== undefined || closed ? 'accepted' : 'request'}
-    acceptedLabel={closed && submitted === undefined ? '投票已结束' : '已提交'}
-    acceptDisabled={missing}
-    onFieldChange={(_, next) => setSelection(Array.isArray(next) ? [...next] : next as string)}
-    onAccept={() => {
-      if (!missing) addResult(selection)
-    }}
+  return <PollCard
+    title={raw.title}
+    options={options}
+    multiple={raw.selectionMode === 'multi'}
+    value={Array.isArray(value) ? value : value ? [value] : []}
+    submitted={submitted !== undefined}
+    closed={closed}
+    onChange={next => setSelection(raw.selectionMode === 'multi' ? next : next[0] ?? '')}
+    onSubmit={() => addResult(selection)}
   />
 }
 
@@ -94,17 +85,10 @@ export function CanvasArtifactTool({ args }: ToolCallMessagePartProps) {
   if (typeof value.id !== 'string' || typeof value.href !== 'string' || typeof value.title !== 'string') {
     throw new Error('协作画布协议不完整')
   }
-  return <ArtifactCard
-    data-assistant-ui-id={value.id}
-    title={value.title}
-    meta={typeof value.description === 'string' && value.description ? value.description : '打开协作画布'}
-    role="button"
-    tabIndex={0}
-    onClick={() => window.open(value.href as string, '_blank', 'noopener,noreferrer')}
-    onKeyDown={(event) => {
-      if (event.key === 'Enter' || event.key === ' ') window.open(value.href as string, '_blank', 'noopener,noreferrer')
-    }}
-  />
+  const match = /^lingxiloop:\/\/canvas\/([^/?#]+)$/.exec(value.href)
+  if (!match) throw new Error('协作画布链接无效')
+  return <CanvasArtifactCard canvasId={decodeURIComponent(match[1])} title={value.title}
+    description={typeof value.description === 'string' ? value.description : undefined} />
 }
 
 interface ElicitationItem {
@@ -394,7 +378,7 @@ export function PresentationArtifactTool({ args }: ToolCallMessagePartProps) {
 
 export const CHAT_TOOL_RENDERERS = {
   by_name: {
-    'approval-card': RecommendationCardTool,
+    'approval-card': ApprovalCardTool,
     'poll-form': PollFormTool,
     'agent-handoff': AgentHandoffTool,
     'agent-plan': AgentPlanTool,

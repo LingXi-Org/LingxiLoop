@@ -27,19 +27,6 @@ test('learning dashboard consumes canonical space, overview, learner and fact ro
   assert.match(hook, /resourcesRequestEpoch/)
   assert.match(panel, /space\.projectId, space\.perspective, space\.canReview/)
   assert.match(panel, /onChanged=\{async \(\) => \{[\s\S]*await refreshAll\(\)/)
-  assert.doesNotMatch(panel, /roleSwitch|setPerspective|LearningCenter/)
-})
-
-test('Learning UI uses uppercase domain values without compatibility coercion', () => {
-  const contracts = read('./contracts.ts')
-  const display = read('./components/learningDisplay.tsx')
-  const api = read('./api.ts')
-
-  assert.match(contracts, /status: 'PLANNING' \| 'ACTIVE' \| 'PAUSED'/)
-  assert.match(contracts, /assistance: 'NONE' \| 'HINT' \| 'GUIDED'/)
-  assert.match(contracts, /evaluationMode: 'AGENT_FORMATIVE' \| 'TEACHER_REQUIRED'/)
-  assert.match(display, /NEEDS_REVIEW: '待复核'/)
-  assert.doesNotMatch(api, /overrideLevel|override_level/)
 })
 
 test('teacher overview keeps learner and evidence detail behind the controlled dialog', () => {

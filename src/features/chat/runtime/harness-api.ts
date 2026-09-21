@@ -12,6 +12,7 @@ const path = (target: AgentRunTarget) => `/im/channels/${encodeURIComponent(targ
 const thread = (target: AgentRunTarget): Record<string, string> => target.threadId ? { threadId: target.threadId } : {}
 
 export const harnessApi = {
+  readApproval: (id: string, signal?: AbortSignal) => http<unknown>(`/im/approvals/${encodeURIComponent(id)}`, { signal }),
   list: (conversationId: string, signal?: AbortSignal) => http<(AgentRunTarget & Pick<RunState['run'], 'requestVersion' | 'fence' | 'status'>)[]>(`/im/channels/${encodeURIComponent(conversationId)}/runs`,{ signal }),
   subscribe(target: AgentRunTarget, receive: (event: RunStreamEvent) => void, failed: () => void): EventSource {
     const company = getActiveCompanyId()

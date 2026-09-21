@@ -1,0 +1,56 @@
+[
+  {
+    "round": 1,
+    "variant": "baseline",
+    "seconds": 36.390454899999995,
+    "exit": 0,
+    "signal": null,
+    "packages": 213,
+    "cache": "fresh venv; shared uv download cache, populated progressively"
+  },
+  {
+    "round": 1,
+    "variant": "candidate",
+    "seconds": 13.531276799999999,
+    "exit": 0,
+    "signal": null,
+    "packages": 90,
+    "cache": "fresh venv; shared uv download cache, populated progressively"
+  },
+  {
+    "round": 2,
+    "variant": "baseline",
+    "seconds": 23.2319125,
+    "exit": 0,
+    "signal": null,
+    "packages": 213,
+    "cache": "fresh venv; shared uv download cache, populated progressively"
+  },
+  {
+    "round": 2,
+    "variant": "candidate",
+    "seconds": 8.940023400000005,
+    "exit": 0,
+    "signal": null,
+    "packages": 90,
+    "cache": "fresh venv; shared uv download cache, populated progressively"
+  },
+  {
+    "round": 3,
+    "variant": "baseline",
+    "seconds": 21.570827399999995,
+    "exit": 0,
+    "signal": null,
+    "packages": 213,
+    "cache": "fresh venv; shared uv download cache, populated progressively"
+  },
+  {
+    "round": 3,
+    "variant": "candidate",
+    "seconds": 7.535010399999999,
+    "exit": 0,
+    "signal": null,
+    "packages": 90,
+    "cache": "fresh venv; shared uv download cache, populated progressively"
+  }
+]

@@ -4,12 +4,6 @@ from pathlib import Path
 import pytest
 
 from open_notebook.artifact_storage import ArtifactStore
-from open_notebook.podcasts.audio_paths import (
-    audio_file_available,
-    delete_audio_file,
-    open_audio_download,
-    persist_audio_file,
-)
 
 
 class FakeClientError(Exception):
@@ -61,7 +55,8 @@ def r2_env(monkeypatch):
         monkeypatch.setenv(name, value)
 
 
-def test_local_fallback_preserves_path(monkeypatch, tmp_path):
+@pytest.mark.parametrize("enabled", ["auto", "false", "true"])
+def test_rag_requires_complete_r2_configuration(monkeypatch, enabled):
     for name in (
         "R2_ENDPOINT",
         "R2_BUCKET",
@@ -69,16 +64,7 @@ def test_local_fallback_preserves_path(monkeypatch, tmp_path):
         "R2_SECRET_ACCESS_KEY",
     ):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("OPEN_NOTEBOOK_R2_ENABLED", "auto")
-    source = tmp_path / "source.txt"
-    source.write_text("local", encoding="utf-8")
-    store = ArtifactStore()
-    assert store.persist_file(source, "sources") == str(source)
-
-
-def test_explicit_r2_requires_complete_configuration(monkeypatch):
-    monkeypatch.setenv("OPEN_NOTEBOOK_R2_ENABLED", "true")
-    monkeypatch.delenv("R2_BUCKET", raising=False)
+    monkeypatch.setenv("OPEN_NOTEBOOK_R2_ENABLED", enabled)
     with pytest.raises(RuntimeError, match="missing"):
         ArtifactStore(client=FakeS3())
 
@@ -89,8 +75,9 @@ def test_r2_round_trip_and_namespace_isolation(r2_env, tmp_path):
     source = tmp_path / "report.pdf"
     source.write_bytes(b"knowledge")
 
-    reference = store.persist_file(source, "sources")
-    assert reference.startswith("r2://open-notebook/sources/")
+    key = "open-notebook/sources/report.pdf"
+    client.upload_file(str(source), store.bucket, key)
+    reference = f"r2://{key}"
     assert store.exists(reference, "sources", tmp_path)
 
     materialized = store.materialize(reference, "sources", tmp_path)
@@ -103,39 +90,20 @@ def test_r2_round_trip_and_namespace_isolation(r2_env, tmp_path):
 
     download = store.open_download(reference, "sources")
     assert b"".join(download.chunks()) == b"knowledge"
-    with pytest.raises(ValueError, match="outside"):
+    with pytest.raises(ValueError, match="namespace"):
         store.open_download(reference, "podcasts")
+    for invalid in ("r2://other/sources/report.pdf", "r2://open-notebook/sources/../secret"):
+        with pytest.raises(ValueError, match="outside"):
+            store.open_download(invalid, "sources")
 
     store.delete(reference, "sources", tmp_path)
     assert not store.exists(reference, "sources", tmp_path)
 
 
-def test_local_reference_cannot_escape_root(monkeypatch, tmp_path):
-    monkeypatch.setenv("OPEN_NOTEBOOK_R2_ENABLED", "false")
-    store = ArtifactStore()
+def test_local_reference_cannot_escape_root(r2_env, tmp_path):
+    store = ArtifactStore(client=FakeS3())
     outside = tmp_path.parent / "secret.txt"
     outside.write_text("secret", encoding="utf-8")
-    with pytest.raises(ValueError, match="outside"):
+    with pytest.raises(ValueError, match="Not an R2"):
         store.delete(str(outside), "sources", tmp_path)
     assert outside.exists()
-
-
-def test_podcast_final_audio_moves_to_r2(r2_env, monkeypatch, tmp_path):
-    client = FakeS3()
-    store = ArtifactStore(client=client)
-    monkeypatch.setattr("open_notebook.artifact_storage._store", store)
-    monkeypatch.setattr(
-        "open_notebook.podcasts.audio_paths.PODCASTS_FOLDER", str(tmp_path)
-    )
-    audio = tmp_path / "episodes" / "episode-1" / "final.mp3"
-    audio.parent.mkdir(parents=True)
-    audio.write_bytes(b"podcast")
-
-    reference = persist_audio_file(audio)
-    assert reference.startswith("r2://open-notebook/podcasts/")
-    assert not audio.exists()
-    assert audio_file_available(reference)
-    assert b"".join(open_audio_download(reference).chunks()) == b"podcast"
-
-    delete_audio_file(reference)
-    assert not audio_file_available(reference)

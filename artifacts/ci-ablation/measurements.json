@@ -1,0 +1,473 @@
+{
+  "baseline": "d165a283c9f7c7ea26f2f043173b8cd4a93821fc",
+  "node": "v22.22.2",
+  "platform": "win32",
+  "cache": "Installed Node dependencies and warm shared OS cache; fresh output from each build; no concurrent builds/tests launched by this task. Other local tasks and existing services were not stopped.",
+  "samples": [
+    {
+      "group": "web",
+      "round": 1,
+      "variant": "baseline",
+      "seconds": 12.884899800000001,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 73,
+          "pass": 73,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web",
+      "round": 1,
+      "variant": "candidate",
+      "seconds": 8.557354299999998,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 61,
+          "pass": 61,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web",
+      "round": 2,
+      "variant": "baseline",
+      "seconds": 9.605229199999998,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 73,
+          "pass": 73,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web",
+      "round": 2,
+      "variant": "candidate",
+      "seconds": 8.487973600000002,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 61,
+          "pass": 61,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web",
+      "round": 3,
+      "variant": "baseline",
+      "seconds": 8.820176700000003,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 73,
+          "pass": 73,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web",
+      "round": 3,
+      "variant": "candidate",
+      "seconds": 8.837335,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 61,
+          "pass": 61,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "server",
+      "round": 1,
+      "variant": "baseline",
+      "seconds": 63.481943900000005,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 80,
+          "pass": 80,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "calibration"
+    },
+    {
+      "group": "server",
+      "round": 1,
+      "variant": "candidate",
+      "seconds": 31.2450217,
+      "commands": [
+        {
+          "exit": 1,
+          "tests": 74,
+          "pass": 73,
+          "fail": 1,
+          "skipped": 0
+        }
+      ],
+      "phase": "calibration"
+    },
+    {
+      "group": "server",
+      "round": 1,
+      "variant": "baseline",
+      "seconds": 35.959928500000004,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 80,
+          "pass": 80,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "server",
+      "round": 1,
+      "variant": "candidate",
+      "seconds": 30.067532999999997,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 74,
+          "pass": 74,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "server",
+      "round": 2,
+      "variant": "baseline",
+      "seconds": 35.61093210000001,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 80,
+          "pass": 80,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "server",
+      "round": 2,
+      "variant": "candidate",
+      "seconds": 22.48342510000001,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 74,
+          "pass": 74,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "server",
+      "round": 3,
+      "variant": "baseline",
+      "seconds": 22.374016299999987,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 80,
+          "pass": 80,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "server",
+      "round": 3,
+      "variant": "candidate",
+      "seconds": 20.491300800000026,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 74,
+          "pass": 74,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web-build",
+      "round": 1,
+      "variant": "baseline",
+      "seconds": 142.1239613,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        },
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web-build",
+      "round": 1,
+      "variant": "candidate",
+      "seconds": 66.1861624,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web-build",
+      "round": 2,
+      "variant": "baseline",
+      "seconds": 95.3074744,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        },
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web-build",
+      "round": 2,
+      "variant": "candidate",
+      "seconds": 45.95329680000001,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web-build",
+      "round": 3,
+      "variant": "baseline",
+      "seconds": 147.32332519999997,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        },
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "web-build",
+      "round": 3,
+      "variant": "candidate",
+      "seconds": 98.44982050000003,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "admin-build",
+      "round": 1,
+      "variant": "baseline",
+      "seconds": 121.5661904999999,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        },
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "admin-build",
+      "round": 1,
+      "variant": "candidate",
+      "seconds": 67.64637419999997,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "admin-build",
+      "round": 2,
+      "variant": "baseline",
+      "seconds": 134.03336549999995,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        },
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "admin-build",
+      "round": 2,
+      "variant": "candidate",
+      "seconds": 87.3165603,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "admin-build",
+      "round": 3,
+      "variant": "baseline",
+      "seconds": 109.64327000000002,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        },
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    },
+    {
+      "group": "admin-build",
+      "round": 3,
+      "variant": "candidate",
+      "seconds": 57.65582869999996,
+      "commands": [
+        {
+          "exit": 0,
+          "tests": 0,
+          "pass": 0,
+          "fail": 0,
+          "skipped": 0
+        }
+      ],
+      "phase": "measured"
+    }
+  ],
+  "machine": {
+    "platform": "win32",
+    "os": "10.0.22621",
+    "cpu": "Intel Core i9-13900H",
+    "logicalCpus": 20,
+    "memoryGiB": 16
+  }
+}

@@ -25,3 +25,17 @@ server/**/dist
 # Local frontend build outputs — we always rebuild inside the image.
 dist
 node_modules
+
+# Local dependencies, retired runtime checkouts and test fixtures are not runtime inputs.
+server/**/node_modules
+server/agent-os
+server/src/__tests__
+server/src/__integration__
+server/**/*.test.ts
+src/**/*.test.*
+src/**/__tests__
+**/node_modules
+**/__pycache__
+**/.cache
+server/**/.env*
+server/**/.venv

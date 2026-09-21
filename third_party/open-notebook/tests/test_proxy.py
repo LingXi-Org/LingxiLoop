@@ -54,6 +54,8 @@ def test_lowercase_and_uppercase_kept_in_sync(monkeypatch):
 
 
 def test_merges_both_case_variants(monkeypatch):
+    # Exercise distinct POSIX names even on Windows, where os.environ folds case.
+    monkeypatch.setattr(os, "environ", dict(os.environ))
     monkeypatch.setenv("no_proxy", "lower.example.com")
     monkeypatch.setenv("NO_PROXY", "UPPER.example.com")
     ensure_internal_no_proxy()

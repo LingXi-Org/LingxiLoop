@@ -96,7 +96,7 @@ ignore = [
 ]
 
 [tool.uv]
-default-groups = ["dev", "full"]
+default-groups = ["dev"]
 # Pillow < 12.2.0 has open security advisories (PSD OOB write, FITS
 # decompression bomb, PDF trailer DoS). The only thing holding it back is
 # moviepy's `pillow<12` cap, pulled in via podcast-creator 0.12.0 — and
@@ -104,3 +104,6 @@ default-groups = ["dev", "full"]
 # pipeline never imports. Drop this override once podcast-creator ships a
 # release without moviepy (already removed on its main branch).
 override-dependencies = ["pillow>=12.2.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

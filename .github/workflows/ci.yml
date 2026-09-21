@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: Component to verify, or release to deploy all production projects
+        description: Component to verify, release production images, or run deep integration checks
         required: true
         type: choice
-        options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release]
+        options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release, deep-integration]
 
 concurrency:
   group: lingxiloop-${{ github.ref }}
@@ -24,11 +24,21 @@ permissions:
 
 env:
   NODE_VERSION: "22"
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
 
 jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
+      admin_build: ${{ steps.scope.outputs.admin_build }}
+      integration_files: ${{ steps.scope.outputs.integration_files }}
+      deep_integration: ${{ steps.scope.outputs.deep_integration }}
+      open_notebook: ${{ steps.scope.outputs.open_notebook }}
+      deployment: ${{ steps.scope.outputs.deployment }}
+      web_build: ${{ steps.scope.outputs.web_build }}
+      web_tests: ${{ steps.paths.outputs.web_tests_files }}
+      admin_tests: ${{ steps.paths.outputs.admin_tests_files }}
+      server_tests: ${{ steps.paths.outputs.server_tests_files }}
       web: ${{ steps.scope.outputs.web }}
       admin: ${{ steps.scope.outputs.admin }}
       control: ${{ steps.scope.outputs.control }}
@@ -48,15 +58,18 @@ jobs:
       - uses: dorny/paths-filter@v4
         id: paths
         with:
+          list-files: json
           predicate-quantifier: some-with-excludes
           filters: |
             shared_frontend:
               - '.npmrc'
               - 'package.json'
               - 'package-lock.json'
+            lint_config:
               - 'biome.json'
             test_runner:
               - 'scripts/run-tests.mjs'
+              - 'scripts/test-selectors.test.mjs'
             web:
               - 'src/**'
               - 'public/**'
@@ -66,6 +79,10 @@ jobs:
               - 'tsconfig.node.json'
               - 'postcss.config.js'
               - 'tailwind.config.ts'
+              - '!src/**/*.test.*'
+              - '!src/**/__tests__/**'
+            web_tests:
+              - 'src/**/*.test.*'
             admin:
               - 'admin/**'
               - 'vite.admin.config.ts'
@@ -75,33 +92,45 @@ jobs:
               - 'src/components/ui/**'
               - 'src/lib/actionToast.ts'
               - 'src/lib/confirmAction.ts'
+              - '!**/*.test.*'
+            admin_tests:
+              - 'admin/**/*.test.*'
             control:
               - 'workers/control-plane/**'
               - 'worker-configuration.d.ts'
+              - '!workers/control-plane/**/*.test.*'
+              - '!workers/control-plane/vitest.config.ts'
+              - '!workers/control-plane/wrangler.test.jsonc'
+            control_tests:
+              - 'workers/control-plane/**/*.test.*'
+              - 'workers/control-plane/vitest.config.ts'
+              - 'workers/control-plane/wrangler.test.jsonc'
             server:
-              - 'scripts/test-native-agent-*.mjs'
-              - 'scripts/test-distributed-realtime.mjs'
-              - 'server/.npmrc'
-              - 'server/src/**'
-              - 'server/scripts/**'
-              - 'server/package.json'
-              - 'server/package-lock.json'
-              - 'server/run-integration-tests.mjs'
               - 'server/tsconfig.json'
-              - 'server/*.conf'
-              - 'server/docker/lingxiloop-server.Dockerfile'
+              - 'server/scripts/**'
+            server_tests:
+              - 'server/src/**/*.test.ts'
+              - '!server/src/__integration__/**'
             server_source:
-              - 'scripts/test-native-agent-*.mjs'
-              - 'scripts/test-distributed-realtime.mjs'
               - 'server/.npmrc'
               - 'server/src/**'
+              - '!server/src/**/*.test.ts'
               - '!server/src/__tests__/**'
               - '!server/src/__integration__/**'
               - 'server/package.json'
               - 'server/package-lock.json'
               - 'server/*.conf'
+              - 'src/lib/canvasLayout.ts'
+              - 'src/lib/canvasEventKinds.ts'
+            integration_tests:
+              - 'server/src/__integration__/*.test.ts'
+            integration_runner:
+              - 'server/run-integration-tests.mjs'
+              - 'server/src/__integration__/**'
+              - '!server/src/__integration__/*.test.ts'
             server_docker:
               - 'server/docker/lingxiloop-server.Dockerfile'
+              - 'server/docker/lingxiloop-server.Dockerfile.dockerignore'
             open_notebook:
               - 'third_party/open-notebook/Dockerfile'
               - 'third_party/open-notebook/.dockerignore'
@@ -123,19 +152,26 @@ jobs:
               - 'third_party/open-notebook/open_notebook/utils/__init__.py'
               - 'third_party/open-notebook/open_notebook/utils/proxy.py'
               - 'third_party/open-notebook/open_notebook/utils/url_validation.py'
+            open_notebook_tests:
+              - 'third_party/open-notebook/tests/**'
+              - 'third_party/open-notebook/Makefile'
             wukongim:
               - 'server/wukongim/**'
               - 'server/docker/wukongim.Dockerfile'
             gateway:
               - 'deploy/komodo/lingxiloop-app-b/gateway.conf'
               - 'deploy/komodo/lingxiloop-app-b/gateway.Dockerfile'
-              - 'website/**'
-            deployment:
+            ci:
               - '.github/workflows/ci.yml'
-              - 'deploy/**'
-              - 'scripts/update-deployment-images.mjs'
               - 'scripts/ci-scope.mjs'
               - 'scripts/production-rag-contract.test.mjs'
+              - 'scripts/update-deployment-images.mjs'
+              - 'scripts/trigger-komodo-rollout.mjs'
+              - 'scripts/test-distributed-realtime.mjs'
+              - 'scripts/test-native-agent-*.mjs'
+            deployment:
+              - 'deploy/**'
+              - '!deploy/**/*.md'
             control_migrations:
               - 'workers/control-plane/migrations/**'
             release:
@@ -143,10 +179,20 @@ jobs:
       - id: scope
         shell: bash
         env:
+          INTEGRATION_FILES: ${{ steps.paths.outputs.integration_tests_files }}
           EVENT: ${{ github.event_name }}
           MANUAL_SCOPE: ${{ inputs.scope }}
           SHARED_FRONTEND: ${{ steps.paths.outputs.shared_frontend }}
           TEST_RUNNER: ${{ steps.paths.outputs.test_runner }}
+          LINT_CONFIG: ${{ steps.paths.outputs.lint_config }}
+          WEB_TESTS: ${{ steps.paths.outputs.web_tests }}
+          ADMIN_TESTS: ${{ steps.paths.outputs.admin_tests }}
+          CONTROL_TESTS: ${{ steps.paths.outputs.control_tests }}
+          SERVER_TESTS: ${{ steps.paths.outputs.server_tests }}
+          INTEGRATION_RUNNER: ${{ steps.paths.outputs.integration_runner }}
+          INTEGRATION_TESTS: ${{ steps.paths.outputs.integration_tests }}
+          OPEN_NOTEBOOK_TESTS: ${{ steps.paths.outputs.open_notebook_tests }}
+          CI_CONFIG: ${{ steps.paths.outputs.ci }}
           WEB: ${{ steps.paths.outputs.web }}
           ADMIN: ${{ steps.paths.outputs.admin }}
           CONTROL: ${{ steps.paths.outputs.control }}
@@ -168,7 +214,7 @@ jobs:
     timeout-minutes: 25
     services:
       redis:
-        image: redis:7-alpine
+        image: ${{ needs.changes.outputs.server == 'true' && 'redis:7-alpine' || '' }}
         ports: ["6379:6379"]
         options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
@@ -180,13 +226,33 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - if: needs.changes.outputs.web == 'true'
-        run: npm run lint && npm test && npm run build
+        run: npm run lint && npm test
+        env:
+          CI_TEST_FILES: ${{ needs.changes.outputs.web_tests }}
+      - if: needs.changes.outputs.web_build == 'true' && !(github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true'))
+        run: npm run build
+      - if: needs.changes.outputs.web == 'true' && needs.changes.outputs.web_build != 'true'
+        run: npm run typecheck
       - if: needs.changes.outputs.admin == 'true'
-        run: npm run admin:lint && npm run admin:test && npm run admin:build
+        run: npm run admin:lint && npm run admin:test
+        env:
+          CI_TEST_FILES: ${{ needs.changes.outputs.admin_tests }}
+      - if: needs.changes.outputs.admin_build == 'true' && !(github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: npm run admin:build
+      - if: needs.changes.outputs.admin == 'true' && needs.changes.outputs.admin_build != 'true'
+        run: npm run admin:typecheck
       - if: needs.changes.outputs.server == 'true'
-        run: npm run server:lint && npm run server:typecheck && npm run server:test
+        run: npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs
+        env:
+          CI_TEST_FILES: ${{ needs.changes.outputs.server_tests }}
       - if: needs.changes.outputs.control == 'true'
         run: npm run control:lint && npm run control:typecheck && npm run control:test
+      - if: needs.changes.outputs.open_notebook == 'true'
+        uses: astral-sh/setup-uv@v6
+        with: { enable-cache: true, cache-dependency-glob: third_party/open-notebook/uv.lock }
+      - if: needs.changes.outputs.open_notebook == 'true'
+        working-directory: third_party/open-notebook
+        run: uv run --frozen --python 3.12 pytest -q
       - if: needs.changes.outputs.deploy_contract == 'true'
         run: node --test scripts/production-rag-contract.test.mjs
       - if: needs.changes.outputs.release == 'true'
@@ -227,12 +293,18 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - run: npm run db:migrate
+      - if: needs.changes.outputs.server != 'true'
+        run: node --test scripts/test-selectors.test.mjs
       - run: npm run test:integration
-      - name: Distributed SSE with a real Redis restart
+        env:
+          INTEGRATION_TEST_FILES: ${{ needs.changes.outputs.integration_files }}
+      - if: needs.changes.outputs.deep_integration == 'true'
+        name: Distributed SSE with a real Redis restart
         run: node --import tsx scripts/test-distributed-realtime.mjs
         env:
           LINGXIOS_BENCH_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
-      - name: Native product Worker flows on empty databases
+      - if: needs.changes.outputs.deep_integration == 'true'
+        name: Native product Worker flows on empty databases
         env:
           PGHOST: 127.0.0.1
           PGUSER: postgres
@@ -250,7 +322,7 @@ jobs:
       always() &&
       github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.changes.outputs.publish == 'true' &&
-      (needs.checks.result == 'success' || needs.checks.result == 'skipped') &&
+      needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped')
     needs: [changes, checks, integration]
     runs-on: ubuntu-latest
@@ -290,9 +362,11 @@ jobs:
   update-manifests:
     if: >-
       always() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
+      needs.checks.result == 'success' &&
+      (needs.integration.result == 'success' || needs.integration.result == 'skipped') &&
       (needs.publish.result == 'success' ||
-       (needs.changes.outputs.publish == 'false' && needs.changes.outputs.deploy_contract == 'true' && needs.checks.result == 'success'))
-    needs: [changes, checks, publish]
+       (needs.changes.outputs.publish == 'false' && needs.changes.outputs.deployment == 'true'))
+    needs: [changes, checks, integration, publish]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: { contents: write }
@@ -331,8 +405,9 @@ jobs:
     if: >-
       always() &&
       github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-      needs.changes.outputs.control_deploy == 'true' && needs.checks.result == 'success'
-    needs: [changes, checks]
+      needs.changes.outputs.control_deploy == 'true' && needs.checks.result == 'success' &&
+      (needs.integration.result == 'success' || needs.integration.result == 'skipped')
+    needs: [changes, checks, integration]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: production
@@ -343,6 +418,11 @@ jobs:
       - run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Build Refine before production changes
+        run: npm run admin:build
+        env:
+          VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
+          VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEsX5eyOl1nAe5i9
       - if: needs.changes.outputs.control_migrations == 'true'
         name: Apply D1 migrations
         run: npm run control:d1:remote
@@ -351,7 +431,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       - name: Deploy Refine and control-plane Worker
         run: |
-          npm run admin:build
           npx wrangler versions upload --config workers/control-plane/wrangler.jsonc --tag "$GITHUB_SHA"
           npx wrangler versions deploy --config workers/control-plane/wrangler.jsonc --version-tag "$GITHUB_SHA" --yes
         env:
@@ -365,7 +444,7 @@ jobs:
       always() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.update-manifests.result == 'success' &&
       (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
-    needs: [update-manifests, deploy]
+    needs: [changes, update-manifests, deploy]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: production

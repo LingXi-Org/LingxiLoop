@@ -58,11 +58,6 @@
     "icons": "node scripts-gen-icon.mjs && python scripts-gen-tray-icons.py && npx -y electron-icon-builder -i build/icon.png -o build --flatten && node scripts-sync-electron-dev-icon.mjs",
     "electron:dev": "concurrently -k -n web,api,worker,electron -c blue,magenta,yellow,cyan \"npm:dev\" \"npm:server:dev\" \"npm:worker:dev\" \"wait-on tcp:5180 tcp:5181 && cross-env-shell ELECTRON_RENDERER_URL=http://localhost:5180 electron .\"",
     "electron:start": "electron .",
-    "electron:prepare": "node scripts/prepare-electron-package.mjs",
-    "electron:build": "npm run build && npm run electron:prepare && electron-builder --publish never",
-    "electron:build:mac": "npm run build && npm run electron:prepare && electron-builder --mac --publish never",
-    "electron:build:win": "npm run build && npm run electron:prepare && electron-builder --win --publish never",
-    "electron:build:linux": "npm run build && npm run electron:prepare && electron-builder --linux --publish never",
     "eval:check": "npm --prefix eval run check && npm --prefix eval test",
     "eval:run": "npm --prefix eval run eval --"
   },
@@ -177,7 +172,6 @@
     "concurrently": "^9.2.1",
     "cross-env": "^7.0.3",
     "electron": "^33.4.11",
-    "electron-builder": "^25.1.8",
     "postal-mime": "^2.2.7",
     "postcss": "^8.4.47",
     "shadcn": "^4.19.0",
@@ -187,82 +181,5 @@
     "vitest": "^3.2.4",
     "wait-on": "^8.0.5",
     "wrangler": "^4.127.1"
-  },
-  "build": {
-    "appId": "cn.lingxilearn.loop",
-    "productName": "LingxiLoop",
-    "asar": true,
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "build/**/*",
-      "build/tray-template*.png",
-      "package.json"
-    ],
-    "directories": {
-      "app": "electron-package",
-      "output": "release",
-      "buildResources": "build"
-    },
-    "mac": {
-      "identity": "-",
-      "category": "public.app-category.productivity",
-      "icon": "build/icons/icon.icns",
-      "artifactName": "LingxiLoop-${version}-${arch}.${ext}",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "notarize": false,
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ]
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "build/icons/icon.ico"
-    },
-    "nsis": {
-      "artifactName": "LingxiLoop-Setup-${version}.${ext}"
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "category": "Network",
-      "icon": "build/icon.png",
-      "maintainer": "LingXi-Org"
-    }
   }
 }

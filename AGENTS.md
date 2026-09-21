@@ -4,7 +4,7 @@ This is a stable web product. Follow the user's request to completion; ask only 
 
 ## Product invariants
 
-- Keep Web/API and background workers separate. The browser web app is the supported release surface; Electron is local development only and every local package command uses `--publish never`.
+- Keep Web/API and background workers separate. The browser web app is the supported release surface; Electron is local development only (`electron:dev/start`), with no installer packaging or publishing.
 - PostgreSQL owns product state, WuKongIM durable IM, Redis ephemeral coordination, and vendored Open Notebook/SurrealDB its own schema.
 - The old Agent OS and harness are retired. Use the exact published LingxiOS dependency through its public exports; do not restore vendored runtime code or invent a compatibility adapter. Keep product authorization and the shared LLM ledger intact.
 - At every server trust boundary, enforce tenant and project authorization. Never expose or log credentials, tokens, or prompts; preserve signed callback/webhook checks.

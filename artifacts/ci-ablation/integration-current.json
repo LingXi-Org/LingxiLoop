@@ -1,0 +1,21 @@
+[
+  {
+    "name": "current-migrate",
+    "seconds": 9.20948,
+    "exit": 0,
+    "signal": null,
+    "tests": 0,
+    "pass": 0,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "name": "current-regular-integration",
+    "seconds": 1076.8739049000003,
+    "exit": 1073807364,
+    "signal": null,
+    "status": "incomplete-interrupted",
+    "completedSubtests": 113,
+    "note": "Session interruption; no final TAP summary. Not counted as passed."
+  }
+]

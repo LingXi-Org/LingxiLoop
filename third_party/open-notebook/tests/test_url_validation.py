@@ -21,8 +21,7 @@ from unittest.mock import patch
 
 import pytest
 
-from api.credentials_service import validate_url
-from open_notebook.utils.url_validation import prepare_pinned_http_target
+from open_notebook.utils.url_validation import prepare_pinned_http_target, validate_url
 
 pytestmark = pytest.mark.asyncio
 

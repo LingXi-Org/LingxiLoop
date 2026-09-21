@@ -53,6 +53,10 @@ function integrationFileArgs(argv) {
 let requestedFiles
 try {
   requestedFiles = integrationFileArgs(process.argv.slice(2))
+  if (requestedFiles.length === 0) requestedFiles = JSON.parse(process.env.INTEGRATION_TEST_FILES || '[]')
+  if (!Array.isArray(requestedFiles) || requestedFiles.some((name) => typeof name !== 'string')) {
+    throw new Error('INTEGRATION_TEST_FILES must be an array of integration test filenames')
+  }
 } catch (error) {
   console.error(`[integration] ${error instanceof Error ? error.message : String(error)}`)
   process.exit(2)
@@ -75,6 +79,7 @@ if (missingFiles.length > 0) {
 const LIVE_RESEND = process.env.RESEND_LIVE_TEST === '1'
 const defaultFiles = availableFiles.filter((name) => name !== 'resend-live.test.ts' || LIVE_RESEND)
 const selectedFiles = requestedFiles.length > 0 ? requestedFiles : defaultFiles
+console.log(`[integration] selected ${selectedFiles.length}/${availableFiles.length} file(s): ${selectedFiles.join(', ')}`)
 const testFiles = selectedFiles.map((name) => join(integrationDir, name))
 if (testFiles.length === 0) {
   console.error(`[integration] no test files found under ${integrationDir}`)
@@ -137,7 +142,6 @@ if (!process.env.RESEND_WEBHOOK_SECRET) {
 
 // Forward to node --import tsx --test against the integration suite.
 // tsx handles TypeScript; node:test handles the test runner.
-console.log(`[integration] running ${selectedFiles.length}/${availableFiles.length} file(s): ${selectedFiles.join(', ')}`)
 // --test-concurrency=1 serializes test FILES. Default is N-cpu which
 // causes deadlocks here: every file's beforeEach TRUNCATEs the same
 // tables on the shared test DB; two TRUNCATE CASCADE statements running

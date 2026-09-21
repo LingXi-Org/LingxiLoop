@@ -11,8 +11,8 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Avatar } from '@/components/Avatar'
-import { ArtifactCard } from '@/components/assistant-ui/elements/artifact-card'
-import { conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
+import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
+import { ProgressCard } from '@/components/assistant-ui/elements/progress-card'
 import { confidenceCopyText, type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
 import { TypingIndicator } from '@/components/typing-indicator'
@@ -28,14 +28,11 @@ import { CHAT_TOOL_RENDERERS } from './ToolRenderers'
 import { HarnessDetails } from './HarnessDetails'
 
 function ReasoningPart({ status }: ReasoningMessagePartProps) {
-  return (
-    <details className="my-2 rounded-xl border border-border bg-muted/30 px-3 py-2" open={status.type === 'running'}>
-      <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
-        {status.type === 'running' ? '正在思考…' : '思考过程'}
-      </summary>
-      <div className="mt-2 text-xs leading-5 text-muted-foreground"><MarkdownText /></div>
-    </details>
-  )
+  return <ProgressCard title="处理进度" steps={[{
+    id: 'reasoning', label: '思考过程',
+    status: status.type === 'running' ? 'running' : status.type === 'complete' ? 'complete' : 'stopped',
+    detail: <MarkdownText />,
+  }]} />
 }
 
 function SourcePart({ url, title }: SourceMessagePartProps) {
@@ -337,6 +334,7 @@ export function ConversationMessage() {
       filename: string
       data: string
       mimeType: string
+      sourceType?: 'url' | 'id'
     }> = []
     content.forEach((part, index) => {
       if (part.type === 'image' && typeof part.image === 'string') {
@@ -352,6 +350,7 @@ export function ConversationMessage() {
           filename: part.filename ?? '附件',
           data: part.data,
           mimeType: part.mimeType,
+          sourceType: part.sourceType,
         })
       }
     })
@@ -412,20 +411,8 @@ export function ConversationMessage() {
         )}
         <div className="grid w-full min-w-0 gap-0.5">
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
-          {attachments.length > 0 && <div data-slot="message-attachments" className="flex w-full max-w-full flex-row gap-2 overflow-x-auto">
-            {attachments.map((attachment) => <ArtifactCard
-              key={attachment.id}
-              role="button"
-              tabIndex={0}
-              aria-label={`打开附件：${attachment.filename}`}
-              title={attachment.filename}
-              meta={attachment.mimeType.startsWith('image/') ? '图片附件' : '文件附件'}
-              className={conversationCardSize.tile}
-              onClick={() => window.open(attachment.data, '_blank', 'noopener,noreferrer')}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') window.open(attachment.data, '_blank', 'noopener,noreferrer')
-              }}
-            />)}
+          {attachments.length > 0 && <div data-slot="message-attachments" className={cn('flex w-full min-w-0 flex-col gap-1', custom.isMine && 'items-end')}>
+            {attachments.map((attachment) => <AttachmentCard key={attachment.id} {...attachment} />)}
           </div>}
           <MessagePrimitive.Parts
             components={{

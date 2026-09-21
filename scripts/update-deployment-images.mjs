@@ -7,13 +7,15 @@ const manifests = {
   'deploy/komodo/lingxiloop-knowledge-agent/compose.yml': ['open-notebook'],
 }
 
-export function updateImageTags(source, sha, packages) {
+export function updateImageTags(source, sha, packages, owner) {
   if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error(`invalid commit SHA: ${sha}`)
+  if (owner !== undefined && !/^[a-z0-9][a-z0-9-]*$/i.test(owner)) throw new Error('invalid image owner')
   let updated = source
   for (const name of packages) {
     const pattern = new RegExp(`(lingxiloop-${name}:)[0-9a-f]{40}`, 'g')
     if (!pattern.test(updated)) throw new Error(`missing lingxiloop-${name} image`)
     updated = updated.replace(pattern, `$1${sha}`)
+    if (owner) updated = updated.replace(new RegExp(`(ghcr.io/)[^/\\s]+/(lingxiloop-${name}:)`, 'g'), `$1${owner.toLowerCase()}/$2`)
   }
   return updated
 }
@@ -26,6 +28,6 @@ if (process.argv[1]?.endsWith('update-deployment-images.mjs')) {
     const selected = packages.filter((name) => published.has(name))
     if (selected.length === 0) continue
     const source = readFileSync(path, 'utf8')
-    writeFileSync(path, updateImageTags(source, sha, selected))
+    writeFileSync(path, updateImageTags(source, sha, selected, process.env.GITHUB_REPOSITORY_OWNER))
   }
 }
