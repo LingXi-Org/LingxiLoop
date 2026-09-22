@@ -34,7 +34,7 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
     {retrieval && <ProgressTracker {...retrieval} />}
     {needsAttention ? <RunProgressCard view={view} error={metadata.harnessError}>
       {metadata.harnessControl && view.delivery === 'failed' && <div className="mt-3 flex justify-end"><Button type="button" size="sm" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button></div>}
-    </RunProgressCard> : !active && <p role="status">{harnessLabel(view)}</p>}
+    </RunProgressCard> : !active && outcome?.status !== 'satisfied' && <p role="status">{harnessLabel(view)}</p>}
     {outcome?.question && <p className="text-sm text-foreground">{outcome.question}</p>}
     {envelope?.artifacts.length ? <DeliveryCard artifacts={envelope.artifacts} busy={busy} onDownload={artifact => void perform(() => harnessApi.download(target,artifact))} /> : null}
     {metadata.harnessControl && active && outcome?.status === 'awaiting_approval' && <ApprovalRequestCard

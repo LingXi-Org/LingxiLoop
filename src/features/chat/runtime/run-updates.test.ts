@@ -91,13 +91,13 @@ test('a run discovered after a sent bubble owns a separate preview and cannot er
   }
 })
 
-test('a failure clears uncommitted previews and active state while preserving the specific error', () => {
+test('a failure preserves the preview for complete-bubble rendering while retaining the specific error', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
-  state = applyRunUpdate(state,target,event('尚未验收的草稿'),participants.agent)
+  state = applyRunUpdate(state,target,event('完整气泡\n\n尚未完成的尾段'),participants.agent)
   state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 8,kind: 'run.failed',stage: 'failed',visibility: 'user',
     data: { error: 'Final assessment protocol correction exhausted' } } },participants.agent)
   assert.deepEqual(state.activeRuns,{})
-  assert.deepEqual(state.messages[0].content,[])
+  assert.deepEqual(state.messages[0].content,[{ type: 'text', text: '完整气泡\n\n尚未完成的尾段' }])
   assert.deepEqual(state.messages[0].status,{ type: 'incomplete',reason: 'error' })
   assert.equal(metadata(state.messages[0]).harnessError,'Final assessment protocol correction exhausted')
 })

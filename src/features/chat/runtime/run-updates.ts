@@ -57,7 +57,7 @@ export function applyRunUpdate(
   // Only previews need a time-based anchor; delivered messages retain their IM sequence.
   if (before && before.positionAfter === undefined && !Number.isFinite(startedAt) && !lastSent) delete custom.positionAfter
   const message: ThreadMessage = { id, role: 'assistant', createdAt,
-    content: current?.role === 'assistant' && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed' && before?.harness?.message)
+    content: current?.role === 'assistant' && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed')
       && view.resultId === before?.harness?.resultId ? current.content : harnessParts(view), status: harnessStatus(view), metadata: {
       unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], ...current?.metadata, custom,
     } }

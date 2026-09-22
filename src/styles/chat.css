@@ -202,6 +202,17 @@
   box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--border) 72%, transparent);
 }
 .im-markdown-bubble > :first-child { margin-block-start: 0; }
+.im-markdown-bubble[data-bubble-enter] {
+  transform-origin: left top;
+  animation: chat-bubble-enter 200ms cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes chat-bubble-enter {
+  from { opacity: 0; transform: translateY(6px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .im-markdown-bubble[data-bubble-enter] { animation: none; }
+}
 .im-markdown-bubble > :last-child { margin-block-end: 0; }
 .im-markdown-bubble :where(pre) { max-width: 100%; overflow-x: auto; }
 .im-markdown-bubble > :where(ul, ol) { padding-inline-start: 1.35em; }

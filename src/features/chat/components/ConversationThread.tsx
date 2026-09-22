@@ -1,7 +1,7 @@
-import { ThreadPrimitive } from '@assistant-ui/react'
+import { ThreadPrimitive, useAuiState } from '@assistant-ui/react'
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useConversationUi } from '@/stores/conversationUi'
@@ -9,14 +9,23 @@ import { useConversations } from '@/features/conversations/store'
 import { userFacingError } from '@/lib/userFacingError'
 import { messagesApi } from '../api'
 import { chatTransport, useConversationThreadSnapshot } from '../runtime'
-import { ConversationActivity } from './ConversationActivity'
 import { ConversationComposer } from './ConversationComposer'
-import { ConversationMessage } from './ConversationMessage'
+import { ConversationMessage, MessageAnimationBaseline } from './ConversationMessage'
 import { ConversationStart } from './ConversationStart'
 import { ConversationMemory } from './ConversationMemory'
 import { getLingxiMessageMetadata } from '../runtime/model'
+import { messageKey } from '../runtime/store'
 
 const MESSAGE_COMPONENTS = { Message: ConversationMessage }
+
+function ConversationMessages() {
+  // Indices must come from the runtime itself: external snapshots can be one
+  // render ahead while history or a canonical delivery is being reconciled.
+  const messages = useAuiState(state => state.thread.messages)
+  return messages.map((message, index) => message.metadata.custom.schema === 'lingxiloop.thread-message.v1' ? (
+    <ThreadPrimitive.MessageByIndex key={messageKey(message)} index={index} components={MESSAGE_COMPONENTS} />
+  ) : null)
+}
 
 export function ConversationThread({
   conversationId,
@@ -31,6 +40,12 @@ export function ConversationThread({
 }) {
   const isMobile = useIsMobile()
   const snapshot = useConversationThreadSnapshot(conversationId, threadRootId)
+  const animationKey = JSON.stringify([conversationId, threadRootId])
+  const [animationBaseline, setAnimationBaseline] = useState({ key: '', sequence: Infinity })
+  useEffect(() => {
+    if (animationBaseline.key === animationKey || snapshot.isLoading || snapshot.messages.length === 0 && snapshot.hasMoreOlder) return
+    setAnimationBaseline({ key: animationKey, sequence: Math.max(0, ...snapshot.messages.map(message => getLingxiMessageMetadata(message).sequence ?? 0)) })
+  }, [animationBaseline.key, animationKey, snapshot.isLoading, snapshot.hasMoreOlder, snapshot.messages])
   const viewportRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadingOlderRef = useRef(false)
@@ -150,8 +165,9 @@ export function ConversationThread({
             ) : snapshot.isLoading ? '正在加载消息…' : threadRootId ? '尚无回复' : '开始一段新对话'}
           </div>
         </ThreadPrimitive.Empty>
-        <ThreadPrimitive.Messages components={MESSAGE_COMPONENTS} />
-        {!threadRootId && <ConversationActivity conversationId={conversationId} />}
+        <MessageAnimationBaseline.Provider key={animationKey} value={animationBaseline.key === animationKey ? animationBaseline.sequence : Infinity}>
+          <ConversationMessages />
+        </MessageAnimationBaseline.Provider>
       </ThreadPrimitive.Viewport>
       {!readOnly && <div className={isMobile ? 'shrink-0 bg-background pt-2' : 'shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4'} data-chat-composer-bar>
         <ConversationComposer

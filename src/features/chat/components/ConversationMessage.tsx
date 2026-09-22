@@ -7,7 +7,7 @@ import {
 } from '@assistant-ui/react'
 import { Copy01Icon, ReplyIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { ProgressCard } from '@/components/assistant-ui/elements/progress-card'
@@ -26,6 +26,8 @@ import { chatTransport, type LingxiMessageMetadata } from '../runtime'
 import { CHAT_TOOL_RENDERERS } from './ToolRenderers'
 import { HarnessDetails } from './HarnessDetails'
 import { copyMessageText, MessageActions } from './MessageActions'
+
+export const MessageAnimationBaseline = createContext(Infinity)
 
 function ReasoningPart({ status }: ReasoningMessagePartProps) {
   return <ProgressCard title="处理进度" steps={[{
@@ -123,6 +125,10 @@ function MessageTextPart() {
   const longPressOrigin = useRef({ x: 0, y: 0 })
   const bodyRef = useRef<HTMLDivElement>(null)
   const metadata = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
+  const animationBaseline = useContext(MessageAnimationBaseline)
+  const interrupted = useAuiState((state) => state.message.status?.type === 'incomplete'
+    && ['error', 'cancelled'].includes(state.message.status.reason))
+    && (!metadata.harness?.message || metadata.harness.message.envelope.requestVersion !== metadata.harness.requestVersion)
   const inlineCitations = Boolean(metadata.harness && (!metadata.harness.message
     || ['queued', 'leased'].includes(metadata.harness.lifecycle ?? '')
     || metadata.harness.message.envelope.citationEvidence !== undefined))
@@ -210,7 +216,8 @@ function MessageTextPart() {
         metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
       )}
     >
-      <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations} />
+      <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations}
+        interrupted={interrupted} animateEntry={metadata.sequence !== null && metadata.sequence > animationBaseline} />
     </div>
     {isMobile && <MobileMessageActions metadata={metadata} getText={getText} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
   </div>
@@ -249,8 +256,15 @@ export function ConversationMessage() {
   const isMobile = useIsMobile()
   const custom = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
   const isSpecialCard = custom.presentation === 'special-card'
-  const showInheritedChrome = isSpecialCard && custom.groupStart && custom.clusterChromeAt !== null
-  const showMessageChrome = !isSpecialCard && custom.clusterChromeAt === null
+  const running = useAuiState((state) => {
+    const messages = state.thread.messages
+    for (let index = messages.findIndex(message => message.id === state.message.id); index >= 0; index -= 1) {
+      const message = messages[index]!
+      if (message.status?.type === 'running') return true
+      if (message.metadata.custom.groupStart) break
+    }
+    return false
+  })
   const createdAt = useAuiState((state) => state.message.createdAt)
   const messageId = useAuiState((state) => state.message.id)
   const content = useAuiState((state) => state.message.content)
@@ -295,7 +309,6 @@ export function ConversationMessage() {
     avatarUrl: null,
     status: 'avail',
   } : undefined)
-  const chromeAt = custom.clusterChromeAt === null ? createdAt : new Date(custom.clusterChromeAt)
   // The external runtime adds an empty assistant placeholder after a mid-run user turn.
   // Real replies come from the transport and already carry their own typing state.
   if (custom.schema !== 'lingxiloop.thread-message.v1') return null
@@ -319,23 +332,22 @@ export function ConversationMessage() {
       <div className={cn(
         'flex shrink-0',
         isMobile ? 'w-8' : 'w-10',
-        showInheritedChrome ? 'items-start' : isMobile ? 'items-end pb-4' : 'items-end pb-5',
-        showMessageChrome && participant?.kind === 'agent' && 'chat-message-avatar',
-        showMessageChrome && participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
-        showMessageChrome && participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
+        !custom.isMine ? 'items-start' : isMobile ? 'items-end pb-4' : 'items-end pb-5',
+        custom.groupStart && participant?.kind === 'agent' && 'chat-message-avatar',
+        custom.groupStart && participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
+        custom.groupStart && participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
       )}>
-        {(showInheritedChrome || (showMessageChrome && custom.groupEnd)) && participant && (
+        {(custom.isMine ? custom.groupEnd : custom.groupStart) && participant && (
           <Avatar p={participant} size={isMobile ? 32 : 38} ringColor="var(--background)" mode="chat" className="transition-[width,height] duration-200" />
         )}
       </div>
       <div className={cn('flex min-w-0 flex-1 flex-col', custom.isMine && 'items-end')}>
-        {(showInheritedChrome || (showMessageChrome && custom.groupStart && !custom.isMine)) && (
+        {custom.groupStart && !custom.isMine && (
           <div className={cn('mb-1 flex items-center gap-2 px-1 text-muted-foreground', isMobile ? 'text-xs' : 'text-[11px]')}>
             <span className="font-medium">{custom.senderName}</span>
-            <time>{chromeAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>
           </div>
         )}
-        <div className="grid w-full min-w-0 gap-0.5">
+        <div className={cn('grid w-full min-w-0 gap-0.5', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {attachments.length > 0 && <div data-slot="message-attachments" className={cn('flex w-full min-w-0 flex-col gap-1', custom.isMine && 'items-end')}>
             {attachments.map((attachment) => <AttachmentCard key={attachment.id} {...attachment} />)}
@@ -359,10 +371,10 @@ export function ConversationMessage() {
           </MessagePrimitive.Error>}
         </div>
         <Reactions metadata={custom} messageId={messageId} />
-        {custom.isMine && (custom.delivery !== 'sent' || (showMessageChrome && custom.groupEnd)) && (
-          <div className={cn('mt-0.5 flex items-center justify-end gap-2 px-1 text-muted-foreground', isMobile ? 'text-[11px]' : 'text-[10px]')}>
-            {showMessageChrome && custom.groupEnd && <time>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
-            {custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}
+        {(custom.groupEnd || (custom.isMine && custom.delivery !== 'sent')) && (
+          <div data-message-footer className={cn('mt-0.5 flex min-h-4 items-center gap-2 px-1 text-muted-foreground', custom.isMine && 'justify-end', isMobile ? 'text-[11px]' : 'text-[10px]')}>
+            {custom.groupEnd && !running && <time dateTime={createdAt.toISOString()}>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
+            {custom.isMine && custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}
           </div>
         )}
       </div>
