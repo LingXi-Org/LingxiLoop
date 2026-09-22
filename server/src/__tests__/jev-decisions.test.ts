@@ -20,7 +20,7 @@ test('product decisions only classify authorized current reads and use frozen re
   assert.match(request.state.query, /new requirement/)
   assert.ok(request.questions.email_0 && request.questions.evidence_kind && request.questions.canvas_gap)
   assert.equal(productDecisionOptions({}), undefined)
-  assert.equal(productDecisionOptions({ TYPESAFE_API_KEY: 'fixture' })?.mode, 'shadow')
+  assert.equal(productDecisionOptions({ TYPESAFE_API_KEY: 'fixture' })?.mode, 'active')
   assert.throws(() => productDecisionOptions({ TYPESAFE_API_KEY: 'fixture', JEV_MODE: 'invalid' }))
 })
 
@@ -39,6 +39,6 @@ test('advice reorders copies, cache is scoped to tenant and revisions; shadow ne
   await hook(different, driver, signal, frozen); assert.equal(calls, 2)
   await hook(context(), driver, signal, { ...frozen, revisions: [] }); assert.equal(calls, 3)
   const shadow = context(), before = structuredClone(shadow)
-  await hook(shadow, { ...driver, configurationFingerprint: 'shadow-failure', mode: () => 'shadow', decide: async () => { throw new Error('unavailable') } }, signal, frozen)
+  await hook(shadow, { ...driver, configurationFingerprint: 'shadow-failure', mode: () => 'shadow', decide: async () => { throw new Error('jev_connection_failed') } }, signal, frozen)
   assert.deepEqual(shadow, before)
 })

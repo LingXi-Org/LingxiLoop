@@ -82,3 +82,6 @@ server/uploads/
 
 docs/HANDOFF.md
 android/app/google-services.json
+
+# Private reproducible evaluation stores and raw local run artifacts
+/eval/results/

@@ -56,7 +56,7 @@ async function withMigrations(run: (url: URL, directory: string) => Promise<void
 
 test('an empty database reaches the latest schema once and repeated migration is a no-op', async () => {
   await withDatabase(async (database) => {
-    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1'])
+    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1','0030_lingxios_5_0_0'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     const { rows } = await database.query('SELECT version,name FROM schema_migrations ORDER BY version')
@@ -90,6 +90,7 @@ test('an empty database reaches the latest schema once and repeated migration is
       { version: 27, name: 'learning_collaboration' },
       { version: 28, name: 'lingxios_3_3_4' },
       { version: 29, name: 'lingxios_4_0_1' },
+      { version: 30, name: 'lingxios_5_0_0' },
     ])
     const { rows: evalSchema } = await database.query(`SELECT
       to_regclass('public.eval_jobs') AS jobs,
@@ -137,7 +138,7 @@ test('collaboration upgrade preserves managed IDs, custom rooms and leaders whil
         VALUES('upgrade-course','collab-upgrade','upgrade-project','upgrade-owner','course-study');
       INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id)
         SELECT id,company_id,jsonb_build_object('members',members,'channelType',2),leader_id FROM conversations WHERE company_id='collab-upgrade'`)
-    assert.deepEqual(await migrateDatabase(database),['0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1'])
+    assert.deepEqual(await migrateDatabase(database),['0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1','0030_lingxios_5_0_0'])
     for (const preset of STARTER_TEAM) {
       const agent = (await database.query('SELECT name,initial,role,system_prompt,capabilities FROM participants WHERE id=$1',[`old-${preset.presetKey}`])).rows[0]
       assert.deepEqual(agent,{ name: preset.name,initial: preset.initial,role: preset.role,system_prompt: preset.systemPrompt,capabilities: preset.capabilities })
@@ -167,7 +168,7 @@ test('earlier 3.2 versions upgrade only runtime registration and preserve existi
       ...!['3.2.9','3.2.10','3.2.11','3.2.12'].includes(version) ? ['0018_lingxios_3_2_9','0019_agent_read_receipts'] : [],
       ...!['3.2.10','3.2.11','3.2.12'].includes(version) ? ['0020_lingxios_3_2_10'] : [],
       ...!['3.2.11','3.2.12'].includes(version) ? ['0021_lingxios_3_2_11'] : [],
-      ...version !== '3.2.12' ? ['0022_lingxios_3_2_12'] : [],'0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1'])
+      ...version !== '3.2.12' ? ['0022_lingxios_3_2_12'] : [],'0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1','0030_lingxios_5_0_0'])
     assert.deepEqual(await migrateDatabase(database),[])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query('SELECT schema_version,protocol_version FROM lingxios_installation')).rows,
@@ -197,7 +198,7 @@ test('read receipt upgrade preserves human receipts and accepts only same-tenant
         VALUES('receipt-room','receipt-tenant','group','Receipts','["reader","agent-reader"]');
       INSERT INTO im_read_receipt_advances(company_id,channel_id,reader_id,previous_read_seq,read_through_seq)
         VALUES('receipt-tenant','receipt-room','reader',0,1)`)
-    assert.deepEqual(await migrateDatabase(database), ['0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1'])
+    assert.deepEqual(await migrateDatabase(database), ['0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1','0030_lingxios_5_0_0'])
     const { appendReadReceiptAdvance } = await import('../im/read-receipts-repository.js')
     await appendReadReceiptAdvance(database, { companyId: 'receipt-tenant', channelId: 'receipt-room', readerId: 'agent-reader', readThroughSeq: 2 })
     assert.deepEqual((await database.query('SELECT reader_id,read_through_seq::int FROM im_read_receipt_advances ORDER BY reader_id')).rows,
@@ -215,7 +216,7 @@ test('3.2.13 upgrades the workspace schema transactionally and repeats without c
     await restoreSchema10(database, '3.2.13')
     await database.query("INSERT INTO users(id,email,display_name) VALUES('upgrade-user','upgrade@example.test','Preserved')")
     await assert.rejects(assertMigrationsCurrent(database), /run `npm run db:migrate`/)
-    assert.deepEqual(await migrateDatabase(database), ['0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1'])
+    assert.deepEqual(await migrateDatabase(database), ['0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1','0030_lingxios_5_0_0'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query(`SELECT to_regclass('lingxios.agent_workspace_checkpoints') AS checkpoints,
@@ -245,11 +246,11 @@ for (const [version, pending] of [['3.3.0', 25], ['3.3.1', 26], ['3.3.2', 28], [
     const schemaBefore = (await database.query(`SELECT table_name,column_name,data_type FROM information_schema.columns
       WHERE table_schema='lingxios' ORDER BY table_name,ordinal_position`)).rows
     await assert.rejects(assertMigrationsCurrent(database), /run `npm run db:migrate`/)
-    assert.deepEqual(await migrateDatabase(database), [...pending === 25 ? ['0025_lingxios_3_3_1'] : [], ...pending <= 26 ? ['0026_lingxios_3_3_2','0027_learning_collaboration'] : [], ...pending <= 28 ? ['0028_lingxios_3_3_4'] : [],'0029_lingxios_4_0_1'])
+    assert.deepEqual(await migrateDatabase(database), [...pending === 25 ? ['0025_lingxios_3_3_1'] : [], ...pending <= 26 ? ['0026_lingxios_3_3_2','0027_learning_collaboration'] : [], ...pending <= 28 ? ['0028_lingxios_3_3_4'] : [],'0029_lingxios_4_0_1','0030_lingxios_5_0_0'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query('SELECT runtime_version,schema_version,protocol_version,schema_sha256 FROM lingxios_installation')).rows,
-      [{ runtime_version: '4.0.1', schema_version: 11, protocol_version: 12, schema_sha256: installation[0].schema_sha256 }])
+      [{ runtime_version: '5.0.0-rc.2', schema_version: 11, protocol_version: 13, schema_sha256: installation[0].schema_sha256 }])
     assert.deepEqual((await database.query(`SELECT table_name,column_name,data_type FROM information_schema.columns
       WHERE table_schema='lingxios' ORDER BY table_name,ordinal_position`)).rows, schemaBefore)
     assert.deepEqual((await database.query("SELECT id FROM users WHERE id='patch-user'")).rows, [{ id: 'patch-user' }])
@@ -260,7 +261,7 @@ for (const [version, pending] of [['3.3.0', 25], ['3.3.1', 26], ['3.3.2', 28], [
 test('protocol 12 cutover refuses leased work and preserves the old installation atomically', async () => {
   await withDatabase(async database => {
     await migrateDatabase(database)
-    await database.query(`DELETE FROM schema_migrations WHERE version=29;
+    await database.query(`DELETE FROM schema_migrations WHERE version>=29;
       UPDATE lingxios_installation SET runtime_version='3.3.4',protocol_version=11;
       INSERT INTO lingxios.agent_work_items(id,tenant_id,agent_id,session_id,kind,lane,trigger_ref,status,started_at,lease_expires_at)
         VALUES('leased-cutover','tenant','agent','session','turn','interactive','message','leased',NOW(),NOW()+INTERVAL '1 minute')`)
@@ -268,7 +269,7 @@ test('protocol 12 cutover refuses leased work and preserves the old installation
     assert.deepEqual((await database.query('SELECT runtime_version,protocol_version FROM lingxios_installation')).rows,
       [{ runtime_version: '3.3.4', protocol_version: 11 }])
     await database.query("UPDATE lingxios.agent_work_items SET status='cancelled' WHERE id='leased-cutover'")
-    assert.deepEqual(await migrateDatabase(database), ['0029_lingxios_4_0_1'])
+    assert.deepEqual(await migrateDatabase(database), ['0029_lingxios_4_0_1','0030_lingxios_5_0_0'])
     assert.deepEqual(await migrateDatabase(database), [])
   })
 })
@@ -278,6 +279,22 @@ test('a recorded runtime patch repairs a stale LingxiOS schema before serving', 
     await migrateDatabase(database)
     await restoreSchema10(database, '3.3.4')
     await migrateDatabase(database)
+    await assertMigrationsCurrent(database)
+  })
+})
+
+test('protocol 13 decision cutover refuses active leases and preserves the installation', async () => {
+  await withDatabase(async database => {
+    await migrateDatabase(database)
+    await database.query(`DELETE FROM schema_migrations WHERE version=30;
+      UPDATE lingxios_installation SET runtime_version='4.0.1',protocol_version=12;
+      INSERT INTO lingxios.agent_work_items(id,tenant_id,agent_id,session_id,kind,lane,trigger_ref,status,started_at,lease_expires_at)
+        VALUES('decision-cutover','tenant','agent','session','turn','interactive','message','leased',NOW(),NOW()+INTERVAL '1 minute')`)
+    await assert.rejects(migrateDatabase(database), /migration 30_lingxios_5_0_0 failed/)
+    assert.deepEqual((await database.query('SELECT runtime_version,protocol_version FROM lingxios_installation')).rows,
+      [{ runtime_version: '4.0.1', protocol_version: 12 }])
+    await database.query("UPDATE lingxios.agent_work_items SET status='cancelled' WHERE id='decision-cutover'")
+    assert.deepEqual(await migrateDatabase(database), ['0030_lingxios_5_0_0'])
     await assertMigrationsCurrent(database)
   })
 })
@@ -373,11 +390,11 @@ test('concurrent migrators serialize and apply each migration once', async () =>
     try {
       const results = await Promise.all([migrateDatabase(database), migrateDatabase(second)])
       assert.deepEqual(results.map((result) => [...result]).sort((a, b) => b.length - a.length), [
-        ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1'],
+        ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_4_0_1','0030_lingxios_5_0_0'],
         [],
       ])
       const { rows } = await database.query('SELECT COUNT(*)::int AS count FROM schema_migrations')
-    assert.deepEqual(rows, [{ count: 29 }])
+    assert.deepEqual(rows, [{ count: 30 }])
     } finally {
       await second.end()
     }

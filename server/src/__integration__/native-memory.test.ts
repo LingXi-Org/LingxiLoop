@@ -76,7 +76,7 @@ for (const jev of [false,true]) test(`native memory writes remain Agent-only and
   if (jev) {
     let calls: Array<{ model: string; cost_usd: string }> = []
     for (let attempt=0;attempt<50;attempt++) {
-      calls=(await pool.query("SELECT model,cost_usd FROM llm_calls WHERE company_id=$1 AND purpose='lingxios.decision'",[companyId])).rows
+      calls=(await pool.query("SELECT model,cost_usd FROM llm_calls WHERE company_id=$1 AND purpose='lingxios.memory-write-review'",[companyId])).rows
       if (calls.length>=2) break
       await delay(100)
     }

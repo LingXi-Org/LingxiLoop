@@ -24,21 +24,24 @@ const instructions = 'Judge semantic fulfillment of expected against input, outp
   + 'Do not infer mastery from self-report, require unrequested actions or invent missing evidence. For factuality, compare factual support and contradictions to expected.'
 const probability = z.number().finite().min(0).max(1)
 const responseSchema = z.object({ model: z.string(), usage: z.object({ input_tokens: z.number().int().nonnegative().safe(), output_tokens: z.number().int().nonnegative().safe() }),
-  answers: z.object({ verdict: z.object({ type: z.literal('choice'), choice: z.enum(['PASS', 'PARTIAL', 'UNSUPPORTED', 'WRONG_SCOPE', 'FAIL', 'UNCERTAIN']),
-    confidence: probability, probabilities: z.object({ PASS: probability, PARTIAL: probability, UNSUPPORTED: probability, WRONG_SCOPE: probability, FAIL: probability, UNCERTAIN: probability }).strict() }) }).strict() })
+  answers: z.record(z.string(), z.object({ type: z.literal('choice'), choice: z.enum(['PASS', 'PARTIAL', 'UNSUPPORTED', 'WRONG_SCOPE', 'FAIL', 'UNCERTAIN']),
+    confidence: probability, probabilities: z.object({ PASS: probability, PARTIAL: probability, UNSUPPORTED: probability, WRONG_SCOPE: probability, FAIL: probability, UNCERTAIN: probability }).strict() })) })
 
 /** Deliberately independent of the runtime client, prompts, credentials and USD ledger. */
 export function jevJudge(raw: z.infer<typeof configSchema>): Judge {
   const config = configSchema.parse(raw), { apiKey: _secret, ...publicConfig } = config
-  return { fingerprint: hash({ ...publicConfig, engine: 'jev-black-box/1', instructions, criteria, threshold: 0.95 }),
+  return { fingerprint: hash({ ...publicConfig, engine: 'jev-black-box/2-atomic', instructions, criteria, threshold: 0.95 }),
     async grade(input, output, expected, signal, requestId, options) {
       const scope = modelScope.getStore(), started = Date.now()
       const call = scope ? span('eval.judge', traceId(), undefined, [{ traceId: scope.traceId, spanId: scope.parentSpanId }]) : undefined
       let usage = zeroUsage(), failure: string | undefined
       try {
-        const state = { input, output, expected, evidence: options?.evidence ?? [], taskSuccess: options?.taskSuccess ?? false }
-        const question = { type: 'choice', instructions, criteria }
-        const body = JSON.stringify({ model: config.model, state, questions: { verdict: question } })
+        const requirements = (expected.match(/[^\n。！？!?]+[。！？!?]?/g) ?? []).filter(text => text.trim())
+        if (!requirements.length || requirements.length > 64) throw new EvaluationError('jev_judge_criteria_limit')
+        const state = { input, output, expected, requirements, evidence: options?.evidence ?? [], taskSuccess: options?.taskSuccess ?? false }
+        const questions = Object.fromEntries(requirements.map((_, i) => [requirements.length === 1 ? 'verdict' : `criterion_${i}`,
+          { type: 'choice', instructions: instructions + ` Assess requirements[${i}] in the context of the complete expected rubric.`, criteria }]))
+        const body = JSON.stringify({ model: config.model, state, questions })
         if (Buffer.byteLength(body) > 30000) throw new EvaluationError('jev_judge_context_limit')
         const reserve = Buffer.byteLength(body) * config.inputCnyPerMillion / 1e6
         if (options?.maxCostCny !== undefined && reserve > options.maxCostCny) throw new EvaluationError('judge_spend_limit_reached')
@@ -59,13 +62,18 @@ export function jevJudge(raw: z.infer<typeof configSchema>): Judge {
         } } finally { await reader.cancel().catch(() => {}); reader.releaseLock() }
         const parsed = responseSchema.safeParse(JSON.parse(Buffer.concat(chunks).toString('utf8')))
         if (!parsed.success || parsed.data.model !== config.model) throw new EvaluationError('invalid_jev_judge_response')
-        const result = parsed.data, answer = result.answers.verdict, values = Object.values(answer.probabilities)
+        const result = parsed.data
+        if (Object.keys(result.answers).length !== requirements.length || Object.keys(questions).some(id => !result.answers[id])) throw new EvaluationError('invalid_jev_judge_coverage')
         usage = { inputTokens: result.usage.input_tokens, outputTokens: result.usage.output_tokens, costCny: result.usage.input_tokens * config.inputCnyPerMillion / 1e6 }
-        if (Math.abs(values.reduce((a, b) => a + b, 0) - 1) > 0.02 || answer.probabilities[answer.choice] + 0.001 < Math.max(...values)) throw new EvaluationError('invalid_jev_judge_distribution')
+        for (const answer of Object.values(result.answers)) {
+          const values = Object.values(answer.probabilities)
+          if (Math.abs(values.reduce((a, b) => a + b, 0) - 1) > 0.02 || answer.probabilities[answer.choice] + 0.001 < Math.max(...values)) throw new EvaluationError('invalid_jev_judge_distribution')
+        }
         if (options?.maxCostCny !== undefined && usage.costCny > options.maxCostCny) throw new EvaluationError('judge_spend_limit_reached')
-        const confident = answer.confidence >= 0.95 && answer.probabilities[answer.choice] >= 0.95
-        return { score: confident ? answer.choice === 'PASS' ? 1 : answer.choice === 'PARTIAL' ? 0.5 : 0 : 0, usage,
-          reason: `semantic_${confident ? answer.choice.toLowerCase() : 'uncertain'}` }
+        const answers = Object.values(result.answers), confident = answers.every(answer => answer.confidence >= 0.95)
+        const verdict = !confident || answers.some(answer => answer.choice === 'UNCERTAIN') ? 'uncertain'
+          : ['WRONG_SCOPE', 'UNSUPPORTED', 'FAIL', 'PARTIAL'].find(choice => answers.some(answer => answer.choice === choice))?.toLowerCase() ?? 'pass'
+        return { score: verdict === 'pass' ? 1 : verdict === 'partial' ? 0.5 : 0, usage, reason: `semantic_${verdict}` }
       } catch (error) {
         failure = error instanceof EvaluationError ? error.code : signal.aborted ? 'cancelled' : 'jev_judge_api_error'
         throw new ModelError(failure, usage)

@@ -16,7 +16,7 @@ import { citationTextViolation } from './citations.js'
 import { IM_CONVERSATION_RULES } from './conversation-style.js'
 import { TEACHER_KNOWLEDGE_ACTIONS } from '../modules/learning/teacher-preset.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
-import { createProductDecisionContext } from './decisions.js'
+import { createProductDecisionContext, prepareInitialKnowledge, productDecisionOptions } from './decisions.js'
 
 type Work = Omit<WorkItem, 'leaseToken'>
 
@@ -127,7 +127,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const capabilities = grants.map(grant => grant.name)
     const knowledgeRetrieval = capabilities.includes('knowledge') ? await retrieveKnowledgeState({ companyId: work.tenantId, conversationId: productConversationId(work),
       authorizationUserId: work.principalId!, audienceUserIds: await audienceHumanIds({ work, database: pool }),
-      query: text, contextQuery: [...recentHistory.map(message => message.payload.body ?? ''),text].join('\n').slice(-8000), limit: 8 }).catch(error => {
+      query: text, contextQuery: [...recentHistory.map(message => message.payload.body ?? ''),text].join('\n').slice(-8000), limit: productDecisionOptions() ? 16 : 8 }).catch(error => {
         if (!(error instanceof OpenNotebookError)) throw error
         return { status: 'unavailable' as const, citations: [] }
       }) : undefined
@@ -161,6 +161,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
 }
 
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {
+  prepareInitialContext = prepareInitialKnowledge
   prepareDecisionContext = createProductDecisionContext()
   override validateAssistantText(text: string, context: TurnContext) {
     return super.validateAssistantText(text, context) ?? citationTextViolation(text, context.evidence ?? [])

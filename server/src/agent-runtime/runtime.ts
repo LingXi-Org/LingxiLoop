@@ -117,13 +117,14 @@ async function recordModelCall(observation: ModelCallObservation): Promise<void>
   const pricing=providerPricing(observation.model), billing=usage && pricing ? siliconFlowCost(usage,pricing) : undefined
   const record = {
     context: {
-      purpose: `lingxios.${observation.purpose}`,
+      purpose: `lingxios.${observation.decision?.purpose ?? observation.purpose}`,
       companyId: observation.tenantId,
       agentId: observation.agentId,
       runId: observation.workId,
       ...(binding ? { conversationId: binding.conversation_id } : {}),
       source: 'agent-os' as const,
       extras: { callId: observation.callId, pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
+        ...(observation.decision ? { decision: observation.decision } : {}),
         ...(usage?.reasoningTokens !== undefined ? { reasoningTokens: usage.reasoningTokens } : {}),
         ...(billing ? { providerPricing: pricing,...billing } : {}),
         ...(observation.instructionsSha256 ? { instructionsSha256: observation.instructionsSha256 } : {}),

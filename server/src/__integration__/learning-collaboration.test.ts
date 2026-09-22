@@ -182,14 +182,20 @@ test('changing a Mission coordinator publishes the current owner in the same tra
     [f.ids.forge,f.ids.forge,1])
 })
 
-test('scripted native execution persists Mission → independent Canvas host → specialist and verifier reports → coordinator return', { timeout: 120000 }, async () => {
+test('scripted native execution persists Mission → independent Canvas host → specialist and verifier reports → coordinator return', { timeout: 120000 }, async t => {
+  const priorKey = process.env.TYPESAFE_API_KEY
+  process.env.TYPESAFE_API_KEY = 'fixture-local-only'
+  t.after(() => { if (priorKey === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = priorKey })
+  const reviews: Array<{ report: { consumedReportIds?: string[] }; sources: unknown[] }> = []
   const f = await fixture(), stages = new Map<string,number>(), usage = { available: true,inputTokens: 100,outputTokens: 30 }
   let work: WorkItem | undefined
   const toolsSeen = new Set<string>()
   const worker = createWorker({ controlPlane: { connectWorker(input) {
     const host = f.api.connectWorker(input)
     return { ...host,async claimWork(...args) { const claimed = await host.claimWork(...args); if (claimed) work = claimed; return claimed } }
-  } },worker: { id: 'learning-collaboration',concurrency: 1,shutdownGraceMs: 1000 },
+  } }, decisions: { modelId: 'jev-1.13.0', configurationFingerprint: 'canvas-acceptance', inputCostMicrosPerMillion: 42000, mode: purpose => purpose === 'canvas-report' ? 'active' : 'off',
+    async decide(request) { reviews.push(request.state as typeof reviews[number]); return { model: 'jev-1.13.0', usage, answers: Object.fromEntries(Object.keys(request.questions).map(id => [id, { type: 'choice' as const, choice: 'yes', confidence: 1, probabilities: { yes: 1, no: 0, uncertain: 0 } }])) } }
+  },worker: { id: 'learning-collaboration',concurrency: 1,shutdownGraceMs: 1000 },
   processors: { handoff: 'conversation', canvas_worker: 'conversation', canvas_summary: 'conversation', mission_coordinator: 'conversation' },model: {
     modelId: 'collaboration-fixture',contextWindowTokens: 200000,
     async run(request) {
@@ -265,6 +271,9 @@ test('scripted native execution persists Mission → independent Canvas host →
     assert.deepEqual((await pool.query('SELECT execution_role FROM canvas_assignment_reports WHERE company_id=$1 ORDER BY execution_role',[f.companyId])).rows,
       [{ execution_role: 'reporter' },{ execution_role: 'specialist' },{ execution_role: 'verifier' }])
     assert.ok(toolsSeen.has('knowledge__list_sources'))
+    assert.equal(reviews.length, 3)
+    assert.equal(reviews.find(row => row.report.consumedReportIds?.length === 2)?.sources.length, 2)
+    assert.ok(reviews.every(row => row.sources.length > 0))
     const events = (await pool.query("SELECT event FROM agent_native_event_outbox WHERE company_id=$1 AND event->>'type'='im.system'",[f.companyId])).rows.map(row => row.event)
     const plans = events.filter(event => event.payload.kind === 'learning_mission').sort((a,b) => a.payload.data.progressVersion-b.payload.data.progressVersion)
     assert.equal(plans.at(-1).payload.data.status,'COMPLETED')

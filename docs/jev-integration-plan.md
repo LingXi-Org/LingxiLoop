@@ -1,5 +1,7 @@
 # Jev 接入评估与 LingxiOS / LingxiLoop 替换计划
 
+> 当前交付状态以第 9 节为准。5.x 为候选包，完整质量验收尚未通过；前文保留首次评估和 4.x 的历史记录。
+
 评估日期：2026-09-22。状态：已实施接入和真实 API 试跑，包发布及验证记录见第 8 节；未部署生产。
 
 最初评估依据：LingxiLoop `8b132f4`、本地 LingxiOS `9ccb102`，以及实际安装的 `@lyyzka/lingxios@3.3.4`。工作区已有其他 UI 修改，本次未修改它们。README 中旧运行时版本不作为依赖事实。
@@ -166,7 +168,7 @@ Choice confidence 是分布统计，不直接等价于“该操作正确的概�
 **推荐首批交付：Jev 决策基础设施 + 记忆写入审核替换 + 记忆合成验证替换 + 知识检索重排 + 独立中文基准。** 第二批重构内容审核和教育/Eval 判定，再扩展其余高收益节点。这样能大量覆盖合适位置，同时把真正减少生成调用的收益与新增质量能力分开验证。
 
 
-## 8. 本轮实施记录（2026-09-22）
+## 8. 上一轮 4.x 实施记录（历史，不代表当前默认配置）
 
 版本：LingxiOS 4.0.1、控制面协议 12、数据库 schema 11；Loop 通过精确发布依赖接入，不复制运行时源代码。产品迁移 `0029_lingxios_4_0_1` 只验证并更新安装版本，保留所有业务与账本数据。升级前排空旧任务、同时更新控制面与 Worker；本轮不执行生产迁移或部署。回退须同样排空任务并恢复匹配的包及安装版本，不混跑协议。
 
@@ -212,3 +214,53 @@ shadow 的当前范围：执行并计量 Jev 请求，保持原判定/排序结�
 - Eval 升级精确公开依赖后 `eval:check` 通过（16 项），没有新增依赖或复用运行时判定实现。
 - 独立临时 PostgreSQL/Redis 上 `db:migrate` 首次应用 29 项、第二次 no-op 通过；6 个相关集成文件全部 48 项通过。包括真实 Worker 产品建议、固定引用、Jev 替换记忆审核、每次 100 输入 token/30 免费输出 token 按 5 微美元保守取整进入产品账本，以及租约任务阻止协议迁移。
 - 未等待远程 CI、未部署生产；没有修改生产配置或数据库。临时密钥文件不在提交中。
+
+## 9. 完整链路开发交付与未通过项（2026-09-22）
+
+包为 `@lyyzka/lingxios@5.0.0-rc.2`，GitHub Packages 标签 `jev-next`；`latest` 保持 4.0.1。包源码提交 `b1f20cf`，tarball SHA-1 `50a40e11d639124cbeaccd83a14da6d2d26c8cdd`。这是可消费的开发候选，不是已通过全部语义质量门的稳定版本。Loop 根、server、eval 使用相同精确版本。控制面协议 13、schema 11、kernel 2；新增 `0030_lingxios_5_0_0.sql`，没有改写历史迁移或另建决策表。
+
+### 实际消费者
+
+| 节点 | 实际采用位置与边界 | 验证范围 |
+| --- | --- | --- |
+| 决策与回退 | `decideOrFallback` 按节点 confidence 阈值；明确拒绝条件由节点声明；生命周期/存储/预算错误不走付费回退 | OS 测试覆盖 429、取消、预算、失败、脱敏摘要 |
+| 记忆写入 | `reviewedMemoryHost`，原子证据、安全、敏感推断、权限、一致性和显式请求；不确定一次原审核 | native-memory 集成、正式提示词真实 12 例试跑 |
+| 记忆合成 | `verifyMemoryDecision` 原子安全/作用域/冲突/保护项和逐项来源；生成提案保留 | OS synthesis 与 memory 测试 |
+| 持久价值 | `hasDurableValue` 只过滤自动合成批次；显式 memory 操作走独立写入口 | OS 内存治理覆盖；领域阈值未完成校准 |
+| 记忆召回 | 最多 16 个授权候选，按请求/快照/配置变化重新排序；保留 core 与存储实体 | 重排及身份不变测试 |
+| 内容与引用 | 完整原请求/修订/回答/真实引用分段；32 题批次；来源片段索引和固定码；无法完整核查回退；已知拒绝提前结束 | 长文本多批次、跨批明确拒绝、引用覆盖测试 |
+| 技能与动作 | 多候选时选完整参数只读动作，含已授权 skills.load；通过正常执行器重新授权/记录；开放参数留给生成模型 | OS runtime 与技能测试 |
+| 成员路线 | 当前授权 roster 最多 16 个按相关性排序，进入实际规划上下文 | 产品上下文测试与真实 roster 集成 |
+| 知识 | 自动上下文与 knowledge.search 都使用授权后 16 个候选，返回最多 8 个；首次固定 marker 前排序；已有 marker 不重绑定 | 知识/引用集成及 16→8 定向测试 |
+| 研究与证据 | research.search / research.read / knowledge.read_source 实际结果/摘要/正文的相关性、充分性及冲突进入返回值；缺材料保留 unknown/补搜依据 | 产品读回路径；没有排序 nDCG 验收 |
+| 学习评分 | 实际 attempt 和活动 rubric 逐维度 L0–L4 候选进入 propose_evaluation；反馈保留生成，来源不替换；自述不能晋级 | 提案参数定向测试、教育集成 |
+| 学习门槛 | Jev confidence 不作为学习 confidence；保留提案的学习证据可信度，由既有教师复核、L3/L4/降级规则决定采用 | 现有学习/教师集成；自动采用率需进一步验证 |
+| 学习事项/活动 | 本人事项、满足前置条件的 PUBLISHED 活动排序与支持分类进入 learningContext；Mission/due 真实读结果参与规划 | 学习协作集成与类型检查 |
+| Canvas | submit_report 审查实际 finding、evidenceRefs 及 consumedReportIds；重新读取来源绑定后提交；独立 verifier 保留 | 专家→verifier→reporter→Mission 的真实 Worker 集成（本地 Jev fixture） |
+| 教师/邮件 | 班级真实读结果排序；邮件正文 intent 进入返回值；不发送或压制正式通知 | teacher/email 集成；语义质量为组件用例 |
+| PPT | presentations.get 读取实际 HTML 产物文本与授权来源；不通过则返回 needs_revision，要求 revise/补证，不返回该产物附件 | HTML 提取、拒绝与放行的定向测试；既有静态结构检查保留 |
+| 公开协议与审计 | 私有 prepareToolDecision、输入绑定 hash、版本化摘要、调用 ID；复用 agent_steps、账本和 outbox，shadow 记录原审核对照 | 包安装/HTTP/事务源变更/权限撤销/重放测试 |
+| 两条执行入口 | Worker 的同一 HostPort 包裹 native 与 Python bridge；付费审核发生在执行事务之前；提交端重新授权与读源 | 共用执行路径、计费/重放测试、memory Python 集成 |
+| 独立 Eval | 原子 criteria，全量 coverage 校验，`jev-black-box/2-atomic` 指纹；固定事实验收不使用 Jev 自评 | Eval 17 项测试；新增独立 suite 实跑失败，未提升 baseline |
+
+配置 key 后默认 active；无 key 保留原路径。全局 `JEV_MODE=off|shadow|active`。节点支持 `JEV_<NODE>_MODE` 和 `JEV_<NODE>_THRESHOLD`，NODE 为 MEMORY_WRITE、MEMORY_VERIFY、CONTENT、MEMORY_RECALL、MEMORY_DURABILITY、PRODUCT、KNOWLEDGE、LEARNING、CANVAS、PPT、ROUTE、RESEARCH、RESEARCH_READ、KNOWLEDGE_READ、EMAIL_INBOX、EMAIL_SHOW、TEACHER_REVIEWS、TEACHER_ACTIVITIES、TEACHER_LEARNERS、TEACHER_OVERVIEW、LEARNING_DUE、LEARNING_UNITS、LEARNING_CURRENT、LEARNING_MISSION。阈值须在 [0,1]；没有把下述探针阈值写入生产提示词。API 与 Worker 要使用一致的节点开关，Worker 提供实际 API key；临时 `.env.jev.local` 不自动加载，继续忽略，不写入 Git、包或日志。
+
+### 真实评测结果与完成边界
+
+完整脱敏结果见 [jev-acceptance-v5.json](jev-acceptance-v5.json)。400 条中文合成语义探针分 240 校准/160 冻结，40 个种子场景族分离；标签为规则和固定事实编写，**不是独立人工标注**。同一族内存在受控重复变体，因此有效独立样本数低于 400。数据和脚本在 eval/datasets、eval/scripts；不能把这些简化问题的结果视为正式各节点提示词的端到端验收。
+
+- 冻结集直接采用 102/160（63.75%），直接采用准确率 100%，回退 36.25%。普通正例最终通过率 100%，该有限样本集误放行/误拒均 0。包括“不确定”标签后的混合总体准确率 **94.375%**。
+- Jev 延迟 p50 287ms / p95 899ms；对照 p50 1176ms / p95 8515ms。混合使用同轮已收集对照响应计算，**不是端到端混合链路延迟**。
+- 冻结集混合调用费用保守上界 $0.027642；本轮全部已观测调用费用保守上界 **$0.134315**，包括独立对照和正式记忆试跑。所有运行最坏预留上界 $2.460425，低于 $10。对照使用官方峰时 CNY 3/9 每百万 token，并将其数值当 USD 上界，不冒充实际美元账单。未读取生产数据。
+- 正式 memory-write-review 提示词 12 例：4 例直接判断正确，8 例需要生成回退；三个普通偏好全部回退。**不能宣称记忆审核已实证完成有效替换**。
+- 通过独立 EvalTarget 运行新的 `jev-atomic-holdout.v1` suite，生成模型对照准确率 **81.875%**，低于 95% 门槛；gate 为 score_below_threshold / pass_rate_below_threshold / baseline_required。没有修改标签、降低门槛或伪造合格 baseline。
+- 尚未完成：正式全部节点的领域阈值校准；400 条实际工作流而非组件问题的验收；检索 nDCG@8 和反证保留定量报告；全部产品节点的真实模型端到端净成本/延迟；长文本/过期来源/跨租户组合的完整真实 API 验收。权限、版本、长文本、取消等已有确定性回归不能替代这些质量指标。
+
+因此本轮完成代码链路、候选包和确定性验证，**完整验收未通过，稳定版发布门保持关闭**。没有生产部署、生产迁移或等待 CI。继续验收时应新建版本化数据/报告；脚本拒绝覆盖旧报告，必须计入已有费用后再预留预算。生成对照凭据通过显式文件参数提供，Eval Judge 不回退读取产品 key。
+
+### 本地验证
+
+- OS 发布门：构建、类型及安装包等全部 **288** 项通过；PostgreSQL stores 的升级、并发 CAS、租约和恢复通过；真实 Worker 进程被杀后恢复通过。
+- Loop：Web/server 类型检查、受影响文件 Biome lint；**79** 项服务端测试通过，包含 PPT 与提案采用检查；另新增来源正文/补搜建议定向检查通过。
+- 独立 Eval：**17** 项通过；新增 suite 的真实质量门失败如上。
+- 临时 PostgreSQL/Redis：此前 34 项产品集成通过；最终候选迁移、记忆、知识、Canvas 共 35 项集成通过；新增协议 13 活动租约阻止迁移定向 1 项通过。首次迁移 30 项，第二次 no-op。所有临时服务属于本轮隔离测试，不涉及生产。

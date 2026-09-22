@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "id": "jev-atomic-holdout",
+  "version": "1",
+  "dataset": {
+    "id": "jev-atomic-holdout",
+    "version": "1"
+  },
+  "samples": 1,
+  "concurrency": 4,
+  "timeoutMs": 45000,
+  "graders": [
+    {
+      "id": "fixed-fact",
+      "kind": "exact",
+      "threshold": 1
+    }
+  ],
+  "gate": {
+    "minScore": 0.95,
+    "minPassRate": 0.95,
+    "maxScoreDrop": 0.02,
+    "maxCaseDrop": 0,
+    "maxP95LatencyMs": 45000,
+    "maxCandidateCostCny": 2,
+    "maxJudgeCostCny": 0,
+    "requireBaseline": true
+  }
+}

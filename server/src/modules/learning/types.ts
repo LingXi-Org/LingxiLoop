@@ -148,6 +148,8 @@ export interface LearningTurnContext {
   actorRole?: LearningRole
   learnerId?: string
   activeMission?: LearningMission
+  learningCases?: import('./cases-repository.js').LearningCaseRecord[]
+  eligibleActivities?: LearningActivity[]
   knowledgeUnits: Array<LearningKnowledgeUnit & {
     level: number
     stateStatus: LearningStateStatus

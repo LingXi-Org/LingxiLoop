@@ -34,3 +34,23 @@ test('independent Jev judge validates protocol, abstains, bounds spend and accou
     assert.notEqual(judge.fingerprint, jevJudge({ ...config, model: 'jev-1.14.0' }).fingerprint)
   } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())) }
 })
+
+test('atomic rubric covers every original criterion and never approves missing answers', async () => {
+  let omit = false
+  const server = createServer(async (request, response) => {
+    let body = ''; for await (const chunk of request) body += chunk
+    const payload = JSON.parse(body)
+    assert.equal(payload.state.expected, '必须引用来源。必须保留反证。')
+    assert.deepEqual(Object.keys(payload.questions), ['criterion_0', 'criterion_1'])
+    const answer = (choice: string) => ({ type: 'choice', choice, confidence: 1, probabilities: { PASS: Number(choice === 'PASS'), PARTIAL: 0, UNSUPPORTED: Number(choice === 'UNSUPPORTED'), WRONG_SCOPE: 0, FAIL: 0, UNCERTAIN: 0 } })
+    response.end(JSON.stringify({ model: 'jev-1.13.0', usage: { input_tokens: 40, output_tokens: 10 }, answers: { criterion_0: answer('PASS'), ...omit ? {} : { criterion_1: answer('UNSUPPORTED') } } }))
+  })
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
+  try {
+    const judge = jevJudge({ apiKey: 'fixture', model: 'jev-1.13.0', inputCnyPerMillion: .3, timeoutMs: 1000, baseURL: `http://127.0.0.1:${(server.address() as {port:number}).port}/v1` })
+    const grade = () => judge.grade('task', 'answer', '必须引用来源。必须保留反证。', new AbortController().signal, 'atomic')
+    assert.equal((await grade()).reason, 'semantic_unsupported')
+    omit = true
+    await assert.rejects(grade(), /invalid_jev_judge_coverage/)
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())) }
+})

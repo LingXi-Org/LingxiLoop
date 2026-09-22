@@ -30,6 +30,8 @@ import type { LearningMission, LearningMissionKind, LearningTurnContext } from '
 import { getLearningMission } from './mission-lifecycle-application.js'
 import { isTeacherRoom } from './visibility.js'
 import { publishMissionProgress } from './mission-progress.js'
+import { listLearningCases } from './cases-repository.js'
+import { listProjectLearningActivities } from './activities-repository.js'
 
 export {
   addLearningMissionSteps,
@@ -444,6 +446,15 @@ export async function loadLearningContext(
   const activeMission = missionId
     ? await findLearningMission(db, room.companyId, room.projectId, missionId)
     : null
+  const learningCases = learnerId ? await listLearningCases(db, { companyId: room.companyId, projectId: room.projectId, learnerFilterId: learnerId, limit: 16 }) : []
+  const eligibleActivities = learnerId ? (await listProjectLearningActivities(db, room.companyId, room.projectId, false))
+    .filter(activity => activity.status === 'PUBLISHED' && activity.knowledgeUnitIds.every(id => {
+      const unit = allUnits.find(row => row.id === id)
+      return unit && unit.prerequisiteKnowledgeUnitIds.every(prerequisite => {
+        const required = allUnits.find(row => row.id === prerequisite)
+        return required && (byUnit.get(prerequisite)?.level ?? 0) >= required.targetLevel
+      })
+    })).slice(0, 16) : []
   return {
     project: {
       id: contextText(room.projectId, 96),
@@ -457,6 +468,8 @@ export async function loadLearningContext(
     ...(learnerId ? { learnerId: contextText(learnerId, 96) } : {}),
     ...(activeMission ? { activeMission: boundedMission(activeMission) } : {}),
     knowledgeUnits,
+    learningCases,
+    eligibleActivities,
     due: knowledgeUnits.filter((item) => item.nextReviewAt && new Date(item.nextReviewAt) <= new Date())
       .slice(0, 12).map((item) => ({
         knowledgeUnitId: item.id,

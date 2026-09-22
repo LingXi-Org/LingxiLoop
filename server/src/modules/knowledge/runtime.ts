@@ -493,7 +493,7 @@ export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Pro
   const searchStartedAt = Date.now()
   let rankedHits: OpenNotebookSearchHit[]
   try {
-    const limit = Math.max(1, Math.min(8, args.limit ?? 8))
+    const limit = Math.max(1, Math.min(16, args.limit ?? 8))
     const [textHits, vectorHits] = await Promise.all([
       openNotebookClient.search({
         notebookId, sourceIds: externalIds, query: args.query,
