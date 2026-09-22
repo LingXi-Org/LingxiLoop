@@ -129,3 +129,9 @@ Old scripts, suites/baselines, server Eval modules, internal runtime adapters/te
 Stop old Eval readers/writers and archive required historical Eval results before deployment. Run `npm run db:migrate` before starting the new processes. Old binaries are incompatible with the removed tables; rollback requires the operations backup. Existing signed Trust snapshots remain immutable historical records; new snapshots omit old Eval fields. No production database is modified by this merge.
 
 Accounting uses CNY (人民币), including prices per million tokens, `costCny`, gate budgets and `eval.cost.cny` spans. Values are used directly without exchange-rate conversion. The v2 engine, suite/manifest/report/baseline schemas reject former USD artifacts; create fresh runs and reviewed baselines instead of relabeling historical costs. The smoke suite is version 2; dataset content is unchanged.
+
+## Jev Judge（独立、显式选择）
+
+设置 `EVAL_JUDGE_PROVIDER=jev`，显式提供 `EVAL_JEV_API_KEY`、固定的 `EVAL_JEV_MODEL`、`EVAL_JEV_INPUT_CNY_PER_MILLION` 和 `EVAL_JEV_TIMEOUT_MS`。不读取运行时 `TYPESAFE_API_KEY`；不导入 OS 的客户端或评判提示词。输出 token 免费，输入价格必须由操作者按人民币配置。
+
+每次判分一次 Choice 请求；PASS=1、PARTIAL=0.5，其余及低置信度=0。协议错误、超时和缺 usage 使样本失败，缺 usage 保守记入调用前预留费用。禁止重试，限制请求/响应大小，检查剩余预算。遥测只记录模型、数量、费用和状态。Jev 指纹与 Autoevals 不同，必须建立新的基线；旧基线不能直接比较。现有 Autoevals 仍为默认。运行时 12 个合成中文样例不构成独立领域校准，不能据此提升 Jev 为正式发布裁判。

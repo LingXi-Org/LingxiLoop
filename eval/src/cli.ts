@@ -1,3 +1,4 @@
+import { jevConfigFromEnv, jevJudge } from './jev.js'
 import { parseArgs } from 'node:util'
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -58,9 +59,13 @@ export async function main(args = process.argv.slice(2)) {
     const dataset = old?.manifest.dataset ?? datasetSchema.parse(readJson(required('dataset')))
     for (const c of dataset.cases) if (c.scenario) validateScenario(c.scenario)
     const target = candidateTarget(candidateConfig, suite.toolBudget ? 'tools' : 'text')
-    const judgeConfig = suite.graders.some(g => g.kind === 'factuality' || g.kind === 'task_success') ? configFromEnv('JUDGE') : undefined
+    const provider = process.env.EVAL_JUDGE_PROVIDER ?? 'autoevals'
+    if (!['autoevals', 'jev'].includes(provider)) throw new EvaluationError('invalid_judge_provider')
+    const judgeConfig = provider === 'autoevals' && suite.graders.some(g => g.kind === 'factuality' || g.kind === 'task_success') ? configFromEnv('JUDGE') : undefined
     if (judgeConfig && judgeConfig.model === candidateConfig.model && judgeConfig.baseURL === candidateConfig.baseURL) throw new EvaluationError('judge_must_be_independent_model')
-    const judge = judgeConfig ? semanticJudge(judgeConfig) : undefined
+    const jevConfig = provider === 'jev' && suite.graders.some(g => g.kind === 'factuality' || g.kind === 'task_success') ? jevConfigFromEnv() : undefined
+    if (jevConfig && jevConfig.model === candidateConfig.model) throw new EvaluationError('judge_must_be_independent_model')
+    const judge = jevConfig ? jevJudge(jevConfig) : judgeConfig ? semanticJudge(judgeConfig) : undefined
     if (values.baseline && values['baseline-file']) throw new EvaluationError('conflicting_baseline_options')
     const baseline = values['baseline-file'] ? importBaseline(store, readJson(values['baseline-file'])) : values.baseline ?? null
     const manifest: Manifest = old?.manifest ?? {

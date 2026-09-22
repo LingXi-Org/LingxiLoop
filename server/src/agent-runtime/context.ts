@@ -16,6 +16,7 @@ import { citationTextViolation } from './citations.js'
 import { IM_CONVERSATION_RULES } from './conversation-style.js'
 import { TEACHER_KNOWLEDGE_ACTIONS } from '../modules/learning/teacher-preset.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
+import { createProductDecisionContext } from './decisions.js'
 
 type Work = Omit<WorkItem, 'leaseToken'>
 
@@ -160,6 +161,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
 }
 
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {
+  prepareDecisionContext = createProductDecisionContext()
   override validateAssistantText(text: string, context: TurnContext) {
     return super.validateAssistantText(text, context) ?? citationTextViolation(text, context.evidence ?? [])
   }

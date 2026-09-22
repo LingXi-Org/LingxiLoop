@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
-import { createLingxiOS, type CitationEvidence } from '@lyyzka/lingxios'
+import { createLingxiOS, type CitationEvidence, type DecisionAnswer } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { z } from 'zod'
 import { nativeTool } from '../agents/tools.js'
@@ -53,12 +53,21 @@ test('product correction commits frozen excerpts and preserves them in IM delive
       return { ...await product.contextProvider.loadContext(work), evidence }
     } }, delivery: createProductDelivery(() => application) })
   const api = await application
-  let calls = 0
+  let calls = 0, decisionCalls = 0
   const body = '建议[**分散安排**复习](#cite-S1)，并[隔天回顾](#cite-S1)，[主动回忆](#cite-S2)，[结合练习](#cite-S1,S3)，[调整间隔](#cite-S4)。'
   const worker = createWorker({ controlPlane: api, policy: new ProductRuntimePolicy(),
+    decisions: { modelId: 'jev-1.13.0', configurationFingerprint: 'product-jev-fixture', inputCostMicrosPerMillion: 42000,
+      mode: purpose => purpose === 'product-context' ? 'active' : 'off', async decide(request) {
+        decisionCalls++
+        return { model: 'jev-1.13.0', usage: { available: true, inputTokens: 100, outputTokens: 30 },
+          answers: Object.fromEntries(Object.entries(request.questions).map(([key, question]) => [key, question.type === 'score'
+            ? { type: 'score', score: key === 'evidence_0' ? 0 : 2, confidence: 1, probabilities: {}, legend: {} }
+            : { type: 'choice', choice: 'yes', confidence: 1, probabilities: { yes: 1, no: 0, uncertain: 0 } }] as [string, DecisionAnswer])) }
+      } },
     modelBudget: { inputCostMicrosPerMillion: 1, outputCostMicrosPerMillion: 1 },
     model: { modelId: 'citation-fixture', contextWindowTokens: 200000, async run(request) {
       calls++
+      assert.match(JSON.stringify(request.items), /decisionAdvice/)
       if (calls === 1) evidence[0].excerpt = '后来更新的内容，不应替换已冻结节选。'
       else if (calls === 2) {
         assert.match(JSON.stringify(request.items), /supported answer wording/)
@@ -101,6 +110,7 @@ test('product correction commits frozen excerpts and preserves them in IM delive
     assert.equal(executed, true)
     const result = { message: await api.readMessage(identity) }
     assert.equal(calls, 3)
+    assert.ok(decisionCalls >= 2, 'new observed evidence must receive fresh budgeted decisions')
     assert.equal(result.message?.body, body)
     assert.deepEqual(result.message?.envelope.citationEvidence, expectedEvidence)
     assert.deepEqual(result.message?.envelope.citations.map(citation => citation.sources.map(source => source.chunkIds)),

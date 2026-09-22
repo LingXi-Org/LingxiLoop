@@ -6,6 +6,7 @@ import { env } from '../env.js'
 import { recordLlmCall } from '../llm-ledger.js'
 import { createProductTools } from './tools.js'
 import { createProductContext, ProductRuntimePolicy } from './context.js'
+import { productDecisionOptions } from './decisions.js'
 import { createProductDelivery } from './delivery.js'
 import { createCanvasRuntime, completeCanvasWork } from '../modules/canvas/index.js'
 import { resolveMemoryScopes } from '../modules/memory/public.js'
@@ -169,7 +170,9 @@ export async function listenLingxiOSControl() {
 export async function startLingxiOSWorker() {
   if (worker) throw new Error('LingxiOS worker already started in this process')
   const concurrency = positiveInteger('AGENT_OS_MAX_CONCURRENT_RUNS', 2)
+  const decisions = productDecisionOptions()
   const options = {
+    ...(decisions ? { decisions } : {}),
     modelBudget: common().modelBudget,
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),

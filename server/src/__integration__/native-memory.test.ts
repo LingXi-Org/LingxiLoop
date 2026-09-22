@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
+import { setTimeout as delay } from 'node:timers/promises'
 import { createServer, type Server } from 'node:http'
 import { after, before, test } from 'node:test'
-import type { MemoryDocument } from '@lyyzka/lingxios'
+import type { DecisionDriver, MemoryDocument } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
@@ -18,7 +19,8 @@ before(async()=>{
 })
 after(async()=>{ await worker?.stop();await teardownAll(server) })
 
-test('native memory writes remain Agent-only and preserve reviewed versioned writes',async()=>{
+for (const jev of [false,true]) test(`native memory writes remain Agent-only and preserve reviewed versioned writes (${jev ? 'Jev' : 'generative'})`,async()=>{
+  await worker?.stop();await resetAllTables()
   const { companyId,projectId,agentId }=await seedCompanyWithAgent()
   await seedUserMembership('test-owner',companyId)
   const conversationId='memory-room',members=['test-owner',agentId]
@@ -43,7 +45,10 @@ test('native memory writes remain Agent-only and preserve reviewed versioned wri
   const content={ path: 'notes/leases.md',title: 'Lease fencing',description: 'Checked learning note',body: 'Fencing rejects stale workers.',layer: 'core' as const,locked: true }
   let document: MemoryDocument | undefined,hop=0,reviewed=0
   const usage={ available: true,inputTokens: 100,outputTokens: 30,cachedInputTokens: 20 }
-  worker=createWorker({ controlPlane: app,worker: { id: 'native-memory-worker' },model: {
+  const decisions: DecisionDriver = { modelId: 'jev-1.13.0',configurationFingerprint: 'jev-integration-fixture',inputCostMicrosPerMillion: 42000,
+    mode: purpose=>purpose==='memory-write-review' ? 'active' : 'off',async decide(request) { reviewed++;return { model: 'jev-1.13.0',usage,
+      answers: Object.fromEntries(Object.keys(request.questions).map(key=>[key,{ type: 'choice' as const,choice: 'yes',confidence: 1,probabilities: { yes: 1,no: 0,uncertain: 0 } }])) } } }
+  worker=createWorker({ ...(jev ? { decisions } : {}),controlPlane: app,worker: { id: 'native-memory-worker' },model: {
     modelId: 'native-memory-fixture',contextWindowTokens: 200000,
     async run() {
       hop++
@@ -52,7 +57,7 @@ test('native memory writes remain Agent-only and preserve reviewed versioned wri
       return { output: [{ role: 'assistant',content: 'Checked the protected memory.' }],text: 'Checked the protected memory.',model: 'native-memory-fixture',usage }
     },
     async structured(input) {
-      if (input.instructions.includes('"approved":boolean')) { reviewed++;return { value: { approved: true,explicit: true,confidence: 1 },model: 'native-memory-fixture',usage } }
+      if (input.instructions.includes('"approved":boolean')) { assert.equal(jev,false,'active Jev must replace this generative reviewer');reviewed++;return { value: { approved: true,explicit: true,confidence: 1 },model: 'native-memory-fixture',usage } }
       return { value: { missing: [] },model: 'native-memory-fixture',usage }
     },async compact(){throw new Error('fixture must not compact')},
   } })
@@ -68,6 +73,17 @@ test('native memory writes remain Agent-only and preserve reviewed versioned wri
   assert.deepEqual(await memory.scopes(nextIdentity),scopes)
   hop=0
   assert.equal(await worker.runNext(),true)
+  if (jev) {
+    let calls: Array<{ model: string; cost_usd: string }> = []
+    for (let attempt=0;attempt<50;attempt++) {
+      calls=(await pool.query("SELECT model,cost_usd FROM llm_calls WHERE company_id=$1 AND purpose='lingxios.decision'",[companyId])).rows
+      if (calls.length>=2) break
+      await delay(100)
+    }
+    assert.ok(calls.length>=2,'Jev calls must reach the shared product ledger')
+    assert.deepEqual(calls.map(call=>({ model: call.model,costUsd: Number(call.cost_usd) })),
+      calls.map(()=>({ model: 'jev-1.13.0',costUsd: 0.000005 })))
+  }
   document=(await memory.read(nextIdentity,scope,document.id))!
   assert.equal(document.version,2);assert.equal(document.body,'Explicitly checked and updated fencing.')
 })

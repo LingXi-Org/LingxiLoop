@@ -58,7 +58,7 @@ async function applyRuntimeUpgrade(client: PoolClient, runtimeVersion = RUNTIME_
   const schema = await runtimeSchema()
   await client.query(`UPDATE public.lingxios_installation
     SET runtime_version=$1,schema_version=$2,protocol_version=$3,schema_sha256=$4,installed_at=NOW()
-    WHERE singleton`, [runtimeVersion,releaseVersions.schema,releaseVersions.controlPlane,schema.hash])
+    WHERE singleton`, [runtimeVersion,releaseVersions.schema,runtimeVersion === RUNTIME_SCHEMA_RELEASE ? 11 : releaseVersions.controlPlane,schema.hash])
 }
 
 async function assertRuntimeCurrent(client: PoolClient): Promise<void> {
@@ -206,7 +206,7 @@ export async function migrateDatabase(
           const schema = await runtimeSchema()
           await client.query(schema.sql)
           await client.query(`INSERT INTO public.lingxios_installation(runtime_version,schema_version,protocol_version,schema_sha256)
-            VALUES($1,$2,$3,$4)`, [RUNTIME_SCHEMA_RELEASE,releaseVersions.schema,releaseVersions.controlPlane,schema.hash])
+            VALUES($1,$2,$3,$4)`, [RUNTIME_SCHEMA_RELEASE,releaseVersions.schema,11,schema.hash])
         }
         if (migration.version === RUNTIME_UPGRADE_VERSION && migration.name === 'lingxios_3_2'
           || migration.version === 24 && migration.name === 'lingxios_3_3_0') {

@@ -14,6 +14,7 @@ const testsByScope = {
     'server/src/__tests__/domain-events.test.ts',
     'server/src/__tests__/entitlement-resolver.test.ts',
     'server/src/__tests__/llm-ledger.test.ts',
+    'server/src/__tests__/jev-decisions.test.ts',
     'server/src/__tests__/agent-tool-registry.test.ts',
     'server/src/__tests__/confidence-citations.test.ts',
     'server/src/__tests__/knowledge-retrieval.test.ts',
