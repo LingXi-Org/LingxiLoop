@@ -7,7 +7,7 @@ x-logging: &logging
     max-file: "3"
 
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:3e30a24616ab132b8b129fe854b52f85fb45f48a
+  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:6f03c55a523c0c99897991062cf7ca187d6f1315
   pull_policy: always
   restart: unless-stopped
   environment: &runtime-environment
@@ -31,12 +31,13 @@ x-runtime: &runtime
     OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
     OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
     OPENAI_MODEL: ${OPENAI_MODEL:-deepseek-ai/DeepSeek-V4-Flash}
+    AGENT_OS_RESPONSE_POLICY: ${AGENT_OS_RESPONSE_POLICY:-auto}
     AGENT_OS_HOMES_ROOT: /var/lib/lingxios/homes
     AGENT_OS_PYTHON: /usr/bin/python3
     LINGXIOS_CONTAINER_ISOLATED: "true"
-    AGENT_OS_MAX_CONCURRENT_RUNS: ${AGENT_OS_MAX_CONCURRENT_RUNS:-1}
-    AGENT_OS_RESERVED_INTERACTIVE_RUNS: "0"
-    AGENT_OS_MODEL_CONCURRENCY: "1"
+    AGENT_OS_MAX_CONCURRENT_RUNS: ${AGENT_OS_MAX_CONCURRENT_RUNS:-2}
+    AGENT_OS_RESERVED_INTERACTIVE_RUNS: ${AGENT_OS_RESERVED_INTERACTIVE_RUNS:-1}
+    AGENT_OS_MODEL_CONCURRENCY: ${AGENT_OS_MODEL_CONCURRENCY:-2}
     AGENT_OS_MAX_MODEL_CALLS: ${AGENT_OS_MAX_MODEL_CALLS:-128}
     AGENT_OS_MAX_MODEL_TOKENS: ${AGENT_OS_MAX_MODEL_TOKENS:-1000000}
     AGENT_OS_MAX_MODEL_COST_MICROS: ${AGENT_OS_MAX_MODEL_COST_MICROS:-10000000}
@@ -105,7 +106,9 @@ services:
 
   worker:
     <<: *runtime
-    environment: *runtime-environment
+    environment:
+      <<: *runtime-environment
+      NODE_OPTIONS: --max-old-space-size=640
     command: ["npm", "run", "worker:start"]
     depends_on:
       lingxiloop:
@@ -123,8 +126,8 @@ services:
       timeout: 5s
       retries: 12
       start_period: 60s
-    cpus: "0.5"
-    mem_limit: 640m
+    cpus: "1.0"
+    mem_limit: 1g
 
 volumes:
   lingxios-homes: {}
