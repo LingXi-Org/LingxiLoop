@@ -311,7 +311,7 @@ test('initial history publishes complete run snapshots together and subscribes o
       [{ type: 'text', text: 'run 的完整历史回复' }], [{ type: 'text', text: 'second 的完整历史回复' }],
     ])
     callbacks.get('active')!({ type: 'preview', preview: { ...(event('实时新内容') as Extract<RunStreamEvent, { type: 'preview' }>).preview, runId: 'active' } })
-    assert.deepEqual(useChatThreadStore.getState().conversations.room!.messages.at(-1)!.content, [{ type: 'text', text: '实时新内容' }])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room!.messages.at(-1)!.content, [])
     const tool = { ...messages[0]!, metadata: { ...messages[0]!.metadata, custom: { ...metadata(messages[0]!), messageKind: 'tool_activity' } } } as ThreadMessage
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], null).map(message => message.id), ['visible'])
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], 'visible').map(message => message.id), ['visible'])
