@@ -56,9 +56,9 @@ export function readHarness(envelope: ImEnvelope): RunView | undefined {
 }
 
 export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
-  if (view.lifecycle === 'failed' && !view.message) return []
-  if (view.lifecycle === 'leased' || view.lifecycle === 'queued') return view.draft ? [{ type: 'text', text: view.draft }] : []
-  if (!view.message) return view.draft ? [{ type: 'text', text: view.draft }] : []
+  // Only committed messages may enter the conversation; model drafts can contain private reasoning.
+  if (view.lifecycle === 'queued' || view.lifecycle === 'leased') return []
+  if (!view.message) return []
   const segments = responseSegments(view.message.envelope)
   const evidence = view.message.envelope.citationEvidence
   const parts: ThreadAssistantMessagePart[] = []
@@ -108,7 +108,7 @@ export function harnessLabel(view: RunView): string {
   if (view.lifecycle === 'cancelled') return '已取消'
   if (view.lifecycle === 'failed') return '执行失败'
   if (view.lifecycle === 'queued') return '排队中'
-  if (view.lifecycle === 'leased') return view.draft ? '正文草稿' : '执行中'
+  if (view.lifecycle === 'leased') return '执行中'
   switch (view.goalOutcome?.status) {
     case 'satisfied': return '已完成'
     case 'partial': return '部分完成'

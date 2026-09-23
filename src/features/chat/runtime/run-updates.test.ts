@@ -91,13 +91,13 @@ test('a run discovered after a sent bubble owns a separate preview and cannot er
   }
 })
 
-test('a failure preserves the preview for complete-bubble rendering while retaining the specific error', () => {
+test('a failure discards the uncommitted preview while retaining the specific error', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
   state = applyRunUpdate(state,target,event('完整气泡\n\n尚未完成的尾段'),participants.agent)
   state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 8,kind: 'run.failed',stage: 'failed',visibility: 'user',
     data: { error: 'Final assessment protocol correction exhausted' } } },participants.agent)
   assert.deepEqual(state.activeRuns,{})
-  assert.deepEqual(state.messages[0].content,[{ type: 'text', text: '完整气泡\n\n尚未完成的尾段' }])
+  assert.deepEqual(state.messages[0].content,[])
   assert.deepEqual(state.messages[0].status,{ type: 'incomplete',reason: 'error' })
   assert.equal(metadata(state.messages[0]).harnessError,'Final assessment protocol correction exhausted')
 })
@@ -227,17 +227,17 @@ test('citation projections agree across snapshots and IM replay and disappear be
   assert.deepEqual(state.messages[0].content, [])
   state = applyRunUpdate(state, target, { type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 2,
     requestVersion: 2, attemptId: 'next', seq: 1, draft: '新的草稿' } }, participants.agent)
-  assert.deepEqual(state.messages[0].content, [{ type: 'text', text: '新的草稿' }])
+  assert.deepEqual(state.messages[0].content, [])
 })
 
-test('paragraph deltas are immediate, replay is idempotent and cancellation retains visible text', () => {
+test('paragraph deltas stay uncommitted and cancellation does not expose them', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: snapshot('run', 'leased') })
   state = applyRunUpdate(state, target, event('第一段'))
   const delta: RunStreamEvent = { type: 'preview', preview: { kind: 'delta', runId: 'run', fence: 1,
     requestVersion: 1, attemptId: 'attempt', fromSeq: 1, seq: 2, delta: '\n\n第二段 **正在' } }
   state = applyRunUpdate(state, target, delta)
   state = applyRunUpdate(state, target, delta)
-  const content = [{ type: 'text', text: '第一段\n\n第二段 **正在' }]
+  const content: [] = []
   assert.deepEqual(state.messages[0]!.content, content)
   state = applyRunUpdate(state, target, { type: 'event', event: { runId: 'run', seq: 3,
     kind: 'run.cancelled', stage: 'completed', visibility: 'user', data: {} } })
@@ -311,7 +311,7 @@ test('initial history publishes complete run snapshots together and subscribes o
       [{ type: 'text', text: 'run 的完整历史回复' }], [{ type: 'text', text: 'second 的完整历史回复' }],
     ])
     callbacks.get('active')!({ type: 'preview', preview: { ...(event('实时新内容') as Extract<RunStreamEvent, { type: 'preview' }>).preview, runId: 'active' } })
-    assert.deepEqual(useChatThreadStore.getState().conversations.room!.messages.at(-1)!.content, [{ type: 'text', text: '实时新内容' }])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room!.messages.at(-1)!.content, [])
     const tool = { ...messages[0]!, metadata: { ...messages[0]!.metadata, custom: { ...metadata(messages[0]!), messageKind: 'tool_activity' } } } as ThreadMessage
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], null).map(message => message.id), ['visible'])
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], 'visible').map(message => message.id), ['visible'])

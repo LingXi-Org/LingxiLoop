@@ -149,9 +149,7 @@ export function serializeThreadMessage(message: ThreadMessage): SerializableThre
 
 export function messageText(message: ThreadMessage): string {
   return message.content
-    .filter((part): part is Extract<(typeof message.content)[number], { type: 'text' | 'reasoning' }> => (
-      part.type === 'text' || part.type === 'reasoning'
-    ))
+    .filter((part): part is Extract<(typeof message.content)[number], { type: 'text' }> => part.type === 'text')
     .map((part) => part.text)
     .join('\n')
 }

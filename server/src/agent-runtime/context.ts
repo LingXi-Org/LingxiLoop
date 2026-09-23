@@ -62,8 +62,15 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     if (teacherContext) await authorizeAudienceRead({ work,database: pool },{ projectId: teacherContext.course.projectId,action: 'learning:manage',
       resource: { type: 'project',id: teacherContext.course.projectId } })
     if (canvasRun && (!profile.capabilities.includes('canvas') || profile.teacher_managed)) throw new NoEffectError('Canvas capability was revoked', 'forbidden')
+    const learningAudienceSafe = !profile.capabilities.includes('learning') || (await Promise.all(
+      (await audienceHumanIds({ work,database: pool })).filter(id => id !== work.principalId).map(actorUserId =>
+        permissionService.can({ actorUserId,companyId: work.tenantId,action: 'learning:manage',
+          resource: { type: 'conversation',id: productConversationId(work) } })),
+    )).every(decision => decision.allowed)
+    if (!learningAudienceSafe && work.kind === 'mission_coordinator') throw new NoEffectError('learning audience is no longer authorized','forbidden')
     const available = tools.filter(tool => {
       const namespace = tool.action.split('.')[0]
+      if (namespace === 'learning' && !learningAudienceSafe) return false
       if (work.conversation?.internal && ['chat.send','chat.ask'].includes(tool.action)) return false
       if (profile.teacher_managed) return namespace === 'teacher' && (work.kind !== 'teacher_digest' || digestActions.has(tool.action))
         || tool.action === 'chat.send' && work.kind === 'turn' && work.lane === 'interactive' && !!teacherContext
