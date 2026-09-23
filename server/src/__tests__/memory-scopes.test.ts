@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 import type { Queryable } from '../db/queryable.js'
+import { ForbiddenError } from '../modules/access/errors.js'
 
 test('teacher memory is empty only after authorization; ordinary memory and revocation remain enforced', async () => {
   const assertCan = mock.fn(async (_input: unknown) => {})
-  mock.module('../modules/access/public.js', { namedExports: { createPermissionService: () => ({ assertCan }) } })
+  mock.module('../modules/access/public.js', { namedExports: { createPermissionService: () => ({ assertCan }), ForbiddenError } })
   const { resolveMemoryScopes } = await import('../modules/memory/public.js')
   const identity = { tenantId: 'company',principalId: 'human',agentId: 'agent',sessionId: 'session',workId: 'run' }
   let room: { conversation_id: string; teacher_managed: boolean } | undefined = { conversation_id: 'room',teacher_managed: true }
@@ -21,6 +22,8 @@ test('teacher memory is empty only after authorization; ordinary memory and revo
   room.teacher_managed = true
   assertCan.mock.mockImplementation(async () => { throw new Error('permission revoked') })
   await assert.rejects(resolveMemoryScopes(identity,db),/permission revoked/)
+  assertCan.mock.mockImplementation(async () => { throw new ForbiddenError('RESOURCE_MEMBERSHIP_REQUIRED') })
+  await assert.rejects(resolveMemoryScopes(identity,db), { code: 'forbidden' })
   room = undefined
   await assert.rejects(resolveMemoryScopes(identity,db),/memory source identity or membership was revoked/)
 })

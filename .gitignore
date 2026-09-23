@@ -25,6 +25,7 @@ dist
 dist-admin
 dist-ssr
 /artifacts/eval-*.json
+/eval/results/
 /artifacts/.env*
 /artifacts/playwright/.playwright-artifacts-*/
 /artifacts/playwright/*/error-context.md

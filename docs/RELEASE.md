@@ -2,7 +2,7 @@
 
 The server image contains the exact published LingxiOS dependency and its
 Python runner. Database migrations must complete before Web or Worker starts;
-only App B runs the Worker.
+App A and App B each run a Worker.
 
 The GitHub workflow publishes immutable commit-tagged images, pins the four
 Compose projects under `deploy/komodo`, applies D1 migrations when needed, and
@@ -19,6 +19,11 @@ administrator, delete `BOOTSTRAP_ADMIN_TOKEN`.
 
 Production is forward-only. Fix failed releases in place; there is no retained
 application-state rollback for the first Komodo release.
+
+For ordinary chat, `AGENT_OS_RESPONSE_POLICY=auto` selects the fast profile and
+upgrades complex work to deep execution. Set `AGENT_OS_RESPONSE_POLICY=deep` on
+both Workers to restore the previous deep-only behavior without reverting
+database state.
 
 The production operations MCP additionally requires the five Worker secrets
 documented in `deploy/komodo/README.md`. Apply them with `wrangler secret put`,

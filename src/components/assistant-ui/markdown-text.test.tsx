@@ -9,36 +9,47 @@ function Text() { return <MarkdownText segmented /> }
 function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
 function Preview({ text, running, claims, inlineCitations, interrupted = false, animateEntry = false }: { text: string; running: boolean; claims?: MarkdownConfidenceClaim[]; inlineCitations?: boolean; interrupted?: boolean; animateEntry?: boolean }) {
   const messages: ThreadMessage[] = [{ id: 'reply', role: 'assistant', createdAt: new Date(0),
-    content: [{ type: 'text', text }], status: running ? { type: 'running' } : { type: 'complete', reason: 'stop' },
+    content: [{ type: 'text', text }], status: running ? { type: 'running' } : interrupted ? { type: 'incomplete', reason: 'cancelled' } : { type: 'complete', reason: 'stop' },
     metadata: { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], custom: {} } }]
   const runtime = useExternalStoreRuntime({ messages, isRunning: running, onNew: async () => {} })
-  function CitedMessage() { return <MessagePrimitive.Parts components={{ Text: () => <MarkdownText segmented confidenceClaims={claims} inlineCitations={inlineCitations} interrupted={interrupted} animateEntry={animateEntry} /> }} /> }
+  function CitedMessage() { return <MessagePrimitive.Parts components={{ Text: () => <MarkdownText segmented confidenceClaims={claims} inlineCitations={inlineCitations} animateEntry={animateEntry} /> }} /> }
   return <AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{ AssistantMessage: CitedMessage, UserMessage: Message }} /></AssistantRuntimeProvider>
 }
 
-test('streamed paragraphs only reveal complete blocks, including the final block on completion', () => {
-  for (const [text, liveCount, finalCount] of [
-    ['第一段', 0, 1], ['第一段\n\n', 1, 1], ['第一段\n\n第二段 **正在', 1, 2],
-    ['第一段\n\n第二段\n\n- 一\n- 二\n\n```js\nconst value = 1\n```\n\n| 项目 | 结果 |\n| --- | --- |\n| 测试 | 正常 |', 4, 5],
+test('the first character and each growing block are visible before completion', () => {
+  for (const [text, count] of [
+    ['第', 1], ['第一段', 1], ['第一段\n\n', 1], ['第一段\n\n第二段 **正在', 2],
+    ['第一段\n\n第二段\n\n- 一\n- 二\n\n```js\nconst value = 1\n```\n\n| 项目 | 结果 |\n| --- | --- |\n| 测试 | 正常 |', 4],
   ] as const) {
     for (const inlineCitations of [true, false]) {
       for (const running of [true, false]) {
         const html = renderToStaticMarkup(<Preview text={text} running={running} inlineCitations={inlineCitations} />)
-        const count = running ? liveCount : finalCount
         assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, count)
-        assert.equal(html.includes('第一段'), count > 0)
+        assert.ok(html.includes(text === '第' ? '第' : '第一段'))
       }
     }
   }
 })
 
-test('unfinished structural blocks stay buffered across blank lines and interruption', () => {
+test('lists share a bubble with their lead-in without merging subsequent paragraphs', () => {
+  for (const lead of ['学习方面', '**学习方面**', '## 学习方面']) {
+    for (const list of ['- 一\n- 二', '1. 一\n2. 二']) {
+      for (const running of [false, true]) {
+        const html = renderToStaticMarkup(<Preview text={`${lead}\n\n${list}\n\n接下来`} running={running} />)
+        assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 2)
+        assert.match(html, /学习方面[\s\S]*<\/(?:p|h2)>\s*<(?:ul|ol)/)
+        assert.ok(html.includes('接下来'))
+      }
+    }
+  }
+})
+
+test('unfinished structural blocks remain visible across blank lines and interruption', () => {
   for (const tail of ['- 一\n\n- 二', '> 引用\n>\n> 继续', '```js\nconst x = 1\n\n', '| 表头 |\n| --- |\n| 值 |']) {
     for (const interrupted of [false, true]) {
       const html = renderToStaticMarkup(<Preview text={`已展示\n\n${tail}`} running={!interrupted} interrupted={interrupted} inlineCitations />)
-      assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 1)
       assert.match(html, /已展示/)
-      assert.doesNotMatch(html, /<ul|<blockquote|<table|<pre/)
+      assert.match(html, /<ul|<blockquote|<table|<pre/)
     }
   }
 })
@@ -59,7 +70,7 @@ test('committed citations preserve Markdown and normal links, with one shared ba
   const html = renderToStaticMarkup(<Preview text={text} running={false} claims={claims} />)
   assert.equal((html.match(/data-confidence-id=/g) ?? []).length, 3)
   assert.equal((html.match(/data-slot="confidence-basis"/g) ?? []).length, 1)
-  assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 5)
+  assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 4)
   assert.match(html, /data-streamdown="strong">事实<\/span>/)
   assert.match(html, /data-streamdown="link"[^>]*>官网<\/button>/)
   assert.match(html, /<ul/)
@@ -142,9 +153,9 @@ test('new drafts show only body text and never activate citation navigation or s
   for (const running of [true, false]) {
     const html = renderToStaticMarkup(<Preview text={'[间隔复习](#cite-S1) [【S2】](#cite-S2) [**【S2】**](#cite-S2)\n\n第二段'} running={running} inlineCitations />)
     assert.match(html, /间隔复习/)
-    assert.equal(html.includes('第二段'), !running)
+    assert.ok(html.includes('第二段'))
     assert.doesNotMatch(html, /data-streamdown="link"|data-confidence-id|confidence-basis|【S2】/)
-    assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, running ? 1 : 2)
+    assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 2)
   }
   const claims = [{ id: 'source', text: '间隔复习', confidence: 'grounded' as const, basis: '来源标题\n原文第一段。\n<script>只是原文</script>' }]
   const html = renderToStaticMarkup(<ConfidenceMarker claims={claims} hoveredId="source" onHover={() => {}} />)

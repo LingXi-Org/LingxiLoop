@@ -1,5 +1,5 @@
 import { NoEffectError, type MemoryOptions } from '@lyyzka/lingxios'
-import { createPermissionService } from '../access/public.js'
+import { createPermissionService, ForbiddenError } from '../access/public.js'
 import type { Queryable } from '../../db/queryable.js'
 
 /** The native service additionally partitions IM scopes by principal, Agent and frozen audience. */
@@ -18,7 +18,10 @@ export const resolveMemoryScopes: MemoryOptions['resolveScopes'] = async (identi
   [identity.tenantId,identity.sessionId,identity.agentId,identity.principalId,identity.workId ?? null])).rows[0]
   if (!room) throw new NoEffectError('memory source identity or membership was revoked', 'forbidden')
   await createPermissionService(db, { lockDependencies: true }).assertCan({ actorUserId: identity.principalId, companyId: identity.tenantId,
-    action: 'agent_memory:read', resource: { type: 'conversation', id: room.conversation_id } })
+    action: 'agent_memory:read', resource: { type: 'conversation', id: room.conversation_id } }).catch(error => {
+      if (error instanceof ForbiddenError) throw new NoEffectError('memory source authorization was revoked', 'forbidden')
+      throw error
+    })
   signal?.throwIfAborted()
   // Teachers use live course facts; no memory scopes is a valid context, not a revoked identity.
   if (room.teacher_managed) return []
