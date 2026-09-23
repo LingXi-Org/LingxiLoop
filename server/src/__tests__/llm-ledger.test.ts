@@ -16,7 +16,7 @@ test('SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rat
   assert.throws(()=>siliconFlowPricing(0))
 })
 
-test('every product LLM completion records the authoritative call ledger', async () => {
+test('product LLM completions disable thinking and record the authoritative call ledger', async () => {
   const records: Array<Record<string, unknown>> = []
   let providerRequest: Record<string, unknown> | undefined
   __setLlmLedgerOverrideForTesting(async (record) => { records.push(record as unknown as Record<string, unknown>) })
@@ -28,13 +28,14 @@ test('every product LLM completion records the authoritative call ledger', async
   }) as never)
   try {
     await createChatCompletion({ purpose: 'test', companyId: 'company-1', agentId: 'agent-1' }, {
-      model: 'test-model', messages: [{ role: 'user', content: 'hello' }],
+      model: 'test-model', messages: [{ role: 'user', content: 'hello' }], reasoning_effort: 'high',
     })
     assert.equal(records.length, 1)
     assert.deepEqual(records[0]?.context, { purpose: 'test', companyId: 'company-1', agentId: 'agent-1' })
     assert.equal(records[0]?.status, 'succeeded')
     assert.deepEqual(records[0]?.usage, { prompt_tokens: 7, completion_tokens: 3 })
-    assert.equal(providerRequest?.reasoning_effort, 'high')
+    assert.equal(providerRequest?.reasoning_effort, undefined)
+    assert.equal(providerRequest?.enable_thinking, false)
   } finally {
     __setLlmClientOverrideForTesting(null)
     __setLlmLedgerOverrideForTesting(null)

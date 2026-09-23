@@ -115,7 +115,7 @@ test('native citations keep occurrence identities, all source versions and trunc
   view.lifecycle = 'queued'
   assert.deepEqual(harnessParts(view), [])
   view.draft = '新的草稿'
-  assert.deepEqual(harnessParts(view), [])
+  assert.deepEqual(harnessParts(view), [{ type: 'text', text: '新的草稿' }])
   view.lifecycle = 'succeeded'
   view.message!.envelope.citations[0].sources = []
   assert.throws(() => harnessParts(view), /recorded sources/)
@@ -170,7 +170,7 @@ test('history, API snapshots and later attempts converge to one current message 
   view = consumeRunStreamEvent(view,{ type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 3,
     requestVersion: 3, attemptId: 'attempt', seq: 1, draft: '新版内容' } })
   assert.equal(consumeRunEvent(view,event),view)
-  assert.deepEqual(harnessParts(view),[])
+  assert.deepEqual(harnessParts(view),[{ type: 'text', text: '新版内容' }])
   assert.equal(view.message?.envelope.artifacts[0].source?.version,'7')
   view = consumeRunStreamEvent(view,{ type: 'reset', runId: 'run', reason: 'superseded' })
   assert.equal(view.draft,'')
