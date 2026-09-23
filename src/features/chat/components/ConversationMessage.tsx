@@ -1,6 +1,5 @@
 import {
   MessagePrimitive,
-  type ReasoningMessagePartProps,
   type SourceMessagePartProps,
   useAui,
   useAuiState,
@@ -10,7 +9,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { createContext, type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
-import { ProgressCard } from '@/components/assistant-ui/elements/progress-card'
 import { MemoryChips } from '@/components/assistant-ui/elements/memory-chips'
 import { confidenceCopyText, type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
@@ -29,14 +27,6 @@ import { chatLatency } from '../runtime/latency'
 import { copyMessageText, MessageActions } from './MessageActions'
 
 export const MessageAnimationBaseline = createContext(Infinity)
-
-function ReasoningPart({ status }: ReasoningMessagePartProps) {
-  return <ProgressCard title="处理进度" steps={[{
-    id: 'reasoning', label: '思考过程',
-    status: status.type === 'running' ? 'running' : status.type === 'complete' ? 'complete' : 'stopped',
-    detail: <MarkdownText />,
-  }]} />
-}
 
 function SourcePart({ url, title }: SourceMessagePartProps) {
   return url
@@ -357,7 +347,7 @@ export function ConversationMessage() {
           <MessagePrimitive.Parts
             components={{
               Text: MessageTextPart,
-              Reasoning: ReasoningPart,
+              Reasoning: () => null,
               Image: () => null,
               File: () => null,
               Source: SourcePart,

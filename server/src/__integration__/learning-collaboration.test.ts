@@ -163,6 +163,27 @@ test('new course rooms retain all six agents after member synchronization', asyn
   assert.deepEqual((await pool.query('SELECT members FROM conversations WHERE id=$1',[f.roomId])).rows,[{ members: f.members }])
 })
 
+test('a shared learner room keeps Canvas available without exposing private learning context', async () => {
+  const f = await fixture()
+  await seedUserMembership('peer',f.companyId,{ role: 'STUDENT' })
+  await pool.query(`INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES($1,$2,'peer','STUDENT')`,[f.companyId,f.projectId])
+  const members = [...f.members,'peer']
+  await pool.query('UPDATE conversations SET members=$2::jsonb WHERE id=$1',[f.roomId,JSON.stringify(members)])
+  await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1",[f.roomId,JSON.stringify(members)])
+  const policy = await syncConversationPolicy(f.api,f.companyId,f.roomId)
+  const work: ActionContext['work'] = { id: 'shared-learning-run',tenantId: f.companyId,agentId: f.ids.nova,principalId: 'learner',
+    sessionId: f.run.sessionId,kind: 'turn',lane: 'interactive',triggerRef: f.source.messageId,fence: 1,homeEpoch: 1,
+    createdAt: new Date().toISOString(),meta: { text: '在 Canvas 中组织一次学习' },
+    conversation: { conversationId: f.roomId,policyVersion: policy.version,source: f.source,internal: false,
+      audience: { visibility: 'conversation',participantIds: members } } }
+  const product = createProductContext(createProductTools(lingxiOSControl))
+  const context = await product.contextProvider.loadContext(work)
+  const grants = await product.capabilityResolver.resolve(work)
+  assert.equal(context.dynamic?.learningContext,undefined)
+  assert.ok(grants.some(grant => grant.name === 'canvas'))
+  assert.ok(!grants.some(grant => grant.name === 'learning'))
+})
+
 test('changing a Mission coordinator publishes the current owner in the same transaction', async () => {
   const f = await fixture()
   const mission = await upsertLearningMission(pool,{ id: 'coordinator-mission',companyId: f.companyId,projectId: f.projectId,
