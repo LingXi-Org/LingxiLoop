@@ -9,6 +9,7 @@ test('run notifications and discovery subscribe before blocked history, deduplic
   const opened: Array<{ runId: string; readyState: number; close(): void; receive(event: RunStreamEvent): void }> = []
   const listed: Array<{ conversationId: string; agentId: string; runId: string; status: string }> = []
   let reads = 0
+  let paint: (() => void) | undefined
   mock.module('@/api/core/realtime', { namedExports: { ws: { connect: async () => {},
     on: (listener: typeof receive) => { receive = listener; return () => {} } } } })
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
@@ -35,6 +36,7 @@ test('run notifications and discovery subscribe before blocked history, deduplic
   } } })
   Object.defineProperty(globalThis, 'window', { configurable: true, value: {
     setInterval: (callback: () => void) => { discover = callback; return 1 }, clearInterval: () => {},
+    requestAnimationFrame: (callback: () => void) => { paint = callback; return 1 }, cancelAnimationFrame: () => { paint = undefined },
   } })
   Object.defineProperty(globalThis, 'EventSource', { configurable: true, value: { CLOSED: 2 } })
   const { ChatTransport } = await import('./transport')
@@ -52,6 +54,16 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     opened[0].receive({ type: 'preview', preview: { runId: 'run', fence: 1, requestVersion: 1,
       attemptId: 'attempt', seq: 1, kind: 'snapshot', draft: '你好' } })
     assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, [{ type: 'text', text: '你好' }])
+    const delta = { runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', kind: 'delta' as const }
+    opened[0].receive({ type: 'preview', preview: { ...delta, seq: 2, fromSeq: 1, delta: '，' } })
+    opened[0].receive({ type: 'preview', preview: { ...delta, seq: 3, fromSeq: 2, delta: '世界' } })
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, [{ type: 'text', text: '你好' }])
+    paint!()
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, [{ type: 'text', text: '你好，世界' }])
+    opened[0].receive({ type: 'preview', preview: { ...delta, seq: 4, fromSeq: 3, delta: '已撤回' } })
+    opened[0].receive({ type: 'reset', runId: 'run', reason: 'superseded' })
+    paint!()
+    assert.equal(useChatThreadStore.getState().conversations.room.messages[0].content.some(part => part.type === 'text' && part.text.includes('已撤回')), false)
     opened[0].close()
     receive(event)
     assert.equal(opened.length, 2)

@@ -38,6 +38,7 @@ import { harnessApi, type AgentRunResponse, type AgentRunTarget } from './harnes
 import { applyRunUpdate, needsRunStream } from './run-updates'
 import { canCancelRun, isRunMessage } from './harness'
 import { attachmentMessages } from './attachment-messages'
+import { chatLatency } from './latency'
 
 const TYPING_STALE_MS = 45_000
 
@@ -164,6 +165,8 @@ export class ChatTransport {
   private readonly messageListeners = new Set<(message: ThreadMessage) => void>()
   private connection = new AbortController()
   private readonly runReads = new Map<string, Promise<void>>()
+  private readonly previewBatch = new Map<string, { target: AgentRunTarget; item: Extract<RunStreamEvent, { type: 'preview' }> }>()
+  private previewFrame: number | undefined
 
   boot(): void {
     if (this.connection.signal.aborted) this.connection = new AbortController()
@@ -184,7 +187,10 @@ export class ChatTransport {
     for (const unsubscribe of this.subscriptions) unsubscribe()
     this.subscriptions = []
     this.connection.abort()
+    chatLatency.clear()
     this.runReads.clear()
+    if (this.previewFrame !== undefined) window.cancelAnimationFrame(this.previewFrame)
+    this.previewFrame = undefined; this.previewBatch.clear()
     lingxiIm.disconnect()
     for (const timer of this.typingTimers.values()) window.clearTimeout(timer)
     this.typingTimers.clear()
@@ -329,6 +335,7 @@ export class ChatTransport {
   ): Promise<boolean> {
     const text = body.trim()
     if (!text && !attachment) return false
+    chatLatency.send(clientMessageId)
     const optimistic = optimisticMessage(conversationId, clientMessageId, text, attachment, quotedMessageId)
     setConversationMessages(conversationId, [optimistic])
     const payload: LingxiMessageV1 = replayPayload ?? {
@@ -351,6 +358,7 @@ export class ChatTransport {
     })
     try {
       this.commitEnvelope(await lingxiIm.send(conversationId, payload))
+      chatLatency.submitted(clientMessageId)
       if (attachment) {
         window.setTimeout(() => {
           void import('@/features/knowledge/state')
@@ -591,14 +599,62 @@ export class ChatTransport {
       const oldest = this.runStreams.keys().next().value!
       this.runStreams.get(oldest)?.close(); this.runStreams.delete(oldest)
     }
-    const stream = harnessApi.subscribe(target,item => this.applyRunStreamEvent(target,item),() => {
+    const stream = harnessApi.subscribe(target,item => this.receiveRunStreamEvent(target,item),() => {
+      chatLatency.disconnected(target.runId)
       if (!this.connection.signal.aborted) void this.refreshRun(target)
     })
     this.runStreams.set(key,stream)
   }
 
+  private receiveRunStreamEvent(target: AgentRunTarget, item: RunStreamEvent): void {
+    if (this.connection.signal.aborted) return
+    if (item.type === 'preview') chatLatency.preview(target.runId, item.preview.seq,
+      (item.preview.kind === 'delta' ? item.preview.delta : item.preview.draft).length)
+    const pending = this.previewBatch.get(target.runId)
+    if (item.type !== 'preview') {
+      // Retractions and durable terminal state supersede queued body text immediately.
+      if (item.type === 'reset' || item.type === 'state' && (item.state.run.status !== 'leased'
+        || pending && (pending.item.preview.requestVersion !== item.state.run.requestVersion || pending.item.preview.fence !== item.state.run.fence))) this.previewBatch.delete(target.runId)
+      else if (pending) { this.previewBatch.delete(target.runId); this.applyRunStreamEvent(target, pending.item) }
+      this.applyRunStreamEvent(target, item)
+      return
+    }
+    const current = useChatThreadStore.getState().conversations[target.conversationId]?.messages
+      .find(message => messageMetadata(message).runId === target.runId && isRunMessage(messageMetadata(message)))
+    if (!window.requestAnimationFrame || !pending && !(current && messageMetadata(current).harness?.draft)) {
+      this.applyRunStreamEvent(target, item)
+      return
+    }
+    let preview = item.preview
+    if (pending && preview.kind === 'delta') {
+      const before = pending.item.preview
+      if (before.fence === preview.fence && before.requestVersion === preview.requestVersion
+        && before.attemptId === preview.attemptId && before.seq === preview.fromSeq) {
+        preview = before.kind === 'snapshot'
+          ? { ...preview, kind: 'snapshot', draft: before.draft + preview.delta }
+          : { ...preview, fromSeq: before.fromSeq, delta: before.delta + preview.delta }
+      } else { this.previewBatch.delete(target.runId); this.applyRunStreamEvent(target, pending.item) }
+    }
+    if ((preview.kind === 'delta' ? preview.delta : preview.draft).length > 100_000) {
+      this.previewBatch.delete(target.runId)
+      this.runStreams.get(target.runId)?.close(); this.runStreams.delete(target.runId); this.subscribeRun(target)
+      return
+    }
+    this.previewBatch.set(target.runId, { target, item: { type: 'preview', preview } })
+    this.previewFrame ??= window.requestAnimationFrame(() => {
+      this.previewFrame = undefined
+      const batch = [...this.previewBatch.values()]; this.previewBatch.clear()
+      for (const { target, item } of batch) this.applyRunStreamEvent(target, item)
+    })
+  }
+
   private applyRunStreamEvent(target: AgentRunTarget, item: RunStreamEvent): void {
     if (this.connection.signal.aborted) return
+    if (item.type === 'event' && item.event.kind === 'run.started' && typeof item.event.data.sourceRef === 'string') {
+      chatLatency.bind(target.runId, item.event.data.sourceRef)
+    }
+    if (item.type === 'reset') chatLatency.reset(target.runId, item.reason)
+    if (item.type === 'state' && item.state.message) chatLatency.completed(target.runId)
     let reconnect = false
     updateConversation(target.conversationId,state => {
       const previous = state.messages.find(message => messageMetadata(message).runId === target.runId

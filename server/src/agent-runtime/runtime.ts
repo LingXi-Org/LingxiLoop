@@ -28,6 +28,12 @@ function positiveInteger(name: string, fallback: number): number {
   return value
 }
 
+function responsePolicy(): 'auto' | 'deep' {
+  const value = process.env.AGENT_OS_RESPONSE_POLICY?.trim() || 'auto'
+  if (value !== 'auto' && value !== 'deep') throw new Error('AGENT_OS_RESPONSE_POLICY must be auto or deep')
+  return value
+}
+
 function modelRate(name: string, fallback = 0): number {
   const raw = process.env[name]?.trim()
   if (!raw && env.NODE_ENV === 'production' && !fallback) throw new Error(`${name} is required in production`)
@@ -82,7 +88,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
     previewStore = previewUrl ? createRealtimeStore(previewUrl) : undefined
     const harness = createProductHarness(createProductTools(lingxiOSControl))
     const { tools } = assembleHarness(harness)
-    control = createLingxiOS({ ...common(), harness, ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
+    control = createLingxiOS({ ...common(), harness, responsePolicy: responsePolicy(), ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
       ...(objectStore ? { objects: objectStore, workspace: {} } : {}),
       realtime: { ...(previewStore ? { store: previewStore } : {}), async allowDraft(work) {
@@ -123,6 +129,8 @@ async function recordModelCall(observation: ModelCallObservation): Promise<void>
       ...(binding ? { conversationId: binding.conversation_id } : {}),
       source: 'agent-os' as const,
       extras: { callId: observation.callId, pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
+        ...(observation.firstContentMs !== undefined ? { firstContentMs: observation.firstContentMs } : {}),
+        ...(observation.configurationFingerprint ? { configurationFingerprint: observation.configurationFingerprint } : {}),
         ...(usage?.reasoningTokens !== undefined ? { reasoningTokens: usage.reasoningTokens } : {}),
         ...(billing ? { providerPricing: pricing,...billing } : {}),
         ...(observation.instructionsSha256 ? { instructionsSha256: observation.instructionsSha256 } : {}),
@@ -175,6 +183,7 @@ export async function startLingxiOSWorker() {
     ...kernelOptions(), policy: new ProductRuntimePolicy(),
     model: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL,
       reasoningEffort: 'high' as const },
+    ...(responsePolicy() === 'auto' ? { fastModel: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL, maxThinkingTokens: 0 } } : {}),
     worker: { id: `lingxiloop-${env.INSTANCE_ID}`, concurrency,
       reservedInteractiveRuns: modelRate('AGENT_OS_RESERVED_INTERACTIVE_RUNS', concurrency > 1 ? 1 : 0),
       healthPort: positiveInteger('AGENT_OS_WORKER_PORT', 5190), shutdownGraceMs: positiveInteger('AGENT_OS_SHUTDOWN_GRACE_MS', 120000) },

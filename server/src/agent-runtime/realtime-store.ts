@@ -7,7 +7,8 @@ local previous = redis.call('GET', KEYS[1])
 local old = previous and cjson.decode(previous) or nil
 local incoming = cjson.decode(ARGV[1])
 if old then
-  if old.fence > incoming.fence or (old.fence == incoming.fence and old.owner ~= incoming.owner) then return 'stale' end
+  if old.fence > incoming.fence or (old.fence == incoming.fence and old.owner ~= incoming.owner
+    and not (old.cleared and incoming.kind == 'reset')) then return 'stale' end
   if old.fence == incoming.fence and (old.requestVersion > incoming.requestVersion or old.seq >= incoming.seq) then return 'stale' end
 end
 if ARGV[3] == '1' then

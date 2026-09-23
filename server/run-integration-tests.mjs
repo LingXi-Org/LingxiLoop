@@ -140,6 +140,10 @@ if (!process.env.RESEND_WEBHOOK_SECRET) {
   process.env.RESEND_WEBHOOK_SECRET = `whsec_${Buffer.alloc(32, 7).toString('base64')}`
 }
 
+// Legacy scripted model fixtures exercise deep execution; the response-policy
+// spec explicitly opts into auto and supplies both model profiles.
+if (!process.env.AGENT_OS_RESPONSE_POLICY) process.env.AGENT_OS_RESPONSE_POLICY = 'deep'
+
 // Forward to node --import tsx --test against the integration suite.
 // tsx handles TypeScript; node:test handles the test runner.
 // --test-concurrency=1 serializes test FILES. Default is N-cpu which

@@ -210,7 +210,15 @@ export async function resetAllTables(): Promise<void> {
   }
   await ensureSchemaOnce()
   storageObjects.clear()
-  await pool.query(`TRUNCATE TABLE ${TABLES_TO_WIPE.join(', ')} CASCADE`)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await pool.query(`TRUNCATE TABLE ${TABLES_TO_WIPE.join(', ')} CASCADE`)
+      break
+    } catch (error) {
+      if ((error as { code?: string }).code !== '40P01' || attempt === 2) throw error
+      await new Promise(resolve => setTimeout(resolve, 50 * (attempt + 1)))
+    }
+  }
   await ensureEducationPlan(pool)
 }
 

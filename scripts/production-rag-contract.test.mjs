@@ -142,11 +142,14 @@ test('Komodo runs isolated workers on both app nodes with bounded drain and read
 
   assert.match(appA, /10\.20\.0\.2:5183:5181/)
   assert.doesNotMatch(appA, /^ {2}gateway:/m)
-  assert.match(appA, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-1\}/)
-  assert.match(appA, /AGENT_OS_RESERVED_INTERACTIVE_RUNS: "0"/)
-  assert.match(appB, /AGENT_OS_RESERVED_INTERACTIVE_RUNS: "1"/)
   for (const app of [appA, appB]) {
+    assert.match(app, /AGENT_OS_MAX_CONCURRENT_RUNS: \$\{AGENT_OS_MAX_CONCURRENT_RUNS:-2\}/)
+    assert.match(app, /AGENT_OS_RESERVED_INTERACTIVE_RUNS: \$\{AGENT_OS_RESERVED_INTERACTIVE_RUNS:-1\}/)
+    assert.match(app, /AGENT_OS_MODEL_CONCURRENCY: \$\{AGENT_OS_MODEL_CONCURRENCY:-2\}/)
     assert.match(app, /worker:\r?\n {4}<<: \*runtime/)
+    assert.match(app, /NODE_OPTIONS: --max-old-space-size=640/)
+    assert.match(app, /cpus: "1.0"/)
+    assert.match(app, /mem_limit: 1g/)
     assert.match(app, /read_only: true/)
     assert.match(app, /stop_grace_period: 150s/)
     assert.match(app, /localhost:5190\/readyz/)

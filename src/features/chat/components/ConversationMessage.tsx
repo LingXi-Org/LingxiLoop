@@ -25,6 +25,7 @@ import type { Participant } from '@/types'
 import { chatTransport, type LingxiMessageMetadata } from '../runtime'
 import { CHAT_TOOL_RENDERERS } from './ToolRenderers'
 import { HarnessDetails } from './HarnessDetails'
+import { chatLatency } from '../runtime/latency'
 import { copyMessageText, MessageActions } from './MessageActions'
 
 export const MessageAnimationBaseline = createContext(Infinity)
@@ -126,9 +127,6 @@ function MessageTextPart() {
   const bodyRef = useRef<HTMLDivElement>(null)
   const metadata = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
   const animationBaseline = useContext(MessageAnimationBaseline)
-  const interrupted = useAuiState((state) => state.message.status?.type === 'incomplete'
-    && ['error', 'cancelled'].includes(state.message.status.reason))
-    && (!metadata.harness?.message || metadata.harness.message.envelope.requestVersion !== metadata.harness.requestVersion)
   const inlineCitations = Boolean(metadata.harness && (!metadata.harness.message
     || ['queued', 'leased'].includes(metadata.harness.lifecycle ?? '')
     || metadata.harness.message.envelope.citationEvidence !== undefined))
@@ -136,6 +134,10 @@ function MessageTextPart() {
     .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
     .map((part) => part.text)
     .join('\n'))
+  useEffect(() => {
+    if (!metadata.runId || metadata.isMine || !rawText.trim() || document.visibilityState !== 'visible') return
+    if (bodyRef.current) chatLatency.painted(metadata.runId, bodyRef.current)
+  }, [metadata.runId, metadata.isMine, rawText])
   const confidenceClaims = useAuiState((state) => {
     const part = state.message.content.find((part) => part.type === 'tool-call' && part.toolName === 'cite_claims')
     if (part?.type !== 'tool-call' || !part.result || typeof part.result !== 'object') return undefined
@@ -217,7 +219,7 @@ function MessageTextPart() {
       )}
     >
       <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations}
-        interrupted={interrupted} animateEntry={metadata.sequence !== null && metadata.sequence > animationBaseline} />
+        animateEntry={metadata.sequence !== null && metadata.sequence > animationBaseline} />
     </div>
     {isMobile && <MobileMessageActions metadata={metadata} getText={getText} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
   </div>

@@ -138,7 +138,10 @@ export const learningTools: ToolDefinition[] = [
     await mission(context, input.missionId)
     const db = database(context)
     return updateLearningMissionStep(db, run => run(db), roomInput(context), input)
-  }, missionState),
+  }, async (context, input) => ({
+    resource: `learning_mission_step:${input.stepId}`,
+    observed: { step: (await mission(context, input.missionId))?.steps.find(step => step.id === input.stepId) ?? null },
+  })),
   write('finish_planning', async (context, input) => {
     await mission(context, input.missionId)
     const db = database(context)
