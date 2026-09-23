@@ -88,7 +88,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const grants: CapabilityGrant[] = [...new Set(available.map(tool => tool.action.split('.')[0]))]
       .map(name => ({ name, methods: available.filter(tool => tool.action.startsWith(`${name}.`)).map(tool => tool.action.split('.')[1]) }))
     if (work.conversation && !profile.teacher_managed && profile.capabilities.includes('canvas')) grants.push({ name: 'graph', methods: ['start','read'] }, { name: 'shared_state', methods: ['create','read','update'] })
-    return { profile, grants, canvasRun, teacherContext, handoff }
+    return { profile, grants, canvasRun, teacherContext, handoff, learningAudienceSafe }
   }
   const contextProvider: ContextProvider = { async authorizeRequest(work, request) {
     await assertFrozenAudience(pool,work)
@@ -104,7 +104,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
       throw new NoEffectError('request knowledge source selection was revoked','forbidden')
     }
   }, async loadContext(work, _signal, options) {
-    const { profile, grants, canvasRun, teacherContext, handoff } = await scoped(work)
+    const { profile, grants, canvasRun, teacherContext, handoff, learningAudienceSafe } = await scoped(work)
     const fast = options?.responseProfile === 'fast' && !canvasRun && !handoff && !teacherContext
     const text = work.meta?.text
     if (typeof text !== 'string') throw new Error('persisted request text is missing')
@@ -143,12 +143,8 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const versionBySource = new Map(versions.rows.map(row => [row.id, new Date(row.updated_at).toISOString()]))
     const evidence = retrieval.map(item => ({ marker: item.marker, sourceId: item.sourceId, sourceVersion: versionBySource.get(item.sourceId)!,
       chunkId: item.chunkId, title: item.sourceTitle, excerpt: item.excerpt, truncated: true, ...(item.sourceUrl ? { url: item.sourceUrl } : {}) }))
-    if (!fast && capabilities.includes('learning')) for (const userId of await audienceHumanIds({ work,database: pool })) if (userId !== work.principalId) {
-      await permissionService.assertCan({ actorUserId: userId,companyId: work.tenantId,action: 'learning:manage',
-        resource: { type: 'conversation',id: productConversationId(work) } })
-    }
     const [learningContext, canvas] = await Promise.all([
-      !fast && capabilities.includes('learning') ? loadLearningTurnContext(nativeContext({ work }), work.principalId!) : undefined,
+      !fast && learningAudienceSafe ? loadLearningTurnContext(nativeContext({ work }), work.principalId!) : undefined,
       !fast && capabilities.includes('canvas') ? getConversationCanvas(work.tenantId, productConversationId(work), work.principalId!) : undefined,
     ])
     return { responseProfile: fast ? 'fast' as const : 'deep' as const,

@@ -227,24 +227,24 @@ test('citation projections agree across snapshots and IM replay and disappear be
   assert.deepEqual(state.messages[0].content, [])
   state = applyRunUpdate(state, target, { type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 2,
     requestVersion: 2, attemptId: 'next', seq: 1, draft: '新的草稿' } }, participants.agent)
-  assert.deepEqual(state.messages[0].content, [])
+  assert.deepEqual(state.messages[0].content, [{ type: 'text', text: '新的草稿' }])
 })
 
-test('paragraph deltas stay uncommitted and cancellation does not expose them', () => {
+test('paragraph deltas render live Markdown once and cancellation clears the uncommitted draft', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: snapshot('run', 'leased') })
   state = applyRunUpdate(state, target, event('第一段'))
+  assert.deepEqual(state.messages[0]!.content, [{ type: 'text', text: '第一段' }])
   const delta: RunStreamEvent = { type: 'preview', preview: { kind: 'delta', runId: 'run', fence: 1,
     requestVersion: 1, attemptId: 'attempt', fromSeq: 1, seq: 2, delta: '\n\n第二段 **正在' } }
   state = applyRunUpdate(state, target, delta)
   state = applyRunUpdate(state, target, delta)
-  const content: [] = []
-  assert.deepEqual(state.messages[0]!.content, content)
+  assert.deepEqual(state.messages[0]!.content, [{ type: 'text', text: '第一段\n\n第二段 **正在' }])
   state = applyRunUpdate(state, target, { type: 'event', event: { runId: 'run', seq: 3,
     kind: 'run.cancelled', stage: 'completed', visibility: 'user', data: {} } })
   state = applyRunUpdate(state, target, { type: 'state', state: snapshot('run', 'cancelled') })
-  assert.deepEqual(state.messages[0]!.content, content)
+  assert.deepEqual(state.messages[0]!.content, [])
   assert.deepEqual(state.messages[0]!.status, { type: 'incomplete', reason: 'cancelled' })
-  assert.deepEqual(mergeCanonicalMessages(state.messages, state.messages)[0]!.content, content)
+  assert.deepEqual(mergeCanonicalMessages(state.messages, state.messages)[0]!.content, [])
   assert.deepEqual(state.activeRuns, {})
 })
 
@@ -311,7 +311,7 @@ test('initial history publishes complete run snapshots together and subscribes o
       [{ type: 'text', text: 'run 的完整历史回复' }], [{ type: 'text', text: 'second 的完整历史回复' }],
     ])
     callbacks.get('active')!({ type: 'preview', preview: { ...(event('实时新内容') as Extract<RunStreamEvent, { type: 'preview' }>).preview, runId: 'active' } })
-    assert.deepEqual(useChatThreadStore.getState().conversations.room!.messages.at(-1)!.content, [])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room!.messages.at(-1)!.content, [{ type: 'text', text: '实时新内容' }])
     const tool = { ...messages[0]!, metadata: { ...messages[0]!.metadata, custom: { ...metadata(messages[0]!), messageKind: 'tool_activity' } } } as ThreadMessage
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], null).map(message => message.id), ['visible'])
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], 'visible').map(message => message.id), ['visible'])

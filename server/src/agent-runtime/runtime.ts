@@ -182,7 +182,7 @@ export async function startLingxiOSWorker() {
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),
     model: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL,
-      reasoningEffort: 'high' as const },
+      maxThinkingTokens: 0 },
     ...(responsePolicy() === 'auto' ? { fastModel: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL, maxThinkingTokens: 0 } } : {}),
     worker: { id: `lingxiloop-${env.INSTANCE_ID}`, concurrency,
       reservedInteractiveRuns: modelRate('AGENT_OS_RESERVED_INTERACTIVE_RUNS', concurrency > 1 ? 1 : 0),
