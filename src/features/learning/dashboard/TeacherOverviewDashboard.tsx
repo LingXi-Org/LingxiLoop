@@ -91,7 +91,7 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
         >
           {space.canReview ? (
             <TeacherLearnersSection projectId={space.projectId} refreshToken={revision} onOpenLearner={(learnerId) => setDetailView({ kind: 'learner', learnerId })} />
-          ) : <Alert><AlertDescription>当前课程状态下不能查看学习者审核资料。</AlertDescription></Alert>}
+          ) : <Alert><AlertDescription>你目前无法查看学习者评价。</AlertDescription></Alert>}
         </OverviewChartCard>
         <OverviewChartCard
           title="学情分析" value={summary.attempts + ' 次学习提交'} description={'近 ' + data.overview.windowDays + ' 天 · 查看目标掌握、任务与评价分布'}
@@ -137,7 +137,7 @@ function TeachingPriorities({ overview, canReview, onOpenSection }: {
   const coverage = summary.learnerCount ? summary.learnersWithEvidence / summary.learnerCount * 100 : 0
   return (
     <Card className="h-full">
-      <CardHeader><CardTitle><h3>教学重点</h3></CardTitle><CardDescription>先处理反馈，再跟进学习进展</CardDescription></CardHeader>
+      <CardHeader><CardTitle><h3>教学重点</h3></CardTitle></CardHeader>
       <CardContent className="flex flex-1 flex-col gap-3">
         <Button type="button" variant="ghost" disabled={!canReview} className="h-auto justify-start gap-3 rounded-xl border p-3 text-start whitespace-normal" onClick={() => onOpenSection('reviews')}>
           <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><ClipboardCheck aria-hidden="true" className="size-4" /></span>
@@ -234,7 +234,7 @@ function ReviewQueue({
       <CardContent className="space-y-2">
         {!canReview ? (
           <Alert>
-            <AlertDescription>当前课程状态下不能查看或处理评价审核。</AlertDescription>
+            <AlertDescription>你目前无法查看或处理待审核评价。</AlertDescription>
           </Alert>
         ) : reviews.length > 0 ? (
           <>
@@ -251,7 +251,7 @@ function ReviewQueue({
                     {review.learner_display_name} · {review.activity_title ?? '学习评价'}
                   </span>
                   <span className="mt-1 block text-xs text-muted-foreground">
-                    建议掌握等级 {review.demonstrated_level} · 置信度 {Math.round(review.confidence * 100)}%
+                    建议掌握等级 {review.demonstrated_level}
                   </span>
                 </span>
                 <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
@@ -276,7 +276,7 @@ function ReviewQueue({
                 <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} />
               </EmptyMedia>
               <EmptyTitle>当前没有待审核评价</EmptyTitle>
-              <EmptyDescription>新的评价进入审核队列后会显示在这里。</EmptyDescription>
+              <EmptyDescription>有新的学习评价需要你确认时，会显示在这里。</EmptyDescription>
             </EmptyHeader>
           </Empty>
         )}

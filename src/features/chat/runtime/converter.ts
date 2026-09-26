@@ -377,7 +377,7 @@ function baseParts(envelope: ImEnvelope, harness?: RunView): ThreadAssistantMess
         return [toolCall(`presentation:${id}`, 'presentation-artifact', {
           artifactId: artifact.artifactId,
           artifactKind: 'lecture_deck_html',
-          title: string(artifact.title, payload.body || 'HTML 演示'),
+          title: string(artifact.title, payload.body || '演示文稿'),
         })]
       }
       return [...textPart, toolActivityPart(id, data, payload.body ?? '')]

@@ -129,7 +129,7 @@ export function LearnerOverviewDashboard({
           <LearningActivitiesSection course={course} activities={model.activities.map((item) => item.activity)} evidence={model.evidence.map((item) => item.evidence)} objectiveTitlesById={objectiveTitlesById} perspective="learner" answers={answers} setAnswers={setAnswers} onChanged={onChanged} onError={onError} />
         </OverviewChartCard>
         <OverviewChartCard
-          title="学习任务" value={overview ? overview.summary.activeMissions + ' 项进行中' : '统计待同步'} description="查看任务步骤与完成进展"
+          title="学习任务" value={overview ? overview.summary.activeMissions + ' 项进行中' : '暂不可用'} description="查看任务步骤与完成进展"
           className="@min-[48rem]/learning-grid:col-span-7"
           open={detail === 'missions'} onOpenChange={(open) => setDetail(open ? 'missions' : null)}
           chart={<OverviewBarChart data={missionDistribution} />}
@@ -137,7 +137,7 @@ export function LearnerOverviewDashboard({
           <MissionSection missions={model.missions.map((item) => item.mission)} showStepEvidence />
         </OverviewChartCard>
         <OverviewChartCard
-          title="目标掌握" value={overview ? overview.summary.verifiedObjectives + ' 项已验证' : '统计待同步'} description={overview ? overview.summary.dueReviews + ' 项待复习 · 查看成功标准与关联证据' : '查看成功标准与关联证据'}
+          title="目标掌握" value={overview ? overview.summary.verifiedObjectives + ' 项已验证' : '暂不可用'} description={overview ? overview.summary.dueReviews + ' 项待复习 · 查看成功标准与关联证据' : '查看成功标准与关联证据'}
           className="@min-[48rem]/learning-grid:col-span-5"
           open={detail === 'objectives'} onOpenChange={(open) => setDetail(open ? 'objectives' : null)}
           chart={<OverviewBarChart layout="vertical" data={overview?.masteryDistribution.map((item) => ({ label: '等级 ' + item.level, count: item.count })) ?? []} />}
@@ -145,7 +145,7 @@ export function LearnerOverviewDashboard({
           <LearningObjectivesSection course={course} objectives={model.objectives.map((item) => item.objective)} perspective="learner" mastery={mastery} learnerDetailsById={learnerDetailsById} onChanged={onChanged} onError={onError} />
         </OverviewChartCard>
         <OverviewChartCard
-          title="学习记录" value={overview ? overview.summary.evidenceAttempts + ' 次学习提交' : '统计待同步'} description={overview ? '近 ' + overview.windowDays + ' 天 · 回顾学习证据与反馈' : '回顾学习证据与反馈'}
+          title="学习记录" value={overview ? overview.summary.evidenceAttempts + ' 次学习提交' : '暂不可用'} description={overview ? '近 ' + overview.windowDays + ' 天 · 回顾学习证据与反馈' : '回顾学习证据与反馈'}
           className="@min-[48rem]/learning-grid:col-span-7"
           open={detail === 'evidence'} onOpenChange={(open) => setDetail(open ? 'evidence' : null)}
           chart={<LearnerAttemptChart overview={overview} />}
@@ -163,7 +163,7 @@ export function LearnerOverviewDashboard({
                   <ul className="list-disc space-y-2 ps-4 text-muted-foreground">
                     <li>使用提示或引导完成的证据，最高推进到掌握等级 2。</li>
                     <li>掌握等级 3 通常需要两个不同来源的独立证据。</li>
-                    <li>掌握等级 4 需要课程创建者确认的项目或考核证据。</li>
+                    <li>最高掌握等级需教师确认项目或考核证据。</li>
                     <li>较弱的新证据不会直接抹去已有掌握，而会进入待复核状态。</li>
                   </ul>
                 </AccordionContent>

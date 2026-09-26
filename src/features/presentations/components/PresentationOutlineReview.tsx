@@ -1,4 +1,4 @@
-import { CheckmarkCircle02Icon, SourceCodeIcon } from '@hugeicons/core-free-icons'
+import { CheckmarkCircle02Icon, File01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,7 @@ import {
 const PAGE_KIND_LABELS: Record<PresentationPageKind, string> = {
   opening: '开场',
   content: '正文',
-  sources: '资料索引',
+  sources: '参考资料',
   closing: '结语',
 }
 
@@ -47,7 +47,7 @@ export function PresentationOutlineReview({
                 <div><dt className="text-xs text-muted-foreground">语言</dt><dd className="mt-1 font-medium">{outline.language || '中文'}</dd></div>
               </dl>
               <Progress value={coveragePercent} max={100} aria-label="资料覆盖率">
-                <ProgressLabel>资料覆盖率</ProgressLabel>
+              <ProgressLabel>资料覆盖</ProgressLabel>
                 <ProgressValue />
               </Progress>
             </CardContent>
@@ -86,8 +86,8 @@ export function PresentationOutlineReview({
                           </div>
                           {page.conclusion && <p className="mt-1 text-xs leading-5 text-muted-foreground">{page.conclusion}</p>}
                           <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
-                            <HugeiconsIcon icon={SourceCodeIcon} strokeWidth={2} className="size-3" />
-                            {page.sourceIds.length} 份资料 · {page.evidenceIds.length} 条证据
+                            <HugeiconsIcon icon={File01Icon} strokeWidth={2} className="size-3" />
+                            引用 {page.sourceIds.length} 份资料
                           </div>
                         </div>
                       </li>
@@ -101,10 +101,10 @@ export function PresentationOutlineReview({
       </div>
 
       <div className="flex shrink-0 flex-col gap-3 border-t border-[var(--im-divider-weak)] bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p className="text-xs leading-5 text-muted-foreground">批准后将按这份大纲生成并检查全部页面。需要调整时，可直接在群聊中说明。</p>
+        <p className="text-xs leading-5 text-muted-foreground">确认后开始生成演示文稿。如需调整大纲，可先在群聊中说明。</p>
         <Button type="button" onClick={onApprove} disabled={approving} className="shrink-0">
           <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} data-icon="inline-start" />
-          {approving ? '正在批准…' : '批准大纲并开始生成'}
+          {approving ? '正在生成…' : '确认大纲并生成'}
         </Button>
       </div>
     </div>

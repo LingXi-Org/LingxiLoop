@@ -677,7 +677,7 @@ function PresenceStrip({ session, synced }: { session: YDocSession; synced: bool
   // ascent/descent (16.5px for 12px Manrope), not line-height, so it
   // centers on a different baseline than the 12px-tall Delete button.
   // As a block, height = leading-none line-height = 12px = same box.
-  if (!synced) return <span className="block text-xs leading-none text-muted-foreground">正在同步...</span>
+  if (!synced) return <span className="block text-xs leading-none text-muted-foreground">正在打开文档…</span>
   if (peers.length === 0) return <span className="block text-xs leading-none text-muted-foreground">只有你</span>
   return (
     <div className="flex items-center -space-x-1.5">

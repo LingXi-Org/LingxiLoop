@@ -51,8 +51,8 @@ export function PresentationViewer({
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon"><HugeiconsIcon icon={Presentation01Icon} strokeWidth={2} /></EmptyMedia>
-            <EmptyTitle>还没有可播放的版本</EmptyTitle>
-            <EmptyDescription>页面完成检查后，演示会自动出现在这里。</EmptyDescription>
+            <EmptyTitle>暂无可查看的演示文稿</EmptyTitle>
+            <EmptyDescription>生成完成后，演示文稿会显示在这里。</EmptyDescription>
           </EmptyHeader>
         </Empty>
       </div>
@@ -83,9 +83,9 @@ export function PresentationViewer({
           `${presentation.title}-v${selectedVersion.versionNumber}`,
         ),
         {
-          loading: '正在准备 HTML 演示',
-          success: 'HTML 演示已开始下载',
-          error: 'HTML 演示下载失败',
+          loading: '正在准备演示文稿',
+          success: '演示文稿已开始下载',
+          error: '演示文稿下载失败',
         },
       )
     } catch {
@@ -101,11 +101,11 @@ export function PresentationViewer({
         <div className="me-auto min-w-40 flex-1">
           <h2 className="truncate font-heading text-sm font-medium text-foreground">{presentation.title}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {selectedVersion ? `${selectedVersion.pageCount} 页 · ${formatBytes(selectedVersion.sizeBytes)}` : '自包含离线 HTML'}
+            {selectedVersion ? `${selectedVersion.pageCount} 页 · ${formatBytes(selectedVersion.sizeBytes)}` : '离线可用'}
           </p>
         </div>
         <Select value={selectedVersionId ?? undefined} onValueChange={setSelectedVersionId}>
-          <SelectTrigger size="sm" aria-label="选择演示版本"><SelectValue /></SelectTrigger>
+          <SelectTrigger size="sm" aria-label="选择演示文稿版本"><SelectValue /></SelectTrigger>
           <SelectContent align="start">
             {sortedVersions.map((version) => (
               <SelectItem key={version.id} value={version.id}>{formatVersion(version)}</SelectItem>
@@ -114,7 +114,7 @@ export function PresentationViewer({
         </Select>
         <Button type="button" variant="outline" size="sm" onClick={download} disabled={downloading || !selectedVersion}>
           <HugeiconsIcon icon={Download04Icon} strokeWidth={2} data-icon="inline-start" />
-          {downloading ? '正在下载…' : '下载 HTML'}
+          {downloading ? '正在下载…' : '下载演示文稿'}
         </Button>
         <Button type="button" variant="secondary" size="sm" onClick={() => void enterFullscreen()} disabled={html.status !== 'ready'}>
           <HugeiconsIcon icon={Maximize01Icon} strokeWidth={2} data-icon="inline-start" />
@@ -124,13 +124,13 @@ export function PresentationViewer({
 
       <div className="min-h-0 flex-1 bg-muted/50 p-3 sm:p-5">
         <div className="relative h-full min-h-64 overflow-hidden rounded-2xl bg-muted shadow-sm ring-1 ring-border">
-          {html.status === 'loading' && <ResourceSkeleton variant="media" className="h-full" label="正在加载 HTML 演示" />}
+          {html.status === 'loading' && <ResourceSkeleton variant="media" className="h-full" label="正在加载演示文稿" />}
           {html.status === 'error' && (
             <div className="grid h-full place-items-center bg-card px-6">
               <Empty>
                 <EmptyHeader>
                   <EmptyMedia variant="icon"><HugeiconsIcon icon={Presentation01Icon} strokeWidth={2} /></EmptyMedia>
-                  <EmptyTitle>演示加载失败</EmptyTitle>
+                  <EmptyTitle>暂时无法显示演示文稿</EmptyTitle>
                   <EmptyDescription>{html.error}</EmptyDescription>
                 </EmptyHeader>
                 <Button type="button" variant="outline" onClick={() => setReloadRevision((value) => value + 1)}>
@@ -145,7 +145,7 @@ export function PresentationViewer({
               <Empty>
                 <EmptyHeader>
                   <EmptyMedia variant="icon"><HugeiconsIcon icon={Presentation01Icon} strokeWidth={2} /></EmptyMedia>
-                  <EmptyTitle>请选择演示版本</EmptyTitle>
+                  <EmptyTitle>请选择演示文稿版本</EmptyTitle>
                 </EmptyHeader>
               </Empty>
             </div>
@@ -154,7 +154,7 @@ export function PresentationViewer({
             <iframe
               ref={iframeRef}
               src={html.url}
-              title={`${presentation.title}演示`}
+              title={`${presentation.title}演示文稿`}
               sandbox="allow-scripts"
               referrerPolicy="no-referrer"
               allow="fullscreen"

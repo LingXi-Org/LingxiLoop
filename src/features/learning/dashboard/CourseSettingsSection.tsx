@@ -52,14 +52,7 @@ const LIFECYCLE_ACTIONS = {
     destructive: boolean
   }
 >
-const SETTINGS_TABS = [
-  { value: 'profile', label: '基本资料', description: '这些信息会显示给所有课程成员。' },
-  { value: 'content', label: '课程内容', description: '管理学习目标、成功标准与课程活动。' },
-  { value: 'members', label: '成员与邀请', description: '管理课程成员与邀请。' },
-  { value: 'status', label: '课程状态', description: '完成状态变更后，课程权限会随之更新。' },
-] as const
 export function CourseSettingsSection({ space, section }: { space: LearningSpace; section: 'profile' | 'content' | 'members' | 'status' }) {
-  const current = SETTINGS_TABS.find((tab) => tab.value === section) ?? SETTINGS_TABS[0]
   const canView = space.perspective === 'teacher' && space.canManage && Boolean(space.courseId)
   const canEdit = canView && space.canUpdateCourse
   const frameSection = section === 'profile' ? 'settings' : section
@@ -127,7 +120,6 @@ export function CourseSettingsSection({ space, section }: { space: LearningSpace
     <DashboardSectionFrame
       space={space}
       section={frameSection}
-      description={current.description}
     >
         {section === 'profile' && <div className="min-w-0">
           <CourseProfileSettings course={course} canEdit={canEdit} onUpdated={setCourse} />
@@ -155,9 +147,7 @@ export function CourseSettingsSection({ space, section }: { space: LearningSpace
                     {lifecycle.label}
                   </Button>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">当前状态没有可执行的下一步。</p>
-              )}
+              ) : null}
             </CardContent>
           </Card>
         </div>}

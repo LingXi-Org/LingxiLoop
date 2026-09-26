@@ -7,7 +7,7 @@ import { BRAND_AVATAR_BASE_EXPRESSION } from '@/components/brand-avatar-controll
 import { NavUser } from '@/components/nav-user'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -136,10 +136,10 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
     {user ? <div className="shrink-0 px-2 pt-2"><NavUser compact user={{ id: user.id, name: user.name, email: user.email, avatar: user.avatarUrl ?? participantAvatar }} /></div> : null}
     {canCreate ? <Dialog open={createOpen} onOpenChange={(open) => { if (creating) return; setCreateOpen(open); if (!open) setCreateError(null) }}>
       <DialogContent>
-        <DialogHeader><DialogTitle>新建课程</DialogTitle><DialogDescription>创建后会同时准备专属课程对话，并进入新的课程看板。</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>新建课程</DialogTitle></DialogHeader>
         <form id="workspace-rail-create-course" onSubmit={handleCreateCourse}>
           <FieldGroup>
-            <Field><FieldLabel htmlFor="workspace-rail-course-name">课程名称</FieldLabel><Input id="workspace-rail-course-name" name="name" required autoFocus placeholder="例如：产品设计基础" /></Field>
+            <Field><FieldLabel htmlFor="workspace-rail-course-name">课程名称</FieldLabel><Input id="workspace-rail-course-name" name="name" required autoFocus /></Field>
             <Field><FieldLabel htmlFor="workspace-rail-course-description">课程简介</FieldLabel><Textarea id="workspace-rail-course-description" name="description" placeholder="简要说明课程目标与内容" /><FieldDescription>简介可稍后在基本资料中继续完善。</FieldDescription></Field>
             {createError ? <Alert variant="destructive"><AlertTitle>创建失败</AlertTitle><AlertDescription>{createError}</AlertDescription></Alert> : null}
           </FieldGroup>

@@ -222,7 +222,7 @@ export function buildLearnerDashboardModel(
           ? '课程活动来源已不可用'
           : evidence.mission_step_id
             ? '任务步骤来源已不可用'
-            : '来源待同步',
+          : '未注明来源',
         objectiveIds: [],
         objectiveTitles: [],
       }

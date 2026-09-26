@@ -75,13 +75,13 @@
 <main>
   <a href="/" class="back">← Back to loop.lingxilearn.cn</a>
   <h1>Privacy Policy</h1>
-  <div class="updated">Last updated: 2026-08-27</div>
+  <div class="updated">Last updated: 2026-09-26</div>
 
   <p>
-    LingxiLoop ("we", "us", "our") provides a workspace for humans and AI agents
-    to collaborate. This policy explains what data the LingxiLoop Desktop app and
-    Web app at <a href="https://loop.lingxilearn.cn">loop.lingxilearn.cn</a>
-    collect, how we use it, and what choices you have. We collect only the
+    LingxiLoop ("we", "us", "our") provides a workspace for people and AI teammates
+    to collaborate. This policy explains what data the LingxiLoop Web app at
+    <a href="https://loop.lingxilearn.cn">loop.lingxilearn.cn</a>
+    collects, how we use it, and what choices you have. We collect only the
     data we need to make the product work and we never sell it.
   </p>
 
@@ -90,25 +90,25 @@
     <strong>Account information.</strong> When you sign in we receive your
     email address and display name from the third-party provider you chose
     (Google, GitHub, or Lingxi). We store: your email, name, an
-    avatar URL mirrored from the provider, and an opaque per-provider user
-    identifier (used only to recognize you on return visits).
+    avatar URL from the provider, and a unique provider ID so we can recognize
+    your account when you sign in again.
   </p>
   <p>
-    <strong>Content you create.</strong> Messages, documents, kanban cards,
-    calendar events, agent definitions, and reactions are stored on our
+    <strong>Content you create.</strong> Messages, documents, task boards,
+    calendar events, AI teammate settings, and reactions are stored on our
     servers so that you and your workspace teammates can see them. This
     content is scoped to the workspace you create it in; it is not visible
     to users outside that workspace and it is not used to train any model.
   </p>
   <p>
-    <strong>Diagnostic logs.</strong> We log standard server access metadata
-    (timestamps, IP addresses, user agents, error traces) for security and
-    debugging. These logs are retained up to 30 days and are not used for
-    advertising or sold to anyone.
+    <strong>Service records.</strong> We keep basic connection details, including
+    timestamps, IP addresses, browser details, and error information, to protect
+    the service and investigate problems. We retain these records for up to 30
+    days. They are not used for advertising or sold.
   </p>
   <p>
-    <strong>Usage analytics.</strong> The apps send product-usage events
-    (screens opened, features used) to PostHog so we can understand what
+    <strong>Usage analytics.</strong> The app sends usage events
+    (pages opened, features used) to PostHog so we can understand what
     to improve. These events are tied to your account, never include
     message or document content, and are not used for advertising or
     shared with anyone else.
@@ -130,11 +130,11 @@
   </p>
   <ul>
     <li><strong>Production infrastructure providers</strong> — application and database hosting.</li>
-    <li><strong>Cloudflare</strong> — static-site hosting, attachment storage and delivery (R2 / CDN), and inbound email routing.</li>
+    <li><strong>Cloudflare</strong> — website hosting, attachment storage and delivery, and inbound email routing.</li>
     <li><strong>Resend</strong> — sending email on behalf of your workspace's agents.</li>
     <li><strong>PostHog</strong> — product analytics (usage events as described above).</li>
-    <li><strong>OAuth providers</strong> (Google, GitHub, Lingxi) — verifying your sign-in.</li>
-    <li><strong>LLM providers</strong> (OpenAI / Anthropic / xAI, etc.) — when your agents make an LLM call. Each workspace owner can configure or BYO their own provider keys.</li>
+    <li><strong>Sign-in providers</strong> (Google, GitHub, Lingxi) — verifying your account.</li>
+    <li><strong>AI providers</strong> (OpenAI, Anthropic, xAI, and others) — when an AI teammate responds. Workspace owners can configure the provider accounts used by their team.</li>
   </ul>
   <p>
     We do not share data with advertisers or data brokers. We disclose
@@ -145,18 +145,17 @@
   <h2>Your rights</h2>
   <p>
     <strong>Account deletion.</strong> You can permanently delete your
-    LingxiLoop account from your account settings in the Web or Desktop app.
-    Deletion immediately invalidates all your sign-in
-    sessions, removes your OAuth linkages, clears your name / email / avatar
-    from our database, and marks you as departed in every workspace you
-    belong to. Content you co-authored in shared rooms (messages, etc.) is
-    preserved with an anonymized author label so the rest of your team's
-    history stays intact.
+    LingxiLoop account from your account settings in the Web app.
+    Deletion immediately invalidates your sign-in sessions, removes your
+    links to sign-in providers, clears your name, email, and avatar from our
+    records, and removes your membership from every workspace. Your messages
+    and other shared content remain, with your name replaced by a generic
+    author label so your team's history stays intact.
   </p>
   <p>
     <strong>Access and correction.</strong> You can view and edit your
-    profile fields (name, avatar) at any time from the Me tab. For copies
-    of audit logs or a full data export, email us at the address below.
+    name and avatar in your account settings. For copies of audit logs or a
+    data export, use the contact link below.
   </p>
   <h2>Children</h2>
   <p>
@@ -173,8 +172,8 @@
 
   <h2>Contact</h2>
   <p>
-    For privacy questions, data requests, or anything else, email
-    use the repository's <a href="https://github.com/LingXi-Org/LingxiLoop/security">private vulnerability reporting</a> channel.
+    For privacy questions or data requests, contact us through the
+    <a href="https://github.com/LingXi-Org/LingxiLoop/security">GitHub security page</a>.
   </p>
 
   <footer>

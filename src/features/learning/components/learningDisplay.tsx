@@ -30,7 +30,7 @@ export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
 }
 
 export const EVALUATION_MODE_LABELS: Record<string, string> = {
-  AGENT_FORMATIVE: '智能助教形成性评价', TEACHER_REQUIRED: '课程创建者审核',
+  AGENT_FORMATIVE: '智能助教反馈', TEACHER_REQUIRED: '教师审核',
 }
 
 export const WEEKDAY_LABELS: Record<string, string> = {
@@ -48,7 +48,7 @@ export const DELIVERY_CHANNEL_LABELS: Record<string, string> = {
 
 export function statusLabel(value: unknown): string {
   const raw = String(value ?? '—')
-  return STATUS_LABELS[raw.toUpperCase()] ?? '状态待同步'
+  return STATUS_LABELS[raw.toUpperCase()] ?? '状态暂不可用'
 }
 
 export function MasteryBadge({ level }: { level: number }) {

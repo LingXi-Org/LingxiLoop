@@ -63,7 +63,7 @@ function updateEntry(
 }
 
 function presentationError(error: unknown): string {
-  return userFacingError(error, '暂时无法加载这份演示，请稍后重试。')
+  return userFacingError(error, '暂时无法加载这份演示文稿，请稍后重试。')
 }
 
 export const usePresentations = create<PresentationsState>((set, get) => ({

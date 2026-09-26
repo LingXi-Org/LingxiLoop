@@ -34,7 +34,7 @@ export function AgentsPage() {
           </DialogTrigger>
           <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-lg">
             <DialogHeader className="pe-8"><DialogTitle>{agent.name}</DialogTitle><DialogDescription>{agent.role || '智能体资料'} · {STATUS[agent.status]}</DialogDescription></DialogHeader>
-            <div className="flex items-center gap-4"><AgentAvatarEditor agent={agent} /><p className="text-xs leading-relaxed text-muted-foreground">点击头像更换<br />自定义头像仅自己可见</p></div>
+            <div className="flex items-center gap-4"><AgentAvatarEditor agent={agent} /><p className="text-xs leading-relaxed text-muted-foreground">点击头像更换</p></div>
             {agent.bio && <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">{agent.bio}</p>}
             {!!agent.capabilities?.length && <div><h3 className="mb-2 text-xs font-medium text-muted-foreground">可用能力</h3><ul className="flex flex-wrap gap-1.5">{agent.capabilities.map(capability => <li key={capability} className="rounded-md border bg-muted/30 px-2 py-1 text-xs">{CAPABILITIES[capability]}</li>)}</ul></div>}
             {agent.email && <p className="break-all text-xs text-muted-foreground">邮箱：{agent.email}</p>}

@@ -15,13 +15,13 @@ const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; descriptio
   { id: 'canvas', label: '共享画布', description: '查看并修改工作区共享画布与内容卡片' },
   { id: 'web', label: '网页研究', description: '搜索和读取公开网页' },
   { id: 'files', label: '文件', description: '读写工作区与交付文件' },
-  { id: 'email', label: '邮件', description: '起草邮件；实际发送仍受审批策略约束' },
+  { id: 'email', label: '邮件', description: '起草邮件；发送前仍需你确认' },
   { id: 'documents', label: '协作文档', description: '创建、读取和编辑协作文档' },
-  { id: 'calendar', label: '日历', description: '访问日历和日程相关能力' },
+  { id: 'calendar', label: '日历', description: '查看和安排日程' },
   { id: 'knowledge', label: '知识库', description: '检索并使用当前学习区的知识资料' },
-  { id: 'learning', label: '教学', description: '在课程范围内规划学习任务、记录证据并提出形成性评价' },
-  { id: 'handoffs', label: '协作交接', description: '向同一会话的其他 Agent 委派任务并跟踪结果' },
-  { id: 'routines', label: '定时任务', description: '创建经审批的定时任务并查看运行记录' },
+  { id: 'learning', label: '教学', description: '规划课程任务，跟进学习成果并提供反馈' },
+  { id: 'handoffs', label: '协作交接', description: '与同一会话中的其他智能助教分工并查看进展' },
+  { id: 'routines', label: '定时任务', description: '安排定时任务并查看执行记录' },
 ]
 const DEFAULT_CAPABILITIES: AgentCapability[] = ['canvas', 'web', 'files', 'email', 'documents', 'knowledge']
 
@@ -40,11 +40,6 @@ export function AgentEditor({ agent, onClose }: Props) {
   const [capabilities, setCapabilities] = useState<AgentCapability[]>(agent?.capabilities ?? DEFAULT_CAPABILITIES)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-  const [harness, setHarness] = useState<Awaited<ReturnType<typeof agentsApi.getHarness>> | null>(null)
-  useEffect(() => { let active = true
-    void agentsApi.getHarness().then(value => { if (active) setHarness(value) }).catch(error => { if (active) setErr(userFacingError(error,'技能配置读取失败')) })
-    return () => { active = false }
-  }, [])
   // Esc to close
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -102,7 +97,7 @@ export function AgentEditor({ agent, onClose }: Props) {
               {editing ? `编辑 ${agent!.name}` : "新建智能助教"}
             </h2>
             <div className="text-[12.5px] text-ink-500 italic font-display">
-              {editing ? "调整该队友的行为方式。" : "从头开始​​定义一个新队友。"}
+              {editing ? "调整该队友的行为方式。" : "设置新队友的职责和工作方式。"}
             </div>
           </div>
           <Button
@@ -113,62 +108,52 @@ export function AgentEditor({ agent, onClose }: Props) {
         </div>
 
         <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
-          <Field label="名称" hint="智能助教在界面中的显示名称；@提及标识会自动生成。">
+          <Field label="名称" hint="其他成员可在对话中用这个名称找到并提及它。">
             <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="例如：概念导师"
             />
           </Field>
 
-          <Field label="任务职责" hint="系统会按任务分配职责，智能助教不能自行提高权限。">
+          <Field label="任务职责" hint="选择它在团队任务中的分工；角色不会增加它可使用的功能。">
             <div className="grid gap-2 sm:grid-cols-2">
               {[
-                ['协调者', '维护学习任务板，并分派完成任务所需的最小团队'],
-                ['专业执行者', '只完成分配的专业子问题，并提交结构化报告'],
-                ['独立复核者', '必须独立于产出角色，执行反例检查和证据裁决'],
-                ['汇总者', '只读取已保存的报告，保留冲突并形成最终汇总'],
+                ['协调者', '拆分任务并分配给合适的团队成员'],
+                ['专业执行者', '处理分配的任务并说明结论'],
+                ['独立复核者', '检查结论与证据，寻找遗漏'],
+                ['汇总者', '整理团队成果并说明不同意见'],
               ].map(([title, description]) => <div key={title} className="rounded-[10px] border border-ink-100 bg-white px-3 py-2.5"><div className="text-[12px] font-semibold text-ink-900">{title}</div><div className="mt-1 text-[11px] leading-4 text-ink-500">{description}</div></div>)}
             </div>
           </Field>
 
-          <Field label="角色说明" hint="显示在名称旁，用简短文字说明该智能助教的职责。">
+          <Field label="角色说明">
             <Input
               type="text"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              placeholder="例如：概念教学与理解检查"
             />
           </Field>
 
-          <Field label="行为提示词" hint="描述智能助教的语气、原则和工作边界。请用第二人称“你”来书写。">
+          <Field label="行为指引" hint="写下你希望它如何沟通、分析问题和完成任务。">
             <Textarea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               rows={5}
-              placeholder="你先核对事实，再给出清晰结论。表达直接、友好，不夸大不确定信息。"
               className="font-display italic"
               style={{ minHeight: 110 }}
             />
           </Field>
 
-          <Field label="简介" hint="可选，显示在智能助教资料卡上。">
+          <Field label="简介" hint="介绍它擅长什么，帮助团队找到合适的伙伴。">
             <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={2}
-              placeholder="用一句话说明这个智能助教最擅长的事情。"
             />
           </Field>
 
-          <Field label="运行环境" hint="所有学习智能助教使用相同的安全运行环境与模型配置。">
-            <div className="rounded-[10px] bg-sky2-50 px-3 py-2 text-[12.5px] text-ink-700">
-              LingxiLoop 智能助教安全运行环境
-            </div>
-          </Field>
-
-          <Field label="能力与权限" hint="只允许该智能助教使用已勾选的能力；可随时撤销。高风险动作仍会单独请求批准。">
+          <Field label="能力与权限" hint="仅启用所选功能；涉及敏感操作时，智能助教仍会先征求你的同意。">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {CAPABILITY_OPTIONS.map((option) => {
                 const checked = capabilities.includes(option.id)
@@ -195,22 +180,6 @@ export function AgentEditor({ agent, onClose }: Props) {
                   </label>
                 )
               })}
-            </div>
-            <div className="mt-2 rounded-[9px] border border-dashed border-ink-100 px-3 py-2 text-[11.5px] text-ink-500">
-              + 更多能力可通过后续集成扩展
-            </div>
-          </Field>
-
-          {harness && <Field label="已配置技能" hint="技能随所属能力启用，执行时仍会检查当前权限。">
-            <ul className="space-y-2 text-sm">{harness.skills.filter(skill => skill.actions.every(action =>
-              capabilities.includes((action.startsWith('research.') ? 'web' : action.split('.')[0]) as AgentCapability))).map(skill =>
-              <li key={skill.name}><span className="font-medium">{skill.name}</span><p className="text-muted-foreground">{skill.description}</p></li>)}</ul>
-          </Field>}
-
-          <Field label="趣味头像" hint="智能助教使用固定的趣味头像；颜色、形状与表情会随身份和状态变化。">
-            <div className="flex items-center gap-3 rounded-[12px] border border-ink-100 bg-white px-4 py-3">
-              <Avatar p={previewParticipant} size={72} animated={false} />
-              <div className="text-[12.5px] leading-5 text-ink-500">无需上传或生成图片；同一智能助教在聊天、成员列表和管理界面保持一致。</div>
             </div>
           </Field>
 
