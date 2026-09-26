@@ -22,18 +22,18 @@ export function PresentationArtifactCard({
   const title = presentation?.title || artifact.title
   const pageCount = presentation?.latestVersion?.pageCount ?? presentation?.targetPageCount
   const meta = loading && !presentation
-    ? '正在加载网页演示'
+    ? '正在加载演示文稿'
     : error && !presentation
       ? error
       : presentation
         ? [pageCount ? `${pageCount} 页` : '', PRESENTATION_STATUS_LABELS[presentation.status], presentation.visibilityScope === 'PRIVATE' ? '仅自己可见' : '']
             .filter(Boolean).join(' · ')
-        : '打开查看演示详情'
+        : '打开演示文稿'
 
   return (
     <ArtifactCard
       onOpen={() => onOpen(artifact.artifactId)}
-      openLabel="打开演示"
+      openLabel="打开演示文稿"
       icon={<PresentationIcon />}
       preview={html.status === 'ready'
         ? <div className="pointer-events-none absolute inset-0" inert><iframe
@@ -43,11 +43,11 @@ export function PresentationArtifactCard({
         : <div className="flex h-full flex-col justify-center gap-2 p-5 text-foreground">
           <PresentationIcon aria-hidden className="size-5 text-muted-foreground" />
           <p className="line-clamp-2 text-lg font-semibold">{title}</p>
-          <p className="text-xs text-muted-foreground">{html.status === 'error' ? '封面预览不可用，可打开演示重试' : html.status === 'loading' || loading ? '正在加载封面' : '尚无可预览版本'}</p>
+          <p className="text-xs text-muted-foreground">{html.status === 'error' ? '暂时无法预览封面，可打开演示文稿继续查看' : html.status === 'loading' || loading ? '正在加载封面' : '暂无可预览版本'}</p>
         </div>}
       data-presentation-open-trigger={artifact.artifactId}
       className={className}
-      aria-label={`打开网页演示：${title}`}
+      aria-label={`打开演示文稿：${title}`}
       title={title}
       meta={meta}
     />

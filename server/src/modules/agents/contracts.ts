@@ -1,13 +1,14 @@
+import { DEFAULT_AGENT_CAPABILITIES } from '../../../../src/lib/agentCapabilities.js'
 import { z } from 'zod'
 
-const capabilitySchema = z.enum(['canvas', 'web', 'files', 'email', 'documents', 'calendar', 'knowledge', 'learning', 'handoffs', 'routines'])
+const capabilitySchema = z.enum(DEFAULT_AGENT_CAPABILITIES)
 
 export const createAgentRequestSchema = z.object({
   name: z.string().trim().min(1, 'name required').max(80),
   role: z.string().trim().max(160).default(''),
   systemPrompt: z.string().trim().min(10, 'systemPrompt required (at least 10 chars — describe the agent\'s style)').max(20_000),
   bio: z.string().max(2_000).default(''),
-  capabilities: z.array(capabilitySchema).max(10).default(['canvas', 'web', 'files', 'email', 'documents']),
+  capabilities: z.array(capabilitySchema).max(10).default([...DEFAULT_AGENT_CAPABILITIES]),
 }).strict()
 
 export const updateAgentRequestSchema = createAgentRequestSchema.partial().refine(
@@ -15,7 +16,7 @@ export const updateAgentRequestSchema = createAgentRequestSchema.partial().refin
   'nothing to update',
 )
 
-export const preferencesRequestSchema = z.record(z.string(), z.unknown())
+export const preferencesRequestSchema = z.record(z.string(), z.unknown()).refine(value => !Object.hasOwn(value, 'agentAvatars'), 'agent avatars must use the avatar endpoint')
 export const autonomyRequestSchema = z.object({ threshold: z.coerce.number().min(0).max(1) }).strict()
 
 export type CreateAgentInput = z.infer<typeof createAgentRequestSchema>

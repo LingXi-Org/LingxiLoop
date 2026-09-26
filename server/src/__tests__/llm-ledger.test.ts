@@ -11,6 +11,8 @@ test('SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rat
   assert.equal(cost.costUsd,10.65/7)
   assert.equal(cost.cachedUsageAvailable,true)
   assert.equal(siliconFlowCost({ available: true,inputTokens: 1_000_000,outputTokens: 0 },pricing).costCny,3)
+  assert.deepEqual(siliconFlowCost({available:true,inputTokens:1_000_000,outputTokens:1_000_000,cachedInputTokens:500_000},siliconFlowPricing(7,'zai-org/GLM-5.2')),
+    {costCny:33,costUsd:33/7,cachedUsageAvailable:true})
   assert.throws(()=>siliconFlowCost({ available: true,inputTokens: 1,outputTokens: 0,cachedInputTokens: 2 },pricing))
   assert.throws(()=>siliconFlowCost({ available: false,inputTokens: 0,outputTokens: 0 },pricing))
   assert.throws(()=>siliconFlowPricing(0))

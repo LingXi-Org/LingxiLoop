@@ -1,9 +1,10 @@
+import { CARD_RESULT_ACTIONS, toolCardResult } from '@/lib/agentToolCards'
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { consumeAssistantMessage, createRunView, responseSegments, type AssistantMessage, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import type { ImEnvelope } from '@/lib/im/wukong'
 import type { HarnessToolPart, LingxiMessageMetadata } from './model'
 import type { MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
-import { researchSources } from './research'
+import { researchSources } from '@/lib/researchSources'
 
 /** chat.send messages can share a run ID without owning that run's preview or lifecycle. */
 export function isRunMessage(metadata: LingxiMessageMetadata): boolean {
@@ -28,9 +29,10 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
     }
     const previous = calls.get(id)
     if (event.kind === 'tool.completed' && previous && event.seq > (previous.eventSeq ?? 0) && event.data.result && typeof event.data.result === 'object') {
-      const result = event.data.result, value = Reflect.get(result,'value')
+      const result = event.data.result, value = Reflect.get(result,'value'), cardValue = toolCardResult(previous.toolName, value)
       // Retain status and bounded search cards, never complete source text or prompts.
       calls.set(id,{ ...previous,eventSeq: event.seq,result: { status: Reflect.get(result,'status'),
+        ...(cardValue === undefined ? {} : { value: cardValue }),
         ...(previous.toolName === 'research.search' ? { sources: researchSources(value) } : {}),
         ...(previous.toolName.startsWith('knowledge.') && value && typeof value === 'object' ? { sourceStatus: Reflect.get(value,'status') } : {}) },isError: event.data.isError === true })
     }
@@ -57,11 +59,14 @@ export function readHarness(envelope: ImEnvelope): RunView | undefined {
   return { ...consumeAssistantMessage(createRunView(runId),message,data.harnessCommit as { resultId: string; fence: number }), delivery: 'delivered' }
 }
 
-export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
-  if (view.lifecycle === 'queued') return []
-  // Public RunView drafts contain body-text deltas; private reasoning never enters this stream.
-  if (view.lifecycle === 'leased' && view.draft) return [{ type: 'text', text: view.draft }]
-  if (!view.message) return []
+export function harnessParts(view: RunView, tools: readonly HarnessToolPart[] = []): ThreadAssistantMessagePart[] {
+  const cards = tools.filter(tool => CARD_RESULT_ACTIONS.some(action => action === tool.toolName)).map(tool =>
+    tool.result === undefined && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed')
+      ? { ...tool, result: { status: view.lifecycle }, isError: view.lifecycle === 'failed' } : tool)
+  if (view.lifecycle === 'queued') return cards
+  // Native drafts expose content deltas only; provider reasoning fields are excluded upstream.
+  if (view.lifecycle === 'leased' && view.draft) return [{ type: 'text', text: view.draft }, ...cards]
+  if (!view.message) return cards
   const segments = responseSegments(view.message.envelope)
   const evidence = view.message.envelope.citationEvidence
   const parts: ThreadAssistantMessagePart[] = []
@@ -92,7 +97,8 @@ export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
   }
   if (claims.length) parts.push({ type: 'tool-call', toolCallId: `cite-claims:${view.runId}:${view.resultId}`,
     toolName: 'cite_claims', args: {}, argsText: '{}', result: { claims } })
-  return parts
+  return [...parts, ...cards.filter(tool => !(tool.toolName === 'calendar.get' && parts.some(part => part.type === 'tool-call' && part.toolName === 'calendar-event'
+    && (part.args.event as { id?: string })?.id === (tool.result as { value?: { id?: string } })?.value?.id)))]
 }
 
 export function harnessStatus(view: RunView): MessageStatus {

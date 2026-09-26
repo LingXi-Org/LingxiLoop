@@ -1,3 +1,4 @@
+import { assistantTextViolation } from './assistant-text.js'
 import { createHash } from 'node:crypto'
 import type { createLingxiOS, ApprovalSnapshot, DeliveryPort } from '@lyyzka/lingxios'
 import { sendAgentChannelMessage } from '../im/public.js'
@@ -21,6 +22,8 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
   return {
     async onEvent() { /* Native SSE owns replay and preview delivery. */ },
     async deliverMessage(work, message, context) {
+      const violation = assistantTextViolation(message.body)
+      if (violation) throw new Error(violation)
       if (!context?.commit) throw new Error('committed result identity is required for native delivery')
       if (work.conversation?.internal) throw new Error('internal delegates cannot publish IM messages')
       const conversationId = productConversationId(work)

@@ -10,6 +10,7 @@ const question = z.object({ name: z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}
   'question requires unique choices or freeform input')
 
 export const agentMessageSchemas = {
+  recommend: z.object({ title: text(160), explanation: text(4000), nextStep: text(500) }).strict(),
   history: z.object({ limit: z.number().int().min(1).max(100).default(50), beforeSequence: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).default(0) }).strict(),
   inbox: z.object({ limit: z.number().int().min(1).max(50).default(50) }).strict(),
   search: z.object({ query: text(200), limit: z.number().int().min(1).max(50).default(10) }).strict(),

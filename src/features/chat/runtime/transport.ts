@@ -483,7 +483,7 @@ export class ChatTransport {
       await this.refreshRun(target)
       const refreshed = useChatThreadStore.getState().conversations[conversationId]?.messages
         .find(item => messageMetadata(item).runId === target.runId && messageMetadata(item).senderId === target.agentId && isRunMessage(messageMetadata(item)))
-      if (refreshed && messageMetadata(refreshed).harnessError) throw new Error('任务状态暂时无法同步')
+      if (refreshed && messageMetadata(refreshed).harnessError) throw new Error('无法获取任务进度，请重试。')
     })).then(results => {
       if (results.some(result => result.status === 'rejected')) throw new Error('部分任务未能停止，请重试。')
     }).finally(() => this.cancellations.delete(conversationId))
@@ -553,7 +553,7 @@ export class ChatTransport {
         if (meta.runId !== target.runId || !isRunMessage(meta)) return message
         const inaccessible = /\(40[134]\)/.test(String(error))
         return { ...message, metadata: { ...message.metadata, custom: { ...meta,
-          ...(inaccessible ? { harnessControl: false, memory: undefined } : {}), harnessError: inaccessible ? undefined : '运行状态暂时无法同步，请重试' } } } as ThreadMessage
+          ...(inaccessible ? { harnessControl: false, memory: undefined } : {}), harnessError: inaccessible ? undefined : '任务进度暂不可用，请重试。' } } } as ThreadMessage
       }) }))
     }
   }

@@ -3,6 +3,8 @@ import { useParticipants } from '@/features/agents/state'
 import { useCalendar } from '@/features/calendar/state'
 import { useConversations } from '@/features/conversations/store'
 import { useDocuments } from '@/features/documents/state'
+import { useCanvas } from '@/features/canvas/state'
+import { useKnowledgeSources } from './state'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
@@ -72,6 +74,8 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     setWorkspaceSession({ companyId, projectId })
     set({ selectedId: projectId })
     useApp.getState().selectConversation(null)
+    useCanvas.getState().reset()
+    useKnowledgeSources.getState().reset()
     useCalendar.getState().reset()
     useDocuments.getState().reset()
     await Promise.all([
@@ -88,6 +92,8 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     setWorkspaceSession(null)
     set({ selectedId: null })
     useApp.getState().selectConversation(null)
+    useCanvas.getState().reset()
+    useKnowledgeSources.getState().reset()
   },
 
 }))
@@ -124,6 +130,8 @@ export async function selectLearningSpace(selection: LearningSpaceSelection): Pr
   useConversations.getState().reset()
   useCalendar.getState().reset()
   useDocuments.getState().reset()
+  useCanvas.getState().reset()
+  useKnowledgeSources.getState().reset()
   useApp.setState({ selectedConversationId: null })
   useAuth.getState().setActiveCompany(selection.companyId)
 }

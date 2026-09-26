@@ -53,7 +53,7 @@ export function applyRunUpdate(
     memory: response?.memory
       ? response.memory.revision >= (before?.memory?.revision ?? 0) ? response.memory : before?.memory
       : projectRunMemory(target.runId, response?.events ?? (item.type === 'event' ? [item.event] : []), before?.memory),
-    harnessTools: harnessToolParts(target.runId, response?.events ?? (item.type === 'event' ? [item.event] : []), before?.harnessTools),
+    harnessTools: harnessToolParts(target.runId, response?.events ?? (item.type === 'event' ? [item.event] : []), [...before?.harnessTools ?? [], ...response?.tools ?? []]),
     harnessReplaySeq: response?.nextSeq ?? view.lastSeq,
     ...(response ? { harnessControl: response.canControl, harnessError: response.run.error ?? undefined } : {}),
     ...(item.type === 'event' && item.event.kind === 'run.failed' && typeof item.event.data.error === 'string'
@@ -62,7 +62,7 @@ export function applyRunUpdate(
   // Only previews need a time-based anchor; delivered messages retain their IM sequence.
   if (before && before.positionAfter === undefined && !Number.isFinite(startedAt) && !lastSent) delete custom.positionAfter
   const message: ThreadMessage = { id, role: 'assistant', createdAt,
-    content: harnessParts(view), status: harnessStatus(view), metadata: {
+    content: harnessParts(view, custom.harnessTools), status: harnessStatus(view), metadata: {
       unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], ...current?.metadata, custom,
     } }
   const activeRuns = { ...state.activeRuns }

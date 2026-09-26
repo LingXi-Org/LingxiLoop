@@ -109,7 +109,7 @@ export async function listAgentEmailExternalContacts(
 
 export async function listAgentEmailThreads(
   db: Queryable,
-  input: { companyId: string; agentId: string; unreadOnly: boolean; limit: number },
+  input: { companyId: string; agentId: string; unreadOnly: boolean; limit: number; projectId?: string; query?: string; offset?: number },
 ): Promise<AgentEmailThreadRow[]> {
   const { rows } = await db.query<{
     conversation_id: string
@@ -127,6 +127,7 @@ export async function listAgentEmailThreads(
         WHERE conversation.kind = 'email'
           AND conversation.company_id = $1
           AND conversation.members @> to_jsonb(ARRAY[$2::text])
+          AND ($5::text IS NULL OR conversation.project_id=$5)
      ),
      last_message AS (
        SELECT DISTINCT ON (email.conversation_id)
@@ -151,14 +152,17 @@ export async function listAgentEmailThreads(
             last_message.subject AS last_subject,
             last_message.from_addr AS last_from,
             last_message.at::text AS last_at,
-            last_message.body AS last_body
+            CASE WHEN $5::text IS NULL THEN last_message.body ELSE left(last_message.body,240) END AS last_body
        FROM my_threads thread
        LEFT JOIN last_message ON last_message.conversation_id = thread.id
        LEFT JOIN unread ON unread.conversation_id = thread.id
-      WHERE NOT $3 OR COALESCE(unread.count, 0) > 0
-      ORDER BY thread.updated_at DESC
-      LIMIT $4`,
-    [input.companyId, input.agentId, input.unreadOnly, input.limit],
+      WHERE (NOT $3 OR COALESCE(unread.count, 0) > 0)
+        AND ($6::text = '' OR strpos(lower(thread.title),lower($6)) > 0 OR EXISTS (
+          SELECT 1 FROM email_messages matching WHERE matching.company_id=$1 AND matching.conversation_id=thread.id
+            AND (strpos(lower(matching.subject),lower($6)) > 0 OR strpos(lower(matching.from_addr),lower($6)) > 0)))
+      ORDER BY thread.updated_at DESC,thread.id
+      LIMIT $4 OFFSET $7`,
+    [input.companyId, input.agentId, input.unreadOnly, input.limit, input.projectId ?? null, input.query ?? '', input.offset ?? 0],
   )
   return rows.map((row) => ({
     conversationId: row.conversation_id,

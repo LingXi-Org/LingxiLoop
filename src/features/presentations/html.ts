@@ -35,7 +35,7 @@ export function usePresentationHtml(
         setState({
           status: 'error',
           url: null,
-          error: userFacingError(error, '暂时无法加载演示文件，请稍后重试。'),
+          error: userFacingError(error, '暂时无法加载演示文稿，请稍后重试。'),
         })
       })
     return () => {
@@ -50,7 +50,7 @@ export function usePresentationHtml(
 
 export function safePresentationFilename(title: string): string {
   const base = title.trim().replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').replace(/[. ]+$/g, '').slice(0, 120)
-  return `${base || 'HTML 演示'}.html`
+  return `${base || '演示文稿'}.html`
 }
 
 export async function downloadPresentationVersion(

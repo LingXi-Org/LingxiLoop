@@ -55,7 +55,7 @@ export async function createChatCompletion(
   request: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
   options?: OpenAI.RequestOptions,
 ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
-  const providerRequest = { ...request, reasoning_effort: undefined, enable_thinking: false }
+  const providerRequest = { ...request, reasoning_effort: undefined, thinking_budget: undefined, enable_thinking: false, thinking: { type: 'disabled' } }
   return tracked(
     context,
     request.model,

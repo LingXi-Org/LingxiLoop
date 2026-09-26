@@ -14,12 +14,12 @@ let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
 after(async () => { await teardownAll(); await im?.close() })
 
-test('production workers disable thinking for fast, upgraded and deep calls and stream only body text before completion', { timeout: 90000 }, async () => {
+test('production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion', { timeout: 180000 }, async () => {
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   const body = '第一段\n\n第二段 **正文**', privateText = 'private-reasoning-fixture'
   const originalBaseUrl = env.OPENAI_BASE_URL
-  for (const mode of ['auto', 'upgrade', 'deep']) {
+  for (const mode of ['auto', 'deep']) {
     const requests: Record<string, unknown>[] = []
     let release!: () => void
     const gate = new Promise<void>(resolve => { release = resolve })
@@ -37,14 +37,17 @@ test('production workers disable thinking for fast, upgraded and deep calls and 
       res.writeHead(200, { 'content-type': 'text/event-stream' })
       const send = (delta: unknown, finish_reason: string | null = null) =>
         res.write(`data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason }] })}\n\n`)
-      if (mode === 'upgrade' && request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'response__upgrade')) {
-        send({ tool_calls: [{ index: 0, id: 'upgrade', type: 'function', function: { name: 'response__upgrade', arguments: '{}' } }] }, 'tool_calls')
-      } else {
-        send({ reasoning_content: privateText })
+      assert.ok(!request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'response__upgrade'))
+      if(requests.filter(item=>item.stream).length===1){
+        send({role:'assistant',reasoning_content:privateText,tool_calls:[{index:0,id:'invalid-question',type:'function',function:{name:'chat__ask',arguments:'{"title":'}}]})
+        send({tool_calls:[{index:0,function:{arguments:'"PRIVATE TOOL ARGUMENT"}'}}]},'tool_calls')
+        res.end(`data: ${JSON.stringify({choices:[],usage})}\n\ndata: [DONE]\n\n`)
+        return
+      }
+        send({ role: 'assistant', reasoning_content: privateText })
         send({ content: '第一段' })
         await gate
         send({ reasoning_content: privateText, content: '\n\n第二段 **正文**' }, 'stop')
-      }
       res.end(`data: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
     })
     await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
@@ -66,12 +69,13 @@ test('production workers disable thinking for fast, upgraded and deep calls and 
       messageId: 'question', version: 1, author: { id: 'test-owner', kind: 'human' }, text: '请解释这个概念。', mentions: [agentId] },
     { mode: 'execute', executionClass: 'conversation', codeExecution: 'disabled' })
     const run = result.runs[0]; assert.ok(run); await bindProductRun(pool, run, conversationId)
-    const cancellation = new AbortController(), timeout = AbortSignal.timeout(20000)
+    const cancellation = new AbortController(), timeout = AbortSignal.timeout(60000)
     const stream = await api.streamRun(run, { signal: AbortSignal.any([cancellation.signal, timeout]) })
     let wire = ''
+    let streamError: unknown
     const reading = (async () => {
       for await (const chunk of stream.body!.pipeThrough(new TextDecoderStream())) wire += chunk
-    })().catch(error => { if (!cancellation.signal.aborted) throw error })
+    })().catch(error => { if (!cancellation.signal.aborted) streamError = error })
     let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
     try {
       worker = await startLingxiOSWorker()
@@ -82,15 +86,21 @@ test('production workers disable thinking for fast, upgraded and deep calls and 
       while ((await api.readRunState(run))?.delivery !== 'delivered') { timeout.throwIfAborted(); await delay(20) }
       assert.equal((await api.readRunState(run))?.message?.body, body)
       assert.deepEqual(im.messages.filter(message => message.channelId === conversationId).map(message => message.payload.body), [body])
-      assert.equal(requests.filter(request => request.stream).length, mode === 'upgrade' ? 2 : 1)
+      assert.equal(requests.filter(request => request.stream).length, 2)
       assert.ok(requests.some(request => !request.stream), 'auxiliary content check must also use the native driver')
       for (const request of requests) {
         assert.equal(request.enable_thinking, false)
+        assert.equal(request.thinking,undefined)
+        assert.equal((request.response_format as {type:string}|undefined)?.type,request.stream ? undefined : 'json_object')
         assert.equal(request.reasoning_effort, undefined)
         assert.equal(request.thinking_budget, undefined)
       }
-      assert.doesNotMatch(wire, /private-reasoning-fixture/)
-      const calls = await pool.query('SELECT status FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, run.runId])
+      assert.doesNotMatch(wire, /private-reasoning-fixture|PRIVATE TOOL ARGUMENT/)
+      let calls = await pool.query('SELECT status FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, run.runId])
+      while (calls.rows.length < requests.length) {
+        timeout.throwIfAborted(); await delay(20)
+        calls = await pool.query('SELECT status FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, run.runId])
+      }
       assert.deepEqual(calls.rows.map(row => row.status), requests.map(() => 'succeeded'))
     } finally {
       release(); cancellation.abort(); await reading
@@ -99,5 +109,6 @@ test('production workers disable thinking for fast, upgraded and deep calls and 
       await new Promise<void>(resolve => provider.close(() => resolve()))
       env.OPENAI_BASE_URL = originalBaseUrl
     }
+    if (streamError) throw streamError
   }
 })

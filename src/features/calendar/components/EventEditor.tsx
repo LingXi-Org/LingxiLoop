@@ -251,7 +251,6 @@ export function EventEditor({ event, prefill, onClose }: Props) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="例如每日站立文摘"
               autoFocus
               maxLength={200}
             />
@@ -513,7 +512,6 @@ export function EventEditor({ event, prefill, onClose }: Props) {
                   id="event-prompt"
                   value={agentPrompt}
                   onChange={(e) => setAgentPrompt(e.target.value)}
-                  placeholder="例如总结过去 24 小时的对话活动并在此处发布摘要。"
                   rows={4}
                   maxLength={8000}
                 />

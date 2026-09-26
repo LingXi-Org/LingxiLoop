@@ -41,10 +41,11 @@ import { userFacingError } from '@/lib/userFacingError'
 import { useAuth } from '@/stores/auth'
 import { knowledgeApi } from '../api'
 import type { KnowledgeSource } from '../contracts'
+import { ConversationSourceToggle } from './ConversationSourceToggle'
 
 const statusLabel: Record<string, string> = {
-  upload_pending: '等待上传', queued: '排队', processing: '处理中', parsing: '解析',
-  chunking: '分块', indexing: '索引', ready: '就绪', failed: '失败', retrying: '重试中',
+  upload_pending: '等待上传', queued: '等待处理', processing: '处理中', parsing: '处理中',
+  chunking: '处理中', indexing: '处理中', ready: '可查看', failed: '处理失败', retrying: '重新处理',
 }
 const kindLabel: Record<KnowledgeSource['kind'], string> = { file: '文件', url: '网页', text: '文本' }
 
@@ -112,7 +113,7 @@ export function ProjectSourceLibrary({
     }
     const uploads = Promise.all(files.map((file) => knowledgeApi.uploadProjectSource(projectId, file, revealPending)))
     void toastAction(uploads, {
-      loading: '正在后台上传文件', success: '文件已上传，正在解析并建立索引', error: '文件上传失败',
+      loading: '正在上传文件', success: '文件已上传，正在准备内容', error: '文件上传失败',
     }).then(() => load()).catch(() => undefined)
   }
   const addUrl = async (url: string, title?: string) => { await knowledgeApi.addProjectUrlSource(projectId, { url, title }); await load() }
@@ -138,7 +139,7 @@ export function ProjectSourceLibrary({
   const retry = async (source: KnowledgeSource) => {
     try {
       await toastAction(knowledgeApi.retryProjectSource(projectId, source.id), {
-        loading: '正在重新处理资料', success: '资料已重新进入处理队列', error: '资料重试失败',
+        loading: '正在重新处理资料', success: '资料已开始重新处理', error: '无法重新处理资料，请稍后重试',
       })
       await load()
     } catch { /* Toast owns the visible error state. */ }
@@ -146,14 +147,14 @@ export function ProjectSourceLibrary({
 
   const remove = async (source: KnowledgeSource) => {
     if (!await confirmSensitiveAction({
-      title: '删除知识来源？',
-      description: `“${source.title}”及其索引内容将被永久删除。`,
-      confirmLabel: '删除来源',
+      title: '删除资料？',
+      description: `“${source.title}”及其搜索内容将被永久删除。`,
+      confirmLabel: '删除资料',
       tone: 'destructive',
     })) return
     try {
       await toastAction(knowledgeApi.deleteProjectSource(projectId, source.id), {
-        loading: '正在删除知识来源', success: '知识来源已删除', error: '删除知识来源失败',
+        loading: '正在删除资料', success: '资料已删除', error: '删除资料失败',
       })
       if (selected?.id === source.id) setSelected(null)
       await load()
@@ -165,7 +166,7 @@ export function ProjectSourceLibrary({
     <div>
       {loading && visibleSources.length === 0 ? <ResourceSkeleton variant="cards" count={6} label="正在加载资料库" />
         : error && visibleSources.length === 0 ? <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" onClick={() => void load(true)}>重新加载</Button></AlertDescription></Alert>
-          : visibleSources.length === 0 ? <Empty className="min-h-96 border border-dashed"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>文件夹还是空的</EmptyTitle><EmptyDescription>{readOnly ? '这里还没有可查看的资料。' : '上传文件、网页或文本后，系统会自动提取内容并建立可检索索引。'}</EmptyDescription></EmptyHeader>{!readOnly ? <EmptyContent><Button type="button" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button></EmptyContent> : null}</Empty>
+          : visibleSources.length === 0 ? <Empty className="min-h-96 border border-dashed"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>还没有资料</EmptyTitle><EmptyDescription>{readOnly ? '这里还没有可查看的资料。' : '添加文件、网页或文本，之后可在资料库中查看和搜索。'}</EmptyDescription></EmptyHeader>{!readOnly ? <EmptyContent><Button type="button" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button></EmptyContent> : null}</Empty>
             : <><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visibleSources.map((source) => {
               const creator = byId[source.createdBy]?.name ?? source.ownerName ?? (source.createdBy === me?.id ? '你' : '一位成员')
               const busy = source.status === 'upload_pending' || source.status === 'queued' || source.status === 'processing'
@@ -182,8 +183,7 @@ export function ProjectSourceLibrary({
                         <span className="block text-sm text-muted-foreground">{kindLabel[source.kind]} · {Math.max(1, Math.round(source.sizeBytes / 1024))} KB</span>
                       </span>
                       <span className="mt-auto flex w-full flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <Badge variant={source.status === 'failed' ? 'destructive' : source.status === 'ready' ? 'secondary' : 'outline'}>{statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态待同步'}</Badge>
-                        {source.chunkCount ? <span>{source.chunkCount} 个片段</span> : null}
+                        <Badge variant={source.status === 'failed' ? 'destructive' : source.status === 'ready' ? 'secondary' : 'outline'}>{statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态暂不可用'}</Badge>
                         <span className="ms-auto truncate">{creator}</span>
                       </span>
                     </button>
@@ -209,8 +209,9 @@ export function ProjectSourceLibrary({
 
     <Dialog open={selected !== null} onOpenChange={(nextOpen) => { if (!nextOpen) { setSelected(null); setDetailError('') } }}>
       <DialogContent className="max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-3xl">
-        <DialogHeader className="border-b border-border/60 p-6 pe-14"><DialogTitle>{selected?.title ?? '资料预览'}</DialogTitle><DialogDescription>{selected ? `${kindLabel[selected.kind]} · ${statusLabel[selected.stage] ?? statusLabel[selected.status] ?? '状态待同步'} · ${selected.visibilityScope === 'PROJECT' ? '项目共享' : '仅自己'}` : '资料详情'}</DialogDescription></DialogHeader>
+        <DialogHeader className="border-b border-border/60 p-6 pe-14"><DialogTitle>{selected?.title ?? '资料预览'}</DialogTitle><DialogDescription>{selected ? `${kindLabel[selected.kind]} · ${statusLabel[selected.stage] ?? statusLabel[selected.status] ?? '状态暂不可用'} · ${selected.visibilityScope === 'PROJECT' ? '项目成员可见' : '仅自己可见'}` : '资料'}</DialogDescription></DialogHeader>
         <div className="min-h-0 overflow-y-auto p-6">
+          {selected && !detailError && <ConversationSourceToggle key={`${projectId}:${selected.id}`} projectId={projectId} sourceId={selected.id} />}
           {detailLoading ? <ResourceSkeleton variant="detail" label="正在加载资料预览" />
             : detailError ? <Alert variant="destructive"><AlertDescription>{detailError}</AlertDescription></Alert>
               : selected ? <><div className="flex flex-wrap gap-2">{selected.originalUrl ? <Button asChild variant="outline" size="sm"><a href={selected.originalUrl} target="_blank" rel="noreferrer">打开原始网页</a></Button> : null}{selected.originalFileUrl ? <Button asChild variant="outline" size="sm"><a href={selected.originalFileUrl} target="_blank" rel="noreferrer">打开原始文件</a></Button> : null}</div><pre className="mt-4 min-h-48 whitespace-pre-wrap rounded-3xl bg-muted p-5 font-sans text-sm leading-6">{selected.extractedText || (selected.error ? userFacingError(selected.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可预览提取内容。')}</pre>{editable(selected) ? <div className="mt-5 flex flex-wrap justify-end gap-2"><Button type="button" variant="outline" onClick={() => setRenaming(selected)}><HugeiconsIcon icon={Edit02Icon} strokeWidth={2} />重命名</Button><Button type="button" variant="destructive" onClick={() => void remove(selected)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />删除来源</Button></div> : null}</> : null}

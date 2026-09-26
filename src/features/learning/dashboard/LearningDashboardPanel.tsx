@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { CourseSourceDrive } from '@/features/knowledge/components/CourseSourceDrive'
 import { userFacingError } from '@/lib/userFacingError'
@@ -13,15 +14,13 @@ import { useLearningDashboardData } from './useLearningDashboardData'
 
 export function LearningDashboardPanel({ space, section }: {
   space: LearningSpace
-  spaces: LearningSpace[]
   section: LearningDashboardSection
-  onOpenLearningSpace(projectId: string): void
 }) {
   if (section === 'calendar') return <CalendarView />
   if (section === 'resources') return <CourseSourceDrive space={space} />
   if (space.perspective === 'teacher') {
-    if (section === 'settings') {
-      return <CourseSettingsSection space={space} />
+    if (section === 'settings' || section === 'content' || section === 'members' || section === 'status') {
+      return <CourseSettingsSection space={space} section={section === 'settings' ? 'profile' : section} />
     }
     return <DashboardSectionFrame space={space} section="overview"><TeacherOverviewDashboard space={space} /></DashboardSectionFrame>
   }
@@ -59,7 +58,7 @@ function LearningDataSection({ space, section }: { space: LearningSpace; section
   return (
     <DashboardSectionFrame space={space} section={section}>
       <div className="space-y-4">
-        {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+        {error && <Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" disabled={overviewLoading || resourcesLoading} onClick={() => void refreshAll()}>重新加载</Button></AlertDescription></Alert>}
         {content}
       </div>
     </DashboardSectionFrame>

@@ -7,7 +7,7 @@ import { userFacingError } from '@/lib/userFacingError'
 import { mergeCanvasActivities } from './lib/events'
 import { acceptsCanvasEventTimestamp, upsertCanvasFrame } from './lib/realtime'
 import { useApp } from '@/stores/app'
-import { useSurface } from '@/stores/surface'
+import { getWorkspaceSession } from '@/lib/workspaceSession'
 import type {
   CanvasFrame,
   CanvasFrameType,
@@ -55,6 +55,12 @@ const defaults: Record<CanvasFrameType, { title: string; content: string; width:
   artifact: { title: '成果', content: '', width: 420, height: 280 },
 }
 
+let canvasRequestEpoch = 0
+const canvasScope = () => {
+  const workspace = getWorkspaceSession()
+  return `${workspace?.companyId}:${workspace?.projectId}:${useApp.getState().selectedConversationId}`
+}
+
 export const useCanvas = create<CanvasState>((set, get) => ({
   snapshot: null,
   previews: {},
@@ -68,9 +74,12 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   selectedFrameId: null,
 
   load: async (canvasId) => {
+    const epoch = ++canvasRequestEpoch
+    const scope = canvasScope()
     set({ loading: true, error: null })
     try {
       const snapshot = await canvasApi.getCanvas(canvasId ?? get().activeCanvasId ?? undefined)
+      if (epoch !== canvasRequestEpoch || scope !== canvasScope()) return
       set((state) => {
         const current = state.activityByCanvas[snapshot.id]
           ?? (state.snapshot?.id === snapshot.id ? state.snapshot.activity : [])
@@ -94,17 +103,20 @@ export const useCanvas = create<CanvasState>((set, get) => ({
         }
       })
     } catch (error) {
-      set({ error: userFacingError(error, '暂时无法打开画布，请稍后重试。') })
+      if (epoch === canvasRequestEpoch && scope === canvasScope()) set({ error: userFacingError(error, '暂时无法打开画布，请稍后重试。') })
     } finally {
-      set({ loading: false })
+      if (epoch === canvasRequestEpoch && scope === canvasScope()) set({ loading: false })
     }
   },
 
   loadPreview: async (canvasId) => {
     const state = get()
     if (state.snapshot?.id === canvasId || state.previews[canvasId]) return
+    const scope = canvasScope()
+    const epoch = canvasRequestEpoch
     try {
       const snapshot = await canvasApi.getCanvas(canvasId)
+      if (scope !== canvasScope() || epoch !== canvasRequestEpoch) return
       set((current) => {
         const activity = mergeCanvasActivities(current.activityByCanvas[canvasId] ?? [], snapshot.activity)
         return {
@@ -119,12 +131,21 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   },
 
   loadWorkspaces: async (conversationId) => {
-    try { set({ workspaces: await canvasApi.getCanvases(conversationId) }) }
-    catch (error) { set({ error: userFacingError(error, '暂时无法加载画布列表，请稍后重试。') }) }
+    const scope = canvasScope()
+    const epoch = canvasRequestEpoch
+    try {
+      const workspaces = await canvasApi.getCanvases(conversationId)
+      if (scope === canvasScope() && epoch === canvasRequestEpoch) set({ workspaces })
+    } catch (error) {
+      if (scope === canvasScope() && epoch === canvasRequestEpoch) set({ error: userFacingError(error, '暂时无法加载画布列表，请稍后重试。') })
+    }
   },
 
   ensureForConversation: async (conversationId) => {
+    const epoch = ++canvasRequestEpoch
+    const scope = canvasScope()
     const snapshot = await canvasApi.ensureConversationCanvas(conversationId)
+    if (epoch !== canvasRequestEpoch || scope !== canvasScope()) return snapshot
     const summary: CanvasWorkspaceSummary = {
       id: snapshot.id,
       title: snapshot.title,
@@ -148,7 +169,10 @@ export const useCanvas = create<CanvasState>((set, get) => ({
     return snapshot
   },
 
-  reset: () => set({ snapshot: null, previews: {}, workspaces: [], activeCanvasId: null, eventClocks: {}, activityByCanvas: {}, liveCards: {}, loading: false, error: null, selectedFrameId: null }),
+  reset: () => {
+    canvasRequestEpoch += 1
+    set({ snapshot: null, previews: {}, workspaces: [], activeCanvasId: null, eventClocks: {}, activityByCanvas: {}, liveCards: {}, loading: false, error: null, selectedFrameId: null })
+  },
   selectFrame: (id) => set({ selectedFrameId: id }),
   patchLocalFrame: (id, patch) => set((state) => {
     if (!state.snapshot) return {}
@@ -387,11 +411,6 @@ ws.on((event) => {
     useCanvas.getState().applyEvent(event)
     if (event.kind === 'workspace.started') {
       void useCanvas.getState().loadWorkspaces(event.conversationId)
-      const app = useApp.getState()
-      if (window.innerWidth >= 768 && app.view === 'conversations' && app.selectedConversationId === event.conversationId) {
-        useSurface.getState().openCanvasPeek(event.canvasId)
-        void useCanvas.getState().load(event.canvasId)
-      }
     }
   }
   if (event.type === 'hello' && useCanvas.getState().snapshot) void useCanvas.getState().load(useCanvas.getState().activeCanvasId ?? undefined)

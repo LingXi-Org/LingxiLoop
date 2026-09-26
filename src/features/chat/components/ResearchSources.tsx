@@ -2,7 +2,7 @@ import type { RunView } from '@lyyzka/lingxios/ui'
 import { Citation } from '@/components/tool-ui/citation'
 import { LinkPreview } from '@/components/tool-ui/link-preview'
 import type { HarnessToolPart } from '../runtime/model'
-import type { ResearchSource } from '../runtime/research'
+import type { ResearchSource } from '@/lib/researchSources'
 
 export function ResearchSources({ calls, lifecycle }: { calls: readonly HarnessToolPart[]; lifecycle: RunView['lifecycle'] }) {
   return <>{calls.filter(call => call.toolName === 'research.search').map(call => {

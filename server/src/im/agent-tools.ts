@@ -1,3 +1,4 @@
+import { assistantTextViolation } from '../agent-runtime/assistant-text.js'
 import { productConversationId, assertFrozenAudience } from '../agent-runtime/identity.js'
 import { NoEffectError, type ActionContext, type ToolDefinition, type createLingxiOS } from '@lyyzka/lingxios'
 import type { Queryable } from '../db/queryable.js'
@@ -14,8 +15,8 @@ import { appendReadReceiptAdvance } from './read-receipts-repository.js'
 const identity = ({ work }: ActionContext) => ({ companyId: work.tenantId, userId: work.agentId, channelId: productConversationId(work) })
 const application = (context: ActionContext) => createImMessagesApplication(context.signal)
 async function authorize(context: ActionContext) {
-  if (context.work.conversation?.internal && ['chat.send','chat.ask'].includes(context.action.action)) throw new NoEffectError('internal delegates return results to their parent','forbidden')
-  if (['chat.send','chat.ask'].includes(context.action.action)) await assertFrozenAudience(context.database as Queryable,context.work)
+  if (context.work.conversation?.internal && ['chat.send','chat.ask','chat.recommend'].includes(context.action.action)) throw new NoEffectError('internal delegates return results to their parent','forbidden')
+  if (['chat.send','chat.ask','chat.recommend'].includes(context.action.action)) await assertFrozenAudience(context.database as Queryable,context.work)
   await authorizeAudienceRead(context,{ action: 'conversation:read',resource: { type: 'conversation',id: productConversationId(context.work) } })
   await createPermissionService(context.database as Queryable, { lockDependencies: true }).assertCan({ actorUserId: context.work.principalId!,
     companyId: context.work.tenantId, action: ['chat.history','chat.inbox','chat.search'].includes(context.action.action) ? 'conversation:read' : 'conversation:write',
@@ -28,7 +29,11 @@ async function read(context: ActionContext, messageId: string) {
 }
 
 function payload(context: ActionContext, input: Record<string, unknown>): LingxiMessageV1 {
-  const ask = context.action.action === 'chat.ask', clientMsgNo = `${ask ? 'questionnaire' : 'action'}-${context.action.idempotencyKey}`
+  const recommendation = context.action.action === 'chat.recommend'
+  if (recommendation) input = { title: input.title, display: 'recommendation', explanation: input.explanation,
+    items: [{ name: 'next_step', prompt: input.nextStep, required: true,
+      choices: [{ value: 'accept', label: '按这个建议继续' }, { value: 'alternatives', label: '看看其他方案' }] }] }
+  const ask = recommendation || context.action.action === 'chat.ask', clientMsgNo = `${ask ? 'questionnaire' : 'action'}-${context.action.idempotencyKey}`
   const reply = (input.replyToClientMsgNo as string | undefined) ?? context.work.threadId
   return { version: 1, kind: ask ? 'questionnaire' : 'text', clientMsgNo, body: String(ask ? input.title : input.body),
     ...(reply ? { replyToClientMsgNo: reply } : {}), refs: { runId: context.work.id, agentId: context.work.agentId },
@@ -39,6 +44,8 @@ const communication = {
   effect: 'uncertain' as const, approval: false, authorize,
   async execute(context: ActionContext, input: Record<string, unknown>) {
     const outgoing = payload(context, input)
+    const violation = assistantTextViolation(outgoing.body ?? '')
+    if (violation) throw new NoEffectError(violation, 'invalid_answer')
     const result = await application(context).acceptAgentMessage({ ...identity(context), clientNonce: outgoing.clientMsgNo, payload: outgoing,
       ...(outgoing.kind === 'text' ? { rejectVerbatimPeerBody: outgoing.body } : {}) })
     if (result.kind !== 'accepted') throw new NoEffectError(`message rejected: ${result.kind}`, result.kind)
@@ -95,6 +102,7 @@ export function createMessageTools(control: () => ReturnType<typeof createLingxi
       if (result) await recordSentMessage(context,result.value.messageId,input.body)
       return result
     } }),
+  nativeTool('chat.recommend', agentMessageSchemas.recommend, { ...communication, description: 'Offer a learning next step as an interactive recommendation card. This is advice, not a completed action; the learner can choose to continue or request alternatives.' }),
   nativeTool('chat.ask', agentMessageSchemas.ask, { ...communication, description: 'Send an interactive questionnaire with unique questions and choices.' }),
   nativeTool('chat.history', agentMessageSchemas.history, { description: 'Read a bounded page of messages and advance the agent’s read receipt.', effect: 'transaction', approval: false, authorize,
     async execute(context, input) {

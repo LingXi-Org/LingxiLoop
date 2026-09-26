@@ -51,6 +51,7 @@ export interface Participant {
   avatarBg: string
   /** Human profile image. Agent values are always null and ignored by the renderer. */
   avatarUrl?: string | null
+  personalAvatar?: { seed: string } | { url: string } | null
   status: Status
   statusUpdatedAt?: string
   bio?: string
@@ -138,6 +139,5 @@ export interface PollTally {
 }
 
 export interface ViewKey {
-  view: 'conversations' | 'mail' | 'calendar' | 'library' | 'learning' | 'courses'
+  view: 'conversations' | 'agents' | 'mail' | 'calendar' | 'library' | 'learning' | 'courses' | 'course-content' | 'course-members' | 'course-status'
 }
-

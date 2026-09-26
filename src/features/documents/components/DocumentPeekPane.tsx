@@ -42,7 +42,7 @@ export function DocumentPeekPane() {
   if (!doc) {
     return (
       <aside className="grid h-full min-w-0 place-items-center border-s border-[var(--im-divider)] bg-card px-8 text-center">
-        <Empty><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} /></EmptyMedia><EmptyTitle>文档不可用</EmptyTitle><EmptyDescription>此工件可能已被删除或移出此工作区。</EmptyDescription></EmptyHeader><Button variant="outline" onClick={closeDocumentPeek}>关闭</Button></Empty>
+        <Empty><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} /></EmptyMedia><EmptyTitle>文档不可用</EmptyTitle><EmptyDescription>此文档可能已被删除，或你没有访问权限。</EmptyDescription></EmptyHeader><Button variant="outline" onClick={closeDocumentPeek}>关闭</Button></Empty>
       </aside>
     )
   }

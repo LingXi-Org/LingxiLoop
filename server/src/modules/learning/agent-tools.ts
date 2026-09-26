@@ -170,7 +170,10 @@ export const learningTools: ToolDefinition[] = [
       const found = await db.query('SELECT 1 FROM evidence_records WHERE company_id=$1 AND project_id=$2 AND id=$3', [room.companyId,room.projectId,id])
       if (found.rows.length !== 1) throw new NoEffectError('evaluation evidence is outside this project', 'forbidden')
     }
-    return proposeLearningEvaluation(db, run => run(db), inc, { ...roomInput(context), agentId: context.work.agentId, ...input })
+    const result = await proposeLearningEvaluation(db, run => run(db), inc, { ...roomInput(context), agentId: context.work.agentId, ...input })
+    const { rows } = await db.query<{ demonstrated_level: number; rubric_results: unknown }>('SELECT demonstrated_level,rubric_results FROM learning_evaluations WHERE company_id=$1 AND project_id=$2 AND id=$3', [room.companyId,room.projectId,result.evaluationId])
+    if (!rows[0]) throw new Error('committed evaluation is missing')
+    return { ...result, display: { demonstratedLevel: rows[0].demonstrated_level, rubricResults: rows[0].rubric_results } }
   }, async (context, input, result) => {
     const room = await scope(context)
     await readLearningAttempts(context, { attemptId: input.attemptId })

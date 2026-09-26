@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
+import { setTimeout as delay } from 'node:timers/promises'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
@@ -12,7 +13,7 @@ let im: Awaited<ReturnType<typeof installRecordingWukong>>, worker: ReturnType<t
 before(async () => { process.env.AGENT_OS_RESPONSE_POLICY = 'auto'; await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
 after(async () => { await worker?.stop(); await teardownAll(); await im?.close() })
 
-test('ordinary product chat defers retrieval, upgrades durably and keeps every model call in the shared ledger', async () => {
+test('ordinary product chat loads full authorized tools immediately and keeps every model call in the shared ledger', async () => {
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   await pool.query(`UPDATE participants SET capabilities='["knowledge"]'::jsonb WHERE company_id=$1 AND id=$2`, [companyId, agentId])
@@ -49,16 +50,17 @@ test('ordinary product chat defers retrieval, upgrades durably and keeps every m
       messageId: `request-${upgrade}`, version: 1, author: { id: 'test-owner', kind: 'human' }, text: '保留原始要求：请回答。', mentions: [agentId] },
     { mode: 'execute', deliveryMode: 'auto', executionClass: 'operation' })
     const run = result.runs[0]; assert.ok(run); await bindProductRun(pool, run, conversationId)
-    assert.equal(await worker.runNext(), true)
+    const deadline = AbortSignal.timeout(30000)
+    while (!await worker.runNext()) { deadline.throwIfAborted(); await delay(50) }
     const state = await api.readRunState(run)
     assert.equal(state?.run.status, 'succeeded')
-    assert.equal(state?.message?.body, upgrade ? '深度回答。' : '直接回答。')
+    assert.equal(state?.message?.body, '深度回答。')
     const calls = (await pool.query(`SELECT model,status,extras FROM llm_calls WHERE company_id=$1 AND run_id=$2 AND purpose='lingxios.agent-turn' ORDER BY created_at`,
       [companyId, run.runId])).rows
-    assert.deepEqual(calls.map(call => [call.model, call.status]), upgrade ? [['fast-fixture', 'succeeded'], ['deep-fixture', 'succeeded']] : [['fast-fixture', 'succeeded']])
-    assert.equal(calls[0].extras.configurationFingerprint, 'fast-config')
+    assert.deepEqual(calls.map(call => [call.model, call.status]), [['deep-fixture', 'succeeded']])
+    assert.equal(calls[0].extras.configurationFingerprint, 'deep-config')
     const steps = (await pool.query(`SELECT request_version FROM lingxios.agent_steps WHERE work_id=$1 AND kind='runtime.response'`, [run.runId])).rows
-    assert.equal(steps.length, upgrade ? 1 : 0)
+    assert.equal(steps.length, 0)
   }
-  assert.deepEqual([fastCalls, deepCalls], [2, 1])
+  assert.deepEqual([fastCalls, deepCalls], [0, 2])
 })

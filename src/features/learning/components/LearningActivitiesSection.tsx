@@ -87,17 +87,10 @@ export function LearningActivitiesSection({
     : [
         {
           key: 'ready',
-          label: '待开始',
-          empty: '没有待开始的活动',
+          label: '待完成',
+          empty: '没有待完成的活动',
           items: activities.filter((activity) => activity.status === 'PUBLISHED'
-            && !submittedActivityIds.has(activity.id) && !answers[activity.id]?.trim()),
-        },
-        {
-          key: 'active',
-          label: '进行中',
-          empty: '没有进行中的活动',
-          items: activities.filter((activity) => activity.status === 'PUBLISHED'
-            && !submittedActivityIds.has(activity.id) && Boolean(answers[activity.id]?.trim())),
+            && !submittedActivityIds.has(activity.id)),
         },
         {
           key: 'submitted',
@@ -114,9 +107,11 @@ export function LearningActivitiesSection({
         },
       ]
 
+  const visibleColumns = columns.filter((column) => perspective === 'teacher' || column.items.length > 0)
+
   return (
-    <div className={`grid items-start gap-4 ${perspective === 'teacher' ? '@min-[72rem]/learning-grid:grid-cols-3' : '@min-[44rem]/learning-grid:grid-cols-2'}`}>
-      {columns.map((column) => {
+    <div className={`grid items-start gap-4 ${perspective === 'teacher' ? '@min-[72rem]/learning-grid:grid-cols-3' : visibleColumns.length > 1 ? '@min-[44rem]/learning-grid:grid-cols-2' : ''}`}>
+      {visibleColumns.map((column) => {
         return (
           <section key={column.key} className="space-y-3 rounded-3xl bg-muted/40 p-3" aria-labelledby={`activity-column-${column.key}`}>
             <div className="flex items-center justify-between gap-3 px-1">
@@ -132,7 +127,7 @@ export function LearningActivitiesSection({
                       <p className="text-sm leading-5 text-muted-foreground">{activity.instructions}</p>
                       <p className="text-xs text-muted-foreground">
                         {ACTIVITY_TYPE_LABELS[activity.kind] ?? '学习活动'} · 目标掌握等级 {activity.targetLevel} ·{' '}
-                        {EVALUATION_MODE_LABELS[activity.evaluationMode] ?? '评价方式待同步'}
+                        {EVALUATION_MODE_LABELS[activity.evaluationMode] ?? '其他评价方式'}
                       </p>
                       {activity.dueAt && <p className="text-xs text-muted-foreground">截止时间：{new Date(activity.dueAt).toLocaleString('zh-CN')}</p>}
                       {perspective === 'learner' && activity.knowledgeUnitIds.some((id) => objectiveTitlesById?.has(id)) && (
@@ -169,6 +164,7 @@ export function LearningActivitiesSection({
                     <div className="mt-4 space-y-3">
                       <Textarea
                         value={answers[activity.id] ?? ''}
+                        aria-label={`${activity.title}的作答或反思`}
                         onChange={(event) => setAnswers((current) => ({ ...current, [activity.id]: event.target.value }))}
                         placeholder="在这里提交你的作答或反思"
                         className="min-h-24"
@@ -183,6 +179,12 @@ export function LearningActivitiesSection({
           </section>
         )
       })}
+      {perspective === 'learner' && activities.length === 0 && (
+        <div className="col-span-full rounded-xl border border-dashed bg-card p-8 text-center">
+          <h3 className="font-medium">还没有课程活动</h3>
+          <p className="mt-2 text-sm text-muted-foreground">老师发布活动后，你可以在这里查看要求并提交作答。</p>
+        </div>
+      )}
     </div>
   )
 }

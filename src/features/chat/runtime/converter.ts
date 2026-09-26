@@ -319,7 +319,8 @@ function questionnairePart(id: string, data: JsonObject): ThreadAssistantMessage
       } : {}),
     }
   }) : []
-  return toolCall(`questionnaire:${id}`, 'elicitation-form', {
+  return toolCall(`questionnaire:${id}`, questionnaire.display === 'recommendation' ? 'recommendation-card' : 'elicitation-form', {
+    ...(questionnaire.display === 'recommendation' ? { explanation: string(questionnaire.explanation) } : {}),
     id: `questionnaire-${id}`,
     title: string(questionnaire.title, '请补充信息'),
     items,
@@ -377,7 +378,7 @@ function baseParts(envelope: ImEnvelope, harness?: RunView): ThreadAssistantMess
         return [toolCall(`presentation:${id}`, 'presentation-artifact', {
           artifactId: artifact.artifactId,
           artifactKind: 'lecture_deck_html',
-          title: string(artifact.title, payload.body || 'HTML 演示'),
+          title: string(artifact.title, payload.body || '演示文稿'),
         })]
       }
       return [...textPart, toolActivityPart(id, data, payload.body ?? '')]
@@ -389,7 +390,7 @@ function baseParts(envelope: ImEnvelope, harness?: RunView): ThreadAssistantMess
     case 'poll':
       return [pollPart(id, data)]
     case 'questionnaire':
-      return [questionnairePart(id, data)]
+      return [questionnairePart(payload.clientMsgNo, data)]
     case 'handoff': {
       const taskId = string(payload.refs?.handoffId, string(data.id, id))
       return [toolCall(`handoff:${taskId}`, 'agent-handoff', {
@@ -605,6 +606,39 @@ export function convertEnvelopeBatch(
     const nextSequence = (message.metadata.custom as LingxiMessageMetadata).sequence ?? 0
     if (current && progress) byId.set(key,mergeProgressMessage(current,message))
     else if (!current || nextSequence >= currentSequence) byId.set(key, preserveMessageTime(message, current))
+  }
+  // Index committed card identities once; IM replies reference client message IDs.
+  const questions = new Map<string, string>()
+  for (const [key, message] of byId) {
+    if (message.role !== 'assistant') continue
+    const channel = (message.metadata.custom as LingxiMessageMetadata).conversationId
+    for (const part of message.content) if (part.type === 'tool-call' && part.toolCallId.startsWith('questionnaire:')) {
+      questions.set(JSON.stringify([channel, part.toolCallId.slice('questionnaire:'.length)]), key)
+    }
+  }
+  for (const reply of envelopes) {
+    if (!context.meId || reply.fromUid !== context.meId || reply.payload.kind !== 'text') continue
+    const response = object(reply.payload.data?.questionnaireReply)
+    if (typeof response.questionId !== 'string' || response.questionId !== reply.payload.replyToClientMsgNo) continue
+    const key = questions.get(JSON.stringify([reply.channelId, response.questionId]))
+    const message = key ? byId.get(key) : undefined
+    if (!key || !message) continue
+    const answers = object(response.answers)
+    const content = message.content.map(part => {
+      if (part.type !== 'tool-call' || part.toolCallId !== 'questionnaire:' + response.questionId) return part
+      const items = part.args.items as Array<{ name: string; choices: Array<{ value: string; disabled?: boolean }>; input?: unknown; multiple?: boolean; required?: boolean }> | undefined
+      if (!items?.length || Object.keys(answers).some(name => !items.some(item => item.name === name))) return part
+      const valid = items.every(item => {
+        const value = answers[item.name]
+        if (value === undefined) return !item.required
+        if (Array.isArray(value) && !item.multiple) return false
+        const values = Array.isArray(value) ? value : [value]
+        return (!item.required || values.length > 0) && values.length <= 12 && values.every(value => typeof value === 'string' && value.length <= 4000
+          && (!item.required || value.trim().length > 0) && (item.input || item.choices.some(choice => choice.value === value && !choice.disabled)))
+      })
+      return valid ? { ...part, result: answers } : part
+    })
+    byId.set(key, { ...message, content } as ThreadMessage)
   }
   return projectMessageGroups([...byId.values()].sort((left, right) => {
     const leftSequence = (left.metadata.custom as LingxiMessageMetadata).sequence

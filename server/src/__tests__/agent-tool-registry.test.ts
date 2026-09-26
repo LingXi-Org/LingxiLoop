@@ -7,7 +7,7 @@ test('the LingxiOS registry exposes every product capability exactly once', () =
   const actions = tools.map(tool => tool.action)
   assert.equal(new Set(actions).size, actions.length)
   assert.deepEqual([...new Set(actions.map(action => action.split('.')[0]))], [
-    'calendar', 'documents', 'canvas', 'learning', 'teacher', 'directory', 'handoffs', 'research',
+    'files', 'calendar', 'documents', 'canvas', 'learning', 'teacher', 'directory', 'handoffs', 'research',
     'polls', 'chat', 'knowledge', 'email', 'presentations', 'routines',
   ])
 })

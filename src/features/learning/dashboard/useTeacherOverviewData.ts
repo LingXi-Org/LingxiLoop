@@ -17,7 +17,6 @@ export interface TeacherOverviewData {
 
 export function useTeacherOverviewData(projectId: string, canReview: boolean) {
   const requestEpoch = useRef(0)
-  const loaded = useRef(false)
   const [data, setData] = useState<TeacherOverviewData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -25,7 +24,7 @@ export function useTeacherOverviewData(projectId: string, canReview: boolean) {
 
   const refresh = useCallback(async () => {
     const epoch = ++requestEpoch.current
-    if (!loaded.current) setLoading(true)
+    setLoading(true)
     setError('')
     try {
       const [overview, objectives, activities, reviews] = await Promise.all([
@@ -36,7 +35,6 @@ export function useTeacherOverviewData(projectId: string, canReview: boolean) {
       ])
       if (epoch !== requestEpoch.current) return
       if (overview.perspective !== 'teacher') throw new Error('teacher overview returned learner data')
-      loaded.current = true
       setData({ overview, objectives, activities, reviews })
       setRevision((current) => current + 1)
     } catch (reason) {
@@ -49,7 +47,6 @@ export function useTeacherOverviewData(projectId: string, canReview: boolean) {
   }, [canReview, projectId])
 
   useEffect(() => {
-    loaded.current = false
     setData(null)
     void refresh()
     return () => { requestEpoch.current += 1 }

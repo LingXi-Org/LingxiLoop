@@ -164,7 +164,8 @@ export async function preferences(db: Queryable, userId: string) {
 export async function savePreferences(db: Queryable, userId: string, value: Record<string, unknown>): Promise<void> {
   await db.query(
     `INSERT INTO user_preferences (user_id,prefs,updated_at) VALUES ($1,$2::jsonb,NOW())
-     ON CONFLICT(user_id) DO UPDATE SET prefs=EXCLUDED.prefs,updated_at=NOW()`,
+     ON CONFLICT(user_id) DO UPDATE SET prefs=EXCLUDED.prefs ||
+       CASE WHEN user_preferences.prefs ? 'agentAvatars' THEN jsonb_build_object('agentAvatars',user_preferences.prefs->'agentAvatars') ELSE '{}'::jsonb END,updated_at=NOW()`,
     [userId, JSON.stringify(value)],
   )
 }

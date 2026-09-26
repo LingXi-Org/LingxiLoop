@@ -1,3 +1,4 @@
+import { RecommendationCard } from '@/components/assistant-ui/elements/recommendation-card'
 import type { ThreadMessage, ToolCallMessagePartProps } from '@assistant-ui/react'
 import { renderGenerativeUI, type UIElement, type UISpec } from '@assistant-ui/react-generative-ui'
 import { useState } from 'react'
@@ -99,6 +100,14 @@ interface ElicitationItem {
   multiple?: boolean
   choices?: Array<{ value: string; label: string; description?: string; disabled?: boolean }>
   input?: { label: string; placeholder?: string }
+}
+
+export function RecommendationTool({ args, result, addResult }: ToolCallMessagePartProps) {
+  const value = args as { title: string; explanation: string; items: ElicitationItem[] }
+  if (!value.title || !value.explanation || value.items?.[0]?.name !== 'next_step') throw new Error('学习建议协议不完整')
+  return <RecommendationCard question={value.title} state={result ? 'accepted' : 'idle'} confidenceLabel="学习建议 · 尚未执行"
+    acceptedLabel="已反馈你的选择" onAccept={() => addResult({ next_step: 'accept' })}
+    onAlternatives={() => addResult({ next_step: 'alternatives' })}>{value.explanation} {value.items[0].prompt}</RecommendationCard>
 }
 
 export function ElicitationFormTool({ args, result, addResult }: ToolCallMessagePartProps) {
@@ -214,14 +223,15 @@ export function TeacherBriefingStatsTool({ args }: ToolCallMessagePartProps) {
   return <StatsDisplay {...value} locale="zh-CN" className={`${conversationCardSize.wide} min-w-0`} />
 }
 
-export function ScoreBreakdownTool({ args, result, isError }: ToolCallMessagePartProps) {
-  const value = args as { demonstratedLevel: number; rubricResults: ScoreCriterion[] }
-  const response = result as { value: { status: 'ACCEPTED' | 'PENDING' } } | undefined
+export function ScoreBreakdownTool({ result, isError }: ToolCallMessagePartProps) {
+  const response = result as { status?: string; value?: { status: 'ACCEPTED' | 'PENDING' | 'REJECTED'; display?: { demonstratedLevel: number; rubricResults: ScoreCriterion[] } } } | undefined
+  const value = response?.value?.display
+  if (!value) return <p role="status">{response?.status === 'cancelled' ? '评价已取消。' : isError ? '评价失败，请查看任务状态。' : result ? '评价数据暂不可用。' : '正在评价…'}</p>
   const verdict = result === undefined
     ? '评估中'
     : isError
       ? '评估失败'
-      : response!.value.status === 'ACCEPTED' ? '已判定' : '待教师复核'
+      : response!.value!.status === 'ACCEPTED' ? '已判定' : response!.value!.status === 'REJECTED' ? '已退回' : '待教师复核'
   return <ScoreBreakdown
     verdict={verdict}
     total={value.demonstratedLevel}
@@ -326,7 +336,8 @@ function createEventSpec(
 
 export function CreateCalendarEventTool({ args, approval, respondToApproval }: ToolCallMessagePartProps) {
   if (!approval) return null
-  const event = args as { title: string; at: string; endAt?: string; allDay?: boolean; kind?: 'personal' | 'agent_task' }
+  const input = args as { title: string; startAt: string; endAt?: string; allDay?: boolean; kind?: 'personal' | 'agent_task' }
+  const event = { ...input, at: input.startAt }
   if (!event.title || !event.at) throw new Error('创建日程协议缺少标题或时间')
   return <div data-aui-theme="elements" className={conversationCardSize.standard}>
     {renderGenerativeUI(createEventSpec(event, approval.approved), styledGenerativeUILibrary, {
@@ -340,16 +351,22 @@ export function CreateCalendarEventTool({ args, approval, respondToApproval }: T
 }
 
 export function ViewCalendarEventTool({ result, isError }: ToolCallMessagePartProps) {
-  if (result === undefined || isError) return null
-  const response = result as { status: string; value: CalendarEvent | CalendarEvent[] }
-  if (response.status !== 'completed') throw new Error('日历查看协议未完成')
-  const events = Array.isArray(response.value) ? response.value : [response.value]
+  if (result === undefined || isError) return <p role="status">{isError ? '日历读取失败，请查看任务状态。' : '正在读取日历…'}</p>
+  const response = result as { status: string; value?: CalendarEvent | { events: CalendarEvent[]; truncated: boolean } }
+  if (response.status !== 'completed' || !response.value) return <p role="status">{response.status === 'cancelled' ? '日历读取已取消。' : '日历数据暂不可用。'}</p>
+  const events = 'events' in response.value ? response.value.events : [response.value]
   const spec: UISpec = events.length > 0
     ? { $type: 'Col', gap: 4, children: events.map(viewEventSpec) }
     : { $type: 'Caption', value: '暂无安排' }
   return <CardSurface data-aui-theme="elements" className={`${conversationCardSize.standard} gap-0 p-3`}>
     {renderGenerativeUI(spec, styledGenerativeUILibrary, { status: 'done' })}
   </CardSurface>
+}
+
+export function CalendarEventCard({ args }: ToolCallMessagePartProps) {
+  const event = args.event as CalendarEvent
+  if (!event?.id || !event.title || !event.startAt) throw new Error('日历卡片缺少授权记录')
+  return <CardSurface className={conversationCardSize.standard}>{renderGenerativeUI(viewEventSpec(event), styledGenerativeUILibrary, { status: 'done' })}</CardSurface>
 }
 
 export function PresentationArtifactTool({ args }: ToolCallMessagePartProps) {
@@ -368,7 +385,10 @@ export const CHAT_TOOL_RENDERERS = {
     'canvas-artifact': CanvasArtifactTool,
     'canvas-progress': CanvasProgressTool,
     'elicitation-form': ElicitationFormTool,
+    'recommendation-card': RecommendationTool,
     showStats: TeacherBriefingStatsTool,
+    'learning-stats': TeacherBriefingStatsTool,
+    'calendar-event': CalendarEventCard,
     'learning.propose_evaluation': ScoreBreakdownTool,
     'calendar.create': CreateCalendarEventTool,
     'calendar.list': ViewCalendarEventTool,
@@ -388,6 +408,6 @@ export function isVisibleChatPart(part: ThreadMessage['content'][number]): boole
   if (part.type !== 'tool-call' || !(part.toolName in CHAT_TOOL_RENDERERS.by_name)) return false
   if (['ipython', 'cite_claims', 'read_document'].includes(part.toolName)) return false
   if (['approval-card', 'calendar.create'].includes(part.toolName)) return Boolean(part.approval)
-  if (['calendar.list', 'calendar.get'].includes(part.toolName)) return part.result !== undefined && !part.isError
+  if (['calendar.list', 'calendar.get'].includes(part.toolName)) return true
   return true
 }

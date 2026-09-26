@@ -4,13 +4,12 @@ import type React from 'react'
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { Avatar } from '@/components/Avatar'
-import { NavUser } from '@/components/nav-user'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
-import { SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
+import { SidebarContent, SidebarHeader } from '@/components/ui/sidebar'
 import { useParticipants } from '@/features/agents/state'
 import { conversationsApi } from '@/features/conversations/api'
 import { isMuted, useConversations } from '@/features/conversations/store'
@@ -45,16 +44,18 @@ ConversationItemGroup.displayName = 'ConversationItemGroup'
 const ConversationListRow = forwardRef<HTMLDivElement, {
   children: React.ReactNode
   selected?: boolean
+  pinned?: boolean
   mobile?: boolean
   onSelect: () => void
 } & Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'>>(
-  ({ children, selected = false, mobile = false, onSelect, className, ...props }, ref) => (
+  ({ children, selected = false, pinned = false, mobile = false, onSelect, className, ...props }, ref) => (
     <Item
       ref={ref}
       role="button"
       tabIndex={0}
       size="xs"
       aria-current={selected ? 'page' : undefined}
+      data-pinned={pinned || undefined}
       onClick={onSelect}
       onKeyDown={(event) => {
         if (event.key !== 'Enter' && event.key !== ' ') return
@@ -62,11 +63,13 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
         onSelect()
       }}
       className={cn(
-        'im-navigation-row group cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-xl border-0 text-left shadow-none',
-        mobile ? 'px-3 py-2' : 'px-2 py-1.5',
+        'im-navigation-row im-conversation-row group relative cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-none border-0 px-3 text-left shadow-none focus-visible:ring-inset',
+        mobile ? 'py-2' : 'py-1.5',
         selected
-          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-          : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+          ? 'bg-[var(--im-conversation-selected)] text-sidebar-primary-foreground'
+          : pinned
+            ? 'bg-[var(--im-conversation-pinned)] text-sidebar-foreground hover:bg-[var(--im-conversation-hover)]'
+            : 'bg-transparent text-sidebar-foreground hover:bg-[var(--im-conversation-hover)]',
         className,
       )}
       {...props}
@@ -96,7 +99,7 @@ function ConversationRow({ conversation, selected, items, onConversationSelected
   return (
     <ContextMenu>
     <ContextMenuTrigger asChild>
-      <ConversationListRow mobile={isMobile} selected={selected} onSelect={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}>
+      <ConversationListRow mobile={isMobile} selected={selected} pinned={conversation.pinned} onSelect={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}>
         <ConversationListItemContent conversation={conversation} selected={selected} variant={isMobile ? 'mobile' : 'desktop'} />
       </ConversationListRow>
     </ContextMenuTrigger>
@@ -143,13 +146,6 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
       </div>
     </div>
   )
-}
-
-export function SidebarUserFooter() {
-  const authUser = useAuth((s) => s.user)
-  const authParticipant = useParticipants((s) => authUser ? s.byId[authUser.id] : undefined)
-  if (!authUser) return null
-  return <SidebarFooter className="shrink-0 border-t border-[var(--im-divider-weak)] bg-sidebar p-2"><NavUser user={{ id: authUser.id, name: authUser.name, email: authUser.email, avatar: authUser.avatarUrl ?? authParticipant?.avatarUrl }} /></SidebarFooter>
 }
 
 export function ConversationsPane({ onConversationSelected }: { onConversationSelected?: (conversationId: string) => void } = {}) {
@@ -281,9 +277,9 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
       <SidebarHeader className="desktop-window-toolbar omb-drag shrink-0 gap-0 p-0">
         {isMobile && <h1 className="h-12 shrink-0 truncate px-4 font-heading text-xl font-medium leading-[48px] text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
         <div className={cn('im-navigation-row flex min-w-0 items-center gap-2', isMobile ? 'px-3' : 'px-2')}>
-        <InputGroup className={cn('omb-no-drag min-w-0 flex-1 rounded-xl border-transparent bg-input/50 shadow-none', isMobile ? 'h-10' : 'h-8')}>
+        <InputGroup className={cn('omb-no-drag min-w-0 flex-1 rounded-xl border-transparent bg-sidebar-accent shadow-none', isMobile ? 'h-10' : 'h-8')}>
           <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className={cn('px-2 text-sm', isMobile ? 'h-10' : 'h-8')} />
-          <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4 opacity-50" /></InputGroupAddon>
+          <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4" /></InputGroupAddon>
           {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" className={isMobile ? 'size-8' : undefined} onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
         </InputGroup>
         {companyId && projectId && <NewConversationDialog key={`${companyId}:${projectId}`} companyId={companyId} projectId={projectId} isMobile={isMobile} onCreated={(id) => {
@@ -292,7 +288,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="gap-0 px-2 pb-2 pt-0">
+      <SidebarContent className="gap-0 p-0">
         {query.trim() ? (
           <div className="h-full overflow-y-auto">
             {searching && <ResourceSkeleton variant="list" count={4} compact label="正在搜索会话" />}
@@ -301,8 +297,8 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
               {resultRows.map((row) => (
                 <ConversationListRow key={row.id} mobile={isMobile} selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>
                   <ItemContent className="min-w-0">
-                    <ItemTitle className="block w-full truncate text-sm font-medium text-sidebar-foreground">{row.title}</ItemTitle>
-                    <ItemDescription className="line-clamp-1 text-xs text-muted-foreground">{row.preview}</ItemDescription>
+                    <ItemTitle className={cn('block w-full truncate text-sm font-medium', selected === row.id ? 'text-sidebar-primary-foreground' : 'text-sidebar-foreground')}>{row.title}</ItemTitle>
+                    <ItemDescription className={cn('line-clamp-1 text-xs', selected === row.id ? 'text-sidebar-primary-foreground/85' : 'text-muted-foreground')}>{row.preview}</ItemDescription>
                   </ItemContent>
                 </ConversationListRow>
               ))}

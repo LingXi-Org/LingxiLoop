@@ -196,8 +196,8 @@ function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>侧边栏</SheetTitle>
-            <SheetDescription>显示移动端侧边栏。</SheetDescription>
+            <SheetTitle>主导航</SheetTitle>
+            <SheetDescription>浏览工作区与功能。</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>

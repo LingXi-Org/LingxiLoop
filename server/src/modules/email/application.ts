@@ -150,7 +150,7 @@ export class EmailApplication {
     const messageId = this.infrastructure.mintMessageId()
     const conversation = await this.infrastructure.findOrCreateConversation({
       companyId: scope.companyId,
-      ...(context?.projectId ? { projectId: context.projectId } : {}),
+      ...((context?.projectId ?? scope.projectId) ? { projectId: context?.projectId ?? scope.projectId } : {}),
       inReplyTo: null,
       references: [],
       subject,

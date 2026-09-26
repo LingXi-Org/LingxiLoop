@@ -1,3 +1,4 @@
+import { publicRunEvent, publicRunStream, priorToolNames } from '../agent-runtime/public-events.js'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { pool } from '../db/pool.js'
@@ -150,11 +151,12 @@ imRouter.get('/companies/:companyId/channels/:id/agents/:agentId/runs/:runId/str
   const close = () => cancellation.abort()
   res.once('close',close)
   try {
-    const stream = await (await lingxiOSControl()).streamRun(run,{ signal: cancellation.signal, lastEventId: req.get('last-event-id') })
+    const app = await lingxiOSControl()
+    const stream = await app.streamRun(run,{ signal: cancellation.signal, lastEventId: req.get('last-event-id') })
     res.status(stream.status)
     stream.headers.forEach((value,key) => { res.setHeader(key,value) })
     res.flushHeaders()
-    if (stream.body) await pipeline(Readable.fromWeb(stream.body as import('node:stream/web').ReadableStream<Uint8Array>),res,{ signal: cancellation.signal })
+    if (stream.body) await pipeline(Readable.from(publicRunStream(stream.body, async id => (await priorToolNames(after=>app.readEvents(run,after),new Set([id]))).get(id))),res,{ signal: cancellation.signal })
     else res.end()
   } catch (error) { if (!cancellation.signal.aborted) throw error }
   finally { res.off('close',close); cancellation.abort() }
@@ -172,7 +174,15 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) 
   if (!state) { res.status(404).json({ error: 'run not found' }); return }
   const [events, diagnostics, permission] = await Promise.all([app.readEvents(runIdentity,afterSeq),app.readDiagnostics(runIdentity),
     permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: sessionId } })])
-  res.json({ ...state, outcome: state.run.goalOutcome, ...events, diagnostics, canControl: permission.allowed })
+  const actionNames = new Map(diagnostics?.actions.map(item => ['host:' + item.actionKey,item.action]))
+  for (const event of events.events) if (event.kind === 'tool.started' && typeof event.data.name === 'string') actionNames.set(String(event.data.toolCallId),event.data.name)
+  const missing = new Set(events.events.filter(event=>event.kind==='tool.completed' && !actionNames.has(String(event.data.toolCallId))).map(event=>String(event.data.toolCallId)))
+  if(missing.size) for(const [id,name] of await priorToolNames(after=>app.readEvents(runIdentity,after),missing)) actionNames.set(id,name)
+  res.json({ ...state, outcome: state.run.goalOutcome, ...events,
+    events: events.events.map(event => publicRunEvent(event,actionNames.get(String(event.data.toolCallId)))),
+    diagnostics: diagnostics ? { ...diagnostics, actions: diagnostics.actions.map(({ actionKey,action,result }) => ({ actionKey,action,
+      result: result ? { ok:result.ok,executionState:result.executionState,approval:result.approval } : null })), delivery: null } : null,
+    canControl: permission.allowed })
 }))
 
 imRouter.post('/channels/:id/agents/:agentId/runs/:runId/reconcile', safe(async (req, res) => {

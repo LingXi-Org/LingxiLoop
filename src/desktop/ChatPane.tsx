@@ -1,14 +1,12 @@
-import { PanelRightCloseIcon, PanelRightOpenIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { CanvasPopover } from '@/features/canvas/components/CanvasPopover'
 import { ConversationSearch } from '@/features/chat/components/ConversationSearch'
 import { ConversationThread } from '@/features/chat/components/ConversationThread'
 import { ConversationRuntimeProvider } from '@/features/chat/runtime'
+import { useConversations } from '@/features/conversations/store'
 import { ConversationHeader } from '@/im/ConversationHeader'
 import { useApp } from '@/stores/app'
 import { useUiCommand } from '@/stores/uiCommands'
-import { useConversations } from '@/features/conversations/store'
 
 function EmptyConversation() {
   const total = useConversations((state) => state.list.length)
@@ -27,12 +25,8 @@ function EmptyConversation() {
 
 export function ChatPane({
   onBackToConversations,
-  groupContextOpen = false,
-  onToggleGroupContext,
 }: {
   onBackToConversations?: () => void
-  groupContextOpen?: boolean
-  onToggleGroupContext?: () => void
 } = {}) {
   const conversationId = useApp((state) => state.selectedConversationId)
   const conversation = useConversations((state) => (
@@ -50,21 +44,19 @@ export function ChatPane({
   if (!conversationId || !conversation) return <EmptyConversation />
   return (
     <ConversationRuntimeProvider key={conversationId} conversationId={conversationId}>
-      <main ref={rootRef} className="chat-surface grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden bg-background">
+      <main ref={rootRef} className="chat-surface chat-pane grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden bg-background">
         <ConversationHeader
           conversationId={conversationId}
           variant={onBackToConversations ? 'mobile' : 'desktop'}
           onBack={onBackToConversations}
-          actions={onToggleGroupContext && (
-            <Button type="button" variant="ghost" size="icon-lg" onClick={onToggleGroupContext} aria-label={groupContextOpen ? '收起资料与 Canvas 工作区' : '展开资料与 Canvas 工作区'} aria-controls="conversation-context-workspace" aria-expanded={groupContextOpen} className={onBackToConversations ? 'size-11 text-muted-foreground' : 'text-muted-foreground'} data-context-workspace-trigger>
-              <HugeiconsIcon icon={groupContextOpen ? PanelRightCloseIcon : PanelRightOpenIcon} strokeWidth={2} className="size-[18px]" />
-            </Button>
-          )}
+          actions={<CanvasPopover key={conversationId} conversationId={conversationId} />}
         />
         <div data-chat-auxiliary="true">
           <ConversationSearch conversationId={conversationId} open={searchOpen} onClose={() => setSearchOpen(false)} rootRef={rootRef} />
         </div>
-        <ConversationThread conversationId={conversationId} readOnly={conversation.readOnly} />
+        <div className="chat-thread-layout min-h-0 min-w-0">
+          <ConversationThread conversationId={conversationId} readOnly={conversation.readOnly} />
+        </div>
       </main>
     </ConversationRuntimeProvider>
   )

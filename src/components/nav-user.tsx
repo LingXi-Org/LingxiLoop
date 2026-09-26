@@ -18,8 +18,9 @@ import { cn } from '@/lib/utils'
 import { resolveUserAvatarUrl } from '@/lib/userAvatar'
 import { useAuth } from '@/stores/auth'
 
-export function NavUser({ user }: {
+export function NavUser({ user, compact = false }: {
   user: { id: string; name: string; email: string; avatar?: string | null }
+  compact?: boolean
 }) {
   const isMobile = useIsMobile()
   const isCompanyAdmin = useAuth((state) => state.companies[0]?.isAdmin === true)
@@ -41,16 +42,16 @@ export function NavUser({ user }: {
     </div>
   </>
 
-  const accountButton = <Button id={SETTINGS_DIALOG_TRIGGER_ID} type="button" variant="ghost" className={cn('w-full justify-start gap-2 rounded-xl px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground', isMobile ? 'h-12' : 'h-14')} aria-label="打开账户菜单">
-    {identity}
-    <HugeiconsIcon icon={UnfoldMoreIcon} strokeWidth={2} className="ms-auto size-4" />
+  const accountButton = <Button id={SETTINGS_DIALOG_TRIGGER_ID} type="button" variant="ghost" className={cn('justify-start gap-2 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground', compact ? 'size-11 justify-center p-1' : isMobile ? 'h-12 w-full px-2' : 'h-14 w-full px-2')} aria-label="打开账户菜单" title={compact ? `${user.name} · 账户与设置` : undefined}>
+    {compact ? <Avatar className="size-8 rounded-lg"><AvatarImage className="rounded-lg" src={avatarUrl} alt={user.name} /><AvatarFallback className="rounded-lg">{fallback}</AvatarFallback></Avatar> : identity}
+    {!compact && <HugeiconsIcon icon={UnfoldMoreIcon} strokeWidth={2} className="ms-auto size-4" />}
   </Button>
 
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>
       {accountButton}
     </DropdownMenuTrigger>
-    <DropdownMenuContent className="min-w-64 rounded-lg" side={isMobile ? 'top' : 'right'} align="end" sideOffset={8}>
+    <DropdownMenuContent className="min-w-64 max-w-[calc(100vw-24px)] rounded-lg" side={compact ? 'right' : isMobile ? 'top' : 'right'} align="end" sideOffset={8} collisionPadding={12}>
       <DropdownMenuGroup>
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">{identity}</div>

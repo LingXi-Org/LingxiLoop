@@ -15,23 +15,24 @@ import { useConversations } from '@/features/conversations/store'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useApp } from '@/stores/app'
 import { CourseAvatar } from '../components/CourseAvatar'
+import { statusLabel } from '../components/learningDisplay'
 import type { LearningSpace } from '../contracts'
-import { LearningGrowthVine } from './LearningGrowthVine'
 import type { LearningDashboardSection } from './navigation'
 
 export const LEARNING_SECTION_COPY: Record<
   LearningDashboardSection,
-  { title: string; description: string }
+  { title: string }
 > = {
-  overview: { title: '学习概览', description: '基于当前学习记录汇总' },
-  activities: { title: '学习活动', description: '课程活动与证据提交' },
-  learners: { title: '学习者', description: '课程学习者的学习记录' },
-  content: { title: '课程内容', description: '课程目标与成功标准' },
-  reviews: { title: '评价审核', description: '核对评价与学习证据' },
-  members: { title: '分享与成员', description: '管理课程访问与邀请' },
-  calendar: { title: '日历', description: '课程与个人安排' },
-  resources: { title: '资料', description: '按工作区管理个人资料' },
-  settings: { title: '课程设置', description: '课程资料与生命周期' },
+  overview: { title: '学习概览' },
+  activities: { title: '学习活动' },
+  learners: { title: '学习者' },
+  content: { title: '课程内容' },
+  reviews: { title: '评价审核' },
+  members: { title: '成员与邀请' },
+  calendar: { title: '日历' },
+  resources: { title: '课程资料' },
+  settings: { title: '基本资料' },
+  status: { title: '课程状态' },
 }
 
 export function DashboardSectionFrame({
@@ -39,13 +40,11 @@ export function DashboardSectionFrame({
   section,
   breadcrumb,
   headerActions,
-  description,
   children,
 }: {
   space: LearningSpace
   section: LearningDashboardSection
   breadcrumb?: { root: string; current: ReactNode; onBack(): void }
-  description?: string
   headerActions?: ReactNode
   children: ReactNode
 }) {
@@ -78,8 +77,14 @@ export function DashboardSectionFrame({
   )
 
   const content = section === 'overview' ? (
-    <div className="space-y-4 @min-[48rem]/learning-grid:space-y-6">
-      <LearningGrowthVine key={`${space.companyId}:${space.projectId}`} space={space} />
+    <div className="@container/learning-grid space-y-4 @min-[48rem]/learning-grid:space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">{space.perspective === 'teacher' ? '教学工作台' : '我的学习'}</p>
+          <h2 className="text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">{space.title}</h2>
+        </div>
+        <Badge variant="outline" className="mt-1 bg-card">{statusLabel(space.status)}</Badge>
+      </div>
       {children}
     </div>
   ) : children
@@ -95,7 +100,6 @@ export function DashboardSectionFrame({
                 {breadcrumb ? <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink asChild><Button type="button" variant="link" className="h-auto p-0 text-base" onClick={breadcrumb.onBack}>{breadcrumb.root}</Button></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem>{typeof breadcrumb.current === 'string' ? <BreadcrumbPage>{breadcrumb.current}</BreadcrumbPage> : breadcrumb.current}</BreadcrumbItem></BreadcrumbList></Breadcrumb> : <h1 className="font-heading text-lg font-medium text-foreground">{copy.title}</h1>}
                 <Badge variant="secondary" className="h-5 px-2 text-[10px]">{spaceKindLabel}</Badge>
               </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">{description ?? copy.description}</p>
             </div>
             {conversationAction}
             {headerActions ? <div className="order-last w-full min-w-0">{headerActions}</div> : null}
@@ -114,7 +118,6 @@ export function DashboardSectionFrame({
         <CourseAvatar avatarUrl={space.avatarUrl} courseId={space.courseId ?? space.projectId} title={space.title} size="sm" />
         <div className="min-w-0 flex-1">
           {breadcrumb ? <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink asChild><Button type="button" variant="link" className="h-auto p-0 text-sm" onClick={breadcrumb.onBack}>{breadcrumb.root}</Button></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem>{typeof breadcrumb.current === 'string' ? <BreadcrumbPage>{breadcrumb.current}</BreadcrumbPage> : breadcrumb.current}</BreadcrumbItem></BreadcrumbList></Breadcrumb> : <h1 className="truncate font-heading text-sm font-medium">{copy.title}</h1>}
-          <p className="text-xs text-muted-foreground">{description ?? copy.description}</p>
         </div>
         {headerActions ? <div className="min-w-0 flex-[2] overflow-hidden">{headerActions}</div> : null}
         {conversationAction}
@@ -122,7 +125,7 @@ export function DashboardSectionFrame({
           {spaceKindLabel}
         </Badge>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 @min-[48rem]/learning-grid:p-6">
+      <div className={`min-h-0 flex-1 overflow-y-auto p-4 @min-[48rem]/learning-grid:p-6 ${section === 'overview' ? 'bg-muted/25' : ''}`}>
         <div className="mx-auto max-w-7xl">{content}</div>
       </div>
     </div>

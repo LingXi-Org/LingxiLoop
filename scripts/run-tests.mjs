@@ -15,6 +15,8 @@ const testsByScope = {
     'server/src/__tests__/entitlement-resolver.test.ts',
     'server/src/__tests__/llm-ledger.test.ts',
     'server/src/__tests__/agent-tool-registry.test.ts',
+    'server/src/__tests__/assistant-text.test.ts',
+    'server/src/__tests__/public-events.test.ts',
     'server/src/__tests__/research-search.test.ts',
     'server/src/__tests__/confidence-citations.test.ts',
     'server/src/__tests__/knowledge-retrieval.test.ts',
@@ -30,6 +32,7 @@ const testsByScope = {
   web: [
     'src/components/assistant-ui/markdown-text.test.tsx',
     'src/features/chat/runtime/converter.test.ts',
+    'src/features/chat/runtime/tool-card-results.test.ts',
     'src/features/chat/runtime/store.test.ts',
     'src/features/chat/runtime/harness.test.ts',
     'src/features/chat/components/ResearchSources.test.tsx',

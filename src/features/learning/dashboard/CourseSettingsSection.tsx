@@ -6,8 +6,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ChevronDown } from 'lucide-react'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/dropdown-menu'
 import { projectLifecycleApi } from '@/features/projects/api'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
@@ -54,17 +52,10 @@ const LIFECYCLE_ACTIONS = {
     destructive: boolean
   }
 >
-const SETTINGS_TABS = [
-  { value: 'profile', label: '基本资料', description: '这些信息会显示给所有课程成员。' },
-  { value: 'content', label: '课程内容', description: '管理学习目标、成功标准与课程活动。' },
-  { value: 'members', label: '成员与邀请', description: '管理课程成员与邀请。' },
-  { value: 'status', label: '课程状态', description: '完成状态变更后，课程权限会随之更新。' },
-] as const
-export function CourseSettingsSection({ space }: { space: LearningSpace }) {
-  const [section, setSection] = useState('profile')
-  const current = SETTINGS_TABS.find((tab) => tab.value === section) ?? SETTINGS_TABS[0]
+export function CourseSettingsSection({ space, section }: { space: LearningSpace; section: 'profile' | 'content' | 'members' | 'status' }) {
   const canView = space.perspective === 'teacher' && space.canManage && Boolean(space.courseId)
   const canEdit = canView && space.canUpdateCourse
+  const frameSection = section === 'profile' ? 'settings' : section
   const [course, setCourse] = useState<ApiCourse | null>(null)
   const [loading, setLoading] = useState(canView)
   const [busy, setBusy] = useState(false)
@@ -91,11 +82,11 @@ export function CourseSettingsSection({ space }: { space: LearningSpace }) {
     }
   }, [canView, space.courseId])
   if (!canView) {
-    return <DashboardSectionFrame space={space} section="settings"><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
+    return <DashboardSectionFrame space={space} section={frameSection}><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
   }
-  if (loading) return <DashboardSectionFrame space={space} section="settings"><ResourceSkeleton variant="detail" label="正在加载课程设置" /></DashboardSectionFrame>
+  if (loading) return <DashboardSectionFrame space={space} section={frameSection}><ResourceSkeleton variant="detail" label="正在加载课程设置" /></DashboardSectionFrame>
   if (error || !course) {
-    return <DashboardSectionFrame space={space} section="settings"><Alert variant="destructive"><AlertDescription>{error || '课程设置暂不可用。'}</AlertDescription></Alert></DashboardSectionFrame>
+    return <DashboardSectionFrame space={space} section={frameSection}><Alert variant="destructive"><AlertDescription>{error || '课程设置暂不可用。'}</AlertDescription></Alert></DashboardSectionFrame>
   }
 
   const lifecycleAction = course.status === space.status ? space.lifecycleAction : null
@@ -128,22 +119,7 @@ export function CourseSettingsSection({ space }: { space: LearningSpace }) {
   return (
     <DashboardSectionFrame
       space={space}
-      section="settings"
-      description={current.description}
-      breadcrumb={{ root: '课程设置', onBack: () => setSection('profile'), current: (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 px-1" aria-label={`当前分类：${current.label}，切换课程设置分类`}>
-              <span aria-current="page">{current.label}</span><ChevronDown className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuRadioGroup value={section} onValueChange={setSection}>
-              {SETTINGS_TABS.map((tab) => <DropdownMenuRadioItem key={tab.value} value={tab.value}>{tab.label}</DropdownMenuRadioItem>)}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) }}
+      section={frameSection}
     >
         {section === 'profile' && <div className="min-w-0">
           <CourseProfileSettings course={course} canEdit={canEdit} onUpdated={setCourse} />
@@ -171,9 +147,7 @@ export function CourseSettingsSection({ space }: { space: LearningSpace }) {
                     {lifecycle.label}
                   </Button>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">当前状态没有可执行的下一步。</p>
-              )}
+              ) : null}
             </CardContent>
           </Card>
         </div>}

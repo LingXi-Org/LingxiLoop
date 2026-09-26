@@ -1,157 +1,58 @@
-import { PlusSignIcon } from '@hugeicons/core-free-icons'
+import { BubbleChatIcon, RoboticIcon, Mail01Icon, PlusSignIcon, Settings02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowLeftRight } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
-import { BrandAvatar, useBrandAvatarInteraction } from '@/components/BrandAvatar'
+import { BrandAvatar } from '@/components/BrandAvatar'
+import { BRAND_AVATAR_BASE_EXPRESSION } from '@/components/brand-avatar-controller'
+import { NavUser } from '@/components/nav-user'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { selectLearningSpace, useWorkspace } from '@/features/knowledge/workspace'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { useParticipants } from '@/features/agents/state'
+import { selectLearningSpace } from '@/features/knowledge/workspace'
 import { learningApi } from '@/features/learning/api'
 import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
-import { notifyAction, toastAction } from '@/lib/actionToast'
+import type { LearningSpace } from '@/features/learning/contracts'
+import { getLearningDashboardMenu, viewForLearningSection } from '@/features/learning/dashboard/navigation'
+import { toastAction } from '@/lib/actionToast'
 import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
+import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import type { WorkspaceSummary } from '@/types'
+import type { ViewKey } from '@/types'
 
-export function workspaceInitials(name: string): string {
-  const value = name.trim()
-  if (!value) return '·'
-  const words = value.split(/\s+/).filter(Boolean)
-  return words.length > 1
-    ? words.slice(0, 2).map((word) => word[0]).join('').toUpperCase()
-    : Array.from(value).slice(0, 2).join('').toUpperCase()
-}
-
-function workspaceKindLabel(workspace: WorkspaceSummary): string {
-  if (workspace.kind === 'TEACHING') return '教学工作区'
-  return '课程工作区'
-}
-
-function WorkspaceRailItem({ workspace, active, pending, onSelect }: {
-  workspace: WorkspaceSummary
-  active: boolean
+export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, onSelect, onReload, onNavigate }: {
+  spaces: LearningSpace[]
+  activeSpace?: LearningSpace
+  loading: boolean
+  error: string
   pending: boolean
-  onSelect: () => void
+  onSelect(space: LearningSpace): void
+  onReload(): void
+  onNavigate(view: ViewKey['view']): void
 }) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onSelect}
-          disabled={pending}
-          aria-label={`切换到${workspace.name}`}
-          aria-current={active ? 'page' : undefined}
-          className="im-navigation-row group relative w-full rounded-none hover:bg-transparent"
-        >
-          <span
-            aria-hidden
-            className={cn(
-              'absolute start-0 bg-sidebar-primary transition-[width,height,border-radius] duration-200',
-              active
-                ? 'h-9 w-1 rounded-e-full shadow-[0_0_0_2px_color-mix(in_srgb,var(--sidebar-primary)_14%,transparent)]'
-                : 'size-2 rounded-full shadow-[0_0_0_2px_color-mix(in_srgb,var(--sidebar-primary)_12%,transparent)] group-hover:h-5 group-hover:w-1 group-hover:rounded-e-full',
-            )}
-          />
-          <CourseAvatar
-            key={workspace.id}
-            courseId={workspace.courseId ?? workspace.id}
-            avatarUrl={workspace.avatarUrl}
-            title={workspace.name}
-            className={cn(
-              'size-9 rounded-lg transition-transform duration-150 group-active:scale-95 [&_[data-slot=avatar-fallback]]:rounded-lg [&_[data-slot=avatar-image]]:rounded-lg',
-              active && 'ring-2 ring-sidebar-primary/40 ring-offset-2 ring-offset-accent',
-              pending && 'animate-pulse',
-            )}
-          />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="right" sideOffset={10} className="max-w-64">
-        <span className="font-semibold">{workspace.name}</span>
-        <span className="ml-1.5 opacity-70">{workspaceKindLabel(workspace)}</span>
-      </TooltipContent>
-    </Tooltip>
-  )
-}
-
-function RailDivider() {
-  return <div aria-hidden className="absolute inset-x-0 top-0 mx-auto h-px w-6 bg-border" />
-}
-
-function WorkspaceRailGroup({ workspaces, dashboardActive, activeId, pendingId, onSelect }: {
-  workspaces: WorkspaceSummary[]
-  dashboardActive: boolean
-  activeId: string | null
-  pendingId: string | null
-  onSelect: (id: string) => void
-}) {
-  if (workspaces.length === 0) return null
-  return (
-    <section className="relative flex w-full flex-col items-center gap-0">
-      <RailDivider />
-      {workspaces.map((workspace) => (
-        <WorkspaceRailItem
-          key={workspace.id}
-          workspace={workspace}
-          active={!dashboardActive && workspace.id === activeId}
-          pending={workspace.id === pendingId}
-          onSelect={() => onSelect(workspace.id)}
-        />
-      ))}
-    </section>
-  )
-}
-
-export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspace }: {
-  dashboardActive: boolean
-  onOpenDashboard: () => void
-  onOpenWorkspace: () => void
-}) {
-  const workspaces = useWorkspace((state) => state.list)
-  const activeId = useWorkspace((state) => state.selectedId)
-  const select = useWorkspace((state) => state.select)
+  const view = useApp((state) => state.view)
+  const user = useAuth((state) => state.user)
+  const participantAvatar = useParticipants((state) => user ? state.byId[user.id]?.avatarUrl : undefined)
   const companyId = useAuth((state) => state.activeCompanyId)
-  const [pendingId, setPendingId] = useState<string | null>(null)
+  const canCreate = useAuth((state) => state.companies[0]?.role === 'teacher')
   const [createOpen, setCreateOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
-  const brandAvatar = useBrandAvatarInteraction()
-  const visible = workspaces.filter((workspace) => workspace.status !== 'ARCHIVED' && workspace.status !== 'DELETED')
-  const canCreate = useAuth((state) => state.companies[0]?.role === 'teacher')
-
-  const handleSelect = async (id: string) => {
-    if (pendingId) return
-    onOpenWorkspace()
-    if (id === activeId) return
-    setPendingId(id)
-    try {
-      await select(id)
-    } catch (error) {
-      notifyAction({
-        title: '学习区切换失败',
-        description: userFacingError(error, '暂时无法打开这个学习区，请稍后重试。'),
-        type: 'error',
-      })
-    } finally {
-      setPendingId(null)
-    }
-  }
+  const menu = [
+    { view: 'conversations' as const, label: '对话', icon: BubbleChatIcon, management: false },
+    { view: 'agents' as const, label: 'Agent', icon: RoboticIcon, management: false },
+    { view: 'mail' as const, label: '邮件', icon: Mail01Icon, management: false },
+    ...(activeSpace ? getLearningDashboardMenu(activeSpace).map((item) => ({ ...item, view: viewForLearningSection(item.section) })) : []),
+  ]
+  const managementMenu = menu.filter((item) => item.management)
+  const overview = menu.find((item) => item.view === 'learning')
+  const activeManagement = managementMenu.find((item) => item.view === view)
 
   const handleCreateCourse = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -164,112 +65,87 @@ export function WorkspaceRail({ dashboardActive, onOpenDashboard, onOpenWorkspac
     try {
       if (!companyId) throw new Error('暂时无法确认你的公司，请重新登录后再试。')
       const course = await toastAction(learningApi.createCourse({
-        name,
-        description: String(data.get('description') ?? '').trim(),
-      }, companyId), {
-        loading: '正在创建课程与课程对话',
-        success: '课程已创建',
-        error: '创建课程失败',
-      })
-      await selectLearningSpace({ companyId: companyId, projectId: course.projectId })
+        name, description: String(data.get('description') ?? '').trim(),
+      }, companyId), { loading: '正在创建课程与课程对话', success: '课程已创建', error: '创建课程失败' })
+      await selectLearningSpace({ companyId, projectId: course.projectId })
+      onReload()
       form.reset()
       setCreateOpen(false)
-      onOpenDashboard()
-    } catch (error) {
-      setCreateError(userFacingError(error, '课程创建失败，请稍后重试。'))
-    } finally {
-      setCreating(false)
-    }
+      onNavigate('learning')
+    } catch (reason) {
+      setCreateError(userFacingError(reason, '课程创建失败，请稍后重试。'))
+    } finally { setCreating(false) }
   }
 
-  return (
-    <TooltipProvider delayDuration={120}>
-      <nav
-        aria-label="工作区"
-        className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-[var(--workspace-chrome-surface)] pb-2 pt-[var(--im-navigation-top)] text-foreground"
-      >
-        <div className="im-navigation-row flex w-full items-center justify-center">
+  return <nav aria-label="工作区与功能" className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-[var(--workspace-chrome-surface)] pb-2 pt-[var(--im-navigation-top)] text-foreground">
+    <div className="im-navigation-row flex w-full items-center justify-center">
+      <DropdownMenu>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="打开学习看板"
-              aria-current={dashboardActive ? 'page' : undefined}
-              onClick={() => {
-                brandAvatar.registerClick()
-                onOpenDashboard()
-              }}
-              className={cn(
-                'size-9 shrink-0 translate-x-px overflow-hidden rounded-lg bg-transparent p-0 hover:bg-transparent',
-                dashboardActive && 'ring-2 ring-sidebar-primary/40 ring-offset-2 ring-offset-accent',
-              )}
-            >
-              <BrandAvatar expression={brandAvatar.expression} className="size-9 rounded-lg" />
-            </Button>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="ghost" size="icon" disabled={pending || creating} aria-label={`切换工作区${activeSpace ? `：${activeSpace.title}` : ''}`} className="relative size-11 rounded-xl p-1">
+                {activeSpace ? <CourseAvatar courseId={activeSpace.courseId ?? activeSpace.projectId} avatarUrl={activeSpace.avatarUrl} title={activeSpace.title} className="size-9 rounded-lg" /> : <BrandAvatar expression={BRAND_AVATAR_BASE_EXPRESSION} className="size-9 rounded-lg" />}
+                <span aria-hidden="true" className="pointer-events-none absolute bottom-0.5 end-0.5 grid size-4 place-items-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground ring-2 ring-[var(--workspace-chrome-surface)]"><ArrowLeftRight className="size-2.5" strokeWidth={2.5} /></span>
+              </Button>
+            </DropdownMenuTrigger>
           </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={10}>学习看板</TooltipContent>
+          <TooltipContent side="right">{activeSpace?.title ?? '选择工作区'} · 切换工作区</TooltipContent>
         </Tooltip>
-        </div>
-        <div className="server-rail-scroll flex min-h-0 w-full translate-x-px flex-1 flex-col items-center overflow-y-auto overflow-x-hidden pb-3">
-          <WorkspaceRailGroup workspaces={visible} dashboardActive={dashboardActive} activeId={activeId} pendingId={pendingId} onSelect={(id) => void handleSelect(id)} />
-          {canCreate && <Dialog open={createOpen} onOpenChange={(open) => {
-            setCreateOpen(open)
-            if (!open) setCreateError(null)
-          }}>
-            <div className="im-navigation-row flex w-full items-center justify-center">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DialogTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label="新建课程"
-                      className="size-9 shrink-0 rounded-lg border border-dashed border-sidebar-primary/35 bg-transparent text-sidebar-primary shadow-none hover:bg-sidebar-accent hover:text-sidebar-primary focus-visible:border-sidebar-primary/50 focus-visible:ring-sidebar-primary/20"
-                    >
-                      <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />
-                    </Button>
-                  </DialogTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10}>新建课程</TooltipContent>
-              </Tooltip>
-            </div>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>新建课程</DialogTitle>
-                <DialogDescription>创建后会同时准备专属课程对话，并进入新的课程看板。</DialogDescription>
-              </DialogHeader>
-              <form id="workspace-rail-create-course" onSubmit={handleCreateCourse}>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="workspace-rail-course-name">课程名称</FieldLabel>
-                    <Input id="workspace-rail-course-name" name="name" required autoFocus placeholder="例如：产品设计基础" />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="workspace-rail-course-description">课程简介</FieldLabel>
-                    <Textarea id="workspace-rail-course-description" name="description" placeholder="简要说明课程目标与内容" />
-                    <FieldDescription>简介可稍后在课程管理中继续完善。</FieldDescription>
-                  </Field>
-                  {createError && (
-                    <Alert variant="destructive">
-                      <AlertTitle>创建失败</AlertTitle>
-                      <AlertDescription>{createError}</AlertDescription>
-                    </Alert>
-                  )}
-                </FieldGroup>
-              </form>
-              <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="outline" disabled={creating}>取消</Button></DialogClose>
-                <Button type="submit" form="workspace-rail-create-course" disabled={creating}>
-                  {creating ? '正在创建…' : '创建课程'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>}
-        </div>
-      </nav>
-    </TooltipProvider>
-  )
+        <DropdownMenuContent side="right" align="start" sideOffset={8} collisionPadding={12} className="w-72 max-w-[calc(100vw-24px)]">
+          <DropdownMenuLabel>工作区</DropdownMenuLabel>
+          {loading && spaces.length === 0 ? <p role="status" className="px-3 py-4 text-sm text-muted-foreground">正在加载工作区…</p> : null}
+          {error ? <div role="alert" className="px-3 py-2 text-sm text-destructive">{error}<Button variant="ghost" size="sm" onClick={onReload}>重试</Button></div> : null}
+          {!loading && !error && spaces.length === 0 ? <p className="px-3 py-4 text-sm text-muted-foreground">还没有可用的工作区</p> : null}
+          <div className="max-h-80 overflow-y-auto">
+            {spaces.map((space) => <DropdownMenuItem key={space.projectId} disabled={pending} onSelect={() => onSelect(space)} aria-current={activeSpace?.projectId === space.projectId ? 'true' : undefined}>
+              <CourseAvatar courseId={space.courseId ?? space.projectId} avatarUrl={space.avatarUrl} title={space.title} size="sm" />
+              <span className="min-w-0 flex-1 truncate">{space.title}</span>
+              {activeSpace?.projectId === space.projectId ? <HugeiconsIcon icon={Tick02Icon} className="size-4 text-primary" aria-label="当前工作区" /> : null}
+            </DropdownMenuItem>)}
+          </div>
+          {canCreate ? <><DropdownMenuSeparator /><DropdownMenuItem onSelect={() => setCreateOpen(true)}><HugeiconsIcon icon={PlusSignIcon} />新建课程</DropdownMenuItem></> : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+    <div className="server-rail-scroll flex min-h-0 w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-2 py-2">
+      {menu.filter((item) => !item.management && item.view !== 'learning').map((item) => <Tooltip key={item.view}>
+        <TooltipTrigger asChild>
+          <Button type="button" variant="ghost" size="icon" disabled={pending || creating} aria-label={item.label} data-workspace-view={item.view} aria-current={view === item.view ? 'page' : undefined} onClick={() => onNavigate(item.view)} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', view === item.view && 'bg-sidebar-accent text-sidebar-primary')}>
+            <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-6" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">{item.label}</TooltipContent>
+      </Tooltip>)}
+      {managementMenu.length > 0 && <Tooltip>
+          <TooltipTrigger asChild>
+              <Button type="button" variant="ghost" size="icon" disabled={pending || creating} aria-label="课程管理" aria-current={activeManagement ? 'page' : undefined} onClick={() => onNavigate(activeManagement?.view ?? 'courses')} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', activeManagement && 'bg-sidebar-accent text-sidebar-primary')}>
+                <HugeiconsIcon icon={Settings02Icon} strokeWidth={1.8} className="size-6" />
+              </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">课程管理{activeManagement ? ` · ${activeManagement.label}` : ''}</TooltipContent>
+      </Tooltip>}
+    </div>
+    {overview && <Tooltip>
+      <TooltipTrigger asChild>
+        <Button type="button" variant="ghost" size="icon" disabled={pending || creating} aria-label={overview.label} data-workspace-view={overview.view} aria-current={view === overview.view ? 'page' : undefined} onClick={() => onNavigate(overview.view)} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', view === overview.view && 'bg-sidebar-accent text-sidebar-primary')}>
+          <HugeiconsIcon icon={overview.icon} strokeWidth={1.8} className="size-6" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{overview.label}</TooltipContent>
+    </Tooltip>}
+    {user ? <div className="shrink-0 px-2 pt-2"><NavUser compact user={{ id: user.id, name: user.name, email: user.email, avatar: user.avatarUrl ?? participantAvatar }} /></div> : null}
+    {canCreate ? <Dialog open={createOpen} onOpenChange={(open) => { if (creating) return; setCreateOpen(open); if (!open) setCreateError(null) }}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>新建课程</DialogTitle></DialogHeader>
+        <form id="workspace-rail-create-course" onSubmit={handleCreateCourse}>
+          <FieldGroup>
+            <Field><FieldLabel htmlFor="workspace-rail-course-name">课程名称</FieldLabel><Input id="workspace-rail-course-name" name="name" required autoFocus /></Field>
+            <Field><FieldLabel htmlFor="workspace-rail-course-description">课程简介</FieldLabel><Textarea id="workspace-rail-course-description" name="description" placeholder="简要说明课程目标与内容" /><FieldDescription>简介可稍后在基本资料中继续完善。</FieldDescription></Field>
+            {createError ? <Alert variant="destructive"><AlertTitle>创建失败</AlertTitle><AlertDescription>{createError}</AlertDescription></Alert> : null}
+          </FieldGroup>
+        </form>
+        <DialogFooter><DialogClose asChild><Button type="button" variant="outline" disabled={creating}>取消</Button></DialogClose><Button type="submit" form="workspace-rail-create-course" disabled={creating}>{creating ? '正在创建…' : '创建课程'}</Button></DialogFooter>
+      </DialogContent>
+    </Dialog> : null}
+  </nav>
 }

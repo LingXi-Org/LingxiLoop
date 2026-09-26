@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
+import { STARTER_TEAM } from '../modules/learning/preset.js'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import type { ActionContext } from '@lyyzka/lingxios'
 import { lingxiOSControl, stopLingxiOSControl } from '../agent-runtime/runtime.js'
@@ -204,7 +205,7 @@ async function seedTeacherCourse():Promise<Fixture>{
   return {companyId,projectId,courseId,teacherId,learnerId,adminId}
 }
 
-async function apiRequest(userId:string,companyId:string,path:string,projectId?:string):Promise<Response>{
+async function apiRequest(userId:string,companyId:string,path:string,projectId?:string,init:RequestInit={}):Promise<Response>{
   const app=await buildApiTestApp(userId)
   const server=createServer(app)
   await new Promise<void>((resolve)=>server.listen(0,'127.0.0.1',resolve))
@@ -212,12 +213,45 @@ async function apiRequest(userId:string,companyId:string,path:string,projectId?:
   if(!address||typeof address==='string')throw new Error('test server did not bind')
   try{
     return await fetch(`http://127.0.0.1:${address.port}${path}`,{
-      headers:{'x-company-id':companyId,...(projectId?{'x-project-id':projectId}:{})},
+      ...init,
+      headers:{'content-type':'application/json','x-company-id':companyId,...(projectId?{'x-project-id':projectId}:{})},
     })
   }finally{
     await new Promise<void>((resolve,reject)=>server.close((error)=>error?reject(error):resolve()))
   }
 }
+
+test('[integration] personal Agent avatars retain the six/seven roster and reject student Pulse writes', async () => {
+  const fixture = await seedTeacherCourse()
+  const pulse = await ensureTeacherAgentForCourse(fixture.companyId, fixture.courseId, pool, teacherTransaction)
+  for (const agent of STARTER_TEAM) {
+    await pool.query(`INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status,preset_key)
+      VALUES($1,$2,'agent',$3,$4,$5,'transparent','avail',$6)`,
+    [`${agent.id}-${fixture.companyId}`, fixture.companyId, agent.name, agent.role, agent.initial, agent.presetKey])
+  }
+  const request = (userId: string, path: string, init?: RequestInit) => apiRequest(userId, fixture.companyId, path, fixture.projectId, init)
+  type Member = { id: string; kind: string; personalAvatar: { seed: string } | null }
+  const teacher = await (await request(fixture.teacherId, '/api/participants')).json() as Member[]
+  const student = await (await request(fixture.learnerId, '/api/participants')).json() as Member[]
+  assert.equal(teacher.filter(row => row.kind === 'agent').length, 7)
+  assert.equal(student.filter(row => row.kind === 'agent').length, 6)
+  assert.equal(student.some(row => row.id === pulse.agentId), false)
+  const path = `/api/agents/${pulse.agentId}/avatar`
+  assert.equal((await request(fixture.learnerId, path, { method: 'PUT', body: JSON.stringify({ seed: 'student' }) })).status, 404)
+  assert.equal((await request(fixture.learnerId, path, { method: 'DELETE' })).status, 404)
+  assert.equal((await request(fixture.teacherId, path, { method: 'PUT', body: JSON.stringify({ seed: 'teacher' }) })).status, 200)
+  const reloaded = await (await request(fixture.teacherId, '/api/participants')).json() as Member[]
+  assert.deepEqual(reloaded.find(row => row.id === pulse.agentId)?.personalAvatar, { seed: 'teacher' })
+  const admin = await (await request(fixture.adminId, '/api/participants')).json() as Member[]
+  assert.equal(admin.find(row => row.id === pulse.agentId)?.personalAvatar, null)
+  assert.equal((await request(fixture.teacherId, '/api/me/preferences', { method: 'PUT', body: JSON.stringify({ theme: 'dark' }) })).status, 200)
+  const afterPrefs = await (await request(fixture.teacherId, '/api/participants')).json() as Member[]
+  assert.deepEqual(afterPrefs.find(row => row.id === pulse.agentId)?.personalAvatar, { seed: 'teacher' })
+  assert.equal((await request(fixture.teacherId, path, { method: 'DELETE' })).status, 200)
+  const reset = await (await request(fixture.teacherId, '/api/participants')).json() as Member[]
+  assert.equal(reset.find(row => row.id === pulse.agentId)?.personalAvatar, null)
+  assert.deepEqual((await pool.query('SELECT avatar_url FROM participants WHERE id=$1 AND company_id=$2', [pulse.agentId, fixture.companyId])).rows, [{ avatar_url: null }])
+})
 
 test('[integration] concurrent provisioning creates one Project Pulse and one Course teacher room',async()=>{
   const fixture=await seedTeacherCourse()

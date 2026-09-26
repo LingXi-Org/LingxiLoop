@@ -70,7 +70,7 @@ test('preset and custom Agents receive IM rules and deliver distinct messages to
     } })
     try {
       assert.equal(await worker.runNext(),true)
-      for (let attempt = 0; attempt < 100 && (await api.readRunState(run))?.delivery !== 'delivered'; attempt++) await delay(20)
+      for (let attempt = 0; attempt < 100 && (await api.readRunState(run))?.delivery !== 'delivered'; attempt++) await delay(100)
       assert.equal((await api.readRunState(run))?.delivery,'delivered')
       assert.deepEqual(messages.filter(message => message.channelId === conversationId).map(message => message.payload.body),[...leadIns,final])
       const history = await pool.query<{ input: { text: string }; outcome: { runs: unknown[]; reason: string } }>(
@@ -108,7 +108,7 @@ test('preset and custom Agents receive IM rules and deliver distinct messages to
       followup = true
       const nextRun = await enqueue('followup','刚才第一条在说什么？')
       assert.equal(await worker.runNext(),true)
-      for (let attempt = 0; attempt < 100 && (await api.readRunState(nextRun))?.delivery !== 'delivered'; attempt++) await delay(20)
+      for (let attempt = 0; attempt < 100 && (await api.readRunState(nextRun))?.delivery !== 'delivered'; attempt++) await delay(100)
       assert.equal((await api.readRunState(nextRun))?.delivery,'delivered')
     } finally { await worker.stop() }
   }

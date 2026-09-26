@@ -726,14 +726,14 @@ export function CalendarView() {
           {mode === 'day' && <TimeGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} dayCount={1} />}
         </div>
         <aside className="hidden min-h-0 border-s border-[var(--im-divider)] bg-card @min-[48rem]/calendar:flex @min-[48rem]/calendar:flex-col">
-          <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--im-divider-weak)] px-3"><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} className="size-4 text-muted-foreground" /><h2 className="text-sm font-medium">即将推出</h2><span className="ms-auto text-xs text-muted-foreground">{agenda.length} 项</span></div>
+          <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--im-divider-weak)] px-3"><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} className="size-4 text-muted-foreground" /><h2 className="text-sm font-medium">近期安排</h2><span className="ms-auto text-xs text-muted-foreground">{agenda.length} 项</span></div>
           {agendaContent}
         </aside>
       </div>}
 
       <Sheet open={agendaOpen} onOpenChange={setAgendaOpen}>
         <SheetContent side="right" className="w-[min(92vw,360px)] p-0 sm:max-w-[360px]">
-          <SheetHeader className="border-b border-[var(--im-divider-weak)] px-4 py-3 text-start"><SheetTitle>即将推出</SheetTitle><SheetDescription>未来 30 天 · {agenda.length} 项</SheetDescription></SheetHeader>
+          <SheetHeader className="border-b border-[var(--im-divider-weak)] px-4 py-3 text-start"><SheetTitle>近期安排</SheetTitle><SheetDescription>未来 30 天 · {agenda.length} 项</SheetDescription></SheetHeader>
           {agendaContent}
         </SheetContent>
       </Sheet>
