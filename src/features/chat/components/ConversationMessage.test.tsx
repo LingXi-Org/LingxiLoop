@@ -37,6 +37,17 @@ function Preview({ messages }: { messages: ThreadMessage[] }) {
   return <AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{ Message: ConversationMessage }} /></AssistantRuntimeProvider>
 }
 
+test('memory metadata does not expose summaries in conversation messages', () => {
+  const reply = message('1')
+  const metadata = getLingxiMessageMetadata(reply)
+  metadata.runId = 'run'
+  metadata.harness = { ...createRunView('run'), lifecycle: 'succeeded' }
+  metadata.memory = { chips: [{ id: 'memory', text: '隐藏的记忆摘要' }], calls: {}, revision: 1 }
+  const html = renderToStaticMarkup(<Preview messages={[reply]} />)
+  assert.doesNotMatch(html, /隐藏的记忆摘要|memory-chips|已记住/)
+  assert.match(html, /正文1/)
+})
+
 test('text timestamps sit at the bottom right for every sender and attachments omit time', () => {
   for (const sender of ['agent', 'human', 'me']) {
     const html = renderToStaticMarkup(<Preview messages={[message('1', sender, true), message('2', sender)]} />)

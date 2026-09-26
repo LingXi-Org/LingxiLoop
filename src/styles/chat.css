@@ -4,6 +4,17 @@
 .chat-surface { background: var(--im-chat-surface, var(--panel)); color: var(--ink); }
 .chat-composer-shell { background: var(--panel); border-color: var(--hairline); }
 
+.chat-pane { container: chat-pane / inline-size; }
+.chat-pane:has([data-canvas-popover-trigger][data-state='open']) .chat-thread-layout {
+  padding-block-start: 224px;
+}
+@container chat-pane (min-width: 48rem) {
+  .chat-pane:has([data-canvas-popover-trigger][data-state='open']) .chat-thread-layout {
+    padding-block-start: 0;
+    margin-inline-end: 384px;
+  }
+}
+
 /* ============== Shared IM shell ============== */
 .desktop-im-grid {
   position: relative;

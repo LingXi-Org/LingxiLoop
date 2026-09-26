@@ -4,13 +4,16 @@ import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
 import { clearAvatarCache } from '@/lib/avatarCache'
 import type { Participant, Status } from '@/types'
+import { registerAuthTeardown } from '@/stores/authTeardown'
 
 interface ParticipantsState {
   byId: Record<string, Participant>
   loaded: boolean
+  error: string | null
   /** Hard reload — clears state first, used at boot / workspace switch. */
   load: () => Promise<void>
   reset: () => void
+  setAvatar: (id: string, avatar: Participant['personalAvatar']) => void
   /** Quiet re-fetch — keeps the existing roster visible during the network
    *  round-trip, then swaps. Used by the 60s background refresher so human
    *  profile changes or a status nudge arrive without a blank flash. */
@@ -52,9 +55,9 @@ async function fetchInto(
     if (epoch !== participantsRequestEpoch) return
     const byId: Record<string, Participant> = {}
     for (const p of list) byId[p.id] = fromApi(p)
-    set({ byId, loaded: true })
-  } catch (err) {
-    console.warn('[participants] fetch failed', err)
+    set({ byId, loaded: true, error: null })
+  } catch {
+    if (epoch === participantsRequestEpoch) set({ loaded: true, error: '智能体资料加载失败，请重试。' })
   }
 }
 
@@ -67,6 +70,9 @@ function fromApi(p: ApiParticipant): Participant {
     initial: p.initial,
     avatarBg: p.avatarBg,
     avatarUrl: p.avatarUrl ?? null,
+    personalAvatar: p.personalAvatar ?? null,
+    presetKey: p.presetKey,
+    projectId: p.projectId,
     status: normalizeStatus(p.status, p.statusUpdatedAt),
     statusUpdatedAt: coerceStatusUpdatedAt(p.statusUpdatedAt),
     bio: p.bio ?? undefined,
@@ -82,12 +88,17 @@ function fromApi(p: ApiParticipant): Participant {
 export const useParticipants = create<ParticipantsState>((set) => ({
   byId: {},
   loaded: false,
+  error: null,
+  setAvatar(id, personalAvatar) {
+    participantsRequestEpoch += 1
+    set(state => state.byId[id] ? { byId: { ...state.byId, [id]: { ...state.byId[id], personalAvatar } } } : {})
+  },
   async load() {
     // Reset before re-loading so a workspace switch never shows the
     // previous tenant's roster during the loading window. Same trigger
     // also drops the local avatar cache — we never want a portrait
     // from the previous workspace to flash on a same-id participant.
-    set({ byId: {}, loaded: false })
+    set({ byId: {}, loaded: false, error: null })
     clearAvatarCache()
     const epoch = ++participantsRequestEpoch
     await fetchInto(set, epoch)
@@ -95,7 +106,7 @@ export const useParticipants = create<ParticipantsState>((set) => ({
   reset() {
     participantsRequestEpoch += 1
     clearAvatarCache()
-    set({ byId: {}, loaded: false })
+    set({ byId: {}, loaded: false, error: null })
   },
   async refresh() {
     // No state-clear — just fetch fresh data and swap. Used by the
@@ -141,6 +152,7 @@ export const useParticipants = create<ParticipantsState>((set) => ({
 // WS bindings + the periodic refresher only need to attach once per
 // page lifetime.
 const REFRESH_INTERVAL_MS = 60_000
+registerAuthTeardown(() => useParticipants.getState().reset())
 let wsBound = false
 export function bootParticipants() {
   void useParticipants.getState().load()
@@ -167,6 +179,7 @@ export function bootParticipants() {
         byId: {
           ...s.byId,
           [p.id]: {
+            ...s.byId[p.id],
             id: p.id,
             kind: p.kind,
             name: p.name,

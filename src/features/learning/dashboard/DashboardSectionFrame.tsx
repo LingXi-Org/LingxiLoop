@@ -15,8 +15,8 @@ import { useConversations } from '@/features/conversations/store'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useApp } from '@/stores/app'
 import { CourseAvatar } from '../components/CourseAvatar'
+import { statusLabel } from '../components/learningDisplay'
 import type { LearningSpace } from '../contracts'
-import { LearningGrowthVine } from './LearningGrowthVine'
 import type { LearningDashboardSection } from './navigation'
 
 export const LEARNING_SECTION_COPY: Record<
@@ -28,10 +28,11 @@ export const LEARNING_SECTION_COPY: Record<
   learners: { title: '学习者', description: '课程学习者的学习记录' },
   content: { title: '课程内容', description: '课程目标与成功标准' },
   reviews: { title: '评价审核', description: '核对评价与学习证据' },
-  members: { title: '分享与成员', description: '管理课程访问与邀请' },
+  members: { title: '成员与邀请', description: '管理课程访问与邀请' },
   calendar: { title: '日历', description: '课程与个人安排' },
   resources: { title: '资料', description: '按工作区管理个人资料' },
-  settings: { title: '课程设置', description: '课程资料与生命周期' },
+  settings: { title: '基本资料', description: '这些信息会显示给所有课程成员' },
+  status: { title: '课程状态', description: '管理课程生命周期' },
 }
 
 export function DashboardSectionFrame({
@@ -78,8 +79,15 @@ export function DashboardSectionFrame({
   )
 
   const content = section === 'overview' ? (
-    <div className="space-y-4 @min-[48rem]/learning-grid:space-y-6">
-      <LearningGrowthVine key={`${space.companyId}:${space.projectId}`} space={space} />
+    <div className="@container/learning-grid space-y-4 @min-[48rem]/learning-grid:space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">{space.perspective === 'teacher' ? '教学工作台' : '我的学习'}</p>
+          <h2 className="text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">{space.title}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{space.perspective === 'teacher' ? '了解班级进展，及时回应每一份学习成果。' : '从眼前的一步开始，让每一次学习都有收获。'}</p>
+        </div>
+        <Badge variant="outline" className="mt-1 bg-card">{statusLabel(space.status)}</Badge>
+      </div>
       {children}
     </div>
   ) : children
@@ -122,7 +130,7 @@ export function DashboardSectionFrame({
           {spaceKindLabel}
         </Badge>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 @min-[48rem]/learning-grid:p-6">
+      <div className={`min-h-0 flex-1 overflow-y-auto p-4 @min-[48rem]/learning-grid:p-6 ${section === 'overview' ? 'bg-muted/25' : ''}`}>
         <div className="mx-auto max-w-7xl">{content}</div>
       </div>
     </div>

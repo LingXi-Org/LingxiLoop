@@ -41,6 +41,7 @@ import { userFacingError } from '@/lib/userFacingError'
 import { useAuth } from '@/stores/auth'
 import { knowledgeApi } from '../api'
 import type { KnowledgeSource } from '../contracts'
+import { ConversationSourceToggle } from './ConversationSourceToggle'
 
 const statusLabel: Record<string, string> = {
   upload_pending: '等待上传', queued: '排队', processing: '处理中', parsing: '解析',
@@ -211,6 +212,7 @@ export function ProjectSourceLibrary({
       <DialogContent className="max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-3xl">
         <DialogHeader className="border-b border-border/60 p-6 pe-14"><DialogTitle>{selected?.title ?? '资料预览'}</DialogTitle><DialogDescription>{selected ? `${kindLabel[selected.kind]} · ${statusLabel[selected.stage] ?? statusLabel[selected.status] ?? '状态待同步'} · ${selected.visibilityScope === 'PROJECT' ? '项目共享' : '仅自己'}` : '资料详情'}</DialogDescription></DialogHeader>
         <div className="min-h-0 overflow-y-auto p-6">
+          {selected && !detailError && <ConversationSourceToggle key={`${projectId}:${selected.id}`} projectId={projectId} sourceId={selected.id} />}
           {detailLoading ? <ResourceSkeleton variant="detail" label="正在加载资料预览" />
             : detailError ? <Alert variant="destructive"><AlertDescription>{detailError}</AlertDescription></Alert>
               : selected ? <><div className="flex flex-wrap gap-2">{selected.originalUrl ? <Button asChild variant="outline" size="sm"><a href={selected.originalUrl} target="_blank" rel="noreferrer">打开原始网页</a></Button> : null}{selected.originalFileUrl ? <Button asChild variant="outline" size="sm"><a href={selected.originalFileUrl} target="_blank" rel="noreferrer">打开原始文件</a></Button> : null}</div><pre className="mt-4 min-h-48 whitespace-pre-wrap rounded-3xl bg-muted p-5 font-sans text-sm leading-6">{selected.extractedText || (selected.error ? userFacingError(selected.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可预览提取内容。')}</pre>{editable(selected) ? <div className="mt-5 flex flex-wrap justify-end gap-2"><Button type="button" variant="outline" onClick={() => setRenaming(selected)}><HugeiconsIcon icon={Edit02Icon} strokeWidth={2} />重命名</Button><Button type="button" variant="destructive" onClick={() => void remove(selected)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />删除来源</Button></div> : null}</> : null}

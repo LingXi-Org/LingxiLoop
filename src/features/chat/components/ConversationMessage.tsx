@@ -221,7 +221,7 @@ function MessageTextPart() {
 function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; messageId: string }) {
   if (metadata.reactions.length === 0) return null
   return (
-    <div className={cn('mt-1 flex flex-wrap gap-1', metadata.isMine ? 'justify-end' : 'justify-start')}>
+    <div className={cn('row-start-3 mt-1 flex flex-wrap gap-1', metadata.isMine ? 'justify-end' : 'justify-start')}>
       {metadata.reactions.map((reaction) => (
         <Button
           key={reaction.emoji}
@@ -319,18 +319,18 @@ export function ConversationMessage() {
       data-message-presentation={custom.presentation}
       data-message-continued-from={custom.continuedFromPrevious}
       className={cn(
-        'group/message flex w-full shrink-0',
-        isMobile ? 'gap-2 px-2.5' : 'gap-2.5 px-3 sm:px-4',
+        'group/message grid w-full shrink-0',
+        isMobile ? 'gap-x-2 px-2.5' : 'gap-x-2.5 px-3 sm:px-4',
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
         custom.continuedFromPrevious ? isSpecialCard ? 'pt-1' : 'pt-px' : 'pt-1.5',
         custom.continuedToNext ? isSpecialCard ? 'pb-0' : 'pb-px' : 'pb-1.5',
-        custom.isMine && 'flex-row-reverse',
+        custom.isMine ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
     >
       <div className={cn(
-        'flex shrink-0',
+        'row-start-2 flex self-center',
         isMobile ? 'w-8' : 'w-10',
-        !custom.isMine ? 'items-start' : 'items-end',
+        custom.isMine ? 'col-start-2' : 'col-start-1',
         custom.groupStart && participant?.kind === 'agent' && 'chat-message-avatar',
         custom.groupStart && participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
         custom.groupStart && participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
@@ -339,13 +339,13 @@ export function ConversationMessage() {
           <Avatar p={participant} size={isMobile ? 32 : 38} ringColor="var(--background)" mode="chat" className="transition-[width,height] duration-200" />
         )}
       </div>
-      <div className={cn('flex min-w-0 flex-1 flex-col', custom.isMine && 'items-end')}>
+      <div className={cn('contents', custom.isMine ? '[&>div]:col-start-1' : '[&>div]:col-start-2')}>
         {custom.groupStart && !custom.isMine && (
-          <div className={cn('mb-1 flex items-center gap-2 px-1 text-muted-foreground', isMobile ? 'text-xs' : 'text-[11px]')}>
+          <div className={cn('row-start-1 mb-1 flex items-center gap-2 px-1 text-muted-foreground', isMobile ? 'text-xs' : 'text-[11px]')}>
             <span className="font-medium">{custom.senderName}</span>
           </div>
         )}
-        <div className={cn('grid w-full min-w-0 gap-0.5', running && 'min-h-5')}>
+        <div className={cn('row-start-2 grid w-full min-w-0 gap-0.5', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {attachments.length > 0 && <div data-slot="message-attachments" className={cn('flex w-full min-w-0 flex-col gap-1', custom.isMine && 'items-end')}>
             {attachments.map((attachment, index) => <MessageFooterContext.Provider key={attachment.id}
@@ -365,8 +365,6 @@ export function ConversationMessage() {
               tools: CHAT_TOOL_RENDERERS,
             }} />
           </MessageFooterContext.Provider>)}
-          {custom.harness && custom.memory && <MemoryChips fresh chips={custom.memory.chips}
-            unavailable={Object.values(custom.memory.calls).some(call => call.unavailable)} className="mt-2 max-w-xl" />}
           {custom.senderKind === 'agent' && custom.messageKind === 'text' && custom.runId && <HarnessDetails metadata={custom} />}
           {!custom.harness && <MessagePrimitive.Error>
             <div className="mt-2 text-xs text-destructive">消息生成失败</div>

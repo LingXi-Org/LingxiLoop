@@ -1,6 +1,7 @@
 import type { PoolClient } from 'pg'
 import type { Queryable } from '../../db/queryable.js'
 import type { AgentScope, CreateAgentInput, ParticipantScope, UpdateAgentInput } from './contracts.js'
+import { agentAvatarKey, type PersonalAgentAvatar } from './personal-avatar.js'
 import {
   agentIdExists,
   allAutonomy,
@@ -36,8 +37,11 @@ export class AgentApplication {
   async participants(scope: ParticipantScope) {
     await releaseExpiredAgentStatus(this.db, scope.companyId, this.busyLeaseMs)
     const rows = await listParticipants(this.db, scope)
+    const prefs = await preferences(this.db, scope.userId)
+    const avatars = (prefs.agentAvatars ?? {}) as Record<string, PersonalAgentAvatar>
     return rows.map((row) => {
-      const { companySlug, ...participant } = row
+      const { companySlug, ...fields } = row
+      const participant = { ...fields, personalAvatar: row.kind === 'agent' ? avatars[agentAvatarKey(scope.companyId, row.id)] ?? null : null }
       if (row.managed) return { ...participant, email: null }
       if (row.kind !== 'agent' || row.email || !companySlug) return participant
       return { ...participant, email: this.infra.computeAddress(row.id, companySlug) }
@@ -90,7 +94,10 @@ export class AgentApplication {
     return { ok: true as const }
   }
 
-  preferences(userId: string) { return preferences(this.db, userId) }
+  async preferences(userId: string) {
+    const { agentAvatars: _avatars, ...prefs } = await preferences(this.db, userId)
+    return prefs
+  }
   async savePreferences(userId: string, value: Record<string, unknown>) {
     await savePreferences(this.db, userId, value)
     return { ok: true as const }

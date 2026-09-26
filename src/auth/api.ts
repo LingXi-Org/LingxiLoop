@@ -20,11 +20,27 @@ export const authApi = {
     if (!response.ok) { const result = await response.json() as { error?: string }; throw new Error(result.error ?? '接受邀请失败') }
   },
   session: () => authClient.getSession(),
-  signIn: (email: string, password: string, captchaToken: string) => authClient.signIn.email({
-    email,
-    password,
-    fetchOptions: { headers: { 'x-captcha-response': captchaToken } },
-  }),
+  signIn: async (email: string, password: string, captchaToken: string, invitation?: { token: string; kind: 'project' | 'company' }) => {
+    const result = await authClient.signIn.email({
+      email,
+      password,
+      fetchOptions: { headers: { 'x-captcha-response': captchaToken } },
+    })
+    if (!result.error && invitation) {
+      try {
+        await authApi.acceptInvitation(invitation.token, invitation.kind)
+      } catch (error) {
+        if (!(error instanceof Error) || ![
+          'invitation email mismatch', 'invitation not found',
+          'invitation no longer active', 'invitation is no longer active',
+        ].includes(error.message)) throw error
+        // An old invitation must not block login to an existing, authorized workspace.
+        const me = await authApi.me()
+        if (!me.activeCompanyId || !me.companies.some((company) => company.id === me.activeCompanyId)) throw error
+      }
+    }
+    return result
+  },
   signUp: (input: { email: string; password: string; name: string; inviteToken?: string; inviteKind?: 'project' | 'company' }, captchaToken: string) => (
     fetch(`${API}/auth/sign-up/email`, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json', 'x-captcha-response': captchaToken }, body: JSON.stringify(input) })
       .then(async (response) => {

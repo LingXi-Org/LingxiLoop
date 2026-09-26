@@ -64,6 +64,7 @@ function useDisplayState(workingSeed: number, status: string, baseState: StateId
 }
 
 interface Props {
+  seed?: string
   participant: BloubParticipant
   status: string
   size: number
@@ -151,8 +152,8 @@ function Dot({ dot, ink }: { dot: DotRender; ink: string }) {
 }
 
 /** Native React renderer for Bloub's clock-free SVG morph engine. */
-export function BloubAvatar({ participant, status, size, paper = 'var(--paper)', animated = true, mode = 'neutral', className }: Props) {
-  const participantIdentity = useMemo(() => getBloubIdentity(participant), [participant.id, participant.role])
+export function BloubAvatar({ participant, status, size, paper = 'var(--paper)', animated = true, mode = 'neutral', className, seed }: Props) {
+  const participantIdentity = useMemo(() => getBloubIdentity(participant, seed), [participant.id, participant.role, seed])
   // Outside opted-in chat surfaces, agents deliberately present one quiet,
   // stable identity. Conversation avatars and transcript rows opt in explicitly.
   const identity = useMemo(() => (

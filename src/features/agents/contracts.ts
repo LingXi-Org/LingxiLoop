@@ -24,6 +24,9 @@ export interface ApiParticipant {
   initial: string
   avatarBg: string
   avatarUrl?: string | null
+  personalAvatar?: { seed: string } | { url: string } | null
+  presetKey?: string | null
+  projectId?: string | null
   status: Status
   statusUpdatedAt?: string
   bio: string | null

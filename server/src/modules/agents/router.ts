@@ -10,6 +10,9 @@ import { assembleHarness } from '@lyyzka/lingxios'
 import { createProductHarness } from '../../agent-runtime/harness.js'
 import { createProductTools } from '../../agent-runtime/tools.js'
 import { lingxiOSControl } from '../../agent-runtime/runtime.js'
+import { pool } from '../../db/pool.js'
+import { avatarInputSchema } from '../identity/contracts.js'
+import { savePersonalAgentAvatar } from './personal-avatar.js'
 
 export const agentsRouter = Router()
 
@@ -33,6 +36,17 @@ async function respond<T>(work: () => Promise<T>): Promise<T> {
 agentsRouter.get('/participants', safe(async (req, res) => {
   const scope = await requireCompanyArtifactContext(req, 'agent:read')
   res.json(await agentApplication.participants(scope))
+}))
+
+agentsRouter.put('/agents/:id/avatar', safe(async (req, res) => {
+  const scope = await requireCompanyArtifactContext(req, 'agent:read')
+  const input = parse(avatarInputSchema.safeParse(req.body))
+  res.json(await savePersonalAgentAvatar(pool, scope, String(req.params.id), input))
+}))
+
+agentsRouter.delete('/agents/:id/avatar', safe(async (req, res) => {
+  const scope = await requireCompanyArtifactContext(req, 'agent:read')
+  res.json(await savePersonalAgentAvatar(pool, scope, String(req.params.id), null))
 }))
 
 agentsRouter.get('/agents/harness', safe(async (req, res) => {

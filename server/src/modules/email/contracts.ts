@@ -1,5 +1,10 @@
 import { z } from 'zod'
 
+export const emailListQuerySchema = z.object({
+  q: z.string().trim().max(200).default(''),
+  offset: z.coerce.number().int().min(0).max(100_000).default(0),
+}).strict()
+
 export const outboundAttachmentSchema = z.object({
   key: z.string().trim().min(1),
   filename: z.string().trim().min(1).max(200),
@@ -98,6 +103,7 @@ export type ResendEmailReceivedEvent = z.infer<typeof resendEmailReceivedEventSc
 export interface EmailScope {
   userId: string
   companyId: string
+  projectId?: string
 }
 
 export interface EmailSendPayload {

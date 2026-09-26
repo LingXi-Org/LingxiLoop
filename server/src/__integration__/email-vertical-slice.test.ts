@@ -66,6 +66,37 @@ const validBody = {
   body: 'Architecture is explicit.',
 }
 
+test('[integration] mail page lists only member threads in its project and sends into that project', async () => {
+  const secondProject = 'project-email-second'
+  await pool.query(`INSERT INTO projects(id,company_id,kind,name,created_by,is_default)
+    VALUES($1,$2,'INSTITUTIONAL_COURSE','Second',$3,FALSE)`, [secondProject, COMPANY_ID, USER_ID])
+  __setEmailProviderOverrideForTesting(async input => ({ ok: true, smtpMessageId: input.messageId, error: null }))
+  const headers = { 'content-type': 'application/json', 'x-company-id': COMPANY_ID, 'x-project-id': secondProject }
+  const response = await fetch(`${baseUrl}/api/email/send`, { method: 'POST', headers, body: JSON.stringify(validBody) })
+  assert.equal(response.status, 200)
+  const sent = await response.json() as { conversationId: string }
+  assert.equal((await pool.query('SELECT project_id FROM conversations WHERE id=$1', [sent.conversationId])).rows[0]?.project_id, secondProject)
+  await findOrCreateEmailConversation({ companyId: COMPANY_ID, projectId: secondProject, inReplyTo: null, references: [], subject: 'Private other member', memberIds: ['someone-else'], idempotencyKey: 'mail-not-a-member' })
+  assert.equal((await send({ ...validBody, idempotencyKey: 'mail-default-project' })).status, 200)
+  const list = async (q = '', projectId = secondProject) => {
+    const res = await fetch(`${baseUrl}/api/email/threads?q=${encodeURIComponent(q)}`, { headers: { ...headers, 'x-project-id': projectId } })
+    assert.equal(res.status, 200)
+    return res.json() as Promise<{ items: Array<{ conversationId: string; lastFrom: string }>; hasMore: boolean }>
+  }
+  const page = await list()
+  assert.deepEqual(page.items.map(row => row.conversationId), [sent.conversationId])
+  assert.equal(page.hasMore, false)
+  assert.equal((await list('First release')).items.length, 1)
+  assert.equal((await list(page.items[0].lastFrom)).items.length, 1)
+  assert.equal((await list('no matches')).items.length, 0)
+  assert.equal((await list('', PROJECT_ID)).items.some(row => row.conversationId === sent.conversationId), false)
+  const history = await fetch(`${baseUrl}/api/conversations/${sent.conversationId}/messages`, { headers })
+  assert.equal(history.status, 200)
+  assert.equal(((await history.json()) as Array<{ body: string }>)[0]?.body, validBody.body)
+  const forbidden = await fetch(`${baseUrl}/api/email/threads`, { headers: { ...headers, 'x-project-id': 'foreign-project' } })
+  assert.equal(forbidden.status, 404)
+})
+
 test('[integration] email rejects retired or unknown request fields', async () => {
   const response = await send({ ...validBody, mock: true })
   assert.equal(response.status, 400)

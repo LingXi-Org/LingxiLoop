@@ -15,7 +15,7 @@ export const updateAgentRequestSchema = createAgentRequestSchema.partial().refin
   'nothing to update',
 )
 
-export const preferencesRequestSchema = z.record(z.string(), z.unknown())
+export const preferencesRequestSchema = z.record(z.string(), z.unknown()).refine(value => !Object.hasOwn(value, 'agentAvatars'), 'agent avatars must use the avatar endpoint')
 export const autonomyRequestSchema = z.object({ threshold: z.coerce.number().min(0).max(1) }).strict()
 
 export type CreateAgentInput = z.infer<typeof createAgentRequestSchema>

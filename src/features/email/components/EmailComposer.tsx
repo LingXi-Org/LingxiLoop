@@ -17,7 +17,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
  *
  * Submission: POSTs to /api/email/send or /api/email/reply/:id. On
  * success: closes drawer, navigates to the resulting thread, and
- * triggers a messages reload so the new bubble shows up. On failure:
+ * notifies the owning email page to refresh its thread. On failure:
  * keeps drawer open + surfaces error inline so the user can edit + retry.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -38,14 +38,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useParticipants } from '@/features/agents/state'
-import { chatTransport } from '@/features/chat/runtime'
-import { useChatThreadStore } from '@/features/chat/runtime/store'
-import { useConversations } from '@/features/conversations/store'
 import { uploadsApi } from '@/features/platform/api'
 import { toastAction } from '@/lib/actionToast'
 import { participantRoleZh } from '@/lib/participantRole'
 import { userFacingError } from '@/lib/userFacingError'
-import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import type { Participant } from '@/types'
 import { emailApi } from '../api'
@@ -168,6 +164,7 @@ function PillField({
         <Input
           ref={inputRef}
           type="text"
+          aria-label={label}
           value={draft}
           onChange={(e) => { setDraft(e.target.value); setOpenSuggest(true) }}
           onFocus={() => setOpenSuggest(Boolean(draft))}
@@ -203,11 +200,12 @@ function PillField({
   )
 }
 
-export function EmailComposer() {
+export function EmailComposer({ onSent, replyContext }: {
+  onSent(conversationId: string): void
+  replyContext?: { subject: string; from: string }
+}) {
   const compose = useEmailComposer((s) => s.composition)
   const close = useEmailComposer((s) => s.closeCompose)
-  const select = useApp((s) => s.selectConversation)
-  const setView = useApp((s) => s.setView)
   const byId = useParticipants((s) => s.byId)
   const me = useAuth((s) => s.user)
 
@@ -224,6 +222,8 @@ export function EmailComposer() {
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const idempotencyKeyRef = useRef(crypto.randomUUID())
+  const mounted = useRef(true)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   // Drag-and-drop depth counter — incremented on dragenter, decremented
   // on dragleave. Counting (rather than a single boolean) handles the
   // browser firing dragleave when the cursor crosses between nested
@@ -235,26 +235,7 @@ export function EmailComposer() {
   const open = compose !== null
   const isReply = compose?.mode === 'reply'
 
-  // Reply context: when we're replying, find the original message in any
-  // loaded conversation so the drawer can show "Re: <subject> · from <addr>".
-  // No fetch — if it's not loaded, the preview just falls back to the id.
-  const replyOriginal: { email: { subject: string; from: string } } | null = useMemo(() => {
-    if (!isReply) return null
-    const conversations = useChatThreadStore.getState().conversations
-    for (const state of Object.values(conversations)) {
-      const hit = state.messages.find((message) => message.id === compose.replyToMessageId)
-      const email = hit?.content.find((part) => part.type === 'tool-call' && part.toolName === 'draft-email')
-      if (email?.type === 'tool-call') {
-        return {
-          email: {
-            subject: typeof email.args.subject === 'string' ? email.args.subject : '',
-            from: typeof email.args.from === 'string' ? email.args.from : '',
-          },
-        }
-      }
-    }
-    return null
-  }, [isReply, compose])
+  const replyOriginal = replyContext ? { email: replyContext } : null
 
   useEffect(() => {
     if (!open) return
@@ -392,13 +373,8 @@ export function EmailComposer() {
         success: isReply ? '邮件回复已发送' : '邮件已发送',
         error: isReply ? '发送邮件回复失败' : '发送邮件失败',
       })
-      // Reload conversations + the affected thread's messages so the new
-      // bubble appears immediately. The WS pubsub will also deliver the
-      // `message.new` event but a hard reload is simpler than racing it.
-      await useConversations.getState().reload()
-      await chatTransport.reloadConversation(result.conversationId)
-      setView('conversations')
-      select(result.conversationId)
+      if (!mounted.current) return
+      onSent(result.conversationId)
       close()
     } catch (err) {
       setError(userFacingError(err, '邮件发送失败，请稍后重试。'))
@@ -408,7 +384,7 @@ export function EmailComposer() {
   }
 
   return (
-    <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) close() }} direction="right">
+    <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen && !sending) close() }} direction="right">
       <DrawerContent
         className="email-composer-drawer w-[calc(100vw-1rem)] max-w-[660px] gap-0 overflow-hidden p-0"
         onDragEnter={onDragEnter}
@@ -442,6 +418,7 @@ export function EmailComposer() {
           <DrawerClose asChild>
             <Button
               type="button"
+              disabled={sending}
               className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-lg leading-none text-ink-secondary transition hover:bg-raised hover:text-ink"
               aria-label="关闭邮件编辑器"
             >×</Button>

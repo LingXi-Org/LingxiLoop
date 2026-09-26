@@ -64,12 +64,15 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
   const visibleFrames = useMemo(() => snapshot?.frames.filter((frame) => frame.type !== 'artifact') ?? [], [snapshot?.frames])
 
   useEffect(() => {
+    let active = true
     void ws.connect()
     void (async () => {
       await loadWorkspaces()
+      if (!active) return
       const target = canvasId ?? useCanvas.getState().activeCanvasId ?? useCanvas.getState().workspaces[0]?.id
       if (target) await load(target)
     })()
+    return () => { active = false }
   }, [canvasId, load, loadWorkspaces])
 
   useEffect(() => {

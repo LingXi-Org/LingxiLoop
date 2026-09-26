@@ -1,14 +1,54 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import test from 'node:test'
 import { runInNewContext } from 'node:vm'
+import { load } from 'cheerio'
+import { createElement, type ComponentType, type ReactNode } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import ts from 'typescript'
 import type { LearningGrowthLearner } from '../contracts'
+import * as vineModel from './learningVineModel'
 import { layoutLearningVine, VINE_ORIGIN, vineScrollTarget, vineSurfaceY, visibleVineWaypoints } from './learningVineModel'
 
 const learner = (id: string, points: number): LearningGrowthLearner => ({
   learnerId: id, displayName: id, avatarUrl: null, points,
   evidenceCount: 0, acceptedCount: 0, independentCount: 0, masteryPoints: 0, waypoints: [],
+})
+
+test('the footer follows the signed-in user, including empty and unavailable growth data', () => {
+  const source = readFileSync(new URL('./LearningGrowthVine.tsx', import.meta.url), 'utf8')
+  const require = createRequire(import.meta.url)
+  const exports: { LearningGrowthVine?: ComponentType<{ projectId: string }> } = {}
+  let currentUser = 'me'
+  let growth = { learners: [learner('other', 100), { ...learner('me', 3), acceptedCount: 1, evidenceCount: 2, independentCount: 1 }], loading: false, error: '' }
+  const children = ({ children }: { children: ReactNode }) => children
+  runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText, {
+    exports,
+    require: (name: string) => {
+      if (name === '@/stores/auth') return { useAuth: (select: (state: { user: { id: string } }) => unknown) => select({ user: { id: currentUser } }) }
+      if (name === './useLearningGrowth') return { useLearningGrowth: () => growth }
+      if (name === './learningVineModel') return vineModel
+      if (name === '@/components/Avatar') return { Avatar: () => null }
+      if (name === '@/components/ui/popover') return { Popover: children, PopoverTrigger: children, PopoverContent: () => null }
+      if (name.endsWith('.webp') || name.endsWith('.css')) return {}
+      return require(name)
+    },
+  })
+  assert.ok(exports.LearningGrowthVine)
+  const render = () => load(renderToStaticMarkup(createElement(exports.LearningGrowthVine!, { projectId: 'course' })))
+  const html = render()
+  assert.deepEqual(html('footer dd').map((_, element) => html(element).text()).get(), ['3', '1 / 2', '1'])
+  assert.equal(html('footer button, footer select').length, 0)
+  assert.match(html('.vine-learner[data-selected="true"]').text(), /me（我）/)
+  currentUser = 'missing'
+  assert.equal(render()('footer dd').first().text(), '0')
+  growth = { learners: [], loading: false, error: '' }
+  assert.equal(render()('footer dd').first().text(), '0')
+  growth = { ...growth, loading: true }
+  assert.equal(render()('footer dd').first().text(), '—')
+  growth = { ...growth, loading: false, error: '无法加载' }
+  assert.equal(render()('footer dd').first().text(), '—')
 })
 
 test('scrolling keeps its position after React clears the event before a queued state update', () => {

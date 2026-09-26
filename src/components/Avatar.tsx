@@ -34,11 +34,9 @@ function useResolvedAvatarStatus(p: Participant, statusOverride?: string) {
 export function Avatar({ p, size = 44, statusOverride, ringColor = 'var(--paper)', className, animated = true, mode = 'neutral' }: Props) {
   const fontSize = Math.round(size * 0.36)
   const status = useResolvedAvatarStatus(p, statusOverride)
-  // Route human images through the local cache so they survive re-mounts.
-  // Agent image URLs are intentionally ignored: their single source of
-  // visual identity is the deterministic Bloub renderer. Human cache entries
-  // are still invalidated by participant avatar events and the refresh ticker.
-  const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : resolveUserAvatarUrl(p.avatarUrl, p.id))
+  const agentUrl = p.personalAvatar && 'url' in p.personalAvatar ? p.personalAvatar.url : null
+  const humanSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : resolveUserAvatarUrl(p.avatarUrl, p.id))
+  const cachedSrc = p.kind === 'agent' ? agentUrl : humanSrc
   // Bounded retry so one transient load failure doesn't permanently fall
   // back to the initial letter (see useAvatarImg).
   const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
@@ -51,8 +49,8 @@ export function Avatar({ p, size = 44, statusOverride, ringColor = 'var(--paper)
 
   return (
     <div className={cn('relative inline-grid place-items-center rounded-full font-display font-medium text-white tracking-tight shrink-0', className)} style={style}>
-      {p.kind === 'agent' ? (
-        <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} mode={mode} />
+      {p.kind === 'agent' && !showImg ? (
+        <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} mode={mode} seed={p.personalAvatar && 'seed' in p.personalAvatar ? p.personalAvatar.seed : undefined} />
       ) : showImg ? (
         <img
           key={imgKey}
@@ -85,7 +83,9 @@ export function AvatarMini({
   mode?: 'chat' | 'neutral'
 }) {
   const status = useResolvedAvatarStatus(p, statusOverride)
-  const cachedSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : resolveUserAvatarUrl(p.avatarUrl, p.id))
+  const agentUrl = p.personalAvatar && 'url' in p.personalAvatar ? p.personalAvatar.url : null
+  const humanSrc = useCachedAvatarSrc(p.id, p.kind === 'agent' ? null : resolveUserAvatarUrl(p.avatarUrl, p.id))
+  const cachedSrc = p.kind === 'agent' ? agentUrl : humanSrc
   const { showImg, imgKey, onError } = useAvatarImg(cachedSrc)
   return (
     <div
@@ -97,8 +97,8 @@ export function AvatarMini({
         fontSize: Math.round(size * 0.4),
       }}
     >
-      {p.kind === 'agent'
-        ? <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} mode={mode} />
+      {p.kind === 'agent' && !showImg
+        ? <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} mode={mode} seed={p.personalAvatar && 'seed' in p.personalAvatar ? p.personalAvatar.seed : undefined} />
         : showImg
         ? <img
             key={imgKey}
