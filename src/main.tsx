@@ -12,17 +12,6 @@ function render(Component: ComponentType) {
   root.render(<StrictMode><AppThemeProvider><Component /></AppThemeProvider></StrictMode>)
 }
 
-async function renderApp(Component: ComponentType) {
-  const { GlobalInteractionProvider } = await import('./components/GlobalInteractionProvider')
-  root.render(
-    <StrictMode>
-      <AppThemeProvider>
-        <GlobalInteractionProvider><Component /></GlobalInteractionProvider>
-      </AppThemeProvider>
-    </StrictMode>,
-  )
-}
-
 async function boot() {
   if (isNotificationWindow) {
     const { NotificationWindow } = await import('./components/NotificationWindow')
@@ -31,8 +20,17 @@ async function boot() {
   }
 
   if (isElectron) document.body.classList.add('electron')
-  const { App } = await import('./App')
-  await renderApp(App)
+  const [{ App }, { GlobalInteractionProvider }] = await Promise.all([
+    import('./App'),
+    import('./components/GlobalInteractionProvider'),
+  ])
+  root.render(
+    <StrictMode>
+      <AppThemeProvider>
+        <GlobalInteractionProvider><App /></GlobalInteractionProvider>
+      </AppThemeProvider>
+    </StrictMode>,
+  )
 
   if (import.meta.env.VITE_PUBLIC_POSTHOG_KEY) {
     const start = () => { void import('./observability-entry').then(({ mountObservability }) => mountObservability()) }

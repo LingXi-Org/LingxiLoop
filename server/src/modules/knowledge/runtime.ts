@@ -441,6 +441,8 @@ function hitExcerpt(hit: OpenNotebookSearchHit): string {
 
 interface KnowledgeRetrievalInput {
   companyId: string; conversationId: string; authorizationUserId: string; audienceUserIds?: string[]; query: string; contextQuery?: string; limit?: number
+  signal?: AbortSignal
+  searchTimeoutMs?: number
 }
 export interface KnowledgeRetrievalResult {
   status: 'matched' | 'no_matches' | 'no_sources' | 'processing' | 'unavailable' | 'not_applicable'
@@ -453,6 +455,7 @@ export async function retrieveKnowledge(args: KnowledgeRetrievalInput): Promise<
 }
 
 export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Promise<KnowledgeRetrievalResult> {
+  args.signal?.throwIfAborted()
   const authorizationUserId = requireAuthorizationUserId(args.authorizationUserId)
   if (!args.query.trim()) return { status: 'not_applicable', citations: [] }
   if (!openNotebookEnabled()) return { status: 'unavailable', citations: [] }
@@ -486,6 +489,7 @@ export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Pro
   sources = sources.filter(source => !source.excluded)
   const processingSources = sources.filter(source => ['queued','processing'].includes(source.status)).length
   sources = sources.filter(source => source.status === 'ready' && source.externalSourceId)
+  args.signal?.throwIfAborted()
   if (!sources.length) return { status: processingSources ? 'processing' : 'no_sources', citations: [], processingSources }
   const notebookId = await ensureProjectNotebook(projectId, args.companyId)
   const externalIds = sources.map((source) => source.externalSourceId!)
@@ -498,11 +502,13 @@ export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Pro
       openNotebookClient.search({
         notebookId, sourceIds: externalIds, query: args.query,
         limit, type: 'text', minimumScore: 0, companyId: args.companyId,
+        signal: args.signal, timeoutMs: args.searchTimeoutMs,
       }),
       openNotebookClient.search({
         notebookId, sourceIds: externalIds, query: args.contextQuery?.trim() || args.query,
         limit, type: 'vector', minimumScore: Number(process.env.OPEN_NOTEBOOK_MINIMUM_SCORE ?? 0.2),
         companyId: args.companyId,
+        signal: args.signal, timeoutMs: args.searchTimeoutMs,
       }),
     ])
     rankedHits = fuseKnowledgeSearchHits([textHits, vectorHits], limit)

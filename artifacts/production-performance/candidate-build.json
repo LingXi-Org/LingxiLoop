@@ -1,0 +1,185 @@
+{
+  "measurement": "Production manifest static import closure. Excludes runtime data, font requests and browser timings.",
+  "initialPage": {
+    "roots": [
+      "index.html",
+      "_App-Ds0lHQCA.js",
+      "src/components/GlobalInteractionProvider.tsx"
+    ],
+    "requestCount": 10,
+    "bytes": 1431191,
+    "gzipBytes": 361787,
+    "assets": [
+      {
+        "file": "assets/App-Ds0lHQCA.js",
+        "bytes": 694718,
+        "gzipBytes": 187445
+      },
+      {
+        "file": "assets/BloubAvatar-CJT340yW.js",
+        "bytes": 31311,
+        "gzipBytes": 13107
+      },
+      {
+        "file": "assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+        "bytes": 332,
+        "gzipBytes": 196
+      },
+      {
+        "file": "assets/GlobalInteractionProvider-X6Gf6D6K.js",
+        "bytes": 7417,
+        "gzipBytes": 2583
+      },
+      {
+        "file": "assets/InformationCircleIcon-CUKxAkIj.js",
+        "bytes": 543,
+        "gzipBytes": 238
+      },
+      {
+        "file": "assets/button-CeuA27HH.js",
+        "bytes": 29167,
+        "gzipBytes": 10053
+      },
+      {
+        "file": "assets/confirmAction-CZPyppmq.js",
+        "bytes": 23191,
+        "gzipBytes": 8576
+      },
+      {
+        "file": "assets/index-3TCdiA7B.js",
+        "bytes": 200582,
+        "gzipBytes": 63213
+      },
+      {
+        "file": "assets/index-CqcASEiD.css",
+        "bytes": 383233,
+        "gzipBytes": 57591
+      },
+      {
+        "file": "assets/index-xMT13bo8.js",
+        "bytes": 60697,
+        "gzipBytes": 18785
+      }
+    ]
+  },
+  "defaultChat": {
+    "roots": [
+      "index.html",
+      "_App-Ds0lHQCA.js",
+      "src/components/GlobalInteractionProvider.tsx",
+      "_mermaid-HWGCJPDP-CNz91-Of.js"
+    ],
+    "requestCount": 15,
+    "bytes": 3426022,
+    "gzipBytes": 982988,
+    "assets": [
+      {
+        "file": "assets/App-Ds0lHQCA.js",
+        "bytes": 694718,
+        "gzipBytes": 187445
+      },
+      {
+        "file": "assets/BloubAvatar-CJT340yW.js",
+        "bytes": 31311,
+        "gzipBytes": 13107
+      },
+      {
+        "file": "assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+        "bytes": 332,
+        "gzipBytes": 196
+      },
+      {
+        "file": "assets/GlobalInteractionProvider-X6Gf6D6K.js",
+        "bytes": 7417,
+        "gzipBytes": 2583
+      },
+      {
+        "file": "assets/InformationCircleIcon-CUKxAkIj.js",
+        "bytes": 543,
+        "gzipBytes": 238
+      },
+      {
+        "file": "assets/avatar-9Nt2TuTd.js",
+        "bytes": 114392,
+        "gzipBytes": 37801
+      },
+      {
+        "file": "assets/button-CeuA27HH.js",
+        "bytes": 29167,
+        "gzipBytes": 10053
+      },
+      {
+        "file": "assets/confirmAction-CZPyppmq.js",
+        "bytes": 23191,
+        "gzipBytes": 8576
+      },
+      {
+        "file": "assets/index-3TCdiA7B.js",
+        "bytes": 200582,
+        "gzipBytes": 63213
+      },
+      {
+        "file": "assets/index-CqcASEiD.css",
+        "bytes": 383233,
+        "gzipBytes": 57591
+      },
+      {
+        "file": "assets/index-u-KQnTHo.js",
+        "bytes": 173895,
+        "gzipBytes": 49979
+      },
+      {
+        "file": "assets/index-xMT13bo8.js",
+        "bytes": 60697,
+        "gzipBytes": 18785
+      },
+      {
+        "file": "assets/mermaid-HWGCJPDP-BJsU3OYj.css",
+        "bytes": 164406,
+        "gzipBytes": 55618
+      },
+      {
+        "file": "assets/mermaid-HWGCJPDP-CNz91-Of.js",
+        "bytes": 1540136,
+        "gzipBytes": 476848
+      },
+      {
+        "file": "assets/state-22m161ne.js",
+        "bytes": 2002,
+        "gzipBytes": 955
+      }
+    ]
+  },
+  "deferred": {
+    "CanvasView": {
+      "file": "assets/CanvasView-BRuDH4BC.js",
+      "separateDynamicEntry": true,
+      "inDefaultChat": false
+    },
+    "DocumentPeekPane": {
+      "file": "assets/DocumentPeekPane-x2pNO5dg.js",
+      "separateDynamicEntry": true,
+      "inDefaultChat": false
+    },
+    "CalendarPeekPane": {
+      "file": "assets/CalendarPeekPane-CFtBlRra.js",
+      "separateDynamicEntry": true,
+      "inDefaultChat": false
+    },
+    "PresentationDrawerContent": {
+      "file": "assets/PresentationDrawerContent-CERtGiHF.js",
+      "separateDynamicEntry": true,
+      "inDefaultChat": false
+    },
+    "SettingsDialog": {
+      "file": "assets/SettingsDialog-DEAjj0mF.js",
+      "separateDynamicEntry": true,
+      "inDefaultChat": false
+    },
+    "PersonalDashboard": {
+      "file": "assets/PersonalDashboard-BkNAAE6Q.js",
+      "separateDynamicEntry": true,
+      "inDefaultChat": false
+    }
+  }
+}

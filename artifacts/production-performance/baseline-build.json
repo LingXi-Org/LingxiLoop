@@ -1,0 +1,165 @@
+{
+  "measurement": "Production manifest static import closure. Excludes runtime data, font requests and browser timings.",
+  "initialPage": {
+    "roots": [
+      "index.html",
+      "_App-CXkWVZ-J.js",
+      "src/components/GlobalInteractionProvider.tsx"
+    ],
+    "requestCount": 8,
+    "bytes": 1426930,
+    "gzipBytes": 360460,
+    "assets": [
+      {
+        "file": "assets/App-CXkWVZ-J.js",
+        "bytes": 690780,
+        "gzipBytes": 186433
+      },
+      {
+        "file": "assets/BloubAvatar-DwPk0tVw.js",
+        "bytes": 31311,
+        "gzipBytes": 13109
+      },
+      {
+        "file": "assets/GlobalInteractionProvider-CTpVTqRR.js",
+        "bytes": 7329,
+        "gzipBytes": 2543
+      },
+      {
+        "file": "assets/button-9UNTIS3N.js",
+        "bytes": 29161,
+        "gzipBytes": 10066
+      },
+      {
+        "file": "assets/confirmAction-DrXgbkep.js",
+        "bytes": 24040,
+        "gzipBytes": 8764
+      },
+      {
+        "file": "assets/index-B2WHJyOl.css",
+        "bytes": 382981,
+        "gzipBytes": 57445
+      },
+      {
+        "file": "assets/index-DNAEcG8Z.js",
+        "bytes": 200643,
+        "gzipBytes": 63170
+      },
+      {
+        "file": "assets/input-Diy54QxP.js",
+        "bytes": 60685,
+        "gzipBytes": 18930
+      }
+    ]
+  },
+  "defaultChat": {
+    "roots": [
+      "index.html",
+      "_App-CXkWVZ-J.js",
+      "src/components/GlobalInteractionProvider.tsx",
+      "_mermaid-HWGCJPDP-Dz27zKgn.js"
+    ],
+    "requestCount": 13,
+    "bytes": 4687262,
+    "gzipBytes": 1361955,
+    "assets": [
+      {
+        "file": "assets/App-CXkWVZ-J.js",
+        "bytes": 690780,
+        "gzipBytes": 186433
+      },
+      {
+        "file": "assets/BloubAvatar-DwPk0tVw.js",
+        "bytes": 31311,
+        "gzipBytes": 13109
+      },
+      {
+        "file": "assets/GlobalInteractionProvider-CTpVTqRR.js",
+        "bytes": 7329,
+        "gzipBytes": 2543
+      },
+      {
+        "file": "assets/avatar-IQzKGvLO.js",
+        "bytes": 114392,
+        "gzipBytes": 37803
+      },
+      {
+        "file": "assets/button-9UNTIS3N.js",
+        "bytes": 29161,
+        "gzipBytes": 10066
+      },
+      {
+        "file": "assets/confirmAction-DrXgbkep.js",
+        "bytes": 24040,
+        "gzipBytes": 8764
+      },
+      {
+        "file": "assets/index-B2WHJyOl.css",
+        "bytes": 382981,
+        "gzipBytes": 57445
+      },
+      {
+        "file": "assets/index-CmpLsysy.js",
+        "bytes": 173886,
+        "gzipBytes": 49979
+      },
+      {
+        "file": "assets/index-DNAEcG8Z.js",
+        "bytes": 200643,
+        "gzipBytes": 63170
+      },
+      {
+        "file": "assets/input-Diy54QxP.js",
+        "bytes": 60685,
+        "gzipBytes": 18930
+      },
+      {
+        "file": "assets/mermaid-HWGCJPDP-Dz27zKgn.js",
+        "bytes": 2798982,
+        "gzipBytes": 855491
+      },
+      {
+        "file": "assets/mermaid-HWGCJPDP-xX_lDUGd.css",
+        "bytes": 171070,
+        "gzipBytes": 57260
+      },
+      {
+        "file": "assets/state-RjhY9SmF.js",
+        "bytes": 2002,
+        "gzipBytes": 962
+      }
+    ]
+  },
+  "deferred": {
+    "CanvasView": {
+      "file": null,
+      "separateDynamicEntry": false,
+      "inDefaultChat": null
+    },
+    "DocumentPeekPane": {
+      "file": null,
+      "separateDynamicEntry": false,
+      "inDefaultChat": null
+    },
+    "CalendarPeekPane": {
+      "file": null,
+      "separateDynamicEntry": false,
+      "inDefaultChat": null
+    },
+    "PresentationDrawerContent": {
+      "file": null,
+      "separateDynamicEntry": false,
+      "inDefaultChat": null
+    },
+    "SettingsDialog": {
+      "file": null,
+      "separateDynamicEntry": false,
+      "inDefaultChat": null
+    },
+    "PersonalDashboard": {
+      "file": null,
+      "separateDynamicEntry": false,
+      "inDefaultChat": null
+    }
+  }
+}

@@ -1,0 +1,45 @@
+TAP version 13
+# (node:43180) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:43180) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# Subtest: workspace realtime shares tickets and fences late connections across reconnect and logou
+ok 1 - workspace realtime shares tickets and fences late connections across reconnect and logou
+  ---
+  duration_ms: 127.3882
+  type: 'test'
+  ...
+# (node:32692) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: history paints independently of diagnostics and obsolete requests cannot mutate the current session
+ok 2 - history paints independently of diagnostics and obsolete requests cannot mutate the current session
+  ---
+  duration_ms: 794.938
+  type: 'test'
+  ...
+# Subtest: measures real visible text on the browser clock, coalesces paints and cancels discarded samples
+ok 3 - measures real visible text on the browser clock, coalesces paints and cancels discarded samples
+  ---
+  duration_ms: 8.5151
+  type: 'test'
+  ...
+# Subtest: maps global command shortcuts
+ok 4 - maps global command shortcuts
+  ---
+  duration_ms: 3.7463
+  type: 'test'
+  ...
+# Subtest: switching workspaces reloads the complete project-scoped conversation surface
+ok 5 - switching workspaces reloads the complete project-scoped conversation surface
+  ---
+  duration_ms: 17.7252
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5612.0498

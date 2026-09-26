@@ -10,6 +10,23 @@ import {
 } from 'lexical'
 import { useEffect, type ComponentProps } from 'react'
 import { ComposerDirectiveChip } from './ComposerTriggers'
+import { chatLatency } from '../runtime/latency'
+
+function ComposerReadyPlugin({ conversationId }: { conversationId: string }) {
+  const [editor] = useLexicalComposerContext()
+  useEffect(() => {
+    let cancel: (() => void) | undefined
+    const ready = () => {
+      cancel?.()
+      const node = editor.getRootElement()
+      if (node && editor.isEditable()) cancel = chatLatency.ready(conversationId, 'composer_ready', node)
+    }
+    const root = editor.registerRootListener(ready)
+    const editable = editor.registerEditableListener(ready)
+    return () => { root(); editable(); cancel?.() }
+  }, [conversationId, editor])
+  return null
+}
 
 function ConcurrentSubmitPlugin() {
   const [editor] = useLexicalComposerContext()
@@ -26,10 +43,11 @@ function ConcurrentSubmitPlugin() {
   return null
 }
 
-export function ComposerLexicalInput(props: Omit<ComponentProps<typeof LexicalComposerInput>, 'directiveChip'>) {
+export function ComposerLexicalInput({ conversationId, ...props }: Omit<ComponentProps<typeof LexicalComposerInput>, 'directiveChip'> & { conversationId: string }) {
   return (
     <LexicalComposerInput {...props} directiveChip={ComposerDirectiveChip}>
       <ConcurrentSubmitPlugin />
+      <ComposerReadyPlugin conversationId={conversationId} />
     </LexicalComposerInput>
   )
 }

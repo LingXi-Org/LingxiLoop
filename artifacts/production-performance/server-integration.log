@@ -1,0 +1,85 @@
+[integration] selected 3/47 file(s): runtime-context-latency.test.ts, runtime-response-policy.test.ts, runtime-nonthinking.test.ts
+TAP version 13
+# [im.read-receipt] agent advance failed {
+#   channelId: 'context-latency-room',
+#   agentId: 'a-922d929d',
+#   error: 'fixture rollback after advance'
+# }
+# Subtest: context bounds automatic search and persists Agent receipts before asynchronous delivery
+ok 1 - context bounds automatic search and persists Agent receipts before asynchronous delivery
+  ---
+  duration_ms: 32788.3524
+  type: 'test'
+  ...
+# {"automaticSearchElapsedMs":5320,"cancelledSearches":4,"durableAgentReceipts":1,"outboxReplayed":true,"humanReadVerified":true}
+# {"ts":"2026-09-26T02:02:57.278Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-d6g0m","healthPort":52993,"maxConcurrentRuns":2}
+# {"ts":"2026-09-26T02:03:00.842Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-d6g0m","timedOut":false}
+# {"ts":"2026-09-26T02:03:00.847Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\node_modules\\\\@lyyzka\\\\lingxios\\\\src\\\\app\\\\index.ts:827:22)\\n    at stopLingxiOSControl (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:160:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:228:5)\\n    at async TestContext.<anonymous> (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\__integration__\\\\runtime-nonthinking.test.ts:97:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-09-26T02:03:00.854Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\node_modules\\\\@lyyzka\\\\lingxios\\\\src\\\\app\\\\index.ts:827:22)\\n    at stopLingxiOSControl (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:160:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:228:5)\\n    at async TestContext.<anonymous> (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\__integration__\\\\runtime-nonthinking.test.ts:97:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-09-26T02:03:02.361Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-d6g0m","healthPort":52993,"maxConcurrentRuns":2}
+# {"ts":"2026-09-26T02:03:06.032Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-d6g0m","timedOut":false}
+# {"ts":"2026-09-26T02:03:06.038Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\node_modules\\\\@lyyzka\\\\lingxios\\\\src\\\\app\\\\index.ts:827:22)\\n    at stopLingxiOSControl (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:160:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:228:5)\\n    at async TestContext.<anonymous> (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\__integration__\\\\runtime-nonthinking.test.ts:97:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-09-26T02:03:06.039Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\node_modules\\\\@lyyzka\\\\lingxios\\\\src\\\\app\\\\index.ts:827:22)\\n    at stopLingxiOSControl (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:160:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:228:5)\\n    at async TestContext.<anonymous> (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\__integration__\\\\runtime-nonthinking.test.ts:97:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-09-26T02:03:06.772Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-d6g0m","healthPort":52993,"maxConcurrentRuns":2}
+# {"ts":"2026-09-26T02:03:09.545Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-d6g0m","timedOut":false}
+# {"ts":"2026-09-26T02:03:09.553Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\node_modules\\\\@lyyzka\\\\lingxios\\\\src\\\\app\\\\index.ts:827:22)\\n    at stopLingxiOSControl (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:160:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:228:5)\\n    at async TestContext.<anonymous> (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\__integration__\\\\runtime-nonthinking.test.ts:97:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-09-26T02:03:09.554Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\node_modules\\\\@lyyzka\\\\lingxios\\\\src\\\\app\\\\index.ts:827:22)\\n    at stopLingxiOSControl (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:160:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:228:5)\\n    at async TestContext.<anonymous> (C:\\\\Users\\\\34395\\\\.codex\\\\worktrees\\\\production-performance\\\\LingxiLoop\\\\server\\\\src\\\\__integration__\\\\runtime-nonthinking.test.ts:97:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# Subtest: production workers disable thinking for fast, upgraded and deep calls and stream only body text before completion
+ok 2 - production workers disable thinking for fast, upgraded and deep calls and stream only body text before completion
+  ---
+  duration_ms: 19509.0407
+  type: 'test'
+  ...
+# {"ts":"2026-09-26T02:03:35.321Z","level":"info","msg":"worker stopped","workerId":"response-policy-worker","timedOut":false}
+# Subtest: ordinary product chat defers retrieval, upgrades durably and keeps every model call in the shared ledger
+ok 3 - ordinary product chat defers retrieval, upgrades durably and keeps every model call in the shared ledger
+  ---
+  duration_ms: 9086.7631
+  type: 'test'
+  ...
+# {"ts":"2026-09-26T02:03:35.328Z","level":"warn","msg":"dependencies failed","error":"control plane stopped"}
+# {"ts":"2026-09-26T02:03:35.329Z","level":"warn","msg":"memory capture failed","error":"control plane stopped"}
+# [access] permission resolution failed closed {
+#   action: 'agent_memory:read',
+#   actorUserId: 'test-owner',
+#   error: 'control plane stopped'
+# }
+# {"ts":"2026-09-26T02:03:35.329Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-09-26T02:03:35.330Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# [access] permission resolution failed closed {
+#   action: 'conversation:read',
+#   actorUserId: 'test-owner',
+#   error: 'Cannot use a pool after calling end on the pool'
+# }
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 165149.9787
+[integration] selected 1/47 file(s): runtime-context-latency.test.ts
+TAP version 13
+# [im.read-receipt] agent advance failed {
+#   channelId: 'context-latency-room',
+#   agentId: 'a-4b5fadc2',
+#   error: 'fixture rollback after advance'
+# }
+# Subtest: context bounds automatic search and persists Agent receipts before asynchronous delivery
+ok 1 - context bounds automatic search and persists Agent receipts before asynchronous delivery
+  ---
+  duration_ms: 21377.6642
+  type: 'test'
+  ...
+# {"independentContextReads":["canvas","learning"],"automaticSearchElapsedMs":5180,"cancelledSearches":4,"durableAgentReceipts":1,"outboxReplayed":true,"humanReadVerified":true}
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 49542.2431

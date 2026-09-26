@@ -279,19 +279,32 @@ export class OpenNotebookClient {
     type?: 'text' | 'vector'
     minimumScore?: number
     companyId: string
+    signal?: AbortSignal
+    timeoutMs?: number
   }): Promise<OpenNotebookSearchHit[]> {
+    input.signal?.throwIfAborted()
     const allowedSources = new Set(input.sourceIds)
     if (allowedSources.size === 0) return []
     const requestedLimit = Math.max(1, Math.min(100, input.limit ?? 8))
-    const response = await this.json<{ results?: OpenNotebookSearchHit[] }>('/api/search', {
-      method: 'POST', headers: this.headers(true),
-      body: JSON.stringify({
-        query: input.query, type: input.type ?? 'vector', limit: requestedLimit,
-        minimum_score: input.minimumScore ?? 0.2,
-        notebook_id: input.notebookId, source_ids: [...allowedSources],
-        company_id: input.companyId,
-      }),
-    }, 90_000)
+    const deadline = timeoutSignal(input.timeoutMs ?? 90_000)
+    const signal = input.signal ? AbortSignal.any([input.signal, deadline]) : deadline
+    let response: { results?: OpenNotebookSearchHit[] }
+    try {
+      response = await this.json('/api/search', {
+        method: 'POST', headers: this.headers(true), signal,
+        body: JSON.stringify({
+          query: input.query, type: input.type ?? 'vector', limit: requestedLimit,
+          minimum_score: input.minimumScore ?? 0.2,
+          notebook_id: input.notebookId, source_ids: [...allowedSources],
+          company_id: input.companyId,
+        }),
+      })
+      input.signal?.throwIfAborted()
+    } catch (error) {
+      input.signal?.throwIfAborted()
+      if (deadline.aborted) throw new OpenNotebookError('Open Notebook search timed out')
+      throw error
+    }
     // Fail closed even if an older upstream ignored the scope fields.
     return (response.results ?? []).filter((hit) => {
       const parent = String(hit.parent_id ?? hit.id ?? '')

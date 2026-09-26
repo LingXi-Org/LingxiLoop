@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { useSurface } from '@/stores/surface'
+import { chatLatency } from '@/features/chat/runtime/latency'
 import type { ViewKey } from '@/types'
 
 interface AppState {
@@ -19,8 +20,13 @@ export const useApp = create<AppState>((set) => ({
     set({ view })
   },
   selectConversation: (id) => {
+    chatLatency.opened(id)
     useSurface.getState().closeForConversationChange()
     set({ view: 'conversations', selectedConversationId: id })
   },
-  setSelectedIfNone: (id) => set((state) => state.selectedConversationId ? {} : { selectedConversationId: id }),
+  setSelectedIfNone: (id) => set((state) => {
+    if (state.selectedConversationId) return {}
+    chatLatency.opened(id)
+    return { selectedConversationId: id }
+  }),
 }))

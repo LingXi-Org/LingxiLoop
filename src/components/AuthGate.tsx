@@ -11,14 +11,11 @@ export function AuthGate({ children, unauthFallback }: { children: ReactNode; un
   const setMe = useAuth((state) => state.setMe)
   const setServerCapabilities = useAuth((state) => state.setServerCapabilities)
   const clear = useAuth((state) => state.clear)
-  const markReady = useAuth((state) => state.markReady)
 
   useEffect(() => {
     let cancelled = false
     void (async () => {
       try {
-        const session = await authApi.session()
-        if (!session.data) { if (!cancelled) markReady(); return }
         const me = await authApi.me()
         if (cancelled) return
         setAuthenticated(me.user, me.activeCompanyId)
@@ -29,7 +26,7 @@ export function AuthGate({ children, unauthFallback }: { children: ReactNode; un
       }
     })()
     return () => { cancelled = true }
-  }, [clear, markReady, setAuthenticated, setMe, setServerCapabilities])
+  }, [clear, setAuthenticated, setMe, setServerCapabilities])
 
   if (!ready) return <div className="fixed inset-0 grid place-items-center text-ink-300"><WindowDragStrip />加载中...</div>
   if (!authenticated) return <>{unauthFallback ?? <AuthScreen />}</>

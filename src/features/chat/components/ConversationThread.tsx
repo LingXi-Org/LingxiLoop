@@ -8,13 +8,15 @@ import { useConversationUi } from '@/stores/conversationUi'
 import { useConversations } from '@/features/conversations/store'
 import { userFacingError } from '@/lib/userFacingError'
 import { messagesApi } from '../api'
-import { chatTransport, useConversationThreadSnapshot } from '../runtime'
+import { chatTransport } from '../runtime/transport'
+import { useConversationThreadSnapshot } from '../runtime/runtime'
 import { ConversationComposer } from './ConversationComposer'
 import { ConversationMessage, MessageAnimationBaseline } from './ConversationMessage'
 import { ConversationStart } from './ConversationStart'
 import { ConversationMemory } from './ConversationMemory'
 import { getLingxiMessageMetadata } from '../runtime/model'
 import { messageKey } from '../runtime/store'
+import { chatLatency } from '../runtime/latency'
 
 const MESSAGE_COMPONENTS = { Message: ConversationMessage }
 
@@ -40,6 +42,10 @@ export function ConversationThread({
 }) {
   const isMobile = useIsMobile()
   const snapshot = useConversationThreadSnapshot(conversationId, threadRootId)
+  const readReceiptKey = useAuiState(state => JSON.stringify(state.thread.messages.flatMap(message => {
+    const metadata = message.metadata.custom
+    return typeof metadata.sequence === 'number' ? [[metadata.clientMessageId, metadata.sequence]] : []
+  })))
   const animationKey = JSON.stringify([conversationId, threadRootId])
   const [animationBaseline, setAnimationBaseline] = useState({ key: '', sequence: Infinity })
   useEffect(() => {
@@ -52,6 +58,11 @@ export function ConversationThread({
   const lastReadSequenceRef = useRef(0)
   const pendingJumpId = useConversationUi((state) => state.pendingJumpMessageId)
   const clearPendingJump = useConversationUi((state) => state.clearPendingJump)
+  useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport || threadRootId || snapshot.isLoading || snapshot.error || (!snapshot.messages.length && snapshot.hasMoreOlder)) return
+    return chatLatency.ready(conversationId, 'history_visible', viewport)
+  }, [conversationId, threadRootId, snapshot.isLoading, snapshot.error, snapshot.messages.length, snapshot.hasMoreOlder])
 
   const loadOlder = useCallback(async () => {
     const viewport = viewportRef.current
@@ -85,7 +96,7 @@ export function ConversationThread({
 
   useEffect(() => {
     const viewport = viewportRef.current
-    if (!viewport || threadRootId) return
+    if (!viewport || threadRootId || readReceiptKey === '[]') return
     const messages = [...viewport.querySelectorAll<HTMLElement>('[data-msg-seq]')]
     if (messages.length === 0) return
     const markVisibleMessagesRead = () => {
@@ -128,7 +139,7 @@ export function ConversationThread({
       observer.disconnect()
       document.removeEventListener('visibilitychange', scheduleReadReceipt)
     }
-  }, [conversationId, snapshot.messages, threadRootId])
+  }, [conversationId, readReceiptKey, threadRootId])
 
   useEffect(() => {
     if (!pendingJumpId) return

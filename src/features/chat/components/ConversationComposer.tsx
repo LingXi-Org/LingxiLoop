@@ -136,6 +136,7 @@ export function ConversationComposer({
             </Tooltip>
           </div>
           <ComposerLexicalInput
+            conversationId={conversationId}
             ref={inputRef}
             autoFocus={!compact}
             submitMode="enter"

@@ -19,11 +19,20 @@ class RealtimeClient {
   private intentionalClose = false
   private generation = 0
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  private connecting: Promise<void> | null = null
 
-  async connect() {
-    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return
-    if (!getMeId()) return
-    const generation = this.generation
+  connect(): Promise<void> {
+    if (this.intentionalClose || !getMeId()) return Promise.resolve()
+    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return Promise.resolve()
+    if (this.connecting) return this.connecting
+    const pending = this.openConnection(this.generation).finally(() => {
+      if (this.connecting === pending) this.connecting = null
+    })
+    this.connecting = pending
+    return pending
+  }
+
+  private async openConnection(generation: number): Promise<void> {
     let ticket: string
     try {
       const response = await lingxiApiFetch(`${getServerOrigin()}/api/auth/ws-ticket`, {
@@ -31,10 +40,13 @@ class RealtimeClient {
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
       })
-      if (!response.ok) { this.scheduleReconnect(); return }
+      if (!response.ok) {
+        if (generation === this.generation) this.scheduleReconnect()
+        return
+      }
       ticket = ((await response.json()) as { ticket: string }).ticket
     } catch {
-      this.scheduleReconnect()
+      if (generation === this.generation) this.scheduleReconnect()
       return
     }
     if (generation !== this.generation || this.intentionalClose) return
@@ -45,6 +57,7 @@ class RealtimeClient {
       this.reconnectDelay = 500
     }
     socket.onmessage = (event) => {
+      if (this.socket !== socket || generation !== this.generation) return
       try {
         const data = JSON.parse(event.data) as WsEvent
         this.listeners.forEach((listener) => { listener(data) })
@@ -53,8 +66,8 @@ class RealtimeClient {
       }
     }
     socket.onclose = (event) => {
+      if (this.socket !== socket || generation !== this.generation) return
       if (event.code === 4403) { useAuth.getState().clear(); return }
-      if (this.socket !== socket) return
       this.socket = null
       if (!this.intentionalClose) this.scheduleReconnect()
     }
@@ -88,6 +101,7 @@ class RealtimeClient {
   close() {
     this.intentionalClose = true
     this.generation += 1
+    this.connecting = null
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer)
     this.reconnectTimer = null
     this.socket?.close()
@@ -95,12 +109,7 @@ class RealtimeClient {
   }
 
   reconnect() {
-    this.generation += 1
-    this.intentionalClose = true
-    this.socket?.close()
-    this.socket = null
-    if (this.reconnectTimer) clearTimeout(this.reconnectTimer)
-    this.reconnectTimer = null
+    this.close()
     this.intentionalClose = false
     this.reconnectDelay = 500
     void this.connect()

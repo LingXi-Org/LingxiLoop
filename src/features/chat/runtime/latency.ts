@@ -2,6 +2,15 @@ type Sample = { sentAt?: number; previewAt?: number; receivedAt?: number; visibl
   resets: number; disconnects: number; frame?: number; paintMs: number[] }
 const requests = new Map<string, number>()
 const runs = new Map<string, Sample>()
+type ReadyStage = 'composer_ready' | 'history_visible'
+let navigation: { conversationId: string; startedAt: number; done: Set<ReadyStage>; frames: Map<ReadyStage, number> } | undefined
+let firstNavigation = true
+
+function capture(timing: Record<string, unknown>) {
+  if (typeof window !== 'undefined' && import.meta.env?.VITE_PUBLIC_POSTHOG_KEY) {
+    void import('@/lib/observability').then(({ posthog }) => posthog.capture('chat_latency', timing)).catch(() => {})
+  }
+}
 
 function sample(runId: string): Sample {
   let value = runs.get(runId)
@@ -24,12 +33,37 @@ function report(runId: string, stage: string, detail: Record<string, string | nu
     ...(value.previewAt !== undefined ? { sincePreviewMs: now - value.previewAt } : {}), ...detail }
   performance.measure('lingxiloop.chat.latency', { start: now, duration: 0, detail: timing })
   performance.clearMeasures('lingxiloop.chat.latency')
-  if (typeof window !== 'undefined' && !['preview', 'body_painted'].includes(stage)) void import('@/lib/observability').then(({ posthog, isPostHogConfigured }) => {
-    if (isPostHogConfigured()) posthog.capture('chat_latency', timing)
-  }).catch(() => {})
+  if (!['preview', 'body_painted'].includes(stage)) capture(timing)
 }
 
 export const chatLatency = {
+  opened(conversationId: string | null) {
+    if (navigation?.conversationId === conversationId) return
+    if (navigation) for (const frame of navigation.frames.values()) cancelAnimationFrame(frame)
+    navigation = conversationId ? { conversationId, startedAt: firstNavigation ? 0 : performance.now(), done: new Set(), frames: new Map() } : undefined
+    if (conversationId) firstNavigation = false
+  },
+  ready(conversationId: string, stage: ReadyStage, node: HTMLElement) {
+    const opening = navigation
+    if (!opening || opening.conversationId !== conversationId || opening.done.has(stage) || opening.frames.has(stage)) return () => {}
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
+        opening.frames.delete(stage)
+        const rect = node.getBoundingClientRect()
+        if (navigation !== opening || !node.isConnected || document.visibilityState !== 'visible'
+          || rect.bottom <= 0 || rect.top >= innerHeight || !rect.width) return
+        opening.done.add(stage)
+        const now = performance.now(), timing = { stage, durationMs: now - opening.startedAt }
+        const name = `lingxiloop.chat.${stage}`
+        performance.clearMeasures(name)
+        performance.measure(name, { start: opening.startedAt, end: now, detail: timing })
+        capture(timing)
+      })
+      opening.frames.set(stage, frame)
+    })
+    opening.frames.set(stage, frame)
+    return () => { cancelAnimationFrame(frame); opening.frames.delete(stage) }
+  },
   send(sourceRef: string) {
     if (requests.size >= 128) requests.delete(requests.keys().next().value!)
     requests.set(sourceRef, performance.now())
@@ -78,5 +112,7 @@ export const chatLatency = {
   clear() {
     for (const value of runs.values()) if (value.frame !== undefined) cancelAnimationFrame(value.frame)
     requests.clear(); runs.clear()
+    chatLatency.opened(null)
+    firstNavigation = false
   },
 }

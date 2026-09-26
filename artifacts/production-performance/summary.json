@@ -1,0 +1,203 @@
+{
+  "generatedAt": "2026-09-26T02:16:06.330Z",
+  "baseline": {
+    "commit": "e610e863a9d434c392552123a2dd8ead7fd99a0a",
+    "description": "Latest origin/main at worktree creation; this is the build comparison baseline, not the deployed old production image"
+  },
+  "candidate": {
+    "branch": "codex/production-performance",
+    "baseCommit": "e610e863a9d434c392552123a2dd8ead7fd99a0a",
+    "committed": false,
+    "trackedSourceDiffSha256": "0ff16715b28665ca06425c4395a1a443b1db73a8299f423585d7271be3068d79",
+    "lingxiOS": "3.3.6",
+    "node": "v22.22.2",
+    "modelChanged": false
+  },
+  "production": {
+    "lastObservedCommit": "6f0e0c4ed3de5f87dd2db132872c3e065c6e8ba1",
+    "deployedThisTask": false,
+    "releaseAuthorization": "pending"
+  },
+  "bundle": {
+    "method": "Production manifest static import closure. Excludes runtime data, font requests and browser timings.",
+    "initialPage": {
+      "before": {
+        "bytes": 1426930,
+        "gzipBytes": 360460,
+        "staticJsCssRequests": 8
+      },
+      "after": {
+        "bytes": 1431191,
+        "gzipBytes": 361787,
+        "staticJsCssRequests": 10
+      },
+      "gzipReductionPercent": -0.37
+    },
+    "defaultChat": {
+      "before": {
+        "bytes": 4687262,
+        "gzipBytes": 1361955,
+        "staticJsCssRequests": 13
+      },
+      "after": {
+        "bytes": 3426022,
+        "gzipBytes": 982988,
+        "staticJsCssRequests": 15
+      },
+      "gzipReductionPercent": 27.83
+    },
+    "deferred": {
+      "CanvasView": {
+        "file": "assets/CanvasView-BRuDH4BC.js",
+        "separateDynamicEntry": true,
+        "inDefaultChat": false
+      },
+      "DocumentPeekPane": {
+        "file": "assets/DocumentPeekPane-x2pNO5dg.js",
+        "separateDynamicEntry": true,
+        "inDefaultChat": false
+      },
+      "CalendarPeekPane": {
+        "file": "assets/CalendarPeekPane-CFtBlRra.js",
+        "separateDynamicEntry": true,
+        "inDefaultChat": false
+      },
+      "PresentationDrawerContent": {
+        "file": "assets/PresentationDrawerContent-CERtGiHF.js",
+        "separateDynamicEntry": true,
+        "inDefaultChat": false
+      },
+      "SettingsDialog": {
+        "file": "assets/SettingsDialog-DEAjj0mF.js",
+        "separateDynamicEntry": true,
+        "inDefaultChat": false
+      },
+      "PersonalDashboard": {
+        "file": "assets/PersonalDashboard-BkNAAE6Q.js",
+        "separateDynamicEntry": true,
+        "inDefaultChat": false
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "web_typecheck_and_production_build",
+      "status": "passed",
+      "command": "npm run build -- --manifest",
+      "artifact": "candidate-build.log"
+    },
+    {
+      "name": "server_typecheck",
+      "status": "passed",
+      "command": "npm run server:typecheck"
+    },
+    {
+      "name": "targeted_lint_and_diff_check",
+      "status": "passed",
+      "artifact": "lint.log"
+    },
+    {
+      "name": "chat_regression",
+      "status": "passed",
+      "tests": 15,
+      "artifact": "chat-regression.log"
+    },
+    {
+      "name": "workspace_keyboard_history_latency_realtime",
+      "status": "passed",
+      "tests": 5,
+      "artifact": "web-regression.log"
+    },
+    {
+      "name": "auth_settings_scope_frontend_checks",
+      "status": "passed"
+    },
+    {
+      "name": "knowledge_search_http_and_existing_read_receipts",
+      "status": "passed",
+      "tests": 5
+    },
+    {
+      "name": "runtime_context_nonthinking_and_response_policy_integration",
+      "status": "passed",
+      "testFiles": 3,
+      "finalContextRerun": "passed",
+      "artifact": "server-integration.log"
+    },
+    {
+      "name": "context_parallel_failure_before_change",
+      "status": "failed_as_expected",
+      "artifact": "server-context-parallel-red.log"
+    },
+    {
+      "name": "actual_static_http",
+      "status": "passed",
+      "checks": 16,
+      "artifact": "asset-http.json"
+    },
+    {
+      "name": "deferred_build_graph",
+      "status": "passed",
+      "baselineRejectedAsExpected": true,
+      "command": "node scripts/measure-web-build.mjs dist artifacts/production-performance/candidate-build.json '_mermaid-HWGCJPDP-CNz91-Of.js' --check-deferred"
+    }
+  ],
+  "controlledContextFixtures": {
+    "method": "Local controlled upstream never completes its JSON body; elapsed value includes context preparation and is not mainland or real-model latency",
+    "samples": [
+      {
+        "automaticSearchElapsedMs": 5320,
+        "cancelledSearches": 4,
+        "durableAgentReceipts": 1,
+        "outboxReplayed": true,
+        "humanReadVerified": true
+      },
+      {
+        "independentContextReads": [
+          "canvas",
+          "learning"
+        ],
+        "automaticSearchElapsedMs": 5180,
+        "cancelledSearches": 4,
+        "durableAgentReceipts": 1,
+        "outboxReplayed": true,
+        "humanReadVerified": true
+      }
+    ]
+  },
+  "browser": {
+    "status": "blocked",
+    "reason": "Browser inventory/create-tab timed out repeatedly; one inventory returned nodeRepl.fetch request failed. No usable browser connection.",
+    "mainlandNetworkVerified": false,
+    "browserVersion": null,
+    "network": null,
+    "coldLoad": {
+      "requiredRunsPerVersion": 5,
+      "baseline": [],
+      "candidate": [],
+      "baselineMedianMs": null,
+      "candidateMedianMs": null
+    },
+    "conversationSwitch": {
+      "requiredRunsPerVersion": 5,
+      "baseline": [],
+      "candidate": [],
+      "baselineMedianMs": null,
+      "candidateMedianMs": null
+    },
+    "fixedConversation": {
+      "baseline": [],
+      "candidate": [],
+      "firstBodyMedianMs": null,
+      "errorRate": null
+    },
+    "panelAndKeyboardUiAcceptance": "pending",
+    "captureScript": "capture-browser.js"
+  },
+  "limits": [
+    "Static JS/CSS request counts are not observed total browser requests.",
+    "Existing large-chunk and CSS ::highlight build warnings remain.",
+    "No production rollout or mainland-browser speed/error-rate claim has been made.",
+    "No dependency changes or database migrations."
+  ]
+}

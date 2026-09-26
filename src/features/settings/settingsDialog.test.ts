@@ -33,7 +33,7 @@ test('invitation landing remains reachable before authentication and clears on c
   assert.match(app, /invitation\?\.clear\(\)\s+setInvitation\(null\)/)
   assert.match(app, /<AuthGate unauthFallback=\{invitationScreen\}>/)
   assert.match(app, /\{invitationScreen \?\? <AuthedApp/)
-  assert.match(gate, /authApi\.session\(\)/)
+  assert.match(gate, /authApi\.me\(\)/)
   assert.match(gate, /unauthFallback \?\? <AuthScreen \/>/)
 })
 

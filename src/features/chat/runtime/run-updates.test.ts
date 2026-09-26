@@ -254,7 +254,7 @@ test('a reply at the page boundary leaves room for subsequently loaded older his
   assert.deepEqual(messages.map(message => message.id), ['older', 'preview-run', 'newer'])
 })
 
-test('initial history publishes complete run snapshots together and subscribes only to active runs', async () => {
+test('initial history is ready before slow run snapshots, which merge without duplicate replies', async () => {
   resetChatThreadStore()
   const subscribed: string[] = []
   const callbacks = new Map<string, (item: RunStreamEvent) => void>()
@@ -300,11 +300,12 @@ test('initial history publishes complete run snapshots together and subscribes o
   try {
     const loading = transport.loadConversation('room')
     await new Promise(resolve => setImmediate(resolve))
-    assert.equal(useChatThreadStore.getState().conversations.room?.isLoading, true)
-    assert.deepEqual(batches, [])
-    finishSecond(snapshot('second'))
+    assert.equal(useChatThreadStore.getState().conversations.room?.isLoading, false)
+    assert.deepEqual(batches, [[]])
     await loading
-    assert.equal(batches.length, 1)
+    finishSecond(snapshot('second'))
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(batches.length, 2)
     assert.deepEqual(subscribed, ['active'])
     const messages = useChatThreadStore.getState().conversations.room!.messages
     assert.deepEqual(messages.slice(0, 2).map(message => message.content), [

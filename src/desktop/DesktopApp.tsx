@@ -1,9 +1,10 @@
 import { Cancel01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import type { LayoutChangedMeta } from 'react-resizable-panels'
 import { CommandPalette } from '@/components/CommandPalette'
 import { GroupContextContent } from '@/components/GroupContextContent'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import {
@@ -16,16 +17,12 @@ import {
 } from '@/components/ui/drawer'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
-import { CanvasView } from '@/features/canvas/components/CanvasView'
-import { CalendarPeekPane } from '@/features/calendar/components/CalendarPeekPane'
 import { ConversationsPane, SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
 import { useConversations } from '@/features/conversations/store'
-import { DocumentPeekPane } from '@/features/documents/components/DocumentPeekPane'
 import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
-import { PresentationDrawerContent } from '@/features/presentations'
-import { SettingsDialog } from '@/features/settings/SettingsDialog'
+import { SETTINGS_DIALOG_TRIGGER_ID, useSettingsDialog } from '@/features/settings/store'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
@@ -34,9 +31,15 @@ import { useSurface } from '@/stores/surface'
 import { useTheme } from '@/stores/theme'
 import { ChatPane } from './ChatPane'
 import { InfoPane } from './InfoPane'
-import { PersonalDashboard } from './PersonalDashboard'
 import { ThreadDrawer } from './ThreadDrawer'
 import { WorkspaceRail } from './WorkspaceRail'
+
+const CanvasView = lazy(() => import('@/features/canvas/components/CanvasView').then((module) => ({ default: module.CanvasView })))
+const CalendarPeekPane = lazy(() => import('@/features/calendar/components/CalendarPeekPane').then((module) => ({ default: module.CalendarPeekPane })))
+const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
+const PresentationDrawerContent = lazy(() => import('@/features/presentations/components/PresentationDrawerContent').then((module) => ({ default: module.PresentationDrawerContent })))
+const SettingsDialog = lazy(() => import('@/features/settings/SettingsDialog').then((module) => ({ default: module.SettingsDialog })))
+const PersonalDashboard = lazy(() => import('./PersonalDashboard').then((module) => ({ default: module.PersonalDashboard })))
 
 const DESKTOP_SIDEBAR_WIDTH_KEY = 'lingxiloop:desktop-layout:sidebar-width:v1'
 const LEFT_COLUMN_DEFAULT = 260
@@ -73,6 +76,7 @@ export function DesktopApp() {
   const activeWorkspace = workspaces.find((project) => project.id === selectedWorkspaceId)
   const activeProjectName = activeWorkspace?.name ?? '课程'
   const view = useApp((state) => state.view)
+  const settingsOpen = useSettingsDialog((state) => state.open)
   const surface = useSurface((state) => state.surface)
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
   const openThread = surface?.kind === 'thread' ? surface : null
@@ -232,11 +236,13 @@ export function DesktopApp() {
         </div>}
         <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">
           {dashboardOpen ? (
-            <PersonalDashboard
-              view={view}
-              sidebarWidth={sidebarWidth}
-              onLayoutChanged={handleSidebarLayoutChanged}
-            />
+            <Suspense fallback={<ResourceSkeleton variant="detail" label="正在打开个人面板" />}>
+              <PersonalDashboard
+                view={view}
+                sidebarWidth={sidebarWidth}
+                onLayoutChanged={handleSidebarLayoutChanged}
+              />
+            </Suspense>
           ) : isMobile ? (
             <div className="h-full min-h-0 min-w-0" data-mobile-conversation-page={mobileChatOpen ? 'chat' : 'list'}>
               {mobileChatOpen ? (
@@ -305,7 +311,11 @@ export function DesktopApp() {
               </DrawerClose>
             </div>
           </DrawerHeader>}
-          <div className="min-h-0 flex-1 overflow-hidden">{drawerContent}</div>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <Suspense fallback={<div className="h-full p-4"><Button type="button" variant="ghost" onClick={closeDrawer}>关闭</Button><ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} /></div>}>
+              {drawerContent}
+            </Suspense>
+          </div>
         </DrawerContent>
       </Drawer>
 
@@ -313,12 +323,23 @@ export function DesktopApp() {
         <DialogContent showCloseButton={false} className="h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] max-w-none gap-0 overflow-hidden rounded-2xl bg-card p-0 sm:max-w-none">
           <DialogTitle className="sr-only">Canvas</DialogTitle>
           <DialogDescription className="sr-only">协作画布</DialogDescription>
-          {canvasId && <CanvasView canvasId={canvasId} onBack={closeCanvasView} />}
+          <Suspense fallback={<div className="h-full p-4"><Button type="button" variant="ghost" onClick={closeCanvasView}>关闭画布</Button><ResourceSkeleton variant="media" label="正在打开画布" /></div>}>
+            {canvasId && <CanvasView canvasId={canvasId} onBack={closeCanvasView} />}
+          </Suspense>
         </DialogContent>
       </Dialog>
 
       <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
-      <SettingsDialog />
+      {settingsOpen && <Suspense fallback={<Dialog open onOpenChange={(open) => useSettingsDialog.getState().setOpen(open)}>
+        <DialogContent onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          if (!useSettingsDialog.getState().open) document.getElementById(SETTINGS_DIALOG_TRIGGER_ID)?.focus()
+        }}>
+          <DialogTitle>设置</DialogTitle>
+          <DialogDescription>正在打开设置…</DialogDescription>
+          <ResourceSkeleton variant="detail" label="正在打开设置" />
+        </DialogContent>
+      </Dialog>}><SettingsDialog /></Suspense>}
       <SourceDetailOverlay />
     </div>
   )

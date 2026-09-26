@@ -16,6 +16,7 @@ import {
 } from '@/lib/im/wukong'
 import { userFacingError } from '@/lib/userFacingError'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
+import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { convertEnvelope, convertEnvelopeBatch, projectMessageGroups } from './converter'
 import { type LingxiMessageMetadata, resolveMessagePresentation } from './model'
 import { forgetChatOutbox, readChatOutbox, rememberChatOutbox } from './outbox'
@@ -43,6 +44,7 @@ import { chatLatency } from './latency'
 const TYPING_STALE_MS = 45_000
 
 type UploadedAttachment = ApiAttachment & { key?: string }
+type RequestContext = { signal: AbortSignal; identity: string; current: () => boolean }
 
 function conversionContext() {
   return { participants: useParticipants.getState().byId, meId: getMeId() }
@@ -161,10 +163,13 @@ export class ChatTransport {
   private readonly runStreams = new Map<string, EventSource>()
   private discoveryTimer: number | undefined
   private subscriptions: (() => void)[] = []
-  private discovering = false
+  private discovering: RequestContext | undefined
   private readonly messageListeners = new Set<(message: ThreadMessage) => void>()
   private connection = new AbortController()
-  private readonly runReads = new Map<string, Promise<void>>()
+  private workspaceIdentity: string | null = null
+  private workspaceChannels: Set<string> | null = null
+  private readonly runReads = new Map<string, Promise<AgentRunResponse>>()
+  private readonly historyRequests = new Map<string, RequestContext>()
   private readonly previewBatch = new Map<string, { target: AgentRunTarget; item: Extract<RunStreamEvent, { type: 'preview' }> }>()
   private previewFrame: number | undefined
 
@@ -187,8 +192,10 @@ export class ChatTransport {
     for (const unsubscribe of this.subscriptions) unsubscribe()
     this.subscriptions = []
     this.connection.abort()
+    this.workspaceIdentity = null; this.workspaceChannels = null
     chatLatency.clear()
     this.runReads.clear()
+    this.historyRequests.clear()
     if (this.previewFrame !== undefined) window.cancelAnimationFrame(this.previewFrame)
     this.previewFrame = undefined; this.previewBatch.clear()
     lingxiIm.disconnect()
@@ -201,7 +208,36 @@ export class ChatTransport {
   }
 
   setWorkspaceChannels(channelIds: Iterable<string>): void {
-    lingxiIm.setWorkspaceChannels(channelIds)
+    const channels = new Set(channelIds), identity = this.requestIdentity()
+    const changed = this.workspaceIdentity !== identity
+    const revoked = this.workspaceChannels && [...this.workspaceChannels].some(id => !channels.has(id))
+    const interrupted = !changed && revoked ? Object.entries(useChatThreadStore.getState().conversations)
+      .filter(([id, state]) => channels.has(id) && (state.isLoading || state.isLoadingOlder)) : []
+    if (changed || revoked) {
+      // A fresh signal is the scope generation: A → B → A cannot revive an A request.
+      this.connection.abort(); this.connection = new AbortController()
+      this.runReads.clear(); this.historyRequests.clear()
+      for (const stream of this.runStreams.values()) stream.close()
+      this.runStreams.clear()
+      if (this.previewFrame !== undefined) window.cancelAnimationFrame(this.previewFrame)
+      this.previewFrame = undefined; this.previewBatch.clear()
+      for (const timer of this.typingTimers.values()) window.clearTimeout(timer)
+      this.typingTimers.clear()
+      chatLatency.opened(null)
+      if (changed) resetChatThreadStore()
+      else useChatThreadStore.setState(state => ({ conversations: Object.fromEntries(
+        Object.entries(state.conversations).filter(([id]) => channels.has(id))
+          .map(([id, conversation]) => [id, { ...conversation, isLoading: false, isLoadingOlder: false }]),
+      ) }))
+    }
+    this.workspaceIdentity = identity; this.workspaceChannels = channels
+    lingxiIm.setWorkspaceChannels(channels)
+    if (changed || revoked) for (const id of Object.keys(useChatThreadStore.getState().conversations)) this.syncRunStreams(id)
+    // The mounted runtime only loads on conversation changes, so resume work canceled by scope revocation here.
+    for (const [id, state] of interrupted) {
+      if (state.isLoadingOlder) void this.loadOlder(id)
+      else void this.loadConversation(id)
+    }
   }
 
   subscribeMessages(listener: (message: ThreadMessage) => void): () => void {
@@ -209,77 +245,109 @@ export class ChatTransport {
     return () => this.messageListeners.delete(listener)
   }
 
+  private requestIdentity(): string {
+    return JSON.stringify([getMeId(), getActiveCompanyId(), getWorkspaceSession()?.projectId ?? null])
+  }
+
+  private includesChannel(conversationId: string): boolean {
+    return !this.workspaceChannels || this.workspaceChannels.has(conversationId)
+  }
+
+  private captureRequest(): RequestContext {
+    const signal = this.connection.signal
+    const captured = this.requestIdentity()
+    return { signal, identity: captured, current: () => !signal.aborted && this.requestIdentity() === captured }
+  }
+
   async loadConversation(conversationId: string): Promise<void> {
+    if (!this.includesChannel(conversationId)) return
     const current = useChatThreadStore.getState().conversations[conversationId]
-    if (current?.loaded || current?.isLoading) return
+    if (current?.loaded || current?.isLoading && this.historyRequests.get(conversationId)?.current()) return
+    const request = this.captureRequest()
+    this.historyRequests.set(conversationId, request)
     updateConversation(conversationId, (state) => ({ ...state, isLoading: true, error: null }))
     try {
       const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE)
+      if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
-      const snapshots = await this.readRunSnapshots(conversationId, messages)
-      if (this.connection.signal.aborted) return
-      updateConversation(conversationId, (state) => this.applyRunSnapshots({
+      updateConversation(conversationId, (state) => ({
         ...state,
         messages: mergeCanonicalMessages(state.messages, messages),
         loaded: true,
         isLoading: false,
         hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE,
-      }, snapshots))
+      }))
       this.syncRunStreams(conversationId)
+      void this.hydrateConversation(conversationId, request)
     } catch (error) {
+      if (!request.current()) return
       console.error('[chat.transport] history conversion/load failed', error)
       updateConversation(conversationId, (state) => ({
         ...state,
         isLoading: false,
         error: userFacingError(error, '暂时无法加载消息，请稍后重试。'),
       }))
+    } finally {
+      if (this.historyRequests.get(conversationId) === request) this.historyRequests.delete(conversationId)
     }
   }
 
   async reloadConversation(conversationId: string): Promise<void> {
+    if (!this.includesChannel(conversationId)) return
+    const request = this.captureRequest()
     try {
       const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE)
+      if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
-      const snapshots = await this.readRunSnapshots(conversationId, messages)
-      if (this.connection.signal.aborted) return
-      updateConversation(conversationId, state => this.applyRunSnapshots({ ...state,
-        messages: mergeCanonicalMessages(state.messages, messages), loaded: true, error: null }, snapshots))
+      updateConversation(conversationId, state => ({ ...state,
+        messages: mergeCanonicalMessages(state.messages, messages), loaded: true, isLoading: false, error: null }))
       this.syncRunStreams(conversationId)
+      void this.hydrateConversation(conversationId, request)
     } catch (error) {
+      if (!request.current()) return
       console.error('[chat.transport] reload failed', error)
     }
   }
 
   async loadOlder(conversationId: string): Promise<void> {
+    if (!this.includesChannel(conversationId)) return
     const current = useChatThreadStore.getState().conversations[conversationId]
-    if (!current?.loaded || current.isLoadingOlder || !current.hasMoreOlder) return
+    if (!current?.loaded || !current.hasMoreOlder || current.isLoadingOlder && this.historyRequests.get(conversationId)?.current()) return
+    const request = this.captureRequest()
     const before = oldestSequence(current.messages)
     if (before === null || before <= 1) {
       updateConversation(conversationId, (state) => ({ ...state, hasMoreOlder: false }))
       return
     }
+    this.historyRequests.set(conversationId, request)
     updateConversation(conversationId, (state) => ({ ...state, isLoadingOlder: true }))
     try {
       const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE, before)
+      if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
         .filter((message) => (messageMetadata(message).sequence ?? Number.MAX_SAFE_INTEGER) < before)
-      const snapshots = await this.readRunSnapshots(conversationId, messages)
-      if (this.connection.signal.aborted) return
-      updateConversation(conversationId, (state) => this.applyRunSnapshots({
+      updateConversation(conversationId, (state) => ({
         ...state,
         messages: mergeCanonicalMessages(state.messages, messages),
         isLoadingOlder: false,
         hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE && messages.length > 0,
-      }, snapshots))
+      }))
       this.syncRunStreams(conversationId)
+      void this.hydrateConversation(conversationId, request)
     } catch (error) {
+      if (!request.current()) return
       console.error('[chat.transport] older history failed', error)
       updateConversation(conversationId, (state) => ({ ...state, isLoadingOlder: false }))
+    } finally {
+      if (this.historyRequests.get(conversationId) === request) this.historyRequests.delete(conversationId)
     }
   }
 
   async ensureThread(conversationId: string, rootId: string): Promise<void> {
+    if (!this.includesChannel(conversationId)) return
+    const request = this.captureRequest()
     await this.loadConversation(conversationId)
+    if (!request.current()) return
     const current = useChatThreadStore.getState().conversations[conversationId]
     if (current?.messages.some((message) => (
       message.id === rootId || messageMetadata(message).quotedMessageId === rootId
@@ -288,6 +356,7 @@ export class ChatTransport {
     let before = 0
     while (true) {
       const page = await lingxiIm.history(conversationId, 200, before)
+      if (!request.current()) return
       envelopes.push(...page)
       if (page.length < 200) break
       const next = Math.min(...page.map((envelope) => envelope.messageSeq))
@@ -456,19 +525,29 @@ export class ChatTransport {
     await harnessApi.continue(target,clientMsgNo,requestVersion)
   }
 
-  refreshRun(target: AgentRunTarget): Promise<void> {
-    const key = JSON.stringify(target), pending = this.runReads.get(key)
+  private readRun(target: AgentRunTarget, request: RequestContext): Promise<AgentRunResponse> {
+    const key = JSON.stringify([request.identity, target.conversationId, target.agentId, target.runId, target.threadId ?? null])
+    const pending = this.runReads.get(key)
     if (pending) return pending
-    const signal = AbortSignal.any([this.connection.signal,AbortSignal.timeout(30_000)])
-    const read = async () => {
-      const response = await harnessApi.read(target,0,signal)
-      if (signal.aborted) return
+    const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30_000)])
+    const promise = harnessApi.read(target, 0, signal).finally(() => {
+      if (this.runReads.get(key) === promise) this.runReads.delete(key)
+    })
+    this.runReads.set(key, promise)
+    return promise
+  }
+
+  async refreshRun(target: AgentRunTarget): Promise<void> {
+    if (!this.includesChannel(target.conversationId)) return
+    const request = this.captureRequest()
+    try {
+      const response = await this.readRun(target, request)
+      if (!request.current()) return
       updateConversation(target.conversationId, state => applyRunUpdate(state, target,
         { type: 'state', state: response }, useParticipants.getState().byId[target.agentId], response))
       this.syncRunStreams(target.conversationId)
-    }
-    const promise = read().catch(error => {
-      if (signal.aborted) return
+    } catch (error) {
+      if (!request.current()) return
       updateConversation(target.conversationId,state => ({ ...state, messages: state.messages.map(message => {
         const meta = messageMetadata(message)
         if (meta.runId !== target.runId || !isRunMessage(meta)) return message
@@ -476,13 +555,11 @@ export class ChatTransport {
         return { ...message, metadata: { ...message.metadata, custom: { ...meta,
           ...(inaccessible ? { harnessControl: false, memory: undefined } : {}), harnessError: inaccessible ? undefined : '运行状态暂时无法同步，请重试' } } } as ThreadMessage
       }) }))
-    }).finally(() => { if (this.runReads.get(key) === promise) this.runReads.delete(key) })
-    this.runReads.set(key,promise)
-    return promise
+    }
   }
 
   private commitEnvelope(envelope: ImEnvelope): void {
-    if (this.connection.signal.aborted) return
+    if (this.connection.signal.aborted || !this.includesChannel(envelope.channelId)) return
     try {
       const message = convertEnvelope(envelope, conversionContext())
       const metadata = messageMetadata(message)
@@ -529,10 +606,10 @@ export class ChatTransport {
     }
   }
 
-  private async readRunSnapshots(conversationId: string, messages: readonly ThreadMessage[]) {
-    const signal = AbortSignal.any([this.connection.signal, AbortSignal.timeout(30_000)])
+  private async readRunSnapshots(conversationId: string, messages: readonly ThreadMessage[], request: RequestContext) {
+    const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30_000)])
     const listed = await harnessApi.list(conversationId, signal).catch(() => [])
-    if (signal.aborted) return []
+    if (signal.aborted || !request.current()) return []
     // Subscribe before history/diagnostic pagination so it cannot hide a short reply.
     for (const target of listed) if (needsRunStream(target.status)) this.subscribeRun(target)
     const targets = new Map(listed.map(target => [target.runId, target]))
@@ -548,9 +625,22 @@ export class ChatTransport {
       const view = meta?.harness
       return !view || meta.harnessControl === undefined || view.requestVersion !== target.requestVersion
         || view.fence !== target.fence || view.lifecycle !== target.status || view.delivery === 'pending'
-    }).map(async target => ({ target, response: await harnessApi.read(target, 0, signal) }))
+    }).map(async target => ({ target, response: await this.readRun({ conversationId: target.conversationId,
+      agentId: target.agentId, runId: target.runId, ...(target.threadId ? { threadId: target.threadId } : {}) }, request) }))
     const results = await Promise.allSettled(reads)
     return results.flatMap(result => result.status === 'fulfilled' ? [result.value] : [])
+  }
+
+  private async hydrateConversation(conversationId: string, request: RequestContext): Promise<void> {
+    try {
+      const messages = useChatThreadStore.getState().conversations[conversationId]?.messages ?? []
+      const snapshots = await this.readRunSnapshots(conversationId, messages, request)
+      if (!request.current()) return
+      if (snapshots.length) updateConversation(conversationId, current => this.applyRunSnapshots(current, snapshots))
+      this.syncRunStreams(conversationId)
+    } catch (error) {
+      if (request.current()) console.warn('[chat.transport] run hydration failed', error)
+    }
   }
 
   private applyRunSnapshots(state: ConversationChatState, snapshots: Array<{ target: AgentRunTarget; response: AgentRunResponse }>) {
@@ -577,21 +667,21 @@ export class ChatTransport {
   }
 
   private async discoverRuns(): Promise<void> {
-    if (this.discovering || this.connection.signal.aborted) return
-    this.discovering = true
+    if (this.discovering?.current() || this.connection.signal.aborted) return
+    const request = this.captureRequest()
+    this.discovering = request
     try {
       for (const [conversationId,state] of Object.entries(useChatThreadStore.getState().conversations)) {
         if (!state.loaded) continue
-        const snapshots = await this.readRunSnapshots(conversationId, state.messages)
-        if (this.connection.signal.aborted) return
-        if (snapshots.length) updateConversation(conversationId, current => this.applyRunSnapshots(current, snapshots))
-        this.syncRunStreams(conversationId)
+        await this.hydrateConversation(conversationId, request)
+        if (!request.current()) return
       }
     } catch { /* Native EventSource reconnects existing runs; discovery retries on the next tick. */ }
-    finally { this.discovering = false }
+    finally { if (this.discovering === request) this.discovering = undefined }
   }
 
   private subscribeRun(target: AgentRunTarget): void {
+    if (!this.includesChannel(target.conversationId)) return
     const key = target.runId
     if (this.runStreams.get(key)?.readyState === EventSource.CLOSED) this.runStreams.delete(key)
     if (this.runStreams.has(key) || this.connection.signal.aborted) return
@@ -599,9 +689,13 @@ export class ChatTransport {
       const oldest = this.runStreams.keys().next().value!
       this.runStreams.get(oldest)?.close(); this.runStreams.delete(oldest)
     }
-    const stream = harnessApi.subscribe(target,item => this.receiveRunStreamEvent(target,item),() => {
+    const request = this.captureRequest()
+    const stream = harnessApi.subscribe(target,item => {
+      if (request.current()) this.receiveRunStreamEvent(target,item)
+    },() => {
+      if (!request.current()) return
       chatLatency.disconnected(target.runId)
-      if (!this.connection.signal.aborted) void this.refreshRun(target)
+      void this.refreshRun(target)
     })
     this.runStreams.set(key,stream)
   }

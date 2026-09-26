@@ -45,6 +45,7 @@ export function advanceAgentReadReceipt(input: {
   companyId: string
   channelId: string
   agentId: string
+  workId: string
   readThroughSeq: number
 }): Promise<ReadReceiptAdvance | null> {
   return application.advanceAgent(input)

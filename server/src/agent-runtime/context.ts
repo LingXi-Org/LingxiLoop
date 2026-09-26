@@ -103,18 +103,25 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
       AND source_id=ANY($2::text[]) AND user_id=ANY($3::text[]) LIMIT 1`,[productConversationId(work),sourceIds,readers])).rows.length) {
       throw new NoEffectError('request knowledge source selection was revoked','forbidden')
     }
-  }, async loadContext(work, _signal, options) {
+  }, async loadContext(work, signal, options) {
+    signal?.throwIfAborted()
     const { profile, grants, canvasRun, teacherContext, handoff, learningAudienceSafe } = await scoped(work)
     const fast = options?.responseProfile === 'fast' && !canvasRun && !handoff && !teacherContext
     const text = work.meta?.text
     if (typeof text !== 'string') throw new Error('persisted request text is missing')
-    const recentHistory = await getAgentChannelHistory({ companyId: work.tenantId, agentId: work.agentId, channelId: productConversationId(work), limit: work.conversation ? 8 : 80 }) ?? []
-    const history = work.conversation ? [] : recentHistory
-    const roster = await pool.query<{ id: string; name: string; role: string; capabilities: string[]; preset_key: string | null }>(
-      `SELECT agent.id,agent.name,agent.role,agent.capabilities,agent.preset_key FROM participants agent
-        JOIN im_channel_bindings channel ON channel.company_id=agent.company_id AND channel.channel_id=$2
-        WHERE agent.company_id=$1 AND agent.kind='agent' AND agent.departed_at IS NULL AND channel.profile->'members' ? agent.id`,
-      [work.tenantId, productConversationId(work)])
+    const capabilities = grants.map(grant => grant.name)
+    const [channelHistory, roster, learningContext, canvas] = await Promise.all([
+      getAgentChannelHistory({ companyId: work.tenantId, agentId: work.agentId, channelId: productConversationId(work), limit: work.conversation ? 8 : 80 }),
+      pool.query<{ id: string; name: string; role: string; capabilities: string[]; preset_key: string | null }>(
+        `SELECT agent.id,agent.name,agent.role,agent.capabilities,agent.preset_key FROM participants agent
+          JOIN im_channel_bindings channel ON channel.company_id=agent.company_id AND channel.channel_id=$2
+          WHERE agent.company_id=$1 AND agent.kind='agent' AND agent.departed_at IS NULL AND channel.profile->'members' ? agent.id`,
+        [work.tenantId, productConversationId(work)]),
+      !fast && learningAudienceSafe ? loadLearningTurnContext(nativeContext({ work }), work.principalId!) : undefined,
+      !fast && capabilities.includes('canvas') ? getConversationCanvas(work.tenantId, productConversationId(work), work.principalId!) : undefined,
+    ])
+    signal?.throwIfAborted()
+    const recentHistory = channelHistory ?? [], history = work.conversation ? [] : recentHistory
     const actors = await pool.query<{ id: string; kind: 'agent' | 'human'; name: string }>('SELECT id,kind,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])',
       [work.tenantId,[...new Set([...history.map(message => message.fromUid),...work.conversation?.audience.participantIds ?? []])]])
     const byId = new Map(actors.rows.map(row => [row.id,row]))
@@ -129,11 +136,12 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
         authorName: String(work.meta?.authorName ?? 'User'), authorKind: delegation ? 'agent' : 'human', body: text, createdAt: work.createdAt ?? '' })
     }
     const readThroughSeq = Math.max(0, ...recentHistory.map(message => message.messageSeq))
-    if (readThroughSeq) await advanceAgentReadReceipt({ companyId: work.tenantId, agentId: work.agentId, channelId: productConversationId(work), readThroughSeq })
-    const capabilities = grants.map(grant => grant.name)
+    if (readThroughSeq) await advanceAgentReadReceipt({ companyId: work.tenantId, agentId: work.agentId, channelId: productConversationId(work), workId: work.id, readThroughSeq })
     const knowledgeRetrieval = !fast && capabilities.includes('knowledge') ? await retrieveKnowledgeState({ companyId: work.tenantId, conversationId: productConversationId(work),
       authorizationUserId: work.principalId!, audienceUserIds: await audienceHumanIds({ work, database: pool }),
-      query: text, contextQuery: [...recentHistory.map(message => message.payload.body ?? ''),text].join('\n').slice(-8000), limit: 8 }).catch(error => {
+      query: text, contextQuery: [...recentHistory.map(message => message.payload.body ?? ''),text].join('\n').slice(-8000), limit: 8,
+      signal, searchTimeoutMs: 5_000 }).catch(error => {
+        signal?.throwIfAborted()
         if (!(error instanceof OpenNotebookError)) throw error
         return { status: 'unavailable' as const, citations: [] }
       }) : undefined
@@ -143,10 +151,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const versionBySource = new Map(versions.rows.map(row => [row.id, new Date(row.updated_at).toISOString()]))
     const evidence = retrieval.map(item => ({ marker: item.marker, sourceId: item.sourceId, sourceVersion: versionBySource.get(item.sourceId)!,
       chunkId: item.chunkId, title: item.sourceTitle, excerpt: item.excerpt, truncated: true, ...(item.sourceUrl ? { url: item.sourceUrl } : {}) }))
-    const [learningContext, canvas] = await Promise.all([
-      !fast && learningAudienceSafe ? loadLearningTurnContext(nativeContext({ work }), work.principalId!) : undefined,
-      !fast && capabilities.includes('canvas') ? getConversationCanvas(work.tenantId, productConversationId(work), work.principalId!) : undefined,
-    ])
+    signal?.throwIfAborted()
     return { responseProfile: fast ? 'fast' as const : 'deep' as const,
       ...(work.conversation ? { audience: work.conversation.audience } : {}), persona: { name: profile.name, role: profile.role, instructions: profile.system_prompt ?? '' }, capabilities, grants, messages, evidence,
       productRules: 'You act as an Agent for the authenticated human. Preserve the original request and revisions. '

@@ -6,6 +6,7 @@ import type { Conversation } from '@/types'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { chatTransport } from '@/features/chat/runtime'
+import { chatLatency } from '@/features/chat/runtime/latency'
 import { useChatThreadStore } from '@/features/chat/runtime/store'
 import { useParticipants } from '@/features/agents/state'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
@@ -31,6 +32,7 @@ function reconcileConversationSelection(conversations: Conversation[]): void {
   const active = useApp.getState().selectedConversationId
   if (active && conversations.some((conversation) => conversation.id === active)) return
   const fallback = conversations[0]
+  chatLatency.opened(fallback?.id ?? null)
   useApp.setState({ selectedConversationId: fallback?.id ?? null })
 }
 

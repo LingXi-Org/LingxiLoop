@@ -40,7 +40,8 @@ export const knowledgeTools: ToolDefinition[] = [
   nativeTool('knowledge.search', schemas.search, { description: 'Search the enabled knowledge sources visible to every reader in this conversation. Returns source excerpts; cite the runtime-assigned #cite-Sn markers and use read_source for more context.',
     effect: 'read', approval: false, authorize, async execute(context, input) {
       const retrieval = await retrieveKnowledgeState({ companyId: context.work.tenantId, conversationId: productConversationId(context.work),
-        authorizationUserId: context.work.principalId!, audienceUserIds: await audienceHumanIds(context), ...input }).catch(error => {
+        authorizationUserId: context.work.principalId!, audienceUserIds: await audienceHumanIds(context), ...input, signal: context.signal }).catch(error => {
+          context.signal.throwIfAborted()
           if (!(error instanceof OpenNotebookError)) throw error
           return { status: 'unavailable' as const, citations: [] }
         })

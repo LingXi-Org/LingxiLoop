@@ -1,0 +1,106 @@
+TAP version 13
+# (node:38568) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: history paints independently of diagnostics and obsolete requests cannot mutate the current session
+ok 1 - history paints independently of diagnostics and obsolete requests cannot mutate the current session
+  ---
+  duration_ms: 1331.1598
+  type: 'test'
+  ...
+# Subtest: measures real visible text on the browser clock, coalesces paints and cancels discarded samples
+ok 2 - measures real visible text on the browser clock, coalesces paints and cancels discarded samples
+  ---
+  duration_ms: 11.8944
+  type: 'test'
+  ...
+# (node:35028) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: sent bubbles, native final citations and interleaved users survive replay and reload in IM order
+ok 3 - sent bubbles, native final citations and interleaved users survive replay and reload in IM order
+  ---
+  duration_ms: 22.731
+  type: 'test'
+  ...
+# Subtest: a run discovered after a sent bubble owns a separate preview and cannot erase sent text on cancellation or failure
+ok 4 - a run discovered after a sent bubble owns a separate preview and cannot erase sent text on cancellation or failure
+  ---
+  duration_ms: 3.8186
+  type: 'test'
+  ...
+# Subtest: a failure discards the uncommitted preview while retaining the specific error
+ok 5 - a failure discards the uncommitted preview while retaining the specific error
+  ---
+  duration_ms: 1.2688
+  type: 'test'
+  ...
+# Subtest: a live reply keeps its anchor until canonical delivery establishes IM order
+ok 6 - a live reply keeps its anchor until canonical delivery establishes IM order
+  ---
+  duration_ms: 3.4069
+  type: 'test'
+  ...
+# Subtest: snapshots preserve IM order after reload and older history does not move the reply
+ok 7 - snapshots preserve IM order after reload and older history does not move the reply
+  ---
+  duration_ms: 2.1057
+  type: 'test'
+  ...
+# Subtest: committed memory summaries belong to the main run reply and survive HTTP replay and IM merging
+ok 8 - committed memory summaries belong to the main run reply and survive HTTP replay and IM merging
+  ---
+  duration_ms: 3.1165
+  type: 'test'
+  ...
+# Subtest: reload keeps interleaved user clusters when run start times disagree with committed message order
+ok 9 - reload keeps interleaved user clusters when run start times disagree with committed message order
+  ---
+  duration_ms: 2.2721
+  type: 'test'
+  ...
+# Subtest: committed replies ignore duplicate snapshots and stale deltas without regressing conten
+ok 10 - committed replies ignore duplicate snapshots and stale deltas without regressing conten
+  ---
+  duration_ms: 1.0879
+  type: 'test'
+  ...
+# Subtest: citation projections agree across snapshots and IM replay and disappear before the next draf
+ok 11 - citation projections agree across snapshots and IM replay and disappear before the next draf
+  ---
+  duration_ms: 8.1388
+  type: 'test'
+  ...
+# Subtest: paragraph deltas render live Markdown once and cancellation clears the uncommitted draf
+ok 12 - paragraph deltas render live Markdown once and cancellation clears the uncommitted draf
+  ---
+  duration_ms: 2.5773
+  type: 'test'
+  ...
+# Subtest: a reply at the page boundary leaves room for subsequently loaded older history
+ok 13 - a reply at the page boundary leaves room for subsequently loaded older history
+  ---
+  duration_ms: 1.0713
+  type: 'test'
+  ...
+# Subtest: initial history is ready before slow run snapshots, which merge without duplicate replies
+ok 14 - initial history is ready before slow run snapshots, which merge without duplicate replies
+  ---
+  duration_ms: 456.283
+  type: 'test'
+  ...
+# (node:22444) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: run notifications and discovery subscribe before blocked history, deduplicate and recover closed streams
+ok 15 - run notifications and discovery subscribe before blocked history, deduplicate and recover closed streams
+  ---
+  duration_ms: 746.3672
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8757.7192

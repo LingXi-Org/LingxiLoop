@@ -101,7 +101,13 @@ const config: Config = {
           'var(--font-sans)'
         ],
         mono: [
-          'JetBrains Mono',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'Monaco',
+          'Consolas',
+          'Liberation Mono',
+          'Courier New',
           'monospace'
         ]
       },

@@ -1,6 +1,7 @@
 import type { Queryable } from '../db/queryable.js'
 import type { ImReadReceiptEvent } from '../redis.js'
 import type { ReadReceiptAdvance } from './read-receipts-contracts.js'
+import { persistNativeEvents } from '../agents/native-events.js'
 import {
   appendReadReceiptAdvance,
   conversationRecipientIds,
@@ -43,17 +44,23 @@ export class ReadReceiptsApplication {
     companyId: string
     channelId: string
     agentId: string
+    workId: string
     readThroughSeq: number
   }): Promise<ReadReceiptAdvance | null> {
     try {
-      const advance = await this.record({
-        companyId: input.companyId,
-        channelId: input.channelId,
-        readerId: input.agentId,
-        readThroughSeq: input.readThroughSeq,
+      return await this.infrastructure.transaction(async db => {
+        const advance = await this.record({
+          companyId: input.companyId,
+          channelId: input.channelId,
+          readerId: input.agentId,
+          readThroughSeq: input.readThroughSeq,
+        }, db)
+        if (advance) await persistNativeEvents(db, {
+          companyId: input.companyId, workId: input.workId,
+          key: JSON.stringify([input.workId, input.channelId, input.agentId, input.readThroughSeq]),
+        }, [{ type: 'im.read_receipt', advance }])
+        return advance
       })
-      if (advance) await this.publish(advance)
-      return advance
     } catch (error) {
       console.warn('[im.read-receipt] agent advance failed', {
         channelId: input.channelId,

@@ -3,7 +3,7 @@ import express from 'express'
 import compression from 'compression'
 import http from 'node:http'
 import { existsSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { env } from './env.js'
 import { api } from './api/router.js'
 import { initializeNativeStorage } from './storage.js'
@@ -112,13 +112,13 @@ export async function startWebProcess(): Promise<ServiceHandle> {
   if (hasDist) {
     app.use(express.static(DIST_DIR, {
       index: false,
-      // Hashed JS/CSS get long cache; index.html is served via the SPA
-      // catch-all below with no-cache headers, so deploys are picked up
-      // instantly even when the static-asset CDN caches aggressively.
       maxAge: '1h',
       setHeaders: (res, filePath) => {
         if (filePath.endsWith('index.html')) {
           res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+        } else if (dirname(filePath) === join(DIST_DIR, 'assets') && /-[\w-]{8,}\.[^.]+$/.test(filePath)) {
+          // Vite content hashes change with the asset; only these URLs are immutable.
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
         }
       },
     }))

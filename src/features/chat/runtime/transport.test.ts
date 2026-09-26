@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { setImmediate } from 'node:timers/promises'
 import { mock, test } from 'node:test'
 import type { WsEvent } from '@/api/contracts'
-import type { RunStreamEvent } from '@lyyzka/lingxios/ui'
+import type { RunState, RunStreamEvent } from '@lyyzka/lingxios/ui'
 
 test('run notifications and discovery subscribe before blocked history, deduplicate and recover closed streams', async () => {
   let receive!: (event: WsEvent) => void, discover!: () => void
@@ -51,6 +51,9 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     receive(event); receive(event)
     assert.deepEqual(opened.map(stream => stream.runId), ['run'])
     assert.equal(reads, 1)
+    // Native SSE sends the lifecycle snapshot before its first preview.
+    opened[0].receive({ type: 'state', state: { run: { id: 'run', status: 'leased', fence: 1,
+      requestVersion: 1, createdAt: new Date(0).toISOString() }, message: null, delivery: null } as RunState })
     opened[0].receive({ type: 'preview', preview: { runId: 'run', fence: 1, requestVersion: 1,
       attemptId: 'attempt', seq: 1, kind: 'snapshot', draft: '你好' } })
     assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, [{ type: 'text', text: '你好' }])
@@ -73,6 +76,11 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     discover()
     await setImmediate()
     assert.deepEqual(opened.map(stream => stream.runId), ['run', 'run', 'missed-notification'])
+    const stale = opened.at(-1)!
+    transport.disconnect(); transport.boot()
+    stale.receive({ type: 'preview', preview: { runId: 'missed-notification', fence: 1, requestVersion: 1,
+      attemptId: 'old', seq: 1, kind: 'snapshot', draft: '旧会话' } })
+    assert.deepEqual(useChatThreadStore.getState().conversations, {})
   } finally {
     transport.disconnect()
     assert.ok(opened.every(stream => stream.readyState === 2))
