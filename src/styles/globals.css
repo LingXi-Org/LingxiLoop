@@ -285,8 +285,8 @@ body {
   --im-chat-surface: var(--background);
   --im-nav-surface: var(--sidebar);
   --im-conversation-selected: color-mix(in oklch, var(--sidebar-primary) 85%, var(--primary));
-  --im-conversation-pinned: color-mix(in oklch, var(--sidebar) 90%, var(--sidebar-foreground));
-  --im-conversation-hover: color-mix(in oklch, var(--sidebar) 84%, var(--sidebar-foreground));
+  --im-conversation-pinned: var(--sidebar-accent);
+  --im-conversation-hover: color-mix(in oklch, var(--sidebar-accent) 94%, var(--sidebar-foreground));
   --im-detail-surface: var(--card);
   --im-elevated-surface: var(--card);
   --im-divider: color-mix(in srgb, var(--border) 52%, transparent);

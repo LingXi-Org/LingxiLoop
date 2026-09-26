@@ -35,6 +35,13 @@ test('workspace navigation preserves views and restores the original conversatio
     await switchLearningWorkspace({ ...target, projectId: 'learner', perspective: 'learner', canManage: false })
     assert.equal(useApp.getState().view, 'learning')
 
+    for (const view of ['agents', 'mail'] as const) {
+      useApp.setState({ view })
+      await switchLearningWorkspace({ ...target, projectId: view })
+      assert.equal(useApp.getState().view, view)
+      assert.equal(useApp.getState().selectedConversationId, null)
+    }
+
     workspace.selectedId = 'old'
     useApp.setState({ view: 'library', selectedConversationId: 'room' })
     failing.add('next')

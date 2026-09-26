@@ -1,5 +1,6 @@
-import { BubbleChatIcon, PlusSignIcon, Settings02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { BubbleChatIcon, RoboticIcon, Mail01Icon, PlusSignIcon, Settings02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowLeftRight } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { BrandAvatar } from '@/components/BrandAvatar'
 import { BRAND_AVATAR_BASE_EXPRESSION } from '@/components/brand-avatar-controller'
@@ -45,9 +46,12 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
   const [createError, setCreateError] = useState<string | null>(null)
   const menu = [
     { view: 'conversations' as const, label: '对话', icon: BubbleChatIcon, management: false },
+    { view: 'agents' as const, label: 'Agent', icon: RoboticIcon, management: false },
+    { view: 'mail' as const, label: '邮件', icon: Mail01Icon, management: false },
     ...(activeSpace ? getLearningDashboardMenu(activeSpace).map((item) => ({ ...item, view: viewForLearningSection(item.section) })) : []),
   ]
   const managementMenu = menu.filter((item) => item.management)
+  const overview = menu.find((item) => item.view === 'learning')
   const activeManagement = managementMenu.find((item) => item.view === view)
 
   const handleCreateCourse = async (event: FormEvent<HTMLFormElement>) => {
@@ -79,8 +83,9 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" disabled={pending || creating} aria-label={`切换工作区${activeSpace ? `：${activeSpace.title}` : ''}`} className="size-11 rounded-xl p-1">
+              <Button type="button" variant="ghost" size="icon" disabled={pending || creating} aria-label={`切换工作区${activeSpace ? `：${activeSpace.title}` : ''}`} className="relative size-11 rounded-xl p-1">
                 {activeSpace ? <CourseAvatar courseId={activeSpace.courseId ?? activeSpace.projectId} avatarUrl={activeSpace.avatarUrl} title={activeSpace.title} className="size-9 rounded-lg" /> : <BrandAvatar expression={BRAND_AVATAR_BASE_EXPRESSION} className="size-9 rounded-lg" />}
+                <span aria-hidden="true" className="pointer-events-none absolute bottom-0.5 end-0.5 grid size-4 place-items-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground ring-2 ring-[var(--workspace-chrome-surface)]"><ArrowLeftRight className="size-2.5" strokeWidth={2.5} /></span>
               </Button>
             </DropdownMenuTrigger>
           </TooltipTrigger>
@@ -103,7 +108,7 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
       </DropdownMenu>
     </div>
     <div className="server-rail-scroll flex min-h-0 w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-2 py-2">
-      {menu.filter((item) => !item.management).map((item) => <Tooltip key={item.view}>
+      {menu.filter((item) => !item.management && item.view !== 'learning').map((item) => <Tooltip key={item.view}>
         <TooltipTrigger asChild>
           <Button type="button" variant="ghost" size="icon" disabled={pending || creating} aria-label={item.label} data-workspace-view={item.view} aria-current={view === item.view ? 'page' : undefined} onClick={() => onNavigate(item.view)} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', view === item.view && 'bg-sidebar-accent text-sidebar-primary')}>
             <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-6" />
@@ -120,6 +125,14 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
           <TooltipContent side="right">课程管理{activeManagement ? ` · ${activeManagement.label}` : ''}</TooltipContent>
       </Tooltip>}
     </div>
+    {overview && <Tooltip>
+      <TooltipTrigger asChild>
+        <Button type="button" variant="ghost" size="icon" disabled={pending || creating} aria-label={overview.label} data-workspace-view={overview.view} aria-current={view === overview.view ? 'page' : undefined} onClick={() => onNavigate(overview.view)} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', view === overview.view && 'bg-sidebar-accent text-sidebar-primary')}>
+          <HugeiconsIcon icon={overview.icon} strokeWidth={1.8} className="size-6" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{overview.label}</TooltipContent>
+    </Tooltip>}
     {user ? <div className="shrink-0 px-2 pt-2"><NavUser compact user={{ id: user.id, name: user.name, email: user.email, avatar: user.avatarUrl ?? participantAvatar }} /></div> : null}
     {canCreate ? <Dialog open={createOpen} onOpenChange={(open) => { if (creating) return; setCreateOpen(open); if (!open) setCreateError(null) }}>
       <DialogContent>

@@ -109,13 +109,13 @@ export function stableParticipantHash(value: string): number {
   return hash >>> 0
 }
 
-export function getBloubIdentity(participant: Pick<Participant, 'id' | 'role'>): BloubIdentity {
-  const personaKey = getStarterPersonaKey(participant)
+export function getBloubIdentity(participant: Pick<Participant, 'id' | 'role'>, seed?: string): BloubIdentity {
+  const personaKey = seed ? null : getStarterPersonaKey(participant)
   if (personaKey) {
     const { shape, color, expression } = STARTER_BLOUB_PROFILES[personaKey]
     return { shape, color, expression }
   }
-  const hash = stableParticipantHash(participant.id)
+  const hash = stableParticipantHash(seed ?? participant.id)
   return {
     shape: SHAPES[hash % SHAPES.length]!,
     color: COLORS[(hash >>> 5) % COLORS.length]!,

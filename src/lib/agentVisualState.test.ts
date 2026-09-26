@@ -12,6 +12,16 @@ import {
 } from './agentVisualState'
 import { SEQUENCE } from './bloub/states'
 
+test('personal random seeds change only the Bloub appearance, keeping identity and activity intact', () => {
+  const agent = { id: 'nova', role: STARTER_PERSONA_ROLES.nova }
+  const before = { ...agent }
+  assert.deepEqual(getBloubIdentity(agent, 'personal-seed'), getBloubIdentity({ id: 'another' }, 'personal-seed'))
+  assert.deepEqual(getBloubIdentity(agent, 'personal-seed'), getBloubIdentity(agent, 'personal-seed'))
+  assert.notDeepEqual(getBloubIdentity(agent, 'personal-seed'), getBloubIdentity(agent))
+  assert.deepEqual(agent, before)
+  assert.equal(getBloubState(agent, 'working'), STARTER_BLOUB_PROFILES.nova.working)
+})
+
 test('starter Bloub identities stay stable across tenant id suffixes', () => {
   for (const [key, expected] of Object.entries(STARTER_BLOUB_PROFILES)) {
     const role = STARTER_PERSONA_ROLES[key as keyof typeof STARTER_PERSONA_ROLES]

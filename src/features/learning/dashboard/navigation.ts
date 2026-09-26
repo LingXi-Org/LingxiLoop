@@ -1,7 +1,7 @@
 import {
   Archive02Icon,
   Calendar03Icon,
-  DashboardSquare01Icon,
+  ChartHistogramIcon,
   File01Icon,
   Folder01Icon,
   Settings02Icon,
@@ -25,12 +25,12 @@ export type LearningDashboardSection =
 export interface LearningDashboardMenuItem {
   section: LearningDashboardSection
   label: string
-  icon: typeof DashboardSquare01Icon
+  icon: typeof ChartHistogramIcon
   management?: boolean
 }
 
 const LEARNER_MENU: LearningDashboardMenuItem[] = [
-  { section: 'overview', label: '学习概览', icon: DashboardSquare01Icon },
+  { section: 'overview', label: '学习概览', icon: ChartHistogramIcon },
   { section: 'calendar', label: '日历', icon: Calendar03Icon },
   { section: 'resources', label: '资料', icon: Folder01Icon },
 ]
@@ -76,7 +76,7 @@ export function learningSectionForView(view: ViewKey['view']): LearningDashboard
 }
 
 export function viewForWorkspace(view: ViewKey['view'], space: NavigationContext): ViewKey['view'] {
-  if (view === 'conversations') return view
+  if (view === 'conversations' || view === 'agents' || view === 'mail') return view
   const section = learningSectionForView(view)
   return isLearningDashboardSectionAvailable(section, space) ? viewForLearningSection(section) : 'learning'
 }

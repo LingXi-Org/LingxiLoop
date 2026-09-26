@@ -9,6 +9,10 @@ import type {
 } from './contracts'
 
 export const agentsApi = {
+  saveAvatar: (id: string, input: { seed: string } | { key: string } | null) =>
+    http<{ avatar: { seed: string } | { url: string } | null }>(`/agents/${encodeURIComponent(id)}/avatar`, {
+      method: input ? 'PUT' : 'DELETE', ...(input ? { body: JSON.stringify(input) } : {}),
+    }),
   getHarness: () => http<HarnessContext>('/agents/harness'),
   getParticipants: () => http<ApiParticipant[]>('/participants'),
   stopAgentRun: (agentId: string, channelId: string) =>

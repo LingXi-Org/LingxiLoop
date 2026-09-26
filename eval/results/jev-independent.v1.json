@@ -1,0 +1,5695 @@
+{
+  "report": {
+    "schemaVersion": 2,
+    "jobId": "53f683b3-6cad-450b-95aa-39d539cad6eb",
+    "manifestHash": "a74b56eecb643ac8c64af229dfdd5bc11533b899ef15a27c8a25837ae5bdda64",
+    "comparisonKey": "a596d244293153e558821aa0d0c7cde32183cc28999ad3c6cec56a10bff88be7",
+    "engine": "black-box-eval/2",
+    "revision": "jev-v5-atomic-fixed-facts-v1",
+    "seed": 42,
+    "suite": {
+      "id": "jev-atomic-holdout",
+      "version": "1",
+      "digest": "1f155153ae17d21079a350d19d998bbc66ebdb6fb3990afed4e24eef36fa344e"
+    },
+    "dataset": {
+      "id": "jev-atomic-holdout",
+      "version": "1",
+      "digest": "5f4e82a9090c22a628543a6164b074a8b0dfb41976090f7fbd6b6d2314236eb0"
+    },
+    "target": {
+      "id": "candidate-model",
+      "version": "1",
+      "fingerprint": "4b00f374b40e546338576a0eb9e682911153a833bbc16f2a42acba3ffbc90664"
+    },
+    "judgeFingerprint": null,
+    "score": 0.81875,
+    "passRate": 0.81875,
+    "p95LatencyMs": 8565,
+    "usage": {
+      "candidate": {
+        "inputTokens": 17744,
+        "outputTokens": 216,
+        "costCny": 0.055175999999999996
+      },
+      "judge": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "costCny": 0
+      }
+    },
+    "cases": [
+      {
+        "id": "memory-write-review-holdout-0",
+        "tags": [
+          "memory-write-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-write-review-holdout-1",
+        "tags": [
+          "memory-write-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-write-review-holdout-2",
+        "tags": [
+          "memory-write-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-write-review-holdout-3",
+        "tags": [
+          "memory-write-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-write-review-holdout-4",
+        "tags": [
+          "memory-write-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-write-review-holdout-5",
+        "tags": [
+          "memory-write-review",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "memory-write-review-holdout-6",
+        "tags": [
+          "memory-write-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-write-review-holdout-7",
+        "tags": [
+          "memory-write-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-synthesis-verification-holdout-0",
+        "tags": [
+          "memory-synthesis-verification",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-synthesis-verification-holdout-1",
+        "tags": [
+          "memory-synthesis-verification",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-synthesis-verification-holdout-2",
+        "tags": [
+          "memory-synthesis-verification",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-synthesis-verification-holdout-3",
+        "tags": [
+          "memory-synthesis-verification",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-synthesis-verification-holdout-4",
+        "tags": [
+          "memory-synthesis-verification",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-synthesis-verification-holdout-5",
+        "tags": [
+          "memory-synthesis-verification",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "memory-synthesis-verification-holdout-6",
+        "tags": [
+          "memory-synthesis-verification",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-synthesis-verification-holdout-7",
+        "tags": [
+          "memory-synthesis-verification",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-durability-holdout-0",
+        "tags": [
+          "memory-durability",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-durability-holdout-1",
+        "tags": [
+          "memory-durability",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "memory-durability-holdout-2",
+        "tags": [
+          "memory-durability",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-durability-holdout-3",
+        "tags": [
+          "memory-durability",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "memory-durability-holdout-4",
+        "tags": [
+          "memory-durability",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "memory-durability-holdout-5",
+        "tags": [
+          "memory-durability",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-durability-holdout-6",
+        "tags": [
+          "memory-durability",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-durability-holdout-7",
+        "tags": [
+          "memory-durability",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "memory-relevance-holdout-0",
+        "tags": [
+          "memory-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-relevance-holdout-1",
+        "tags": [
+          "memory-relevance",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "memory-relevance-holdout-2",
+        "tags": [
+          "memory-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-relevance-holdout-3",
+        "tags": [
+          "memory-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-relevance-holdout-4",
+        "tags": [
+          "memory-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-relevance-holdout-5",
+        "tags": [
+          "memory-relevance",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "memory-relevance-holdout-6",
+        "tags": [
+          "memory-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "memory-relevance-holdout-7",
+        "tags": [
+          "memory-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "content-review-holdout-0",
+        "tags": [
+          "content-review",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "content-review-holdout-1",
+        "tags": [
+          "content-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "content-review-holdout-2",
+        "tags": [
+          "content-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "content-review-holdout-3",
+        "tags": [
+          "content-review",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "content-review-holdout-4",
+        "tags": [
+          "content-review",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "content-review-holdout-5",
+        "tags": [
+          "content-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "content-review-holdout-6",
+        "tags": [
+          "content-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "content-review-holdout-7",
+        "tags": [
+          "content-review",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "citation-review-holdout-0",
+        "tags": [
+          "citation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "citation-review-holdout-1",
+        "tags": [
+          "citation-review",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "citation-review-holdout-2",
+        "tags": [
+          "citation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "citation-review-holdout-3",
+        "tags": [
+          "citation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "citation-review-holdout-4",
+        "tags": [
+          "citation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "citation-review-holdout-5",
+        "tags": [
+          "citation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "citation-review-holdout-6",
+        "tags": [
+          "citation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "citation-review-holdout-7",
+        "tags": [
+          "citation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "knowledge-relevance-holdout-0",
+        "tags": [
+          "knowledge-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "knowledge-relevance-holdout-1",
+        "tags": [
+          "knowledge-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "knowledge-relevance-holdout-2",
+        "tags": [
+          "knowledge-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "knowledge-relevance-holdout-3",
+        "tags": [
+          "knowledge-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "knowledge-relevance-holdout-4",
+        "tags": [
+          "knowledge-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "knowledge-relevance-holdout-5",
+        "tags": [
+          "knowledge-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "knowledge-relevance-holdout-6",
+        "tags": [
+          "knowledge-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "knowledge-relevance-holdout-7",
+        "tags": [
+          "knowledge-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-sufficiency-holdout-0",
+        "tags": [
+          "evidence-sufficiency",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-sufficiency-holdout-1",
+        "tags": [
+          "evidence-sufficiency",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "evidence-sufficiency-holdout-2",
+        "tags": [
+          "evidence-sufficiency",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-sufficiency-holdout-3",
+        "tags": [
+          "evidence-sufficiency",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-sufficiency-holdout-4",
+        "tags": [
+          "evidence-sufficiency",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-sufficiency-holdout-5",
+        "tags": [
+          "evidence-sufficiency",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-sufficiency-holdout-6",
+        "tags": [
+          "evidence-sufficiency",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-sufficiency-holdout-7",
+        "tags": [
+          "evidence-sufficiency",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-conflict-holdout-0",
+        "tags": [
+          "evidence-conflict",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-conflict-holdout-1",
+        "tags": [
+          "evidence-conflict",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-conflict-holdout-2",
+        "tags": [
+          "evidence-conflict",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-conflict-holdout-3",
+        "tags": [
+          "evidence-conflict",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-conflict-holdout-4",
+        "tags": [
+          "evidence-conflict",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-conflict-holdout-5",
+        "tags": [
+          "evidence-conflict",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-conflict-holdout-6",
+        "tags": [
+          "evidence-conflict",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "evidence-conflict-holdout-7",
+        "tags": [
+          "evidence-conflict",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-rubric-holdout-0",
+        "tags": [
+          "learning-rubric",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-rubric-holdout-1",
+        "tags": [
+          "learning-rubric",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "learning-rubric-holdout-2",
+        "tags": [
+          "learning-rubric",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-rubric-holdout-3",
+        "tags": [
+          "learning-rubric",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-rubric-holdout-4",
+        "tags": [
+          "learning-rubric",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-rubric-holdout-5",
+        "tags": [
+          "learning-rubric",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-rubric-holdout-6",
+        "tags": [
+          "learning-rubric",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-rubric-holdout-7",
+        "tags": [
+          "learning-rubric",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-evidence-holdout-0",
+        "tags": [
+          "learning-evidence",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-evidence-holdout-1",
+        "tags": [
+          "learning-evidence",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-evidence-holdout-2",
+        "tags": [
+          "learning-evidence",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-evidence-holdout-3",
+        "tags": [
+          "learning-evidence",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-evidence-holdout-4",
+        "tags": [
+          "learning-evidence",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-evidence-holdout-5",
+        "tags": [
+          "learning-evidence",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-evidence-holdout-6",
+        "tags": [
+          "learning-evidence",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-evidence-holdout-7",
+        "tags": [
+          "learning-evidence",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-error-holdout-0",
+        "tags": [
+          "learning-error",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-error-holdout-1",
+        "tags": [
+          "learning-error",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "learning-error-holdout-2",
+        "tags": [
+          "learning-error",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-error-holdout-3",
+        "tags": [
+          "learning-error",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "learning-error-holdout-4",
+        "tags": [
+          "learning-error",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-error-holdout-5",
+        "tags": [
+          "learning-error",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "learning-error-holdout-6",
+        "tags": [
+          "learning-error",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-error-holdout-7",
+        "tags": [
+          "learning-error",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "learning-case-holdout-0",
+        "tags": [
+          "learning-case",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-case-holdout-1",
+        "tags": [
+          "learning-case",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-case-holdout-2",
+        "tags": [
+          "learning-case",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-case-holdout-3",
+        "tags": [
+          "learning-case",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "learning-case-holdout-4",
+        "tags": [
+          "learning-case",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-case-holdout-5",
+        "tags": [
+          "learning-case",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-case-holdout-6",
+        "tags": [
+          "learning-case",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "learning-case-holdout-7",
+        "tags": [
+          "learning-case",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "activity-relevance-holdout-0",
+        "tags": [
+          "activity-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "activity-relevance-holdout-1",
+        "tags": [
+          "activity-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "activity-relevance-holdout-2",
+        "tags": [
+          "activity-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "activity-relevance-holdout-3",
+        "tags": [
+          "activity-relevance",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "activity-relevance-holdout-4",
+        "tags": [
+          "activity-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "activity-relevance-holdout-5",
+        "tags": [
+          "activity-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "activity-relevance-holdout-6",
+        "tags": [
+          "activity-relevance",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "activity-relevance-holdout-7",
+        "tags": [
+          "activity-relevance",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "canvas-report-holdout-0",
+        "tags": [
+          "canvas-report",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "canvas-report-holdout-1",
+        "tags": [
+          "canvas-report",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "canvas-report-holdout-2",
+        "tags": [
+          "canvas-report",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "canvas-report-holdout-3",
+        "tags": [
+          "canvas-report",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "canvas-report-holdout-4",
+        "tags": [
+          "canvas-report",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "canvas-report-holdout-5",
+        "tags": [
+          "canvas-report",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "canvas-report-holdout-6",
+        "tags": [
+          "canvas-report",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "canvas-report-holdout-7",
+        "tags": [
+          "canvas-report",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "teacher-priority-holdout-0",
+        "tags": [
+          "teacher-priority",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "teacher-priority-holdout-1",
+        "tags": [
+          "teacher-priority",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "teacher-priority-holdout-2",
+        "tags": [
+          "teacher-priority",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "teacher-priority-holdout-3",
+        "tags": [
+          "teacher-priority",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "teacher-priority-holdout-4",
+        "tags": [
+          "teacher-priority",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "teacher-priority-holdout-5",
+        "tags": [
+          "teacher-priority",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "teacher-priority-holdout-6",
+        "tags": [
+          "teacher-priority",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "teacher-priority-holdout-7",
+        "tags": [
+          "teacher-priority",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "email-intent-holdout-0",
+        "tags": [
+          "email-intent",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "email-intent-holdout-1",
+        "tags": [
+          "email-intent",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "email-intent-holdout-2",
+        "tags": [
+          "email-intent",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "email-intent-holdout-3",
+        "tags": [
+          "email-intent",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "email-intent-holdout-4",
+        "tags": [
+          "email-intent",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "email-intent-holdout-5",
+        "tags": [
+          "email-intent",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "email-intent-holdout-6",
+        "tags": [
+          "email-intent",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "email-intent-holdout-7",
+        "tags": [
+          "email-intent",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "presentation-review-holdout-0",
+        "tags": [
+          "presentation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "presentation-review-holdout-1",
+        "tags": [
+          "presentation-review",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "presentation-review-holdout-2",
+        "tags": [
+          "presentation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "presentation-review-holdout-3",
+        "tags": [
+          "presentation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "presentation-review-holdout-4",
+        "tags": [
+          "presentation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "presentation-review-holdout-5",
+        "tags": [
+          "presentation-review",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "presentation-review-holdout-6",
+        "tags": [
+          "presentation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "presentation-review-holdout-7",
+        "tags": [
+          "presentation-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "route-selection-holdout-0",
+        "tags": [
+          "route-selection",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "route-selection-holdout-1",
+        "tags": [
+          "route-selection",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "route-selection-holdout-2",
+        "tags": [
+          "route-selection",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "route-selection-holdout-3",
+        "tags": [
+          "route-selection",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "route-selection-holdout-4",
+        "tags": [
+          "route-selection",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "route-selection-holdout-5",
+        "tags": [
+          "route-selection",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "route-selection-holdout-6",
+        "tags": [
+          "route-selection",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "route-selection-holdout-7",
+        "tags": [
+          "route-selection",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "scope-review-holdout-0",
+        "tags": [
+          "scope-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "scope-review-holdout-1",
+        "tags": [
+          "scope-review",
+          "synthetic"
+        ],
+        "score": 0,
+        "passed": false
+      },
+      {
+        "id": "scope-review-holdout-2",
+        "tags": [
+          "scope-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "scope-review-holdout-3",
+        "tags": [
+          "scope-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "scope-review-holdout-4",
+        "tags": [
+          "scope-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "scope-review-holdout-5",
+        "tags": [
+          "scope-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "scope-review-holdout-6",
+        "tags": [
+          "scope-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      },
+      {
+        "id": "scope-review-holdout-7",
+        "tags": [
+          "scope-review",
+          "synthetic"
+        ],
+        "score": 1,
+        "passed": true
+      }
+    ],
+    "samples": [
+      {
+        "caseId": "activity-relevance-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 6109,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 108,
+          "outputTokens": 1,
+          "costCny": 0.000333
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "activity-relevance-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1851,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 1,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "activity-relevance-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 670,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 97,
+          "outputTokens": 2,
+          "costCny": 0.000309
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "activity-relevance-holdout-3",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 638,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 136,
+          "outputTokens": 1,
+          "costCny": 0.000417
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "activity-relevance-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1234,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 108,
+          "outputTokens": 1,
+          "costCny": 0.000333
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "activity-relevance-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2066,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 1,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "activity-relevance-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 905,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 97,
+          "outputTokens": 2,
+          "costCny": 0.000309
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "activity-relevance-holdout-7",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 825,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 136,
+          "outputTokens": 1,
+          "costCny": 0.000417
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "canvas-report-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1483,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 107,
+          "outputTokens": 1,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "canvas-report-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 13617,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 1,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "canvas-report-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 13572,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 98,
+          "outputTokens": 2,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "canvas-report-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1211,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 135,
+          "outputTokens": 1,
+          "costCny": 0.000414
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "canvas-report-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 600,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 107,
+          "outputTokens": 1,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "canvas-report-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 974,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 1,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "canvas-report-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 656,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 98,
+          "outputTokens": 2,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "canvas-report-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1007,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 135,
+          "outputTokens": 1,
+          "costCny": 0.000414
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "citation-review-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1399,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 1,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "citation-review-holdout-1",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 1311,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 2,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "citation-review-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 3630,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 98,
+          "outputTokens": 2,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "citation-review-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 7259,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 130,
+          "outputTokens": 1,
+          "costCny": 0.000399
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "citation-review-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1241,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 1,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "citation-review-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 818,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 1,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "citation-review-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 810,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 98,
+          "outputTokens": 2,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "citation-review-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2490,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 130,
+          "outputTokens": 1,
+          "costCny": 0.000399
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "content-review-holdout-0",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 1731,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 101,
+          "outputTokens": 2,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "content-review-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1031,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 103,
+          "outputTokens": 1,
+          "costCny": 0.000318
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "content-review-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1722,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 96,
+          "outputTokens": 2,
+          "costCny": 0.000306
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "content-review-holdout-3",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 1960,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 129,
+          "outputTokens": 1,
+          "costCny": 0.000396
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "content-review-holdout-4",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 881,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 101,
+          "outputTokens": 2,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "content-review-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 7266,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 103,
+          "outputTokens": 1,
+          "costCny": 0.000318
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "content-review-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 689,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 96,
+          "outputTokens": 2,
+          "costCny": 0.000306
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "content-review-holdout-7",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 468,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 129,
+          "outputTokens": 1,
+          "costCny": 0.000396
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "email-intent-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 516,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 101,
+          "outputTokens": 1,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "email-intent-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1113,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 1,
+          "costCny": 0.000306
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "email-intent-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 723,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 94,
+          "outputTokens": 2,
+          "costCny": 0.0003
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "email-intent-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 6228,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 129,
+          "outputTokens": 1,
+          "costCny": 0.000396
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "email-intent-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 613,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 101,
+          "outputTokens": 1,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "email-intent-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 481,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 1,
+          "costCny": 0.000306
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "email-intent-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 628,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 94,
+          "outputTokens": 2,
+          "costCny": 0.0003
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "email-intent-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 891,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 129,
+          "outputTokens": 1,
+          "costCny": 0.000396
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "evidence-conflict-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 505,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 110,
+          "outputTokens": 1,
+          "costCny": 0.000339
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "evidence-conflict-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 649,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 109,
+          "outputTokens": 1,
+          "costCny": 0.000336
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "evidence-conflict-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1043,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 101,
+          "outputTokens": 2,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "evidence-conflict-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 3509,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 138,
+          "outputTokens": 1,
+          "costCny": 0.000423
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "evidence-conflict-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 505,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 110,
+          "outputTokens": 1,
+          "costCny": 0.000339
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "evidence-conflict-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 550,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 109,
+          "outputTokens": 1,
+          "costCny": 0.000336
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "evidence-conflict-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2313,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 101,
+          "outputTokens": 2,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "evidence-conflict-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2382,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 138,
+          "outputTokens": 1,
+          "costCny": 0.000423
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "evidence-sufficiency-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 3527,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "evidence-sufficiency-holdout-1",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 3696,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 2,
+          "costCny": 0.000333
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "evidence-sufficiency-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 713,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 95,
+          "outputTokens": 2,
+          "costCny": 0.000303
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "evidence-sufficiency-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 637,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 133,
+          "outputTokens": 1,
+          "costCny": 0.000408
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "evidence-sufficiency-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1129,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "evidence-sufficiency-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 631,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "evidence-sufficiency-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1860,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 95,
+          "outputTokens": 2,
+          "costCny": 0.000303
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "evidence-sufficiency-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 533,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 133,
+          "outputTokens": 1,
+          "costCny": 0.000408
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "knowledge-relevance-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 3196,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 114,
+          "outputTokens": 1,
+          "costCny": 0.000351
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "knowledge-relevance-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2509,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 112,
+          "outputTokens": 1,
+          "costCny": 0.000345
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "knowledge-relevance-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2426,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 2,
+          "costCny": 0.000333
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "knowledge-relevance-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1231,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 142,
+          "outputTokens": 1,
+          "costCny": 0.000435
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "knowledge-relevance-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 537,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 114,
+          "outputTokens": 1,
+          "costCny": 0.000351
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "knowledge-relevance-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 458,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 112,
+          "outputTokens": 1,
+          "costCny": 0.000345
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "knowledge-relevance-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1276,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 2,
+          "costCny": 0.000333
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "knowledge-relevance-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 537,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 142,
+          "outputTokens": 1,
+          "costCny": 0.000435
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-case-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 7550,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 96,
+          "outputTokens": 1,
+          "costCny": 0.000297
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-case-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 485,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 95,
+          "outputTokens": 1,
+          "costCny": 0.000294
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "learning-case-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 5913,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 95,
+          "outputTokens": 2,
+          "costCny": 0.000303
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-case-holdout-3",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 6420,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 124,
+          "outputTokens": 1,
+          "costCny": 0.000381
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "learning-case-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 5647,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 96,
+          "outputTokens": 1,
+          "costCny": 0.000297
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-case-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 758,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 95,
+          "outputTokens": 1,
+          "costCny": 0.000294
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "learning-case-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 586,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 95,
+          "outputTokens": 2,
+          "costCny": 0.000303
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-case-holdout-7",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 1494,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 124,
+          "outputTokens": 1,
+          "costCny": 0.000381
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "learning-error-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1661,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 108,
+          "outputTokens": 1,
+          "costCny": 0.000333
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-error-holdout-1",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 508,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 2,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-error-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 631,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 97,
+          "outputTokens": 2,
+          "costCny": 0.000309
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-error-holdout-3",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 782,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 136,
+          "outputTokens": 1,
+          "costCny": 0.000417
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "learning-error-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1106,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 108,
+          "outputTokens": 1,
+          "costCny": 0.000333
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-error-holdout-5",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 841,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 2,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-error-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1261,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 97,
+          "outputTokens": 2,
+          "costCny": 0.000309
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-error-holdout-7",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 5472,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 136,
+          "outputTokens": 1,
+          "costCny": 0.000417
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "learning-evidence-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 522,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 107,
+          "outputTokens": 1,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-evidence-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 7763,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "learning-evidence-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1123,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 2,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-evidence-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 7205,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 135,
+          "outputTokens": 1,
+          "costCny": 0.000414
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-evidence-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1518,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 107,
+          "outputTokens": 1,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-evidence-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 650,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "learning-evidence-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 12228,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 2,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-evidence-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 3352,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 135,
+          "outputTokens": 1,
+          "costCny": 0.000414
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-rubric-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 744,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 109,
+          "outputTokens": 1,
+          "costCny": 0.000336
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-rubric-holdout-1",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 4654,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 2,
+          "costCny": 0.000333
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-rubric-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 790,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 2,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-rubric-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 838,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 137,
+          "outputTokens": 1,
+          "costCny": 0.00042
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-rubric-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 465,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 109,
+          "outputTokens": 1,
+          "costCny": 0.000336
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "learning-rubric-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 439,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "learning-rubric-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 6434,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 2,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "learning-rubric-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 800,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 137,
+          "outputTokens": 1,
+          "costCny": 0.00042
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-durability-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 584,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 1,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-durability-holdout-1",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 4993,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 2,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-durability-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 8565,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 2,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-durability-holdout-3",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 11274,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 132,
+          "outputTokens": 1,
+          "costCny": 0.000405
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "memory-durability-holdout-4",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 1623,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 1,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "memory-durability-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1684,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 1,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "memory-durability-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 900,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 2,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-durability-holdout-7",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 3764,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 132,
+          "outputTokens": 1,
+          "costCny": 0.000405
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "memory-relevance-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 4325,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-relevance-holdout-1",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 1012,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 2,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-relevance-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1425,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 2,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-relevance-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 13459,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 133,
+          "outputTokens": 1,
+          "costCny": 0.000408
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-relevance-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 6655,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-relevance-holdout-5",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 502,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 2,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-relevance-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 773,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 2,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-relevance-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 595,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 133,
+          "outputTokens": 1,
+          "costCny": 0.000408
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-synthesis-verification-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1477,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 1,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-synthesis-verification-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 571,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 101,
+          "outputTokens": 1,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "memory-synthesis-verification-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 951,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 2,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-synthesis-verification-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 926,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 132,
+          "outputTokens": 1,
+          "costCny": 0.000405
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-synthesis-verification-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 530,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 104,
+          "outputTokens": 1,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-synthesis-verification-holdout-5",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 1030,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 101,
+          "outputTokens": 2,
+          "costCny": 0.000321
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-synthesis-verification-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2646,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 2,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-synthesis-verification-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1706,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 132,
+          "outputTokens": 1,
+          "costCny": 0.000405
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-write-review-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 3215,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 103,
+          "outputTokens": 1,
+          "costCny": 0.000318
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-write-review-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1548,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 107,
+          "outputTokens": 1,
+          "costCny": 0.00033
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "memory-write-review-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 22202,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 2,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-write-review-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1466,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 131,
+          "outputTokens": 1,
+          "costCny": 0.000402
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-write-review-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1131,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 103,
+          "outputTokens": 1,
+          "costCny": 0.000318
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "memory-write-review-holdout-5",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 625,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 107,
+          "outputTokens": 2,
+          "costCny": 0.000339
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-write-review-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1919,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 99,
+          "outputTokens": 2,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "memory-write-review-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2537,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 131,
+          "outputTokens": 1,
+          "costCny": 0.000402
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "presentation-review-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 525,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "presentation-review-holdout-1",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 1502,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 2,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "presentation-review-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 5701,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 98,
+          "outputTokens": 2,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "presentation-review-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 4837,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 133,
+          "outputTokens": 1,
+          "costCny": 0.000408
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "presentation-review-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1482,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "presentation-review-holdout-5",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 1871,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 2,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "presentation-review-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 638,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 98,
+          "outputTokens": 2,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "presentation-review-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1625,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 133,
+          "outputTokens": 1,
+          "costCny": 0.000408
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "route-selection-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2265,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 113,
+          "outputTokens": 1,
+          "costCny": 0.000348
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "route-selection-holdout-1",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1081,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "route-selection-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1251,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 2,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "route-selection-holdout-3",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 5624,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 141,
+          "outputTokens": 1,
+          "costCny": 0.000432
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "route-selection-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 612,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 113,
+          "outputTokens": 1,
+          "costCny": 0.000348
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "route-selection-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 966,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 105,
+          "outputTokens": 1,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "route-selection-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 6518,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 2,
+          "costCny": 0.000324
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "route-selection-holdout-7",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 4303,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 141,
+          "outputTokens": 1,
+          "costCny": 0.000432
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "scope-review-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 491,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 119,
+          "outputTokens": 1,
+          "costCny": 0.000366
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "scope-review-holdout-1",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 6378,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 116,
+          "outputTokens": 2,
+          "costCny": 0.000366
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "scope-review-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 783,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 111,
+          "outputTokens": 2,
+          "costCny": 0.000351
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "scope-review-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 11640,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 147,
+          "outputTokens": 1,
+          "costCny": 0.00045
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "scope-review-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 547,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 119,
+          "outputTokens": 1,
+          "costCny": 0.000366
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "scope-review-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 733,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 116,
+          "outputTokens": 1,
+          "costCny": 0.000357
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "scope-review-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 946,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 111,
+          "outputTokens": 2,
+          "costCny": 0.000351
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "scope-review-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 834,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 147,
+          "outputTokens": 1,
+          "costCny": 0.00045
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "teacher-priority-holdout-0",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2213,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 1,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "teacher-priority-holdout-1",
+        "index": 0,
+        "status": "fail",
+        "score": 0,
+        "latencyMs": 871,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 0,
+            "passed": false,
+            "reason": "expectation_mismatch"
+          }
+        ],
+        "candidate": {
+          "inputTokens": 98,
+          "outputTokens": 2,
+          "costCny": 0.000312
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "failure": "grader_threshold",
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "teacher-priority-holdout-2",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 12985,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 95,
+          "outputTokens": 2,
+          "costCny": 0.000303
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "teacher-priority-holdout-3",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 7248,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 130,
+          "outputTokens": 1,
+          "costCny": 0.000399
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "teacher-priority-holdout-4",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2445,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 102,
+          "outputTokens": 1,
+          "costCny": 0.000315
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      },
+      {
+        "caseId": "teacher-priority-holdout-5",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 2259,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 98,
+          "outputTokens": 1,
+          "costCny": 0.000303
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "04a06452677210a3cdaec376fd5ebbca1714cb7af9e62bf5cce1644310a9086a"
+      },
+      {
+        "caseId": "teacher-priority-holdout-6",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 872,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 95,
+          "outputTokens": 2,
+          "costCny": 0.000303
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "06f0ce347185bdee8b5081b9f3d31f268698b248496d3e1b316da4ec3fcd4716"
+      },
+      {
+        "caseId": "teacher-priority-holdout-7",
+        "index": 0,
+        "status": "pass",
+        "score": 1,
+        "latencyMs": 1228,
+        "grades": [
+          {
+            "id": "fixed-fact",
+            "score": 1,
+            "passed": true
+          }
+        ],
+        "candidate": {
+          "inputTokens": 130,
+          "outputTokens": 1,
+          "costCny": 0.000399
+        },
+        "judge": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "costCny": 0
+        },
+        "outputHash": "6c76a9331e7f5ff9db2754d119a61395717be0c0877d0d8bd462197dff961e4c"
+      }
+    ],
+    "tags": [
+      {
+        "id": "memory-write-review",
+        "cases": 8,
+        "score": 0.875,
+        "passRate": 0.875
+      },
+      {
+        "id": "synthetic",
+        "cases": 160,
+        "score": 0.81875,
+        "passRate": 0.81875
+      },
+      {
+        "id": "memory-synthesis-verification",
+        "cases": 8,
+        "score": 0.875,
+        "passRate": 0.875
+      },
+      {
+        "id": "memory-durability",
+        "cases": 8,
+        "score": 0.5,
+        "passRate": 0.5
+      },
+      {
+        "id": "memory-relevance",
+        "cases": 8,
+        "score": 0.75,
+        "passRate": 0.75
+      },
+      {
+        "id": "content-review",
+        "cases": 8,
+        "score": 0.5,
+        "passRate": 0.5
+      },
+      {
+        "id": "citation-review",
+        "cases": 8,
+        "score": 0.875,
+        "passRate": 0.875
+      },
+      {
+        "id": "knowledge-relevance",
+        "cases": 8,
+        "score": 1,
+        "passRate": 1
+      },
+      {
+        "id": "evidence-sufficiency",
+        "cases": 8,
+        "score": 0.875,
+        "passRate": 0.875
+      },
+      {
+        "id": "evidence-conflict",
+        "cases": 8,
+        "score": 1,
+        "passRate": 1
+      },
+      {
+        "id": "learning-rubric",
+        "cases": 8,
+        "score": 0.875,
+        "passRate": 0.875
+      },
+      {
+        "id": "learning-evidence",
+        "cases": 8,
+        "score": 1,
+        "passRate": 1
+      },
+      {
+        "id": "learning-error",
+        "cases": 8,
+        "score": 0.5,
+        "passRate": 0.5
+      },
+      {
+        "id": "learning-case",
+        "cases": 8,
+        "score": 0.75,
+        "passRate": 0.75
+      },
+      {
+        "id": "activity-relevance",
+        "cases": 8,
+        "score": 0.75,
+        "passRate": 0.75
+      },
+      {
+        "id": "canvas-report",
+        "cases": 8,
+        "score": 1,
+        "passRate": 1
+      },
+      {
+        "id": "teacher-priority",
+        "cases": 8,
+        "score": 0.875,
+        "passRate": 0.875
+      },
+      {
+        "id": "email-intent",
+        "cases": 8,
+        "score": 1,
+        "passRate": 1
+      },
+      {
+        "id": "presentation-review",
+        "cases": 8,
+        "score": 0.75,
+        "passRate": 0.75
+      },
+      {
+        "id": "route-selection",
+        "cases": 8,
+        "score": 0.75,
+        "passRate": 0.75
+      },
+      {
+        "id": "scope-review",
+        "cases": 8,
+        "score": 0.875,
+        "passRate": 0.875
+      }
+    ],
+    "graders": [
+      {
+        "id": "fixed-fact",
+        "diagnostic": false,
+        "score": 0.81875
+      }
+    ],
+    "failures": {
+      "grader_threshold": 29
+    },
+    "eligible": false,
+    "comparison": null,
+    "gate": {
+      "passed": false,
+      "reasons": [
+        "score_below_threshold",
+        "pass_rate_below_threshold",
+        "baseline_required"
+      ]
+    }
+  },
+  "reserveUsd": 2.3812860000000007,
+  "totalUpperUsd": 2.4597908880000006,
+  "note": "Entire baseline reservation charged conservatively, including failed requests. Synthetic component baseline, not production runtime acceptance."
+}

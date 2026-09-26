@@ -12,7 +12,6 @@ import { chatTransport, useConversationThreadSnapshot } from '../runtime'
 import { ConversationComposer } from './ConversationComposer'
 import { ConversationMessage, MessageAnimationBaseline } from './ConversationMessage'
 import { ConversationStart } from './ConversationStart'
-import { ConversationMemory } from './ConversationMemory'
 import { getLingxiMessageMetadata } from '../runtime/model'
 import { messageKey } from '../runtime/store'
 
@@ -143,10 +142,6 @@ export function ConversationThread({
 
   return (
     <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread>
-      <ConversationMemory conversationId={conversationId} threadId={threadRootId} revision={snapshot.messages.flatMap(message => {
-        const value = getLingxiMessageMetadata(message)
-        return value.memory?.revision ? [`${value.runId}:${value.memory.revision}`] : []
-      }).join(',')} />
       <ThreadPrimitive.Viewport ref={viewportRef} data-chat-viewport className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
         {!threadRootId && (
           <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-[10.5px] text-muted-foreground sm:px-4">

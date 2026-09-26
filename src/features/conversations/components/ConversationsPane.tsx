@@ -277,9 +277,9 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
       <SidebarHeader className="desktop-window-toolbar omb-drag shrink-0 gap-0 p-0">
         {isMobile && <h1 className="h-12 shrink-0 truncate px-4 font-heading text-xl font-medium leading-[48px] text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
         <div className={cn('im-navigation-row flex min-w-0 items-center gap-2', isMobile ? 'px-3' : 'px-2')}>
-        <InputGroup className={cn('omb-no-drag min-w-0 flex-1 rounded-xl border-transparent bg-input/50 shadow-none', isMobile ? 'h-10' : 'h-8')}>
+        <InputGroup className={cn('omb-no-drag min-w-0 flex-1 rounded-xl border-transparent bg-sidebar-accent shadow-none', isMobile ? 'h-10' : 'h-8')}>
           <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className={cn('px-2 text-sm', isMobile ? 'h-10' : 'h-8')} />
-          <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4 opacity-50" /></InputGroupAddon>
+          <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4" /></InputGroupAddon>
           {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" className={isMobile ? 'size-8' : undefined} onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
         </InputGroup>
         {companyId && projectId && <NewConversationDialog key={`${companyId}:${projectId}`} companyId={companyId} projectId={projectId} isMobile={isMobile} onCreated={(id) => {

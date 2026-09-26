@@ -32,7 +32,7 @@ test('rail, notifications and workspace switches share the same view mapping', (
     assert.equal(learningSectionForView(view), item.section)
     assert.equal(viewForWorkspace(view, teacher), view)
   }
-  assert.deepEqual((['conversations', 'calendar', 'library', 'learning'] as const).map((view) => viewForWorkspace(view, learner)), ['conversations', 'calendar', 'library', 'learning'])
+  assert.deepEqual((['conversations', 'agents', 'mail', 'calendar', 'library', 'learning'] as const).map((view) => viewForWorkspace(view, learner)), ['conversations', 'agents', 'mail', 'calendar', 'library', 'learning'])
   assert.equal(viewForWorkspace('course-members', learner), 'learning')
   assert.equal(learningSectionForView('courses'), 'settings')
 })

@@ -39,6 +39,8 @@ import { PersonalDashboard } from './PersonalDashboard'
 import { ThreadDrawer } from './ThreadDrawer'
 import { WorkspaceRail } from './WorkspaceRail'
 import { useLearningSpaces } from './useLearningSpaces'
+import { AgentsPage } from '@/features/agents/components/AgentsPage'
+import { MailPage } from '@/features/email/components/MailPage'
 
 const DESKTOP_SIDEBAR_WIDTH_KEY = 'lingxiloop:desktop-layout:sidebar-width:v1'
 const LEFT_COLUMN_DEFAULT = 260
@@ -211,7 +213,7 @@ export function DesktopApp() {
           <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeProjectName}</span>
         </div>}
         <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">
-          {learningSpaces.pending ? <ResourceSkeleton variant="detail" label="正在切换工作区" className="p-6" /> : dashboardOpen ? (
+          {learningSpaces.pending ? <ResourceSkeleton variant="detail" label="正在切换工作区" className="p-6" /> : view === 'agents' ? <AgentsPage key={selectedWorkspaceId} /> : view === 'mail' ? <MailPage key={selectedWorkspaceId} /> : dashboardOpen ? (
             <PersonalDashboard
               view={view}
               space={learningSpaces.activeSpace}

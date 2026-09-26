@@ -10,7 +10,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { createContext, type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
-import { MemoryChips } from '@/components/assistant-ui/elements/memory-chips'
 import { ProgressCard } from '@/components/assistant-ui/elements/progress-card'
 import { confidenceCopyText, type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
@@ -372,8 +371,6 @@ export function ConversationMessage() {
               tools: CHAT_TOOL_RENDERERS,
             }} />
           </MessageFooterContext.Provider>)}
-          {custom.harness && custom.memory && <MemoryChips fresh chips={custom.memory.chips}
-            unavailable={Object.values(custom.memory.calls).some(call => call.unavailable)} className="mt-2 max-w-xl" />}
           {custom.senderKind === 'agent' && custom.messageKind === 'text' && custom.runId && <HarnessDetails metadata={custom} />}
           {!custom.harness && <MessagePrimitive.Error>
             <div className="mt-2 text-xs text-destructive">消息生成失败</div>

@@ -1,13 +1,25 @@
 import { Router } from 'express'
 import { safe } from '../../http/async-handler.js'
 import { HttpError } from '../../http/errors.js'
-import { requireCompany } from '../../http/request-context.js'
+import { requireCompany, requireCompanyArtifactContext } from '../../http/request-context.js'
 import { permissionService } from '../access/public.js'
 import { EmailApplicationError } from './application.js'
-import { replyEmailRequestSchema, sendEmailRequestSchema } from './contracts.js'
+import { emailListQuerySchema, replyEmailRequestSchema, sendEmailRequestSchema } from './contracts.js'
 import { emailApplication } from './facade.js'
+import { pool } from '../../db/pool.js'
+import { listAgentEmailThreads } from './agent-repository.js'
 
 export const emailRouter = Router()
+
+emailRouter.get('/email/threads', safe(async (req, res) => {
+  const scope = await requireCompanyArtifactContext(req, 'email:read')
+  const parsed = emailListQuerySchema.safeParse(req.query)
+  if (!parsed.success) throw invalidRequest(parsed.error)
+  const rows = await listAgentEmailThreads(pool, {
+    ...scope, agentId: scope.userId, unreadOnly: false, limit: 51, query: parsed.data.q, offset: parsed.data.offset,
+  })
+  res.json({ items: rows.slice(0, 50), hasMore: rows.length > 50 })
+}))
 
 function invalidRequest(error: { issues: Array<{ message: string }> }): HttpError {
   return new HttpError(400, error.issues[0]?.message ?? 'invalid email request')
@@ -26,7 +38,9 @@ function mapEmailError(error: unknown): never {
 }
 
 emailRouter.post('/email/send', safe(async (req, res) => {
-  const scope = await requireCompany(req)
+  const scope = req.get('x-project-id')
+    ? await requireCompanyArtifactContext(req, 'email:write')
+    : await requireCompany(req)
   await permissionService.assertCan({ actorUserId: scope.userId, action: 'email:write', companyId: scope.companyId })
   const parsed = sendEmailRequestSchema.safeParse(req.body)
   if (!parsed.success) throw invalidRequest(parsed.error)

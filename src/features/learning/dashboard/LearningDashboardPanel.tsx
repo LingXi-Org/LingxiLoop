@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { CourseSourceDrive } from '@/features/knowledge/components/CourseSourceDrive'
 import { userFacingError } from '@/lib/userFacingError'
@@ -57,7 +58,7 @@ function LearningDataSection({ space, section }: { space: LearningSpace; section
   return (
     <DashboardSectionFrame space={space} section={section}>
       <div className="space-y-4">
-        {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+        {error && <Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" disabled={overviewLoading || resourcesLoading} onClick={() => void refreshAll()}>重新加载</Button></AlertDescription></Alert>}
         {content}
       </div>
     </DashboardSectionFrame>
