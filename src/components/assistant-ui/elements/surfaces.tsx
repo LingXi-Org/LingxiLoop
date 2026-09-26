@@ -4,6 +4,7 @@ import { Slot } from "@radix-ui/react-slot";
 import type { ComponentProps } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { MessageFooterContents } from '../message-footer';
 
 export type MessageSurfaceVariant = "bubble" | "inset" | "overlay" | "status";
 export type CardSurfaceVariant = "default" | "interactive" | "destructive" | "parchment" | "media";
@@ -34,7 +35,7 @@ export function MessageSurface({ asChild, status, variant, className, ...props }
   />;
 }
 
-export function CardSurface({ asChild, status, variant = "default", interactive, className, ...props }: SurfaceProps & { variant?: CardSurfaceVariant; interactive?: boolean }) {
+export function CardSurface({ asChild, status, variant = "default", interactive, className, children, ...props }: SurfaceProps & { variant?: CardSurfaceVariant; interactive?: boolean }) {
   const Component = asChild ? Slot : "div";
   return <Component
     data-message-surface="card"
@@ -47,7 +48,7 @@ export function CardSurface({ asChild, status, variant = "default", interactive,
       className,
     )}
     {...props}
-  />;
+  >{asChild ? children : <MessageFooterContents>{children}</MessageFooterContents>}</Component>;
 }
 
 export const floating = "bg-background border border-border/60 dark:bg-popover";

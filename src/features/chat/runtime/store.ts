@@ -1,6 +1,6 @@
 import type { ThreadMessage } from '@assistant-ui/react'
 import { create } from 'zustand'
-import { getLingxiMessageMetadata, mergeProgressMessage, type LingxiMessageMetadata } from './model'
+import { getLingxiMessageMetadata, mergeProgressMessage, preserveMessageTime, type LingxiMessageMetadata } from './model'
 import { projectMessageGroups } from './converter'
 import { harnessParts, harnessStatus, isRunMessage, mergeHarness } from './harness'
 
@@ -82,11 +82,15 @@ export function mergeCanonicalMessages(
           harnessError: after.harnessError ?? before.harnessError,
           unresolvedActions: after.unresolvedActions ?? before.unresolvedActions } } } as ThreadMessage)
     } else if (!before?.harness || after.harness) byId.set(key,message)
+    const merged = byId.get(key)
+    if (merged) byId.set(key, preserveMessageTime(preserveMessageTime(merged, previous), message))
   }
   for (const message of current) {
     const key = messageKey(message), next = byId.get(key)
     if (next && metadata(next).sequence === null && metadata(message).positionAfter !== undefined) {
-      byId.set(key, { ...patchMetadata(next, { positionAfter: metadata(message).positionAfter }), createdAt: message.createdAt })
+      const time = metadata(message).timestampMissing ? next : message
+      byId.set(key, { ...patchMetadata(next, { positionAfter: metadata(message).positionAfter,
+        timestampMissing: metadata(time).timestampMissing }), createdAt: time.createdAt })
     } else if (next && metadata(next).sequence !== null && metadata(next).positionAfter !== undefined) {
       byId.set(key, patchMetadata(next, { positionAfter: undefined }))
     }

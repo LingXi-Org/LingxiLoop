@@ -25,9 +25,13 @@ export function applyRunUpdate(
   const view = consumeRunStreamEvent(before?.harness ?? createRunView(target.runId), item)
   const id = current?.id ?? `preview-${target.runId}`
   const startedAt = item.type === 'state' ? Date.parse(item.state.run.createdAt) : NaN
-  const createdAt = before?.sequence != null || before?.positionAfter !== undefined ? current!.createdAt
-    : Number.isFinite(startedAt) ? new Date(startedAt) : current?.createdAt ?? new Date()
-  const positionAt = Number.isFinite(startedAt) ? new Date(startedAt) : createdAt
+  const validStartedAt = Number.isFinite(startedAt) && startedAt > 0
+  const keepTime = current && !before?.timestampMissing
+    && (before?.sequence != null || before?.positionAfter !== undefined || !validStartedAt)
+  const createdAt = keepTime ? current.createdAt
+    : validStartedAt ? new Date(startedAt) : current?.createdAt ?? new Date()
+  const timestampMissing = keepTime ? undefined : validStartedAt ? undefined : before?.timestampMissing ?? !current
+  const positionAt = validStartedAt ? new Date(startedAt) : createdAt
   const predecessor = state.messages.filter(message => message !== current && message.createdAt <= positionAt).at(-1)
   const lastSent = state.messages.filter(message => {
     const value = metadata(message)
@@ -42,6 +46,7 @@ export function applyRunUpdate(
     presentation: 'conversation', quotedMessageId: target.threadId ?? null, quote: null, reactions: [], replyCount: 0,
     threadRootId: target.threadId ?? null, groupStart: true, groupEnd: true, continuedFromPrevious: false,
     continuedToNext: false, clusterChromeAt: null, ...before,
+    timestampMissing,
     positionAfter: before?.sequence != null ? undefined : lastSent ? messageKey(lastSent)
       : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
     runId: target.runId, harness: view,

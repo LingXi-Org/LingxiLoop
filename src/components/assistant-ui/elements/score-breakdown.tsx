@@ -1,4 +1,5 @@
 "use client";
+import { MessageFooterContents } from '../message-footer';
 
 import type { ComponentProps } from "react";
 import { pct, take } from "@/lib/range";
@@ -44,7 +45,7 @@ export function ScoreBreakdown({
 
       {...props}
     >
-      <div className="flex items-baseline gap-2">
+      <MessageFooterContents><div className="flex items-baseline gap-2">
         <span className="text-2xl font-medium tracking-tight tabular-nums">
           {total.toFixed(1)}
         </span>
@@ -100,6 +101,7 @@ export function ScoreBreakdown({
           </div>
         ))}
       </div>
+      </MessageFooterContents>
     </div>
   );
 }

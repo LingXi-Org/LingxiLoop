@@ -10,6 +10,27 @@ const participants: Record<string, Participant> = {
   agent: { id: 'agent', kind: 'agent', name: 'Scout', initial: 'S', avatarBg: '#fff', status: 'avail' },
 }
 
+test('message times accept seconds and milliseconds, but never display a missing timestamp', () => {
+  const context = { participants, meId: 'me' }
+  for (const value of [1_767_225_600, 1_767_225_600_000]) {
+    const message = convertEnvelope(envelope('text', {}, { timestamp: value }), context)
+    assert.equal(message.createdAt.getTime(), 1_767_225_600_000)
+    assert.ok(!getLingxiMessageMetadata(message).timestampMissing)
+  }
+  for (const value of [undefined, null, '', 0, -1, NaN, Infinity, 9e15]) {
+    const message = convertEnvelope(envelope('text', {}, { timestamp: value as number }), context)
+    assert.equal(getLingxiMessageMetadata(message).timestampMissing, true)
+    assert.ok(Number.isFinite(message.createdAt.getTime()))
+    assert.ok(message.createdAt.getTime() > 0)
+  }
+  const valid = envelope('text'), missing = { ...valid, timestamp: 0 }
+  for (const entries of [[valid, missing], [missing, valid]]) {
+    const [message] = convertEnvelopeBatch(entries, context)
+    assert.equal(message!.createdAt.getTime(), valid.timestamp * 1000)
+    assert.ok(!getLingxiMessageMetadata(message!).timestampMissing)
+  }
+})
+
 function envelope(kind: LingxiMessageV1['kind'], data: Record<string, unknown> = {}, patch: Partial<ImEnvelope> = {}): ImEnvelope {
   return {
     messageId: `${kind}-server`,

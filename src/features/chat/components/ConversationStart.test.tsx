@@ -14,4 +14,6 @@ test('conversation start shows the first message date and time in the local time
 test('conversation start omits missing or invalid timestamps', () => {
   assert.equal(renderToStaticMarkup(<ConversationStart />), '')
   assert.equal(renderToStaticMarkup(<ConversationStart createdAt={new Date(Number.NaN)} />), '')
+  assert.equal(renderToStaticMarkup(<ConversationStart createdAt={new Date(0)} />), '')
+  assert.equal(renderToStaticMarkup(<ConversationStart createdAt={new Date()} timestampMissing />), '')
 })

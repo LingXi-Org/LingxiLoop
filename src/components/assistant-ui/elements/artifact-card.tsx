@@ -1,4 +1,5 @@
 "use client"
+import { MessageFooterContents } from '../message-footer'
 
 import { ArrowUpRightIcon, FileTextIcon } from "lucide-react"
 import type { ComponentProps, ReactNode } from "react"
@@ -38,7 +39,7 @@ export function ArtifactCard({
       )}
       {...props}
     >
-      {preview && <div data-slot="artifact-preview" className="relative aspect-video overflow-hidden bg-muted">{preview}</div>}
+      <MessageFooterContents>{preview && <div data-slot="artifact-preview" className="relative aspect-video overflow-hidden bg-muted">{preview}</div>}
       <div className="flex items-center gap-3 p-3.5">
       <span aria-hidden className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-xl [&_svg]:size-4">
         {icon ?? <FileTextIcon className={cn("size-4", generating && "animate-pulse motion-reduce:animate-none")} />}
@@ -57,6 +58,7 @@ export function ArtifactCard({
       </div>
       </div>
       {onOpen && <div className="flex justify-end px-3.5 pb-3.5"><Button type="button" size="sm" onClick={onOpen} aria-label={`${openLabel}：${title}`}>{openLabel}<ArrowUpRightIcon aria-hidden className="size-3.5" /></Button></div>}
+      </MessageFooterContents>
     </div>
   )
 }

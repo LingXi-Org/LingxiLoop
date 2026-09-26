@@ -1,4 +1,4 @@
-import type { ToolCallMessagePartProps } from '@assistant-ui/react'
+import type { ThreadMessage, ToolCallMessagePartProps } from '@assistant-ui/react'
 import { renderGenerativeUI, type UIElement, type UISpec } from '@assistant-ui/react-generative-ui'
 import { useState } from 'react'
 import { Plan } from '@/components/tool-ui/plan'
@@ -380,4 +380,14 @@ export const CHAT_TOOL_RENDERERS = {
     read_document: () => null,
   },
   Fallback: () => null,
+}
+
+export function isVisibleChatPart(part: ThreadMessage['content'][number]): boolean {
+  if (part.type === 'text') return Boolean(part.text.trim())
+  if (part.type === 'source') return true
+  if (part.type !== 'tool-call' || !(part.toolName in CHAT_TOOL_RENDERERS.by_name)) return false
+  if (['ipython', 'cite_claims', 'read_document'].includes(part.toolName)) return false
+  if (['approval-card', 'calendar.create'].includes(part.toolName)) return Boolean(part.approval)
+  if (['calendar.list', 'calendar.get'].includes(part.toolName)) return part.result !== undefined && !part.isError
+  return true
 }

@@ -7,8 +7,8 @@ const dateTimeFormat = new Intl.DateTimeFormat('zh-CN', {
   hourCycle: 'h23',
 })
 
-export function ConversationStart({ createdAt }: { createdAt?: Date }) {
-  if (!createdAt || !Number.isFinite(createdAt.getTime())) return null
+export function ConversationStart({ createdAt, timestampMissing }: { createdAt?: Date; timestampMissing?: boolean }) {
+  if (timestampMissing || !createdAt || !Number.isFinite(createdAt.getTime()) || createdAt.getTime() <= 0) return null
 
   return (
     <div className="flex w-full items-center gap-3 text-xs text-muted-foreground" data-slot="day-separator">

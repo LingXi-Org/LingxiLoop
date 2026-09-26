@@ -1,4 +1,5 @@
 "use client"
+import { MessageFooterContents } from '../message-footer'
 
 import { CheckIcon, PlugIcon, XIcon } from "lucide-react"
 import type { ComponentProps } from "react"
@@ -73,7 +74,7 @@ export function ElicitationForm({
       )}
       {...props}
     >
-      <div className="flex items-center gap-2.5">
+      <MessageFooterContents><div className="flex items-center gap-2.5">
         <span className="bg-foreground/[0.05] text-foreground/45 flex size-7 shrink-0 items-center justify-center rounded-lg">
           <PlugIcon className="size-3.5" />
         </span>
@@ -203,6 +204,7 @@ export function ElicitationForm({
           </span>
         )}
       </div>
+      </MessageFooterContents>
     </div>
   )
 }

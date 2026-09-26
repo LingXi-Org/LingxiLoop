@@ -1,10 +1,12 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { MessageFooterContents } from '@/components/assistant-ui/message-footer'
 
 function Card({
   className,
   size = "default",
+  children,
   ...props
 }: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
   return (
@@ -16,7 +18,7 @@ function Card({
         className
       )}
       {...props}
-    />
+    ><MessageFooterContents>{children}</MessageFooterContents></div>
   )
 }
 

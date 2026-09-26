@@ -6,6 +6,7 @@ import { defaultRehypePlugins } from 'streamdown'
 import { createContext, memo, useContext, useEffect, useMemo, useState } from 'react'
 import type { Root } from 'hast'
 import { visit } from 'unist-util-visit'
+import { MessageFooterContents } from './message-footer'
 import {
   type ConfidenceClaim, ConfidenceMarker, ConfidenceMarkerInline,
 } from '@/components/assistant-ui/elements/confidence-marker'
@@ -27,11 +28,13 @@ export function confidenceCopyText(text: string, claims: readonly Pick<MarkdownC
 }
 
 const BubbleEntryContext = createContext(false)
-const BubbleDiv: NonNullable<StreamdownTextPrimitiveProps['components']>['div'] = ({ node, ...props }) => {
+const BubbleDiv: NonNullable<StreamdownTextPrimitiveProps['components']>['div'] = ({ node, children, ...props }) => {
   const canAnimate = useContext(BubbleEntryContext)
   // Capture entry only; later tokens and citation metadata must not replay it.
   const [animate] = useState(canAnimate)
-  return <div {...props} data-bubble-enter={node?.properties['dataBubble'] && animate ? '' : undefined} />
+  return <div {...props} data-bubble-enter={node?.properties['dataBubble'] && animate ? '' : undefined}>
+    {node?.properties['dataLastBubble'] ? <MessageFooterContents inset={false}>{children}</MessageFooterContents> : children}
+  </div>
 }
 
 const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['span'] = ({ node, children, ...props }) => {
@@ -78,8 +81,12 @@ function rehypeConfidence({ claims, segmented, inlineCitations, holdTail, paragr
         }
       }
     })
-    if (segmented) tree.children = tree.children.map(node => node.type === 'element'
-      ? { type: 'element', tagName: 'div', properties: { className: ['im-markdown-bubble'], dataBubble: true }, children: [node] } : node)
+    if (segmented) {
+      tree.children = tree.children.map(node => node.type === 'element'
+        ? { type: 'element', tagName: 'div', properties: { className: ['im-markdown-bubble'], dataBubble: true }, children: [node] } : node)
+      const lastBubble = [...tree.children].reverse().find(node => node.type === 'element')
+      if (lastBubble?.type === 'element') lastBubble.properties.dataLastBubble = true
+    }
   }
 }
 

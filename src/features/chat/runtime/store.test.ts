@@ -29,6 +29,17 @@ test('canonical merge replaces optimistic messages by client identity and preser
   assert.equal(merged.some((item) => item.id === 'temp-1'), false)
 })
 
+test('invalid receipts cannot replace a known send time and later valid receipts repair missing times', () => {
+  const valid = { ...message('one', 1), createdAt: new Date('2026-09-26T10:00:00Z') }
+  const missing = { ...valid, createdAt: new Date('2026-09-26T11:00:00Z'),
+    metadata: { custom: { ...getLingxiMessageMetadata(valid), timestampMissing: true } } } as ThreadMessage
+  for (const [before, after] of [[valid, missing], [missing, valid]]) {
+    const [result] = mergeCanonicalMessages([before!], [after!])
+    assert.equal(result!.createdAt.getTime(), valid.createdAt.getTime())
+    assert.ok(!getLingxiMessageMetadata(result!).timestampMissing)
+  }
+})
+
 test('poll events replace canonical assistant-ui form state without retaining a second payload model', () => {
   resetChatThreadStore()
   const initial = {
