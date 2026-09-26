@@ -1,0 +1,708 @@
+
+> lingxiloop@0.1.0-beta server:test
+> node scripts/run-tests.mjs server
+
+TAP version 13
+# Subtest: admin resource lists enforce bounds and return an opaque next cursor
+ok 1 - admin resource lists enforce bounds and return an opaque next cursor
+  ---
+  duration_ms: 18.4064
+  type: 'test'
+  ...
+# Subtest: native delivery operations page failures and retry only a validated identity
+ok 2 - native delivery operations page failures and retry only a validated identity
+  ---
+  duration_ms: 3.1302
+  type: 'test'
+  ...
+# Subtest: suspending revokes WS tickets while restore creates no ticket
+ok 3 - suspending revokes WS tickets while restore creates no ticket
+  ---
+  duration_ms: 1.0155
+  type: 'test'
+  ...
+# Subtest: platform message history uses the company-scoped channel profile
+ok 4 - platform message history uses the company-scoped channel profile
+  ---
+  duration_ms: 0.7353
+  type: 'test'
+  ...
+# Subtest: observability dashboard returns validated OpenPlait frames with collapsed run detail data
+ok 5 - observability dashboard returns validated OpenPlait frames with collapsed run detail data
+  ---
+  duration_ms: 4.4437
+  type: 'test'
+  ...
+# Subtest: platform Agent operations resolve the authoritative run identity
+ok 6 - platform Agent operations resolve the authoritative run identity
+  ---
+  duration_ms: 1.1941
+  type: 'test'
+  ...
+# Subtest: admin association filters are exact, validated and preserve knowledge ownership
+ok 7 - admin association filters are exact, validated and preserve knowledge ownership
+  ---
+  duration_ms: 22.1886
+  type: 'test'
+  ...
+# Subtest: admin record names resolve in batches and secret fields remain omitted
+ok 8 - admin record names resolve in batches and secret fields remain omitted
+  ---
+  duration_ms: 9.0935
+  type: 'test'
+  ...
+# Subtest: administrator command auditing accepts Chinese reasons in JSON bodies
+ok 9 - administrator command auditing accepts Chinese reasons in JSON bodies
+  ---
+  duration_ms: 23.1229
+  type: 'test'
+  ...
+# Subtest: the LingxiOS registry exposes every product capability exactly once
+ok 10 - the LingxiOS registry exposes every product capability exactly once
+  ---
+  duration_ms: 4.0889
+  type: 'test'
+  ...
+# Subtest: HTTP and WebSocket composition keeps authentication and authorization at the boundary
+ok 11 - HTTP and WebSocket composition keeps authentication and authorization at the boundary
+  ---
+  duration_ms: 3.0503
+  type: 'test'
+  ...
+# Subtest: product policy requires answer wording instead of source labels and preserves Markdown examples
+ok 12 - product policy requires answer wording instead of source labels and preserves Markdown examples
+  ---
+  duration_ms: 4.9311
+  type: 'test'
+  ...
+# Subtest: conversation activity reads scoped public runtime state without tool outputs or prompts
+ok 13 - conversation activity reads scoped public runtime state without tool outputs or prompts
+  ---
+  duration_ms: 3.1612
+  type: 'test'
+  ...
+# [documents] edit not persisted; retained for retry Error: database offline
+#     at Object.query (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\__tests__\\document-collaboration.test.ts:184:49)
+#     at persistDocumentUpdate (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\modules\\documents\\collaboration-repository.ts:71:29)
+#     at <anonymous> (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\modules\\documents\\collaboration-application.ts:168:17)
+#     at async <anonymous> (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\modules\\documents\\collaboration-application.ts:155:9)
+# [documents] fanout failed; durable replay will recover Error: Redis offline
+#     at Object.publish (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\__tests__\\document-collaboration.test.ts:200:36)
+#     at <anonymous> (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\modules\\documents\\collaboration-application.ts:181:38)
+# [documents] recovery will retry Error: compaction failed
+#     at Object.query (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\__tests__\\document-collaboration.test.ts:189:61)
+#     at compactDocumentUpdates (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\modules\\documents\\collaboration-repository.ts:99:12)
+#     at async <anonymous> (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\modules\\documents\\collaboration-application.ts:128:7)
+#     at async DocumentRoomRuntime.maybeCompact (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\modules\\documents\\collaboration-application.ts:121:5)
+#     at async DocumentRoomRuntime.recover (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\modules\\documents\\collaboration-application.ts:203:11)
+#     at async TestContext.<anonymous> (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\__tests__\\document-collaboration.test.ts:226:3)
+#     at async Test.run (node:internal/test_runner/test:1054:7)
+#     at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+# Subtest: document collaboration persists and publishes one local Yjs update with its true origin
+ok 14 - document collaboration persists and publishes one local Yjs update with its true origin
+  ---
+  duration_ms: 9.7705
+  type: 'test'
+  ...
+# Subtest: a warm document room cannot be reused under another tenant
+ok 15 - a warm document room cannot be reused under another tenant
+  ---
+  duration_ms: 0.9792
+  type: 'test'
+  ...
+# Subtest: remote document updates are applied only to the matching tenant room
+ok 16 - remote document updates are applied only to the matching tenant room
+  ---
+  duration_ms: 1.7312
+  type: 'test'
+  ...
+# Subtest: project document lookup carries company and project tenant predicates
+ok 17 - project document lookup carries company and project tenant predicates
+  ---
+  duration_ms: 0.4999
+  type: 'test'
+  ...
+# Subtest: failed persistence is retained, retries include dependent deltas, and durable replay heals missed fanout
+ok 18 - failed persistence is retained, retries include dependent deltas, and durable replay heals missed fanout
+  ---
+  duration_ms: 55.4467
+  type: 'test'
+  ...
+# Subtest: domain mutation and event append share one caller-owned transaction
+ok 19 - domain mutation and event append share one caller-owned transaction
+  ---
+  duration_ms: 4.3607
+  type: 'test'
+  ...
+# Subtest: an exact idempotent retry returns the original event without another insert
+ok 20 - an exact idempotent retry returns the original event without another insert
+  ---
+  duration_ms: 0.5279
+  type: 'test'
+  ...
+# Subtest: idempotency key reuse with a changed typed payload is rejected
+ok 21 - idempotency key reuse with a changed typed payload is rejected
+  ---
+  duration_ms: 0.9605
+  type: 'test'
+  ...
+# Subtest: payload and cursor bounds fail before persistence
+ok 22 - payload and cursor bounds fail before persistence
+  ---
+  duration_ms: 0.6709
+  type: 'test'
+  ...
+# Subtest: event cursor reads are tenant scoped, optional-Project scoped and bounded
+ok 23 - event cursor reads are tenant scoped, optional-Project scoped and bounded
+  ---
+  duration_ms: 0.3224
+  type: 'test'
+  ...
+# Subtest: Education Company input requires an ordered contract period and positive seat limit
+ok 24 - Education Company input requires an ordered contract period and positive seat limit
+  ---
+  duration_ms: 4.6919
+  type: 'test'
+  ...
+# Subtest: Education entitlements require an active Seat and use its Contract plan
+ok 25 - Education entitlements require an active Seat and use its Contract plan
+  ---
+  duration_ms: 1.2006
+  type: 'test'
+  ...
+# Subtest: Education Contract expiry is terminal and retry-safe
+ok 26 - Education Contract expiry is terminal and retry-safe
+  ---
+  duration_ms: 0.2323
+  type: 'test'
+  ...
+# Subtest: due Contract expiry scopes every mutation to Education and Institutional Projects
+ok 27 - due Contract expiry scopes every mutation to Education and Institutional Projects
+  ---
+  duration_ms: 0.539
+  type: 'test'
+  ...
+# Subtest: expiry keeps Seat-backed grace access and publishes durable lifecycle facts
+ok 28 - expiry keeps Seat-backed grace access and publishes durable lifecycle facts
+  ---
+  duration_ms: 0.2876
+  type: 'test'
+  ...
+# Subtest: Enterprise governance exposes bounded hierarchy and five versioned Policy kinds
+ok 29 - Enterprise governance exposes bounded hierarchy and five versioned Policy kinds
+  ---
+  duration_ms: 1.0646
+  type: 'test'
+  ...
+# Subtest: typed entitlements preserve boolean, number, and string values without coercion
+ok 30 - typed entitlements preserve boolean, number, and string values without coercion
+  ---
+  duration_ms: 1.6057
+  type: 'test'
+  ...
+# Subtest: gateway assertion binds identity, method, path and freshness
+ok 31 - gateway assertion binds identity, method, path and freshness
+  ---
+  duration_ms: 4.9656
+  type: 'test'
+  ...
+# Subtest: gateway middleware consumes a signed nonce only once
+ok 32 - gateway middleware consumes a signed nonce only once
+  ---
+  duration_ms: 1.9925
+  type: 'test'
+  ...
+# Subtest: registration service binds capability, verified subject and all business input
+ok 33 - registration service binds capability, verified subject and all business input
+  ---
+  duration_ms: 2.8314
+  type: 'test'
+  ...
+# Subtest: bootstrap platform identity service binds the verified bootstrap subject
+ok 34 - bootstrap platform identity service binds the verified bootstrap subject
+  ---
+  duration_ms: 0.5879
+  type: 'test'
+  ...
+# Subtest: Course kind is selected by its dedicated use case, not by request data
+ok 35 - Course kind is selected by its dedicated use case, not by request data
+  ---
+  duration_ms: 7.1875
+  type: 'test'
+  ...
+# Subtest: Institutional Course persistence inherits the Contract plan and assigns only creator OWNER role
+ok 36 - Institutional Course persistence inherits the Contract plan and assigns only creator OWNER role
+  ---
+  duration_ms: 1.9982
+  type: 'test'
+  ...
+# Subtest: course assignment accepts existing company teachers only
+ok 37 - course assignment accepts existing company teachers only
+  ---
+  duration_ms: 2.6929
+  type: 'test'
+  ...
+# (node:37684) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: retrieval numbers distinct chunks of one PDF and preserves Markdown after hybrid deduplication
+ok 38 - retrieval numbers distinct chunks of one PDF and preserves Markdown after hybrid deduplication
+  ---
+  duration_ms: 1714.9198
+  type: 'test'
+  ...
+# Subtest: hybrid retrieval fuses duplicate ranks and caps each source at three chunks
+ok 39 - hybrid retrieval fuses duplicate ranks and caps each source at three chunks
+  ---
+  duration_ms: 7.6903
+  type: 'test'
+  ...
+# Subtest: source metadata lists remain readable while the Open Notebook engine is offline
+ok 40 - source metadata lists remain readable while the Open Notebook engine is offline
+  ---
+  duration_ms: 1.0823
+  type: 'test'
+  ...
+# Subtest: course resource review exposes teacher-only reads without a mutation route
+ok 41 - course resource review exposes teacher-only reads without a mutation route
+  ---
+  duration_ms: 0.7215
+  type: 'test'
+  ...
+# Subtest: native Open Notebook ingestion accepts the supported attachment contract
+ok 42 - native Open Notebook ingestion accepts the supported attachment contract
+  ---
+  duration_ms: 1.3422
+  type: 'test'
+  ...
+# Subtest: knowledge URL validator rejects local, credentialed, and non-http targets
+ok 43 - knowledge URL validator rejects local, credentialed, and non-http targets
+  ---
+  duration_ms: 2.6361
+  type: 'test'
+  ...
+# Subtest: Open Notebook file ingestion references the canonical private object without uploading a second copy
+ok 44 - Open Notebook file ingestion references the canonical private object without uploading a second copy
+  ---
+  duration_ms: 66.1786
+  type: 'test'
+  ...
+# Subtest: Open Notebook JSON source idempotency stays in the internal header
+ok 45 - Open Notebook JSON source idempotency stays in the internal header
+  ---
+  duration_ms: 2.0184
+  type: 'test'
+  ...
+# Subtest: LingxiLoop never marks an upstream command ready without embedded chunks
+ok 46 - LingxiLoop never marks an upstream command ready without embedded chunks
+  ---
+  duration_ms: 1.5389
+  type: 'test'
+  ...
+# Subtest: direct and group Agent retrieval share one membership-scoped Project resolver
+ok 47 - direct and group Agent retrieval share one membership-scoped Project resolver
+  ---
+  duration_ms: 1.7099
+  type: 'test'
+  ...
+# Subtest: knowledge retrieval builds the Open Notebook allowlist before search
+ok 48 - knowledge retrieval builds the Open Notebook allowlist before search
+  ---
+  duration_ms: 1.2962
+  type: 'test'
+  ...
+# Subtest: standard Activity Import accepts only bounded canonical activity drafts
+ok 49 - standard Activity Import accepts only bounded canonical activity drafts
+  ---
+  duration_ms: 11.7543
+  type: 'test'
+  ...
+# Subtest: LingxiLit instruments a preloaded OpenAI module without exporting message content
+ok 50 - LingxiLit instruments a preloaded OpenAI module without exporting message content
+  ---
+  duration_ms: 5754.5789
+  type: 'test'
+  ...
+# Subtest: model calls fail open when pricing and OTLP are unavailable
+ok 51 - model calls fail open when pricing and OTLP are unavailable
+  ---
+  duration_ms: 4667.939
+  type: 'test'
+  ...
+# Subtest: SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rates
+ok 52 - SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rates
+  ---
+  duration_ms: 1.0036
+  type: 'test'
+  ...
+# Subtest: product LLM completions disable thinking and record the authoritative call ledger
+ok 53 - product LLM completions disable thinking and record the authoritative call ledger
+  ---
+  duration_ms: 1.1094
+  type: 'test'
+  ...
+# Subtest: failed product LLM calls are recorded and propagate
+ok 54 - failed product LLM calls are recorded and propagate
+  ---
+  duration_ms: 0.4513
+  type: 'test'
+  ...
+# Subtest: successful provider results are not returned until the ledger write succeeds
+ok 55 - successful provider results are not returned until the ledger write succeeds
+  ---
+  duration_ms: 0.2968
+  type: 'test'
+  ...
+# Subtest: a missing authoritative ledger record fails the product call
+ok 56 - a missing authoritative ledger record fails the product call
+  ---
+  duration_ms: 0.2257
+  type: 'test'
+  ...
+# Subtest: caller-supplied call identity makes uncertain ledger retries idempotent
+ok 57 - caller-supplied call identity makes uncertain ledger retries idempotent
+  ---
+  duration_ms: 0.3323
+  type: 'test'
+  ...
+# (node:25108) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: teacher memory is empty only after authorization; ordinary memory and revocation remain enforced
+ok 58 - teacher memory is empty only after authorization; ordinary memory and revocation remain enforced
+  ---
+  duration_ms: 553.5619
+  type: 'test'
+  ...
+# Subtest: native evolution fixture rewards recovery and blocks unsafe strategy actions
+ok 59 - native evolution fixture rewards recovery and blocks unsafe strategy actions
+  ---
+  duration_ms: 6.8105
+  type: 'test'
+  ...
+# [access] permission resolution failed closed {
+#   action: 'unknown:action',
+#   actorUserId: 'actor',
+#   error: 'database unavailable'
+# }
+# Subtest: creator policies deny missing ownership facts instead of treating them as public
+ok 60 - creator policies deny missing ownership facts instead of treating them as public
+  ---
+  duration_ms: 0.9338
+  type: 'test'
+  ...
+# Subtest: users can edit their own Canvas frames after the workspace finishes
+ok 61 - users can edit their own Canvas frames after the workspace finishes
+  ---
+  duration_ms: 0.3214
+  type: 'test'
+  ...
+# Subtest: platform administrators bypass tenant membership but not entitlements or resource state
+ok 62 - platform administrators bypass tenant membership but not entitlements or resource state
+  ---
+  duration_ms: 0.2555
+  type: 'test'
+  ...
+# Subtest: runtime failures and unregistered actions fail closed without a context
+ok 63 - runtime failures and unregistered actions fail closed without a context
+  ---
+  duration_ms: 1.5616
+  type: 'test'
+  ...
+# Subtest: ResourceAccessMode centralizes Project lifecycle restrictions
+ok 64 - ResourceAccessMode centralizes Project lifecycle restrictions
+  ---
+  duration_ms: 0.2565
+  type: 'test'
+  ...
+# Subtest: invalid Company and Project lifecycle contexts fail closed with their owning state denial
+ok 65 - invalid Company and Project lifecycle contexts fail closed with their owning state denial
+  ---
+  duration_ms: 0.2142
+  type: 'test'
+  ...
+# Subtest: close-out, transfer, read-only, and retention policies fail closed by action
+ok 66 - close-out, transfer, read-only, and retention policies fail closed by action
+  ---
+  duration_ms: 0.2684
+  type: 'test'
+  ...
+# Subtest: retention and archived institutional reads require a Company manager or Project owner
+ok 67 - retention and archived institutional reads require a Company manager or Project owner
+  ---
+  duration_ms: 0.238
+  type: 'test'
+  ...
+# Subtest: ordinary teachers remain managers in MANAGER_ONLY Project contexts
+ok 68 - ordinary teachers remain managers in MANAGER_ONLY Project contexts
+  ---
+  duration_ms: 0.2136
+  type: 'test'
+  ...
+# Subtest: teachers cannot submit as students
+ok 69 - teachers cannot submit as students
+  ---
+  duration_ms: 0.2825
+  type: 'test'
+  ...
+# Subtest: Company and Project lifecycle restrictions are both enforced
+ok 70 - Company and Project lifecycle restrictions are both enforced
+  ---
+  duration_ms: 0.1028
+  type: 'test'
+  ...
+# Subtest: company administrators manage course groups but do not inherit private email or direct-message membership
+ok 71 - company administrators manage course groups but do not inherit private email or direct-message membership
+  ---
+  duration_ms: 0.1267
+  type: 'test'
+  ...
+# [worker] first started · concurrency=idempotent
+# [worker] second started · concurrency=idempotent
+# [lifecycle] stopping (test)
+# Subtest: worker tasks start in registry order and stop exactly once in reverse order
+ok 72 - worker tasks start in registry order and stop exactly once in reverse order
+  ---
+  duration_ms: 2.2614
+  type: 'test'
+  ...
+# [worker] fixture started · concurrency=queue-claim
+# [worker] ready · tasks=1
+# [lifecycle] stopping (test)
+# [lifecycle] stopping (test)
+# [lifecycle] failed to stop broken-task: Error: stop failed
+#     at Object.stop (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\__tests__\\process-lifecycle.test.ts:79:54)
+#     at Lifecycle.\#stopAll (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\runtime\\lifecycle.ts:52:25)
+#     at Lifecycle.stop (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\runtime\\lifecycle.ts:44:27)
+#     at TestContext.<anonymous> (C:\\Users\\34395\\.codex\\worktrees\\production-performance\\LingxiLoop\\server\\src\\__tests__\\process-lifecycle.test.ts:81:34)
+#     at Test.runInAsyncScope (node:async_hooks:214:14)
+#     at Test.run (node:internal/test_runner/test:1047:25)
+#     at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+#     at Test.postRun (node:internal/test_runner/test:1173:19)
+#     at Test.run (node:internal/test_runner/test:1101:12)
+#     at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+# Subtest: Worker composition has injectable startup and connection shutdown boundaries
+ok 73 - Worker composition has injectable startup and connection shutdown boundaries
+  ---
+  duration_ms: 6398.743
+  type: 'test'
+  ...
+# Subtest: a failing disposer does not prevent the remaining resources from closing
+ok 74 - a failing disposer does not prevent the remaining resources from closing
+  ---
+  duration_ms: 2.3099
+  type: 'test'
+  ...
+# Subtest: Web composition contains no background scheduler or worker startup
+ok 75 - Web composition contains no background scheduler or worker startup
+  ---
+  duration_ms: 4.999
+  type: 'test'
+  ...
+# Subtest: every deployment defines an independently runnable worker service
+ok 76 - every deployment defines an independently runnable worker service
+  ---
+  duration_ms: 3.0126
+  type: 'test'
+  ...
+# Subtest: Komodo workers inherit the complete runtime environment
+ok 77 - Komodo workers inherit the complete runtime environment
+  ---
+  duration_ms: 3.4955
+  type: 'test'
+  ...
+# Subtest: Open Notebook restarts only after SurrealDB is healthy
+ok 78 - Open Notebook restarts only after SurrealDB is healthy
+  ---
+  duration_ms: 1.4396
+  type: 'test'
+  ...
+# Subtest: database pool does not load unrelated application secrets
+ok 79 - database pool does not load unrelated application secrets
+  ---
+  duration_ms: 1.1646
+  type: 'test'
+  ...
+# Subtest: avatars preserve their seeded style and accept only owned, bounded raster uploads
+ok 80 - avatars preserve their seeded style and accept only owned, bounded raster uploads
+  ---
+  duration_ms: 13.7142
+  type: 'test'
+  ...
+# Subtest: ProjectInvite creation stops before mutation for a non-Teaching Project
+ok 81 - ProjectInvite creation stops before mutation for a non-Teaching Project
+  ---
+  duration_ms: 1.8041
+  type: 'test'
+  ...
+# Subtest: Project lifecycle rejects invalid jumps and concurrent conditional-update loss
+ok 82 - Project lifecycle rejects invalid jumps and concurrent conditional-update loss
+  ---
+  duration_ms: 3.4409
+  type: 'test'
+  ...
+# (node:38552) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: natural results use original safe URLs, normalized text and stable deduplication
+ok 83 - natural results use original safe URLs, normalized text and stable deduplication
+  ---
+  duration_ms: 20.235
+  type: 'test'
+  ...
+# Subtest: only explicit no-match pages are empty; challenges and broken markup fail
+ok 84 - only explicit no-match pages are empty; challenges and broken markup fail
+  ---
+  duration_ms: 2.2904
+  type: 'test'
+  ...
+# Subtest: result thumbnails preserve lazy image URLs without treating favicons or unsafe URLs as previews
+ok 85 - result thumbnails preserve lazy image URLs without treating favicons or unsafe URLs as previews
+  ---
+  duration_ms: 4.8622
+  type: 'test'
+  ...
+# Subtest: search stays within two pages, preserves order, validates inputs and propagates failures
+ok 86 - search stays within two pages, preserves order, validates inputs and propagates failures
+  ---
+  duration_ms: 4.8483
+  type: 'test'
+  ...
+# Subtest: result payload stays below the native runtime 8000-character tool output limit
+ok 87 - result payload stays below the native runtime 8000-character tool output limit
+  ---
+  duration_ms: 14.2826
+  type: 'test'
+  ...
+# Subtest: upload boundaries reject unsafe or cross-workspace storage paths
+ok 88 - upload boundaries reject unsafe or cross-workspace storage paths
+  ---
+  duration_ms: 6.3072
+  type: 'test'
+  ...
+# Subtest: bounded storage reads stop as soon as a streamed body crosses the cap
+ok 89 - bounded storage reads stop as soon as a streamed body crosses the cap
+  ---
+  duration_ms: 1.0168
+  type: 'test'
+  ...
+# Subtest: storage use requires an explicitly installed provider
+ok 90 - storage use requires an explicitly installed provider
+  ---
+  duration_ms: 0.3347
+  type: 'test'
+  ...
+# Subtest: readiness requires both PostgreSQL and Redis
+ok 91 - readiness requires both PostgreSQL and Redis
+  ---
+  duration_ms: 0.5664
+  type: 'test'
+  ...
+# Subtest: canonical snapshot JSON sorts keys recursively and preserves dates
+ok 92 - canonical snapshot JSON sorts keys recursively and preserves dates
+  ---
+  duration_ms: 3.5853
+  type: 'test'
+  ...
+# Subtest: WuKong channel reconciliation uses the v3 integer-switch contract
+ok 93 - WuKong channel reconciliation uses the v3 integer-switch contract
+  ---
+  duration_ms: 31.9458
+  type: 'test'
+  ...
+# Subtest: WuKong adapter uses v3 message endpoints and preserves client_msg_no
+ok 94 - WuKong adapter uses v3 message endpoints and preserves client_msg_no
+  ---
+  duration_ms: 1.3145
+  type: 'test'
+  ...
+# Subtest: WuKong adapter syncs channel history and decodes Lingxi payloads
+ok 95 - WuKong adapter syncs channel history and decodes Lingxi payloads
+  ---
+  duration_ms: 2.0983
+  type: 'test'
+  ...
+# Subtest: WuKong history starts at the latest page and walks older pages without overlap
+ok 96 - WuKong history starts at the latest page and walks older pages without overlap
+  ---
+  duration_ms: 3.9003
+  type: 'test'
+  ...
+# Subtest: WuKong history repairs authoritative membership once before retrying
+ok 97 - WuKong history repairs authoritative membership once before retrying
+  ---
+  duration_ms: 3.8622
+  type: 'test'
+  ...
+# Subtest: WuKong history rejects invalid pagination before making a provider request
+ok 98 - WuKong history rejects invalid pagination before making a provider request
+  ---
+  duration_ms: 0.8984
+  type: 'test'
+  ...
+# Subtest: WuKong adapter treats missing empty-channel sync state as empty results
+ok 99 - WuKong adapter treats missing empty-channel sync state as empty results
+  ---
+  duration_ms: 1.5581
+  type: 'test'
+  ...
+# Subtest: WuKong client sets the exact remaining unread count for partial visibility
+ok 100 - WuKong client sets the exact remaining unread count for partial visibility
+  ---
+  duration_ms: 0.7341
+  type: 'test'
+  ...
+# Subtest: WuKong adapter accepts v3 empty-state errors returned as HTTP 400
+ok 101 - WuKong adapter accepts v3 empty-state errors returned as HTTP 400
+  ---
+  duration_ms: 2.1132
+  type: 'test'
+  ...
+# Subtest: WuKong adapter treats the empty-channel 500 response as empty results
+ok 102 - WuKong adapter treats the empty-channel 500 response as empty results
+  ---
+  duration_ms: 1.174
+  type: 'test'
+  ...
+# Subtest: WuKong adapter recognizes structured and localized empty-channel 500 responses
+ok 103 - WuKong adapter recognizes structured and localized empty-channel 500 responses
+  ---
+  duration_ms: 1.6862
+  type: 'test'
+  ...
+# Subtest: WuKong adapter does not hide unrelated history failures
+ok 104 - WuKong adapter does not hide unrelated history failures
+  ---
+  duration_ms: 1.0195
+  type: 'test'
+  ...
+# Subtest: WuKong adapter does not hide unrelated HTTP 400 failures
+ok 105 - WuKong adapter does not hide unrelated HTTP 400 failures
+  ---
+  duration_ms: 1.4687
+  type: 'test'
+  ...
+# Subtest: WuKong webhook signatures are constant-time HMAC contracts
+ok 106 - WuKong webhook signatures are constant-time HMAC contracts
+  ---
+  duration_ms: 1.5169
+  type: 'test'
+  ...
+# Subtest: WuKong msg.notify batches normalize to the Agent OS webhook contract
+ok 107 - WuKong msg.notify batches normalize to the Agent OS webhook contract
+  ---
+  duration_ms: 5.3346
+  type: 'test'
+  ...
+# Subtest: production enables authenticated WuKong callbacks without inheriting the local proxy
+ok 108 - production enables authenticated WuKong callbacks without inheriting the local proxy
+  ---
+  duration_ms: 12.6514
+  type: 'test'
+  ...
+1..108
+# tests 108
+# suites 0
+# pass 108
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 53456.7969

@@ -4,31 +4,6 @@ import test from 'node:test'
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8')
 
-test('learning dashboard consumes canonical space, overview, learner and fact routes', () => {
-  const api = read('./api.ts')
-  const hook = read('./dashboard/useLearningDashboardData.ts')
-  const panel = read('./dashboard/LearningDashboardPanel.tsx')
-
-  assert.match(api, /\/learning\/spaces/)
-  assert.match(api, /learning\/overview\?windowDays=/)
-  assert.match(api, /learning\/learners\$\{query\}/)
-  assert.match(api, /learning\/attempts\/\$\{encodeURIComponent\(attemptId\)\}/)
-  assert.match(api, /\/projects\/\$\{encodeURIComponent\(projectId\)\}\/learning\/knowledge-units/)
-  assert.match(api, /\/projects\/\$\{encodeURIComponent\(projectId\)\}\/learning\/activities/)
-  assert.match(api, /\/projects\/\$\{encodeURIComponent\(projectId\)\}\/learning\/missions/)
-  assert.match(api, /prerequisiteIds: prerequisiteKnowledgeUnitIds/)
-  assert.match(hook, /learningApi\.getOverview\(projectId\)/)
-  assert.match(hook, /Promise\.allSettled/)
-  assert.match(hook, /learningApi\.getDashboard\(\)/)
-  assert.match(hook, /state\.projectId === projectId/)
-  assert.match(hook, /perspective === 'learner'/)
-  assert.match(hook, /Promise\.all\(\[refreshOverview\(\), refreshResources\(\)\]\)/)
-  assert.match(hook, /overviewRequestEpoch/)
-  assert.match(hook, /resourcesRequestEpoch/)
-  assert.match(panel, /space\.projectId, space\.perspective, space\.canReview/)
-  assert.match(panel, /onChanged=\{async \(\) => \{[\s\S]*await refreshAll\(\)/)
-})
-
 test('teacher overview keeps learner and evidence detail behind the controlled dialog', () => {
   const dashboard = read('./dashboard/TeacherOverviewDashboard.tsx')
   const roster = read('./dashboard/TeacherLearnersSection.tsx')

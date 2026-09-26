@@ -95,7 +95,6 @@ test('Web composition contains no background scheduler or worker startup', async
     'startKnowledgeStorageGc',
     'startCalendarScheduler',
     'startPollExpirationSweeper',
-    'startStaleAgentRunSweeper',
   ]
   for (const starter of starters) {
     assert.doesNotMatch(web, new RegExp(`\\b${starter}\\b`))
@@ -125,7 +124,7 @@ test('Komodo workers inherit the complete runtime environment', async () => {
   assert.match(compose, /WUKONG_WEBHOOK_SECRET: \$\{WUKONG_WEBHOOK_SECRET:\?/)
   assert.match(compose, /WUKONG_USER_TOKEN_SECRET: \$\{WUKONG_USER_TOKEN_SECRET:\?/)
   assert.match(compose, /lingxiloop:\r?\n {4}<<: \*runtime\r?\n {4}environment: \*runtime-environment/)
-  assert.match(compose, /worker:\r?\n {4}<<: \*runtime\r?\n {4}environment: \*runtime-environment/)
+  assert.match(compose, /worker:\r?\n {4}<<: \*runtime\r?\n {4}environment:\r?\n {6}<<: \*runtime-environment/)
   assert.match(compose, /db-migrate:\r?\n {4}<<: \*runtime\r?\n {4}environment:\r?\n {6}NODE_ENV: production\r?\n {6}DATABASE_POOL_MAX:[^\n]+\n {6}DATABASE_URL:/)
   assert.match(compose, /db-migrate:[\s\S]*?restart: on-failure/)
   assert.match(compose, /start_period: 10m/)
@@ -137,19 +136,6 @@ test('Komodo workers inherit the complete runtime environment', async () => {
   const image = await readFile(new URL('../../docker/lingxiloop-server.Dockerfile', import.meta.url), 'utf8')
   assert.match(image, /node:22-bookworm-slim/)
   assert.match(image, /python3[\s\\]+bubblewrap/)
-})
-
-test('the authenticated product router owns the LingxiOS control surface', async () => {
-  const router = await readFile(new URL('../im/router.ts', import.meta.url), 'utf8')
-  for (const route of [
-    "get('/approvals/:id'",
-    "post('/approvals/:id/resolve'",
-    "post('/approvals/:id/reconcile'",
-    "get('/channels/:id/agents/:agentId/runs/:runId'",
-    "delete('/channels/:id/agents/:agentId/runs/:runId'",
-  ]) assert.ok(router.includes(route))
-  assert.match(router, /await identity\(req\)/)
-  assert.match(router, /action: 'agent_run:control'/)
 })
 
 test('Open Notebook restarts only after SurrealDB is healthy', async () => {

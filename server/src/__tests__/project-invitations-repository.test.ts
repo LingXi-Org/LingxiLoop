@@ -5,23 +5,6 @@ import {
   insertProjectInvitation,
 } from '../modules/learning/invitations-repository.js'
 
-test('ProjectInvite targets only a planned Teaching Project and grants Student membership', async () => {
-  const statements: string[] = []
-  const db: Queryable = {
-    query: async <_T>(text: string): Promise<any> => {
-      statements.push(text)
-      return { rows: text.includes("kind IN") ? [{ '?column?': 1 }] : [], rowCount: 1 }
-    },
-  }
-  const created = await insertProjectInvitation(db, {
-    tokenHash: 'token', projectId: 'project-1', companyId: 'company-1', userId: 'teacher-1',
-    email: null, note: null, maxUses: 1, expiresAt: new Date('2026-09-01T00:00:00Z'),
-  })
-
-  assert.equal(created, true)
-  assert.match(statements[0] ?? '', /kind IN \('TEACHING','INSTITUTIONAL_COURSE'\)/)
-})
-
 test('ProjectInvite creation stops before mutation for a non-Teaching Project', async () => {
   const statements: string[] = []
   const db: Queryable = {

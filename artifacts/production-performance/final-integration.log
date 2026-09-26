@@ -1,0 +1,4 @@
+[integration] selected 4/48 file(s): runtime-context-latency.test.ts, runtime-nonthinking.test.ts, runtime-response-policy.test.ts, research-search.test.ts
+[integration] skipped — set INTEGRATION_DATABASE_URL to enable.
+             example: INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \\
+                      npm run test:integration

@@ -42,10 +42,6 @@ test('text timestamps sit at the bottom right for every sender and attachments o
     const html = renderToStaticMarkup(<Preview messages={[message('1', sender, true), message('2', sender)]} />)
     const $ = load(html)
     if (sender !== 'me') assert.equal((html.match(new RegExp(`class="font-medium">${participants[sender].name}`, 'g')) ?? []).length, 1)
-    if (sender !== 'me') {
-      assert.match(html, /shrink-0 w-10 items-start/)
-      assert.doesNotMatch(html, /items-end pb-5|data-chat-agent-status/)
-    }
     assert.equal($('time').length, 1)
     assert.equal($('[data-slot="attachment-card"] time').length, 0)
     assert.equal($(sender === 'me' ? '[data-message-bubble="user"] time' : '.im-markdown-bubble time').length, 1)

@@ -1,10 +1,10 @@
 
 > lingxiloop@0.1.0-beta build
-> npm run typecheck && vite build --manifes
+> npm run typecheck && vite build --manifest
 
 
 > lingxiloop@0.1.0-beta typecheck
-> tsc --noEmit && tsc -p tsconfig.node.json --noEmi
+> tsc --noEmit && tsc -p tsconfig.node.json --noEmit
 
 vite v5.4.21 building for production...
 transforming...
@@ -28,7 +28,7 @@ Issue #2:
 │   color: inherit;
 │   background: var(--gold);
 
-✓ 16861 modules transformed.
+✓ 16874 modules transformed.
 rendering chunks...
 [plugin:vite:reporter] [plugin vite:reporter]
 (!) C:/Users/34395/.codex/worktrees/production-performance/LingxiLoop/src/lib/avatarCache.ts is dynamically imported by C:/Users/34395/.codex/worktrees/production-performance/LingxiLoop/src/stores/auth.ts but also statically imported by C:/Users/34395/.codex/worktrees/production-performance/LingxiLoop/src/components/Avatar.tsx, C:/Users/34395/.codex/worktrees/production-performance/LingxiLoop/src/features/agents/state.ts, C:/Users/34395/.codex/worktrees/production-performance/LingxiLoop/src/features/settings/AccountSettingsPanel.tsx, dynamic import will not move module into another chunk.
@@ -277,38 +277,38 @@ dist/.vite/manifest.json                                                        
 dist/assets/learning-vine-BVCdy0vb.webp                                           161.70 kB
 dist/assets/PersonalDashboard-DviME_5D.css                                          6.67 kB │ gzip:   1.95 kB
 dist/assets/mermaid-HWGCJPDP-BJsU3OYj.css                                         164.41 kB │ gzip:  55.62 kB
-dist/assets/index-CqcASEiD.css                                                    383.22 kB │ gzip:  57.59 kB
+dist/assets/index-CypyfIxB.css                                                    384.67 kB │ gzip:  57.80 kB
 dist/assets/CheckmarkCircle02Icon-D-PTcbNP.js                                       0.33 kB │ gzip:   0.20 kB
 dist/assets/InformationCircleIcon-CUKxAkIj.js                                       0.54 kB │ gzip:   0.24 kB
 dist/assets/SourceCodeIcon-BRk30PkD.js                                              0.57 kB │ gzip:   0.25 kB
-dist/assets/highlighted-body-KPVGNVTW-D25K1g0A.js                                   0.75 kB │ gzip:   0.46 kB
+dist/assets/highlighted-body-KPVGNVTW-BFLP_KEu.js                                   0.75 kB │ gzip:   0.46 kB
 dist/assets/Maximize01Icon-PBXxhwBA.js                                              1.00 kB │ gzip:   0.49 kB
-dist/assets/state-22m161ne.js                                                       1.91 kB │ gzip:   0.96 kB
-dist/assets/AvatarEditor-DVLDtL3t.js                                                2.74 kB │ gzip:   1.56 kB
-dist/assets/with-selector-kHrruWEU.js                                               4.06 kB │ gzip:   1.73 kB
-dist/assets/GlobalInteractionProvider-X6Gf6D6K.js                                   7.40 kB │ gzip:   2.58 kB
-dist/assets/CalendarPeekPane-CFtBlRra.js                                            7.45 kB │ gzip:   3.18 kB
-dist/assets/NotificationWindow-Nh76lvUS.js                                          8.20 kB │ gzip:   3.63 kB
-dist/assets/EventEditor-BhRaeDAB.js                                                14.38 kB │ gzip:   5.79 kB
-dist/assets/PresentationDrawerContent-CERtGiHF.js                                  14.57 kB │ gzip:   5.43 kB
-dist/assets/SettingsDialog-DEAjj0mF.js                                             22.41 kB │ gzip:   8.24 kB
-dist/assets/confirmAction-CZPyppmq.js                                              23.19 kB │ gzip:   8.58 kB
-dist/assets/select-BCsYfNC7.js                                                     23.31 kB │ gzip:   7.99 kB
-dist/assets/CanvasView-BRuDH4BC.js                                                 29.05 kB │ gzip:  11.05 kB
-dist/assets/button-CeuA27HH.js                                                     29.17 kB │ gzip:  10.05 kB
-dist/assets/BloubAvatar-CJT340yW.js                                                31.19 kB │ gzip:  13.11 kB
-dist/assets/index-xMT13bo8.js                                                      60.70 kB │ gzip:  18.79 kB
-dist/assets/avatar-9Nt2TuTd.js                                                    114.39 kB │ gzip:  37.80 kB
-dist/assets/index-u-KQnTHo.js                                                     173.88 kB │ gzip:  49.98 kB
-dist/assets/observability-Bw9Y7Md_.js                                             192.20 kB │ gzip:  63.94 kB
-dist/assets/index-3TCdiA7B.js                                                     200.58 kB │ gzip:  63.21 kB
+dist/assets/state-NVcqdfdn.js                                                       1.91 kB │ gzip:   0.96 kB
+dist/assets/AvatarEditor-4fDSQ0_i.js                                                2.74 kB │ gzip:   1.56 kB
+dist/assets/with-selector-NLHKtk_j.js                                               4.06 kB │ gzip:   1.73 kB
+dist/assets/GlobalInteractionProvider-_P_kY-tW.js                                   7.40 kB │ gzip:   2.58 kB
+dist/assets/CalendarPeekPane-BZ91zeHb.js                                            7.45 kB │ gzip:   3.18 kB
+dist/assets/NotificationWindow-hwL2dwE0.js                                          8.20 kB │ gzip:   3.63 kB
+dist/assets/EventEditor-Cmb_MAhn.js                                                14.38 kB │ gzip:   5.80 kB
+dist/assets/PresentationDrawerContent-BszpOUUg.js                                  14.57 kB │ gzip:   5.44 kB
+dist/assets/SettingsDialog-BoNWmIXJ.js                                             22.41 kB │ gzip:   8.25 kB
+dist/assets/confirmAction-CQVaefJ6.js                                              23.19 kB │ gzip:   8.58 kB
+dist/assets/select-CnIyIC4O.js                                                     23.31 kB │ gzip:   7.99 kB
+dist/assets/CanvasView-CwWYJ03V.js                                                 29.05 kB │ gzip:  11.06 kB
+dist/assets/button-D5gPkV3i.js                                                     29.17 kB │ gzip:  10.05 kB
+dist/assets/BloubAvatar-7ebeLlIR.js                                                31.19 kB │ gzip:  13.11 kB
+dist/assets/index-MxW9Rtj4.js                                                      60.70 kB │ gzip:  18.78 kB
+dist/assets/avatar-C1yp0MSJ.js                                                    114.39 kB │ gzip:  37.80 kB
+dist/assets/index-DiqZud1N.js                                                     173.88 kB │ gzip:  49.98 kB
+dist/assets/observability-bJatjTyg.js                                             192.20 kB │ gzip:  63.94 kB
+dist/assets/index-Beg1D1uU.js                                                     200.58 kB │ gzip:  63.21 kB
+dist/assets/PersonalDashboard-CYDfgbXs.js                                         543.34 kB │ gzip: 161.16 kB
+dist/assets/DocumentPeekPane-ncc-6SwA.js                                          577.11 kB │ gzip: 182.58 kB
+dist/assets/App-COOqYGz8.js                                                       692.93 kB │ gzip: 188.07 kB
+dist/assets/mermaid-HWGCJPDP-BVUrilGA.js                                        1,533.14 kB │ gzip: 479.89 kB
 
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-dist/assets/PersonalDashboard-BkNAAE6Q.js                                         543.34 kB │ gzip: 161.15 kB
-dist/assets/DocumentPeekPane-x2pNO5dg.js                                          577.11 kB │ gzip: 182.57 kB
-dist/assets/App-Ds0lHQCA.js                                                       691.08 kB │ gzip: 187.45 kB
-dist/assets/mermaid-HWGCJPDP-CNz91-Of.js                                        1,521.14 kB │ gzip: 476.85 kB
-✓ built in 1m 10s
+✓ built in 1m 33s

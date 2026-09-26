@@ -16,3 +16,9 @@ This is a stable web product. Follow the user's request to completion; ask only 
 - Use the smallest owning check: web (`lint`, `typecheck`, `test`, `build`); admin/control (`admin:*`/`control:*`); server (`server:*` and affected integration); Open Notebook (its own affected package). Migration and runtime integration changes also require their owning integration coverage.
 - Do not add or use Playwright for repository verification.
 - Use Komodo's CLI/API update state for production deployment verification; never copy credentials into files or output.
+
+## Testing
+
+- Never write unit tests after you write code.
+- Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
+- If you must test a system in isolation, first write down all the ways it could fail, then write the code.

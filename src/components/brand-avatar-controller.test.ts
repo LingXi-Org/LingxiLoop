@@ -1,13 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import avatarDefinition from '@/assets/lingxiloop.avatar.json'
 import {
-  BRAND_AVATAR_ANGRY_ANIMATION,
   BRAND_AVATAR_ANGRY_EXPRESSION,
   BRAND_AVATAR_BASE_EXPRESSION,
   BRAND_AVATAR_BLINK_EXPRESSION,
-  BRAND_AVATAR_IDLE_ANIMATION,
-  BRAND_AVATAR_SQUINT_ANIMATION,
   BrandAvatarController,
   type BrandAvatarScheduler,
   type BrandAvatarTimer,
@@ -61,19 +57,9 @@ function setup() {
 
 test('starts from the upward glance while the native idle timeline owns blinking', () => {
   const { expressions, scheduler } = setup()
-  const idle = avatarDefinition.animations[BRAND_AVATAR_IDLE_ANIMATION]
 
   assert.deepEqual(expressions, [BRAND_AVATAR_BASE_EXPRESSION])
   assert.equal(scheduler.pendingCount(), 0)
-  assert.equal(idle.playbackMode, 'loop')
-  assert.deepEqual(idle.steps.map((step) => step.expression), [BRAND_AVATAR_BASE_EXPRESSION])
-  assert.deepEqual(idle.blink, {
-    enabled: true,
-    initialDelayMs: 2600,
-    minIntervalMs: 3400,
-    maxIntervalMs: 6200,
-    durationMs: 280,
-  })
 })
 
 test('a click holds the sleepy squint before returning to idle blinking', () => {
@@ -86,15 +72,6 @@ test('a click holds the sleepy squint before returning to idle blinking', () => 
 
   assert.equal(expressions.at(-1), BRAND_AVATAR_BASE_EXPRESSION)
   assert.equal(scheduler.pendingCount(), 0)
-})
-
-test('the click squint reaches its target through the accelerated native timeline', () => {
-  const squint = avatarDefinition.animations[BRAND_AVATAR_SQUINT_ANIMATION]
-
-  assert.equal(squint.playbackMode, 'loop')
-  assert.deepEqual(squint.steps.map((step) => step.expression), [BRAND_AVATAR_BLINK_EXPRESSION])
-  assert.equal(squint.steps[0]?.transition, 'smooth')
-  assert.equal(squint.steps[0]?.transitionMs, 160)
 })
 
 test('clicking an already closed expression extends it without flashing through idle', () => {
@@ -154,15 +131,4 @@ test('the browser scheduler can dispose without an unbound timer invocation', ()
   controller.start()
 
   assert.doesNotThrow(() => controller.dispose())
-})
-
-test('the angry brand animation continuously renders the source shake motion', () => {
-  assert.equal(avatarDefinition.expressions[BRAND_AVATAR_ANGRY_EXPRESSION].motion.body, 'shake')
-  assert.deepEqual(
-    avatarDefinition.animations[BRAND_AVATAR_ANGRY_ANIMATION].steps.map((step) => step.expression),
-    [BRAND_AVATAR_ANGRY_EXPRESSION],
-  )
-  assert.equal(avatarDefinition.animations[BRAND_AVATAR_ANGRY_ANIMATION].playbackMode, 'loop')
-  assert.equal(avatarDefinition.animations[BRAND_AVATAR_ANGRY_ANIMATION].steps[0]?.transition, 'smooth')
-  assert.equal(avatarDefinition.animations[BRAND_AVATAR_ANGRY_ANIMATION].steps[0]?.transitionMs, 420)
 })

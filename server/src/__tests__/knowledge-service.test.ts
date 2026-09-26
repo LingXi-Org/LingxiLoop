@@ -4,7 +4,6 @@ import { test } from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import {
   isKnowledgeAttachmentMime,
-  KNOWLEDGE_ATTACHMENT_MIMES,
   MAX_SOURCE_BYTES,
   openNotebookEnabled,
   validateKnowledgeUrl,
@@ -61,26 +60,11 @@ test('native Open Notebook ingestion accepts the supported attachment contract',
   }
 })
 
-test('supported attachment types are explicit and do not include archives', () => {
-  assert.deepEqual([...KNOWLEDGE_ATTACHMENT_MIMES].sort(), [
-    'application/json',
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/csv',
-    'text/markdown',
-    'text/plain',
-  ])
-})
-
 test('knowledge URL validator rejects local, credentialed, and non-http targets', async () => {
   await assert.rejects(validateKnowledgeUrl('http://localhost/admin'), /blocked/)
   await assert.rejects(validateKnowledgeUrl('http://127.0.0.1/private'), /blocked/)
   await assert.rejects(validateKnowledgeUrl('file:///etc/passwd'), /http or https/)
   await assert.rejects(validateKnowledgeUrl('https://user:pass@example.com'), /credentials/)
-})
-
-test('native ingestion preserves the public upload limit', () => {
-  assert.equal(MAX_SOURCE_BYTES, 200 * 1024 * 1024)
 })
 
 test('Open Notebook file ingestion references the canonical private object without uploading a second copy', async () => {

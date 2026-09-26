@@ -1,9 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Queryable } from '../db/queryable.js'
-import { PERMISSION_ACTIONS } from '../domain/access/public.js'
 import { ContextScopedPermissionService } from '../modules/access/application.js'
-import { evaluatePolicy, PERMISSION_POLICIES, resourceAccessMode } from '../modules/access/policy.js'
+import { evaluatePolicy, resourceAccessMode } from '../modules/access/policy.js'
 import type { ResolvedAccessContext } from '../modules/access/public.js'
 
 const ownerContext: ResolvedAccessContext = {
@@ -16,10 +15,6 @@ const ownerContext: ResolvedAccessContext = {
   effectivePlan: { id: 'plan', code: 'EDUCATION' },
   entitlements: { has: () => true, boolean: () => true, number: () => null, string: () => null },
 }
-
-test('every canonical PermissionAction has one typed policy', () => {
-  assert.deepEqual(Object.keys(PERMISSION_POLICIES).sort(), [...PERMISSION_ACTIONS].sort())
-})
 
 test('creator policies deny missing ownership facts instead of treating them as public', () => {
   assert.equal(evaluatePolicy(

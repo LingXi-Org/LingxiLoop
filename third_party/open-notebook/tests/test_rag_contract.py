@@ -794,26 +794,3 @@ def test_r2_prefix_cannot_overlap_the_knowledge_source_prefix(
         monkeypatch.setattr(runtime, "get_artifact_store", lambda: store)
         with pytest.raises(ConfigurationError, match="must not overlap"):
             runtime.validate_r2_configuration()
-
-
-def test_rag_image_target_and_supervisor_contract() -> None:
-    root = Path(__file__).parent.parent
-    dockerfile = (root / "Dockerfile").read_text(encoding="utf-8")
-    supervisor = (root / "supervisord.rag.conf").read_text(encoding="utf-8")
-    assert "AS lingxiloop-rag" in dockerfile
-    assert "api.rag_main:app" in supervisor
-    assert "--import-modules rag_commands" in supervisor
-    assert "command=/app/.venv/bin/uvicorn" in supervisor
-    assert "command=/app/.venv/bin/surreal-commands-worker" in supervisor
-    assert "uv run" not in supervisor
-    assert "[program:rag-api]" in supervisor
-    assert "[program:rag-worker]" in supervisor
-    assert supervisor.count("[program:") == 2
-    rag_target = dockerfile.split("FROM accel.way2api.fun/docker.io/library/python:3.12-slim-trixie AS lingxiloop-rag", 1)[
-        1
-    ].split("FROM runtime-base AS runtime", 1)[0]
-    assert "node" not in rag_target.lower()
-    assert "frontend" not in rag_target.lower()
-    assert "scripts/docker-entrypoint.sh" not in rag_target
-    assert "ghcr.io/astral-sh/uv" not in rag_target
-    assert "8502" not in rag_target

@@ -58,8 +58,8 @@ export function readHarness(envelope: ImEnvelope): RunView | undefined {
 }
 
 export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
-  // The native preview contains user-facing text; reasoning never belongs in this channel.
-  if (view.lifecycle === 'queued' || view.lifecycle === 'leased') return view.draft ? [{ type: 'text', text: view.draft }] : []
+  // Only committed messages may enter the conversation; model drafts can contain private reasoning.
+  if (view.lifecycle === 'queued' || view.lifecycle === 'leased') return []
   if (!view.message) return []
   const segments = responseSegments(view.message.envelope)
   const evidence = view.message.envelope.citationEvidence

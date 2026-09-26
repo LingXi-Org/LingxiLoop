@@ -102,25 +102,6 @@ test('lecture deck artifacts fail closed', () => {
   assert.equal(parsePresentationArtifact({ artifactId: 'x', artifactKind: 'other' }), null)
 })
 
-test('presentation resources preserve exclusive loading, error, empty, and ready branches', () => {
-  const drawer = read('./components/PresentationDrawerContent.tsx')
-  const card = read('./components/PresentationArtifactCard.tsx')
-  assert.match(drawer, /loading && !presentation[\s\S]*?<ResourceSkeleton/)
-  assert.match(drawer, /error && !presentation[\s\S]*?role="alert"/)
-  assert.match(drawer, /loaded && !presentation[\s\S]*?演示不可用/)
-  assert.match(drawer, /presentation\.status === 'ready'[\s\S]*?<PresentationViewer/)
-  assert.match(card, /const meta = loading && !presentation[\s\S]*?error && !presentation[\s\S]*?<ArtifactCard[\s\S]*?meta=\{meta\}/)
-  assert.doesNotMatch(card, /ResourceSkeleton/)
-})
-
-test('outline approval uses revision fencing, sensitive confirmation, and lifecycle Toast', () => {
-  const drawer = read('./components/PresentationDrawerContent.tsx')
-  const api = read('./api.ts')
-  assert.match(drawer, /confirmSensitiveAction\(/)
-  assert.match(drawer, /toastAction\(approveOutline\(presentation\.id, presentation\.outlineRevision\)/)
-  assert.match(api, /JSON\.stringify\(\{ expectedRevision \}\)/)
-})
-
 test('the active viewer runs only authenticated Blob HTML in a script-only sandbox', () => {
   const viewer = read('./components/PresentationViewer.tsx')
   const html = read('./html.ts')

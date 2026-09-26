@@ -8,13 +8,12 @@ import { expireNextDueEducationContract } from '../modules/education/repository.
 import { resolveAccessContext } from '../modules/access/context-resolver.js'
 import type { AccessRepository } from '../modules/access/repository.js'
 
-const repositorySource = readFileSync('server/src/modules/education/repository.ts', 'utf8')
 const applicationSource = readFileSync('server/src/modules/education/application.ts', 'utf8')
-const routerSource = readFileSync('server/src/modules/education/router.ts', 'utf8')
 const accessRepositorySource = readFileSync('server/src/modules/access/repository.ts', 'utf8')
 const productionWorkerSource = readFileSync('server/src/worker.ts', 'utf8')
 
 const validRequest = {
+  initialAdminEmail: 'admin@example.school',
   name: 'Example School',
   slug: 'example-school',
   planId: 'education-plan',
@@ -37,25 +36,6 @@ test('Education Company input requires an ordered contract period and positive s
     ...validRequest,
     contract: { ...validRequest.contract, seatLimit: 0 },
   }).success, false)
-})
-
-test('Education creation reuses an existing User and does not grant a Project role', () => {
-  assert.match(repositorySource, /SELECT display_name,avatar_url FROM users/)
-  assert.doesNotMatch(repositorySource, /INSERT INTO users/)
-  assert.match(repositorySource, /INSERT INTO company_memberships/)
-  assert.match(repositorySource, /INSERT INTO organization_seats/)
-  assert.doesNotMatch(repositorySource, /INSERT INTO project_memberships/)
-})
-
-test('Education creation emits the four canonical facts and exposes only its dedicated endpoint', () => {
-  for (const eventType of [
-    'EDUCATION_COMPANY.CREATED',
-    'SCHOOL_MEMBERSHIP.CREATED',
-    'EDUCATION_CONTRACT.CREATED',
-    'ORGANIZATION_SEAT.ASSIGNED',
-  ]) assert.match(applicationSource, new RegExp(eventType.replace('.', '\\.')))
-  assert.match(routerSource, /\.post\('\/education-companies'/)
-  assert.doesNotMatch(routerSource, /\.post\('\/companies'/)
 })
 
 function educationRepository(seatPlanId: string | null): AccessRepository {

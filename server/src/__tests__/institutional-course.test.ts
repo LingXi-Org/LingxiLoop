@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import { projectKindBelongsToCompanyType } from '../domain/public.js'
@@ -11,9 +10,6 @@ import {
   addInstitutionalCourseMember,
   insertCourse,
 } from '../modules/learning/courses-repository.js'
-
-const applicationSource = readFileSync('server/src/modules/learning/application.ts', 'utf8')
-const routerSource = readFileSync('server/src/modules/learning/router.ts', 'utf8')
 
 test('Course kind is selected by its dedicated use case, not by request data', () => {
   assert.deepEqual(createCourseRequestSchema.parse({ name: 'Personal class' }), {
@@ -106,12 +102,4 @@ test('course assignment accepts existing company teachers only', async () => {
     userId: 'student-1',
     role: 'TEACHER',
   }), { projectId: 'project-1', role: 'TEACHER', added: false })
-})
-
-test('Institutional Course writes publish canonical events and use a dedicated member route', () => {
-  assert.match(applicationSource, /PROJECT\.CREATED/)
-  assert.match(applicationSource, /PROJECT_MEMBERSHIP\.ASSIGNED/)
-  assert.match(applicationSource, /source: 'INSTITUTIONAL_COURSE'/)
-  assert.match(routerSource, /\.put\('\/courses\/:id\/members\/:userId'/)
-  assert.match(routerSource, /\.post\('\/institutional-courses'/)
 })

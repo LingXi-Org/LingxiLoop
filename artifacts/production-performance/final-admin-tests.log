@@ -1,0 +1,62 @@
+
+> lingxiloop@0.1.0-beta admin:test
+> node scripts/run-tests.mjs admin
+
+TAP version 13
+# Subtest: LingxiLit admin URL accepts HTTP(S) URLs only
+ok 1 - LingxiLit admin URL accepts HTTP(S) URLs only
+  ---
+  duration_ms: 5.1248
+  type: 'test'
+  ...
+# Subtest: management transport isolates company requests and clears cached records after revocation
+ok 2 - management transport isolates company requests and clears cached records after revocation
+  ---
+  duration_ms: 1448.5005
+  type: 'test'
+  ...
+# Subtest: resource directories select useful columns without exposing raw payloads
+ok 3 - resource directories select useful columns without exposing raw payloads
+  ---
+  duration_ms: 4.9645
+  type: 'test'
+  ...
+# Subtest: image fields allow only safe HTTPS or same-origin paths and fall back to another valid image
+ok 4 - image fields allow only safe HTTPS or same-origin paths and fall back to another valid image
+  ---
+  duration_ms: 1.2553
+  type: 'test'
+  ...
+# Subtest: long resource content stays on the authenticated admin proxy
+ok 5 - long resource content stays on the authenticated admin proxy
+  ---
+  duration_ms: 0.8587
+  type: 'test'
+  ...
+# Subtest: detail values use semantic fields and escape user content instead of rendering HTML
+ok 6 - detail values use semantic fields and escape user content instead of rendering HTML
+  ---
+  duration_ms: 93.4284
+  type: 'test'
+  ...
+# Subtest: missing and invalid numeric data stay distinct from successful results
+ok 7 - missing and invalid numeric data stay distinct from successful results
+  ---
+  duration_ms: 67.1634
+  type: 'test'
+  ...
+# Subtest: workspace navigation preserves every resource under a business owner
+ok 8 - workspace navigation preserves every resource under a business owner
+  ---
+  duration_ms: 71.9431
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7429.8487

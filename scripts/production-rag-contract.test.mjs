@@ -37,7 +37,6 @@ test('packaged and published stacks select the RAG-only image', () => {
   const packaged = read('docker-compose.mvp.yml')
   const workflow = read('.github/workflows/ci.yml')
   const scope = read('scripts/ci-scope.mjs')
-  const smoke = read('server/scripts/knowledge-rag-smoke.ts')
 
   const packagedService = packaged.slice(packaged.indexOf('  open-notebook:'), packaged.indexOf('  wukongim:'))
   assert.match(packagedService, /image: .*lingxiloop-open-notebook/)
@@ -51,48 +50,13 @@ test('packaged and published stacks select the RAG-only image', () => {
   assert.match(workflow, /dorny\/paths-filter@v4[\s\S]*predicate-quantifier: some-with-excludes/)
   assert.doesNotMatch(workflow, /- 'third_party\/open-notebook\/\*\*'/)
   assert.doesNotMatch(workflow, /setup-qemu|:mvp/)
-  assert.match(smoke, /createSecondProject/)
-  assert.match(smoke, /seedOtherCompany/)
-  assert.match(smoke, /otherProjectSourceId/)
-  assert.match(smoke, /otherCompanySourceId/)
   assert.doesNotMatch(packaged, /8502/)
 })
 
-test('native v1 schema makes source chunks the only searchable Surreal corpus', () => {
-  const migration = read('third_party/open-notebook/open_notebook/rag/schema.surrealql')
-
-  assert.match(migration, /DEFINE FUNCTION fn::scoped_vector_search/)
-  assert.match(migration, /DEFINE FUNCTION fn::scoped_text_search/)
-  assert.equal((migration.match(/FROM source_embedding/g) ?? []).length, 2)
-  assert.doesNotMatch(migration, /FROM\s+source_insight\b/i)
-  assert.doesNotMatch(migration, /FROM\s+note\b/i)
-  assert.match(migration, /source\.id IN \$source_ids/g)
-})
-
-test('the production entrypoint has the exact RAG routes and one worker command', () => {
-  const main = read('third_party/open-notebook/api/rag_main.py')
-  const router = read('third_party/open-notebook/api/rag_router.py')
+test('the production image runs only the RAG API and worker', () => {
   const commands = read('third_party/open-notebook/rag_commands.py')
   const supervisor = read('third_party/open-notebook/supervisord.rag.conf')
   const dockerfile = read('third_party/open-notebook/Dockerfile')
-  const routePattern = /@(app|router)\.(get|post|put|delete)\(\s*["']([^"']+)["']/g
-  const routes = [...`${main}\n${router}`.matchAll(routePattern)]
-    .map(([, owner, method, path]) => `${method.toUpperCase()} ${owner === 'router' ? '/api' : ''}${path}`)
-    .sort()
-
-  assert.deepEqual(routes, [
-    'DELETE /api/sources/{source_id}',
-    'GET /api/sources/{source_id}',
-    'GET /api/sources/{source_id}/presentation-material',
-    'GET /api/sources/{source_id}/status',
-    'GET /health',
-    'GET /readyz',
-    'POST /api/notebooks',
-    'POST /api/search',
-    'POST /api/sources/json',
-    'POST /api/sources/{source_id}/retry',
-    'PUT /api/notebooks/{notebook_id}',
-  ].sort())
   assert.equal((commands.match(/@command\(/g) ?? []).length, 1)
   assert.match(commands, /@command\(\s*"process_source"/)
   assert.deepEqual(

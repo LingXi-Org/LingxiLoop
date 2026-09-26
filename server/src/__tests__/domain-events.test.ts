@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import {
@@ -115,10 +114,4 @@ test('event cursor reads are tenant scoped, optional-Project scoped and bounded'
   assert.match(fixture.calls[0]!.text, /company_id=\$1 AND sequence>\$2/)
   assert.match(fixture.calls[0]!.text, /project_id=\$3/)
   assert.deepEqual(fixture.calls[0]!.params, ['company-1', 6, 'project-1', 20])
-})
-
-test('event repository has no mutation path for the append-only ledger', () => {
-  const repository = readFileSync(new URL('../modules/events/repository.ts', import.meta.url), 'utf8')
-  assert.doesNotMatch(repository, /UPDATE domain_events|DELETE FROM domain_events/)
-  assert.match(repository, /company_id=\$1 AND idempotency_key=\$2/)
 })

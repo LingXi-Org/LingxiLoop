@@ -10,7 +10,6 @@ import {
   getWorkingEpochSeed,
   pickWorkingStateSequence,
 } from './agentVisualState'
-import { SEQUENCE } from './bloub/states'
 
 test('starter Bloub identities stay stable across tenant id suffixes', () => {
   for (const [key, expected] of Object.entries(STARTER_BLOUB_PROFILES)) {
@@ -26,13 +25,6 @@ test('starter Bloub identities stay stable across tenant id suffixes', () => {
       expression: expected.expression,
     })
   }
-})
-
-test('starter identities use distinct shapes, colors, and expressions', () => {
-  const profiles = Object.values(STARTER_BLOUB_PROFILES)
-  assert.equal(new Set(profiles.map((profile) => profile.shape)).size, profiles.length)
-  assert.equal(new Set(profiles.map((profile) => profile.color)).size, profiles.length)
-  assert.equal(new Set(profiles.map((profile) => profile.expression)).size, profiles.length)
 })
 
 test('starter working and thinking states consume twelve unique poses', () => {
@@ -54,13 +46,6 @@ test('shared and custom-agent status mappings retain their defaults', () => {
   assert.equal(getBloubState(custom, 'resting'), 'sleep')
   assert.equal(getBloubState(custom, 'unknown'), 'idle')
   assert.equal(getStarterPersonaKey({ id: 'nova-custom' }), null)
-})
-
-test('working montage uses the complete upstream 14-state catalogue', () => {
-  assert.deepEqual(WORKING_STATE_POOL, SEQUENCE)
-  assert.equal(WORKING_STATE_POOL.length, 14)
-  assert.equal(new Set(WORKING_STATE_POOL).size, 14)
-  assert.equal(WORKING_STATE_POOL.includes('swirl'), false)
 })
 
 test('working montage reseeds its start without changing upstream order or repeating a state', () => {

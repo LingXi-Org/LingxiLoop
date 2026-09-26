@@ -1,0 +1,634 @@
+
+> lingxiloop@0.1.0-beta test
+> node scripts/run-tests.mjs web
+
+TAP version 13
+# Subtest: caller headers override matching defaults without dropping request context
+ok 1 - caller headers override matching defaults without dropping request context
+  ---
+  duration_ms: 72.0244
+  type: 'test'
+  ...
+# Subtest: presigned uploads keep the File body on the browser fetch path
+ok 2 - presigned uploads keep the File body on the browser fetch path
+  ---
+  duration_ms: 4.2017
+  type: 'test'
+  ...
+# Subtest: approval cards show explicit decisions and distinct receipts, and disable both actions while busy
+ok 3 - approval cards show explicit decisions and distinct receipts, and disable both actions while busy
+  ---
+  duration_ms: 106.5498
+  type: 'test'
+  ...
+# Subtest: memory chips preserve full summaries and report unavailable updates
+ok 4 - memory chips preserve full summaries and report unavailable updates
+  ---
+  duration_ms: 49.94
+  type: 'test'
+  ...
+# Subtest: streamed paragraphs only reveal complete blocks, including the final block on completion
+ok 5 - streamed paragraphs only reveal complete blocks, including the final block on completion
+  ---
+  duration_ms: 883.7398
+  type: 'test'
+  ...
+# Subtest: lists share a bubble with their lead-in without merging subsequent paragraphs
+ok 6 - lists share a bubble with their lead-in without merging subsequent paragraphs
+  ---
+  duration_ms: 237.1038
+  type: 'test'
+  ...
+# Subtest: unfinished structural blocks stay buffered across blank lines and interruption
+ok 7 - unfinished structural blocks stay buffered across blank lines and interruption
+  ---
+  duration_ms: 200.2435
+  type: 'test'
+  ...
+# Subtest: history has no entry animation and live arrivals opt in
+ok 8 - history has no entry animation and live arrivals opt in
+  ---
+  duration_ms: 31.9965
+  type: 'test'
+  ...
+# Subtest: committed citations preserve Markdown and normal links, with one shared basis slot
+ok 9 - committed citations preserve Markdown and normal links, with one shared basis slot
+  ---
+  duration_ms: 76.3356
+  type: 'test'
+  ...
+# Subtest: only the active occurrence describes its fixed, accessible basis region
+ok 10 - only the active occurrence describes its fixed, accessible basis region
+  ---
+  duration_ms: 12.2974
+  type: 'test'
+  ...
+# Subtest: copying and quoting strip only supplied citation spans
+ok 11 - copying and quoting strip only supplied citation spans
+  ---
+  duration_ms: 14.7111
+  type: 'test'
+  ...
+# Subtest: citation excerpts render safe compact Markdown while source titles remain literal
+ok 12 - citation excerpts render safe compact Markdown while source titles remain literal
+  ---
+  duration_ms: 28.3779
+  type: 'test'
+  ...
+# Subtest: new citations underline answer wording and consume internal links before Link rendering
+ok 13 - new citations underline answer wording and consume internal links before Link rendering
+  ---
+  duration_ms: 50.8691
+  type: 'test'
+  ...
+# Subtest: new drafts show only body text and never activate citation navigation or stale confidence
+ok 14 - new drafts show only body text and never activate citation navigation or stale confidence
+  ---
+  duration_ms: 59.7734
+  type: 'test'
+  ...
+# Subtest: cached Markdown processors keep each message and regenerated claim identity separate
+ok 15 - cached Markdown processors keep each message and regenerated claim identity separate
+  ---
+  duration_ms: 94.9504
+  type: 'test'
+  ...
+# Subtest: starts from the upward glance while the native idle timeline owns blinking
+ok 16 - starts from the upward glance while the native idle timeline owns blinking
+  ---
+  duration_ms: 1.6629
+  type: 'test'
+  ...
+# Subtest: a click holds the sleepy squint before returning to idle blinking
+ok 17 - a click holds the sleepy squint before returning to idle blinking
+  ---
+  duration_ms: 0.3656
+  type: 'test'
+  ...
+# Subtest: clicking an already closed expression extends it without flashing through idle
+ok 18 - clicking an already closed expression extends it without flashing through idle
+  ---
+  duration_ms: 0.1538
+  type: 'test'
+  ...
+# Subtest: four clicks inside the rolling window trigger and hold angry brows
+ok 19 - four clicks inside the rolling window trigger and hold angry brows
+  ---
+  duration_ms: 0.2103
+  type: 'test'
+  ...
+# Subtest: clicks outside the rolling window do not accumulate into anger
+ok 20 - clicks outside the rolling window do not accumulate into anger
+  ---
+  duration_ms: 0.2114
+  type: 'test'
+  ...
+# Subtest: dispose clears pending reactions
+ok 21 - dispose clears pending reactions
+  ---
+  duration_ms: 0.1399
+  type: 'test'
+  ...
+# Subtest: the browser scheduler can dispose without an unbound timer invocation
+ok 22 - the browser scheduler can dispose without an unbound timer invocation
+  ---
+  duration_ms: 0.2253
+  type: 'test'
+  ...
+# (node:37404) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: text timestamps sit at the bottom right for every sender and attachments omit time
+ok 23 - text timestamps sit at the bottom right for every sender and attachments omit time
+  ---
+  duration_ms: 324.0975
+  type: 'test'
+  ...
+# Subtest: attachments retain delivery feedback without a timestamp
+ok 24 - attachments retain delivery feedback without a timestamp
+  ---
+  duration_ms: 20.3951
+  type: 'test'
+  ...
+# Subtest: running replies reserve their footer and successful completion shows a timestamp without a completion label
+ok 25 - running replies reserve their footer and successful completion shows a timestamp without a completion label
+  ---
+  duration_ms: 33.7713
+  type: 'test'
+  ...
+# Subtest: mixed content ends with one internal timestamp and missing timestamps remain hidden
+ok 26 - mixed content ends with one internal timestamp and missing timestamps remain hidden
+  ---
+  duration_ms: 66.3245
+  type: 'test'
+  ...
+# Subtest: a single safe search source uses LinkPreview after completion, replay and reload
+ok 27 - a single safe search source uses LinkPreview after completion, replay and reload
+  ---
+  duration_ms: 77.6927
+  type: 'test'
+  ...
+# Subtest: multiple sources use Citation while a deduplicated single source uses LinkPreview
+ok 28 - multiple sources use Citation while a deduplicated single source uses LinkPreview
+  ---
+  duration_ms: 12.9373
+  type: 'test'
+  ...
+# Subtest: empty results are silent while failures, malformed results and cancellation stay visible
+ok 29 - empty results are silent while failures, malformed results and cancellation stay visible
+  ---
+  duration_ms: 4.9582
+  type: 'test'
+  ...
+# Subtest: single-source images survive replay and select the with-image preview; invalid images keep the text card
+ok 30 - single-source images survive replay and select the with-image preview; invalid images keep the text card
+  ---
+  duration_ms: 17.0485
+  type: 'test'
+  ...
+# Subtest: attachment previews preserve file types and never turn opaque IDs or unsafe URLs into links
+ok 31 - attachment previews preserve file types and never turn opaque IDs or unsafe URLs into links
+  ---
+  duration_ms: 37.9548
+  type: 'test'
+  ...
+# Subtest: poll lists retain single and multiple selection semantics and collapse submitted choices into a receipt
+ok 32 - poll lists retain single and multiple selection semantics and collapse submitted choices into a receipt
+  ---
+  duration_ms: 13.8294
+  type: 'test'
+  ...
+# Subtest: step results distinguish failed execution from failed delivery without inventing completed work
+ok 33 - step results distinguish failed execution from failed delivery without inventing completed work
+  ---
+  duration_ms: 10.4658
+  type: 'test'
+  ...
+# Subtest: delivery manifests and previews expose labelled actions without unauthenticated download links
+ok 34 - delivery manifests and previews expose labelled actions without unauthenticated download links
+  ---
+  duration_ms: 7.9005
+  type: 'test'
+  ...
+# Subtest: all attachments are committed under unique nonces and only the final message carries the question and wakes the agent
+ok 35 - all attachments are committed under unique nonces and only the final message carries the question and wakes the agent
+  ---
+  duration_ms: 3.9308
+  type: 'test'
+  ...
+# Subtest: message times accept seconds and milliseconds, but never display a missing timestamp
+ok 36 - message times accept seconds and milliseconds, but never display a missing timestamp
+  ---
+  duration_ms: 3.6086
+  type: 'test'
+  ...
+# Subtest: every WuKong kind converts exhaustively to canonical role, parts, and JSON-safe metadata
+ok 37 - every WuKong kind converts exhaustively to canonical role, parts, and JSON-safe metadata
+  ---
+  duration_ms: 3.6242
+  type: 'test'
+  ...
+# Subtest: structured kinds become assistant-ui calls instead of view-level kind branches
+ok 38 - structured kinds become assistant-ui calls instead of view-level kind branches
+  ---
+  duration_ms: 1.163
+  type: 'test'
+  ...
+# Subtest: handoff, mission, and attachment protocols map directly to their native elements
+ok 39 - handoff, mission, and attachment protocols map directly to their native elements
+  ---
+  duration_ms: 1.4421
+  type: 'test'
+  ...
+# Subtest: questionnaires preserve choices and freeform inputs for the question card
+ok 40 - questionnaires preserve choices and freeform inputs for the question card
+  ---
+  duration_ms: 0.495
+  type: 'test'
+  ...
+# Subtest: lecture deck artifacts use the dedicated presentation card renderer
+ok 41 - lecture deck artifacts use the dedicated presentation card renderer
+  ---
+  duration_ms: 0.2427
+  type: 'test'
+  ...
+# Subtest: batch conversion is stable, deduplicated, and projects sender grouping
+ok 42 - batch conversion is stable, deduplicated, and projects sender grouping
+  ---
+  duration_ms: 0.4434
+  type: 'test'
+  ...
+# Subtest: clusters adjacent text, attachments, and assistant-ui cards by sender rather than message kind
+ok 43 - clusters adjacent text, attachments, and assistant-ui cards by sender rather than message kind
+  ---
+  duration_ms: 0.5547
+  type: 'test'
+  ...
+# Subtest: a card-first agent cluster inherits the following bubble chrome once
+ok 44 - a card-first agent cluster inherits the following bubble chrome once
+  ---
+  duration_ms: 0.55
+  type: 'test'
+  ...
+# Subtest: group projection preserves messages whose cluster position did not change
+ok 45 - group projection preserves messages whose cluster position did not change
+  ---
+  duration_ms: 0.6034
+  type: 'test'
+  ...
+# Subtest: unknown WuKong kinds fail closed at the transport conversion boundary
+ok 46 - unknown WuKong kinds fail closed at the transport conversion boundary
+  ---
+  duration_ms: 0.7222
+  type: 'test'
+  ...
+# Subtest: structured approvals use the assistant-ui approval gate as their only decision path
+ok 47 - structured approvals use the assistant-ui approval gate as their only decision path
+  ---
+  duration_ms: 0.3028
+  type: 'test'
+  ...
+# Subtest: agent text restores the native read_document result without rebuilding citations
+ok 48 - agent text restores the native read_document result without rebuilding citations
+  ---
+  duration_ms: 1.4198
+  type: 'test'
+  ...
+# Subtest: calendar creation approvals use the native generative event protocol
+ok 49 - calendar creation approvals use the native generative event protocol
+  ---
+  duration_ms: 0.228
+  type: 'test'
+  ...
+# Subtest: approval kinds use Chinese recommendation details
+ok 50 - approval kinds use Chinese recommendation details
+  ---
+  duration_ms: 0.2588
+  type: 'test'
+  ...
+# Subtest: teacher briefings map their four-stat wire protocol directly to Tool UI
+ok 51 - teacher briefings map their four-stat wire protocol directly to Tool UI
+  ---
+  duration_ms: 4.4646
+  type: 'test'
+  ...
+# Subtest: agent text rejects retired markers instead of rebuilding confidence from citations
+ok 52 - agent text rejects retired markers instead of rebuilding confidence from citations
+  ---
+  duration_ms: 0.3162
+  type: 'test'
+  ...
+# (node:30272) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: HTTP replay follows event pages and folds a memory call split across page boundaries
+ok 53 - HTTP replay follows event pages and folds a memory call split across page boundaries
+  ---
+  duration_ms: 34.2163
+  type: 'test'
+  ...
+# Subtest: native response text and presentation cards retain segment order and stable identities
+ok 54 - native response text and presentation cards retain segment order and stable identities
+  ---
+  duration_ms: 3.5561
+  type: 'test'
+  ...
+# Subtest: public native tool events project into bounded assistant-ui history and survive committed IM replay
+ok 55 - public native tool events project into bounded assistant-ui history and survive committed IM replay
+  ---
+  duration_ms: 3.0182
+  type: 'test'
+  ...
+# Subtest: native committed partial answers retain artifact hashes and provenance without appearing complete
+ok 56 - native committed partial answers retain artifact hashes and provenance without appearing complete
+  ---
+  duration_ms: 1.4059
+  type: 'test'
+  ...
+# Subtest: native citations keep occurrence identities, all source versions and truncation, without grading support
+ok 57 - native citations keep occurrence identities, all source versions and truncation, without grading support
+  ---
+  duration_ms: 4.8141
+  type: 'test'
+  ...
+# Subtest: distinct chunks of one PDF remain specific across repeated and combined citations
+ok 58 - distinct chunks of one PDF remain specific across repeated and combined citations
+  ---
+  duration_ms: 1.9333
+  type: 'test'
+  ...
+# Subtest: history, API snapshots and later attempts converge to one current message without restoring an old wait
+ok 59 - history, API snapshots and later attempts converge to one current message without restoring an old wait
+  ---
+  duration_ms: 2.2994
+  type: 'test'
+  ...
+# Subtest: memory projection keeps only successful descriptions, merges updates, restores and replays idempotently
+ok 60 - memory projection keeps only successful descriptions, merges updates, restores and replays idempotently
+  ---
+  duration_ms: 4.8387
+  type: 'test'
+  ...
+# Subtest: running, failed, pending approval, unknown, read operations and foreign events never claim a saved memory
+ok 61 - running, failed, pending approval, unknown, read operations and foreign events never claim a saved memory
+  ---
+  duration_ms: 0.8281
+  type: 'test'
+  ...
+# Subtest: truncated and invalid successful payloads show unavailable without interpreting previews
+ok 62 - truncated and invalid successful payloads show unavailable without interpreting previews
+  ---
+  duration_ms: 0.5119
+  type: 'test'
+  ...
+# (node:38284) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: preview receipt time stays hidden until a valid run timestamp arrives
+ok 63 - preview receipt time stays hidden until a valid run timestamp arrives
+  ---
+  duration_ms: 6.2883
+  type: 'test'
+  ...
+# Subtest: sent bubbles, native final citations and interleaved users survive replay and reload in IM order
+ok 64 - sent bubbles, native final citations and interleaved users survive replay and reload in IM order
+  ---
+  duration_ms: 8.743
+  type: 'test'
+  ...
+# Subtest: a run discovered after a sent bubble owns a separate preview and cannot erase sent text on cancellation or failure
+ok 65 - a run discovered after a sent bubble owns a separate preview and cannot erase sent text on cancellation or failure
+  ---
+  duration_ms: 1.348
+  type: 'test'
+  ...
+# Subtest: a failure discards the uncommitted preview while retaining the specific error
+ok 66 - a failure discards the uncommitted preview while retaining the specific error
+  ---
+  duration_ms: 0.5293
+  type: 'test'
+  ...
+# Subtest: a live reply keeps its anchor until canonical delivery establishes IM order
+ok 67 - a live reply keeps its anchor until canonical delivery establishes IM order
+  ---
+  duration_ms: 2.0128
+  type: 'test'
+  ...
+# Subtest: snapshots preserve IM order after reload and older history does not move the reply
+ok 68 - snapshots preserve IM order after reload and older history does not move the reply
+  ---
+  duration_ms: 0.8607
+  type: 'test'
+  ...
+# Subtest: committed memory summaries belong to the main run reply and survive HTTP replay and IM merging
+ok 69 - committed memory summaries belong to the main run reply and survive HTTP replay and IM merging
+  ---
+  duration_ms: 1.2603
+  type: 'test'
+  ...
+# Subtest: reload keeps interleaved user clusters when run start times disagree with committed message order
+ok 70 - reload keeps interleaved user clusters when run start times disagree with committed message order
+  ---
+  duration_ms: 1.1499
+  type: 'test'
+  ...
+# Subtest: committed replies ignore duplicate snapshots and stale deltas without regressing content
+ok 71 - committed replies ignore duplicate snapshots and stale deltas without regressing content
+  ---
+  duration_ms: 0.883
+  type: 'test'
+  ...
+# Subtest: citation projections agree across snapshots and IM replay and disappear before the next draft
+ok 72 - citation projections agree across snapshots and IM replay and disappear before the next draft
+  ---
+  duration_ms: 3.4286
+  type: 'test'
+  ...
+# Subtest: paragraph deltas stay uncommitted and cancellation does not expose them
+ok 73 - paragraph deltas stay uncommitted and cancellation does not expose them
+  ---
+  duration_ms: 0.8236
+  type: 'test'
+  ...
+# Subtest: a reply at the page boundary leaves room for subsequently loaded older history
+ok 74 - a reply at the page boundary leaves room for subsequently loaded older history
+  ---
+  duration_ms: 0.7358
+  type: 'test'
+  ...
+# Subtest: initial history is ready before slow run snapshots, which merge without duplicate replies
+ok 75 - initial history is ready before slow run snapshots, which merge without duplicate replies
+  ---
+  duration_ms: 272.4686
+  type: 'test'
+  ...
+# Subtest: canonical merge replaces optimistic messages by client identity and preserves pagination order
+ok 76 - canonical merge replaces optimistic messages by client identity and preserves pagination order
+  ---
+  duration_ms: 2.4897
+  type: 'test'
+  ...
+# Subtest: invalid receipts cannot replace a known send time and later valid receipts repair missing times
+ok 77 - invalid receipts cannot replace a known send time and later valid receipts repair missing times
+  ---
+  duration_ms: 0.5747
+  type: 'test'
+  ...
+# Subtest: poll events replace canonical assistant-ui form state without retaining a second payload model
+ok 78 - poll events replace canonical assistant-ui form state without retaining a second payload model
+  ---
+  duration_ms: 0.9795
+  type: 'test'
+  ...
+# (node:6436) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: deleting an interrupted upload resets only its request key across both source views
+ok 79 - deleting an interrupted upload resets only its request key across both source views
+  ---
+  duration_ms: 56.4436
+  type: 'test'
+  ...
+# Subtest: generates a stable local avatar for each course
+ok 80 - generates a stable local avatar for each course
+  ---
+  duration_ms: 17.1689
+  type: 'test'
+  ...
+# Subtest: generates a local avatar when the course identifier is blank
+ok 81 - generates a local avatar when the course identifier is blank
+  ---
+  duration_ms: 2.7502
+  type: 'test'
+  ...
+# Subtest: scrolling keeps its position after React clears the event before a queued state update
+ok 82 - scrolling keeps its position after React clears the event before a queued state update
+  ---
+  duration_ms: 50.8073
+  type: 'test'
+  ...
+# Subtest: the shared origin and furthest evidence bound every viewport, even on an extremely long vine
+ok 83 - the shared origin and furthest evidence bound every viewport, even on an extremely long vine
+  ---
+  duration_ms: 0.8978
+  type: 'test'
+  ...
+# Subtest: dense avatars share a group without losing members, while nearby milestones keep all contributions
+ok 84 - dense avatars share a group without losing members, while nearby milestones keep all contributions
+  ---
+  duration_ms: 19.0685
+  type: 'test'
+  ...
+# Subtest: teacher overview keeps learner and evidence detail behind the controlled dialog
+ok 85 - teacher overview keeps learner and evidence detail behind the controlled dialog
+  ---
+  duration_ms: 3.3186
+  type: 'test'
+  ...
+# Subtest: teacher dashboard writes require teacher management plus the matching capability
+ok 86 - teacher dashboard writes require teacher management plus the matching capability
+  ---
+  duration_ms: 2.6713
+  type: 'test'
+  ...
+# Subtest: presentation boundaries accept only explicit v1 schema versions
+ok 87 - presentation boundaries accept only explicit v1 schema versions
+  ---
+  duration_ms: 2.7694
+  type: 'test'
+  ...
+# Subtest: lecture deck artifacts fail closed
+ok 88 - lecture deck artifacts fail closed
+  ---
+  duration_ms: 0.2427
+  type: 'test'
+  ...
+# Subtest: the active viewer runs only authenticated Blob HTML in a script-only sandbox
+ok 89 - the active viewer runs only authenticated Blob HTML in a script-only sandbox
+  ---
+  duration_ms: 1.2526
+  type: 'test'
+  ...
+# Subtest: settings restores keyboard focus and interactive surfaces have accessible labels
+ok 90 - settings restores keyboard focus and interactive surfaces have accessible labels
+  ---
+  duration_ms: 2.8939
+  type: 'test'
+  ...
+# Subtest: account exit clears identity and authentication submits the CAPTCHA response
+ok 91 - account exit clears identity and authentication submits the CAPTCHA response
+  ---
+  duration_ms: 1.2527
+  type: 'test'
+  ...
+# Subtest: invitation landing remains reachable before authentication and clears on completion
+ok 92 - invitation landing remains reachable before authentication and clears on completion
+  ---
+  duration_ms: 0.6995
+  type: 'test'
+  ...
+# Subtest: user-visible errors are mapped before rendering provider details
+ok 93 - user-visible errors are mapped before rendering provider details
+  ---
+  duration_ms: 0.9979
+  type: 'test'
+  ...
+# Subtest: starter Bloub identities stay stable across tenant id suffixes
+ok 94 - starter Bloub identities stay stable across tenant id suffixes
+  ---
+  duration_ms: 2.9213
+  type: 'test'
+  ...
+# Subtest: starter working and thinking states consume twelve unique poses
+ok 95 - starter working and thinking states consume twelve unique poses
+  ---
+  duration_ms: 0.8631
+  type: 'test'
+  ...
+# Subtest: shared and custom-agent status mappings retain their defaults
+ok 96 - shared and custom-agent status mappings retain their defaults
+  ---
+  duration_ms: 0.3682
+  type: 'test'
+  ...
+# Subtest: working montage reseeds its start without changing upstream order or repeating a state
+ok 97 - working montage reseeds its start without changing upstream order or repeating a state
+  ---
+  duration_ms: 0.6107
+  type: 'test'
+  ...
+# Subtest: pickWorkingStateSequence clamps count to the pool size
+ok 98 - pickWorkingStateSequence clamps count to the pool size
+  ---
+  duration_ms: 0.1812
+  type: 'test'
+  ...
+# Subtest: working epoch seed is stable within a round and changes with time or round
+ok 99 - working epoch seed is stable within a round and changes with time or round
+  ---
+  duration_ms: 0.2905
+  type: 'test'
+  ...
+# Subtest: sensitive actions retain confirmation prompts
+ok 100 - sensitive actions retain confirmation prompts
+  ---
+  duration_ms: 8.1955
+  type: 'test'
+  ...
+# Subtest: dashboard role changes and destructive actions confirm before mutation and preserve Toast lifecycle
+ok 101 - dashboard role changes and destructive actions confirm before mutation and preserve Toast lifecycle
+  ---
+  duration_ms: 3.0226
+  type: 'test'
+  ...
+# Subtest: platform administration routes sensitive commands through the shared dialog and Toast lifecycle
+ok 102 - platform administration routes sensitive commands through the shared dialog and Toast lifecycle
+  ---
+  duration_ms: 1.9506
+  type: 'test'
+  ...
+1..102
+# tests 102
+# suites 0
+# pass 102
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 60951.763

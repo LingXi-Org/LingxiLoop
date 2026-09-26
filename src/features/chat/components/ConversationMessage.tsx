@@ -186,7 +186,7 @@ function MessageTextPart() {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
   const markdown = <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations}
-    interrupted={interrupted} animateEntry={metadata.sequence !== null && metadata.sequence > animationBaseline} />
+    animateEntry={metadata.sequence !== null && metadata.sequence > animationBaseline} />
   return <div className={cn('relative min-w-0 w-fit', isMobile ? 'max-w-full' : 'max-w-[85%]', metadata.isMine && 'ms-auto')}>
     {!isMobile && <MessageActions isMine={metadata.isMine} getText={getText} />}
     <div

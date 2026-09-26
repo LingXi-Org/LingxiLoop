@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-09-26T02:04:16.962Z",
+  "targetedTests": {
+    "passed": 15,
+    "failed": 0,
+    "command": "node --import tsx --experimental-test-module-mocks --test server/src/__tests__/research-search.test.ts src/features/chat/components/ResearchSources.test.tsx src/features/chat/runtime/harness.test.ts src/features/chat/runtime/task-progress.test.tsx"
+  },
+  "integration": {
+    "passed": 1,
+    "failed": 0,
+    "command": "npm run test:integration -- --file research-search.test.ts",
+    "environment": "Dedicated temporary PostgreSQL and Redis; migrated current schema; containers removed after the test"
+  },
+  "live": {
+    "categories": [
+      "教育",
+      "技术",
+      "资讯"
+    ],
+    "cardsPerCategory": 8,
+    "replay": "passed",
+    "command": "node --import tsx scripts/research-search-smoke.tsx"
+  },
+  "visual": {
+    "method": "Codex browser accessibility API and screenshot; no Playwright",
+    "narrowContainerWidth": 320,
+    "keyboardFocus": "Tab focuses a labelled native source link; visible focus ring",
+    "remoteFavicons": false
+  },
+  "checks": {
+    "serverTypecheck": "passed",
+    "changedFileLint": "passed",
+    "frontendTypecheck": "blocked by other workspace edits: score-breakdown.tsx JSX syntax errors on the last run; ConversationMessage.test.tsx errors on the earlier run",
+    "runtimeRegression": "26/28 passed; unrelated timestampMissing and draft-display expectations failed"
+  },
+  "deployment": "not performed",
+  "displayUpdate": {
+    "checkedAt": "2026-09-26T02:10:56.091Z",
+    "rule": "Per search call: one validated unique source uses LinkPreview; multiple sources use Citation.",
+    "tests": {
+      "passed": 3,
+      "failed": 0,
+      "command": "node --import tsx --test src/features/chat/components/ResearchSources.test.tsx"
+    },
+    "lint": "8 changed files passed",
+    "scope": "Frontend presentation only; no backend or authorization changes."
+  },
+  "imageUpdate": {
+    "checkedAt": "2026-09-26T02:19:36.538Z",
+    "tests": {
+      "passed": 9,
+      "failed": 0
+    },
+    "serverTypecheck": "passed",
+    "frontendTypecheck": "passed",
+    "lint": "27 files passed",
+    "live": "Three categories with 8 results each; replay passed; actual thumbnail rendered in 320px LinkPreview",
+    "keyboardFocus": "Labelled native link focused by Tab with visible ring; verified via screenshot",
+    "rule": "Single source with a validated thumbnail uses LinkPreview with image; multiple sources retain Citation"
+  }
+}

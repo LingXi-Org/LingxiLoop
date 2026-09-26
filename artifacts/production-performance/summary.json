@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T02:16:06.330Z",
+  "generatedAt": "2026-09-26T03:10:32Z",
   "baseline": {
     "commit": "e610e863a9d434c392552123a2dd8ead7fd99a0a",
     "description": "Latest origin/main at worktree creation; this is the build comparison baseline, not the deployed old production image"
@@ -7,16 +7,18 @@
   "candidate": {
     "branch": "codex/production-performance",
     "baseCommit": "e610e863a9d434c392552123a2dd8ead7fd99a0a",
-    "committed": false,
-    "trackedSourceDiffSha256": "0ff16715b28665ca06425c4395a1a443b1db73a8299f423585d7271be3068d79",
+    "committed": true,
+    "trackedSourceDiffSha256": "931c43269aa70b979064a03509ebebb7cbe42dda3e428979fcab142f85feffc3",
     "lingxiOS": "3.3.6",
     "node": "v22.22.2",
     "modelChanged": false
   },
-  "production": {
-    "lastObservedCommit": "6f0e0c4ed3de5f87dd2db132872c3e065c6e8ba1",
-    "deployedThisTask": false,
-    "releaseAuthorization": "pending"
+  "productionPreflight": {
+    "observedImageCommit": "6f0e0c4ed3de5f87dd2db132872c3e065c6e8ba1",
+    "observedAppAState": "healthy before rollout; recent V8 heap-limit OOM in logs",
+    "observedAppBState": "healthy before rollout",
+    "previousAppADeployFailure": "GHCR pull ended with connection reset; old image remained running",
+    "source": "Komodo stack/service/update inspection before this release"
   },
   "bundle": {
     "method": "Production manifest static import closure. Excludes runtime data, font requests and browser timings.",
@@ -27,11 +29,11 @@
         "staticJsCssRequests": 8
       },
       "after": {
-        "bytes": 1431191,
-        "gzipBytes": 361787,
+        "bytes": 1434486,
+        "gzipBytes": 362623,
         "staticJsCssRequests": 10
       },
-      "gzipReductionPercent": -0.37
+      "gzipReductionPercent": -0.6
     },
     "defaultChat": {
       "before": {
@@ -40,11 +42,11 @@
         "staticJsCssRequests": 13
       },
       "after": {
-        "bytes": 3426022,
-        "gzipBytes": 982988,
+        "bytes": 3441422,
+        "gzipBytes": 986872,
         "staticJsCssRequests": 15
       },
-      "gzipReductionPercent": 27.83
+      "gzipReductionPercent": 27.54
     },
     "deferred": {
       "CanvasView": {
@@ -83,7 +85,7 @@
     {
       "name": "web_typecheck_and_production_build",
       "status": "passed",
-      "command": "npm run build -- --manifest",
+      "command": "npm run build -- --manifest (final merged candidate)",
       "artifact": "candidate-build.log"
     },
     {
@@ -97,10 +99,22 @@
       "artifact": "lint.log"
     },
     {
-      "name": "chat_regression",
+      "name": "web_tests",
       "status": "passed",
-      "tests": 15,
-      "artifact": "chat-regression.log"
+      "tests": 102,
+      "artifact": "final-web-tests.log"
+    },
+    {
+      "name": "server_tests",
+      "status": "passed",
+      "tests": 108,
+      "artifact": "final-server-tests.log"
+    },
+    {
+      "name": "admin_tests",
+      "status": "passed",
+      "tests": 8,
+      "artifact": "final-admin-tests.log"
     },
     {
       "name": "workspace_keyboard_history_latency_realtime",
@@ -125,6 +139,13 @@
       "artifact": "server-integration.log"
     },
     {
+      "name": "current_runtime_integration_environment",
+      "status": "skipped",
+      "reason": "INTEGRATION_DATABASE_URL is not configured locally",
+      "selectedFiles": 4,
+      "artifact": "final-integration.log"
+    },
+    {
       "name": "context_parallel_failure_before_change",
       "status": "failed_as_expected",
       "artifact": "server-context-parallel-red.log"
@@ -139,7 +160,7 @@
       "name": "deferred_build_graph",
       "status": "passed",
       "baselineRejectedAsExpected": true,
-      "command": "node scripts/measure-web-build.mjs dist artifacts/production-performance/candidate-build.json '_mermaid-HWGCJPDP-CNz91-Of.js' --check-deferred"
+      "command": "node scripts/measure-web-build.mjs dist artifacts/production-performance/candidate-build.json <App dynamic mermaid entry> --check-deferred"
     }
   ],
   "controlledContextFixtures": {
@@ -197,7 +218,8 @@
   "limits": [
     "Static JS/CSS request counts are not observed total browser requests.",
     "Existing large-chunk and CSS ::highlight build warnings remain.",
-    "No production rollout or mainland-browser speed/error-rate claim has been made.",
+    "Mainland-browser latency and error-rate samples are still unavailable; do not treat bundle savings as user-perceived latency gains.",
+    "Production app containers had recent V8 heap-limit OOM logs before rollout; release verification should watch memory and restart state.",
     "No dependency changes or database migrations."
   ]
 }

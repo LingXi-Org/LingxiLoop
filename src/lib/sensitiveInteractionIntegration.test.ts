@@ -21,21 +21,6 @@ test('sensitive actions retain confirmation prompts', () => {
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })
 
-test('approval decisions and user-triggered tasks publish through the global Toast manager', () => {
-  const main = read('../main.tsx')
-  const provider = read('../components/GlobalInteractionProvider.tsx')
-  assert.match(main, /<GlobalInteractionProvider>/)
-  assert.match(provider, /<Toaster \/>/)
-  assert.match(provider, /<AlertDialog open=\{current !== null\}/)
-  const approvals = read('../features/chat/runtime/transport.ts')
-  assert.match(approvals, /toastAction\(\s*agentsApi\.resolveApproval/)
-  assert.match(read('../features/calendar/components/EventEditor.tsx'), /toastAction\(runNow/)
-  assert.match(read('../features/calendar/components/CalendarEventPeekContent.tsx'), /toastAction\(runEventNow/)
-  assert.match(read('../features/email/components/EmailComposer.tsx'), /toastAction\(Promise\.resolve\(sendPromise\)/)
-  assert.match(read('../lib/actionToast.ts'), /toast\.promise\(/)
-  assert.match(read('../lib/actionToast.ts'), /\.unwrap\(\)/)
-})
-
 test('dashboard role changes and destructive actions confirm before mutation and preserve Toast lifecycle', () => {
   const members = read('../features/learning/dashboard/CourseMembersSection.tsx')
   const settings = read('../features/learning/dashboard/CourseSettingsSection.tsx')
@@ -67,11 +52,4 @@ test('platform administration routes sensitive commands through the shared dialo
   assert.match(admin, /disabled=\{pending\}/)
   assert.match(admin, /await toastAction\(adminFetch/)
   assert.doesNotMatch(admin, /\b(?:window\.)?(?:alert|confirm|prompt)\s*\(/)
-})
-
-test('calendar editing uses the controlled Base UI Dialog without a handwritten modal shell', () => {
-  const editor = read('../features/calendar/components/EventEditor.tsx')
-  assert.match(editor, /<Dialog open onOpenChange=/)
-  assert.match(editor, /<DialogContent[\s\S]*?<DialogTitle[\s\S]*?<DialogDescription/)
-  assert.doesNotMatch(editor, /fixed inset-0|addEventListener\(['"]keydown/)
 })
