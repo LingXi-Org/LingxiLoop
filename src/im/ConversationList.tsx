@@ -1,4 +1,4 @@
-import { NotificationOff01Icon, PinIcon } from '@hugeicons/core-free-icons'
+import { NotificationOff01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Badge } from '@/components/ui/badge'
 import { useEffect } from 'react'
@@ -104,36 +104,32 @@ export function ConversationListItemContent({
   const isDirectAgent = conversation.kind === 'direct' && conversation.members.some(
     (id) => id !== meId && byId[id]?.kind === 'agent',
   )
+  const secondaryText = selected ? 'text-sidebar-primary-foreground/85' : 'text-muted-foreground'
   return (
     <>
-      <ConversationAvatar conversation={conversation} size={isMobile ? 42 : !isDirectAgent ? 48 : 54} variant={variant} />
+      <span className="relative shrink-0">
+        <ConversationAvatar conversation={conversation} size={isMobile ? 42 : !isDirectAgent ? 48 : 54} variant={variant} />
+        {!selected && muted && (conversation.unread ?? 0) > 0 && <span className="absolute -end-0.5 -top-0.5 size-2.5 rounded-full bg-destructive" aria-label={`${conversation.unread} 条未读消息`} />}
+      </span>
       <span className="min-w-0 flex-1 self-center">
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className={cn('truncate font-semibold', isMobile ? 'text-[16px]' : 'text-[15px]', muted ? 'text-muted-foreground' : 'text-foreground')}>
+          <span className={cn('truncate font-semibold', isMobile ? 'text-[16px]' : 'text-[15px]', selected ? 'text-sidebar-primary-foreground' : 'text-foreground')}>
             {conversation.title}
           </span>
-          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className="shrink-0 text-[9px] font-normal text-muted-foreground">{role}</span>)}
-          {muted && (
-            <span className="inline-flex size-4 shrink-0 items-center justify-center text-muted-foreground" aria-label="已静音" title="已静音">
-              <HugeiconsIcon icon={NotificationOff01Icon} strokeWidth={2} className="size-3" />
-            </span>
-          )}
+          {roleLabels.map((role, index) => <span key={`${role}-${index}`} className={cn('shrink-0 text-[9px] font-normal', secondaryText)}>{role}</span>)}
+          {conversation.pinned && <span className="sr-only">已置顶</span>}
           {conversation.tag === 'fresh-pulled' && <span className="rounded bg-secondary px-1.5 py-0.5 text-[8px] font-bold text-secondary-foreground">新消息</span>}
         </span>
-        <span className={cn('mt-0.5 block truncate', isMobile ? 'text-[14px]' : 'text-[13px]', typingNames.length > 0 ? 'text-primary' : 'text-muted-foreground')}>
+        <span className={cn('mt-0.5 block truncate', isMobile ? 'text-[14px]' : 'text-[13px]', !selected && typingNames.length > 0 ? 'text-primary' : secondaryText)}>
           {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1 self-center">
         <span className="flex items-center gap-1">
-          <span className={cn('tabular-nums text-muted-foreground', isMobile ? 'text-[12px]' : 'text-[11px]')}>{conversation.lastAt}</span>
-          {conversation.pinned && !isMobile && (
-            <span className="inline-flex size-4 items-center justify-center text-muted-foreground" aria-label="已置顶" title="已置顶">
-              <HugeiconsIcon icon={PinIcon} strokeWidth={2} className="size-3" />
-            </span>
-          )}
+          <span className={cn('tabular-nums', secondaryText, isMobile ? 'text-[12px]' : 'text-[11px]')}>{conversation.lastAt}</span>
         </span>
-        {!selected && (conversation.unread ?? 0) > 0 && (
+        {muted && <span className={cn('inline-flex size-4 items-center justify-center', secondaryText)} aria-label="已静音" title="已静音"><HugeiconsIcon icon={NotificationOff01Icon} strokeWidth={2} className="size-4" /></span>}
+        {!selected && (conversation.unread ?? 0) > 0 && !muted && (
           <Badge className="min-w-5 bg-[var(--unread)] px-1.5 text-[10px] font-bold tabular-nums text-[var(--unread-foreground)]">
             {conversation.unread! > 99 ? '99+' : conversation.unread}
           </Badge>

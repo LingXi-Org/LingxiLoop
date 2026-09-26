@@ -13,15 +13,13 @@ import { useLearningDashboardData } from './useLearningDashboardData'
 
 export function LearningDashboardPanel({ space, section }: {
   space: LearningSpace
-  spaces: LearningSpace[]
   section: LearningDashboardSection
-  onOpenLearningSpace(projectId: string): void
 }) {
   if (section === 'calendar') return <CalendarView />
   if (section === 'resources') return <CourseSourceDrive space={space} />
   if (space.perspective === 'teacher') {
-    if (section === 'settings') {
-      return <CourseSettingsSection space={space} />
+    if (section === 'settings' || section === 'content' || section === 'members' || section === 'status') {
+      return <CourseSettingsSection space={space} section={section === 'settings' ? 'profile' : section} />
     }
     return <DashboardSectionFrame space={space} section="overview"><TeacherOverviewDashboard space={space} /></DashboardSectionFrame>
   }

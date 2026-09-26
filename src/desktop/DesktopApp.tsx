@@ -3,7 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useState } from 'react'
 import type { LayoutChangedMeta } from 'react-resizable-panels'
 import { CommandPalette } from '@/components/CommandPalette'
-import { GroupContextContent } from '@/components/GroupContextContent'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import {
@@ -18,12 +18,13 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { CanvasView } from '@/features/canvas/components/CanvasView'
 import { CalendarPeekPane } from '@/features/calendar/components/CalendarPeekPane'
-import { ConversationsPane, SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
+import { ConversationsPane } from '@/features/conversations/components/ConversationsPane'
 import { useConversations } from '@/features/conversations/store'
 import { DocumentPeekPane } from '@/features/documents/components/DocumentPeekPane'
 import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
+import { viewForWorkspace } from '@/features/learning/dashboard/navigation'
 import { PresentationDrawerContent } from '@/features/presentations'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -37,20 +38,19 @@ import { InfoPane } from './InfoPane'
 import { PersonalDashboard } from './PersonalDashboard'
 import { ThreadDrawer } from './ThreadDrawer'
 import { WorkspaceRail } from './WorkspaceRail'
+import { useLearningSpaces } from './useLearningSpaces'
 
 const DESKTOP_SIDEBAR_WIDTH_KEY = 'lingxiloop:desktop-layout:sidebar-width:v1'
 const LEFT_COLUMN_DEFAULT = 260
 const LEFT_COLUMN_MIN = 240
 const LEFT_COLUMN_MAX = 360
 const MIDDLE_COLUMN_MIN = 320
-const CONTEXT_COLUMN_DEFAULT = 340
-const CONTEXT_COLUMN_MIN = 320
-const CONTEXT_COLUMN_MAX = 720
 
 function loadSidebarWidth(): number {
   if (typeof window === 'undefined') return LEFT_COLUMN_DEFAULT
   try {
-    const width = Number(window.localStorage.getItem(DESKTOP_SIDEBAR_WIDTH_KEY))
+    const stored = window.localStorage.getItem(DESKTOP_SIDEBAR_WIDTH_KEY)
+    const width = stored === null ? LEFT_COLUMN_DEFAULT : Number(stored)
     return Number.isFinite(width) ? Math.min(LEFT_COLUMN_MAX, Math.max(LEFT_COLUMN_MIN, width)) : LEFT_COLUMN_DEFAULT
   } catch {
     return LEFT_COLUMN_DEFAULT
@@ -68,6 +68,7 @@ function persistSidebarWidth(width: number): void {
 export function DesktopApp() {
   const { theme } = useTheme()
   const isMobile = useIsMobile()
+  const learningSpaces = useLearningSpaces()
   const workspaces = useWorkspace((state) => state.list)
   const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
   const activeWorkspace = workspaces.find((project) => project.id === selectedWorkspaceId)
@@ -80,10 +81,8 @@ export function DesktopApp() {
   const calendarEventId = surface?.kind === 'calendar' ? surface.eventId : null
   const canvasId = surface?.kind === 'canvas' ? surface.canvasId : null
   const presentationId = surface?.kind === 'presentation' ? surface.presentationId : null
-  const sourceDetailOpen = useKnowledgeSources((state) => Boolean(state.selectedSource))
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
-  const [groupContextOpen, setGroupContextOpen] = useState(false)
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
@@ -93,14 +92,19 @@ export function DesktopApp() {
   }, [theme])
 
   useEffect(() => {
-    setGroupContextOpen(Boolean(selectedConversation) && !isMobile)
     if (!selectedConversation) setMobileConversationOpen(false)
   }, [isMobile, selectedConversation?.id])
 
   useEffect(() => {
-    if (isMobile && (surface || sourceDetailOpen)) setGroupContextOpen(false)
-  }, [isMobile, sourceDetailOpen, surface])
+    setMobileConversationOpen(false)
+    useKnowledgeSources.getState().close()
+  }, [selectedWorkspaceId])
 
+  useEffect(() => {
+    if (!learningSpaces.activeSpace || learningSpaces.pending || learningSpaces.loading) return
+    const availableView = viewForWorkspace(view, learningSpaces.activeSpace)
+    if (view !== availableView) useApp.getState().setView(availableView)
+  }, [view, learningSpaces.activeSpace, learningSpaces.pending, learningSpaces.loading])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -132,14 +136,6 @@ export function DesktopApp() {
   }, [commandPaletteOpen, isMobile, selectedConversationId, view])
 
   const dashboardOpen = view !== 'conversations'
-  const openDashboard = () => {
-    useApp.getState().setView('learning')
-  }
-  const openWorkspace = () => {
-    setMobileConversationOpen(false)
-    setGroupContextOpen(false)
-    useApp.getState().setView('conversations')
-  }
   const handleSidebarLayoutChanged = (_layout: Record<string, number>, meta: LayoutChangedMeta) => {
     if (!meta.isUserInteraction) return
     const width = document.querySelector<HTMLElement>('[data-panel="conversations"]')?.getBoundingClientRect().width
@@ -153,7 +149,8 @@ export function DesktopApp() {
     const closingActiveElement = document.activeElement
     useSurface.getState().closeCanvasPeek()
     if (!closingCanvasId) return
-    const focusTrigger = () => document.querySelector<HTMLElement>(`[data-canvas-open-trigger="${CSS.escape(closingCanvasId)}"]`)?.focus({ preventScroll: true })
+    const focusTrigger = () => (document.querySelector<HTMLElement>(`[data-canvas-open-trigger="${CSS.escape(closingCanvasId)}"]`)
+      ?? document.querySelector<HTMLElement>('[data-canvas-popover-trigger]'))?.focus({ preventScroll: true })
     window.requestAnimationFrame(() => {
       focusTrigger()
       window.setTimeout(() => {
@@ -172,24 +169,8 @@ export function DesktopApp() {
       document.querySelector<HTMLElement>(`[data-presentation-open-trigger="${CSS.escape(closingPresentationId)}"]`)?.focus()
     })
   }
-  const focusContextTrigger = () => {
-    window.requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>('[data-context-workspace-trigger]')?.focus({ preventScroll: true })
-    })
-  }
-  const closeMobileCanvasView = () => {
-    useSurface.getState().closeCanvasPeek()
-    setGroupContextOpen(false)
-    focusContextTrigger()
-  }
-  const closeMobileContext = () => {
-    setGroupContextOpen(false)
-    focusContextTrigger()
-  }
-  const contextOpen = Boolean(selectedConversation && groupContextOpen)
-  const mobileContextOpen = isMobile && contextOpen
   const drawerCanvasId = isMobile ? canvasId : null
-  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || calendarEventId || presentationId || drawerCanvasId || mobileContextOpen)
+  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || calendarEventId || presentationId || drawerCanvasId)
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
 
@@ -198,8 +179,7 @@ export function DesktopApp() {
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
   else if (calendarEventId) { drawerTitle = '日历事件'; drawerContent = <CalendarPeekPane /> }
   else if (presentationId) { drawerTitle = 'HTML 演示'; drawerContent = <PresentationDrawerContent presentationId={presentationId} /> }
-  else if (drawerCanvasId) { drawerTitle = 'Canvas'; drawerContent = <CanvasView canvasId={drawerCanvasId} onBack={closeMobileCanvasView} /> }
-  else if (mobileContextOpen && selectedConversation) { drawerTitle = '资料与 Canvas 工作区'; drawerContent = <GroupContextContent conversationId={selectedConversation.id} /> }
+  else if (drawerCanvasId) { drawerTitle = 'Canvas'; drawerContent = <CanvasView canvasId={drawerCanvasId} onBack={closeCanvasView} /> }
 
   const closeDrawer = () => {
     const surfaces = useSurface.getState()
@@ -208,12 +188,11 @@ export function DesktopApp() {
     else if (documentId) surfaces.closeDocumentPeek()
     else if (calendarEventId) surfaces.closeCalendarEventPeek()
     else if (presentationId) closePresentationView()
-    else if (drawerCanvasId) closeMobileCanvasView()
-    else if (mobileContextOpen) closeMobileContext()
+    else if (drawerCanvasId) closeCanvasView()
   }
   const drawerOwnsHeader = Boolean(calendarEventId || drawerCanvasId)
   const fullBleedDrawer = Boolean(presentationId || drawerCanvasId)
-  const mobileChatOpen = isMobile && mobileConversationOpen && Boolean(selectedConversation)
+  const mobileChatOpen = !dashboardOpen && !learningSpaces.pending && isMobile && mobileConversationOpen && Boolean(selectedConversation)
   const drawerWidth = isMobile
     ? ' data-[vaul-drawer-direction=right]:w-screen data-[vaul-drawer-direction=right]:max-w-none'
     : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
@@ -221,9 +200,10 @@ export function DesktopApp() {
   return (
     <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
       {!mobileChatOpen && <WorkspaceRail
-          dashboardActive={dashboardOpen}
-          onOpenDashboard={openDashboard}
-          onOpenWorkspace={openWorkspace}
+          {...learningSpaces}
+          onSelect={(space) => void learningSpaces.select(space)}
+          onReload={() => void learningSpaces.reload()}
+          onNavigate={(next) => { setMobileConversationOpen(false); useApp.getState().setView(next) }}
         />}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)]">
         {!isMobile && <div className="omb-drag flex h-5 shrink-0 items-center justify-center gap-1 px-2 text-accent-foreground" data-workspace-titlebar>
@@ -231,11 +211,13 @@ export function DesktopApp() {
           <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeProjectName}</span>
         </div>}
         <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">
-          {dashboardOpen ? (
+          {learningSpaces.pending ? <ResourceSkeleton variant="detail" label="正在切换工作区" className="p-6" /> : dashboardOpen ? (
             <PersonalDashboard
               view={view}
-              sidebarWidth={sidebarWidth}
-              onLayoutChanged={handleSidebarLayoutChanged}
+              space={learningSpaces.activeSpace}
+              loading={learningSpaces.loading && !learningSpaces.activeSpace}
+              error={learningSpaces.error}
+              onRetry={() => void learningSpaces.reload()}
             />
           ) : isMobile ? (
             <div className="h-full min-h-0 min-w-0" data-mobile-conversation-page={mobileChatOpen ? 'chat' : 'list'}>
@@ -245,13 +227,10 @@ export function DesktopApp() {
                     useApp.getState().selectConversation(null)
                     setMobileConversationOpen(false)
                   }}
-                  groupContextOpen={contextOpen}
-                  onToggleGroupContext={() => setGroupContextOpen((open) => !open)}
                 />
               ) : (
                 <div className="flex h-full min-h-0 flex-col bg-card">
                   <ConversationsPane onConversationSelected={() => setMobileConversationOpen(true)} />
-                  <SidebarUserFooter />
                 </div>
               )}
             </div>
@@ -264,31 +243,18 @@ export function DesktopApp() {
             <ResizablePanel id="conversations" defaultSize={sidebarWidth} minSize={LEFT_COLUMN_MIN} maxSize={LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
               <div className="flex h-full min-h-0 flex-col bg-card">
                 <ConversationsPane />
-                <SidebarUserFooter />
               </div>
             </ResizablePanel>
             <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整会话列表宽度" title="拖动调整会话列表宽度，双击恢复默认" />
             <ResizablePanel id="conversation-workspace" defaultSize="75%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
-              <ResizablePanelGroup id="desktop-conversation-content-layout" orientation="horizontal" className="min-h-0 min-w-0">
-                <ResizablePanel id="conversation" defaultSize="100%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
-                  <ChatPane groupContextOpen={contextOpen} onToggleGroupContext={() => setGroupContextOpen((open) => !open)} />
-                </ResizablePanel>
-                {contextOpen && <>
-                  <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整资料与 Canvas 工作区宽度" title="拖动调整资料与 Canvas 工作区宽度" />
-                  <ResizablePanel id="context" defaultSize={CONTEXT_COLUMN_DEFAULT} minSize={CONTEXT_COLUMN_MIN} maxSize={CONTEXT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0 bg-card">
-                    <div id="conversation-context-workspace" className="h-full min-h-0">
-                      {selectedConversation && <GroupContextContent conversationId={selectedConversation.id} />}
-                    </div>
-                  </ResizablePanel>
-                </>}
-              </ResizablePanelGroup>
+              <ChatPane />
             </ResizablePanel>
           </ResizablePanelGroup>}
         </div>
       </div>
 
       <Drawer open={drawerOpen} onOpenChange={(open) => { if (!open) closeDrawer() }} direction="right">
-        <DrawerContent id={mobileContextOpen ? 'conversation-context-workspace' : undefined} className={`${drawerWidth}${fullBleedDrawer ? ' max-w-none overflow-hidden p-0 before:inset-0 before:rounded-none before:border-0 sm:max-w-none' : ''}`} style={isMobile ? { top: 'env(safe-area-inset-top)', bottom: 'env(safe-area-inset-bottom)' } : undefined}>
+        <DrawerContent className={`${drawerWidth}${fullBleedDrawer ? ' max-w-none overflow-hidden p-0 before:inset-0 before:rounded-none before:border-0 sm:max-w-none' : ''}`} style={isMobile ? { top: 'env(safe-area-inset-top)', bottom: 'env(safe-area-inset-bottom)' } : undefined}>
           {drawerOwnsHeader ? <>
             <DrawerTitle className="sr-only">{drawerTitle}</DrawerTitle>
             <DrawerDescription className="sr-only">{drawerTitle}</DrawerDescription>

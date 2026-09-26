@@ -29,7 +29,7 @@ test('Source creation and preview remain project scoped', () => {
   assert.match(library, /<KnowledgeSourceUploadDialog/)
   assert.match(library, /uploadProjectSource\(projectId, file, revealPending\)/)
   assert.match(read('./KnowledgeSourceUploadDialog.tsx'), /reset\(\)[\s\S]*onOpenChange\(false\)[\s\S]*void onFiles\(allowed\)/)
-  assert.match(read('../../../components/WorkspaceChrome.tsx'), /uploadKnowledgeFile\(conversationId, file, revealPending\)/)
+  assert.match(library, /<ConversationSourceToggle[\s\S]*projectId=\{projectId\}/)
   assert.match(api, /onPending\?\.\(\)/)
   assert.match(library, /knowledgeApi\.getProjectSource\(projectId, source\.id\)/)
   assert.match(library, /<Dialog open=\{selected !== null\}/)

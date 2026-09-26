@@ -28,10 +28,11 @@ export const LEARNING_SECTION_COPY: Record<
   learners: { title: '学习者', description: '课程学习者的学习记录' },
   content: { title: '课程内容', description: '课程目标与成功标准' },
   reviews: { title: '评价审核', description: '核对评价与学习证据' },
-  members: { title: '分享与成员', description: '管理课程访问与邀请' },
+  members: { title: '成员与邀请', description: '管理课程访问与邀请' },
   calendar: { title: '日历', description: '课程与个人安排' },
   resources: { title: '资料', description: '按工作区管理个人资料' },
-  settings: { title: '课程设置', description: '课程资料与生命周期' },
+  settings: { title: '基本资料', description: '这些信息会显示给所有课程成员' },
+  status: { title: '课程状态', description: '管理课程生命周期' },
 }
 
 export function DashboardSectionFrame({
