@@ -58,8 +58,9 @@ export function readHarness(envelope: ImEnvelope): RunView | undefined {
 }
 
 export function harnessParts(view: RunView): ThreadAssistantMessagePart[] {
-  // Only committed messages may enter the conversation; model drafts can contain private reasoning.
-  if (view.lifecycle === 'queued' || view.lifecycle === 'leased') return []
+  if (view.lifecycle === 'queued') return []
+  // Public RunView drafts contain body-text deltas; private reasoning never enters this stream.
+  if (view.lifecycle === 'leased' && view.draft) return [{ type: 'text', text: view.draft }]
   if (!view.message) return []
   const segments = responseSegments(view.message.envelope)
   const evidence = view.message.envelope.citationEvidence

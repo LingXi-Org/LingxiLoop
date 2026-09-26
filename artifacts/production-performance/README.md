@@ -9,15 +9,15 @@
 - `baseline-build.json` / `candidate-build.json`：生产构建静态依赖的逐文件原始字节与 gzip 字节。
 - `asset-http.json`：真实 Express 静态服务的 16 项 HTTP 检查；仅 mock 无关基础设施启动。
 - `server-integration.log`：专用 PostgreSQL/Redis 下的 RAG 超时/取消、已读 outbox、非思考流式/账本集成结果。
-- `web-regression.log` / `lint.log` / `candidate-build.log`：定向回归、lint、类型检查及生产构建结果。
-- `final-web-tests.log` / `final-server-tests.log` / `final-admin-tests.log`：合入原工作区修改后的测试结果；`final-integration.log` 记录本机因无专用数据库而跳过。
+- `web-regression.log` / `lint.log`：页面/历史加载、首正文、类型检查与 lint 的回归结果。
+- `final-web-tests.log` / `final-server-tests.log` / `final-admin-tests.log`：最终流式 Web 回归、服务端和 Admin 测试结果；`final-integration.log` 记录本机因无专用数据库而跳过。
 - `chat-regression.log`：最终聊天 15 项定向检查；`server-context-parallel-red.log` 保留并行读取改动前的预期失败，修复后通过记录见 `server-integration.log`。
 
 默认聊天 JS/CSS gzip 合计从 **1,361,955 → 986,872 字节（减少 27.54%）**。拆分后静态 JS/CSS 文件数从 **13 → 15**；这不等于浏览器总请求数。首屏静态 gzip 从 **360,460 → 362,623 字节（增加 0.60%）**，静态文件数从 **8 → 10**。鉴权预检、重复 ticket 和运行时字体请求不在这项构建统计内。
 
 包体基线是最新主分支 e610e86，并非生产旧版 6f0e0c4。静态请求数只统计 HTML 入口引用的 JS/CSS 与 App/Provider/默认聊天的静态依赖，不含字体、运行时数据、缓存命中和条件动态加载。六个面板成为单独动态入口，默认聊天依赖不再包含它们。没有将包体降幅换算成用户等待时间。
 
-Web 定向测试 102/102、服务端定向测试 108/108、Admin 测试 8/8 通过；三端 lint 和类型检查通过，生产构建和静态资源 HTTP 检查通过。生产集成测试本轮因没有配置专用 `INTEGRATION_DATABASE_URL` 而跳过，已有的 `server-integration.log` 记录了性能改动的早期集成运行结果。
+最终正文首字渲染、租用中草稿和实时传输回归测试 18/18 通过；服务端定向测试 108/108、Admin 测试 8/8 通过。Web lint、类型检查及最新生产构建通过，静态资源 HTTP 检查通过。生产集成测试本轮因没有配置专用 `INTEGRATION_DATABASE_URL` 而跳过，已有的 `server-integration.log` 记录了关闭思考、剔除推理字段与正文先行流的集成覆盖。
 
 浏览器连接多次超时/返回 fetch 失败，未获得真实浏览器样本；大陆网络冷加载、会话切换各五轮以及固定对话的真实耗时、中位数、错误率仍待验收。`summary.json` 对这些值保留空数组/null，不能视作通过。键盘命令逻辑已检查，真实面板打开和焦点操作仍待浏览器验收。生产 app A 最近有 Node 堆上限 OOM 日志；当前容器健康，但发布后需继续观察内存和重启情况。
 

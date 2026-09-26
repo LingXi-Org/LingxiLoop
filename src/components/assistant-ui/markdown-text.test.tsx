@@ -16,10 +16,10 @@ function Preview({ text, running, claims, inlineCitations, interrupted = false, 
   return <AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{ AssistantMessage: CitedMessage, UserMessage: Message }} /></AssistantRuntimeProvider>
 }
 
-test('streamed paragraphs only reveal complete blocks, including the final block on completion', () => {
+test('streamed prose and incomplete Markdown blocks appear before completion', () => {
   for (const [text, liveCount, finalCount] of [
-    ['第一段', 0, 1], ['第一段\n\n', 1, 1], ['第一段\n\n第二段 **正在', 1, 2],
-    ['第一段\n\n第二段\n\n- 一\n- 二\n\n```js\nconst value = 1\n```\n\n| 项目 | 结果 |\n| --- | --- |\n| 测试 | 正常 |', 3, 4],
+    ['第一段', 1, 1], ['第一段\n\n', 1, 1], ['第一段\n\n第二段 **正在', 2, 2],
+    ['第一段\n\n第二段\n\n- 一\n- 二\n\n```js\nconst value = 1\n```\n\n| 项目 | 结果 |\n| --- | --- |\n| 测试 | 正常 |', 4, 4],
   ] as const) {
     for (const inlineCitations of [true, false]) {
       for (const running of [true, false]) {
@@ -36,21 +36,20 @@ test('lists share a bubble with their lead-in without merging subsequent paragra
     for (const list of ['- 一\n- 二', '1. 一\n2. 二']) {
       for (const running of [false, true]) {
         const html = renderToStaticMarkup(<Preview text={`${lead}\n\n${list}\n\n接下来`} running={running} />)
-        assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, running ? 1 : 2)
+        assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 2)
         assert.match(html, /学习方面[\s\S]*<\/(?:p|h2)>\s*<(?:ul|ol)/)
-        assert.equal(html.includes('接下来'), !running)
+        assert.ok(html.includes('接下来'))
       }
     }
   }
 })
 
-test('unfinished structural blocks stay buffered across blank lines and interruption', () => {
+test('unfinished structural blocks remain visible during streaming and interruption', () => {
   for (const tail of ['- 一\n\n- 二', '> 引用\n>\n> 继续', '```js\nconst x = 1\n\n', '| 表头 |\n| --- |\n| 值 |']) {
     for (const interrupted of [false, true]) {
       const html = renderToStaticMarkup(<Preview text={`已展示\n\n${tail}`} running={!interrupted} interrupted={interrupted} inlineCitations />)
       assert.match(html, /已展示/)
-      if (interrupted) assert.match(html, /<ul|<blockquote|<table|<pre/)
-      else assert.doesNotMatch(html, /<ul|<blockquote|<table|<pre/)
+      assert.match(html, /<ul|<blockquote|<table|<pre/)
     }
   }
 })

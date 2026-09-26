@@ -1,1 +1,44 @@
-Checked 29 files in 192ms. No fixes applied.
+
+> lingxiloop@0.1.0-beta lint
+> biome lint src vite.config.ts
+
+src\components\ui\sidebar.tsx:86:7 lint/suspicious/noDocumentCookie ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Direct assigning to document.cookie is not recommended.
+
+    85 │       // This sets the cookie to keep the sidebar state.
+  > 86 │       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+       │       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    87 │     },
+    88 │     [setOpenProp, open]
+
+  i Consider using the Cookie Store API.
+
+
+src\features\canvas\components\CanvasView.tsx:150:5 lint/suspicious/noFocusedTests  FIXABLE  ━━━━━━━━━━
+
+  ! Don't focus the test.
+
+    148 │       }
+    149 │     }
+  > 150 │     fit()
+        │     ^^^
+    151 │   }
+    152 │
+
+  i The 'fit' method is often used for debugging or during implementation.
+
+  i Consider removing 'f' prefix from 'fit' to ensure all tests are executed.
+
+  i Unsafe fix: Remove focus from test.
+
+    148 148 │         }␍
+    149 149 │       }␍
+    150     │ - ····fit()␍
+        150 │ + ····it()␍
+    151 151 │     }␍
+    152 152 │   ␍
+
+
+Checked 401 files in 683ms. No fixes applied.
+Found 2 warnings.

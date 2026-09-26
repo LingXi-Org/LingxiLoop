@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T03:10:32Z",
+  "generatedAt": "2026-09-26T03:43:15.825Z",
   "baseline": {
     "commit": "e610e863a9d434c392552123a2dd8ead7fd99a0a",
     "description": "Latest origin/main at worktree creation; this is the build comparison baseline, not the deployed old production image"
@@ -8,7 +8,7 @@
     "branch": "codex/production-performance",
     "baseCommit": "e610e863a9d434c392552123a2dd8ead7fd99a0a",
     "committed": true,
-    "trackedSourceDiffSha256": "931c43269aa70b979064a03509ebebb7cbe42dda3e428979fcab142f85feffc3",
+    "trackedSourceDiffSha256": "2c8046cbd8df411d2338e8c3ec8e29d6fb1e40ea2183a35a06b518dc59a53bac",
     "lingxiOS": "3.3.6",
     "node": "v22.22.2",
     "modelChanged": false
@@ -29,8 +29,8 @@
         "staticJsCssRequests": 8
       },
       "after": {
-        "bytes": 1434486,
-        "gzipBytes": 362623,
+        "bytes": 1434532,
+        "gzipBytes": 362637,
         "staticJsCssRequests": 10
       },
       "gzipReductionPercent": -0.6
@@ -42,40 +42,40 @@
         "staticJsCssRequests": 13
       },
       "after": {
-        "bytes": 3441422,
-        "gzipBytes": 986872,
+        "bytes": 3441136,
+        "gzipBytes": 986756,
         "staticJsCssRequests": 15
       },
-      "gzipReductionPercent": 27.54
+      "gzipReductionPercent": 27.55
     },
     "deferred": {
       "CanvasView": {
-        "file": "assets/CanvasView-BRuDH4BC.js",
+        "file": "assets/CanvasView-Dkd2gJ0v.js",
         "separateDynamicEntry": true,
         "inDefaultChat": false
       },
       "DocumentPeekPane": {
-        "file": "assets/DocumentPeekPane-x2pNO5dg.js",
+        "file": "assets/DocumentPeekPane-CDpbE2BR.js",
         "separateDynamicEntry": true,
         "inDefaultChat": false
       },
       "CalendarPeekPane": {
-        "file": "assets/CalendarPeekPane-CFtBlRra.js",
+        "file": "assets/CalendarPeekPane-DpeFZhLL.js",
         "separateDynamicEntry": true,
         "inDefaultChat": false
       },
       "PresentationDrawerContent": {
-        "file": "assets/PresentationDrawerContent-CERtGiHF.js",
+        "file": "assets/PresentationDrawerContent-D4otiyTt.js",
         "separateDynamicEntry": true,
         "inDefaultChat": false
       },
       "SettingsDialog": {
-        "file": "assets/SettingsDialog-DEAjj0mF.js",
+        "file": "assets/SettingsDialog-C-uj3L0F.js",
         "separateDynamicEntry": true,
         "inDefaultChat": false
       },
       "PersonalDashboard": {
-        "file": "assets/PersonalDashboard-BkNAAE6Q.js",
+        "file": "assets/PersonalDashboard-CV9ZKxdf.js",
         "separateDynamicEntry": true,
         "inDefaultChat": false
       }
@@ -85,8 +85,8 @@
     {
       "name": "web_typecheck_and_production_build",
       "status": "passed",
-      "command": "npm run build -- --manifest (final merged candidate)",
-      "artifact": "candidate-build.log"
+      "command": "npm run build -- --manifest; node scripts/measure-web-build.mjs ... --check-deferred",
+      "artifact": "candidate-build.json"
     },
     {
       "name": "server_typecheck",
@@ -101,8 +101,9 @@
     {
       "name": "web_tests",
       "status": "passed",
-      "tests": 102,
-      "artifact": "final-web-tests.log"
+      "tests": 18,
+      "artifact": "final-web-tests.log",
+      "command": "Focused harness, transport and Markdown streaming regression tests"
     },
     {
       "name": "server_tests",

@@ -1,7 +1,6 @@
 "use client"
 
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
-import { useMessagePartText } from '@assistant-ui/react'
 import { defaultRehypePlugins } from 'streamdown'
 import { createContext, memo, useContext, useEffect, useMemo, useState } from 'react'
 import type { Element, Root } from 'hast'
@@ -44,18 +43,11 @@ const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['s
 }
 const confidenceComponents = { span: ConfidenceSpan, div: BubbleDiv }
 
-function rehypeConfidence({ claims, segmented, inlineCitations, holdTail, paragraphClosed }: {
-  claims: readonly MarkdownConfidenceClaim[]; segmented: boolean; inlineCitations: boolean; holdTail: boolean; paragraphClosed: boolean
+function rehypeConfidence({ claims, segmented, inlineCitations }: {
+  claims: readonly MarkdownConfidenceClaim[]; segmented: boolean; inlineCitations: boolean
 }) {
   const byStart = new Map(claims.map(claim => [claim.start, claim]))
   return (tree: Root) => {
-    if (segmented && holdTail) {
-      const last = [...tree.children].reverse().find(node => node.type === 'element')
-      // Keep incomplete stream blocks out of the rendered message.
-      if (last?.type === 'element' && !(last.tagName === 'p' && paragraphClosed)) {
-        tree.children = tree.children.slice(0, tree.children.indexOf(last))
-      }
-    }
     visit(tree, 'element', (node) => {
       if (node.tagName !== 'a') return
       const href = node.properties.href
@@ -117,18 +109,15 @@ const MarkdownTextImpl = ({
   inlineCitations?: boolean
   animateEntry?: boolean
 }) => {
-  const { text, status } = useMessagePartText()
   const [hoveredId, setHoveredId] = useState('')
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
   const wholeDocument = segmented || Boolean(confidenceClaims?.length) || inlineCitations
-  const holdTail = status.type === 'running'
-  const paragraphClosed = /\r?\n[\t ]*\r?\n[\t\r\n ]*$/.test(text)
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => {
     if (!wholeDocument) return undefined
     // Streamdown caches processors by plugin name and serialized options, not closure identity.
-    return [...Object.values(defaultRehypePlugins), [rehypeConfidence, { claims: confidenceClaims ?? [], segmented, inlineCitations, holdTail, paragraphClosed }]]
-  }, [confidenceClaims, segmented, inlineCitations, wholeDocument, holdTail, paragraphClosed])
+    return [...Object.values(defaultRehypePlugins), [rehypeConfidence, { claims: confidenceClaims ?? [], segmented, inlineCitations }]]
+  }, [confidenceClaims, segmented, inlineCitations, wholeDocument])
 
   const markdown = <div className="im-bubble-markdown-host" data-find-content>
     <StreamdownTextPrimitive
