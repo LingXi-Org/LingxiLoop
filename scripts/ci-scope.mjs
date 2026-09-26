@@ -44,6 +44,14 @@ export function computeScope(changed = {}, manual = '') {
   const openNotebook = enabled('openNotebook') || enabled('openNotebookTests') || release
   const deployment = enabled('deployment')
   const deployContract = deployment || enabled('ci') || enabled('serverDocker') || enabled('wukongim') || enabled('gateway') || openNotebook || release
+  const checkJobs = []
+  if (web) checkJobs.push({ component: 'web' })
+  if (admin) checkJobs.push({ component: 'admin' })
+  if (control) checkJobs.push({ component: 'control' })
+  if (server) checkJobs.push({ component: 'server' })
+  if (openNotebook) checkJobs.push({ component: 'open-notebook' })
+  if (deployContract) checkJobs.push({ component: 'deploy-contract' })
+  if (release) checkJobs.push({ component: 'release' })
 
   const images = []
   if (webBuild || serverSource || enabled('serverDocker')) {
@@ -78,6 +86,7 @@ export function computeScope(changed = {}, manual = '') {
     control_migrations: enabled('controlMigrations'),
     release,
     checks: [web, admin, control, server, deployContract].some(Boolean),
+    check_jobs: checkJobs,
     publish: images.length > 0,
     images,
     packages: images.map(({ manifest }) => manifest).join(' '),
@@ -95,7 +104,7 @@ if (process.argv[1]?.endsWith('ci-scope.mjs')) {
   changed.integrationFiles = JSON.parse(process.env.INTEGRATION_FILES || '[]')
   const result = computeScope(changed, process.env.EVENT === 'workflow_dispatch' ? process.env.MANUAL_SCOPE : '')
   const lines = Object.entries(result).map(([name, value]) => {
-    if (name === 'images') return `images=${JSON.stringify({ include: value })}`
+    if (name === 'images' || name === 'check_jobs') return `${name}=${JSON.stringify({ include: value })}`
     return `${name}=${Array.isArray(value) ? JSON.stringify(value) : value}`
   })
   appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join('\n')}\n`)

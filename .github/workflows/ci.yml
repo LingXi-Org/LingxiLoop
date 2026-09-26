@@ -52,6 +52,7 @@ jobs:
       publish: ${{ steps.scope.outputs.publish }}
       images: ${{ steps.scope.outputs.images }}
       packages: ${{ steps.scope.outputs.packages }}
+      check_jobs: ${{ steps.scope.outputs.check_jobs }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
@@ -210,52 +211,73 @@ jobs:
   checks:
     needs: changes
     if: needs.changes.outputs.checks == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.check_jobs) }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     services:
       redis:
-        image: ${{ needs.changes.outputs.server == 'true' && 'redis:7-alpine' || '' }}
+        image: ${{ matrix.component == 'server' && 'redis:7-alpine' || '' }}
         ports: ["6379:6379"]
         options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
-        with: { node-version: "22", cache: npm }
-      - if: needs.changes.outputs.web == 'true' || needs.changes.outputs.admin == 'true' || needs.changes.outputs.control == 'true' || needs.changes.outputs.server == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+            eval/package-lock.json
+      - if: matrix.component != 'open-notebook'
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-      - if: needs.changes.outputs.web == 'true'
+      - if: matrix.component == 'web'
         run: npm run lint && npm test
         env:
           CI_TEST_FILES: ${{ needs.changes.outputs.web_tests }}
-      - if: needs.changes.outputs.web_build == 'true' && !(github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true'))
+      - if: matrix.component == 'web' && needs.changes.outputs.web_build == 'true' && !(github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true'))
         run: npm run build
-      - if: needs.changes.outputs.web == 'true' && needs.changes.outputs.web_build != 'true'
+      - if: matrix.component == 'web' && needs.changes.outputs.web == 'true' && needs.changes.outputs.web_build != 'true'
         run: npm run typecheck
-      - if: needs.changes.outputs.admin == 'true'
+      - if: matrix.component == 'admin'
         run: npm run admin:lint && npm run admin:test
         env:
           CI_TEST_FILES: ${{ needs.changes.outputs.admin_tests }}
-      - if: needs.changes.outputs.admin_build == 'true' && !(github.event_name == 'push' && github.ref == 'refs/heads/main')
+      - if: matrix.component == 'admin' && needs.changes.outputs.admin_build == 'true' && !(github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true'))
         run: npm run admin:build
-      - if: needs.changes.outputs.admin == 'true' && needs.changes.outputs.admin_build != 'true'
+      - if: matrix.component == 'admin' && needs.changes.outputs.admin_build == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true')
+        run: npm run admin:build
+        env:
+          VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
+          VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEsX5eyOl1nAe5i9
+      - if: matrix.component == 'admin' && needs.changes.outputs.admin_build == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true')
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-dist-${{ github.sha }}
+          path: dist-admin/
+          if-no-files-found: error
+          retention-days: 1
+      - if: matrix.component == 'admin' && needs.changes.outputs.admin == 'true' && needs.changes.outputs.admin_build != 'true'
         run: npm run admin:typecheck
-      - if: needs.changes.outputs.server == 'true'
+      - if: matrix.component == 'server'
         run: npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs
         env:
           CI_TEST_FILES: ${{ needs.changes.outputs.server_tests }}
-      - if: needs.changes.outputs.control == 'true'
+      - if: matrix.component == 'control'
         run: npm run control:lint && npm run control:typecheck && npm run control:test
-      - if: needs.changes.outputs.open_notebook == 'true'
+      - if: matrix.component == 'open-notebook'
         uses: astral-sh/setup-uv@v6
         with: { enable-cache: true, cache-dependency-glob: third_party/open-notebook/uv.lock }
-      - if: needs.changes.outputs.open_notebook == 'true'
+      - if: matrix.component == 'open-notebook'
         working-directory: third_party/open-notebook
         run: uv run --frozen --python 3.12 pytest -q
-      - if: needs.changes.outputs.deploy_contract == 'true'
+      - if: matrix.component == 'deploy-contract'
         run: node --test scripts/production-rag-contract.test.mjs
-      - if: needs.changes.outputs.release == 'true'
+      - if: matrix.component == 'release'
         run: npm run version:check
 
   integration:
@@ -288,7 +310,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
-        with: { node-version: "22", cache: npm }
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+            eval/package-lock.json
       - run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
@@ -414,15 +442,27 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
-        with: { node-version: "22", cache: npm }
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+            eval/package-lock.json
       - run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - name: Build Refine before production changes
+        if: needs.changes.outputs.admin_build != 'true'
         run: npm run admin:build
         env:
           VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
           VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEsX5eyOl1nAe5i9
+      - if: needs.changes.outputs.admin_build == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: admin-dist-${{ github.sha }}
+          path: dist-admin/
       - if: needs.changes.outputs.control_migrations == 'true'
         name: Apply D1 migrations
         run: npm run control:d1:remote

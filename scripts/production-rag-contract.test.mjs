@@ -53,6 +53,13 @@ test('packaged and published stacks select the RAG-only image', () => {
   assert.doesNotMatch(packaged, /8502/)
 })
 
+test('CI component matrix runs only checks enabled by the changed scope', () => {
+  assert.deepEqual(computeScope({ web: true }).check_jobs, [{ component: 'web' }])
+  assert.deepEqual(computeScope({ serverSource: true }).check_jobs, [{ component: 'server' }])
+  assert.ok(computeScope({ deployment: true }).check_jobs.some(({ component }) => component === 'deploy-contract'))
+  assert.ok(computeScope({}, 'release').check_jobs.some(({ component }) => component === 'release'))
+})
+
 test('the production image runs only the RAG API and worker', () => {
   const commands = read('third_party/open-notebook/rag_commands.py')
   const supervisor = read('third_party/open-notebook/supervisord.rag.conf')
