@@ -155,9 +155,9 @@ export function AuthScreen() {
                     event.preventDefault()
                     const data = new FormData(event.currentTarget)
                     void run(async () => {
-                      const result = await authApi.signIn(String(data.get('email')), String(data.get('password')), captchaToken)
+                      const result = await authApi.signIn(String(data.get('email')), String(data.get('password')), captchaToken,
+                        inviteToken ? { token: inviteToken, kind: inviteKind } : undefined)
                       if (result.error) throw new Error(result.error.message)
-                      if (inviteToken) await authApi.acceptInvitation(inviteToken, inviteKind)
                     }, () => location.assign(returnTo), true)
                   }}>
                     <FieldGroup className="gap-5">
