@@ -34,6 +34,21 @@ const event = (draft: string): RunStreamEvent => ({ type: 'preview', preview: {
   kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', seq: 1, draft,
 } })
 
+test('preview receipt time stays hidden until a valid run timestamp arrives', () => {
+  let state = applyRunUpdate({ ...EMPTY_CONVERSATION_CHAT_STATE }, target, event('preview'))
+  assert.equal(metadata(state.messages[0]!).timestampMissing, true)
+  const invalid = snapshot()
+  invalid.run.createdAt = '1970-01-01T00:00:00Z'
+  state = applyRunUpdate(state, target, { type: 'state', state: invalid })
+  assert.equal(metadata(state.messages[0]!).timestampMissing, true)
+  state = applyRunUpdate(state, target, { type: 'state', state: snapshot() })
+  assert.equal(state.messages[0]!.createdAt.getTime(), epoch + 2000)
+  assert.ok(!metadata(state.messages[0]!).timestampMissing)
+  state = applyRunUpdate(state, target, { type: 'state', state: invalid })
+  assert.equal(state.messages[0]!.createdAt.getTime(), epoch + 2000)
+  assert.ok(!metadata(state.messages[0]!).timestampMissing)
+})
+
 function sent(id: string, sequence: number, runId = 'run'): ImEnvelope {
   return { channelId: 'room',channelType: 2,fromUid: 'agent',messageId: id,clientMsgNo: id,
     messageSeq: sequence,timestamp: (epoch + sequence * 1000) / 1000,

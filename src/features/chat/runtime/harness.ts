@@ -3,6 +3,7 @@ import { consumeAssistantMessage, createRunView, responseSegments, type Assistan
 import type { ImEnvelope } from '@/lib/im/wukong'
 import type { HarnessToolPart, LingxiMessageMetadata } from './model'
 import type { MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
+import { researchSources } from './research'
 
 /** chat.send messages can share a run ID without owning that run's preview or lifecycle. */
 export function isRunMessage(metadata: LingxiMessageMetadata): boolean {
@@ -28,8 +29,9 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
     const previous = calls.get(id)
     if (event.kind === 'tool.completed' && previous && event.seq > (previous.eventSeq ?? 0) && event.data.result && typeof event.data.result === 'object') {
       const result = event.data.result, value = Reflect.get(result,'value')
-      // Retain retrieval status, never duplicate source text or prompts in UI state.
+      // Retain status and bounded search cards, never complete source text or prompts.
       calls.set(id,{ ...previous,eventSeq: event.seq,result: { status: Reflect.get(result,'status'),
+        ...(previous.toolName === 'research.search' ? { sources: researchSources(value) } : {}),
         ...(previous.toolName.startsWith('knowledge.') && value && typeof value === 'object' ? { sourceStatus: Reflect.get(value,'status') } : {}) },isError: event.data.isError === true })
     }
   }

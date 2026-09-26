@@ -53,6 +53,14 @@ export interface LingxiQuoteMetadata {
   sequence: number | null
 }
 
+/** A receipt without a server time must not erase a known timestamp. */
+export function preserveMessageTime(message: ThreadMessage, previous?: ThreadMessage): ThreadMessage {
+  if (!previous || !getLingxiMessageMetadata(message).timestampMissing) return message
+  return { ...message, createdAt: previous.createdAt,
+    metadata: { ...message.metadata, custom: { ...message.metadata.custom,
+      timestampMissing: getLingxiMessageMetadata(previous).timestampMissing } } } as ThreadMessage
+}
+
 /** Business snapshots keep their first IM anchor while newer versions replace their content. */
 export function mergeProgressMessage(before: ThreadMessage, after: ThreadMessage): ThreadMessage {
   const previous = getLingxiMessageMetadata(before), next = getLingxiMessageMetadata(after)
@@ -61,8 +69,10 @@ export function mergeProgressMessage(before: ThreadMessage, after: ThreadMessage
   const value = newer ? after : before
   const anchor = (next.sequence ?? Infinity) < (previous.sequence ?? Infinity) ? after : before
   const anchorMetadata = getLingxiMessageMetadata(anchor)
-  return { ...value, id: anchor.id, createdAt: anchor.createdAt,
+  const time = preserveMessageTime(anchor, anchor === before ? after : before)
+  return { ...value, id: anchor.id, createdAt: time.createdAt,
     metadata: { ...value.metadata, custom: { ...getLingxiMessageMetadata(value), sequence: anchorMetadata.sequence,
+      timestampMissing: getLingxiMessageMetadata(time).timestampMissing,
       clientMessageId: anchorMetadata.clientMessageId } } } as ThreadMessage
 }
 
@@ -71,6 +81,7 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   conversationId: string
   clientMessageId: string
   sequence: number | null
+  timestampMissing?: boolean
   progress?: { key: string; version: number; sequence: number }
   /** Keep a live reply at its original turn when its IM receipt arrives later. */
   positionAfter?: string | null

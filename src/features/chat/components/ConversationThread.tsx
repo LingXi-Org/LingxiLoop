@@ -162,7 +162,7 @@ export function ConversationThread({
         {!threadRootId && (
           <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-[10.5px] text-muted-foreground sm:px-4">
             {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
-              <ConversationStart createdAt={snapshot.messages[0]?.createdAt} />
+              <ConversationStart createdAt={snapshot.messages[0]?.createdAt} timestampMissing={snapshot.messages[0]?.metadata.custom.timestampMissing === true} />
             )}
           </div>
         )}

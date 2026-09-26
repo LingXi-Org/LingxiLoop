@@ -1,4 +1,5 @@
 "use client";
+import { MessageFooterContents } from '../message-footer';
 
 import { CheckIcon, ShieldCheckIcon, XIcon } from "lucide-react";
 import { useRef, useState, type ComponentProps } from "react";
@@ -34,7 +35,7 @@ export function ApprovalCard({
   }
   return <div data-slot="approval-card" aria-busy={disabled}
     className={cn(paper, conversationCardSize.standard, "flex flex-col gap-3.5 rounded-[6px_18px_18px_6px] p-4 text-foreground", className)} {...props}>
-    <div className="flex items-center gap-3">
+    <MessageFooterContents><div className="flex items-center gap-3">
       <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/[0.05] text-muted-foreground">
         <ShieldCheckIcon aria-hidden="true" className="size-4" />
       </span>
@@ -59,5 +60,6 @@ export function ApprovalCard({
       {approved ? "已批准" : "已拒绝"}
     </p>}
     {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+    </MessageFooterContents>
   </div>;
 }

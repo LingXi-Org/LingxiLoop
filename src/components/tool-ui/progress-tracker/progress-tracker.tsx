@@ -1,4 +1,5 @@
 import { cn } from "./_adapter";
+import { MessageFooterContents } from '@/components/assistant-ui/message-footer';
 import type {
   ProgressStep,
   ProgressTrackerChoice,
@@ -187,6 +188,7 @@ function ProgressTrackerReceipt({
       aria-label={choice.summary}
     >
       <div className="bg-card/60 flex w-full flex-col gap-4 rounded-2xl border p-5 shadow-xs">
+        <MessageFooterContents>
         <div className="flex items-center justify-between">
           <ElapsedTimeBadge elapsedTime={elapsedTime} />
           <span
@@ -231,6 +233,7 @@ function ProgressTrackerReceipt({
             </li>
           ))}
         </ol>
+        </MessageFooterContents>
       </div>
     </div>
   );
@@ -259,6 +262,7 @@ function ProgressTrackerLive({
       aria-busy={hasInProgress}
     >
       <div className="bg-card flex w-full flex-col gap-4 rounded-2xl border p-5 shadow-xs">
+        <MessageFooterContents>
         <ElapsedTimeBadge elapsedTime={elapsedTime} />
 
         <ol className="m-0 flex list-none flex-col gap-3 p-0">
@@ -334,6 +338,7 @@ function ProgressTrackerLive({
             );
           })}
         </ol>
+        </MessageFooterContents>
       </div>
     </article>
   );

@@ -156,7 +156,7 @@ if (!process.env.AGENT_OS_RESPONSE_POLICY) process.env.AGENT_OS_RESPONSE_POLICY 
 // the right trade.
 const child = spawn(
   'node',
-  ['--import', 'tsx', '--test', '--test-concurrency=1', '--test-force-exit', ...testFiles],
+  ['--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-concurrency=1', '--test-force-exit', ...testFiles],
   { stdio: 'inherit', env: process.env },
 )
 child.on('exit', (code) => process.exit(code ?? 1))

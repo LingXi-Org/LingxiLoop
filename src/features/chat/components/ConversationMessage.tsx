@@ -10,6 +10,7 @@ import { createContext, type PointerEvent as ReactPointerEvent, useContext, useE
 import { Avatar } from '@/components/Avatar'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { MemoryChips } from '@/components/assistant-ui/elements/memory-chips'
+import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
 import { confidenceCopyText, type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
 import { TypingIndicator } from '@/components/typing-indicator'
@@ -22,7 +23,7 @@ import { useConversationUi } from '@/stores/conversationUi'
 import type { Participant } from '@/types'
 import { chatTransport } from '../runtime/transport'
 import type { LingxiMessageMetadata } from '../runtime/model'
-import { CHAT_TOOL_RENDERERS } from './ToolRenderers'
+import { CHAT_TOOL_RENDERERS, isVisibleChatPart } from './ToolRenderers'
 import { HarnessDetails } from './HarnessDetails'
 import { chatLatency } from '../runtime/latency'
 import { copyMessageText, MessageActions } from './MessageActions'
@@ -30,9 +31,9 @@ import { copyMessageText, MessageActions } from './MessageActions'
 export const MessageAnimationBaseline = createContext(Infinity)
 
 function SourcePart({ url, title }: SourceMessagePartProps) {
-  return url
+  return <div className="w-fit max-w-full rounded-[18px] bg-muted px-3.5 py-2"><MessageFooterContents inset={false}>{url
     ? <a href={url} target="_blank" rel="noreferrer" className="text-xs text-primary underline underline-offset-2">{title ?? url}</a>
-    : <span className="text-xs text-muted-foreground">{title}</span>
+    : <span className="text-xs text-muted-foreground">{title}</span>}</MessageFooterContents></div>
 }
 
 function QuotePart({ text, messageId }: { text: string; messageId: string }) {
@@ -184,6 +185,8 @@ function MessageTextPart() {
   useEffect(() => () => {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
+  const markdown = <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations}
+    interrupted={interrupted} animateEntry={metadata.sequence !== null && metadata.sequence > animationBaseline} />
   return <div className={cn('relative min-w-0 w-fit', isMobile ? 'max-w-full' : 'max-w-[85%]', metadata.isMine && 'ms-auto')}>
     {!isMobile && <MessageActions isMine={metadata.isMine} getText={getText} />}
     <div
@@ -204,13 +207,12 @@ function MessageTextPart() {
       className={cn(
         'min-w-0 tracking-[-0.01em]',
         isMobile ? 'text-base leading-[1.5]' : 'text-[15px] leading-[1.35]',
-        metadata.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-primary-foreground [&_.typeset]:!text-primary-foreground [&_.typeset_*]:!text-primary-foreground'],
+        metadata.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-primary-foreground [&_[data-message-footer]]:text-primary-foreground/75 [&_.typeset]:!text-primary-foreground [&_.typeset_*]:!text-primary-foreground'],
         !metadata.isMine && 'text-foreground',
         metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
       )}
     >
-      <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations}
-        animateEntry={metadata.sequence !== null && metadata.sequence > animationBaseline} />
+      {metadata.isMine ? <MessageFooterContents inset={false}>{markdown}</MessageFooterContents> : markdown}
     </div>
     {isMobile && <MobileMessageActions metadata={metadata} getText={getText} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
   </div>
@@ -249,18 +251,11 @@ export function ConversationMessage() {
   const isMobile = useIsMobile()
   const custom = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
   const isSpecialCard = custom.presentation === 'special-card'
-  const running = useAuiState((state) => {
-    const messages = state.thread.messages
-    for (let index = messages.findIndex(message => message.id === state.message.id); index >= 0; index -= 1) {
-      const message = messages[index]!
-      if (message.status?.type === 'running') return true
-      if (message.metadata.custom.groupStart) break
-    }
-    return false
-  })
+  const running = useAuiState((state) => state.message.status?.type === 'running')
   const createdAt = useAuiState((state) => state.message.createdAt)
   const messageId = useAuiState((state) => state.message.id)
   const content = useAuiState((state) => state.message.content)
+  const lastVisiblePart = content.reduce((last, part, index) => isVisibleChatPart(part) ? index : last, -1)
   const attachments = useMemo(() => {
     const items: Array<{
       id: string
@@ -305,6 +300,16 @@ export function ConversationMessage() {
   // The external runtime adds an empty assistant placeholder after a mid-run user turn.
   // Real replies come from the transport and already carry their own typing state.
   if (custom.schema !== 'lingxiloop.thread-message.v1') return null
+  const showTime = !running && !custom.timestampMissing && Number.isFinite(createdAt.getTime()) && createdAt.getTime() > 0
+  const showDelivery = custom.isMine && custom.delivery !== 'sent'
+  const deliveryLabel = showDelivery ? custom.delivery === 'sending' ? '发送中…' : '发送失败' : null
+  const footer = showTime || showDelivery ? (
+    <div data-message-footer data-align="end" className="flex items-center justify-end gap-2 whitespace-nowrap text-[11px] leading-4 tabular-nums text-muted-foreground sm:text-[10px]">
+      {showTime && <time dateTime={createdAt.toISOString()}>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
+      {deliveryLabel && <span>{deliveryLabel}</span>}
+    </div>
+  ) : null
+  const attachmentFooter = deliveryLabel ? <span className="whitespace-nowrap text-xs text-muted-foreground">{deliveryLabel}</span> : null
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
@@ -325,7 +330,7 @@ export function ConversationMessage() {
       <div className={cn(
         'flex shrink-0',
         isMobile ? 'w-8' : 'w-10',
-        !custom.isMine ? 'items-start' : isMobile ? 'items-end pb-4' : 'items-end pb-5',
+        !custom.isMine ? 'items-start' : 'items-end',
         custom.groupStart && participant?.kind === 'agent' && 'chat-message-avatar',
         custom.groupStart && participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
         custom.groupStart && participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
@@ -343,19 +348,23 @@ export function ConversationMessage() {
         <div className={cn('grid w-full min-w-0 gap-0.5', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {attachments.length > 0 && <div data-slot="message-attachments" className={cn('flex w-full min-w-0 flex-col gap-1', custom.isMine && 'items-end')}>
-            {attachments.map((attachment) => <AttachmentCard key={attachment.id} {...attachment} />)}
+            {attachments.map((attachment, index) => <MessageFooterContext.Provider key={attachment.id}
+              value={lastVisiblePart < 0 && index === attachments.length - 1 ? attachmentFooter : null}>
+              <AttachmentCard {...attachment} />
+            </MessageFooterContext.Provider>)}
           </div>}
-          <MessagePrimitive.Parts
-            components={{
+          {custom.quote && <QuotePart text={custom.quote.text} messageId={custom.quote.messageId} />}
+          {content.map((part, index) => <MessageFooterContext.Provider key={part.type === 'tool-call' ? part.toolCallId : index}
+            value={index === lastVisiblePart ? footer : null}>
+            <MessagePrimitive.PartByIndex index={index} components={{
               Text: MessageTextPart,
               Reasoning: () => null,
               Image: () => null,
               File: () => null,
               Source: SourcePart,
-              Quote: QuotePart,
               tools: CHAT_TOOL_RENDERERS,
-            }}
-          />
+            }} />
+          </MessageFooterContext.Provider>)}
           {custom.harness && custom.memory && <MemoryChips fresh chips={custom.memory.chips}
             unavailable={Object.values(custom.memory.calls).some(call => call.unavailable)} className="mt-2 max-w-xl" />}
           {custom.senderKind === 'agent' && custom.messageKind === 'text' && custom.runId && <HarnessDetails metadata={custom} />}
@@ -364,12 +373,6 @@ export function ConversationMessage() {
           </MessagePrimitive.Error>}
         </div>
         <Reactions metadata={custom} messageId={messageId} />
-        {(custom.groupEnd || (custom.isMine && custom.delivery !== 'sent')) && (
-          <div data-message-footer className={cn('mt-0.5 flex min-h-4 items-center gap-2 px-1 text-muted-foreground', custom.isMine && 'justify-end', isMobile ? 'text-[11px]' : 'text-[10px]')}>
-            {custom.groupEnd && !running && <time dateTime={createdAt.toISOString()}>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
-            {custom.isMine && custom.delivery !== 'sent' && <span>{custom.delivery === 'sending' ? '发送中…' : '发送失败'}</span>}
-          </div>
-        )}
       </div>
     </MessagePrimitive.Root>
   )

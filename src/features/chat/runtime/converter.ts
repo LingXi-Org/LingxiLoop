@@ -13,7 +13,7 @@ import type {
   LingxiQuoteMetadata,
   LingxiReactionMetadata,
 } from './model'
-import { mergeProgressMessage, resolveMessagePresentation } from './model'
+import { mergeProgressMessage, preserveMessageTime, resolveMessagePresentation } from './model'
 import { readHarness, harnessParts, harnessStatus } from './harness'
 import type { RunView } from '@lyyzka/lingxios/ui'
 
@@ -62,9 +62,10 @@ function messageId(envelope: ImEnvelope): string {
   return envelope.messageId || payload.clientMsgNo
 }
 
-function timestamp(value: number): Date {
+function timestamp(value: number): Date | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined
   const date = new Date(value > 10_000_000_000 ? value : value * 1_000)
-  return Number.isFinite(date.getTime()) ? date : new Date()
+  return Number.isFinite(date.getTime()) ? date : undefined
 }
 
 function reactions(data: JsonObject, meId: string | null): LingxiReactionMetadata[] {
@@ -395,7 +396,7 @@ function baseParts(envelope: ImEnvelope, harness?: RunView): ThreadAssistantMess
         id: `handoff-${taskId}`,
         fromAgentId: string(data.fromAgentId), toAgentId: string(data.toAgentId),
         title: string(data.title,payload.body), status: string(data.status,'queued'),
-        updatedAt: string(data.updatedAt,timestamp(envelope.timestamp).toISOString()),
+        updatedAt: string(data.updatedAt,timestamp(envelope.timestamp)?.toISOString() ?? ''),
       })]
     }
     case 'canvas': {
@@ -403,7 +404,7 @@ function baseParts(envelope: ImEnvelope, harness?: RunView): ThreadAssistantMess
       return [...(Array.isArray(data.assignments) ? [toolCall(`canvas-progress:${taskId}`, 'canvas-progress', {
         id: `canvas-progress-${taskId}`, title: string(data.title,payload.body), goal: string(data.goal),
         status: string(data.status,'active'), coordinatorAgentId: string(data.coordinatorAgentId), assignments: data.assignments,
-        updatedAt: string(data.updatedAt,timestamp(envelope.timestamp).toISOString()),
+        updatedAt: string(data.updatedAt,timestamp(envelope.timestamp)?.toISOString() ?? ''),
       })] : []), toolCall(`canvas:${taskId}`, 'canvas-artifact', {
         id: `canvas-${taskId}`,
         title: string(data.title, payload.body || '画布'),
@@ -417,7 +418,7 @@ function baseParts(envelope: ImEnvelope, harness?: RunView): ThreadAssistantMess
         id: `mission-${taskId}`,
         goal: string(data.goal, payload.body || '完成学习任务'), successCriteria: string(data.successCriteria),
         coordinatorAgentId: string(data.coordinatorAgentId), status: string(data.status,'PLANNING'), steps: Array.isArray(data.steps) ? data.steps : [],
-        updatedAt: string(data.updatedAt,timestamp(envelope.timestamp).toISOString()),
+        updatedAt: string(data.updatedAt,timestamp(envelope.timestamp)?.toISOString() ?? ''),
       })]
     }
     case 'email': {
@@ -498,7 +499,9 @@ export function convertEnvelope(envelope: ImEnvelope, context: MessageConversion
     : metadata.isMine && (envelope.payload.kind === 'text' || envelope.payload.kind === 'attachment')
       ? 'user'
       : 'assistant'
-  const common = { id: messageId(envelope), createdAt: timestamp(envelope.timestamp) }
+  const createdAt = timestamp(envelope.timestamp)
+  if (!createdAt) metadata.timestampMissing = true
+  const common = { id: messageId(envelope), createdAt: createdAt ?? new Date() }
   if (role === 'system') {
     const text = content.find((part) => part.type === 'text')?.text ?? envelope.payload.body ?? ''
     return { ...common, role, content: [{ type: 'text', text }], metadata: { custom: metadata } }
@@ -601,7 +604,7 @@ export function convertEnvelopeBatch(
     const currentSequence = current ? (current.metadata.custom as LingxiMessageMetadata).sequence ?? 0 : -1
     const nextSequence = (message.metadata.custom as LingxiMessageMetadata).sequence ?? 0
     if (current && progress) byId.set(key,mergeProgressMessage(current,message))
-    else if (!current || nextSequence >= currentSequence) byId.set(key, message)
+    else if (!current || nextSequence >= currentSequence) byId.set(key, preserveMessageTime(message, current))
   }
   return projectMessageGroups([...byId.values()].sort((left, right) => {
     const leftSequence = (left.metadata.custom as LingxiMessageMetadata).sequence

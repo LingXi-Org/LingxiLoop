@@ -16,7 +16,7 @@ async function authorize(context: ActionContext) {
     action: 'agent:read', resource: { type: 'conversation', id: productConversationId(context.work) } })
 }
 export const researchTools: ToolDefinition[] = [
-  nativeTool('research.search', researchSchemas.search, { description: 'Search OpenAlex for public research sources.', effect: 'read', approval: false, authorize,
+  nativeTool('research.search', researchSchemas.search, { description: 'Search public web sources using the free Chinese 360 search engine. Results include titles, original URLs and snippets; snippets are not full source text. Source links are displayed as cards.', effect: 'read', approval: false, authorize,
     async execute(context, input) { return { ok: true, value: await searchResearch(input.query, input.limit, context.signal) } } }),
   nativeTool('research.read', researchSchemas.read, { description: 'Read a public source with DNS, redirect, byte and time limits.', effect: 'read', approval: false, authorize,
     async execute(context, input) { return { ok: true, value: await readResearch(input.url, context.signal) } } }),

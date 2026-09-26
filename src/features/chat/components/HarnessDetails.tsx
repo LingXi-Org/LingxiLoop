@@ -10,6 +10,7 @@ import { harnessLabel } from '../runtime/harness'
 import { DeliveryCard, RunProgressCard } from './RunResultCards'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
 import { knowledgeProgress } from '../runtime/task-progress'
+import { ResearchSources } from './ResearchSources'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const target = useMemo(() => ({ conversationId: metadata.conversationId, agentId: metadata.senderId, runId: metadata.runId!,
@@ -31,6 +32,7 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
   }
 
   return <section aria-label="任务结果与操作" className="mt-2 grid w-full max-w-xl gap-2 text-xs text-muted-foreground empty:hidden">
+    <ResearchSources calls={metadata.harnessTools ?? []} lifecycle={view.lifecycle} />
     {retrieval && <ProgressTracker {...retrieval} />}
     {needsAttention ? <RunProgressCard view={view} error={metadata.harnessError}>
       {metadata.harnessControl && view.delivery === 'failed' && <div className="mt-3 flex justify-end"><Button type="button" size="sm" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button></div>}
