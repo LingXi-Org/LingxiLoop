@@ -18,7 +18,7 @@ export function formatLearningDateTime(value: string | undefined | null): string
   const date = new Date(value)
   return Number.isFinite(date.getTime())
     ? date.toLocaleString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : '时间待同步'
+    : '时间暂不可用'
 }
 
 export function LearnerNextSteps({ overview, model, canSubmit, onOpenSection }: {
@@ -55,8 +55,8 @@ export function LearnerNextSteps({ overview, model, canSubmit, onOpenSection }: 
         )) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-muted/40 p-6 text-center">
             <CheckCheck aria-hidden="true" className="size-7 text-primary" />
-            <p className="font-medium">{overview ? '按自己的节奏继续' : '学习安排待同步'}</p>
-            <p className="text-sm leading-6 text-muted-foreground">{overview ? '可以回顾学习记录，或在课程对话中探索新的问题。' : '概览加载后，这里会显示复习与学习安排。'}</p>
+            <p className="font-medium">{overview ? '按自己的节奏继续' : '学习安排暂不可用'}</p>
+            <p className="text-sm leading-6 text-muted-foreground">可以回顾学习记录，或在课程对话中探索新的问题。</p>
             <Button type="button" variant="outline" size="sm" onClick={() => onOpenSection('evidence')}>回顾学习记录 <ArrowRight aria-hidden="true" /></Button>
           </div>
         )}

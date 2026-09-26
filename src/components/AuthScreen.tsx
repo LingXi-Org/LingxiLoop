@@ -77,7 +77,7 @@ function TurnstileWidget({ onToken, onError }: { onToken: (token: string) => voi
 
 function CaptchaField({ onToken, onError }: { onToken: (token: string) => void; onError: () => void }) {
   if (!TURNSTILE_SITE_KEY) {
-    return <Alert variant="destructive"><AlertDescription>人机验证尚未配置，请联系管理员。</AlertDescription></Alert>
+    return <Alert variant="destructive"><AlertDescription>暂时无法完成安全验证，请稍后重试；如仍无法继续，请联系管理员。</AlertDescription></Alert>
   }
   return <Field><TurnstileWidget onToken={onToken} onError={onError} /></Field>
 }
@@ -161,7 +161,7 @@ export function AuthScreen() {
                     }, () => location.assign(returnTo), true)
                   }}>
                     <FieldGroup className="gap-5">
-                      <Field><FieldLabel htmlFor="login-email">邮箱</FieldLabel><Input id="login-email" name="email" type="email" autoComplete="email" placeholder="m@example.com" required /></Field>
+                      <Field><FieldLabel htmlFor="login-email">邮箱</FieldLabel><Input id="login-email" name="email" type="email" autoComplete="email" required /></Field>
                       <Field>
                         <div className="flex items-center"><FieldLabel htmlFor="login-password">密码</FieldLabel><Button type="button" variant="link" size="sm" className="ms-auto" onClick={() => changeMode('forgot')}>忘记密码？</Button></div>
                         <Input id="login-password" name="password" type="password" autoComplete="current-password" required />
@@ -191,7 +191,7 @@ export function AuthScreen() {
                     <FieldGroup className="gap-5">
                       <Alert><AlertTitle>{invitation.companyName} · {invitation.role === 'teacher' ? (invitation.isAdmin ? '教师管理员' : '教师') : '学生'}</AlertTitle><AlertDescription>{invitation.courseName ? `课程：${invitation.courseName}。` : ''}邮箱验证后加入。身份由邀请确定。</AlertDescription></Alert>
                       <Field><FieldLabel htmlFor="signup-name">姓名</FieldLabel><Input id="signup-name" name="name" autoComplete="name" required /></Field>
-                      <Field><FieldLabel htmlFor="signup-email">邮箱</FieldLabel><Input id="signup-email" name="email" type="email" defaultValue={invitation.email ?? ''} readOnly={Boolean(invitation.email)} autoComplete="email" placeholder="m@example.com" required /></Field>
+                      <Field><FieldLabel htmlFor="signup-email">邮箱</FieldLabel><Input id="signup-email" name="email" type="email" defaultValue={invitation.email ?? ''} readOnly={Boolean(invitation.email)} autoComplete="email" required /></Field>
                       <Field><FieldLabel htmlFor="signup-password">密码</FieldLabel><Input id="signup-password" name="password" type="password" autoComplete="new-password" minLength={8} required /><FieldDescription>至少 8 个字符。</FieldDescription></Field>
                       <Field><FieldLabel htmlFor="confirm-password">确认密码</FieldLabel><Input id="confirm-password" name="confirmPassword" type="password" autoComplete="new-password" minLength={8} required /></Field>
                       <CaptchaField key={`signup-${captchaRound}`} onToken={setCaptchaToken} onError={captchaError} />
@@ -214,7 +214,7 @@ export function AuthScreen() {
               }}>
                 <FieldGroup className="gap-5">
                   <Alert><AlertTitle>验证码已发送</AlertTitle><AlertDescription>验证码将在短时间内失效，请检查收件箱。</AlertDescription></Alert>
-                  <Field><FieldLabel htmlFor="verification-code">邮箱验证码</FieldLabel><Input id="verification-code" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} placeholder="000000" required /></Field>
+                  <Field><FieldLabel htmlFor="verification-code">邮箱验证码</FieldLabel><Input id="verification-code" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required /></Field>
                   {error ? <FieldDescription role="alert" className="text-destructive">{error}</FieldDescription> : null}
                   <Button className="w-full" type="submit" disabled={busy}>{busy ? <Spinner /> : null}验证邮箱</Button>
                   <Button type="button" variant="outline" disabled={busy} onClick={() => void run(async () => {

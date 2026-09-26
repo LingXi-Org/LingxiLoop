@@ -31,7 +31,7 @@ export function CourseProfileSettings({
     const description = String(data.get('description') ?? '').trim()
     const confirmed = await confirmSensitiveAction({
       title: '保存课程设置？',
-      description: '课程名称与说明将对所有课程成员更新。',
+      description: '保存后，所有课程成员都会看到新的课程名称和说明。',
       confirmLabel: '保存更改',
       tone: 'warning',
     })
@@ -68,7 +68,7 @@ export function CourseProfileSettings({
     <Card>
       <CardContent>
         <form onSubmit={updateCourse} className="space-y-6">
-          {!canEdit && <p className="text-sm text-muted-foreground">当前课程状态下只能查看基本资料。</p>}
+          {!canEdit && <p className="text-sm text-muted-foreground">课程基本资料当前仅供查看。</p>}
           <AvatarEditor kind="course" currentUrl={course.avatarUrl || getCourseAvatarUrl(course.id)} onSave={saveAvatar} disabled={!canEdit || busy} />
           <FieldGroup>
             <Field>

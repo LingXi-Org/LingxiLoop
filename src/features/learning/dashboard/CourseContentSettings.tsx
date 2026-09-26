@@ -226,7 +226,7 @@ export function CourseContentSettings({ space }: { space: LearningSpace }) {
   return (
     <div className="space-y-6">
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-      {!canEdit && <Alert><AlertDescription>当前课程状态下可以查看内容，但不能创建、发布或关闭内容。</AlertDescription></Alert>}
+      {!canEdit && <Alert><AlertDescription>课程内容当前仅供查看，无法新增、发布或关闭。</AlertDescription></Alert>}
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">

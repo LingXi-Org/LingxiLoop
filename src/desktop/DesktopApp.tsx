@@ -183,7 +183,7 @@ export function DesktopApp() {
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
   else if (calendarEventId) { drawerTitle = '日历事件'; drawerContent = <CalendarPeekPane /> }
-  else if (presentationId) { drawerTitle = 'HTML 演示'; drawerContent = <PresentationDrawerContent presentationId={presentationId} /> }
+  else if (presentationId) { drawerTitle = '演示文稿'; drawerContent = <PresentationDrawerContent presentationId={presentationId} /> }
   else if (drawerCanvasId) { drawerTitle = 'Canvas'; drawerContent = <CanvasView canvasId={drawerCanvasId} onBack={closeCanvasView} /> }
 
   const closeDrawer = () => {

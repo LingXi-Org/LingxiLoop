@@ -95,7 +95,7 @@ export function CalendarEventPeekContent({
       <PeekUnavailable
         icon={<HugeiconsIcon icon={Calendar03Icon} className="size-5" />}
         title="日历事件不可用"
-        detail={failed || '该事件可能已被删除，或不属于当前工作区。'}
+        detail={failed || '该事件可能已被删除，或你没有访问权限。'}
         onClose={onClose}
       />
     )

@@ -32,7 +32,7 @@ export function LearningReviewsSection({ course, reviews, progress, onChanged, o
     try {
       await toastAction(learningApi.reviewEvaluation(course.projectId, item.id, {
         decision,
-        reason: accepted ? '课程创建者确认评价与证据一致' : '证据不足，需要补充',
+        reason: accepted ? '教师确认评价与证据一致' : '证据不足，需要补充',
       }), {
         loading: accepted ? '正在接受评价' : '正在退回评价',
         success: accepted ? '评价已接受' : '评价已退回',
@@ -52,22 +52,22 @@ export function LearningReviewsSection({ course, reviews, progress, onChanged, o
             <div>
               <h3 className="font-heading text-sm font-medium">{item.activity_title ?? '学习评价'}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                学习者 {progress.find((learner) => learner.user_id === item.learner_id)?.display_name ?? '课程成员'} · 建议掌握等级 {item.demonstrated_level} · 置信度 {Math.round(item.confidence * 100)}%
+                学习者 {progress.find((learner) => learner.user_id === item.learner_id)?.display_name ?? '课程成员'} · 建议掌握等级 {item.demonstrated_level}
               </p>
             </div>
             <p className="text-sm">{item.feedback}</p>
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">
-                评价提交者：{item.builder_agent_id ? participantsById[item.builder_agent_id]?.name ?? '教学智能助教' : '未绑定'}
+                AI 初评：{item.builder_agent_id ? participantsById[item.builder_agent_id]?.name ?? '教学智能助教' : '教学智能助教'}
               </Badge>
               <Badge variant={item.verifier_verdict === 'supported' ? 'secondary' : 'outline'}>
-                独立复核：{item.verifier_agent_id ? participantsById[item.verifier_agent_id]?.name ?? '教学智能助教' : '尚未复核'} ·{' '}
-                {item.verifier_verdict === 'supported' ? '证据支持' : item.verifier_verdict === 'rejected' ? '证据冲突' : '需课程创建者审核'}
+                复核：{item.verifier_agent_id ? participantsById[item.verifier_agent_id]?.name ?? '教学智能助教' : '尚未完成'} ·{' '}
+                {item.verifier_verdict === 'supported' ? '与证据一致' : item.verifier_verdict === 'rejected' ? '与证据不一致' : '等待你审核'}
               </Badge>
             </div>
             {course.perspective === 'teacher' && course.canManage && course.canReview && <div className="flex flex-wrap gap-3">
               <Button size="sm" onClick={() => void review(item, 'accept')}>
-                {item.demonstrated_level === 4 ? '课程创建者确认掌握等级 4' : '接受'}
+                {item.demonstrated_level === 4 ? '确认已掌握' : '接受评价'}
               </Button>
               <Button size="sm" variant="secondary" onClick={() => void review(item, 'reject')}>退回</Button>
             </div>}

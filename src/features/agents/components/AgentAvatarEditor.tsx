@@ -52,7 +52,7 @@ export function AgentAvatarEditor({ agent }: { agent: Participant }) {
   return <Dialog open={open} onOpenChange={changeOpen}>
     <DialogTrigger asChild><button type="button" aria-label={`更换${agent.name}的头像`} className="shrink-0 rounded-xl p-1 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"><Avatar p={agent} size={72} /></button></DialogTrigger>
     <DialogContent className="sm:max-w-md">
-      <DialogHeader><DialogTitle>更换 {agent.name} 的头像</DialogTitle><DialogDescription>仅自己可见，保存后同步到聊天和成员列表。</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>更换 {agent.name} 的头像</DialogTitle><DialogDescription>自定义头像仅你可见。</DialogDescription></DialogHeader>
       <div className="flex flex-wrap items-center gap-4">
         <Avatar p={{ ...agent, personalAvatar: file && preview ? { url: preview } : draft }} size={80} animated={false} />
         <Button variant="outline" disabled={busy} onClick={() => { setFile(null); setDraft({ seed: crypto.randomUUID() }); setError('') }}>随机换一个</Button>

@@ -160,7 +160,7 @@ function LearnerView({ projectId, learnerId, onOpenAttempt }: {
         <h3 id="learner-attempts-title" className="font-heading text-base font-medium">学习证据</h3>
         {detail.attempts.map((attempt) => (
           <div key={attempt.attemptId} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3">
-            <div><p className="font-medium">{attempt.title}</p><p className="mt-1 text-xs text-muted-foreground">{dateTime(attempt.submittedAt)} · {ASSISTANCE_LABELS[attempt.assistance] ?? '辅助方式待同步'} · {statusLabel(attempt.status)}</p></div>
+            <div><p className="font-medium">{attempt.title}</p><p className="mt-1 text-xs text-muted-foreground">{dateTime(attempt.submittedAt)} · {ASSISTANCE_LABELS[attempt.assistance] ?? '辅助情况未记录'} · {statusLabel(attempt.status)}</p></div>
             <Button type="button" size="sm" variant="outline" onClick={() => onOpenAttempt(attempt.attemptId)}>查看证据</Button>
           </div>
         ))}
@@ -185,7 +185,7 @@ function AttemptView({ projectId, attemptId, backToLearnerId, onOpenLearner }: {
     <div className="space-y-5">
       <DialogHeader className="pe-10">
         <DialogTitle>{detail.source?.title ?? '学习证据'}</DialogTitle>
-        <DialogDescription>{detail.learner.displayName} · {dateTime(detail.submittedAt)} · {ASSISTANCE_LABELS[detail.assistance] ?? '辅助方式待同步'}</DialogDescription>
+        <DialogDescription>{detail.learner.displayName} · {dateTime(detail.submittedAt)} · {ASSISTANCE_LABELS[detail.assistance] ?? '辅助情况未记录'}</DialogDescription>
       </DialogHeader>
       <div className="flex flex-wrap gap-2">
         <Button
@@ -252,12 +252,12 @@ function ReviewView({ projectId, canReview, review, onOpenLearner, onReviewed, o
     <div className="space-y-6">
       <DialogHeader className="pe-10">
         <DialogTitle>{review.activity_title ?? '学习评价'}</DialogTitle>
-        <DialogDescription>建议掌握等级 {review.demonstrated_level} · 置信度 {Math.round(review.confidence * 100)}%</DialogDescription>
+        <DialogDescription>建议掌握等级 {review.demonstrated_level}</DialogDescription>
       </DialogHeader>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" onClick={onOpenLearner}>查看学习者</Button>
         <Badge variant={review.verifier_verdict === 'supported' ? 'secondary' : 'outline'}>
-          {review.verifier_verdict === 'supported' ? '独立复核支持' : review.verifier_verdict === 'rejected' ? '独立复核冲突' : '等待课程创建者判断'}
+          {review.verifier_verdict === 'supported' ? '与证据一致' : review.verifier_verdict === 'rejected' ? '与证据不一致' : '等待你审核'}
         </Badge>
       </div>
       {review.feedback && <p className="rounded-2xl bg-muted p-4 text-sm">{review.feedback}</p>}
@@ -274,7 +274,7 @@ function ReviewView({ projectId, canReview, review, onOpenLearner, onReviewed, o
           <Textarea id={`review-reason-${review.id}`} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="说明接受或退回的依据" required aria-invalid={Boolean(error) || undefined} />
           <p className="text-xs text-muted-foreground">审核说明会随本次决定一起保存。</p>
         </div>
-      ) : <Alert><AlertDescription>当前课程状态下不能处理评价审核。</AlertDescription></Alert>}
+      ) : <Alert><AlertDescription>你目前无法处理这条评价。</AlertDescription></Alert>}
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
       {canReview && (
         <DialogFooter className="sticky bottom-0 z-10 -mx-6 -mb-6 border-t bg-popover px-6 pb-6 pt-4">

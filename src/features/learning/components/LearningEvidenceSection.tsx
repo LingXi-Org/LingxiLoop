@@ -66,7 +66,7 @@ export function LearningEvidenceSection({
               <div>
                 <p className="font-heading text-sm font-medium">第 {evidence.length - index} 次尝试</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {new Date(item.created_at).toLocaleString('zh-CN')} · {ASSISTANCE_LABELS[item.assistance] ?? '辅助方式待同步'} · {statusLabel(item.status)}
+                  {new Date(item.created_at).toLocaleString('zh-CN')} · {ASSISTANCE_LABELS[item.assistance] ?? '辅助情况未记录'} · {statusLabel(item.status)}
                 </p>
               </div>
               {item.demonstrated_level !== null
@@ -84,7 +84,6 @@ export function LearningEvidenceSection({
                 {item.evaluation_id ? (
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
                     <Badge variant="secondary">{item.demonstrated_level === null ? '等待掌握等级' : `掌握等级 ${item.demonstrated_level}`}</Badge>
-                    {item.confidence !== null && <span>置信度 {Math.round(item.confidence * 100)}%</span>}
                     {item.evaluation_status && <span>{statusLabel(item.evaluation_status)}</span>}
                   </div>
                 ) : <p className="mt-2 text-sm text-muted-foreground">等待评价</p>}

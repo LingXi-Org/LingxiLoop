@@ -216,13 +216,13 @@ export function isPresentationActive(status: PresentationStatus): boolean {
 }
 
 export const PRESENTATION_STATUS_LABELS: Record<PresentationStatus, string> = {
-  waitingForSources: '等待资料',
-  planning: '正在规划',
+  waitingForSources: '正在准备资料',
+  planning: '正在准备大纲',
   awaitingOutlineApproval: '等待确认大纲',
   generating: '正在生成',
-  validating: '正在检查',
-  ready: '可以播放',
-  needsAttention: '需要处理',
+  validating: '正在完善内容',
+  ready: '可查看',
+  needsAttention: '需要补充资料',
   failed: '生成失败',
   cancelled: '已取消',
 }

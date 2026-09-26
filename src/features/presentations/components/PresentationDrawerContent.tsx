@@ -54,7 +54,7 @@ function PendingPresentation({ presentation }: { presentation: PresentationDetai
           </CardContent>
         </Card>
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <ResourceSkeleton variant="media" className="min-h-80" label="正在生成 HTML 演示" />
+          <ResourceSkeleton variant="media" className="min-h-80" label="正在生成演示文稿" />
         </div>
       </div>
     </div>
@@ -72,21 +72,20 @@ function UnavailablePresentation({
 }) {
   const needsAttention = presentation.status === 'needsAttention'
   const cancelled = presentation.status === 'cancelled'
-  const detail = presentation.error
-    || (needsAttention && presentation.recommendedPageCount
-      ? `现有资料可靠支撑约 ${presentation.recommendedPageCount} 页。请在群聊中接受缩短页数，或补充资料。`
+  const detail = needsAttention && presentation.recommendedPageCount
+      ? `这些资料适合制作约 ${presentation.recommendedPageCount} 页。请在群聊中确认缩短页数，或补充资料后重试。`
       : needsAttention
-        ? '现有资料不足以可靠完成这份演示。请补充资料或在群聊中调整要求。'
+        ? '现有资料不足以完成这份演示文稿。请补充资料或调整页数。'
         : cancelled
-          ? '这次演示生成已经取消。'
-          : '演示生成没有完成，请稍后重试。')
+          ? '已取消生成这份演示文稿。'
+          : '未能完成这份演示文稿，请稍后重试。'
 
   return (
     <div className="grid h-full place-items-center overflow-y-auto px-6 py-10">
       <Empty>
         <EmptyHeader>
           <EmptyMedia variant="icon"><HugeiconsIcon icon={AlertCircleIcon} strokeWidth={2} /></EmptyMedia>
-          <EmptyTitle>{needsAttention ? '需要调整生成条件' : cancelled ? '演示生成已取消' : '演示生成失败'}</EmptyTitle>
+          <EmptyTitle>{needsAttention ? '需要补充资料' : cancelled ? '已取消生成' : '演示文稿未能完成'}</EmptyTitle>
           <EmptyDescription>{detail}</EmptyDescription>
         </EmptyHeader>
         {!needsAttention && (
@@ -111,7 +110,7 @@ export function PresentationDrawerContent({ presentationId }: { presentationId: 
   const [retrying, setRetrying] = useState(false)
 
   if (loading && !presentation) {
-    return <ResourceSkeleton variant="detail" className="h-full" label="正在加载 HTML 演示" />
+    return <ResourceSkeleton variant="detail" className="h-full" label="正在加载演示文稿" />
   }
 
   if (error && !presentation) {
@@ -120,7 +119,7 @@ export function PresentationDrawerContent({ presentationId }: { presentationId: 
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon"><HugeiconsIcon icon={Presentation01Icon} strokeWidth={2} /></EmptyMedia>
-            <EmptyTitle>演示加载失败</EmptyTitle>
+            <EmptyTitle>暂时无法加载演示文稿</EmptyTitle>
             <EmptyDescription>{error}</EmptyDescription>
           </EmptyHeader>
           <Button type="button" variant="outline" onClick={() => void refresh()}>
@@ -138,8 +137,8 @@ export function PresentationDrawerContent({ presentationId }: { presentationId: 
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon"><HugeiconsIcon icon={Presentation01Icon} strokeWidth={2} /></EmptyMedia>
-            <EmptyTitle>演示不可用</EmptyTitle>
-            <EmptyDescription>这份演示可能已被删除，或不属于当前工作区。</EmptyDescription>
+            <EmptyTitle>找不到这份演示文稿</EmptyTitle>
+            <EmptyDescription>它可能已被删除，或你没有访问权限。</EmptyDescription>
           </EmptyHeader>
         </Empty>
       </div>
@@ -147,25 +146,25 @@ export function PresentationDrawerContent({ presentationId }: { presentationId: 
   }
 
   if (!presentation) {
-    return <ResourceSkeleton variant="detail" className="h-full" label="正在加载 HTML 演示" />
+    return <ResourceSkeleton variant="detail" className="h-full" label="正在加载演示文稿" />
   }
 
   if (presentation.status === 'awaitingOutlineApproval' && presentation.outline) {
     const approve = async () => {
       if (approving) return
       const confirmed = await confirmSensitiveAction({
-        title: '批准大纲并开始生成？',
-        description: `将按照当前 ${presentation.outline?.targetPageCount ?? presentation.targetPageCount} 页大纲生成并检查完整演示。`,
-        confirmLabel: '批准并生成',
+        title: '确认大纲并开始生成？',
+        description: `将按这份 ${presentation.outline?.targetPageCount ?? presentation.targetPageCount} 页大纲生成完整演示文稿。`,
+        confirmLabel: '开始生成',
         tone: 'warning',
       })
       if (!confirmed) return
       setApproving(true)
       try {
         await toastAction(approveOutline(presentation.id, presentation.outlineRevision), {
-          loading: '正在批准演示大纲',
-          success: '大纲已批准，完整演示生成已触发',
-          error: '演示大纲批准失败',
+          loading: '正在开始生成',
+          success: '已开始生成演示文稿',
+          error: '无法确认大纲，请重试',
           description: presentation.title,
         })
       } catch {
@@ -187,9 +186,9 @@ export function PresentationDrawerContent({ presentationId }: { presentationId: 
       setRetrying(true)
       try {
         await toastAction(retryPresentation(presentation.id), {
-          loading: '正在重新启动演示生成',
-          success: '演示生成已重新启动',
-          error: '无法重新启动演示生成',
+          loading: '正在重新生成演示文稿',
+          success: '已重新开始生成演示文稿',
+          error: '无法重新生成，请稍后重试',
           description: presentation.title,
         })
       } catch {

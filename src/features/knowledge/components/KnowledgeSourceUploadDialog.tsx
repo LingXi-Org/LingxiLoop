@@ -50,7 +50,7 @@ export function KnowledgeSourceUploadDialog({
   const run = async (action: () => Promise<void>) => {
     setBusy(true)
     try {
-      await toastAction(action(), { loading: '正在添加资料', success: '资料已提交处理', error: '资料添加失败' })
+      await toastAction(action(), { loading: '正在添加资料', success: '资料已添加，正在准备内容', error: '资料添加失败' })
       setBusy(false)
       reset()
       onOpenChange(false)
@@ -73,7 +73,7 @@ export function KnowledgeSourceUploadDialog({
         <DialogDescription>PDF、DOCX、TXT、MD、CSV、JSON，单文件不超过 200 MB</DialogDescription>
       </DialogHeader>
       <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)} className="min-h-0">
-        <TabsList className="w-full"><TabsTrigger value="file">文件</TabsTrigger><TabsTrigger value="url">网页 URL</TabsTrigger><TabsTrigger value="text">粘贴文本</TabsTrigger></TabsList>
+        <TabsList className="w-full"><TabsTrigger value="file">文件</TabsTrigger><TabsTrigger value="url">网页链接</TabsTrigger><TabsTrigger value="text">粘贴文本</TabsTrigger></TabsList>
         <TabsContent value="file" className="min-h-0 overflow-hidden">
           <Empty
             className={dragging ? 'h-full border border-dashed border-ring bg-accent/50' : 'h-full border border-dashed'}
@@ -82,7 +82,7 @@ export function KnowledgeSourceUploadDialog({
             onDragLeave={() => setDragging(false)}
             onDrop={(event) => { event.preventDefault(); upload([...event.dataTransfer.files]) }}
           >
-            <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>拖放多个文件到这里</EmptyTitle><EmptyDescription>文件会立即上传并进入处理队列</EmptyDescription></EmptyHeader>
+            <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>拖放多个文件到这里</EmptyTitle><EmptyDescription>文件会立即上传，内容准备好后即可使用</EmptyDescription></EmptyHeader>
             <EmptyContent><Button type="button" variant="outline" onClick={() => fileRef.current?.click()}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />浏览文件</Button><Input ref={fileRef} hidden multiple accept={ACCEPT} type="file" onChange={(event) => { upload([...event.target.files ?? []]); event.target.value = '' }} /></EmptyContent>
           </Empty>
         </TabsContent>

@@ -127,7 +127,7 @@ export function LearningActivitiesSection({
                       <p className="text-sm leading-5 text-muted-foreground">{activity.instructions}</p>
                       <p className="text-xs text-muted-foreground">
                         {ACTIVITY_TYPE_LABELS[activity.kind] ?? '学习活动'} · 目标掌握等级 {activity.targetLevel} ·{' '}
-                        {EVALUATION_MODE_LABELS[activity.evaluationMode] ?? '评价方式待同步'}
+                        {EVALUATION_MODE_LABELS[activity.evaluationMode] ?? '其他评价方式'}
                       </p>
                       {activity.dueAt && <p className="text-xs text-muted-foreground">截止时间：{new Date(activity.dueAt).toLocaleString('zh-CN')}</p>}
                       {perspective === 'learner' && activity.knowledgeUnitIds.some((id) => objectiveTitlesById?.has(id)) && (
