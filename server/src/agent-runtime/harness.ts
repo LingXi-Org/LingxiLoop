@@ -1,3 +1,4 @@
+import { productCards } from './presentation-cards.js'
 import type { HarnessProfile, SkillDefinition, ToolDefinition } from '@lyyzka/lingxios'
 import { presentationCard } from '../modules/presentations/agent-tools.js'
 
@@ -9,16 +10,16 @@ export const productSkills: SkillDefinition[] = [
   { name: 'canvas-cooperation', version: '2', description: 'Use for a shared deliverable or independent evidence verification.',
     actions: ['canvas.current','canvas.start_workspace','canvas.assign','canvas.submit_report'], body: 'Use canvas.available_agents for actual room members. Create the business workspace with canvas.start_workspace and assign specialist and independent verifier tasks through canvas.assign. These tools dispatch real child work and wait for its results; never bypass them with graph.start. Persist canvas.submit_report, consume all current reports and preserve unresolved disagreements. If coordinating a Mission, first hand off Canvas hosting to a separate child via handoffs.create; resume Mission coordination after that child returns. Creation or acceptance is not completion.' },
   { name: 'task-coordination', version: '1', description: 'Choose direct answers, specialist handoffs or a sustained learning Mission according to the goal.',
-    actions: ['learning.current','learning.start_mission','handoffs.create'], body: 'Answer simple questions directly. For a sustained learning goal in an authorized project conversation, reuse the relevant active Mission or start one from the committed original human message. Maintain planning, checking, reflection and completion evidence. For a specialist subtask, call handoffs.create with an actual roster ID and wait for the persisted child result. If the needed role is absent, explain its purpose and ask the user to add it. Ordinary @ text does not dispatch work.' },
+    actions: ['learning.current','learning.start_mission','handoffs.create'], body: 'Answer conceptual questions directly and fully, including detailed explanations. Explanation depth alone does not require delegation, retrieval or a Mission. For a sustained learning goal in an authorized project conversation, reuse the relevant active Mission or start one from the committed original human message. Maintain planning, checking, reflection and completion evidence. For a specialist subtask, call handoffs.create with an actual roster ID and wait for the persisted child result. If the needed role is absent, explain its purpose and ask the user to add it. Ordinary @ text does not dispatch work.' },
   { name: 'course-evidence', version: '1', description: 'Ground course-dependent answers in authorized knowledge and resolve missing or conflicting evidence.',
-    actions: ['knowledge.search','knowledge.read_source','knowledge.list_sources'], body: 'Use automatic retrieval when sufficient. When the question depends on course material, evidence is missing, or sources conflict, search and read the relevant source before answering. Cite only returned markers and distinguish inference. State no matches, processing sources or service unavailability when observed; do not invent citations. At most two searches for the same question without new evidence; then explain the gap or ask for the missing material.' },
+    actions: ['knowledge.search','knowledge.read_source','knowledge.list_sources'], body: 'Use automatic retrieval when sufficient. When the user asks for course-source grounding and that evidence is missing or conflicting, search and read the relevant source before answering. General conceptual explanations do not depend on course materials. Cite only returned markers and distinguish inference. State no matches, processing sources or service unavailability when observed; do not invent citations. An empty source listing is a completed check, not a reason to list again. When the user permits a general explanation if sources are absent, give it immediately and clearly disclose the missing course grounding. At most two retrieval calls for the same question without new evidence; then explain the gap or ask for the missing material.' },
 ]
 
 export function createProductHarness(tools: ToolDefinition[]): HarnessProfile {
-  return { id: 'lingxiloop', version: '3.2.3', mode: 'execute',
+  return { id: 'lingxiloop', version: '3.3.6-cards-2', mode: 'execute',
     capabilities: [...new Set(tools.map(tool => tool.action.split('.')[0]))].map(id => ({ id,
       tools: tools.filter(tool => tool.action.startsWith(`${id}.`)),
       skills: productSkills.filter(skill => skill.actions[0].startsWith(`${id}.`)),
-      ...(id === 'presentations' ? { presentations: [presentationCard] } : {}),
+      presentations: [...(id === 'presentations' ? [presentationCard] : []), ...productCards(tools).filter(card => card.actions[0].startsWith(id + '.'))],
     })) }
 }

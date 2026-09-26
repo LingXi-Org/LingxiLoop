@@ -1,3 +1,4 @@
+import { DEFAULT_AGENT_CAPABILITIES } from '@/lib/agentCapabilities'
 import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
 import { agentsApi } from '../api'
@@ -11,19 +12,19 @@ import { userFacingError } from '@/lib/userFacingError'
 import { useParticipants } from '../state'
 import type { AgentCapability, Participant } from '@/types'
 
-const CAPABILITY_OPTIONS: Array<{ id: AgentCapability; label: string; description: string }> = [
-  { id: 'canvas', label: '共享画布', description: '查看并修改工作区共享画布与内容卡片' },
-  { id: 'web', label: '网页研究', description: '搜索和读取公开网页' },
-  { id: 'files', label: '文件', description: '读写工作区与交付文件' },
-  { id: 'email', label: '邮件', description: '起草邮件；实际发送仍受审批策略约束' },
-  { id: 'documents', label: '协作文档', description: '创建、读取和编辑协作文档' },
-  { id: 'calendar', label: '日历', description: '访问日历和日程相关能力' },
-  { id: 'knowledge', label: '知识库', description: '检索并使用当前学习区的知识资料' },
-  { id: 'learning', label: '教学', description: '在课程范围内规划学习任务、记录证据并提出形成性评价' },
-  { id: 'handoffs', label: '协作交接', description: '向同一会话的其他 Agent 委派任务并跟踪结果' },
-  { id: 'routines', label: '定时任务', description: '创建经审批的定时任务并查看运行记录' },
-]
-const DEFAULT_CAPABILITIES: AgentCapability[] = ['canvas', 'web', 'files', 'email', 'documents', 'knowledge']
+const CAPABILITY_DETAILS: Record<(typeof DEFAULT_AGENT_CAPABILITIES)[number], { label: string; description: string }> = {
+  'canvas': { label: '共享画布', description: '查看并修改工作区共享画布与内容卡片' },
+  'web': { label: '网页研究', description: '搜索和读取公开网页' },
+  'files': { label: '文件', description: '读取已选附件并生成交付文件' },
+  'email': { label: '邮件', description: '起草邮件；实际发送仍受审批策略约束' },
+  'documents': { label: '协作文档', description: '创建、读取和编辑协作文档' },
+  'calendar': { label: '日历', description: '访问日历和日程相关能力' },
+  'knowledge': { label: '知识库', description: '检索并使用当前学习区的知识资料' },
+  'learning': { label: '教学', description: '在课程范围内规划学习任务、记录证据并提出形成性评价' },
+  'handoffs': { label: '协作交接', description: '向同一会话的其他 Agent 委派任务并跟踪结果' },
+  'routines': { label: '定时任务', description: '创建经审批的定时任务并查看运行记录' },
+}
+const CAPABILITY_OPTIONS = DEFAULT_AGENT_CAPABILITIES.map(id => ({ id, ...CAPABILITY_DETAILS[id] }))
 
 interface Props {
   /** if provided, edit mode; otherwise create mode */
@@ -37,7 +38,7 @@ export function AgentEditor({ agent, onClose }: Props) {
   const [role, setRole] = useState(agent?.role ?? '')
   const [systemPrompt, setSystemPrompt] = useState(agent?.systemPrompt ?? '')
   const [bio, setBio] = useState(agent?.bio ?? '')
-  const [capabilities, setCapabilities] = useState<AgentCapability[]>(agent?.capabilities ?? DEFAULT_CAPABILITIES)
+  const [capabilities, setCapabilities] = useState<AgentCapability[]>(agent?.capabilities ?? [...DEFAULT_AGENT_CAPABILITIES])
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [harness, setHarness] = useState<Awaited<ReturnType<typeof agentsApi.getHarness>> | null>(null)

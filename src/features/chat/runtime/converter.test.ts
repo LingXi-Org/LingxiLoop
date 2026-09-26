@@ -142,7 +142,7 @@ test('questionnaires preserve choices and freeform inputs for the question card'
   }), { participants, meId: 'me' })
   const part = message.content.find((item) => item.type === 'tool-call')
   assert.deepEqual(part?.type === 'tool-call' ? part.args : null, {
-    id: 'questionnaire-questionnaire-server',
+    id: 'questionnaire-questionnaire-client',
     title: '复习计划',
     items: [{
       name: 'time', prompt: '每天多久？', description: '', required: true, multiple: false,
@@ -366,4 +366,21 @@ test('agent text rejects retired markers instead of rebuilding confidence from c
   input.payload.refs = { runId: 'run-1' }
   input.payload.body = 'hello [S1]'
   assert.throws(() => convertEnvelope(input, { participants, meId: 'me' }), /retired bare citation marker/)
+})
+
+
+test('recommendation choices restore once from authorized same-channel IM replies', () => {
+  const card = envelope('questionnaire', { display:'recommendation', title:'Next step', explanation:'A suggestion only', items:[{name:'next_step',prompt:'Draw the path',required:true,choices:[{value:'accept',label:'Try it'}]}] })
+  const reply = envelope('text')
+  reply.payload.replyToClientMsgNo = card.payload.clientMsgNo
+  reply.payload.data = {questionnaireReply:{questionId:card.payload.clientMsgNo,answers:{next_step:'accept'}}}
+  const context = {participants,meId:'me'}
+  const part = (messages:ReturnType<typeof convertEnvelopeBatch>) => messages.find(message=>message.role==='assistant')?.content.find(part=>part.type==='tool-call')
+  const restored = part(convertEnvelopeBatch([card,reply,card,reply],context))
+  assert.equal(restored?.type==='tool-call' && restored.toolName,'recommendation-card')
+  assert.deepEqual(restored?.type==='tool-call' && restored.result,{next_step:'accept'})
+  for (const bad of [{...reply,fromUid:'someone-else'},{...reply,channelId:'other-room'}, {...reply,payload:{...reply.payload,data:{questionnaireReply:{questionId:card.payload.clientMsgNo,answers:{next_step:'invented'}}}}}]) {
+    const result=part(convertEnvelopeBatch([card,bad],context))
+    assert.equal(result?.type==='tool-call' ? result.result:undefined,undefined)
+  }
 })

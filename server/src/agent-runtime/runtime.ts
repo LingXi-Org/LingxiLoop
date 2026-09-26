@@ -28,12 +28,6 @@ function positiveInteger(name: string, fallback: number): number {
   return value
 }
 
-function responsePolicy(): 'auto' | 'deep' {
-  const value = process.env.AGENT_OS_RESPONSE_POLICY?.trim() || 'auto'
-  if (value !== 'auto' && value !== 'deep') throw new Error('AGENT_OS_RESPONSE_POLICY must be auto or deep')
-  return value
-}
-
 function modelRate(name: string, fallback = 0): number {
   const raw = process.env[name]?.trim()
   if (!raw && env.NODE_ENV === 'production' && !fallback) throw new Error(`${name} is required in production`)
@@ -54,10 +48,10 @@ function kernelOptions() {
 }
 
 function providerPricing(model = env.OPENAI_MODEL) {
-  if (model !== 'deepseek-ai/DeepSeek-V4-Flash' || new URL(env.OPENAI_BASE_URL).hostname !== 'api.siliconflow.cn') return undefined
+  if (model !== 'deepseek-ai/DeepSeek-V4-Flash' && model !== 'zai-org/GLM-5.2' || new URL(env.OPENAI_BASE_URL).hostname !== 'api.siliconflow.cn') return undefined
   const rate = process.env.SILICONFLOW_USD_CNY_RATE?.trim()
   if (!rate && env.NODE_ENV === 'production') throw new Error('SILICONFLOW_USD_CNY_RATE is required in production')
-  return siliconFlowPricing(Number(rate || 7))
+  return siliconFlowPricing(Number(rate || 7),model)
 }
 const common = () => {
   const pricing=providerPricing()
@@ -88,7 +82,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
     previewStore = previewUrl ? createRealtimeStore(previewUrl) : undefined
     const harness = createProductHarness(createProductTools(lingxiOSControl))
     const { tools } = assembleHarness(harness)
-    control = createLingxiOS({ ...common(), harness, responsePolicy: responsePolicy(), ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
+    control = createLingxiOS({ ...common(), harness, responsePolicy: 'deep', ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
       ...(objectStore ? { objects: objectStore, workspace: {} } : {}),
       realtime: { ...(previewStore ? { store: previewStore } : {}), async allowDraft(work) {
@@ -182,8 +176,9 @@ export async function startLingxiOSWorker() {
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),
     model: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL,
-      maxThinkingTokens: 0 },
-    ...(responsePolicy() === 'auto' ? { fastModel: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL, maxThinkingTokens: 0 } } : {}),
+      maxThinkingTokens: 0, capabilities: { parallelTools: false },
+      ...(env.OPENAI_MODEL === 'deepseek-ai/DeepSeek-V4-Flash' && new URL(env.OPENAI_BASE_URL).hostname === 'api.siliconflow.cn'
+        ? { contextWindowTokens: 1_000_000 } : {}) },
     worker: { id: `lingxiloop-${env.INSTANCE_ID}`, concurrency,
       reservedInteractiveRuns: modelRate('AGENT_OS_RESERVED_INTERACTIVE_RUNS', concurrency > 1 ? 1 : 0),
       healthPort: positiveInteger('AGENT_OS_WORKER_PORT', 5190), shutdownGraceMs: positiveInteger('AGENT_OS_SHUTDOWN_GRACE_MS', 120000) },

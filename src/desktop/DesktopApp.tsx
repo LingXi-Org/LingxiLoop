@@ -3,7 +3,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import type { LayoutChangedMeta } from 'react-resizable-panels'
 import { CommandPalette } from '@/components/CommandPalette'
-import { GroupContextContent } from '@/components/GroupContextContent'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
@@ -17,7 +16,7 @@ import {
 } from '@/components/ui/drawer'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
-import { ConversationsPane, SidebarUserFooter } from '@/features/conversations/components/ConversationsPane'
+import { ConversationsPane } from '@/features/conversations/components/ConversationsPane'
 import { useConversations } from '@/features/conversations/store'
 import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
@@ -221,8 +220,10 @@ export function DesktopApp() {
             <Suspense fallback={<ResourceSkeleton variant="detail" label="正在打开个人面板" />}>
               <PersonalDashboard
                 view={view}
-                sidebarWidth={sidebarWidth}
-                onLayoutChanged={handleSidebarLayoutChanged}
+                space={learningSpaces.activeSpace}
+                loading={learningSpaces.loading && !learningSpaces.activeSpace}
+                error={learningSpaces.error}
+                onRetry={() => void learningSpaces.reload()}
               />
             </Suspense>
           ) : isMobile ? (

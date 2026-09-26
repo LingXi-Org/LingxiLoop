@@ -74,7 +74,7 @@ export function mergeCanonicalMessages(
       byId.set(key,{ ...canonical, status: harnessStatus(harness),
         content: (harness.lifecycle === 'cancelled' || harness.lifecycle === 'failed')
           && harness.resultId === before.harness.resultId ? previous.content
-          : harness.message ? harnessParts(harness) : message.content,
+          : harness.message ? harnessParts(harness, after.harnessTools ?? before.harnessTools) : message.content,
         metadata: { ...canonical.metadata, custom: { ...before,...metadata(canonical), harness,
           harnessTools: after.harnessTools ?? before.harnessTools,
           memory: after.memory ?? before.memory,

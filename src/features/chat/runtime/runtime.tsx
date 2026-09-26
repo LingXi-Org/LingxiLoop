@@ -12,6 +12,7 @@ import { uploadsApi } from '@/features/platform/api'
 import type { ConversationThreadSnapshot } from './model'
 import { EMPTY_CONVERSATION_CHAT_STATE, useChatThreadStore } from './store'
 import { chatTransport, filterThreadMessages } from './transport'
+import { getActiveCompanyId, getMeId } from '@/stores/auth'
 
 type UploadedAttachment = PendingAttachment & {
   apiAttachment: Awaited<ReturnType<typeof uploadsApi.uploadFile>>
@@ -127,17 +128,23 @@ export function useConversationThreadRuntime(
           : Array.isArray(result) ? result.map(String) : []
         if (values.length > 0) await chatTransport.votePoll(toolCallId.slice('poll:'.length), values)
       }
-      if (toolName === 'elicitation-form' && toolCallId.startsWith('questionnaire:') && result && typeof result === 'object') {
+      if (['elicitation-form', 'recommendation-card'].includes(toolName) && toolCallId.startsWith('questionnaire:') && result && typeof result === 'object') {
         const answers = Object.entries(result).map(([name, answer]) => (
           `${name}: ${Array.isArray(answer) ? answer.map(String).join(', ') : String(answer)}`
         ))
         if (answers.length > 0) {
-          await chatTransport.send(
-            conversationId,
-            `问答卡片回复：\n${answers.join('\n')}`,
-            null,
-            toolCallId.slice('questionnaire:'.length),
-          )
+          const questionId = toolCallId.slice('questionnaire:'.length)
+          const userId=getMeId(),companyId=getActiveCompanyId()
+          if(!userId||!companyId)throw new Error('请先登录后回复卡片')
+          // One answer intent per learner/card, including double clicks and reconnect retries.
+          const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([companyId,conversationId,userId,questionId])))
+          const clientMsgNo='questionnaire-reply-'+Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('')
+          const body = `问答卡片回复：\n${answers.join('\n')}`
+          const sent = await chatTransport.send(conversationId, body, null, questionId, clientMsgNo, {
+            version: 1, kind: 'text', clientMsgNo, body, replyToClientMsgNo: questionId,
+            data: { questionnaireReply: { questionId, answers: result } },
+          })
+          if (!sent) throw new Error('卡片回复尚未发送，请重试')
         }
       }
     },

@@ -1,3 +1,4 @@
+import { learningTools } from '../modules/learning/public.js'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { after, before, test } from 'node:test'
@@ -27,7 +28,7 @@ test('context bounds automatic search and persists Agent receipts before asynchr
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   const conversationId = 'context-latency-room', members = ['test-owner', agentId]
-  await pool.query(`UPDATE participants SET capabilities='["knowledge","canvas"]'::jsonb WHERE company_id=$1 AND id=$2`, [companyId, agentId])
+  await pool.query(`UPDATE participants SET capabilities='["knowledge","canvas","learning"]'::jsonb WHERE company_id=$1 AND id=$2`, [companyId, agentId])
   await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Latency',$4::jsonb)`,
     [conversationId, companyId, projectId, JSON.stringify(members)])
   await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',
@@ -46,7 +47,7 @@ test('context bounds automatic search and persists Agent receipts before asynchr
   { mode: 'execute', executionClass: 'operation' })
   const work = await api.connectWorker({ workerId: 'context-latency', workKinds: ['turn'] }).claimWork()
   assert.ok(work)
-  const provider = createProductContext([...knowledgeTools, ...createCanvasTools(lingxiOSControl)]).contextProvider
+  const provider = createProductContext([...learningTools, ...knowledgeTools, ...createCanvasTools(lingxiOSControl)]).contextProvider
   let searches = 0, disconnected = 0, onSearch: (() => void) | undefined
   const upstream = createServer(async (req, res) => {
     for await (const _chunk of req) { /* consume the local fixture request */ }
@@ -63,8 +64,6 @@ test('context bounds automatic search and persists Agent receipts before asynchr
   openNotebookClient.search = local.search.bind(local)
   process.env.OPEN_NOTEBOOK_ENABLED = 'true'
   try {
-    await provider.loadContext(work, undefined, { responseProfile: 'fast' })
-    assert.equal(searches, 0, 'fast context must continue to skip automatic retrieval')
     let releaseRoster!: () => void, startedRoster!: () => void
     const rosterHeld = new Promise<void>(resolve => { releaseRoster = resolve })
     const rosterStarted = new Promise<void>(resolve => { startedRoster = resolve })

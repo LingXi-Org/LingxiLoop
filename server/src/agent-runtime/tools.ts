@@ -1,3 +1,4 @@
+import { fileTools } from './file-tools.js'
 import type { createLingxiOS, ToolDefinition } from '@lyyzka/lingxios'
 import { calendarTools } from '../modules/calendar/index.js'
 import { documentTools } from '../modules/documents/public.js'
@@ -14,7 +15,7 @@ import { presentationTools } from '../modules/presentations/public.js'
 import { createRoutineTools } from '../modules/routines/public.js'
 
 export function createProductTools(control: () => ReturnType<typeof createLingxiOS>): ToolDefinition[] {
-  return [...calendarTools, ...documentTools, ...createCanvasTools(control), ...learningTools, ...teacherTools,
+  return [...fileTools, ...calendarTools, ...documentTools, ...createCanvasTools(control), ...learningTools, ...teacherTools,
     ...directoryTools, ...handoffTools, ...researchTools, ...pollTools, ...conversationTools, ...createMessageTools(control),
     ...knowledgeTools, ...emailTools, ...presentationTools, ...createRoutineTools(control)]
 }

@@ -20,10 +20,16 @@ administrator, delete `BOOTSTRAP_ADMIN_TOKEN`.
 Production is forward-only. Fix failed releases in place; there is no retained
 application-state rollback for the first Komodo release.
 
-For ordinary chat, `AGENT_OS_RESPONSE_POLICY=auto` selects the fast profile and
-upgrades complex work to deep execution. Set `AGENT_OS_RESPONSE_POLICY=deep` on
-both Workers to restore the previous deep-only behavior without reverting
-database state.
+Ordinary chat always uses deep execution with all authorized capabilities.
+Legacy response-policy and fast-model environment values no longer select a
+restricted fast profile. Provider thinking is explicitly disabled for both
+main answers and auxiliary validation.
+
+The default chat model is SiliconFlow `zai-org/GLM-5.2` at
+`https://api.siliconflow.cn/v1`. Existing explicit `OPENAI_MODEL` and
+`OPENAI_BASE_URL` values override defaults: update both deliberately during the
+authorized release, and set `SILICONFLOW_USD_CNY_RATE` for the shared cost ledger.
+Do not change an existing knowledge embedding model without rebuilding its index.
 
 The production operations MCP additionally requires the five Worker secrets
 documented in `deploy/komodo/README.md`. Apply them with `wrangler secret put`,

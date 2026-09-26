@@ -82,7 +82,7 @@ export const knowledgeTools: ToolDefinition[] = [
       return { ok: true, value: { sourceId: input.sourceId, sourceVersion, status: 'ready', text: excerpt,
         offset: input.offset, nextOffset, textLength: text.length, truncated: nextOffset < text.length }, evidence }
     } }),
-  nativeTool('knowledge.list_sources', schemas.list_sources, { description: 'Read sources visible to every conversation reader in the current workspace.', effect: 'read', approval: false, authorize,
+  nativeTool('knowledge.list_sources', schemas.list_sources, { description: 'Read sources visible to every conversation reader in the current workspace. An empty array means there are no visible course sources: do not repeat this call or search absent sources without new input. Explain the observed gap and give a general explanation when the user permits it.', effect: 'read', approval: false, authorize,
     async execute(context) {
       const sources = await application(context).listKnowledgeSourcesForAgent(nativeContext(context))
       const readers = await audienceHumanIds(context), permissions = createPermissionService(db(context), { lockDependencies: true })

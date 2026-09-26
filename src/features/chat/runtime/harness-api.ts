@@ -4,11 +4,13 @@ import { API, http } from '@/api/core/http'
 import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId } from '@/stores/auth'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
+import { harnessToolParts } from './harness'
+import type { HarnessToolPart } from './model'
 import { projectRunMemory, type RunMemory } from './memory'
 
 export interface AgentRunTarget { conversationId: string; agentId: string; runId: string; threadId?: string }
 type Diagnostics = Awaited<ReturnType<Awaited<ReturnType<typeof createLingxiOS>>['readDiagnostics']>>
-export type AgentRunResponse = RunState & { events: RunEvent[]; nextSeq: number; diagnostics: Diagnostics; canControl: boolean; memory?: RunMemory }
+export type AgentRunResponse = RunState & { events: RunEvent[]; nextSeq: number; diagnostics: Diagnostics; canControl: boolean; memory?: RunMemory; tools?: HarnessToolPart[] }
 export interface MemorySummaryPage {
   items: Array<{ id: string; text: string; agentId: string; agentName: string }>
   nextCursor: string | null
@@ -41,7 +43,7 @@ export const harnessApi = {
     const read = (seq: number) => http<AgentRunResponse>(
       `${path(target)}?${new URLSearchParams({ afterSeq: String(seq), ...thread(target) })}`, { signal: boundedSignal })
     const response = await read(afterSeq)
-    let page = response, memory = projectRunMemory(target.runId, page.events)
+    let page = response, memory = projectRunMemory(target.runId, page.events), tools = harnessToolParts(target.runId, page.events)
     // LingxiOS 3.3.2 returns at most 100 events; fold pages without retaining their private payloads.
     while (page.events.length === 100) {
       boundedSignal.throwIfAborted()
@@ -49,8 +51,9 @@ export const harnessApi = {
       if (next.events.length && next.nextSeq <= page.nextSeq) throw new Error('运行历史游标没有前进')
       page = next
       memory = projectRunMemory(target.runId, page.events, memory)
+      tools = harnessToolParts(target.runId, page.events, tools)
     }
-    return { ...page, memory, nextSeq: page.nextSeq }
+    return { ...page, memory, tools, nextSeq: page.nextSeq }
   },
   cancel: (target: AgentRunTarget) => http<{ cancelled: boolean }>(path(target),{ method: 'DELETE', body: JSON.stringify(thread(target)) }),
   revise: (target: AgentRunTarget, text: string) => http<{ revised: boolean }>(path(target),{ method: 'PATCH', body: JSON.stringify({ text,...thread(target) }) }),
