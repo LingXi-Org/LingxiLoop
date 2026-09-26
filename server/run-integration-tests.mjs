@@ -152,7 +152,7 @@ if (!process.env.RESEND_WEBHOOK_SECRET) {
 // the right trade.
 const child = spawn(
   'node',
-  ['--import', 'tsx', '--test', '--test-concurrency=1', '--test-force-exit', ...testFiles],
+  ['--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-concurrency=1', '--test-force-exit', ...testFiles],
   { stdio: 'inherit', env: process.env },
 )
 child.on('exit', (code) => process.exit(code ?? 1))
