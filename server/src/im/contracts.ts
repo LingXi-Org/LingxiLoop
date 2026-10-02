@@ -51,7 +51,7 @@ export const imReadReceiptsQuerySchema = z.object({
 })
 
 export const approvalResolutionRequestSchema = z.object({ approved: z.boolean() }).strict()
-export const lingxiOSRunQuerySchema = z.object({ afterSeq: z.coerce.number().int().nonnegative().safe().default(0), threadId: z.string().min(1).max(1000).optional() }).strict()
+export const lingxiOSRunQuerySchema = z.object({ threadId: z.string().min(1).max(1000).optional() }).strict()
 export const lingxiOSRunCancelSchema = z.object({ threadId: z.string().trim().min(1).max(80).optional() }).strict()
 export const lingxiOSArtifactQuerySchema = z.object({ path: z.string().min(1).max(1000), threadId: z.string().min(1).max(1000).optional() }).strict()
 export const lingxiOSRunInputSchema = z.object({ clientMsgNo: z.string().min(1).max(1000), requestVersion: z.number().int().positive(),

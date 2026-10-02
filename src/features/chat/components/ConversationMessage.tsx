@@ -6,7 +6,7 @@ import {
 } from '@assistant-ui/react'
 import { Copy01Icon, ReplyIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { createContext, type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
@@ -26,8 +26,6 @@ import { CHAT_TOOL_RENDERERS, isVisibleChatPart } from './ToolRenderers'
 import { HarnessDetails } from './HarnessDetails'
 import { chatLatency } from '../runtime/latency'
 import { copyMessageText, MessageActions } from './MessageActions'
-
-export const MessageAnimationBaseline = createContext(Infinity)
 
 function SourcePart({ url, title }: SourceMessagePartProps) {
   return <div className="w-fit max-w-full rounded-[18px] bg-muted px-3.5 py-2"><MessageFooterContents inset={false}>{url
@@ -117,7 +115,9 @@ function MessageTextPart() {
   const longPressOrigin = useRef({ x: 0, y: 0 })
   const bodyRef = useRef<HTMLDivElement>(null)
   const metadata = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
-  const animationBaseline = useContext(MessageAnimationBaseline)
+  const footer = useContext(MessageFooterContext)
+  const isAgent = metadata.senderKind === 'agent'
+  const isHuman = metadata.senderKind === 'human'
   const inlineCitations = Boolean(metadata.harness && (!metadata.harness.message
     || ['queued', 'leased'].includes(metadata.harness.lifecycle ?? '')
     || metadata.harness.message.envelope.citationEvidence !== undefined))
@@ -184,13 +184,13 @@ function MessageTextPart() {
   useEffect(() => () => {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
-  const markdown = <MarkdownText segmented={!metadata.isMine} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations}
-    animateEntry={metadata.sequence !== null && metadata.sequence > animationBaseline} />
-  return <div className={cn('relative min-w-0 w-fit', isMobile ? 'max-w-full' : 'max-w-[85%]', metadata.isMine && 'ms-auto')}>
-    {!isMobile && <MessageActions isMine={metadata.isMine} getText={getText} />}
+  const markdown = <MarkdownText agent={isAgent} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations} />
+  return <div className={cn('relative min-w-0', isAgent ? 'w-full max-w-full' : ['w-fit', isMobile ? 'max-w-full' : 'max-w-[85%]'], metadata.isMine && 'ms-auto')}>
+    {!isMobile && !isAgent && <MessageActions isMine={metadata.isMine} getText={getText} />}
     <div
       ref={bodyRef}
-      data-message-bubble={metadata.isMine ? 'user' : 'assistant'}
+      data-message-bubble={isHuman ? metadata.isMine ? 'user' : 'human' : undefined}
+      data-agent-body={isAgent ? '' : undefined}
       data-message-group-position={groupPosition}
       onPointerDown={startLongPress}
       onPointerMove={moveLongPress}
@@ -205,14 +205,17 @@ function MessageTextPart() {
       }}
       className={cn(
         'min-w-0 tracking-[-0.01em]',
-        isMobile ? 'text-base leading-[1.5]' : 'text-[15px] leading-[1.35]',
-        metadata.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-primary-foreground [&_[data-message-footer]]:text-primary-foreground/75 [&_.typeset]:!text-primary-foreground [&_.typeset_*]:!text-primary-foreground'],
+        isAgent ? isMobile ? 'text-[15px] leading-[1.5]' : 'text-[14px] leading-[1.5]'
+          : isMobile ? 'text-base leading-[1.5]' : 'text-[15px] leading-[1.35]',
+        isHuman && metadata.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-primary-foreground [&_[data-message-footer]]:text-primary-foreground/75 [&_.typeset]:!text-primary-foreground [&_.typeset_*]:!text-primary-foreground'],
         !metadata.isMine && 'text-foreground',
-        metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
+        isHuman && !metadata.isMine && ['px-3.5 py-2 bg-muted', bubbleRadius],
+        isHuman && metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
       )}
     >
-      {metadata.isMine ? <MessageFooterContents inset={false}>{markdown}</MessageFooterContents> : markdown}
+      {isAgent ? <>{markdown}{footer}</> : <MessageFooterContents inset={false}>{markdown}</MessageFooterContents>}
     </div>
+    {!isMobile && isAgent && <MessageActions isMine={false} getText={getText} className="static mt-1 translate-y-0 justify-end opacity-100" />}
     {isMobile && <MobileMessageActions metadata={metadata} getText={getText} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
   </div>
 }
@@ -326,8 +329,9 @@ export function ConversationMessage() {
         custom.isMine ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
     >
-      <div className={cn(
-        'row-start-2 flex self-center',
+      <div data-message-avatar className={cn(
+        'row-start-2 flex',
+        custom.senderKind === 'agent' ? 'self-start' : 'self-center',
         isMobile ? 'w-8' : 'w-10',
         custom.isMine ? 'col-start-2' : 'col-start-1',
         custom.groupStart && participant?.kind === 'agent' && 'chat-message-avatar',

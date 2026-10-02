@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { RunEvent } from '@lyyzka/lingxios/ui'
-import { projectRunMemory } from './memory'
+import { projectRunMemory } from '@/lib/agentRunSnapshot'
 
 const document = (id: string, description = id) => ({ id, description, status: 'active', body: 'PRIVATE BODY', sources: ['PRIVATE SOURCE'] })
 function events(seq: number, name = 'memory.apply', value: unknown = { documents: [document('one')], deleted: [] }): RunEvent[] {

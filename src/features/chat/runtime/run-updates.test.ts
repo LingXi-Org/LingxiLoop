@@ -1,12 +1,30 @@
 import assert from 'node:assert/strict'
-import { mock, test } from 'node:test'
+import { beforeEach, mock, test } from 'node:test'
 import type { ThreadMessage } from '@assistant-ui/react'
 import type { RunState, RunStreamEvent } from '@lyyzka/lingxios/ui'
 import type { ImEnvelope } from '@/lib/im/wukong'
 import { convertEnvelope } from './converter'
-import { applyRunUpdate, needsRunStream } from './run-updates'
+import { applyRunSnapshot, needsRunStream } from './run-updates'
+import { RunStreamProjection } from '../../../../server/src/agent-runtime/assistant-transport'
+import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { getLingxiMessageMetadata as metadata } from './model'
 import { EMPTY_CONVERSATION_CHAT_STATE, mergeCanonicalMessages, resetChatThreadStore, useChatThreadStore } from './store'
+
+const projections = new Map<string, RunStreamProjection>()
+beforeEach(() => projections.clear())
+function project(item: RunStreamEvent, runId = 'run', canControl = true) {
+  let projection = projections.get(runId)
+  if (!projection) { projection = new RunStreamProjection(runId, canControl); projections.set(runId, projection) }
+  return projection.apply(item)
+}
+function applyRunUpdate(state: typeof EMPTY_CONVERSATION_CHAT_STATE, target: { conversationId: string; agentId: string; runId: string; threadId?: string },
+  item: RunStreamEvent, participant?: (typeof participants)['agent'], response?: { events: import('@lyyzka/lingxios/ui').RunEvent[]; canControl: boolean; memory?: import('@/lib/agentRunSnapshot').RunMemory }) {
+  if (response) {
+    if (!projections.has(target.runId)) projections.set(target.runId, new RunStreamProjection(target.runId, response.canControl))
+    for (const event of response.events) project({ type: 'event', event }, target.runId)
+  }
+  return applyRunSnapshot(state, target, project(item, target.runId), participant)
+}
 
 const target = { conversationId: 'room', agentId: 'agent', runId: 'run' }
 const participants = { agent: { id: 'agent', kind: 'agent' as const, name: '助手', initial: '助', avatarBg: '', status: 'avail' as const } }
@@ -55,7 +73,7 @@ function sent(id: string, sequence: number, runId = 'run'): ImEnvelope {
     payload: { version: 1,kind: 'text',clientMsgNo: id,body: id,refs: { runId,agentId: 'agent' } } }
 }
 
-test('sent bubbles, native final citations and interleaved users survive replay and reload in IM order', () => {
+test('sent messages, native final citations and interleaved users survive replay and reload in IM order', () => {
   const first = user('first',1,1000), followup = user('followup',4,4000)
   const bubbles = [sent('lead-in',2),sent('example',3)].map(envelope => convertEnvelope(envelope,{ participants,meId: 'human' }))
   let state = applyRunUpdate({ ...EMPTY_CONVERSATION_CHAT_STATE,messages: [first] },target,
@@ -89,9 +107,10 @@ test('sent bubbles, native final citations and interleaved users survive replay 
     state.messages.map(message => [message.id,message.content,metadata(message).sequence]))
 })
 
-test('a run discovered after a sent bubble owns a separate preview and cannot erase sent text on cancellation or failure', () => {
+test('a run discovered after a sent message owns a separate preview and cannot erase sent text on cancellation or failure', () => {
   const bubble = convertEnvelope(sent('already-sent',1),{ participants,meId: 'human' })
   for (const kind of ['run.cancelled','run.failed'] as const) {
+    projections.clear()
     let state = applyRunUpdate({ ...EMPTY_CONVERSATION_CHAT_STATE,messages: [bubble] },target,
       { type: 'state',state: snapshot('run','leased') },participants.agent)
     state = applyRunUpdate(state,target,event('尚未发送的部分'),participants.agent)
@@ -108,7 +127,7 @@ test('a run discovered after a sent bubble owns a separate preview and cannot er
 
 test('a failure discards the uncommitted preview while retaining the specific error', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
-  state = applyRunUpdate(state,target,event('完整气泡\n\n尚未完成的尾段'),participants.agent)
+  state = applyRunUpdate(state,target,event('完整段落\n\n尚未完成的尾段'),participants.agent)
   state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 8,kind: 'run.failed',stage: 'failed',visibility: 'user',
     data: { error: 'Final assessment protocol correction exhausted' } } },participants.agent)
   assert.deepEqual(state.activeRuns,{})
@@ -273,7 +292,7 @@ test('a reply at the page boundary leaves room for subsequently loaded older his
 test('initial history is ready before slow run snapshots, which merge without duplicate replies', async () => {
   resetChatThreadStore()
   const subscribed: string[] = []
-  const callbacks = new Map<string, (item: RunStreamEvent) => void>()
+  const callbacks = new Map<string, (item: AgentRunSnapshot) => void>()
   const cancelled: string[] = []
   let receiveIm!: (envelope: ImEnvelope) => void
   const imHistory: ImEnvelope[] = []
@@ -295,16 +314,13 @@ test('initial history is ready before slow run snapshots, which merge without du
     },
     list: async () => ['run', 'second', 'active'].map(runId => ({ ...target, runId, requestVersion: 1, fence: 1,
       status: runId === 'active' ? 'leased' : 'succeeded' })),
-    read: async ({ runId }: typeof target) => ({ ...(runId === 'second' ? await second : snapshot(runId, runId === 'active' ? 'leased' : 'succeeded')),
-      events: [], nextSeq: 0, canControl: true, diagnostics: { actions: [] } }),
-    subscribe: (runTarget: typeof target, receive: (item: RunStreamEvent) => void) => {
+    read: async ({ runId }: typeof target) => new RunStreamProjection(runId, true).apply({ type: 'state', state: runId === 'second' ? await second : snapshot(runId, 'succeeded') }),
+    subscribe: (runTarget: typeof target, receive: (item: AgentRunSnapshot) => void, signal: AbortSignal) => {
       subscribed.push(runTarget.runId); callbacks.set(runTarget.runId, receive)
-      return { readyState: 1, close() {} }
+      return new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), { once: true }))
     },
   } } })
-  const originalEventSource = globalThis.EventSource
   const originalWindow = globalThis.window
-  globalThis.EventSource = { CLOSED: 2 } as typeof EventSource
   globalThis.window = { setInterval: () => 0,clearInterval: () => {},clearTimeout: () => {} } as unknown as Window & typeof globalThis
   const { ChatTransport, filterThreadMessages } = await import('./transport')
   const transport = new ChatTransport()
@@ -327,7 +343,8 @@ test('initial history is ready before slow run snapshots, which merge without du
     assert.deepEqual(messages.slice(0, 2).map(message => message.content), [
       [{ type: 'text', text: 'run 的完整历史回复' }], [{ type: 'text', text: 'second 的完整历史回复' }],
     ])
-    callbacks.get('active')!({ type: 'preview', preview: { ...(event('实时新内容') as Extract<RunStreamEvent, { type: 'preview' }>).preview, runId: 'active' } })
+    callbacks.get('active')!(project({ type: 'state', state: snapshot('active', 'leased') }, 'active'))
+    callbacks.get('active')!(project({ type: 'preview', preview: { ...(event('实时新内容') as Extract<RunStreamEvent, { type: 'preview' }>).preview, runId: 'active' } }, 'active'))
     assert.deepEqual(useChatThreadStore.getState().conversations.room!.messages.at(-1)!.content, [{type:'text',text:'实时新内容'}])
     const tool = { ...messages[0]!, metadata: { ...messages[0]!.metadata, custom: { ...metadata(messages[0]!), messageKind: 'tool_activity' } } } as ThreadMessage
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], null).map(message => message.id), ['visible'])
@@ -343,8 +360,8 @@ test('initial history is ready before slow run snapshots, which merge without du
     assert.deepEqual(afterSend.activeRuns,activeBefore.activeRuns)
     assert.deepEqual(afterSend.typingAgentIds,['agent'])
     assert.deepEqual(afterSend.messages.slice(-3).map(message => message.id),['active-lead-in','active-example','preview-active'])
-    callbacks.get('active')!({ type: 'preview',preview: { ...(event('新的末条回复') as Extract<RunStreamEvent,{ type: 'preview' }>).preview,
-      runId: 'active',seq: 2 } })
+    callbacks.get('active')!(project({ type: 'preview',preview: { ...(event('新的末条回复') as Extract<RunStreamEvent,{ type: 'preview' }>).preview,
+      runId: 'active',seq: 2 } }, 'active'))
     await transport.reloadConversation('room')
     const replayed = useChatThreadStore.getState().conversations.room!
     assert.equal(replayed.messages.length,5)
@@ -363,12 +380,20 @@ test('initial history is ready before slow run snapshots, which merge without du
     assert.equal(transport.cancel('room'), stopping)
     await assert.rejects(stopping, /部分任务未能停止/)
     assert.deepEqual(cancelled, ['queued', 'active', 'waiting', 'reject'])
-    assert.equal(metadata(useChatThreadStore.getState().conversations.room!.messages.find(message => metadata(message).runId === 'queued')!).harness?.lifecycle, 'succeeded')
+    assert.equal(metadata(useChatThreadStore.getState().conversations.room!.messages.find(message => metadata(message).runId === 'queued')!).harness?.lifecycle, 'queued')
   } finally {
     unsubscribe()
     transport.disconnect()
-    globalThis.EventSource = originalEventSource
     globalThis.window = originalWindow
     mock.restoreAll()
   }
+})
+
+test('separate agents and child threads cannot overwrite each other', () => {
+  const first = new RunStreamProjection('run-a', true).apply({ type: 'state', state: snapshot('run-a', 'leased') })
+  const second = new RunStreamProjection('run-b', true).apply({ type: 'state', state: snapshot('run-b', 'leased') })
+  let state = applyRunSnapshot(EMPTY_CONVERSATION_CHAT_STATE, { ...target, runId: 'run-a' }, first)
+  state = applyRunSnapshot(state, { ...target, agentId: 'other-agent', runId: 'run-b', threadId: 'thread' }, second)
+  assert.deepEqual(state.messages.map(message => [metadata(message).senderId, metadata(message).threadRootId]), [['agent', null], ['other-agent', 'thread']])
+  assert.throws(() => applyRunSnapshot(state, target, second), /身份/)
 })

@@ -4,7 +4,8 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { createRunView } from '@lyyzka/lingxios/ui'
-import { harnessParts, harnessToolParts } from './harness'
+
+import { harnessParts, harnessToolParts } from '@/lib/agentRunSnapshot'
 import { toolCardResult } from '@/lib/agentToolCards'
 import { publicRunEvent } from '../../../../server/src/agent-runtime/public-events'
 // The unrelated Canvas editor imports browser-only CSS; retain real card renderers below.

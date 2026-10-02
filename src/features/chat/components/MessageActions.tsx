@@ -16,7 +16,7 @@ export async function copyMessageText(text: string) {
   }
 }
 
-export function MessageActions({ isMine, getText }: { isMine: boolean; getText: () => string }) {
+export function MessageActions({ isMine, getText, className }: { isMine: boolean; getText: () => string; className?: string }) {
   const aui = useAui()
   const messageId = useAuiState((state) => state.message.id)
   const [success, setSuccess] = useState<'reply' | 'copy' | null>(null)
@@ -31,6 +31,7 @@ export function MessageActions({ isMine, getText }: { isMine: boolean; getText: 
       'absolute top-1/2 z-30 flex -translate-y-1/2 items-center gap-0.5 bg-transparent text-foreground transition-opacity motion-reduce:transition-none group-hover/message:opacity-100 focus-within:opacity-100',
       success ? 'opacity-100' : 'opacity-0',
       isMine ? 'end-full me-2' : 'start-full ms-2',
+      className,
     )} role="toolbar" aria-label="消息操作">
       <Button
         type="button"

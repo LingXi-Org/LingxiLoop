@@ -14,7 +14,8 @@ import type {
   LingxiReactionMetadata,
 } from './model'
 import { mergeProgressMessage, preserveMessageTime, resolveMessagePresentation } from './model'
-import { readHarness, harnessParts, harnessStatus } from './harness'
+import { readHarness } from './harness'
+import { harnessParts, harnessStatus } from '@/lib/agentRunSnapshot'
 import type { RunView } from '@lyyzka/lingxios/ui'
 
 type JsonObject = Record<string, unknown>

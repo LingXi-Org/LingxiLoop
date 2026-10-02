@@ -2,7 +2,8 @@ import type { ThreadMessage } from '@assistant-ui/react'
 import { create } from 'zustand'
 import { getLingxiMessageMetadata, mergeProgressMessage, preserveMessageTime, type LingxiMessageMetadata } from './model'
 import { projectMessageGroups } from './converter'
-import { harnessParts, harnessStatus, isRunMessage, mergeHarness } from './harness'
+import { isRunMessage, mergeHarness } from './harness'
+import { harnessParts, harnessStatus } from '@/lib/agentRunSnapshot'
 
 export const CHAT_HISTORY_PAGE_SIZE = 80
 
@@ -72,7 +73,7 @@ export function mergeCanonicalMessages(
       const harness = mergeHarness(before.harness,after.harness)
       const canonical = harness.resultId === before.harness.resultId && before.sequence !== null ? previous : message
       byId.set(key,{ ...canonical, status: harnessStatus(harness),
-        content: (harness.lifecycle === 'cancelled' || harness.lifecycle === 'failed')
+        content: (harness.lifecycle === 'queued' || harness.lifecycle === 'leased' || harness.lifecycle === 'cancelled' || harness.lifecycle === 'failed')
           && harness.resultId === before.harness.resultId ? previous.content
           : harness.message ? harnessParts(harness, after.harnessTools ?? before.harnessTools) : message.content,
         metadata: { ...canonical.metadata, custom: { ...before,...metadata(canonical), harness,
@@ -105,7 +106,7 @@ export function mergeCanonicalMessages(
   for (const [key,message] of byId) {
     const value = metadata(message), lastSent = lastSentByRun.get(runKey(value))
     if (!isRunMessage(value) || !lastSent) continue
-    // Sent bubbles use IM order; only the pending final reply needs an anchor after the latest bubble.
+    // Sent messages use IM order; only the pending final reply needs an anchor after the latest send.
     byId.set(key,patchMetadata(message,{ positionAfter: value.sequence === null ? messageKey(lastSent) : undefined }))
   }
   const positioned = [...byId.values()].filter(message => metadata(message).positionAfter !== undefined)

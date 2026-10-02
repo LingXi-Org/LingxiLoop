@@ -3,13 +3,15 @@ import { setImmediate } from 'node:timers/promises'
 import { mock, test } from 'node:test'
 import type { WsEvent } from '@/api/contracts'
 import type { RunState, RunStreamEvent } from '@lyyzka/lingxios/ui'
+import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
+import { RunStreamProjection } from '../../../../server/src/agent-runtime/assistant-transport'
 
 test('run notifications and discovery subscribe before blocked history, deduplicate and recover closed streams', async () => {
   let receive!: (event: WsEvent) => void, discover!: () => void
-  const opened: Array<{ runId: string; readyState: number; close(): void; receive(event: RunStreamEvent): void }> = []
+  const opened: Array<{ runId: string; signal: AbortSignal; close(): void; receive(event: RunStreamEvent): void }> = []
   const listed: Array<{ conversationId: string; agentId: string; runId: string; status: string }> = []
   let reads = 0
-  let paint: (() => void) | undefined
+  const retries: Array<() => void> = []
   mock.module('@/api/core/realtime', { namedExports: { ws: { connect: async () => {},
     on: (listener: typeof receive) => { receive = listener; return () => {} } } } })
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
@@ -24,21 +26,20 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     projectMessageGroups: (messages: unknown) => messages } })
   mock.module('./harness-api', { namedExports: { harnessApi: {
     list: async () => listed,
-    read: async (_target: unknown, _seq: number, signal: AbortSignal) => {
+    read: async () => {
       reads++
-      return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }))
+      throw new Error('Active streams must not read HTTP snapshots')
     },
-    subscribe: (target: { runId: string }, listener: (event: RunStreamEvent) => void) => {
-      const stream = { runId: target.runId, readyState: 1, close() { this.readyState = 2 }, receive: listener }
-      opened.push(stream)
-      return stream
-    },
+    subscribe: (target: { runId: string }, listener: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal) => new Promise<void>(resolve => {
+      const projection = new RunStreamProjection(target.runId, true)
+      opened.push({ runId: target.runId, signal, close: resolve, receive: event => listener(projection.apply(event)) })
+      signal.addEventListener('abort', () => resolve(), { once: true })
+    }),
   } } })
   Object.defineProperty(globalThis, 'window', { configurable: true, value: {
     setInterval: (callback: () => void) => { discover = callback; return 1 }, clearInterval: () => {},
-    requestAnimationFrame: (callback: () => void) => { paint = callback; return 1 }, cancelAnimationFrame: () => { paint = undefined },
+    setTimeout: (callback: () => void) => { retries.push(callback); return retries.length }, clearTimeout: () => {},
   } })
-  Object.defineProperty(globalThis, 'EventSource', { configurable: true, value: { CLOSED: 2 } })
   const { ChatTransport } = await import('./transport')
   const { updateConversation, useChatThreadStore } = await import('./store')
   const transport = new ChatTransport()
@@ -50,8 +51,8 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     assert.equal(opened.length, 0)
     receive(event); receive(event)
     assert.deepEqual(opened.map(stream => stream.runId), ['run'])
-    assert.equal(reads, 1)
-    // Native SSE sends the lifecycle snapshot before its first preview.
+    assert.equal(reads, 0)
+    // The server projects native events before the browser receives state operations.
     opened[0].receive({ type: 'state', state: { run: { id: 'run', status: 'leased', fence: 1,
       requestVersion: 1, createdAt: new Date(0).toISOString() }, message: null, delivery: null } as RunState })
     opened[0].receive({ type: 'preview', preview: { runId: 'run', fence: 1, requestVersion: 1,
@@ -60,14 +61,15 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     const delta = { runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', kind: 'delta' as const }
     opened[0].receive({ type: 'preview', preview: { ...delta, seq: 2, fromSeq: 1, delta: '，' } })
     opened[0].receive({ type: 'preview', preview: { ...delta, seq: 3, fromSeq: 2, delta: '世界' } })
-    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, [{ type: 'text', text: '你好' }])
-    paint!()
     assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, [{ type: 'text', text: '你好，世界' }])
     opened[0].receive({ type: 'preview', preview: { ...delta, seq: 4, fromSeq: 3, delta: '已撤回' } })
     opened[0].receive({ type: 'reset', runId: 'run', reason: 'superseded' })
-    paint!()
     assert.equal(useChatThreadStore.getState().conversations.room.messages[0].content.some(part => part.type === 'text' && part.text.includes('已撤回')), false)
     opened[0].close()
+    await setImmediate()
+    retries.at(-1)!()
+    await setImmediate()
+    assert.equal(opened.length, 2)
     receive(event)
     assert.equal(opened.length, 2)
     updateConversation('room', state => ({ ...state, loaded: true, isLoading: false }))
@@ -83,7 +85,8 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     assert.deepEqual(useChatThreadStore.getState().conversations, {})
   } finally {
     transport.disconnect()
-    assert.ok(opened.every(stream => stream.readyState === 2))
-    Reflect.deleteProperty(globalThis, 'window'); Reflect.deleteProperty(globalThis, 'EventSource')
+    assert.ok(opened.every(stream => stream.signal.aborted))
+    assert.equal(reads, 0)
+    Reflect.deleteProperty(globalThis, 'window')
   }
 })

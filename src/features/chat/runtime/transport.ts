@@ -1,5 +1,5 @@
 import type { AppendMessage, ThreadMessage, ThreadUserMessagePart } from '@assistant-ui/react'
-import type { RunStreamEvent } from '@lyyzka/lingxios/ui'
+import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import type { ApiAttachment, WsEvent } from '@/api/contracts'
 import { ws } from '@/api/core/realtime'
 import { agentsApi } from '@/features/agents/api'
@@ -36,7 +36,7 @@ import {
   useChatThreadStore,
 } from './store'
 import { harnessApi, type AgentRunResponse, type AgentRunTarget } from './harness-api'
-import { applyRunUpdate, needsRunStream } from './run-updates'
+import { applyRunSnapshot, needsRunStream } from './run-updates'
 import { canCancelRun, isRunMessage } from './harness'
 import { attachmentMessages } from './attachment-messages'
 import { chatLatency } from './latency'
@@ -160,7 +160,7 @@ export class ChatTransport {
   private readonly cancellations = new Map<string, Promise<void>>()
   private booted = false
   private readonly typingTimers = new Map<string, number>()
-  private readonly runStreams = new Map<string, EventSource>()
+  private readonly runStreams = new Map<string, AbortController>()
   private discoveryTimer: number | undefined
   private subscriptions: (() => void)[] = []
   private discovering: RequestContext | undefined
@@ -170,8 +170,6 @@ export class ChatTransport {
   private workspaceChannels: Set<string> | null = null
   private readonly runReads = new Map<string, Promise<AgentRunResponse>>()
   private readonly historyRequests = new Map<string, RequestContext>()
-  private readonly previewBatch = new Map<string, { target: AgentRunTarget; item: Extract<RunStreamEvent, { type: 'preview' }> }>()
-  private previewFrame: number | undefined
 
   boot(): void {
     if (this.connection.signal.aborted) this.connection = new AbortController()
@@ -196,12 +194,10 @@ export class ChatTransport {
     chatLatency.clear()
     this.runReads.clear()
     this.historyRequests.clear()
-    if (this.previewFrame !== undefined) window.cancelAnimationFrame(this.previewFrame)
-    this.previewFrame = undefined; this.previewBatch.clear()
     lingxiIm.disconnect()
     for (const timer of this.typingTimers.values()) window.clearTimeout(timer)
     this.typingTimers.clear()
-    for (const stream of this.runStreams.values()) stream.close()
+    for (const stream of this.runStreams.values()) stream.abort()
     this.runStreams.clear()
     window.clearInterval(this.discoveryTimer)
     resetChatThreadStore()
@@ -217,10 +213,8 @@ export class ChatTransport {
       // A fresh signal is the scope generation: A → B → A cannot revive an A request.
       this.connection.abort(); this.connection = new AbortController()
       this.runReads.clear(); this.historyRequests.clear()
-      for (const stream of this.runStreams.values()) stream.close()
+      for (const stream of this.runStreams.values()) stream.abort()
       this.runStreams.clear()
-      if (this.previewFrame !== undefined) window.cancelAnimationFrame(this.previewFrame)
-      this.previewFrame = undefined; this.previewBatch.clear()
       for (const timer of this.typingTimers.values()) window.clearTimeout(timer)
       this.typingTimers.clear()
       chatLatency.opened(null)
@@ -481,9 +475,6 @@ export class ChatTransport {
         ...(message.threadRootId ? { threadId: message.threadRootId } : {}) }
       await harnessApi.cancel(target)
       await this.refreshRun(target)
-      const refreshed = useChatThreadStore.getState().conversations[conversationId]?.messages
-        .find(item => messageMetadata(item).runId === target.runId && messageMetadata(item).senderId === target.agentId && isRunMessage(messageMetadata(item)))
-      if (refreshed && messageMetadata(refreshed).harnessError) throw new Error('无法获取任务进度，请重试。')
     })).then(results => {
       if (results.some(result => result.status === 'rejected')) throw new Error('部分任务未能停止，请重试。')
     }).finally(() => this.cancellations.delete(conversationId))
@@ -530,7 +521,7 @@ export class ChatTransport {
     const pending = this.runReads.get(key)
     if (pending) return pending
     const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30_000)])
-    const promise = harnessApi.read(target, 0, signal).finally(() => {
+    const promise = harnessApi.read(target, signal).finally(() => {
       if (this.runReads.get(key) === promise) this.runReads.delete(key)
     })
     this.runReads.set(key, promise)
@@ -539,23 +530,9 @@ export class ChatTransport {
 
   async refreshRun(target: AgentRunTarget): Promise<void> {
     if (!this.includesChannel(target.conversationId)) return
-    const request = this.captureRequest()
-    try {
-      const response = await this.readRun(target, request)
-      if (!request.current()) return
-      updateConversation(target.conversationId, state => applyRunUpdate(state, target,
-        { type: 'state', state: response }, useParticipants.getState().byId[target.agentId], response))
-      this.syncRunStreams(target.conversationId)
-    } catch (error) {
-      if (!request.current()) return
-      updateConversation(target.conversationId,state => ({ ...state, messages: state.messages.map(message => {
-        const meta = messageMetadata(message)
-        if (meta.runId !== target.runId || !isRunMessage(meta)) return message
-        const inaccessible = /\(40[134]\)/.test(String(error))
-        return { ...message, metadata: { ...message.metadata, custom: { ...meta,
-          ...(inaccessible ? { harnessControl: false, memory: undefined } : {}), harnessError: inaccessible ? undefined : '任务进度暂不可用，请重试。' } } } as ThreadMessage
-      }) }))
-    }
+    this.runStreams.get(target.runId)?.abort()
+    this.runStreams.delete(target.runId)
+    this.subscribeRun(target)
   }
 
   private commitEnvelope(envelope: ImEnvelope): void {
@@ -621,6 +598,7 @@ export class ChatTransport {
         requestVersion: view.requestVersion, fence: view.fence, status: view.lifecycle ?? 'queued' })
     }
     const reads = [...targets.values()].filter(target => {
+      if (needsRunStream(target.status) || this.runStreams.has(target.runId)) return false
       const meta = messages.map(messageMetadata).find(meta => meta.runId === target.runId && isRunMessage(meta))
       const view = meta?.harness
       return !view || meta.harnessControl === undefined || view.requestVersion !== target.requestVersion
@@ -644,9 +622,8 @@ export class ChatTransport {
   }
 
   private applyRunSnapshots(state: ConversationChatState, snapshots: Array<{ target: AgentRunTarget; response: AgentRunResponse }>) {
-    for (const { target, response } of snapshots.sort((a, b) => a.response.run.createdAt.localeCompare(b.response.run.createdAt))) {
-      state = applyRunUpdate(state, target, { type: 'state', state: response },
-        useParticipants.getState().byId[target.agentId], response)
+    for (const { target, response } of snapshots.sort((a, b) => (a.response.createdAt ?? '').localeCompare(b.response.createdAt ?? ''))) {
+      state = applyRunSnapshot(state, target, response, useParticipants.getState().byId[target.agentId])
     }
     return { ...state, messages: projectMessageGroups(state.messages) }
   }
@@ -654,14 +631,9 @@ export class ChatTransport {
   private syncRunStreams(conversationId: string): void {
     for (const message of useChatThreadStore.getState().conversations[conversationId]?.messages ?? []) {
       const meta = messageMetadata(message), view = meta.harness
-      if (!view || !meta.runId || meta.messageKind !== 'text') continue
-      if (needsRunStream(view.lifecycle, view.delivery)) {
-        if (this.runStreams.get(meta.runId)?.readyState === EventSource.CLOSED) this.runStreams.delete(meta.runId)
+      if (view && meta.runId && meta.messageKind === 'text' && needsRunStream(view.lifecycle, view.delivery)) {
         this.subscribeRun({ conversationId, agentId: meta.senderId, runId: meta.runId,
           ...(meta.threadRootId ? { threadId: meta.threadRootId } : {}) })
-      } else {
-        this.runStreams.get(meta.runId)?.close()
-        this.runStreams.delete(meta.runId)
       }
     }
   }
@@ -676,97 +648,62 @@ export class ChatTransport {
         await this.hydrateConversation(conversationId, request)
         if (!request.current()) return
       }
-    } catch { /* Native EventSource reconnects existing runs; discovery retries on the next tick. */ }
+    } catch { /* Existing streams reconnect independently; discovery retries on the next tick. */ }
     finally { if (this.discovering === request) this.discovering = undefined }
   }
 
   private subscribeRun(target: AgentRunTarget): void {
-    if (!this.includesChannel(target.conversationId)) return
-    const key = target.runId
-    if (this.runStreams.get(key)?.readyState === EventSource.CLOSED) this.runStreams.delete(key)
-    if (this.runStreams.has(key) || this.connection.signal.aborted) return
+    if (!this.includesChannel(target.conversationId) || this.connection.signal.aborted || this.runStreams.has(target.runId)) return
     if (this.runStreams.size >= 128) {
       const oldest = this.runStreams.keys().next().value!
-      this.runStreams.get(oldest)?.close(); this.runStreams.delete(oldest)
+      this.runStreams.get(oldest)?.abort(); this.runStreams.delete(oldest)
     }
-    const request = this.captureRequest()
-    const stream = harnessApi.subscribe(target,item => {
-      if (request.current()) this.receiveRunStreamEvent(target,item)
-    },() => {
-      if (!request.current()) return
-      chatLatency.disconnected(target.runId)
-      void this.refreshRun(target)
+    const request = this.captureRequest(), controller = new AbortController()
+    const signal = AbortSignal.any([controller.signal, request.signal])
+    this.runStreams.set(target.runId, controller)
+    void (async () => {
+      let failures = 0
+      while (!signal.aborted && request.current()) {
+        let latest: AgentRunSnapshot | undefined
+        try {
+          await harnessApi.subscribe(target, snapshot => {
+            if (!request.current() || signal.aborted) return
+            failures = 0
+            if (snapshot.sourceRef && snapshot.sourceRef !== latest?.sourceRef) chatLatency.bind(target.runId, snapshot.sourceRef)
+            const text = snapshot.content.filter(part => part.type === 'text').map(part => part.text).join('')
+            if (snapshot.status.type === 'running' && text) chatLatency.preview(target.runId, snapshot.view.lastSeq, text.length)
+            if (latest?.content.length && !snapshot.content.length) chatLatency.reset(target.runId, 'retracted')
+            if (snapshot.view.message && !latest?.view.message) chatLatency.completed(target.runId)
+            latest = snapshot
+            updateConversation(target.conversationId, state => applyRunSnapshot(state, target, snapshot, useParticipants.getState().byId[target.agentId]))
+          }, signal)
+          if (!latest || needsRunStream(latest.view.lifecycle, latest.view.delivery)) throw new Error('运行流提前结束')
+          return
+        } catch (error) {
+          if (signal.aborted || !request.current()) return
+          chatLatency.disconnected(target.runId)
+          const inaccessible = /[（(]40[134][）)]/.test(String(error))
+          updateConversation(target.conversationId, state => ({ ...state, messages: state.messages.map(message => {
+            const meta = messageMetadata(message)
+            if (meta.runId !== target.runId || !isRunMessage(meta)) return message
+            return { ...message, metadata: { ...message.metadata, custom: { ...meta,
+              ...(inaccessible ? { harnessControl: false, memory: undefined } : {}),
+              harnessError: inaccessible ? '无权读取任务进度。' : '连接已中断，正在重新连接…',
+            } } } as ThreadMessage
+          }) }))
+          if (inaccessible) return
+        }
+        // Retry this protocol only. Abort also releases the pending backoff timer.
+        await new Promise<void>(resolve => {
+          const done = () => { window.clearTimeout(timer); signal.removeEventListener('abort', done); resolve() }
+          const timer = window.setTimeout(done, Math.min(30_000, 1000 * 2 ** Math.min(failures++, 5)))
+          signal.addEventListener('abort', done, { once: true })
+          if (signal.aborted) done()
+        })
+      }
+    })().finally(() => {
+      if (this.runStreams.get(target.runId) === controller) this.runStreams.delete(target.runId)
     })
-    this.runStreams.set(key,stream)
-  }
-
-  private receiveRunStreamEvent(target: AgentRunTarget, item: RunStreamEvent): void {
-    if (this.connection.signal.aborted) return
-    if (item.type === 'preview') chatLatency.preview(target.runId, item.preview.seq,
-      (item.preview.kind === 'delta' ? item.preview.delta : item.preview.draft).length)
-    const pending = this.previewBatch.get(target.runId)
-    if (item.type !== 'preview') {
-      // Retractions and durable terminal state supersede queued body text immediately.
-      if (item.type === 'reset' || item.type === 'state' && (item.state.run.status !== 'leased'
-        || pending && (pending.item.preview.requestVersion !== item.state.run.requestVersion || pending.item.preview.fence !== item.state.run.fence))) this.previewBatch.delete(target.runId)
-      else if (pending) { this.previewBatch.delete(target.runId); this.applyRunStreamEvent(target, pending.item) }
-      this.applyRunStreamEvent(target, item)
-      return
-    }
-    const current = useChatThreadStore.getState().conversations[target.conversationId]?.messages
-      .find(message => messageMetadata(message).runId === target.runId && isRunMessage(messageMetadata(message)))
-    if (!window.requestAnimationFrame || !pending && !(current && messageMetadata(current).harness?.draft)) {
-      this.applyRunStreamEvent(target, item)
-      return
-    }
-    let preview = item.preview
-    if (pending && preview.kind === 'delta') {
-      const before = pending.item.preview
-      if (before.fence === preview.fence && before.requestVersion === preview.requestVersion
-        && before.attemptId === preview.attemptId && before.seq === preview.fromSeq) {
-        preview = before.kind === 'snapshot'
-          ? { ...preview, kind: 'snapshot', draft: before.draft + preview.delta }
-          : { ...preview, fromSeq: before.fromSeq, delta: before.delta + preview.delta }
-      } else { this.previewBatch.delete(target.runId); this.applyRunStreamEvent(target, pending.item) }
-    }
-    if ((preview.kind === 'delta' ? preview.delta : preview.draft).length > 100_000) {
-      this.previewBatch.delete(target.runId)
-      this.runStreams.get(target.runId)?.close(); this.runStreams.delete(target.runId); this.subscribeRun(target)
-      return
-    }
-    this.previewBatch.set(target.runId, { target, item: { type: 'preview', preview } })
-    this.previewFrame ??= window.requestAnimationFrame(() => {
-      this.previewFrame = undefined
-      const batch = [...this.previewBatch.values()]; this.previewBatch.clear()
-      for (const { target, item } of batch) this.applyRunStreamEvent(target, item)
-    })
-  }
-
-  private applyRunStreamEvent(target: AgentRunTarget, item: RunStreamEvent): void {
-    if (this.connection.signal.aborted) return
-    if (item.type === 'event' && item.event.kind === 'run.started' && typeof item.event.data.sourceRef === 'string') {
-      chatLatency.bind(target.runId, item.event.data.sourceRef)
-    }
-    if (item.type === 'reset') chatLatency.reset(target.runId, item.reason)
-    if (item.type === 'state' && item.state.message) chatLatency.completed(target.runId)
-    let reconnect = false
-    updateConversation(target.conversationId,state => {
-      const previous = state.messages.find(message => messageMetadata(message).runId === target.runId
-        && isRunMessage(messageMetadata(message)))
-      const next = applyRunUpdate(state, target, item, useParticipants.getState().byId[target.agentId])
-      const view = next.messages.find(message => messageMetadata(message).runId === target.runId
-        && isRunMessage(messageMetadata(message)))
-      reconnect = item.type === 'preview' && item.preview.kind === 'delta'
-        && (!previous || messageMetadata(previous).harness !== messageMetadata(view!).harness)
-        && messageMetadata(view!).harness?.preview === null
-      return next
-    })
-    if (reconnect) {
-      this.runStreams.get(target.runId)?.close()
-      this.runStreams.delete(target.runId)
-      this.subscribeRun(target)
-    }
-    if (item.type === 'state') this.syncRunStreams(target.conversationId)
   }
 
   private applyWorkspaceEvent(event: WsEvent): void {
@@ -776,7 +713,6 @@ export class ChatTransport {
         const target = { conversationId: event.conversationId, agentId: event.agentId, runId: event.runId,
           ...(event.threadId ? { threadId: event.threadId } : {}) }
         this.subscribeRun(target)
-        void this.refreshRun(target)
       }
       return
     }

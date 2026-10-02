@@ -8,7 +8,8 @@ import { canvasProgress, handoffProgress, knowledgeProgress, missionPlan } from 
 import { convertEnvelope, convertEnvelopeBatch } from './converter'
 import { mergeCanonicalMessages } from './store'
 import { getLingxiMessageMetadata } from './model'
-import { harnessToolParts } from './harness'
+
+import { harnessToolParts } from '@/lib/agentRunSnapshot'
 
 const names = { nova: { name: '司南' }, sage: { name: '明理' }, trace: { name: '溯源' } }
 const at = '2026-09-21T08:00:00.000Z'

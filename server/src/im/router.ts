@@ -1,4 +1,4 @@
-import { publicRunEvent, publicRunStream, priorToolNames } from '../agent-runtime/public-events.js'
+import { RunStreamProjection, assistantRunResponse } from '../agent-runtime/assistant-transport.js'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { pool } from '../db/pool.js'
@@ -140,7 +140,7 @@ imRouter.get('/channels/:id/runs', safe(async (req, res) => {
   res.json(runs.filter(Boolean))
 }))
 
-// EventSource sends credentials natively; the tenant path is still checked against current membership.
+// The tenant in the URL and the workspace headers remain subject to membership checks.
 imRouter.get('/companies/:companyId/channels/:id/agents/:agentId/runs/:runId/stream', safe(async (req, res) => {
   const { userId, companyId } = await identity(req), conversationId = String(req.params.id)
   await assertChannelPermission(userId,companyId,conversationId,'conversation:read')
@@ -152,11 +152,14 @@ imRouter.get('/companies/:companyId/channels/:id/agents/:agentId/runs/:runId/str
   res.once('close',close)
   try {
     const app = await lingxiOSControl()
-    const stream = await app.streamRun(run,{ signal: cancellation.signal, lastEventId: req.get('last-event-id') })
+    const permission = await permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: conversationId } })
+    const upstream = await app.streamRun(run, { signal: cancellation.signal })
+    if (!upstream.ok || !upstream.body) throw new HttpError(502, '运行流暂不可用')
+    const stream = assistantRunResponse(upstream.body, new RunStreamProjection(run.runId, permission.allowed))
     res.status(stream.status)
     stream.headers.forEach((value,key) => { res.setHeader(key,value) })
     res.flushHeaders()
-    if (stream.body) await pipeline(Readable.from(publicRunStream(stream.body, async id => (await priorToolNames(after=>app.readEvents(run,after),new Set([id]))).get(id))),res,{ signal: cancellation.signal })
+    if (stream.body) await pipeline(Readable.fromWeb(stream.body as import('node:stream/web').ReadableStream<Uint8Array>), res, { signal: cancellation.signal })
     else res.end()
   } catch (error) { if (!cancellation.signal.aborted) throw error }
   finally { res.off('close',close); cancellation.abort() }
@@ -166,23 +169,29 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) 
   const { userId, companyId } = await identity(req)
   const sessionId = String(req.params.id)
   await assertChannelPermission(userId, companyId, sessionId, 'conversation:read')
-  const { afterSeq, threadId } = requestInput(lingxiOSRunQuerySchema, req.query)
+  const { threadId } = requestInput(lingxiOSRunQuerySchema, req.query)
   const runIdentity = await productRunIdentity({ companyId, conversationId: sessionId, agentId: String(req.params.agentId), runId: String(req.params.runId), principalId: userId,
     ...(threadId ? { threadId } : {}) })
   const app = await lingxiOSControl()
   const state = await app.readRunState(runIdentity)
   if (!state) { res.status(404).json({ error: 'run not found' }); return }
-  const [events, diagnostics, permission] = await Promise.all([app.readEvents(runIdentity,afterSeq),app.readDiagnostics(runIdentity),
-    permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: sessionId } })])
-  const actionNames = new Map(diagnostics?.actions.map(item => ['host:' + item.actionKey,item.action]))
-  for (const event of events.events) if (event.kind === 'tool.started' && typeof event.data.name === 'string') actionNames.set(String(event.data.toolCallId),event.data.name)
-  const missing = new Set(events.events.filter(event=>event.kind==='tool.completed' && !actionNames.has(String(event.data.toolCallId))).map(event=>String(event.data.toolCallId)))
-  if(missing.size) for(const [id,name] of await priorToolNames(after=>app.readEvents(runIdentity,after),missing)) actionNames.set(id,name)
-  res.json({ ...state, outcome: state.run.goalOutcome, ...events,
-    events: events.events.map(event => publicRunEvent(event,actionNames.get(String(event.data.toolCallId)))),
-    diagnostics: diagnostics ? { ...diagnostics, actions: diagnostics.actions.map(({ actionKey,action,result }) => ({ actionKey,action,
-      result: result ? { ok:result.ok,executionState:result.executionState,approval:result.approval } : null })), delivery: null } : null,
-    canControl: permission.allowed })
+  const permission = await permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: sessionId } })
+  const projection = new RunStreamProjection(runIdentity.runId, permission.allowed)
+  projection.apply({ type: 'state', state })
+  const signal = AbortSignal.timeout(30_000)
+  let cursor = 0
+  while (true) {
+    signal.throwIfAborted()
+    const page = await app.readEvents(runIdentity, cursor)
+    for (const event of page.events) projection.apply({ type: 'event', event })
+    if (page.events.length < 100) break
+    if (page.nextSeq <= cursor) throw new Error('runtime event cursor did not advance')
+    cursor = page.nextSeq
+  }
+  // A consistent read after replay owns lifecycle and the final delivered message.
+  const current = await app.readRunState(runIdentity)
+  if (!current) throw new HttpError(404, 'run not found')
+  res.json(projection.apply({ type: 'state', state: current }))
 }))
 
 imRouter.post('/channels/:id/agents/:agentId/runs/:runId/reconcile', safe(async (req, res) => {

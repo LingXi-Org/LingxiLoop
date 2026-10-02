@@ -1,30 +1,32 @@
 import type { ThreadMessage } from '@assistant-ui/react'
-import { consumeRunStreamEvent, createRunView, type RunStreamEvent } from '@lyyzka/lingxios/ui'
 import type { Participant } from '@/types'
-import type { AgentRunResponse, AgentRunTarget } from './harness-api'
-import { harnessParts, harnessStatus, harnessToolParts, isRunMessage } from './harness'
+import type { AgentRunTarget } from './harness-api'
+import { isRunMessage } from './harness'
+import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { getLingxiMessageMetadata as metadata, type LingxiMessageMetadata } from './model'
 import { mergeCanonicalMessages, messageKey, type ConversationChatState } from './store'
-import { projectRunMemory } from './memory'
 
 export function needsRunStream(status: string | null, delivery?: string | null): boolean {
   return status === 'queued' || status === 'leased' || status === 'waiting' || delivery === 'pending'
 }
 
 /** HTTP snapshots and SSE updates share one message; committed IM order is authoritative. */
-export function applyRunUpdate(
+export function applyRunSnapshot(
   state: ConversationChatState,
   target: AgentRunTarget,
-  item: RunStreamEvent,
+  snapshot: AgentRunSnapshot,
   participant?: Participant,
-  response?: AgentRunResponse,
 ): ConversationChatState {
+  if (snapshot.runId !== target.runId || snapshot.view.runId !== target.runId) throw new Error('运行身份不一致')
   const current = state.messages.find(message => metadata(message).runId === target.runId
-    && metadata(message).senderId === target.agentId && isRunMessage(metadata(message)))
+    && metadata(message).senderId === target.agentId && metadata(message).threadRootId === (target.threadId ?? null) && isRunMessage(metadata(message)))
   const before = current && metadata(current)
-  const view = consumeRunStreamEvent(before?.harness ?? createRunView(target.runId), item)
+  const view = snapshot.view
+  const previousView = before?.harness
+  if (previousView && (view.requestVersion < previousView.requestVersion || view.fence < previousView.fence
+    || view.messageFence < previousView.messageFence || view.lastSeq < previousView.lastSeq)) return state
   const id = current?.id ?? `preview-${target.runId}`
-  const startedAt = item.type === 'state' ? Date.parse(item.state.run.createdAt) : NaN
+  const startedAt = snapshot.createdAt ? Date.parse(snapshot.createdAt) : NaN
   const validStartedAt = Number.isFinite(startedAt) && startedAt > 0
   const keepTime = current && !before?.timestampMissing
     && (before?.sequence != null || before?.positionAfter !== undefined || !validStartedAt)
@@ -50,19 +52,14 @@ export function applyRunUpdate(
     positionAfter: before?.sequence != null ? undefined : lastSent ? messageKey(lastSent)
       : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
     runId: target.runId, harness: view,
-    memory: response?.memory
-      ? response.memory.revision >= (before?.memory?.revision ?? 0) ? response.memory : before?.memory
-      : projectRunMemory(target.runId, response?.events ?? (item.type === 'event' ? [item.event] : []), before?.memory),
-    harnessTools: harnessToolParts(target.runId, response?.events ?? (item.type === 'event' ? [item.event] : []), [...before?.harnessTools ?? [], ...response?.tools ?? []]),
-    harnessReplaySeq: response?.nextSeq ?? view.lastSeq,
-    ...(response ? { harnessControl: response.canControl, harnessError: response.run.error ?? undefined } : {}),
-    ...(item.type === 'event' && item.event.kind === 'run.failed' && typeof item.event.data.error === 'string'
-      ? { harnessError: item.event.data.error } : {}),
+    memory: snapshot.memory && snapshot.memory.revision >= (before?.memory?.revision ?? 0) ? snapshot.memory : before?.memory,
+    harnessTools: snapshot.tools,
+    harnessControl: snapshot.canControl, harnessError: snapshot.error ?? undefined,
   }
   // Only previews need a time-based anchor; delivered messages retain their IM sequence.
   if (before && before.positionAfter === undefined && !Number.isFinite(startedAt) && !lastSent) delete custom.positionAfter
   const message: ThreadMessage = { id, role: 'assistant', createdAt,
-    content: harnessParts(view, custom.harnessTools), status: harnessStatus(view), metadata: {
+    content: snapshot.content, status: snapshot.status, metadata: {
       unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], ...current?.metadata, custom,
     } }
   const activeRuns = { ...state.activeRuns }

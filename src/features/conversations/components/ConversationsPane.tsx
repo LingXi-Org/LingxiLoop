@@ -284,7 +284,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="gap-0 p-0">
+      <SidebarContent className={cn('gap-0 py-0', isMobile ? 'px-3' : 'px-2')}>
         {query.trim() ? (
           <div className="h-full overflow-y-auto">
             {searching && <ResourceSkeleton variant="list" count={4} compact label="正在搜索会话" />}

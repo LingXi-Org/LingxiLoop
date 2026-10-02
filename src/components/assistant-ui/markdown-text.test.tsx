@@ -5,38 +5,38 @@ import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, Mes
 import { confidenceCopyText, MarkdownText, type MarkdownConfidenceClaim } from './markdown-text'
 import { ConfidenceMarker } from './elements/confidence-marker'
 
-function Text() { return <MarkdownText segmented /> }
+function Text() { return <MarkdownText agent /> }
 function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
-function Preview({ text, running, claims, inlineCitations, interrupted = false, animateEntry = false }: { text: string; running: boolean; claims?: MarkdownConfidenceClaim[]; inlineCitations?: boolean; interrupted?: boolean; animateEntry?: boolean }) {
+function Preview({ text, running, claims, inlineCitations, interrupted = false }: { text: string; running: boolean; claims?: MarkdownConfidenceClaim[]; inlineCitations?: boolean; interrupted?: boolean }) {
   const messages: ThreadMessage[] = [{ id: 'reply', role: 'assistant', createdAt: new Date(0),
     content: [{ type: 'text', text }], status: running ? { type: 'running' } : interrupted ? { type: 'incomplete', reason: 'cancelled' } : { type: 'complete', reason: 'stop' },
     metadata: { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], custom: {} } }]
   const runtime = useExternalStoreRuntime({ messages, isRunning: running, onNew: async () => {} })
-  function CitedMessage() { return <MessagePrimitive.Parts components={{ Text: () => <MarkdownText segmented confidenceClaims={claims} inlineCitations={inlineCitations} animateEntry={animateEntry} /> }} /> }
+  function CitedMessage() { return <MessagePrimitive.Parts components={{ Text: () => <MarkdownText agent confidenceClaims={claims} inlineCitations={inlineCitations} /> }} /> }
   return <AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{ AssistantMessage: CitedMessage, UserMessage: Message }} /></AssistantRuntimeProvider>
 }
 
 test('streamed prose and incomplete Markdown blocks appear before completion', () => {
-  for (const [text, liveCount, finalCount] of [
-    ['第一段', 1, 1], ['第一段\n\n', 1, 1], ['第一段\n\n第二段 **正在', 2, 2],
-    ['第一段\n\n第二段\n\n- 一\n- 二\n\n```js\nconst value = 1\n```\n\n| 项目 | 结果 |\n| --- | --- |\n| 测试 | 正常 |', 4, 4],
+  for (const text of [
+    '第一段', '第一段\n\n', '第一段\n\n第二段 **正在',
+    '第一段\n\n第二段\n\n- 一\n- 二\n\n```js\nconst value = 1\n```\n\n| 项目 | 结果 |\n| --- | --- |\n| 测试 | 正常 |',
   ] as const) {
     for (const inlineCitations of [true, false]) {
       for (const running of [true, false]) {
         const html = renderToStaticMarkup(<Preview text={text} running={running} inlineCitations={inlineCitations} />)
-        assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, running ? liveCount : finalCount)
-        assert.equal(html.includes('第一段'), !running || liveCount > 0)
+        assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
+        assert.ok(html.includes('第一段'))
       }
     }
   }
 })
 
-test('lists share a bubble with their lead-in without merging subsequent paragraphs', () => {
+test('lists and paragraphs retain their semantic layout without bubble wrappers', () => {
   for (const lead of ['学习方面', '**学习方面**', '## 学习方面']) {
     for (const list of ['- 一\n- 二', '1. 一\n2. 二']) {
       for (const running of [false, true]) {
         const html = renderToStaticMarkup(<Preview text={`${lead}\n\n${list}\n\n接下来`} running={running} />)
-        assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 2)
+        assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
         assert.match(html, /学习方面[\s\S]*<\/(?:p|h2)>\s*<(?:ul|ol)/)
         assert.ok(html.includes('接下来'))
       }
@@ -54,11 +54,15 @@ test('unfinished structural blocks remain visible during streaming and interrupt
   }
 })
 
-test('history has no entry animation and live arrivals opt in', () => {
-  for (const animateEntry of [false, true]) {
-    const html = renderToStaticMarkup(<Preview text="完整消息" running={false} animateEntry={animateEntry} />)
-    assert.equal(html.includes('data-bubble-enter'), animateEntry)
+test('only live agent text uses native reveal and shimmer; settled and interrupted text is static', () => {
+  for (const running of [false, true]) {
+    const html = renderToStaticMarkup(<Preview text="完整消息" running={running} />)
+    assert.equal(html.includes('data-sd-animate='), running)
+    assert.equal(html.includes('motion-safe:shimmer'), running)
+    assert.doesNotMatch(html, /data-bubble-enter|im-markdown-bubble/)
   }
+  const interrupted = renderToStaticMarkup(<Preview text="中断正文" running={false} interrupted />)
+  assert.doesNotMatch(interrupted, /data-sd-animate=|motion-safe:shimmer/)
 })
 
 test('committed citations preserve Markdown and normal links, with one shared basis slot', () => {
@@ -70,7 +74,7 @@ test('committed citations preserve Markdown and normal links, with one shared ba
   const html = renderToStaticMarkup(<Preview text={text} running={false} claims={claims} />)
   assert.equal((html.match(/data-confidence-id=/g) ?? []).length, 3)
   assert.equal((html.match(/data-slot="confidence-basis"/g) ?? []).length, 1)
-  assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 4)
+  assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
   assert.match(html, /data-streamdown="strong">事实<\/span>/)
   assert.match(html, /data-streamdown="link"[^>]*>官网<\/button>/)
   assert.match(html, /<ul/)
@@ -155,7 +159,7 @@ test('new drafts show only body text and never activate citation navigation or s
     assert.match(html, /间隔复习/)
     assert.ok(html.includes('第二段'))
     assert.doesNotMatch(html, /data-streamdown="link"|data-confidence-id|confidence-basis|【S2】/)
-    assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 2)
+    assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
   }
   const claims = [{ id: 'source', text: '间隔复习', confidence: 'grounded' as const, basis: '来源标题\n原文第一段。\n<script>只是原文</script>' }]
   const html = renderToStaticMarkup(<ConfidenceMarker claims={claims} hoveredId="source" onHover={() => {}} />)

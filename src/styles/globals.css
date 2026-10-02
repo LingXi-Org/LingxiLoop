@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "tw-shimmer";
+@import "streamdown/styles.css";
 @import "./typeset.css";
 @import "./chat.css";
 @import "./generative-ui-elements.css";
@@ -67,7 +68,6 @@
   --brand-bubble-border: var(--border);
   --brand-bubble-ink: var(--foreground);
   --brand-bubble-muted: var(--muted-foreground);
-  --bubble-agent: color-mix(in oklch, var(--background) 94%, var(--foreground));
   --accent-ink: var(--primary-foreground);
   --selection-bg: color-mix(in srgb, var(--primary) 22%, transparent);
   --code-bg: var(--muted);
@@ -277,7 +277,6 @@ body {
 .desktop-openmaus {
   --im-navigation-row-height: 60px;
   --im-navigation-top: 20px;
-  --bubble-agent: var(--muted);
   --workspace-chrome-surface: color-mix(in oklch, var(--background) 96%, var(--foreground));
   --unread: var(--primary);
   --unread-foreground: var(--primary-foreground);

@@ -1,7 +1,7 @@
 import { ThreadPrimitive, useAuiState } from '@assistant-ui/react'
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useConversationUi } from '@/stores/conversationUi'
@@ -11,9 +11,8 @@ import { messagesApi } from '../api'
 import { chatTransport } from '../runtime/transport'
 import { useConversationThreadSnapshot } from '../runtime/runtime'
 import { ConversationComposer } from './ConversationComposer'
-import { ConversationMessage, MessageAnimationBaseline } from './ConversationMessage'
+import { ConversationMessage } from './ConversationMessage'
 import { ConversationStart } from './ConversationStart'
-import { getLingxiMessageMetadata } from '../runtime/model'
 import { messageKey } from '../runtime/store'
 import { chatLatency } from '../runtime/latency'
 
@@ -45,12 +44,6 @@ export function ConversationThread({
     const metadata = message.metadata.custom
     return typeof metadata.sequence === 'number' ? [[metadata.clientMessageId, metadata.sequence]] : []
   })))
-  const animationKey = JSON.stringify([conversationId, threadRootId])
-  const [animationBaseline, setAnimationBaseline] = useState({ key: '', sequence: Infinity })
-  useEffect(() => {
-    if (animationBaseline.key === animationKey || snapshot.isLoading || snapshot.messages.length === 0 && snapshot.hasMoreOlder) return
-    setAnimationBaseline({ key: animationKey, sequence: Math.max(0, ...snapshot.messages.map(message => getLingxiMessageMetadata(message).sequence ?? 0)) })
-  }, [animationBaseline.key, animationKey, snapshot.isLoading, snapshot.hasMoreOlder, snapshot.messages])
   const viewportRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadingOlderRef = useRef(false)
@@ -171,9 +164,7 @@ export function ConversationThread({
             ) : snapshot.isLoading ? '正在加载消息…' : threadRootId ? '尚无回复' : '开始一段新对话'}
           </div>
         </ThreadPrimitive.Empty>
-        <MessageAnimationBaseline.Provider key={animationKey} value={animationBaseline.key === animationKey ? animationBaseline.sequence : Infinity}>
-          <ConversationMessages />
-        </MessageAnimationBaseline.Provider>
+        <ConversationMessages />
       </ThreadPrimitive.Viewport>
       {!readOnly && <div className={isMobile ? 'shrink-0 bg-background pt-2' : 'shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4'} data-chat-composer-bar>
         <ConversationComposer

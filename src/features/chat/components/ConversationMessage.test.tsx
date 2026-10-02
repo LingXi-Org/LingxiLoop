@@ -55,7 +55,7 @@ test('text timestamps sit at the bottom right for every sender and attachments o
     if (sender !== 'me') assert.equal((html.match(new RegExp(`class="font-medium">${participants[sender].name}`, 'g')) ?? []).length, 1)
     assert.equal($('time').length, 1)
     assert.equal($('[data-slot="attachment-card"] time').length, 0)
-    assert.equal($(sender === 'me' ? '[data-message-bubble="user"] time' : '.im-markdown-bubble time').length, 1)
+    assert.equal($(sender === 'agent' ? '[data-agent-body] time' : '[data-message-bubble] time').length, 1)
     assert.equal($('[data-message-footer][data-align="end"]').length, 1)
   }
 })
@@ -90,7 +90,7 @@ test('mixed content ends with one internal timestamp and missing timestamps rema
   const mixed = { ...attachment, content: [...attachment.content, { type: 'text', text: '第一段\n\n最后一段' }] } as ThreadMessage
   let $ = load(renderToStaticMarkup(<Preview messages={[mixed]} />))
   assert.equal($('time').length, 1)
-  assert.equal($('.im-markdown-bubble').last().find('time').length, 1)
+  assert.equal($('[data-agent-body]').last().find('time').length, 1)
   assert.equal($('[data-slot="attachment-card"] time').length, 0)
   const poll = { ...message('2'), content: [{ type: 'tool-call', toolCallId: 'poll', toolName: 'poll-form', args: {}, argsText: '{}' }] } as ThreadMessage
   $ = load(renderToStaticMarkup(<Preview messages={[poll]} />))
@@ -100,4 +100,19 @@ test('mixed content ends with one internal timestamp and missing timestamps rema
   $ = load(renderToStaticMarkup(<Preview messages={[mixed]} />))
   assert.equal($('time').length, 0)
   assert.ok($.text().includes('最后一段'))
+})
+
+// Failure cases: incoming humans mistaken for agents; long replies center avatars;
+// streaming chrome persists on history; compact typography leaks into human bubbles.
+test('sender kind owns bubble chrome and agent avatars align at the top', () => {
+  for (const sender of ['agent', 'human', 'me']) {
+    const $ = load(renderToStaticMarkup(<Preview messages={[message('1', sender)]} />))
+    assert.equal($('[data-message-bubble]').length, sender === 'agent' ? 0 : 1)
+    assert.equal($('[data-agent-body]').length, sender === 'agent' ? 1 : 0)
+    if (sender === 'agent') {
+      assert.match($('[data-message-avatar]').attr('class') ?? '', /self-start/)
+      assert.doesNotMatch($('[data-agent-body]').attr('class') ?? '', /bg-|rounded-|border-/)
+      assert.match($('[data-agent-body]').attr('class') ?? '', /text-\[14px\]/)
+    }
+  }
 })
