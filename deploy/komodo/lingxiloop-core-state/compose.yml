@@ -92,4 +92,5 @@ services:
 volumes:
   postgres-data: {}
   redis-data: {}
-  wukong-data: {}
+  wukong-data:
+    name: lingxiloop-core-state_wukong-data-20261002-v2
