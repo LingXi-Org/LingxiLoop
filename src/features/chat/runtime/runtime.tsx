@@ -19,7 +19,7 @@ type UploadedAttachment = PendingAttachment & {
 }
 
 const attachmentAdapter: AttachmentAdapter = {
-  accept: '*/*',
+  accept: '*',
   async add({ file }) {
     const apiAttachment = await uploadsApi.uploadFile(file)
     return {

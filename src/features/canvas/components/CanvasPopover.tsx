@@ -1,4 +1,4 @@
-import { DashboardSquare01Icon } from '@hugeicons/core-free-icons'
+import { CanvasIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useRef, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
@@ -18,11 +18,11 @@ export function CanvasPopover({ conversationId }: { conversationId: string }) {
 
   return <Popover open={open} onOpenChange={(next) => { openingFullView.current = false; setOpen(next) }}>
     <PopoverTrigger asChild>
-      <Button ref={triggerRef} type="button" variant="ghost" size="icon-lg" className="size-11 text-muted-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground" aria-label={open ? '收起 Canvas 预览' : '打开 Canvas 预览'} title="Canvas" data-canvas-popover-trigger>
-        <HugeiconsIcon icon={DashboardSquare01Icon} strokeWidth={1.8} className="size-5" />
+      <Button ref={triggerRef} type="button" variant="ghost" size="icon-lg" className="size-11 text-muted-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground" aria-label={open ? '收起画布预览' : '打开画布预览'} title="画布" data-canvas-popover-trigger>
+        <HugeiconsIcon icon={CanvasIcon} strokeWidth={1.8} className="size-5" />
       </Button>
     </PopoverTrigger>
-    <PopoverContent side="bottom" align="end" sideOffset={12} collisionPadding={12} aria-label="当前会话 Canvas" className="w-[min(360px,calc(100vw-24px))] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto rounded-2xl p-0" onInteractOutside={(event) => event.preventDefault()} onCloseAutoFocus={(event) => { event.preventDefault(); if (!openingFullView.current) triggerRef.current?.focus({ preventScroll: true }) }}>
+    <PopoverContent side="bottom" align="end" sideOffset={12} collisionPadding={12} aria-label="当前会话画布" className="w-[min(360px,calc(100vw-24px))] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto rounded-2xl p-0" onInteractOutside={(event) => event.preventDefault()} onCloseAutoFocus={(event) => { event.preventDefault(); if (!openingFullView.current) triggerRef.current?.focus({ preventScroll: true }) }}>
       {open && <CanvasPopoverPreview conversationId={conversationId} onOpenCanvas={(id) => {
         openingFullView.current = true
         setOpen(false)

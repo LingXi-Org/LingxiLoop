@@ -6,6 +6,7 @@ import {
 import { Alert02Icon, ArrowUp02Icon, Cancel01Icon, Loading03Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { AtSignIcon, BarChart3Icon, PaperclipIcon } from 'lucide-react'
 import { PollComposer } from '@/components/PollComposer'
 import {
   Attachment,
@@ -18,6 +19,7 @@ import {
   AttachmentTitle,
 } from '@/components/ui/attachment'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useUiCommand } from '@/stores/uiCommands'
 import { useTypingEmitter } from '../useTypingEmitter'
@@ -29,6 +31,8 @@ import { canCancelRun } from '../runtime/harness'
 import { getLingxiMessageMetadata } from '../runtime/model'
 import { userFacingError } from '@/lib/userFacingError'
 
+const actionClassName = 'h-auto min-h-11 w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-start whitespace-normal motion-reduce:transition-none'
+
 export function ConversationComposer({
   conversationId,
   compact = false,
@@ -39,6 +43,10 @@ export function ConversationComposer({
   placeholder?: string
 }) {
   const inputRef = useRef<HTMLDivElement>(null)
+  const addRef = useRef<HTMLButtonElement>(null)
+  const insertMentionRef = useRef<(() => void) | null>(null)
+  const afterMenuClose = useRef<(() => void) | null>(null)
+  const [actionsOpen, setActionsOpen] = useState(false)
   const text = useAuiState((state) => state.composer.text)
   const canCancel = useChatThreadStore((state) => state.conversations[conversationId]?.messages
     .some(message => canCancelRun(getLingxiMessageMetadata(message))) ?? false)
@@ -60,6 +68,10 @@ export function ConversationComposer({
     setPollOpen(false)
     requestAnimationFrame(focusInput)
   }, [focusInput])
+  const chooseAction = (action: () => void) => {
+    afterMenuClose.current = action
+    setActionsOpen(false)
+  }
 
   useEffect(() => {
     if (uiCommand?.type === 'focus-composer') focusInput()
@@ -72,6 +84,8 @@ export function ConversationComposer({
         <PollComposer conversationId={conversationId} onSubmitted={closePoll} onCancel={closePoll} />
       ) : (
         <ComposerTriggers conversationId={conversationId} onOpenPoll={openPoll}>
+          <Popover open={actionsOpen} onOpenChange={setActionsOpen}>
+          <PopoverAnchor asChild>
           <ComposerPrimitive.Root
             className="chat-composer group/composer relative flex w-full flex-col rounded-3xl border border-border bg-card px-2 py-2 text-card-foreground"
             onSubmit={finalizeTyping}
@@ -126,18 +140,19 @@ export function ConversationComposer({
           <div className="flex shrink-0 items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <ComposerPrimitive.AddAttachment asChild>
-                  <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground md:size-9" aria-label="添加附件">
+                <PopoverTrigger asChild>
+                  <Button ref={addRef} type="button" variant="ghost" size="icon" className="size-11 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground md:size-9" aria-label="添加">
                     <HugeiconsIcon icon={PlusSignIcon} size={20} strokeWidth={2} />
                   </Button>
-                </ComposerPrimitive.AddAttachment>
+                </PopoverTrigger>
               </TooltipTrigger>
-              <TooltipContent side="top">添加附件</TooltipContent>
+              <TooltipContent side="top">添加</TooltipContent>
             </Tooltip>
           </div>
           <ComposerLexicalInput
             conversationId={conversationId}
             ref={inputRef}
+            insertMentionRef={insertMentionRef}
             autoFocus={!compact}
             submitMode="enter"
             placeholder={placeholder}
@@ -167,6 +182,35 @@ export function ConversationComposer({
           </div>
         </div>
           </ComposerPrimitive.Root>
+          </PopoverAnchor>
+          <PopoverContent
+            side="top" align="start" sideOffset={8} collisionPadding={12} aria-label="添加"
+            className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-24px)] max-h-[var(--radix-popover-content-available-height)] gap-0 overflow-y-auto rounded-3xl p-2 motion-reduce:animate-none"
+            onCloseAutoFocus={(event) => {
+              event.preventDefault()
+              const action = afterMenuClose.current
+              afterMenuClose.current = null
+              if (action) action()
+              else addRef.current?.focus({ preventScroll: true })
+            }}
+          >
+            <p className="px-3 pb-1.5 pt-1 text-xs text-muted-foreground">添加</p>
+            <ComposerPrimitive.AddAttachment asChild>
+              <Button type="button" variant="ghost" className={actionClassName} onClick={() => chooseAction(focusInput)}>
+                <PaperclipIcon className="size-5" aria-hidden />
+                <span className="flex min-w-0 flex-wrap items-baseline gap-x-2"><span>上传文件</span><span className="text-xs font-normal text-muted-foreground">添加图片或文件</span></span>
+              </Button>
+            </ComposerPrimitive.AddAttachment>
+            <Button type="button" variant="ghost" className={actionClassName} onClick={() => chooseAction(() => insertMentionRef.current?.())}>
+              <AtSignIcon className="size-5" aria-hidden />
+              <span className="flex min-w-0 flex-wrap items-baseline gap-x-2"><span>提及成员</span><span className="text-xs font-normal text-muted-foreground">选择要提醒的人</span></span>
+            </Button>
+            <Button type="button" variant="ghost" className={actionClassName} onClick={() => chooseAction(openPoll)}>
+              <BarChart3Icon className="size-5" aria-hidden />
+              <span className="flex min-w-0 flex-wrap items-baseline gap-x-2"><span>发起投票</span><span className="text-xs font-normal text-muted-foreground">邀请成员参与投票</span></span>
+            </Button>
+          </PopoverContent>
+          </Popover>
         </ComposerTriggers>
       )}
     </div>
