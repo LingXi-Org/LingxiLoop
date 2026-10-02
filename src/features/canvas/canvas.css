@@ -445,18 +445,24 @@
 .canvas-preview-shell {
   overflow: hidden;
   border: 0;
-  border-radius: 0;
+  border-radius: 1rem;
   background: transparent;
   box-shadow: none;
 }
 
-.canvas-preview-shell:focus-within {
-  box-shadow: none;
+.canvas-preview-shell:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
 }
 
-.canvas-preview-shell:focus-within [data-canvas-ui='preview'].canvas-preview {
-  --canvas-sketch-color: var(--canvas-accent);
-  box-shadow: -1px 1px 0 2px color-mix(in srgb, var(--canvas-accent) 18%, transparent), 2px -1px 0 1px color-mix(in srgb, var(--canvas-accent) 10%, transparent), var(--canvas-card-shadow);
+.canvas-preview-shell [data-canvas-ui='preview'].canvas-preview {
+  border: 0;
+  border-radius: 0;
+}
+
+.canvas-preview-shell [data-canvas-ui='preview'].canvas-preview::before,
+.canvas-preview-shell [data-canvas-ui='preview'].canvas-preview::after {
+  content: none;
 }
 
 [data-canvas-ui='preview'].canvas-preview {

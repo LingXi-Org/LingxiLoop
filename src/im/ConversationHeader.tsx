@@ -42,7 +42,7 @@ export function ConversationHeader({
         </Button>
       )}
       <div className="omb-no-drag flex min-w-0 items-center gap-2.5">
-        <ConversationAvatar conversation={conversation} size={mobile ? 28 : 30} variant={variant} />
+        <ConversationAvatar conversation={conversation} size={mobile ? 28 : 30} />
         <span className={cn('truncate font-medium text-foreground', mobile ? 'text-base' : 'text-sm')}>{conversation.title}</span>
       </div>
       {actions && <div className="omb-no-drag ms-auto flex items-center gap-1">{actions}</div>}

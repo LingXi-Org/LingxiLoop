@@ -2,8 +2,7 @@ import { NotificationOff01Icon, PinIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Badge } from '@/components/ui/badge'
 import { useEffect } from 'react'
-import { Avatar, AvatarStack } from '@/components/Avatar'
-import { HiveAvatar } from '@/components/HiveAvatar'
+import { Avatar } from '@/components/Avatar'
 import { PreviewText } from '@/components/PreviewText'
 import { participantRoleZh } from '@/lib/participantRole'
 import { cn } from '@/lib/utils'
@@ -24,11 +23,9 @@ function backfillRosterOnce() {
 export function ConversationAvatar({
   conversation,
   size = 48,
-  variant = 'mobile',
 }: {
   conversation: Conversation
   size?: number
-  variant?: 'desktop' | 'mobile'
 }) {
   const avatarMotion = 'transition-[width,height] duration-200 ease-out motion-reduce:transition-none'
   const byId = useParticipants((state) => state.byId)
@@ -57,9 +54,23 @@ export function ConversationAvatar({
     if (members.length === 0) {
       return <span className={cn('grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground', avatarMotion)} style={{ width: size, height: size }}>群</span>
     }
-    return variant === 'mobile'
-      ? <HiveAvatar ps={members} size={size} ringColor="var(--sidebar)" mode="chat" className={avatarMotion} />
-      : <AvatarStack ps={members} size={Math.round(size * 0.68)} max={3} mode="chat" />
+    if (members.length === 1) return <Avatar p={members[0]} size={size} ringColor="var(--sidebar)" mode="chat" className={avatarMotion} />
+    const portraitSize = Math.round(size * 0.64)
+    const remaining = members.length - 2
+    return (
+      <span className={cn('relative block shrink-0', avatarMotion)} style={{ width: size, height: size }}>
+        {members.slice(0, 2).map((person, index) => (
+          <span key={person.id} className={cn('absolute flex rounded-full ring-1 ring-sidebar', index === 0 ? 'start-0 top-0' : 'end-0 bottom-0')}>
+            <Avatar p={person} size={portraitSize} ringColor="var(--sidebar)" mode="chat" />
+          </span>
+        ))}
+        {remaining > 0 && (
+          <span className="absolute bottom-0 start-0 font-medium leading-none tabular-nums text-muted-foreground" style={{ fontSize: Math.max(8, Math.round(size * 0.21)) }} aria-label={`${remaining} 位其他成员`} title={`${remaining} 位其他成员`}>
+            {remaining > 99 ? '99+' : `+${remaining}`}
+          </span>
+        )}
+      </span>
+    )
   }
 
   const person = members[0] ?? conversation.members.map((id) => byId[id]).find(Boolean)
@@ -101,17 +112,14 @@ export function ConversationListItemContent({
     .map((id) => byId[id]?.name?.trim())
     .filter((name): name is string => Boolean(name))
   const isMobile = variant === 'mobile'
-  const isDirectAgent = conversation.kind === 'direct' && conversation.members.some(
-    (id) => id !== meId && byId[id]?.kind === 'agent',
-  )
   const secondaryText = 'text-muted-foreground'
   return (
     <>
-      <span className="relative shrink-0">
-        <ConversationAvatar conversation={conversation} size={isMobile ? 42 : !isDirectAgent ? 48 : 54} variant={variant} />
+      <span className="relative flex shrink-0">
+        <ConversationAvatar conversation={conversation} size={isMobile ? 42 : 48} />
         {!selected && muted && (conversation.unread ?? 0) > 0 && <span className="absolute -end-0.5 -top-0.5 size-2.5 rounded-full bg-destructive" aria-label={`${conversation.unread} 条未读消息`} />}
         {!selected && (conversation.unread ?? 0) > 0 && !muted && (
-          <Badge className="absolute -end-1 -top-1 min-w-5 bg-[var(--unread)] px-1.5 text-[10px] font-bold tabular-nums text-[var(--unread-foreground)]" aria-label={`${conversation.unread} 条未读消息`}>
+          <Badge className="absolute -end-1 -top-1 min-w-5 bg-[var(--unread)] px-1.5 text-[10px] font-bold tabular-nums text-[var(--unread-foreground)] ring-2 ring-sidebar" aria-label={`${conversation.unread} 条未读消息`}>
             {conversation.unread! > 99 ? '99+' : conversation.unread}
           </Badge>
         )}
