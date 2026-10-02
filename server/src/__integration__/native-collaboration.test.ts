@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { after, before, test } from 'node:test'
+import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import type { WorkItem } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
@@ -62,16 +63,15 @@ test('product policy feeds native IM identities, graph waits, state conflicts an
       const stream = await fetch(`http://127.0.0.1:${address.port}/api/im/companies/${companyId}/channels/${conversationId}/agents/${target.agentId}/runs/${target.runId}/stream`,{ signal: AbortSignal.timeout(5000) })
       assert.equal(stream.status,200)
       assert.ok(stream.headers.get('content-type')?.startsWith('text/event-stream'))
-      const reader=stream.body!.getReader()
+      const reader=AssistantStream.fromResponse(stream,new AssistantTransportDecoder()).getReader()
+      const state=new AssistantTransportDeltaTracker()
       try {
-        let frame=''
-        while (!frame.includes('\n\n')) {
-          const next=await reader.read();assert.equal(next.done,false)
-          frame+=new TextDecoder().decode(next.value)
-        }
-        assert.match(frame,/event: state/)
-        const state=JSON.parse(frame.split('\n').find(line=>line.startsWith('data: '))!.slice(6))
-        assert.deepEqual([state.type,state.state.run.id,state.state.run.requestVersion],['state',target.runId,2])
+        const next=await reader.read();assert.equal(next.done,false)
+        assert.equal(next.value.type,'update-state')
+        if (next.value.type !== 'update-state') continue
+        state.append(next.value.operations)
+        const snapshot=state.state as { runId: string; view: { runId: string; requestVersion: number } }
+        assert.deepEqual([snapshot.runId,snapshot.view.runId,snapshot.view.requestVersion],[target.runId,target.runId,2])
       } finally { await reader.cancel() }
     }
     const denied = await fetch(url,{ headers: { 'x-company-id': 'outside-company' } })

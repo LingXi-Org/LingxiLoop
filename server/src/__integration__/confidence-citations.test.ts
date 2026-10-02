@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
+import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import { createLingxiOS, type CitationEvidence } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { z } from 'zod'
@@ -118,16 +119,17 @@ test('product correction commits frozen excerpts and preserves them in IM delive
       const response = await fetch(`http://127.0.0.1:${address.port}/api/im/companies/${companyId}/channels/${conversationId}/agents/${agentId}/runs/${identity.runId}/stream`,
         { signal: AbortSignal.timeout(5000) })
       assert.equal(response.status, 200)
-      const reader = response.body!.getReader()
+      const reader = AssistantStream.fromResponse(response, new AssistantTransportDecoder()).getReader()
+      const state = new AssistantTransportDeltaTracker()
       try {
-        let frame = ''
-        while (!frame.includes('\n\n')) {
-          const chunk = await reader.read()
-          assert.equal(chunk.done, false)
-          frame += new TextDecoder().decode(chunk.value)
-        }
-        const state = JSON.parse(frame.split('\n').find(line => line.startsWith('data: '))!.slice(6))
-        assert.deepEqual(state.state.message.envelope, result.message!.envelope)
+        const chunk = await reader.read()
+        assert.equal(chunk.done, false)
+        assert.equal(chunk.value.type, 'update-state')
+        if (chunk.value.type !== 'update-state') continue
+        state.append(chunk.value.operations)
+        const snapshot = state.state as { runId: string; view: { message: { envelope: unknown } | null } }
+        assert.equal(snapshot.runId, identity.runId)
+        assert.deepEqual(snapshot.view.message?.envelope, result.message!.envelope)
       } finally { await reader.cancel() }
     }
   } finally {
