@@ -25,7 +25,13 @@ class LingxiContent extends MessageContent {
     this.contentType = NATIVE_MESSAGE_CONTENT_TYPE
     this.contentObj = payload
   }
-  override decodeJSON(value: unknown): void { this.contentObj = value }
+  override decodeJSON(value: unknown): void {
+    if (!value || typeof value !== 'object' || !('type' in value) || value.type !== NATIVE_MESSAGE_CONTENT_TYPE) {
+      throw new Error('消息协议已更新，请刷新页面')
+    }
+    const { type: _contentType, ...payload } = value
+    this.contentObj = nativeMessageSchema.parse(payload)
+  }
   override encodeJSON(): unknown { return this.contentObj }
 }
 

@@ -15,7 +15,8 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
     ...(metadata.threadRootId ? { threadId: metadata.threadRootId } : {}) }),
   [metadata.conversationId,metadata.senderId,metadata.runId,metadata.threadRootId])
   const view = metadata.harness!
-  const tools = useAuiState(state => state.message.content.filter(part => part.type === 'tool-call'))
+  const content = useAuiState(state => state.message.content)
+  const tools = useMemo(() => content.filter(part => part.type === 'tool-call'), [content])
   const outcome = view.goalOutcome
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
