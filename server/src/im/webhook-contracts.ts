@@ -1,17 +1,6 @@
+import { nativeMessageSchema, type NativeMessage } from './message-types.js'
+import { decodeNativePayload } from './wukong.js'
 import { z } from 'zod'
-
-const lingxiMessageSchema = z.object({
-  version: z.literal(1),
-  kind: z.enum([
-    'text', 'attachment', 'system', 'tool_activity', 'approval', 'handoff',
-    'questionnaire', 'poll', 'artifact', 'canvas', 'learning_mission',
-  ]),
-  clientMsgNo: z.string().min(1).max(80),
-  body: z.string().max(64 * 1024).optional(),
-  replyToClientMsgNo: z.string().min(1).optional(),
-  refs: z.record(z.string(), z.union([z.string(), z.array(z.string())])).optional(),
-  data: z.record(z.string(), z.unknown()).optional(),
-}).strict()
 
 const webhookEnvelopeSchema = z.object({
   event_id: z.string().min(1),
@@ -32,24 +21,8 @@ const msgNotifySchema = z.array(z.object({
   payload: z.unknown(),
 }).passthrough()).length(1)
 
-function normalizePayload(value: unknown): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return value
-  if ((value as Record<string, unknown>).type !== 1000) return value
-  const { type: _wireType, ...payload } = value as Record<string, unknown>
-  return payload
-}
-
-function decodePayload(value: unknown): unknown {
-  if (value && typeof value === 'object' && !Array.isArray(value)) return normalizePayload(value)
-  if (typeof value !== 'string') return null
-  for (const candidate of [value, Buffer.from(value, 'base64').toString('utf8')]) {
-    try { return normalizePayload(JSON.parse(candidate) as unknown) } catch { /* try the next supported wire representation */ }
-  }
-  return null
-}
-
 type ParsedWukongWebhook =
-  | { success: false; error: z.ZodError }
+  | { success: false; error: z.ZodError<unknown> }
   | {
       success: true
       data: {
@@ -58,7 +31,7 @@ type ParsedWukongWebhook =
         channelId: string
         fromUid: string
         clientMsgNo: string
-        payload: z.infer<typeof lingxiMessageSchema>
+        payload: NativeMessage
       }
     }
 
@@ -71,13 +44,13 @@ export function parseWukongWebhook(value: unknown): ParsedWukongWebhook {
   } : value
   const envelope = webhookEnvelopeSchema.safeParse(normalized)
   if (!envelope.success) return envelope
-  const payload = lingxiMessageSchema.safeParse(decodePayload(envelope.data.message.payload))
-  if (!payload.success) return payload
-  if (payload.data.clientMsgNo !== envelope.data.message.client_msg_no) {
-    const mismatch = lingxiMessageSchema.safeParse(null)
-    if (!mismatch.success) return mismatch
-    throw new Error('unreachable payload mismatch validation state')
-  }
+  let decoded: unknown
+  try {
+    if (typeof envelope.data.message.payload !== 'string') throw new Error('base64 payload required')
+    decoded = decodeNativePayload(envelope.data.message.payload)
+  } catch { return { success: false, error: new z.ZodError([{ code: 'custom', path: ['payload'], message: 'invalid native message protocol' }]) } }
+  const payload = nativeMessageSchema.safeParse(decoded)
+  if (!payload.success) return { success: false, error: new z.ZodError([{ code: 'custom', path: ['payload'], message: 'invalid native message protocol' }]) }
   return {
     success: true as const,
     data: {

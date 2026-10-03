@@ -1,3 +1,4 @@
+import { nativeText, nativeData } from '../im/message-types.js'
 import { calendarApplication } from '../modules/calendar/index.js'
 import { createCalendarEventRequestSchema } from '../modules/calendar/contracts.js'
 import assert from 'node:assert/strict'
@@ -53,11 +54,11 @@ test('native capability registry executes cards and artifacts, gates approval, a
   assert.equal((await call('presentation.render',{type:'learning-stats',reference:'other-room'})).ok,false)
   const card = await call('chat.recommend',{title:'下一步学习',explanation:'先区分接入方式与传输协议。',nextStep:'画出传感器到手机的数据路径。'})
   assert.equal(card.ok,true,JSON.stringify(card))
-  assert.equal(im.messages.filter(message=>message.payload.kind==='questionnaire').length,1)
-  assert.equal((im.messages.find(message=>message.payload.kind==='questionnaire')?.payload.data?.questionnaire as {display?:string} | undefined)?.display,'recommendation')
+  assert.equal(im.messages.filter(message=>nativeData(message.payload,'recommendation') !== undefined).length,1)
+  assert.equal(im.messages[0].payload.content.some(part => part.type === 'tool-call'),false)
   const malformed = await call('chat.send',{body:'<think>private</think>Answer'})
   assert.equal(malformed.ok,false)
-  assert.ok(!im.messages.some(message=>message.payload.body?.includes('<think>')))
+  assert.ok(!im.messages.some(message=>nativeText(message.payload).includes('<think>')))
   const calendar = await call('calendar.list',{from:'2026-09-01T00:00:00Z',to:'2026-10-01T00:00:00Z'})
   assert.equal(calendar.ok,true,JSON.stringify(calendar))
   const approval = await call('calendar.create',{title:'复习',startAt:'2026-09-27T10:00:00Z'})

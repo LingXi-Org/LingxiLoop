@@ -1,3 +1,4 @@
+import { nativeText } from '../im/message-types.js'
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -72,7 +73,7 @@ test('preset and custom Agents receive IM rules and deliver distinct messages to
       assert.equal(await worker.runNext(),true)
       for (let attempt = 0; attempt < 100 && (await api.readRunState(run))?.delivery !== 'delivered'; attempt++) await delay(100)
       assert.equal((await api.readRunState(run))?.delivery,'delivered')
-      assert.deepEqual(messages.filter(message => message.channelId === conversationId).map(message => message.payload.body),[...leadIns,final])
+      assert.deepEqual(messages.filter(message => message.channelId === conversationId).map(message => nativeText(message.payload)),[...leadIns,final])
       const history = await pool.query<{ input: { text: string }; outcome: { runs: unknown[]; reason: string } }>(
         `SELECT input,outcome FROM lingxios.agent_im_messages WHERE tenant_id=$1 AND conversation_id=$2
           AND input->'author'->>'kind'='agent' ORDER BY recorded_at,message_id`,[companyId,conversationId])

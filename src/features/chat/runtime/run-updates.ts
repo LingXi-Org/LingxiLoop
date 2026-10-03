@@ -1,74 +1,47 @@
 import type { ThreadMessage } from '@assistant-ui/react'
 import type { Participant } from '@/types'
 import type { AgentRunTarget } from './harness-api'
-import { isRunMessage } from './harness'
-import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
+import type { AgentRunSnapshot, RunDisplayState } from '@/lib/agentRunSnapshot'
+import { deserializeMessage } from '@/lib/nativeMessage'
 import { getLingxiMessageMetadata as metadata, type LingxiMessageMetadata } from './model'
 import { mergeCanonicalMessages, messageKey, type ConversationChatState } from './store'
+import { isOlderRun } from './harness'
 
 export function needsRunStream(status: string | null, delivery?: string | null): boolean {
   return status === 'queued' || status === 'leased' || status === 'waiting' || delivery === 'pending'
 }
 
-/** HTTP snapshots and SSE updates share one message; committed IM order is authoritative. */
-export function applyRunSnapshot(
-  state: ConversationChatState,
-  target: AgentRunTarget,
-  snapshot: AgentRunSnapshot,
-  participant?: Participant,
-): ConversationChatState {
-  if (snapshot.runId !== target.runId || snapshot.view.runId !== target.runId) throw new Error('运行身份不一致')
-  const current = state.messages.find(message => metadata(message).runId === target.runId
-    && metadata(message).senderId === target.agentId && metadata(message).threadRootId === (target.threadId ?? null) && isRunMessage(metadata(message)))
-  const before = current && metadata(current)
-  const view = snapshot.view
-  const previousView = before?.harness
-  if (previousView && (view.requestVersion < previousView.requestVersion || view.fence < previousView.fence
-    || view.messageFence < previousView.messageFence || view.lastSeq < previousView.lastSeq)) return state
-  const id = current?.id ?? `preview-${target.runId}`
-  const startedAt = snapshot.createdAt ? Date.parse(snapshot.createdAt) : NaN
-  const validStartedAt = Number.isFinite(startedAt) && startedAt > 0
-  const keepTime = current && !before?.timestampMissing
-    && (before?.sequence != null || before?.positionAfter !== undefined || !validStartedAt)
-  const createdAt = keepTime ? current.createdAt
-    : validStartedAt ? new Date(startedAt) : current?.createdAt ?? new Date()
-  const timestampMissing = keepTime ? undefined : validStartedAt ? undefined : before?.timestampMissing ?? !current
-  const positionAt = validStartedAt ? new Date(startedAt) : createdAt
-  const predecessor = state.messages.filter(message => message !== current && message.createdAt <= positionAt).at(-1)
+export function applyRunSnapshot(state: ConversationChatState, target: AgentRunTarget, snapshot: AgentRunSnapshot, participant?: Participant): ConversationChatState {
+  const native = deserializeMessage(snapshot.message)
+  const view = native.metadata.custom.harness as RunDisplayState
+  if (native.role !== 'assistant' || view?.runId !== target.runId || native.id !== `run-${target.runId}`) throw new Error('运行身份不一致')
+  const current = state.messages.find(message => message.id === native.id), before = current && metadata(current)
+  if (before?.harness && isOlderRun(before.harness,view)) return state
+  const predecessor = state.messages.filter(message => message !== current && message.createdAt <= native.createdAt).at(-1)
   const lastSent = state.messages.filter(message => {
     const value = metadata(message)
-    return value.runId === target.runId && value.senderId === target.agentId && value.messageKind === 'text'
-      && !value.harness && value.sequence !== null && value.threadRootId === (target.threadId ?? null)
+    return value.runId === target.runId && value.senderId === target.agentId && !value.harness && value.sequence !== null
+      && value.threadRootId === (target.threadId ?? null)
   }).at(-1)
   const custom: LingxiMessageMetadata = {
-    schema: 'lingxiloop.thread-message.v1', conversationId: target.conversationId, clientMessageId: id,
-    sequence: null,
-    senderId: target.agentId, senderName: participant?.name ?? target.agentId, senderKind: 'agent',
+    schema: 'lingxiloop.thread-message.v2', conversationId: target.conversationId, clientMessageId: native.id,
+    sequence: null, senderId: target.agentId, senderName: participant?.name ?? target.agentId, senderKind: 'agent',
     senderAvatarUrl: participant?.avatarUrl ?? null, isMine: false, delivery: 'sent', messageKind: 'text',
     presentation: 'conversation', quotedMessageId: target.threadId ?? null, quote: null, reactions: [], replyCount: 0,
     threadRootId: target.threadId ?? null, groupStart: true, groupEnd: true, continuedFromPrevious: false,
-    continuedToNext: false, clusterChromeAt: null, ...before,
-    timestampMissing,
+    continuedToNext: false, clusterChromeAt: null, ...before, ...native.metadata.custom,
     positionAfter: before?.sequence != null ? undefined : lastSent ? messageKey(lastSent)
       : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
-    runId: target.runId, harness: view,
-    memory: snapshot.memory && snapshot.memory.revision >= (before?.memory?.revision ?? 0) ? snapshot.memory : before?.memory,
-    harnessTools: snapshot.tools,
-    harnessControl: snapshot.canControl, harnessError: snapshot.error ?? undefined,
+    harnessError: typeof native.metadata.custom.harnessError === 'string' ? native.metadata.custom.harnessError : undefined,
+    runId: target.runId, harness: before?.harness?.delivery === 'delivered' && before.harness.resultId === view.resultId
+      ? { ...view, delivery: 'delivered' } : view,
   }
-  // Only previews need a time-based anchor; delivered messages retain their IM sequence.
-  if (before && before.positionAfter === undefined && !Number.isFinite(startedAt) && !lastSent) delete custom.positionAfter
-  const message: ThreadMessage = { id, role: 'assistant', createdAt,
-    content: snapshot.content, status: snapshot.status, metadata: {
-      unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], ...current?.metadata, custom,
-    } }
-  const activeRuns = { ...state.activeRuns }
-  for (const [key, run] of Object.entries(activeRuns)) if (run.id === target.runId) delete activeRuns[key]
-  if (view.lifecycle === 'queued' || view.lifecycle === 'leased') activeRuns[id] = {
-    id: target.runId, agentId: target.agentId, messageId: id, lastSequence: view.lastSeq,
+  const message: ThreadMessage = { ...native, metadata: { ...native.metadata, custom } }
+  const messages = mergeCanonicalMessages(state.messages,[message]), activeRuns = { ...state.activeRuns }
+  for (const [key,run] of Object.entries(activeRuns)) if (run.id === target.runId) delete activeRuns[key]
+  if (view.lifecycle === 'queued' || view.lifecycle === 'leased') activeRuns[native.id] = {
+    id: target.runId, agentId: target.agentId, messageId: native.id, lastSequence: view.lastSeq,
     state: view.lifecycle === 'queued' ? 'queued' : 'running',
   }
-  const messages = current ? state.messages.map(existing => existing === current ? message : existing) : [...state.messages, message]
-  return { ...state, activeRuns, messages: current && before?.positionAfter === custom.positionAfter
-    ? messages : mergeCanonicalMessages([], messages) }
+  return { ...state, activeRuns, messages }
 }

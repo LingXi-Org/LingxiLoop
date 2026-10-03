@@ -54,10 +54,10 @@ export function RecommendationCard({
         {children}
       </p>
 
-      <div className="flex h-8 items-center justify-between">
+      <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
         {state === "idle" ? (
           <>
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <span className="flex items-end gap-0.5" aria-hidden>
                 {CONFIDENCE_BARS.map((bar) => (
                   <span

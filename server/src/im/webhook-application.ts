@@ -1,5 +1,6 @@
+import { attachmentMetadata, assertOwnedMessageAttachments } from './attachments.js'
 import { createHash } from 'node:crypto'
-import type { LingxiMessageV1 } from './message-types.js'
+import { nativeText, nativeData, nativeAttachments, userMessageSchema, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import { parseMentions } from '../mentions.js'
 import { resolveLearningAgentRecipients } from './routing.js'
@@ -18,6 +19,7 @@ interface KnowledgeJobInput {
   projectId: string
   conversationId: string
   clientMsgNo: string
+  attachmentId: string
   createdBy: string
   title: string
   mime: string
@@ -34,7 +36,7 @@ export interface WukongWebhookInfrastructure {
   createKnowledgeJob(db: Queryable, input: KnowledgeJobInput): Promise<{ deferAgentWake: boolean; sourceId: string }>
   enqueueAgentWakes(db: Queryable, input: {
     eventId: string; companyId: string; channelId: string; clientMsgNo: string
-    payload: LingxiMessageV1; recipients: string[]; knowledgeSourceId?: string
+    payload: NativeMessage; recipients: string[]; knowledgeSourceIds?: string[]
   }): Promise<number>
   flushAgentWakes(eventId: string): Promise<number>
 }
@@ -46,7 +48,7 @@ export interface WukongCommittedEvent {
   channelId: string
   clientMsgNo: string
   fromUid: string
-  payload: LingxiMessageV1
+  payload: NativeMessage
 }
 
 function record(value: unknown): Record<string, unknown> {
@@ -76,19 +78,28 @@ export class WukongWebhookApplication {
         await completeWebhookReceipt(db, input.eventId)
         return { ok: true, ignored: true }
       }
-      if (input.payload.data?.suppressAgentWake === true && input.payload.kind !== 'attachment') {
-        await completeWebhookReceipt(db, input.eventId)
-        return { ok: true, ignored: true, reason: 'product-state update' }
-      }
+      const custom = input.payload.metadata.custom
       const binding = await webhookBinding(db, input.channelId)
       if (!binding) throw Object.assign(new Error('WuKong channel is not bound yet; retry webhook'), { status: 503 })
       const profileMembers = Array.isArray(binding.profile.members) ? binding.profile.members.map(String) : []
       const members = await webhookMembers(db, { companyId: binding.company_id, memberIds: profileMembers })
-      const calendarDispatch = input.fromUid === 'calendar' && input.payload.kind === 'system'
-        && typeof input.payload.data?.calendarEventId === 'string'
-        && typeof input.payload.data?.scheduledFor === 'string'
+      const calendarDispatch = input.fromUid === 'calendar' && input.payload.role === 'system'
+        && typeof custom.calendarEventId === 'string'
+        && typeof custom.scheduledFor === 'string'
       if (!members.some((member) => member.id === input.fromUid) && !calendarDispatch) {
         throw new Error('message author is not a bound channel member')
+      }
+      const author = members.find(member => member.id === input.fromUid)
+      if (author?.kind === 'human' && !userMessageSchema.safeParse(input.payload).success) {
+        // Human-labelled product notices must have passed the server's acceptance boundary.
+        const accepted = await db.query(`SELECT 1 FROM im_send_acceptances WHERE company_id=$1 AND user_id=$2
+          AND channel_id=$3 AND client_nonce=$4 AND payload=$5::jsonb`,
+        [binding.company_id,input.fromUid,input.channelId,input.clientMsgNo,JSON.stringify(input.payload)])
+        if (!accepted.rows.length) throw Object.assign(new Error('invalid human message'), { status: 403 })
+      }
+      if (custom.suppressAgentWake === true) {
+        await completeWebhookReceipt(db, input.eventId)
+        return { ok: true, ignored: true, reason: 'product-state update' }
       }
       const teacherRoom = await teacherRoomForWebhook(db, {
         channelId: input.channelId,
@@ -107,23 +118,24 @@ export class WukongWebhookApplication {
           throw new Error('only the registered 望远 Agent may write as an Agent in this room')
         }
       }
-      const refs = input.payload.refs ?? {}
-      const parsedMentions = parseMentions(input.payload.body ?? '', members)
+      const refs = record(custom.refs)
+      if (input.payload.role === 'user') await assertOwnedMessageAttachments(db, { companyId: binding.company_id, userId: input.fromUid, payload: input.payload })
+      const parsedMentions = parseMentions(nativeText(input.payload), members)
       const mentionedIds = [...new Set([
-        ...(Array.isArray(input.payload.data?.mentionedIds) ? input.payload.data.mentionedIds.map(String) : []),
+        ...(Array.isArray(custom.mentionedIds) ? custom.mentionedIds.map(String) : []),
         ...parsedMentions.mentionedIds,
       ])]
-      const mentionAll = input.payload.data?.mentionAll === true || parsedMentions.mentionAll
+      const mentionAll = custom.mentionAll === true || parsedMentions.mentionAll
       const recipients = resolveLearningAgentRecipients({
         authorId: input.fromUid,
         channelType: Number(binding.profile.channelType ?? 2),
         members: members.map((member) => ({ id: member.id, kind: member.kind, presetKey: member.preset_key })),
         mentionedIds,
         mentionAll,
-        replyAuthorId: typeof input.payload.data?.replyAuthorId === 'string'
-          ? input.payload.data.replyAuthorId : undefined,
+        replyAuthorId: typeof custom.replyAuthorId === 'string'
+          ? custom.replyAuthorId : undefined,
         leaderAgentId: binding.leader_agent_id ?? undefined,
-        handoffTargetId: input.payload.kind === 'handoff' && typeof refs.toAgentId === 'string'
+        handoffTargetId: nativeData(input.payload,'handoff') !== undefined && typeof refs.toAgentId === 'string'
           ? refs.toAgentId : undefined,
       })
       if (teacherRoom && recipients.some((agentId) => agentId !== teacherRoom.agent_id)) {
@@ -133,37 +145,20 @@ export class WukongWebhookApplication {
         companyId: binding.company_id,
         agentIds: recipients,
       })) throw new Error('望远 can only be invoked from its registered teacher room')
-      let knowledgeSourceId: string | undefined
-      let deferAgentWake = false
-      if (input.payload.kind === 'attachment' && !teacherRoom) {
-        const attachment = record(input.payload.data)
-        const mime = String(attachment.mime ?? '').toLowerCase()
-        const size = Number(attachment.size ?? 0)
-        const storageKey = String(attachment.key ?? '')
-        const conversation = await webhookConversation(db, {
-          channelId: input.channelId,
-          companyId: binding.company_id,
-        })
-        if (conversation?.kind === 'group' && conversation.projectId
-          && storageKey.startsWith(`attachments/${binding.company_id}/`)
-          && this.infrastructure.isKnowledgeAttachment(mime, size)) {
+      const knowledgeSourceIds: string[] = []
+      const attachments = nativeAttachments(input.payload)
+      if (attachments.length && !teacherRoom) {
+        const conversation = await webhookConversation(db, { channelId: input.channelId, companyId: binding.company_id })
+        if (conversation?.kind === 'group' && conversation.projectId) for (const attachment of attachments) {
+          const metadata = await attachmentMetadata(attachment,binding.company_id)
+          if (!this.infrastructure.isKnowledgeAttachment(metadata.mime, metadata.size)) continue
           const ingestion = await this.infrastructure.createKnowledgeJob(db, {
-            companyId: binding.company_id,
-            projectId: conversation.projectId,
-            conversationId: input.channelId,
-            clientMsgNo: input.clientMsgNo,
-            createdBy: input.fromUid,
-            title: String(attachment.name ?? '聊天附件'),
-            mime,
-            size,
-            storageKey,
-            ...(input.payload.replyToClientMsgNo
-              ? { threadRootClientMsgNo: input.payload.replyToClientMsgNo }
-              : {}),
-            recipients: [],
+            companyId: binding.company_id, projectId: conversation.projectId, conversationId: input.channelId,
+            clientMsgNo: input.clientMsgNo, attachmentId: attachment.id, createdBy: input.fromUid, title: metadata.name,
+            mime: metadata.mime, size: metadata.size, storageKey: metadata.key,
+            ...(typeof custom.replyToClientMsgNo === 'string' ? { threadRootClientMsgNo: custom.replyToClientMsgNo } : {}), recipients: [],
           })
-          knowledgeSourceId = ingestion.sourceId
-          deferAgentWake = ingestion.deferAgentWake
+          knowledgeSourceIds.push(ingestion.sourceId)
         }
       }
       const queued = await this.infrastructure.enqueueAgentWakes(db, {
@@ -173,16 +168,16 @@ export class WukongWebhookApplication {
         clientMsgNo: input.clientMsgNo,
         payload: input.payload,
         recipients,
-        ...(knowledgeSourceId ? { knowledgeSourceId } : {}),
+        knowledgeSourceIds,
       })
       await completeWebhookReceipt(db, input.eventId)
       return {
         ok: true,
         recipients,
-        deferAgentWake,
+        deferAgentWake: knowledgeSourceIds.length > 0,
         agentRuntimeAvailable: true,
         queued,
-        ...(knowledgeSourceId ? { knowledgeSourceId } : {}),
+        knowledgeSourceIds,
       }
     })
     await this.infrastructure.flushAgentWakes(input.eventId)

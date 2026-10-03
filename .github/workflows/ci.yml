@@ -12,6 +12,10 @@ on:
         required: true
         type: choice
         options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release, deep-integration]
+      publish_only:
+        description: Verify and publish immutable images without changing production manifests or deploying
+        type: boolean
+        default: false
 
 concurrency:
   group: lingxiloop-${{ github.ref }}
@@ -348,7 +352,8 @@ jobs:
   publish:
     if: >-
       always() &&
-      github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
+      ((github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true')) ||
+       (github.event_name == 'workflow_dispatch' && inputs.publish_only)) &&
       needs.changes.outputs.publish == 'true' &&
       needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped')
@@ -389,7 +394,7 @@ jobs:
 
   update-manifests:
     if: >-
-      always() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
+      always() && !inputs.publish_only && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped') &&
       (needs.publish.result == 'success' ||

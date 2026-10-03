@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
-import { WukongClient, _setWukongClientForTests } from '../im/wukong.js'
+import { WukongClient, _setWukongClientForTests, decodeNativePayload } from '../im/wukong.js'
 import type { ImMessage } from '../im/types.js'
 
 /** Exercise the HTTP client, including copies created with an action's AbortSignal. */
@@ -11,15 +11,15 @@ export async function installRecordingWukong() {
     const input = JSON.parse(Buffer.concat(chunks).toString() || '{}')
     response.setHeader('content-type','application/json')
     if (request.url === '/message/send') {
-      const payload = JSON.parse(Buffer.from(input.payload,'base64').toString())
+      const payload = decodeNativePayload(input.payload)
       const messageSeq = messages.length + 1, messageId = `recorded-${messageSeq}`
       messages.push({ channelId: input.channel_id,channelType: input.channel_type,fromUid: input.from_uid,
-        payload,messageId,messageSeq,clientMsgNo: payload.clientMsgNo,timestamp: Date.now() / 1000 })
+        payload,messageId,messageSeq,clientMsgNo: input.client_msg_no,timestamp: Date.now() / 1000 })
       response.end(JSON.stringify({ message_id: messageId,message_seq: messageSeq }))
     } else if (request.url === '/channel/messagesync') {
       response.end(JSON.stringify({ messages: messages.filter(message => message.channelId === input.channel_id
         && (!input.start_message_seq || message.messageSeq <= input.start_message_seq)).slice(-(input.limit || 80))
-        .map(message => ({ ...message,payload: Buffer.from(JSON.stringify(message.payload)).toString('base64') })) }))
+        .map(message => ({ ...message,payload: Buffer.from(JSON.stringify({type:1001,...message.payload})).toString('base64') })) }))
     } else response.end(JSON.stringify({ messages: [] }))
   })
   await new Promise<void>(resolve => server.listen(0,'127.0.0.1',resolve))

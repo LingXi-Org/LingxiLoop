@@ -8,16 +8,16 @@ import { PollCard } from '@/components/assistant-ui/elements/poll-card'
 import { ProgressCard } from '@/components/assistant-ui/elements/progress-card'
 import { DeliveryCard, RunProgressCard } from './RunResultCards'
 
-test('attachment previews preserve file types and never turn opaque IDs or unsafe URLs into links', () => {
+test('attachment previews preserve file types and route storage IDs through the authenticated file endpoint', () => {
   const image = renderToStaticMarkup(<AttachmentCard filename="参考.png" mimeType="image/png" data="https://example.com/reference.png" sourceType="url" />)
   assert.match(image, /<img[^>]+alt="参考.png"/)
   const document = renderToStaticMarkup(<AttachmentCard filename="报告.pdf" mimeType="application/pdf" data="https://example.com/report.pdf" sourceType="url" />)
   assert.doesNotMatch(document, /<img/)
   assert.match(document, /打开附件：报告.pdf/)
-  for (const [data, sourceType] of [['file-secret', 'id'], ['javascript:alert(1)', 'url']] as const) {
-    const html = renderToStaticMarkup(<AttachmentCard filename="文件" mimeType="application/pdf" data={data} sourceType={sourceType} />)
-    assert.doesNotMatch(html, /href=|<img/)
-  }
+  const stored = renderToStaticMarkup(<AttachmentCard filename="文件" mimeType="application/pdf" data="file-secret" sourceType="id" />)
+  assert.match(stored, /href="\/api\/files\?key=file-secret"/)
+  const unsafe = renderToStaticMarkup(<AttachmentCard filename="文件" mimeType="application/pdf" data="javascript:alert(1)" sourceType="url" />)
+  assert.doesNotMatch(unsafe, /href=|<img/)
 })
 
 test('poll lists retain single and multiple selection semantics and collapse submitted choices into a receipt', () => {
@@ -40,16 +40,17 @@ test('poll lists retain single and multiple selection semantics and collapse sub
 test('step results distinguish failed execution from failed delivery without inventing completed work', () => {
   const view = createRunView('run')
   view.lifecycle = 'failed'
-  const failed = renderToStaticMarkup(<RunProgressCard view={view} error="Tool execution timed out" />)
+  const failed = renderToStaticMarkup(<RunProgressCard view={{ ...view, artifacts: [] }} error="Tool execution timed out" />)
   assert.match(failed, /工具执行超时/)
   assert.match(failed, /尚无已提交的答复/)
   assert.doesNotMatch(failed, /答复已生成/)
   view.lifecycle = 'succeeded'
   view.goalOutcome = { status: 'satisfied', requestVersion: 1, verification: 'passed' }
   view.delivery = 'failed'
+  view.resultId = 'result'
   view.message = { version: 2, runId: 'run', agentId: 'agent', sessionId: 'session', body: '答复',
     envelope: { version: 1, body: '答复', requestVersion: 1, evidenceSnapshotId: 'evidence', citations: [], artifacts: [], goalOutcome: view.goalOutcome } }
-  const delivery = renderToStaticMarkup(<RunProgressCard view={view} />)
+  const delivery = renderToStaticMarkup(<RunProgressCard view={{ ...view, artifacts: [] }} />)
   assert.match(delivery, /答复已生成/)
   assert.match(delivery, /投递未完成/)
   const reasoning = renderToStaticMarkup(<ProgressCard title="处理进度" steps={[{ id: 'reasoning', label: '思考过程', status: 'running', detail: '实际返回的内容' }]} />)

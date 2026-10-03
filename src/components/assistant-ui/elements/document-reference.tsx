@@ -23,7 +23,7 @@ export function DocumentReference({
   "children" | "title" | "pages" | "anchors" | "activePage" | "onJump"
 > & {
   title: string;
-  pages: number;
+  pages?: number;
   anchors: readonly DocumentAnchor[];
   activePage: number;
   onJump?: (page: number) => void;
@@ -52,7 +52,7 @@ export function DocumentReference({
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-[13.5px] font-medium">{title}</span>
           <span className={cn(mono, "text-foreground/30")}>
-            {pages} 页 · {anchors.length} 处引用
+            {[pages ? `${pages} 页` : '', anchors.length ? `${anchors.length} 处引用` : '文档来源'].filter(Boolean).join(' · ')}
           </span>
         </div>
       </div>
@@ -62,10 +62,11 @@ export function DocumentReference({
           <button
             key={`${anchor.page}-${i}`}
             type="button"
+            disabled={!onJump}
             aria-current={i === currentIndex || undefined}
             onClick={() => onJump?.(anchor.page)}
             className={cn(
-              "flex flex-col gap-1 rounded-xl px-2.5 py-2 text-start transition-colors",
+              "flex flex-col gap-1 rounded-xl px-2.5 py-2 text-start transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default motion-reduce:transition-none",
               anchor.page === activePage
                 ? field
                 : "hover:bg-foreground/[0.035]",

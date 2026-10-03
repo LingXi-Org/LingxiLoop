@@ -1,6 +1,7 @@
 import type { Queryable } from '../db/queryable.js'
 
 export interface ImSendAcceptanceRow {
+  payload: unknown
   input_digest: string
   status: string
   echo: Record<string, unknown> | null
@@ -133,7 +134,7 @@ export async function getSendAcceptance(
   input: { companyId: string; userId: string; clientNonce: string },
 ): Promise<ImSendAcceptanceRow | null> {
   const { rows } = await db.query<ImSendAcceptanceRow>(
-    `SELECT input_digest,status,echo
+    `SELECT input_digest,status,echo,payload
        FROM im_send_acceptances
       WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
     [input.companyId, input.userId, input.clientNonce],

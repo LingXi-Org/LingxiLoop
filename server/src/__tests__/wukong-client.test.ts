@@ -1,3 +1,4 @@
+import { createNativeMessage, nativeText } from '../../../src/lib/nativeMessage'
 import assert from 'node:assert/strict'
 import { createHmac } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
@@ -28,23 +29,19 @@ test('WuKong adapter uses v3 message endpoints and preserves client_msg_no', asy
     return new Response(JSON.stringify({ message_id: 'wk-1', message_seq: 9 }), { status: 200 })
   }
   const client = new WukongClient({ apiUrl: 'http://wk:5001', wsUrl: 'ws://wk:5200', apiToken: 'token', webhookSecret: 'secret' })
-  const sent = await client.sendMessage('study', 2, 'nova', { version: 1, kind: 'text', clientMsgNo: 'client-1', body: 'hello' })
+  const sent = await client.sendMessage('study', 2, 'nova', createNativeMessage({ id: 'client-1', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'hello' }] }))
   assert.deepEqual(sent, { messageId: 'wk-1', messageSeq: 9 })
   assert.equal(calls[0]?.url, 'http://wk:5001/message/send')
   const body = JSON.parse(String(calls[0]?.init?.body)) as Record<string, unknown>
   assert.equal(body.client_msg_no, 'client-1')
-  assert.deepEqual(JSON.parse(Buffer.from(String(body.payload), 'base64').toString('utf8')), {
-    type: 1000, version: 1, kind: 'text', clientMsgNo: 'client-1', body: 'hello',
-  })
+  assert.deepEqual(JSON.parse(Buffer.from(String(body.payload), 'base64').toString('utf8')), { type: 1001, ...createNativeMessage({ id: 'client-1', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'hello' }] }) })
   const headers = calls[0]?.init?.headers as Record<string, string> | undefined
   assert.equal(headers?.token, 'token')
 })
 
 test('WuKong adapter syncs channel history and decodes Lingxi payloads', async () => {
   const calls: Array<{ url: string; body: Record<string, unknown> }> = []
-  const encoded = Buffer.from(JSON.stringify({
-    type: 1000, version: 1, kind: 'text', clientMsgNo: 'client-9', body: 'learn',
-  })).toString('base64')
+  const encoded = Buffer.from(JSON.stringify({ type: 1001, ...createNativeMessage({ id: 'client-9', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'learn' }] }) })).toString('base64')
   globalThis.fetch = async (input, init) => {
     calls.push({ url: String(input), body: JSON.parse(String(init?.body)) as Record<string, unknown> })
     return new Response(JSON.stringify({ messages: [{
@@ -59,7 +56,7 @@ test('WuKong adapter syncs channel history and decodes Lingxi payloads', async (
   assert.equal(calls[0]?.body.start_message_seq, 9)
   assert.equal(calls[0]?.body.end_message_seq, 0)
   assert.equal(calls[0]?.body.pull_mode, 0)
-  assert.equal(messages[0]?.payload.body, 'learn')
+  assert.equal(nativeText(messages[0]!.payload), 'learn')
   assert.equal(messages[0]?.messageId, 'wk-9')
   assert.equal(messages[0]?.clientMsgNo, 'client-9')
 })
@@ -75,7 +72,7 @@ test('WuKong history starts at the latest page and walks older pages without ove
         ? (!request.start_message_seq || sequence <= request.start_message_seq) && sequence > request.end_message_seq
         : sequence >= request.start_message_seq && (!request.end_message_seq || sequence < request.end_message_seq))
     const page = request.pull_mode === 0 ? sequences.slice(-request.limit) : sequences.slice(0, request.limit)
-    return Response.json({ messages: page.map(message_seq => ({ message_seq, payload: Buffer.from('{"version":1,"kind":"text"}').toString('base64') })) })
+    return Response.json({ messages: page.map(message_seq => ({ message_seq, payload: Buffer.from(JSON.stringify({ type: 1001, ...createNativeMessage({ id: String(message_seq), role: 'user', content: [{ type: 'text', text: 'fixture' }] }) })).toString('base64') })) })
   }
   const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
   const pages: number[][] = []
@@ -200,10 +197,10 @@ test('WuKong webhook signatures are constant-time HMAC contracts', () => {
 })
 
 test('WuKong msg.notify batches normalize to the Agent OS webhook contract', () => {
-  const payload = { version: 1, kind: 'text', clientMsgNo: 'msg-1', body: 'hello' }
+  const payload = createNativeMessage({ id: 'msg-1', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'hello' }] })
   const parsed = parseWukongWebhook([{
     message_idstr: '123', channel_id: 'channel-1', from_uid: 'user-1', client_msg_no: 'msg-1',
-    payload: Buffer.from(JSON.stringify({ type: 1000, ...payload })).toString('base64'),
+    payload: Buffer.from(JSON.stringify({ type: 1001, ...payload })).toString('base64'),
   }])
   assert.deepEqual(parsed, {
     success: true,

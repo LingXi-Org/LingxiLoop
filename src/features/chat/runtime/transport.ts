@@ -1,5 +1,6 @@
-import type { AppendMessage, ThreadMessage, ThreadUserMessagePart } from '@assistant-ui/react'
-import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
+import { createNativeMessage, nativeText, nativeAttachments, nativeMessageSchema } from '@/lib/nativeMessage'
+import type { AppendMessage, ThreadMessage } from '@assistant-ui/react'
+import type { AgentRunSnapshot, RunDisplayState } from '@/lib/agentRunSnapshot'
 import type { ApiAttachment, WsEvent } from '@/api/contracts'
 import { ws } from '@/api/core/realtime'
 import { agentsApi } from '@/features/agents/api'
@@ -11,19 +12,18 @@ import { parseMentions } from '@/lib/mentions'
 import { useConversations } from '@/features/conversations/store'
 import {
   type ImEnvelope,
-  type LingxiMessageV1,
+  type NativeMessage,
   lingxiIm,
 } from '@/lib/im/wukong'
 import { userFacingError } from '@/lib/userFacingError'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { convertEnvelope, convertEnvelopeBatch, projectMessageGroups } from './converter'
-import { type LingxiMessageMetadata, resolveMessagePresentation } from './model'
+import type { LingxiMessageMetadata } from './model'
 import { forgetChatOutbox, readChatOutbox, rememberChatOutbox } from './outbox'
 import {
   CHAT_HISTORY_PAGE_SIZE,
-  type ConversationChatState,
-  markDelivery,
+    markDelivery,
   mergeCanonicalMessages,
   messageKey,
   removeConversationMessage,
@@ -35,10 +35,10 @@ import {
   updateConversation,
   useChatThreadStore,
 } from './store'
-import { harnessApi, type AgentRunResponse, type AgentRunTarget } from './harness-api'
+import { harnessApi, type AgentRunTarget } from './harness-api'
 import { applyRunSnapshot, needsRunStream } from './run-updates'
 import { canCancelRun, isRunMessage } from './harness'
-import { attachmentMessages } from './attachment-messages'
+import { attachmentMessage, uploadedAttachment } from './attachment-messages'
 import { chatLatency } from './latency'
 
 const TYPING_STALE_MS = 45_000
@@ -76,77 +76,13 @@ function mentionedAgentIds(body: string, conversationId: string): string[] {
   return parseMentions(body, roster).mentionedIds.filter(id => useParticipants.getState().byId[id]?.kind === 'agent')
 }
 
-function optimisticMessage(
-  conversationId: string,
-  clientMessageId: string,
-  body: string,
-  attachment: UploadedAttachment | null,
-  quotedMessageId: string | null,
-): ThreadMessage {
+function optimisticMessage(conversationId: string, payload: NativeMessage): ThreadMessage {
   const authorId = getMeId()
   if (!authorId) throw new Error('Chat send requires an authenticated user')
-  const participant = useParticipants.getState().byId[authorId]
-  const original = quotedMessageId
-    ? useChatThreadStore.getState().conversations[conversationId]?.messages.find((message) => message.id === quotedMessageId)
-    : undefined
-  const originalMetadata = original ? messageMetadata(original) : null
-  const content: ThreadUserMessagePart[] = [
-    ...(body ? [{ type: 'text' as const, text: body }] : []),
-    ...(attachment
-      ? attachment.kind === 'img' || attachment.mime?.startsWith('image/')
-        ? [{ type: 'image' as const, image: attachment.url, filename: attachment.name }]
-        : [{
-            type: 'file' as const,
-            data: attachment.url,
-            filename: attachment.name,
-            mimeType: attachment.mime ?? 'application/octet-stream',
-            sourceType: 'url' as const,
-          }]
-      : []),
-  ]
-  const metadata: LingxiMessageMetadata = {
-    schema: 'lingxiloop.thread-message.v1',
-    conversationId,
-    clientMessageId,
-    sequence: null,
-    senderId: authorId,
-    senderName: participant?.name ?? authorId,
-    senderKind: 'human',
-    senderAvatarUrl: participant?.avatarUrl ?? null,
-    isMine: true,
-    delivery: 'sending',
-    messageKind: attachment ? 'attachment' : 'text',
-    presentation: resolveMessagePresentation(content),
-    runId: null,
-    quotedMessageId,
-    quote: original ? {
-      messageId: original.id,
-      authorId: originalMetadata?.senderId ?? '',
-      authorName: originalMetadata?.senderName ?? null,
-      text: original.content
-        .filter((part): part is Extract<(typeof original.content)[number], { type: 'text' }> => part.type === 'text')
-        .map((part) => part.text)
-        .join('\n')
-        .slice(0, 240),
-      sequence: originalMetadata?.sequence ?? null,
-    } : null,
-    reactions: [],
-    replyCount: 0,
-    threadRootId: quotedMessageId,
-    groupStart: true,
-    groupEnd: true,
-    continuedFromPrevious: false,
-    continuedToNext: false,
-    clusterChromeAt: null,
-  }
-  return {
-    id: clientMessageId,
-    role: 'user',
-    content,
-    attachments: [],
-    createdAt: new Date(),
-    metadata: { isOptimistic: true, custom: metadata },
-  }
+  const message = convertEnvelope({ channelId: conversationId, channelType: 2, fromUid: authorId, messageId: '',
+    clientMsgNo: payload.id, messageSeq: 0, timestamp: Date.parse(payload.createdAt) / 1000, payload },conversionContext())
+  return { ...message, metadata: { ...message.metadata, isOptimistic: true,
+    custom: { ...message.metadata.custom, delivery: 'sending' } } } as ThreadMessage
 }
 
 function oldestSequence(messages: readonly ThreadMessage[]): number | null {
@@ -161,14 +97,12 @@ export class ChatTransport {
   private booted = false
   private readonly typingTimers = new Map<string, number>()
   private readonly runStreams = new Map<string, AbortController>()
-  private discoveryTimer: number | undefined
   private subscriptions: (() => void)[] = []
   private discovering: RequestContext | undefined
   private readonly messageListeners = new Set<(message: ThreadMessage) => void>()
   private connection = new AbortController()
   private workspaceIdentity: string | null = null
   private workspaceChannels: Set<string> | null = null
-  private readonly runReads = new Map<string, Promise<AgentRunResponse>>()
   private readonly historyRequests = new Map<string, RequestContext>()
 
   boot(): void {
@@ -181,7 +115,6 @@ export class ChatTransport {
     void this.recoverOutbox()
     void ws.connect()
     this.subscriptions.push(ws.on((event) => this.applyWorkspaceEvent(event)))
-    this.discoveryTimer = window.setInterval(() => void this.discoverRuns(),1500)
     void this.discoverRuns()
   }
 
@@ -192,14 +125,12 @@ export class ChatTransport {
     this.connection.abort()
     this.workspaceIdentity = null; this.workspaceChannels = null
     chatLatency.clear()
-    this.runReads.clear()
     this.historyRequests.clear()
     lingxiIm.disconnect()
     for (const timer of this.typingTimers.values()) window.clearTimeout(timer)
     this.typingTimers.clear()
     for (const stream of this.runStreams.values()) stream.abort()
     this.runStreams.clear()
-    window.clearInterval(this.discoveryTimer)
     resetChatThreadStore()
   }
 
@@ -212,7 +143,7 @@ export class ChatTransport {
     if (changed || revoked) {
       // A fresh signal is the scope generation: A → B → A cannot revive an A request.
       this.connection.abort(); this.connection = new AbortController()
-      this.runReads.clear(); this.historyRequests.clear()
+      this.historyRequests.clear()
       for (const stream of this.runStreams.values()) stream.abort()
       this.runStreams.clear()
       for (const timer of this.typingTimers.values()) window.clearTimeout(timer)
@@ -272,7 +203,9 @@ export class ChatTransport {
         hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE,
       }))
       this.syncRunStreams(conversationId)
-      void this.hydrateConversation(conversationId, request)
+      void this.discoverConversationRuns(conversationId, request).catch(error => {
+        if (request.current()) updateConversation(conversationId,state => ({ ...state,error: userFacingError(error,'任务进度暂不可用，请刷新。') }))
+      })
     } catch (error) {
       if (!request.current()) return
       console.error('[chat.transport] history conversion/load failed', error)
@@ -296,7 +229,9 @@ export class ChatTransport {
       updateConversation(conversationId, state => ({ ...state,
         messages: mergeCanonicalMessages(state.messages, messages), loaded: true, isLoading: false, error: null }))
       this.syncRunStreams(conversationId)
-      void this.hydrateConversation(conversationId, request)
+      void this.discoverConversationRuns(conversationId, request).catch(error => {
+        if (request.current()) updateConversation(conversationId,state => ({ ...state,error: userFacingError(error,'任务进度暂不可用，请刷新。') }))
+      })
     } catch (error) {
       if (!request.current()) return
       console.error('[chat.transport] reload failed', error)
@@ -327,7 +262,9 @@ export class ChatTransport {
         hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE && messages.length > 0,
       }))
       this.syncRunStreams(conversationId)
-      void this.hydrateConversation(conversationId, request)
+      void this.discoverConversationRuns(conversationId, request).catch(error => {
+        if (request.current()) updateConversation(conversationId,state => ({ ...state,error: userFacingError(error,'任务进度暂不可用，请刷新。') }))
+      })
     } catch (error) {
       if (!request.current()) return
       console.error('[chat.transport] older history failed', error)
@@ -362,30 +299,10 @@ export class ChatTransport {
 
   async sendAppend(conversationId: string, message: AppendMessage, threadRootId: string | null): Promise<void> {
     const text = textFromAppend(message)
-    const attachments = (message.attachments ?? []).map(attachment => {
-      const uploaded = (attachment as unknown as { apiAttachment?: UploadedAttachment }).apiAttachment
-      if (!uploaded) throw new Error('Composer attachment is not uploaded')
-      return uploaded
-    })
     const quotedMessageId = threadRootId ?? quoteIdFromAppend(message)
-    if (!attachments.length) { await this.send(conversationId, text, null, quotedMessageId); return }
-    const payloads = attachmentMessages(attachments, text, quotedMessageId,
+    const payload = attachmentMessage(message.attachments ?? [], text, quotedMessageId,
       { mentionedIds: mentionedAgentIds(text, conversationId), mentionAll: hasBroadcastMention(text) })
-    for (const payload of payloads) rememberChatOutbox({ conversationId, clientMessageId: payload.clientMsgNo,
-      payload: payload as unknown as Record<string, unknown>, createdAt: new Date().toISOString() })
-    setConversationMessages(conversationId, payloads.map((payload, index) =>
-      optimisticMessage(conversationId, payload.clientMsgNo, payload.body ?? '', attachments[index], quotedMessageId)))
-    try {
-      for (const [index, payload] of payloads.entries()) {
-        if (!await this.send(conversationId, payload.body ?? '', attachments[index], quotedMessageId, payload.clientMsgNo, payload)) {
-          throw new Error('Attachment submission is incomplete')
-        }
-      }
-    } catch {
-      for (const entry of readChatOutbox().filter(entry => payloads.some(payload => payload.clientMsgNo === entry.clientMessageId))) {
-        markDelivery(conversationId, entry.clientMessageId, 'failed')
-      }
-    }
+    await this.send(conversationId,text,null,quotedMessageId,payload.id,payload)
   }
 
   async send(
@@ -394,35 +311,26 @@ export class ChatTransport {
     attachment: UploadedAttachment | null,
     quotedMessageId: string | null,
     clientMessageId = `temp-${crypto.randomUUID()}`,
-    replayPayload?: LingxiMessageV1,
+    replayPayload?: NativeMessage,
   ): Promise<boolean> {
     const text = body.trim()
-    if (!text && !attachment) return false
+    const payload = replayPayload ?? createNativeMessage({ id: clientMessageId, role: 'user',
+      content: text ? [{ type: 'text', text }] : [], attachments: attachment ? [uploadedAttachment(attachment)] : [],
+      custom: { ...(quotedMessageId ? { replyToClientMsgNo: quotedMessageId } : {}),
+        mentionedIds: mentionedAgentIds(text,conversationId), mentionAll: hasBroadcastMention(text) } })
+    if (!nativeText(payload) && !nativeAttachments(payload).length) return false
     chatLatency.send(clientMessageId)
-    const optimistic = optimisticMessage(conversationId, clientMessageId, text, attachment, quotedMessageId)
-    setConversationMessages(conversationId, [optimistic])
-    const payload: LingxiMessageV1 = replayPayload ?? {
-      version: 1,
-      kind: attachment ? 'attachment' : 'text',
-      clientMsgNo: clientMessageId,
-      body: text,
-      ...(quotedMessageId ? { replyToClientMsgNo: quotedMessageId } : {}),
-      data: {
-        ...(attachment ?? {}),
-        mentionedIds: mentionedAgentIds(text, conversationId),
-        mentionAll: hasBroadcastMention(text),
-      },
-    }
+    setConversationMessages(conversationId, [optimisticMessage(conversationId,payload)])
     rememberChatOutbox({
       conversationId,
       clientMessageId,
-      payload: payload as unknown as Record<string, unknown>,
+      payload,
       createdAt: new Date().toISOString(),
     })
     try {
       this.commitEnvelope(await lingxiIm.send(conversationId, payload))
       chatLatency.submitted(clientMessageId)
-      if (attachment) {
+      if (nativeAttachments(payload).length) {
         window.setTimeout(() => {
           void import('@/features/knowledge/state')
             .then(({ useKnowledgeSources }) => useKnowledgeSources.getState().load())
@@ -440,23 +348,9 @@ export class ChatTransport {
   async retry(conversationId: string, messageId: string): Promise<void> {
     const entry = readChatOutbox().find((row) => row.clientMessageId === messageId)
     if (!entry) throw new Error('Failed message is no longer present in the outbox')
-    const payload = entry.payload as unknown as LingxiMessageV1
-    const data = payload.data ?? {}
-    for (const dependency of Array.isArray(data.attachmentClientMsgNos) ? data.attachmentClientMsgNos : []) {
-      if (dependency !== messageId && typeof dependency === 'string'
-        && readChatOutbox().some(item => item.clientMessageId === dependency && item.conversationId === conversationId)) {
-        await this.retry(conversationId, dependency)
-      }
-    }
-    const attachment = payload.kind === 'attachment' ? data as unknown as UploadedAttachment : null
-    const sent = await this.send(
-      conversationId,
-      payload.body ?? '',
-      attachment,
-      payload.replyToClientMsgNo ?? null,
-      messageId,
-      payload,
-    )
+    const payload = nativeMessageSchema.parse(entry.payload)
+    const reply = payload.metadata.custom.replyToClientMsgNo
+    const sent = await this.send(conversationId,nativeText(payload),null,typeof reply === 'string' ? reply : null,messageId,payload)
     if (!sent) throw new Error('消息尚未发送，请重试。')
   }
 
@@ -487,7 +381,7 @@ export class ChatTransport {
       .find((candidate) => candidate.id === messageId)
     const sequence = message ? messageMetadata(message).sequence : null
     if (!message || sequence === null) return
-    const result = await messagesApi.toggleReaction(conversationId, messageId, sequence, emoji)
+    const result = await messagesApi.toggleReaction(conversationId, messageMetadata(message).imMessageId ?? messageId, sequence, emoji)
     replaceMessageReactions(conversationId, messageId, result.reactions)
   }
 
@@ -502,30 +396,30 @@ export class ChatTransport {
     )
   }
 
+  async answerQuestionnaire(conversationId: string, questionId: string, answers: Record<string, string | string[]>): Promise<void> {
+    const userId = getMeId(), companyId = getActiveCompanyId()
+    if (!userId || !companyId) throw new Error('请先登录后回复卡片')
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify([companyId, conversationId, userId, questionId])))
+    const id = 'q-' + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
+    const text = `问答卡片回复：\n${Object.entries(answers).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`).join('\n')}`
+    const sent = await this.send(conversationId, text, null, questionId, id, createNativeMessage({ id, role: 'user', content: [{ type: 'text', text }],
+      custom: { replyToClientMsgNo: questionId, questionnaireReply: { questionId, answers } } }))
+    if (!sent) throw new Error('卡片回复尚未发送，请重试')
+  }
+
   async votePoll(messageId: string, optionIds: string[]): Promise<void> {
     await messagesApi.castPollVote(messageId, optionIds)
   }
 
   async continueRun(target: AgentRunTarget, text: string, requestVersion: number): Promise<void> {
     const clientMsgNo = `temp-${crypto.randomUUID()}`
-    const accepted = await this.send(target.conversationId,text,null,target.threadId ?? null,clientMsgNo,{
-      version: 1, kind: 'text', clientMsgNo, body: text.trim(), ...(target.threadId ? { replyToClientMsgNo: target.threadId } : {}),
-      data: { mentionedIds: [target.agentId], agentContinuation: { runId: target.runId, agentId: target.agentId, requestVersion } },
-    })
+    const accepted = await this.send(target.conversationId,text,null,target.threadId ?? null,clientMsgNo,createNativeMessage({
+      id: clientMsgNo, role: 'user', content: [{ type: 'text', text: text.trim() }],
+      custom: { ...(target.threadId ? { replyToClientMsgNo: target.threadId } : {}), mentionedIds: [target.agentId],
+        agentContinuation: { runId: target.runId, agentId: target.agentId, requestVersion } },
+    }))
     if (!accepted) throw new Error('补充信息尚未发送，可在消息中重试')
     await harnessApi.continue(target,clientMsgNo,requestVersion)
-  }
-
-  private readRun(target: AgentRunTarget, request: RequestContext): Promise<AgentRunResponse> {
-    const key = JSON.stringify([request.identity, target.conversationId, target.agentId, target.runId, target.threadId ?? null])
-    const pending = this.runReads.get(key)
-    if (pending) return pending
-    const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30_000)])
-    const promise = harnessApi.read(target, signal).finally(() => {
-      if (this.runReads.get(key) === promise) this.runReads.delete(key)
-    })
-    this.runReads.set(key, promise)
-    return promise
   }
 
   async refreshRun(target: AgentRunTarget): Promise<void> {
@@ -568,13 +462,12 @@ export class ChatTransport {
         }
       })
       if (accepted) for (const listener of this.messageListeners) listener(message)
-      if (metadata.harness && metadata.runId) void this.refreshRun({ conversationId: envelope.channelId,
-        agentId: metadata.senderId, runId: metadata.runId, ...(metadata.threadRootId ? { threadId: metadata.threadRootId } : {}) })
+      this.syncRunStreams(envelope.channelId)
     } catch (error) {
       console.error('[chat.transport] rejected unsupported WuKong message', error, {
         channelId: envelope.channelId,
         messageId: envelope.messageId,
-        kind: envelope.payload.kind,
+        role: envelope.payload.role,
       })
       updateConversation(envelope.channelId, (state) => ({
         ...state,
@@ -583,49 +476,15 @@ export class ChatTransport {
     }
   }
 
-  private async readRunSnapshots(conversationId: string, messages: readonly ThreadMessage[], request: RequestContext) {
-    const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30_000)])
-    const listed = await harnessApi.list(conversationId, signal).catch(() => [])
-    if (signal.aborted || !request.current()) return []
-    // Subscribe before history/diagnostic pagination so it cannot hide a short reply.
-    for (const target of listed) if (needsRunStream(target.status)) this.subscribeRun(target)
-    const targets = new Map(listed.map(target => [target.runId, target]))
-    for (const message of messages) {
-      const meta = messageMetadata(message), view = meta.harness
-      if (meta.senderKind !== 'agent' || meta.messageKind !== 'text' || !meta.runId || !view || targets.has(meta.runId)) continue
-      targets.set(meta.runId, { conversationId, agentId: meta.senderId, runId: meta.runId,
-        ...(meta.threadRootId ? { threadId: meta.threadRootId } : {}),
-        requestVersion: view.requestVersion, fence: view.fence, status: view.lifecycle ?? 'queued' })
+  private async discoverConversationRuns(conversationId: string, request: RequestContext): Promise<void> {
+    const targets = await harnessApi.list(conversationId,request.signal)
+    if (!request.current()) return
+    const messages = useChatThreadStore.getState().conversations[conversationId]?.messages ?? []
+    for (const target of targets) {
+      const current = messages.map(messageMetadata).find(meta => meta.runId === target.runId && isRunMessage(meta))?.harness
+      if (!current || needsRunStream(target.status,current.delivery) || current.requestVersion < target.requestVersion
+        || current.fence < target.fence || current.lifecycle !== target.status) this.subscribeRun(target)
     }
-    const reads = [...targets.values()].filter(target => {
-      if (needsRunStream(target.status) || this.runStreams.has(target.runId)) return false
-      const meta = messages.map(messageMetadata).find(meta => meta.runId === target.runId && isRunMessage(meta))
-      const view = meta?.harness
-      return !view || meta.harnessControl === undefined || view.requestVersion !== target.requestVersion
-        || view.fence !== target.fence || view.lifecycle !== target.status || view.delivery === 'pending'
-    }).map(async target => ({ target, response: await this.readRun({ conversationId: target.conversationId,
-      agentId: target.agentId, runId: target.runId, ...(target.threadId ? { threadId: target.threadId } : {}) }, request) }))
-    const results = await Promise.allSettled(reads)
-    return results.flatMap(result => result.status === 'fulfilled' ? [result.value] : [])
-  }
-
-  private async hydrateConversation(conversationId: string, request: RequestContext): Promise<void> {
-    try {
-      const messages = useChatThreadStore.getState().conversations[conversationId]?.messages ?? []
-      const snapshots = await this.readRunSnapshots(conversationId, messages, request)
-      if (!request.current()) return
-      if (snapshots.length) updateConversation(conversationId, current => this.applyRunSnapshots(current, snapshots))
-      this.syncRunStreams(conversationId)
-    } catch (error) {
-      if (request.current()) console.warn('[chat.transport] run hydration failed', error)
-    }
-  }
-
-  private applyRunSnapshots(state: ConversationChatState, snapshots: Array<{ target: AgentRunTarget; response: AgentRunResponse }>) {
-    for (const { target, response } of snapshots.sort((a, b) => (a.response.createdAt ?? '').localeCompare(b.response.createdAt ?? ''))) {
-      state = applyRunSnapshot(state, target, response, useParticipants.getState().byId[target.agentId])
-    }
-    return { ...state, messages: projectMessageGroups(state.messages) }
   }
 
   private syncRunStreams(conversationId: string): void {
@@ -645,10 +504,10 @@ export class ChatTransport {
     try {
       for (const [conversationId,state] of Object.entries(useChatThreadStore.getState().conversations)) {
         if (!state.loaded) continue
-        await this.hydrateConversation(conversationId, request)
+        await this.discoverConversationRuns(conversationId, request)
         if (!request.current()) return
       }
-    } catch { /* Existing streams reconnect independently; discovery retries on the next tick. */ }
+    } catch (error) { if (request.current()) console.warn('[chat.transport] run discovery failed',error) }
     finally { if (this.discovering === request) this.discovering = undefined }
   }
 
@@ -669,15 +528,18 @@ export class ChatTransport {
           await harnessApi.subscribe(target, snapshot => {
             if (!request.current() || signal.aborted) return
             failures = 0
-            if (snapshot.sourceRef && snapshot.sourceRef !== latest?.sourceRef) chatLatency.bind(target.runId, snapshot.sourceRef)
-            const text = snapshot.content.filter(part => part.type === 'text').map(part => part.text).join('')
-            if (snapshot.status.type === 'running' && text) chatLatency.preview(target.runId, snapshot.view.lastSeq, text.length)
-            if (latest?.content.length && !snapshot.content.length) chatLatency.reset(target.runId, 'retracted')
-            if (snapshot.view.message && !latest?.view.message) chatLatency.completed(target.runId)
+            const custom = snapshot.message.metadata.custom, view = custom.harness as RunDisplayState
+            const previous = latest?.message.metadata.custom.harness as RunDisplayState | undefined
+            if (typeof custom.sourceRef === 'string' && custom.sourceRef !== latest?.message.metadata.custom.sourceRef) chatLatency.bind(target.runId,custom.sourceRef)
+            const text = nativeText(snapshot.message)
+            if (snapshot.message.status?.type === 'running' && text) chatLatency.preview(target.runId,view.lastSeq,text.length)
+            if (latest?.message.content.length && !snapshot.message.content.length) chatLatency.reset(target.runId,'retracted')
+            if (view.resultId && !previous?.resultId) chatLatency.completed(target.runId)
             latest = snapshot
             updateConversation(target.conversationId, state => applyRunSnapshot(state, target, snapshot, useParticipants.getState().byId[target.agentId]))
           }, signal)
-          if (!latest || needsRunStream(latest.view.lifecycle, latest.view.delivery)) throw new Error('运行流提前结束')
+          const view = latest?.message.metadata.custom.harness as RunDisplayState | undefined
+          if (!view || needsRunStream(view.lifecycle,view.delivery)) throw new Error('运行流提前结束')
           return
         } catch (error) {
           if (signal.aborted || !request.current()) return

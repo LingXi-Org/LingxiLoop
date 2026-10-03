@@ -1,44 +1,14 @@
+import { serializeMessage, type NativeMessage } from '@/lib/nativeMessage'
 import type { ThreadMessage } from '@assistant-ui/react'
-import type { RunView } from '@lyyzka/lingxios/ui'
-import type { RunMemory, HarnessToolPart } from '@/lib/agentRunSnapshot'
+import type { RunDisplayState } from '@/lib/agentRunSnapshot'
+import type { RunMemory } from '@/lib/agentRunSnapshot'
 export type { HarnessToolPart } from '@/lib/agentRunSnapshot'
 
 export type LingxiDeliveryStatus = 'sending' | 'sent' | 'failed'
 export type LingxiMessagePresentation = 'conversation' | 'special-card'
 
-const SPECIAL_CARD_TOOLS = new Set([
-  'approval-card',
-  'poll-form',
-  'agent-handoff',
-  'agent-plan',
-  'canvas-artifact',
-  'canvas-progress',
-  'elicitation-form',
-  'showStats',
-  'recommendation-card',
-  'learning-stats',
-  'calendar-event',
-  'learning.propose_evaluation',
-  'calendar.create',
-  'calendar.list',
-  'calendar.get',
-  'draft-email',
-  'presentation-artifact',
-])
-
-export function resolveMessagePresentation(content: readonly {
-  type: string
-  toolName?: string
-  toolCallId?: string
-}[]): LingxiMessagePresentation {
-  return content.some((part) => (
-    part.type === 'file'
-    || part.type === 'image'
-    || (part.type === 'tool-call' && (
-      part.toolCallId?.startsWith('host:')
-      || SPECIAL_CARD_TOOLS.has(part.toolName ?? '')
-    ))
-  )) ? 'special-card' : 'conversation'
+export function resolveMessagePresentation(content: readonly { type: string }[]): LingxiMessagePresentation {
+  return content.some(part => ['file','image','tool-call','data','generative-ui'].includes(part.type)) ? 'special-card' : 'conversation'
 }
 
 export interface LingxiReactionMetadata {
@@ -80,9 +50,10 @@ export function mergeProgressMessage(before: ThreadMessage, after: ThreadMessage
 }
 
 export interface LingxiMessageMetadata extends Record<string, unknown> {
-  schema: 'lingxiloop.thread-message.v1'
+  schema: 'lingxiloop.thread-message.v2'
   conversationId: string
   clientMessageId: string
+  imMessageId?: string
   sequence: number | null
   timestampMissing?: boolean
   progress?: { key: string; version: number; sequence: number }
@@ -97,8 +68,7 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   messageKind: string
   presentation: LingxiMessagePresentation
   runId: string | null
-  harness?: RunView
-  harnessTools?: HarnessToolPart[]
+  harness?: RunDisplayState
   harnessControl?: boolean
   memory?: RunMemory
   harnessError?: string
@@ -128,19 +98,12 @@ export interface ConversationThreadSnapshot {
   error: string | null
 }
 
-export interface SerializableThreadMessageSnapshot {
-  id: string
-  role: ThreadMessage['role']
-  createdAt: string
-  content: ThreadMessage['content']
-  status?: ThreadMessage['status']
-  metadata: LingxiMessageMetadata
-}
+export type SerializableThreadMessageSnapshot = NativeMessage
 
 export function getLingxiMessageMetadata(message: ThreadMessage): LingxiMessageMetadata {
   const metadata = message.metadata.custom as Partial<LingxiMessageMetadata>
   if (
-    metadata.schema !== 'lingxiloop.thread-message.v1'
+    metadata.schema !== 'lingxiloop.thread-message.v2'
     || (metadata.presentation !== 'conversation' && metadata.presentation !== 'special-card')
     || (metadata.clusterChromeAt !== null && typeof metadata.clusterChromeAt !== 'string')
   ) {
@@ -150,14 +113,7 @@ export function getLingxiMessageMetadata(message: ThreadMessage): LingxiMessageM
 }
 
 export function serializeThreadMessage(message: ThreadMessage): SerializableThreadMessageSnapshot {
-  return {
-    id: message.id,
-    role: message.role,
-    createdAt: message.createdAt.toISOString(),
-    content: message.content,
-    ...(message.status ? { status: message.status } : {}),
-    metadata: getLingxiMessageMetadata(message),
-  }
+  return serializeMessage(message)
 }
 
 export function messageText(message: ThreadMessage): string {

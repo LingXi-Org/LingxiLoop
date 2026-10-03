@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../im/message-types.js'
 import { pool } from '../../db/pool.js'
 import { sendSystemChannelMessage } from '../../im/public.js'
 import { sendCalendarReminderEmail } from '../email/index.js'
@@ -19,13 +20,8 @@ const calendarScheduler = new CalendarScheduler({
       actorId: input.actorId,
       channelId: input.channelId,
       clientNonce: input.clientNonce,
-      payload: {
-        version: 1,
-        kind: 'system',
-        clientMsgNo: input.clientNonce,
-        body: input.body,
-        data: { calendarEventId: input.eventId, scheduledFor: input.scheduledFor },
-      },
+      payload: createNativeMessage({ id: input.clientNonce, role: 'system', content: [{ type: 'text', text: input.body }],
+        custom: { calendarEventId: input.eventId, scheduledFor: input.scheduledFor } }),
     })
     if (result.kind !== 'accepted') throw new Error(`calendar IM dispatch failed: ${result.kind}`)
     return { messageId: result.messageId, sequence: result.sequence }

@@ -3,17 +3,8 @@ import { getServerOrigin } from '@/api/core/http'
 import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
 
-export const LINGXI_MESSAGE_CONTENT_TYPE = 1000
-
-export type LingxiMessageV1 = {
-  version: 1
-  kind: 'text' | 'attachment' | 'system' | 'tool_activity' | 'approval' | 'handoff' | 'questionnaire' | 'poll' | 'artifact' | 'canvas' | 'learning_mission' | 'email'
-  clientMsgNo: string
-  body?: string
-  replyToClientMsgNo?: string
-  refs?: Record<string, string | string[]>
-  data?: Record<string, unknown>
-}
+import { nativeMessageSchema, NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage } from '../nativeMessage'
+export type { NativeMessage } from '../nativeMessage'
 
 export interface ImEnvelope {
   messageId: string
@@ -23,16 +14,16 @@ export interface ImEnvelope {
   channelType: number
   fromUid: string
   timestamp: number
-  payload: LingxiMessageV1
+  payload: NativeMessage
 }
 
 type Bootstrap = { uid: string; token: string; wsUrl: string; apiVersion: 3; sdkVersion: '1.3.5' }
 
 class LingxiContent extends MessageContent {
-  constructor(payload?: LingxiMessageV1) {
+  constructor(payload?: NativeMessage) {
     super()
-    this.contentType = LINGXI_MESSAGE_CONTENT_TYPE
-    this.contentObj = payload ?? { version: 1, kind: 'text', clientMsgNo: '', body: '' }
+    this.contentType = NATIVE_MESSAGE_CONTENT_TYPE
+    this.contentObj = payload
   }
   override decodeJSON(value: unknown): void { this.contentObj = value }
   override encodeJSON(): unknown { return this.contentObj }
@@ -47,16 +38,12 @@ function authHeaders(): Record<string, string> {
 }
 
 function fromSdk(message: WKMessage): ImEnvelope {
-  const raw = message.content instanceof LingxiContent
-    ? message.content.contentObj
-    : (message.content as { contentObj?: unknown })?.contentObj
-  const payload = raw && typeof raw === 'object' ? raw as LingxiMessageV1 : {
-    version: 1 as const, kind: 'text' as const, clientMsgNo: message.clientMsgNo, body: String(raw ?? ''),
-  }
+  if (!(message.content instanceof LingxiContent)) throw new Error('消息协议已更新，请刷新页面')
+  const payload = nativeMessageSchema.parse(message.content.contentObj)
   return {
     messageId: message.messageID,
     messageSeq: message.messageSeq,
-    clientMsgNo: message.clientMsgNo || payload.clientMsgNo,
+    clientMsgNo: message.clientMsgNo,
     channelId: message.channel.channelID,
     channelType: message.channel.channelType,
     fromUid: message.fromUID,
@@ -76,7 +63,7 @@ export class LingxiImClient {
   private workspaceChannels = new Set<string>()
 
   constructor() {
-    this.sdk.register(LINGXI_MESSAGE_CONTENT_TYPE, () => new LingxiContent())
+    this.sdk.register(NATIVE_MESSAGE_CONTENT_TYPE, () => new LingxiContent())
     this.sdk.chatManager.addMessageListener((message) => {
       const converted = fromSdk(message)
       if (!this.workspaceChannels.has(converted.channelId)) return
@@ -146,9 +133,9 @@ export class LingxiImClient {
     return response.json() as Promise<ImEnvelope[]>
   }
 
-  async send(channelId: string, payload: LingxiMessageV1): Promise<ImEnvelope> {
+  async send(channelId: string, payload: NativeMessage): Promise<ImEnvelope> {
     const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages/accept`, {
-      method: 'POST', headers: authHeaders(), body: JSON.stringify({ clientNonce: payload.clientMsgNo, payload }),
+      method: 'POST', headers: authHeaders(), body: JSON.stringify({ clientNonce: payload.id, payload }),
     })
     if (!response.ok) {
       const detail = await response.text().catch(() => '')

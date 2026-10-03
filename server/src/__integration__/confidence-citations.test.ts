@@ -1,3 +1,5 @@
+import type { AgentRunSnapshot } from '../../../src/lib/agentRunSnapshot.js'
+import { nativeText, nativeData } from '../im/message-types.js'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { after, before, test } from 'node:test'
@@ -79,7 +81,9 @@ test('product correction commits frozen excerpts and preserves them in IM delive
     const chunks = []
     for await (const chunk of request) chunks.push(chunk)
     const sent = JSON.parse(Buffer.concat(chunks).toString())
-    assert.deepEqual(JSON.parse(Buffer.from(sent.payload, 'base64').toString()).data.harness.citationEvidence, expectedEvidence)
+    const native = JSON.parse(Buffer.from(sent.payload, 'base64').toString())
+    assert.equal(native.type,1001)
+    assert.deepEqual(nativeData<{ claims: { evidence: unknown }[] }>(native,'citation-claims')?.claims.map(claim=>claim.evidence),[ [expectedEvidence[0]], [expectedEvidence[0]], [expectedEvidence[1]], [expectedEvidence[0],expectedEvidence[2]], [expectedEvidence[3]] ])
     response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ message_id: 'im-result', message_seq: 1 }))
   })
   try {
@@ -111,7 +115,8 @@ test('product correction commits frozen excerpts and preserves them in IM delive
     assert.equal(await api.readDelivery(identity), 'delivered')
     const delivered = (await pool.query('SELECT payload FROM im_send_acceptances WHERE company_id=$1', [companyId])).rows
     assert.equal(delivered.length, 1)
-    assert.deepEqual(delivered[0].payload.data.harness, result.message!.envelope)
+    assert.equal(nativeText(delivered[0].payload),body)
+    assert.deepEqual(nativeData<{ claims: { evidence: unknown }[] }>(delivered[0].payload,'citation-claims')?.claims.map(claim=>claim.evidence),result.message!.envelope.citations.map(citation=>expectedEvidence.filter(item=>citation.markers.includes(item.marker))))
     await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
     const address = server.address()
     assert.ok(address && typeof address === 'object')
@@ -127,9 +132,9 @@ test('product correction commits frozen excerpts and preserves them in IM delive
         assert.equal(chunk.value.type, 'update-state')
         if (chunk.value.type !== 'update-state') continue
         state.append(chunk.value.operations)
-        const snapshot = state.state as { runId: string; view: { message: { envelope: unknown } | null } }
-        assert.equal(snapshot.runId, identity.runId)
-        assert.deepEqual(snapshot.view.message?.envelope, result.message!.envelope)
+        const snapshot = state.state as unknown as AgentRunSnapshot
+        assert.equal(snapshot.message.id, `run-${identity.runId}`)
+        assert.deepEqual(snapshot.message.content, delivered[0].payload.content)
       } finally { await reader.cancel() }
     }
   } finally {

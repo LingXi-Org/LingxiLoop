@@ -18,7 +18,8 @@ import { Button } from '@/components/ui/button'
  * Auto-dismiss after AUTO_DISMISS_MS; hover pauses the timer.
  */
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import type { LingxiMessageMetadata } from '@/features/chat/runtime/model'
 import type { NotificationPushPayload } from '@/lib/runtime'
 import { BloubAvatar } from '@/components/BloubAvatar'
 import {
@@ -49,7 +50,7 @@ const MAX_TOASTS = 5
 type Toast = NotificationPushPayload
 
 function toastMetadata(toast: Toast) {
-  return toast.message.metadata
+  return toast.message.metadata.custom as LingxiMessageMetadata
 }
 
 function toastBody(toast: Toast): string {
@@ -62,6 +63,7 @@ function toastBody(toast: Toast): string {
 }
 
 export function NotificationWindow() {
+  const reduceMotion = useReducedMotion()
   const [toasts, setToasts] = useState<Toast[]>([])
 
   // The Electron BrowserWindow is `transparent: true`, but that only
@@ -206,16 +208,16 @@ export function NotificationWindow() {
         {toasts.map((t) => (
           <motion.div
             key={t.id}
-            layout
+            layout={!reduceMotion}
             // wails-gui's entry: slide 12px from the right + fade in.
             // No scale, no spring — just a clean translate + opacity.
-            initial={{ opacity: 0, x: 12 }}
+            initial={reduceMotion ? false : { opacity: 0, x: 4 }}
             animate={{ opacity: 1, x: 0 }}
             // Exit slides slightly further (16px) than the entry's 12px
             // so dismissal reads as a deliberate sweep-off, not a
             // mirrored reverse-of-entry.
-            exit={{ opacity: 0, x: 16, transition: EXIT_TRANSITION }}
-            transition={{
+            exit={{ opacity: 0, x: reduceMotion ? 0 : 4, transition: reduceMotion ? { duration: 0 } : EXIT_TRANSITION }}
+            transition={reduceMotion ? { duration: 0 } : {
               opacity: ENTRY_TRANSITION,
               x: ENTRY_TRANSITION,
               // `layout` animates `y` as siblings reflow when a toast

@@ -1,5 +1,6 @@
+import { assertOwnedMessageAttachments } from './attachments.js'
 import { createHash } from 'node:crypto'
-import type { LingxiMessageV1 } from './message-types.js'
+import { nativeMessageSchema, nativeText, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import type { ReadReceiptAdvance } from './read-receipts-contracts.js'
 import type { ImChannelProfile } from './types.js'
@@ -31,7 +32,7 @@ export interface ImMessageEnvelope {
   channelId: string
   fromUid: string
   timestamp: number
-  payload: LingxiMessageV1
+  payload: NativeMessage
 }
 
 export interface ImMessagesInfrastructure {
@@ -68,7 +69,8 @@ export interface ImMessagesInfrastructure {
     channelId: string,
     channelType: number,
     userId: string,
-    payload: LingxiMessageV1,
+    payload: NativeMessage,
+    clientNonce?: string,
   ): Promise<{ messageId: string; messageSeq: number }>
   setUnread(userId: string, channelId: string, channelType: number, unread: number): Promise<void>
   recordReadReceipt(input: {
@@ -181,10 +183,10 @@ export class ImMessagesApplication {
     )
     return messages.map((message) => ({
       ...message,
-      payload: {
+      payload: nativeMessageSchema.parse({
         ...message.payload,
-        data: { ...(message.payload.data ?? {}), reactions: reactions[message.messageId] ?? [] },
-      },
+        metadata: { ...message.payload.metadata, custom: { ...message.payload.metadata.custom, reactions: reactions[message.messageId] ?? [] } },
+      }),
     }))
   }
 
@@ -223,7 +225,7 @@ export class ImMessagesApplication {
         .slice(-conversation.unread)
         .filter((message) => message.fromUid !== input.userId)
         .map((message) => {
-          const quotedId = message.payload.replyToClientMsgNo
+          const quotedId = message.payload.metadata.custom.replyToClientMsgNo
           return {
             channelId: conversation.channelId,
             title: channel.title,
@@ -285,7 +287,7 @@ export class ImMessagesApplication {
         for (const message of page) {
           if (seenMessages.has(message.messageId)) continue
           seenMessages.add(message.messageId)
-          if ((message.payload.body ?? '').toLocaleLowerCase().includes(query)) {
+          if (nativeText(message.payload).toLocaleLowerCase().includes(query)) {
             matches.push({ channelId: conversation.channelId, title: channel.title, kind: channel.kind, message })
           }
         }
@@ -366,14 +368,14 @@ export class ImMessagesApplication {
       userId: string
       channelId: string
       clientNonce: string
-      payload: LingxiMessageV1
+      payload: NativeMessage
     },
   ): Promise<
     | { kind: 'nonce_conflict' }
     | { kind: 'accepted'; duplicate: boolean; echo: Record<string, unknown> }
   > {
     const inputDigest = createHash('sha256')
-      .update(canonicalJson({ channelId: input.channelId, channelType, payload: input.payload }))
+      .update(canonicalJson({ channelId: input.channelId, channelType, payload: { ...nativeMessageSchema.parse(input.payload), createdAt: undefined } }))
       .digest('hex')
     const identity = {
       companyId: input.companyId,
@@ -394,12 +396,14 @@ export class ImMessagesApplication {
       if (acceptance.status === 'accepted' && acceptance.echo) {
         return { kind: 'accepted', duplicate: true, echo: acceptance.echo }
       }
+      const payload = nativeMessageSchema.parse(acceptance.payload)
       try {
         const sent = await this.infrastructure.sendMessage(
           input.channelId,
           channelType,
           input.userId,
-          input.payload,
+          payload,
+          input.clientNonce,
         )
         const echo = {
           messageId: sent.messageId,
@@ -409,7 +413,7 @@ export class ImMessagesApplication {
           channelType,
           fromUid: input.userId,
           timestamp: Math.floor(Date.now() / 1000),
-          payload: input.payload,
+          payload,
         }
         await acceptSend(db, { ...identity, echo })
         return { kind: 'accepted', duplicate: false, echo }
@@ -430,7 +434,7 @@ export class ImMessagesApplication {
     userId: string
     channelId: string
     clientNonce: string
-    payload: LingxiMessageV1
+    payload: NativeMessage
   }): Promise<
     | { kind: 'channel_not_found' }
     | { kind: 'nonce_conflict' }
@@ -438,6 +442,7 @@ export class ImMessagesApplication {
   > {
     const channelType = await this.channelType(input)
     if (channelType === null) return { kind: 'channel_not_found' }
+    await assertOwnedMessageAttachments(this.infrastructure.db, input)
     return this.infrastructure.withConnection((db) => this.acceptMessage(db, channelType, input))
   }
 
@@ -446,7 +451,7 @@ export class ImMessagesApplication {
     actorId: string
     channelId: string
     clientNonce: string
-    payload: LingxiMessageV1
+    payload: NativeMessage
   }): Promise<
     | { kind: 'channel_not_found' }
     | { kind: 'nonce_conflict' }
@@ -469,7 +474,7 @@ export class ImMessagesApplication {
     userId: string
     channelId: string
     clientNonce: string
-    payload: LingxiMessageV1
+    payload: NativeMessage
     rejectVerbatimPeerBody?: string
   }): Promise<
     | { kind: 'channel_not_found' }
@@ -496,9 +501,9 @@ export class ImMessagesApplication {
             input.userId,
           )
           const peer = recent
-            .filter((message) => message.fromUid !== input.userId && message.payload.kind === 'text')
+            .filter((message) => message.fromUid !== input.userId && message.payload.content.some(part => part.type === 'text'))
             .sort((left, right) => right.messageSeq - left.messageSeq)[0]
-          if (peer?.payload.body?.trim() === draft) return { kind: 'verbatim_peer', peer }
+          if (peer && nativeText(peer.payload).trim() === draft) return { kind: 'verbatim_peer', peer }
         }
         return this.acceptMessage(db, channelType, input)
       } finally {

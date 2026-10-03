@@ -1,3 +1,4 @@
+import { createNativeMessage, nativeText } from '../../../src/lib/nativeMessage'
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
 import { pool } from '../db/pool.js'
@@ -28,17 +29,15 @@ test('attachment questions and history use committed bytes, wake once and retain
   }
   const text = 'Context '.repeat(300) + 'Unique recorded value: 7391.'
   const signal = new AbortController().signal
-  const message = (id: string, seq: number, room: string): ImMessageEnvelope => ({ messageId: `im-${id}`,clientMsgNo: id,messageSeq: seq,
-    channelId: room,fromUid: 'test-owner',timestamp: Math.floor(Date.now()/1000),payload: { version: 1,kind: 'attachment',clientMsgNo: id,
-      data: { key: `attachments/${companyId}/${id}.txt`,name: `${id}.txt`,mime: 'text/plain',size: Buffer.byteLength(text) } } })
   for (const room of ['attachment-group','attachment-dm']) {
-    const first = message(`${room}-one`,1,room), last = message(`${room}-two`,2,room)
-    first.payload.data!.suppressAgentWake = true
-    last.payload.body = 'What is the unique recorded value in both files?'
-    last.payload.data!.attachmentClientMsgNos = [first.clientMsgNo,last.clientMsgNo]
-    last.payload.data!.mentionedIds = [agentId]
-    const history = [first,last]
-    for (const item of history) await storage.put(String(item.payload.data!.key),Buffer.from(text),'text/plain')
+    const refs = ['one','two'].map(name => ({ clientMsgNo: `${room}-input`,attachmentId: `attachments/${companyId}/${room}-${name}.txt` }))
+    const last: ImMessageEnvelope = { messageId: `im-${room}`,clientMsgNo: `${room}-input`,messageSeq: 1,
+      channelId: room,fromUid: 'test-owner',timestamp: Math.floor(Date.now()/1000),
+      payload: createNativeMessage({ id: `${room}-input`,role: 'user',content: [{ type: 'text',text: 'What is the unique recorded value in both files?' }],
+        custom: { mentionedIds: [agentId] },attachments: refs.map(ref => ({ id: ref.attachmentId,type: 'file',name: ref.attachmentId.split('/').at(-1)!,
+          contentType: 'text/plain',status: { type: 'complete' },content: [{ type: 'file',data: ref.attachmentId,sourceType: 'id',mimeType: 'text/plain' }] })) }) }
+    const history = [last]
+    for (const ref of refs) await storage.put(ref.attachmentId,Buffer.from(text),'text/plain')
     _setWukongClientForTests(new class extends WukongClient {
       override async syncMessages(channelId: string, channelType: number, limit = 80, _uid = '', before = 0) {
         return history.filter(item => item.channelId === channelId && (!before || item.messageSeq < before)).slice(-limit).map(item => ({ ...item,channelType }))
@@ -47,38 +46,37 @@ test('attachment questions and history use committed bytes, wake once and retain
     }({ apiUrl: 'http://unused',wsUrl: 'ws://unused',apiToken: 'test',webhookSecret: 'test' }))
     const wake = (item: ImMessageEnvelope) => enqueueAgentWakes(pool,{ eventId: item.clientMsgNo,companyId,channelId: room,
       clientMsgNo: item.clientMsgNo,payload: item.payload,recipients: [agentId] })
-    assert.equal(await wake(first),0)
     assert.equal(await wake(last),1)
     await wake(last)
-    const rows = (await pool.query('SELECT attachment_client_msg_nos,available_at FROM lingxios_ingress_outbox WHERE channel_id=$1',[room])).rows
+    const rows = (await pool.query('SELECT knowledge_source_ids,available_at FROM lingxios_ingress_outbox WHERE channel_id=$1',[room])).rows
     assert.equal(rows.length,1)
-    assert.deepEqual(rows[0].attachment_client_msg_nos,[first.clientMsgNo,last.clientMsgNo])
+    assert.deepEqual(rows[0].knowledge_source_ids,[])
     assert.ok(rows[0].available_at)
     const input = { companyId,agentId,channelId: room,clientMsgNo: last.clientMsgNo }
     const accepted = await receiveAgentRequest(input)
     assert.ok('runs' in accepted && accepted.runs.length === 1)
     const run = (await pool.query('SELECT meta FROM lingxios.agent_work_items WHERE id=$1',[accepted.runs[0].runId])).rows[0]
-    assert.equal(run.meta.text,last.payload.body)
+    assert.equal(run.meta.text,nativeText(last.payload))
     assert.equal(run.meta.deliveryMode,'auto')
     assert.deepEqual(run.meta.attachments.map((item: { text: string }) => item.text),[text,text])
     await receiveAgentRequest(input)
     assert.equal(Number((await pool.query('SELECT count(*) FROM lingxios.agent_work_items WHERE id=$1',[accepted.runs[0].runId])).rows[0].count),1)
     const followup: ImMessageEnvelope = { ...last,clientMsgNo: `${room}-followup`,messageId: `${room}-followup`,messageSeq: 3,
-      payload: { version: 1,kind: 'text',clientMsgNo: `${room}-followup`,body: 'Explain the recorded value.',data: { mentionedIds: [agentId] } } }
+      payload: createNativeMessage({ id: `${room}-followup`, role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'Explain the recorded value.' }], custom: { ...{ mentionedIds: [agentId] } } }) }
     history.push(followup)
     const next = await receiveAgentRequest({ ...input,clientMsgNo: followup.clientMsgNo })
     assert.ok('runs' in next && next.runs.length === 1)
     const nextMeta = (await pool.query('SELECT meta FROM lingxios.agent_work_items WHERE id=$1',[next.runs[0].runId])).rows[0].meta
     assert.equal(nextMeta.attachments.length,2)
     await assert.rejects(receiveAgentRequest({ ...input,companyId: 'different-tenant' }),/unavailable/)
-    await assert.rejects(readRequestAttachments(history,[first.clientMsgNo],'different-tenant',signal,new Set()),/invalid committed attachment/)
-    assert.deepEqual(selectRequestAttachments(followup,[],[{ ...first,fromUid: 'other' },{ ...last,channelId: 'other' }]),[])
-    assert.equal((await readRequestAttachments(history,[first.clientMsgNo],companyId,signal,new Set([first.clientMsgNo])))[0].contentStatus,'unavailable')
-    await pool.query(`INSERT INTO knowledge_sources(id,company_id,project_id,conversation_id,title,kind,status,visibility_scope,owner_user_id,created_by_user_id,created_via,origin_client_msg_no)
-      VALUES($1,$2,$3,$4,'Private source','text','ready','PRIVATE','test-owner','test-owner','USER',$5)`,[`${room}-source`,companyId,projectId,room,first.clientMsgNo])
-    assert.equal((await unavailableAttachmentIds(pool,companyId,room,[first.clientMsgNo],['test-owner','other-reader'])).has(first.clientMsgNo),true)
+    await assert.rejects(readRequestAttachments(history,[refs[0]],'different-tenant',signal,new Set()),/attachment is unavailable/)
+    assert.deepEqual(selectRequestAttachments(followup,[],[{ ...last,fromUid: 'other' },{ ...last,channelId: 'other' }]),[])
+    assert.equal((await readRequestAttachments(history,[refs[0]],companyId,signal,new Set([JSON.stringify([refs[0].clientMsgNo,refs[0].attachmentId])])))[0].contentStatus,'unavailable')
+    await pool.query(`INSERT INTO knowledge_sources(id,company_id,project_id,conversation_id,title,kind,status,visibility_scope,owner_user_id,created_by_user_id,created_via,origin_client_msg_no,origin_attachment_id)
+      VALUES($1,$2,$3,$4,'Private source','text','ready','PRIVATE','test-owner','test-owner','USER',$5,$6)`,[`${room}-source`,companyId,projectId,room,refs[0].clientMsgNo,refs[0].attachmentId])
+    assert.equal((await unavailableAttachmentIds(pool,companyId,room,[refs[0]],['test-owner','other-reader'])).has(JSON.stringify([refs[0].clientMsgNo,refs[0].attachmentId])),true)
     await pool.query(`INSERT INTO conversation_source_exclusions(conversation_id,source_id,user_id) VALUES($1,$2,'test-owner')`,[room,`${room}-source`])
-    assert.equal((await unavailableAttachmentIds(pool,companyId,room,[first.clientMsgNo],['test-owner'])).has(first.clientMsgNo),true)
+    assert.equal((await unavailableAttachmentIds(pool,companyId,room,[refs[0]],['test-owner'])).has(JSON.stringify([refs[0].clientMsgNo,refs[0].attachmentId])),true)
   }
 })
 

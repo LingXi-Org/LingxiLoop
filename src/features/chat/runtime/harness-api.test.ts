@@ -1,15 +1,16 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 import { AssistantTransportEncoder, AssistantStream, type AssistantStreamChunk } from 'assistant-stream'
+import { createNativeMessage } from '@/lib/nativeMessage'
 import { createRunView } from '@lyyzka/lingxios/ui'
 import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 
 // Failure cases: tenant/project headers missing, native decoder bypassed, no DONE,
 // old named-event protocol accepted, cancellation swallowed, body replay via HTTP.
 test('run API consumes only assistant transport and reads the same projected snapshot', async () => {
-  const snapshot: AgentRunSnapshot = { runId: 'run', createdAt: null, view: { ...createRunView('run'), lifecycle: 'leased' },
-    content: [{ type: 'text', text: '第一段' }], status: { type: 'running' }, tools: [], memory: null,
-    canControl: true, error: null, sourceRef: null }
+  const snapshot: AgentRunSnapshot = { message: createNativeMessage({ id: 'run-run', role: 'assistant',
+    content: [{ type: 'text', text: '第一段' }], status: { type: 'running' },
+    custom: { runId: 'run', harness: { ...createRunView('run'), lifecycle: 'leased', artifacts: [] } } }) }
   let protocol: 'native' | 'old' | 'truncated' = 'native'
   let reads = 0
   mock.module('@/api/core/http', { namedExports: { API: '/api', http: async (path: string, init: RequestInit) => {
@@ -28,7 +29,7 @@ test('run API consumes only assistant transport and reads the same projected sna
     if (protocol === 'truncated') return new Response('data: {"type":"update-state","path":[],"operations":[]}\n\n', { headers: { 'content-type': 'text/event-stream' } })
     return AssistantStream.toResponse(new ReadableStream<AssistantStreamChunk>({ start(controller) {
       controller.enqueue({ type: 'update-state', path: [], operations: [{ type: 'set', path: [], value: snapshot as never }] })
-      controller.enqueue({ type: 'update-state', path: [], operations: [{ type: 'append-text', path: ['content', '0', 'text'], value: '继续' }] })
+      controller.enqueue({ type: 'update-state', path: [], operations: [{ type: 'append-text', path: ['message', 'content', '0', 'text'], value: '继续' }] })
       controller.close()
     } }), new AssistantTransportEncoder())
   } } })
@@ -38,7 +39,7 @@ test('run API consumes only assistant transport and reads the same projected sna
   const target = { conversationId: 'room', agentId: 'agent', runId: 'run' }
   const states: AgentRunSnapshot[] = []
   await harnessApi.subscribe(target, state => states.push(state), new AbortController().signal)
-  assert.deepEqual(states.map(state => state.content), [[{ type: 'text', text: '第一段' }], [{ type: 'text', text: '第一段继续' }]])
+  assert.deepEqual(states.map(state => state.message.content), [[{ type: 'text', text: '第一段' }], [{ type: 'text', text: '第一段继续' }]])
   assert.equal(reads, 0)
   assert.deepEqual(await harnessApi.read(target), snapshot)
   for (const value of ['old', 'truncated'] as const) {

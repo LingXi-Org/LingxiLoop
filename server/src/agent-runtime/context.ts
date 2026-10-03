@@ -1,3 +1,4 @@
+import { nativeText } from '../im/message-types.js'
 import { assistantTextViolation } from './assistant-text.js'
 import { productConversationId, bindProductRun, assertFrozenAudience } from './identity.js'
 import { NoEffectError, DefaultRuntimePolicy, type CapabilityGrant, type ContextMessage, type ContextProvider,
@@ -12,7 +13,7 @@ import { loadLearningTurnContext, loadTeacherTurnContext, assertMissionCoordinat
 import { getConversationCanvas, loadCanvasRunContext } from '../modules/canvas/index.js'
 import { assertRoutineRun } from '../modules/routines/public.js'
 import { assignedHandoff } from '../modules/agents/index.js'
-import { unavailableAttachmentIds } from './attachments.js'
+import { unavailableAttachmentIds, parseAttachmentRefId } from './attachments.js'
 import { citationTextViolation } from './citations.js'
 import { IM_CONVERSATION_RULES } from './conversation-style.js'
 import { TEACHER_KNOWLEDGE_ACTIONS } from '../modules/learning/teacher-preset.js'
@@ -52,7 +53,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const attachments = Array.isArray(work.meta?.attachments) ? work.meta.attachments as Array<{ id: string; text?: string }> : []
     if (attachments.some(item => item.text !== undefined)) {
       const denied = await unavailableAttachmentIds(pool,work.tenantId,productConversationId(work),
-        attachments.filter(item => item.text !== undefined).map(item => item.id), await audienceHumanIds({ work,database: pool }))
+        attachments.filter(item => item.text !== undefined).map(item => parseAttachmentRefId(item.id)), await audienceHumanIds({ work,database: pool }))
       if (denied.size) throw new NoEffectError('request attachment access or source selection was revoked','forbidden')
     }
     await bindProductRun(pool, { runId: work.id, tenantId: work.tenantId, agentId: work.agentId, principalId: work.principalId!, sessionId: work.sessionId, ...(work.threadId ? { threadId: work.threadId } : {}) }, productConversationId(work), work.conversation?.internal ?? false)
@@ -96,7 +97,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const readers = await audienceHumanIds({ work,database: pool })
     const attachments = [...request.attachments,...[...(request.inheritedRevisions ?? []),...request.revisions].flatMap(revision => revision.attachments ?? [])]
     const denied = await unavailableAttachmentIds(pool,work.tenantId,productConversationId(work),
-      attachments.filter(item => item.text !== undefined).map(item => item.id),readers)
+      attachments.filter(item => item.text !== undefined).map(item => parseAttachmentRefId(item.id)),readers)
     if (denied.size) throw new NoEffectError('request attachment access or source selection was revoked','forbidden')
     const sourceIds = [...new Set(request.evidence.items.map(item => item.sourceId).filter(id => !id.startsWith('attachment:') && !/^https?:\/\//.test(id)))]
     for (const id of sourceIds) await authorizeAudienceRead({ work,database: pool },{ action: 'knowledge:read',resource: { type: 'knowledge_source',id } })
@@ -127,9 +128,9 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const byId = new Map(actors.rows.map(row => [row.id,row]))
     const messages: ContextMessage[] = history.map(message => ({ ref: message.clientMsgNo, authorId: message.fromUid,
       authorName: byId.get(message.fromUid)?.name ?? message.fromUid, authorKind: byId.get(message.fromUid)?.kind ?? 'system',
-      body: message.payload.body ?? JSON.stringify(message.payload.data ?? {}),
+      body: nativeText(message.payload),
       createdAt: Number.isFinite(message.timestamp) ? new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString() : '',
-      ...(message.payload.replyToClientMsgNo ? { replyToRef: message.payload.replyToClientMsgNo } : {}) }))
+      ...(typeof message.payload.metadata.custom.replyToClientMsgNo === 'string' ? { replyToRef: message.payload.metadata.custom.replyToClientMsgNo } : {}) }))
     if (!messages.some(message => message.ref === work.triggerRef)) {
       const delegation = work.meta?.delegation as { instructionAuthorId?: string } | undefined
       messages.push({ ref: work.triggerRef, authorId: delegation?.instructionAuthorId ?? work.principalId!,
@@ -139,7 +140,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     if (readThroughSeq) await advanceAgentReadReceipt({ companyId: work.tenantId, agentId: work.agentId, channelId: productConversationId(work), workId: work.id, readThroughSeq })
     const knowledgeRetrieval = capabilities.includes('knowledge') ? await retrieveKnowledgeState({ companyId: work.tenantId, conversationId: productConversationId(work),
       authorizationUserId: work.principalId!, audienceUserIds: await audienceHumanIds({ work, database: pool }),
-      query: text, contextQuery: [...recentHistory.map(message => message.payload.body ?? ''),text].join('\n').slice(-8000), limit: 8,
+      query: text, contextQuery: [...recentHistory.map(message => nativeText(message.payload)),text].join('\n').slice(-8000), limit: 8,
       signal, searchTimeoutMs: 5_000 }).catch(error => {
         signal?.throwIfAborted()
         if (!(error instanceof OpenNotebookError)) throw error
