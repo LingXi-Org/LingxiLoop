@@ -9,6 +9,8 @@ import { createNativeMessage } from '../../../src/lib/nativeMessage'
 import { test, before, beforeEach, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { WukongClient, _setWukongClientForTests } from '../im/wukong.js'
 import {
   buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll,
   installFakeWukong,
@@ -84,6 +86,38 @@ test('[integration] retired GET /conversations has no compatibility data plane',
   })
   const raw = await res.text()
   assert.equal(res.status, 404, `${conversationId}: ${raw}`)
+})
+
+test('[integration] channel list survives a durable retired preview through the real IM HTTP client', async t => {
+  // Failure cases: retired previews cause 500, channel/unread state disappears,
+  // or tenant authorization is bypassed while loading IM summaries.
+  const { companyId, projectId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile)
+    VALUES($1,$2,$3::jsonb)`, [conversationId, companyId, JSON.stringify({ channelType: 2 })])
+  const im = createServer(async (request, response) => {
+    const chunks: Buffer[] = []
+    for await (const chunk of request) chunks.push(chunk)
+    assert.equal(request.url, '/conversation/list')
+    assert.equal(JSON.parse(Buffer.concat(chunks).toString()).uid, ME_USER_ID)
+    response.setHeader('content-type', 'application/json')
+    response.end(JSON.stringify({ done: true, conversations: [{ channel_id: conversationId, channel_type: 2,
+      unread: 3, last_message: { payload: Buffer.from(JSON.stringify({ type: 1, content: 'retired fixture' })).toString('base64') } }] }))
+  })
+  await new Promise<void>(resolve => im.listen(0, '127.0.0.1', resolve))
+  const address = im.address(); assert.ok(address && typeof address === 'object')
+  _setWukongClientForTests(new WukongClient({ apiUrl: `http://127.0.0.1:${address.port}`, wsUrl: 'ws://unused', apiToken: 'fixture', webhookSecret: 'fixture' }))
+  t.after(async () => { installFakeWukong(); await new Promise<void>(resolve => im.close(() => resolve())) })
+  const headers = { 'x-company-id': companyId, 'x-project-id': projectId }
+  const response = await fetch(`${baseUrl}/api/im/channels`, { headers })
+  assert.equal(response.status, 200, await response.clone().text())
+  const channels = await response.json() as Array<{ id: string; title: string; unreadCount: number; lastMessage: unknown }>
+  assert.deepEqual(channels.map(({ id, title, unreadCount, lastMessage }) => ({ id, title, unreadCount, lastMessage })),
+    [{ id: conversationId, title: 'Ada', unreadCount: 3, lastMessage: null }])
+  const denied = await fetch(`${baseUrl}/api/im/channels`, { headers: { ...headers, 'x-company-id': 'outside-company' } })
+  assert.equal(denied.status, 403)
+  await mkdir('artifacts/im-channels', { recursive: true })
+  await writeFile('artifacts/im-channels/retired-preview.json', JSON.stringify({ passed: true,
+    checks: ['real-http-client', 'channels-200', 'channel-and-unread-preserved', 'retired-preview-null', 'tenant-isolation'] }, null, 2))
 })
 
 test('[integration] GET /search uses the same perspective-specific direct title', async () => {

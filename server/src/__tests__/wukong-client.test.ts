@@ -9,6 +9,31 @@ import { WukongClient } from '../im/wukong.js'
 const originalFetch = globalThis.fetch
 afterEach(() => { globalThis.fetch = originalFetch })
 
+// Failure cases: a retired preview breaks the whole list, unread/channel state is
+// lost, native previews change, or malformed native messages stop being rejected.
+test('conversation summaries tolerate unsupported previews without weakening native validation', async () => {
+  const payload = createNativeMessage({ id: 'native-preview', role: 'user', content: [{ type: 'text', text: 'hello' }] })
+  const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64')
+  let encoded = encode({ type: 1, content: 'retired fixture' })
+  globalThis.fetch = async () => Response.json({ done: true, conversations: [
+    { channel_id: 'old', channel_type: 2, unread: 3, active_at: 100, last_message: { payload: encoded } },
+    { channel_id: 'native', channel_type: 2, unread: 1, active_at: 200, last_message: {
+      message_idstr: 'wk-native', message_seq: 9, client_msg_no: payload.id, from_uid: 'sender',
+      server_timestamp_ms: 200000, payload: encode({ type: 1001, ...payload }),
+    } },
+  ] })
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  assert.deepEqual(await client.listConversations('student'), [
+    { channelId: 'old', channelType: 2, unread: 3, activeAt: 100, lastMessage: null },
+    { channelId: 'native', channelType: 2, unread: 1, activeAt: 200, lastMessage: {
+      messageId: 'wk-native', messageSeq: 9, clientMsgNo: payload.id, channelId: 'native', channelType: 2,
+      fromUid: 'sender', timestamp: 200, payload,
+    } },
+  ])
+  encoded = encode({ type: 1001, id: 'invalid-native' })
+  await assert.rejects(() => client.listConversations('student'))
+})
+
 test('WuKong channel reconciliation uses the v3 integer-switch contract', async () => {
   let body: Record<string, unknown> = {}
   globalThis.fetch = async (_input, init) => {

@@ -117,12 +117,15 @@ export class WukongClient {
         let lastMessage: ImMessage | null = null
         if (Object.keys(last).length > 0) {
           const encoded = typeof last.payload === 'string' ? last.payload : ''
-          const payload = decodeNativePayload(encoded)
-          lastMessage = {
-            messageId: String(last.message_idstr ?? last.message_id ?? ''),
-            messageSeq: Number(last.message_seq ?? 0), clientMsgNo: String(last.client_msg_no ?? ''),
-            channelId, channelType, fromUid: String(last.from_uid ?? ''),
-            timestamp: Math.floor(Number(last.server_timestamp_ms ?? 0) / 1000), payload,
+          const { type, ...payload } = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))
+          // Durable IM can retain retired message types; they have no native preview.
+          if (type === NATIVE_MESSAGE_CONTENT_TYPE) {
+            lastMessage = {
+              messageId: String(last.message_idstr ?? last.message_id ?? ''),
+              messageSeq: Number(last.message_seq ?? 0), clientMsgNo: String(last.client_msg_no ?? ''),
+              channelId, channelType, fromUid: String(last.from_uid ?? ''),
+              timestamp: Math.floor(Number(last.server_timestamp_ms ?? 0) / 1000), payload: nativeMessageSchema.parse(payload),
+            }
           }
         }
         collected.set(`${channelId}:${channelType}`, {
