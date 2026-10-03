@@ -112,6 +112,34 @@ test('WuKong history starts at the latest page and walks older pages without ove
   assert.equal(calls, 3)
 })
 
+// Failure cases: retired records poison history, filtering truncates a page or
+// loses older native messages, a repeated cursor loops, or native validation loosens.
+test('WuKong history fills native pages across retired records without overlap', async () => {
+  const calls: Array<{ start_message_seq: number; limit: number }> = []
+  const rows = Array.from({ length: 9 }, (_, index) => {
+    const sequence = index + 1
+    const payload = sequence % 3 === 1 ? { type: 1001, ...createNativeMessage({ id: String(sequence), role: 'user',
+      content: [{ type: 'text', text: `native-${sequence}` }] }) } : { type: 1, content: 'retired fixture' }
+    return { message_seq: sequence, payload: Buffer.from(JSON.stringify(payload)).toString('base64') }
+  })
+  globalThis.fetch = async (_input, init) => {
+    const input = JSON.parse(String(init?.body))
+    calls.push(input)
+    return Response.json({ messages: rows.filter(row => !input.start_message_seq || row.message_seq <= input.start_message_seq).slice(-input.limit) })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  const latest = await client.syncMessages('study', 2, 2, 'student')
+  const older = await client.syncMessages('study', 2, 2, 'student', latest[0].messageSeq)
+  assert.deepEqual([latest.map(message => message.messageSeq), older.map(message => message.messageSeq)], [[4, 7], [1]])
+  assert.ok(calls.every((input, index) => index === 0 || input.start_message_seq < calls[index - 1].start_message_seq || calls[index - 1].start_message_seq === 0))
+  globalThis.fetch = async () => Response.json({ messages: [rows[0], rows[1]].map(row => ({ ...row,
+    message_seq: 9, payload: Buffer.from(JSON.stringify({ type: 1 })).toString('base64') })) })
+  await assert.rejects(() => client.syncMessages('study', 2, 2), /cursor did not advance/)
+  globalThis.fetch = async () => Response.json({ messages: [{ message_seq: 1,
+    payload: Buffer.from(JSON.stringify({ type: 1001, id: 'invalid-native' })).toString('base64') }] })
+  await assert.rejects(() => client.syncMessages('study', 2))
+})
+
 test('WuKong history repairs authoritative membership once before retrying', async () => {
   const calls: Array<{ url: string; body: Record<string, unknown> }> = []
   globalThis.fetch = async (input, init) => {

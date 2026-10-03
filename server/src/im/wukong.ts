@@ -117,14 +117,14 @@ export class WukongClient {
         let lastMessage: ImMessage | null = null
         if (Object.keys(last).length > 0) {
           const encoded = typeof last.payload === 'string' ? last.payload : ''
-          const { type, ...payload } = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))
+          const payload = storedNativePayload(encoded)
           // Durable IM can retain retired message types; they have no native preview.
-          if (type === NATIVE_MESSAGE_CONTENT_TYPE) {
+          if (payload) {
             lastMessage = {
               messageId: String(last.message_idstr ?? last.message_id ?? ''),
               messageSeq: Number(last.message_seq ?? 0), clientMsgNo: String(last.client_msg_no ?? ''),
               channelId, channelType, fromUid: String(last.from_uid ?? ''),
-              timestamp: Math.floor(Number(last.server_timestamp_ms ?? 0) / 1000), payload: nativeMessageSchema.parse(payload),
+              timestamp: Math.floor(Number(last.server_timestamp_ms ?? 0) / 1000), payload,
             }
           }
         }
@@ -177,48 +177,66 @@ export class WukongClient {
       throw new Error('message sync cursor must be a non-negative safe integer')
     }
     if (beforeMessageSeq === 1) return []
+    const syncSignal = AbortSignal.any([AbortSignal.timeout(15_000), ...[this.signal, signal].filter((value): value is AbortSignal => !!value)])
+    let cursor = beforeMessageSeq
+    const collected: ImMessage[] = []
+    let pageLimit = limit
     const requestMessages = () => this.request<unknown>('/channel/messagesync', {
-      signal,
+      signal: syncSignal,
       method: 'POST', body: JSON.stringify({
         login_uid: loginUid,
         channel_id: channelId,
         channel_type: channelType,
-        start_message_seq: beforeMessageSeq ? beforeMessageSeq - 1 : 0,
+        start_message_seq: cursor ? cursor - 1 : 0,
         end_message_seq: 0,
-        limit,
+        limit: pageLimit,
         pull_mode: 0,
       }),
     })
-    let value: unknown
-    try {
-      value = await requestMessages()
-    } catch (error) {
-      if (repairProfile && isMissingChannelMembership(error)) {
-        await this.upsertChannel(repairProfile)
+    let repaired = false
+    while (collected.length < limit) {
+      syncSignal.throwIfAborted()
+      pageLimit = limit - collected.length
+      let value: unknown
+      try {
         value = await requestMessages()
-      } else {
-        // An empty channel has no sync state yet; expose it as an empty history.
-        if (isEmptyChannelResult(error)) return []
-        throw error
+      } catch (error) {
+        if (!repaired && repairProfile && isMissingChannelMembership(error)) {
+          repaired = true
+          await this.upsertChannel(repairProfile)
+          value = await requestMessages()
+        } else {
+          // An empty channel has no sync state yet; expose it as an empty history.
+          if (isEmptyChannelResult(error)) break
+          throw error
+        }
       }
+      const root = jsonRecord(value)
+      const list = Array.isArray(value) ? value : Array.isArray(root.messages) ? root.messages : []
+      const messages = list.flatMap((raw): ImMessage[] => {
+        const item = jsonRecord(raw)
+        const encoded = typeof item.payload === 'string' ? item.payload : ''
+        const payload = storedNativePayload(encoded)
+        if (!payload) return []
+        return [{
+          messageId: String(item.message_idstr ?? item.message_id ?? item.messageId ?? ''),
+          messageSeq: Number(item.message_seq ?? item.messageSeq ?? 0),
+          clientMsgNo: String(item.client_msg_no ?? item.clientMsgNo ?? ''),
+          channelId: String(item.channel_id ?? item.channelId ?? channelId),
+          channelType: Number(item.channel_type ?? item.channelType ?? channelType),
+          fromUid: String(item.from_uid ?? item.fromUid ?? ''),
+          timestamp: Number(item.timestamp ?? 0),
+          payload,
+        }]
+      })
+      collected.unshift(...messages)
+      if (collected.length >= limit || list.length < pageLimit) break
+      const next = Math.min(...list.map(raw => Number(jsonRecord(raw).message_seq ?? jsonRecord(raw).messageSeq ?? 0)))
+      if (!Number.isSafeInteger(next) || next < 1 || cursor && next >= cursor) throw new Error('message history cursor did not advance')
+      if (next === 1) break
+      cursor = next
     }
-    const root = jsonRecord(value)
-    const list = Array.isArray(value) ? value : Array.isArray(root.messages) ? root.messages : []
-    return list.map((raw) => {
-      const item = jsonRecord(raw)
-      const encoded = typeof item.payload === 'string' ? item.payload : ''
-      const payload = decodeNativePayload(encoded)
-      return {
-        messageId: String(item.message_idstr ?? item.message_id ?? item.messageId ?? ''),
-        messageSeq: Number(item.message_seq ?? item.messageSeq ?? 0),
-        clientMsgNo: String(item.client_msg_no ?? item.clientMsgNo ?? ''),
-        channelId: String(item.channel_id ?? item.channelId ?? channelId),
-        channelType: Number(item.channel_type ?? item.channelType ?? channelType),
-        fromUid: String(item.from_uid ?? item.fromUid ?? ''),
-        timestamp: Number(item.timestamp ?? 0),
-        payload,
-      }
-    })
+    return collected
   }
 
   verifyWebhook(rawBody: Buffer, signature: string | undefined, token?: string): boolean {
@@ -256,7 +274,12 @@ export function wukongClient(signal?: AbortSignal): WukongClient {
 export function _setWukongClientForTests(client: WukongClient | null): void { singleton = client }
 
 export function decodeNativePayload(encoded: string): NativeMessage {
+  const payload = storedNativePayload(encoded)
+  if (!payload) throw new Error('Unsupported message protocol')
+  return payload
+}
+
+function storedNativePayload(encoded: string): NativeMessage | null {
   const { type, ...payload } = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))
-  if (type !== NATIVE_MESSAGE_CONTENT_TYPE) throw new Error('Unsupported message protocol')
-  return nativeMessageSchema.parse(payload)
+  return type === NATIVE_MESSAGE_CONTENT_TYPE ? nativeMessageSchema.parse(payload) : null
 }
