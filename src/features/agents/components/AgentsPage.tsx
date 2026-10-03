@@ -1,4 +1,8 @@
 import { Avatar } from '@/components/Avatar'
+import { useState } from 'react'
+import { SkeletonRegion } from '@/components/ResourceSkeleton'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import type { AgentCapability, Status } from '@/types'
@@ -9,8 +13,15 @@ const STATUS: Record<Status, string> = { avail: '可用', working: '工作中', 
 const CAPABILITIES: Record<AgentCapability, string> = { canvas: '共享画布', web: '网页研究', files: '文件', email: '邮件', documents: '文档', calendar: '日历', knowledge: '知识库', learning: '学习辅导', teacher_admin: '教学管理', handoffs: '协作交接', routines: '定时任务' }
 const ORDER = ['nova', 'sage', 'milo', 'trace', 'scout', 'forge', 'pulse']
 
+export function AgentsSkeleton() {
+  return <SkeletonRegion label="正在加载智能体" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    {Array.from({ length: 6 }, (_, index) => <div key={index} className="space-y-4 rounded-lg border bg-background p-5"><div className="flex items-center gap-3"><Skeleton className="size-12 shrink-0 rounded-full" /><Skeleton className="h-5 w-24" /><Skeleton className="ms-auto h-6 w-12" /></div><Skeleton className="h-4 w-1/2" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-4/5" /><Skeleton className="h-3 w-20" /></div>)}
+  </SkeletonRegion>
+}
+
 export function AgentsPage() {
-  const { byId, loaded, error, load } = useParticipants()
+  const { byId, loaded, error, load, refresh } = useParticipants()
+  const [retrying, setRetrying] = useState(false)
   const agents = Object.values(byId).filter(agent => agent.kind === 'agent' && !agent.departedAt)
     .sort((a, b) => (ORDER.indexOf(a.presetKey ?? '') < 0 ? 99 : ORDER.indexOf(a.presetKey!)) - (ORDER.indexOf(b.presetKey ?? '') < 0 ? 99 : ORDER.indexOf(b.presetKey!)))
   return <div className="flex h-full min-h-0 min-w-0 flex-col" data-page="agents">
@@ -19,10 +30,10 @@ export function AgentsPage() {
       {loaded && !error && <span className="rounded-full border bg-muted/40 px-3 py-1 text-xs text-muted-foreground">{agents.length} 位团队成员</span>}
     </header>
     <section aria-label="智能体列表" className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-muted/20 p-4 md:p-6">
-      {!loaded && <p role="status" className="p-3 text-sm text-muted-foreground">正在加载智能体…</p>}
-      {error && <div role="alert" className="p-3 text-sm text-destructive">{error}<Button variant="outline" onClick={() => void load()}>重试</Button></div>}
-      {loaded && !error && !agents.length && <p className="p-3 text-sm text-muted-foreground">当前工作区暂无可用智能体。</p>}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {!loaded && !error && <AgentsSkeleton />}
+      {error && <div role="alert" className="ui-enter mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/20 p-4 text-sm text-destructive">{error}<Button variant="outline" disabled={retrying} onClick={() => { setRetrying(true); void (agents.length ? refresh() : load()).finally(() => setRetrying(false)) }}>{retrying ? '重试中…' : '重试'}</Button></div>}
+      {loaded && !error && !agents.length && <Empty><EmptyHeader><EmptyTitle>暂无可用智能体</EmptyTitle><EmptyDescription>当前工作区的智能体会显示在这里。</EmptyDescription></EmptyHeader></Empty>}
+      <div className="ui-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy={retrying}>
         {agents.map(agent => <Dialog key={agent.id}>
           <DialogTrigger asChild>
             <button type="button" aria-label={`查看${agent.name}的资料`} className="flex min-w-0 flex-col rounded-lg border bg-background p-5 text-start outline-none transition-colors hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none">

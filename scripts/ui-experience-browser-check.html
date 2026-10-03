@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content" /><title>UI 体验本地验收</title></head>
+<body><div id="root"></div><script>
+// This page must never reach an API proxy. Only explicit local fixtures may respond.
+window.fetch = async () => new Response(JSON.stringify({error:'本地验收：未配置此请求'}), {status:503,headers:{'content-type':'application/json'}});
+XMLHttpRequest.prototype.send = function () { throw new Error('Local UI check blocks XHR'); };
+</script><script type="module" src="/scripts/ui-experience-browser-check.tsx"></script></body></html>

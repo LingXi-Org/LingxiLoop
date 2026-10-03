@@ -76,7 +76,9 @@ export const useCanvas = create<CanvasState>((set, get) => ({
   load: async (canvasId) => {
     const epoch = ++canvasRequestEpoch
     const scope = canvasScope()
-    set({ loading: true, error: null })
+    const targetId = canvasId ?? get().activeCanvasId
+    set((state) => ({ loading: true, error: null, activeCanvasId: targetId,
+      snapshot: targetId && state.snapshot?.id !== targetId ? state.previews[targetId] ?? null : state.snapshot }))
     try {
       const snapshot = await canvasApi.getCanvas(canvasId ?? get().activeCanvasId ?? undefined)
       if (epoch !== canvasRequestEpoch || scope !== canvasScope()) return

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { contextThreadsApi } from '@/features/context-threads/api'
-import { motion, useMotionValue, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useTransform, useReducedMotion } from 'framer-motion'
 import { useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { IMail } from '@/components/icons'
@@ -49,6 +49,7 @@ export function ParticipantProfile({
   const meId = useMe()
   const selectConversation = useApp((state) => state.selectConversation)
   const setView = useApp((state) => state.setView)
+  const reduceMotion = useReducedMotion()
   const scrollTop = useMotionValue(0)
   const compactOpacity = useTransform(scrollTop, [36, 92], [0, 1])
   const heroScale = useTransform(scrollTop, [0, 120], [1, 0.78])
@@ -121,7 +122,7 @@ export function ParticipantProfile({
           style={{ opacity: heroOpacity }}
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,var(--sky2-100),transparent_72%)]" />
-          <motion.div style={{ scale: heroScale, y: heroY }} className="relative mx-auto mb-3 w-fit origin-top">
+          <motion.div style={reduceMotion ? undefined : { scale: heroScale, y: heroY }} className="relative mx-auto mb-3 w-fit origin-top">
             <Avatar p={participant} size={96} ringColor="var(--panel)" />
           </motion.div>
           <h2 className="relative truncate text-[25px] font-semibold tracking-[-0.025em] text-ink">{participant.name}</h2>

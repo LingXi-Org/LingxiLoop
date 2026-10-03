@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { DashboardSkeleton } from './DashboardSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from '@/components/ui/sidebar'
@@ -16,7 +16,7 @@ export function PersonalDashboard({ view, space, loading, error, onRetry }: {
   error: string
   onRetry(): void
 }) {
-  if (loading) return <ResourceSkeleton variant="detail" label="正在加载学习空间" className="p-6" />
+  if (loading && !error) return <DashboardSkeleton view={view} perspective={space?.perspective} />
   if (!space) return error ? (
     <div className="p-6"><Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button variant="outline" size="sm" onClick={onRetry}>重试</Button></AlertDescription></Alert></div>
   ) : (

@@ -72,7 +72,7 @@ function CanvasTimeline({ onFocusFrame }: { onFocusFrame: (frameId: string) => v
   const scrollTimeline = (direction: -1 | 1) => {
     const timeline = timelineRef.current
     if (!timeline) return
-    timeline.scrollBy({ left: direction * Math.max(180, timeline.clientWidth * 0.72), behavior: 'smooth' })
+    timeline.scrollBy({ left: direction * Math.max(180, timeline.clientWidth * 0.72), behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
   }
   if (snapshot.assignments.length === 0) return <div data-canvas-timeline data-canvas-timeline-state="empty" className="canvas-timeline-shell flex min-w-0 flex-1 items-center justify-center rounded-xl border bg-card px-4 text-muted-foreground shadow-sm">
     <span className="size-1.5 rounded-full bg-muted-foreground/40" aria-hidden />

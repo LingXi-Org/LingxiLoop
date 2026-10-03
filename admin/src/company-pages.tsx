@@ -8,12 +8,16 @@ import { confirmSensitiveAction } from '@/lib/confirmAction'
 import type { ApiCompanyMember } from '@/features/companies/contracts'
 import { adminFetch, refreshManagementSession, useManagementSession } from './api'
 import { recordPath } from './workspace-model'
+import { AdminMetricsSkeleton } from './loading'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { ErrorPanel } from './pages'
+import { userFacingError } from '@/lib/userFacingError'
 
 export function CompanyDashboard() {
   const session = useManagementSession()
   const result = useCustom<{ companyName: string; metrics: Array<{ label: string; resource: string; value: number }> }>({ url: '/api/control/company/dashboard', method: 'get' })
-  return <section className="space-y-6"><h1 className="text-2xl font-semibold">{session?.companyName} · 本公司概览</h1>
-    {result.query.isError ? <p role="alert">概览暂不可用 <Button onClick={() => void result.query.refetch()}>重试</Button></p> : !result.query.data ? <p aria-busy="true">正在加载…</p> : <div className="admin-kpi-grid">{result.query.data.data.metrics.map(metric => <Card key={metric.resource}><CardContent className="py-6"><Link to={recordPath(metric.resource)}><p>{metric.label}</p><strong className="text-3xl">{metric.value}</strong></Link></CardContent></Card>)}</div>}
+  return <section className="ui-enter space-y-6" aria-busy={result.query.isFetching}><h1 className="text-2xl font-semibold">{session?.companyName} · 本公司概览</h1>
+    {result.query.isError && <ErrorPanel message="概览刷新失败" retry={() => void result.query.refetch()} />}{!result.query.data ? (result.query.isError ? null : <AdminMetricsSkeleton />) : <div className="ui-stagger admin-kpi-grid">{result.query.data.data.metrics.map(metric => <Card key={metric.resource}><CardContent className="py-6"><Link to={recordPath(metric.resource)}><p>{metric.label}</p><strong className="text-3xl">{metric.value}</strong></Link></CardContent></Card>)}</div>}
     {session?.companyId && <Button asChild variant="outline"><Link to={recordPath('companies', session.companyId)}>查看公司资料</Link></Button>}
   </section>
 }
@@ -21,7 +25,7 @@ export function CompanyDashboard() {
 export function CompanyUsage() {
   const result = useCustom<{ calls: number; inputTokens: number; outputTokens: number; costUsd: number }>({ url: '/api/control/company/usage', method: 'get' })
   const usage = result.query.data?.data
-  return result.query.isError ? <p role="alert">用量暂不可用 <Button onClick={() => void result.query.refetch()}>重试</Button></p> : !usage ? <p aria-busy="true">正在加载…</p> : <div className="admin-kpi-grid">{[['调用次数', usage.calls], ['输入 Token', usage.inputTokens], ['输出 Token', usage.outputTokens], ['费用（USD）', usage.costUsd]].map(([label, value]) => <Card key={label}><CardContent className="py-6"><p>{label}</p><strong className="text-2xl">{Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 6 })}</strong></CardContent></Card>)}</div>
+  return <>{result.query.isError && <ErrorPanel message="用量刷新失败" retry={() => void result.query.refetch()} />}{!usage ? (result.query.isError ? null : <AdminMetricsSkeleton />) : <div className="ui-stagger admin-kpi-grid">{[['调用次数', usage.calls], ['输入 Token', usage.inputTokens], ['输出 Token', usage.outputTokens], ['费用（USD）', usage.costUsd]].map(([label, value]) => <Card key={label}><CardContent className="py-6"><p>{label}</p><strong className="text-2xl">{Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 6 })}</strong></CardContent></Card>)}</div>}</>
 }
 
 export function CompanyProfileEdit({ id, name, description }: { id: string; name: string; description: string }) {
@@ -46,17 +50,17 @@ export function CompanyMembers() {
   const run = async (work: () => Promise<unknown>) => {
     setBusy(true); setError('')
     try { await work(); await refreshManagementSession(); await invalidate({ invalidates: ['all'] }) }
-    catch (reason) { setError(reason instanceof Error ? reason.message : (reason as { message?: string }).message ?? '操作失败') }
+    catch (reason) { setError(userFacingError(reason, '操作失败，请稍后重试。')) }
     finally { setBusy(false) }
   }
-  return <section className="space-y-6"><h1 className="text-2xl font-semibold">公司成员</h1>
+  return <section className="ui-enter space-y-6" aria-busy={result.query.isFetching}><h1 className="text-2xl font-semibold">公司成员</h1>
     {session.capabilities.invite && <form className="flex flex-wrap items-end gap-3" onSubmit={event => {
       event.preventDefault(); const email = new FormData(event.currentTarget).get('email')
       void run(async () => { const invite = await adminFetch<{ url: string }>(`/companies/${encodeURIComponent(companyId)}/invitations`, { method: 'POST', body: JSON.stringify({ email, isAdmin: false, sendEmail: false }) }); setInvitation(invite.url) })
     }}><label className="space-y-2">教师邮箱<Input name="email" type="email" required /></label><Button disabled={busy}>邀请教师</Button></form>}
     {invitation && <label className="block">邀请链接<Input readOnly value={invitation} onFocus={event => event.target.select()} /></label>}
     {error && <p role="alert">{error}</p>}
-    {result.query.isError ? <p role="alert">成员暂不可用 <Button onClick={() => void result.query.refetch()}>重试</Button></p> : !result.query.data ? <p aria-busy="true">正在加载…</p> : <ul className="space-y-3">{result.query.data.data.map(member => <li key={member.id} className="flex flex-wrap items-center gap-3 rounded-xl border p-4">
+    {result.query.isError && <ErrorPanel message="成员刷新失败" retry={() => void result.query.refetch()} />}{!result.query.data ? (result.query.isError ? null : <ResourceSkeleton count={6} label="正在加载公司成员" />) : <ul className="ui-stagger space-y-3">{result.query.data.data.map(member => <li key={member.id} className="flex flex-wrap items-center gap-3 rounded-xl border p-4">
       <div className="min-w-0 flex-1"><Link to={recordPath('users', member.id)} className="font-semibold underline">{member.name}</Link><p className="break-all text-sm">{member.email} · {member.role === 'teacher' ? '教师' : '学生'}{member.isAdmin ? ' · 管理员' : ''}</p></div>
       {member.role === 'teacher' && session.capabilities.updateMember && <Button variant="outline" disabled={busy} onClick={() => void run(async () => {
         if (await confirmSensitiveAction({ title: member.isAdmin ? '撤销管理权限？' : '授予管理权限？', description: `此操作将立即更改 ${member.name} 的公司管理权限。最后一位管理员须先交接。`, confirmLabel: '确认' })) await adminFetch(`/companies/${encodeURIComponent(companyId)}/members/${encodeURIComponent(member.id)}`, { method: 'PATCH', body: JSON.stringify({ isAdmin: !member.isAdmin }) })

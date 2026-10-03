@@ -2,7 +2,7 @@ import { CheckmarkCircle02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight, ClipboardCheck, Users } from 'lucide-react'
 import { useState } from 'react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { OverviewSkeleton } from './LearningSkeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -51,11 +51,11 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
   const [detail, setDetail] = useState<string | null>(null)
 
   if (loading && !data) {
-    return <ResourceSkeleton variant="cards" count={8} label="正在加载课程总览" />
+    return <OverviewSkeleton perspective="teacher" />
   }
   if (!data) {
     return (
-      <div className="grid min-h-64 place-items-center rounded-3xl border border-dashed p-6 text-center">
+      <div role="alert" className="ui-enter grid min-h-64 place-items-center rounded-3xl border border-dashed p-6 text-center">
         <div>
           <p className="text-sm text-muted-foreground">{error || '课程总览暂时不可用。'}</p>
           <Button type="button" variant="outline" className="mt-4" onClick={() => void refresh()}>
@@ -69,8 +69,8 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
   const { summary } = data.overview
   const coverage = summary.learnerCount ? Math.round(summary.learnersWithEvidence / summary.learnerCount * 100) + '%' : '—'
   return (
-    <div className="space-y-4 @min-[48rem]/learning-grid:space-y-6" data-testid="teacher-overview-dashboard" aria-busy={loading}>
-      {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+    <div className="ui-enter space-y-4 @min-[48rem]/learning-grid:space-y-6" data-testid="teacher-overview-dashboard" aria-busy={loading}>
+      {error && <Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button size="sm" variant="outline" disabled={loading} onClick={() => void refresh()}>重试</Button></AlertDescription></Alert>}
       <div className="grid gap-4 @min-[48rem]/learning-grid:grid-cols-12">
         <OverviewChartCard
           title="评价审核" value={summary.pendingReviews + ' 项待审核'} description={'近 ' + data.overview.windowDays + ' 天评价分布 · 点击处理审核'}

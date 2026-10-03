@@ -22,8 +22,14 @@ import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
 import { viewForWorkspace } from '@/features/learning/dashboard/navigation'
-import { SETTINGS_DIALOG_TRIGGER_ID, useSettingsDialog } from '@/features/settings/store'
+import { useSettingsDialog } from '@/features/settings/store'
+import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useEntrance } from '@/hooks/use-entrance'
+import { DashboardSkeleton } from './DashboardSkeleton'
+import { DocumentSkeleton } from '@/features/documents/components/DocumentSkeleton'
+import { CanvasSkeleton } from '@/features/canvas/components/CanvasSkeleton'
+import { PresentationSkeleton } from '@/features/presentations/components/PresentationSkeleton'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
@@ -41,7 +47,6 @@ const CanvasView = lazy(() => import('@/features/canvas/components/CanvasView').
 const CalendarPeekPane = lazy(() => import('@/features/calendar/components/CalendarPeekPane').then((module) => ({ default: module.CalendarPeekPane })))
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
 const PresentationDrawerContent = lazy(() => import('@/features/presentations/components/PresentationDrawerContent').then((module) => ({ default: module.PresentationDrawerContent })))
-const SettingsDialog = lazy(() => import('@/features/settings/SettingsDialog').then((module) => ({ default: module.SettingsDialog })))
 const PersonalDashboard = lazy(() => import('./PersonalDashboard').then((module) => ({ default: module.PersonalDashboard })))
 
 const DESKTOP_SIDEBAR_WIDTH_KEY = 'lingxiloop:desktop-layout:sidebar-width:v1'
@@ -91,6 +96,7 @@ export function DesktopApp() {
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
+  const pageRef = useEntrance(`${selectedWorkspaceId}:${view}`)
 
   useEffect(() => {
     window.lingxiloop?.windowChrome?.setTheme(theme)
@@ -203,7 +209,7 @@ export function DesktopApp() {
     : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
   return (
-    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
+    <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
       {!mobileChatOpen && <WorkspaceRail
           {...learningSpaces}
           onSelect={(space) => void learningSpaces.select(space)}
@@ -215,9 +221,9 @@ export function DesktopApp() {
           {activeWorkspace && <CourseAvatar avatarUrl={activeWorkspace.avatarUrl} courseId={activeWorkspace.courseId ?? activeWorkspace.id} title={activeWorkspace.name} size="sm" className="!size-3 rounded-sm [&_[data-slot=avatar-fallback]]:rounded-sm [&_[data-slot=avatar-image]]:rounded-sm" />}
           <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeProjectName}</span>
         </div>}
-        <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">
+        <div ref={pageRef} data-ui-page={view} className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">
           {view === 'agents' ? <AgentsPage key={selectedWorkspaceId} /> : view === 'mail' ? <MailPage key={selectedWorkspaceId} /> : dashboardOpen ? (
-            <Suspense fallback={<ResourceSkeleton variant="detail" label="正在打开个人面板" />}>
+            <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
               <PersonalDashboard
                 view={view}
                 space={learningSpaces.activeSpace}
@@ -279,7 +285,7 @@ export function DesktopApp() {
             </div>
           </DrawerHeader>}
           <div className="min-h-0 flex-1 overflow-hidden">
-            <Suspense fallback={<div className="h-full p-4"><Button type="button" variant="ghost" onClick={closeDrawer}>关闭</Button><ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} /></div>}>
+            <Suspense fallback={<div className="flex h-full flex-col">{drawerOwnsHeader && <Button type="button" variant="ghost" className="m-2 self-start" onClick={closeDrawer}>关闭</Button>}{documentId ? <DocumentSkeleton /> : presentationId ? <PresentationSkeleton /> : drawerCanvasId ? <CanvasSkeleton /> : <ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} />}</div>}>
               {drawerContent}
             </Suspense>
           </div>
@@ -287,26 +293,17 @@ export function DesktopApp() {
       </Drawer>
 
       <Dialog open={!isMobile && Boolean(canvasId)} onOpenChange={(open) => { if (!open) closeCanvasView() }}>
-        <DialogContent showCloseButton={false} className="h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] max-w-none gap-0 overflow-hidden rounded-2xl bg-card p-0 sm:max-w-none">
+        <DialogContent showCloseButton={false} className="h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none gap-0 overflow-hidden rounded-2xl bg-card p-0 sm:max-w-none">
           <DialogTitle className="sr-only">Canvas</DialogTitle>
           <DialogDescription className="sr-only">协作画布</DialogDescription>
-          <Suspense fallback={<div className="h-full p-4"><Button type="button" variant="ghost" onClick={closeCanvasView}>关闭画布</Button><ResourceSkeleton variant="media" label="正在打开画布" /></div>}>
+          <Suspense fallback={<div className="flex h-full flex-col"><Button type="button" variant="ghost" className="m-2 self-start" onClick={closeCanvasView}>关闭画布</Button><CanvasSkeleton /></div>}>
             {canvasId && <CanvasView canvasId={canvasId} onBack={closeCanvasView} />}
           </Suspense>
         </DialogContent>
       </Dialog>
 
       <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
-      {settingsOpen && <Suspense fallback={<Dialog open onOpenChange={(open) => useSettingsDialog.getState().setOpen(open)}>
-        <DialogContent onCloseAutoFocus={(event) => {
-          event.preventDefault()
-          if (!useSettingsDialog.getState().open) document.getElementById(SETTINGS_DIALOG_TRIGGER_ID)?.focus()
-        }}>
-          <DialogTitle>设置</DialogTitle>
-          <DialogDescription>正在打开设置…</DialogDescription>
-          <ResourceSkeleton variant="detail" label="正在打开设置" />
-        </DialogContent>
-      </Dialog>}><SettingsDialog /></Suspense>}
+      {settingsOpen && <SettingsDialog />}
       <SourceDetailOverlay />
     </div>
   )

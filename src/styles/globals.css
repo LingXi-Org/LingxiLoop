@@ -5,6 +5,7 @@
 @import "./typeset.css";
 @import "./chat.css";
 @import "./generative-ui-elements.css";
+@import "./experience.css";
 @import "shadcn/tailwind.css";
 @source "../../node_modules/streamdown/dist/*.js";
 
@@ -1112,8 +1113,8 @@ input, textarea { font: inherit; }
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.448 0.119 151.328);
-  --primary-foreground: oklch(0.982 0.018 155.826);
+  --primary: oklch(0.723 0.219 149.579);
+  --primary-foreground: oklch(0.266 0.065 152.934);
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.274 0.006 286.033);
@@ -1132,7 +1133,7 @@ input, textarea { font: inherit; }
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.723 0.219 149.579);
-  --sidebar-primary-foreground: oklch(0.982 0.018 155.826);
+  --sidebar-primary-foreground: oklch(0.266 0.065 152.934);
   --sidebar-accent: oklch(0.274 0.006 286.033);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);

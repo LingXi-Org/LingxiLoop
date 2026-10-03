@@ -1,7 +1,7 @@
 import { Archive02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useState } from 'react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { CourseSettingsSkeleton } from './LearningSkeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -60,6 +60,7 @@ export function CourseSettingsSection({ space, section }: { space: LearningSpace
   const [loading, setLoading] = useState(canView)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [revision, setRevision] = useState(0)
 
   useEffect(() => {
     if (!canView || !space.courseId) return
@@ -80,13 +81,13 @@ export function CourseSettingsSection({ space, section }: { space: LearningSpace
     return () => {
       active = false
     }
-  }, [canView, space.courseId])
+  }, [canView, space.courseId, revision])
   if (!canView) {
     return <DashboardSectionFrame space={space} section={frameSection}><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
   }
-  if (loading) return <DashboardSectionFrame space={space} section={frameSection}><ResourceSkeleton variant="detail" label="正在加载课程设置" /></DashboardSectionFrame>
-  if (error || !course) {
-    return <DashboardSectionFrame space={space} section={frameSection}><Alert variant="destructive"><AlertDescription>{error || '课程设置暂不可用。'}</AlertDescription></Alert></DashboardSectionFrame>
+  if (loading && !course) return <DashboardSectionFrame space={space} section={frameSection}><CourseSettingsSkeleton section={section} /></DashboardSectionFrame>
+  if (!course) {
+    return <DashboardSectionFrame space={space} section={frameSection}><Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error || '课程设置暂不可用。'}<Button variant="outline" size="sm" disabled={loading} onClick={() => setRevision(value => value + 1)}>重试</Button></AlertDescription></Alert></DashboardSectionFrame>
   }
 
   const lifecycleAction = course.status === space.status ? space.lifecycleAction : null
@@ -121,6 +122,7 @@ export function CourseSettingsSection({ space, section }: { space: LearningSpace
       space={space}
       section={frameSection}
     >
+        {error && <Alert variant="destructive" className="mb-4"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button size="sm" variant="outline" disabled={loading} onClick={() => setRevision(value => value + 1)}>重试</Button></AlertDescription></Alert>}
         {section === 'profile' && <div className="min-w-0">
           <CourseProfileSettings course={course} canEdit={canEdit} onUpdated={setCourse} />
         </div>}

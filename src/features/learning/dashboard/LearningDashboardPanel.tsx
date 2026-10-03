@@ -59,7 +59,7 @@ function LearningDataSection({ space, section }: { space: LearningSpace; section
     <DashboardSectionFrame space={space} section={section}>
       <div className="space-y-4">
         {error && <Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" disabled={overviewLoading || resourcesLoading} onClick={() => void refreshAll()}>重新加载</Button></AlertDescription></Alert>}
-        {content}
+        {overview || !overviewError ? content : null}
       </div>
     </DashboardSectionFrame>
   )

@@ -39,7 +39,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
+import { DocumentSkeleton } from './DocumentSkeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { uploadsApi } from '@/features/platform/api'
 import { notifyAction, toastAction } from '@/lib/actionToast'
@@ -181,7 +181,7 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
     </div>
   )
   if (!user || !session) return (
-    <div className="grid h-full gap-4 p-6" role="status" aria-label="正在加载文档编辑器"><span className="sr-only">正在加载文档编辑器</span><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-full min-h-64 rounded-4xl" /></div>
+    <DocumentSkeleton />
   )
 
   const commitTitle = async () => {
@@ -196,7 +196,7 @@ export function DocumentEditor({ documentId, variant = 'full', onClose, onOpenFu
   const isPeek = variant === 'peek'
 
   return (
-    <div className="flex h-full flex-col bg-card text-card-foreground">
+    <div className="ui-enter flex h-full flex-col bg-card text-card-foreground">
       <header
         className={cn(
           'flex min-w-0 items-center gap-2.5 border-b border-[var(--im-divider-weak)]',

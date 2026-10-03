@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { AuthGate } from '@/components/AuthGate'
+import { WorkspaceSkeleton } from '@/components/WorkspaceSkeleton'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { NotificationToasts } from '@/components/NotificationToasts'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -13,10 +14,6 @@ import { usePrefs } from '@/stores/preferences'
 import { consumeInviteFromUrl, InviteAcceptScreen } from '@/features/companies/components/InviteAcceptScreen'
 
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
-
-function SurfaceFallback() {
-  return <div className="fixed inset-0 grid place-items-center bg-background text-sm text-muted-foreground">正在打开 LingxiLoop…</div>
-}
 
 function AuthedApp() {
   const convoId = useApp((s) => s.selectedConversationId)
@@ -59,7 +56,7 @@ function AuthedApp() {
 
   return (
     <TooltipProvider delayDuration={120}>
-      <Suspense fallback={<SurfaceFallback />}><DesktopApp /></Suspense>
+      <Suspense fallback={<WorkspaceSkeleton />}><DesktopApp /></Suspense>
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}

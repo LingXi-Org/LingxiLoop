@@ -3,6 +3,7 @@ import { recordPath } from './workspace-model'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { userFacingError } from '@/lib/userFacingError'
 import { adminFetch } from './api'
 
 export function EducationPage() {
@@ -20,7 +21,7 @@ export function EducationPage() {
       void adminFetch<{ companyId: string; invitation: { url: string } | null }>('/control/platform/education-companies', {
         method: 'POST', body: JSON.stringify({ name: data.get('name'), slug: data.get('slug'), initialAdminEmail: data.get('email'), planId: 'plan-education', idempotencyKey,
           contract: { startsAt: new Date(String(data.get('startsAt'))).toISOString(), endsAt: new Date(String(data.get('endsAt'))).toISOString(), seatLimit: Number(data.get('seats')), config: {} } }),
-      }).then(setResult).catch((reason) => setError(reason.message ?? '创建失败')).finally(() => setBusy(false))
+      }).then(setResult).catch((reason) => setError(userFacingError(reason, '创建失败，请稍后重试。'))).finally(() => setBusy(false))
     }}>
       <label className="block space-y-1">公司名称<Input name="name" required maxLength={100} /></label>
       <label className="block space-y-1">公司标识<Input name="slug" required minLength={3} maxLength={80} pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="example-school" /></label>

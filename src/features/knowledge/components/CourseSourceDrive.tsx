@@ -1,7 +1,7 @@
 import { Folder01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { SourceFoldersSkeleton } from './SourceSkeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -28,6 +28,7 @@ export function CourseSourceDrive({ space }: { space: LearningSpace }) {
   const [members, setMembers] = useState<ApiCourseMember[]>([])
   const [openFolderId, setOpenFolderId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
   const reviewMode = space.perspective === 'teacher'
 
@@ -47,6 +48,7 @@ export function CourseSourceDrive({ space }: { space: LearningSpace }) {
         setSources(await knowledgeApi.listProjectSources(space.projectId))
         setMembers([])
       }
+      setLoaded(true)
     } catch (reason) {
       setError(userFacingError(reason, '班级资料暂时无法加载，请稍后重试。'))
     } finally {
@@ -108,15 +110,16 @@ export function CourseSourceDrive({ space }: { space: LearningSpace }) {
     breadcrumb={openFolder ? { root: '班级资料', current: openFolder.name, onBack: closeFolder } : undefined}
   >
     {openFolder ? <ProjectSourceLibrary
+      key={`${space.projectId}:${openFolder.id}:${reviewMode}`}
       projectId={space.projectId}
       canManage={space.canManage}
       visibilityScope={openFolder.visibilityScope}
       ownerUserId={openFolder.ownerUserId}
       readOnly={openFolder.readOnly}
       reviewMode={reviewMode}
-    /> : loading ? <ResourceSkeleton variant="cards" count={4} label="正在加载班级资料" /> : error ? (
+    /> : loading && !loaded ? <SourceFoldersSkeleton /> : error && !loaded ? (
       <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" onClick={() => void load()}>重新加载</Button></AlertDescription></Alert>
-    ) : <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    ) : <>{error && <Alert variant="destructive" className="mb-4"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button variant="outline" size="sm" disabled={loading} onClick={() => void load()}>重试</Button></AlertDescription></Alert>}<div aria-busy={loading} className="ui-stagger grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {folders.map((folder) => <Card key={folder.id} size="sm" className="min-h-56 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg focus-within:ring-2 focus-within:ring-ring">
         <button type="button" className="flex h-full w-full flex-col items-start gap-4 px-5 py-5 text-start outline-none" onClick={() => setOpenFolderId(folder.id)}>
           <span className="grid size-20 place-items-center rounded-4xl bg-primary/10 text-primary">
@@ -129,6 +132,6 @@ export function CourseSourceDrive({ space }: { space: LearningSpace }) {
           </span>
         </button>
       </Card>)}
-    </div>}
+    </div></>}
   </DashboardSectionFrame>
 }

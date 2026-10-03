@@ -134,7 +134,7 @@ export function AuthScreen() {
     <main className="flex min-h-svh items-center justify-center overflow-y-auto bg-muted p-4 sm:p-6 lg:p-10">
       <WindowDragStrip />
       <div className="w-full max-w-lg">
-        <Card className="w-full self-center">
+        <Card className="ui-enter w-full self-center">
           <CardHeader>
             <div className="mb-4 flex items-center gap-3 font-heading font-medium">
               <ProductLogo size={36} rounded />

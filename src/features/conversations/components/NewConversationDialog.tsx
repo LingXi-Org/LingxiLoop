@@ -1,6 +1,7 @@
 import { PlusSignIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useId, useRef, useState } from 'react'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Avatar } from '@/components/Avatar'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -108,7 +109,7 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
         <form id={formId} className="flex min-h-0 flex-1 flex-col gap-3" onSubmit={(event) => { event.preventDefault(); void submit() }} aria-busy={busy}>
           <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索参与者" aria-label="搜索参与者" disabled={busy || Boolean(createdId)} />
           <div className="min-h-0 flex-1 overflow-y-auto" role="group" aria-label="参与者">
-            {!loaded && <p className="p-4 text-center text-sm text-muted-foreground">正在加载参与者…</p>}
+            {!loaded && <ResourceSkeleton variant="list" count={4} compact label="正在加载参与者" />}
             {loaded && visible.length === 0 && <p className="p-4 text-center text-sm text-muted-foreground">{query.trim() ? '没有找到匹配的参与者' : '暂无可选择的参与者'}</p>}
             {visible.map((participant) => {
               const checked = selectedIds.includes(participant.id)

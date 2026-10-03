@@ -288,7 +288,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
         {query.trim() ? (
           <div className="h-full overflow-y-auto">
             {searching && <ResourceSkeleton variant="list" count={4} compact label="正在搜索会话" />}
-            {!searching && resultRows.length === 0 && <p className="px-3 py-5 text-sm text-muted-foreground">没有找到匹配结果</p>}
+            {!searching && resultRows.length === 0 && <div className="ui-enter px-3 py-5 text-sm text-muted-foreground"><p>没有找到匹配结果</p><Button variant="outline" size="sm" className="mt-3" onClick={() => setQuery('')}>清除搜索</Button></div>}
             <ItemGroup className="!gap-0">
               {resultRows.map((row) => (
                 <ConversationListRow key={row.id} mobile={isMobile} selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>

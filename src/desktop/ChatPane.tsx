@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useEntrance } from '@/hooks/use-entrance'
 import { CanvasPopover } from '@/features/canvas/components/CanvasPopover'
 import { ConversationSearch } from '@/features/chat/components/ConversationSearch'
 import { ConversationThread } from '@/features/chat/components/ConversationThread'
@@ -33,7 +34,7 @@ export function ChatPane({
     conversationId ? state.list.find((item) => item.id === conversationId) : undefined
   ))
   const [searchOpen, setSearchOpen] = useState(false)
-  const rootRef = useRef<HTMLElement>(null)
+  const rootRef = useEntrance<HTMLElement>(conversation?.id ?? null)
   const uiCommand = useUiCommand()
 
   useEffect(() => { setSearchOpen(false) }, [conversationId])

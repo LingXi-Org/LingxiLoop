@@ -2,6 +2,7 @@ import { AlertCircleIcon, Presentation01Icon, RefreshCwIcon } from '@hugeicons/c
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +14,7 @@ import { PRESENTATION_STATUS_LABELS, type PresentationDetailV1 } from '../contra
 import { usePresentationResource, usePresentations } from '../state'
 import { PresentationOutlineReview } from './PresentationOutlineReview'
 import { PresentationViewer } from './PresentationViewer'
+import { PresentationSkeleton } from './PresentationSkeleton'
 
 function generationProgress(presentation: PresentationDetailV1): number {
   if (typeof presentation.progress === 'number') {
@@ -110,7 +112,7 @@ export function PresentationDrawerContent({ presentationId }: { presentationId: 
   const [retrying, setRetrying] = useState(false)
 
   if (loading && !presentation) {
-    return <ResourceSkeleton variant="detail" className="h-full" label="正在加载演示文稿" />
+    return <PresentationSkeleton />
   }
 
   if (error && !presentation) {
@@ -146,7 +148,7 @@ export function PresentationDrawerContent({ presentationId }: { presentationId: 
   }
 
   if (!presentation) {
-    return <ResourceSkeleton variant="detail" className="h-full" label="正在加载演示文稿" />
+    return <PresentationSkeleton />
   }
 
   if (presentation.status === 'awaitingOutlineApproval' && presentation.outline) {
@@ -177,7 +179,7 @@ export function PresentationDrawerContent({ presentationId }: { presentationId: 
   }
 
   if (presentation.status === 'ready') {
-    return <PresentationViewer presentation={presentation} versions={versions} />
+    return <div className="ui-enter flex h-full min-h-0 flex-col" aria-busy={loading}>{error && <Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button variant="outline" size="sm" disabled={loading} onClick={() => void refresh()}>重试</Button></AlertDescription></Alert>}<div className="min-h-0 flex-1"><PresentationViewer presentation={presentation} versions={versions} /></div></div>
   }
 
   if (presentation.status === 'failed' || presentation.status === 'needsAttention' || presentation.status === 'cancelled') {

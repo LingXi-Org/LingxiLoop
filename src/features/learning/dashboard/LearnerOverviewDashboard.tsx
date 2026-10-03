@@ -1,5 +1,5 @@
 import { type Dispatch, type SetStateAction, useMemo, useState } from 'react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { OverviewSkeleton } from './LearningSkeletons'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { LearningActivitiesSection } from '../components/LearningActivitiesSection'
 import { LearningEvidenceSection } from '../components/LearningEvidenceSection'
@@ -100,7 +100,7 @@ export function LearnerOverviewDashboard({
     !overview &&
     objectives.length + activities.length + evidence.length + missions.length === 0
   ) {
-    return <ResourceSkeleton variant="cards" count={8} label="正在汇总学习证据看板" />
+    return <OverviewSkeleton perspective="learner" />
   }
 
   const ready = model.activities.filter((item) => item.stage === 'ready').length
@@ -118,7 +118,7 @@ export function LearnerOverviewDashboard({
   ]
 
   return (
-    <div className="space-y-4 @min-[48rem]/learning-grid:space-y-6" data-testid="learner-overview-dashboard" aria-busy={loading}>
+    <div className="ui-enter space-y-4 @min-[48rem]/learning-grid:space-y-6" data-testid="learner-overview-dashboard" aria-busy={loading}>
       <div className="grid gap-4 @min-[48rem]/learning-grid:grid-cols-12">
         <OverviewChartCard
           title="课程活动" value={ready + ' 项待完成'} description="查看活动要求，提交你的作答"

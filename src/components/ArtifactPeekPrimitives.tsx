@@ -60,7 +60,7 @@ export function PeekHeader({
 
 export function PeekLoading({ icon, label }: { icon: ReactNode; label: string }) {
   return (
-    <div className="relative h-full space-y-3 bg-card p-4" aria-label={label}>
+    <div className="ui-enter relative h-full space-y-3 bg-card p-4" role="status" aria-label={label}>
       <Skeleton className="h-12" />
       <Skeleton className="h-48" />
       <div className="pointer-events-none absolute start-4 top-4 grid size-10 place-items-center text-primary" aria-hidden>{icon}</div>
@@ -73,15 +73,17 @@ export function PeekUnavailable({
   title,
   detail,
   onClose,
+  onRetry,
 }: {
   icon: ReactNode
   title: string
   detail: string
+  onRetry?: () => void
   onClose: () => void
 }) {
   return (
     <div className="grid h-full place-items-center bg-card px-8 text-center">
-      <Empty><EmptyHeader><EmptyMedia variant="icon">{icon}</EmptyMedia><EmptyTitle>{title}</EmptyTitle><EmptyDescription>{detail}</EmptyDescription></EmptyHeader><Button variant="outline" onClick={onClose}>关闭</Button></Empty>
+      <Empty><EmptyHeader><EmptyMedia variant="icon">{icon}</EmptyMedia><EmptyTitle>{title}</EmptyTitle><EmptyDescription>{detail}</EmptyDescription></EmptyHeader><div className="flex gap-2">{onRetry && <Button onClick={onRetry}>重试</Button>}<Button variant="outline" onClick={onClose}>关闭</Button></div></Empty>
     </div>
   )
 }
