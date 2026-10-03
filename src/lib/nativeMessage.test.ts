@@ -19,9 +19,15 @@ test('native messages survive JSON and nested-message replay without losing cont
       { type: 'generative-ui', id: 'card', spec: { root: { component: 'Card', children: ['hello'] } } },
       { type: 'tool-call', toolCallId: 'call', toolName: 'calendar.get', args: { eventId: 'event' }, argsText: '{"eventId":"event"}',
         result: { status: 'completed' }, artifact: { id: 'artifact' }, isError: false, parentId: 'parent', messages: [child],
-        approval: { id: 'approval', approved: false, reason: 'declined' }, interrupt: { type: 'human', payload: { prompt: 'confirm' } } },
+        timing: { startedAt: 10, completedAt: 20 }, providerMetadata: { provider: { trace: 'display-only' } },
+        mcp: { app: { resourceUri: 'ui://fixture/card', mimeType: 'text/html', visibility: ['app'], serverId: 'fixture' } },
+        modelContent: [{ type: 'text', text: 'model result' }, { type: 'file', data: 'aGVsbG8=', mediaType: 'text/plain', filename: 'model.txt' }],
+        approval: { id: 'approval', approved: false, reason: 'declined', isAutomatic: false, optionId: 'deny',
+          options: [{ id: 'deny', kind: 'deny-once', label: '拒绝一次', grants: [], confirm: { title: '确认' } }] }, interrupt: { type: 'human', payload: { prompt: 'confirm' } } },
     ], status: { type: 'complete', reason: 'stop' }, metadata: { unstable_state: null, unstable_data: [], unstable_annotations: [],
-      steps: [{ messageId: 'step', usage: { inputTokens: 10, outputTokens: 20 } }], custom: { runId: 'run' } } }
+      steps: [{ messageId: 'step', usage: { inputTokens: 10, outputTokens: 20 } }], custom: { runId: 'run' },
+      timing: { streamStartTime: 1, firstTokenTime: 2, totalStreamTime: 20, tokenCount: 10, tokensPerSecond: 500, totalChunks: 2, toolCallCount: 1 },
+      submittedFeedback: { type: 'positive' }, isOptimistic: false } }
   assert.deepEqual(deserializeMessage(JSON.parse(JSON.stringify(serializeMessage(message)))), message)
 })
 

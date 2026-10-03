@@ -64,6 +64,32 @@ test('tool terminal and approval states are visible without requiring a result',
   }
 })
 
+test('adjacent ordinary tools group in place while rich results stay visible', () => {
+  const tool = (id: string) => ({ type: 'tool-call' as const, toolCallId: id, toolName: 'fixture.tool', args: {}, argsText: '{}', result: { ok: true } })
+  const reply = { ...message('1'), content: [{ type: 'text', text: '开始正文' }, tool('one'), tool('two'),
+    { type: 'tool-call', toolCallId: 'calendar', toolName: 'calendar.list', args: {}, argsText: '{}', result: { status: 'completed', value: { events: [], truncated: false } } },
+    { type: 'text', text: '最后正文' }] } as ThreadMessage
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  assert.equal($('[data-slot="tool-group-root"]').length, 1)
+  assert.match($.text(), /2 项工具调用/)
+  assert.match($.text(), /暂无安排/)
+  assert.equal($('time').length, 1)
+  assert.match($('[data-agent-body]').last().text(), /最后正文/)
+})
+
+test('existing data names render descriptive cards without dumping JSON', () => {
+  const reply = { ...message('1'), content: [
+    { type: 'data', name: 'document-reference', data: { title: '证据文档', pages: 3, anchors: [{ page: 2, quote: '可核对的证据' }], activePage: 2 } },
+    { type: 'data', name: 'email', data: { id: 'mail', from: 'a@example.com', to: ['b@example.com'], cc: [], subject: '研究总结', body: '邮件正文', outcome: 'sent' } },
+    { type: 'data', name: 'tool-activity', data: { title: '整理资料', status: 'completed' } },
+  ] } as ThreadMessage
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  for (const label of ['证据文档', '可核对的证据', '研究总结', '邮件正文', '整理资料']) assert.ok($.text().includes(label), label)
+  assert.equal($('pre').length, 0)
+  assert.equal($('time').length, 1)
+  assert.equal($('button').filter((_, node) => /发送邮件|批准|加入安排/.test($(node).text())).length, 0)
+})
+
 test('memory metadata does not expose summaries in conversation messages', () => {
   const reply = message('1')
   const metadata = getLingxiMessageMetadata(reply)

@@ -7,9 +7,9 @@ import { ConfidenceMarker } from './elements/confidence-marker'
 
 function Text() { return <MarkdownText agent /> }
 function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
-function Preview({ text, running, claims, inlineCitations, interrupted = false }: { text: string; running: boolean; claims?: MarkdownConfidenceClaim[]; inlineCitations?: boolean; interrupted?: boolean }) {
+function Preview({ text, content, running, claims, inlineCitations, interrupted = false }: { text: string; content?: Extract<ThreadMessage, { role: 'assistant' }>['content']; running: boolean; claims?: MarkdownConfidenceClaim[]; inlineCitations?: boolean; interrupted?: boolean }) {
   const messages: ThreadMessage[] = [{ id: 'reply', role: 'assistant', createdAt: new Date(0),
-    content: [{ type: 'text', text }], status: running ? { type: 'running' } : interrupted ? { type: 'incomplete', reason: 'cancelled' } : { type: 'complete', reason: 'stop' },
+    content: content ?? [{ type: 'text', text }], status: running ? { type: 'running' } : interrupted ? { type: 'incomplete', reason: 'cancelled' } : { type: 'complete', reason: 'stop' },
     metadata: { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], custom: {} } }]
   const runtime = useExternalStoreRuntime({ messages, isRunning: running, onNew: async () => {} })
   function CitedMessage() { return <MessagePrimitive.Parts components={{ Text: () => <MarkdownText agent confidenceClaims={claims} inlineCitations={inlineCitations} /> }} /> }
@@ -29,6 +29,23 @@ test('streamed prose and incomplete Markdown blocks appear before completion', (
       }
     }
   }
+})
+
+// Failure cases: later text matches the first occurrence, duplicate coordinates,
+// copy leaves internal links behind, and code examples lose their literal syntax.
+test('mixed message text keeps global citation positions and copy across non-text parts', () => {
+  const first = '第一段 [事实](#cite-S1)', second = '第二段 [事实](#cite-S1) 与 `[示例](#cite-S1)`'
+  const text = first + '\n' + second
+  const claims = [...text.matchAll(/\[事实\]\(#cite-S1\)/g)].map((match, index) => ({
+    id: `mixed:${index}`, text: '事实', confidence: 'grounded' as const, basis: `证据 ${index}`, markers: ['S1'], start: match.index, end: match.index + match[0].length,
+  }))
+  const html = renderToStaticMarkup(<Preview text={text} content={[
+    { type: 'text', text: first }, { type: 'data', name: 'separator', data: {} }, { type: 'text', text: second },
+  ]} running={false} claims={claims} inlineCitations />)
+  assert.deepEqual([...html.matchAll(/data-confidence-id="([^"]+)"/g)].map(match => match[1]), ['mixed:0', 'mixed:1'])
+  const ranges = [...html.matchAll(/data-citation-start="(\d+)" data-citation-end="(\d+)"/g)].map(match => ({ start: Number(match[1]), end: Number(match[2]), text: '事实' }))
+  assert.deepEqual(ranges, claims.map(({ start, end, text }) => ({ start, end, text })))
+  assert.equal(confidenceCopyText(text, ranges), '第一段 事实\n第二段 事实 与 `[示例](#cite-S1)`')
 })
 
 test('lists and paragraphs retain their semantic layout without bubble wrappers', () => {

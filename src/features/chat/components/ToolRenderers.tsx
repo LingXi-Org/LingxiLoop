@@ -180,7 +180,7 @@ interface DraftEmailArgs {
   outcome?: 'sent' | 'cancelled'
 }
 
-function draftEmailSpec(email: DraftEmailArgs, outcome?: DraftEmailArgs['outcome']): UIElement {
+function draftEmailSpec(email: DraftEmailArgs, outcome?: DraftEmailArgs['outcome'], readOnly = false): UIElement {
   const row = (key: string, label: string, value: string): UIElement => ({
     $type: 'Row', $key: key, align: 'center', gap: 3,
     children: [
@@ -191,7 +191,7 @@ function draftEmailSpec(email: DraftEmailArgs, outcome?: DraftEmailArgs['outcome
   return {
     $type: 'Card',
     title: outcome === 'sent' ? '邮件已发送' : outcome === 'cancelled' ? '邮件已取消' : '新邮件',
-    ...(outcome ? {} : {
+    ...(outcome || readOnly ? {} : {
       confirm: { label: '发送邮件', $action: { type: 'email.send' } },
       cancel: { label: '取消', $action: { type: 'email.cancel' } },
     }),
@@ -206,15 +206,16 @@ function draftEmailSpec(email: DraftEmailArgs, outcome?: DraftEmailArgs['outcome
   }
 }
 
-export function DraftEmailTool({ args, result, addResult }: CardProps) {
+export function DraftEmailTool({ args, result, addResult, readOnly = false }: CardProps & { readOnly?: boolean }) {
   const email = args as unknown as DraftEmailArgs
   const resultStatus = typeof result === 'object' && result !== null ? (result as { status?: unknown }).status : undefined
   const outcome = resultStatus === 'sent' || email.outcome === 'sent'
     ? 'sent'
     : resultStatus === 'cancelled' || email.outcome === 'cancelled' ? 'cancelled' : undefined
-  const content = renderGenerativeUI(draftEmailSpec(email, outcome), styledGenerativeUILibrary, {
+  const content = renderGenerativeUI(draftEmailSpec(email, outcome, readOnly), styledGenerativeUILibrary, {
     status: 'done',
     dispatch: ({ type }) => {
+      if (readOnly) return
       if (type === 'email.send') addResult({ status: 'sent' })
       if (type === 'email.cancel') addResult({ status: 'cancelled' })
     },

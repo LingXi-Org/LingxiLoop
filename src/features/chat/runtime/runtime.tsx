@@ -109,7 +109,9 @@ export function useConversationThreadRuntime(
     onCancel: () => chatTransport.cancel(conversationId),
     onRefetchThread: () => chatTransport.reloadConversation(conversationId),
     onDelete: (messageId) => chatTransport.discard(conversationId, messageId),
-    onRespondToToolApproval: async ({ approvalId, approved }) => {
+    onRespondToToolApproval: async ({ approvalId, approved, optionId }) => {
+      // The product endpoint currently accepts binary decisions only.
+      if (optionId !== undefined || typeof approved !== 'boolean') throw new Error('不支持的审批选项')
       await chatTransport.resolveApproval(approvalId, approved ? 'approved' : 'denied')
     },
     adapters: { attachments: attachmentAdapter },

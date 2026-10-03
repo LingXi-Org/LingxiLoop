@@ -126,8 +126,9 @@ function MessageTextPart() {
     return Array.isArray(claims) ? claims as MarkdownConfidenceClaim[] : undefined
   })
   const getText = () => {
+    const body = bodyRef.current?.closest('.native-message-content') ?? bodyRef.current
     if (inlineCitations) {
-      const ranges = Array.from(bodyRef.current?.querySelectorAll<HTMLElement>('[data-citation-start]') ?? []).flatMap(node => {
+      const ranges = Array.from(body?.querySelectorAll<HTMLElement>('[data-citation-start]') ?? []).filter(node => node.closest('.native-message-content') === body).flatMap(node => {
         const start = Number(node.dataset.citationStart), end = Number(node.dataset.citationEnd)
         const link = /^\[([\s\S]+)\]\(#cite-[^)]*\)$/.exec(rawText.slice(start, end))
         return link && Number.isSafeInteger(start) && Number.isSafeInteger(end) && end <= rawText.length
@@ -135,7 +136,8 @@ function MessageTextPart() {
       })
       return confidenceCopyText(rawText, ranges)
     }
-    const renderedIds = new Set(Array.from(bodyRef.current?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [], node => node.dataset.confidenceId))
+    const renderedIds = new Set(Array.from(body?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [])
+      .filter(node => node.closest('.native-message-content') === body).map(node => node.dataset.confidenceId))
     return confidenceCopyText(rawText, confidenceClaims?.filter(claim => renderedIds.has(claim.id)))
   }
   const groupPosition = metadata.groupStart

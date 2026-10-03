@@ -2,7 +2,7 @@
 
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
 import { Block, type BlockProps, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
-import { useMessagePartText } from '@assistant-ui/react'
+import { useAuiState, useMessagePartText } from '@assistant-ui/react'
 import { useReducedMotion } from 'framer-motion'
 import { createContext, memo, useContext, useMemo, useState } from 'react'
 import type { Root } from 'hast'
@@ -93,6 +93,9 @@ const MarkdownTextImpl = ({
 }) => {
   const [hoveredId, setHoveredId] = useState('')
   const { text, status } = useMessagePartText()
+  // Citation spans use nativeText's joined-message coordinates, including between cards.
+  const textOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
+    .reduce((offset, part) => offset + (part.type === 'text' ? part.text.length + 1 : 0), 0))
   const reducedMotion = useReducedMotion()
   const streaming = agent && status.type === 'running' && !reducedMotion
   const hasCitations = Boolean(confidenceClaims.length) || inlineCitations
@@ -100,9 +103,9 @@ const MarkdownTextImpl = ({
   const blocks = useMemo(() => hasCitations ? parseMarkdownIntoBlocks(text) : [], [hasCitations, text])
   const parseBlocks = useMemo(() => () => blocks, [blocks])
   const offsets = useMemo(() => {
-    let offset = 0
+    let offset = textOffset
     return blocks.map(block => { const start = offset; offset += block.length; return start })
-  }, [blocks])
+  }, [blocks, textOffset])
   const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations }), [offsets, confidenceClaims, inlineCitations])
   return <ConfidenceMarker claims={confidenceClaims} hoveredId={hoveredId} onHover={setHoveredId} floatingBasis={inlineCitations}>
     <CitationBlocks.Provider value={citationBlocks}>
