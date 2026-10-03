@@ -180,7 +180,6 @@ export class WukongClient {
     const syncSignal = AbortSignal.any([AbortSignal.timeout(15_000), ...[this.signal, signal].filter((value): value is AbortSignal => !!value)])
     let cursor = beforeMessageSeq
     const collected: ImMessage[] = []
-    let pageLimit = limit
     const requestMessages = () => this.request<unknown>('/channel/messagesync', {
       signal: syncSignal,
       method: 'POST', body: JSON.stringify({
@@ -189,14 +188,13 @@ export class WukongClient {
         channel_type: channelType,
         start_message_seq: cursor ? cursor - 1 : 0,
         end_message_seq: 0,
-        limit: pageLimit,
+        limit,
         pull_mode: 0,
       }),
     })
     let repaired = false
     while (collected.length < limit) {
       syncSignal.throwIfAborted()
-      pageLimit = limit - collected.length
       let value: unknown
       try {
         value = await requestMessages()
@@ -230,13 +228,13 @@ export class WukongClient {
         }]
       })
       collected.unshift(...messages)
-      if (collected.length >= limit || list.length < pageLimit) break
+      if (collected.length >= limit || list.length < limit) break
       const next = Math.min(...list.map(raw => Number(jsonRecord(raw).message_seq ?? jsonRecord(raw).messageSeq ?? 0)))
       if (!Number.isSafeInteger(next) || next < 1 || cursor && next >= cursor) throw new Error('message history cursor did not advance')
       if (next === 1) break
       cursor = next
     }
-    return collected
+    return collected.slice(-limit)
   }
 
   verifyWebhook(rawBody: Buffer, signature: string | undefined, token?: string): boolean {
