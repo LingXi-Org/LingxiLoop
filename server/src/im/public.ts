@@ -1,4 +1,4 @@
-import type { LingxiMessageV1 } from './message-types.js'
+import type { NativeMessage } from './message-types.js'
 import type { ImMessageEnvelope } from './messages-application.js'
 import { createImMessagesApplication, imMessagesApplication } from './messages-facade.js'
 export { createMessageTools } from './agent-tools.js'
@@ -44,7 +44,7 @@ export async function sendAgentChannelMessage(input: {
   agentId: string
   channelId: string
   clientNonce: string
-  payload: LingxiMessageV1
+  payload: NativeMessage
   signal?: AbortSignal
 }): Promise<
   | { kind: 'channel_not_found' }
@@ -76,7 +76,7 @@ export async function sendSystemChannelMessage(input: {
   actorId: string
   channelId: string
   clientNonce: string
-  payload: LingxiMessageV1
+  payload: NativeMessage
   signal?: AbortSignal
 }): Promise<
   | { kind: 'channel_not_found' }

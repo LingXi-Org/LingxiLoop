@@ -1,3 +1,4 @@
+import { createNativeMessage } from '@/lib/nativeMessage'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -9,7 +10,7 @@ import { convertEnvelope, convertEnvelopeBatch } from './converter'
 import { mergeCanonicalMessages } from './store'
 import { getLingxiMessageMetadata } from './model'
 
-import { harnessToolParts } from '@/lib/agentRunSnapshot'
+import { harnessToolParts } from '../../../../server/src/agent-runtime/message-projection'
 
 const names = { nova: { name: '司南' }, sage: { name: '明理' }, trace: { name: '溯源' } }
 const at = '2026-09-21T08:00:00.000Z'
@@ -36,19 +37,19 @@ test('official ToolUI renders persisted Mission steps and actual handoff outcome
 })
 
 test('reordered and repeated business snapshots restore one current message with its IM anchor', () => {
-  for (const kind of ['handoff','learning_mission','canvas'] as const) {
+  for (const kind of ['handoff','learning-mission','canvas'] as const) {
     const event = (version: number, sequence: number): ImEnvelope => ({ channelId: 'room',channelType: 2,fromUid: 'nova',
       messageId: `im-${sequence}`, clientMsgNo: `nonce-${sequence}`,messageSeq: sequence,timestamp: Date.parse(at),
-      payload: { version: 1,kind,clientMsgNo: `nonce-${sequence}`,refs: { handoffId: 'business' },data: {
+      payload: createNativeMessage({ id: `${kind}:business`, role: 'assistant', createdAt: at, custom: { progressVersion: version, refs: { handoffId: 'business' } }, content: [{ type: 'data', name: kind, data: {
         id: 'business',missionId: 'business',canvasId: 'business',progressVersion: version,goal: `v${version}`,title: `v${version}`,
         fromAgentId: 'nova',toAgentId: 'sage',assignments: [],status: version === 3 ? 'completed' : 'working',
-      } } })
+      } }] }) })
     const context = { participants: {},meId: null }, first = event(1,10), latest = event(3,12), stale = event(2,15)
     const batch = convertEnvelopeBatch([latest,first,stale,latest],context)
     const live = mergeCanonicalMessages([convertEnvelope(first,context)], [convertEnvelope(latest,context),convertEnvelope(stale,context)])
     for (const result of [batch,live,mergeCanonicalMessages(live,batch)]) {
       assert.equal(result.length,1)
-      assert.equal(result[0].id,'im-10')
+      assert.equal(result[0].id,`${kind}:business`)
       assert.equal(getLingxiMessageMetadata(result[0]).clientMessageId,'nonce-10')
       assert.equal(getLingxiMessageMetadata(result[0]).sequence,10)
       assert.equal(getLingxiMessageMetadata(result[0]).progress?.version,3)

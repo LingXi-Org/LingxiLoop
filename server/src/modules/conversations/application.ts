@@ -1,3 +1,4 @@
+import { nativeText, type NativeMessage } from '../../im/message-types.js'
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { ImChannelProfile } from '../../im/types.js'
@@ -73,7 +74,7 @@ export interface ConversationInfrastructure {
     channelId: string
     title: string
     kind: string
-    message: { messageId: string; fromUid: string; timestamp: number; payload: { body?: string } }
+    message: { messageId: string; fromUid: string; timestamp: number; payload: NativeMessage }
   }>>
 }
 
@@ -454,7 +455,7 @@ export class ConversationsApplication {
       conversationKind: match.kind,
       authorId: match.message.fromUid,
       authorName: authorNames.get(match.message.fromUid) ?? match.message.fromUid,
-      body: match.message.payload.body ?? '',
+      body: nativeText(match.message.payload),
       createdAt: new Date(match.message.timestamp > 10_000_000_000
         ? match.message.timestamp
         : match.message.timestamp * 1000).toISOString(),

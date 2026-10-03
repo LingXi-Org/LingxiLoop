@@ -1,3 +1,4 @@
+import { attachmentRefsSchema } from '../../im/contracts.js'
 import { z } from 'zod'
 
 export const emailListQuerySchema = z.object({
@@ -35,7 +36,7 @@ export const replyEmailRequestSchema = z.object({
   attachments: attachmentsSchema,
 }).strict()
 
-const attachmentClientMsgNos = z.array(z.string().trim().min(1).max(200)).max(16).default([])
+const attachmentRefs = attachmentRefsSchema.default([])
   .refine(ids => new Set(ids).size === ids.length, 'attachment IDs must be unique')
 export const agentEmailSchemas = {
   whoami: z.object({}).strict(),
@@ -43,11 +44,11 @@ export const agentEmailSchemas = {
   inbox: z.object({ unreadOnly: z.boolean().default(false), limit: z.number().int().min(1).max(50).default(20) }).strict(),
   show: z.object({ conversationId: z.string().trim().min(1).max(200), limit: z.number().int().min(1).max(50).default(50) }).strict(),
   send: sendEmailRequestSchema.omit({ idempotencyKey: true, attachments: true }).extend({
-    to: sendEmailRequestSchema.shape.to.max(64), cc: z.array(z.string().trim().min(1).max(998)).max(64).default([]), attachmentClientMsgNos,
+    to: sendEmailRequestSchema.shape.to.max(64), cc: z.array(z.string().trim().min(1).max(998)).max(64).default([]), attachmentRefs,
   }).strict(),
   reply: replyEmailRequestSchema.omit({ idempotencyKey: true, attachments: true }).extend({
     conversationId: z.string().trim().min(1).max(200), messageId: z.string().trim().min(1).max(200),
-    cc: z.array(z.string().trim().min(1).max(998)).max(64).default([]), attachmentClientMsgNos,
+    cc: z.array(z.string().trim().min(1).max(998)).max(64).default([]), attachmentRefs,
   }).strict(),
 }
 

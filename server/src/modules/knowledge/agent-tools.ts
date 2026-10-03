@@ -1,3 +1,5 @@
+import { nativeAttachments } from '../../im/message-types.js'
+import { attachmentMetadata } from '../../im/attachments.js'
 import { productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
 import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
@@ -112,9 +114,10 @@ export const knowledgeTools: ToolDefinition[] = [
   nativeTool('knowledge.add_file', schemas.add_file, { ...transaction, description: 'Use a committed attachment as a knowledge source.', async execute(context, input) {
     const messages = await readAgentChannelMessages({ companyId: context.work.tenantId, agentId: context.work.agentId, channelId: productConversationId(context.work),
       messageIds: [input.clientMsgNo], signal: context.signal })
-    const data = messages?.find(message => message.clientMsgNo === input.clientMsgNo && message.payload.kind === 'attachment')?.payload.data
-    if (!data || typeof data.key !== 'string' || !data.key.startsWith(`attachments/${context.work.tenantId}/`) || typeof data.mime !== 'string'
-      || !Number.isSafeInteger(data.size) || Number(data.size) < 0) throw new NoEffectError('committed attachment is unavailable')
+    const message = messages?.find(message => message.clientMsgNo === input.clientMsgNo)
+    const attachment = message && nativeAttachments(message.payload).find(file => file.id === input.attachmentId)
+    if (!attachment) throw new NoEffectError('committed attachment is unavailable')
+    const data = await attachmentMetadata(attachment,context.work.tenantId)
     return { ok: true, value: await application(context).addKnowledgeFile(nativeContext(context), { title: input.title || String(data.name ?? 'Attachment'),
       storageKey: data.key, mime: data.mime, size: Number(data.size), idempotencyKey: context.action.idempotencyKey }) }
   }, verify: verifyCreated }),

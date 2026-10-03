@@ -2,8 +2,7 @@ import type { ThreadMessage } from '@assistant-ui/react'
 import { create } from 'zustand'
 import { getLingxiMessageMetadata, mergeProgressMessage, preserveMessageTime, type LingxiMessageMetadata } from './model'
 import { projectMessageGroups } from './converter'
-import { isRunMessage, mergeHarness } from './harness'
-import { harnessParts, harnessStatus } from '@/lib/agentRunSnapshot'
+import { isRunMessage, isOlderRun } from './harness'
 
 export const CHAT_HISTORY_PAGE_SIZE = 80
 
@@ -70,19 +69,13 @@ export function mergeCanonicalMessages(
     if (previous && before?.progress && after.progress) {
       byId.set(key,mergeProgressMessage(previous,message))
     } else if (previous && before?.harness && after.harness && message.role === 'assistant') {
-      const harness = mergeHarness(before.harness,after.harness)
-      const canonical = harness.resultId === before.harness.resultId && before.sequence !== null ? previous : message
-      byId.set(key,{ ...canonical, status: harnessStatus(harness),
-        content: (harness.lifecycle === 'queued' || harness.lifecycle === 'leased' || harness.lifecycle === 'cancelled' || harness.lifecycle === 'failed')
-          && harness.resultId === before.harness.resultId ? previous.content
-          : harness.message ? harnessParts(harness, after.harnessTools ?? before.harnessTools) : message.content,
-        metadata: { ...canonical.metadata, custom: { ...before,...metadata(canonical), harness,
-          harnessTools: after.harnessTools ?? before.harnessTools,
-          memory: after.memory ?? before.memory,
-          harnessControl: after.harnessControl ?? before.harnessControl,
-          harnessError: after.harnessError ?? before.harnessError,
-          unresolvedActions: after.unresolvedActions ?? before.unresolvedActions } } } as ThreadMessage)
-    } else if (!before?.harness || after.harness) byId.set(key,message)
+      const old = before.harness, next = after.harness
+      if (isOlderRun(old,next)) continue
+      const receipt = after.sequence !== null ? after : before
+      byId.set(key,{ ...message, metadata: { ...message.metadata, custom: { ...after,
+        sequence: receipt.sequence, clientMessageId: receipt.clientMessageId, imMessageId: receipt.imMessageId,
+        harnessControl: after.harnessControl ?? before.harnessControl } } } as ThreadMessage)
+    } else byId.set(key,message)
     const merged = byId.get(key)
     if (merged) byId.set(key, preserveMessageTime(preserveMessageTime(merged, previous), message))
   }
@@ -189,7 +182,7 @@ export function updateConversationMessage(
   updateConversation(conversationId, (current) => ({
     ...current,
     messages: projectMessageGroups(current.messages.map((message) => (
-      message.id === messageId ? update(message) : message
+      (message.id === messageId || metadata(message).imMessageId === messageId) ? update(message) : message
     ))),
   }))
 }
@@ -229,40 +222,9 @@ export function replacePollData(
 ): void {
   updateConversationMessage(conversationId, messageId, (message) => ({
     ...message,
-    content: message.content.map((part) => part.type === 'tool-call' && part.toolName === 'poll-form'
-      ? updatePollPart(part, poll, tallies, revision)
-      : part),
+    content: message.content.map(part => part.type === 'data' && part.name === 'poll'
+      && revision >= Number(part.data.revision ?? 0) ? { ...part, data: { poll, pollTallies: tallies, revision } } : part),
   }) as ThreadMessage)
-}
-
-function updatePollPart(
-  part: Extract<ThreadMessage['content'][number], { type: 'tool-call' }>,
-  pollValue: unknown,
-  talliesValue: unknown,
-  revision: number,
-) {
-  const poll = typeof pollValue === 'object' && pollValue !== null ? pollValue as Record<string, unknown> : {}
-  const tallies = Array.isArray(talliesValue) ? talliesValue : []
-  const counts = new Map(tallies.map((value) => {
-    const tally = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
-    return [String(tally.optionId ?? ''), typeof tally.count === 'number' ? tally.count : 0] as const
-  }))
-  const previous = part.args as Record<string, unknown>
-  const options = Array.isArray(poll.options) ? poll.options.map((value, index) => {
-    const option = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
-    const id = String(option.id ?? index)
-    return { id, label: String(option.text ?? option.label ?? `选项 ${index + 1}`), description: `${counts.get(id) ?? 0} 票` }
-  }) : previous.options
-  const args = {
-    ...previous,
-    title: typeof poll.question === 'string' ? poll.question : previous.title,
-    selectionMode: poll.mode === 'multi' ? 'multi' : 'single',
-    options,
-    tallies,
-    closedAt: typeof poll.closedAt === 'string' ? poll.closedAt : null,
-    revision,
-  }
-  return { ...part, args, argsText: JSON.stringify(args) }
 }
 
 export function markDelivery(

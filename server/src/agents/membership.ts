@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../im/message-types.js'
 /** Authoritative membership activity published through WuKongIM. */
 import { randomUUID } from 'node:crypto'
 import { sendSystemChannelMessage } from '../im/public.js'
@@ -23,13 +24,8 @@ export async function postMembershipSystemMessage(args: {
     actorId: args.actorId,
     channelId: args.conversationId,
     clientNonce,
-    payload: {
-      version: 1,
-      kind: 'system',
-      clientMsgNo: clientNonce,
-      body,
-      data: { membershipKind: args.kind, participantId: args.participantId, actorId: args.actorId },
-    },
+    payload: createNativeMessage({ id: clientNonce, role: 'system', content: [{ type: 'text', text: body }],
+      custom: { membershipKind: args.kind, participantId: args.participantId, actorId: args.actorId } }),
   })
   if (result.kind === 'channel_not_found') throw new Error('membership channel is not authoritative')
   if (result.kind === 'nonce_conflict') throw new Error('membership message identity conflict')

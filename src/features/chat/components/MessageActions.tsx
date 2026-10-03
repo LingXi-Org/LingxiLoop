@@ -18,7 +18,7 @@ export async function copyMessageText(text: string) {
 
 export function MessageActions({ isMine, getText, className }: { isMine: boolean; getText: () => string; className?: string }) {
   const aui = useAui()
-  const messageId = useAuiState((state) => state.message.id)
+  const messageId = useAuiState((state) => typeof state.message.metadata.custom.clientMessageId === 'string' ? state.message.metadata.custom.clientMessageId : state.message.id)
   const [success, setSuccess] = useState<'reply' | 'copy' | null>(null)
   useEffect(() => {
     if (!success) return

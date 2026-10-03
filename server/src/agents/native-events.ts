@@ -6,7 +6,7 @@ import type { DocumentChangedEvent, DocumentUpdateEvent } from '../modules/docum
 import type { ConversationUpdatedEvent } from '../modules/conversations/contracts.js'
 import type { ReactionChangedEvent } from '../modules/messages/contracts.js'
 import type { ReadReceiptAdvance } from '../im/read-receipts-contracts.js'
-import type { LingxiMessageV1 } from '../im/message-types.js'
+import type { NativeMessage } from '../im/message-types.js'
 import type { CanvasEvent } from '../redis.js'
 
 export type NativeEvent = CalendarChangedEvent | DocumentChangedEvent | DocumentUpdateEvent | ConversationUpdatedEvent | ReactionChangedEvent | CanvasEvent
@@ -14,7 +14,7 @@ export type NativeEvent = CalendarChangedEvent | DocumentChangedEvent | Document
   | { type: 'im.membership'; companyId: string; conversationId: string; actorId: string; participantId: string; kind: 'joined' | 'left'; clientNonce: string }
   | { type: 'im.clear_hold'; agentId: string; conversationId: string }
   | { type: 'im.read_receipt'; advance: ReadReceiptAdvance }
-  | { type: 'im.system'; companyId: string; actorId: string; channelId: string; clientNonce: string; payload: LingxiMessageV1 }
+  | { type: 'im.system'; companyId: string; actorId: string; channelId: string; clientNonce: string; payload: NativeMessage }
 
 export async function queueNativeEvents(context: ActionContext, events: NativeEvent[]): Promise<void> {
   await persistNativeEvents(context.database as Queryable, { key: context.action.idempotencyKey, companyId: context.work.tenantId, workId: context.work.id }, events)

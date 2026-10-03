@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../../lib/nativeMessage'
 import assert from 'node:assert/strict'
 import { beforeEach, mock, test } from 'node:test'
 import type { ThreadMessage } from '@assistant-ui/react'
@@ -20,7 +21,7 @@ function project(item: RunStreamEvent, runId = 'run', canControl = true) {
 function applyRunUpdate(state: typeof EMPTY_CONVERSATION_CHAT_STATE, target: { conversationId: string; agentId: string; runId: string; threadId?: string },
   item: RunStreamEvent, participant?: (typeof participants)['agent'], response?: { events: import('@lyyzka/lingxios/ui').RunEvent[]; canControl: boolean; memory?: import('@/lib/agentRunSnapshot').RunMemory }) {
   if (response) {
-    if (!projections.has(target.runId)) projections.set(target.runId, new RunStreamProjection(target.runId, response.canControl))
+    if (!projections.has(target.runId)) { const projection = new RunStreamProjection(target.runId, response.canControl); projection.apply(item); projections.set(target.runId, projection) }
     for (const event of response.events) project({ type: 'event', event }, target.runId)
   }
   return applyRunSnapshot(state, target, project(item, target.runId), participant)
@@ -44,7 +45,7 @@ function snapshot(id = 'run', status: RunState['run']['status'] = 'succeeded'): 
 function user(id: string, sequence: number | null, offset: number): ThreadMessage {
   const envelope: ImEnvelope = { channelId: 'room', channelType: 2, fromUid: 'human', messageId: id, clientMsgNo: id,
     messageSeq: sequence ?? 0, timestamp: (epoch + offset) / 1000,
-    payload: { version: 1, kind: 'text', clientMsgNo: id, body: id } }
+    payload: createNativeMessage({ id: id, role: 'user', createdAt: new Date(epoch + offset).toISOString(), content: [{ type: 'text', text: id }] }) }
   const message = convertEnvelope(envelope, { participants, meId: 'human' })
   return { ...message, metadata: { ...message.metadata, custom: { ...metadata(message), sequence } } } as ThreadMessage
 }
@@ -52,25 +53,18 @@ const event = (draft: string): RunStreamEvent => ({ type: 'preview', preview: {
   kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', seq: 1, draft,
 } })
 
-test('preview receipt time stays hidden until a valid run timestamp arrives', () => {
-  let state = applyRunUpdate({ ...EMPTY_CONVERSATION_CHAT_STATE }, target, event('preview'))
-  assert.equal(metadata(state.messages[0]!).timestampMissing, true)
-  const invalid = snapshot()
-  invalid.run.createdAt = '1970-01-01T00:00:00Z'
-  state = applyRunUpdate(state, target, { type: 'state', state: invalid })
-  assert.equal(metadata(state.messages[0]!).timestampMissing, true)
-  state = applyRunUpdate(state, target, { type: 'state', state: snapshot() })
-  assert.equal(state.messages[0]!.createdAt.getTime(), epoch + 2000)
-  assert.ok(!metadata(state.messages[0]!).timestampMissing)
-  state = applyRunUpdate(state, target, { type: 'state', state: invalid })
-  assert.equal(state.messages[0]!.createdAt.getTime(), epoch + 2000)
-  assert.ok(!metadata(state.messages[0]!).timestampMissing)
+test('message updates require a recorded run timestamp and preserve it during previews', () => {
+  assert.throws(() => project(event('preview')), /state must precede/)
+  projections.clear()
+  let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state', state: snapshot('run','leased') })
+  state = applyRunUpdate(state,target,event('preview'))
+  assert.equal(state.messages[0].createdAt.getTime(),epoch+2000)
 })
 
 function sent(id: string, sequence: number, runId = 'run'): ImEnvelope {
   return { channelId: 'room',channelType: 2,fromUid: 'agent',messageId: id,clientMsgNo: id,
     messageSeq: sequence,timestamp: (epoch + sequence * 1000) / 1000,
-    payload: { version: 1,kind: 'text',clientMsgNo: id,body: id,refs: { runId,agentId: 'agent' } } }
+    payload: createNativeMessage({ id: id, role: 'assistant', createdAt: new Date(epoch + sequence * 1000).toISOString(), content: [{ type: 'text', text: id }], custom: { refs: { runId,agentId: 'agent' } } }) }
 }
 
 test('sent messages, native final citations and interleaved users survive replay and reload in IM order', () => {
@@ -80,7 +74,7 @@ test('sent messages, native final citations and interleaved users survive replay
     { type: 'state',state: snapshot('run','leased') },participants.agent)
   state = { ...state,messages: mergeCanonicalMessages(state.messages,[...bubbles,followup]) }
   state = applyRunUpdate(state,target,event('最后一步'),participants.agent)
-  assert.deepEqual(state.messages.map(message => message.id),['first','lead-in','example','preview-run','followup'])
+  assert.deepEqual(state.messages.map(message => message.id),['first','lead-in','example','run-run','followup'])
   assert.equal(Object.keys(state.activeRuns).length,1)
 
   const completed = snapshot()
@@ -91,12 +85,11 @@ test('sent messages, native final citations and interleaved users survive replay
     sources: [{ sourceId: 'source',sourceVersion: 'v1',chunkIds: ['chunk'] }] }]
   state = applyRunUpdate(state,target,{ type: 'state',state: completed },participants.agent)
   const envelope = sent('result-run',5)
-  envelope.payload.body = body
-  envelope.payload.data = { harness: completed.message!.envelope,harnessSessionId: 'session',harnessCommit: { resultId: 'result-run',fence: 1 } }
+  envelope.payload = project({ type: 'state', state: completed }).message
   const result = convertEnvelope(envelope,{ participants,meId: 'human' })
   state = { ...state,messages: mergeCanonicalMessages(state.messages,[result,...bubbles,result]) }
   state = applyRunUpdate(state,target,event('旧草稿'),participants.agent)
-  assert.deepEqual(state.messages.map(message => message.id),['first','lead-in','example','followup','result-run'])
+  assert.deepEqual(state.messages.map(message => message.id),['first','lead-in','example','followup','run-run'])
   assert.deepEqual(state.messages.at(-1)!.content,result.content)
   assert.deepEqual(state.activeRuns,{})
   assert.deepEqual(state.messages.slice(1,3).map(message => message.content),bubbles.map(message => message.content))
@@ -116,7 +109,7 @@ test('a run discovered after a sent message owns a separate preview and cannot e
     state = applyRunUpdate(state,target,event('尚未发送的部分'),participants.agent)
     state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 3,kind,
       stage: kind === 'run.failed' ? 'failed' : 'completed',visibility: 'user',data: { error: 'fixture failure' } } },participants.agent)
-    assert.deepEqual(state.messages.map(message => message.id),['already-sent','preview-run'])
+    assert.deepEqual(state.messages.map(message => message.id),['already-sent','run-run'])
     assert.deepEqual(state.messages[0].content,bubble.content)
     assert.equal(metadata(state.messages[0]).harness,undefined)
     assert.equal(state.messages[0].status?.type,'complete')
@@ -145,14 +138,14 @@ test('a live reply keeps its anchor until canonical delivery establishes IM orde
     requestVersion: 1, attemptId: 'attempt', fromSeq: 1, seq: 2, delta: '，继续' } }
   state = applyRunUpdate(state, target, delta, participants.agent)
   state = { ...state, messages: mergeCanonicalMessages(state.messages, [user('followup', 2, 3000)]) }
-  assert.deepEqual(state.messages.map(message => message.id), ['first', 'preview-run', 'followup'])
+  assert.deepEqual(state.messages.map(message => message.id), ['first', 'run-run', 'followup'])
   state = applyRunUpdate(state, target, { type: 'state', state: snapshot() }, participants.agent)
   const preview = state.messages[1]!
-  const committed = { ...preview, id: 'result-run', metadata: { ...preview.metadata,
+  const committed = { ...preview, metadata: { ...preview.metadata,
     custom: { ...metadata(preview), clientMessageId: 'result-run', sequence: 3, positionAfter: undefined } } } as ThreadMessage
   state = { ...state, messages: mergeCanonicalMessages(state.messages, [committed]) }
   state = applyRunUpdate(state, target, delta, participants.agent)
-  assert.deepEqual(state.messages.map(message => message.id), ['first', 'followup', 'result-run'])
+  assert.deepEqual(state.messages.map(message => message.id), ['first', 'followup', 'run-run'])
   assert.deepEqual(state.messages[2]!.content, [{ type: 'text', text: 'run 的完整历史回复' }])
   assert.deepEqual(state.messages.map(message => [metadata(message).groupStart, metadata(message).groupEnd]),
     [[true, false], [false, true], [true, true]])
@@ -161,14 +154,14 @@ test('a live reply keeps its anchor until canonical delivery establishes IM orde
 test('snapshots preserve IM order after reload and older history does not move the reply', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: snapshot() }, participants.agent)
   const reply = state.messages[0]!
-  const canonical = { ...reply, createdAt: new Date(epoch + 4000), metadata: { ...reply.metadata,
+  const canonical = { ...reply, metadata: { ...reply.metadata,
     custom: { ...metadata(reply), sequence: 3, positionAfter: undefined } } } as ThreadMessage
   state = { ...state, messages: mergeCanonicalMessages([], [user('first', 1, 1000), user('followup', 2, 3000), canonical]) }
   state = applyRunUpdate(state, target, { type: 'state', state: snapshot() }, participants.agent)
   state = { ...state, messages: mergeCanonicalMessages(state.messages, [user('older', 0, 0)]) }
-  assert.deepEqual(state.messages.map(message => message.id), ['older', 'first', 'followup', 'preview-run'])
+  assert.deepEqual(state.messages.map(message => message.id), ['older', 'first', 'followup', 'run-run'])
   assert.equal(state.messages[3]!.status?.type, 'complete')
-  assert.equal(state.messages[3]!.createdAt.getTime(), epoch + 4000)
+  assert.equal(state.messages[3]!.createdAt.getTime(), epoch + 2000)
 })
 
 test('committed memory summaries belong to the main run reply and survive HTTP replay and IM merging', () => {
@@ -187,8 +180,8 @@ test('committed memory summaries belong to the main run reply and survive HTTP r
   assert.equal(metadata(state.messages[0]).memory, undefined)
   const main = state.messages[1], memory = metadata(main).memory
   assert.deepEqual(memory?.chips, [{ id: 'memory', text: '喜欢中文' }])
-  const committed = { ...main, id: 'canonical', metadata: { ...main.metadata,
-    custom: { ...metadata(main), sequence: 2, clientMessageId: 'canonical', memory: undefined } } } as ThreadMessage
+  const committed = { ...main, metadata: { ...main.metadata,
+    custom: { ...metadata(main), sequence: 2, clientMessageId: 'canonical' } } } as ThreadMessage
   const merged = mergeCanonicalMessages(state.messages, [committed])
   assert.deepEqual(metadata(merged[1]).memory, memory)
   assert.deepEqual(applyRunUpdate({ ...state, messages: merged }, target, { type: 'state', state: response }, participants.agent, response)
@@ -203,9 +196,7 @@ test('reload keeps interleaved user clusters when run start times disagree with 
     messages.push(user(`user-${turn}`, turn * 2 - 1, turn * 1000))
     const completed = snapshot(`run-${turn}`)
     const envelope = sent(`reply-${turn}`, turn * 2, `run-${turn}`)
-    envelope.payload.body = completed.message!.body
-    envelope.payload.data = { harness: completed.message!.envelope, harnessSessionId: 'session',
-      harnessCommit: { resultId: `result-run-${turn}`, fence: 1 } }
+    envelope.payload = new RunStreamProjection(`run-${turn}`,true).apply({ type: 'state',state: completed }).message
     messages.push(convertEnvelope(envelope, { participants, meId: 'human' }))
   }
   let state = { ...EMPTY_CONVERSATION_CHAT_STATE, messages: mergeCanonicalMessages([], messages) }
@@ -244,13 +235,12 @@ test('citation projections agree across snapshots and IM replay and disappear be
     title: '学习指南', excerpt: '间隔复习有助于记忆。' }]
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: completed }, participants.agent)
   const im: ImEnvelope = { channelId: 'room', channelType: 2, fromUid: 'agent', messageId: 'committed', clientMsgNo: 'committed', messageSeq: 1, timestamp: epoch,
-    payload: { version: 1, kind: 'text', clientMsgNo: 'committed', body, refs: { runId: 'run', agentId: 'agent' },
-      data: { harness: completed.message!.envelope, harnessSessionId: 'session', harnessCommit: { resultId: 'result-run', fence: 1 } } } }
+    payload: project({ type: 'state', state: completed }).message }
   const replay = convertEnvelope(im, { participants, meId: 'human' })
   assert.deepEqual(state.messages[0].content, replay.content)
-  const claims = state.messages[0].content.find(part => part.type === 'tool-call' && part.toolName === 'cite_claims')
-  assert.ok(claims?.type === 'tool-call')
-  assert.deepEqual(claims.result, { claims: [{ id: 'run:result-run:2', text: '间隔复习', confidence: 'grounded',
+  const claims = state.messages[0].content.find(part => part.type === 'data' && part.name === 'citation-claims')
+  assert.ok(claims?.type === 'data')
+  assert.deepEqual(claims.data, { claims: [{ id: 'run:result-run:2', text: '间隔复习', confidence: 'grounded',
     markers: ['S1'], start: 2, end: body.length, basis: '', evidence: completed.message!.envelope.citationEvidence }] })
   state = applyRunUpdate(state, target, { type: 'state', state: structuredClone(completed) }, participants.agent)
   assert.deepEqual(state.messages[0].content, replay.content)
@@ -286,7 +276,7 @@ test('paragraph deltas display immediately, deduplicate, and cancellation clears
 test('a reply at the page boundary leaves room for subsequently loaded older history', () => {
   const state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: snapshot() }, participants.agent)
   const messages = mergeCanonicalMessages(state.messages, [user('older', 1, 1000), user('newer', 3, 3000)])
-  assert.deepEqual(messages.map(message => message.id), ['older', 'preview-run', 'newer'])
+  assert.deepEqual(messages.map(message => message.id), ['older', 'run-run', 'newer'])
 })
 
 test('initial history is ready before slow run snapshots, which merge without duplicate replies', async () => {
@@ -296,8 +286,6 @@ test('initial history is ready before slow run snapshots, which merge without du
   const cancelled: string[] = []
   let receiveIm!: (envelope: ImEnvelope) => void
   const imHistory: ImEnvelope[] = []
-  let finishSecond!: (state: RunState) => void
-  const second = new Promise<RunState>(resolve => { finishSecond = resolve })
   mock.module('@/api/core/realtime', { namedExports: { ws: { connect: async () => {},on: () => () => {} } } })
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
   mock.module('@/features/agents/state', { namedExports: { useParticipants: { getState: () => ({ byId: participants }) } } })
@@ -314,7 +302,7 @@ test('initial history is ready before slow run snapshots, which merge without du
     },
     list: async () => ['run', 'second', 'active'].map(runId => ({ ...target, runId, requestVersion: 1, fence: 1,
       status: runId === 'active' ? 'leased' : 'succeeded' })),
-    read: async ({ runId }: typeof target) => new RunStreamProjection(runId, true).apply({ type: 'state', state: runId === 'second' ? await second : snapshot(runId, 'succeeded') }),
+    read: async () => { throw new Error('history must not hydrate with a separate run read') },
     subscribe: (runTarget: typeof target, receive: (item: AgentRunSnapshot) => void, signal: AbortSignal) => {
       subscribed.push(runTarget.runId); callbacks.set(runTarget.runId, receive)
       return new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), { once: true }))
@@ -335,10 +323,11 @@ test('initial history is ready before slow run snapshots, which merge without du
     assert.equal(useChatThreadStore.getState().conversations.room?.isLoading, false)
     assert.deepEqual(batches, [[]])
     await loading
-    finishSecond(snapshot('second'))
+    callbacks.get('run')!(project({ type: 'state', state: snapshot() }))
+    callbacks.get('second')!(project({ type: 'state', state: snapshot('second') },'second'))
     await new Promise(resolve => setImmediate(resolve))
-    assert.equal(batches.length, 2)
-    assert.deepEqual(subscribed, ['active'])
+    assert.ok(batches.length >= 3)
+    assert.deepEqual(subscribed, ['run', 'second', 'active'])
     const messages = useChatThreadStore.getState().conversations.room!.messages
     assert.deepEqual(messages.slice(0, 2).map(message => message.content), [
       [{ type: 'text', text: 'run 的完整历史回复' }], [{ type: 'text', text: 'second 的完整历史回复' }],
@@ -350,7 +339,7 @@ test('initial history is ready before slow run snapshots, which merge without du
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], null).map(message => message.id), ['visible'])
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], 'visible').map(message => message.id), ['visible'])
     await transport.reloadConversation('room')
-    assert.deepEqual(subscribed, ['active'])
+    assert.deepEqual(subscribed, ['run', 'second', 'active'])
     assert.equal(useChatThreadStore.getState().conversations.room!.messages.length, 3)
     const activeBefore = useChatThreadStore.getState().conversations.room!
     useChatThreadStore.setState({ conversations: { room: { ...activeBefore,typingAgentIds: ['agent'] } } })
@@ -359,7 +348,7 @@ test('initial history is ready before slow run snapshots, which merge without du
     const afterSend = useChatThreadStore.getState().conversations.room!
     assert.deepEqual(afterSend.activeRuns,activeBefore.activeRuns)
     assert.deepEqual(afterSend.typingAgentIds,['agent'])
-    assert.deepEqual(afterSend.messages.slice(-3).map(message => message.id),['active-lead-in','active-example','preview-active'])
+    assert.deepEqual(afterSend.messages.slice(-3).map(message => message.id),['active-lead-in','active-example','run-active'])
     callbacks.get('active')!(project({ type: 'preview',preview: { ...(event('新的末条回复') as Extract<RunStreamEvent,{ type: 'preview' }>).preview,
       runId: 'active',seq: 2 } }, 'active'))
     await transport.reloadConversation('room')

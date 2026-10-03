@@ -30,8 +30,8 @@ export async function assertFrozenAudience(db: Queryable, work: Pick<WorkItem, '
 
 export async function bindProductRun(db: Queryable, identity: RunIdentity, conversationId: string, internal = false) {
   const result = await db.query(`INSERT INTO agent_run_bindings
-    (run_id,company_id,conversation_id,session_id,agent_id,principal_id,thread_id,internal)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(run_id) DO UPDATE SET run_id=EXCLUDED.run_id
+    (run_id,company_id,conversation_id,session_id,agent_id,principal_id,thread_id,internal,message_protocol)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,2) ON CONFLICT(run_id) DO UPDATE SET run_id=EXCLUDED.run_id
     WHERE agent_run_bindings.company_id=EXCLUDED.company_id AND agent_run_bindings.conversation_id=EXCLUDED.conversation_id
       AND agent_run_bindings.session_id=EXCLUDED.session_id AND agent_run_bindings.agent_id=EXCLUDED.agent_id
       AND agent_run_bindings.principal_id=EXCLUDED.principal_id AND agent_run_bindings.thread_id IS NOT DISTINCT FROM EXCLUDED.thread_id
@@ -42,10 +42,11 @@ export async function bindProductRun(db: Queryable, identity: RunIdentity, conve
 }
 
 /** The authenticated route supplies a product channel; the stored runtime identity is authoritative. */
-export async function productRunIdentity(input: { companyId: string; conversationId: string; agentId: string; runId: string; principalId: string; threadId?: string }, db: Queryable = pool): Promise<RunIdentity> {
+export async function productRunIdentity(input: { companyId: string; conversationId: string; agentId: string; runId: string; principalId: string; threadId?: string; historical?: true }, db: Queryable = pool): Promise<RunIdentity> {
   const result = await db.query(`SELECT 1 FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2
-    AND conversation_id=$3 AND agent_id=$4 AND principal_id=$5 AND thread_id IS NOT DISTINCT FROM $6 AND NOT internal`,
-  [input.runId,input.companyId,input.conversationId,input.agentId,input.principalId,input.threadId ?? null])
+    AND conversation_id=$3 AND agent_id=$4 AND principal_id=$5 AND thread_id IS NOT DISTINCT FROM $6 AND NOT internal
+    AND (message_protocol=2 OR $7)`,
+  [input.runId,input.companyId,input.conversationId,input.agentId,input.principalId,input.threadId ?? null,input.historical === true])
   if (!result.rows.length) throw Object.assign(new Error('run not found'), { status: 404 })
   const identity = await readRunReference(db,input.companyId,input.runId)
   if (!identity || identity.principalId !== input.principalId || identity.agentId !== input.agentId) throw Object.assign(new Error('run not found'), { status: 404 })

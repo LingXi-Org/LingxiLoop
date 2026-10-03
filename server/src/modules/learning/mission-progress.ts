@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../im/message-types.js'
 import type { Queryable } from '../../db/queryable.js'
 import { persistNativeEvents } from '../../agents/native-events.js'
 import { findLearningMission } from './missions-repository.js'
@@ -12,10 +13,10 @@ export async function publishMissionProgress(db: Queryable, input: { companyId: 
   const progressVersion = changed.rows[0].progress_version, clientNonce = `mission:${mission.id}:${progressVersion}`
   await persistNativeEvents(db, { companyId: input.companyId, workId: input.workId ?? `mission:${mission.id}`, key: clientNonce }, [{
     type: 'im.system', companyId: input.companyId, actorId: mission.coordinatorAgentId, channelId: mission.conversationId, clientNonce,
-    payload: { version: 1, kind: 'learning_mission', clientMsgNo: clientNonce, body: mission.goal,
-      replyToClientMsgNo: mission.triggerClientMsgNo, refs: { agentId: mission.coordinatorAgentId },
-      data: { missionId: mission.id, projectId: mission.projectId, goal: mission.goal, successCriteria: mission.successCriteria,
+    payload: createNativeMessage({ id: `mission:${mission.id}`, role: 'assistant',
+      content: [{ type: 'data', name: 'learning-mission', data: { missionId: mission.id, projectId: mission.projectId, goal: mission.goal, successCriteria: mission.successCriteria,
         kind: mission.kind, status: mission.status, coordinatorAgentId: mission.coordinatorAgentId, steps: mission.steps,
-        progressVersion, updatedAt: new Date(mission.updatedAt).toISOString(), suppressAgentWake: true } },
+        progressVersion, updatedAt: new Date(mission.updatedAt).toISOString() } }],
+      custom: { replyToClientMsgNo: mission.triggerClientMsgNo, refs: { agentId: mission.coordinatorAgentId }, progressVersion, suppressAgentWake: true } }),
   }])
 }

@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../../lib/nativeMessage'
 import assert from 'node:assert/strict'
 import { setImmediate } from 'node:timers/promises'
 import { mock, test } from 'node:test'
@@ -16,12 +17,11 @@ test('history paints independently of diagnostics and obsolete requests cannot m
   let history: () => Promise<ImEnvelope[]> = async () => [envelope('history', 1)]
   let finishRun!: (response: AgentRunResponse) => void
   const run = new Promise<AgentRunResponse>(resolve => { finishRun = resolve })
-  const projected: AgentRunSnapshot = { runId: 'run', view: { ...createRunView('run'), lifecycle: 'leased', requestVersion: 1, fence: 1 },
-    content: [], status: { type: 'running' }, createdAt: new Date(3000).toISOString(), tools: [], memory: null, canControl: true, error: null, sourceRef: null }
+  const projected: AgentRunSnapshot = { message: createNativeMessage({ id: 'run-run', role: 'assistant',createdAt: new Date(3000).toISOString(), content: [],status: { type: 'running' },custom: { runId: 'run',harness: { ...createRunView('run'), lifecycle: 'leased',requestVersion: 1,fence: 1,artifacts: [] } } }) }
   const target = { conversationId: 'room', agentId: 'agent', runId: 'run', status: 'leased', requestVersion: 1, fence: 1 }
   function envelope(id: string, sequence: number): ImEnvelope {
     return { channelId: 'room', channelType: 2, fromUid: 'human', clientMsgNo: id, messageId: id,
-      messageSeq: sequence, timestamp: sequence, payload: { version: 1, kind: 'text', clientMsgNo: id, body: id } }
+      messageSeq: sequence, timestamp: sequence, payload: createNativeMessage({ id: id, role: 'user', createdAt: new Date(sequence * 1000).toISOString(), content: [{ type: 'text', text: id }] }) }
   }
   mock.module('@/api/core/realtime', { namedExports: { ws: { connect: async () => {}, on: () => () => {} } } })
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
@@ -58,7 +58,7 @@ test('history paints independently of diagnostics and obsolete requests cannot m
     await setImmediate()
     assert.equal(loaded, true, 'history completion must not wait for a run read')
     assert.equal(historyReads, 1)
-    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id !== 'preview-run').map(message => message.id), ['history'])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id !== 'run-run').map(message => message.id), ['history'])
     assert.equal(useChatThreadStore.getState().conversations.room.isLoading, false)
     const refresh = transport.refreshRun(target)
     await setImmediate()
@@ -66,8 +66,8 @@ test('history paints independently of diagnostics and obsolete requests cannot m
     setConversationMessages('room', [convertEnvelope(envelope('live', 2), { participants: {}, meId: 'human' })])
     finishRun(projected)
     await first; await refresh; await setImmediate()
-    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id !== 'preview-run').map(message => message.id), ['history', 'live'])
-    assert.equal(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id === 'preview-run').length, 1)
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id !== 'run-run').map(message => message.id), ['history', 'live'])
+    assert.equal(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id === 'run-run').length, 1)
 
     for (const fail of [false, true]) {
       let resolve!: (value: ImEnvelope[]) => void, reject!: (error: Error) => void
@@ -78,7 +78,7 @@ test('history paints independently of diagnostics and obsolete requests cannot m
       if (fail) reject(new Error('old request failed'))
       else resolve([envelope('obsolete', 3)])
       await stale; await setImmediate()
-      assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id !== 'preview-run'), [])
+      assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id !== 'run-run'), [])
       assert.equal(useChatThreadStore.getState().conversations.room.error, null)
     }
 
@@ -89,12 +89,12 @@ test('history paints independently of diagnostics and obsolete requests cannot m
     projectId = 'other-project'
     finishHistory([envelope('old-project', 4)])
     await previousProject; await setImmediate()
-    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id !== 'preview-run'), [])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id !== 'run-run'), [])
     projectId = 'project'
     history = async () => [envelope('returned', 5)]
     await transport.loadConversation('room')
     assert.equal(useChatThreadStore.getState().conversations.room.isLoading, false)
-    assert.equal(useChatThreadStore.getState().conversations.room.messages[0].id, 'returned')
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.map(message => message.id), ['run-run', 'returned'])
 
     await setImmediate()
     const previousStream = streams.at(-1)!
@@ -105,13 +105,13 @@ test('history paints independently of diagnostics and obsolete requests cannot m
     projectId = 'project'; transport.setWorkspaceChannels(['room'])
     finishHistory([envelope('revived-old-project', 6)])
     await roundTrip; await setImmediate()
-    previousStream.receive({ ...projected, content: [{ type: 'text', text: 'revived-old-stream' }] })
+    previousStream.receive({ message: { ...projected.message, content: [{ type: 'text', text: 'revived-old-stream' }] } as typeof projected.message })
     assert.deepEqual(useChatThreadStore.getState().conversations, {}, 'returning to the same identity cannot revive old work')
     history = async () => [envelope('fresh-return', 7)]
     await transport.loadConversation('room'); await setImmediate()
     assert.notEqual(streams.at(-1), previousStream)
     assert.equal(streams.at(-1)?.signal.aborted, false)
-    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.map(message => message.id), ['preview-run', 'fresh-return'])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.map(message => message.id), ['run-run', 'fresh-return'])
 
     for (const older of [false, true]) {
       transport.setWorkspaceChannels(['room', 'revoked'])
@@ -137,7 +137,7 @@ test('history paints independently of diagnostics and obsolete requests cannot m
       const restored = useChatThreadStore.getState().conversations.room
       assert.equal(restored.isLoading, false)
       assert.equal(restored.isLoadingOlder, false)
-      assert.deepEqual(restored.messages.filter(message => message.id !== 'preview-run').map(message => message.id),
+      assert.deepEqual(restored.messages.filter(message => message.id !== 'run-run').map(message => message.id),
         older ? ['replacement', 'current'] : ['replacement'])
     }
   } finally {

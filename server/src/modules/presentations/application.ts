@@ -1,5 +1,5 @@
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto'
-import type { LingxiMessageV1 } from '../../im/message-types.js'
+import type { NativeMessage } from '../../im/message-types.js'
 import type { AgentActionContext } from '../../agents/contracts.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { Storage } from '../../storage.js'
@@ -344,5 +344,5 @@ export function createPresentationAgentFacade(application: PresentationsApplicat
   }
 }
 
-export type PresentationArtifactMessage = LingxiMessageV1
+export type PresentationArtifactMessage = NativeMessage
 export type PresentationPersistenceRow = PresentationRow

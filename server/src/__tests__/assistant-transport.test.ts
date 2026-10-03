@@ -51,11 +51,11 @@ test('native state operations stream text once, retract it, and end with canonic
     tracker.append(chunk.operations)
     states.push(tracker.state as unknown as AgentRunSnapshot)
   }
-  assert.ok(states.some(state => state.content[0]?.type === 'text' && state.content[0].text === '第一段\n\n第二段😀'))
-  assert.ok(states.some((state, index) => index > 1 && !state.content.length))
-  assert.deepEqual(states.at(-1)!.content, [{ type: 'text', text: '最终正文' }])
-  assert.equal(states.at(-1)!.status.type, 'complete')
-  assert.ok(states.every(state => state.view.draft === '' && !state.view.preview))
+  assert.ok(states.some(state => state.message.content[0]?.type === 'text' && state.message.content[0].text === '第一段\n\n第二段😀'))
+  assert.ok(states.some((state, index) => index > 1 && !state.message.content.length))
+  assert.deepEqual(states.at(-1)!.message.content, [{ type: 'text', text: '最终正文' }])
+  assert.equal(states.at(-1)!.message.status?.type, 'complete')
+  assert.ok(states.every(state => !('draft' in (state.message.metadata.custom.harness as object)) && !('message' in (state.message.metadata.custom.harness as object))))
 })
 
 test('projection owns gaps, cancellation, failures, approvals and filtered tool/memory replay', () => {
@@ -64,8 +64,8 @@ test('projection owns gaps, cancellation, failures, approvals and filtered tool/
     projection.apply({ type: 'state', state: runState() })
     projection.apply(draft('未提交正文'))
     const stopped = projection.apply({ type: 'state', state: runState(status) })
-    assert.deepEqual(stopped.content, [])
-    assert.deepEqual(stopped.status, { type: 'incomplete', reason: status === 'failed' ? 'error' : 'cancelled' })
+    assert.deepEqual(stopped.message.content, [])
+    assert.deepEqual(stopped.message.status, { type: 'incomplete', reason: status === 'failed' ? 'error' : 'cancelled' })
   }
   const projection = new RunStreamProjection('run', false)
   projection.apply({ type: 'state', state: runState() })
@@ -76,14 +76,14 @@ test('projection owns gaps, cancellation, failures, approvals and filtered tool/
     data: { toolCallId: 'host:memory', result: { status: 'completed', value: {
       documents: [{ id: 'm', description: '喜欢中文', status: 'active', body: 'PRIVATE' }], deleted: [],
     } } } } })
-  assert.deepEqual(memory.memory?.chips, [{ id: 'm', text: '喜欢中文' }])
+  assert.deepEqual((memory.message.metadata.custom.memory as { chips: unknown[] })?.chips, [{ id: 'm', text: '喜欢中文' }])
   assert.doesNotMatch(JSON.stringify(memory), /PRIVATE|arguments/)
   const waiting = runState('waiting')
   waiting.run.goalOutcome = { status: 'awaiting_approval', requestVersion: 1, verification: 'not_run', approvalId: 'approval' }
   const result = projection.apply({ type: 'state', state: waiting })
-  assert.deepEqual(result.status, { type: 'requires-action', reason: 'tool-calls' })
-  assert.equal(result.canControl, false)
-  assert.equal(result.view.goalOutcome?.status, 'awaiting_approval')
+  assert.deepEqual(result.message.status, { type: 'requires-action', reason: 'tool-calls' })
+  assert.equal(result.message.metadata.custom.harnessControl, false)
+  assert.equal((result.message.metadata.custom.harness as { goalOutcome: { status: string } }).goalOutcome.status, 'awaiting_approval')
 })
 
 test('truncated native frames and old browser wire format fail instead of falling back', async () => {

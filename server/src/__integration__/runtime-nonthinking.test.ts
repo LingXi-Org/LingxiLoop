@@ -1,3 +1,5 @@
+import { nativeText } from '../im/message-types.js'
+import type { RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -105,7 +107,7 @@ test('production workers always expose full tools and disable thinking even with
       release()
       while ((await api.readRunState(run))?.delivery !== 'delivered') { timeout.throwIfAborted(); await delay(20) }
       assert.equal((await api.readRunState(run))?.message?.body, body)
-      assert.deepEqual(im.messages.filter(message => message.channelId === conversationId).map(message => message.payload.body), [body])
+      assert.deepEqual(im.messages.filter(message => message.channelId === conversationId).map(message => nativeText(message.payload)), [body])
       assert.equal(requests.filter(request => request.stream).length, 2)
       assert.ok(requests.some(request => !request.stream), 'auxiliary content check must also use the native driver')
       for (const request of requests) {
@@ -122,14 +124,14 @@ test('production workers always expose full tools and disable thinking even with
         if (chunk.type === 'update-state') replayState.append(chunk.operations)
       }
       const final = replayState.state as unknown as AgentRunSnapshot
-      assert.deepEqual(final.content.filter(part => part.type === 'text'), [{ type: 'text', text: body }])
-      assert.equal(final.view.delivery, 'delivered')
-      assert.ok(snapshots.some(snapshot => snapshot.status.type === 'running' && snapshot.content.some(part => part.type === 'text' && part.text === '第一段')))
+      assert.deepEqual(final.message.content.filter(part => part.type === 'text'), [{ type: 'text', text: body }])
+      assert.equal((final.message.metadata.custom.harness as RunDisplayState).delivery, 'delivered')
+      assert.ok(snapshots.some(snapshot => snapshot.message.status?.type === 'running' && snapshot.message.content.some(part => part.type === 'text' && part.text === '第一段')))
       const snapshotResponse = await fetch(`${origin}/api/im/channels/${conversationId}/agents/${agentId}/runs/${run.runId}`, { headers, signal: timeout })
       assert.equal(snapshotResponse.status, 200)
       const snapshot = await snapshotResponse.json() as AgentRunSnapshot
-      assert.deepEqual(snapshot.content, final.content)
-      assert.deepEqual(snapshot.tools, final.tools)
+      assert.deepEqual(snapshot.message.content, final.message.content)
+      assert.deepEqual(snapshot.message.metadata, final.message.metadata)
       for (const invalid of [path.replace(companyId, 'other-company'), `${path}?threadId=other-thread`]) {
         const denied = await fetch(origin + invalid, { headers, signal: timeout })
         assert.ok([400, 403, 404].includes(denied.status))
@@ -139,7 +141,7 @@ test('production workers always expose full tools and disable thinking even with
       await writeFile(`.codex-tmp/assistant-transport/${mode}.json`, JSON.stringify({
         protocol: 'assistant-transport', mode, snapshots: snapshots.length,
         streamedBeforeCompletion: true, deliveredOnce: true, reconnectMatchesSnapshot: true,
-        content: final.content, status: final.status, tenantAndThreadIsolation: true,
+        content: final.message.content, status: final.message.status, tenantAndThreadIsolation: true,
       }, null, 2))
       let calls = await pool.query('SELECT status FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, run.runId])
       while (calls.rows.length < requests.length) {

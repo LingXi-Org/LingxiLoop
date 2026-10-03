@@ -51,8 +51,8 @@ async function committedMessages(context: ActionContext, ids: string[]) {
   const messages = await readAgentChannelMessages({ companyId: context.work.tenantId, agentId: context.work.agentId,
     channelId: productConversationId(context.work), messageIds: ids, signal: context.signal })
   if (!messages || new Set(messages.map(message => message.messageId)).size !== ids.length
-    || messages.some(message => message.fromUid !== context.work.principalId || message.payload.refs?.agentId)) throw new NoEffectError('evidence must be committed messages from the original human', 'forbidden')
-  return ids.map(id => ({ ...messages.find(message => message.messageId === id || message.payload.clientMsgNo === id)!, clientMsgNo: id }))
+    || messages.some(message => message.fromUid !== context.work.principalId || message.payload.role !== 'user')) throw new NoEffectError('evidence must be committed messages from the original human', 'forbidden')
+  return ids.map(id => ({ ...messages.find(message => message.messageId === id || message.payload.id === id)!, clientMsgNo: id }))
 }
 
 export async function readLearningAttempts(context: ActionContext, input: { attemptId?: string; activityId?: string; missionStepId?: string }) {
@@ -186,7 +186,7 @@ export const learningTools: ToolDefinition[] = [
     async execute(context, input) {
       const source = input.sourceClientMsgNo ?? (typeof context.work.meta?.sourceClientMsgNo === 'string' ? context.work.meta.sourceClientMsgNo : context.work.triggerRef)
       const messages = await committedMessages(context, [source]), db = database(context)
-      if (messages[0]?.payload.kind !== 'text') throw new NoEffectError('a Mission requires the original learner’s committed text')
+      if (messages[0]?.payload.role !== 'user') throw new NoEffectError('a Mission requires the original learner’s committed text')
       let childId: string | undefined
       const result = await startLearningMission(db, run => run(db), {
         syncMessages: async () => messages.map(message => ({ clientMsgNo: message.clientMsgNo, fromUid: message.fromUid, authoredByAgent: false })),

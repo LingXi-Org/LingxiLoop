@@ -1,4 +1,4 @@
-import type { LingxiMessageV1 } from './message-types.js'
+import type { NativeMessage } from './message-types.js'
 
 export const WUKONG_CHANNEL_TYPE_PERSON = 1
 export const WUKONG_CHANNEL_TYPE_GROUP = 2
@@ -33,7 +33,7 @@ export interface ImMessage {
   channelType: number
   fromUid: string
   timestamp: number
-  payload: LingxiMessageV1
+  payload: NativeMessage
 }
 
 export interface ImReadReceiptAdvance {

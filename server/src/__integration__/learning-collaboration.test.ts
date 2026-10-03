@@ -1,3 +1,4 @@
+import { createNativeMessage, nativeData } from '../../../src/lib/nativeMessage'
 import assert from 'node:assert/strict'
 import { after, afterEach, before, beforeEach, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -59,7 +60,7 @@ async function fixture() {
   const api = await lingxiOSControl(), policy = await syncConversationPolicy(api,companyId,roomId)
   const source = { messageId: 'collab-request',version: 1 }, body = '本周完成一个有证据、有独立复核的课程练习，并整理反思。'
   im.messages.push({ channelId: roomId,channelType: 2,messageId: source.messageId,clientMsgNo: source.messageId,messageSeq: 1,
-    fromUid: 'learner',timestamp: Date.now()/1000,payload: { version: 1,kind: 'text',clientMsgNo: source.messageId,body } })
+    fromUid: 'learner',timestamp: Date.now()/1000,payload: createNativeMessage({ id: source.messageId, role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: body }] }) })
   const accepted = await api.conversations.ingest({ tenantId: companyId,conversationId: roomId,policyVersion: policy.version,
     ...source,author: { id: 'learner',kind: 'human' },text: body,mentions: [ids.nova] },
   { mode: 'execute',executionClass: 'operation',codeExecution: 'disabled' })
@@ -199,7 +200,7 @@ test('changing a Mission coordinator publishes the current owner in the same tra
   await transaction(db => assignLearningMissionCoordinator(db,input))
   const events = (await pool.query('SELECT event FROM agent_native_event_outbox WHERE company_id=$1',[f.companyId])).rows
   assert.equal(events.length,1)
-  assert.deepEqual([events[0].event.actorId,events[0].event.payload.data.coordinatorAgentId,events[0].event.payload.data.progressVersion],
+  assert.deepEqual([events[0].event.actorId,nativeData(events[0].event.payload,'learning-mission')?.coordinatorAgentId,events[0].event.payload.metadata.custom.progressVersion],
     [f.ids.forge,f.ids.forge,1])
 })
 
@@ -287,10 +288,12 @@ test('scripted native execution persists Mission → independent Canvas host →
       [{ execution_role: 'reporter' },{ execution_role: 'specialist' },{ execution_role: 'verifier' }])
     assert.ok(toolsSeen.has('knowledge__list_sources'))
     const events = (await pool.query("SELECT event FROM agent_native_event_outbox WHERE company_id=$1 AND event->>'type'='im.system'",[f.companyId])).rows.map(row => row.event)
-    const plans = events.filter(event => event.payload.kind === 'learning_mission').sort((a,b) => a.payload.data.progressVersion-b.payload.data.progressVersion)
-    assert.equal(plans.at(-1).payload.data.status,'COMPLETED')
-    assert.equal(plans.at(-1).payload.data.steps.length,2)
-    assert.ok(events.some(event => event.payload.kind === 'canvas' && event.payload.data.status === 'completed'))
+    const plans = events.filter(event => nativeData(event.payload,'learning-mission')).sort((a,b) => a.payload.metadata.custom.progressVersion-b.payload.metadata.custom.progressVersion)
+    const finalPlan = nativeData<{ status: string; steps: unknown[] }>(plans.at(-1).payload,'learning-mission')
+    assert.ok(finalPlan)
+    assert.equal(finalPlan.status,'COMPLETED')
+    assert.equal(finalPlan.steps.length,2)
+    assert.ok(events.some(event => nativeData(event.payload,'canvas')?.status === 'completed'))
     const before = events.length
     await canvas.reconcile(pool,completeCanvasWork,signal); await reconcileHandoffs(pool,transaction,lingxiOSControl,signal)
     assert.equal((await pool.query("SELECT 1 FROM agent_native_event_outbox WHERE company_id=$1 AND event->>'type'='im.system'",[f.companyId])).rowCount,before)
@@ -335,7 +338,7 @@ for (const outcome of ['failed','cancelled'] as const) test(`handoff ${outcome} 
     assert.equal((await pool.query('SELECT id FROM agent_native_event_outbox WHERE company_id=$1 AND attempts>0 AND delivered_at IS NULL',[f.companyId])).rowCount,count)
     await pool.query('UPDATE agent_native_event_outbox SET available_at=NOW() WHERE company_id=$1',[f.companyId])
     const delivered: string[] = []
-    await flushNativeEvents(pool,async event => { if (event.type === 'im.system' && event.payload.kind === 'handoff') delivered.push(String(event.payload.data?.status)) },signal)
+    await flushNativeEvents(pool,async event => { if (event.type === 'im.system' && nativeData(event.payload,'handoff') !== undefined) delivered.push(String((nativeData(event.payload,'handoff') as { status?: string })?.status)) },signal)
     assert.ok(delivered.includes(outcome))
     assert.equal((await pool.query('SELECT id FROM agent_native_event_outbox WHERE company_id=$1 AND delivered_at IS NULL',[f.companyId])).rowCount,0)
   } finally { await worker.stop() }

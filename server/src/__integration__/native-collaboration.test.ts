@@ -53,6 +53,12 @@ test('product policy feeds native IM identities, graph waits, state conflicts an
       return await response.json() as { runId: string; requestVersion: number; fence: number; status: string }[]
     }
     assert.equal((await discover()).length,2)
+    // Pre-cutover runs remain available to business/audit readers, but cannot repopulate chat history.
+    await pool.query('UPDATE agent_run_bindings SET message_protocol=1 WHERE run_id=$1',[accepted.runs[1].runId])
+    assert.deepEqual((await discover()).map(run => run.runId),[accepted.runs[0].runId])
+    const historicalRun = { companyId,conversationId,agentId: accepted.runs[1].agentId,runId: accepted.runs[1].runId,principalId: 'test-owner' }
+    await assert.rejects(productRunIdentity(historicalRun),{ status:404 })
+    assert.ok(await productRunIdentity({ ...historicalRun,historical:true }))
     const target = accepted.runs[0]
     assert.equal(await api.revise(target,'Updated collaboration request'),true)
     const discovered = (await discover()).find(run => run.runId === target.runId)!
@@ -70,8 +76,8 @@ test('product policy feeds native IM identities, graph waits, state conflicts an
         assert.equal(next.value.type,'update-state')
         if (next.value.type !== 'update-state') continue
         state.append(next.value.operations)
-        const snapshot=state.state as { runId: string; view: { runId: string; requestVersion: number } }
-        assert.deepEqual([snapshot.runId,snapshot.view.runId,snapshot.view.requestVersion],[target.runId,target.runId,2])
+        const snapshot=state.state as { message: { id: string; metadata: { custom: { runId: string; harness: { requestVersion: number } } } } }
+        assert.deepEqual([snapshot.message.id,snapshot.message.metadata.custom.runId,snapshot.message.metadata.custom.harness.requestVersion],[`run-${target.runId}`,target.runId,2])
       } finally { await reader.cancel() }
     }
     const denied = await fetch(url,{ headers: { 'x-company-id': 'outside-company' } })

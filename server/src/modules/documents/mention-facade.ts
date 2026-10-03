@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../im/message-types.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { wukongClient } from '../../im/wukong.js'
@@ -17,14 +18,11 @@ export const documentMentionApplication = new DocumentMentionApplication({
       userId: args.mentionerId,
       agentId: args.agentId,
     })
-    await wukongClient().sendMessage(conversation.id, 2, args.mentionerId, {
-      version: 1,
-      kind: 'text',
-      clientMsgNo: `doc-mention-${args.deliveryId}-${args.agentId}`,
-      body: `@${args.agentId} heads-up — I mentioned you in the document "${args.documentTitle}". Please read document ${args.documentId}.`,
-      refs: { documentId: args.documentId },
-      data: { mentionedIds: [args.agentId], mentionAll: false },
-    })
+    await wukongClient().sendMessage(conversation.id, 2, args.mentionerId, createNativeMessage({
+      id: `doc-mention-${args.deliveryId}-${args.agentId}`, role: 'user',
+      content: [{ type: 'text', text: `@${args.agentId} heads-up — I mentioned you in the document "${args.documentTitle}". Please read document ${args.documentId}.` }],
+      custom: { refs: { documentId: args.documentId }, mentionedIds: [args.agentId], mentionAll: false },
+    }))
   },
   metric: inc,
 })

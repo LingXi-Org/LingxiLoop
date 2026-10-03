@@ -52,7 +52,7 @@ export function ConversationSearch({
       applyFindHighlights(rootRef.current, deferredQuery, current)
       if (current) {
         rootRef.current?.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(current.messageId)}"]`)
-          ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+          ?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
       }
     })
     return () => window.cancelAnimationFrame(frame)

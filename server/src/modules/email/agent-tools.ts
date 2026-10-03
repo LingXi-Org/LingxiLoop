@@ -1,3 +1,6 @@
+import { nativeAttachments } from '../../im/message-types.js'
+import { attachmentMetadata } from '../../im/attachments.js'
+import type { AttachmentRef } from '../../im/contracts.js'
 import { productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
 import { NoEffectError, type ActionContext, type ActionResult, type ToolDefinition } from '@lyyzka/lingxios'
@@ -25,14 +28,17 @@ async function authorize(context: ActionContext, input: Record<string, unknown> 
     resource: ['whoami','contacts','inbox'].includes(method) ? { type: 'agent', id: context.work.agentId }
       : { type: 'conversation', id: typeof input.conversationId === 'string' ? input.conversationId : productConversationId(context.work) } })
 }
-async function attachments(context: ActionContext, refs: string[]): Promise<OutboundAttachmentInput[]> {
+async function attachments(context: ActionContext, refs: AttachmentRef[]): Promise<OutboundAttachmentInput[]> {
   const messages = refs.length ? await readAgentChannelMessages({ companyId: context.work.tenantId, agentId: context.work.agentId,
-    channelId: productConversationId(context.work), messageIds: refs, signal: context.signal }) : []
-  const resolved = refs.map(ref => {
-    const message = messages?.find(row => row.clientMsgNo === ref && row.payload.kind === 'attachment'), data = message?.payload.data
-    if (typeof data?.key !== 'string' || !data.key.startsWith(`attachments/${context.work.tenantId}/`)) throw new NoEffectError('committed attachment is unavailable')
-    return outboundAttachmentSchema.parse({ key: data.key, filename: data.name, mimeType: data.mime, sizeBytes: data.size })
-  })
+    channelId: productConversationId(context.work), messageIds: refs.map(ref => ref.clientMsgNo), signal: context.signal }) : []
+  const resolved: OutboundAttachmentInput[] = []
+  for (const ref of refs) {
+    const message = messages?.find(row => row.clientMsgNo === ref.clientMsgNo)
+    const attachment = message && nativeAttachments(message.payload).find(file => file.id === ref.attachmentId)
+    if (!attachment) throw new NoEffectError('committed attachment is unavailable')
+    const data = await attachmentMetadata(attachment,context.work.tenantId)
+    resolved.push(outboundAttachmentSchema.parse({ key: data.key, filename: data.name, mimeType: data.mime, sizeBytes: data.size }))
+  }
   if (resolved.reduce((sum, item) => sum + item.sizeBytes, 0) > 25 * 1024 * 1024) throw new NoEffectError('email attachments exceed 25 MiB')
   return resolved
 }
@@ -72,7 +78,7 @@ export const emailTools: ToolDefinition[] = [
     effect: 'uncertain', approval: true, authorize, async preview(context, input) {
       const project = await context.database.query('SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2', [productConversationId(context.work),context.work.tenantId])
       return { email: await application(context).delivery.previewSend(scope(context), input), body: input.body,
-        attachments: await attachments(context, input.attachmentClientMsgNos), projectId: project.rows[0]?.project_id ?? null }
+        attachments: await attachments(context, input.attachmentRefs), projectId: project.rows[0]?.project_id ?? null }
     }, async execute(context, input) {
       const preview = context.approvedPreview
       if (!preview) throw new NoEffectError('approved email preview is required')
@@ -86,7 +92,7 @@ export const emailTools: ToolDefinition[] = [
       const target = await findEmailReplyTarget(db(context), context.work.tenantId, input.messageId)
       if (target?.conversation_id !== input.conversationId || !target.members?.includes(context.work.agentId)) throw new NoEffectError('reply message is outside the authorized thread', 'forbidden')
     }, async preview(context, input) { return { email: await application(context).delivery.previewReply(scope(context), input.messageId, input),
-      body: input.body, attachments: await attachments(context, input.attachmentClientMsgNos) } }, async execute(context, input) {
+      body: input.body, attachments: await attachments(context, input.attachmentRefs) } }, async execute(context, input) {
       const preview = context.approvedPreview
       if (!preview) throw new NoEffectError('approved email preview is required')
       return delivered(await application(context).delivery.replyFromAgent(scope(context), input.messageId, { body: input.body, cc: input.cc,

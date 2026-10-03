@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../im/message-types.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { wukongClient } from '../../im/wukong.js'
@@ -15,19 +16,10 @@ export const pollApplication = new PollApplication(pool, {
       row.channel_id,
       row.channel_type,
       actorId ?? row.author_id,
-      {
-        version: 1,
-        kind: 'poll',
-        clientMsgNo,
-        body: `📊 ${row.poll.question}`,
-        refs: { pollClientMsgNo: row.poll_client_msg_no },
-        data: {
-          poll: row.poll as unknown as Record<string, unknown>,
-          pollTallies: tallies,
-          revision,
-          suppressAgentWake: !initial,
-        },
-      },
+      createNativeMessage({ id: row.poll_client_msg_no, role: 'assistant',
+        content: [{ type: 'data', name: 'poll', data: { poll: row.poll, pollTallies: tallies, revision } }],
+        custom: { refs: { pollClientMsgNo: row.poll_client_msg_no }, suppressAgentWake: !initial } }),
+      clientMsgNo,
     )
     return sent.messageSeq
   },

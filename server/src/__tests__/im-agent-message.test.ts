@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../../src/lib/nativeMessage'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Queryable } from '../db/queryable.js'
@@ -25,7 +26,7 @@ test('agent send rechecks authoritative WuKong history under the channel lease',
       channelId: 'room',
       fromUid: 'peer-agent',
       timestamp: 1_788_000_000,
-      payload: { version: 1 as const, kind: 'text' as const, clientMsgNo: 'peer-client-message', body: 'same answer' },
+      payload: createNativeMessage({ id: 'peer-client-message', role: 'assistant', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'same answer' }] }),
     }],
     listConversations: async () => [],
     clearUnread: async () => undefined,
@@ -45,7 +46,7 @@ test('agent send rechecks authoritative WuKong history under the channel lease',
     userId: 'agent',
     channelId: 'room',
     clientNonce: 'agent-reply:nonce',
-    payload: { version: 1, kind: 'text', clientMsgNo: 'agent-reply:nonce', body: 'same answer' },
+    payload: createNativeMessage({ id: 'agent-reply:nonce', role: 'assistant', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'same answer' }] }),
     rejectVerbatimPeerBody: 'same answer',
   })
 
@@ -74,7 +75,7 @@ test('agent inbox reads and clears only tenant-authorized WuKong conversations',
       return [{
         messageId: `${channelId}-message`, messageSeq: 7, clientMsgNo: `${channelId}-client`,
         channelId, fromUid: 'peer', timestamp: 1_788_000_000,
-        payload: { version: 1 as const, kind: 'text' as const, clientMsgNo: `${channelId}-client`, body: channelId },
+        payload: createNativeMessage({ id: `${channelId}-client`, role: 'assistant', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: channelId }] }),
       }]
     },
     listConversations: async () => [
@@ -119,12 +120,12 @@ test('agent search pages authoritative history and excludes unauthorized channel
       if (channelId !== 'allowed') throw new Error('unauthorized channel was synchronized')
       if (before > 0) return [{
         messageId: 'match', messageSeq: 1, clientMsgNo: 'match-client', channelId, fromUid: 'peer', timestamp: 1,
-        payload: { version: 1 as const, kind: 'text' as const, clientMsgNo: 'match-client', body: 'Needle' },
+        payload: createNativeMessage({ id: 'match-client', role: 'assistant', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'Needle' }] }),
       }]
       return Array.from({ length: 200 }, (_, index) => ({
         messageId: `page-${index + 2}`, messageSeq: index + 2, clientMsgNo: `client-${index + 2}`,
         channelId, fromUid: 'peer', timestamp: index + 2,
-        payload: { version: 1 as const, kind: 'text' as const, clientMsgNo: `client-${index + 2}`, body: 'haystack' },
+        payload: createNativeMessage({ id: `client-${index + 2}`, role: 'assistant', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'haystack' }] }),
       }))
     },
     listConversations: async () => [

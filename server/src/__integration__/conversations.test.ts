@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../../src/lib/nativeMessage'
 /**
  * Integration tests for conversation list/search shaping.
  *
@@ -138,9 +139,7 @@ test('[integration] new direct conversation is bound, listed and accepts a messa
   ])
   const send = await fetch(`${baseUrl}/api/im/channels/${created.id}/messages/accept`, {
     method: 'POST', headers,
-    body: JSON.stringify({ clientNonce: 'created-conversation-message', payload: {
-      version: 1, kind: 'text', clientMsgNo: 'created-conversation-message', body: '你好',
-    } }),
+    body: JSON.stringify({ clientNonce: 'created-conversation-message', payload: createNativeMessage({ id: 'created-conversation-message', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: '你好' }] }) }),
   })
   const body = await send.json() as { status: string }
   assert.equal(send.status, 202, JSON.stringify(body))

@@ -1,3 +1,4 @@
+import { nativeText } from '../im/message-types.js'
 import type { RunStreamEvent } from '@lyyzka/lingxios/ui'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
@@ -74,9 +75,9 @@ test('live provider delivers full learning help and native cards with measured f
       }finally{cancel.abort();await reading}
       if(!streamValid && process.env.LINGXIOS_LIVE_CAPTURE==='1')await writeFile(`.codex-tmp/live-preview-${scenario.id}.json`,JSON.stringify({invalidPreview,attempts:[...attempts.values()]},null,2))
       const deliveredMessages=im.messages.filter(message=>message.channelId===conversationId)
-      const firstMessage=deliveredMessages.find(message=>message.payload.body?.trim())
+      const firstMessage=deliveredMessages.find(message=>nativeText(message.payload).trim())
       if(firstMessage)firstTextMs=Math.min(firstTextMs??Infinity,Math.max(0,firstMessage.timestamp*1000-started))
-      const body=deliveredMessages.map(message=>message.payload.body??'').join('\n')
+      const body=deliveredMessages.map(message=>nativeText(message.payload)).join('\n')
       const calls=await pool.query("SELECT count(*)::int AS n,coalesce(sum((extras->>'reasoningTokens')::bigint),0)::int AS reasoning_tokens FROM llm_calls WHERE company_id=$1 AND run_id=$2",[companyId,run.runId])
       const actions:string[]=[]
       let cursor=0

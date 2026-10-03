@@ -1,3 +1,5 @@
+import { nativeMessageSchema } from '@/lib/nativeMessage'
+import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import type { ResponseEnvelope, RunState } from '@lyyzka/lingxios/ui'
 import { API, http } from '@/api/core/http'
@@ -42,8 +44,10 @@ export const harnessApi = {
         if (!value.operations.length) continue
         state.append(value.operations)
         const snapshot = state.state as unknown as AgentRunSnapshot
-        if (!snapshot || snapshot.runId !== target.runId || snapshot.view?.runId !== target.runId
-          || !Array.isArray(snapshot.content) || !snapshot.status) throw new Error('运行流消息身份或内容不正确')
+        const message = nativeMessageSchema.parse(snapshot?.message)
+        const view = message.metadata.custom.harness as RunDisplayState
+        if (message.id !== `run-${target.runId}` || message.metadata.custom.runId !== target.runId || view?.runId !== target.runId
+          || ![view.requestVersion,view.fence,view.messageFence,view.lastSeq].every(value => Number.isSafeInteger(value) && value >= 0)) throw new Error('运行流消息身份或内容不正确')
         receive(snapshot)
       }
     } finally { await reader.cancel(); reader.releaseLock() }

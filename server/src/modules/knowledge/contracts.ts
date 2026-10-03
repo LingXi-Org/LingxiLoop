@@ -45,7 +45,7 @@ export const agentKnowledgeSchemas = {
   add_text: createSourceRequestSchema.options[0].omit({ kind: true, idempotencyKey: true }).extend({ title: updateSourceRequestSchema.shape.title,
     text: createSourceRequestSchema.options[0].shape.text.max(200_000) }).strict(),
   add_url: createSourceRequestSchema.options[1].omit({ kind: true, idempotencyKey: true }).strict(),
-  add_file: z.object({ title: updateSourceRequestSchema.shape.title.optional(), clientMsgNo: sourceId }).strict(),
+  add_file: z.object({ title: updateSourceRequestSchema.shape.title.optional(), clientMsgNo: sourceId, attachmentId: z.string().min(1).max(2000) }).strict(),
   retry_ingestion: z.object({ sourceId }).strict(),
   set_source_enabled: z.object({ sourceId, enabled: z.boolean() }).strict(),
   delete_source: z.object({ sourceId }).strict(),

@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import type { LingxiMessageV1 } from './message-types.js'
+import { nativeMessageSchema, NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage } from './message-types.js'
 import type { ImBootstrap, ImChannelProfile, ImMessage } from './types.js'
 
 export interface WukongConfig {
@@ -81,15 +81,15 @@ export class WukongClient {
     })
   }
 
-  async sendMessage(channelId: string, channelType: number, fromUid: string, payload: LingxiMessageV1): Promise<{ messageId: string; messageSeq: number }> {
+  async sendMessage(channelId: string, channelType: number, fromUid: string, payload: NativeMessage, clientNonce = payload.id): Promise<{ messageId: string; messageSeq: number }> {
     const value = await this.request<Record<string, unknown>>('/message/send', {
       method: 'POST',
       body: JSON.stringify({
         from_uid: fromUid,
         channel_id: channelId,
         channel_type: channelType,
-        client_msg_no: payload.clientMsgNo,
-        payload: Buffer.from(JSON.stringify({ type: 1000, ...payload }), 'utf8').toString('base64'),
+        client_msg_no: clientNonce,
+        payload: Buffer.from(JSON.stringify({ type: NATIVE_MESSAGE_CONTENT_TYPE, ...nativeMessageSchema.parse(payload) }), 'utf8').toString('base64'),
       }),
     })
     return {
@@ -117,12 +117,10 @@ export class WukongClient {
         let lastMessage: ImMessage | null = null
         if (Object.keys(last).length > 0) {
           const encoded = typeof last.payload === 'string' ? last.payload : ''
-          let payload: LingxiMessageV1
-          try { payload = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8')) as LingxiMessageV1 }
-          catch { payload = { version: 1, kind: 'system', clientMsgNo: String(last.client_msg_no ?? ''), body: encoded } }
+          const payload = decodeNativePayload(encoded)
           lastMessage = {
             messageId: String(last.message_idstr ?? last.message_id ?? ''),
-            messageSeq: Number(last.message_seq ?? 0), clientMsgNo: String(last.client_msg_no ?? payload.clientMsgNo ?? ''),
+            messageSeq: Number(last.message_seq ?? 0), clientMsgNo: String(last.client_msg_no ?? ''),
             channelId, channelType, fromUid: String(last.from_uid ?? ''),
             timestamp: Math.floor(Number(last.server_timestamp_ms ?? 0) / 1000), payload,
           }
@@ -206,13 +204,11 @@ export class WukongClient {
     return list.map((raw) => {
       const item = jsonRecord(raw)
       const encoded = typeof item.payload === 'string' ? item.payload : ''
-      let payload: LingxiMessageV1
-      try { payload = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8')) as LingxiMessageV1 }
-      catch { payload = { version: 1, kind: 'system', clientMsgNo: String(item.client_msg_no ?? ''), body: encoded } }
+      const payload = decodeNativePayload(encoded)
       return {
         messageId: String(item.message_idstr ?? item.message_id ?? item.messageId ?? ''),
         messageSeq: Number(item.message_seq ?? item.messageSeq ?? 0),
-        clientMsgNo: String(item.client_msg_no ?? item.clientMsgNo ?? payload.clientMsgNo ?? ''),
+        clientMsgNo: String(item.client_msg_no ?? item.clientMsgNo ?? ''),
         channelId: String(item.channel_id ?? item.channelId ?? channelId),
         channelType: Number(item.channel_type ?? item.channelType ?? channelType),
         fromUid: String(item.from_uid ?? item.fromUid ?? ''),
@@ -255,3 +251,9 @@ export function wukongClient(signal?: AbortSignal): WukongClient {
 }
 
 export function _setWukongClientForTests(client: WukongClient | null): void { singleton = client }
+
+export function decodeNativePayload(encoded: string): NativeMessage {
+  const { type, ...payload } = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))
+  if (type !== NATIVE_MESSAGE_CONTENT_TYPE) throw new Error('Unsupported message protocol')
+  return nativeMessageSchema.parse(payload)
+}

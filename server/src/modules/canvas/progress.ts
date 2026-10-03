@@ -19,8 +19,11 @@ export async function publishCanvasProgress(db: Queryable, companyId: string, ca
     SELECT 'canvas:'||id||':'||progress_version,company_id,'canvas:'||id,
       jsonb_build_object('type','im.system','companyId',company_id,'actorId',initiator_agent_id,
         'channelId',conversation_id,'clientNonce','canvas:'||id||':'||progress_version,'payload',
-        jsonb_strip_nulls(jsonb_build_object('version',1,'kind','canvas','clientMsgNo','canvas:'||id||':'||progress_version,
-          'body',title,'replyToClientMsgNo',NULLIF(shared_state_thread_key,''),'data',
-          progress_snapshot||jsonb_build_object('progressVersion',progress_version,'updatedAt',clock_timestamp(),'suppressAgentWake',true))))
+        jsonb_build_object('id','canvas:'||id,'role','assistant','createdAt',clock_timestamp(),
+          'content',jsonb_build_array(jsonb_build_object('type','data','name','canvas','data',
+            progress_snapshot||jsonb_build_object('progressVersion',progress_version,'updatedAt',clock_timestamp()))),
+          'status',jsonb_build_object('type','complete','reason','stop'),
+          'metadata',jsonb_build_object('unstable_state',NULL,'unstable_annotations','[]'::jsonb,'unstable_data','[]'::jsonb,'steps','[]'::jsonb,
+            'custom',jsonb_strip_nulls(jsonb_build_object('replyToClientMsgNo',NULLIF(shared_state_thread_key,''),'progressVersion',progress_version,'suppressAgentWake',true)))))
     FROM changed ON CONFLICT DO NOTHING`, [companyId,canvasId])
 }

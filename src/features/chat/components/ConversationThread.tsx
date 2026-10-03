@@ -22,7 +22,7 @@ function ConversationMessages() {
   // Indices must come from the runtime itself: external snapshots can be one
   // render ahead while history or a canonical delivery is being reconciled.
   const messages = useAuiState(state => state.thread.messages)
-  return messages.map((message, index) => message.metadata.custom.schema === 'lingxiloop.thread-message.v1' ? (
+  return messages.map((message, index) => message.metadata.custom.schema === 'lingxiloop.thread-message.v2' ? (
     <ThreadPrimitive.MessageByIndex key={messageKey(message)} index={index} components={MESSAGE_COMPONENTS} />
   ) : null)
 }

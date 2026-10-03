@@ -1,3 +1,6 @@
+import { decodeNativePayload } from '../im/wukong.js'
+import type { NativeMessage } from '../im/message-types.js'
+import type { RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { after, before, test } from 'node:test'
@@ -30,14 +33,14 @@ test('product native admission, cancellation, revision, independent delivery and
   let releaseDelivery!: () => void
   const slowDelivery = new Promise<void>(resolve => { releaseDelivery = resolve })
   type DeliveryContext = NonNullable<Parameters<DeliveryPort['deliverMessage']>[2]>
-  const deliveries: Record<string, { payload: { clientMsgNo: string; data: { harnessCommit: DeliveryContext['commit']; im: NonNullable<DeliveryContext['im']> } }; messageId: string; calls: number }> = {}
+  const deliveries: Record<string, { payload: NativeMessage; clientNonce: string; messageId: string; calls: number }> = {}
   const im = createServer(async (req, res) => {
     const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(chunk)
     const input = JSON.parse(Buffer.concat(chunks).toString() || '{}')
     res.setHeader('content-type', 'application/json')
     if (req.url !== '/message/send') { res.end(JSON.stringify({ messages: [] })); return }
-    const payload = JSON.parse(Buffer.from(input.payload, 'base64').toString())
-    const record = deliveries[input.channel_id] ??= { payload, messageId: `receipt-${input.channel_id}`, calls: 0 }
+    const payload = decodeNativePayload(input.payload)
+    const record = deliveries[input.channel_id] ??= { payload, clientNonce: input.client_msg_no, messageId: `receipt-${input.channel_id}`, calls: 0 }
     record.calls++
     if (input.channel_id === 'slow-room') await slowDelivery
     res.end(JSON.stringify({ message_id: record.messageId, message_seq: 1 }))
@@ -104,11 +107,16 @@ test('product native admission, cancellation, revision, independent delivery and
     await waitFor(() => worker!.activeRuns === 0, 'cancel must release the worker slot')
     const replay = async (run: RunIdentity, room: string) => {
       const work = claimed.get(run.runId)!, message = (await api.readMessage(run))!, sent = deliveries[room]
+      const view = sent.payload.metadata.custom.harness as RunDisplayState
+      const commit: DeliveryContext['commit'] = { resultId: view.resultId!,fence: view.messageFence }
+      assert.ok(work.conversation)
+      const context: NonNullable<DeliveryContext['im']> = { tenantId: companyId,...work.conversation,replyKey: 'fixture-replay',messageKey: sent.clientNonce }
       const receipt = await createProductDelivery(lingxiOSControl).deliverMessage(work, message,
-        { signal: shutdown.signal, deadlineAt: new Date(Date.now() + 15000).toISOString(), commit: sent.payload.data.harnessCommit, im: sent.payload.data.im })
+        { signal: shutdown.signal, deadlineAt: new Date(Date.now() + 15000).toISOString(), commit, im: context })
       assert.deepEqual(receipt, { messageId: sent.messageId })
       assert.equal(sent.calls, 1, 'ACK replay must use the persisted WuKong receipt without another send')
-      assert.equal(sent.payload.clientMsgNo, sent.payload.data.im.messageKey)
+      assert.equal(sent.payload.id, `run-${run.runId}`)
+      assert.equal(sent.clientNonce,context.messageKey)
     }
     await replay(fast, 'fast-room')
     releaseDelivery()

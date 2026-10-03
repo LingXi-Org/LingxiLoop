@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../im/message-types.js'
 import { readRunReference, type createLingxiOS } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { persistNativeEvents } from '../../agents/native-events.js'
@@ -12,12 +13,12 @@ export async function publishHandoffProgress(db: Queryable, companyId: string, h
   const clientNonce = `handoff:${row.id}:${row.progress_version}`
   await persistNativeEvents(db, { companyId, workId: row.parent_work_id, key: clientNonce }, [{
     type: 'im.system', companyId, actorId: row.from_agent_id, channelId: row.conversation_id, clientNonce,
-    payload: { version: 1, kind: 'handoff', clientMsgNo: clientNonce, body: row.title, refs: { handoffId: row.id },
-      ...(row.thread_id ? { replyToClientMsgNo: row.thread_id } : {}), data: {
+    payload: createNativeMessage({ id: `handoff:${row.id}`, role: 'assistant', createdAt: row.updated_at.toISOString(),
+      content: [{ type: 'data', name: 'handoff', data: {
         id: row.id, fromAgentId: row.from_agent_id, toAgentId: row.to_agent_id, title: row.title, status: row.status,
         parentWorkId: row.parent_work_id, childWorkId: row.child_work_id, progressVersion: row.progress_version, updatedAt: row.updated_at.toISOString(),
-        suppressAgentWake: true, activation: 'deliver',
-      } },
+      } }], custom: { refs: { handoffId: row.id }, ...(row.thread_id ? { replyToClientMsgNo: row.thread_id } : {}),
+        progressVersion: row.progress_version, suppressAgentWake: true, activation: 'deliver' } }),
   }])
 }
 

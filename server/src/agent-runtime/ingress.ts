@@ -1,65 +1,57 @@
 import { randomUUID } from 'node:crypto'
-import type { LingxiMessageV1 } from '../im/message-types.js'
+import { nativeData, type NativeMessage } from '../im/message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import { pool } from '../db/pool.js'
 import { receiveAgentRequest } from './receive.js'
-import { agentContinuationSchema, attachmentMessageIdsSchema } from '../im/contracts.js'
+import { agentContinuationSchema } from '../im/contracts.js'
 
 export interface AgentWakeInput {
   eventId: string
   companyId: string
   channelId: string
   clientMsgNo: string
-  payload: LingxiMessageV1
+  payload: NativeMessage
   recipients: string[]
-  knowledgeSourceId?: string
+  knowledgeSourceIds?: string[]
 }
 
 export async function enqueueAgentWakes(db: Queryable, input: AgentWakeInput): Promise<number> {
-  if (input.payload.data?.suppressAgentWake === true) return 0
+  const custom = input.payload.metadata.custom
+  if (custom.suppressAgentWake === true) return 0
   let kind: 'message' | 'handoff' | 'calendar'
   let recipients = input.recipients
-  let attachments = attachmentMessageIdsSchema.parse(input.payload.data?.attachmentClientMsgNos ?? [])
-  if (input.payload.kind === 'text') {
+  if (input.payload.role === 'user') {
     kind = 'message'
-    if (input.payload.data?.agentContinuation !== undefined) {
-      const continuation = agentContinuationSchema.parse(input.payload.data.agentContinuation)
+    if (custom.agentContinuation !== undefined) {
+      const continuation = agentContinuationSchema.parse(custom.agentContinuation)
       recipients = recipients.filter(id => id === continuation.agentId)
     }
-  }
-  else if (input.payload.kind === 'handoff') kind = 'handoff'
-  else if (input.payload.kind === 'attachment') {
-    kind = 'message'
-    attachments = attachmentMessageIdsSchema.parse([...new Set([...attachments, input.clientMsgNo])])
-  } else if (input.payload.kind === 'system'
-    && typeof input.payload.data?.calendarEventId === 'string'
-    && typeof input.payload.data?.scheduledFor === 'string') {
+  } else if (nativeData(input.payload,'handoff')) kind = 'handoff'
+  else if (input.payload.role === 'system' && typeof custom.calendarEventId === 'string' && typeof custom.scheduledFor === 'string') {
     kind = 'calendar'
     const { rows } = await db.query<{ assignee_id: string }>(
-      `SELECT assignee_id FROM calendar_events
-        WHERE company_id=$1 AND id=$2 AND kind='agent_task' AND target_conversation_id=$3
-          AND assignee_id IS NOT NULL`,
-      [input.companyId, input.payload.data.calendarEventId, input.channelId],
-    )
+      `SELECT assignee_id FROM calendar_events WHERE company_id=$1 AND id=$2 AND kind='agent_task'
+        AND target_conversation_id=$3 AND assignee_id IS NOT NULL`,[input.companyId,custom.calendarEventId,input.channelId])
     recipients = rows[0] ? [rows[0].assignee_id] : []
   } else return 0
+  const dependencies = [...new Set(input.knowledgeSourceIds ?? [])].sort()
 
   let inserted = 0
   for (const agentId of new Set(recipients)) {
     const { rowCount } = await db.query(
       `INSERT INTO lingxios_ingress_outbox
-        (event_id,agent_id,company_id,channel_id,client_msg_no,kind,attachment_client_msg_nos,knowledge_source_id,available_at)
-       VALUES($1,$2,$3,$4,$5,$6,$7,$8,CASE WHEN $9 THEN NOW() ELSE NULL END)
+        (event_id,agent_id,company_id,channel_id,client_msg_no,kind,knowledge_source_ids,available_at)
+       VALUES($1,$2,$3,$4,$5,$6,$7,CASE WHEN NOT EXISTS(SELECT 1 FROM knowledge_sources source
+         LEFT JOIN knowledge_source_jobs job ON job.source_id=source.id WHERE source.id=ANY($7::text[]) AND source.deleted_at IS NULL
+           AND source.status NOT IN ('ready','failed') AND COALESCE(job.status,'queued') NOT IN ('completed','failed')) THEN NOW() ELSE NULL END)
        ON CONFLICT(event_id,agent_id) DO UPDATE SET event_id=EXCLUDED.event_id
        WHERE lingxios_ingress_outbox.company_id=EXCLUDED.company_id
          AND lingxios_ingress_outbox.channel_id=EXCLUDED.channel_id
          AND lingxios_ingress_outbox.client_msg_no=EXCLUDED.client_msg_no
          AND lingxios_ingress_outbox.kind=EXCLUDED.kind
-         AND lingxios_ingress_outbox.attachment_client_msg_nos=EXCLUDED.attachment_client_msg_nos
-         AND lingxios_ingress_outbox.knowledge_source_id IS NOT DISTINCT FROM EXCLUDED.knowledge_source_id
+         AND lingxios_ingress_outbox.knowledge_source_ids=EXCLUDED.knowledge_source_ids
        RETURNING event_id`,
-      [input.eventId, agentId, input.companyId, input.channelId, input.clientMsgNo, kind, attachments,
-        input.knowledgeSourceId ?? null, true],
+      [input.eventId, agentId, input.companyId, input.channelId, input.clientMsgNo, kind, dependencies],
     )
     if (rowCount !== 1) throw new Error('WuKong event identity was reused with a different Agent wake')
     inserted++
@@ -76,7 +68,7 @@ export async function flushAgentWakes(eventId?: string, signal?: AbortSignal): P
     const token = randomUUID()
     const { rows } = await pool.query<{
       event_id: string; agent_id: string; company_id: string; channel_id: string; client_msg_no: string
-      kind: 'message' | 'handoff' | 'calendar'; attachment_client_msg_nos: string[]
+      kind: 'message' | 'handoff' | 'calendar'
     }>(
       `WITH candidate AS (
          SELECT event_id,agent_id FROM lingxios_ingress_outbox
@@ -87,8 +79,7 @@ export async function flushAgentWakes(eventId?: string, signal?: AbortSignal): P
        UPDATE lingxios_ingress_outbox wake SET claim_token=$2,claimed_until=NOW()+INTERVAL '60 seconds',
          attempts=attempts+1
        FROM candidate WHERE wake.event_id=candidate.event_id AND wake.agent_id=candidate.agent_id
-       RETURNING wake.event_id,wake.agent_id,wake.company_id,wake.channel_id,wake.client_msg_no,wake.kind,
-         wake.attachment_client_msg_nos`,
+       RETURNING wake.event_id,wake.agent_id,wake.company_id,wake.channel_id,wake.client_msg_no,wake.kind`,
       [eventId ?? null, token],
     )
     const wake = rows[0]
@@ -98,7 +89,7 @@ export async function flushAgentWakes(eventId?: string, signal?: AbortSignal): P
     try {
       const input = { companyId: wake.company_id, agentId: wake.agent_id, channelId: wake.channel_id,
         clientMsgNo: wake.client_msg_no }
-      await Promise.race([receiveAgentRequest({ ...input, kind: wake.kind, attachmentClientMsgNos: wake.attachment_client_msg_nos, signal: deadline }),
+      await Promise.race([receiveAgentRequest({ ...input, kind: wake.kind, signal: deadline }),
         new Promise<never>((_resolve,reject) => {
           abort = () => reject(deadline.reason)
           if (deadline.aborted) abort(); else deadline.addEventListener('abort',abort,{ once: true })

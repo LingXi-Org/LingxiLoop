@@ -1,3 +1,4 @@
+import { readRunProjection } from './assistant-transport.js'
 import { assistantTextViolation } from './assistant-text.js'
 import { createHash } from 'node:crypto'
 import type { createLingxiOS, ApprovalSnapshot, DeliveryPort } from '@lyyzka/lingxios'
@@ -38,11 +39,10 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
         }
       }
       const clientNonce = context.im?.messageKey ?? `agent-${createHash('sha256').update(context.commit.resultId).digest('hex')}`
+      const projection = await readRunProjection(api,{ tenantId: work.tenantId, agentId: work.agentId, sessionId: work.sessionId,
+        runId: work.id, principalId: work.principalId!, ...(work.threadId ? { threadId: work.threadId } : {}) },true)
       const result = await sendAgentChannelMessage({ companyId: work.tenantId, agentId: work.agentId, channelId: conversationId,
-        clientNonce, signal: context.signal, payload: { version: 1, kind: 'text', clientMsgNo: clientNonce,
-          body: message.body, ...(work.threadId ? { replyToClientMsgNo: work.threadId } : {}),
-          refs: { runId: work.id, agentId: work.agentId }, data: { harness: message.envelope, harnessCommit: context.commit, harnessSessionId: message.sessionId,
-            ...(context.im ? { im: context.im } : {}), suppressAgentWake: true } } })
+        clientNonce, signal: context.signal, payload: projection.committed(message,context.commit).message })
       if (result.kind !== 'accepted') throw new Error(`assistant delivery ${result.kind}`)
       if (context.im) await api.conversations.ingest({ tenantId: work.tenantId, conversationId,
         ...(work.threadId ? { threadId: work.threadId } : {}), policyVersion: context.im.policyVersion,

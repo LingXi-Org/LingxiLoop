@@ -1,4 +1,5 @@
 import { assistantTextViolation } from '../agent-runtime/assistant-text.js'
+import { z } from 'zod'
 import { productConversationId, assertFrozenAudience } from '../agent-runtime/identity.js'
 import { NoEffectError, type ActionContext, type ToolDefinition, type createLingxiOS } from '@lyyzka/lingxios'
 import type { Queryable } from '../db/queryable.js'
@@ -9,7 +10,7 @@ import { createMessagesApplication } from '../modules/messages/facade.js'
 import { reactionsForWukongMessages } from '../modules/messages/repository.js'
 import { createImMessagesApplication } from './messages-facade.js'
 import { agentMessageSchemas } from './agent-contracts.js'
-import type { LingxiMessageV1 } from './message-types.js'
+import { createNativeMessage, nativeText, type NativeMessage } from './message-types.js'
 import { appendReadReceiptAdvance } from './read-receipts-repository.js'
 
 const identity = ({ work }: ActionContext) => ({ companyId: work.tenantId, userId: work.agentId, channelId: productConversationId(work) })
@@ -28,42 +29,43 @@ async function read(context: ActionContext, messageId: string) {
   return messages?.[0] ?? null
 }
 
-function payload(context: ActionContext, input: Record<string, unknown>): LingxiMessageV1 {
+function payload(context: ActionContext, input: Record<string, unknown>): NativeMessage {
   const recommendation = context.action.action === 'chat.recommend'
   if (recommendation) input = { title: input.title, display: 'recommendation', explanation: input.explanation,
     items: [{ name: 'next_step', prompt: input.nextStep, required: true,
       choices: [{ value: 'accept', label: '按这个建议继续' }, { value: 'alternatives', label: '看看其他方案' }] }] }
   const ask = recommendation || context.action.action === 'chat.ask', clientMsgNo = `${ask ? 'questionnaire' : 'action'}-${context.action.idempotencyKey}`
   const reply = (input.replyToClientMsgNo as string | undefined) ?? context.work.threadId
-  return { version: 1, kind: ask ? 'questionnaire' : 'text', clientMsgNo, body: String(ask ? input.title : input.body),
-    ...(reply ? { replyToClientMsgNo: reply } : {}), refs: { runId: context.work.id, agentId: context.work.agentId },
-    ...(ask ? { data: { questionnaire: { ...input, items: (input.items as Array<Record<string, unknown>>).map((item, index) => ({ ...item, name: item.name ?? `question_${index + 1}` })) } } } : {}) }
+  return createNativeMessage({ id: clientMsgNo, role: 'assistant',
+    content: ask ? [{ type: 'data', name: recommendation ? 'recommendation' : 'questionnaire', data: z.json().parse({
+      ...input, items: (input.items as Array<Record<string, string>>).map((item, index) => ({ ...item, name: item.name ?? `question_${index + 1}` })),
+    }) }] : [{ type: 'text', text: String(input.body) }],
+    custom: { ...(reply ? { replyToClientMsgNo: reply } : {}), refs: { runId: context.work.id, agentId: context.work.agentId } } })
 }
 
 const communication = {
   effect: 'uncertain' as const, approval: false, authorize,
   async execute(context: ActionContext, input: Record<string, unknown>) {
     const outgoing = payload(context, input)
-    const violation = assistantTextViolation(outgoing.body ?? '')
+    const violation = assistantTextViolation(context.action.action === 'chat.send' ? nativeText(outgoing) : String(input.title))
     if (violation) throw new NoEffectError(violation, 'invalid_answer')
-    const result = await application(context).acceptAgentMessage({ ...identity(context), clientNonce: outgoing.clientMsgNo, payload: outgoing,
-      ...(outgoing.kind === 'text' ? { rejectVerbatimPeerBody: outgoing.body } : {}) })
+    const result = await application(context).acceptAgentMessage({ ...identity(context), clientNonce: outgoing.id, payload: outgoing,
+      ...(context.action.action === 'chat.send' ? { rejectVerbatimPeerBody: nativeText(outgoing) } : {}) })
     if (result.kind !== 'accepted') throw new NoEffectError(`message rejected: ${result.kind}`, result.kind)
     const value: Record<string, unknown> = { ...result.echo, duplicate: result.duplicate }
     return { ok: true as const, value }
   },
   async reconcile(context: ActionContext, input: Record<string, unknown>) {
-    const outgoing = payload(context, input), message = await read(context, outgoing.clientMsgNo)
+    const outgoing = payload(context, input), message = await read(context, outgoing.id)
     if (!message || message.fromUid !== context.work.agentId) return null
-    const check = compareResource(`message:${outgoing.clientMsgNo}`, { kind: outgoing.kind, body: outgoing.body }, message.payload)
+    const check = compareResource(`message:${outgoing.id}`, { content: outgoing.content }, { content: message.payload.content })
     return check.status === 'passed' ? { ok: true as const, value: message } : null
   },
   async verify(context: ActionContext, input: Record<string, unknown>) {
     await authorize(context)
-    const outgoing = payload(context, input), message = await read(context, outgoing.clientMsgNo)
-    return compareResource(`message:${outgoing.clientMsgNo}`, { fromUid: context.work.agentId, kind: outgoing.kind, body: outgoing.body,
-      ...(outgoing.data?.questionnaire ? { questionnaire: outgoing.data.questionnaire } : {}) },
-    { fromUid: message?.fromUid, kind: message?.payload.kind, body: message?.payload.body, questionnaire: message?.payload.data?.questionnaire })
+    const outgoing = payload(context, input), message = await read(context, outgoing.id)
+    return compareResource(`message:${outgoing.id}`, { fromUid: context.work.agentId, content: outgoing.content },
+      { fromUid: message?.fromUid, content: message?.payload.content })
   },
 }
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { RunEvent } from '@lyyzka/lingxios/ui'
-import { harnessToolParts } from '@/lib/agentRunSnapshot'
+import { harnessToolParts } from '../../../../server/src/agent-runtime/message-projection'
 import { ResearchSources } from './ResearchSources'
 
 // Failure cases: lost/replayed results, foreign runs, unsafe URLs, leaked query/full

@@ -352,7 +352,10 @@ export async function runKnowledgeWorkerOnce(workerId = `open-notebook-${process
   const job = await claimJob(workerId)
   if (!job) return false
   const startedAt = Date.now()
-  if (job.deadlinePassed) await releaseDeferredWake(job.sourceId, '附件知识索引超过 10 分钟，资料仍在后台处理')
+  if (job.deadlinePassed) {
+    await cancelKnowledgeSourceJob(job.sourceId, '附件知识索引超时，请重试入库')
+    return true
+  }
   try {
     await processSource(job)
   } catch (error) {
