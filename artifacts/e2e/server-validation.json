@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-10-09T03:55:34.576Z",
+  "generatedAt": "2026-10-09T04:13:38.267Z",
   "status": "passed-with-explicit-skips",
-  "commit": "4fdbc21a750c303c8af0240f249e847c106584de",
+  "commit": "78082e1d93717740616111f5f5bf86e048896a37",
   "command": "npm run test:integration",
   "execution": "GitHub Actions Ubuntu with PostgreSQL 16 and Redis 7",
-  "workflow": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/37880765882",
-  "job": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/37880765882/job/113659731149",
+  "workflow": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/37882232147",
+  "job": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/37882232147/job/113664459251",
   "counts": {
     "tests": 199,
     "passed": 197,
@@ -17,5 +17,5 @@
     "ok 182 - private S3 objects cross nodes, enforce committed size, report missing bytes and transport failures # SKIP set LINGXIOS_TEST_OBJECT_BUCKET and local S3 fixture credentials"
   ],
   "log": "artifacts/e2e/server-integration.log",
-  "additionalEvidence": "server-targeted-validation.json exercises local object storage, migrations and native-message paths (28 passed)."
+  "additionalEvidence": "release-targeted-validation.json exercises local object storage, migrations and native-message paths (28 passed)."
 }

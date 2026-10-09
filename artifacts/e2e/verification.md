@@ -17,7 +17,7 @@ Release verification on 2026-10-09: Web 56 passed / 1 explicitly skipped; Admin 
 | Web | [web-validation.json](web-validation.json) |
 | Admin | [admin-validation.json](admin-validation.json) |
 | Server/API/workers | [server-validation.json](server-validation.json), [full integration log](server-integration.log) |
-| Migration/native messages/object storage | [server-targeted-validation.json](server-targeted-validation.json), [targeted integration log](server-targeted-integration.log) |
+| Migration/native messages/object storage | [release-targeted-validation.json](release-targeted-validation.json), [targeted integration log](release-targeted-integration.log) |
 | Control plane | [control-validation.json](control-validation.json), [contract log](control-validation.log) |
 | Knowledge service | [knowledge-validation.json](knowledge-validation.json) |
 | Memory authorization regression | [memory-validation.json](memory-validation.json) |
@@ -50,8 +50,8 @@ Knowledge tests use the actual ingestion service and worker, real extraction/obj
 
 The current browser evidence covers Chromium at desktop and phone widths. Additional engines/devices remain unverified. Composer image upload is explicitly skipped: official Web 0.12 cannot select the detached native file picker in either managed Chromium or CDP mode. Other upload coverage does not substitute for this journey.
 
-Production rollout verification is recorded separately in `release-validation.json` after the authorized CI/Komodo rollout finishes. The browser tests use disposable local accounts and data.
+Production release `78082e1d` completed successfully through [CI](https://github.com/LingXi-Org/LingxiLoop/actions/runs/37882232147) and Komodo update `6ac86a9ed8838102d0f8a053` (`Complete`, `success: true`). Both application nodes, their background workers, gateway, WuKongIM and Notebook run the expected immutable images and are healthy. Both migration containers exited with code 0. The control-plane Worker serves 100% of traffic on its new version; Web, health and Admin HTTPS routes return 200. Full evidence is in [release-validation.json](release-validation.json). The browser tests use disposable local accounts and data.
 
 The release includes the merged navigation, business-layout and agent-actions cases. Fixture corrections explicitly select the intended workspace, distinguish teacher-private rooms from student Study Rooms, and preserve test Notebook IDs across restarts. The final company-administration rerun resolves a transient Cloudflare CAPTCHA verification timeout without bypassing authentication.
 
-Supporting checks on the merged source: Web tests 72 passed, Admin tests 8 passed, E2E/Web/Admin/Server/Control type checks passed, and owning scoped lint checks passed. The control suite passed in an isolated Linux container after Windows Miniflare timed out during cache teardown; storage isolation remained enabled.
+Supporting checks on the merged source: Web tests 72 passed, Admin tests 8 passed, E2E/Web/Admin/Server/Control type checks passed, and owning scoped lint checks passed. The control suite passed all 13 checks with the default command in [CI](https://github.com/LingXi-Org/LingxiLoop/actions/runs/37881987813). The deliberately delayed Kuma fixture now has a per-case 30s timeout; production timeout behavior and storage isolation are unchanged. Windows Miniflare teardown remains an environment limitation.

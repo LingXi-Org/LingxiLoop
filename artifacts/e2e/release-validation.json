@@ -1,0 +1,351 @@
+{
+  "status": "passed",
+  "commit": "78082e1d93717740616111f5f5bf86e048896a37",
+  "workflow": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/37882232147",
+  "controlChecks": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/37881987813",
+  "worker": {
+    "status": "deployed",
+    "version": "d1e9c15f-8dd4-4f6f-bf2f-10546f97acca",
+    "deployment": "ef4a0a03-92dd-4b53-bacb-ef5f3cd3f2c8",
+    "trafficPercentage": 100,
+    "verifiedAt": "2026-10-09T04:09:19.948Z",
+    "method": "Sigillo-injected official Wrangler versions upload/deploy; immutable production Admin assets downloaded from successful CI build ca41962e",
+    "adminHtmlStatus": 200,
+    "verifiedAssets": [
+      {
+        "path": "/assets/index-BTIX-esh.js",
+        "status": 200
+      },
+      {
+        "path": "/assets/index-Cne3WdD7.css",
+        "status": 200
+      }
+    ]
+  },
+  "komodo": {
+    "update": {
+      "id": "6ac86a9ed8838102d0f8a053",
+      "status": "Complete",
+      "success": true,
+      "start_ts": 1791519390458,
+      "end_ts": 1791520096630,
+      "operation": "RunProcedure",
+      "target": {
+        "type": "Procedure",
+        "id": "6aa8a416b35d27bdd4e12af5"
+      },
+      "stages": [
+        {
+          "stage": "Execute procedure",
+          "success": true
+        },
+        {
+          "stage": "Execution ok",
+          "success": true
+        }
+      ]
+    },
+    "stacks": [
+      {
+        "id": "6aa8a411b35d27bdd4e12aef",
+        "name": "lingxiloop-app-a",
+        "state": "running",
+        "status": "exited(1), running(2)",
+        "deployed_hash": "df97cadc",
+        "services": [
+          {
+            "service": "db-migrate",
+            "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+          },
+          {
+            "service": "lingxiloop",
+            "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+          },
+          {
+            "service": "worker",
+            "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+          }
+        ]
+      },
+      {
+        "id": "6aa8a414b35d27bdd4e12af1",
+        "name": "lingxiloop-app-b",
+        "state": "running",
+        "status": "exited(1), running(3)",
+        "deployed_hash": "df97cadc",
+        "services": [
+          {
+            "service": "db-migrate",
+            "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+          },
+          {
+            "service": "gateway",
+            "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-gateway:78082e1d93717740616111f5f5bf86e048896a37"
+          },
+          {
+            "service": "lingxiloop",
+            "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+          },
+          {
+            "service": "worker",
+            "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+          }
+        ]
+      },
+      {
+        "id": "6aa8a3e8b35d27bdd4e12ae0",
+        "name": "lingxiloop-core-state",
+        "state": "running",
+        "status": "running(4)",
+        "deployed_hash": "df97cadc",
+        "services": [
+          {
+            "service": "postgres",
+            "image": "accel.way2api.fun/docker.io/pgvector/pgvector:pg16"
+          },
+          {
+            "service": "realtime-redis",
+            "image": "sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7"
+          },
+          {
+            "service": "redis",
+            "image": "sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7"
+          },
+          {
+            "service": "wukongim",
+            "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-wukongim:78082e1d93717740616111f5f5bf86e048896a37"
+          }
+        ]
+      },
+      {
+        "id": "6aa8a3ebb35d27bdd4e12ae2",
+        "name": "lingxiloop-knowledge-agent",
+        "state": "running",
+        "status": "running(2)",
+        "deployed_hash": "df97cadc",
+        "services": [
+          {
+            "service": "open-notebook",
+            "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-open-notebook:78082e1d93717740616111f5f5bf86e048896a37"
+          },
+          {
+            "service": "surrealdb",
+            "image": "accel.way2api.fun/docker.io/surrealdb/surrealdb@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011"
+          }
+        ]
+      },
+      {
+        "id": "6aa8a3a0b35d27bdd4e12acd",
+        "name": "server-b-ingress",
+        "state": "running",
+        "status": "running(1)",
+        "deployed_hash": "df97cadc",
+        "services": [
+          {
+            "service": "traefik",
+            "image": "accel.way2api.fun/docker.io/library/traefik:v3.7.1"
+          }
+        ]
+      },
+      {
+        "id": "6aa8a415b35d27bdd4e12af3",
+        "name": "uptime",
+        "state": "running",
+        "status": "running(1)",
+        "deployed_hash": "df97cadc",
+        "services": [
+          {
+            "service": "uptime-kuma",
+            "image": "accel.way2api.fun/docker.io/louislam/uptime-kuma:2.3.2"
+          }
+        ]
+      }
+    ],
+    "services": [
+      {
+        "stack": "lingxiloop-app-a",
+        "service": "db-migrate",
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37",
+        "state": "Exited",
+        "container": {
+          "name": "lingxiloop-app-a-db-migrate-1",
+          "state": "exited",
+          "status": "Exited (0) 6 minutes ago",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+        }
+      },
+      {
+        "stack": "lingxiloop-app-a",
+        "service": "lingxiloop",
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-app-a-lingxiloop-1",
+          "state": "running",
+          "status": "Up 6 minutes (healthy)",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+        }
+      },
+      {
+        "stack": "lingxiloop-app-a",
+        "service": "worker",
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-app-a-worker-1",
+          "state": "running",
+          "status": "Up 6 minutes (healthy)",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+        }
+      },
+      {
+        "stack": "lingxiloop-app-b",
+        "service": "db-migrate",
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37",
+        "state": "Exited",
+        "container": {
+          "name": "lingxiloop-app-b-db-migrate-1",
+          "state": "exited",
+          "status": "Exited (0) About a minute ago",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+        }
+      },
+      {
+        "stack": "lingxiloop-app-b",
+        "service": "gateway",
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-gateway:78082e1d93717740616111f5f5bf86e048896a37",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-app-b-gateway-1",
+          "state": "running",
+          "status": "Up About a minute (healthy)",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-gateway:78082e1d93717740616111f5f5bf86e048896a37"
+        }
+      },
+      {
+        "stack": "lingxiloop-app-b",
+        "service": "lingxiloop",
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-app-b-lingxiloop-1",
+          "state": "running",
+          "status": "Up About a minute (healthy)",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+        }
+      },
+      {
+        "stack": "lingxiloop-app-b",
+        "service": "worker",
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-app-b-worker-1",
+          "state": "running",
+          "status": "Up About a minute (healthy)",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:78082e1d93717740616111f5f5bf86e048896a37"
+        }
+      },
+      {
+        "stack": "lingxiloop-knowledge-agent",
+        "service": "open-notebook",
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-open-notebook:78082e1d93717740616111f5f5bf86e048896a37",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-knowledge-agent-open-notebook-1",
+          "state": "running",
+          "status": "Up 8 minutes (healthy)",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-open-notebook:78082e1d93717740616111f5f5bf86e048896a37"
+        }
+      },
+      {
+        "stack": "lingxiloop-knowledge-agent",
+        "service": "surrealdb",
+        "image": "accel.way2api.fun/docker.io/surrealdb/surrealdb@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-knowledge-agent-surrealdb-1",
+          "state": "running",
+          "status": "Up 3 weeks (healthy)",
+          "image": "accel.way2api.fun/docker.io/surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011"
+        }
+      },
+      {
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "image": "accel.way2api.fun/docker.io/pgvector/pgvector:pg16",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-core-state-postgres-1",
+          "state": "running",
+          "status": "Up 7 days (healthy)",
+          "image": "accel.way2api.fun/docker.io/pgvector/pgvector:pg16"
+        }
+      },
+      {
+        "stack": "lingxiloop-core-state",
+        "service": "realtime-redis",
+        "image": "sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-core-state-realtime-redis-1",
+          "state": "running",
+          "status": "Up 2 weeks (healthy)",
+          "image": "sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7"
+        }
+      },
+      {
+        "stack": "lingxiloop-core-state",
+        "service": "redis",
+        "image": "sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-core-state-redis-1",
+          "state": "running",
+          "status": "Up 2 weeks (healthy)",
+          "image": "sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7"
+        }
+      },
+      {
+        "stack": "lingxiloop-core-state",
+        "service": "wukongim",
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-wukongim:78082e1d93717740616111f5f5bf86e048896a37",
+        "state": "Running",
+        "container": {
+          "name": "lingxiloop-core-state-wukongim-1",
+          "state": "running",
+          "status": "Up 11 minutes (healthy)",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-wukongim:78082e1d93717740616111f5f5bf86e048896a37"
+        }
+      }
+    ],
+    "verifiedAt": "2026-10-09T04:30:08.642Z",
+    "procedure": "lingxiloop-production-rollout"
+  },
+  "limits": [
+    "Live model completions and real email delivery remain unverified.",
+    "Composer image upload remains explicitly skipped because the official browser engine cannot select its detached native picker."
+  ],
+  "verifiedAt": "2026-10-09T04:30:11.926Z",
+  "manifestCommit": "df97cadc",
+  "workflowConclusion": "success",
+  "http": [
+    {
+      "url": "https://loop.lingxilearn.cn/",
+      "status": 200
+    },
+    {
+      "url": "https://loop.lingxilearn.cn/api/health",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "ts": 1791520205103
+      }
+    },
+    {
+      "url": "https://admin.lingxilearn.cn/login",
+      "status": 200
+    }
+  ],
+  "scope": "Frozen release 78082e1d, with manifests pinned by df97cadc. New uncommitted interactive UI changes from the concurrently active chat 完成 Issue #111 全部开发 are not included or modified by this release."
+}

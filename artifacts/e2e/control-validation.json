@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-10-09T03:50:48.834Z",
+  "generatedAt": "2026-10-09T04:06:42.083Z",
   "project": "control-plane",
   "status": "passed",
-  "command": "npm run control:test -- --testTimeout 60000 --hookTimeout 60000",
-  "execution": "Current control-plane source copied into cached Linux Node 22 image lingxiloop-ci-ablation-control:local; network disabled; D1 storage isolation enabled",
+  "command": "npm run control:lint && npm run control:typecheck && npm run control:test",
+  "execution": "GitHub Actions Ubuntu, current source, default test command with a 30s limit only on the deliberately stalled Kuma fixture; D1 storage isolation enabled",
   "counts": {
     "tests": 13,
     "skipped": 0,
@@ -19,10 +19,12 @@
   "limitations": [
     "The installed Vitest worker pool supports compatibility date 2025-12-17 and logs fallback from requested 2026-09-01.",
     "Local SMTP protocol fixtures do not verify real email delivery. Browser tests separately use the actual Wrangler runtime.",
-    "Windows Miniflare timed out during Kuma verification and failed isolated cache teardown; all 13 checks passed in the isolated Linux run."
+    "Windows Miniflare timed out and failed isolated cache teardown; all 13 checks passed with the default command in CI after correcting the Kuma fixture timeout."
   ],
   "sourceHashes": {
     "workers/control-plane/src/index.ts": "6217ec95227e85a7817944ec92ab0137e3520b36898508995a8475509c81da2a",
-    "workers/control-plane/src/index.test.ts": "348f60e931ae1cf2d3371671716975163036f3867adb08fed308d30ef0f6a0c1"
-  }
+    "workers/control-plane/src/index.test.ts": "69d7e29d6db1da1e53a7e0d40c86ccc6a222d53971e5932bca61456856b3cf3b"
+  },
+  "workflow": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/37881987813",
+  "commit": "78082e1d93717740616111f5f5bf86e048896a37"
 }

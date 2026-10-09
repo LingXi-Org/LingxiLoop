@@ -1,9 +1,25 @@
+checks (control)	Run npm run control:lint && npm run control:typecheck && npm run control:test	﻿2026-10-09T04:04:27.9896828Z ##[group]Run npm run control:lint && npm run control:typecheck && npm run control:test
+[36;1mnpm run control:lint && npm run control:typecheck && npm run control:test[0m
+shell: /usr/bin/bash -e {0}
+env:
+NODE_VERSION: 22
+ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+##[endgroup]
+
+> lingxiloop@0.1.0-beta control:lint
+> biome lint workers/control-plane worker-configuration.d.ts
+
+Checked 11 files in 32ms. No fixes applied.
+
+> lingxiloop@0.1.0-beta control:typecheck
+> tsc -p workers/control-plane/tsconfig.json --noEmit
+
 
 > lingxiloop@0.1.0-beta control:test
-> vitest run --config workers/control-plane/vitest.config.ts --testTimeout 60000 --hookTimeout 60000
+> vitest run --config workers/control-plane/vitest.config.ts
 
 
- RUN  v3.2.7 /app
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/LingxiLoop/LingxiLoop[39m
 
 [vpw:debug] Adding `enable_nodejs_tty_module` compatibility flag during tests as this feature is needed to support the Vitest runner.
 [vpw:debug] Adding `enable_nodejs_fs_module` compatibility flag during tests as this feature is needed to support the Vitest runner.
@@ -14,28 +30,23 @@
 but you've requested "2026-09-01". Falling back to "2025-12-17"...
 [mf:warn] The latest compatibility date supported by the installed Cloudflare Workers Runtime is "2025-12-17",
 but you've requested "2026-09-01". Falling back to "2025-12-17"...
-Cannot optimize dependency: vitest > @vitest/snapshot > magic-string, present in 'ssr.optimizeDeps.include'
-Cannot optimize dependency: vitest > @vitest/expect > chai, present in 'ssr.optimizeDeps.include'
- ✓ workers/control-plane/src/smtp.test.ts (1 test) 280ms
-stderr | workers/control-plane/src/index.test.ts > control-plane trust boundaries > keeps user lifecycle authority and D1 state aligned with the product result
-2026-10-09T03:49:08.273Z WARN [Better Auth]: Rate limiting could not determine a client IP and is falling back to a single shared per-path bucket. Ensure your runtime forwards a trusted client IP header, then set `advanced.ipAddress.ipAddressHeaders` or `advanced.ipAddress.trustedProxies` so the address can be resolved.
+Cannot optimize dependency: [36mvitest > @vitest/snapshot > magic-string[39m, present in 'ssr.optimizeDeps.include'
+Cannot optimize dependency: [36mvitest > @vitest/expect > chai[39m, present in 'ssr.optimizeDeps.include'
+[32m✓[39m workers/control-plane/src/smtp.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 49[2mms[22m[39m
+[90mstderr[2m | workers/control-plane/src/index.test.ts[2m > [22m[2mcontrol-plane trust boundaries[2m > [22m[2mkeeps user lifecycle authority and D1 state aligned with the product result
+[22m[39m2026-10-09T04:04:36.084Z WARN [Better Auth]: Rate limiting could not determine a client IP and is falling back to a single shared per-path bucket. Ensure your runtime forwards a trusted client IP header, then set `advanced.ipAddress.ipAddressHeaders` or `advanced.ipAddress.trustedProxies` so the address can be resolved.
 
-stderr | workers/control-plane/src/index.test.ts > control-plane trust boundaries > rejects cross-site authentication writes and registration without CAPTCHA
-2026-10-09T03:49:13.687Z ERROR [Better Auth]: Invalid origin: https://attacker.example
+[90mstderr[2m | workers/control-plane/src/index.test.ts[2m > [22m[2mcontrol-plane trust boundaries[2m > [22m[2mrejects cross-site authentication writes and registration without CAPTCHA
+[22m[39m2026-10-09T04:04:37.448Z ERROR [Better Auth]: Invalid origin: https://attacker.example
 
- ✓ workers/control-plane/src/index.test.ts (12 tests) 23728ms
-   ✓ control-plane trust boundaries > keeps user lifecycle authority and D1 state aligned with the product result  1250ms
-   ✓ control-plane trust boundaries > company management forwards a signed user identity without promoting the global role  1048ms
-   ✓ control-plane trust boundaries > applies auth/control schema and rejects unauthenticated administration  6858ms
-   ✓ control-plane trust boundaries > signs in after an OTP verifies a password account  656ms
-   ✓ control-plane trust boundaries > issues a one-time Sigillo SSO code only for the approved provider  549ms
-   ✓ control-plane trust boundaries > proxies websocket tickets instead of sending them to Better Auth  543ms
-   ✓ control-plane trust boundaries > proxies Kuma status for an authenticated administrator  17183ms
-   ✓ control-plane trust boundaries > authenticates MCP, exposes operations, and replays commands idempotently  534ms
+[32m✓[39m workers/control-plane/src/index.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 16890[2mms[22m[39m
+[33m[2m✓[22m[39m control-plane trust boundaries[2m > [22mkeeps user lifecycle authority and D1 state aligned with the product result [33m 324[2mms[22m[39m
+[33m[2m✓[22m[39m control-plane trust boundaries[2m > [22minitializes concurrent platform reads and preserves administrator identity restrictions [33m 387[2mms[22m[39m
+[33m[2m✓[22m[39m control-plane trust boundaries[2m > [22mproxies Kuma status for an authenticated administrator [33m 15060[2mms[22m[39m
 
- Test Files  2 passed (2)
-      Tests  13 passed (13)
-   Start at  03:48:58
-   Duration  26.80s (transform 2.02s, setup 0ms, collect 5.41s, tests 24.01s, environment 3ms, prepare 4.25s)
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 04:04:33
+[2m   Duration [22m 19.59s[2m (transform 382ms, setup 0ms, collect 1.52s, tests 16.94s, environment 0ms, prepare 797ms)[22m
 
 [vpw:debug] Shutting down runtimes...
