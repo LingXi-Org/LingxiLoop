@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "startedAt": "2026-10-09T05:10:44.077Z",
+  "expectedChecks": [
+    "personal-state-and-recovery",
+    "action-admission",
+    "action-recipient-authority",
+    "student-teacher-room-and-scope",
+    "pending-publication",
+    "action-lost-ACK",
+    "dispatch-unknown",
+    "concurrent-writes",
+    "runtime-control-admission"
+  ],
+  "completedChecks": [
+    "personal-state-and-recovery",
+    "action-admission",
+    "action-recipient-authority",
+    "student-teacher-room-and-scope",
+    "pending-publication",
+    "action-lost-ACK",
+    "dispatch-unknown",
+    "concurrent-writes",
+    "runtime-control-admission"
+  ],
+  "command": "npm run test:integration -- --file interactive-ui.test.ts"
+}

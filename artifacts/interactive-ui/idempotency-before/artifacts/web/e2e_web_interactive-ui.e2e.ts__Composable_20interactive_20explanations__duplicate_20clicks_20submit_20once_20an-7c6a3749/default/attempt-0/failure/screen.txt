@@ -1,0 +1,46 @@
+# Screen at failure
+url: http://127.0.0.1:5190/e2e/interactive-ui.html?mode=action-retry
+revision: b1
+viewport: 1440x960
+nodes: 40
+
+#root document "Interactive explanation acceptance fixture"
+ #n10 main
+  #n11 text="组件验收：合成消息与个人状态接口"
+  #n12 region "运动与选择"
+   #n13 heading "运动与选择"
+   #n14 text="发射角度"
+   #n15 status "45 °"
+   #n16 "发射角度"
+    #n17 slider "发射角度"
+   #n18 figure "抛射轨迹"
+    #n19 application
+    #n20 text="射程 40.7747 m · 飞行时间 2.88321 s · 最大高度 10.1937 m"
+   #n21 region "探索步骤"
+    #n22 heading "探索步骤"
+    #n23 list
+     #n24 listitem "先预测 改变角度会怎样影响射程？"
+      #n25 text="先预测"
+      #n26 text="改变角度会怎样影响射程？"
+    #n27 button "上一步" [disabled]
+    #n28 button "下一步"
+    #n29 text="1 / 2"
+   #n30 text="你的预测"
+   #n31 textbox "你的预测"
+   #n32 region "概念对比"
+    #n33 table "概念对比"
+     #n34 rowgroup
+      #n35 row "条件 结论"
+       #n36 columnheader "条件"
+       #n37 columnheader "结论"
+     #n38 rowgroup
+      #n39 row "相同速度与起落高度 45°时射程最大"
+       #n40 cell "相同速度与起落高度"
+       #n41 cell "45°时射程最大"
+      #n42 row "存在空气阻力 需要不同模型"
+       #n43 cell "存在空气阻力"
+       #n44 cell "需要不同模型"
+   #n45 button "解释当前结果"
+  #n46 status "已提交"
+  #n47 group
+   #n48 text="文字讲解"

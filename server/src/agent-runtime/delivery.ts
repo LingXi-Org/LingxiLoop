@@ -7,6 +7,10 @@ import { loadRuntimeBinding } from './context.js'
 import { productConversationId, assertFrozenAudience } from './identity.js'
 import { pool } from '../db/pool.js'
 import { syncConversationPolicy } from './conversations.js'
+import { commitUiRevisions, reserveUiRevisions, UiRevisionConflict } from '../im/interactive-ui.js'
+import { messageLessons } from './interactive-ui-projection.js'
+import { OPENUI_COMPONENT } from '../../../src/lib/interactive-ui/catalog.js'
+import { nativeMessageSchema } from '../im/message-types.js'
 
 export function approvalView(approval: ApprovalSnapshot) {
   const status = approval.decision === null ? 'PENDING' : approval.decision === false ? 'REJECTED'
@@ -41,9 +45,25 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
       const clientNonce = context.im?.messageKey ?? `agent-${createHash('sha256').update(context.commit.resultId).digest('hex')}`
       const projection = await readRunProjection(api,{ tenantId: work.tenantId, agentId: work.agentId, sessionId: work.sessionId,
         runId: work.id, principalId: work.principalId!, ...(work.threadId ? { threadId: work.threadId } : {}) },true)
+      let payload = projection.committed(message,context.commit).message
+      const uiDelivery = { companyId: work.tenantId, channelId: conversationId, agentId: work.agentId, runId: work.id,
+        clientNonce, resultId: context.commit.resultId, fence: context.commit.fence, envelopes: messageLessons(payload) }
+      while (uiDelivery.envelopes.length) {
+        try { await reserveUiRevisions(uiDelivery); break }
+        catch (error) {
+          if (!(error instanceof UiRevisionConflict)) throw error
+          const failed = uiDelivery.envelopes.find(item => item.uiId === error.uiId)
+          if (!failed) throw error
+          payload = nativeMessageSchema.parse({ ...payload, content: payload.content.map(part => part.type === 'generative-ui'
+            && !Array.isArray(part.spec.root) && typeof part.spec.root === 'object' && part.spec.root.component === OPENUI_COMPONENT
+            && part.spec.root.props?.uiId === error.uiId ? { type: 'text' as const, text: `${failed.fallback}\n\n本次交互更新未保存，原有版本仍保留。` } : part) })
+          uiDelivery.envelopes = messageLessons(payload)
+        }
+      }
       const result = await sendAgentChannelMessage({ companyId: work.tenantId, agentId: work.agentId, channelId: conversationId,
-        clientNonce, signal: context.signal, payload: projection.committed(message,context.commit).message })
+        clientNonce, signal: context.signal, payload })
       if (result.kind !== 'accepted') throw new Error(`assistant delivery ${result.kind}`)
+      await commitUiRevisions({ ...uiDelivery, messageId: result.messageId })
       if (context.im) await api.conversations.ingest({ tenantId: work.tenantId, conversationId,
         ...(work.threadId ? { threadId: work.threadId } : {}), policyVersion: context.im.policyVersion,
         messageId: result.messageId, version: 1, author: { id: work.agentId, kind: 'agent' }, text: message.body,

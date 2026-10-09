@@ -1,0 +1,20 @@
+{
+  "theme": "light",
+  "themeEvidence": [
+    {
+      "variant": "direct",
+      "color": "oklch(0.141 0.005 285.823)",
+      "background": "oklch(1 0 0)",
+      "font": "\"Inter Variable\", sans-serif"
+    },
+    {
+      "variant": "adapter",
+      "color": "oklch(0.141 0.005 285.823)",
+      "background": "oklch(1 0 0)",
+      "font": "\"Inter Variable\", sans-serif"
+    }
+  ],
+  "runtime": "Current @assistant-ui/react useExternalStoreRuntime with an official present_openui Tool UI",
+  "adapter": "@openuidev/assistant-ui@0.1.2; isolated compatible Zustand 4; host ThemeProvider disabled",
+  "customLearningAction": "Direct Renderer delivers the authorized interaction event; the official present adapter ignores this custom action type."
+}

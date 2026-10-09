@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="10.464">
+  <testsuite name="e2e/web/interactive-ui-wukong.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="10.464">
+    <testcase name="Real WuKong interactive UI transport &gt; real personal state survives reload and double clicks produce one durable action [web]" classname="e2e/web/interactive-ui-wukong.e2e.ts" time="10.464"/>
+  </testsuite>
+</testsuites>

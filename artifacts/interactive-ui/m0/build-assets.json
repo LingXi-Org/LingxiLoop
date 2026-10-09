@@ -1,0 +1,76 @@
+{
+  "measuredAt": "2026-10-09T05:02:50.077Z",
+  "entries": {
+    "interactive-ui": {
+      "htmlSha256": "81a026068ed3e895d19a2f59fc8dee3597da82ec1a8e857df311192a84d85c2e",
+      "assets": [
+        {
+          "file": "/assets/interactive-ui-e3q5U1CI.js",
+          "bytes": 4599,
+          "sha256": "5ca0dea9c95e82fae0691b902545e998a30f4427803404d8b16b9d0f9f84d91b"
+        },
+        {
+          "file": "/assets/library-CIeYvDYp.js",
+          "bytes": 858664,
+          "sha256": "c4a8827f20f4ecb12d8f8a4245fc1b5a2d174db4af924b26edc8875813e96d99"
+        },
+        {
+          "file": "/assets/globals-CSgnaIJu.js",
+          "bytes": 180979,
+          "sha256": "76a1beaf698cb74fdbcc08dfdfa82a302a5708446c4a65feec85c1642b6f0362"
+        },
+        {
+          "file": "/assets/OpenUiLesson-DtHUda0J.js",
+          "bytes": 17918,
+          "sha256": "c7075b0f513d26074e76dd5e529cd4c68732ae0c8336f54aafe70ddfb293e298"
+        },
+        {
+          "file": "/assets/globals-CMutyz2c.css",
+          "bytes": 341770,
+          "sha256": "be8621bd1fbf7dae3ed5cfb4aa480764c4b178708ef95e1cf307d733c923eeda"
+        }
+      ]
+    },
+    "interactive-adapter": {
+      "htmlSha256": "ccadc7ec126099d6899b72f695da61fc6b03f99f8de7ce9394d9ef5084586986",
+      "assets": [
+        {
+          "file": "/assets/interactive-adapter-B1FiZGte.js",
+          "bytes": 1964664,
+          "sha256": "246d310b743b2767c2d40103a0de1f0120d00f66b0d77976c00b681ed87feaef"
+        },
+        {
+          "file": "/assets/library-CIeYvDYp.js",
+          "bytes": 858664,
+          "sha256": "c4a8827f20f4ecb12d8f8a4245fc1b5a2d174db4af924b26edc8875813e96d99"
+        },
+        {
+          "file": "/assets/globals-CSgnaIJu.js",
+          "bytes": 180979,
+          "sha256": "76a1beaf698cb74fdbcc08dfdfa82a302a5708446c4a65feec85c1642b6f0362"
+        },
+        {
+          "file": "/assets/nativeMessage-RTWVaokc.js",
+          "bytes": 9678,
+          "sha256": "a819a2dabdf8e81c7c1e439e6f34630f851cbaeff93350df201d894da6ecebbe"
+        },
+        {
+          "file": "/assets/thread-D4ShwYo7.js",
+          "bytes": 188697,
+          "sha256": "3bbe8fbb0734185448f2bfd3bbd8322cf34e048be873eba35790f22018862fea"
+        },
+        {
+          "file": "/assets/globals-CMutyz2c.css",
+          "bytes": 341770,
+          "sha256": "be8621bd1fbf7dae3ed5cfb4aa480764c4b178708ef95e1cf307d733c923eeda"
+        },
+        {
+          "file": "/assets/interactive-adapter-CiqARtjf.css",
+          "bytes": 294079,
+          "sha256": "2f3977a49009f8037284a9191291a5945548db35feea19ba5f6d0d4697709a19"
+        }
+      ]
+    }
+  },
+  "scope": "Uncompressed initial HTML-referenced assets of the isolated production multi-entry comparison; dynamic imports excluded; not full product route cost."
+}

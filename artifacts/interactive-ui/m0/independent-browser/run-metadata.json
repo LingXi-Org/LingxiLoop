@@ -1,0 +1,20 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:web",
+    "--",
+    "e2e/web/interactive-ui.e2e.ts",
+    "--grep",
+    "independent long-list",
+    "--output",
+    "artifacts/interactive-ui/m0/independent-browser"
+  ],
+  "buildMode": "existing production preview via E2E_BASE_URL",
+  "browser": "managed official @e2e-dev/web browser",
+  "build": {
+    "file": ".e2e/interactive-site/e2e/interactive-ui.html",
+    "modifiedAt": "2026-10-09T05:02:23.846Z",
+    "sha256": "81a026068ed3e895d19a2f59fc8dee3597da82ec1a8e857df311192a84d85c2e"
+  }
+}

@@ -1,5 +1,7 @@
 import { assertOwnedMessageAttachments } from './attachments.js'
-import { createHash } from 'node:crypto'
+import { messageAcceptanceDigest } from './messages-digest.js'
+import { assertUiInteractionAdmission } from './interactive-ui-admission.js'
+import { OPENUI_COMPONENT } from '../../../src/lib/interactive-ui/catalog.js'
 import { nativeMessageSchema, nativeText, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import type { ReadReceiptAdvance } from './read-receipts-contracts.js'
@@ -82,15 +84,6 @@ export interface ImMessagesInfrastructure {
   publishReadReceipt(advance: ReadReceiptAdvance): Promise<void>
 }
 
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
-  if (value && typeof value === 'object') {
-    const record = value as Record<string, unknown>
-    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(',')}}`
-  }
-  return JSON.stringify(value)
-}
-
 export class ImMessagesApplication {
   constructor(private readonly infrastructure: ImMessagesInfrastructure) {}
 
@@ -126,9 +119,9 @@ export class ImMessagesApplication {
   }
 
   /** Stable IDs identify the request even after its message leaves the recent history window. */
-  async readMessages(input: { companyId: string; userId: string; channelId: string; messageIds: string[]; signal?: AbortSignal }): Promise<Array<ImMessageEnvelope & { channelType: number }> | null> {
+  async readMessages(input: { companyId: string; userId: string; channelId: string; messageIds: string[]; signal?: AbortSignal }, db = this.infrastructure.db): Promise<Array<ImMessageEnvelope & { channelType: number }> | null> {
     if (input.messageIds.length > 50 || input.messageIds.some(id => !id.trim() || id.length > 2000)) throw new Error('invalid message identities')
-    const profile = await channelProfileForMember(this.infrastructure.db, input)
+    const profile = await channelProfileForMember(db, input)
     if (!profile) return null
     const signal = input.signal ?? AbortSignal.timeout(30_000), missing = new Set(input.messageIds)
     const found: Array<ImMessageEnvelope & { channelType: number }> = []
@@ -374,9 +367,7 @@ export class ImMessagesApplication {
     | { kind: 'nonce_conflict' }
     | { kind: 'accepted'; duplicate: boolean; echo: Record<string, unknown> }
   > {
-    const inputDigest = createHash('sha256')
-      .update(canonicalJson({ channelId: input.channelId, channelType, payload: { ...nativeMessageSchema.parse(input.payload), createdAt: undefined } }))
-      .digest('hex')
+    const inputDigest = messageAcceptanceDigest({ ...input, channelType })
     const identity = {
       companyId: input.companyId,
       userId: input.userId,
@@ -397,7 +388,21 @@ export class ImMessagesApplication {
         return { kind: 'accepted', duplicate: true, echo: acceptance.echo }
       }
       const payload = nativeMessageSchema.parse(acceptance.payload)
+      const requiresReconciliation = payload.metadata.custom.uiInteraction !== undefined || payload.content.some(part =>
+        part.type === 'generative-ui' && !Array.isArray(part.spec.root) && typeof part.spec.root === 'object'
+        && part.spec.root.component === OPENUI_COMPONENT)
+      if (requiresReconciliation && acceptance.error) {
+        const found = (await this.readMessages({ ...input, messageIds: [input.clientNonce] }, db))?.find(message => message.clientMsgNo === input.clientNonce)
+        if (!found) throw new Error('interactive message acceptance is unknown; reconciliation is required')
+        if (found.fromUid !== input.userId || messageAcceptanceDigest({ ...input, payload: found.payload, channelType: found.channelType }) !== inputDigest) {
+          return { kind: 'nonce_conflict' }
+        }
+        const echo = { ...found }
+        await acceptSend(db, { ...identity, echo })
+        return { kind: 'accepted', duplicate: true, echo }
+      }
       try {
+        if (requiresReconciliation) await deferSend(db, { ...identity, error: 'interactive-dispatch-started' })
         const sent = await this.infrastructure.sendMessage(
           input.channelId,
           channelType,
@@ -442,6 +447,7 @@ export class ImMessagesApplication {
   > {
     const channelType = await this.channelType(input)
     if (channelType === null) return { kind: 'channel_not_found' }
+    await assertUiInteractionAdmission(input, this.infrastructure.db)
     await assertOwnedMessageAttachments(this.infrastructure.db, input)
     return this.infrastructure.withConnection((db) => this.acceptMessage(db, channelType, input))
   }

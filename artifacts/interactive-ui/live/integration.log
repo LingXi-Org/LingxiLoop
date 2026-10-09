@@ -1,0 +1,46 @@
+ Container lingxiloop-e2e-redis-1  Running
+ Container lingxiloop-e2e-postgres-1  Running
+ Container lingxiloop-e2e-redis-1  Waiting
+ Container lingxiloop-e2e-postgres-1  Waiting
+ Container lingxiloop-e2e-redis-1  Healthy
+ Container lingxiloop-e2e-postgres-1  Healthy
+ Container lingxiloop-ui-live-wukongim-1  Running
+ Container lingxiloop-ui-live-wukongim-1  Waiting
+ Container lingxiloop-ui-live-wukongim-1  Healthy
+[db:migrate] applied 0001_v1_baseline, 0002_remove_legacy_identity, 0003_agent_os_session_affinity, 0004_backfill_personal_owner_participants, 0005_lingxios_v2_reset, 0006_observable_live_eval, 0007_install_lingxios, 0008_agent_os_execution, 0009_native_agent_tools, 0010_lingxios_native_runtime, 0011_closed_education, 0012_lingxios_3_2, 0013_native_collaboration, 0014_profile_avatars, 0015_lingxios_3_2_6, 0016_lingxios_3_2_7, 0017_lingxios_3_2_8, 0018_lingxios_3_2_9, 0019_agent_read_receipts, 0020_lingxios_3_2_10, 0021_lingxios_3_2_11, 0022_lingxios_3_2_12, 0023_lingxios_3_2_13, 0024_lingxios_3_3_0, 0025_lingxios_3_3_1, 0026_lingxios_3_3_2, 0027_learning_collaboration, 0028_lingxios_3_3_4, 0029_lingxios_3_3_5, 0030_lingxios_3_3_6, 0031_agent_capabilities, 0032_native_message_attachments, 0033_interactive_ui · 11977ms
+[integration] selected 1/56 file(s): interactive-ui-live.test.ts
+TAP version 13
+# {"ts":"2026-10-09T04:46:51.391Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-1f8kw","healthPort":52997,"maxConcurrentRuns":1}
+# {"ts":"2026-10-09T04:46:54.308Z","level":"error","msg":"control-plane request failed","path":"/v5/work/im%3A3f7e3eb2e44b660be46cf3641c0627ac0a84e92b93fb218638e058a98a08ca0f/preview","error":{"name":"Error","message":"aborted","stack":"Error: aborted\\n    at abortIncoming (node:_http_server:838:17)\\n    at socketOnClose (node:_http_server:832:3)\\n    at Socket.emit (node:events:531:35)\\n    at TCP.<anonymous> (node:net:346:12)"}}
+# {"ts":"2026-10-09T04:46:54.442Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-1f8kw","timedOut":false}
+# {"ts":"2026-10-09T04:46:54.445Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (E:\\\\lyyzka\\\\LingxiLoop\\\\server\\\\node_modules\\\\@lyyzka\\\\lingxios\\\\src\\\\app\\\\index.ts:827:22)\\n    at stopLingxiOSControl (E:\\\\lyyzka\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:154:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (E:\\\\lyyzka\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:223:5)\\n    at async TestContext.<anonymous> (E:\\\\lyyzka\\\\LingxiLoop\\\\server\\\\src\\\\__integration__\\\\interactive-ui-live.test.ts:196:46)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-09T04:46:54.452Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (E:\\\\lyyzka\\\\LingxiLoop\\\\server\\\\node_modules\\\\@lyyzka\\\\lingxios\\\\src\\\\app\\\\index.ts:827:22)\\n    at stopLingxiOSControl (E:\\\\lyyzka\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:154:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (E:\\\\lyyzka\\\\LingxiLoop\\\\server\\\\src\\\\agent-runtime\\\\runtime.ts:223:5)\\n    at async TestContext.<anonymous> (E:\\\\lyyzka\\\\LingxiLoop\\\\server\\\\src\\\\__integration__\\\\interactive-ui-live.test.ts:196:46)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# Subtest: current product generates, delivers and explores learning UI with a real model and browser
+not ok 1 - current product generates, delivers and explores learning UI with a real model and browser
+  ---
+  duration_ms: 14070.3789
+  type: 'test'
+  location: 'E:\\lyyzka\\LingxiLoop\\server\\src\\__integration__\\interactive-ui-live.test.ts:1:1228'
+  failureType: 'testCodeFailure'
+  error: 'baseline-projectile: product run failed'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    runCase (E:\lyyzka\LingxiLoop\server\src\__integration__\interactive-ui-live.test.ts:133:16)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (E:\lyyzka\LingxiLoop\server\src\__integration__\interactive-ui-live.test.ts:161:22)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24859.7522

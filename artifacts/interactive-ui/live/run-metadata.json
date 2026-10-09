@@ -1,0 +1,16 @@
+{
+  "startedAt": "2026-10-09T04:46:14.242Z",
+  "finishedAt": "2026-10-09T04:46:54.604Z",
+  "passed": false,
+  "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui",
+  "runtime": "3.3.6",
+  "candidate": "deepseek-ai/DeepSeek-V4-Flash",
+  "judge": "zai-org/GLM-5.3",
+  "maxRunCostUSD": 0.25,
+  "maxTotalCostUSD": 5,
+  "modelConcurrency": 1,
+  "database": "lingxiloop_ui_model_test",
+  "identity": "synthetic test-owner",
+  "realWuKong": true,
+  "authentication": "isolated test middleware"
+}

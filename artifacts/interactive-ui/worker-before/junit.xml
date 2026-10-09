@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="1" errors="0" skipped="0" time="18.564">
+  <testsuite name="e2e/web/interactive-ui.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="18.564">
+    <testcase name="Composable interactive explanations &gt; offscreen simulation cancels its worker and never labels old results as new parameters [web]" classname="e2e/web/interactive-ui.e2e.ts" time="18.564">
+      <failure message="expect.toHaveCount failed&#10;locator: locator(&quot;[data-result=\&quot;clt\&quot;]&quot;)&#10;expected: count 0&#10;observed: count 1 (match count 1)" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expect.toHaveCount failed
+locator: locator(&quot;[data-result=\&quot;clt\&quot;]&quot;)
+expected: count 0
+observed: count 1 (match count 1)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

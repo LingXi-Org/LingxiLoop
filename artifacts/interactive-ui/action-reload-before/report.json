@@ -1,0 +1,2833 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a11f05-36d2-7d12-8d08-80b8f79e4b8f",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-09T04:56:40.012Z",
+    "finishedAt": "2026-10-09T04:57:09.315Z",
+    "project": {
+      "id": "lingxiloop-web",
+      "configDigest": "26a0e9bca1cdbc337f4c702d8c395684795a086495cd61c6c0b964b609e85625"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "win32 10.0.22621",
+      "arch": "x64",
+      "runtime": "node v22.22.2"
+    },
+    "vcs": {
+      "commit": "61335b89e69ef40c45ef0404b8447a3fded2c941",
+      "branch": "codex/issue-111-openui",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5189",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "8ebebd9aba139a076f2bee9bde2a404256edfebb4b18fd1f64e7915757fedd78",
+        "testId": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::Agent%20opens%20its%20durable%20conversation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Agent action journeys",
+          "Agent opens its durable conversation"
+        ],
+        "file": "e2e/web/agent-actions.e2e.ts",
+        "source": {
+          "file": "e2e/web/agent-actions.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "agents",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "0b71e94c46bf813274720e92a5cc38500cec3fb75b197e076312907cc856fb65",
+        "testId": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::Agent%20opens%20its%20durable%20conversation%20on%20mobile",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "Agent action journeys",
+          "Agent opens its durable conversation on mobile"
+        ],
+        "file": "e2e/web/agent-actions.e2e.ts",
+        "source": {
+          "file": "e2e/web/agent-actions.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "agents",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f675f0f87f040964e4ae005d4a007fe7a05a7dbb9865e503011a0d65e1d6be06",
+        "testId": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::repeated%20clicks%20create%20once%20and%20a%20refresh%20failure%20retries%20only%20the%20list",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "Agent action journeys",
+          "repeated clicks create once and a refresh failure retries only the list"
+        ],
+        "file": "e2e/web/agent-actions.e2e.ts",
+        "source": {
+          "file": "e2e/web/agent-actions.e2e.ts",
+          "line": 25,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "agents",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "11cc1213f42e9d08c35069585e3be57f125ee0f9613062fc8843f978a6bba9ea",
+        "testId": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::managed%20teacher%20Agent%20opens%20its%20teaching%20workspace%20without%20creating%20a%20chat",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "Agent action journeys",
+          "managed teacher Agent opens its teaching workspace without creating a chat"
+        ],
+        "file": "e2e/web/agent-actions.e2e.ts",
+        "source": {
+          "file": "e2e/web/agent-actions.e2e.ts",
+          "line": 53,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "agents",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d7fbb3ab5206fb84e6c36f808fa8fd95d03490b56307d698cd0fbfcb3426dc9e",
+        "testId": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::an%20old%20Agent%20request%20cannot%20navigate%20while%20another%20workspace%20is%20opening",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "Agent action journeys",
+          "an old Agent request cannot navigate while another workspace is opening"
+        ],
+        "file": "e2e/web/agent-actions.e2e.ts",
+        "source": {
+          "file": "e2e/web/agent-actions.e2e.ts",
+          "line": 69,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "agents",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "7bb19bed2bc17c5a19375324defb22c29556c2253366fefb1d6369f1df676ab0",
+        "testId": "e2e/web/auth.e2e.ts::Public%20authentication::signed-out%20visitors%20get%20labelled%20login%20fields%20and%20no%20open%20registration",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Public authentication",
+          "signed-out visitors get labelled login fields and no open registration"
+        ],
+        "file": "e2e/web/auth.e2e.ts",
+        "source": {
+          "file": "e2e/web/auth.e2e.ts",
+          "line": 5,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "auth",
+          "public"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "80af444718f02e56552db66087557223e469494ebc98c34af9cbc7bb88311d60",
+        "testId": "e2e/web/auth.e2e.ts::Public%20authentication::password%20recovery%20returns%20to%20login%20without%20losing%20the%20entry%20point",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "Public authentication",
+          "password recovery returns to login without losing the entry point"
+        ],
+        "file": "e2e/web/auth.e2e.ts",
+        "source": {
+          "file": "e2e/web/auth.e2e.ts",
+          "line": 16,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "auth",
+          "public"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9ddd124f55adf632b7aa6f22b060e26a5b7f968933ab7d922e518acacf28c010",
+        "testId": "e2e/web/auth.e2e.ts::Public%20authentication::reset%20links%20reject%20an%20invalid%20token%20with%20a%20visible%20error",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "Public authentication",
+          "reset links reject an invalid token with a visible error"
+        ],
+        "file": "e2e/web/auth.e2e.ts",
+        "source": {
+          "file": "e2e/web/auth.e2e.ts",
+          "line": 27,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "auth",
+          "public"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "90656344693138a4bb1000773255a6070b1597759db7c16b73544c79ef119538",
+        "testId": "e2e/web/auth.e2e.ts::Public%20authentication::invalid%20invitation%20is%20explained%20instead%20of%20leaving%20a%20blank%20app%3A%20%2Finvite%2Fe2e-invalid-invitation",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "Public authentication",
+          "invalid invitation is explained instead of leaving a blank app: /invite/e2e-invalid-invitation"
+        ],
+        "file": "e2e/web/auth.e2e.ts",
+        "source": {
+          "file": "e2e/web/auth.e2e.ts",
+          "line": 37,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "auth",
+          "public"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e4e86f3652a85c749835d4a29be59acb658742fcc60fdb8fc0bce2b96148f4d7",
+        "testId": "e2e/web/auth.e2e.ts::Public%20authentication::invalid%20invitation%20is%20explained%20instead%20of%20leaving%20a%20blank%20app%3A%20%2Finvite%2Fproject%2Fe2e-invalid-invitation",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "Public authentication",
+          "invalid invitation is explained instead of leaving a blank app: /invite/project/e2e-invalid-invitation"
+        ],
+        "file": "e2e/web/auth.e2e.ts",
+        "source": {
+          "file": "e2e/web/auth.e2e.ts",
+          "line": 37,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "auth",
+          "public"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "313f8d88bd3fe34fc8ef042e4cf8a2f61431698208ccfcd3b7b03b60dd52252a",
+        "testId": "e2e/web/auth.e2e.ts::Public%20authentication::invalid%20invitation%20is%20explained%20instead%20of%20leaving%20a%20blank%20app%3A%20%2F%23invite%3D%2525",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "Public authentication",
+          "invalid invitation is explained instead of leaving a blank app: /#invite=%25"
+        ],
+        "file": "e2e/web/auth.e2e.ts",
+        "source": {
+          "file": "e2e/web/auth.e2e.ts",
+          "line": 37,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "auth",
+          "public"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "1247a8ba2b4e8a0bbcc2f7a6aae4e6ba9ca2fcc58a8a954b49480835b142c879",
+        "testId": "e2e/web/auth.e2e.ts::Public%20authentication::login%20and%20password%20recovery%20fit%20a%20phone%20viewport",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "Public authentication",
+          "login and password recovery fit a phone viewport"
+        ],
+        "file": "e2e/web/auth.e2e.ts",
+        "source": {
+          "file": "e2e/web/auth.e2e.ts",
+          "line": 44,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "auth",
+          "public"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e84c9b167b3c6ee1e82e0a34704a9e240194361c6f2c73ff627b6784a3e446e1",
+        "testId": "e2e/web/business-layout.e2e.ts::learner%20next%20steps%20precede%20analysis%20and%20keep%20the%20activity%20detail%20reachable",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "learner next steps precede analysis and keep the activity detail reachable"
+        ],
+        "file": "e2e/web/business-layout.e2e.ts",
+        "source": {
+          "file": "e2e/web/business-layout.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "business-layout",
+          "learning"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "6cf31df78b249cda6aae98c49544e05835b2ae2d4a43de5353213614e4821cf4",
+        "testId": "e2e/web/business-layout.e2e.ts::teacher%20priorities%20and%20follow-up%20precede%20charts%20and%20open%20the%20existing%20review%20flow",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "teacher priorities and follow-up precede charts and open the existing review flow"
+        ],
+        "file": "e2e/web/business-layout.e2e.ts",
+        "source": {
+          "file": "e2e/web/business-layout.e2e.ts",
+          "line": 22,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "business-layout",
+          "learning"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "bd0c6983fe4f035e160abec8b19f3ef5603344e58a0d59e86ce9c56dc14e4b88",
+        "testId": "e2e/web/business-layout.e2e.ts::resource%20scope%20shows%20public%20sources%20immediately%20and%20preserves%20student%20write%20permissions",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "resource scope shows public sources immediately and preserves student write permissions"
+        ],
+        "file": "e2e/web/business-layout.e2e.ts",
+        "source": {
+          "file": "e2e/web/business-layout.e2e.ts",
+          "line": 39,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "business-layout",
+          "knowledge",
+          "authorization"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ed84e7bf4de0e38ef3e39829272ea575251c60996f7a15de1163613f5b0604a9",
+        "testId": "e2e/web/business-layout.e2e.ts::mail%20keeps%20its%20page%20title%20visible%20beside%20search%20on%20desktop",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "mail keeps its page title visible beside search on desktop"
+        ],
+        "file": "e2e/web/business-layout.e2e.ts",
+        "source": {
+          "file": "e2e/web/business-layout.e2e.ts",
+          "line": 59,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "business-layout",
+          "mail"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e55483a51685f5d2d0ce76c34def1d047d842c78dbaae230af1c5100b86c7ff8",
+        "testId": "e2e/web/business-layout.e2e.ts::teacher%20can%20manage%20public%20sources%20while%20learner%20review%20sources%20stay%20read-only",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "teacher can manage public sources while learner review sources stay read-only"
+        ],
+        "file": "e2e/web/business-layout.e2e.ts",
+        "source": {
+          "file": "e2e/web/business-layout.e2e.ts",
+          "line": 74,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "business-layout",
+          "knowledge",
+          "authorization"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "99108557f9b4072929cc297ba02073e6c07c3082294374af64e3b20fd2ab2e51",
+        "testId": "e2e/web/calendar.e2e.ts::calendar%20personal%20event%20is%20validated%2C%20saved%2C%20reloaded%2C%20edited%20and%20deleted",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "calendar personal event is validated, saved, reloaded, edited and deleted"
+        ],
+        "file": "e2e/web/calendar.e2e.ts",
+        "source": {
+          "file": "e2e/web/calendar.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "calendar",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b31eb7850e64ee8d4f8390950916ebee79b8681d4b4d969385b8e624189d3e54",
+        "testId": "e2e/web/canvas.e2e.ts::canvas%20text%20cards%20create%2C%20edit%2C%20move%2C%20persist%2C%20download%20and%20delete",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "canvas text cards create, edit, move, persist, download and delete"
+        ],
+        "file": "e2e/web/canvas.e2e.ts",
+        "source": {
+          "file": "e2e/web/canvas.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "canvas",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "7cead7d655e9b616701d4d6264cf67f988ee8940fd54ab26e91c6a6d742511cd",
+        "testId": "e2e/web/conversations.e2e.ts::Durable%20conversations::human%20DM%20sends%2C%20survives%20reload%2C%20searches%20history%20and%20opens%20its%20canvas",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Durable conversations",
+          "human DM sends, survives reload, searches history and opens its canvas"
+        ],
+        "file": "e2e/web/conversations.e2e.ts",
+        "source": {
+          "file": "e2e/web/conversations.e2e.ts",
+          "line": 6,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "chat",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d3f2d7d23d94c750c66bd02f09e066bc167b268c5a43743075cff88311fd600c",
+        "testId": "e2e/web/conversations.e2e.ts::Durable%20conversations::a%20named%20group%20persists%20and%20mobile%20navigation%20returns%20to%20the%20conversation%20list",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "Durable conversations",
+          "a named group persists and mobile navigation returns to the conversation list"
+        ],
+        "file": "e2e/web/conversations.e2e.ts",
+        "source": {
+          "file": "e2e/web/conversations.e2e.ts",
+          "line": 66,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "chat",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "44fed8342263b0967b008b7dee8a5841ecb62caa6f6b05c86d026217bc5bfe24",
+        "testId": "e2e/web/course.e2e.ts::Disposable%20course%20lifecycle::teacher%20creates%20a%20course%2C%20updates%20its%20profile%2C%20publishes%20content%2C%20revokes%20an%20invite%20and%20ends%20it",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Disposable course lifecycle",
+          "teacher creates a course, updates its profile, publishes content, revokes an invite and ends it"
+        ],
+        "file": "e2e/web/course.e2e.ts",
+        "source": {
+          "file": "e2e/web/course.e2e.ts",
+          "line": 6,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "learning",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b06decfa94627f7b7e8ab19519408c09cb419b2e1e8d7e87cbd55618e8b27c0f",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20projectile",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: projectile"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "35b76d80434f397d8256302640f2fbc8fb28da42fc8f33095c89ad88deac8b3f",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20functions",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: functions"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "3a0f0fc4633fac659c637fd550bd7d2666e253f672d9ddc83623a7e84bd43831",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20dct",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: dct"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "cd85665fea03e573ce4c03bd07b06cbd15ab8b0539bc0e148675b1d31e7dba33",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20clt",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: clt"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "7c0f227a111e9140f742d48281744fbdbceee27e3f4d1ce38f3886bbe2208122",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20monty",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: monty"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "971b6f4eb606311ff1afaef7923ee54cce999e650d2ef26ee2356cc3146744ad",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20comparison",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: comparison"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "1eae0611b31331fef8e83ef6b85b1386cd250cf6fbd8bfe998c99e892016d20d",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20steps",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: steps"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "95f45ce6e5d4ecc26c4d8b822e6bb433cf9d1623ba0e57e76032406524c4dcee",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20mixed",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: mixed"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "1ddc9c84c26df978d77d4c868ac703f949064caeeea7b947c59548cc1cc535bd",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20brief",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: brief"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "dedaa02dd54e0ee3da117170c48830b7efe3892bae6ea04d1824b8a6e9061c32",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::real%20model%20composition%3A%20unsupported",
+        "kind": "test",
+        "declarationIndex": 9,
+        "titlePath": [
+          "Product live interactive learning",
+          "real model composition: unsupported"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 71,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e79538dbf321bc3b16ecf0ac4917873fe1047c662a7d46935c12142580c30a9e",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::continuous%20exploration%20makes%20no%20model%2Faction%20calls%20and%20survives%20reload",
+        "kind": "test",
+        "declarationIndex": 10,
+        "titlePath": [
+          "Product live interactive learning",
+          "continuous exploration makes no model/action calls and survives reload"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 84,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "0e0b43037c794b9e6ca152992f3b57f81ca66c51f8e746e2f3ed500ebd532bf1",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::natural-language%20revisions%20preserve%20compatible%20state%2C%20reset%20changed%20meaning%2C%20and%20remove%20controls",
+        "kind": "test",
+        "declarationIndex": 11,
+        "titlePath": [
+          "Product live interactive learning",
+          "natural-language revisions preserve compatible state, reset changed meaning, and remove controls"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 108,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "4b81147d211e44d07168b9a8a041094eaa3b0f280e139c67e3c6b1846f9ef8d5",
+        "testId": "e2e/web/interactive-ui-live.e2e.ts::Product%20live%20interactive%20learning::an%20incorrect%20prediction%20submits%20once%20and%20receives%20a%20new%20real%20model%20explanation",
+        "kind": "test",
+        "declarationIndex": 12,
+        "titlePath": [
+          "Product live interactive learning",
+          "an incorrect prediction submits once and receives a new real model explanation"
+        ],
+        "file": "e2e/web/interactive-ui-live.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-live.e2e.ts",
+          "line": 175,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-live"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "8c61a09b15c3c42b877375b9a5d4c1a5b670b785fd80834c2c95ca880e4710e0",
+        "testId": "e2e/web/interactive-ui-wukong.e2e.ts::Real%20WuKong%20interactive%20UI%20transport::real%20personal%20state%20survives%20reload%20and%20double%20clicks%20produce%20one%20durable%20action",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Real WuKong interactive UI transport",
+          "real personal state survives reload and double clicks produce one durable action"
+        ],
+        "file": "e2e/web/interactive-ui-wukong.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui-wukong.e2e.ts",
+          "line": 28,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui-wukong"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "111dacb53a4ecb5615d84c7a651ed7e4e98ab59be42af56ff0690407ec6fe685",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::continuous%20controls%2C%20recovery%20and%20mixed%20composition%20%28light%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Composable interactive explanations",
+          "continuous controls, recovery and mixed composition (light)"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 11,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2c5d0cd2490577fab5c7492b910ea0464edba84f4fa6c91e29fa598a35da609c",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::continuous%20controls%2C%20recovery%20and%20mixed%20composition%20%28dark%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "Composable interactive explanations",
+          "continuous controls, recovery and mixed composition (dark)"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 11,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "479363c04877b00415f57c9ebee0335959f1fb7e0f310bf4046d46db0572feec",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::draft%2C%20pending%20and%20stale%20messages%20are%20read-only%20and%20invalid%20source%20keeps%20its%20explanation",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "Composable interactive explanations",
+          "draft, pending and stale messages are read-only and invalid source keeps its explanation"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 34,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "4ed2e40ce89bcf9664fc333795535cc03502fced1ae8e1cc860622e191965441",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::all%20scientific%20displays%20provide%20values%20and%20predictions%20remain%20local",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "Composable interactive explanations",
+          "all scientific displays provide values and predictions remain local"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 45,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "39ef1c2e7c2a7a950ee21aeb94ea6183a4af1da873af678e833ecaf7004f9a62",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::duplicate%20clicks%20submit%20once%20and%20uncertain%20failures%20retry%20the%20same%20request",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "Composable interactive explanations",
+          "duplicate clicks submit once and uncertain failures retry the same request"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 56,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "20fd6d95d605967c96d07b75bb0c4f0193de0b1870559b64deb01bf321d34729",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::a%20conflicting%20save%20pauses%20edits%20until%20an%20explicit%20reload",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "Composable interactive explanations",
+          "a conflicting save pauses edits until an explicit reload"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 74,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "712246ea8bd209d964750d5793112f28d284cc4601d86095258eb5e9a1a977ee",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::reloading%20after%20a%20save%20conflict%20keeps%20an%20unconfirmed%20action%20retryable%20with%20the%20same%20identity",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "Composable interactive explanations",
+          "reloading after a save conflict keeps an unconfirmed action retryable with the same identity"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 85,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-09T04:56:41.423Z",
+            "durationMs": 27540,
+            "artifacts": [
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_web_interactive-ui.e2e.ts__Composable_20interactive_20explanations__reloading_20after_20a_20save_20conflict-19c19b94/default/attempt-0/failure/screen.txt",
+                "size": 1549,
+                "sha256": "e462eea8fb2c2deffeba7d3923a600535174eb58c48a449991571737fc32927e"
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_web_interactive-ui.e2e.ts__Composable_20interactive_20explanations__reloading_20after_20a_20save_20conflict-19c19b94/default/attempt-0/screenshots/001-failure.png",
+                "size": 45282,
+                "sha256": "834e5e563b0fdbe61492474236bf72d1403e1c7ce691fb28c524dcb2083914f1"
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_web_interactive-ui.e2e.ts__Composable_20interactive_20explanations__reloading_20after_20a_20save_20conflict-19c19b94/default/attempt-0/trace/trace.zip",
+                "size": 670627,
+                "sha256": "2f9e985eff22f1484584f91b9337a7b81a1d04efed2daeb8882b10eecedf26c8"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expect.toBeEnabled failed\nlocator: getByRole(\"button\", name: \"重试提交\")\nexpected: enabled\nobserved: no node (match count 0)",
+              "retryable": false,
+              "phase": "body",
+              "details": {
+                "locator": "getByRole(\"button\", name: \"重试提交\")",
+                "expected": "enabled",
+                "observed": "no node",
+                "matches": 0
+              },
+              "source": {
+                "file": "node_modules/e2e/dist/expect/async.js",
+                "line": 112,
+                "column": 28
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:5189/e2e/interactive-ui.html?mode=action-reload",
+              "screen": "01a11f05-44cf-7460-8784-aa95c6e53ef8:artifact:0",
+              "screenshot": "01a11f05-44cf-7460-8784-aa95c6e53ef8:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/interactive-ui.html?mode=action-reload",
+                "status": "passed",
+                "startedAt": "2026-10-09T04:56:41.792Z",
+                "durationMs": 9668,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toBeEnabled",
+                "label": "getByRole(\"button\", name: \"解释当前结果\")",
+                "status": "passed",
+                "startedAt": "2026-10-09T04:56:51.466Z",
+                "durationMs": 206,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"解释当前结果\")",
+                "status": "passed",
+                "startedAt": "2026-10-09T04:56:51.673Z",
+                "durationMs": 216,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-actions]\")",
+                "status": "passed",
+                "startedAt": "2026-10-09T04:56:51.890Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"slider\", name: \"发射角度\")",
+                "status": "passed",
+                "startedAt": "2026-10-09T04:56:51.912Z",
+                "durationMs": 36,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "ArrowRight",
+                "status": "passed",
+                "startedAt": "2026-10-09T04:56:51.949Z",
+                "durationMs": 95,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"重新载入\")",
+                "status": "passed",
+                "startedAt": "2026-10-09T04:56:52.045Z",
+                "durationMs": 792,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重新载入\")",
+                "status": "passed",
+                "startedAt": "2026-10-09T04:56:52.838Z",
+                "durationMs": 415,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a11f05-44cf-7460-8784-aa95c6e53ef8:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toBeEnabled",
+                "label": "getByRole(\"button\", name: \"重试提交\")",
+                "status": "failed",
+                "startedAt": "2026-10-09T04:56:53.254Z",
+                "durationMs": 15059,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                },
+                "error": {
+                  "category": "test",
+                  "code": "ASSERTION_FAILED",
+                  "message": "expect.toBeEnabled failed\nlocator: getByRole(\"button\", name: \"重试提交\")\nexpected: enabled\nobserved: no node (match count 0)",
+                  "retryable": false,
+                  "details": {
+                    "locator": "getByRole(\"button\", name: \"重试提交\")",
+                    "expected": "enabled",
+                    "observed": "no node",
+                    "matches": 0
+                  },
+                  "source": {
+                    "file": "node_modules/e2e/dist/expect/async.js",
+                    "line": 112,
+                    "column": 28
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e3ff95d67c80b84d8639664056d6a7ec8bb9d207b6025a002915915c92e160e7",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::M0%20baseline%20locks%20performance%20gates%20before%20independent%20acceptance",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "Composable interactive explanations",
+          "M0 baseline locks performance gates before independent acceptance"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 102,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9ef1eee026d26b6c0936a6a11b9cb886b4e6546a497a45914d344598a08e0b32",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::independent%20long-list%20keyboard%20and%20pointer%20interaction%20meets%20frozen%20gates",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "Composable interactive explanations",
+          "independent long-list keyboard and pointer interaction meets frozen gates"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 131,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "bae36316dc2604bb5d9627bd25acab69a87df4b855d4046014d336ca464dadf0",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::official%20adapter%20and%20direct%20Renderer%20use%20the%20same%20controls%20in%20the%20current%20external-store%20runtime",
+        "kind": "test",
+        "declarationIndex": 9,
+        "titlePath": [
+          "Composable interactive explanations",
+          "official adapter and direct Renderer use the same controls in the current external-store runtime"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 170,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "1e4fd4550fb9be6ea77d1d2a3f5b3c192424b22fa16d0e0cb377b7fd88f8b04a",
+        "testId": "e2e/web/interactive-ui.e2e.ts::Composable%20interactive%20explanations::reduced-motion%20CSS%20and%20the%20touch%20pointer%20path%20preserve%20continuous%20control",
+        "kind": "test",
+        "declarationIndex": 10,
+        "titlePath": [
+          "Composable interactive explanations",
+          "reduced-motion CSS and the touch pointer path preserve continuous control"
+        ],
+        "file": "e2e/web/interactive-ui.e2e.ts",
+        "source": {
+          "file": "e2e/web/interactive-ui.e2e.ts",
+          "line": 198,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "interactive-ui"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "5b68649512a6efc7efed9675f2961ed3e056fcc5a00bfdb5b200cfcc72369c8b",
+        "testId": "e2e/web/knowledge.e2e.ts::personal%20text%20source%20is%20ingested%2C%20previewed%2C%20renamed%2C%20reloaded%20and%20deleted",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "personal text source is ingested, previewed, renamed, reloaded and deleted"
+        ],
+        "file": "e2e/web/knowledge.e2e.ts",
+        "source": {
+          "file": "e2e/web/knowledge.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "knowledge",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "db87c6462a29a649c8aaaeb913e8c5afc42c5f96400ef57ffa1ad5750aa9c86a",
+        "testId": "e2e/web/learning.e2e.ts::teacher%20publishes%20an%20activity%2C%20student%20submits%2C%20and%20teacher%20opens%20the%20persisted%20evidence",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "teacher publishes an activity, student submits, and teacher opens the persisted evidence"
+        ],
+        "file": "e2e/web/learning.e2e.ts",
+        "source": {
+          "file": "e2e/web/learning.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "learning",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f89dc4a65de587922109edd68b7573271e0d87b490d1cd0884e2e49ba2336c2a",
+        "testId": "e2e/web/membership.e2e.ts::course%20member%20identities%20are%20displayed%20without%20unsupported%20role%20changes",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "course member identities are displayed without unsupported role changes"
+        ],
+        "file": "e2e/web/membership.e2e.ts",
+        "source": {
+          "file": "e2e/web/membership.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "learning",
+          "authorization"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e45f0e9ced4d254fa51edefb20866152e71e86543ca6343fbec7d93d93554797",
+        "testId": "e2e/web/membership.e2e.ts::course%20invitation%20acceptance%2C%20fixed%20identity%20and%20removal%20update%20student%20access",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "course invitation acceptance, fixed identity and removal update student access"
+        ],
+        "file": "e2e/web/membership.e2e.ts",
+        "source": {
+          "file": "e2e/web/membership.e2e.ts",
+          "line": 18,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "learning",
+          "authorization",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f5c930911bb5711044171b5de1762a8fb71b4d10bf4e0aa5642c24d0a5750046",
+        "testId": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::explicit%20project%20and%20conversation%20survive%20reload%20and%20override%20a%20cached%20project",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Workspace URL navigation",
+          "explicit project and conversation survive reload and override a cached project"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 10,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ae7e1d41a15aac88370b3a10b08fd3ca19917e3cb1d5948bc1988f843cdeb51d",
+        "testId": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::module%20navigation%20and%20browser%20history%20restore%20the%20selected%20conversation",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "Workspace URL navigation",
+          "module navigation and browser history restore the selected conversation"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 21,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f43f08a8a2b8879aac5d52e0db6c750479ddcb177e47e8aa32505a84d880cc9b",
+        "testId": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::an%20explicit%20conversation%20list%20stays%20unselected%2C%20including%20on%20mobile",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "Workspace URL navigation",
+          "an explicit conversation list stays unselected, including on mobile"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 35,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "413f9bc555d2fabbe357fc6e4cf5a5599be14a69aa1cdf1446198a0b0d24b5db",
+        "testId": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::one%20successful%20project%20switch%20adds%20one%20history%20entry%20and%20restores%20across%20projects",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "Workspace URL navigation",
+          "one successful project switch adds one history entry and restores across projects"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 50,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "95d6306378533b20e567f7c7419031df6e10056f6ac34932e58d1e6cbb014d63",
+        "testId": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::missing%20conversations%20and%20inaccessible%20projects%20explain%20the%20failure%20without%20opening%20another%20chat",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "Workspace URL navigation",
+          "missing conversations and inaccessible projects explain the failure without opening another chat"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 64,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c09f4b37f8c2a5f8bdf80f8ab9e32e1f77166d8340e322fc1600acd96f55f09e",
+        "testId": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::the%20last%20destination%20wins%20when%20history%20changes%20during%20project%20loading",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "Workspace URL navigation",
+          "the last destination wins when history changes during project loading"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 74,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "482afedbfbba891bfa6a893bc073ef8120fa1526edefbd97bc75b87efa918445",
+        "testId": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::a%20network%20failure%20keeps%20the%20destination%20and%20retry%20restores%20it",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "Workspace URL navigation",
+          "a network failure keeps the destination and retry restores it"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 89,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "799c2222c2effebf63c9d92845df4a4c562c04b04af44ce303c479e23cd31fae",
+        "testId": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::an%20older%20project-list%20refresh%20cannot%20replace%20a%20newer%20cached%20destination",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "Workspace URL navigation",
+          "an older project-list refresh cannot replace a newer cached destination"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 102,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "8b48996622d452ed2164eea46b83e7b26e48ff52451d7e883914764daf35ff7b",
+        "testId": "e2e/web/navigation.e2e.ts::a%20student%20management%20deep%20link%20waits%20for%20authorization%20then%20explains%20the%20fallback",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "a student management deep link waits for authorization then explains the fallback"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 120,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation",
+          "authorization"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "8062f6e9363d4c37fcbd878348bb1ef67384dbc263b36fcd881b611bc07aa528",
+        "testId": "e2e/web/navigation.e2e.ts::sign%20in%20keeps%20a%20safe%20internal%20conversation%20destination",
+        "kind": "test",
+        "declarationIndex": 9,
+        "titlePath": [
+          "sign in keeps a safe internal conversation destination"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 128,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation",
+          "auth"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d5ba5afce6cc03470d9122f88b587f1d46d26f2066b775003b2750ed9f1f9a06",
+        "testId": "e2e/web/navigation.e2e.ts::course%20creation%20respects%20newer%20navigation%20while%20creating",
+        "kind": "test",
+        "declarationIndex": 10,
+        "titlePath": [
+          "course creation respects newer navigation while creating"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 140,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "707c955b45ff4cc2d0cf2e07c0d2fbd5da41f8224883bba50a85486bec2488ee",
+        "testId": "e2e/web/navigation.e2e.ts::course%20creation%20respects%20newer%20navigation%20while%20opening",
+        "kind": "test",
+        "declarationIndex": 11,
+        "titlePath": [
+          "course creation respects newer navigation while opening"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 140,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2ea379657c694646d491d5c823de8f254557e0ee734c14fc132b0b0d5b33519f",
+        "testId": "e2e/web/navigation.e2e.ts::selecting%20an%20authorized%20workspace%20after%20an%20invalid%20deep%20link%20starts%20live%20updates",
+        "kind": "test",
+        "declarationIndex": 12,
+        "titlePath": [
+          "selecting an authorized workspace after an invalid deep link starts live updates"
+        ],
+        "file": "e2e/web/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/web/navigation.e2e.ts",
+          "line": 178,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "navigation",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d9e114bca5e42d860f6e8089d07794721fa298ab8df32ee4d6c4c2d71d8833d9",
+        "testId": "e2e/web/preferences.e2e.ts::Saved%20account%20preferences::notification%20times%20and%20switches%20persist%20after%20reload",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Saved account preferences",
+          "notification times and switches persist after reload"
+        ],
+        "file": "e2e/web/preferences.e2e.ts",
+        "source": {
+          "file": "e2e/web/preferences.e2e.ts",
+          "line": 6,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "settings",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "eb35bc8a6266a8d31cb4291a0e283d8f595af5bcc3dfe17d73e43edb874455c5",
+        "testId": "e2e/web/preferences.e2e.ts::Saved%20account%20preferences::generated%20and%20uploaded%20avatars%20save%20and%20survive%20reload",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "Saved account preferences",
+          "generated and uploaded avatars save and survive reload"
+        ],
+        "file": "e2e/web/preferences.e2e.ts",
+        "source": {
+          "file": "e2e/web/preferences.e2e.ts",
+          "line": 34,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "settings",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "fcc2f3ca678e1cc69a41beddbee3b6eef14d95f1e3657c609cd9999ef520fea4",
+        "testId": "e2e/web/recipient.e2e.ts::a%20second%20user%20receives%20a%20durable%20DM%20after%20sending%20and%20reloading",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "a second user receives a durable DM after sending and reloading"
+        ],
+        "file": "e2e/web/recipient.e2e.ts",
+        "source": {
+          "file": "e2e/web/recipient.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "chat",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "41c2d60f7380c2d11d2bdcfe5464b6e6fecbdcbab25d152fa9fc19bf28a18930",
+        "testId": "e2e/web/recipient.e2e.ts::a%20second%20user%20receives%20a%20durable%20DM%20and%20its%20uploaded%20image%20attachment",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "a second user receives a durable DM and its uploaded image attachment"
+        ],
+        "file": "e2e/web/recipient.e2e.ts",
+        "source": {
+          "file": "e2e/web/recipient.e2e.ts",
+          "line": 34,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "chat",
+          "attachments",
+          "mutations"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "018fa274ae594098ff49fe338ab96bdda3f70ecf4b91d3c518343af2d91bf88e",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::session%20survives%20reload%20and%20the%20account%20menu%20shows%20the%20signed-in%20user",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Member workspace",
+          "session survives reload and the account menu shows the signed-in user"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 6,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e63e22e3864e54b8da7d6c5ead9ba520a19ab250c242db99b02178179dfe1185",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::workspace%20picker%20opens%2C%20preserves%20selection%2C%20and%20closes%20with%20Escape",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "Member workspace",
+          "workspace picker opens, preserves selection, and closes with Escape"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 15,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d8a7f0bbd6fe08479435d05bdaf8356a5d339a21324b4ec0d3710fe9eeed7402",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::keyboard%20command%20palette%20searches%20and%20navigates%20to%20the%20resource%20library",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "Member workspace",
+          "keyboard command palette searches and navigates to the resource library"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 26,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "1b964f565eaabd0859f925e472fb5d9e07b7d8fb1200bfb9bc1a6734e919486d",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::command%20palette%20focuses%20conversation%20search%20and%20composer%20and%20opens%20message%20find",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "Member workspace",
+          "command palette focuses conversation search and composer and opens message find"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 36,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d5cf1676799913f9749fc7fc5e6241d8ed13f7727efabc7edb9f7ea1e5b146fb",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::all%20top-level%20learner%20surfaces%20load%20without%20an%20error%20panel",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "Member workspace",
+          "all top-level learner surfaces load without an error panel"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 55,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "1f4209de7c767672709ce873ca0a67010ed48d16cf3d00d4f49053b821863c02",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::new-conversation%20selection%20validates%20empty%20and%20unmatched%20searches",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "Member workspace",
+          "new-conversation selection validates empty and unmatched searches"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 66,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "87e16e26c991e101b9851af8e5f31623f31b625e491aa1d2afcb1b75d24ba8f9",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::mail%20search%20can%20be%20cleared%20and%20an%20empty%20composer%20cannot%20send",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "Member workspace",
+          "mail search can be cleared and an empty composer cannot send"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 77,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2d79740a870ac632f273dced8dfe77c9075a6d82e5fcf793f4425550d6aaa49f",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::calendar%20view%20controls%20and%20cancelled%20edits%20leave%20the%20calendar%20usable",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "Member workspace",
+          "calendar view controls and cancelled edits leave the calendar usable"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 94,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "5aa8aac28f7f2b185c23f9f73bcd0ed646a661187878ac7af2e3dd91d41b44cf",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::settings%20tabs%2C%20appearance%20persistence%20and%20focus%20restoration%20work",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "Member workspace",
+          "settings tabs, appearance persistence and focus restoration work"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 111,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "17f3b58c3e1f72c06f671710d55f3a0973c163cafba53a8705c472b207aadc39",
+        "testId": "e2e/web/workspace.e2e.ts::Member%20workspace::mobile%20shell%20and%20settings%20stay%20within%20the%20viewport",
+        "kind": "test",
+        "declarationIndex": 9,
+        "titlePath": [
+          "Member workspace",
+          "mobile shell and settings stay within the viewport"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 132,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "workspace"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f76b71690a87967c59411dcac5c448634b5d587912ee7a04650c18afd55a5b62",
+        "testId": "e2e/web/workspace.e2e.ts::student%20has%20learner%20navigation%20without%20course%20administration",
+        "kind": "test",
+        "declarationIndex": 10,
+        "titlePath": [
+          "student has learner navigation without course administration"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 146,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "learning",
+          "authorization"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "1a2a8e8aa0fb510dd8380e09c80bc37a5bfbffb8a2543bd2e3d686ed9ddcf6b9",
+        "testId": "e2e/web/workspace.e2e.ts::logout%20revokes%20the%20server%20session%20after%20a%20reload",
+        "kind": "test",
+        "declarationIndex": 11,
+        "titlePath": [
+          "logout revokes the server session after a reload"
+        ],
+        "file": "e2e/web/workspace.e2e.ts",
+        "source": {
+          "file": "e2e/web/workspace.e2e.ts",
+          "line": 155,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "auth"
+        ],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 80,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 80,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 717458,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

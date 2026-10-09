@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="9" failures="0" errors="0" skipped="0" time="16.019">
+  <testsuite name="e2e/web/interactive-ui.e2e.ts" tests="9" failures="0" errors="0" skipped="0" time="16.019">
+    <testcase name="Composable interactive explanations &gt; continuous controls, recovery and mixed composition (light) [web]" classname="e2e/web/interactive-ui.e2e.ts" time="2.548"/>
+    <testcase name="Composable interactive explanations &gt; continuous controls, recovery and mixed composition (dark) [web]" classname="e2e/web/interactive-ui.e2e.ts" time="1.835"/>
+    <testcase name="Composable interactive explanations &gt; draft, pending and stale messages are read-only and invalid source keeps its explanation [web]" classname="e2e/web/interactive-ui.e2e.ts" time="1.455"/>
+    <testcase name="Composable interactive explanations &gt; all scientific displays provide values and predictions remain local [web]" classname="e2e/web/interactive-ui.e2e.ts" time="1.656"/>
+    <testcase name="Composable interactive explanations &gt; duplicate clicks submit once and uncertain failures retry the same request [web]" classname="e2e/web/interactive-ui.e2e.ts" time="0.935"/>
+    <testcase name="Composable interactive explanations &gt; a conflicting save pauses edits until an explicit reload [web]" classname="e2e/web/interactive-ui.e2e.ts" time="1.494"/>
+    <testcase name="Composable interactive explanations &gt; reloading after a save conflict keeps an unconfirmed action retryable with the same identity [web]" classname="e2e/web/interactive-ui.e2e.ts" time="2.189"/>
+    <testcase name="Composable interactive explanations &gt; an unconfirmed newer result keeps the committed revision editable until native delivery [web]" classname="e2e/web/interactive-ui.e2e.ts" time="2.861"/>
+    <testcase name="Composable interactive explanations &gt; offscreen simulation cancels its worker and never labels old results as new parameters [web]" classname="e2e/web/interactive-ui.e2e.ts" time="1.046"/>
+  </testsuite>
+</testsuites>

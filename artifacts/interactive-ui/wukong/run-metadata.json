@@ -1,0 +1,17 @@
+{
+  "startedAt": "2026-10-09T05:00:32.259Z",
+  "finishedAt": "2026-10-09T05:02:48.087Z",
+  "passed": true,
+  "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui --transport-only",
+  "runtime": "3.3.6",
+  "candidate": null,
+  "judge": "zai-org/GLM-5.3",
+  "maxRunCostUSD": 0.25,
+  "maxTotalCostUSD": 5,
+  "modelConcurrency": 1,
+  "database": "lingxiloop_ui_model_test",
+  "identity": "synthetic test-owner",
+  "realWuKong": true,
+  "realModel": false,
+  "authentication": "isolated test middleware"
+}

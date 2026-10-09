@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="5.547">
+  <testsuite name="e2e/web/interactive-ui.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="5.547">
+    <testcase name="Composable interactive explanations &gt; independent long-list keyboard and pointer interaction meets frozen gates [web]" classname="e2e/web/interactive-ui.e2e.ts" time="5.547"/>
+  </testsuite>
+</testsuites>

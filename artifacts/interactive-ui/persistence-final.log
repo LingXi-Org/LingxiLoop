@@ -1,0 +1,79 @@
+ Container lingxiloop-e2e-redis-1  Running
+ Container lingxiloop-e2e-postgres-1  Running
+ Container lingxiloop-e2e-postgres-1  Waiting
+ Container lingxiloop-e2e-redis-1  Waiting
+ Container lingxiloop-e2e-redis-1  Healthy
+ Container lingxiloop-e2e-postgres-1  Healthy
+[db:migrate] already current · 313ms
+[integration] selected 1/57 file(s): interactive-ui.test.ts
+TAP version 13
+# Subtest: personal state is scoped, conditionally saved, and restored only across compatible revisions
+ok 1 - personal state is scoped, conditionally saved, and restored only across compatible revisions
+  ---
+  duration_ms: 13503.9774
+  type: 'test'
+  ...
+# Subtest: actions are allowlisted, admitted once, and generic ingress cannot forge their receipts
+ok 2 - actions are allowlisted, admitted once, and generic ingress cannot forge their receipts
+  ---
+  duration_ms: 1329.9618
+  type: 'test'
+  ...
+# Subtest: mentions in lesson titles and prediction data cannot choose action recipients
+ok 3 - mentions in lesson titles and prediction data cannot choose action recipients
+  ---
+  duration_ms: 478.5632
+  type: 'test'
+  ...
+# Subtest: real student, teacher-room, conversation and tenant scopes remain authoritative for UI requests
+ok 4 - real student, teacher-room, conversation and tenant scopes remain authoritative for UI requests
+  ---
+  duration_ms: 711.3506
+  type: 'test'
+  ...
+# Subtest: pending delivery fences actions, survives ACK loss, and commits only the original recorded message
+ok 5 - pending delivery fences actions, survives ACK loss, and commits only the original recorded message
+  ---
+  duration_ms: 526.0025
+  type: 'test'
+  ...
+# [api] 500 Error: fixture ACK lost after durable write
+#     at WukongClient.<anonymous> (E:\\lyyzka\\LingxiLoop\\server\\src\\__integration__\\interactive-ui.test.ts:292:11)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+#     at async ImMessagesApplication.acceptMessage (E:\\lyyzka\\LingxiLoop\\server\\src\\im\\messages-application.ts:406:22)
+#     at async Object.withConnection (E:\\lyyzka\\LingxiLoop\\server\\src\\im\\messages-facade.ts:13:14)
+#     at async submitUiAction (E:\\lyyzka\\LingxiLoop\\server\\src\\im\\interactive-ui.ts:295:18)
+#     at async <anonymous> (E:\\lyyzka\\LingxiLoop\\server\\src\\im\\router.ts:306:18)
+# Subtest: an action whose send lost its ACK is reconciled without a second human message
+ok 6 - an action whose send lost its ACK is reconciled without a second human message
+  ---
+  duration_ms: 412.7939
+  type: 'test'
+  ...
+# Subtest: native UI dispatch reconciles a lost ACK and does not retry an unconfirmed absent message
+ok 7 - native UI dispatch reconciles a lost ACK and does not retry an unconfirmed absent message
+  ---
+  duration_ms: 216.0861
+  type: 'test'
+  ...
+# Subtest: competing revisions and same-version state writes admit exactly one winner
+ok 8 - competing revisions and same-version state writes admit exactly one winner
+  ---
+  duration_ms: 255.0111
+  type: 'test'
+  ...
+# Subtest: runtime control rejects cancelled or failed runs and binds only the original waiting request
+ok 9 - runtime control rejects cancelled or failed runs and binds only the original waiting request
+  ---
+  duration_ms: 517.1292
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 29800.8168

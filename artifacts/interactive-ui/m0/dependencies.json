@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-09T04:55:51.991Z",
+  "reproduce": "node e2e/interactive-m0.mjs",
+  "telemetry": {
+    "OPENUI_TELEMETRY_DISABLED": "1",
+    "DO_NOT_TRACK": "1",
+    "installScripts": false
+  },
+  "current": {
+    "exitCode": 1,
+    "manifest": {
+      "react": "19.2.8",
+      "react-dom": "19.2.8",
+      "zod": "4.4.3",
+      "zustand": "5.0.15",
+      "@assistant-ui/react": "0.15.16",
+      "@openuidev/react-lang": "0.3.2",
+      "@openuidev/assistant-ui": "0.1.2",
+      "@openuidev/react-ui": "0.17.0",
+      "@openuidev/react-headless": "0.17.0"
+    },
+    "log": "openui-adapter-current.log",
+    "prefix": ".e2e/openui-adapter-current"
+  },
+  "compatible": {
+    "exitCode": 0,
+    "manifest": {
+      "react": "19.2.8",
+      "react-dom": "19.2.8",
+      "zod": "4.4.3",
+      "zustand": "4.5.7",
+      "@assistant-ui/react": "0.15.16",
+      "@openuidev/react-lang": "0.3.2",
+      "@openuidev/assistant-ui": "0.1.2",
+      "@openuidev/react-ui": "0.17.0",
+      "@openuidev/react-headless": "0.17.0"
+    },
+    "resolvedRuntimePackages": {
+      "@assistant-ui/core": "0.3.24",
+      "@assistant-ui/store": "0.3.17",
+      "@assistant-ui/tap": "0.9.21",
+      "assistant-stream": "0.3.48"
+    },
+    "log": "openui-adapter-compatible.log",
+    "prefix": ".e2e/openui-adapter-compatible"
+  },
+  "note": "The compatible prefix is a disposable adapter test only. Production keeps the installed Zustand version and direct Renderer."
+}

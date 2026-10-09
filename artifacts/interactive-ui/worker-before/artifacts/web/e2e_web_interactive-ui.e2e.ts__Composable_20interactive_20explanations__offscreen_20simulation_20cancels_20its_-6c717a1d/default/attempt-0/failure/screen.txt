@@ -1,0 +1,14 @@
+# Screen at failure
+url: http://127.0.0.1:5189/e2e/interactive-ui.html?scenario=worker
+revision: b1
+viewport: 390x844
+nodes: 8
+
+#root document "Interactive explanation acceptance fixture"
+ #n129 main
+  #n130 button "增加样本量" [focused]
+  #n131 text="当前样本量：6"
+  #n132 figure "样本均值分布"
+   #n133 application
+   #n134 text="样本均值：0.49898（理论 0.5）；方差：0.016289（理论 0.0166667）；重复 5000 次"
+ #n135 button "Open OpenUI Inspect"
