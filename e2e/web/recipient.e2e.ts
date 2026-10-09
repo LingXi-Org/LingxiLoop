@@ -32,9 +32,7 @@ test('a second user receives a durable DM after sending and reloading', {
 })
 
 test('a second user receives a durable DM and its uploaded image attachment', {
-  skip: process.env.E2E_CDP_URL
-    ? 'Native file chooser input is unavailable in this Chrome/CDP run; official Web 0.12 has no file chooser API. Upload and recipient retrieval are not verified by this case.'
-    : memberSession().skip ?? memberSession('student').skip ?? mutationPermission.skip,
+  skip: 'The composer uses a detached native file picker; official Web 0.12 has no file chooser API in managed or CDP browsers. Upload and recipient retrieval are not verified by this case.',
   tags: ['web', 'chat', 'attachments', 'mutations'], timeout: 240_000,
 }, async (fixtures) => {
   const { screen, browser } = fixtures

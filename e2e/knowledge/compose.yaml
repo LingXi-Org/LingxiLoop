@@ -2,7 +2,10 @@ name: lingxiloop-e2e-knowledge
 services:
   surrealdb:
     image: surrealdb/surrealdb:v2
-    command: ["start", "--log", "warn", "memory"]
+    user: "0:0"
+    command: ["start", "--log", "warn", "rocksdb:/data/knowledge.db"]
+    volumes:
+      - surreal-data:/data
     environment:
       SURREAL_USER: lingxiloop-e2e
       SURREAL_PASS: lingxiloop-e2e-surreal-local
@@ -13,3 +16,5 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+volumes:
+  surreal-data:

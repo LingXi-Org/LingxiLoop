@@ -20,7 +20,7 @@ test('switching workspaces reloads the complete project-scoped conversation surf
   assert.match(conversations, /const workspace = getWorkspaceSession\(\)[\s\S]*const epoch = \+\+requestEpoch/)
   assert.match(conversations, /activeWorkspace\?\.companyId !== workspace\?\.companyId[\s\S]*activeWorkspace\?\.projectId !== projectId/)
   assert.match(conversations, /reconcileConversationSelection\(conversations\)/)
-  assert.match(participants, /reset\(\)[\s\S]*participantsRequestEpoch \+= 1[\s\S]*set\(\{ byId: \{\}, loaded: false \}\)/)
+  assert.match(participants, /reset\(\)[\s\S]*participantsRequestEpoch \+= 1[\s\S]*set\(\{ byId: \{\}, loaded: false, error: null \}\)/)
   assert.match(documents, /documentsRequestEpoch[\s\S]*scope !== activeScopeKey\(\)[\s\S]*reset: \(\) => \{[\s\S]*documentsRequestEpoch \+= 1/)
   assert.match(calendar, /calendarRequestEpoch[\s\S]*scope !== activeScopeKey\(\)[\s\S]*reset\(\)[\s\S]*calendarRequestEpoch \+= 1/)
   assert.match(transport, /headers\['x-project-id'\] = workspace\.projectId/)

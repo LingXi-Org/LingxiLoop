@@ -22,6 +22,7 @@ test('course invitation acceptance, fixed identity and removal update student ac
   const { app, screen, browser } = fixtures
   const course = testName('membership course')
   const privateMessage = testName('private course message')
+  const studyMessage = testName('student study message')
   const classroom = process.env.E2E_WORKSPACE_NAME ?? 'E2E Classroom'
   await signIn(fixtures, 'member')
   await selectWorkspace(fixtures, classroom)
@@ -41,7 +42,7 @@ test('course invitation acceptance, fixed identity and removal update student ac
   expect(inviteUrl).toMatch(/\/invite\/project\//)
   const invitation = new URL(inviteUrl).pathname
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '对话').tap()
-  await browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: course }).tap()
+  await browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: `课题组｜${course}` }).tap()
   await browser.locator('[contenteditable="true"]').fill(privateMessage)
   await screen.getByRole('button', '发送').tap()
   await expect(browser.locator('[data-msg-id]').filter({ hasText: privateMessage })).toBeVisible()
@@ -58,8 +59,14 @@ test('course invitation acceptance, fixed identity and removal update student ac
   await expect(screen.getByRole('navigation', '工作区与功能')).toBeVisible({ timeout: 45_000 })
   await selectWorkspace(fixtures, course)
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '对话').tap()
-  await browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: course }).tap()
-  await expect(browser.locator('[data-msg-id]').filter({ hasText: privateMessage })).toBeVisible()
+  await expect(browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: `课题组｜${course}` })).toHaveCount(0)
+  await browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: `${course} · Study Room` }).tap()
+  await expect(browser.locator('[data-msg-id]').filter({ hasText: privateMessage })).toHaveCount(0)
+  await browser.locator('[contenteditable="true"]').fill(studyMessage)
+  await screen.getByRole('button', '发送').tap()
+  await expect(browser.locator('[data-msg-id]').filter({ hasText: studyMessage })).toBeVisible()
+  await browser.reload()
+  await expect(browser.locator('[data-msg-id]').filter({ hasText: studyMessage })).toBeVisible()
   await expect(screen.getByRole('button', '课程管理')).toBeHidden()
   await signOut(fixtures)
 
@@ -84,6 +91,8 @@ test('course invitation acceptance, fixed identity and removal update student ac
   await screen.getByRole('button', /^切换工作区/).tap()
   await expect(screen.getByRole('menuitem').filter({ hasText: course })).toHaveCount(0)
   await browser.keyboard.press('Escape')
+  await screen.getByLabel('搜索会话和消息').fill(studyMessage)
+  await expect(screen.getByText('没有找到匹配结果', { exact: true })).toBeVisible()
   await screen.getByLabel('搜索会话和消息').fill(privateMessage)
   await expect(screen.getByText('没有找到匹配结果', { exact: true })).toBeVisible()
 })
