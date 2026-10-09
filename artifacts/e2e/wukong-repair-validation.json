@@ -1,0 +1,10 @@
+{
+  "failed": 0,
+  "generatedAt": "2026-10-05T04:18:04.4683103Z",
+  "log": "artifacts/e2e/wukong-repair-regression.log",
+  "reproduce": "node --import tsx --test server/src/__tests__/wukong-client.test.ts",
+  "passed": 19,
+  "after": "Retry re-enters common bounded history loop; empty channel returns [], unexpected storage and repeated membership failures propagate.",
+  "status": "passed",
+  "before": "New regression failed with HTTP400 channel not found after authoritative membership repair."
+}

@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-10-05T02:42:47.1497272+00:00",
+  "project": "eval",
+  "status": "passed",
+  "reproduce": [
+    "npm ci --prefix eval",
+    "npm run eval:check"
+  ],
+  "checks": {
+    "skipped": 0,
+    "typecheck": "passed",
+    "failed": 0,
+    "tests": 15,
+    "passed": 15
+  },
+  "limitations": [
+    "Local HTTP Candidate/Judge contract verification; no live provider quality baseline was executed."
+  ]
+}

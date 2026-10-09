@@ -1,0 +1,41 @@
+
+> lingxiloop@0.1.0-beta control:test
+> vitest run --config workers/control-plane/vitest.config.ts --testTimeout 60000 --hookTimeout 60000
+
+
+ RUN  v3.2.7 /app
+
+[vpw:debug] Adding `enable_nodejs_tty_module` compatibility flag during tests as this feature is needed to support the Vitest runner.
+[vpw:debug] Adding `enable_nodejs_fs_module` compatibility flag during tests as this feature is needed to support the Vitest runner.
+[vpw:debug] Adding `enable_nodejs_http_modules` compatibility flag during tests as this feature is needed to support the Vitest runner.
+[vpw:debug] Adding `enable_nodejs_perf_hooks_module` compatibility flag during tests as this feature is needed to support the Vitest runner.
+[vpw:info] Starting isolated runtimes for workers/control-plane/vitest.config.ts...
+[mf:warn] The latest compatibility date supported by the installed Cloudflare Workers Runtime is "2025-12-17",
+but you've requested "2026-09-01". Falling back to "2025-12-17"...
+[mf:warn] The latest compatibility date supported by the installed Cloudflare Workers Runtime is "2025-12-17",
+but you've requested "2026-09-01". Falling back to "2025-12-17"...
+Cannot optimize dependency: vitest > @vitest/snapshot > magic-string, present in 'ssr.optimizeDeps.include'
+Cannot optimize dependency: vitest > @vitest/expect > chai, present in 'ssr.optimizeDeps.include'
+ ✓ workers/control-plane/src/smtp.test.ts (1 test) 280ms
+stderr | workers/control-plane/src/index.test.ts > control-plane trust boundaries > keeps user lifecycle authority and D1 state aligned with the product result
+2026-10-09T03:49:08.273Z WARN [Better Auth]: Rate limiting could not determine a client IP and is falling back to a single shared per-path bucket. Ensure your runtime forwards a trusted client IP header, then set `advanced.ipAddress.ipAddressHeaders` or `advanced.ipAddress.trustedProxies` so the address can be resolved.
+
+stderr | workers/control-plane/src/index.test.ts > control-plane trust boundaries > rejects cross-site authentication writes and registration without CAPTCHA
+2026-10-09T03:49:13.687Z ERROR [Better Auth]: Invalid origin: https://attacker.example
+
+ ✓ workers/control-plane/src/index.test.ts (12 tests) 23728ms
+   ✓ control-plane trust boundaries > keeps user lifecycle authority and D1 state aligned with the product result  1250ms
+   ✓ control-plane trust boundaries > company management forwards a signed user identity without promoting the global role  1048ms
+   ✓ control-plane trust boundaries > applies auth/control schema and rejects unauthenticated administration  6858ms
+   ✓ control-plane trust boundaries > signs in after an OTP verifies a password account  656ms
+   ✓ control-plane trust boundaries > issues a one-time Sigillo SSO code only for the approved provider  549ms
+   ✓ control-plane trust boundaries > proxies websocket tickets instead of sending them to Better Auth  543ms
+   ✓ control-plane trust boundaries > proxies Kuma status for an authenticated administrator  17183ms
+   ✓ control-plane trust boundaries > authenticates MCP, exposes operations, and replays commands idempotently  534ms
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  03:48:58
+   Duration  26.80s (transform 2.02s, setup 0ms, collect 5.41s, tests 24.01s, environment 3ms, prepare 4.25s)
+
+[vpw:debug] Shutting down runtimes...

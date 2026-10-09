@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-10-09T03:45:28.534Z",
+  "status": "passed",
+  "reproduce": "node e2e/knowledge/start.mjs (keep running), then node e2e/knowledge/verify.mjs",
+  "checks": [
+    "Bearer authentication rejects unauthenticated requests",
+    "Real SurrealDB schema and object-storage readiness",
+    "Notebook creation is idempotent",
+    "Source ingestion replay is idempotent and conflicting replay is rejected",
+    "Queued command arguments omit source content logged by the worker",
+    "Real background worker extracts, chunks and stores fixture embeddings",
+    "Vector and full-text retrieval honor tenant and selected-source boundaries",
+    "Link ingestion rejects private network targets",
+    "Real object upload validates metadata and extracts original file content",
+    "Retry rejects completed jobs and reprocesses a failed job from its stored asset",
+    "Source deletion removes retrieval results; notebook archive persists"
+  ],
+  "limitations": [
+    "Embeddings use a local constant-vector fixture; semantic ranking quality and paid providers are not verified."
+  ]
+}

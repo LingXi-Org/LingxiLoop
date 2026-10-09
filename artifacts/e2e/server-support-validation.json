@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-10-05T04:18:05.0759842Z",
+  "regressionArtifacts": [
+    "artifacts/e2e/memory-validation.json",
+    "artifacts/e2e/native-admission-validation.json",
+    "artifacts/e2e/knowledge-validation.json",
+    "artifacts/e2e/admission-validation.json",
+    "artifacts/e2e/wukong-repair-validation.json"
+  ],
+  "status": "passed",
+  "limitations": [
+    "No dedicated non-production model or mail credentials were supplied; live provider quality and actual email delivery remain unverified.",
+    "Knowledge embeddings are a labelled constant-vector fixture; semantic ranking is unverified."
+  ],
+  "independentProjectArtifacts": [
+    "artifacts/e2e/eval-validation.json",
+    "artifacts/e2e/r2-gate-validation.json"
+  ],
+  "checks": [
+    {
+      "project": "server",
+      "failed": 0,
+      "passed": 84,
+      "command": "npm run server:test",
+      "note": "Original smoke suite; subsequent changes have their owning regression artifacts. WuKong final19/19 and admission final12/12 separately verified."
+    },
+    {
+      "project": "server",
+      "status": "passed",
+      "command": "npm run server:typecheck",
+      "note": "Passed after final atomic course admission, optional context-thread seeding and WuKong repair changes."
+    },
+    {
+      "project": "integration CLI safety",
+      "failed": 0,
+      "passed": 2,
+      "command": "node --test scripts/test-selectors.test.mjs"
+    },
+    {
+      "cwd": "third_party/open-notebook",
+      "note": "After final tenant isolation and private command argument fixes; two existing deprecation warnings.",
+      "passed": 115,
+      "failed": 0,
+      "command": "uv run --frozen --python 3.12 pytest -q",
+      "project": "Open Notebook"
+    },
+    {
+      "project": "changed files",
+      "status": "passed",
+      "command": "Scoped Biome lint and git diff --check"
+    }
+  ]
+}

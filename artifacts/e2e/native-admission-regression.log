@@ -1,0 +1,20 @@
+[db:migrate] already current · 504ms
+[integration] selected 1/54 file(s): native-admission.test.ts
+TAP version 13
+# {"ts":"2026-10-05T03:48:26.931Z","level":"info","msg":"worker started","workerId":"product-admission","healthPort":null,"maxConcurrentRuns":2}
+# {"ts":"2026-10-05T03:48:42.208Z","level":"info","msg":"worker stopped","workerId":"product-admission","timedOut":false}
+# Subtest: product native admission, cancellation, revision, independent delivery and stable ACK replay
+ok 1 - product native admission, cancellation, revision, independent delivery and stable ACK replay
+  ---
+  duration_ms: 34946.941
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67660.922

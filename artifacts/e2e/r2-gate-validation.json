@@ -1,0 +1,16 @@
+{
+  "fail": 0,
+  "checks": [
+    "Private object old signed URLs denied before bucket access; malformed paths rejected",
+    "Public avatar requests use only their requested object key"
+  ],
+  "generatedAt": "2026-10-05T03:21:56.2641015Z",
+  "command": "node --import tsx --test workers/r2-gate/src/index.test.ts",
+  "status": "passed",
+  "limitations": [
+    "Local Worker fetch-handler tests use synthetic bucket bindings; deployed Cloudflare edge delivery is not verified."
+  ],
+  "pass": 2,
+  "skipped": 0,
+  "tests": 2
+}

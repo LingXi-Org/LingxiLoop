@@ -1,0 +1,192 @@
+ Container lingxiloop-e2e-postgres-1  Running
+ Container lingxiloop-e2e-redis-1  Running
+ Container lingxiloop-e2e-postgres-1  Waiting
+ Container lingxiloop-e2e-redis-1  Waiting
+ Container lingxiloop-e2e-postgres-1  Healthy
+ Container lingxiloop-e2e-redis-1  Healthy
+ Container lingxiloop-e2e-browser-storage-1  Running
+ Container lingxiloop-e2e-browser-storage-1  Waiting
+ Container lingxiloop-e2e-browser-storage-1  Healthy
+[db:migrate] already current · 163ms
+[integration] selected 6/54 file(s): migration.test.ts, native-message-flow.test.ts, native-message-cutover.test.ts, native-message-approvals.test.ts, runtime-objects.test.ts, platform-lifecycle.test.ts
+TAP version 13
+# Subtest: an empty database reaches the latest schema once and repeated migration is a no-op
+ok 1 - an empty database reaches the latest schema once and repeated migration is a no-op
+  ---
+  duration_ms: 14859.3058
+  type: 'test'
+  ...
+# Subtest: collaboration upgrade preserves managed IDs, custom rooms and leaders while expanding default teams
+ok 2 - collaboration upgrade preserves managed IDs, custom rooms and leaders while expanding default teams
+  ---
+  duration_ms: 11238.8982
+  type: 'test'
+  ...
+# Subtest: earlier 3.2 versions upgrade only runtime registration and preserve existing data
+ok 3 - earlier 3.2 versions upgrade only runtime registration and preserve existing data
+  ---
+  duration_ms: 85926.7642
+  type: 'test'
+  ...
+# Subtest: read receipt upgrade preserves human receipts and accepts only same-tenant participants
+ok 4 - read receipt upgrade preserves human receipts and accepts only same-tenant participants
+  ---
+  duration_ms: 9712.6302
+  type: 'test'
+  ...
+# Subtest: 3.2.13 upgrades the workspace schema transactionally and repeats without changing product data
+ok 5 - 3.2.13 upgrades the workspace schema transactionally and repeats without changing product data
+  ---
+  duration_ms: 13433.5398
+  type: 'test'
+  ...
+# Subtest: 3.3.0 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 6 - 3.3.0 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 13009.83
+  type: 'test'
+  ...
+# Subtest: 3.3.1 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 7 - 3.3.1 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 15513.6844
+  type: 'test'
+  ...
+# Subtest: 3.3.2 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 8 - 3.3.2 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 11034.2928
+  type: 'test'
+  ...
+# Subtest: 3.3.4 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 9 - 3.3.4 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 12317.4558
+  type: 'test'
+  ...
+# Subtest: 3.3.5 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 10 - 3.3.5 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 12962.4809
+  type: 'test'
+  ...
+# Subtest: a recorded runtime patch repairs a stale LingxiOS schema before serving
+ok 11 - a recorded runtime patch repairs a stale LingxiOS schema before serving
+  ---
+  duration_ms: 10681.0523
+  type: 'test'
+  ...
+# Subtest: the affinity migration backfills the most recent worker without changing the Home epoch
+ok 12 - the affinity migration backfills the most recent worker without changing the Home epoch
+  ---
+  duration_ms: 9978.2989
+  type: 'test'
+  ...
+# Subtest: native installation rejects old run data before historical reset migrations can change it
+ok 13 - native installation rejects old run data before historical reset migrations can change it
+  ---
+  duration_ms: 9002.8675
+  type: 'test'
+  ...
+# Subtest: a non-empty database without migration history is rejected without mutation
+ok 14 - a non-empty database without migration history is rejected without mutation
+  ---
+  duration_ms: 433.9826
+  type: 'test'
+  ...
+# Subtest: editing an applied migration is rejected by checksum
+ok 15 - editing an applied migration is rejected by checksum
+  ---
+  duration_ms: 6611.515
+  type: 'test'
+  ...
+# Subtest: a failed migration rolls back its DDL and history row
+ok 16 - a failed migration rolls back its DDL and history row
+  ---
+  duration_ms: 7855.1721
+  type: 'test'
+  ...
+# Subtest: concurrent migrators serialize and apply each migration once
+ok 17 - concurrent migrators serialize and apply each migration once
+  ---
+  duration_ms: 14363.0896
+  type: 'test'
+  ...
+# Subtest: runtime readiness rejects pending migrations
+ok 18 - runtime readiness rejects pending migrations
+  ---
+  duration_ms: 5580.4502
+  type: 'test'
+  ...
+# Subtest: runtime readiness rejects a missing native collaboration table
+ok 19 - runtime readiness rejects a missing native collaboration table
+  ---
+  duration_ms: 15589.8974
+  type: 'test'
+  ...
+# Subtest: capability backfill preserves teacher grants, custom prompts and later revocations
+ok 20 - capability backfill preserves teacher grants, custom prompts and later revocations
+  ---
+  duration_ms: 12809.1517
+  type: 'test'
+  ...
+# {"ts":"2026-10-09T03:29:00.826Z","level":"info","msg":"worker stopped","workerId":"approval-fixture","timedOut":false}
+# Subtest: HTTP approval decisions and expiry survive native message replay under a real worker lease
+ok 21 - HTTP approval decisions and expiry survive native message replay under a real worker lease
+  ---
+  duration_ms: 25115.5523
+  type: 'test'
+  ...
+# {"ts":"2026-10-09T03:29:00.872Z","level":"warn","msg":"dependencies failed","error":"control plane stopped"}
+# {"ts":"2026-10-09T03:29:00.872Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# Subtest: message cutover rolls back rehearsal, preserves protected data, and is repeatable
+ok 22 - message cutover rolls back rehearsal, preserves protected data, and is repeatable
+  ---
+  duration_ms: 13431.0754
+  type: 'test'
+  ...
+# Subtest: one native message survives acceptance and replay; every attachment settles before one wake
+ok 23 - one native message survives acceptance and replay; every attachment settles before one wake
+  ---
+  duration_ms: 18652.7198
+  type: 'test'
+  ...
+# Subtest: platform operators manage company lifecycle without tenant membership and preserve audit reasons
+ok 24 - platform operators manage company lifecycle without tenant membership and preserve audit reasons
+  ---
+  duration_ms: 9055.5563
+  type: 'test'
+  ...
+# Subtest: platform project commands retain lifecycle rules and learning projections
+ok 25 - platform project commands retain lifecycle rules and learning projections
+  ---
+  duration_ms: 7984.9038
+  type: 'test'
+  ...
+# Subtest: platform lifecycle requires gateway admin authority, a bounded reason and an existing record
+ok 26 - platform lifecycle requires gateway admin authority, a bounded reason and an existing record
+  ---
+  duration_ms: 9491.4605
+  type: 'test'
+  ...
+# Subtest: platform routine pause is authorized, durable and audited before future dispatch
+ok 27 - platform routine pause is authorized, durable and audited before future dispatch
+  ---
+  duration_ms: 9950.4523
+  type: 'test'
+  ...
+# Subtest: private S3 objects cross nodes, enforce committed size, report missing bytes and transport failures
+ok 28 - private S3 objects cross nodes, enforce committed size, report missing bytes and transport failures
+  ---
+  duration_ms: 189.271
+  type: 'test'
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 468399.853

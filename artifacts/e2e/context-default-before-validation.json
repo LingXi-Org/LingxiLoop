@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-10-05T04:13:41.793Z",
+  "status": "failed",
+  "database": "lingxiloop_memory_test",
+  "reproduce": "node e2e/server/run.mjs --file closed-education.test.ts (after other runs finish)",
+  "results": [
+    {
+      "command": "node --import tsx server/src/migrate-bin.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "node --import tsx --experimental-test-module-mocks --test --test-concurrency=1 --test-force-exit --test-name-pattern=course-only companies server/src/__integration__/closed-education.test.ts",
+      "exitCode": 1
+    }
+  ],
+  "log": "artifacts/e2e/context-default-before.log",
+  "assertion": "Before production fix: optional context-thread seed on an EducationApplication-created company without a default project must complete without creating conversations.",
+  "counts": {
+    "fail": 1,
+    "pass": 0,
+    "skipped": 0,
+    "tests": 1
+  },
+  "resolution": "artifacts/e2e/admission-validation.json"
+}

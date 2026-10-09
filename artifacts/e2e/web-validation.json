@@ -1,0 +1,750 @@
+{
+  "generatedAt": "2026-10-09T03:56:06.887Z",
+  "scope": "Latest selected result per Web test id; collection alone is not verification",
+  "counts": {
+    "total": 57,
+    "passed": 56,
+    "failed": 0,
+    "skipped": 1,
+    "interrupted": 0
+  },
+  "runs": [
+    {
+      "report": ".e2e/release-web/report.json",
+      "id": "01a11ead-21e3-78a2-b90b-fe02749da467",
+      "startedAt": "2026-10-09T03:20:27.246Z",
+      "finishedAt": "2026-10-09T03:32:07.854Z",
+      "runner": {
+        "name": "e2e",
+        "version": "0.17.0"
+      },
+      "environment": {
+        "os": "win32 10.0.22621",
+        "arch": "x64",
+        "runtime": "node v22.22.2",
+        "ci": false
+      },
+      "engine": {
+        "name": "web",
+        "version": "0.12.0",
+        "spiVersion": 1
+      },
+      "execution": {
+        "command": [
+          "npm",
+          "run",
+          "test:e2e:web",
+          "--",
+          "--output",
+          ".e2e/release-web"
+        ],
+        "buildMode": "production Vite build and preview via e2e/serve.mjs",
+        "browser": "installed Chrome over CDP through official @e2e-dev/web",
+        "build": {
+          "file": ".e2e/dist-web/index.html",
+          "modifiedAt": "2026-10-09T03:21:19.642Z",
+          "sha256": "126d35d46ff6a44c1cbdd131df31e3466781d8e7db20daa69dd4463c2b8a1bfa"
+        }
+      }
+    },
+    {
+      "report": ".e2e/release-web-regressions/report.json",
+      "id": "01a11eb9-d338-7d70-911e-cba0a9ac3d3d",
+      "startedAt": "2026-10-09T03:34:18.875Z",
+      "finishedAt": "2026-10-09T03:40:00.892Z",
+      "runner": {
+        "name": "e2e",
+        "version": "0.17.0"
+      },
+      "environment": {
+        "os": "win32 10.0.22621",
+        "arch": "x64",
+        "runtime": "node v22.22.2",
+        "ci": false
+      },
+      "engine": {
+        "name": "web",
+        "version": "0.12.0",
+        "spiVersion": 1
+      },
+      "execution": {
+        "command": [
+          "npm",
+          "run",
+          "test:e2e:web",
+          "--",
+          "--grep",
+          "teacher can manage|canvas text|Durable conversations|course invitation|second user|personal text source",
+          "--output",
+          ".e2e/release-web-regressions"
+        ],
+        "buildMode": "production Vite build and preview via e2e/serve.mjs",
+        "browser": "managed official @e2e-dev/web browser",
+        "build": {
+          "file": ".e2e/dist-web/index.html",
+          "modifiedAt": "2026-10-09T03:34:49.846Z",
+          "sha256": "b129a2da26700e1543f77f3961e4f21aef9c639e53e8eec7da8d00a3ae0ce0e2"
+        }
+      }
+    },
+    {
+      "report": ".e2e/release-web-final-regressions/report.json",
+      "id": "01a11ec3-bd30-79cb-9094-36eb81f3772e",
+      "startedAt": "2026-10-09T03:45:08.426Z",
+      "finishedAt": "2026-10-09T03:47:00.618Z",
+      "runner": {
+        "name": "e2e",
+        "version": "0.17.0"
+      },
+      "environment": {
+        "os": "win32 10.0.22621",
+        "arch": "x64",
+        "runtime": "node v22.22.2",
+        "ci": false
+      },
+      "engine": {
+        "name": "web",
+        "version": "0.12.0",
+        "spiVersion": 1
+      },
+      "execution": {
+        "command": [
+          "npm",
+          "run",
+          "test:e2e:web",
+          "--",
+          "--grep",
+          "course invitation|personal text source",
+          "--output",
+          ".e2e/release-web-final-regressions"
+        ],
+        "buildMode": "production Vite build and preview via e2e/serve.mjs",
+        "browser": "managed official @e2e-dev/web browser",
+        "build": {
+          "file": ".e2e/dist-web/index.html",
+          "modifiedAt": "2026-10-09T03:45:40.984Z",
+          "sha256": "e6d8c2494485c54ca7219ab097ba3b07a1e5b91c677ded1eaacd86e4097b9a4e"
+        }
+      }
+    },
+    {
+      "report": ".e2e/release-web-attachment-limit/report.json",
+      "id": "01a11ecc-9593-71db-b3a1-d43041a33d8b",
+      "startedAt": "2026-10-09T03:54:47.660Z",
+      "finishedAt": "2026-10-09T03:55:47.742Z",
+      "runner": {
+        "name": "e2e",
+        "version": "0.17.0"
+      },
+      "environment": {
+        "os": "win32 10.0.22621",
+        "arch": "x64",
+        "runtime": "node v22.22.2",
+        "ci": false
+      },
+      "engine": {
+        "name": "web",
+        "version": "0.12.0",
+        "spiVersion": 1
+      },
+      "execution": {
+        "command": [
+          "npm",
+          "run",
+          "test:e2e:web",
+          "--",
+          "--grep",
+          "uploaded image attachment",
+          "--pass-with-no-tests",
+          "--output",
+          ".e2e/release-web-attachment-limit"
+        ],
+        "buildMode": "production Vite build and preview via e2e/serve.mjs",
+        "browser": "managed official @e2e-dev/web browser",
+        "build": {
+          "file": ".e2e/dist-web/index.html",
+          "modifiedAt": "2026-10-09T03:55:45.847Z",
+          "sha256": "d5f1d879a928174bb9db95fa5b8a137a1e75da36ef7d3510f8c5a83b3c6c5272"
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::Agent%20opens%20its%20durable%20conversation",
+      "file": "e2e/web/agent-actions.e2e.ts",
+      "title": "Agent action journeys > Agent opens its durable conversation",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 5641,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::Agent%20opens%20its%20durable%20conversation%20on%20mobile",
+      "file": "e2e/web/agent-actions.e2e.ts",
+      "title": "Agent action journeys > Agent opens its durable conversation on mobile",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4405,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::an%20old%20Agent%20request%20cannot%20navigate%20while%20another%20workspace%20is%20opening",
+      "file": "e2e/web/agent-actions.e2e.ts",
+      "title": "Agent action journeys > an old Agent request cannot navigate while another workspace is opening",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4670,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::managed%20teacher%20Agent%20opens%20its%20teaching%20workspace%20without%20creating%20a%20chat",
+      "file": "e2e/web/agent-actions.e2e.ts",
+      "title": "Agent action journeys > managed teacher Agent opens its teaching workspace without creating a chat",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 3586,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/agent-actions.e2e.ts::Agent%20action%20journeys::repeated%20clicks%20create%20once%20and%20a%20refresh%20failure%20retries%20only%20the%20list",
+      "file": "e2e/web/agent-actions.e2e.ts",
+      "title": "Agent action journeys > repeated clicks create once and a refresh failure retries only the list",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 3876,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/auth.e2e.ts::Public%20authentication::invalid%20invitation%20is%20explained%20instead%20of%20leaving%20a%20blank%20app%3A%20%2F%23invite%3D%2525",
+      "file": "e2e/web/auth.e2e.ts",
+      "title": "Public authentication > invalid invitation is explained instead of leaving a blank app: /#invite=%25",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 1089,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/auth.e2e.ts::Public%20authentication::invalid%20invitation%20is%20explained%20instead%20of%20leaving%20a%20blank%20app%3A%20%2Finvite%2Fe2e-invalid-invitation",
+      "file": "e2e/web/auth.e2e.ts",
+      "title": "Public authentication > invalid invitation is explained instead of leaving a blank app: /invite/e2e-invalid-invitation",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 981,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/auth.e2e.ts::Public%20authentication::invalid%20invitation%20is%20explained%20instead%20of%20leaving%20a%20blank%20app%3A%20%2Finvite%2Fproject%2Fe2e-invalid-invitation",
+      "file": "e2e/web/auth.e2e.ts",
+      "title": "Public authentication > invalid invitation is explained instead of leaving a blank app: /invite/project/e2e-invalid-invitation",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 1021,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/auth.e2e.ts::Public%20authentication::login%20and%20password%20recovery%20fit%20a%20phone%20viewport",
+      "file": "e2e/web/auth.e2e.ts",
+      "title": "Public authentication > login and password recovery fit a phone viewport",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 1488,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/auth.e2e.ts::Public%20authentication::password%20recovery%20returns%20to%20login%20without%20losing%20the%20entry%20point",
+      "file": "e2e/web/auth.e2e.ts",
+      "title": "Public authentication > password recovery returns to login without losing the entry point",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 1438,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/auth.e2e.ts::Public%20authentication::reset%20links%20reject%20an%20invalid%20token%20with%20a%20visible%20error",
+      "file": "e2e/web/auth.e2e.ts",
+      "title": "Public authentication > reset links reject an invalid token with a visible error",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 1530,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/auth.e2e.ts::Public%20authentication::signed-out%20visitors%20get%20labelled%20login%20fields%20and%20no%20open%20registration",
+      "file": "e2e/web/auth.e2e.ts",
+      "title": "Public authentication > signed-out visitors get labelled login fields and no open registration",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 1425,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/business-layout.e2e.ts::learner%20next%20steps%20precede%20analysis%20and%20keep%20the%20activity%20detail%20reachable",
+      "file": "e2e/web/business-layout.e2e.ts",
+      "title": "learner next steps precede analysis and keep the activity detail reachable",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4661,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/business-layout.e2e.ts::mail%20keeps%20its%20page%20title%20visible%20beside%20search%20on%20desktop",
+      "file": "e2e/web/business-layout.e2e.ts",
+      "title": "mail keeps its page title visible beside search on desktop",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 3841,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/business-layout.e2e.ts::resource%20scope%20shows%20public%20sources%20immediately%20and%20preserves%20student%20write%20permissions",
+      "file": "e2e/web/business-layout.e2e.ts",
+      "title": "resource scope shows public sources immediately and preserves student write permissions",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4332,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/business-layout.e2e.ts::teacher%20can%20manage%20public%20sources%20while%20learner%20review%20sources%20stay%20read-only",
+      "file": "e2e/web/business-layout.e2e.ts",
+      "title": "teacher can manage public sources while learner review sources stay read-only",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 3230,
+      "report": ".e2e/release-web-regressions/report.json",
+      "runId": "01a11eb9-d338-7d70-911e-cba0a9ac3d3d"
+    },
+    {
+      "id": "e2e/web/business-layout.e2e.ts::teacher%20priorities%20and%20follow-up%20precede%20charts%20and%20open%20the%20existing%20review%20flow",
+      "file": "e2e/web/business-layout.e2e.ts",
+      "title": "teacher priorities and follow-up precede charts and open the existing review flow",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4586,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/calendar.e2e.ts::calendar%20personal%20event%20is%20validated%2C%20saved%2C%20reloaded%2C%20edited%20and%20deleted",
+      "file": "e2e/web/calendar.e2e.ts",
+      "title": "calendar personal event is validated, saved, reloaded, edited and deleted",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 14206,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/canvas.e2e.ts::canvas%20text%20cards%20create%2C%20edit%2C%20move%2C%20persist%2C%20download%20and%20delete",
+      "file": "e2e/web/canvas.e2e.ts",
+      "title": "canvas text cards create, edit, move, persist, download and delete",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 12706,
+      "report": ".e2e/release-web-regressions/report.json",
+      "runId": "01a11eb9-d338-7d70-911e-cba0a9ac3d3d"
+    },
+    {
+      "id": "e2e/web/conversations.e2e.ts::Durable%20conversations::a%20named%20group%20persists%20and%20mobile%20navigation%20returns%20to%20the%20conversation%20list",
+      "file": "e2e/web/conversations.e2e.ts",
+      "title": "Durable conversations > a named group persists and mobile navigation returns to the conversation list",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 8515,
+      "report": ".e2e/release-web-regressions/report.json",
+      "runId": "01a11eb9-d338-7d70-911e-cba0a9ac3d3d"
+    },
+    {
+      "id": "e2e/web/conversations.e2e.ts::Durable%20conversations::human%20DM%20sends%2C%20survives%20reload%2C%20searches%20history%20and%20opens%20its%20canvas",
+      "file": "e2e/web/conversations.e2e.ts",
+      "title": "Durable conversations > human DM sends, survives reload, searches history and opens its canvas",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 14626,
+      "report": ".e2e/release-web-regressions/report.json",
+      "runId": "01a11eb9-d338-7d70-911e-cba0a9ac3d3d"
+    },
+    {
+      "id": "e2e/web/course.e2e.ts::Disposable%20course%20lifecycle::teacher%20creates%20a%20course%2C%20updates%20its%20profile%2C%20publishes%20content%2C%20revokes%20an%20invite%20and%20ends%20it",
+      "file": "e2e/web/course.e2e.ts",
+      "title": "Disposable course lifecycle > teacher creates a course, updates its profile, publishes content, revokes an invite and ends it",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 20229,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/knowledge.e2e.ts::personal%20text%20source%20is%20ingested%2C%20previewed%2C%20renamed%2C%20reloaded%20and%20deleted",
+      "file": "e2e/web/knowledge.e2e.ts",
+      "title": "personal text source is ingested, previewed, renamed, reloaded and deleted",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 18041,
+      "report": ".e2e/release-web-final-regressions/report.json",
+      "runId": "01a11ec3-bd30-79cb-9094-36eb81f3772e"
+    },
+    {
+      "id": "e2e/web/learning.e2e.ts::teacher%20publishes%20an%20activity%2C%20student%20submits%2C%20and%20teacher%20opens%20the%20persisted%20evidence",
+      "file": "e2e/web/learning.e2e.ts",
+      "title": "teacher publishes an activity, student submits, and teacher opens the persisted evidence",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 40538,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/membership.e2e.ts::course%20invitation%20acceptance%2C%20fixed%20identity%20and%20removal%20update%20student%20access",
+      "file": "e2e/web/membership.e2e.ts",
+      "title": "course invitation acceptance, fixed identity and removal update student access",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 45916,
+      "report": ".e2e/release-web-final-regressions/report.json",
+      "runId": "01a11ec3-bd30-79cb-9094-36eb81f3772e"
+    },
+    {
+      "id": "e2e/web/membership.e2e.ts::course%20member%20identities%20are%20displayed%20without%20unsupported%20role%20changes",
+      "file": "e2e/web/membership.e2e.ts",
+      "title": "course member identities are displayed without unsupported role changes",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4623,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::a%20student%20management%20deep%20link%20waits%20for%20authorization%20then%20explains%20the%20fallback",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "a student management deep link waits for authorization then explains the fallback",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4308,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::course%20creation%20respects%20newer%20navigation%20while%20creating",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "course creation respects newer navigation while creating",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 6646,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::course%20creation%20respects%20newer%20navigation%20while%20opening",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "course creation respects newer navigation while opening",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 7599,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::selecting%20an%20authorized%20workspace%20after%20an%20invalid%20deep%20link%20starts%20live%20updates",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "selecting an authorized workspace after an invalid deep link starts live updates",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 7812,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::sign%20in%20keeps%20a%20safe%20internal%20conversation%20destination",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "sign in keeps a safe internal conversation destination",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 9367,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::a%20network%20failure%20keeps%20the%20destination%20and%20retry%20restores%20it",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "Workspace URL navigation > a network failure keeps the destination and retry restores it",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 5376,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::an%20explicit%20conversation%20list%20stays%20unselected%2C%20including%20on%20mobile",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "Workspace URL navigation > an explicit conversation list stays unselected, including on mobile",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 6177,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::an%20older%20project-list%20refresh%20cannot%20replace%20a%20newer%20cached%20destination",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "Workspace URL navigation > an older project-list refresh cannot replace a newer cached destination",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4283,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::explicit%20project%20and%20conversation%20survive%20reload%20and%20override%20a%20cached%20project",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "Workspace URL navigation > explicit project and conversation survive reload and override a cached project",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 7241,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::missing%20conversations%20and%20inaccessible%20projects%20explain%20the%20failure%20without%20opening%20another%20chat",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "Workspace URL navigation > missing conversations and inaccessible projects explain the failure without opening another chat",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4614,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::module%20navigation%20and%20browser%20history%20restore%20the%20selected%20conversation",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "Workspace URL navigation > module navigation and browser history restore the selected conversation",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4910,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::one%20successful%20project%20switch%20adds%20one%20history%20entry%20and%20restores%20across%20projects",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "Workspace URL navigation > one successful project switch adds one history entry and restores across projects",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 5199,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/navigation.e2e.ts::Workspace%20URL%20navigation::the%20last%20destination%20wins%20when%20history%20changes%20during%20project%20loading",
+      "file": "e2e/web/navigation.e2e.ts",
+      "title": "Workspace URL navigation > the last destination wins when history changes during project loading",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 3502,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/preferences.e2e.ts::Saved%20account%20preferences::generated%20and%20uploaded%20avatars%20save%20and%20survive%20reload",
+      "file": "e2e/web/preferences.e2e.ts",
+      "title": "Saved account preferences > generated and uploaded avatars save and survive reload",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 25023,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/preferences.e2e.ts::Saved%20account%20preferences::notification%20times%20and%20switches%20persist%20after%20reload",
+      "file": "e2e/web/preferences.e2e.ts",
+      "title": "Saved account preferences > notification times and switches persist after reload",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 26842,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/recipient.e2e.ts::a%20second%20user%20receives%20a%20durable%20DM%20after%20sending%20and%20reloading",
+      "file": "e2e/web/recipient.e2e.ts",
+      "title": "a second user receives a durable DM after sending and reloading",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 20117,
+      "report": ".e2e/release-web-regressions/report.json",
+      "runId": "01a11eb9-d338-7d70-911e-cba0a9ac3d3d"
+    },
+    {
+      "id": "e2e/web/recipient.e2e.ts::a%20second%20user%20receives%20a%20durable%20DM%20and%20its%20uploaded%20image%20attachment",
+      "file": "e2e/web/recipient.e2e.ts",
+      "title": "a second user receives a durable DM and its uploaded image attachment",
+      "kind": "test",
+      "status": "skipped",
+      "durationMs": 0,
+      "report": ".e2e/release-web-attachment-limit/report.json",
+      "runId": "01a11ecc-9593-71db-b3a1-d43041a33d8b",
+      "skipReason": "The composer uses a detached native file picker; official Web 0.12 has no file chooser API in managed or CDP browsers. Upload and recipient retrieval are not verified by this case."
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::logout%20revokes%20the%20server%20session%20after%20a%20reload",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "logout revokes the server session after a reload",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 10340,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::all%20top-level%20learner%20surfaces%20load%20without%20an%20error%20panel",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > all top-level learner surfaces load without an error panel",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 8022,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::calendar%20view%20controls%20and%20cancelled%20edits%20leave%20the%20calendar%20usable",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > calendar view controls and cancelled edits leave the calendar usable",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 6173,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::command%20palette%20focuses%20conversation%20search%20and%20composer%20and%20opens%20message%20find",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > command palette focuses conversation search and composer and opens message find",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 5972,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::keyboard%20command%20palette%20searches%20and%20navigates%20to%20the%20resource%20library",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > keyboard command palette searches and navigates to the resource library",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4332,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::mail%20search%20can%20be%20cleared%20and%20an%20empty%20composer%20cannot%20send",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > mail search can be cleared and an empty composer cannot send",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 5922,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::mobile%20shell%20and%20settings%20stay%20within%20the%20viewport",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > mobile shell and settings stay within the viewport",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 5138,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::new-conversation%20selection%20validates%20empty%20and%20unmatched%20searches",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > new-conversation selection validates empty and unmatched searches",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4396,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::session%20survives%20reload%20and%20the%20account%20menu%20shows%20the%20signed-in%20user",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > session survives reload and the account menu shows the signed-in user",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 5297,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::settings%20tabs%2C%20appearance%20persistence%20and%20focus%20restoration%20work",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > settings tabs, appearance persistence and focus restoration work",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 7149,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::Member%20workspace::workspace%20picker%20opens%2C%20preserves%20selection%2C%20and%20closes%20with%20Escape",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "Member workspace > workspace picker opens, preserves selection, and closes with Escape",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4312,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "e2e/web/workspace.e2e.ts::student%20has%20learner%20navigation%20without%20course%20administration",
+      "file": "e2e/web/workspace.e2e.ts",
+      "title": "student has learner navigation without course administration",
+      "kind": "test",
+      "status": "passed",
+      "durationMs": 4256,
+      "report": ".e2e/release-web/report.json",
+      "runId": "01a11ead-21e3-78a2-b90b-fe02749da467"
+    },
+    {
+      "id": "setup::e2e/web/session.setup.e2e.ts::sign%20in%20as%20member",
+      "file": "e2e/web/session.setup.e2e.ts",
+      "title": "sign in as member",
+      "kind": "setup",
+      "status": "passed",
+      "durationMs": 8793,
+      "report": ".e2e/release-web-regressions/report.json",
+      "runId": "01a11eb9-d338-7d70-911e-cba0a9ac3d3d"
+    },
+    {
+      "id": "setup::e2e/web/session.setup.e2e.ts::sign%20in%20as%20student",
+      "file": "e2e/web/session.setup.e2e.ts",
+      "title": "sign in as student",
+      "kind": "setup",
+      "status": "passed",
+      "durationMs": 10139,
+      "report": ".e2e/release-web-final-regressions/report.json",
+      "runId": "01a11ec3-bd30-79cb-9094-36eb81f3772e"
+    }
+  ],
+  "limits": [
+    "No dedicated live model account or email receiver was supplied; model completions/quality and email delivery are not verified.",
+    "Local Notebook model fixture validates ingestion plumbing, not live provider quality.",
+    "Composer image upload is unverified because the official engine cannot select the detached native file picker."
+  ]
+}

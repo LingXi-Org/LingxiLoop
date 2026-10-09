@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-10-09T03:31:13.751Z",
+  "reproduce": "node e2e/server/run.mjs --local-objects --file migration.test.ts --file native-message-flow.test.ts --file native-message-cutover.test.ts --file native-message-approvals.test.ts --file runtime-objects.test.ts --file platform-lifecycle.test.ts",
+  "status": "passed",
+  "counts": {
+    "tests": 28,
+    "pass": 28,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "results": [
+    {
+      "command": "docker compose -f e2e/server/compose.yaml up -d --wait",
+      "startedAt": "2026-10-09T03:23:18.352Z",
+      "finishedAt": "2026-10-09T03:23:19.910Z",
+      "exitCode": 0
+    },
+    {
+      "command": "docker compose -f e2e/browser.compose.yaml up -d --wait storage",
+      "startedAt": "2026-10-09T03:23:19.910Z",
+      "finishedAt": "2026-10-09T03:23:21.287Z",
+      "exitCode": 0
+    },
+    {
+      "command": "C:\\nvm4w\\nodejs\\node.exe e2e/server/prepare-runtime-objects.mjs",
+      "startedAt": "2026-10-09T03:23:21.287Z",
+      "finishedAt": "2026-10-09T03:23:22.808Z",
+      "exitCode": 0
+    },
+    {
+      "command": "C:\\nvm4w\\nodejs\\node.exe --import tsx server/src/migrate-bin.ts",
+      "startedAt": "2026-10-09T03:23:22.808Z",
+      "finishedAt": "2026-10-09T03:23:24.844Z",
+      "exitCode": 0
+    },
+    {
+      "command": "C:\\nvm4w\\nodejs\\node.exe server/run-integration-tests.mjs --file migration.test.ts --file native-message-flow.test.ts --file native-message-cutover.test.ts --file native-message-approvals.test.ts --file runtime-objects.test.ts --file platform-lifecycle.test.ts",
+      "startedAt": "2026-10-09T03:23:24.844Z",
+      "finishedAt": "2026-10-09T03:31:13.741Z",
+      "exitCode": 0
+    }
+  ],
+  "log": "artifacts/e2e/server-targeted-integration.log",
+  "selectedFiles": [
+    "migration.test.ts",
+    "native-message-flow.test.ts",
+    "native-message-cutover.test.ts",
+    "native-message-approvals.test.ts",
+    "runtime-objects.test.ts",
+    "platform-lifecycle.test.ts"
+  ],
+  "availableIntegrationFiles": [
+    "admin-workspace.test.ts",
+    "agent-bloub-avatar.test.ts",
+    "agent-protocols-live.test.ts",
+    "agent-protocols.test.ts",
+    "agents-vertical-slice.test.ts",
+    "attachment-answers.test.ts",
+    "calendar-vertical-slice.test.ts",
+    "closed-education.test.ts",
+    "companies-vertical-slice.test.ts",
+    "company-admin.test.ts",
+    "confidence-citations.test.ts",
+    "conversations.test.ts",
+    "courses.test.ts",
+    "document-mention.test.ts",
+    "domain-foundation.test.ts",
+    "email-reply-promote.test.ts",
+    "email-vertical-slice.test.ts",
+    "enterprise-governance.test.ts",
+    "html.test.ts",
+    "identity-vertical-slice.test.ts",
+    "im-conversation-style.test.ts",
+    "inbound.test.ts",
+    "knowledge-vertical-slice.test.ts",
+    "learning-activity-import.test.ts",
+    "learning-collaboration.test.ts",
+    "learning-foundation.test.ts",
+    "learning-preset-onboarding.test.ts",
+    "memory-summaries.test.ts",
+    "messages-vertical-slice.test.ts",
+    "metrics.test.ts",
+    "migration.test.ts",
+    "native-admission.test.ts",
+    "native-collaboration.test.ts",
+    "native-memory.test.ts",
+    "native-message-approvals.test.ts",
+    "native-message-cutover.test.ts",
+    "native-message-flow.test.ts",
+    "permission-resolver.test.ts",
+    "platform-lifecycle.test.ts",
+    "polls.test.ts",
+    "project-lifecycle-concurrency.test.ts",
+    "research-search.test.ts",
+    "resend-live.test.ts",
+    "retry.test.ts",
+    "runtime-compaction.test.ts",
+    "runtime-context-latency.test.ts",
+    "runtime-nonthinking.test.ts",
+    "runtime-notifications.test.ts",
+    "runtime-objects.test.ts",
+    "runtime-realtime.test.ts",
+    "runtime-response-policy.test.ts",
+    "runtime-retirement.test.ts",
+    "teacher-agent.test.ts",
+    "trust-bff.test.ts"
+  ],
+  "limitations": [
+    "Live model provider and Resend delivery are unverified; this isolated runner disables both.",
+    "Runtime object-store coverage uses a separate private bucket in local MinIO; other integration providers are scripted fixtures."
+  ]
+}

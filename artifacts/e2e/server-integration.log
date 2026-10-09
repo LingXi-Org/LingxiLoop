@@ -1,0 +1,1284 @@
+TAP version 13
+# Subtest: workspace summaries and scoped lists agree without leaking another organization
+ok 1 - workspace summaries and scoped lists agree without leaking another organization
+---
+duration_ms: 497.657863
+type: 'test'
+...
+# Subtest: workspace reads require a valid administrator gateway identity
+ok 2 - workspace reads require a valid administrator gateway identity
+---
+duration_ms: 423.426517
+type: 'test'
+...
+# Subtest: [integration] agents cannot persist portrait URLs while human profile images remain valid
+ok 3 - [integration] agents cannot persist portrait URLs while human profile images remain valid
+---
+duration_ms: 463.893185
+type: 'test'
+...
+# Subtest: live provider delivers full learning help and native cards with measured first text and total time
+ok 4 - live provider delivers full learning help and native cards with measured first text and total time # SKIP
+---
+duration_ms: 0.95376
+type: 'test'
+...
+# Subtest: native capability registry executes cards and artifacts, gates approval, and enforces revocation
+ok 5 - native capability registry executes cards and artifacts, gates approval, and enforces revocation
+---
+duration_ms: 2171.587714
+type: 'test'
+...
+# Subtest: [integration] agent creation atomically seeds strict identity, Bloub persistence, and learning ContextThread
+ok 6 - [integration] agent creation atomically seeds strict identity, Bloub persistence, and learning ContextThread
+---
+duration_ms: 486.461283
+type: 'test'
+...
+# Subtest: [integration] lifecycle is tenant scoped and refuses to offboard a group leader
+ok 7 - [integration] lifecycle is tenant scoped and refuses to offboard a group leader
+---
+duration_ms: 448.880843
+type: 'test'
+...
+# Subtest: [integration] human presence never updates the same participant id in another tenant
+ok 8 - [integration] human presence never updates the same participant id in another tenant
+---
+duration_ms: 443.884323
+type: 'test'
+...
+# Subtest: attachment questions and history use committed bytes, wake once and retain tenant and audience boundaries
+ok 9 - attachment questions and history use committed bytes, wake once and retain tenant and audience boundaries
+---
+duration_ms: 880.647403
+type: 'test'
+...
+# Subtest: native knowledge tools read beyond previews, page actual text and enforce source selection
+ok 10 - native knowledge tools read beyond previews, page actual text and enforce source selection
+---
+duration_ms: 663.849333
+type: 'test'
+...
+# Subtest: [integration] calendar create stores explicit tenant and workspace ownership
+ok 11 - [integration] calendar create stores explicit tenant and workspace ownership
+---
+duration_ms: 2793.749883
+type: 'test'
+...
+# Subtest: [integration] calendar rejects cross-tenant references and unknown request fields
+ok 12 - [integration] calendar rejects cross-tenant references and unknown request fields
+---
+duration_ms: 449.526016
+type: 'test'
+...
+# Subtest: [integration] calendar hides ids across tenants and rejects incoherent partial reminders
+ok 13 - [integration] calendar hides ids across tenants and rejects incoherent partial reminders
+---
+duration_ms: 472.779612
+type: 'test'
+...
+# Subtest: operator creates no membership; named first teacher administrator admits once
+ok 14 - operator creates no membership; named first teacher administrator admits once
+---
+duration_ms: 389.117949
+type: 'test'
+...
+# Subtest: students join multiple courses, cannot change identity or cross companies
+ok 15 - students join multiple courses, cannot change identity or cross companies
+---
+duration_ms: 359.620029
+type: 'test'
+...
+# Subtest: course-only companies complete optional context-thread seeding without a default project
+ok 16 - course-only companies complete optional context-thread seeding without a default project
+---
+duration_ms: 319.766813
+type: 'test'
+...
+# Subtest: database rejects a second live company and in-period identity conversion
+ok 17 - database rejects a second live company and in-period identity conversion
+---
+duration_ms: 333.563052
+type: 'test'
+...
+# Subtest: shared invitation concurrency respects use count and replay does not consume twice
+ok 18 - shared invitation concurrency respects use count and replay does not consume twice
+---
+duration_ms: 348.936356
+type: 'test'
+...
+# Subtest: administrator manages unassigned courses; ordinary teacher needs assignment
+ok 19 - administrator manages unassigned courses; ordinary teacher needs assignment
+---
+duration_ms: 364.081505
+type: 'test'
+...
+# Subtest: last administrator hands over before leaving; course creator can leave and history stays
+ok 20 - last administrator hands over before leaving; course creator can leave and history stays
+---
+duration_ms: 335.597408
+type: 'test'
+...
+# Subtest: departure invalidates tickets and old invitations; new period never restores other courses
+ok 21 - departure invalidates tickets and old invitations; new period never restores other courses
+---
+duration_ms: 369.28983
+type: 'test'
+...
+# Subtest: platform suspension cannot be lifted with an invitation
+ok 22 - platform suspension cannot be lifted with an invitation
+---
+duration_ms: 298.866703
+type: 'test'
+...
+# Subtest: departure fences pending document writes and reminder recipients across readmission
+ok 23 - departure fences pending document writes and reminder recipients across readmission
+---
+duration_ms: 344.071158
+type: 'test'
+...
+# Subtest: emergency operator suspension ends the final administrator period; restoration does not revive it
+ok 24 - emergency operator suspension ends the final administrator period; restoration does not revive it
+---
+duration_ms: 308.909684
+type: 'test'
+...
+# Subtest: company retains learner history after a new teacher period replaces the course role
+ok 25 - company retains learner history after a new teacher period replaces the course role
+---
+duration_ms: 339.146462
+type: 'test'
+...
+# Subtest: [integration] member removal disconnects immediately and retries IM reconciliation idempotently
+ok 26 - [integration] member removal disconnects immediately and retries IM reconciliation idempotently
+---
+duration_ms: 455.406438
+type: 'test'
+...
+# Subtest: [integration] company member mutation never crosses tenant ownership
+ok 27 - [integration] company member mutation never crosses tenant ownership
+---
+duration_ms: 397.54716
+type: 'test'
+...
+# Subtest: [integration] single-use invitation accepts exactly once under concurrency
+ok 28 - [integration] single-use invitation accepts exactly once under concurrency
+---
+duration_ms: 419.590907
+type: 'test'
+...
+# Subtest: [integration] invitation replay is idempotent without double-counting usage
+ok 29 - [integration] invitation replay is idempotent without double-counting usage
+---
+duration_ms: 406.763585
+type: 'test'
+...
+# Subtest: [integration] invitation acceptance atomically enqueues one durable member onboarding effect
+ok 30 - [integration] invitation acceptance atomically enqueues one durable member onboarding effect
+---
+duration_ms: 422.029676
+type: 'test'
+...
+# Subtest: management identity comes from active PostgreSQL administration and does not grant platform access
+ok 31 - management identity comes from active PostgreSQL administration and does not grant platform access
+---
+duration_ms: 520.513558
+type: 'test'
+...
+# Subtest: lists, cursors, search, nested sources and summaries exclude foreign and private records
+ok 32 - lists, cursors, search, nested sources and summaries exclude foreign and private records
+---
+duration_ms: 633.086648
+type: 'test'
+...
+# Subtest: guessed details, content chunks, messages and commands share the same boundary
+ok 33 - guessed details, content chunks, messages and commands share the same boundary
+---
+duration_ms: 536.395457
+type: 'test'
+...
+# Subtest: revocation, removal, suspension and company state are enforced on the next request
+ok 34 - revocation, removal, suspension and company state are enforced on the next request
+---
+duration_ms: 460.845219
+type: 'test'
+...
+# Subtest: member management preserves last-admin protection, invitations and immediate revocation
+ok 35 - member management preserves last-admin protection, invitations and immediate revocation
+---
+duration_ms: 638.295617
+type: 'test'
+...
+# Subtest: runtime list, diagnostics and retries require real tenant and session bindings
+ok 36 - runtime list, diagnostics and retries require real tenant and session bindings
+---
+duration_ms: 507.147198
+type: 'test'
+...
+# {"ts":"2026-10-09T03:48:46.382Z","level":"info","msg":"worker stopped","workerId":"lingxios-c414e480-1f82-4599-8597-d017065d2197","timedOut":false}
+# Subtest: product correction commits frozen excerpts and preserves them in IM delivery and authenticated reconnects
+ok 37 - product correction commits frozen excerpts and preserves them in IM delivery and authenticated reconnects
+---
+duration_ms: 6699.759222
+type: 'test'
+...
+# Subtest: [integration] retired GET /conversations has no compatibility data plane
+ok 38 - [integration] retired GET /conversations has no compatibility data plane
+---
+duration_ms: 1973.032501
+type: 'test'
+...
+# Subtest: [integration] channels and paginated history survive durable retired records through the real IM HTTP client
+ok 39 - [integration] channels and paginated history survive durable retired records through the real IM HTTP client
+---
+duration_ms: 469.89683
+type: 'test'
+...
+# Subtest: [integration] GET /search uses the same perspective-specific direct title
+ok 40 - [integration] GET /search uses the same perspective-specific direct title
+---
+duration_ms: 413.625392
+type: 'test'
+...
+# Subtest: [integration] new direct conversation is bound, listed and accepts a message
+ok 41 - [integration] new direct conversation is bound, listed and accepts a message
+---
+duration_ms: 628.462122
+type: 'test'
+...
+# Subtest: [integration] concurrent starts by either human reuse one ordinary private conversation
+ok 42 - [integration] concurrent starts by either human reuse one ordinary private conversation
+---
+duration_ms: 579.810071
+type: 'test'
+...
+# Subtest: [integration] existing ordinary private chat is reused without replacing history or its profile
+ok 43 - [integration] existing ordinary private chat is reused without replacing history or its profile
+---
+duration_ms: 495.100333
+type: 'test'
+...
+# Subtest: [integration] agent private chats reuse the learning context and teaching contexts stay separate
+ok 44 - [integration] agent private chats reuse the learning context and teaching contexts stay separate
+---
+duration_ms: 550.297659
+type: 'test'
+...
+# Subtest: [integration] group creation includes the creator, supports default names, and always makes a new group
+ok 45 - [integration] group creation includes the creator, supports default names, and always makes a new group
+---
+duration_ms: 536.488288
+type: 'test'
+...
+# Subtest: [integration] creation rejects malformed selections, unavailable and managed participants without writing rows
+ok 46 - [integration] creation rejects malformed selections, unavailable and managed participants without writing rows
+---
+duration_ms: 466.838784
+type: 'test'
+...
+# Subtest: [integration] workspace authorization rejects foreign and read-only projects
+ok 47 - [integration] workspace authorization rejects foreign and read-only projects
+---
+duration_ms: 449.963837
+type: 'test'
+...
+# [conversations] committed channel awaits reconciliation
+# Subtest: [integration] committed creation survives an IM sync outage for later reconciliation
+ok 48 - [integration] committed creation survives an IM sync outage for later reconciliation
+---
+duration_ms: 454.945212
+type: 'test'
+...
+# [ws] subscribed to 14 redis channels
+# (node:4488) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+# (Use `node --trace-deprecation ...` to show where the warning was created)
+# Subtest: [integration] learning dashboard stays in the current company and follows course grants and returns real attempt facts
+ok 49 - [integration] learning dashboard stays in the current company and follows course grants and returns real attempt facts
+---
+duration_ms: 2426.252109
+type: 'test'
+...
+# Subtest: [integration] learner sees only enrolled courses and receives opaque 404 for another Project
+ok 50 - [integration] learner sees only enrolled courses and receives opaque 404 for another Project
+---
+duration_ms: 504.121475
+type: 'test'
+...
+# Subtest: [integration] company teachers can create Teaching courses
+ok 51 - [integration] company teachers can create Teaching courses
+---
+duration_ms: 431.535454
+type: 'test'
+...
+# Subtest: [integration] Project invitation replay is idempotent and never grants or downgrades Teacher
+ok 52 - [integration] Project invitation replay is idempotent and never grants or downgrades Teacher
+---
+duration_ms: 504.058703
+type: 'test'
+...
+# Subtest: [integration] concurrent Project invitations converge on one Student membership
+ok 53 - [integration] concurrent Project invitations converge on one Student membership
+---
+duration_ms: 464.936966
+type: 'test'
+...
+# Subtest: [integration] removing a member invalidates replay of their consumed course invitation
+ok 54 - [integration] removing a member invalidates replay of their consumed course invitation
+---
+duration_ms: 494.411639
+type: 'test'
+...
+# [ws] client connected (::ffff:127.0.0.1, user=u-course-learner, companies=1) · total 1
+# Subtest: [integration] removing a course member revokes an existing document WebSocket subscription
+ok 55 - [integration] removing a course member revokes an existing document WebSocket subscription
+---
+duration_ms: 718.432951
+type: 'test'
+...
+# [ws] client disconnected · total 0
+# Subtest: [integration] shared vine credits real evidence once, preserves the whole journey and isolates course peers
+ok 56 - [integration] shared vine credits real evidence once, preserves the whole journey and isolates course peers
+---
+duration_ms: 699.200171
+type: 'test'
+...
+# Subtest: [integration] profile and course avatars persist, share across views and enforce upload ownership and course lifecycle
+ok 57 - [integration] profile and course avatars persist, share across views and enforce upload ownership and course lifecycle
+---
+duration_ms: 636.845385
+type: 'test'
+...
+# Subtest: [integration] concurrent document mentions converge on one durable delivery
+ok 58 - [integration] concurrent document mentions converge on one durable delivery
+---
+duration_ms: 461.687206
+type: 'test'
+...
+# Subtest: [integration] fixed identity and one company are database constraints
+ok 59 - [integration] fixed identity and one company are database constraints
+---
+duration_ms: 432.188457
+type: 'test'
+...
+# Subtest: [integration] duplicate and cross-company project memberships fail closed
+ok 60 - [integration] duplicate and cross-company project memberships fail closed
+---
+duration_ms: 407.771213
+type: 'test'
+...
+# Subtest: [integration] company types and project kinds reject statuses from other lifecycles
+ok 61 - [integration] company types and project kinds reject statuses from other lifecycles
+---
+duration_ms: 439.721744
+type: 'test'
+...
+# Subtest: [integration] plans support inheritance and only scalar entitlement values
+ok 62 - [integration] plans support inheritance and only scalar entitlement values
+---
+duration_ms: 401.242492
+type: 'test'
+...
+# Subtest: [integration] POST /conversations/:id/messages in an email convo auto-promotes to a real send
+ok 63 - [integration] POST /conversations/:id/messages in an email convo auto-promotes to a real send
+---
+duration_ms: 2074.926378
+type: 'test'
+...
+# Subtest: [integration] HTTP reply targets the external sender, not self
+ok 64 - [integration] HTTP reply targets the external sender, not self
+---
+duration_ms: 439.089674
+type: 'test'
+...
+# Subtest: [integration] empty body in an email convo POST is rejected with 400
+ok 65 - [integration] empty body in an email convo POST is rejected with 400
+---
+duration_ms: 420.012738
+type: 'test'
+...
+# Subtest: [integration] reply continues the thread when the latest row is our own outbound
+ok 66 - [integration] reply continues the thread when the latest row is our own outbound
+---
+duration_ms: 427.49417
+type: 'test'
+...
+# Subtest: [integration] non-email conversation POST is retired in favor of WuKongIM
+ok 67 - [integration] non-email conversation POST is retired in favor of WuKongIM
+---
+duration_ms: 405.751233
+type: 'test'
+...
+# Subtest: [integration] mail page lists only member threads in its project and sends into that project
+ok 68 - [integration] mail page lists only member threads in its project and sends into that project
+---
+duration_ms: 2150.53621
+type: 'test'
+...
+# Subtest: [integration] email rejects retired or unknown request fields
+ok 69 - [integration] email rejects retired or unknown request fields
+---
+duration_ms: 419.457627
+type: 'test'
+...
+# [api] 500 Error: RESEND_API_KEY is required
+#     at Object.assertEmailProviderConfigured (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/email/provider.ts:42:11)
+#     at EmailApplication.executeSend (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/email/application.ts:133:25)
+#     at EmailApplication.send (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/email/application.ts:117:42)
+#     at <anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/email/router.ts:48:44)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+#     at async <anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/http/async-handler.ts:7:7)
+# Subtest: [integration] missing Resend configuration fails before persistence side effects
+ok 70 - [integration] missing Resend configuration fails before persistence side effects
+---
+duration_ms: 406.607252
+type: 'test'
+...
+# Subtest: [integration] explicit provider injection uses the real persistence path without mock semantics
+ok 71 - [integration] explicit provider injection uses the real persistence path without mock semantics
+---
+duration_ms: 418.85723
+type: 'test'
+...
+# Subtest: [integration] email persistence rejects cross-tenant conversations and projects
+ok 72 - [integration] email persistence rejects cross-tenant conversations and projects
+---
+duration_ms: 405.074089
+type: 'test'
+...
+# Subtest: [integration] Organization hierarchy is tenant-scoped and idempotent
+ok 73 - [integration] Organization hierarchy is tenant-scoped and idempotent
+---
+duration_ms: 463.22175
+type: 'test'
+...
+# Subtest: [integration] Governance Policy writes reject stale revisions and replay identical outcomes
+ok 74 - [integration] Governance Policy writes reject stale revisions and replay identical outcomes
+---
+duration_ms: 417.006968
+type: 'test'
+...
+# Subtest: [integration] returns 200 + sanitized HTML + CSP for a member
+ok 75 - [integration] returns 200 + sanitized HTML + CSP for a member
+---
+duration_ms: 2034.909173
+type: 'test'
+...
+# Subtest: [integration] returns 204 when the row has no HTML part
+ok 76 - [integration] returns 204 when the row has no HTML part
+---
+duration_ms: 412.330759
+type: 'test'
+...
+# Subtest: [integration] returns 404 for an unknown messageId
+ok 77 - [integration] returns 404 for an unknown messageId
+---
+duration_ms: 413.778361
+type: 'test'
+...
+# Subtest: [integration] returns opaque 404 when the requester is not a thread member
+ok 78 - [integration] returns opaque 404 when the requester is not a thread member
+---
+duration_ms: 422.123769
+type: 'test'
+...
+# Subtest: [integration] registration rejects ordinary assertions, mismatched subjects, expired signatures and replay
+ok 79 - [integration] registration rejects ordinary assertions, mismatched subjects, expired signatures and replay
+---
+duration_ms: 490.377851
+type: 'test'
+...
+# Subtest: [integration] invitation validation and provision are transactional and idempotent
+ok 80 - [integration] invitation validation and provision are transactional and idempotent
+---
+duration_ms: 427.644152
+type: 'test'
+...
+# Subtest: [integration] registration without an invitation cannot create business state
+ok 81 - [integration] registration without an invitation cannot create business state
+---
+duration_ms: 394.777627
+type: 'test'
+...
+# Subtest: [integration] project invitation is redeemed during provisioning
+ok 82 - [integration] project invitation is redeemed during provisioning
+---
+duration_ms: 425.469266
+type: 'test'
+...
+# {"ts":"2026-10-09T03:49:38.213Z","level":"info","msg":"worker stopped","workerId":"style-sage","timedOut":false}
+# {"ts":"2026-10-09T03:49:39.473Z","level":"info","msg":"worker stopped","workerId":"style-custom","timedOut":false}
+# Subtest: preset and custom Agents receive IM rules and deliver distinct messages to both IM and subsequent native context
+ok 83 - preset and custom Agents receive IM rules and deliver distinct messages to both IM and subsequent native context
+---
+duration_ms: 3461.735677
+type: 'test'
+...
+# Subtest: [integration] rejects requests with a bad Resend signature
+ok 84 - [integration] rejects requests with a bad Resend signature
+---
+duration_ms: 929.987627
+type: 'test'
+...
+# Subtest: [integration] rejects requests missing the signature header
+ok 85 - [integration] rejects requests missing the signature header
+---
+duration_ms: 402.421687
+type: 'test'
+...
+# Subtest: [integration] acknowledges a valid event when no recipient resolves to a known agent
+ok 86 - [integration] acknowledges a valid event when no recipient resolves to a known agent
+---
+duration_ms: 402.292643
+type: 'test'
+...
+# Subtest: [integration] persists email_messages + publishes wake event on resolved recipient
+ok 87 - [integration] persists email_messages + publishes wake event on resolved recipient
+---
+duration_ms: 412.412881
+type: 'test'
+...
+# Subtest: [integration] dedups a re-delivered Message-ID
+ok 88 - [integration] dedups a re-delivered Message-ID
+---
+duration_ms: 406.481925
+type: 'test'
+...
+# Subtest: [integration] flags inbound auto_submitted when worker forwarded the header
+ok 89 - [integration] flags inbound auto_submitted when worker forwarded the header
+---
+duration_ms: 409.775653
+type: 'test'
+...
+# Subtest: [integration] exact Message-ID dedup is scoped independently to each tenant
+ok 90 - [integration] exact Message-ID dedup is scoped independently to each tenant
+---
+duration_ms: 417.50924
+type: 'test'
+...
+# Subtest: [integration] inbound reply threads back to the original outbound conversation
+ok 91 - [integration] inbound reply threads back to the original outbound conversation
+---
+duration_ms: 404.021779
+type: 'test'
+...
+# Subtest: [integration] inbound attachments land in email_attachments + storage
+ok 92 - [integration] inbound attachments land in email_attachments + storage
+---
+duration_ms: 398.831021
+type: 'test'
+...
+# Subtest: [integration] knowledge source creation keeps explicit tenant and project ownership
+ok 93 - [integration] knowledge source creation keeps explicit tenant and project ownership
+---
+duration_ms: 507.024744
+type: 'test'
+...
+# Subtest: [integration] direct Agent retrieval resolves only for the authorized conversation member
+ok 94 - [integration] direct Agent retrieval resolves only for the authorized conversation member
+---
+duration_ms: 424.122293
+type: 'test'
+...
+# Subtest: [integration] Source authorization is PROJECT plus only the current user PRIVATE scope
+ok 95 - [integration] Source authorization is PROJECT plus only the current user PRIVATE scope
+---
+duration_ms: 540.945491
+type: 'test'
+...
+# Subtest: [integration] presigned upload confirmation rejects a mismatched R2 object size
+ok 96 - [integration] presigned upload confirmation rejects a mismatched R2 object size
+---
+duration_ms: 437.323669
+type: 'test'
+...
+# Subtest: [integration] presigned upload confirmation rejects an oversized object from HEAD metadata
+ok 97 - [integration] presigned upload confirmation rejects an oversized object from HEAD metadata
+---
+duration_ms: 417.074038
+type: 'test'
+...
+# Subtest: [integration] presigned upload confirmation rejects mismatched HEAD Content-Type metadata
+ok 98 - [integration] presigned upload confirmation rejects mismatched HEAD Content-Type metadata
+---
+duration_ms: 422.645774
+type: 'test'
+...
+# Subtest: [integration] an expired worker cannot overwrite a job reclaimed by a second worker
+ok 99 - [integration] an expired worker cannot overwrite a job reclaimed by a second worker
+---
+duration_ms: 413.117018
+type: 'test'
+...
+# Subtest: [integration] conversation Source exclusions are per-user and accept only authorized Sources
+ok 100 - [integration] conversation Source exclusions are per-user and accept only authorized Sources
+---
+duration_ms: 450.027225
+type: 'test'
+...
+# Subtest: [integration] Activity Import is transactional, event-backed and retry-safe
+ok 101 - [integration] Activity Import is transactional, event-backed and retry-safe
+---
+duration_ms: 490.825938
+type: 'test'
+...
+# Subtest: six real roster grants, source retrieval and Canvas candidates retain member and revocation boundaries
+ok 102 - six real roster grants, source retrieval and Canvas candidates retain member and revocation boundaries
+---
+duration_ms: 1855.266856
+type: 'test'
+...
+# Subtest: new course rooms retain all six agents after member synchronization
+ok 103 - new course rooms retain all six agents after member synchronization
+---
+duration_ms: 505.10067
+type: 'test'
+...
+# Subtest: a shared learner room keeps Canvas available without exposing private learning context
+ok 104 - a shared learner room keeps Canvas available without exposing private learning context
+---
+duration_ms: 555.611445
+type: 'test'
+...
+# Subtest: changing a Mission coordinator publishes the current owner in the same transaction
+ok 105 - changing a Mission coordinator publishes the current owner in the same transaction
+---
+duration_ms: 513.08022
+type: 'test'
+...
+# (node:5259) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+# (Use `node --trace-deprecation ...` to show where the warning was created)
+# {"ts":"2026-10-09T03:50:03.777Z","level":"info","msg":"worker stopped","workerId":"learning-collaboration","timedOut":false}
+# Subtest: scripted native execution persists Mission → independent Canvas host → specialist and verifier reports → coordinator return
+ok 106 - scripted native execution persists Mission → independent Canvas host → specialist and verifier reports → coordinator return
+---
+duration_ms: 4846.75894
+type: 'test'
+...
+# {"ts":"2026-10-09T03:50:04.665Z","level":"info","msg":"worker stopped","workerId":"handoff-failed","timedOut":false}
+# Subtest: handoff failed follows the native child and durable progress delivery recovers after failure
+ok 107 - handoff failed follows the native child and durable progress delivery recovers after failure
+---
+duration_ms: 886.962481
+type: 'test'
+...
+# {"ts":"2026-10-09T03:50:05.404Z","level":"info","msg":"worker stopped","workerId":"handoff-cancelled","timedOut":false}
+# Subtest: handoff cancelled follows the native child and durable progress delivery recovers after failure
+ok 108 - handoff cancelled follows the native child and durable progress delivery recovers after failure
+---
+duration_ms: 739.63103
+type: 'test'
+...
+# Subtest: [integration] Personal Project owns the complete learning foundation without a course
+ok 109 - [integration] Personal Project owns the complete learning foundation without a course
+---
+duration_ms: 453.118855
+type: 'test'
+...
+# Subtest: [integration] same-company wrong-project learning links fail closed
+ok 110 - [integration] same-company wrong-project learning links fail closed
+---
+duration_ms: 460.494278
+type: 'test'
+...
+# Subtest: [integration] cross-tenant learning links, duplicate open cases and action retries are rejected
+ok 111 - [integration] cross-tenant learning links, duplicate open cases and action retries are rejected
+---
+duration_ms: 478.284697
+type: 'test'
+...
+# Subtest: [integration] company onboarding seeds agents without personal conversations
+ok 112 - [integration] company onboarding seeds agents without personal conversations
+---
+duration_ms: 436.5496
+type: 'test'
+...
+# Subtest: [integration] canonical learning preset is idempotent
+ok 113 - [integration] canonical learning preset is idempotent
+---
+duration_ms: 401.01842
+type: 'test'
+...
+# Subtest: [integration] partial company agent installation resumes without replacing existing agents
+ok 114 - [integration] partial company agent installation resumes without replacing existing agents
+---
+duration_ms: 406.419953
+type: 'test'
+...
+# Subtest: read-only memory summaries paginate native scopes and isolate tenants, projects, principals, threads and revoked audiences
+ok 115 - read-only memory summaries paginate native scopes and isolate tenants, projects, principals, threads and revoked audiences
+---
+duration_ms: 1641.716797
+type: 'test'
+...
+# Subtest: [integration] WuKong reaction projections retain explicit tenant ownership
+ok 116 - [integration] WuKong reaction projections retain explicit tenant ownership
+---
+duration_ms: 444.2566
+type: 'test'
+...
+# Subtest: [integration] concurrent reaction toggles serialize on the tenant-scoped WuKong identity
+ok 117 - [integration] concurrent reaction toggles serialize on the tenant-scoped WuKong identity
+---
+duration_ms: 395.534851
+type: 'test'
+...
+# Subtest: [integration] /metrics is 404 when METRICS_BEARER_TOKEN is unset
+ok 118 - [integration] /metrics is 404 when METRICS_BEARER_TOKEN is unset
+---
+duration_ms: 2461.48332
+type: 'test'
+...
+# Subtest: [integration] /metrics is 401 with a wrong token
+ok 119 - [integration] /metrics is 401 with a wrong token
+---
+duration_ms: 411.369865
+type: 'test'
+...
+# Subtest: [integration] /metrics is 401 when no token is supplied but one is required
+ok 120 - [integration] /metrics is 401 when no token is supplied but one is required
+---
+duration_ms: 394.223631
+type: 'test'
+...
+# Subtest: [integration] /metrics returns Prom text exposition with the token in the query
+ok 121 - [integration] /metrics returns Prom text exposition with the token in the query
+---
+duration_ms: 410.109534
+type: 'test'
+...
+# Subtest: [integration] /metrics accepts the token via Authorization: ***
+ok 122 - [integration] /metrics accepts the token via Authorization: ***
+---
+duration_ms: 423.918461
+type: 'test'
+...
+# Subtest: an empty database reaches the latest schema once and repeated migration is a no-op
+ok 123 - an empty database reaches the latest schema once and repeated migration is a no-op
+---
+duration_ms: 3140.883496
+type: 'test'
+...
+# Subtest: collaboration upgrade preserves managed IDs, custom rooms and leaders while expanding default teams
+ok 124 - collaboration upgrade preserves managed IDs, custom rooms and leaders while expanding default teams
+---
+duration_ms: 1033.052354
+type: 'test'
+...
+# Subtest: earlier 3.2 versions upgrade only runtime registration and preserve existing data
+ok 125 - earlier 3.2 versions upgrade only runtime registration and preserve existing data
+---
+duration_ms: 7156.775169
+type: 'test'
+...
+# Subtest: read receipt upgrade preserves human receipts and accepts only same-tenant participants
+ok 126 - read receipt upgrade preserves human receipts and accepts only same-tenant participants
+---
+duration_ms: 995.236329
+type: 'test'
+...
+# Subtest: 3.2.13 upgrades the workspace schema transactionally and repeats without changing product data
+ok 127 - 3.2.13 upgrades the workspace schema transactionally and repeats without changing product data
+---
+duration_ms: 1010.977057
+type: 'test'
+...
+# Subtest: 3.3.0 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 128 - 3.3.0 registers the runtime fixes without altering sessions or accepting an unverified schema
+---
+duration_ms: 1008.615727
+type: 'test'
+...
+# Subtest: 3.3.1 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 129 - 3.3.1 registers the runtime fixes without altering sessions or accepting an unverified schema
+---
+duration_ms: 1135.214966
+type: 'test'
+...
+# Subtest: 3.3.2 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 130 - 3.3.2 registers the runtime fixes without altering sessions or accepting an unverified schema
+---
+duration_ms: 978.191511
+type: 'test'
+...
+# Subtest: 3.3.4 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 131 - 3.3.4 registers the runtime fixes without altering sessions or accepting an unverified schema
+---
+duration_ms: 1014.448164
+type: 'test'
+...
+# Subtest: 3.3.5 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 132 - 3.3.5 registers the runtime fixes without altering sessions or accepting an unverified schema
+---
+duration_ms: 1088.665092
+type: 'test'
+...
+# Subtest: a recorded runtime patch repairs a stale LingxiOS schema before serving
+ok 133 - a recorded runtime patch repairs a stale LingxiOS schema before serving
+---
+duration_ms: 936.823712
+type: 'test'
+...
+# Subtest: the affinity migration backfills the most recent worker without changing the Home epoch
+ok 134 - the affinity migration backfills the most recent worker without changing the Home epoch
+---
+duration_ms: 620.460986
+type: 'test'
+...
+# Subtest: native installation rejects old run data before historical reset migrations can change it
+ok 135 - native installation rejects old run data before historical reset migrations can change it
+---
+duration_ms: 623.38154
+type: 'test'
+...
+# Subtest: a non-empty database without migration history is rejected without mutation
+ok 136 - a non-empty database without migration history is rejected without mutation
+---
+duration_ms: 56.619061
+type: 'test'
+...
+# Subtest: editing an applied migration is rejected by checksum
+ok 137 - editing an applied migration is rejected by checksum
+---
+duration_ms: 598.117898
+type: 'test'
+...
+# Subtest: a failed migration rolls back its DDL and history row
+ok 138 - a failed migration rolls back its DDL and history row
+---
+duration_ms: 588.296578
+type: 'test'
+...
+# Subtest: concurrent migrators serialize and apply each migration once
+ok 139 - concurrent migrators serialize and apply each migration once
+---
+duration_ms: 933.483843
+type: 'test'
+...
+# Subtest: runtime readiness rejects pending migrations
+ok 140 - runtime readiness rejects pending migrations
+---
+duration_ms: 639.969598
+type: 'test'
+...
+# Subtest: runtime readiness rejects a missing native collaboration table
+ok 141 - runtime readiness rejects a missing native collaboration table
+---
+duration_ms: 920.013702
+type: 'test'
+...
+# Subtest: capability backfill preserves teacher grants, custom prompts and later revocations
+ok 142 - capability backfill preserves teacher grants, custom prompts and later revocations
+---
+duration_ms: 958.182771
+type: 'test'
+...
+# {"ts":"2026-10-09T03:50:51.672Z","level":"info","msg":"worker started","workerId":"product-admission","healthPort":null,"maxConcurrentRuns":2}
+# {"ts":"2026-10-09T03:50:59.161Z","level":"info","msg":"worker stopped","workerId":"product-admission","timedOut":false}
+# Subtest: product native admission, cancellation, revision, independent delivery and stable ACK replay
+ok 143 - product native admission, cancellation, revision, independent delivery and stable ACK replay
+---
+duration_ms: 8025.452161
+type: 'test'
+...
+# {"ts":"2026-10-09T03:51:06.534Z","level":"info","msg":"worker started","workerId":"native-test","healthPort":null,"maxConcurrentRuns":1}
+# Subtest: product policy feeds native IM identities, graph waits, state conflicts and revocation
+ok 144 - product policy feeds native IM identities, graph waits, state conflicts and revocation
+---
+duration_ms: 5641.814375
+type: 'test'
+...
+# {"ts":"2026-10-09T03:51:06.806Z","level":"info","msg":"worker stopped","workerId":"native-test","timedOut":false}
+# {"ts":"2026-10-09T03:51:06.809Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-09T03:51:11.308Z","level":"info","msg":"worker stopped","workerId":"native-memory-worker","timedOut":false}
+# Subtest: native memory writes remain Agent-only and preserve reviewed versioned writes
+ok 145 - native memory writes remain Agent-only and preserve reviewed versioned writes
+---
+duration_ms: 2466.098193
+type: 'test'
+...
+# {"ts":"2026-10-09T03:51:11.318Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-09T03:51:11.318Z","level":"warn","msg":"memory capture failed","error":"control plane stopped"}
+# {"ts":"2026-10-09T03:51:16.484Z","level":"info","msg":"worker stopped","workerId":"approval-fixture","timedOut":false}
+# Subtest: HTTP approval decisions and expiry survive native message replay under a real worker lease
+ok 146 - HTTP approval decisions and expiry survive native message replay under a real worker lease
+---
+duration_ms: 3145.196343
+type: 'test'
+...
+# {"ts":"2026-10-09T03:51:16.494Z","level":"warn","msg":"dependencies failed","error":"control plane stopped"}
+# Subtest: message cutover rolls back rehearsal, preserves protected data, and is repeatable
+ok 147 - message cutover rolls back rehearsal, preserves protected data, and is repeatable
+---
+duration_ms: 770.657772
+type: 'test'
+...
+# Subtest: one native message survives acceptance and replay; every attachment settles before one wake
+ok 148 - one native message survives acceptance and replay; every attachment settles before one wake
+---
+duration_ms: 1231.598149
+type: 'test'
+...
+# Subtest: [integration] resolver derives tenant scope and hides every A/B IDOR combination
+ok 149 - [integration] resolver derives tenant scope and hides every A/B IDOR combination
+---
+duration_ms: 418.019245
+type: 'test'
+...
+# Subtest: [integration] company administrator access does not require a course grant
+ok 150 - [integration] company administrator access does not require a course grant
+---
+duration_ms: 366.66025
+type: 'test'
+...
+# Subtest: [integration] inactive memberships and deleted Companies fail closed
+ok 151 - [integration] inactive memberships and deleted Companies fail closed
+---
+duration_ms: 373.665903
+type: 'test'
+...
+# Subtest: [integration] Project Role and effective Entitlement must both allow the action
+ok 152 - [integration] Project Role and effective Entitlement must both allow the action
+---
+duration_ms: 392.645335
+type: 'test'
+...
+# Subtest: [integration] archived Projects remain readable and deny writes
+ok 153 - [integration] archived Projects remain readable and deny writes
+---
+duration_ms: 393.098424
+type: 'test'
+...
+# Subtest: platform operators manage company lifecycle without tenant membership and preserve audit reasons
+ok 154 - platform operators manage company lifecycle without tenant membership and preserve audit reasons
+---
+duration_ms: 507.619735
+type: 'test'
+...
+# Subtest: platform project commands retain lifecycle rules and learning projections
+ok 155 - platform project commands retain lifecycle rules and learning projections
+---
+duration_ms: 409.924596
+type: 'test'
+...
+# Subtest: platform lifecycle requires gateway admin authority, a bounded reason and an existing record
+ok 156 - platform lifecycle requires gateway admin authority, a bounded reason and an existing record
+---
+duration_ms: 385.817073
+type: 'test'
+...
+# Subtest: platform routine pause is authorized, durable and audited before future dispatch
+ok 157 - platform routine pause is authorized, durable and audited before future dispatch
+---
+duration_ms: 383.112771
+type: 'test'
+...
+# Subtest: [integration] POST /polls creates a poll message with structured payload
+ok 158 - [integration] POST /polls creates a poll message with structured payload
+---
+duration_ms: 2352.147261
+type: 'test'
+...
+# Subtest: [integration] poll creation is idempotent per tenant request identity
+ok 159 - [integration] poll creation is idempotent per tenant request identity
+---
+duration_ms: 417.253254
+type: 'test'
+...
+# Subtest: [integration] poll identities and reads stay tenant-scoped
+ok 160 - [integration] poll identities and reads stay tenant-scoped
+---
+duration_ms: 383.191301
+type: 'test'
+...
+# Subtest: [integration] unpublished poll snapshots remain durable and reconcile to WuKong
+ok 161 - [integration] unpublished poll snapshots remain durable and reconcile to WuKong
+---
+duration_ms: 378.766157
+type: 'test'
+...
+# Subtest: [integration] POST /polls rejects fewer than 2 distinct options
+ok 162 - [integration] POST /polls rejects fewer than 2 distinct options
+---
+duration_ms: 389.583094
+type: 'test'
+...
+# Subtest: [integration] POST /polls rejects a missing stable client request identity
+ok 163 - [integration] POST /polls rejects a missing stable client request identity
+---
+duration_ms: 374.496634
+type: 'test'
+...
+# Subtest: [integration] vote tally aggregates across voters & changing a vote is idempotent
+ok 164 - [integration] vote tally aggregates across voters & changing a vote is idempotent
+---
+duration_ms: 430.340971
+type: 'test'
+...
+# Subtest: [integration] single-choice rejects more than one option
+ok 165 - [integration] single-choice rejects more than one option
+---
+duration_ms: 403.620954
+type: 'test'
+...
+# Subtest: [integration] multi-choice persists every chosen option
+ok 166 - [integration] multi-choice persists every chosen option
+---
+duration_ms: 408.564675
+type: 'test'
+...
+# Subtest: [integration] retracting via empty optionIds drops all of voter's rows
+ok 167 - [integration] retracting via empty optionIds drops all of voter's rows
+---
+duration_ms: 432.230407
+type: 'test'
+...
+# Subtest: [integration] closing a poll blocks further votes; only author can close
+ok 168 - [integration] closing a poll blocks further votes; only author can close
+---
+duration_ms: 408.522298
+type: 'test'
+...
+# Subtest: [integration] archived course conversations reject poll create, vote, and close writes
+ok 169 - [integration] archived course conversations reject poll create, vote, and close writes
+---
+duration_ms: 454.78209
+type: 'test'
+...
+# Subtest: [integration] sweepExpiredPolls auto-closes polls past expiresAt
+ok 170 - [integration] sweepExpiredPolls auto-closes polls past expiresAt
+---
+duration_ms: 400.264217
+type: 'test'
+...
+# Subtest: [integration] concurrent course endings apply once and audit once
+ok 171 - [integration] concurrent course endings apply once and audit once
+---
+duration_ms: 435.740666
+type: 'test'
+...
+# (node:6659) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: authorized research.search returns domestic-engine cards and denies unauthorized callers
+ok 172 - authorized research.search returns domestic-engine cards and denies unauthorized callers
+---
+duration_ms: 450.814833
+type: 'test'
+...
+# Subtest: [integration] retry worker promotes a failed row to sent when the provider succeeds
+ok 173 - [integration] retry worker promotes a failed row to sent when the provider succeeds
+---
+duration_ms: 436.710293
+type: 'test'
+...
+# Subtest: [integration] retry worker advances backoff on a still-failing send
+ok 174 - [integration] retry worker advances backoff on a still-failing send
+---
+duration_ms: 389.188033
+type: 'test'
+...
+# [alert] application.error.email retry: terminal failure (message lost): message_id=`m-cbac2beb-56de-4b5d-93d6-c44384128c43`
+# company=`c-a052ec74`
+# subject=pending
+# error: provider rejected request
+# Subtest: [integration] retry worker terminates the row after exhausting backoff steps
+ok 175 - [integration] retry worker terminates the row after exhausting backoff steps
+---
+duration_ms: 380.95566
+type: 'test'
+...
+# Subtest: [integration] retry worker ignores rows with next_retry_at in the future
+ok 176 - [integration] retry worker ignores rows with next_retry_at in the future
+---
+duration_ms: 374.555086
+type: 'test'
+...
+# Subtest: [integration] retry worker ignores inbound rows (only out + failed are eligible)
+ok 177 - [integration] retry worker ignores inbound rows (only out + failed are eligible)
+---
+duration_ms: 374.996297
+type: 'test'
+...
+# {"ts":"2026-10-09T03:51:51.160Z","level":"info","msg":"worker stopped","workerId":"product-compaction","timedOut":false}
+# Subtest: an oversized persisted conversation compacts, records every call and accepts a followup in the same session
+ok 178 - an oversized persisted conversation compacts, records every call and accepts a followup in the same session
+---
+duration_ms: 1497.751157
+type: 'test'
+...
+# [im.read-receipt] agent advance failed {
+#   channelId: 'context-latency-room',
+#   agentId: 'a-03df2b40',
+#   error: 'fixture rollback after advance'
+# }
+# Subtest: context bounds automatic search and persists Agent receipts before asynchronous delivery
+ok 179 - context bounds automatic search and persists Agent receipts before asynchronous delivery
+---
+duration_ms: 6412.36816
+type: 'test'
+...
+# {"independentContextReads":["canvas","learning"],"automaticSearchElapsedMs":5062,"cancelledSearches":4,"durableAgentReceipts":1,"outboxReplayed":true,"humanReadVerified":true}
+# {"ts":"2026-10-09T03:52:03.152Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-4ukpo","healthPort":52993,"maxConcurrentRuns":2}
+# {"ts":"2026-10-09T03:52:04.249Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-4ukpo","timedOut":false}
+# {"ts":"2026-10-09T03:52:04.252Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:827:22)\\n    at stopLingxiOSControl (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:154:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:223:5)\\n    at async TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:155:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-09T03:52:04.256Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:827:22)\\n    at stopLingxiOSControl (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:154:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:223:5)\\n    at async TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:155:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-09T03:52:04.387Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-4ukpo","healthPort":52993,"maxConcurrentRuns":2}
+# {"ts":"2026-10-09T03:52:05.214Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-4ukpo","timedOut":false}
+# {"ts":"2026-10-09T03:52:05.217Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:827:22)\\n    at stopLingxiOSControl (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:154:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:223:5)\\n    at async TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:155:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-09T03:52:05.218Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:827:22)\\n    at stopLingxiOSControl (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:154:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:223:5)\\n    at async TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:155:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# Subtest: production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion
+ok 180 - production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion
+---
+duration_ms: 3663.975367
+type: 'test'
+...
+# [ws] subscribed to 14 redis channels
+# [ws] client connected (127.0.0.1, user=test-owner, companies=1) · total 1
+# [ws] client connected (127.0.0.1, user=peer, companies=1) · total 2
+# [ws] client disconnected · total 1
+# [ws] client disconnected · total 0
+# Subtest: run binding notifies only its authorized principal, deduplicates and rechecks project access
+ok 181 - run binding notifies only its authorized principal, deduplicates and rechecks project access
+---
+duration_ms: 2311.000607
+type: 'test'
+...
+# [access] permission resolution failed closed {
+#   action: 'company:read',
+#   actorUserId: 'peer',
+#   error: 'Cannot use a pool after calling end on the pool'
+# }
+# [access] permission resolution failed closed {
+#   action: 'company:read',
+#   actorUserId: 'test-owner',
+#   error: 'Cannot use a pool after calling end on the pool'
+# }
+# Subtest: private S3 objects cross nodes, enforce committed size, report missing bytes and transport failures
+ok 182 - private S3 objects cross nodes, enforce committed size, report missing bytes and transport failures # SKIP set LINGXIOS_TEST_OBJECT_BUCKET and local S3 fixture credentials
+---
+duration_ms: 0.682334
+type: 'test'
+...
+# Subtest: shares fenced drafts across nodes, isolates identities, recovers lost cache and pubsub, and releases subscriptions
+ok 183 - shares fenced drafts across nodes, isolates identities, recovers lost cache and pubsub, and releases subscriptions
+---
+duration_ms: 1065.801257
+type: 'test'
+...
+# {"ts":"2026-10-09T03:52:13.738Z","level":"info","msg":"worker stopped","workerId":"response-policy-worker","timedOut":false}
+# Subtest: ordinary product chat loads full authorized tools immediately and keeps every model call in the shared ledger
+ok 184 - ordinary product chat loads full authorized tools immediately and keeps every model call in the shared ledger
+---
+duration_ms: 1344.096359
+type: 'test'
+...
+# {"ts":"2026-10-09T03:52:13.744Z","level":"warn","msg":"memory capture failed","error":"control plane stopped"}
+# [access] permission resolution failed closed {
+#   action: 'agent_memory:read',
+#   actorUserId: 'test-owner',
+#   error: 'control plane stopped'
+# }
+# {"ts":"2026-10-09T03:52:13.745Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-09T03:52:13.746Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# Subtest: committed messages remain idempotent and attachments ingest without old Agent work
+ok 185 - committed messages remain idempotent and attachments ingest without old Agent work
+---
+duration_ms: 1298.268595
+type: 'test'
+...
+# Subtest: [integration] Pulse can send conversational messages only in its active authorized teacher room
+ok 186 - [integration] Pulse can send conversational messages only in its active authorized teacher room
+---
+duration_ms: 930.278426
+type: 'test'
+...
+# {"ts":"2026-10-09T03:52:20.852Z","level":"info","msg":"worker stopped","workerId":"teacher-memory-regression","timedOut":false}
+# {"ts":"2026-10-09T03:52:20.854Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# Subtest: [integration] Pulse replies over the control plane without memory and rejects revoked membership
+ok 187 - [integration] Pulse replies over the control plane without memory and rejects revoked membership
+---
+duration_ms: 849.3795
+type: 'test'
+...
+# Subtest: [integration] personal Agent avatars retain the six/seven roster and reject student Pulse writes
+ok 188 - [integration] personal Agent avatars retain the six/seven roster and reject student Pulse writes
+---
+duration_ms: 1162.067783
+type: 'test'
+...
+# Subtest: [integration] concurrent provisioning creates one Project Pulse and one Course teacher room
+ok 189 - [integration] concurrent provisioning creates one Project Pulse and one Course teacher room
+---
+duration_ms: 431.268091
+type: 'test'
+...
+# Subtest: [integration] Pulse provisioning rolls back every owned row on persistence failure
+ok 190 - [integration] Pulse provisioning rolls back every owned row on persistence failure
+---
+duration_ms: 404.445741
+type: 'test'
+...
+# Subtest: [integration] Pulse provisioning and lifecycle reject a foreign tenant scope
+ok 191 - [integration] Pulse provisioning and lifecycle reject a foreign tenant scope
+---
+duration_ms: 418.225358
+type: 'test'
+...
+# Subtest: [integration] archive and restore retain the same Pulse identity and teacher room
+ok 192 - [integration] archive and restore retain the same Pulse identity and teacher room
+---
+duration_ms: 420.009118
+type: 'test'
+...
+# Subtest: [integration] current course teachers and company administrators can discover Pulse and open its teacher endpoint
+ok 193 - [integration] current course teachers and company administrators can discover Pulse and open its teacher endpoint
+---
+duration_ms: 483.235783
+type: 'test'
+...
+# Subtest: [integration] teacher digest calculation keeps local wall-clock time across DST
+ok 194 - [integration] teacher digest calculation keeps local wall-clock time across DST
+---
+duration_ms: 390.803527
+type: 'test'
+...
+# Subtest: [integration] only critical teacher operations cross the approval boundary
+ok 195 - [integration] only critical teacher operations cross the approval boundary
+---
+duration_ms: 365.632102
+type: 'test'
+...
+# Subtest: [integration] Pulse reporting repository cannot cross tenant course boundaries
+ok 196 - [integration] Pulse reporting repository cannot cross tenant course boundaries
+---
+duration_ms: 440.662288
+type: 'test'
+...
+# Subtest: [integration] Pulse approval freshness binds the target room to the trusted tenant
+ok 197 - [integration] Pulse approval freshness binds the target room to the trusted tenant
+---
+duration_ms: 408.507703
+type: 'test'
+...
+# Subtest: [integration] Pulse runtime scope and counts reject foreign tenant state
+ok 198 - [integration] Pulse runtime scope and counts reject foreign tenant state
+---
+duration_ms: 401.36936
+type: 'test'
+...
+# (node:7364) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+# (Use `node --trace-deprecation ...` to show where the warning was created)
+# Subtest: [integration] Trust BFF enforces audience levels and creates retry-safe signed Evidence snapshots
+ok 199 - [integration] Trust BFF enforces audience levels and creates retry-safe signed Evidence snapshots
+---
+duration_ms: 519.882201
+type: 'test'
+...
+1..199
+# tests 199
+# suites 0
+# pass 197
+# fail 0
+# cancelled 0
+# skipped 2
+# todo 0
+# duration_ms 264796.168396

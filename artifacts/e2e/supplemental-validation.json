@@ -1,0 +1,39 @@
+{
+  "recordedAt": "2026-10-05T03:46:39.6131304Z",
+  "checks": [
+    {
+      "project": "open-notebook",
+      "cwd": "third_party/open-notebook",
+      "command": "uv run --frozen --python 3.12 pytest -q",
+      "status": "passed",
+      "passed": 115,
+      "warnings": 2
+    },
+    {
+      "project": "r2-gate",
+      "command": "node --import tsx --test workers/r2-gate/src/index.test.ts",
+      "status": "passed",
+      "passed": 2
+    },
+    {
+      "project": "e2e",
+      "command": "npm run test:e2e:typecheck",
+      "status": "passed"
+    },
+    {
+      "project": "e2e/vite",
+      "command": "npm exec biome lint -- e2e.config.ts e2e/local-api.mjs e2e/seed.ts vite.config.ts",
+      "status": "passed"
+    },
+    {
+      "project": "browser fixture safety",
+      "command": "node --test e2e/server/fixture-safety.test.mjs",
+      "status": "passed",
+      "passed": 1,
+      "log": "artifacts/e2e/fixture-safety.log"
+    }
+  ],
+  "limits": [
+    "Open Notebook and R2 checks use existing fixtures; they do not verify deployed services or a live model."
+  ]
+}

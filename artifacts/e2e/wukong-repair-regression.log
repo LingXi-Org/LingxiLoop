@@ -1,0 +1,124 @@
+TAP version 13
+# Subtest: conversation summaries tolerate unsupported previews without weakening native validation
+ok 1 - conversation summaries tolerate unsupported previews without weakening native validation
+  ---
+  duration_ms: 69.9573
+  type: 'test'
+  ...
+# Subtest: WuKong channel reconciliation uses the v3 integer-switch contract
+ok 2 - WuKong channel reconciliation uses the v3 integer-switch contract
+  ---
+  duration_ms: 1.7631
+  type: 'test'
+  ...
+# Subtest: WuKong adapter uses v3 message endpoints and preserves client_msg_no
+ok 3 - WuKong adapter uses v3 message endpoints and preserves client_msg_no
+  ---
+  duration_ms: 7.8873
+  type: 'test'
+  ...
+# Subtest: WuKong adapter syncs channel history and decodes Lingxi payloads
+ok 4 - WuKong adapter syncs channel history and decodes Lingxi payloads
+  ---
+  duration_ms: 2.7753
+  type: 'test'
+  ...
+# Subtest: WuKong history starts at the latest page and walks older pages without overlap
+ok 5 - WuKong history starts at the latest page and walks older pages without overlap
+  ---
+  duration_ms: 7.8574
+  type: 'test'
+  ...
+# Subtest: WuKong history fills native pages across retired records without overlap
+ok 6 - WuKong history fills native pages across retired records without overlap
+  ---
+  duration_ms: 13.0052
+  type: 'test'
+  ...
+# Subtest: WuKong history repairs authoritative membership once before retrying
+ok 7 - WuKong history repairs authoritative membership once before retrying
+  ---
+  duration_ms: 3.191
+  type: 'test'
+  ...
+# Subtest: WuKong history applies normal error handling after membership repair
+ok 8 - WuKong history applies normal error handling after membership repair
+  ---
+  duration_ms: 3.7796
+  type: 'test'
+  ...
+# Subtest: WuKong history rejects invalid pagination before making a provider request
+ok 9 - WuKong history rejects invalid pagination before making a provider request
+  ---
+  duration_ms: 0.7711
+  type: 'test'
+  ...
+# Subtest: WuKong adapter treats missing empty-channel sync state as empty results
+ok 10 - WuKong adapter treats missing empty-channel sync state as empty results
+  ---
+  duration_ms: 1.4431
+  type: 'test'
+  ...
+# Subtest: WuKong client sets the exact remaining unread count for partial visibility
+ok 11 - WuKong client sets the exact remaining unread count for partial visibility
+  ---
+  duration_ms: 0.6861
+  type: 'test'
+  ...
+# Subtest: WuKong adapter accepts v3 empty-state errors returned as HTTP 400
+ok 12 - WuKong adapter accepts v3 empty-state errors returned as HTTP 400
+  ---
+  duration_ms: 0.9404
+  type: 'test'
+  ...
+# Subtest: WuKong adapter treats the empty-channel 500 response as empty results
+ok 13 - WuKong adapter treats the empty-channel 500 response as empty results
+  ---
+  duration_ms: 0.9596
+  type: 'test'
+  ...
+# Subtest: WuKong adapter recognizes structured and localized empty-channel 500 responses
+ok 14 - WuKong adapter recognizes structured and localized empty-channel 500 responses
+  ---
+  duration_ms: 1.4897
+  type: 'test'
+  ...
+# Subtest: WuKong adapter does not hide unrelated history failures
+ok 15 - WuKong adapter does not hide unrelated history failures
+  ---
+  duration_ms: 0.6466
+  type: 'test'
+  ...
+# Subtest: WuKong adapter does not hide unrelated HTTP 400 failures
+ok 16 - WuKong adapter does not hide unrelated HTTP 400 failures
+  ---
+  duration_ms: 0.9835
+  type: 'test'
+  ...
+# Subtest: WuKong webhook signatures are constant-time HMAC contracts
+ok 17 - WuKong webhook signatures are constant-time HMAC contracts
+  ---
+  duration_ms: 2.0122
+  type: 'test'
+  ...
+# Subtest: WuKong msg.notify batches normalize to the Agent OS webhook contract
+ok 18 - WuKong msg.notify batches normalize to the Agent OS webhook contract
+  ---
+  duration_ms: 6.9871
+  type: 'test'
+  ...
+# Subtest: production enables authenticated WuKong callbacks without inheriting the local proxy
+ok 19 - production enables authenticated WuKong callbacks without inheriting the local proxy
+  ---
+  duration_ms: 28.1995
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1553.1564

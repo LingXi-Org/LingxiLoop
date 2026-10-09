@@ -1,0 +1,799 @@
+{
+  "generatedAt": "2026-10-09T03:56:08.206Z",
+  "project": "admin",
+  "status": "passed",
+  "interpretation": "Latest selected result per test identity across a complete run and the company-administration rerun after transient Cloudflare CAPTCHA verification timeout; not a single all-green full run.",
+  "execution": "Actual production build in managed Chromium through official @e2e-dev/web 0.12.0 and e2e 0.17.0; separate real local Worker/API/database.",
+  "counts": {
+    "total": 82,
+    "passed": 82,
+    "failed": 0,
+    "skipped": 0
+  },
+  "runs": [
+    {
+      "report": ".e2e/release-admin-final/report.json",
+      "id": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "startedAt": "2026-10-09T03:47:25.266Z",
+      "finishedAt": "2026-10-09T03:53:07.874Z",
+      "runner": {
+        "name": "e2e",
+        "version": "0.17.0"
+      },
+      "engine": {
+        "name": "web",
+        "version": "0.12.0",
+        "spiVersion": 1
+      },
+      "vcs": {
+        "commit": "4fdbc21a750c303c8af0240f249e847c106584de",
+        "branch": "codex/e2e-release",
+        "dirty": false
+      }
+    },
+    {
+      "report": ".e2e/release-admin-company/report.json",
+      "id": "01a11ecb-f9c8-7077-803e-a1cd65defcf6",
+      "startedAt": "2026-10-09T03:54:08.148Z",
+      "finishedAt": "2026-10-09T03:55:24.219Z",
+      "runner": {
+        "name": "e2e",
+        "version": "0.17.0"
+      },
+      "engine": {
+        "name": "web",
+        "version": "0.12.0",
+        "spiVersion": 1
+      },
+      "vcs": {
+        "commit": "4fdbc21a750c303c8af0240f249e847c106584de",
+        "branch": "codex/e2e-release",
+        "dirty": false
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "e2e/admin/access.e2e.ts::an%20authenticated%20student%20cannot%20enter%20the%20management%20workspace",
+      "title": "an authenticated student cannot enter the management workspace",
+      "file": "e2e/admin/access.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "setup::e2e/admin/details.e2e.ts::authenticate%20detailed%20administration",
+      "title": "authenticate detailed administration",
+      "file": "e2e/admin/details.e2e.ts",
+      "kind": "setup",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/details.e2e.ts::record-specific%20administration::a%20replacement%20administrator%20invitation%20persists%20in%20organization%20records",
+      "title": "record-specific administration > a replacement administrator invitation persists in organization records",
+      "file": "e2e/admin/details.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/details.e2e.ts::record-specific%20administration::routine%20technical%20fields%20expand%20and%20close%20without%20exposing%20collapsed%20content",
+      "title": "record-specific administration > routine technical fields expand and close without exposing collapsed content",
+      "file": "e2e/admin/details.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/details.e2e.ts::record-specific%20administration::unavailable%20local%20monitoring%20shows%20a%20retryable%20error%20without%20reporting%20healthy%20services",
+      "title": "record-specific administration > unavailable local monitoring shows a retryable error without reporting healthy services",
+      "file": "e2e/admin/details.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "setup::e2e/admin/management.e2e.ts::authenticate%20platform-admin%20through%20the%20real%20control%20plane",
+      "title": "authenticate platform-admin through the real control plane",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "setup",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "setup::e2e/admin/management.e2e.ts::authenticate%20company-admin%20through%20the%20real%20control%20plane",
+      "title": "authenticate company-admin through the real control plane",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "setup",
+      "status": "passed",
+      "runId": "01a11ecb-f9c8-7077-803e-a1cd65defcf6",
+      "report": ".e2e/release-admin-company/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::dashboard%20links%20lead%20to%20operational%20records",
+      "title": "platform administration > dashboard links lead to operational records",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::users%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > users: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::companies%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > companies: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::company-memberships%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > company-memberships: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::company-invitations%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > company-invitations: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::organization-units%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > organization-units: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::governance-policies%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > governance-policies: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::education-contracts%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > education-contracts: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::organization-seats%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > organization-seats: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::projects%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > projects: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::project-memberships%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > project-memberships: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::project-invitations%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > project-invitations: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::project-transfers%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > project-transfers: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::courses%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > courses: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::knowledge-units%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > knowledge-units: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::learning-activities%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > learning-activities: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::learning-attempts%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > learning-attempts: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::learning-missions%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > learning-missions: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::learning-cases%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > learning-cases: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::learning-evaluations%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > learning-evaluations: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::evidence-records%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > evidence-records: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::trust-snapshots%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > trust-snapshots: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::participants%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > participants: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::agent-runs%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > agent-runs: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::agent-routines%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > agent-routines: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::conversations%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > conversations: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::email-messages%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > email-messages: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::documents%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > documents: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::canvases%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > canvases: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::presentations%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > presentations: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::calendar-events%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > calendar-events: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::notification-deliveries%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > notification-deliveries: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::knowledge-sources%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > knowledge-sources: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::knowledge-jobs%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > knowledge-jobs: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::agent-deliveries%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > agent-deliveries: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::llm-calls%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > llm-calls: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::audit-events%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > audit-events: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::webhook-receipts%3A%20browse%20real%20records%20and%20refresh",
+      "title": "platform administration > webhook-receipts: browse real records and refresh",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::user%20filters%20survive%20detail%20navigation%20and%20clear%20correctly",
+      "title": "platform administration > user filters survive detail navigation and clear correctly",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::global%20search%20opens%20the%20matching%20user",
+      "title": "platform administration > global search opens the matching user",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::legacy%20resource%20links%20preserve%20filters",
+      "title": "platform administration > legacy resource links preserve filters",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::identity%20settings%20can%20be%20saved%20with%20an%20audit%20reason",
+      "title": "platform administration > identity settings can be saved with an audit reason",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::education%20onboarding%20creates%20an%20organization%20and%20administrator%20invitation",
+      "title": "platform administration > education onboarding creates an organization and administrator invitation",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::platform%20administration::theme%20preference%20survives%20reload%20and%20logout%20removes%20access",
+      "title": "platform administration > theme preference survives reload and logout removes access",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::company%20administration::company%20dashboard%2C%20members%2C%20company%20profile%20and%20usage%20are%20available",
+      "title": "company administration > company dashboard, members, company profile and usage are available",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ecb-f9c8-7077-803e-a1cd65defcf6",
+      "report": ".e2e/release-admin-company/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::company%20administration::company%20admin%20cannot%20open%20platform-only%20%2Fsystem",
+      "title": "company administration > company admin cannot open platform-only /system",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ecb-f9c8-7077-803e-a1cd65defcf6",
+      "report": ".e2e/release-admin-company/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::company%20administration::company%20admin%20cannot%20open%20platform-only%20%2Forganizations%2Fnew",
+      "title": "company administration > company admin cannot open platform-only /organizations/new",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ecb-f9c8-7077-803e-a1cd65defcf6",
+      "report": ".e2e/release-admin-company/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::company%20administration::company%20admin%20cannot%20open%20platform-only%20%2Fauthentication",
+      "title": "company administration > company admin cannot open platform-only /authentication",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ecb-f9c8-7077-803e-a1cd65defcf6",
+      "report": ".e2e/release-admin-company/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::company%20administration::company%20admin%20cannot%20open%20platform-only%20%2Fstatus",
+      "title": "company administration > company admin cannot open platform-only /status",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ecb-f9c8-7077-803e-a1cd65defcf6",
+      "report": ".e2e/release-admin-company/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::company%20administration::company%20admin%20cannot%20open%20platform-only%20%2Feducation",
+      "title": "company administration > company admin cannot open platform-only /education",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ecb-f9c8-7077-803e-a1cd65defcf6",
+      "report": ".e2e/release-admin-company/report.json"
+    },
+    {
+      "id": "e2e/admin/management.e2e.ts::company%20administration::company%20profile%20saves%20and%20a%20teacher%20invitation%20is%20generated%20without%20sending%20mail",
+      "title": "company administration > company profile saves and a teacher invitation is generated without sending mail",
+      "file": "e2e/admin/management.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ecb-f9c8-7077-803e-a1cd65defcf6",
+      "report": ".e2e/release-admin-company/report.json"
+    },
+    {
+      "id": "setup::e2e/admin/operations.e2e.ts::authenticate%20admin-operations",
+      "title": "authenticate admin-operations",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "setup",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "setup::e2e/admin/operations.e2e.ts::authenticate%20isolated-manager",
+      "title": "authenticate isolated-manager",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "setup",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/operations.e2e.ts::isolated%20platform%20operations::a%20sacrificial%20account%20can%20be%20suspended%20and%20restored%20with%20persisted%20status",
+      "title": "isolated platform operations > a sacrificial account can be suspended and restored with persisted status",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/operations.e2e.ts::isolated%20platform%20operations::project%20details%20link%20populated%20learning%20and%20content%20records%20before%20lifecycle%20commands",
+      "title": "isolated platform operations > project details link populated learning and content records before lifecycle commands",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/operations.e2e.ts::isolated%20platform%20operations::company%20read-only%20and%20archive%20commands%20respect%20prepared%20lifecycle%20states",
+      "title": "isolated platform operations > company read-only and archive commands respect prepared lifecycle states",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/operations.e2e.ts::isolated%20platform%20operations::record%20pagination%20preserves%20search%20and%20returns%20to%20the%20first%20page",
+      "title": "isolated platform operations > record pagination preserves search and returns to the first page",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/operations.e2e.ts::isolated%20platform%20operations::phone%20navigation%20is%20keyboard%20accessible%20without%20horizontal%20page%20overflow",
+      "title": "isolated platform operations > phone navigation is keyboard accessible without horizontal page overflow",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/operations.e2e.ts::isolated%20company%20member%20management::the%20final%20administrator%20cannot%20revoke%20their%20own%20management%20role%20or%20remove%20themselves",
+      "title": "isolated company member management > the final administrator cannot revoke their own management role or remove themselves",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/operations.e2e.ts::isolated%20company%20member%20management::a%20teacher%20can%20receive%20and%20lose%20admin%20rights%2C%20then%20be%20removed",
+      "title": "isolated company member management > a teacher can receive and lose admin rights, then be removed",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/operations.e2e.ts::isolated%20company%20member%20management::cross-company%20record%20links%20do%20not%20expose%20another%20organization",
+      "title": "isolated company member management > cross-company record links do not expose another organization",
+      "file": "e2e/admin/operations.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::admin%20login%20exposes%20labelled%20credentials%20and%20password%20recovery",
+      "title": "admin login exposes labelled credentials and password recovery",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::admin%20reset%20link%20exposes%20the%20new-password%20form",
+      "title": "admin reset link exposes the new-password form",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::admin%20forbidden%20page%20returns%20to%20sign%20in",
+      "title": "admin forbidden page returns to sign in",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::anonymous%20admin%20route%20%2F%20requires%20sign%20in",
+      "title": "anonymous admin route / requires sign in",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::anonymous%20admin%20route%20%2Fusers%20requires%20sign%20in",
+      "title": "anonymous admin route /users requires sign in",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::anonymous%20admin%20route%20%2Forganizations%20requires%20sign%20in",
+      "title": "anonymous admin route /organizations requires sign in",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::anonymous%20admin%20route%20%2Fprojects%20requires%20sign%20in",
+      "title": "anonymous admin route /projects requires sign in",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::anonymous%20admin%20route%20%2Fai%20requires%20sign%20in",
+      "title": "anonymous admin route /ai requires sign in",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::anonymous%20admin%20route%20%2Fsystem%20requires%20sign%20in",
+      "title": "anonymous admin route /system requires sign in",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::anonymous%20admin%20route%20%2Fmembers%20requires%20sign%20in",
+      "title": "anonymous admin route /members requires sign in",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::anonymous%20admin%20route%20%2Forganizations%2Fnew%20requires%20sign%20in",
+      "title": "anonymous admin route /organizations/new requires sign in",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::control%20routes%20reject%20anonymous%20callers%20before%20reaching%20business%20services",
+      "title": "control routes reject anonymous callers before reaching business services",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/public.e2e.ts::control%20accepts%20the%20configured%20local%20browser%20origin%20and%20rejects%20untrusted%20origins",
+      "title": "control accepts the configured local browser origin and rejects untrusted origins",
+      "file": "e2e/admin/public.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    },
+    {
+      "id": "e2e/admin/routine.e2e.ts::platform%20administrator%20pauses%20a%20future%20routine%20and%20persists%20its%20state",
+      "title": "platform administrator pauses a future routine and persists its state",
+      "file": "e2e/admin/routine.e2e.ts",
+      "kind": "test",
+      "status": "passed",
+      "runId": "01a11ec5-d3bc-70be-9e13-9cf18854836b",
+      "report": ".e2e/release-admin-final/report.json"
+    }
+  ],
+  "limits": [
+    "No live email delivery or model completion verified.",
+    "Browser checks use isolated fixtures, not production customer records."
+  ]
+}

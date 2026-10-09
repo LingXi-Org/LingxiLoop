@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-10-05T03:48:42.332Z",
+  "status": "passed",
+  "database": "lingxiloop_memory_test",
+  "reproduce": "node e2e/server/run.mjs --file native-admission.test.ts (after other runs finish)",
+  "results": [
+    {
+      "command": "node --import tsx server/src/migrate-bin.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "node server/run-integration-tests.mjs --file native-admission.test.ts",
+      "exitCode": 0
+    }
+  ],
+  "log": "artifacts/e2e/native-admission-regression.log",
+  "assertion": "Persisted WuKong ACK replay preserves the receipt without another HTTP send."
+}

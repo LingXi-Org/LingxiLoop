@@ -1,0 +1,18 @@
+[db:migrate] applied 0001_v1_baseline, 0002_remove_legacy_identity, 0003_agent_os_session_affinity, 0004_backfill_personal_owner_participants, 0005_lingxios_v2_reset, 0006_observable_live_eval, 0007_install_lingxios, 0008_agent_os_execution, 0009_native_agent_tools, 0010_lingxios_native_runtime, 0011_closed_education, 0012_lingxios_3_2, 0013_native_collaboration, 0014_profile_avatars, 0015_lingxios_3_2_6, 0016_lingxios_3_2_7, 0017_lingxios_3_2_8, 0018_lingxios_3_2_9, 0019_agent_read_receipts, 0020_lingxios_3_2_10, 0021_lingxios_3_2_11, 0022_lingxios_3_2_12, 0023_lingxios_3_2_13, 0024_lingxios_3_3_0, 0025_lingxios_3_3_1, 0026_lingxios_3_3_2, 0027_learning_collaboration, 0028_lingxios_3_3_4, 0029_lingxios_3_3_5, 0030_lingxios_3_3_6, 0031_agent_capabilities, 0032_native_message_attachments · 63884ms
+[integration] selected 1/54 file(s): memory-summaries.test.ts
+TAP version 13
+# Subtest: read-only memory summaries paginate native scopes and isolate tenants, projects, principals, threads and revoked audiences
+ok 1 - read-only memory summaries paginate native scopes and isolate tenants, projects, principals, threads and revoked audiences
+  ---
+  duration_ms: 35881.5732
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 71472.166

@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-10-05T04:16:05.117Z",
+  "status": "passed",
+  "database": "lingxiloop_memory_test",
+  "reproduce": "node e2e/server/run.mjs --file closed-education.test.ts (after other runs finish)",
+  "results": [
+    {
+      "command": "node --import tsx server/src/migrate-bin.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "node server/run-integration-tests.mjs --file closed-education.test.ts",
+      "exitCode": 0
+    }
+  ],
+  "log": "artifacts/e2e/admission-regression.log",
+  "assertion": "Course invitation atomically grants only its local Study Room before asynchronous effects.",
+  "counts": {
+    "fail": 0,
+    "pass": 12,
+    "skipped": 0,
+    "tests": 12
+  },
+  "assertions": [
+    "Invitation admission grants only the invited local Study Room and IM membership before asynchronous effects.",
+    "Real education company provisioning has no default project; optional background seeding completes without creating unauthorized private conversations."
+  ],
+  "beforeLogs": [
+    "artifacts/e2e/admission-before.log",
+    "artifacts/e2e/context-default-before.log"
+  ]
+}

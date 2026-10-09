@@ -1,0 +1,84 @@
+[db:migrate] already current · 251ms
+[integration] selected 1/54 file(s): closed-education.test.ts
+TAP version 13
+# Subtest: operator creates no membership; named first teacher administrator admits once
+ok 1 - operator creates no membership; named first teacher administrator admits once
+  ---
+  duration_ms: 7293.9532
+  type: 'test'
+  ...
+# Subtest: students join multiple courses, cannot change identity or cross companies
+ok 2 - students join multiple courses, cannot change identity or cross companies
+  ---
+  duration_ms: 9432.0735
+  type: 'test'
+  ...
+# Subtest: course-only companies complete optional context-thread seeding without a default project
+ok 3 - course-only companies complete optional context-thread seeding without a default project
+  ---
+  duration_ms: 7782.6609
+  type: 'test'
+  ...
+# Subtest: database rejects a second live company and in-period identity conversion
+ok 4 - database rejects a second live company and in-period identity conversion
+  ---
+  duration_ms: 7981.189
+  type: 'test'
+  ...
+# Subtest: shared invitation concurrency respects use count and replay does not consume twice
+ok 5 - shared invitation concurrency respects use count and replay does not consume twice
+  ---
+  duration_ms: 7065.6332
+  type: 'test'
+  ...
+# Subtest: administrator manages unassigned courses; ordinary teacher needs assignment
+ok 6 - administrator manages unassigned courses; ordinary teacher needs assignment
+  ---
+  duration_ms: 5720.9366
+  type: 'test'
+  ...
+# Subtest: last administrator hands over before leaving; course creator can leave and history stays
+ok 7 - last administrator hands over before leaving; course creator can leave and history stays
+  ---
+  duration_ms: 5018.8348
+  type: 'test'
+  ...
+# Subtest: departure invalidates tickets and old invitations; new period never restores other courses
+ok 8 - departure invalidates tickets and old invitations; new period never restores other courses
+  ---
+  duration_ms: 5332.331
+  type: 'test'
+  ...
+# Subtest: platform suspension cannot be lifted with an invitation
+ok 9 - platform suspension cannot be lifted with an invitation
+  ---
+  duration_ms: 5468.7598
+  type: 'test'
+  ...
+# Subtest: departure fences pending document writes and reminder recipients across readmission
+ok 10 - departure fences pending document writes and reminder recipients across readmission
+  ---
+  duration_ms: 5343.7928
+  type: 'test'
+  ...
+# Subtest: emergency operator suspension ends the final administrator period; restoration does not revive it
+ok 11 - emergency operator suspension ends the final administrator period; restoration does not revive it
+  ---
+  duration_ms: 4772.7099
+  type: 'test'
+  ...
+# Subtest: company retains learner history after a new teacher period replaces the course role
+ok 12 - company retains learner history after a new teacher period replaces the course role
+  ---
+  duration_ms: 4889.3912
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 83924.7145

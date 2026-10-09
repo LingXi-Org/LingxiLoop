@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-10-05T03:22:52.108Z",
+  "status": "passed",
+  "database": "lingxiloop_memory_test",
+  "reproduce": "node e2e/server/run.mjs --file memory-summaries.test.ts (after other runs finish)",
+  "results": [
+    {
+      "command": "node --import tsx server/src/migrate-bin.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "node server/run-integration-tests.mjs --file memory-summaries.test.ts",
+      "exitCode": 0
+    }
+  ],
+  "log": "artifacts/e2e/memory-regression.log",
+  "assertion": "Revoked frozen audience returns HTTP 403 without private memory content."
+}

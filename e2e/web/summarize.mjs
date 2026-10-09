@@ -34,7 +34,7 @@ await writeFile(output, JSON.stringify({
   limits: [
     'No dedicated live model account or email receiver was supplied; model completions/quality and email delivery are not verified.',
     'Local Notebook model fixture validates ingestion plumbing, not live provider quality.',
-    'Separate concurrently authored navigation, business-layout and agent-actions cases are outside this verification report.',
+    'Composer image upload is unverified because the official engine cannot select the detached native file picker.',
   ],
 }, null, 2))
 console.log(`${output}: ${counts.passed}/${counts.total} latest cases passed`)

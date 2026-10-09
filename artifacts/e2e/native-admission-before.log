@@ -1,0 +1,38 @@
+[db:migrate] already current · 975ms
+[integration] selected 1/54 file(s): native-admission.test.ts
+TAP version 13
+# {"ts":"2026-10-05T03:46:44.712Z","level":"info","msg":"worker started","workerId":"product-admission","healthPort":null,"maxConcurrentRuns":2}
+# {"ts":"2026-10-05T03:47:00.743Z","level":"info","msg":"worker stopped","workerId":"product-admission","timedOut":false}
+# Subtest: product native admission, cancellation, revision, independent delivery and stable ACK replay
+not ok 1 - product native admission, cancellation, revision, independent delivery and stable ACK replay
+  ---
+  duration_ms: 32880.2737
+  type: 'test'
+  location: 'E:\\lyyzka\\LingxiLoop\\server\\src\\__integration__\\native-admission.test.ts:1:1031'
+  failureType: 'testCodeFailure'
+  error: |-
+    ACK replay in slow-room must not send again (attempts before replay: 2)
+
+    2 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    replay (E:\lyyzka\LingxiLoop\server\src\__integration__\native-admission.test.ts:126:14)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (E:\lyyzka\LingxiLoop\server\src\__integration__\native-admission.test.ts:133:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 64143.9902
