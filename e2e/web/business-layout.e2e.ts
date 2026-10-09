@@ -5,7 +5,7 @@ import { memberSession } from './support'
 test('learner next steps precede analysis and keep the activity detail reachable', {
   ...memberSession('student'), tags: ['web', 'business-layout', 'learning'],
 }, async ({ app, screen, browser }) => {
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '学习概览').tap()
   await expect(screen.getByRole('heading', '接下来学什么')).toBeVisible()
   const nextSteps = await screen.getByRole('heading', '接下来学什么').boundingBox()
@@ -22,7 +22,7 @@ test('learner next steps precede analysis and keep the activity detail reachable
 test('teacher priorities and follow-up precede charts and open the existing review flow', {
   ...memberSession(), tags: ['web', 'business-layout', 'learning'],
 }, async ({ app, screen, browser }) => {
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '学习概览').tap()
   await expect(screen.getByRole('heading', '教学重点')).toBeVisible()
   await expect(screen.getByRole('heading', '需要关注的学生')).toBeVisible()
@@ -39,7 +39,7 @@ test('teacher priorities and follow-up precede charts and open the existing revi
 test('resource scope shows public sources immediately and preserves student write permissions', {
   ...memberSession('student'), tags: ['web', 'business-layout', 'knowledge', 'authorization'],
 }, async ({ app, screen, browser }) => {
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '资料').tap()
   await expect(screen.getByRole('heading', '课程资料', { level: 1 })).toBeVisible()
   await expect(screen.getByRole('combobox', '资料范围')).toContainText('公共资料')
@@ -59,7 +59,7 @@ test('resource scope shows public sources immediately and preserves student writ
 test('mail keeps its page title visible beside search on desktop', {
   ...memberSession(), tags: ['web', 'business-layout', 'mail'],
 }, async ({ app, screen }) => {
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '邮件').tap()
   const title = screen.getByRole('heading', '邮件', { level: 1 })
   await expect(title).toBeVisible()
@@ -74,7 +74,7 @@ test('mail keeps its page title visible beside search on desktop', {
 test('teacher can manage public sources while learner review sources stay read-only', {
   ...memberSession(), tags: ['web', 'business-layout', 'knowledge', 'authorization'],
 }, async ({ app, screen }) => {
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '资料').tap()
   await expect(screen.getByRole('combobox', '资料范围')).toContainText('公共资料')
   await expect(screen.getByRole('button', '添加资料')).toBeVisible()

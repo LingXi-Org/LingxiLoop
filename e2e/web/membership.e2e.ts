@@ -7,7 +7,7 @@ test('course member identities are displayed without unsupported role changes', 
   ...memberSession(), skip: memberSession().skip ?? memberSession('student').skip,
   tags: ['web', 'learning', 'authorization'],
 }, async ({ app, screen, browser }) => {
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await screen.getByRole('button', '课程管理').tap()
   await screen.getByRole('button', '成员与邀请').tap()
   const student = browser.locator('table').first().getByRole('row').filter({ hasText: process.env.E2E_USER_STUDENT_USERNAME! })
@@ -41,10 +41,10 @@ test('course invitation acceptance, fixed identity and removal update student ac
   expect(inviteUrl).toMatch(/\/invite\/project\//)
   const invitation = new URL(inviteUrl).pathname
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '对话').tap()
-  await browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: `${course} · Study Room` }).tap()
+  await browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: course }).tap()
   await browser.locator('[contenteditable="true"]').fill(privateMessage)
   await screen.getByRole('button', '发送').tap()
-  await expect(screen.getByText(privateMessage, { exact: true })).toBeVisible()
+  await expect(browser.locator('[data-msg-id]').filter({ hasText: privateMessage })).toBeVisible()
   await signOut(fixtures)
 
   await signIn(fixtures, 'student')
@@ -58,8 +58,8 @@ test('course invitation acceptance, fixed identity and removal update student ac
   await expect(screen.getByRole('navigation', '工作区与功能')).toBeVisible({ timeout: 45_000 })
   await selectWorkspace(fixtures, course)
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '对话').tap()
-  await browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: `${course} · Study Room` }).tap()
-  await expect(screen.getByText(privateMessage, { exact: true })).toBeVisible()
+  await browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: course }).tap()
+  await expect(browser.locator('[data-msg-id]').filter({ hasText: privateMessage })).toBeVisible()
   await expect(screen.getByRole('button', '课程管理')).toBeHidden()
   await signOut(fixtures)
 

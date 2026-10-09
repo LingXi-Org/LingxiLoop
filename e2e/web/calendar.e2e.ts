@@ -6,7 +6,7 @@ test('calendar personal event is validated, saved, reloaded, edited and deleted'
   ...memberSession(), ...mutationPermission, tags: ['web', 'calendar', 'mutations'],
 }, async ({ app, screen, browser }) => {
   const title = testName('calendar')
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '日历').tap()
   await screen.getByRole('button', '新事件').tap()
   await screen.getByRole('button', '个人').tap()

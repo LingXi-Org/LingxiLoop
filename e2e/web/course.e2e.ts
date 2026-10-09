@@ -7,7 +7,7 @@ test.describe('Disposable course lifecycle', { ...memberSession(), ...mutationPe
     const course = testName('course')
     const objective = testName('objective')
     const activity = testName('activity')
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await screen.getByRole('button', /^切换工作区/).tap()
     await screen.getByRole('menuitem', '新建课程').tap()
     await screen.getByLabel('课程名称').fill(course)

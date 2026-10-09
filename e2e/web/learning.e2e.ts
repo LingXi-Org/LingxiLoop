@@ -12,7 +12,7 @@ test('teacher publishes an activity, student submits, and teacher opens the pers
   const workspace = process.env.E2E_WORKSPACE_NAME ?? 'E2E Classroom'
   const signIn = async (role: 'member' | 'student') => {
     const user = credentials.user(role)
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await screen.getByLabel('邮箱').fill(user.username)
     await screen.getByLabel('密码').fill(user.password)
     await expect(screen.getByRole('button', '登录')).toBeEnabled({ timeout: 45_000 })

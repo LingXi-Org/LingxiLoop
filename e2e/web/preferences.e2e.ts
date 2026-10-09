@@ -4,7 +4,7 @@ import { memberSession, mutationPermission } from './support'
 
 test.describe('Saved account preferences', { ...memberSession(), ...mutationPermission, tags: ['web', 'settings', 'mutations'] }, () => {
   test('notification times and switches persist after reload', async ({ app, screen, browser }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await screen.getByRole('button', '打开账户菜单').tap()
     await screen.getByRole('menuitem', '设置').tap()
     await screen.getByRole('button', '通知').tap()
@@ -32,7 +32,7 @@ test.describe('Saved account preferences', { ...memberSession(), ...mutationPerm
   })
 
   test('generated and uploaded avatars save and survive reload', async ({ app, screen, browser }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await screen.getByRole('button', '打开账户菜单').tap()
     await screen.getByRole('menuitem', '设置').tap()
     await screen.getByRole('button', '修改个人头像').tap()

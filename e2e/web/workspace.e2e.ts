@@ -4,7 +4,7 @@ import { memberSession } from './support'
 
 test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace'] }, () => {
   test('session survives reload and the account menu shows the signed-in user', async ({ app, browser, screen }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await expect(screen.getByRole('navigation', '工作区与功能')).toBeVisible()
     await browser.reload()
     await screen.getByRole('button', '打开账户菜单').tap()
@@ -13,7 +13,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
   })
 
   test('workspace picker opens, preserves selection, and closes with Escape', async ({ app, screen, browser }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     const picker = screen.getByRole('button', /^切换工作区/)
     await picker.tap()
     await expect(screen.getByRole('menu')).toBeVisible()
@@ -24,7 +24,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
   })
 
   test('keyboard command palette searches and navigates to the resource library', async ({ app, screen, browser }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await expect(screen.getByRole('navigation', '工作区与功能')).toBeVisible()
     await browser.keyboard.press('ControlOrMeta+k')
     await screen.getByPlaceholder('输入命令或会话名称…').fill('打开资料库')
@@ -34,7 +34,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
   })
 
   test('command palette focuses conversation search and composer and opens message find', async ({ app, screen, browser }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await expect(screen.getByRole('button', '新建对话')).toBeVisible()
     await browser.keyboard.press('ControlOrMeta+k')
     await screen.getByPlaceholder('输入命令或会话名称…').fill('搜索会话和消息')
@@ -53,7 +53,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
   })
 
   test('all top-level learner surfaces load without an error panel', async ({ app, browser, screen }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     for (const [name, view] of [['Agent', 'agents'], ['邮件', 'mail'], ['学习概览', 'learning'], ['资料', 'library'], ['日历', 'calendar'], ['对话', 'conversations']]) {
       await screen.getByRole('navigation', '工作区与功能').getByRole('button', name).tap()
       await expect(browser.locator(`[data-ui-page="${view}"]`)).toBeVisible()
@@ -64,7 +64,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
   })
 
   test('new-conversation selection validates empty and unmatched searches', async ({ app, screen }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await screen.getByRole('button', '新建对话').tap()
     const dialog = screen.getByRole('dialog', '新建对话')
     await expect(dialog.getByRole('button', '开始对话')).toBeDisabled()
@@ -75,7 +75,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
   })
 
   test('mail search can be cleared and an empty composer cannot send', async ({ app, screen }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await screen.getByRole('navigation', '工作区与功能').getByRole('button', '邮件').tap()
     await screen.getByLabel('搜索邮件标题或发件人').fill('e2e-unmatched-mail')
     await screen.getByRole('button', '清除搜索').tap()
@@ -92,7 +92,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
   })
 
   test('calendar view controls and cancelled edits leave the calendar usable', async ({ app, screen }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await screen.getByRole('navigation', '工作区与功能').getByRole('button', '日历').tap()
     for (const view of ['日', '周', '月']) {
       await screen.getByRole('tab', view).tap()
@@ -109,7 +109,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
   })
 
   test('settings tabs, appearance persistence and focus restoration work', async ({ app, screen, browser }) => {
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await screen.getByRole('button', '打开账户菜单').tap()
     await screen.getByRole('menuitem', '设置').tap()
     const dialog = screen.getByRole('dialog', 'LingxiLoop 设置')
@@ -131,7 +131,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
 
   test('mobile shell and settings stay within the viewport', async ({ app, screen, browser }) => {
     await browser.setViewport({ width: 390, height: 844 })
-    await app.open('/')
+    await app.open('/?project=e2e-classroom')
     await expect(screen.getByLabel('搜索会话和消息')).toBeVisible()
     await screen.getByRole('button', '打开账户菜单').tap()
     await screen.getByRole('menuitem', '设置').tap()
@@ -144,7 +144,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
 })
 
 test('student has learner navigation without course administration', { ...memberSession('student'), tags: ['web', 'learning', 'authorization'] }, async ({ app, screen }) => {
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await expect(screen.getByRole('button', '学习概览')).toBeVisible()
   await expect(screen.getByRole('button', '课程管理')).toBeHidden()
   await screen.getByRole('button', /^切换工作区/).tap()
@@ -153,7 +153,7 @@ test('student has learner navigation without course administration', { ...member
 
 // Logout invalidates the saved server session, so authenticate afresh for this case.
 test('logout revokes the server session after a reload', { skip: memberSession().skip, tags: ['web', 'auth'] }, async ({ app, browser, screen }) => {
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   const user = credentials.user('member')
   await screen.getByLabel('邮箱').fill(user.username)
   await screen.getByLabel('密码').fill(user.password)

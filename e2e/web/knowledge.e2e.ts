@@ -8,7 +8,7 @@ test('personal text source is ingested, previewed, renamed, reloaded and deleted
   test.skip(process.env.E2E_KNOWLEDGE !== '1', 'Set E2E_KNOWLEDGE=1 with the real worker, object storage and Open Notebook services running.')
   const title = testName('source')
   const text = 'A triangle has three sides. A square has four sides. This is disposable test learning material.'
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await screen.getByRole('navigation', '工作区与功能').getByRole('button', '资料').tap()
   await screen.getByRole('combobox', '资料范围').tap()
   await screen.getByRole('option', '个人资料').tap()

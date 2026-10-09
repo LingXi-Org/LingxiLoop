@@ -11,7 +11,7 @@ test('canvas text cards create, edit, move, persist, download and delete', {
   test.skip(peers.length < 2, 'Set E2E_GROUP_PEERS to two seeded humans separated by |.')
   const group = testName('canvas group')
   const content = testName('canvas content')
-  await app.open('/')
+  await app.open('/?project=e2e-classroom')
   await screen.getByRole('button', '新建对话').tap()
   const creation = screen.getByRole('dialog', '新建对话')
   for (const peer of peers.slice(0, 2)) {
