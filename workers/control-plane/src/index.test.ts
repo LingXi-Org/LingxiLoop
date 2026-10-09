@@ -367,7 +367,7 @@ describe('control-plane trust boundaries', () => {
       expect({ status: unavailable.status, body: await unavailable.json() }).toEqual({ status: 502, body: { error: 'status provider unavailable' } })
       fetchMock.assertNoPendingInterceptors()
     } finally { fetchMock.deactivate() }
-  })
+  }, 30_000) // The stalled upstream fixture deliberately waits beyond the default 5s test timeout.
 
   it('authenticates MCP, exposes operations, and replays commands idempotently', async () => {
     const now = Date.now()
