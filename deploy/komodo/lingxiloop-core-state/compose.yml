@@ -65,7 +65,7 @@ services:
     logging: *logging
 
   wukongim:
-    image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-wukongim:85e0f01aada42ee2fa08a896a18737b162ce5740
+    image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-wukongim:78082e1d93717740616111f5f5bf86e048896a37
     pull_policy: always
     restart: unless-stopped
     environment:
