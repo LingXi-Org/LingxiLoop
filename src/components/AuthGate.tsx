@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { authApi } from '@/auth/api'
 import { useAuth } from '@/stores/auth'
 import { AuthScreen } from './AuthScreen'
-import { WindowDragStrip } from './WindowDragStrip'
+import { WorkspaceSkeleton } from './WorkspaceSkeleton'
 
 export function AuthGate({ children, unauthFallback }: { children: ReactNode; unauthFallback?: ReactNode }) {
   const authenticated = useAuth((state) => state.authenticated)
@@ -28,7 +28,7 @@ export function AuthGate({ children, unauthFallback }: { children: ReactNode; un
     return () => { cancelled = true }
   }, [clear, setAuthenticated, setMe, setServerCapabilities])
 
-  if (!ready) return <div className="fixed inset-0 grid place-items-center text-ink-300"><WindowDragStrip />加载中...</div>
+  if (!ready) return <WorkspaceSkeleton />
   if (!authenticated) return <>{unauthFallback ?? <AuthScreen />}</>
   return <>{children}</>
 }

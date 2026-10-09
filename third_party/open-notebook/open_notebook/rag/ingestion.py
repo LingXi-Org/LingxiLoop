@@ -21,7 +21,12 @@ from open_notebook.rag.models import Source
 
 
 async def extract_source(source: Source, content_state: dict[str, Any]) -> Source:
-    file_reference = content_state.get("file_path")
+    # Commands are logged by the worker. Read persisted content instead of
+    # duplicating private source text/URLs in new jobs; accept older jobs too.
+    file_reference = content_state.get("file_path") or (
+        source.asset.file_path if source.asset else None
+    )
+    url = content_state.get("url") or (source.asset.url if source.asset else None)
     materialized = None
     extraction_path = file_reference
     if file_reference and get_artifact_store().is_object_reference(file_reference):
@@ -36,9 +41,10 @@ async def extract_source(source: Source, content_state: dict[str, Any]) -> Sourc
 
     try:
         result = await extract_content(
-            url=content_state.get("url"),
+            url=url,
             file_path=extraction_path,
-            content=content_state.get("content"),
+            content=content_state.get("content")
+            or (source.full_text if not file_reference and not url else None),
         )
     finally:
         if materialized:

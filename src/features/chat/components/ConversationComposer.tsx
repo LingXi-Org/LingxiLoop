@@ -78,7 +78,7 @@ export function ConversationComposer({
   }, [focusInput, uiCommand])
 
   return (
-    <div className={compact ? 'px-3 pb-3' : 'w-full px-3 pb-4 pt-2 sm:px-4'}>
+    <div data-composer-column className={compact ? 'mx-auto w-full min-w-0 max-w-[800px] px-3 pb-3' : 'mx-auto w-full min-w-0 max-w-[800px] px-2.5 pb-4 pt-2 sm:px-4'}>
       {cancelError && <p role="alert" className="mb-2 px-2 text-xs text-destructive">{cancelError}</p>}
       {pollOpen ? (
         <PollComposer conversationId={conversationId} onSubmitted={closePoll} onCancel={closePoll} />
@@ -87,7 +87,7 @@ export function ConversationComposer({
           <Popover open={actionsOpen} onOpenChange={setActionsOpen}>
           <PopoverAnchor asChild>
           <ComposerPrimitive.Root
-            className="chat-composer group/composer relative flex w-full flex-col rounded-3xl border border-border bg-card px-2 py-2 text-card-foreground"
+            className="chat-composer group/composer relative flex w-full flex-col rounded-2xl border border-border bg-card px-2 py-2 text-card-foreground"
             onSubmit={finalizeTyping}
           >
         <ComposerPrimitive.Quote className="mx-1 mb-2 flex min-w-0 items-center gap-2 rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
@@ -185,7 +185,7 @@ export function ConversationComposer({
           </PopoverAnchor>
           <PopoverContent
             side="top" align="start" sideOffset={8} collisionPadding={12} aria-label="添加"
-            className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-24px)] max-h-[var(--radix-popover-content-available-height)] gap-0 overflow-y-auto rounded-3xl p-2 motion-reduce:animate-none"
+            className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-24px)] max-h-[var(--radix-popover-content-available-height)] gap-0 overflow-y-auto rounded-2xl p-2 motion-reduce:animate-none"
             onCloseAutoFocus={(event) => {
               event.preventDefault()
               const action = afterMenuClose.current

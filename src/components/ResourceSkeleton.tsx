@@ -2,11 +2,18 @@ import type { ComponentProps } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
+export function SkeletonRegion({ label, className, children, ...props }: ComponentProps<'div'> & { label: string }) {
+  return <div role="status" aria-label={label} data-skeleton-region="" className={cn('ui-enter min-w-0', className)} {...props}>
+    <span className="sr-only">{label}</span><div aria-hidden="true" className="contents">{children}</div>
+  </div>
+}
+
 type ResourceSkeletonVariant = 'list' | 'cards' | 'detail' | 'media' | 'table'
 
 interface ResourceSkeletonProps extends Omit<ComponentProps<'div'>, 'children'> {
   variant?: ResourceSkeletonVariant
   count?: number
+  columns?: number
   compact?: boolean
   label?: string
 }
@@ -32,21 +39,24 @@ function SkeletonDetail() {
   </div>
 }
 
-function SkeletonTable({ count }: { count: number }) {
-  return <div className="overflow-hidden rounded-xl border border-border/60">
-    <div className="grid grid-cols-4 gap-4 border-b border-border/60 p-3">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-3 w-3/4" />)}</div>
-    {Array.from({ length: count }, (_, row) => <div key={row} className="grid grid-cols-4 gap-4 border-b border-border/40 p-3 last:border-b-0">{Array.from({ length: 4 }, (_, column) => <Skeleton key={column} className="h-3 w-full" />)}</div>)}
+function SkeletonTable({ count, columns }: { count: number; columns: number }) {
+  return <div className="overflow-x-auto rounded-xl border border-border/60" aria-hidden="true">
+    <div style={{ minWidth: `${columns * 7}rem`, gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }} className="grid">
+      {Array.from({ length: columns }, (_, index) => <div key={`heading-${index}`} className="border-b border-border/60 p-4"><Skeleton className="h-3 w-3/4" /></div>)}
+      {Array.from({ length: count * columns }, (_, index) => <div key={index} className="border-b border-border/40 p-4"><Skeleton className="h-4 w-full" /></div>)}
+    </div>
   </div>
 }
 
-export function ResourceSkeleton({ variant = 'list', count = 3, compact = false, label = '正在加载资源', className, ...props }: ResourceSkeletonProps) {
-  const safeCount = Math.max(1, Math.min(count, 8))
-  return <div data-resource-skeleton="" data-resource-skeleton-variant={variant} role="status" aria-label={label} className={cn('pointer-events-none w-full', className)} {...props}>
+export function ResourceSkeleton({ variant = 'list', count = 3, columns = 4, compact = false, label = '正在加载资源', className, ...props }: ResourceSkeletonProps) {
+  const safeCount = Number.isFinite(count) ? Math.max(1, Math.min(Math.trunc(count), 8)) : 3
+  const safeColumns = Number.isFinite(columns) ? Math.max(1, Math.min(Math.trunc(columns), 16)) : 4
+  return <div data-resource-skeleton="" data-resource-skeleton-variant={variant} role="status" aria-label={label} className={cn('ui-enter pointer-events-none w-full min-w-0', className)} {...props}>
     <span className="sr-only">{label}</span>
     {variant === 'list' && Array.from({ length: safeCount }, (_, index) => <SkeletonRow key={index} compact={compact} />)}
     {variant === 'cards' && <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: safeCount }, (_, index) => <SkeletonCard key={index} />)}</div>}
     {variant === 'detail' && <SkeletonDetail />}
     {variant === 'media' && <Skeleton className="aspect-video h-full min-h-40 w-full rounded-xl" />}
-    {variant === 'table' && <SkeletonTable count={safeCount} />}
+    {variant === 'table' && <SkeletonTable count={safeCount} columns={safeColumns} />}
   </div>
 }

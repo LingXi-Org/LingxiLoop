@@ -1,4 +1,5 @@
-import { RunStreamProjection, assistantRunResponse } from '../agent-runtime/assistant-transport.js'
+import { assistantRunResponse, readRunProjection } from '../agent-runtime/assistant-transport.js'
+import { NoEffectError } from '@lyyzka/lingxios'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { pool } from '../db/pool.js'
@@ -6,7 +7,6 @@ import { productRunIdentity } from '../agent-runtime/identity.js'
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import type { ZodType } from 'zod'
 import type { AuthedRequest } from '../auth.js'
-import type { LingxiMessageV1 } from './message-types.js'
 import { assertTeacherRoomAccessible } from '../modules/learning/public.js'
 import type { PermissionAction } from '../modules/access/public.js'
 import { permissionService } from '../modules/access/public.js'
@@ -94,7 +94,7 @@ async function approvalForCaller(req: Request & AuthedRequest, control: boolean)
   const { userId, companyId } = await identity(req)
   const approval = await (await lingxiOSControl()).readApproval({ tenantId: companyId, principalId: userId, approvalId: String(req.params.id) })
   if (!approval) throw Object.assign(new Error('approval not found'), { status: 404 })
-  const binding = (await pool.query<{ conversation_id: string }>('SELECT conversation_id FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2 AND principal_id=$3 AND NOT internal', [approval.runId,companyId,userId])).rows[0]
+  const binding = (await pool.query<{ conversation_id: string }>('SELECT conversation_id FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2 AND principal_id=$3 AND NOT internal AND message_protocol=2', [approval.runId,companyId,userId])).rows[0]
   if (!binding) throw Object.assign(new Error('approval not found'), { status: 404 })
   await loadRuntimeBinding({ ...approval, conversationId: binding.conversation_id })
   await assertChannelPermission(userId, companyId, binding.conversation_id, control ? 'agent_run:control' : 'conversation:read')
@@ -105,7 +105,13 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
   const { approved } = requestInput(approvalResolutionRequestSchema, req.body)
   const app = await lingxiOSControl()
   const approval = await approvalForCaller(req, true)
-  res.json({ ok: true, ...await app.decideApproval({ ...approval, approved }) })
+  try { res.json({ ok: true, ...await app.decideApproval({ ...approval, approved }) }) }
+  catch (error) {
+    if (error instanceof Error && ['approval already has a different decision','approval belongs to a cancelled or revised request'].includes(error.message)) {
+      throw new HttpError(409, '审批状态已更新，请刷新后查看。')
+    }
+    throw error
+  }
 }))
 
 imRouter.post('/approvals/:id/reconcile', safe(async (req, res) => {
@@ -123,14 +129,19 @@ imRouter.get('/channels/:id/memories', safe(async (req, res) => {
   if (projectId && access.projectId !== projectId) throw new HttpError(403, 'conversation belongs to another workspace')
   const query = requestInput(memorySummariesQuery, req.query)
   res.setHeader('Cache-Control', 'no-store')
-  res.json(await listMemorySummaries(pool, (await lingxiOSControl()).memory, { companyId, userId, conversationId, ...query }))
+  try {
+    res.json(await listMemorySummaries(pool, (await lingxiOSControl()).memory, { companyId, userId, conversationId, ...query }))
+  } catch (error) {
+    if (error instanceof NoEffectError && error.code === 'forbidden') throw new HttpError(403, 'memory access denied')
+    throw error
+  }
 }))
 
 imRouter.get('/channels/:id/runs', safe(async (req, res) => {
   const { userId, companyId } = await identity(req), conversationId = String(req.params.id)
   await assertChannelPermission(userId,companyId,conversationId,'conversation:read')
   const rows = await pool.query(`SELECT run_id AS "runId",agent_id AS "agentId",conversation_id AS "conversationId",thread_id AS "threadId",session_id AS "sessionId"
-    FROM agent_run_bindings WHERE company_id=$1 AND conversation_id=$2 AND principal_id=$3 AND NOT internal
+    FROM agent_run_bindings WHERE company_id=$1 AND conversation_id=$2 AND principal_id=$3 AND NOT internal AND message_protocol=2
     ORDER BY created_at DESC,run_id DESC LIMIT 20`, [companyId,conversationId,userId])
   const app = await lingxiOSControl()
   const runs = await Promise.all(rows.rows.map(async ({ sessionId, ...target }) => {
@@ -153,9 +164,10 @@ imRouter.get('/companies/:companyId/channels/:id/agents/:agentId/runs/:runId/str
   try {
     const app = await lingxiOSControl()
     const permission = await permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: conversationId } })
+    const projection = await readRunProjection(app,run,permission.allowed)
     const upstream = await app.streamRun(run, { signal: cancellation.signal })
     if (!upstream.ok || !upstream.body) throw new HttpError(502, '运行流暂不可用')
-    const stream = assistantRunResponse(upstream.body, new RunStreamProjection(run.runId, permission.allowed))
+    const stream = assistantRunResponse(upstream.body, projection, { api: app, identity: run })
     res.status(stream.status)
     stream.headers.forEach((value,key) => { res.setHeader(key,value) })
     res.flushHeaders()
@@ -176,22 +188,8 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) 
   const state = await app.readRunState(runIdentity)
   if (!state) { res.status(404).json({ error: 'run not found' }); return }
   const permission = await permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: sessionId } })
-  const projection = new RunStreamProjection(runIdentity.runId, permission.allowed)
-  projection.apply({ type: 'state', state })
-  const signal = AbortSignal.timeout(30_000)
-  let cursor = 0
-  while (true) {
-    signal.throwIfAborted()
-    const page = await app.readEvents(runIdentity, cursor)
-    for (const event of page.events) projection.apply({ type: 'event', event })
-    if (page.events.length < 100) break
-    if (page.nextSeq <= cursor) throw new Error('runtime event cursor did not advance')
-    cursor = page.nextSeq
-  }
-  // A consistent read after replay owns lifecycle and the final delivered message.
-  const current = await app.readRunState(runIdentity)
-  if (!current) throw new HttpError(404, 'run not found')
-  res.json(projection.apply({ type: 'state', state: current }))
+  const projection = await readRunProjection(app,runIdentity,permission.allowed)
+  res.json(projection.snapshot)
 }))
 
 imRouter.post('/channels/:id/agents/:agentId/runs/:runId/reconcile', safe(async (req, res) => {
@@ -207,7 +205,7 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId/artifact', safe(async (r
   await assertChannelPermission(userId, companyId, sessionId, 'conversation:read')
   const { path, threadId } = requestInput(lingxiOSArtifactQuerySchema, req.query)
   const run = await productRunIdentity({ companyId, conversationId: sessionId, agentId: String(req.params.agentId), runId: String(req.params.runId), principalId: userId,
-    ...(threadId ? { threadId } : {}) })
+    historical: true, ...(threadId ? { threadId } : {}) })
   const api = await lingxiOSControl(), manifest = (await api.readMessage(run))?.envelope.artifacts.find(item => item.path === path)
   if (!manifest) { res.status(404).json({ error: 'artifact not found' }); return }
   if (manifest.source?.ref.startsWith('document:')) await permissionService.assertCan({ actorUserId: userId, companyId,
@@ -298,18 +296,10 @@ imRouter.post('/channels/:id/messages/accept', safe(async (req, res) => {
   const channelId = String(req.params.id)
   await assertChannelPermission(userId, companyId, channelId, 'conversation:write')
   await assertTeacherRoomAccessible(channelId,companyId,userId)
+  if (req.body?.payload?.version === 1) throw new HttpError(409, '消息协议已更新，请刷新页面后重新发送。')
   const { clientNonce, payload: parsedPayload } = requestInput(imSendAcceptanceRequestSchema, req.body)
-  if (parsedPayload.clientMsgNo !== clientNonce) {
-    res.status(400).json({ error: 'valid clientNonce and matching LingxiMessageV1 payload required' }); return
-  }
-  const rawData = parsedPayload.data ?? {}
-  const { suppressAgentWake: _suppressAgentWake, ...safeData } = rawData
-  const payload: LingxiMessageV1 = {
-    version: 1, kind: parsedPayload.kind, clientMsgNo: clientNonce,
-    ...(parsedPayload.body ? { body: parsedPayload.body } : {}),
-    ...(parsedPayload.replyToClientMsgNo ? { replyToClientMsgNo: parsedPayload.replyToClientMsgNo } : {}),
-    data: { ...safeData, ...(parsedPayload.kind === 'attachment' && rawData.suppressAgentWake === true ? { suppressAgentWake: true } : {}) },
-  }
+  if (parsedPayload.id !== clientNonce) throw new HttpError(400, 'Message identity must match clientNonce')
+  const payload = parsedPayload
   const result = await imMessagesApplication.acceptUserMessage({
     companyId, userId, channelId, clientNonce, payload,
   })

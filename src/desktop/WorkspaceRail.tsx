@@ -1,7 +1,7 @@
 import { BubbleChatIcon, RoboticIcon, Mail01Icon, PlusSignIcon, Settings02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeftRight } from 'lucide-react'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { BrandAvatar } from '@/components/BrandAvatar'
 import { BRAND_AVATAR_BASE_EXPRESSION } from '@/components/brand-avatar-controller'
 import { NavUser } from '@/components/nav-user'
@@ -20,13 +20,15 @@ import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
 import type { LearningSpace } from '@/features/learning/contracts'
 import { getLearningDashboardMenu, viewForLearningSection } from '@/features/learning/dashboard/navigation'
 import { toastAction } from '@/lib/actionToast'
+import { getWorkspaceSession } from '@/lib/workspaceSession'
+import { currentWebNavigation, isCurrentWebNavigation } from '@/lib/webNavigation'
 import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import type { ViewKey } from '@/types'
 
-export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, onSelect, onReload, onNavigate }: {
+export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, onSelect, onReload, onNavigate, workspacePickerOpen, onWorkspacePickerOpenChange, createCourseOpen, onCreateCourseOpenChange }: {
   spaces: LearningSpace[]
   activeSpace?: LearningSpace
   loading: boolean
@@ -35,15 +37,25 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
   onSelect(space: LearningSpace): void
   onReload(): void
   onNavigate(view: ViewKey['view']): void
+  workspacePickerOpen?: boolean
+  onWorkspacePickerOpenChange?(open: boolean): void
+  createCourseOpen?: boolean
+  onCreateCourseOpenChange?(open: boolean): void
 }) {
   const view = useApp((state) => state.view)
   const user = useAuth((state) => state.user)
   const participantAvatar = useParticipants((state) => user ? state.byId[user.id]?.avatarUrl : undefined)
   const companyId = useAuth((state) => state.activeCompanyId)
   const canCreate = useAuth((state) => state.companies[0]?.role === 'teacher')
-  const [createOpen, setCreateOpen] = useState(false)
+  const [localCreateOpen, setLocalCreateOpen] = useState(false)
+  const createOpen = createCourseOpen ?? localCreateOpen
+  const setCreateOpen = onCreateCourseOpenChange ?? setLocalCreateOpen
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null)
+  const submitting = useRef(false)
+  const mounted = useRef(false)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const menu = [
     { view: 'conversations' as const, label: '对话', icon: BubbleChatIcon, management: false },
     { view: 'agents' as const, label: 'Agent', icon: RoboticIcon, management: false },
@@ -59,27 +71,42 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
     const form = event.currentTarget
     const data = new FormData(form)
     const name = String(data.get('name') ?? '').trim()
-    if (!name || creating) return
+    if (!name || submitting.current) return
+    const originalProjectId = getWorkspaceSession()?.projectId
+    let navigationEpoch = currentWebNavigation()
+    const isCurrentUser = () => mounted.current && useAuth.getState().user?.id === user?.id && useAuth.getState().activeCompanyId === companyId
+    submitting.current = true
     setCreating(true)
     setCreateError(null)
     try {
       if (!companyId) throw new Error('暂时无法确认你的公司，请重新登录后再试。')
-      const course = await toastAction(learningApi.createCourse({
-        name, description: String(data.get('description') ?? '').trim(),
-      }, companyId), { loading: '正在创建课程与课程对话', success: '课程已创建', error: '创建课程失败' })
-      await selectLearningSpace({ companyId, projectId: course.projectId })
+      let projectId = createdProjectId
+      if (!projectId) {
+        const course = await toastAction(learningApi.createCourse({
+          name, description: String(data.get('description') ?? '').trim(),
+        }, companyId), { loading: '正在创建课程', success: '课程已创建', error: '创建课程失败' })
+        if (!isCurrentUser()) return
+        projectId = course.projectId
+        setCreatedProjectId(projectId)
+      }
+      if (!isCurrentWebNavigation(navigationEpoch) || getWorkspaceSession()?.projectId !== originalProjectId) return
+      const selection = selectLearningSpace({ companyId, projectId })
+      navigationEpoch = currentWebNavigation()
+      await selection
+      if (!isCurrentUser() || !isCurrentWebNavigation(navigationEpoch) || getWorkspaceSession()?.projectId !== projectId) return
       onReload()
       form.reset()
       setCreateOpen(false)
+      setCreatedProjectId(null)
       onNavigate('learning')
     } catch (reason) {
-      setCreateError(userFacingError(reason, '课程创建失败，请稍后重试。'))
-    } finally { setCreating(false) }
+      if (isCurrentUser() && isCurrentWebNavigation(navigationEpoch)) setCreateError(userFacingError(reason, '暂时无法打开课程，请稍后重试。'))
+    } finally { submitting.current = false; if (mounted.current) setCreating(false) }
   }
 
   return <nav aria-label="工作区与功能" className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-[var(--workspace-chrome-surface)] pb-2 pt-[var(--im-navigation-top)] text-foreground">
     <div className="im-navigation-row flex w-full items-center justify-center">
-      <DropdownMenu>
+      <DropdownMenu open={workspacePickerOpen} onOpenChange={onWorkspacePickerOpenChange}>
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
@@ -134,17 +161,17 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
       <TooltipContent side="right">{overview.label}</TooltipContent>
     </Tooltip>}
     {user ? <div className="shrink-0 px-2 pt-2"><NavUser compact user={{ id: user.id, name: user.name, email: user.email, avatar: user.avatarUrl ?? participantAvatar }} /></div> : null}
-    {canCreate ? <Dialog open={createOpen} onOpenChange={(open) => { if (creating) return; setCreateOpen(open); if (!open) setCreateError(null) }}>
+    {canCreate ? <Dialog open={createOpen} onOpenChange={(open) => { if (submitting.current) return; setCreateOpen(open); if (!open) { setCreateError(null); setCreatedProjectId(null) } }}>
       <DialogContent>
         <DialogHeader><DialogTitle>新建课程</DialogTitle></DialogHeader>
         <form id="workspace-rail-create-course" onSubmit={handleCreateCourse}>
           <FieldGroup>
-            <Field><FieldLabel htmlFor="workspace-rail-course-name">课程名称</FieldLabel><Input id="workspace-rail-course-name" name="name" required autoFocus /></Field>
-            <Field><FieldLabel htmlFor="workspace-rail-course-description">课程简介</FieldLabel><Textarea id="workspace-rail-course-description" name="description" placeholder="简要说明课程目标与内容" /><FieldDescription>简介可稍后在基本资料中继续完善。</FieldDescription></Field>
+            <Field><FieldLabel htmlFor="workspace-rail-course-name">课程名称</FieldLabel><Input id="workspace-rail-course-name" name="name" required autoFocus readOnly={creating || Boolean(createdProjectId)} /></Field>
+            <Field><FieldLabel htmlFor="workspace-rail-course-description">课程简介</FieldLabel><Textarea id="workspace-rail-course-description" name="description" readOnly={creating || Boolean(createdProjectId)} placeholder="简要说明课程目标与内容" /><FieldDescription>简介可稍后在基本资料中继续完善。</FieldDescription></Field>
             {createError ? <Alert variant="destructive"><AlertTitle>创建失败</AlertTitle><AlertDescription>{createError}</AlertDescription></Alert> : null}
           </FieldGroup>
         </form>
-        <DialogFooter><DialogClose asChild><Button type="button" variant="outline" disabled={creating}>取消</Button></DialogClose><Button type="submit" form="workspace-rail-create-course" disabled={creating}>{creating ? '正在创建…' : '创建课程'}</Button></DialogFooter>
+        <DialogFooter><DialogClose asChild><Button type="button" variant="outline" disabled={creating}>取消</Button></DialogClose><Button type="submit" form="workspace-rail-create-course" disabled={creating}>{creating ? '正在打开…' : createdProjectId ? '重试打开课程' : '创建课程'}</Button></DialogFooter>
       </DialogContent>
     </Dialog> : null}
   </nav>

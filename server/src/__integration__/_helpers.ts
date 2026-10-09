@@ -200,13 +200,24 @@ const TABLES_TO_WIPE: readonly string[] = [
   'plans',
 ]
 
-/** Wipe every test table. Call from beforeEach. The check at the top
- *  refuses to run if DATABASE_URL doesn't include the substring "test"
- *  — last line of defense against a misconfigured runner pointing at a
- *  real DB. */
+/** Wipe every test table. Validate the database name again before TRUNCATE
+ *  so directly invoked test files cannot bypass the runner's safety check. */
 export async function resetAllTables(): Promise<void> {
-  if (!/test/i.test(env.DATABASE_URL)) {
-    throw new Error(`refusing to TRUNCATE — DATABASE_URL doesn't look like a test DB: ${env.DATABASE_URL}`)
+  const target = URL.canParse(env.DATABASE_URL) ? new URL(env.DATABASE_URL) : null
+  let databaseName: string
+  let databaseHost: string
+  try {
+    databaseName = decodeURI(target?.pathname.slice(1) ?? '')
+    databaseHost = decodeURIComponent(target?.searchParams.getAll('host').at(-1) || target?.hostname || '')
+  } catch {
+    databaseName = ''
+    databaseHost = ''
+  }
+  if (!target || !['postgres:', 'postgresql:'].includes(target.protocol)
+    || !/(?:^|[_-])test(?:$|[_-])/i.test(databaseName)
+    || /\b(prod|production|main|live)\b/i.test(databaseHost)
+    || /(?:^|[_-])(prod|production|main|live)(?:$|[_-])/i.test(databaseName)) {
+    throw new Error('refusing to TRUNCATE — DATABASE_URL must name a dedicated test database')
   }
   await ensureSchemaOnce()
   storageObjects.clear()

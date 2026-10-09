@@ -299,7 +299,6 @@ export function NotificationToasts() {
     // window. When the user clicks a toast over there, this fires here
     // and selects the conversation.
     const offFocus = window.lingxiloop?.notify?.onFocusConvo((conversationId) => {
-      setView('conversations')
       select(conversationId)
     })
 
@@ -310,7 +309,7 @@ export function NotificationToasts() {
       offFocus?.()
       offVisible?.()
     }
-  }, [select, setView])
+  }, [select])
 
   const dismiss = (id: string) => setToasts((prev) => prev.filter((t) => t.id !== id))
   const onClick = (t: Toast) => {
@@ -330,7 +329,6 @@ export function NotificationToasts() {
       // follow-up — Calendar will scroll to the day on load anyway.
       setView('calendar')
     } else if (t.conversationId) {
-      setView('conversations')
       select(t.conversationId)
     }
     dismiss(t.id)

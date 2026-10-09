@@ -1,3 +1,4 @@
+import { nativeText, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import { workspaceChannels } from './channels-repository.js'
 
@@ -10,7 +11,7 @@ interface ImConversationState {
     clientMsgNo: string
     fromUid: string
     timestamp: number
-    payload: { kind: string; body?: string }
+    payload: NativeMessage
   } | null
 }
 
@@ -51,8 +52,8 @@ export class ImChannelsApplication {
         lastMessage: last ? {
           id: last.messageId || last.clientMsgNo,
           authorId: last.fromUid,
-          kind: last.payload.kind,
-          body: last.payload.body ?? '',
+          kind: last.payload.role === 'system' ? 'system' : 'text',
+          body: nativeText(last.payload),
           createdAt: new Date(last.timestamp * 1000).toISOString(),
         } : null,
         presetKey: row.preset_key,

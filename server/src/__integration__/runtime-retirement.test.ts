@@ -1,3 +1,5 @@
+import { createNativeMessage } from '../im/message-types.js'
+import { storage } from '../storage.js'
 import assert from 'node:assert/strict'
 import { releaseVersions } from '@lyyzka/lingxios'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
@@ -59,20 +61,24 @@ test('committed messages remain idempotent and attachments ingest without old Ag
   const event = {
     raw: Buffer.from('committed attachment'), eventId: 'retirement-event', eventType: 'msg.notify',
     channelId: 'retirement-room', clientMsgNo: 'retirement-message', fromUid: 'test-owner',
-    payload: {
-      version: 1 as const, kind: 'attachment' as const, clientMsgNo: 'retirement-message',
-      data: { key: `attachments/${companyId}/notes.pdf`, mime: 'application/pdf', size: 128, name: 'notes.pdf' },
-    },
+    payload: createNativeMessage({ id: 'retirement-message',role: 'user',content: [],attachments: [{
+      id: `attachments/${companyId}/notes.pdf`, type: 'file',name: 'notes.pdf',contentType: 'application/pdf',status: { type: 'complete' },
+      content: [{ type: 'file',data: `attachments/${companyId}/notes.pdf`,sourceType: 'id',mimeType: 'application/pdf' }],
+    }] }),
   }
+  await storage.put(`attachments/${companyId}/notes.pdf`,Buffer.alloc(128),'application/pdf')
+  await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
+    SELECT $1,$2,'test-owner',period_id FROM company_memberships WHERE company_id=$2 AND user_id='test-owner' AND ended_at IS NULL`,
+    [`attachments/${companyId}/notes.pdf`,companyId])
   await assert.rejects(application.process(event), /injected post-commit runtime outage/)
   assert.deepEqual(await application.process(event), { ok: true, duplicate: true })
   assert.deepEqual(ingestions, [{
     companyId, projectId, conversationId: 'retirement-room', clientMsgNo: 'retirement-message',
-    createdBy: 'test-owner', title: 'notes.pdf', mime: 'application/pdf', size: 128,
+    attachmentId: `attachments/${companyId}/notes.pdf`, createdBy: 'test-owner', title: 'notes.pdf', mime: 'application/pdf', size: 128,
     storageKey: `attachments/${companyId}/notes.pdf`, recipients: [],
   }])
   assert.deepEqual(wakes, [{ eventId: 'retirement-event', companyId, channelId: 'retirement-room',
-    clientMsgNo: 'retirement-message', payload: event.payload, recipients: [agentId], knowledgeSourceId: 'attachment-source' }])
+    clientMsgNo: 'retirement-message', payload: event.payload, recipients: [agentId], knowledgeSourceIds: ['attachment-source'] }])
   assert.deepEqual(flushes, ['retirement-event', 'retirement-event'])
   assert.deepEqual((await pool.query(`SELECT to_regclass('public.agent_work_items') AS retired_queue`)).rows, [{ retired_queue: null }])
   await assert.rejects(application.process({ ...event, raw: Buffer.from('different') }), /different payload/)
@@ -82,11 +88,9 @@ test('committed messages remain idempotent and attachments ingest without old Ag
   for (const kind of ['attachment','text'] as const) {
     const clientNonce = `batch-http-${kind}`
     const response = await fetch(`${baseUrl}/api/im/channels/retirement-room/messages/accept`, { method: 'POST',headers,
-      body: JSON.stringify({ clientNonce,payload: { version: 1,kind,clientMsgNo: clientNonce,body: 'Batch input',
-        data: { ...event.payload.data,suppressAgentWake: true } } }) })
-    assert.equal(response.status,202)
-    const accepted = await response.json() as { echo: { payload: { data: Record<string,unknown> } } }
-    assert.equal(accepted.echo.payload.data.suppressAgentWake,kind === 'attachment' ? true : undefined)
+      body: JSON.stringify({ clientNonce,payload: createNativeMessage({ id: clientNonce,role: 'user',content: [{ type: 'text',text: 'Batch input' }],
+        attachments: kind === 'attachment' && event.payload.role === 'user' ? event.payload.attachments : [],custom: { suppressAgentWake: true } }) }) })
+    assert.equal(response.status,400, 'humans cannot set server-only wake controls')
   }
   const canvas = await fetch(`${baseUrl}/api/conversations/retirement-room/canvas`, { method: 'POST', headers })
   assert.equal(canvas.status, 201)

@@ -1,14 +1,12 @@
 import {
   MessagePrimitive,
-  type SourceMessagePartProps,
   useAui,
   useAuiState,
 } from '@assistant-ui/react'
 import { Copy01Icon, ReplyIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { type PointerEvent as ReactPointerEvent, useContext, useEffect, useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
-import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
 import { confidenceCopyText, type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
@@ -22,16 +20,10 @@ import { useConversationUi } from '@/stores/conversationUi'
 import type { Participant } from '@/types'
 import { chatTransport } from '../runtime/transport'
 import type { LingxiMessageMetadata } from '../runtime/model'
-import { CHAT_TOOL_RENDERERS, isVisibleChatPart } from './ToolRenderers'
+import { NativeMessageContent } from './NativeMessageContent'
 import { HarnessDetails } from './HarnessDetails'
 import { chatLatency } from '../runtime/latency'
 import { copyMessageText, MessageActions } from './MessageActions'
-
-function SourcePart({ url, title }: SourceMessagePartProps) {
-  return <div className="w-fit max-w-full rounded-[18px] bg-muted px-3.5 py-2"><MessageFooterContents inset={false}>{url
-    ? <a href={url} target="_blank" rel="noreferrer" className="text-xs text-primary underline underline-offset-2">{title ?? url}</a>
-    : <span className="text-xs text-muted-foreground">{title}</span>}</MessageFooterContents></div>
-}
 
 function QuotePart({ text, messageId }: { text: string; messageId: string }) {
   const jumpToMessage = useConversationUi((state) => state.jumpToMessage)
@@ -93,7 +85,7 @@ function MobileMessageActions({
             variant="ghost"
             className="h-12 justify-start rounded-2xl"
             onClick={() => {
-              aui.thread.composer().setQuote({ messageId, text: getText() })
+              aui.thread.composer().setQuote({ messageId: metadata.clientMessageId, text: getText() })
               onOpenChange(false)
             }}
           >
@@ -118,9 +110,7 @@ function MessageTextPart() {
   const footer = useContext(MessageFooterContext)
   const isAgent = metadata.senderKind === 'agent'
   const isHuman = metadata.senderKind === 'human'
-  const inlineCitations = Boolean(metadata.harness && (!metadata.harness.message
-    || ['queued', 'leased'].includes(metadata.harness.lifecycle ?? '')
-    || metadata.harness.message.envelope.citationEvidence !== undefined))
+  const inlineCitations = Boolean(metadata.runId)
   const rawText = useAuiState((state) => state.message.content
     .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
     .map((part) => part.text)
@@ -130,14 +120,15 @@ function MessageTextPart() {
     if (bodyRef.current) chatLatency.painted(metadata.runId, bodyRef.current)
   }, [metadata.runId, metadata.isMine, rawText])
   const confidenceClaims = useAuiState((state) => {
-    const part = state.message.content.find((part) => part.type === 'tool-call' && part.toolName === 'cite_claims')
-    if (part?.type !== 'tool-call' || !part.result || typeof part.result !== 'object') return undefined
-    const claims = (part.result as { claims?: unknown }).claims
+    const part = state.message.content.find((part) => part.type === 'data' && part.name === 'citation-claims')
+    if (part?.type !== 'data' || !part.data || typeof part.data !== 'object') return undefined
+    const claims = (part.data as { claims?: unknown }).claims
     return Array.isArray(claims) ? claims as MarkdownConfidenceClaim[] : undefined
   })
   const getText = () => {
+    const body = bodyRef.current?.closest('.native-message-content') ?? bodyRef.current
     if (inlineCitations) {
-      const ranges = Array.from(bodyRef.current?.querySelectorAll<HTMLElement>('[data-citation-start]') ?? []).flatMap(node => {
+      const ranges = Array.from(body?.querySelectorAll<HTMLElement>('[data-citation-start]') ?? []).filter(node => node.closest('.native-message-content') === body).flatMap(node => {
         const start = Number(node.dataset.citationStart), end = Number(node.dataset.citationEnd)
         const link = /^\[([\s\S]+)\]\(#cite-[^)]*\)$/.exec(rawText.slice(start, end))
         return link && Number.isSafeInteger(start) && Number.isSafeInteger(end) && end <= rawText.length
@@ -145,7 +136,8 @@ function MessageTextPart() {
       })
       return confidenceCopyText(rawText, ranges)
     }
-    const renderedIds = new Set(Array.from(bodyRef.current?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [], node => node.dataset.confidenceId))
+    const renderedIds = new Set(Array.from(body?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [])
+      .filter(node => node.closest('.native-message-content') === body).map(node => node.dataset.confidenceId))
     return confidenceCopyText(rawText, confidenceClaims?.filter(claim => renderedIds.has(claim.id)))
   }
   const groupPosition = metadata.groupStart
@@ -205,8 +197,7 @@ function MessageTextPart() {
       }}
       className={cn(
         'min-w-0 tracking-[-0.01em]',
-        isAgent ? isMobile ? 'text-[15px] leading-[1.5]' : 'text-[14px] leading-[1.5]'
-          : isMobile ? 'text-base leading-[1.5]' : 'text-[15px] leading-[1.35]',
+        'text-base leading-[1.65]',
         isHuman && metadata.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-primary-foreground [&_[data-message-footer]]:text-primary-foreground/75 [&_.typeset]:!text-primary-foreground [&_.typeset_*]:!text-primary-foreground'],
         !metadata.isMine && 'text-foreground',
         isHuman && !metadata.isMine && ['px-3.5 py-2 bg-muted', bubbleRadius],
@@ -256,36 +247,6 @@ export function ConversationMessage() {
   const running = useAuiState((state) => state.message.status?.type === 'running')
   const createdAt = useAuiState((state) => state.message.createdAt)
   const messageId = useAuiState((state) => state.message.id)
-  const content = useAuiState((state) => state.message.content)
-  const lastVisiblePart = content.reduce((last, part, index) => isVisibleChatPart(part) ? index : last, -1)
-  const attachments = useMemo(() => {
-    const items: Array<{
-      id: string
-      filename: string
-      data: string
-      mimeType: string
-      sourceType?: 'url' | 'id'
-    }> = []
-    content.forEach((part, index) => {
-      if (part.type === 'image' && typeof part.image === 'string') {
-        items.push({
-          id: `${messageId}-${index}`,
-          filename: part.filename ?? '图片附件',
-          data: part.image,
-          mimeType: 'image/*',
-        })
-      } else if (part.type === 'file') {
-        items.push({
-          id: `${messageId}-${index}`,
-          filename: part.filename ?? '附件',
-          data: part.data,
-          mimeType: part.mimeType,
-          sourceType: part.sourceType,
-        })
-      }
-    })
-    return items
-  }, [content, messageId])
   const awaitingContent = useAuiState((state) => (
     state.message.status?.type === 'running' && state.message.content.length === 0
   ))
@@ -301,17 +262,16 @@ export function ConversationMessage() {
   } : undefined)
   // The external runtime adds an empty assistant placeholder after a mid-run user turn.
   // Real replies come from the transport and already carry their own typing state.
-  if (custom.schema !== 'lingxiloop.thread-message.v1') return null
+  if (custom.schema !== 'lingxiloop.thread-message.v2') return null
   const showTime = !running && !custom.timestampMissing && Number.isFinite(createdAt.getTime()) && createdAt.getTime() > 0
   const showDelivery = custom.isMine && custom.delivery !== 'sent'
   const deliveryLabel = showDelivery ? custom.delivery === 'sending' ? '发送中…' : '发送失败' : null
   const footer = showTime || showDelivery ? (
-    <div data-message-footer data-align="end" className="flex items-center justify-end gap-2 whitespace-nowrap text-[11px] leading-4 tabular-nums text-muted-foreground sm:text-[10px]">
+    <div data-message-footer data-align="end" className="flex items-center justify-end gap-2 whitespace-nowrap text-xs leading-4 tabular-nums text-muted-foreground">
       {showTime && <time dateTime={createdAt.toISOString()}>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
       {deliveryLabel && <span>{deliveryLabel}</span>}
     </div>
   ) : null
-  const attachmentFooter = deliveryLabel ? <span className="whitespace-nowrap text-xs text-muted-foreground">{deliveryLabel}</span> : null
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
@@ -321,7 +281,7 @@ export function ConversationMessage() {
       data-message-presentation={custom.presentation}
       data-message-continued-from={custom.continuedFromPrevious}
       className={cn(
-        'group/message grid w-full shrink-0',
+        'group/message mx-auto grid w-full max-w-[800px] shrink-0',
         isMobile ? 'gap-x-2 px-2.5' : 'gap-x-2.5 px-3 sm:px-4',
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
         custom.continuedFromPrevious ? isSpecialCard ? 'pt-1' : 'pt-px' : 'pt-1.5',
@@ -344,31 +304,15 @@ export function ConversationMessage() {
       </div>
       <div className={cn('contents', custom.isMine ? '[&>div]:col-start-1' : '[&>div]:col-start-2')}>
         {custom.groupStart && !custom.isMine && (
-          <div className={cn('row-start-1 mb-1 flex items-center gap-2 px-1 text-muted-foreground', isMobile ? 'text-xs' : 'text-[11px]')}>
+          <div className="row-start-1 mb-1 flex items-center gap-2 px-1 text-xs text-muted-foreground">
             <span className="font-medium">{custom.senderName}</span>
           </div>
         )}
         <div className={cn('row-start-2 grid w-full min-w-0 gap-0.5', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
-          {attachments.length > 0 && <div data-slot="message-attachments" className={cn('flex w-full min-w-0 flex-col gap-1', custom.isMine && 'items-end')}>
-            {attachments.map((attachment, index) => <MessageFooterContext.Provider key={attachment.id}
-              value={lastVisiblePart < 0 && index === attachments.length - 1 ? attachmentFooter : null}>
-              <AttachmentCard {...attachment} />
-            </MessageFooterContext.Provider>)}
-          </div>}
           {custom.quote && <QuotePart text={custom.quote.text} messageId={custom.quote.messageId} />}
-          {content.map((part, index) => <MessageFooterContext.Provider key={part.type === 'tool-call' ? part.toolCallId : index}
-            value={index === lastVisiblePart ? footer : null}>
-            <MessagePrimitive.PartByIndex index={index} components={{
-              Text: MessageTextPart,
-              Reasoning: () => null,
-              Image: () => null,
-              File: () => null,
-              Source: SourcePart,
-              tools: CHAT_TOOL_RENDERERS,
-            }} />
-          </MessageFooterContext.Provider>)}
-          {custom.senderKind === 'agent' && custom.messageKind === 'text' && custom.runId && <HarnessDetails metadata={custom} />}
+          <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={deliveryLabel && <span className="text-xs text-muted-foreground">{deliveryLabel}</span>} />
+          {custom.senderKind === 'agent' && custom.harness && custom.runId && <HarnessDetails metadata={custom} />}
           {!custom.harness && <MessagePrimitive.Error>
             <div className="mt-2 text-xs text-destructive">消息生成失败</div>
           </MessagePrimitive.Error>}

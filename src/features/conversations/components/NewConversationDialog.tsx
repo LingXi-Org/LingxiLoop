@@ -1,6 +1,7 @@
 import { PlusSignIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Avatar } from '@/components/Avatar'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -14,11 +15,12 @@ import { useAuth } from '@/stores/auth'
 import { conversationsApi } from '../api'
 import { useConversations } from '../store'
 
-export function NewConversationDialog({ companyId, projectId, isMobile, onCreated }: {
+export function NewConversationDialog({ companyId, projectId, isMobile, onCreated, trigger }: {
   companyId: string
   projectId: string
   isMobile: boolean
   onCreated: (id: string) => void
+  trigger?: ReactNode
 }) {
   const meId = useAuth((state) => state.user?.id)
   const byId = useParticipants((state) => state.byId)
@@ -77,7 +79,7 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
       await useConversations.getState().reload()
       if (!isCurrentWorkspace()) return
       const refreshed = useConversations.getState()
-      if (refreshed.error || refreshed.projectId !== projectId || !refreshed.list.some((item) => item.id === conversationId)) {
+      if (refreshed.error || !refreshed.loaded || refreshed.loading || refreshed.projectId !== projectId || !refreshed.list.some((item) => item.id === conversationId)) {
         setError('对话已就绪，但列表刷新失败，请重试刷新。')
         return
       }
@@ -96,9 +98,9 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
       <DialogTrigger asChild>
-        <Button type="button" variant="secondary" size={isMobile ? 'icon-lg' : 'icon-sm'} className="omb-no-drag shrink-0 rounded-full bg-sidebar-accent text-muted-foreground hover:bg-[var(--im-conversation-hover)] hover:text-sidebar-foreground" aria-label="新建对话" title="新建对话">
+        {trigger ?? <Button type="button" variant="secondary" size={isMobile ? 'icon-lg' : 'icon-sm'} className="omb-no-drag shrink-0 rounded-full bg-sidebar-accent text-muted-foreground hover:bg-[var(--im-conversation-hover)] hover:text-sidebar-foreground" aria-label="新建对话" title="新建对话">
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
-        </Button>
+        </Button>}
       </DialogTrigger>
       <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-hidden">
         <DialogHeader className="shrink-0 pe-8">
@@ -108,7 +110,7 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
         <form id={formId} className="flex min-h-0 flex-1 flex-col gap-3" onSubmit={(event) => { event.preventDefault(); void submit() }} aria-busy={busy}>
           <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索参与者" aria-label="搜索参与者" disabled={busy || Boolean(createdId)} />
           <div className="min-h-0 flex-1 overflow-y-auto" role="group" aria-label="参与者">
-            {!loaded && <p className="p-4 text-center text-sm text-muted-foreground">正在加载参与者…</p>}
+            {!loaded && <ResourceSkeleton variant="list" count={4} compact label="正在加载参与者" />}
             {loaded && visible.length === 0 && <p className="p-4 text-center text-sm text-muted-foreground">{query.trim() ? '没有找到匹配的参与者' : '暂无可选择的参与者'}</p>}
             {visible.map((participant) => {
               const checked = selectedIds.includes(participant.id)

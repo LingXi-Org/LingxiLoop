@@ -13,6 +13,7 @@ import { useConversationThreadSnapshot } from '../runtime/runtime'
 import { ConversationComposer } from './ConversationComposer'
 import { ConversationMessage } from './ConversationMessage'
 import { ConversationStart } from './ConversationStart'
+import { ConversationSkeleton } from './ConversationSkeleton'
 import { messageKey } from '../runtime/store'
 import { chatLatency } from '../runtime/latency'
 
@@ -22,7 +23,7 @@ function ConversationMessages() {
   // Indices must come from the runtime itself: external snapshots can be one
   // render ahead while history or a canonical delivery is being reconciled.
   const messages = useAuiState(state => state.thread.messages)
-  return messages.map((message, index) => message.metadata.custom.schema === 'lingxiloop.thread-message.v1' ? (
+  return messages.map((message, index) => message.metadata.custom.schema === 'lingxiloop.thread-message.v2' ? (
     <ThreadPrimitive.MessageByIndex key={messageKey(message)} index={index} components={MESSAGE_COMPONENTS} />
   ) : null)
 }
@@ -45,11 +46,33 @@ export function ConversationThread({
     return typeof metadata.sequence === 'number' ? [[metadata.clientMessageId, metadata.sequence]] : []
   })))
   const viewportRef = useRef<HTMLDivElement>(null)
+  const runtimeMessages = useAuiState(state => state.thread.messages)
+  const entranceTail = useRef<{ scope: string; id: string | null } | null>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadingOlderRef = useRef(false)
   const lastReadSequenceRef = useRef(0)
   const pendingJumpId = useConversationUi((state) => state.pendingJumpMessageId)
   const clearPendingJump = useConversationUi((state) => state.clearPendingJump)
+  useEffect(() => {
+    const scope = `${conversationId}:${threadRootId ?? ''}`
+    const messages = runtimeMessages.filter(message => message.metadata.custom.schema === 'lingxiloop.thread-message.v2')
+    if (snapshot.isLoading || snapshot.isLoadingOlder) {
+      entranceTail.current = null
+      return
+    }
+    if (messages.length !== snapshot.messages.length) return
+    const previous = entranceTail.current
+    const last = messages.at(-1)
+    entranceTail.current = { scope, id: last ? messageKey(last) : null }
+    // Establish a baseline after history reconciliation; only appended live messages enter.
+    if (!previous || previous.scope !== scope) return
+    const anchor = previous.id === null ? -1 : messages.findIndex(message => messageKey(message) === previous.id)
+    if (previous.id !== null && anchor < 0) return
+    for (const message of messages.slice(anchor + 1)) {
+      const id = String(message.metadata.custom.clientMessageId)
+      viewportRef.current?.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(id)}"]`)?.classList.add('ui-enter')
+    }
+  }, [conversationId, threadRootId, runtimeMessages, snapshot.isLoading, snapshot.isLoadingOlder, snapshot.messages.length])
   useEffect(() => {
     const viewport = viewportRef.current
     if (!viewport || threadRootId || snapshot.isLoading || snapshot.error || (!snapshot.messages.length && snapshot.hasMoreOlder)) return
@@ -138,7 +161,7 @@ export function ConversationThread({
     const viewport = viewportRef.current
     const element = viewport?.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(pendingJumpId)}"]`)
     if (!element) return
-    element.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    element.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
     element.classList.add('quote-jump-flash')
     window.setTimeout(() => element.classList.remove('quote-jump-flash'), 1_100)
     clearPendingJump()
@@ -148,25 +171,25 @@ export function ConversationThread({
     <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread>
       <ThreadPrimitive.Viewport ref={viewportRef} data-chat-viewport className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
         {!threadRootId && (
-          <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-[10.5px] text-muted-foreground sm:px-4">
+          <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
             {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
               <ConversationStart createdAt={snapshot.messages[0]?.createdAt} timestampMissing={snapshot.messages[0]?.metadata.custom.timestampMissing === true} />
             )}
           </div>
         )}
         <ThreadPrimitive.Empty>
-          <div className="grid flex-1 place-items-center px-8 py-20 text-center text-sm text-muted-foreground">
+          {snapshot.isLoading && !snapshot.error ? <ConversationSkeleton /> : <div className="ui-enter grid flex-1 place-items-center px-8 py-20 text-center text-sm text-muted-foreground">
             {snapshot.error ? (
-              <div className="grid gap-3">
+              <div role="alert" className="grid gap-3">
                 <span>{userFacingError(snapshot.error, '消息加载失败，请稍后重试。')}</span>
                 <Button size="sm" onClick={() => void chatTransport.reloadConversation(conversationId)}>重试</Button>
               </div>
-            ) : snapshot.isLoading ? '正在加载消息…' : threadRootId ? '尚无回复' : '开始一段新对话'}
-          </div>
+            ) : threadRootId ? '尚无回复' : '开始一段新对话'}
+          </div>}
         </ThreadPrimitive.Empty>
         <ConversationMessages />
       </ThreadPrimitive.Viewport>
-      {!readOnly && <div className={isMobile ? 'shrink-0 bg-background pt-2' : 'shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4'} data-chat-composer-bar>
+      {!readOnly && <div className={`shrink-0 overflow-y-auto [scrollbar-gutter:stable] ${isMobile ? 'bg-background pt-2' : 'bg-gradient-to-t from-background via-background to-transparent pt-4'}`} data-chat-composer-bar>
         <ConversationComposer
           conversationId={conversationId}
           compact={compact}

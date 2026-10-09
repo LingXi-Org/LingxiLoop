@@ -1,6 +1,9 @@
 import { File01Icon, Folder01Icon, Menu01Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { DocumentSkeleton } from './DocumentSkeleton'
+import { userFacingError } from '@/lib/userFacingError'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
@@ -24,8 +27,15 @@ export function DocumentsView() {
   const byId = useParticipants((state) => state.byId)
   const me = useAuth((state) => state.user)
   const [listOpen, setListOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [retry, setRetry] = useState(0)
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    let active = true
+    setError(null)
+    void load().catch(reason => { if (active) setError(userFacingError(reason, '文档加载失败，请重试。')) })
+    return () => { active = false }
+  }, [load, retry])
 
   useEffect(() => {
     if (loaded && !selectedId && list.length > 0) select(list[0].id)
@@ -43,7 +53,7 @@ export function DocumentsView() {
 
   const documentItems = (
     <>
-      {!loaded && <div className="space-y-2 p-2" role="status" aria-label="正在加载文档"><span className="sr-only">正在加载文档</span><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /></div>}
+      {!loaded && !error && <div className="space-y-2 p-2" role="status" aria-label="正在加载文档"><span className="sr-only">正在加载文档</span><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-14 rounded-2xl" /></div>}
       {loaded && list.length === 0 && (
         <Empty className="border-0 px-4 py-8">
           <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle className="text-base">尚无文档</EmptyTitle><EmptyDescription>你可以和智能助教实时协作编辑。</EmptyDescription></EmptyHeader>
@@ -95,11 +105,10 @@ export function DocumentsView() {
           <SidebarHeader className="h-10 shrink-0 justify-center px-3 py-1"><p className="text-xs font-medium text-muted-foreground">所有文档 · {list.length}</p></SidebarHeader>
           <SidebarContent className="gap-0">{documentItems}</SidebarContent>
         </aside>
-        <div className="min-h-0 overflow-hidden bg-card">
-          {!loaded ? (
-            <div className="grid h-full gap-4 p-6" role="status" aria-label="正在加载文档内容"><span className="sr-only">正在加载文档内容</span><Skeleton className="h-12 rounded-2xl" /><Skeleton className="h-full min-h-64 rounded-4xl" /></div>
-          ) : selectedId ? (
-            <DocumentEditor documentId={selectedId} />
+        <div className="flex min-h-0 flex-col overflow-hidden bg-card">
+          {error && <Alert variant="destructive" className="m-4 w-auto shrink-0"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button variant="outline" size="sm" onClick={() => setRetry(value => value + 1)}>重试</Button></AlertDescription></Alert>}
+          {!loaded ? !error && <DocumentSkeleton /> : selectedId ? (
+            <div className="min-h-0 flex-1"><DocumentEditor documentId={selectedId} /></div>
           ) : (
             <Empty className="h-full border-0">
               <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>{list.length === 0 ? '创建文档以开始协作' : '选择一个文档'}</EmptyTitle><EmptyDescription>{list.length === 0 ? '新文档支持多人和智能助教实时编辑。' : '从文档列表中选择要打开的内容。'}</EmptyDescription></EmptyHeader>

@@ -1,6 +1,6 @@
 import { Calendar03Icon, Clock01Icon, RepeatIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { formatShortDate, PeekHeader, PeekLoading, PeekUnavailable } from '@/components/ArtifactPeekPrimitives'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -61,7 +61,6 @@ export function CalendarEventPeekContent({
   onClose: () => void
   onOpenFull?: () => void
 }) {
-  const loadingEventId = useCalendar((state) => state.loadingEventId)
   const loadEvent = useCalendar((state) => state.loadEvent)
   const removeEvent = useCalendar((state) => state.remove)
   const runEventNow = useCalendar((state) => state.runNow)
@@ -72,19 +71,19 @@ export function CalendarEventPeekContent({
   const targetConversation = event?.targetConversationId
     ? conversations.find((conversation) => conversation.id === event.targetConversationId) ?? null
     : null
-  const didRequestCalendar = useRef(false)
+  const [revision, setRevision] = useState(0)
   const [failed, setFailed] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState<null | 'delete' | 'run'>(null)
 
   useEffect(() => {
-    if (!event && loadingEventId !== eventId && !didRequestCalendar.current) {
-      didRequestCalendar.current = true
-      void loadEvent(eventId).catch((error) => {
-        setFailed(userFacingError(error, '暂时无法打开这个日历事件，请稍后重试。'))
-      })
-    }
-  }, [event, eventId, loadEvent, loadingEventId])
+    let active = true
+    setFailed(null)
+    if (!event) void loadEvent(eventId).catch((error) => {
+      if (active) setFailed(userFacingError(error, '暂时无法打开这个日历事件，请稍后重试。'))
+    })
+    return () => { active = false }
+  }, [event?.id, eventId, loadEvent, revision])
 
   if (!event && !failed) {
     return <PeekLoading icon={<HugeiconsIcon icon={Calendar03Icon} className="size-5" />} label="正在加载日历事件" />
@@ -95,6 +94,7 @@ export function CalendarEventPeekContent({
       <PeekUnavailable
         icon={<HugeiconsIcon icon={Calendar03Icon} className="size-5" />}
         title="日历事件不可用"
+        onRetry={() => setRevision(value => value + 1)}
         detail={failed || '该事件可能已被删除，或你没有访问权限。'}
         onClose={onClose}
       />
@@ -102,7 +102,7 @@ export function CalendarEventPeekContent({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-card">
+    <div className="ui-enter flex h-full min-h-0 flex-col bg-card">
       <PeekHeader
         icon={<HugeiconsIcon icon={Calendar03Icon} className="size-5" />}
         label="日历事件"

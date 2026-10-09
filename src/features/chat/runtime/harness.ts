@@ -1,5 +1,4 @@
-import { consumeAssistantMessage, createRunView, type AssistantMessage, type RunView } from '@lyyzka/lingxios/ui'
-import type { ImEnvelope } from '@/lib/im/wukong'
+import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import type { LingxiMessageMetadata } from './model'
 
 /** chat.send messages can share a run ID without owning that run's preview or lifecycle. */
@@ -13,27 +12,13 @@ export function canCancelRun(metadata: LingxiMessageMetadata): boolean {
     && ['queued', 'leased', 'waiting'].includes(metadata.harness?.lifecycle ?? '')
 }
 
-export function mergeHarness(current: RunView, incoming: RunView): RunView {
+export function isOlderRun(current: RunDisplayState, incoming: RunDisplayState): boolean {
   if (current.runId !== incoming.runId) throw new Error('运行身份不一致')
-  const view = incoming.message && incoming.resultId
-    ? consumeAssistantMessage(current,incoming.message,{ resultId: incoming.resultId,fence: incoming.messageFence }) : current
-  return { ...view,
-    ...(incoming.delivery === 'delivered' && incoming.resultId === view.resultId ? { delivery: 'delivered' } : {}) }
+  return incoming.requestVersion < current.requestVersion || incoming.fence < current.fence
+    || incoming.messageFence < current.messageFence || incoming.lastSeq < current.lastSeq
 }
 
-export function readHarness(envelope: ImEnvelope): RunView | undefined {
-  const data = envelope.payload.data
-  if (!data?.harness) return undefined
-  const runId = envelope.payload.refs?.runId
-  if (typeof runId !== 'string' || envelope.payload.refs?.agentId !== envelope.fromUid) throw new Error('运行结果身份不一致')
-  if (typeof data.harnessSessionId !== 'string' || !data.harnessSessionId) throw new Error('运行 session 身份缺失')
-  const message: AssistantMessage = { version: 2, runId, agentId: envelope.fromUid, sessionId: data.harnessSessionId,
-    ...(envelope.payload.replyToClientMsgNo ? { threadId: envelope.payload.replyToClientMsgNo } : {}),
-    body: envelope.payload.body ?? '', envelope: data.harness as AssistantMessage['envelope'] }
-  return { ...consumeAssistantMessage(createRunView(runId),message,data.harnessCommit as { resultId: string; fence: number }), delivery: 'delivered' }
-}
-
-export function harnessLabel(view: RunView): string {
+export function harnessLabel(view: RunDisplayState): string {
   if (view.lifecycle === 'cancelled') return '已取消'
   if (view.lifecycle === 'failed') return '执行失败'
   if (view.lifecycle === 'queued') return '排队中'

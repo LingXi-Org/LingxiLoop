@@ -1,7 +1,7 @@
 import { useCustom } from '@refinedev/core'
 import { CheckCircle2Icon, KeyRoundIcon, LockKeyholeIcon, MailCheckIcon, SaveIcon, ShieldCheckIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { AdminTabSkeleton } from './loading'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { toastAction } from '@/lib/actionToast'
 import { promptSensitiveAction } from '@/lib/confirmAction'
 import { adminFetch, API_URL } from './api'
-import { PageHeading } from './pages'
+import { ErrorPanel, PageHeading } from './pages'
 
 interface AuthSettings {
   sessionExpiresIn: number
@@ -42,8 +42,8 @@ export function AuthSettingsPage() {
     if (settings.query.data?.data) setForm(settings.query.data.data)
   }, [settings.query.data?.data])
 
-  if (settings.query.isLoading && !form) return <ResourceSkeleton variant="detail" label="正在加载身份认证配置" />
-  if (settings.query.isError || !form) {
+  if (settings.query.isLoading && !form) return <AdminTabSkeleton tab="authentication" />
+  if (!form) {
     return <Card><CardHeader><CardTitle>无法加载身份认证配置</CardTitle><CardDescription>请确认当前账号拥有平台管理员权限。</CardDescription></CardHeader><CardContent><Button variant="outline" onClick={() => void settings.query.refetch()}>重新加载</Button></CardContent></Card>
   }
 
@@ -63,8 +63,8 @@ export function AuthSettingsPage() {
     try {
       await toastAction(adminFetch('/control/auth-settings', {
         method: 'PUT',
-        headers: { 'x-control-reason': reason },
         body: JSON.stringify({
+          reason,
           sessionExpiresIn: form.sessionExpiresIn,
           otpExpiresIn: form.otpExpiresIn,
           rateLimitWindow: form.rateLimitWindow,
@@ -75,7 +75,8 @@ export function AuthSettingsPage() {
     } finally { setPending(false) }
   }
 
-  return <div className="space-y-6">
+  return <div className="ui-enter space-y-6">
+    {settings.query.isError && <ErrorPanel message="身份配置刷新失败，已保留当前表单。" retry={() => void settings.query.refetch()} />}
     <PageHeading title="身份与安全" description="管理登录体验、会话有效期与访问保护策略。" />
     <div className="admin-overview-tabs"><a href="#auth-parameters">会话与验证</a><a href="#auth-security">安全策略</a></div>
     <section className="admin-kpi-grid" aria-label="身份认证状态">

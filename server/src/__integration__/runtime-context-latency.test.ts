@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../../src/lib/nativeMessage'
 import { learningTools } from '../modules/learning/public.js'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
@@ -40,7 +41,7 @@ test('context bounds automatic search and persists Agent receipts before asynchr
     VALUES('latency-source',$1,$2,'text','Evidence','external-source','ready','ready','PROJECT','test-owner','test-owner','USER')`, [companyId, projectId])
   im.messages.push({ channelId: conversationId, channelType: 2, fromUid: 'test-owner', messageId: 'input',
     clientMsgNo: 'input', messageSeq: 1, timestamp: Date.now() / 1000,
-    payload: { version: 1, kind: 'text', clientMsgNo: 'input', body: 'Explain the evidence' } })
+    payload: createNativeMessage({ id: 'input', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'Explain the evidence' }] }) })
   const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, conversationId)
   await api.conversations.ingest({ tenantId: companyId, conversationId, policyVersion: policy.version,
     messageId: 'input', version: 1, author: { id: 'test-owner', kind: 'human' }, text: 'Explain the evidence', mentions: [agentId] },
@@ -106,6 +107,8 @@ test('context bounds automatic search and persists Agent receipts before asynchr
     assert.equal(pending[0].work_id, work.id)
     assert.equal(pending[0].event.advance.readThroughSeq, 1)
     const signal = AbortSignal.timeout(5000)
+    // Make the queued fixture eligible even when the local VM clock is resynchronized.
+    await pool.query('UPDATE agent_native_event_outbox SET available_at=NOW() WHERE company_id=$1', [companyId])
     await flushNativeEvents(pool, async () => { throw new Error('fixture Redis unavailable') }, signal)
     assert.equal((await pool.query('SELECT count(*)::int AS n FROM agent_native_event_outbox WHERE company_id=$1 AND delivered_at IS NULL AND attempts=1', [companyId])).rows[0].n, 1)
     await pool.query('UPDATE agent_native_event_outbox SET available_at=NOW() WHERE company_id=$1', [companyId])

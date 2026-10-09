@@ -1,6 +1,6 @@
 import { InformationCircleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,10 +35,11 @@ export function NotificationSettingsPanel() {
   const selectedWorkspace = workspaces.find((workspace) => workspace.id === selectedWorkspaceId)
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [preferences, setPreferences] = useState<LearningNotificationPreferences | null>(null)
+  const [loadedWorkspaceId, setLoadedWorkspaceId] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!workspaceLoaded) {
       setLoadState('loading')
       return
@@ -54,6 +55,7 @@ export function NotificationSettingsPanel() {
     void learningApi.getNotificationPreferences(selectedWorkspaceId).then((next) => {
       if (cancelled) return
       setPreferences(next)
+      setLoadedWorkspaceId(selectedWorkspaceId)
       setLoadState('ready')
     }).catch(() => {
       if (!cancelled) setLoadState('error')
@@ -61,7 +63,8 @@ export function NotificationSettingsPanel() {
     return () => { cancelled = true }
   }, [reloadKey, selectedWorkspace, selectedWorkspaceId, workspaceLoaded])
 
-  if (loadState === 'loading') return <SettingsPanelSkeleton rows={5} />
+  const hasCurrentPreferences = preferences !== null && loadedWorkspaceId === selectedWorkspaceId
+  if (loadState === 'loading' && !hasCurrentPreferences) return <SettingsPanelSkeleton rows={5} />
 
   if (loadState === 'unavailable') {
     return (
@@ -73,7 +76,7 @@ export function NotificationSettingsPanel() {
     )
   }
 
-  if (loadState === 'error' || !preferences || !selectedWorkspace) {
+  if (!hasCurrentPreferences || !preferences || !selectedWorkspace) {
     return (
       <Alert variant="destructive">
         <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} />
@@ -122,7 +125,9 @@ export function NotificationSettingsPanel() {
   const canSave = preferences.timezone.trim().length > 0 && shortTime(preferences.daily_time).length === 5
 
   return (
-    <div className="space-y-6">
+    <div className="ui-enter space-y-6" aria-busy={loadState === 'loading'}>
+      {loadState === 'loading' && <p role="status" className="sr-only">正在更新通知设置…</p>}
+      {loadState === 'error' && <Alert variant="destructive"><AlertDescription>通知设置刷新失败，已保留当前内容。</AlertDescription><AlertAction><Button type="button" size="sm" variant="outline" onClick={() => setReloadKey(value => value + 1)}>重试</Button></AlertAction></Alert>}
       <SettingsGroup
         title={selectedWorkspace.name}
         description="这些偏好只适用于当前学习区。切换学习区后可分别设置。"

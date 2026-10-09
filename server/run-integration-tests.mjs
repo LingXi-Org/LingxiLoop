@@ -94,12 +94,23 @@ if (!INTEGRATION_URL) {
   process.exit(0)
 }
 
-// Belt-and-braces safety: refuse to run when INTEGRATION_DATABASE_URL
-// looks like a production-ish DB name. The suite TRUNCATEs every table,
-// so a mis-set var would silently nuke real data.
-const SUSPICIOUS = /\b(prod|production|main|live)\b/i
-if (SUSPICIOUS.test(INTEGRATION_URL)) {
-  console.error(`[integration] refusing to run — INTEGRATION_DATABASE_URL looks production-flavored: ${INTEGRATION_URL}`)
+// The suite TRUNCATEs every table. Only the database name can identify a
+// dedicated test target; credentials, hostnames and query strings cannot.
+const integrationTarget = URL.canParse(INTEGRATION_URL) ? new URL(INTEGRATION_URL) : null
+let databaseName
+let databaseHost
+try {
+  databaseName = decodeURI(integrationTarget?.pathname.slice(1) ?? '')
+  databaseHost = decodeURIComponent(integrationTarget?.searchParams.getAll('host').at(-1) || integrationTarget?.hostname || '')
+} catch {
+  databaseName = ''
+  databaseHost = ''
+}
+if (!integrationTarget || !['postgres:', 'postgresql:'].includes(integrationTarget.protocol)
+  || !/(?:^|[_-])test(?:$|[_-])/i.test(databaseName)
+  || /\b(prod|production|main|live)\b/i.test(databaseHost)
+  || /(?:^|[_-])(prod|production|main|live)(?:$|[_-])/i.test(databaseName)) {
+  console.error('[integration] refusing to run — INTEGRATION_DATABASE_URL must name a dedicated test database.')
   console.error('              The suite TRUNCATEs every table. Point at a dedicated test DB (e.g. lingxiloop_test).')
   process.exit(2)
 }

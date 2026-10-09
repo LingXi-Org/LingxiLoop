@@ -86,6 +86,7 @@ export function CourseContentSettings({ space }: { space: LearningSpace }) {
   const [activities, setActivities] = useState<LearningActivity[]>([])
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(canView)
+  const [loaded, setLoaded] = useState(false)
   const [busy, setBusy] = useState(false)
   const [objectiveOpen, setObjectiveOpen] = useState(false)
   const [activityOpen, setActivityOpen] = useState(false)
@@ -102,6 +103,7 @@ export function CourseContentSettings({ space }: { space: LearningSpace }) {
       ])
       setObjectives(nextObjectives)
       setActivities(nextActivities)
+      setLoaded(true)
     } catch (reason) {
       setError(userFacingError(reason, '课程内容暂时无法加载，请稍后重试。'))
     } finally {
@@ -221,11 +223,13 @@ export function CourseContentSettings({ space }: { space: LearningSpace }) {
     setError(userFacingError(reason, '课程内容操作未完成，请稍后重试。'))
   }
 
-  if (loading) return <ResourceSkeleton variant="list" count={5} label="正在加载课程内容" />
+  if (loading && !loaded) return <ResourceSkeleton variant="list" count={5} label="正在加载课程内容" />
+  const errorNotice = error && <Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button variant="outline" size="sm" disabled={loading} onClick={() => void load()}>重试</Button></AlertDescription></Alert>
+  if (!loaded && error) return errorNotice
 
   return (
-    <div className="space-y-6">
-      {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+    <div className="ui-enter space-y-6" aria-busy={loading}>
+      {errorNotice}
       {!canEdit && <Alert><AlertDescription>课程内容当前仅供查看，无法新增、发布或关闭。</AlertDescription></Alert>}
       <Card>
         <CardHeader>

@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-03",
+  "scope": "Message content and tool cards on assistant-ui/react 0.15.16",
+  "checks": {
+    "messageRuntimeAndCards": {
+      "status": "passed",
+      "count": 52,
+      "command": "node --import tsx --experimental-test-module-mocks --test --test-force-exit --test-concurrency=1 src/lib/nativeMessage.test.ts src/features/chat/runtime/converter.test.ts src/features/chat/runtime/store.test.ts src/features/chat/runtime/harness.test.ts src/features/chat/runtime/harness-api.test.ts src/features/chat/runtime/run-updates.test.ts src/features/chat/components/ConversationMessage.test.tsx src/features/chat/components/card-styles.test.tsx src/features/chat/components/ResearchSources.test.tsx"
+    },
+    "finalAffectedChecksIncludingMarkdown": {
+      "status": "passed",
+      "count": 29,
+      "command": "node --import tsx --experimental-test-module-mocks --test --test-force-exit --test-concurrency=1 src/lib/nativeMessage.test.ts src/features/chat/components/ConversationMessage.test.tsx src/features/chat/components/card-styles.test.tsx src/components/assistant-ui/markdown-text.test.tsx",
+      "note": "Includes 12 Markdown checks; 64 distinct checks across both runs."
+    },
+    "lint": { "status": "passed", "files": 22, "runner": "Repository Biome, explicitly scoped to changed files" },
+    "browserHarnessTypecheck": { "status": "passed", "entry": "scripts/native-message-browser-check.tsx", "configuration": "Repository tsconfig.json compiler options" },
+    "webBuild": {
+      "status": "passed",
+      "command": "npm run build",
+      "exitCode": 0,
+      "includes": ["web typecheck", "Vite production build"],
+      "warnings": ["CSS optimizer does not recognize ::highlight", "mixed static and dynamic imports", "chunks larger than 500 kB"]
+    },
+    "integration": {
+      "status": "skipped",
+      "command": "npm run test:integration -- --file native-message-flow.test.ts --file native-message-approvals.test.ts",
+      "reason": "INTEGRATION_DATABASE_URL is not configured. Runner exited without executing tests."
+    },
+    "browserAcceptance": {
+      "status": "blocked",
+      "reason": "In-app browser Page.navigate timed out; Chrome connector returned nodeRepl.fetch request failed.",
+      "screenshots": [],
+      "unverified": ["interactive submission and retry", "desktop and narrow viewport", "light and dark themes", "keyboard focus", "reduced motion"],
+      "repeat": [
+        "Run npm run dev, then open /scripts/native-message-browser-check.html on the Vite origin.",
+        "Click 运行验收, then 导出结果 to save the actual browser JSON.",
+        "Repeat at desktop and narrow viewport widths in light and dark themes; exercise keyboard navigation and reduced-motion emulation.",
+        "Save screenshots of the rendered cards and exported results."
+      ]
+    }
+  },
+  "release": { "dependenciesUpgraded": false, "migrationsAdded": false, "deployed": false }
+}

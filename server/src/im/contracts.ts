@@ -1,7 +1,10 @@
+import { userMessageSchema } from './message-types.js'
 import { z } from 'zod'
 export const agentContinuationSchema = z.object({ agentId: z.string().min(1).max(1000), runId: z.string().min(1).max(1000),
   requestVersion: z.number().int().positive().safe() }).strict()
-export const attachmentMessageIdsSchema = z.array(z.string().trim().min(1).max(1000)).max(20)
+export const attachmentRefSchema = z.object({ clientMsgNo: z.string().trim().min(1).max(1000), attachmentId: z.string().min(1).max(2000) }).strict()
+export const attachmentRefsSchema = z.array(attachmentRefSchema).max(20)
+export type AttachmentRef = z.infer<typeof attachmentRefSchema>
 
 export const imHistoryQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(200).default(80),
@@ -14,28 +17,9 @@ export const imReactionRequestSchema = z.object({
   emoji: z.string().trim().min(1).max(32),
 }).strict()
 
-const userMessagePayloadSchema = z.object({
-  version: z.literal(1),
-  kind: z.enum(['text', 'attachment']),
-  clientMsgNo: z.string().trim().min(1).max(80),
-  body: z.string().optional(),
-  replyToClientMsgNo: z.string().trim().min(1).optional(),
-  data: z.record(z.string(), z.unknown()).optional(),
-}).strict().superRefine((payload, context) => {
-  if (payload.data?.attachmentClientMsgNos !== undefined && !attachmentMessageIdsSchema.safeParse(payload.data.attachmentClientMsgNos).success) {
-    context.addIssue({ code: 'custom', message: 'invalid attachment message references', path: ['data','attachmentClientMsgNos'] })
-  }
-  if (payload.data?.agentContinuation !== undefined && (payload.kind !== 'text' || !agentContinuationSchema.safeParse(payload.data.agentContinuation).success)) {
-    context.addIssue({ code: 'custom', message: 'invalid agent continuation', path: ['data','agentContinuation'] })
-  }
-  if (payload.kind === 'text' && !payload.body?.trim()) {
-    context.addIssue({ code: 'custom', message: 'text message body is required', path: ['body'] })
-  }
-})
-
 export const imSendAcceptanceRequestSchema = z.object({
   clientNonce: z.string().trim().min(1).max(80),
-  payload: userMessagePayloadSchema,
+  payload: userMessageSchema,
 }).strict()
 
 export const imReadRequestSchema = z.object({
@@ -55,7 +39,7 @@ export const lingxiOSRunQuerySchema = z.object({ threadId: z.string().min(1).max
 export const lingxiOSRunCancelSchema = z.object({ threadId: z.string().trim().min(1).max(80).optional() }).strict()
 export const lingxiOSArtifactQuerySchema = z.object({ path: z.string().min(1).max(1000), threadId: z.string().min(1).max(1000).optional() }).strict()
 export const lingxiOSRunInputSchema = z.object({ clientMsgNo: z.string().min(1).max(1000), requestVersion: z.number().int().positive(),
-  attachmentClientMsgNos: attachmentMessageIdsSchema.optional() }).strict()
+  attachmentRefs: attachmentRefsSchema.optional() }).strict()
 export const lingxiOSRunRevisionSchema = z.object({ text: z.string().trim().min(1).max(8000), threadId: z.string().min(1).max(1000).optional() }).strict()
 export const lingxiOSReconcileSchema = z.object({ actionKey: z.string().min(1).max(2000), threadId: z.string().min(1).max(1000).optional() }).strict()
 export const approvalSupersedeRequestSchema = z.object({

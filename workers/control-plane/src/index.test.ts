@@ -9,9 +9,64 @@ declare module 'cloudflare:test' {
   }
 }
 
+// Storage snapshots require every response body to be consumed before teardown.
+// https://developers.cloudflare.com/workers/testing/vitest-integration/known-issues/#storage-isolation
+async function fetchComplete(url: string, init?: RequestInit): Promise<Response> {
+  const response = await SELF.fetch(url, init)
+  const body = response.body === null ? null : await response.arrayBuffer()
+  return new Response(body, response)
+}
+
 beforeAll(async () => applyD1Migrations(env.DB, env.TEST_MIGRATIONS))
 
 describe('control-plane trust boundaries', () => {
+  it('keeps user lifecycle authority and D1 state aligned with the product result', async () => {
+    // Failures: missing admin/session claims, rejected or unavailable origin, premature
+    // login revocation, deleting the actor session, and unbanning a failed restore.
+    const now = Math.floor(Date.now() / 1000)
+    await env.DB.batch([
+      env.DB.prepare(`INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt,role,banned) VALUES('lifecycle-admin','Admin','lifecycle-admin@test.local',1,?,?,'admin',0),('lifecycle-target','Target','lifecycle-target@test.local',1,?,?,'user',0)`).bind(now, now, now, now),
+      env.DB.prepare(`INSERT INTO account(id,accountId,providerId,issuer,userId,password,createdAt,updatedAt) VALUES('lifecycle-account','lifecycle-admin','credential','local:credential','lifecycle-admin',?,?,?)`).bind(await hashPassword('password123'), now, now),
+      env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES('lifecycle-admin','pg-lifecycle-admin',?),('lifecycle-target','pg-lifecycle-target',?)`).bind(now, now),
+      env.DB.prepare(`INSERT INTO session(id,expiresAt,token,createdAt,updatedAt,userId) VALUES('target-session',?,'target-session-token',?,?,'lifecycle-target')`).bind(now + 3600, now, now),
+    ])
+    fetchMock.activate(); fetchMock.disableNetConnect()
+    fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true })
+    try {
+      const signIn = await fetchComplete('https://admin.example.com/api/auth/sign-in/email', {
+        method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
+        body: JSON.stringify({ email: 'lifecycle-admin@test.local', password: 'password123' }),
+      })
+      expect(signIn.status).toBe(200)
+      const headers = { 'content-type': 'application/json', cookie: signIn.headers.get('set-cookie') ?? '' }
+      const state = async () => ({
+        user: await env.DB.prepare(`SELECT banned FROM user WHERE id='lifecycle-target'`).first(),
+        link: await env.DB.prepare(`SELECT suspended_at IS NOT NULL AS suspended FROM app_user_links WHERE auth_user_id='lifecycle-target'`).first(),
+        sessions: (await env.DB.prepare(`SELECT userId FROM session ORDER BY userId`).all()).results,
+      })
+      const active = { user: { banned: 0 }, link: { suspended: 0 }, sessions: [{ userId: 'lifecycle-admin' }, { userId: 'lifecycle-target' }] }
+      const suspended = { user: { banned: 1 }, link: { suspended: 1 }, sessions: [{ userId: 'lifecycle-admin' }] }
+      for (const [action, status, expected] of [
+        ['suspend', 409, active], ['suspend', 503, active], ['suspend', 200, suspended],
+        ['restore', 503, suspended], ['restore', 200, { ...active, sessions: [{ userId: 'lifecycle-admin' }] }],
+      ] as const) {
+        let payload: Record<string, unknown> | undefined
+        fetchMock.get('https://origin.example.com').intercept({ path: `/api/admin/users/pg-lifecycle-target/${action}`, method: 'POST' }).reply(options => {
+          const assertion = new Headers(options.headers as HeadersInit).get('x-lingxiloop-gateway')!
+          payload = JSON.parse(atob(assertion.split('.')[0].replaceAll('-', '+').replaceAll('_', '/')))
+          return { statusCode: status, data: JSON.stringify(status === 200 ? { ok: true } : { error: 'origin rejected operation' }) }
+        })
+        const response = await fetchComplete(`https://admin.example.com/api/control/platform/users/pg-lifecycle-target/${action}`, {
+          method: 'POST', headers, body: JSON.stringify({ reason: '生命周期一致性回归' }),
+        })
+        expect(payload).toMatchObject({ appUserId: 'pg-lifecycle-admin', authUserId: 'lifecycle-admin', platformAdmin: true, authSessionIssuedAt: expect.any(Number) })
+        expect(payload!.authSessionIssuedAt).toBeGreaterThan(now * 1000 - 1000)
+        expect(response.status).toBe(status)
+        expect(await state()).toEqual(expected)
+      }
+      fetchMock.assertNoPendingInterceptors()
+    } finally { fetchMock.deactivate() }
+  })
   it('company management forwards a signed user identity without promoting the global role', async () => {
     const now = Math.floor(Date.now() / 1000)
     await env.DB.batch([
@@ -22,7 +77,7 @@ describe('control-plane trust boundaries', () => {
     fetchMock.activate(); fetchMock.disableNetConnect()
     fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true })
     try {
-      const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' }, body: JSON.stringify({ email: 'company-admin@test.local', password: 'password123' }) })
+      const signIn = await fetchComplete('https://admin.example.com/api/auth/sign-in/email', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' }, body: JSON.stringify({ email: 'company-admin@test.local', password: 'password123' }) })
       const headers = { cookie: signIn.headers.get('set-cookie') ?? '' }
       for (const [path, originPath] of [['management-session', '/api/admin-management/session'], ['company/resources/projects', '/api/admin-company/resources/projects']]) {
         fetchMock.get('https://origin.example.com').intercept({ path: originPath, method: 'GET' }).reply(options => {
@@ -32,22 +87,22 @@ describe('control-plane trust boundaries', () => {
           expect(payload.platformAdmin).not.toBe(true)
           return { statusCode: 200, data: JSON.stringify({ ok: true }) }
         })
-        expect((await SELF.fetch(`https://admin.example.com/api/control/${path}`, { headers })).status).toBe(200)
+        expect((await fetchComplete(`https://admin.example.com/api/control/${path}`, { headers })).status).toBe(200)
       }
       fetchMock.get('https://origin.example.com').intercept({ path: '/api/im/companies/company/channels/channel/agents/agent/runs/run/stream', method: 'GET' })
         .reply(200, 'event: preview\ndata: {}\n\n', { headers: { 'content-type': 'text/event-stream; charset=utf-8' } })
-      const stream = await SELF.fetch('https://admin.example.com/api/im/companies/company/channels/channel/agents/agent/runs/run/stream', { headers })
+      const stream = await fetchComplete('https://admin.example.com/api/im/companies/company/channels/channel/agents/agent/runs/run/stream', { headers })
       expect({ encoding: stream.headers.get('content-encoding'), body: await stream.text() })
         .toEqual({ encoding: 'identity', body: 'event: preview\ndata: {}\n\n' })
-      expect((await SELF.fetch('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
-      expect((await SELF.fetch('https://admin.example.com/api/admin-company/resources/users', { headers })).status).toBe(403)
+      expect((await fetchComplete('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
+      expect((await fetchComplete('https://admin.example.com/api/admin-company/resources/users', { headers })).status).toBe(403)
       await env.DB.prepare(`UPDATE app_user_links SET suspended_at=1 WHERE auth_user_id='company-admin'`).run()
-      expect((await SELF.fetch('https://admin.example.com/api/control/company/dashboard', { headers })).status).toBe(403)
+      expect((await fetchComplete('https://admin.example.com/api/control/company/dashboard', { headers })).status).toBe(403)
       fetchMock.assertNoPendingInterceptors()
     } finally { fetchMock.deactivate() }
   })
   async function mcp(method: string, params?: Record<string, unknown>, id = 1) {
-    return SELF.fetch('https://admin.example.com/api/mcp', {
+    return fetchComplete('https://admin.example.com/api/mcp', {
       method: 'POST',
       headers: {
         authorization: 'Bearer test-mcp-service-token',
@@ -65,7 +120,7 @@ describe('control-plane trust boundaries', () => {
     fetchMock.disableNetConnect()
     fetchMock.get('https://origin.example.com').intercept({ path: '/api/health' }).reply(200, { ok: true })
     try {
-      const response = await SELF.fetch('https://admin.example.com/api/health')
+      const response = await fetchComplete('https://admin.example.com/api/health')
       expect({ status: response.status, body: await response.json() }).toEqual({ status: 200, body: { ok: true } })
       fetchMock.assertNoPendingInterceptors()
     } finally {
@@ -82,13 +137,13 @@ describe('control-plane trust boundaries', () => {
     expect(accountColumns.results).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'issuer', notnull: 1 })]))
     const authSettings = await env.DB.prepare(`SELECT session_expires_in,otp_expires_in,rate_limit_window,rate_limit_max FROM auth_settings WHERE id=1`).first()
     expect(authSettings).toEqual({ session_expires_in: 604800, otp_expires_in: 300, rate_limit_window: 60, rate_limit_max: 60 })
-    expect((await SELF.fetch('https://admin.example.com/api/control/eval/jobs', { method: 'POST' })).status).toBe(403)
-    const authSettingsResponse = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/control/auth-settings')
+    expect((await fetchComplete('https://admin.example.com/api/control/eval/jobs', { method: 'POST' })).status).toBe(403)
+    const authSettingsResponse = await fetchComplete('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/control/auth-settings')
     expect(authSettingsResponse.status).toBe(401)
   })
 
   it('keeps bootstrap locked behind its secret', async () => {
-    const response = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/internal/bootstrap-admin', {
+    const response = await fetchComplete('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/internal/bootstrap-admin', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: 'wrong', email: 'admin@example.com' }),
     })
     expect(response.status).toBe(401)
@@ -106,9 +161,13 @@ describe('control-plane trust boundaries', () => {
     fetchMock.activate()
     fetchMock.disableNetConnect()
     fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true })
-    fetchMock.get('https://origin.example.com').intercept({ path: '/api/internal/bootstrap/platform-user', method: 'POST' }).reply(200, { appUserId: 'bootstrap-app-user' }).delay(200).times(2)
+    const bootstrapRequests: unknown[] = []
+    fetchMock.get('https://origin.example.com').intercept({ path: '/api/internal/bootstrap/platform-user', method: 'POST' }).reply(options => {
+      bootstrapRequests.push(JSON.parse(String(options.body)))
+      return { statusCode: 200, data: JSON.stringify({ appUserId: 'bootstrap-app-user' }) }
+    }).delay(200).persist()
     try {
-      const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
+      const signIn = await fetchComplete('https://admin.example.com/api/auth/sign-in/email', {
         method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
         body: JSON.stringify({ email: 'bootstrap-admin@example.com', password: 'password123' }),
       })
@@ -118,18 +177,23 @@ describe('control-plane trust boundaries', () => {
           .reply(200, { view })
       }
       const responses = await Promise.all(['dashboard', 'observability'].map((view) =>
-        SELF.fetch(`https://admin.example.com/api/control/platform/${view}`, { headers })))
+        fetchComplete(`https://admin.example.com/api/control/platform/${view}`, { headers })))
       expect(await Promise.all(responses.map(async (response) => ({ status: response.status, body: await response.json() })))).toEqual([
         { status: 200, body: { view: 'dashboard' } }, { status: 200, body: { view: 'observability' } },
       ])
+      // A concurrent read can see the link committed by the other request.
+      expect([1, 2]).toContain(bootstrapRequests.length)
+      expect(bootstrapRequests).toEqual(Array.from({ length: bootstrapRequests.length }, () => ({
+        authUserId: 'bootstrap-admin', email: 'bootstrap-admin@example.com', name: 'Bootstrap Admin',
+      })))
       expect(await env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id='bootstrap-admin'`).first()).toEqual({ app_user_id: 'bootstrap-app-user' })
-      const response = await SELF.fetch('https://admin.example.com/api/control/bootstrap-business-identity', { method: 'POST', headers })
+      const response = await fetchComplete('https://admin.example.com/api/control/bootstrap-business-identity', { method: 'POST', headers })
       expect(await response.json()).toEqual({ ok: true, appUserId: 'bootstrap-app-user' })
       await env.DB.prepare(`UPDATE app_user_links SET suspended_at=1 WHERE auth_user_id='bootstrap-admin'`).run()
-      expect((await SELF.fetch('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
+      expect((await fetchComplete('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
       await env.DB.prepare(`DELETE FROM app_user_links WHERE auth_user_id='bootstrap-admin'`).run()
       await env.DB.prepare(`UPDATE bootstrap_state SET admin_user_id=NULL WHERE id=1`).run()
-      expect((await SELF.fetch('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
+      expect((await fetchComplete('https://admin.example.com/api/control/platform/dashboard', { headers })).status).toBe(403)
       fetchMock.assertNoPendingInterceptors()
     } finally { fetchMock.deactivate() }
   })
@@ -157,11 +221,11 @@ describe('control-plane trust boundaries', () => {
     fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true })
     fetchMock.get('https://origin.example.com').intercept({ path: '/api/internal/registration/provision', method: 'POST' }).reply(200, { appUserId: 'otp-app-user' })
     try {
-      const verified = await SELF.fetch('https://admin.example.com/api/auth/email-otp/verify-email', {
+      const verified = await fetchComplete('https://admin.example.com/api/auth/email-otp/verify-email', {
         method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com' }, body: JSON.stringify({ email, otp: '123456' }),
       })
       expect(verified.status).toBe(200)
-      const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
+      const signIn = await fetchComplete('https://admin.example.com/api/auth/sign-in/email', {
         method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' }, body: JSON.stringify({ email, password: 'password123' }),
       })
       expect(signIn.status).toBe(200)
@@ -181,22 +245,22 @@ describe('control-plane trust boundaries', () => {
     fetchMock.disableNetConnect()
     fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true })
     try {
-      const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
+      const signIn = await fetchComplete('https://admin.example.com/api/auth/sign-in/email', {
         method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
         body: JSON.stringify({ email: 'sigillo@example.com', password: 'password123' }),
       })
       const returnTo = 'https://sigillo-provider.example/sign-in/sso?return_to=https%3A%2F%2Fsigillo-provider.example%2Fsign-in'
-      const issued = await SELF.fetch(`https://admin.example.com/api/auth/sso/sigillo?return_to=${encodeURIComponent(returnTo)}`, {
+      const issued = await fetchComplete(`https://admin.example.com/api/auth/sso/sigillo?return_to=${encodeURIComponent(returnTo)}`, {
         headers: { cookie: signIn.headers.get('set-cookie') ?? '' }, redirect: 'manual',
       })
       expect(issued.status).toBe(302)
       const code = new URL(issued.headers.get('location')!).searchParams.get('code')
       expect(code).toBeTruthy()
-      const exchanged = await SELF.fetch('https://admin.example.com/api/auth/sso/sigillo/exchange', {
+      const exchanged = await fetchComplete('https://admin.example.com/api/auth/sso/sigillo/exchange', {
         method: 'POST', headers: { 'content-type': 'application/json', 'x-sigillo-sso-secret': 'test-sigillo-sso-secret' }, body: JSON.stringify({ code }),
       })
       expect(await exchanged.json()).toEqual({ userId: 'sigillo-user', email: 'sigillo@example.com', name: 'Sigillo User', returnTo })
-      const replay = await SELF.fetch('https://admin.example.com/api/auth/sso/sigillo/exchange', {
+      const replay = await fetchComplete('https://admin.example.com/api/auth/sso/sigillo/exchange', {
         method: 'POST', headers: { 'content-type': 'application/json', 'x-sigillo-sso-secret': 'test-sigillo-sso-secret' }, body: JSON.stringify({ code }),
       })
       expect(replay.status).toBe(401)
@@ -218,16 +282,16 @@ describe('control-plane trust boundaries', () => {
     fetchMock.get('https://origin.example.com').intercept({ path: '/api/auth/ws-ticket', method: 'POST' }).reply(200, { ticket: 'ticket-1' })
     await env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES('ws-user','app-ws-user',?)`).bind(now).run()
     try {
-      const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
+      const signIn = await fetchComplete('https://admin.example.com/api/auth/sign-in/email', {
         method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
         body: JSON.stringify({ email: 'ws@example.com', password: 'password123' }),
       })
-      const response = await SELF.fetch('https://admin.example.com/api/auth/ws-ticket', {
+      const response = await fetchComplete('https://admin.example.com/api/auth/ws-ticket', {
         method: 'POST', headers: { cookie: signIn.headers.get('set-cookie') ?? '' },
       })
       expect({ status: response.status, body: await response.json() }).toEqual({ status: 200, body: { ticket: 'ticket-1' } })
       for (const path of ['/api/internal/registration/provision', '/api/internal/registration/invitation']) {
-        const denied = await SELF.fetch(`https://admin.example.com${path}`, {
+        const denied = await fetchComplete(`https://admin.example.com${path}`, {
           method: 'POST', headers: { cookie: signIn.headers.get('set-cookie') ?? '' },
         })
         expect(denied.status).toBe(403)
@@ -241,14 +305,14 @@ describe('control-plane trust boundaries', () => {
     fetchMock.disableNetConnect()
     fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true })
     try {
-    const crossSite = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/auth/sign-in/email', {
+    const crossSite = await fetchComplete('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/auth/sign-in/email', {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: 'https://attacker.example', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
       body: JSON.stringify({ email: 'user@example.com', password: 'password123' }),
     })
     expect(crossSite.status).toBe(403)
 
-    const noInvite = await SELF.fetch('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/auth/sign-up/email', {
+    const noInvite = await fetchComplete('https://lingxiloop-control-plane.yangyangli0426.workers.dev/api/auth/sign-up/email', {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: 'https://lingxiloop-control-plane.yangyangli0426.workers.dev' },
       body: JSON.stringify({ email: 'user@example.com', name: 'User', password: 'password123' }),
@@ -277,13 +341,13 @@ describe('control-plane trust boundaries', () => {
     upstream.intercept({ path: '/api/status-page/heartbeat/lingxiloop' })
       .reply(200, { heartbeatList: { 11: [{ status: 0 }, { status: 1, ping: 26 }] }, uptimeList: { '11_24': 1 } })
     try {
-      const signIn = await SELF.fetch('https://admin.example.com/api/auth/sign-in/email', {
+      const signIn = await fetchComplete('https://admin.example.com/api/auth/sign-in/email', {
         method: 'POST',
         headers: { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
         body: JSON.stringify({ email: 'status-admin@example.com', password: 'password123' }),
       })
       expect(signIn.status).toBe(200)
-      const response = await SELF.fetch('https://admin.example.com/api/control/status-page', { headers: { cookie: signIn.headers.get('set-cookie') ?? '' } })
+      const response = await fetchComplete('https://admin.example.com/api/control/status-page', { headers: { cookie: signIn.headers.get('set-cookie') ?? '' } })
       expect(await response.json()).toEqual({
         config: { title: 'LingxiLoop 服务状态' },
         incident: null,
@@ -293,6 +357,14 @@ describe('control-plane trust boundaries', () => {
         latest: { 11: { status: 1, ping: 26 } },
         uptime: { '11_24': 1 },
       })
+      // A stalled provider must produce the existing retryable error, rather
+      // than holding the authenticated monitoring page open indefinitely.
+      upstream.intercept({ path: '/api/status-page/lingxiloop' })
+        .reply(200, { config: {}, incident: null, publicGroupList: [], maintenanceList: [] }).delay(15_000)
+      upstream.intercept({ path: '/api/status-page/heartbeat/lingxiloop' })
+        .reply(200, { heartbeatList: {}, uptimeList: {} }).delay(15_000)
+      const unavailable = await fetchComplete('https://admin.example.com/api/control/status-page', { headers: { cookie: signIn.headers.get('set-cookie') ?? '' } })
+      expect({ status: unavailable.status, body: await unavailable.json() }).toEqual({ status: 502, body: { error: 'status provider unavailable' } })
       fetchMock.assertNoPendingInterceptors()
     } finally { fetchMock.deactivate() }
   })
@@ -303,8 +375,8 @@ describe('control-plane trust boundaries', () => {
       env.DB.prepare(`INSERT OR REPLACE INTO user(id,name,email,emailVerified,createdAt,updatedAt,role,banned) VALUES('mcp-admin','MCP Admin','mcp@example.com',1,?,?, 'admin',0)`).bind(now, now),
       env.DB.prepare(`INSERT OR REPLACE INTO app_user_links(auth_user_id,app_user_id,provisioned_at,suspended_at) VALUES('mcp-admin','app-mcp-admin',?,NULL)`).bind(now),
     ])
-    expect((await SELF.fetch('https://admin.example.com/api/mcp', { method: 'POST' })).status).toBe(401)
-    expect((await SELF.fetch('https://admin.example.com/api/mcp', {
+    expect((await fetchComplete('https://admin.example.com/api/mcp', { method: 'POST' })).status).toBe(401)
+    expect((await fetchComplete('https://admin.example.com/api/mcp', {
       method: 'POST', headers: { authorization: 'Bearer test-mcp-service-token', origin: 'https://attacker.example' },
     })).status).toBe(403)
 

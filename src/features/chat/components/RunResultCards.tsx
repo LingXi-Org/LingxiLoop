@@ -1,6 +1,7 @@
 import { DownloadIcon, PackageIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { ResponseEnvelope, RunView } from '@lyyzka/lingxios/ui'
+import type { ResponseEnvelope } from '@lyyzka/lingxios/ui'
+import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { File } from '@/components/assistant-ui/elements/file'
 import { ProgressCard, type ProgressStep } from '@/components/assistant-ui/elements/progress-card'
 import { CardSurface, conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
@@ -25,7 +26,7 @@ export function DeliveryCard({ artifacts, busy, onDownload }: {
   </CardSurface>
 }
 
-export function RunProgressCard({ view, error, children }: { view: RunView; error?: string | null; children?: ReactNode }) {
+export function RunProgressCard({ view, error, children }: { view: RunDisplayState; error?: string | null; children?: ReactNode }) {
   const outcome = view.goalOutcome
   const failed = view.lifecycle === 'failed'
   const stopped = view.lifecycle === 'cancelled' || outcome?.status === 'partial' || outcome?.status === 'blocked'
@@ -35,8 +36,8 @@ export function RunProgressCard({ view, error, children }: { view: RunView; erro
     status: failed ? 'failed' : stopped ? 'stopped' : outcome?.status === 'satisfied' ? 'complete' : view.lifecycle === 'leased' ? 'running' : 'pending',
     detail: <>{harnessLabel(view)}{error && <p className="mt-1 text-destructive">{harnessFailure(error)}</p>}{gaps?.length ? <ul className="mt-1 list-disc ps-4">{[...new Set(gaps)].map(gap => <li key={gap}>{harnessFailure(gap)}</li>)}</ul> : null}</>,
   }, {
-    id: 'result', label: '准备交付', status: view.message ? 'complete' : failed || stopped ? 'stopped' : 'pending',
-    detail: view.message ? '答复已生成' : '尚无已提交的答复',
+    id: 'result', label: '准备交付', status: view.resultId ? 'complete' : failed || stopped ? 'stopped' : 'pending',
+    detail: view.resultId ? '答复已生成' : '尚无已提交的答复',
   }, {
     id: 'delivery', label: '投递到会话',
     status: view.delivery === 'failed' ? 'failed' : view.delivery === 'delivered' ? 'complete' : 'pending',

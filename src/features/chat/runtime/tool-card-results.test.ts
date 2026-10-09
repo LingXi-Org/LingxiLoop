@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { createRunView } from '@lyyzka/lingxios/ui'
 
-import { harnessParts, harnessToolParts } from '@/lib/agentRunSnapshot'
+import { runMessageParts as harnessParts, harnessToolParts } from '../../../../server/src/agent-runtime/message-projection'
 import { toolCardResult } from '@/lib/agentToolCards'
 import { publicRunEvent } from '../../../../server/src/agent-runtime/public-events'
 // The unrelated Canvas editor imports browser-only CSS; retain real card renderers below.
@@ -29,10 +29,10 @@ test('calendar tools retain only authorized display fields through live and repl
   assert.doesNotMatch(html,/secret|privateNotes/)
   assert.deepEqual(harnessToolParts('run', [started, completed], tools), tools)
   const view = { ...createRunView('run'), lifecycle: 'leased' as const, draft: '正在解释。' }
-  assert.deepEqual(harnessParts(view, tools), [{ type: 'text', text: '正在解释。' }, ...tools])
+  assert.deepEqual(harnessParts(view, tools), [{ type: 'text', text: '正在解释。' }, ...tools.map(({ eventSeq: _seq,...part }) => part)])
   const pending=harnessToolParts('run',[started])
-  assert.deepEqual(harnessParts({...createRunView('run'),lifecycle:'cancelled'},pending)[0],{...pending[0],result:{status:'cancelled'},isError:false})
-  assert.deepEqual(harnessParts({...createRunView('run'),lifecycle:'failed'},pending)[0],{...pending[0],result:{status:'failed'},isError:true})
+  assert.deepEqual(harnessParts({...createRunView('run'),lifecycle:'cancelled'},pending)[0],{...Object.fromEntries(Object.entries(pending[0]).filter(([key])=>key!=='eventSeq')),result:{status:'cancelled'},isError:false})
+  assert.deepEqual(harnessParts({...createRunView('run'),lifecycle:'failed'},pending)[0],{...Object.fromEntries(Object.entries(pending[0]).filter(([key])=>key!=='eventSeq')),result:{status:'failed'},isError:true})
   for(const [result,isError,label] of [[undefined,false,'正在读取日历'],[{status:'cancelled'},false,'日历读取已取消'],[{status:'failed'},true,'日历读取失败']] as const){
     assert.match(renderToStaticMarkup(createElement(ViewCalendarEventTool,{...pending[0],result,isError} as ToolCallMessagePartProps)),new RegExp(label))
   }

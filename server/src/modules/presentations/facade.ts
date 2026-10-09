@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../im/message-types.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { env } from '../../env.js'
@@ -111,18 +112,9 @@ export const presentationsApplication = new PresentationsApplication({
       agentId: input.agentId,
       channelId: input.channelId,
       clientNonce: input.clientMsgNo,
-      payload: {
-        version: 1,
-        kind: 'artifact',
-        clientMsgNo: input.clientMsgNo,
-        body: input.title,
-        refs: { presentationId: input.presentationId, agentId: input.agentId },
-        data: {
-          artifactId: input.presentationId,
-          artifactKind: 'lecture_deck_html',
-          title: input.title,
-        },
-      },
+      payload: createNativeMessage({ id: input.clientMsgNo, role: 'assistant',
+        content: [{ type: 'data', name: 'presentation-artifact', data: { artifactId: input.presentationId, artifactKind: 'lecture_deck_html', title: input.title } }],
+        custom: { refs: { presentationId: input.presentationId, agentId: input.agentId } } }),
     })
     if (sent.kind !== 'accepted') throw new Error(`presentation Artifact card send failed: ${sent.kind}`)
   },

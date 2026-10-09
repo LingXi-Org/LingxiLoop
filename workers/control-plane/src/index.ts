@@ -203,9 +203,18 @@ async function provision(env: Bindings, authUser: { id: string; email: string; n
 
 function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promise<unknown>) => void, settings: AuthSettings, registrationAllowed: () => boolean) {
   const origin = new URL(request.url).origin
-  const trustedOrigins = env.AUTH_ALLOWED_HOSTS.split(',').map((host) => `https://${host.trim()}`)
+  const allowedHosts = env.AUTH_ALLOWED_HOSTS.split(',').map((host) => host.trim()).filter(Boolean)
+  const trustedOrigins = allowedHosts.map((host) => `https://${host}`)
   const hostname = new URL(request.url).hostname
-  if (['localhost', '127.0.0.1', '::1'].includes(hostname) || hostname.endsWith('.workers.dev')) trustedOrigins.push(origin)
+  const loopbackHosts = ['localhost', '127.0.0.1', '[::1]']
+  if (loopbackHosts.includes(hostname)) {
+    trustedOrigins.push(origin)
+    // Local Vite proxies retain the browser Origin, including its distinct port.
+    for (const host of allowedHosts) {
+      const localOrigin = new URL(`http://${host}`)
+      if (loopbackHosts.includes(localOrigin.hostname)) trustedOrigins.push(localOrigin.origin)
+    }
+  } else if (hostname.endsWith('.workers.dev')) trustedOrigins.push(origin)
   return betterAuth({
     appName: 'LingxiLoop',
     baseURL: origin,
@@ -507,9 +516,10 @@ app.all('/api/mcp', async (c) => {
 
 async function statusPage(env: Bindings): Promise<unknown> {
   try {
+    const signal = AbortSignal.timeout(10_000)
     const [pageResponse, heartbeatResponse] = await Promise.all([
-      fetch(new URL('/api/status-page/lingxiloop', env.UPTIME_BASE_URL)),
-      fetch(new URL('/api/status-page/heartbeat/lingxiloop', env.UPTIME_BASE_URL)),
+      fetch(new URL('/api/status-page/lingxiloop', env.UPTIME_BASE_URL), { signal }),
+      fetch(new URL('/api/status-page/heartbeat/lingxiloop', env.UPTIME_BASE_URL), { signal }),
     ])
     if (!pageResponse.ok || !heartbeatResponse.ok) throw new Error('status provider unavailable')
     const page = await pageResponse.json<{
@@ -549,9 +559,10 @@ app.get('/api/control/auth-settings', async (c) => {
 app.put('/api/control/auth-settings', async (c) => {
   const session = requireAdmin(c)
   if (session instanceof Response) return session
-  const reason = c.req.header('x-control-reason')?.trim()
+  const input = await c.req.json<Partial<AuthSettings> & { reason?: unknown }>()
+  const rawReason = input.reason ?? c.req.header('x-control-reason')
+  const reason = typeof rawReason === 'string' ? rawReason.trim() : ''
   if (!reason || reason.length > 280) return c.json({ error: '1–280 字操作原因必填' }, 400)
-  const input = await c.req.json<Partial<AuthSettings>>()
   const values: AuthSettings = {
     sessionExpiresIn: Number(input.sessionExpiresIn),
     otpExpiresIn: Number(input.otpExpiresIn),
@@ -567,12 +578,18 @@ app.put('/api/control/auth-settings', async (c) => {
 })
 
 
-async function controlUserLifecycle(env: Bindings, admin: { auth_user_id: string; app_user_id: string }, appUserId: string,
+async function controlUserLifecycle(env: Bindings, admin: { auth_user_id: string; app_user_id: string; authSessionIssuedAt?: number }, appUserId: string,
   action: 'suspend' | 'restore' | 'delete', reason: string): Promise<Response> {
   if (appUserId === admin.app_user_id) return Response.json({ error: 'administrators cannot change their own access' }, { status: 409 })
   const link = await env.DB.prepare(`SELECT auth_user_id FROM app_user_links WHERE app_user_id=?`).bind(appUserId).first<{ auth_user_id: string }>()
   if (!link) return Response.json({ error: 'auth user mapping not found' }, { status: 404 })
   const raw = JSON.stringify({ reason })
+  const response = await originRequest(env, `/api/admin/users/${encodeURIComponent(appUserId)}/${action}`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: raw,
+  }, { appUserId: admin.app_user_id, authUserId: admin.auth_user_id, authSessionIssuedAt: admin.authSessionIssuedAt, platformAdmin: true })
+  if (!response.ok) return response
+  // Product state owns access. Do not revoke login for rejected operations; an
+  // accepted suspension already blocks the gateway if D1 synchronization fails.
   if (action === 'suspend') {
     await env.DB.batch([
       env.DB.prepare(`UPDATE user SET banned=1,banReason=?,updatedAt=? WHERE id=?`).bind(reason, Date.now(), link.auth_user_id),
@@ -580,16 +597,13 @@ async function controlUserLifecycle(env: Bindings, admin: { auth_user_id: string
       env.DB.prepare(`UPDATE app_user_links SET suspended_at=? WHERE auth_user_id=?`).bind(Date.now(), link.auth_user_id),
     ])
   }
-  const response = await originRequest(env, `/api/admin/users/${encodeURIComponent(appUserId)}/${action}`, {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: raw,
-  }, { appUserId: admin.app_user_id, authUserId: admin.auth_user_id })
-  if (response.ok && action === 'restore') {
+  if (action === 'restore') {
     await env.DB.batch([
       env.DB.prepare(`UPDATE user SET banned=0,banReason=NULL,banExpires=NULL,updatedAt=? WHERE id=?`).bind(Date.now(), link.auth_user_id),
       env.DB.prepare(`UPDATE app_user_links SET suspended_at=NULL WHERE auth_user_id=?`).bind(link.auth_user_id),
     ])
   }
-  if (response.ok && action === 'delete') {
+  if (action === 'delete') {
     await env.DB.prepare(`DELETE FROM user WHERE id=?`).bind(link.auth_user_id).run()
   }
   return response
@@ -604,7 +618,7 @@ app.post('/api/control/platform/users/:id/:action', async (c) => {
   if (!reason) return c.json({ error: 'reason required' }, 400)
   const adminLink = await ensureAdminBusinessIdentity(c, adminSession)
   if (adminLink instanceof Response) return adminLink
-  return controlUserLifecycle(c.env, { auth_user_id: adminSession.user.id, app_user_id: adminLink.app_user_id }, c.req.param('id'), action, reason)
+  return controlUserLifecycle(c.env, { auth_user_id: adminSession.user.id, app_user_id: adminLink.app_user_id, authSessionIssuedAt: new Date(adminSession.session.createdAt).getTime() }, c.req.param('id'), action, reason)
 })
 
 app.all('/api/health*', (c) => originRequest(c.env, c.req.path + new URL(c.req.url).search, { method: c.req.method, headers: c.req.raw.headers }))

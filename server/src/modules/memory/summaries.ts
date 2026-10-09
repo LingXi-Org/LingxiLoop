@@ -53,7 +53,7 @@ export async function listMemorySummaries(db: Queryable, memory: MemoryAPI | und
   const items: Summary[] = []
   for (const [index, row] of rows.slice(0, 5).entries()) {
     const run = await productRunIdentity({ companyId: input.companyId, principalId: input.userId, agentId: row.agent_id,
-      conversationId: input.conversationId, runId: row.run_id, ...(input.threadId ? { threadId: input.threadId } : {}) }, db)
+      conversationId: input.conversationId, runId: row.run_id, historical: true, ...(input.threadId ? { threadId: input.threadId } : {}) }, db)
     const identity = { ...run, workId: run.runId }
     const scopes = await memory.scopes(identity)
     const resume = cursor?.run && cursor.agent === row.agent_id ? cursor : undefined

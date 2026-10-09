@@ -21,6 +21,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 import { AuthScreen } from '@/components/AuthScreen'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { AdminRecordSkeleton, AdminShellSkeleton } from './loading'
+import { useEntrance } from '@/hooks/use-entrance'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -61,7 +63,8 @@ function isChunkDescriptor(value: unknown): value is ChunkDescriptor {
 export function AdminLayout() {
   const session = useManagementSession()
   const companyMode = session?.mode === 'company'
-  const { pathname } = useLocation()
+  const { pathname, search: locationSearch } = useLocation()
+  const pageRef = useEntrance(`${pathname}:${new URLSearchParams(locationSearch).get('tab') ?? ''}`)
   const contentRef = useRef<HTMLElement>(null)
   useEffect(() => { contentRef.current?.scrollTo({ top: 0 }) }, [pathname])
   const [globalSearch, setGlobalSearch] = useState('')
@@ -72,7 +75,7 @@ export function AdminLayout() {
   const { mutate: logout, isPending } = useLogout()
   const health = useCustom<{ ok: boolean }>({ url: `${API_URL}/health/dependencies`, method: 'get', queryOptions: { enabled: session?.mode === 'platform' } })
   const dependencyOk = health.query.data?.data.ok
-  if (!session) return <p aria-busy="true">正在确认管理权限…</p>
+  if (!session) return <AdminShellSkeleton />
   return <SidebarProvider className="admin-shell" style={{ '--sidebar-width': '16rem' } as React.CSSProperties}>
     <a href="#admin-main" className="admin-skip-link">跳至主要内容</a>
     <Sidebar variant="inset">
@@ -108,7 +111,7 @@ export function AdminLayout() {
           <Button variant="ghost" size="icon" onClick={() => setDark(!dark)} aria-label={dark ? '切换浅色模式' : '切换深色模式'}>{dark ? <SunIcon /> : <MoonIcon />}</Button>
         </div>
       </header>
-      <main ref={contentRef} id="admin-main" tabIndex={-1} className="admin-content"><ManagementOutlet /><footer className="admin-footer"><span>© {new Date().getFullYear()} LingxiLoop</span><span>管理工作空间</span></footer></main>
+      <main ref={contentRef} id="admin-main" tabIndex={-1} className="admin-content"><div ref={pageRef} data-ui-page="admin"><ManagementOutlet /></div><footer className="admin-footer"><span>© {new Date().getFullYear()} LingxiLoop</span><span>管理工作空间</span></footer></main>
     </SidebarInset>
   </SidebarProvider>
 }
@@ -135,11 +138,11 @@ export function SearchPage() {
     method: 'get',
     queryOptions: { enabled: query.length >= 2, placeholderData: undefined },
   })
-  if (results.query.isLoading) return <ResourceSkeleton variant="list" count={6} label="正在全局搜索" />
-  if (results.query.isError) return <ErrorPanel message="全局搜索失败" retry={() => void results.query.refetch()} />
+  if (results.query.isLoading && !results.query.data) return <ResourceSkeleton variant="list" count={6} label="正在全局搜索" />
+  if (results.query.isError && !results.query.data) return <ErrorPanel message="全局搜索失败" retry={() => void results.query.refetch()} />
   const data = results.query.data?.data.data ?? []
-  return <div className="space-y-6"><PageHeading title={`搜索“${query}”`} description="用户、公司、项目与课程" />{data.length === 0
-    ? <EmptyPanel message="没有匹配结果" />
+  return <div className="ui-enter space-y-6">{results.query.isError && <ErrorPanel message="搜索结果刷新失败。" retry={() => void results.query.refetch()} />}<PageHeading title={`搜索“${query}”`} description="用户、公司、项目与课程" />{data.length === 0
+    ? <><EmptyPanel message="没有匹配结果，请在顶部搜索框尝试其他名称" /><Button asChild variant="outline"><Link to="/">返回概览</Link></Button></>
     : <div className="space-y-8">{['users', 'companies', 'projects', 'courses'].map(name => { const items = data.filter(item => item.resource === name); return items.length > 0 && <section key={name} className="space-y-3"><h2 className="text-lg font-semibold">{resourceDefinition(name)?.label}</h2><ItemGroup>{items.map(item => <Item asChild variant="outline" key={`${item.resource}:${item.id}`}><Link to={recordPath(item.resource, item.id)}><ItemMedia variant="icon" className="grid size-9 place-items-center rounded-xl bg-muted"><SearchIcon /></ItemMedia><ItemContent><ItemTitle>{item.label}{item.status && <StatusBadge value={item.status} />}</ItemTitle><ItemDescription>{[item.company_name, item.summary].filter(Boolean).join(' · ') || item.id}</ItemDescription></ItemContent><ChevronRightIcon className="size-4 text-muted-foreground" /></Link></Item>)}</ItemGroup></section> })}</div>}</div>
 }
 
@@ -161,7 +164,7 @@ function commands(resource: string, record: AdminRecord): Command[] {
     { action: 'enter-read-only', label: '进入只读', path: `/projects/${record.id}/enter-read-only`, method: 'POST', destructive: true, reason: true },
     { action: 'archive', label: '归档', path: `/projects/${record.id}/archive`, method: 'POST', destructive: true, reason: true },
   ]
-  if (resource === 'agent-routines' && record.status !== 'paused') return [{ action: 'pause', label: '暂停例程', path: `/im/routines/${record.id}/pause`, method: 'POST', destructive: true, reason: true }]
+  if (resource === 'agent-routines' && record.status !== 'paused') return [{ action: 'pause', label: '暂停例程', path: `/control/platform/agent-routines/${record.id}/pause`, method: 'POST', destructive: true, reason: true }]
   if (resource === 'agent-runs') {
     const diagnostics = record.diagnostics as { failedEvents?: number; failedUsageDeliveries?: number; delivery?: { failed_at?: string | null } } | undefined
     return ([['message','结果',!!diagnostics?.delivery?.failed_at],['events','事件',!!diagnostics?.failedEvents],['usage','账单',!!diagnostics?.failedUsageDeliveries]] as const)
@@ -182,8 +185,8 @@ export function ResourceDetailPage() {
   const [pending, setPending] = useState(false)
   const invalidate = useInvalidate()
   if (!resource) return <Navigate to="/" replace />
-  if (detail.query.isLoading && !detail.result) return <ResourceSkeleton variant="detail" label={`正在加载${resource.label}详情`} />
-  if (detail.query.isError || !detail.result) return <ErrorPanel message={`无法加载${resource.label}详情`} retry={() => void detail.query.refetch()} />
+  if (detail.query.isLoading && !detail.result) return <AdminRecordSkeleton />
+  if (!detail.result) return <ErrorPanel message={`无法加载${resource.label}详情`} retry={() => void detail.query.refetch()} />
   const record = detail.result
   const availableCommands = commands(resource.name, record).filter(command => !companyMode || Array.isArray(record.management_actions) && record.management_actions.includes(command.action))
   const execute = async (command: Command) => {
@@ -204,7 +207,8 @@ export function ResourceDetailPage() {
     if (reason === null) return
     setPending(true)
     try {
-      await toastAction(adminFetch(command.path, {
+      const path = !companyMode && /^\/(companies|projects)\//.test(command.path) ? `/control/platform${command.path}` : command.path
+      await toastAction(adminFetch(path, {
         method: command.method,
         body: command.reason ? JSON.stringify({ reason }) : undefined,
         headers: {
@@ -219,6 +223,7 @@ export function ResourceDetailPage() {
     <div><Button asChild variant="ghost" size="sm"><Link to={typeof location.state?.returnTo === "string" && /^\/(?!\/)/.test(location.state.returnTo) ? location.state.returnTo : recordPath(resource.name)}><ArrowLeftIcon />返回{resource.label}</Link></Button></div>
     <PageHeading title={titleFor(record)} description={`${resource.label} · ${record.id}`} actions={availableCommands.map((command) => <CanAccess key={command.label} resource={resource.name} action={command.action}><Button variant={command.destructive ? 'destructive' : 'outline'} disabled={pending} onClick={() => void execute(command)}>{command.label}</Button></CanAccess>)} />
     <div className="flex flex-wrap items-center gap-4"><RecordAvatar record={record} />{(record.status != null || resource.name === 'users') && <StatusBadge value={resource.name === 'users' ? accountStatus(record) : record.status} />}{record.company_id != null && <FieldValue field="company_id" value={record.company_id} label={String(record.company_id_label ?? record.company_id)} />}{record.project_id != null && <FieldValue field="project_id" value={record.project_id} label={String(record.project_id_label ?? record.project_id)} />}</div>
+    {detail.query.isError && <ErrorPanel message="详情刷新失败，当前显示上次加载的内容。" retry={() => void detail.query.refetch()} />}
     <DetailSections key={`${resource.name}:${record.id}`} resource={resource.name} record={record} renderField={(key, value) => isChunkDescriptor(value) ? <ChunkedField key={value.contentUrl} descriptor={value} /> : <FieldValue value={value} field={key} />} />
     {resource.name === 'conversations' && <ConversationContent conversationId={record.id} />}
   </div>
@@ -263,7 +268,7 @@ export function PageHeading({ title, description, actions = [] }: { title: strin
   return <div className="admin-page-heading"><div className="min-w-0"><h1>{title}</h1><p>{description}</p></div>{actions.length > 0 && <div className="admin-heading-actions">{actions}</div>}</div>
 }
 
-function ErrorPanel({ message, retry }: { message: string; retry: () => void }) {
+export function ErrorPanel({ message, retry }: { message: string; retry: () => void }) {
   return <Empty className="admin-state" role="alert"><EmptyHeader><EmptyMedia variant="icon"><CircleAlertIcon /></EmptyMedia><EmptyTitle>{message}</EmptyTitle><EmptyDescription>请检查网络或服务状态后重试。</EmptyDescription></EmptyHeader><EmptyContent><Button variant="outline" onClick={retry}>重新加载</Button></EmptyContent></Empty>
 }
 
@@ -276,7 +281,7 @@ export function LoginPage() {
 }
 
 export function ForbiddenPage() {
-  return <main className="min-h-svh bg-muted flex items-center justify-center p-6"><Card className="w-full max-w-md"><CardHeader><ShieldCheckIcon className="mb-4 size-10 text-primary" /><CardTitle>需要管理员权限</CardTitle><CardDescription>此工作空间仅向平台管理员开放。请使用管理员账号登录，或联系团队管理员申请权限。</CardDescription></CardHeader><CardContent><Button className="w-full" onClick={() => location.assign('/login')}>返回登录</Button></CardContent></Card></main>
+  return <main className="min-h-svh bg-muted flex items-center justify-center p-6"><Card className="w-full max-w-md"><CardHeader><ShieldCheckIcon className="mb-4 size-10 text-primary" /><CardTitle>需要管理员权限</CardTitle><CardDescription>此工作空间仅向有管理权限的账号开放。请使用管理员账号登录，或联系团队管理员申请权限。</CardDescription></CardHeader><CardContent><Button className="w-full" onClick={() => location.assign('/login')}>返回登录</Button></CardContent></Card></main>
 }
 
 function ManagementOutlet() {

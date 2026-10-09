@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { NoEffectError, type ActionContext, type RequestAttachment } from '@lyyzka/lingxios'
 import { nativeTool, authorizeAudienceRead, audienceHumanIds } from '../agents/tools.js'
 import { productConversationId } from './identity.js'
-import { unavailableAttachmentIds } from './attachments.js'
+import { unavailableAttachmentIds, parseAttachmentRefId } from './attachments.js'
 import type { Queryable } from '../db/queryable.js'
 
 async function authorize(context: ActionContext) {
@@ -11,7 +11,7 @@ async function authorize(context: ActionContext) {
 async function attachments(context: ActionContext) {
   const request = await context.requestSnapshot()
   const items: RequestAttachment[] = [...request.attachments, ...[...(request.inheritedRevisions ?? []), ...request.revisions].flatMap(revision => revision.attachments ?? [])]
-  const denied = await unavailableAttachmentIds(context.database as Queryable, context.work.tenantId, productConversationId(context.work), items.map(item => item.id), await audienceHumanIds(context))
+  const denied = await unavailableAttachmentIds(context.database as Queryable, context.work.tenantId, productConversationId(context.work), items.map(item => parseAttachmentRefId(item.id)), await audienceHumanIds(context))
   return items.filter(item => !denied.has(item.id))
 }
 export const fileTools = [

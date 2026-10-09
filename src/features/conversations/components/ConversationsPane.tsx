@@ -22,6 +22,7 @@ import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
+import { useUiCommand } from '@/stores/uiCommands'
 import type { Conversation, Participant } from '@/types'
 import type { ConversationSearchResults } from '../contracts'
 import { NewConversationDialog } from './NewConversationDialog'
@@ -64,7 +65,7 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
         'im-navigation-row group relative cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-xl border-0 text-left shadow-none focus-visible:ring-inset',
         mobile ? 'px-3 py-2' : 'px-2 py-1.5',
         selected
-          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+          ? 'bg-[var(--im-conversation-selected)] text-foreground before:absolute before:inset-y-4 before:start-0 before:w-0.5 before:rounded-full before:bg-primary'
           : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
         className,
       )}
@@ -160,14 +161,14 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
   const [addingMembers, setAddingMembers] = useState<Conversation | null>(null)
   const [pendingPreferences, setPendingPreferences] = useState<Set<string>>(() => new Set())
   const searchRef = useRef<HTMLInputElement>(null)
+  const uiCommand = useUiCommand()
 
   useEffect(() => {
-    const focusSearch = () => { searchRef.current?.focus(); searchRef.current?.select() }
-    window.addEventListener('lingxiloop:focus-conversation-search', focusSearch)
-    return () => {
-      window.removeEventListener('lingxiloop:focus-conversation-search', focusSearch)
+    if (uiCommand?.type === 'focus-conversation-search') {
+      searchRef.current?.focus()
+      searchRef.current?.select()
     }
-  }, [])
+  }, [uiCommand])
 
   useEffect(() => {
     const value = query.trim()
@@ -272,9 +273,9 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
     <aside data-slot="sidebar" className="im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
       <SidebarHeader className="desktop-window-toolbar omb-drag shrink-0 gap-0 p-0">
         {isMobile && <h1 className="h-12 shrink-0 truncate px-4 font-heading text-xl font-medium leading-[48px] text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
-        <div className={cn('im-navigation-row flex min-w-0 items-center gap-2', isMobile ? 'px-3' : 'px-2')}>
-        <InputGroup className={cn('omb-no-drag min-w-0 flex-1 rounded-xl border-transparent bg-sidebar-accent shadow-none', isMobile ? 'h-10' : 'h-8')}>
-          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className={cn('px-2 text-sm', isMobile ? 'h-10' : 'h-8')} />
+        <div className={cn('flex h-16 min-w-0 shrink-0 items-center gap-2', isMobile ? 'px-3' : 'px-2')}>
+        <InputGroup className={cn('omb-no-drag min-w-0 flex-1 rounded-lg border-transparent bg-sidebar-accent shadow-none', isMobile ? 'h-11' : 'h-9')}>
+          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className={cn('px-2 text-sm', isMobile ? 'h-11' : 'h-9')} />
           <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4" /></InputGroupAddon>
           {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" className={isMobile ? 'size-8' : undefined} onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
         </InputGroup>
@@ -288,7 +289,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
         {query.trim() ? (
           <div className="h-full overflow-y-auto">
             {searching && <ResourceSkeleton variant="list" count={4} compact label="正在搜索会话" />}
-            {!searching && resultRows.length === 0 && <p className="px-3 py-5 text-sm text-muted-foreground">没有找到匹配结果</p>}
+            {!searching && resultRows.length === 0 && <div className="ui-enter px-3 py-5 text-sm text-muted-foreground"><p>没有找到匹配结果</p><Button variant="outline" size="sm" className="mt-3" onClick={() => setQuery('')}>清除搜索</Button></div>}
             <ItemGroup className="!gap-0">
               {resultRows.map((row) => (
                 <ConversationListRow key={row.id} mobile={isMobile} selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>
@@ -307,7 +308,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
             className="h-full"
             data={conversations}
             computeItemKey={(_, conversation) => conversation.id}
-            defaultItemHeight={isMobile ? 68 : 60}
+            defaultItemHeight={isMobile ? 68 : 72}
             increaseViewportBy={{ top: 500, bottom: 500 }}
             components={{ List: ConversationItemGroup, EmptyPlaceholder: () => error ? <div role="alert" className="px-4 py-10 text-center"><p className="text-sm font-medium text-foreground">会话加载失败</p><p className="mt-1 text-xs text-muted-foreground">{userFacingError(error, '请稍后重试。')}</p><Button type="button" size="sm" className="mt-3" onClick={() => void useConversations.getState().load()}>重试</Button></div> : loaded ? <p className="px-3 py-8 text-center text-sm text-muted-foreground">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
             itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} />}

@@ -74,6 +74,7 @@ export function CourseProfileSettings({
             <Field>
               <FieldLabel htmlFor="course-settings-name">课程名称</FieldLabel>
               <Input
+                key={course.name}
                 id="course-settings-name"
                 name="name"
                 defaultValue={course.name}
@@ -84,6 +85,7 @@ export function CourseProfileSettings({
             <Field>
               <FieldLabel htmlFor="course-settings-description">课程说明</FieldLabel>
               <Textarea
+                key={course.description}
                 id="course-settings-description"
                 name="description"
                 defaultValue={course.description}

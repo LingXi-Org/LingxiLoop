@@ -63,6 +63,8 @@ Compose runs the one-shot `db-migrate` service before Web and Worker.
 
 ## Verification
 
+Browser flow tests use [tester-army/e2e](https://github.com/tester-army/e2e). See [the E2E setup and coverage guide](e2e/README.md) for the isolated local services, `npm run test:e2e`, and repeatable reports. Run `npm run test:e2e:server` for the isolated API/worker integration suite.
+
 Run only the commands for the changed surface: Web uses the unprefixed lint/typecheck/test/build commands; Admin, Control, and Server use their matching prefixes; Agent Eval uses `eval:check`; integration accepts owning files through `--file`.
 
 CI classifies changed paths, runs only their checks, and publishes only affected images to `ghcr.io/<repository-owner-lowercase>/` with immutable commit-SHA tags. CI does not install or run a browser.

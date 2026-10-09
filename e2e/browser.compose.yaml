@@ -1,0 +1,25 @@
+name: lingxiloop-e2e-browser
+services:
+  wukongim:
+    image: ${E2E_WUKONG_IMAGE:-lingxiloop-e2e-wukongim:local}
+    build:
+      context: ..
+      dockerfile: server/docker/wukongim.Dockerfile
+      args:
+        WUKONG_COMMIT: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
+    ports:
+      - "127.0.0.1:55001:5001"
+      - "127.0.0.1:55200:5200"
+    environment:
+      WK_WEBHOOK_HTTP_ADDR: http://host.docker.internal:5181/webhooks/wukong?token=lingxiloop-e2e-webhook
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  storage:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: ["server", "/data"]
+    ports:
+      - "127.0.0.1:59000:9000"
+    environment:
+      MINIO_ROOT_USER: lingxiloop-e2e
+      MINIO_ROOT_PASSWORD: lingxiloop-e2e-storage-local
+      MINIO_API_CORS_ALLOW_ORIGIN: http://127.0.0.1:5180

@@ -35,6 +35,7 @@ import { selectLearningSpace } from '@/features/knowledge/workspace'
 import { userFacingError } from '@/lib/userFacingError'
 import { ProductLogo } from '@/components/Avatar'
 import { WindowDragStrip } from '@/components/WindowDragStrip'
+import { writeWebDestination } from '@/lib/webNavigation'
 
 function inviteRoleLabel(role: string): string {
   switch (role.toLowerCase()) {
@@ -50,9 +51,12 @@ function inviteRoleLabel(role: string): string {
  *  doesn't trip the same handler again. */
 export function consumeInviteFromUrl(): { token: string; clear: () => void } | null {
   const url = new URL(window.location.href)
+  const decodePathToken = (token: string) => {
+    try { return decodeURIComponent(token) } catch { return token }
+  }
   const projectPathMatch = url.pathname.match(/^\/invite\/project\/([^/?#]+)\/?$/)
   if (projectPathMatch) {
-    const token = `project:${decodeURIComponent(projectPathMatch[1])}`
+    const token = `project:${decodePathToken(projectPathMatch[1])}`
     const clear = () => {
       try { history.replaceState(null, '', `${url.origin}/${url.search}${url.hash}`) } catch { /* swallow */ }
     }
@@ -60,7 +64,7 @@ export function consumeInviteFromUrl(): { token: string; clear: () => void } | n
   }
   const pathMatch = url.pathname.match(/^\/invite\/([^/?#]+)\/?$/)
   if (pathMatch) {
-    const token = decodeURIComponent(pathMatch[1])
+    const token = decodePathToken(pathMatch[1])
     const clear = () => {
       // Drop the /invite/<token> prefix while preserving any query / hash
       // that was on the URL.
@@ -72,7 +76,7 @@ export function consumeInviteFromUrl(): { token: string; clear: () => void } | n
   const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''))
   const fromHash = hashParams.get('invite')
   if (fromHash) {
-    const token = decodeURIComponent(fromHash)
+    const token = fromHash
     const clear = () => {
       hashParams.delete('invite')
       const remaining = hashParams.toString()
@@ -127,12 +131,14 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
       // Both supported surfaces enter the workspace immediately. The Web app
       // is a complete product surface, not a Desktop-download handoff.
       onDone()
+      const accepted = preview?.invitation
+      if (accepted && 'course' in accepted) writeWebDestination({ projectId: accepted.course.projectId, view: 'conversations', conversationId: accepted.course.studyRoomId }, 'replace')
     } catch (e) {
       setAcceptErr(userFacingError(e, '暂时无法接受邀请，请稍后重试。'))
     } finally {
       setBusy(false)
     }
-  }, [projectInvite, rawToken, setMe, setServerCapabilities, setActive, onDone])
+  }, [projectInvite, rawToken, setMe, setServerCapabilities, setActive, onDone, preview])
 
   // Auto-accept the moment we have a session AND the preview is `valid`.
   // Saves a redundant click when the user just signed in to redeem the
@@ -244,6 +250,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
                 }
               }
               onDone()
+              if (inv && 'course' in inv) writeWebDestination({ projectId: inv.course.projectId, view: 'conversations', conversationId: inv.course.studyRoomId }, 'replace')
             }}
           />
         )}

@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { DashboardSkeleton } from './DashboardSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from '@/components/ui/sidebar'
@@ -9,18 +9,30 @@ import { getLearningDashboardMenu, learningSectionForView, viewForLearningSectio
 import { useApp } from '@/stores/app'
 import type { ViewKey } from '@/types'
 
-export function PersonalDashboard({ view, space, loading, error, onRetry }: {
+export function PersonalDashboard({ view, space, loading, error, onRetry, hasSpaces = false, canCreateCourse = false, onChooseWorkspace, onCreateCourse }: {
   view: ViewKey['view']
   space?: LearningSpace
   loading: boolean
   error: string
   onRetry(): void
+  hasSpaces?: boolean
+  canCreateCourse?: boolean
+  onChooseWorkspace?(): void
+  onCreateCourse?(): void
 }) {
-  if (loading) return <ResourceSkeleton variant="detail" label="正在加载学习空间" className="p-6" />
+  if (loading && !error) return <DashboardSkeleton view={view} perspective={space?.perspective} />
   if (!space) return error ? (
     <div className="p-6"><Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button variant="outline" size="sm" onClick={onRetry}>重试</Button></AlertDescription></Alert></div>
   ) : (
-    <div className="grid h-full place-items-center p-6 text-center"><div><p className="font-heading text-base font-medium">当前没有可用的学习空间</p><p className="mt-1 text-sm text-muted-foreground">请点击左上角头像选择工作区，或创建、加入课程。</p></div></div>
+    <div className="grid h-full place-items-center p-6 text-center"><div className="max-w-sm space-y-3">
+      <h1 className="text-xl font-semibold">当前没有可用的学习空间</h1>
+      <p className="text-sm text-muted-foreground">{hasSpaces ? '选择一个工作区，继续查看学习进展。' : canCreateCourse ? '创建课程，开始安排学习内容。' : '请向老师索取课程邀请链接，加入后刷新。'}</p>
+      <div className="flex flex-wrap justify-center gap-2 pt-1">
+        {hasSpaces && onChooseWorkspace ? <Button className="min-h-11" onClick={onChooseWorkspace}>选择工作区</Button>
+          : canCreateCourse && onCreateCourse ? <Button className="min-h-11" onClick={onCreateCourse}>新建课程</Button> : null}
+        <Button className="min-h-11" variant={hasSpaces || canCreateCourse ? 'outline' : 'default'} onClick={onRetry}>刷新</Button>
+      </div>
+    </div></div>
   )
   const section = learningSectionForView(view)
   const managementMenu = getLearningDashboardMenu(space).filter((item) => item.management)

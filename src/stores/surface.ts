@@ -28,7 +28,7 @@ interface SurfaceState {
   closeSurface: () => void
 }
 
-const showConversation = () => useApp.setState({ view: 'conversations' })
+const showConversation = () => useApp.getState().setView('conversations')
 const closeKind = (kind: NonNullable<ConversationSurface>['kind']) =>
   (state: SurfaceState) => state.surface?.kind === kind ? { surface: null } : {}
 

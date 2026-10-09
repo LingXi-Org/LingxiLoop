@@ -18,7 +18,7 @@ const identity = [
   ['users', '用户'], ['companies', '公司'], ['company-memberships', '公司成员'],
   ['company-invitations', '公司邀请'], ['organization-units', '组织单元'],
   ['governance-policies', '治理策略'], ['education-contracts', '教育合同'],
-  ['organization-seats', '组织席位'], ['subscriptions', '订阅'],
+  ['organization-seats', '组织席位'],
 ] as const
 const learning = [
   ['projects', '项目'], ['project-memberships', '项目成员'], ['project-invitations', '项目邀请'],

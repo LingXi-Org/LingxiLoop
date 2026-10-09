@@ -1,3 +1,4 @@
+import { createNativeMessage, nativeText } from '../../../src/lib/nativeMessage'
 import assert from 'node:assert/strict'
 import { createHmac } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
@@ -7,6 +8,31 @@ import { WukongClient } from '../im/wukong.js'
 
 const originalFetch = globalThis.fetch
 afterEach(() => { globalThis.fetch = originalFetch })
+
+// Failure cases: a retired preview breaks the whole list, unread/channel state is
+// lost, native previews change, or malformed native messages stop being rejected.
+test('conversation summaries tolerate unsupported previews without weakening native validation', async () => {
+  const payload = createNativeMessage({ id: 'native-preview', role: 'user', content: [{ type: 'text', text: 'hello' }] })
+  const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64')
+  let encoded = encode({ type: 1, content: 'retired fixture' })
+  globalThis.fetch = async () => Response.json({ done: true, conversations: [
+    { channel_id: 'old', channel_type: 2, unread: 3, active_at: 100, last_message: { payload: encoded } },
+    { channel_id: 'native', channel_type: 2, unread: 1, active_at: 200, last_message: {
+      message_idstr: 'wk-native', message_seq: 9, client_msg_no: payload.id, from_uid: 'sender',
+      server_timestamp_ms: 200000, payload: encode({ type: 1001, ...payload }),
+    } },
+  ] })
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  assert.deepEqual(await client.listConversations('student'), [
+    { channelId: 'old', channelType: 2, unread: 3, activeAt: 100, lastMessage: null },
+    { channelId: 'native', channelType: 2, unread: 1, activeAt: 200, lastMessage: {
+      messageId: 'wk-native', messageSeq: 9, clientMsgNo: payload.id, channelId: 'native', channelType: 2,
+      fromUid: 'sender', timestamp: 200, payload,
+    } },
+  ])
+  encoded = encode({ type: 1001, id: 'invalid-native' })
+  await assert.rejects(() => client.listConversations('student'))
+})
 
 test('WuKong channel reconciliation uses the v3 integer-switch contract', async () => {
   let body: Record<string, unknown> = {}
@@ -28,23 +54,19 @@ test('WuKong adapter uses v3 message endpoints and preserves client_msg_no', asy
     return new Response(JSON.stringify({ message_id: 'wk-1', message_seq: 9 }), { status: 200 })
   }
   const client = new WukongClient({ apiUrl: 'http://wk:5001', wsUrl: 'ws://wk:5200', apiToken: 'token', webhookSecret: 'secret' })
-  const sent = await client.sendMessage('study', 2, 'nova', { version: 1, kind: 'text', clientMsgNo: 'client-1', body: 'hello' })
+  const sent = await client.sendMessage('study', 2, 'nova', createNativeMessage({ id: 'client-1', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'hello' }] }))
   assert.deepEqual(sent, { messageId: 'wk-1', messageSeq: 9 })
   assert.equal(calls[0]?.url, 'http://wk:5001/message/send')
   const body = JSON.parse(String(calls[0]?.init?.body)) as Record<string, unknown>
   assert.equal(body.client_msg_no, 'client-1')
-  assert.deepEqual(JSON.parse(Buffer.from(String(body.payload), 'base64').toString('utf8')), {
-    type: 1000, version: 1, kind: 'text', clientMsgNo: 'client-1', body: 'hello',
-  })
+  assert.deepEqual(JSON.parse(Buffer.from(String(body.payload), 'base64').toString('utf8')), { type: 1001, ...createNativeMessage({ id: 'client-1', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'hello' }] }) })
   const headers = calls[0]?.init?.headers as Record<string, string> | undefined
   assert.equal(headers?.token, 'token')
 })
 
 test('WuKong adapter syncs channel history and decodes Lingxi payloads', async () => {
   const calls: Array<{ url: string; body: Record<string, unknown> }> = []
-  const encoded = Buffer.from(JSON.stringify({
-    type: 1000, version: 1, kind: 'text', clientMsgNo: 'client-9', body: 'learn',
-  })).toString('base64')
+  const encoded = Buffer.from(JSON.stringify({ type: 1001, ...createNativeMessage({ id: 'client-9', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'learn' }] }) })).toString('base64')
   globalThis.fetch = async (input, init) => {
     calls.push({ url: String(input), body: JSON.parse(String(init?.body)) as Record<string, unknown> })
     return new Response(JSON.stringify({ messages: [{
@@ -59,7 +81,7 @@ test('WuKong adapter syncs channel history and decodes Lingxi payloads', async (
   assert.equal(calls[0]?.body.start_message_seq, 9)
   assert.equal(calls[0]?.body.end_message_seq, 0)
   assert.equal(calls[0]?.body.pull_mode, 0)
-  assert.equal(messages[0]?.payload.body, 'learn')
+  assert.equal(nativeText(messages[0]!.payload), 'learn')
   assert.equal(messages[0]?.messageId, 'wk-9')
   assert.equal(messages[0]?.clientMsgNo, 'client-9')
 })
@@ -75,7 +97,7 @@ test('WuKong history starts at the latest page and walks older pages without ove
         ? (!request.start_message_seq || sequence <= request.start_message_seq) && sequence > request.end_message_seq
         : sequence >= request.start_message_seq && (!request.end_message_seq || sequence < request.end_message_seq))
     const page = request.pull_mode === 0 ? sequences.slice(-request.limit) : sequences.slice(0, request.limit)
-    return Response.json({ messages: page.map(message_seq => ({ message_seq, payload: Buffer.from('{"version":1,"kind":"text"}').toString('base64') })) })
+    return Response.json({ messages: page.map(message_seq => ({ message_seq, payload: Buffer.from(JSON.stringify({ type: 1001, ...createNativeMessage({ id: String(message_seq), role: 'user', content: [{ type: 'text', text: 'fixture' }] }) })).toString('base64') })) })
   }
   const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
   const pages: number[][] = []
@@ -88,6 +110,34 @@ test('WuKong history starts at the latest page and walks older pages without ove
   }
   assert.deepEqual(pages, [[4, 5], [2, 3], [1]])
   assert.equal(calls, 3)
+})
+
+// Failure cases: retired records poison history, filtering truncates a page or
+// loses older native messages, a repeated cursor loops, or native validation loosens.
+test('WuKong history fills native pages across retired records without overlap', async () => {
+  const calls: Array<{ start_message_seq: number; limit: number }> = []
+  const rows = Array.from({ length: 9 }, (_, index) => {
+    const sequence = index + 1
+    const payload = sequence % 3 === 1 ? { type: 1001, ...createNativeMessage({ id: String(sequence), role: 'user',
+      content: [{ type: 'text', text: `native-${sequence}` }] }) } : { type: 1, content: 'retired fixture' }
+    return { message_seq: sequence, payload: Buffer.from(JSON.stringify(payload)).toString('base64') }
+  })
+  globalThis.fetch = async (_input, init) => {
+    const input = JSON.parse(String(init?.body))
+    calls.push(input)
+    return Response.json({ messages: rows.filter(row => !input.start_message_seq || row.message_seq <= input.start_message_seq).slice(-input.limit) })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  const latest = await client.syncMessages('study', 2, 2, 'student')
+  const older = await client.syncMessages('study', 2, 2, 'student', latest[0].messageSeq)
+  assert.deepEqual([latest.map(message => message.messageSeq), older.map(message => message.messageSeq)], [[4, 7], [1]])
+  assert.ok(calls.every((input, index) => index === 0 || input.start_message_seq < calls[index - 1].start_message_seq || calls[index - 1].start_message_seq === 0))
+  globalThis.fetch = async () => Response.json({ messages: [rows[0], rows[1]].map(row => ({ ...row,
+    message_seq: 9, payload: Buffer.from(JSON.stringify({ type: 1 })).toString('base64') })) })
+  await assert.rejects(() => client.syncMessages('study', 2, 2), /cursor did not advance/)
+  globalThis.fetch = async () => Response.json({ messages: [{ message_seq: 1,
+    payload: Buffer.from(JSON.stringify({ type: 1001, id: 'invalid-native' })).toString('base64') }] })
+  await assert.rejects(() => client.syncMessages('study', 2))
 })
 
 test('WuKong history repairs authoritative membership once before retrying', async () => {
@@ -112,6 +162,26 @@ test('WuKong history repairs authoritative membership once before retrying', asy
   assert.deepEqual(calls[1]?.body, {
     channel_id: 'study', channel_type: 2, large: 0, reset: 1, subscribers: ['student', 'nova'],
   })
+})
+
+// Failure cases: repaired empty channels still fail, unexpected storage errors
+// disappear, or repeated membership rejection causes an unbounded repair loop.
+test('WuKong history applies normal error handling after membership repair', async () => {
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  const profile = { channelId: 'study', channelType: 2 as const, title: 'Study Room', members: ['student', 'nova'] }
+  for (const detail of ['channel not found', 'storage unavailable', 'valid channel membership required']) {
+    const calls: string[] = []
+    globalThis.fetch = async input => {
+      calls.push(String(input))
+      if (calls.length === 1) return Response.json({ msg: 'valid channel membership required' }, { status: 400 })
+      if (calls.length === 2) return Response.json({})
+      return Response.json({ msg: detail }, { status: 400 })
+    }
+    const history = client.syncMessages('study', 2, 80, 'student', 0, profile)
+    if (detail === 'channel not found') assert.deepEqual(await history, [])
+    else await assert.rejects(history, new RegExp(detail))
+    assert.deepEqual(calls, ['http://wk/channel/messagesync', 'http://wk/channel', 'http://wk/channel/messagesync'])
+  }
 })
 
 test('WuKong history rejects invalid pagination before making a provider request', async () => {
@@ -200,10 +270,10 @@ test('WuKong webhook signatures are constant-time HMAC contracts', () => {
 })
 
 test('WuKong msg.notify batches normalize to the Agent OS webhook contract', () => {
-  const payload = { version: 1, kind: 'text', clientMsgNo: 'msg-1', body: 'hello' }
+  const payload = createNativeMessage({ id: 'msg-1', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'hello' }] })
   const parsed = parseWukongWebhook([{
     message_idstr: '123', channel_id: 'channel-1', from_uid: 'user-1', client_msg_no: 'msg-1',
-    payload: Buffer.from(JSON.stringify({ type: 1000, ...payload })).toString('base64'),
+    payload: Buffer.from(JSON.stringify({ type: 1001, ...payload })).toString('base64'),
   }])
   assert.deepEqual(parsed, {
     success: true,

@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-03T03:10:18.593Z",
+  "route": "/system?tab=authentication",
+  "width": 1280,
+  "height": 900,
+  "theme": "",
+  "checks": [
+    {
+      "name": "后台路由展示标题",
+      "pass": true
+    },
+    {
+      "name": "后台页面无横向溢出",
+      "pass": true
+    },
+    {
+      "name": "后台刷新保留当前内容节点",
+      "pass": true
+    },
+    {
+      "name": "后台刷新失败保留内容并提示",
+      "pass": true
+    },
+    {
+      "name": "后台重试恢复内容",
+      "pass": true
+    }
+  ]
+}

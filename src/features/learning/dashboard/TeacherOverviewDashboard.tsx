@@ -2,7 +2,7 @@ import { CheckmarkCircle02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight, ClipboardCheck, Users } from 'lucide-react'
 import { useState } from 'react'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { OverviewSkeleton } from './LearningSkeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -51,11 +51,11 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
   const [detail, setDetail] = useState<string | null>(null)
 
   if (loading && !data) {
-    return <ResourceSkeleton variant="cards" count={8} label="正在加载课程总览" />
+    return <OverviewSkeleton perspective="teacher" />
   }
   if (!data) {
     return (
-      <div className="grid min-h-64 place-items-center rounded-3xl border border-dashed p-6 text-center">
+      <div role="alert" className="ui-enter grid min-h-64 place-items-center rounded-3xl border border-dashed p-6 text-center">
         <div>
           <p className="text-sm text-muted-foreground">{error || '课程总览暂时不可用。'}</p>
           <Button type="button" variant="outline" className="mt-4" onClick={() => void refresh()}>
@@ -69,8 +69,13 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
   const { summary } = data.overview
   const coverage = summary.learnerCount ? Math.round(summary.learnersWithEvidence / summary.learnerCount * 100) + '%' : '—'
   return (
-    <div className="space-y-4 @min-[48rem]/learning-grid:space-y-6" data-testid="teacher-overview-dashboard" aria-busy={loading}>
-      {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+    <div className="ui-enter space-y-4 @min-[48rem]/learning-grid:space-y-6" data-testid="teacher-overview-dashboard" aria-busy={loading}>
+      {error && <Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button size="sm" variant="outline" disabled={loading} onClick={() => void refresh()}>重试</Button></AlertDescription></Alert>}
+      <div className="grid items-start gap-4 @min-[48rem]/learning-grid:grid-cols-2 @min-[64rem]/learning-grid:grid-cols-3">
+        <TeachingPriorities overview={data.overview} canReview={space.canReview} onOpenSection={setDetail} />
+        <ReviewQueue canReview={space.canReview} reviews={data.reviews} onOpenReview={(review) => setDetailView({ kind: 'review', review })} />
+        <TeacherAttention overview={data.overview} onOpenLearner={space.canReview ? (learnerId) => setDetailView({ kind: 'learner', learnerId }) : undefined} onOpenRoster={space.canReview ? () => setDetail('learners') : undefined} />
+      </div>
       <div className="grid gap-4 @min-[48rem]/learning-grid:grid-cols-12">
         <OverviewChartCard
           title="评价审核" value={summary.pendingReviews + ' 项待审核'} description={'近 ' + data.overview.windowDays + ' 天评价分布 · 点击处理审核'}
@@ -110,10 +115,7 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
           <CourseContentStatus objectives={data.objectives} activities={data.activities} />
         </OverviewChartCard>
       </div>
-      <div className="grid items-start gap-4 @min-[64rem]/learning-grid:grid-cols-12">
-        <div className="min-w-0 @min-[64rem]/learning-grid:col-span-8"><LearningGrowthVine key={space.projectId} projectId={space.projectId} /></div>
-        <div className="h-full min-w-0 @min-[64rem]/learning-grid:col-span-4"><TeachingPriorities overview={data.overview} canReview={space.canReview} onOpenSection={setDetail} /></div>
-      </div>
+      <LearningGrowthVine key={space.projectId} projectId={space.projectId} />
       <TeacherLearningDetailDialog
         projectId={space.projectId}
         canReview={space.canReview}
@@ -243,7 +245,7 @@ function ReviewQueue({
                 key={review.id}
                 type="button"
                 variant="ghost"
-                className="h-auto w-full justify-start rounded-2xl bg-muted p-3 text-start whitespace-normal"
+                className="h-auto w-full justify-start rounded-xl bg-muted p-3 text-start whitespace-normal"
                 onClick={() => onOpenReview(review)}
               >
                 <span className="min-w-0 flex-1">
@@ -270,7 +272,7 @@ function ReviewQueue({
             )}
           </>
         ) : (
-          <Empty className="min-h-52 border-0 p-4">
+          <Empty className="min-h-40 border-0 p-4">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} />

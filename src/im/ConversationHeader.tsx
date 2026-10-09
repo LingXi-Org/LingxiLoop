@@ -24,7 +24,7 @@ export function ConversationHeader({
     <header
       className={cn(
         'im-conversation-header omb-drag z-20 flex shrink-0 items-center border-b border-[var(--im-divider-weak)] bg-sidebar text-sidebar-foreground',
-        mobile ? 'min-h-14 gap-2 px-2' : 'omb-titlebar-safe h-12 gap-3 px-4',
+        mobile ? 'min-h-16 gap-2 px-2' : 'omb-titlebar-safe min-h-16 gap-3 px-6',
       )}
     >
       {onBack && (
@@ -41,9 +41,9 @@ export function ConversationHeader({
           </svg>
         </Button>
       )}
-      <div className="omb-no-drag flex min-w-0 items-center gap-2.5">
+      <div className="omb-no-drag flex min-w-0 flex-1 items-center gap-2.5">
         <ConversationAvatar conversation={conversation} size={mobile ? 28 : 30} />
-        <span className={cn('truncate font-medium text-foreground', mobile ? 'text-base' : 'text-sm')}>{conversation.title}</span>
+        <h1 className={cn('truncate font-heading font-semibold text-foreground', mobile ? 'text-base' : 'text-xl')}>{conversation.title}</h1>
       </div>
       {actions && <div className="omb-no-drag ms-auto flex items-center gap-1">{actions}</div>}
     </header>

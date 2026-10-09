@@ -9,9 +9,10 @@ import { accessControlProvider, adminQueryClient, authProvider, dataProvider, us
 import { CompanyDashboard, CompanyMembers } from './company-pages'
 import { AdminLayout, ForbiddenPage, LoginPage, ResourceDetailPage, SearchPage } from './pages'
 import { ADMIN_RESOURCES } from './resources'
+import { AdminDashboardSkeleton, AdminShellSkeleton } from './loading'
 
 const DashboardPage = lazy(() => import('./dashboard-page').then((module) => ({ default: module.DashboardPage })))
-const deferredPage = (page: ReactNode) => <Suspense fallback={<div className="grid min-h-64 place-items-center text-sm text-muted-foreground" aria-busy="true">正在加载页面…</div>}>{page}</Suspense>
+const deferredPage = (page: ReactNode) => <Suspense fallback={<AdminDashboardSkeleton />}>{page}</Suspense>
 
 export function AdminApp() {
   return <BrowserRouter><Refine
@@ -29,7 +30,7 @@ export function AdminApp() {
   ><Routes>
     <Route path="/login" element={<LoginPage />} />
     <Route path="/forbidden" element={<ForbiddenPage />} />
-    <Route element={<Authenticated key="admin" fallback={<CatchAllNavigate to="/login" />}><Outlet /></Authenticated>}>
+    <Route element={<Authenticated key="admin" loading={<AdminShellSkeleton />} fallback={<CatchAllNavigate to="/login" />}><Outlet /></Authenticated>}>
       <Route element={<AdminLayout />}>
         <Route index element={<ManagementHome />} />
         <Route path="members" element={<CompanyMembers />} />
@@ -53,6 +54,6 @@ export function AdminApp() {
 
 function ManagementHome() {
   const session = useManagementSession()
-  if (!session) return <p aria-busy="true">正在确认管理权限…</p>
+  if (!session) return <AdminShellSkeleton />
   return session?.mode === 'company' ? <CompanyDashboard /> : deferredPage(<DashboardPage />)
 }

@@ -46,7 +46,8 @@ export async function seedMemberLearningContextThreads(
   scope: { companyId: string; userId: string },
 ): Promise<void> {
   const projectId = await findActiveDefaultProjectId(pool, scope.companyId)
-  if (!projectId) throw new Error('active default Project not found')
+  // Education companies create their conversations through assigned courses.
+  if (!projectId) return
   for (const agentId of await listActiveAgentIds(pool, scope.companyId)) {
     await contextThreadsApplication.createLearningThread({ ...scope, projectId }, agentId)
   }

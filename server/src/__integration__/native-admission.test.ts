@@ -1,3 +1,6 @@
+import { decodeNativePayload } from '../im/wukong.js'
+import type { NativeMessage } from '../im/message-types.js'
+import type { RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { after, before, test } from 'node:test'
@@ -30,15 +33,23 @@ test('product native admission, cancellation, revision, independent delivery and
   let releaseDelivery!: () => void
   const slowDelivery = new Promise<void>(resolve => { releaseDelivery = resolve })
   type DeliveryContext = NonNullable<Parameters<DeliveryPort['deliverMessage']>[2]>
-  const deliveries: Record<string, { payload: { clientMsgNo: string; data: { harnessCommit: DeliveryContext['commit']; im: NonNullable<DeliveryContext['im']> } }; messageId: string; calls: number }> = {}
+  const deliveries: Record<string, { payload: NativeMessage; clientNonce: string; messageId: string; calls: number }> = {}
   const im = createServer(async (req, res) => {
     const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(chunk)
     const input = JSON.parse(Buffer.concat(chunks).toString() || '{}')
     res.setHeader('content-type', 'application/json')
     if (req.url !== '/message/send') { res.end(JSON.stringify({ messages: [] })); return }
-    const payload = JSON.parse(Buffer.from(input.payload, 'base64').toString())
-    const record = deliveries[input.channel_id] ??= { payload, messageId: `receipt-${input.channel_id}`, calls: 0 }
+    const payload = decodeNativePayload(input.payload)
+    const record = deliveries[input.channel_id] ??= { payload, clientNonce: input.client_msg_no, messageId: `receipt-${input.channel_id}`, calls: 0 }
+    assert.equal(input.client_msg_no, record.clientNonce, 'delivery retries must preserve the WuKong idempotency key')
+    assert.deepEqual(payload, record.payload, 'delivery retries must preserve the committed payload')
     record.calls++
+    // A lost first acknowledgement must be retried with the same message identity.
+    if (input.channel_id === 'slow-room' && record.calls === 1) {
+      await slowDelivery
+      res.destroy()
+      return
+    }
     if (input.channel_id === 'slow-room') await slowDelivery
     res.end(JSON.stringify({ message_id: record.messageId, message_seq: 1 }))
   })
@@ -104,15 +115,25 @@ test('product native admission, cancellation, revision, independent delivery and
     await waitFor(() => worker!.activeRuns === 0, 'cancel must release the worker slot')
     const replay = async (run: RunIdentity, room: string) => {
       const work = claimed.get(run.runId)!, message = (await api.readMessage(run))!, sent = deliveries[room]
+      assert.deepEqual((await pool.query(`SELECT status,echo->>'messageId' AS "messageId" FROM im_send_acceptances
+        WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`, [companyId, agentId, sent.clientNonce])).rows,
+      [{ status: 'accepted', messageId: sent.messageId }])
+      const callsBeforeReplay = sent.calls
+      const view = sent.payload.metadata.custom.harness as RunDisplayState
+      const commit: DeliveryContext['commit'] = { resultId: view.resultId!,fence: view.messageFence }
+      assert.ok(work.conversation)
+      const context: NonNullable<DeliveryContext['im']> = { tenantId: companyId,...work.conversation,replyKey: 'fixture-replay',messageKey: sent.clientNonce }
       const receipt = await createProductDelivery(lingxiOSControl).deliverMessage(work, message,
-        { signal: shutdown.signal, deadlineAt: new Date(Date.now() + 15000).toISOString(), commit: sent.payload.data.harnessCommit, im: sent.payload.data.im })
+        { signal: shutdown.signal, deadlineAt: new Date(Date.now() + 15000).toISOString(), commit, im: context })
       assert.deepEqual(receipt, { messageId: sent.messageId })
-      assert.equal(sent.calls, 1, 'ACK replay must use the persisted WuKong receipt without another send')
-      assert.equal(sent.payload.clientMsgNo, sent.payload.data.im.messageKey)
+      assert.equal(sent.calls, callsBeforeReplay, 'ACK replay must use the persisted WuKong receipt without another send')
+      assert.equal(sent.payload.id, `run-${run.runId}`)
+      assert.equal(sent.clientNonce,context.messageKey)
     }
     await replay(fast, 'fast-room')
     releaseDelivery()
     await waitFor(async () => (await api.readRunState(slow))?.delivery === 'delivered', 'slow delivery must finish after release')
+    assert.ok(deliveries['slow-room'].calls >= 2, 'lost acknowledgement must exercise delivery retry')
     await replay(slow, 'slow-room')
     assert.ok((await pool.query('SELECT 1 FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, fast.runId])).rows.length,
       'product model calls must reach the shared ledger')

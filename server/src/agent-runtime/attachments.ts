@@ -1,40 +1,57 @@
+import { nativeAttachments } from '../im/message-types.js'
+import { attachmentMetadata } from '../im/attachments.js'
+import { attachmentRefSchema, type AttachmentRef } from '../im/contracts.js'
 import { createHash } from 'node:crypto'
 import { decodeSourceText, extractDocumentText, type RequestAttachment } from '@lyyzka/lingxios'
 import type { ImMessageEnvelope } from '../im/messages-application.js'
 import { storage } from '../storage.js'
 import type { Queryable } from '../db/queryable.js'
 
-export async function unavailableAttachmentIds(db: Queryable, companyId: string, conversationId: string, ids: string[], audienceIds: string[]) {
-  if (!ids.length) return new Set<string>()
-  const { rows } = await db.query<{ origin_client_msg_no: string }>(`SELECT DISTINCT source.origin_client_msg_no
-    FROM knowledge_sources source WHERE source.company_id=$1 AND source.conversation_id=$2 AND source.origin_client_msg_no=ANY($3::text[])
+export const attachmentRefId = (ref: AttachmentRef) => JSON.stringify([ref.clientMsgNo,ref.attachmentId])
+
+export function parseAttachmentRefId(id: string): AttachmentRef {
+  const pair: unknown = JSON.parse(id)
+  if (!Array.isArray(pair) || pair.length !== 2) throw new Error('invalid attachment reference')
+  return attachmentRefSchema.parse({ clientMsgNo: pair[0], attachmentId: pair[1] })
+}
+
+export async function unavailableAttachmentIds(db: Queryable, companyId: string, conversationId: string, refs: AttachmentRef[], audienceIds: string[]) {
+  if (!refs.length) return new Set<string>()
+  const { rows } = await db.query<{ origin_client_msg_no: string; origin_attachment_id: string }>(`SELECT DISTINCT source.origin_client_msg_no,source.origin_attachment_id
+    FROM knowledge_sources source WHERE source.company_id=$1 AND source.conversation_id=$2
+      AND (source.origin_client_msg_no,source.origin_attachment_id) IN (
+        SELECT ref->>'clientMsgNo',ref->>'attachmentId' FROM jsonb_array_elements($3::jsonb) ref)
       AND (source.deleted_at IS NOT NULL OR (source.visibility_scope='PRIVATE' AND EXISTS(SELECT 1 FROM unnest($4::text[]) reader(id) WHERE reader.id<>source.owner_user_id))
         OR EXISTS(SELECT 1 FROM conversation_source_exclusions exclusion WHERE exclusion.source_id=source.id
-          AND exclusion.conversation_id=$2 AND exclusion.user_id=ANY($4::text[])))`, [companyId,conversationId,ids,audienceIds])
-  return new Set(rows.map(row => row.origin_client_msg_no))
+          AND exclusion.conversation_id=$2 AND exclusion.user_id=ANY($4::text[])))`, [companyId,conversationId,JSON.stringify(refs),audienceIds])
+  return new Set(rows.map(row => attachmentRefId({ clientMsgNo: row.origin_client_msg_no, attachmentId: row.origin_attachment_id })))
 }
 
-export function selectRequestAttachments(message: ImMessageEnvelope, explicitIds: string[], messages: ImMessageEnvelope[]): string[] {
-  const ids = [...new Set([...explicitIds, ...(message.payload.kind === 'attachment' ? [message.clientMsgNo] : [])])]
-  if (ids.length > 20) throw new Error('request supports at most 20 attachments')
-  const threadId = message.payload.replyToClientMsgNo
+export function selectRequestAttachments(message: ImMessageEnvelope, explicit: AttachmentRef[], messages: ImMessageEnvelope[]): AttachmentRef[] {
+  const refs = new Map([...explicit, ...nativeAttachments(message.payload).map(file => ({ clientMsgNo: message.clientMsgNo, attachmentId: file.id }))]
+    .map(ref => [attachmentRefId(ref),ref]))
+  if (refs.size > 20) throw new Error('request supports at most 20 attachments')
+  const threadId = message.payload.metadata.custom.replyToClientMsgNo
   for (const item of [...messages].sort((a,b) => b.messageSeq - a.messageSeq)) {
-    if (ids.length === 20) break
-    if (item.channelId === message.channelId && item.messageSeq < message.messageSeq && item.fromUid === message.fromUid
-      && item.payload.kind === 'attachment' && item.payload.replyToClientMsgNo === threadId && !ids.includes(item.clientMsgNo)) ids.push(item.clientMsgNo)
+    if (item.channelId !== message.channelId || item.messageSeq >= message.messageSeq || item.fromUid !== message.fromUid
+      || item.payload.metadata.custom.replyToClientMsgNo !== threadId) continue
+    for (const file of nativeAttachments(item.payload)) {
+      const ref = { clientMsgNo: item.clientMsgNo, attachmentId: file.id }
+      if (refs.size < 20) refs.set(attachmentRefId(ref),ref)
+    }
   }
-  return ids
+  return [...refs.values()]
 }
 
-export async function readRequestAttachments(messages: ImMessageEnvelope[], ids: string[], companyId: string,
+export async function readRequestAttachments(messages: ImMessageEnvelope[], refs: AttachmentRef[], companyId: string,
   signal: AbortSignal, unavailable: ReadonlySet<string>): Promise<RequestAttachment[]> {
   const result: RequestAttachment[] = []
-  for (const id of ids) {
-    const message = messages.find(item => item.clientMsgNo === id), data = message?.payload.data
-    if (message?.payload.kind !== 'attachment' || typeof data?.key !== 'string' || !data.key.startsWith(`attachments/${companyId}/`)
-      || typeof data.name !== 'string' || !data.name.trim() || typeof data.mime !== 'string' || !Number.isSafeInteger(data.size)
-      || Number(data.size) < 0) throw new Error('invalid committed attachment')
-    const attachment: RequestAttachment = { id, sourceVersion: `committed:${id}`, name: data.name, mimeType: data.mime, size: Number(data.size) }
+  for (const ref of refs) {
+    const id = attachmentRefId(ref), message = messages.find(item => item.clientMsgNo === ref.clientMsgNo)
+    const file = message && nativeAttachments(message.payload).find(item => item.id === ref.attachmentId)
+    if (!file) throw new Error('invalid committed attachment')
+    const data = await attachmentMetadata(file,companyId)
+    const attachment: RequestAttachment = { id, sourceVersion: `committed:${id}`, name: data.name, mimeType: data.mime, size: data.size }
     const mime = data.mime.split(';')[0].trim().toLowerCase()
     if (unavailable.has(id)) attachment.contentStatus = 'unavailable'
     else if (attachment.size > 16 * 1024 * 1024) attachment.contentStatus = 'too_large'

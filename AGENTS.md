@@ -14,7 +14,7 @@ This is a stable web product. Follow the user's request to completion; ask only 
 
 - `server/src/db/migrations/0001_v1_baseline.sql` is immutable. Add one next-numbered, transactional, forward-compatible migration; runtime code never executes DDL. A non-empty database without `schema_migrations` must be rebuilt by operations, never adopted by the app.
 - Use the smallest owning check: web (`lint`, `typecheck`, `test`, `build`); admin/control (`admin:*`/`control:*`); server (`server:*` and affected integration); Open Notebook (its own affected package). Migration and runtime integration changes also require their owning integration coverage.
-- Do not add or use Playwright for repository verification.
+- Browser verification uses `tester-army/e2e` and its official `@e2e-dev/web` engine. Do not import or run Playwright directly.
 - Use Komodo's CLI/API update state for production deployment verification; never copy credentials into files or output.
 
 ## Testing

@@ -1,5 +1,5 @@
 import { pool } from '../db/pool.js'
-import type { LingxiMessageV1 } from './message-types.js'
+import { createNativeMessage } from './message-types.js'
 import { wukongClient } from './wukong.js'
 import { syncProductChannel } from '../agent-runtime/conversations.js'
 import type { WorkerTaskHandle } from '../runtime/lifecycle.js'
@@ -24,11 +24,9 @@ export async function reconcileImChannels(): Promise<{ channels: number; failure
         ...(row.preset_key ? { presetKey: row.preset_key } : {}),
       })
       if (row.profile.welcome && row.profile.welcomeAuthorId) {
-        const payload: LingxiMessageV1 = {
-          version: 1, kind: 'text', clientMsgNo: `welcome-${row.channel_id}`,
-          body: row.profile.welcome,
-          refs: { agentId: row.profile.welcomeAuthorId, preset: row.preset_key ?? '' },
-        }
+        const payload = createNativeMessage({ id: `welcome-${row.channel_id}`, role: 'assistant',
+          content: [{ type: 'text', text: row.profile.welcome }],
+          custom: { refs: { agentId: row.profile.welcomeAuthorId, preset: row.preset_key ?? '' } } })
         await wukongClient().sendMessage(row.channel_id, channelType, row.profile.welcomeAuthorId, payload)
       }
     } catch (error) {

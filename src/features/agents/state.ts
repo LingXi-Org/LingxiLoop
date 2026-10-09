@@ -154,8 +154,8 @@ export const useParticipants = create<ParticipantsState>((set) => ({
 const REFRESH_INTERVAL_MS = 60_000
 registerAuthTeardown(() => useParticipants.getState().reset())
 let wsBound = false
-export function bootParticipants() {
-  void useParticipants.getState().load()
+export function bootParticipants(load = true) {
+  if (load) void useParticipants.getState().load()
   if (wsBound) return
   wsBound = true
   ws.connect()

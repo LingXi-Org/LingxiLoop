@@ -3,12 +3,14 @@ import type { Queryable } from '../../db/queryable.js'
 import type { CompanyLifecycleCommand, CompanyStatus, CompanyType } from '../../domain/public.js'
 
 export { STARTER_ROOMS, STARTER_TEAM } from './onboarding-repository.js'
+export { CompanyLifecycleError } from './lifecycle-application.js'
 
 export function onboardCompanyStarterWorkspace(companyId: string): Promise<void> {
   return companyOnboardingApplication.onboard(companyId)
 }
 
 export async function applySystemCompanyLifecycleInTransaction(db: Queryable, input: {
+  actorUserId?: string
   companyId: string
   type: CompanyType
   status: CompanyStatus

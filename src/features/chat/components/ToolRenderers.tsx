@@ -1,5 +1,5 @@
 import { RecommendationCard } from '@/components/assistant-ui/elements/recommendation-card'
-import type { ThreadMessage, ToolCallMessagePartProps } from '@assistant-ui/react'
+import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { renderGenerativeUI, type UIElement, type UISpec } from '@assistant-ui/react-generative-ui'
 import { useState } from 'react'
 import { Plan } from '@/components/tool-ui/plan'
@@ -26,6 +26,12 @@ import {
 } from '@/features/presentations'
 import { useSurface } from '@/stores/surface'
 
+interface CardProps {
+  args: Record<string, unknown>
+  result?: unknown
+  addResult: (value: unknown) => unknown | Promise<unknown>
+}
+
 export function ApprovalCardTool({ args, approval, respondToApproval }: ToolCallMessagePartProps) {
   const value = args as {
     id: string
@@ -47,7 +53,7 @@ export function ApprovalCardTool({ args, approval, respondToApproval }: ToolCall
   )
 }
 
-export function PollFormTool({ args, result, addResult }: ToolCallMessagePartProps) {
+export function PollFormTool({ args, result, addResult }: CardProps) {
   const raw = args as Record<string, unknown>
   const closed = typeof raw.closedAt === 'string'
   const options = Array.isArray(raw.options) ? raw.options.map((option) => {
@@ -81,7 +87,7 @@ export function PollFormTool({ args, result, addResult }: ToolCallMessagePartPro
   />
 }
 
-export function CanvasArtifactTool({ args }: ToolCallMessagePartProps) {
+export function CanvasArtifactTool({ args }: Pick<CardProps, 'args'>) {
   const value = args as { id?: unknown; href?: unknown; title?: unknown; description?: unknown; domain?: unknown }
   if (typeof value.id !== 'string' || typeof value.href !== 'string' || typeof value.title !== 'string') {
     throw new Error('协作画布协议不完整')
@@ -102,7 +108,7 @@ interface ElicitationItem {
   input?: { label: string; placeholder?: string }
 }
 
-export function RecommendationTool({ args, result, addResult }: ToolCallMessagePartProps) {
+export function RecommendationTool({ args, result, addResult }: CardProps) {
   const value = args as { title: string; explanation: string; items: ElicitationItem[] }
   if (!value.title || !value.explanation || value.items?.[0]?.name !== 'next_step') throw new Error('学习建议协议不完整')
   return <RecommendationCard question={value.title} state={result ? 'accepted' : 'idle'} confidenceLabel="学习建议 · 尚未执行"
@@ -110,7 +116,7 @@ export function RecommendationTool({ args, result, addResult }: ToolCallMessageP
     onAlternatives={() => addResult({ next_step: 'alternatives' })}>{value.explanation} {value.items[0].prompt}</RecommendationCard>
 }
 
-export function ElicitationFormTool({ args, result, addResult }: ToolCallMessagePartProps) {
+export function ElicitationFormTool({ args, result, addResult }: CardProps) {
   const value = args as { id?: string; title?: string; items?: ElicitationItem[]; submitLabel?: string }
   const items = Array.isArray(value.items) ? value.items : []
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
@@ -149,17 +155,17 @@ export function ElicitationFormTool({ args, result, addResult }: ToolCallMessage
   )
 }
 
-export function AgentPlanTool({ args }: ToolCallMessagePartProps) {
+export function AgentPlanTool({ args }: Pick<CardProps, 'args'>) {
   const names = useParticipants(state => state.byId)
   return <Plan {...missionPlan(args, names)} />
 }
 
-export function AgentHandoffTool({ args }: ToolCallMessagePartProps) {
+export function AgentHandoffTool({ args }: Pick<CardProps, 'args'>) {
   const names = useParticipants(state => state.byId)
   return <ProgressTracker {...handoffProgress(args, names)} />
 }
 
-export function CanvasProgressTool({ args }: ToolCallMessagePartProps) {
+export function CanvasProgressTool({ args }: Pick<CardProps, 'args'>) {
   const names = useParticipants(state => state.byId)
   return <ProgressTracker {...canvasProgress(args, names)} />
 }
@@ -174,7 +180,7 @@ interface DraftEmailArgs {
   outcome?: 'sent' | 'cancelled'
 }
 
-function draftEmailSpec(email: DraftEmailArgs, outcome?: DraftEmailArgs['outcome']): UIElement {
+function draftEmailSpec(email: DraftEmailArgs, outcome?: DraftEmailArgs['outcome'], readOnly = false): UIElement {
   const row = (key: string, label: string, value: string): UIElement => ({
     $type: 'Row', $key: key, align: 'center', gap: 3,
     children: [
@@ -185,7 +191,7 @@ function draftEmailSpec(email: DraftEmailArgs, outcome?: DraftEmailArgs['outcome
   return {
     $type: 'Card',
     title: outcome === 'sent' ? '邮件已发送' : outcome === 'cancelled' ? '邮件已取消' : '新邮件',
-    ...(outcome ? {} : {
+    ...(outcome || readOnly ? {} : {
       confirm: { label: '发送邮件', $action: { type: 'email.send' } },
       cancel: { label: '取消', $action: { type: 'email.cancel' } },
     }),
@@ -200,15 +206,16 @@ function draftEmailSpec(email: DraftEmailArgs, outcome?: DraftEmailArgs['outcome
   }
 }
 
-export function DraftEmailTool({ args, result, addResult }: ToolCallMessagePartProps) {
-  const email = args as DraftEmailArgs
+export function DraftEmailTool({ args, result, addResult, readOnly = false }: CardProps & { readOnly?: boolean }) {
+  const email = args as unknown as DraftEmailArgs
   const resultStatus = typeof result === 'object' && result !== null ? (result as { status?: unknown }).status : undefined
   const outcome = resultStatus === 'sent' || email.outcome === 'sent'
     ? 'sent'
     : resultStatus === 'cancelled' || email.outcome === 'cancelled' ? 'cancelled' : undefined
-  const content = renderGenerativeUI(draftEmailSpec(email, outcome), styledGenerativeUILibrary, {
+  const content = renderGenerativeUI(draftEmailSpec(email, outcome, readOnly), styledGenerativeUILibrary, {
     status: 'done',
     dispatch: ({ type }) => {
+      if (readOnly) return
       if (type === 'email.send') addResult({ status: 'sent' })
       if (type === 'email.cancel') addResult({ status: 'cancelled' })
     },
@@ -218,7 +225,7 @@ export function DraftEmailTool({ args, result, addResult }: ToolCallMessagePartP
     : <div data-aui-theme="elements" data-assistant-ui-id={email.id} className={conversationCardSize.wide}>{content}</div>
 }
 
-export function TeacherBriefingStatsTool({ args }: ToolCallMessagePartProps) {
+export function TeacherBriefingStatsTool({ args }: Pick<CardProps, 'args'>) {
   const value = parseSerializableStatsDisplay(args)
   return <StatsDisplay {...value} locale="zh-CN" className={`${conversationCardSize.wide} min-w-0`} />
 }
@@ -363,51 +370,21 @@ export function ViewCalendarEventTool({ result, isError }: ToolCallMessagePartPr
   </CardSurface>
 }
 
-export function CalendarEventCard({ args }: ToolCallMessagePartProps) {
+export function CalendarEventCard({ args }: Pick<CardProps, 'args'>) {
   const event = args.event as CalendarEvent
   if (!event?.id || !event.title || !event.startAt) throw new Error('日历卡片缺少授权记录')
   return <CardSurface className={conversationCardSize.standard}>{renderGenerativeUI(viewEventSpec(event), styledGenerativeUILibrary, { status: 'done' })}</CardSurface>
 }
 
-export function PresentationArtifactTool({ args }: ToolCallMessagePartProps) {
+export function PresentationArtifactTool({ args }: Pick<CardProps, 'args'>) {
   const openPresentation = useSurface((state) => state.openPresentationPeek)
   const artifact = parsePresentationArtifact(args)
   if (!artifact) throw new Error('演示文稿产物协议不完整')
   return <PresentationArtifactCard artifact={artifact} onOpen={openPresentation} />
 }
 
-export const CHAT_TOOL_RENDERERS = {
-  by_name: {
-    'approval-card': ApprovalCardTool,
-    'poll-form': PollFormTool,
-    'agent-handoff': AgentHandoffTool,
-    'agent-plan': AgentPlanTool,
-    'canvas-artifact': CanvasArtifactTool,
-    'canvas-progress': CanvasProgressTool,
-    'elicitation-form': ElicitationFormTool,
-    'recommendation-card': RecommendationTool,
-    showStats: TeacherBriefingStatsTool,
-    'learning-stats': TeacherBriefingStatsTool,
-    'calendar-event': CalendarEventCard,
-    'learning.propose_evaluation': ScoreBreakdownTool,
-    'calendar.create': CreateCalendarEventTool,
-    'calendar.list': ViewCalendarEventTool,
-    'calendar.get': ViewCalendarEventTool,
-    'draft-email': DraftEmailTool,
-    'presentation-artifact': PresentationArtifactTool,
-    ipython: () => null,
-    cite_claims: () => null,
-    read_document: () => null,
-  },
-  Fallback: () => null,
-}
-
-export function isVisibleChatPart(part: ThreadMessage['content'][number]): boolean {
-  if (part.type === 'text') return Boolean(part.text.trim())
-  if (part.type === 'source') return true
-  if (part.type !== 'tool-call' || !(part.toolName in CHAT_TOOL_RENDERERS.by_name)) return false
-  if (['ipython', 'cite_claims', 'read_document'].includes(part.toolName)) return false
-  if (['approval-card', 'calendar.create'].includes(part.toolName)) return Boolean(part.approval)
-  if (['calendar.list', 'calendar.get'].includes(part.toolName)) return true
-  return true
+export const TOOL_DETAILS = {
+  'learning.propose_evaluation': ScoreBreakdownTool,
+  'calendar.list': ViewCalendarEventTool,
+  'calendar.get': ViewCalendarEventTool,
 }

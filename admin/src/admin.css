@@ -164,3 +164,8 @@ body { margin: 0; background: var(--background); color: var(--foreground); }
 .admin-workspace-tabs { display: flex; flex-wrap: wrap; gap: .5rem; padding-block-end: 1rem; border-block-end: 1px solid var(--border); }
 .admin-table-card { overflow-x: auto; }
 .admin-content details > summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
+.admin-content, .admin-page-heading > *, .admin-toolbar > * { min-width: 0; }
+.admin-heading-actions, .admin-toolbar { flex-wrap: wrap; }
+.admin-page-heading h1 { overflow-wrap: anywhere; }
+.admin-select { max-width: 100%; }
+.admin-content { padding-block-end: max(1.5rem, env(safe-area-inset-bottom)); }

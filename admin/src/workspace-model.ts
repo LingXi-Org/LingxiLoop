@@ -15,7 +15,7 @@ export const AI = ['participants', 'agent-routines', 'agent-runs', 'agent-delive
 export const SYSTEM = ['audit-events', 'webhook-receipts', 'notification-deliveries']
 
 export function resourceArea(resource: string): string {
-  if (resource === 'users' || resource === 'subscriptions') return '/users'
+  if (resource === 'users') return '/users'
   if (AI.includes(resource)) return '/ai'
   if (SYSTEM.includes(resource)) return '/system'
   if (resource === 'email-messages' || ADMIN_RESOURCES.find(item => item.name === resource)?.group === 'identity') return '/organizations'
@@ -29,7 +29,7 @@ export function recordPath(resource: string, id?: string): string {
 }
 
 export function relationGroups(resource: string): Record<string, string[]> {
-  if (resource === 'users') return { '组织与项目': ['company-memberships', 'project-memberships'], '订阅': ['subscriptions'] }
+  if (resource === 'users') return { '组织与项目': ['company-memberships', 'project-memberships'] }
   if (resource === 'companies') return {
     '成员与组织': ['company-memberships', 'company-invitations', 'organization-units'],
     '合同与治理': ['education-contracts', 'organization-seats', 'governance-policies'],

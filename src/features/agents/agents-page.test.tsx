@@ -16,6 +16,7 @@ test('Agent page renders the supplied authorized roster, personal images and pre
   }]))
   mock.module('@/features/agents/state', { namedExports: { useParticipants: () => ({ byId, loaded, error, load: async () => {} }) } })
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
+  mock.module('@/features/agents/useOpenAgent', { namedExports: { useOpenAgent: () => ({ opening: false, error: null, retryingRefresh: false, actionLabel: '开始对话', open: async () => {} }) } })
   mock.module('@/features/platform/api', { namedExports: { uploadsApi: {} } })
   mock.module('@/features/knowledge/workspace', { namedExports: { useWorkspace: { getState: () => ({ selectedId: 'project' }) } } })
   mock.module('@/stores/auth', { namedExports: { useAuth: (selector: (state: { user: null }) => unknown) => selector({ user: null }) } })

@@ -139,6 +139,8 @@ export function ElicitationForm({
               ) : item.kind === "toggle" ? (
                 <button
                   type="button"
+                  aria-label={item.label}
+                  aria-pressed={item.value === 'true'}
                   disabled={state !== "request"}
                   onClick={() => onFieldChange?.(item.name, item.value === "true" ? "false" : "true")}
                   className="flex w-fit items-center gap-2"
@@ -161,6 +163,8 @@ export function ElicitationForm({
                 </button>
               ) : (
                 <input
+                  aria-label={item.inputLabel ?? item.label}
+                  required={item.required}
                   className={cn(field, "text-foreground/80 rounded-lg px-2.5 py-1.5 text-xs")}
                   value={typeof item.value === "string" ? item.value : ""}
                   placeholder={item.placeholder}

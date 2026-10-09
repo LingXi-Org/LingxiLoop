@@ -1,0 +1,24 @@
+name: lingxiloop-e2e
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "127.0.0.1:55432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: lingxiloop-e2e-local
+      POSTGRES_DB: lingxiloop_integration_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lingxiloop_integration_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30

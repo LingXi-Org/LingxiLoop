@@ -96,7 +96,7 @@ test('read-only memory summaries paginate native scopes and isolate tenants, pro
   await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1", [conversationId, reduced])
   await syncConversationPolicy(app, companyId, conversationId)
   const revokedAudience = await fetch(url, { headers })
-  assert.notEqual(revokedAudience.status, 200, 'native frozen audiences are reauthorized before every read')
+  assert.equal(revokedAudience.status, 403, 'native frozen audience denial is an authorization failure')
   assert.doesNotMatch(await revokedAudience.text(), /summary-00|PRIVATE BODY/)
   await pool.query('UPDATE conversations SET members=$2::jsonb WHERE id=$1', [conversationId, JSON.stringify([agentId])])
   assert.equal((await fetch(url, { headers })).status, 403)

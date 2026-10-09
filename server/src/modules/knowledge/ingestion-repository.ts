@@ -31,6 +31,7 @@ export interface AttachmentKnowledgeJobInput {
   projectId: string
   conversationId: string
   clientMsgNo: string
+  attachmentId: string
   createdBy: string
   title: string
   mime: string
@@ -298,28 +299,28 @@ export async function insertAttachmentKnowledgeJob(
   const { rows: existing } = await db.query<{ id: string }>(
     `SELECT id FROM knowledge_sources
       WHERE company_id=$1 AND project_id=$2 AND conversation_id=$3 AND origin_client_msg_no=$4
-        AND owner_user_id=$5 AND deleted_at IS NULL LIMIT 1`,
-    [input.companyId, input.projectId, input.conversationId, input.clientMsgNo, input.createdBy],
+        AND owner_user_id=$5 AND origin_attachment_id=$6 AND deleted_at IS NULL LIMIT 1`,
+    [input.companyId, input.projectId, input.conversationId, input.clientMsgNo, input.createdBy, input.attachmentId],
   )
   let sourceId = existing[0]?.id ?? `ks-${randomUUID().slice(0, 16)}`
   if (!existing[0]) {
     const { rows: inserted } = await db.query<{ id: string }>(
       `INSERT INTO knowledge_sources
         (id, company_id, project_id, conversation_id, origin_client_msg_no, kind, title, mime_type, size_bytes,
-         storage_key, status, stage, visibility_scope, owner_user_id, created_by_user_id, created_via)
-       VALUES ($1,$2,$3,$4,$5,'file',$6,$7,$8,$9,'queued','queued',$10,$11,$11,'USER')
-       ON CONFLICT (company_id, conversation_id, origin_client_msg_no)
+         storage_key, status, stage, visibility_scope, owner_user_id, created_by_user_id, created_via, origin_attachment_id)
+       VALUES ($1,$2,$3,$4,$5,'file',$6,$7,$8,$9,'queued','queued',$10,$11,$11,'USER',$12)
+       ON CONFLICT (company_id, conversation_id, origin_client_msg_no, origin_attachment_id)
          WHERE origin_client_msg_no IS NOT NULL AND conversation_id IS NOT NULL AND deleted_at IS NULL
        DO NOTHING RETURNING id`,
       [sourceId, input.companyId, input.projectId, input.conversationId, input.clientMsgNo,
-        input.title.slice(0, 200), input.mime, input.size, input.storageKey, input.visibilityScope, input.createdBy],
+        input.title.slice(0, 200), input.mime, input.size, input.storageKey, input.visibilityScope, input.createdBy, input.attachmentId],
     )
     if (!inserted[0]) {
       const { rows: duplicate } = await db.query<{ id: string }>(
         `SELECT id FROM knowledge_sources
           WHERE company_id=$1 AND project_id=$2 AND conversation_id=$3 AND origin_client_msg_no=$4
-            AND owner_user_id=$5 AND deleted_at IS NULL`,
-        [input.companyId, input.projectId, input.conversationId, input.clientMsgNo, input.createdBy],
+            AND owner_user_id=$5 AND origin_attachment_id=$6 AND deleted_at IS NULL`,
+        [input.companyId, input.projectId, input.conversationId, input.clientMsgNo, input.createdBy, input.attachmentId],
       )
       if (!duplicate[0]) throw new Error('failed to resolve idempotent attachment source')
       sourceId = duplicate[0].id
@@ -330,12 +331,7 @@ export async function insertAttachmentKnowledgeJob(
        (id, source_id, status, available_at, wake_recipients, wake_channel_id, wake_trigger_client_msg_no,
         wake_thread_root_client_msg_no, wake_deadline)
      VALUES ($1,$2,'queued',NOW(),$3::jsonb,$4,$5,$6,NOW()+($7::int * INTERVAL '1 millisecond'))
-     ON CONFLICT (source_id) DO UPDATE SET wake_recipients=$3::jsonb, wake_channel_id=$4,
-       wake_trigger_client_msg_no=$5, wake_thread_root_client_msg_no=$6,
-       wake_deadline=COALESCE(knowledge_source_jobs.wake_deadline, NOW()+($7::int * INTERVAL '1 millisecond')),
-       status=CASE WHEN knowledge_source_jobs.status IN ('completed','processing')
-                   THEN knowledge_source_jobs.status ELSE 'queued' END,
-       updated_at=NOW()`,
+     ON CONFLICT (source_id) DO NOTHING`,
     [`ksj-${randomUUID()}`, sourceId, JSON.stringify(input.recipients), input.conversationId, input.clientMsgNo,
       input.threadRootClientMsgNo ?? null, wakeTimeoutMs],
   )

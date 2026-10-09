@@ -1,7 +1,7 @@
 import { useCustom } from '@refinedev/core'
 import { ActivityIcon, ArrowUpRightIcon, Clock3Icon, CoinsIcon, RefreshCwIcon, RouteIcon } from 'lucide-react'
 import { Link } from 'react-router'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { AdminTabSkeleton } from './loading'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,7 +12,7 @@ import { AreaChart } from './components/tremor/AreaChart'
 import { BarList } from './components/tremor/BarList'
 import { DonutChart } from './components/tremor/DonutChart'
 import { normalizeLingxiLitUrl } from './lingxilit-url'
-import { PageHeading } from './pages'
+import { ErrorPanel, PageHeading } from './pages'
 import { RecordAvatar, StatusBadge } from './record-components'
 import { formatValue } from './record-presentation'
 
@@ -23,15 +23,16 @@ function duration(value: number): string {
 export function ObservabilityPage() {
   const query = useCustom<AnalyticsResponse>({ url: `${API_URL}/control/platform/observability`, method: 'get', queryOptions: { refetchInterval: 30_000 } })
   const payload = query.query.data?.data
-  if (query.query.isLoading && !payload) return <ResourceSkeleton variant="detail" label="正在读取 AI 分析数据" />
-  if (query.query.isError || !payload) return <Card role="alert"><CardHeader><CardTitle>AI 分析暂不可用</CardTitle><CardDescription>暂时无法读取运行账本，请稍后重试。</CardDescription></CardHeader><CardContent><Button variant="outline" onClick={() => void query.query.refetch()}>重新加载</Button></CardContent></Card>
+  if (query.query.isLoading && !payload) return <AdminTabSkeleton tab="overview" />
+  if (!payload) return <Card role="alert"><CardHeader><CardTitle>AI 分析暂不可用</CardTitle><CardDescription>暂时无法读取运行账本，请稍后重试。</CardDescription></CardHeader><CardContent><Button variant="outline" onClick={() => void query.query.refetch()}>重新加载</Button></CardContent></Card>
   const summary = frameRows(payload.results.summary)[0] ?? {}
   const runs = metricNumber(summary, 'runs')
   const models = frameRows(payload.results.models).map((row) => ({ name: String(row.model), value: metricNumber(row, 'tokens') }))
   const recent = frameRows(payload.results.recentRuns)
   const results = [{ name: '已完成', value: metricNumber(summary, 'successes') }, { name: '失败或取消', value: metricNumber(summary, 'failures') }, { name: '运行中', value: metricNumber(summary, 'active') }]
   const openLitUrl = normalizeLingxiLitUrl(import.meta.env.VITE_LINGXILIT_URL)
-  return <div className="space-y-6">
+  return <div className="ui-enter space-y-6" aria-busy={query.query.isFetching}>
+    {query.query.isError && <ErrorPanel message="运行分析刷新失败，当前显示上次加载的内容。" retry={() => void query.query.refetch()} />}
     <PageHeading title="AI 分析" description="从运行质量到模型消耗，持续了解 AI 团队的表现。" actions={[
       <Button key="refresh" variant="outline" disabled={query.query.isFetching} onClick={() => void query.query.refetch()}><RefreshCwIcon />刷新数据</Button>,
       <Button key="metrics" asChild variant="outline"><a href={`${API_URL}/runtime-metrics`} target="_blank" rel="noopener noreferrer">原生运行指标<ArrowUpRightIcon /></a></Button>,

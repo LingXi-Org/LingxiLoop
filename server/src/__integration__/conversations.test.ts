@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../../src/lib/nativeMessage'
 /**
  * Integration tests for conversation list/search shaping.
  *
@@ -8,6 +9,8 @@
 import { test, before, beforeEach, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { WukongClient, _setWukongClientForTests } from '../im/wukong.js'
 import {
   buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll,
   installFakeWukong,
@@ -85,6 +88,63 @@ test('[integration] retired GET /conversations has no compatibility data plane',
   assert.equal(res.status, 404, `${conversationId}: ${raw}`)
 })
 
+test('[integration] channels and paginated history survive durable retired records through the real IM HTTP client', async t => {
+  // Failure cases: retired previews cause 500, channel/unread state disappears,
+  // or tenant authorization is bypassed while loading IM summaries.
+  const { companyId, projectId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile)
+    VALUES($1,$2,$3::jsonb)`, [conversationId, companyId, JSON.stringify({ channelType: 2 })])
+  const rows = Array.from({ length: 9 }, (_, index) => {
+    const sequence = index + 1
+    const payload = sequence % 3 === 1 ? { type: 1001, ...createNativeMessage({ id: `native-${sequence}`, role: 'user',
+      content: [{ type: 'text', text: `fixture-${sequence}` }] }) } : { type: 1, content: 'retired fixture' }
+    return { message_seq: sequence, channel_id: conversationId, from_uid: ME_USER_ID,
+      message_idstr: String(sequence), client_msg_no: `fixture-${sequence}`, payload: Buffer.from(JSON.stringify(payload)).toString('base64') }
+  })
+  const im = createServer(async (request, response) => {
+    const chunks: Buffer[] = []
+    for await (const chunk of request) chunks.push(chunk)
+    const input = JSON.parse(Buffer.concat(chunks).toString())
+    response.setHeader('content-type', 'application/json')
+    if (request.url === '/conversation/list') {
+      assert.equal(input.uid, ME_USER_ID)
+      response.end(JSON.stringify({ done: true, conversations: [{ channel_id: conversationId, channel_type: 2,
+        unread: 3, last_message: { payload: rows[8].payload } }] }))
+    } else {
+      assert.equal(request.url, '/channel/messagesync')
+      assert.equal(input.login_uid, ME_USER_ID)
+      assert.equal(input.channel_id, conversationId)
+      response.end(JSON.stringify({ messages: rows.filter(row => !input.start_message_seq || row.message_seq <= input.start_message_seq).slice(-input.limit) }))
+    }
+  })
+  await new Promise<void>(resolve => im.listen(0, '127.0.0.1', resolve))
+  const address = im.address(); assert.ok(address && typeof address === 'object')
+  _setWukongClientForTests(new WukongClient({ apiUrl: `http://127.0.0.1:${address.port}`, wsUrl: 'ws://unused', apiToken: 'fixture', webhookSecret: 'fixture' }))
+  t.after(async () => { installFakeWukong(); await new Promise<void>(resolve => im.close(() => resolve())) })
+  const headers = { 'x-company-id': companyId, 'x-project-id': projectId }
+  const response = await fetch(`${baseUrl}/api/im/channels`, { headers })
+  assert.equal(response.status, 200, await response.clone().text())
+  const channels = await response.json() as Array<{ id: string; title: string; unreadCount: number; lastMessage: unknown }>
+  assert.deepEqual(channels.map(({ id, title, unreadCount, lastMessage }) => ({ id, title, unreadCount, lastMessage })),
+    [{ id: conversationId, title: 'Ada', unreadCount: 3, lastMessage: null }])
+  const history = async (query: string) => {
+    const response = await fetch(`${baseUrl}/api/im/channels/${conversationId}/messages?${query}`, { headers })
+    assert.equal(response.status, 200, await response.clone().text())
+    return await response.json() as Array<{ messageSeq: number; payload: { id: string } }>
+  }
+  const latest = await history('limit=2'), older = await history('limit=2&beforeSeq=4')
+  assert.deepEqual([latest.map(message => [message.messageSeq, message.payload.id]), older.map(message => [message.messageSeq, message.payload.id])],
+    [[[4, 'native-4'], [7, 'native-7']], [[1, 'native-1']]])
+  const denied = await fetch(`${baseUrl}/api/im/channels`, { headers: { ...headers, 'x-company-id': 'outside-company' } })
+  assert.equal(denied.status, 403)
+  const deniedHistory = await fetch(`${baseUrl}/api/im/channels/${conversationId}/messages`, { headers: { ...headers, 'x-company-id': 'outside-company' } })
+  assert.equal(deniedHistory.status, 403)
+  await mkdir('artifacts/im-channels', { recursive: true })
+  await writeFile('artifacts/im-channels/retired-preview.json', JSON.stringify({ passed: true,
+    checks: ['real-http-client', 'channels-200', 'channel-and-unread-preserved', 'retired-preview-null', 'mixed-history-200',
+      'native-pages-filled', 'older-history-without-overlap', 'tenant-isolation'] }, null, 2))
+})
+
 test('[integration] GET /search uses the same perspective-specific direct title', async () => {
   const { companyId, projectId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
 
@@ -138,9 +198,7 @@ test('[integration] new direct conversation is bound, listed and accepts a messa
   ])
   const send = await fetch(`${baseUrl}/api/im/channels/${created.id}/messages/accept`, {
     method: 'POST', headers,
-    body: JSON.stringify({ clientNonce: 'created-conversation-message', payload: {
-      version: 1, kind: 'text', clientMsgNo: 'created-conversation-message', body: '你好',
-    } }),
+    body: JSON.stringify({ clientNonce: 'created-conversation-message', payload: createNativeMessage({ id: 'created-conversation-message', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: '你好' }] }) }),
   })
   const body = await send.json() as { status: string }
   assert.equal(send.status, 202, JSON.stringify(body))

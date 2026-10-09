@@ -19,7 +19,7 @@ export function SettingsGroup({
         <h3 className="font-heading text-sm font-medium text-foreground">{title}</h3>
         {description && <p className="text-xs leading-5 text-muted-foreground">{description}</p>}
       </div>
-      <div className="divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card">
+      <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
         {children}
       </div>
     </section>
@@ -56,14 +56,14 @@ export function SettingsPanelSkeleton({ rows = 3 }: { rows?: number }) {
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-3 w-48 max-w-full" />
       </div>
-      <div className="divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card">
+      <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
         {Array.from({ length: rows }).map((_, index) => (
           <div key={index} className="flex min-h-16 items-center justify-between gap-4 px-4 py-3">
             <div className="space-y-2">
               <Skeleton className="h-4 w-28" />
               <Skeleton className="h-3 w-44 max-w-full" />
             </div>
-            <Skeleton className="h-8 w-20 rounded-3xl" />
+            <Skeleton className="h-8 w-20 rounded-lg" />
           </div>
         ))}
       </div>

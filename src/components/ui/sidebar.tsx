@@ -163,6 +163,8 @@ function Sidebar({
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  // Mobile controls live outside SheetTrigger, so the dialog cannot restore focus itself.
+  const mobileReturnFocus = React.useRef<HTMLElement | null>(null)
 
   if (collapsible === "none") {
     return (
@@ -183,6 +185,13 @@ function Sidebar({
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent
+          onOpenAutoFocus={() => { mobileReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null }}
+          onCloseAutoFocus={(event) => {
+            if (mobileReturnFocus.current?.isConnected) {
+              event.preventDefault()
+              mobileReturnFocus.current.focus()
+            }
+          }}
           dir={dir}
           data-sidebar="sidebar"
           data-slot="sidebar"

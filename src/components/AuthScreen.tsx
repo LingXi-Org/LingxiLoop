@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { WindowDragStrip } from './WindowDragStrip'
+import { safeAuthReturnPath } from '@/lib/webNavigation'
 
 type Mode = 'login' | 'signup' | 'forgot' | 'reset' | 'verify'
 
@@ -87,8 +88,7 @@ export function AuthScreen() {
   const requestedMode = parameters.get('mode')
   const inviteToken = parameters.get('invite') ?? undefined
   const inviteKind = parameters.get('inviteKind') === 'project' ? 'project' : 'company'
-  const requestedReturn = parameters.get('returnTo') ?? '/'
-  const returnTo = requestedReturn.startsWith('/') && !requestedReturn.startsWith('//') && !requestedReturn.includes('\\') ? requestedReturn : '/'
+  const returnTo = safeAuthReturnPath(parameters)
   const [invitation, setInvitation] = useState<Awaited<ReturnType<typeof authApi.invitation>> | null>(null)
   const [mode, setMode] = useState<Mode>(requestedMode === 'reset' ? 'reset' : 'login')
   const [busy, setBusy] = useState(false)
@@ -134,7 +134,7 @@ export function AuthScreen() {
     <main className="flex min-h-svh items-center justify-center overflow-y-auto bg-muted p-4 sm:p-6 lg:p-10">
       <WindowDragStrip />
       <div className="w-full max-w-lg">
-        <Card className="w-full self-center">
+        <Card className="ui-enter w-full self-center">
           <CardHeader>
             <div className="mb-4 flex items-center gap-3 font-heading font-medium">
               <ProductLogo size={36} rounded />

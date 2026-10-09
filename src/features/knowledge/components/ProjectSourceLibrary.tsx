@@ -9,12 +9,12 @@ import {
   Upload04Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { SourceCardsSkeleton } from './SourceSkeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -30,7 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useParticipants } from '@/features/agents/state'
@@ -69,6 +69,9 @@ export function ProjectSourceLibrary({
   readOnly?: boolean
   reviewMode?: boolean
 }) {
+  const requests = useRef({ list: 0, detail: 0 })
+  useEffect(() => () => { requests.current.list++; requests.current.detail++ }, [])
+  const [loaded, setLoaded] = useState(false)
   const [sources, setSources] = useState<KnowledgeSource[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -80,22 +83,25 @@ export function ProjectSourceLibrary({
   const byId = useParticipants((state) => state.byId)
   const me = useAuth((state) => state.user)
 
-  const load = useCallback(async (initial = false) => {
-    if (initial) setLoading(true)
+  const load = useCallback(async () => {
+    const epoch = ++requests.current.list
+    setLoading(true)
     setError('')
     try {
-      setSources(await (reviewMode
+      const rows = await (reviewMode
         ? knowledgeApi.listCourseReviewSources(projectId)
-        : knowledgeApi.listProjectSources(projectId)))
+        : knowledgeApi.listProjectSources(projectId))
+      if (epoch !== requests.current.list) return
+      setSources(rows); setLoaded(true)
     }
-    catch (reason) { setError(userFacingError(reason, '资料库暂时无法加载，请稍后重试。')) }
-    finally { if (initial) setLoading(false) }
+    catch (reason) { if (epoch === requests.current.list) setError(userFacingError(reason, '资料库暂时无法加载，请稍后重试。')) }
+    finally { if (epoch === requests.current.list) setLoading(false) }
   }, [projectId, reviewMode])
 
   useEffect(() => {
-    setSources([])
+    setSources([]); setLoaded(false)
     setSelected(null)
-    void load(true)
+    void load()
   }, [load])
 
   useEffect(() => {
@@ -124,16 +130,18 @@ export function ProjectSourceLibrary({
   const editable = (source: KnowledgeSource) => !readOnly && (canManage || source.createdBy === me?.id)
 
   const open = async (source: KnowledgeSource) => {
+    const epoch = ++requests.current.detail
     setSelected(source)
     setDetailLoading(true)
     setDetailError('')
     try {
-      setSelected(await (reviewMode
+      const detail = await (reviewMode
         ? knowledgeApi.getCourseReviewSource(projectId, source.id)
-        : knowledgeApi.getProjectSource(projectId, source.id)))
+        : knowledgeApi.getProjectSource(projectId, source.id))
+      if (epoch === requests.current.detail) setSelected(detail)
     }
-    catch (reason) { setDetailError(userFacingError(reason, '资料预览暂时无法加载。')) }
-    finally { setDetailLoading(false) }
+    catch (reason) { if (epoch === requests.current.detail) setDetailError(userFacingError(reason, '资料预览暂时无法加载。')) }
+    finally { if (epoch === requests.current.detail) setDetailLoading(false) }
   }
 
   const retry = async (source: KnowledgeSource) => {
@@ -161,33 +169,28 @@ export function ProjectSourceLibrary({
     } catch { /* Toast owns the visible error state. */ }
   }
 
-  return <div className="space-y-5">
-    {!readOnly ? <div className="flex justify-end"><Button type="button" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button></div> : null}
+  return <div aria-busy={loading} className="space-y-5">
+    {!readOnly ? <div className="flex justify-end"><Button type="button" className="max-md:min-h-11" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button></div> : null}
     <div>
-      {loading && visibleSources.length === 0 ? <ResourceSkeleton variant="cards" count={6} label="正在加载资料库" />
-        : error && visibleSources.length === 0 ? <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" onClick={() => void load(true)}>重新加载</Button></AlertDescription></Alert>
-          : visibleSources.length === 0 ? <Empty className="min-h-96 border border-dashed"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>还没有资料</EmptyTitle><EmptyDescription>{readOnly ? '这里还没有可查看的资料。' : '添加文件、网页或文本，之后可在资料库中查看和搜索。'}</EmptyDescription></EmptyHeader>{!readOnly ? <EmptyContent><Button type="button" onClick={() => setAdding(true)}><HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />添加资料</Button></EmptyContent> : null}</Empty>
-            : <><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visibleSources.map((source) => {
+      {loading && !loaded ? <SourceCardsSkeleton />
+        : error && visibleSources.length === 0 ? <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button type="button" variant="outline" size="sm" onClick={() => void load()}>重新加载</Button></AlertDescription></Alert>
+          : visibleSources.length === 0 ? <Empty className="min-h-64 border border-dashed"><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle>还没有资料</EmptyTitle><EmptyDescription>{readOnly ? '这里还没有可查看的资料。' : '添加文件、网页或文本，之后可在资料库中查看和搜索。'}</EmptyDescription></EmptyHeader></Empty>
+            : <><ul aria-label="资料列表" className="ui-stagger divide-y overflow-hidden rounded-2xl border">{visibleSources.map((source) => {
               const creator = byId[source.createdBy]?.name ?? source.ownerName ?? (source.createdBy === me?.id ? '你' : '一位成员')
               const busy = source.status === 'upload_pending' || source.status === 'queued' || source.status === 'processing'
               const canEdit = editable(source)
-              return <ContextMenu key={source.id}>
+              return <li key={source.id}><ContextMenu>
                 <ContextMenuTrigger asChild>
-                  <Card size="sm" className="relative min-h-64 overflow-visible transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg focus-within:ring-2 focus-within:ring-ring">
-                    <button type="button" className="flex h-full w-full flex-col items-start gap-4 px-5 py-5 text-start outline-none" onClick={() => void open(source)}>
-                      <span className={source.status === 'failed' ? 'grid size-16 place-items-center rounded-4xl bg-destructive/10 text-destructive' : 'grid size-16 place-items-center rounded-4xl bg-primary/10 text-primary'}>
-                        {busy ? <HugeiconsIcon icon={Loading03Icon} strokeWidth={1.8} className="size-8 animate-spin" /> : <SourceIcon source={source} className="size-9" />}
-                      </span>
-                      <span className="min-w-0 space-y-1">
-                        <span className="block line-clamp-2 font-heading text-base font-medium">{source.title}</span>
-                        <span className="block text-sm text-muted-foreground">{kindLabel[source.kind]} · {Math.max(1, Math.round(source.sizeBytes / 1024))} KB</span>
-                      </span>
-                      <span className="mt-auto flex w-full flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <Badge variant={source.status === 'failed' ? 'destructive' : source.status === 'ready' ? 'secondary' : 'outline'}>{statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态暂不可用'}</Badge>
-                        <span className="ms-auto truncate">{creator}</span>
-                      </span>
-                    </button>
-                  </Card>
+                  <button type="button" className="flex min-h-20 w-full items-center gap-3 bg-card p-4 text-start outline-none transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" onClick={() => void open(source)}>
+                    <span className={source.status === 'failed' ? 'grid size-10 shrink-0 place-items-center rounded-xl bg-destructive/10 text-destructive' : 'grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground'}>
+                      {busy ? <HugeiconsIcon icon={Loading03Icon} strokeWidth={1.8} className="size-5 animate-spin" /> : <SourceIcon source={source} className="size-5" />}
+                    </span>
+                    <span className="min-w-0 flex-1 space-y-1">
+                      <span className="block break-words text-sm font-medium">{source.title}</span>
+                      <span className="block break-words text-xs text-muted-foreground">{kindLabel[source.kind]} · {Math.max(1, Math.round(source.sizeBytes / 1024))} KB · {creator}</span>
+                    </span>
+                    <Badge className="shrink-0" variant={source.status === 'failed' ? 'destructive' : source.status === 'ready' ? 'secondary' : 'outline'}>{statusLabel[source.stage] ?? statusLabel[source.status] ?? '状态暂不可用'}</Badge>
+                  </button>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
                   <ContextMenuItem onSelect={() => void open(source)}><SourceIcon source={source} />打开资料</ContextMenuItem>
@@ -195,8 +198,8 @@ export function ProjectSourceLibrary({
                   {source.status === 'failed' && canEdit ? <ContextMenuItem onSelect={() => void retry(source)}><HugeiconsIcon icon={RefreshIcon} strokeWidth={2} />重新处理</ContextMenuItem> : null}
                   {canEdit ? <><ContextMenuSeparator /><ContextMenuItem variant="destructive" onSelect={() => void remove(source)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />删除资料</ContextMenuItem></> : null}
                 </ContextMenuContent>
-              </ContextMenu>
-            })}</div>{error ? <Alert variant="destructive" className="mt-5"><AlertDescription>{error}</AlertDescription></Alert> : null}</>}
+              </ContextMenu></li>
+            })}</ul>{error ? <Alert variant="destructive" className="mt-5"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button size="sm" variant="outline" disabled={loading} onClick={() => void load()}>重试</Button></AlertDescription></Alert> : null}</>}
     </div>
 
     {!readOnly ? <KnowledgeSourceUploadDialog open={adding} onOpenChange={setAdding} onFiles={uploadFiles} onUrl={addUrl} onText={addText} /> : null}
@@ -207,14 +210,14 @@ export function ProjectSourceLibrary({
       await load()
     }} />
 
-    <Dialog open={selected !== null} onOpenChange={(nextOpen) => { if (!nextOpen) { setSelected(null); setDetailError('') } }}>
+    <Dialog open={selected !== null} onOpenChange={(nextOpen) => { if (!nextOpen) { requests.current.detail++; setSelected(null); setDetailError('') } }}>
       <DialogContent className="max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-3xl">
         <DialogHeader className="border-b border-border/60 p-6 pe-14"><DialogTitle>{selected?.title ?? '资料预览'}</DialogTitle><DialogDescription>{selected ? `${kindLabel[selected.kind]} · ${statusLabel[selected.stage] ?? statusLabel[selected.status] ?? '状态暂不可用'} · ${selected.visibilityScope === 'PROJECT' ? '项目成员可见' : '仅自己可见'}` : '资料'}</DialogDescription></DialogHeader>
         <div className="min-h-0 overflow-y-auto p-6">
           {selected && !detailError && <ConversationSourceToggle key={`${projectId}:${selected.id}`} projectId={projectId} sourceId={selected.id} />}
           {detailLoading ? <ResourceSkeleton variant="detail" label="正在加载资料预览" />
-            : detailError ? <Alert variant="destructive"><AlertDescription>{detailError}</AlertDescription></Alert>
-              : selected ? <><div className="flex flex-wrap gap-2">{selected.originalUrl ? <Button asChild variant="outline" size="sm"><a href={selected.originalUrl} target="_blank" rel="noreferrer">打开原始网页</a></Button> : null}{selected.originalFileUrl ? <Button asChild variant="outline" size="sm"><a href={selected.originalFileUrl} target="_blank" rel="noreferrer">打开原始文件</a></Button> : null}</div><pre className="mt-4 min-h-48 whitespace-pre-wrap rounded-3xl bg-muted p-5 font-sans text-sm leading-6">{selected.extractedText || (selected.error ? userFacingError(selected.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可预览提取内容。')}</pre>{editable(selected) ? <div className="mt-5 flex flex-wrap justify-end gap-2"><Button type="button" variant="outline" onClick={() => setRenaming(selected)}><HugeiconsIcon icon={Edit02Icon} strokeWidth={2} />重命名</Button><Button type="button" variant="destructive" onClick={() => void remove(selected)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />删除来源</Button></div> : null}</> : null}
+            : detailError ? <Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{detailError}<Button size="sm" variant="outline" onClick={() => { if (selected) void open(selected) }}>重试</Button></AlertDescription></Alert>
+              : selected ? <><div className="flex flex-wrap gap-2">{selected.originalUrl ? <Button asChild variant="outline" size="sm"><a href={selected.originalUrl} target="_blank" rel="noreferrer">打开原始网页</a></Button> : null}{selected.originalFileUrl ? <Button asChild variant="outline" size="sm"><a href={selected.originalFileUrl} target="_blank" rel="noreferrer">打开原始文件</a></Button> : null}</div><pre className="mt-4 min-h-48 whitespace-pre-wrap rounded-2xl bg-muted p-5 font-sans text-sm leading-6">{selected.extractedText || (selected.error ? userFacingError(selected.error, '资料处理失败，请重试。') : '资料仍在处理中，完成后可预览提取内容。')}</pre>{editable(selected) ? <div className="mt-5 flex flex-wrap justify-end gap-2"><Button type="button" variant="outline" onClick={() => setRenaming(selected)}><HugeiconsIcon icon={Edit02Icon} strokeWidth={2} />重命名</Button><Button type="button" variant="destructive" onClick={() => void remove(selected)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />删除来源</Button></div> : null}</> : null}
         </div>
       </DialogContent>
     </Dialog>

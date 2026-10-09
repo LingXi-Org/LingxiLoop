@@ -40,9 +40,9 @@ export function LearnerNextSteps({ overview, model, canSubmit, onOpenSection }: 
     <Card className="h-full">
       <CardHeader>
         <CardTitle><h3>接下来学什么</h3></CardTitle>
-        <CardDescription>聚焦当前最值得推进的一步</CardDescription>
+        <CardDescription>待复习、待完成的活动与任务步骤</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-3">
+      <CardContent className="grid gap-3 @min-[48rem]/learning-grid:grid-cols-3">
         {actions.length > 0 ? actions.map((action) => (
           <Button key={action.key} type="button" variant="ghost" aria-label={`${action.label}：${action.title}，${action.detail}`} className="h-auto w-full items-start justify-start gap-3 rounded-xl border p-3 text-start whitespace-normal" onClick={() => onOpenSection(action.key)}>
             <span aria-hidden="true" className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary [&_svg]:size-4">{action.icon}</span>
@@ -53,14 +53,14 @@ export function LearnerNextSteps({ overview, model, canSubmit, onOpenSection }: 
             <ArrowRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-muted-foreground" />
           </Button>
         )) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-muted/40 p-6 text-center">
+          <div className="flex flex-col items-start gap-3 rounded-xl bg-muted/40 p-4 @min-[48rem]/learning-grid:col-span-3">
             <CheckCheck aria-hidden="true" className="size-7 text-primary" />
             <p className="font-medium">{overview ? '按自己的节奏继续' : '学习安排暂不可用'}</p>
             <p className="text-sm leading-6 text-muted-foreground">可以回顾学习记录，或在课程对话中探索新的问题。</p>
             <Button type="button" variant="outline" size="sm" onClick={() => onOpenSection('evidence')}>回顾学习记录 <ArrowRight aria-hidden="true" /></Button>
           </div>
         )}
-        {!canSubmit && <p className="mt-auto pt-2 text-xs leading-5 text-muted-foreground">当前课程为只读状态，可继续回顾目标与学习记录。</p>}
+        {!canSubmit && <p className="text-xs leading-5 text-muted-foreground @min-[48rem]/learning-grid:col-span-3">当前课程为只读状态，可继续回顾目标与学习记录。</p>}
       </CardContent>
     </Card>
   )

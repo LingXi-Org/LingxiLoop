@@ -97,7 +97,6 @@ const RESOURCE_COLUMNS: Record<string, string[]> = {
   'governance-policies': ['kind', 'policy_version', 'created_at'],
   'education-contracts': ['plan_id', 'status', 'seat_limit', 'ends_at'],
   'organization-seats': ['user_id', 'status', 'assigned_at'],
-  subscriptions: ['plan_id', 'status', 'current_period_end'],
   'project-transfers': ['source_company_id', 'target_company_id', 'status', 'created_at'],
   courses: ['company_id', 'project_id', 'created_at'],
   'knowledge-units': ['status', 'project_id', 'created_at'],

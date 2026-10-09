@@ -198,7 +198,7 @@ const Legend = React.forwardRef<HTMLOListElement, LegendProps>((props, ref) => {
             direction === "left"
               ? element.scrollLeft - width + scrollButtonsWith
               : element.scrollLeft + width - scrollButtonsWith,
-          behavior: "smooth",
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
         })
         setTimeout(() => {
           checkScroll()

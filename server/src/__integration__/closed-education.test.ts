@@ -18,6 +18,7 @@ import { changeUserLifecycle } from '../modules/platform-operations/user-lifecyc
 import { listCalendarReminderRecipients } from '../modules/calendar/repository.js'
 import { findLearningDashboardLearner } from '../modules/learning/teacher-reporting-repository.js'
 import { listProjects } from '../modules/knowledge/repository.js'
+import { seedMemberLearningContextThreads } from '../modules/context-threads/facade.js'
 
 const transaction = <T>(work: Parameters<typeof withTransaction<T>>[1]) => withTransaction(pool, work)
 const education = new EducationApplication({ transaction, auditInTransaction, invitationBaseUrl: 'https://loop.test' })
@@ -82,6 +83,12 @@ test('operator creates no membership; named first teacher administrator admits o
 test('students join multiple courses, cannot change identity or cross companies', async () => {
   await user('student')
   await accept('student',await studentInvitation('math'),'project')
+  assert.deepEqual((await pool.query(`SELECT conversation.id,conversation.members ? 'student' AS "roomMember",
+    COALESCE(binding.profile->'members' ? 'student',false) AS "imMember"
+    FROM conversations conversation LEFT JOIN im_channel_bindings binding ON binding.channel_id=conversation.id
+    WHERE conversation.id IN ('room-math','room-science') ORDER BY conversation.id`)).rows,
+  [{ id:'room-math',roomMember:true,imMember:true }, { id:'room-science',roomMember:false,imMember:false }],
+  'admission must grant only the invited local Study Room before any async effects run')
   await accept('student',await studentInvitation('science'),'project')
   assert.equal(await allowed('student','math','learning:submit'),true)
   assert.equal(await allowed('student','math','learning:manage'),false)
@@ -89,6 +96,15 @@ test('students join multiple courses, cannot change identity or cross companies'
   await assert.rejects(accept('student',await teacherInvitation('student',false,otherId),'company'),/another company/)
   await pool.query(`UPDATE companies SET status='READ_ONLY' WHERE id=$1`,[companyId])
   await assert.rejects(accept('student',await teacherInvitation('student',false,otherId),'company'),/another company/)
+})
+
+// Course-only companies have no default Project: optional onboarding must not
+// retry forever or create private threads outside an assigned course.
+test('course-only companies complete optional context-thread seeding without a default project', async () => {
+  assert.equal((await pool.query(`SELECT 1 FROM projects WHERE company_id=$1 AND is_default`, [companyId])).rowCount, 0)
+  const before = (await pool.query(`SELECT id FROM conversations WHERE company_id=$1 ORDER BY id`, [companyId])).rows
+  await seedMemberLearningContextThreads({ companyId, userId: 'school-admin' })
+  assert.deepEqual((await pool.query(`SELECT id FROM conversations WHERE company_id=$1 ORDER BY id`, [companyId])).rows, before)
 })
 
 test('database rejects a second live company and in-period identity conversion', async () => {

@@ -1,16 +1,17 @@
+import { nativeMessageSchema, type NativeMessage } from '@/lib/nativeMessage'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
 
 export interface ChatOutboxEntry {
   conversationId: string
   clientMessageId: string
-  payload: Record<string, unknown>
+  payload: NativeMessage
   createdAt: string
 }
 
 function storageKey(): string | null {
   const companyId = getActiveCompanyId()
   const userId = getMeId()
-  return companyId && userId ? `lingxiloop.chat.outbox:${companyId}:${userId}` : null
+  return companyId && userId ? `lingxiloop.chat.outbox.v2:${companyId}:${userId}` : null
 }
 
 export function readChatOutbox(): ChatOutboxEntry[] {
@@ -26,7 +27,7 @@ export function readChatOutbox(): ChatOutboxEntry[] {
         && typeof row.conversationId === 'string'
         && typeof row.clientMessageId === 'string'
         && typeof row.createdAt === 'string'
-        && row.payload && typeof row.payload === 'object',
+        && nativeMessageSchema.safeParse(row.payload).success,
       )
     }).slice(-100)
   } catch {

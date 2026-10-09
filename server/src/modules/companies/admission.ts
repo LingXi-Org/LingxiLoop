@@ -4,6 +4,7 @@ import type { Queryable } from '../../db/queryable.js'
 import { HttpError } from '../../http/errors.js'
 import { auditInTransaction } from '../identity/public.js'
 import { enqueueLearningEffect } from '../learning/effects-repository.js'
+import { studyRoomState, syncStudyRoomMembers } from '../learning/reporting-repository.js'
 import { enqueueMemberOnboardingEffect } from './effects-repository.js'
 
 /** All invitation entry points run this inside their business transaction. */
@@ -110,6 +111,13 @@ export async function acceptEducationInvitation(db: Queryable, userId: string, t
         SET role='STUDENT',status='ACTIVE',company_period_id=EXCLUDED.company_period_id,updated_at=NOW()`,
     [course.projectId, company.id, userId, member.period_id])
     await db.query(`INSERT INTO project_invitation_acceptances(token_hash,user_id) VALUES($1,$2)`, [tokenHash, userId])
+    // Local authorization must be ready when admission returns; durable effects
+    // reconcile the external channel independently after this transaction commits.
+    const room = await studyRoomState(db, company.id, course.id)
+    if (room?.room_id) await syncStudyRoomMembers(db, {
+      courseId: course.id, companyId: company.id, roomId: room.room_id,
+      title: room.title, topic: room.topic, leaderId: room.leader_id,
+    })
     for (const effectKind of ['study_room.sync', 'teacher_room.sync', 'member_onboarding.seed'] as const) {
       await enqueueLearningEffect(db, { companyId: company.id, courseId: course.id, kind: effectKind, effectKey: userId, payload: { userId } })
     }

@@ -8,6 +8,8 @@ import {
   UserCircleIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { lazy, Suspense } from 'react'
+import { useEntrance } from '@/hooks/use-entrance'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -36,12 +38,14 @@ import {
 } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { AccountSettingsPanel } from './AccountSettingsPanel'
-import { AppearanceSoundSettingsPanel } from './AppearanceSoundSettingsPanel'
-import { DataAccountSettingsPanel } from './DataAccountSettingsPanel'
-import { NotificationSettingsPanel } from './NotificationSettingsPanel'
+import { SettingsPanelSkeleton } from './SettingsComponents'
 import type { SettingsSectionId } from './store'
 import { SETTINGS_DIALOG_TRIGGER_ID, useSettingsDialog } from './store'
+
+const AccountSettingsPanel = lazy(() => import('./AccountSettingsPanel').then(module => ({ default: module.AccountSettingsPanel })))
+const AppearanceSoundSettingsPanel = lazy(() => import('./AppearanceSoundSettingsPanel').then(module => ({ default: module.AppearanceSoundSettingsPanel })))
+const DataAccountSettingsPanel = lazy(() => import('./DataAccountSettingsPanel').then(module => ({ default: module.DataAccountSettingsPanel })))
+const NotificationSettingsPanel = lazy(() => import('./NotificationSettingsPanel').then(module => ({ default: module.NotificationSettingsPanel })))
 
 const SETTINGS_SECTIONS = [
   {
@@ -76,12 +80,13 @@ const SETTINGS_SECTIONS = [
 }>
 
 function SettingsPanel({ section }: { section: SettingsSectionId }) {
-  switch (section) {
-    case 'account': return <AccountSettingsPanel />
-    case 'appearance-sound': return <AppearanceSoundSettingsPanel />
-    case 'notifications': return <NotificationSettingsPanel />
-    case 'data-account': return <DataAccountSettingsPanel />
-  }
+  const ref = useEntrance(section)
+  return <div ref={ref}><Suspense fallback={<SettingsPanelSkeleton />}>
+    {section === 'account' && <AccountSettingsPanel />}
+    {section === 'appearance-sound' && <AppearanceSoundSettingsPanel />}
+    {section === 'notifications' && <NotificationSettingsPanel />}
+    {section === 'data-account' && <DataAccountSettingsPanel />}
+  </Suspense></div>
 }
 
 /** Global settings surface. Mount once inside the authenticated desktop shell. */
@@ -202,7 +207,7 @@ export function SettingsDialog() {
           <SidebarInset className="min-h-0 min-w-0 overflow-hidden bg-popover text-popover-foreground">
             <header className="flex h-14 shrink-0 flex-col justify-center border-b border-border px-4 pe-14 sm:px-6 sm:pe-14">
               <h2 className="font-heading text-sm font-medium text-foreground">{currentSection.label}</h2>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">{currentSection.description}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{currentSection.description}</p>
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
               <SettingsPanel section={activeSection} />

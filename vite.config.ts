@@ -6,7 +6,7 @@ import path from 'node:path'
 // LINGXILOOP_DEV_API_TARGET=https://loop.example.com (no trailing slash) to
 // run the dev renderer against production without rebuilding.
 const HTTP_TARGET = process.env.LINGXILOOP_DEV_API_TARGET || 'http://localhost:5181'
-const WS_TARGET = HTTP_TARGET.replace(/^http/, 'ws')
+const WS_TARGET = process.env.LINGXILOOP_DEV_WS_TARGET || HTTP_TARGET.replace(/^http/, 'ws')
 
 export default defineConfig({
   plugins: [react()],

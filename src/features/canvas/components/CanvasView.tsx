@@ -1,8 +1,9 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ws } from '@/api/core/realtime'
 import { AvatarMini } from '@/components/Avatar'
 import { IAt, IPlus, ISend, ITrash } from '@/components/icons'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,6 +16,7 @@ import { canvasStatusLabel, isCanvasAssignmentActive } from '../lib/collaboratio
 import { useCanvas } from '../state'
 import { CanvasFrameContent } from './CanvasFrameContent'
 import { CanvasHeader } from './CanvasHeader'
+import { CanvasSkeleton } from './CanvasSkeleton'
 import { localizeCanvasStatus as localizeStatus } from './canvasLabels'
 import '../canvas.css'
 
@@ -39,7 +41,8 @@ type GesturePoint = { x: number; y: number; pointerType: string }
 type PinchGesture = { distance: number; zoom: number; worldX: number; worldY: number }
 
 export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: () => void } = {}) {
-  const snapshot = useCanvas((state) => state.snapshot)
+  const snapshot = useCanvas((state) => canvasId && state.snapshot?.id !== canvasId ? state.previews[canvasId] ?? null : state.snapshot)
+  const loading = useCanvas((state) => state.loading)
   const error = useCanvas((state) => state.error)
   const selectedId = useCanvas((state) => state.selectedFrameId)
   const activeCanvasId = useCanvas((state) => state.activeCanvasId)
@@ -63,9 +66,14 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
   const gestureMoved = useRef(false)
   const visibleFrames = useMemo(() => snapshot?.frames.filter((frame) => frame.type !== 'artifact') ?? [], [snapshot?.frames])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let active = true
     void ws.connect()
+    if (canvasId) {
+      void load(canvasId)
+      void loadWorkspaces()
+      return
+    }
     void (async () => {
       await loadWorkspaces()
       if (!active) return
@@ -277,7 +285,12 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
 
   const feedbackFrame = visibleFrames.find((frame) => frame.id === feedbackFrameId) ?? null
 
-  return <div data-canvas-ui="root" className="canvas-shell relative h-full min-h-0 overflow-hidden">
+  if (!snapshot) return <div className="relative h-full min-h-0">
+    {onBack && <Button className="absolute end-3 top-3 z-10" variant="outline" size="sm" onClick={onBack}>关闭画布</Button>}
+    {error ? <Alert variant="destructive" className="mx-auto mt-16 max-w-md"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button variant="outline" size="sm" disabled={loading} onClick={() => void load(canvasId)}>{loading ? '正在重试…' : '重试'}</Button></AlertDescription></Alert> : <CanvasSkeleton />}
+  </div>
+
+  return <div data-canvas-ui="root" aria-busy={loading} className="ui-enter canvas-shell relative h-full min-h-0 overflow-hidden">
     <CanvasHeader onBack={onBack} onFocusFrame={focusFrame} />
     <ContextMenu onOpenChange={(open) => { if (!open) { setMenu(null); setFrameMenu(null) } }}>
     <ContextMenuTrigger asChild>
@@ -302,7 +315,8 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
         })}
       </div>
       {snapshot && visibleFrames.length === 0 && <div className="pointer-events-none fixed inset-0 grid place-items-center"><div data-canvas-empty className="canvas-empty-state px-5 py-4 text-center" style={{ transform: `scale(${viewport.zoom})` }}><div className="text-sm font-semibold text-ink">画布还没有卡片</div><div className="mt-1 text-xs text-ink-secondary">在空白处单击右键，选择“新增”或“对话”。</div></div></div>}
-      {error && <div className="canvas-error-state absolute left-4 top-4 px-3 py-2 text-xs">{error}</div>}
+      {loading && <span role="status" className="sr-only">正在刷新画布</span>}
+      {error && <div role="alert" className="canvas-error-state absolute left-4 top-4 flex flex-wrap items-center gap-2 px-3 py-2 text-xs">{error}<Button variant="outline" size="sm" disabled={loading} onClick={() => void load(canvasId)}>重试</Button></div>}
     </div>
     </ContextMenuTrigger>
     <ContextMenuContent aria-label={frameMenu && snapshot ? `${snapshot.frames.find((frame) => frame.id === frameMenu.frameId)?.title ?? ''}卡片操作` : '画布操作'} className="min-w-[200px]">

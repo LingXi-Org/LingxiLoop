@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../im/message-types.js'
 import { randomUUID } from 'node:crypto'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
@@ -81,17 +82,10 @@ async function deliverPendingBriefings(now: Date): Promise<void> {
         agentId: briefing.agent_id,
         channelId: briefing.channel_id,
         clientNonce: briefing.client_msg_no,
-        payload: {
-          version: 1,
-          kind: 'system',
-          clientMsgNo: briefing.client_msg_no,
-          body: briefing.summary,
-          refs: { briefingId: briefing.id, attentionItemIds: briefing.attention_item_ids },
-          data: {
-            type: 'teacher_briefing',
+        payload: createNativeMessage({ id: briefing.client_msg_no, role: 'assistant',
+          content: [{ type: 'text', text: briefing.summary }, { type: 'data', name: 'teacher-briefing', data: {
             dashboard: teacherBriefingDashboard(briefing, previousStatistics),
-          },
-        },
+          } }], custom: { refs: { briefingId: briefing.id, attentionItemIds: briefing.attention_item_ids } } }),
       })
       if (sent.kind !== 'accepted') throw new Error(`Teacher Briefing send rejected: ${sent.kind}`)
       await withTransaction(pool, (db) => markTeacherBriefingSent(db, {

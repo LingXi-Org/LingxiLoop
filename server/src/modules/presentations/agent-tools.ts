@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../im/message-types.js'
 import { productConversationId } from '../../agent-runtime/identity.js'
 import { NoEffectError, type ActionContext, type ToolDefinition, type PresentationDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
@@ -16,9 +17,9 @@ function application(context: ActionContext) {
     enabled: () => env.PRESENTATION_HTML_ENABLED,
     async sendArtifactCard(input) { events.push({ type: 'im.system', companyId: input.companyId,
       actorId: input.agentId, channelId: input.channelId, clientNonce: input.clientMsgNo,
-      payload: { version: 1, kind: 'artifact', clientMsgNo: input.clientMsgNo, body: input.title,
-        refs: { presentationId: input.presentationId, agentId: input.agentId },
-        data: { artifactId: input.presentationId, artifactKind: 'lecture_deck_html', title: input.title } } }) },
+      payload: createNativeMessage({ id: input.clientMsgNo, role: 'assistant',
+        content: [{ type: 'data', name: 'presentation-artifact', data: { artifactId: input.presentationId, artifactKind: 'lecture_deck_html', title: input.title } }],
+        custom: { refs: { presentationId: input.presentationId, agentId: input.agentId } } }) }) },
   })
   return { app, api: createPresentationAgentFacade(app), events }
 }

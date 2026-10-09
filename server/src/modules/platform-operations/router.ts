@@ -10,7 +10,8 @@ import { safe } from '../../http/async-handler.js'
 import { HttpError } from '../../http/errors.js'
 import { imMessagesApplication } from '../../im/messages-facade.js'
 import { readDocumentText } from '../documents/public.js'
-import { audit } from '../identity/public.js'
+import { audit, auditInTransaction } from '../identity/public.js'
+import { cancelRoutineRuns } from '../routines/public.js'
 import { platformApplication } from '../platform/facade.js'
 import { requirePlatformAdmin, type PlatformAdminIdentity } from './authorization.js'
 import {
@@ -24,6 +25,7 @@ import {
 } from './resources.js'
 import { observabilityDashboard } from './observability-dashboard.js'
 import { changeUserLifecycle } from './user-lifecycle.js'
+import { platformLifecycleRouter } from './lifecycle.js'
 import {
   cancelPlatformAgentRun,
   continuePlatformAgentRun,
@@ -100,6 +102,7 @@ function identity(response: { locals: Record<string, unknown> }): PlatformAdminI
 }
 
 adminRouter.use(educationRouter)
+adminRouter.use(platformLifecycleRouter)
 
 adminRouter.get('/session', (request, response) => {
   response.json({
@@ -214,6 +217,21 @@ adminRouter.get('/resources/:resource', safe(async (request, response) => {
 
 adminRouter.get('/runtime-metrics', safe(async (_request,response) => {
   response.type('text/plain; version=0.0.4').send((await lingxiOSControl()).metrics())
+}))
+
+adminRouter.post('/agent-routines/:id/pause', safe(async (request, response) => {
+  const { reason } = reasonSchema.parse(request.body)
+  const id = String(request.params.id)
+  await withTransaction(pool, async db => {
+    const routine = (await db.query<{ company_id: string }>('SELECT company_id FROM agent_routines WHERE id=$1 FOR UPDATE', [id])).rows[0]
+    if (!routine) throw new HttpError(404, 'routine not found')
+    await db.query(`UPDATE agent_routines SET status='paused',next_run_at=NULL,version=version+1,
+      pause_reason='platform_admin',updated_at=NOW() WHERE id=$1`, [id])
+    await cancelRoutineRuns(db, lingxiOSControl, id)
+    await auditInTransaction(db, { kind: 'platform_admin.routine_pause', userId: identity(response).id,
+      companyId: routine.company_id, ...requestMetadata(request), detail: { routineId: id, reason } })
+  })
+  response.json({ ok: true, id, status: 'paused' })
 }))
 
 adminRouter.post('/agent-runs/:id/delivery/:channel/retry', safe(async (request, response) => {

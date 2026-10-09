@@ -6,6 +6,7 @@ import { userFacingError } from '@/lib/userFacingError'
 import { toastAction } from '@/lib/actionToast'
 import { useAuth } from '@/stores/auth'
 import { getLearningSpaceScopes, switchLearningWorkspace } from './dashboardScope'
+import type { ViewKey } from '@/types'
 
 export function useLearningSpaces() {
   const companyId = useAuth((state) => state.activeCompanyId)
@@ -52,12 +53,12 @@ export function useLearningSpaces() {
     }
   }, [reload])
 
-  const select = async (space: LearningSpace) => {
-    if (selectionPending.current || space.projectId === projectId) return
+  const select = async (space: LearningSpace, requestedView?: ViewKey['view']) => {
+    if (selectionPending.current || (space.projectId === projectId && !requestedView)) return
     selectionPending.current = true
     setPending(true)
     try {
-      await toastAction(switchLearningWorkspace(space), {
+      await toastAction(switchLearningWorkspace(space, requestedView), {
         loading: '正在切换工作区', success: `已切换到${space.title}`,
         error: (reason) => userFacingError(reason, '切换工作区失败，请稍后重试。'),
       })

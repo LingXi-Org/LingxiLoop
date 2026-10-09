@@ -1,3 +1,4 @@
+import { nativeData } from '../../im/message-types.js'
 import { productConversationId, assertFrozenAudience } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
@@ -14,9 +15,9 @@ import type { RunIdentity } from '@lyyzka/lingxios'
 export async function resolveAgentHandoffWake(input: { companyId: string; channelId: string; agentId: string }, message: ImMessageEnvelope): Promise<RunIdentity> {
   const { rows } = await pool.query<{ child_work_id: string; principal_id: string; thread_id: string | null }>(`SELECT child_work_id,principal_id,thread_id FROM agent_handoffs
     WHERE id=$1 AND company_id=$2 AND conversation_id=$3 AND to_agent_id=$4 AND from_agent_id=$5`,
-    [message.payload.refs?.handoffId,input.companyId,input.channelId,input.agentId,message.fromUid])
+    [nativeData(message.payload,'handoff')?.id,input.companyId,input.channelId,input.agentId,message.fromUid])
   const row = rows[0]
-  if (message.payload.kind !== 'handoff' || !row?.child_work_id || !row.principal_id) throw new Error('handoff is missing its authorized native child')
+  if (!nativeData(message.payload,'handoff') || !row?.child_work_id || !row.principal_id) throw new Error('handoff is missing its authorized native child')
   const identity = await readRunReference(pool,input.companyId,row.child_work_id)
   if (!identity || identity.principalId !== row.principal_id || identity.agentId !== input.agentId) throw new Error('handoff child identity changed')
   return identity

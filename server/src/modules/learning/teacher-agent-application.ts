@@ -1,3 +1,4 @@
+import { createNativeMessage } from '../../im/message-types.js'
 /** Pulse application orchestration. Persistence is owned by teacher-* repositories. */
 import { createHash } from 'node:crypto'
 import type { AgentActionContext, AgentAction } from '../../agents/contracts.js'
@@ -209,11 +210,11 @@ export async function ensureTeacherAgentForCourse(companyId: string,courseId: st
 export async function sendTeacherAgentWelcome(companyId:string,courseId:string,db:Queryable):Promise<void>{
   const descriptor=await findTeacherWelcomeDescriptor(db,companyId,courseId)
   if(!descriptor)return
-  await wukongClient().sendMessage(descriptor.conversationId,2,descriptor.agentId,{
-    version:1,kind:'system',clientMsgNo:`teacher-welcome-${courseId}`,
-    body:`望远已就绪：我可以汇总“${descriptor.courseTitle}”的学情、检索课程资料、管理草稿与成员，并把关键变更提交给教师审批。`,
-    refs:{agentId:descriptor.agentId},data:{suppressAgentWake:true},
-  })
+  await wukongClient().sendMessage(descriptor.conversationId,2,descriptor.agentId,createNativeMessage({
+    id:`teacher-welcome-${courseId}`,role:'assistant',
+    content:[{type:'text',text:`望远已就绪：我可以汇总“${descriptor.courseTitle}”的学情、检索课程资料、管理草稿与成员，并把关键变更提交给教师审批。`}],
+    custom:{refs:{agentId:descriptor.agentId},suppressAgentWake:true},
+  }))
 }
 
 export async function syncTeacherRoomMembers(companyId:string,courseId:string,db:Queryable,transaction:TeacherTransaction,

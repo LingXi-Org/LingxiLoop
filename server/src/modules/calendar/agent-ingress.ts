@@ -5,8 +5,8 @@ import { calendarApplication } from './facade.js'
 import type { ImMessageEnvelope } from '../../im/messages-application.js'
 
 export async function resolveCalendarAgentRequest(input: { companyId: string; channelId: string; agentId: string }, message: ImMessageEnvelope) {
-  const eventId = message.payload.data?.calendarEventId, scheduledFor = message.payload.data?.scheduledFor
-  if (message.fromUid !== 'calendar' || message.payload.kind !== 'system' || typeof eventId !== 'string'
+  const eventId = message.payload.metadata.custom.calendarEventId, scheduledFor = message.payload.metadata.custom.scheduledFor
+  if (message.fromUid !== 'calendar' || message.payload.role !== 'system' || typeof eventId !== 'string'
     || typeof scheduledFor !== 'string' || !Number.isFinite(Date.parse(scheduledFor))
     || message.clientMsgNo !== `calendar-dispatch:${createHash('sha256').update(`${input.companyId}\0${eventId}\0${scheduledFor}`).digest('hex')}`) {
     throw new Error('committed calendar dispatch identity is invalid')

@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-03T03:11:19.534Z",
+  "route": "/",
+  "width": 1440,
+  "height": 960,
+  "theme": "",
+  "checks": [
+    {
+      "name": "后台路由展示标题",
+      "pass": true
+    },
+    {
+      "name": "后台页面无横向溢出",
+      "pass": true
+    },
+    {
+      "name": "后台刷新保留当前内容节点",
+      "pass": true
+    },
+    {
+      "name": "后台刷新失败保留内容并提示",
+      "pass": true
+    },
+    {
+      "name": "后台重试恢复内容",
+      "pass": true
+    }
+  ]
+}

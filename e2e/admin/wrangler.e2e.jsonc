@@ -1,0 +1,25 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "lingxiloop-control-e2e",
+  "main": "../../workers/control-plane/src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "lingxiloop-control-e2e",
+    "database_id": "00000000-0000-0000-0000-000000000000",
+    "migrations_dir": "../../workers/control-plane/migrations"
+  }],
+  "vars": {
+    "ORIGIN_BASE_URL": "http://127.0.0.1:5181",
+    "UPTIME_BASE_URL": "http://127.0.0.1:9",
+    "KOMODO_BASE_URL": "http://127.0.0.1:9",
+    "KOMODO_TARGETS_JSON": "{}",
+    "AUTH_ALLOWED_HOSTS": "127.0.0.1:5180,127.0.0.1:5198,127.0.0.1:8797,localhost:5180,localhost:5198,localhost:8797",
+    "APP_VERSION": "e2e-local",
+    "BETTER_AUTH_SECRET": "lingxiloop-e2e-local-auth-secret-000000001",
+    "GATEWAY_HMAC_SECRET": "lingxiloop-e2e-local-gateway-secret-00000001",
+    "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA"
+  }
+}

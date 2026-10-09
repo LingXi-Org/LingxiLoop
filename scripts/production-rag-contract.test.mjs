@@ -354,7 +354,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
 
 test('actual workflow conditions block publishing and deployment after a failed or cancelled gate', () => {
   const workflow = read('.github/workflows/ci.yml')
-  const allows = (job, scope, results = {}, event = 'push') => {
+  const allows = (job, scope, results = {}, event = 'push', publishOnly = false) => {
     const block = workflow.match(new RegExp(`^  ${job}:\\r?\\n([\\s\\S]*?)(?=^  [a-z]|$(?![\\s\\S]))`, 'm'))?.[1]
     const expression = block?.match(/if: >-\r?\n([\s\S]*?)\r?\n    needs:/)?.[1]
     assert.ok(expression, job)
@@ -362,12 +362,14 @@ test('actual workflow conditions block publishing and deployment after a failed 
     for (const name of ['checks', 'integration', 'publish', 'update-manifests', 'deploy']) {
       needs[name] = { result: results[name] ?? 'success' }
     }
-    return Function('github', 'needs', 'always', `return (${expression.replaceAll('needs.update-manifests', "needs['update-manifests']")})`)(
-      { ref: 'refs/heads/main', event_name: event }, needs, () => true,
+    return Function('github', 'needs', 'always', 'inputs', `return (${expression.replaceAll('needs.update-manifests', "needs['update-manifests']")})`)(
+      { ref: 'refs/heads/main', event_name: event }, needs, () => true, { publish_only: publishOnly },
     )
   }
   const release = computeScope({}, 'release')
   assert.equal(allows('publish', release), true)
+  assert.equal(allows('publish', computeScope({}, 'server'), {}, 'workflow_dispatch', true), true)
+  assert.equal(allows('update-manifests', release, {}, 'workflow_dispatch', true), false)
   for (const gate of ['checks', 'integration']) {
     for (const result of ['failure', 'cancelled']) {
       assert.equal(allows('publish', release, { [gate]: result }), false, `${gate}: ${result}`)

@@ -36,6 +36,8 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Item, ItemActions, ItemContent, ItemGroup } from '@/components/ui/item'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CalendarSkeleton } from './CalendarSkeleton'
+import { useEntrance } from '@/hooks/use-entrance'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useParticipants } from '@/features/agents/state'
 import { useConversations } from '@/features/conversations/store'
@@ -574,6 +576,9 @@ export function CalendarView() {
 
   const events = useCalendar((s) => s.events)
   const loaded = useCalendar((s) => s.loaded)
+  const loading = useCalendar((s) => s.loading)
+  const loadError = useCalendar((s) => s.error)
+  const contentRef = useEntrance(`${mode}:${cursor.getTime()}:${loaded}`)
   const load = useCalendar((s) => s.load)
   const remove = useCalendar((s) => s.remove)
   const runNow = useCalendar((s) => s.runNow)
@@ -633,7 +638,7 @@ export function CalendarView() {
 
   const agendaContent = (
     <div className="min-h-0 flex-1 overflow-auto p-2">
-      {!loaded && <div className="space-y-2" aria-label="正在加载日历事件"><Skeleton className="h-24 rounded-2xl" /><Skeleton className="h-24 rounded-2xl" /><Skeleton className="h-24 rounded-2xl" /></div>}
+      {!loaded && !loadError && <div role="status" className="space-y-2" aria-label="正在加载日历事件"><Skeleton className="h-24 rounded-2xl" /><Skeleton className="h-24 rounded-2xl" /><Skeleton className="h-24 rounded-2xl" /></div>}
       {loaded && agenda.length === 0 && (
         <Empty className="border-0 px-4 py-8">
           <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={Clock01Icon} strokeWidth={2} /></EmptyMedia><EmptyTitle className="text-base">未来 30 天没有安排</EmptyTitle><EmptyDescription>创建事件或智能助教任务后会显示在这里。</EmptyDescription></EmptyHeader>
@@ -706,20 +711,8 @@ export function CalendarView() {
         <span className="order-last w-full truncate text-sm font-medium @min-[42rem]/calendar:hidden">{headerLabel}</span>
       </header>
 
-      {!loaded ? (
-        <div className="grid min-h-0 flex-1 @min-[48rem]/calendar:grid-cols-[minmax(0,1fr)_320px]" role="status" aria-label="正在加载日历">
-          <span className="sr-only">正在加载日历</span>
-          <div className="grid min-h-0 grid-cols-7 gap-px bg-border/60 p-px">
-            {Array.from({ length: 35 }, (_, index) => <Skeleton key={index} className="min-h-20 rounded-none bg-card @min-[48rem]/calendar:min-h-28" />)}
-          </div>
-          <aside className="hidden min-h-0 space-y-3 border-s border-[var(--im-divider)] p-3 @min-[48rem]/calendar:block">
-            <Skeleton className="h-6 w-28" />
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
-          </aside>
-        </div>
-      ) : <div className="grid min-h-0 flex-1 @min-[48rem]/calendar:grid-cols-[minmax(0,1fr)_320px]">
+      {loadError && <div role="alert" className="ui-enter flex flex-wrap items-center gap-3 border-b border-destructive/20 px-4 py-3 text-sm text-destructive"><span>{loadError}</span><Button variant="outline" size="sm" disabled={loading} onClick={() => void (loaded ? useCalendar.getState().reload() : load())}>重试</Button></div>}
+      {!loaded ? (loadError ? null : <CalendarSkeleton mode={mode} />) : <div ref={contentRef} aria-busy={loading} className="grid min-h-0 flex-1 @min-[48rem]/calendar:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-h-0 flex-col">
           {mode === 'month' && <MonthGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} />}
           {mode === 'week' && <TimeGrid cursor={cursor} events={events} onEdit={openEdit} onNew={openNew} dayCount={7} />}

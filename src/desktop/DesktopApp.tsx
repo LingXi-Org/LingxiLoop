@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import type { LayoutChangedMeta } from 'react-resizable-panels'
 import { CommandPalette } from '@/components/CommandPalette'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import {
@@ -21,14 +22,23 @@ import { useConversations } from '@/features/conversations/store'
 import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
-import { viewForWorkspace } from '@/features/learning/dashboard/navigation'
-import { SETTINGS_DIALOG_TRIGGER_ID, useSettingsDialog } from '@/features/settings/store'
+import { useSettingsDialog } from '@/features/settings/store'
+import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useEntrance } from '@/hooks/use-entrance'
+import { DashboardSkeleton } from './DashboardSkeleton'
+import { DocumentSkeleton } from '@/features/documents/components/DocumentSkeleton'
+import { CanvasSkeleton } from '@/features/canvas/components/CanvasSkeleton'
+import { PresentationSkeleton } from '@/features/presentations/components/PresentationSkeleton'
 import { actionForKeyboardEvent } from '@/lib/commands'
+import { retryWebNavigation } from '@/lib/navigation'
 import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
+import { useAuth } from '@/stores/auth'
+import type { Participant } from '@/types'
 import { useSurface } from '@/stores/surface'
 import { useTheme } from '@/stores/theme'
+import { useUiCommands } from '@/stores/uiCommands'
 import { ChatPane } from './ChatPane'
 import { InfoPane } from './InfoPane'
 import { ThreadDrawer } from './ThreadDrawer'
@@ -41,12 +51,11 @@ const CanvasView = lazy(() => import('@/features/canvas/components/CanvasView').
 const CalendarPeekPane = lazy(() => import('@/features/calendar/components/CalendarPeekPane').then((module) => ({ default: module.CalendarPeekPane })))
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
 const PresentationDrawerContent = lazy(() => import('@/features/presentations/components/PresentationDrawerContent').then((module) => ({ default: module.PresentationDrawerContent })))
-const SettingsDialog = lazy(() => import('@/features/settings/SettingsDialog').then((module) => ({ default: module.SettingsDialog })))
 const PersonalDashboard = lazy(() => import('./PersonalDashboard').then((module) => ({ default: module.PersonalDashboard })))
 
 const DESKTOP_SIDEBAR_WIDTH_KEY = 'lingxiloop:desktop-layout:sidebar-width:v1'
-const LEFT_COLUMN_DEFAULT = 260
-const LEFT_COLUMN_MIN = 240
+const LEFT_COLUMN_DEFAULT = 300
+const LEFT_COLUMN_MIN = 260
 const LEFT_COLUMN_MAX = 360
 const MIDDLE_COLUMN_MIN = 320
 
@@ -88,28 +97,34 @@ export function DesktopApp() {
   const presentationId = surface?.kind === 'presentation' ? surface.presentationId : null
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
-  const [mobileConversationOpen, setMobileConversationOpen] = useState(false)
+  const mobileConversationOpen = useApp((state) => state.mobileConversationOpen)
+  const navigationPending = useApp((state) => state.navigationPending)
+  const navigationError = useApp((state) => state.navigationError)
+  const canCreateCourse = useAuth((state) => state.companies.find((company) => company.id === state.activeCompanyId)?.role === 'teacher')
+  const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false)
+  const [createCourseOpen, setCreateCourseOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
+  const pageRef = useEntrance(`${selectedWorkspaceId}:${view}`)
 
   useEffect(() => {
     window.lingxiloop?.windowChrome?.setTheme(theme)
   }, [theme])
 
   useEffect(() => {
-    if (!selectedConversation) setMobileConversationOpen(false)
-  }, [isMobile, selectedConversation?.id])
-
-  useEffect(() => {
-    setMobileConversationOpen(false)
     useKnowledgeSources.getState().close()
   }, [selectedWorkspaceId])
 
-  useEffect(() => {
-    if (!learningSpaces.activeSpace || learningSpaces.pending || learningSpaces.loading) return
-    const availableView = viewForWorkspace(view, learningSpaces.activeSpace)
-    if (view !== availableView) useApp.getState().setView(availableView)
-  }, [view, learningSpaces.activeSpace, learningSpaces.pending, learningSpaces.loading])
+  const chooseWorkspace = () => setWorkspacePickerOpen(true)
+  const openTeachingWorkspace = async (agent: Participant) => {
+    const { user, activeCompanyId } = useAuth.getState()
+    const target = learningSpaces.spaces.find((space) => space.companyId === activeCompanyId
+      && space.projectId === agent.projectId && space.canManage && space.perspective === 'teacher')
+    if (!target || learningSpaces.pending) return false
+    await learningSpaces.select(target, 'learning')
+    return useAuth.getState().user?.id === user?.id && useAuth.getState().activeCompanyId === activeCompanyId
+      && useWorkspace.getState().selectedId === target.projectId && useApp.getState().view === 'learning'
+  }
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -118,13 +133,13 @@ export function DesktopApp() {
       if (!action) return
       if (action.id === 'palette') { event.preventDefault(); setCommandPaletteOpen(true); return }
       if (action.id === 'find-chat') {
-        if (view === 'conversations' && selectedConversationId) { event.preventDefault(); window.dispatchEvent(new Event('lingxiloop:find-chat')) }
+        if (view === 'conversations' && selectedConversationId) { event.preventDefault(); useUiCommands.getState().dispatch('find-chat') }
         return
       }
       const visible = useConversations.getState().list
       if (action.id === 'conversation-index') {
         const target = visible[action.index ?? -1]
-        if (target) { event.preventDefault(); useApp.getState().selectConversation(target.id); if (isMobile) setMobileConversationOpen(true) }
+        if (target) { event.preventDefault(); useApp.getState().selectConversation(target.id) }
         return
       }
       if (visible.length === 0) return
@@ -134,13 +149,12 @@ export function DesktopApp() {
       if (!target) return
       event.preventDefault()
       useApp.getState().selectConversation(target.id)
-      if (isMobile) setMobileConversationOpen(true)
     }
     window.addEventListener('keydown', onKeyDown, true)
     return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [commandPaletteOpen, isMobile, selectedConversationId, view])
 
-  const dashboardOpen = view !== 'conversations'
+  const dashboardOpen = !['conversations', 'agents', 'mail'].includes(view)
   const handleSidebarLayoutChanged = (_layout: Record<string, number>, meta: LayoutChangedMeta) => {
     if (!meta.isUserInteraction) return
     const width = document.querySelector<HTMLElement>('[data-panel="conversations"]')?.getBoundingClientRect().width
@@ -179,7 +193,7 @@ export function DesktopApp() {
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
 
-  if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane /> }
+  if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> }
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
   else if (calendarEventId) { drawerTitle = '日历事件'; drawerContent = <CalendarPeekPane /> }
@@ -203,41 +217,50 @@ export function DesktopApp() {
     : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
   return (
-    <div className="desktop-openmaus relative flex h-screen w-screen min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
+    <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
       {!mobileChatOpen && <WorkspaceRail
           {...learningSpaces}
           onSelect={(space) => void learningSpaces.select(space)}
           onReload={() => void learningSpaces.reload()}
-          onNavigate={(next) => { setMobileConversationOpen(false); useApp.getState().setView(next) }}
+          onNavigate={(next) => useApp.getState().setView(next)}
+          workspacePickerOpen={workspacePickerOpen}
+          onWorkspacePickerOpenChange={setWorkspacePickerOpen}
+          createCourseOpen={createCourseOpen}
+          onCreateCourseOpenChange={setCreateCourseOpen}
         />}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)]">
-        {!isMobile && <div className="omb-drag flex h-5 shrink-0 items-center justify-center gap-1 px-2 text-accent-foreground" data-workspace-titlebar>
+        {!isMobile && <div className="omb-drag flex h-7 shrink-0 items-center justify-center gap-1.5 px-2 text-accent-foreground" data-workspace-titlebar>
           {activeWorkspace && <CourseAvatar avatarUrl={activeWorkspace.avatarUrl} courseId={activeWorkspace.courseId ?? activeWorkspace.id} title={activeWorkspace.name} size="sm" className="!size-3 rounded-sm [&_[data-slot=avatar-fallback]]:rounded-sm [&_[data-slot=avatar-image]]:rounded-sm" />}
-          <span className="max-w-56 truncate text-[11px] font-medium leading-none">{activeProjectName}</span>
+          <span className="max-w-80 truncate text-xs font-medium leading-none">{activeProjectName}</span>
         </div>}
-        <div className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">
-          {view === 'agents' ? <AgentsPage key={selectedWorkspaceId} /> : view === 'mail' ? <MailPage key={selectedWorkspaceId} /> : dashboardOpen ? (
-            <Suspense fallback={<ResourceSkeleton variant="detail" label="正在打开个人面板" />}>
+        {navigationError && <Alert variant="destructive" className="mb-2 me-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
+        <div ref={pageRef} data-ui-page={view} aria-busy={navigationPending || undefined} className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-border bg-background text-foreground">
+          {navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" /> : !selectedWorkspaceId || dashboardOpen ? (
+            <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
               <PersonalDashboard
                 view={view}
                 space={learningSpaces.activeSpace}
                 loading={learningSpaces.loading && !learningSpaces.activeSpace}
                 error={learningSpaces.error}
                 onRetry={() => void learningSpaces.reload()}
+                hasSpaces={learningSpaces.spaces.length > 0}
+                canCreateCourse={canCreateCourse}
+                onChooseWorkspace={chooseWorkspace}
+                onCreateCourse={() => setCreateCourseOpen(true)}
               />
             </Suspense>
-          ) : isMobile ? (
+          ) : view === 'agents' ? <AgentsPage key={selectedWorkspaceId} onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> : view === 'mail' ? <MailPage key={selectedWorkspaceId} /> : isMobile ? (
             <div className="h-full min-h-0 min-w-0" data-mobile-conversation-page={mobileChatOpen ? 'chat' : 'list'}>
               {mobileChatOpen ? (
                 <ChatPane
+                  onChooseWorkspace={chooseWorkspace}
                   onBackToConversations={() => {
                     useApp.getState().selectConversation(null)
-                    setMobileConversationOpen(false)
                   }}
                 />
               ) : (
                 <div className="flex h-full min-h-0 flex-col bg-card">
-                  <ConversationsPane onConversationSelected={() => setMobileConversationOpen(true)} />
+                  <ConversationsPane />
                 </div>
               )}
             </div>
@@ -253,8 +276,8 @@ export function DesktopApp() {
               </div>
             </ResizablePanel>
             <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整会话列表宽度" title="拖动调整会话列表宽度，双击恢复默认" />
-            <ResizablePanel id="conversation-workspace" defaultSize="75%" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
-              <ChatPane />
+            <ResizablePanel id="conversation-workspace" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
+              <ChatPane onChooseWorkspace={chooseWorkspace} />
             </ResizablePanel>
           </ResizablePanelGroup>}
         </div>
@@ -279,7 +302,7 @@ export function DesktopApp() {
             </div>
           </DrawerHeader>}
           <div className="min-h-0 flex-1 overflow-hidden">
-            <Suspense fallback={<div className="h-full p-4"><Button type="button" variant="ghost" onClick={closeDrawer}>关闭</Button><ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} /></div>}>
+            <Suspense fallback={<div className="flex h-full flex-col">{drawerOwnsHeader && <Button type="button" variant="ghost" className="m-2 self-start" onClick={closeDrawer}>关闭</Button>}{documentId ? <DocumentSkeleton /> : presentationId ? <PresentationSkeleton /> : drawerCanvasId ? <CanvasSkeleton /> : <ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} />}</div>}>
               {drawerContent}
             </Suspense>
           </div>
@@ -287,26 +310,17 @@ export function DesktopApp() {
       </Drawer>
 
       <Dialog open={!isMobile && Boolean(canvasId)} onOpenChange={(open) => { if (!open) closeCanvasView() }}>
-        <DialogContent showCloseButton={false} className="h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] max-w-none gap-0 overflow-hidden rounded-2xl bg-card p-0 sm:max-w-none">
+        <DialogContent showCloseButton={false} className="h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none gap-0 overflow-hidden rounded-2xl bg-card p-0 sm:max-w-none">
           <DialogTitle className="sr-only">Canvas</DialogTitle>
           <DialogDescription className="sr-only">协作画布</DialogDescription>
-          <Suspense fallback={<div className="h-full p-4"><Button type="button" variant="ghost" onClick={closeCanvasView}>关闭画布</Button><ResourceSkeleton variant="media" label="正在打开画布" /></div>}>
+          <Suspense fallback={<div className="flex h-full flex-col"><Button type="button" variant="ghost" className="m-2 self-start" onClick={closeCanvasView}>关闭画布</Button><CanvasSkeleton /></div>}>
             {canvasId && <CanvasView canvasId={canvasId} onBack={closeCanvasView} />}
           </Suspense>
         </DialogContent>
       </Dialog>
 
       <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
-      {settingsOpen && <Suspense fallback={<Dialog open onOpenChange={(open) => useSettingsDialog.getState().setOpen(open)}>
-        <DialogContent onCloseAutoFocus={(event) => {
-          event.preventDefault()
-          if (!useSettingsDialog.getState().open) document.getElementById(SETTINGS_DIALOG_TRIGGER_ID)?.focus()
-        }}>
-          <DialogTitle>设置</DialogTitle>
-          <DialogDescription>正在打开设置…</DialogDescription>
-          <ResourceSkeleton variant="detail" label="正在打开设置" />
-        </DialogContent>
-      </Dialog>}><SettingsDialog /></Suspense>}
+      {settingsOpen && <SettingsDialog />}
       <SourceDetailOverlay />
     </div>
   )

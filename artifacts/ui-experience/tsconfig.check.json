@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "noUnusedLocals": false, "noUnusedParameters": false },
+  "include": ["../../scripts/ui-experience-browser-check.tsx", "../../src/vite-env.d.ts"]
+}

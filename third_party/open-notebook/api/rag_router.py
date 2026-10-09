@@ -231,14 +231,13 @@ async def _verify_notebooks(notebook_ids: list[str]) -> None:
 async def _enqueue_process_source(
     *,
     source_id: str,
-    content_state: dict[str, Any],
     notebook_ids: list[str],
     expected_command_id: str | None = None,
 ) -> str:
     source_record = exact_record_id(source_id, "source")
     command_input = SourceProcessingInput(
         source_id=source_id,
-        content_state=content_state,
+        content_state={},
         notebook_ids=notebook_ids,
     )
     variables: dict[str, Any] = {
@@ -289,7 +288,6 @@ async def _queue_source(
     *,
     notebook_ids: list[str],
     title: str | None,
-    content_state: dict[str, Any],
     asset: Asset | None,
     external_key: str,
     ingestion_fingerprint: str,
@@ -315,7 +313,7 @@ async def _queue_source(
     pending_source_id = f"source:{uuid.uuid4().hex}"
     command_input = SourceProcessingInput(
         source_id=pending_source_id,
-        content_state=content_state,
+        content_state={},
         notebook_ids=notebook_ids,
     )
     source_data = source.model_dump(
@@ -469,7 +467,6 @@ async def create_json_source(
         return await _queue_source(
             notebook_ids=payload.notebooks,
             title=payload.title or payload.filename,
-            content_state={"file_path": reference},
             asset=Asset(file_path=reference, owned=False),
             external_key=external_key,
             ingestion_fingerprint=fingerprint,
@@ -493,7 +490,6 @@ async def create_json_source(
         return await _queue_source(
             notebook_ids=payload.notebooks,
             title=payload.title,
-            content_state={"url": payload.url},
             asset=Asset(url=payload.url),
             external_key=external_key,
             ingestion_fingerprint=fingerprint,
@@ -518,7 +514,6 @@ async def create_json_source(
     return await _queue_source(
         notebook_ids=payload.notebooks,
         title=payload.title,
-        content_state={"content": payload.content},
         asset=None,
         external_key=external_key,
         ingestion_fingerprint=fingerprint,
@@ -791,19 +786,15 @@ async def retry_source(source_id: str) -> SourceResponse:
     notebook_ids = [str(value) for value in notebook_rows]
     if not notebook_ids:
         raise HTTPException(status_code=400, detail="Source has no notebook scope")
-    if source.asset and source.asset.file_path:
-        content_state = {"file_path": source.asset.file_path}
-    elif source.asset and source.asset.url:
-        content_state = {"url": source.asset.url}
-    elif source.full_text:
-        content_state = {"content": source.full_text}
-    else:
+    if not (
+        source.full_text
+        or (source.asset and (source.asset.file_path or source.asset.url))
+    ):
         raise HTTPException(status_code=400, detail="Source cannot be retried")
     assert source.command is not None
     try:
         command_id = await _enqueue_process_source(
             source_id=source_id,
-            content_state=content_state,
             notebook_ids=notebook_ids,
             expected_command_id=str(source.command),
         )
@@ -858,8 +849,12 @@ async def _allowed_source_ids(payload: SearchRequest) -> list[str]:
     if not scoped:
         return []
     embedded_rows = await repo_query(
-        "SELECT VALUE source FROM source_embedding WHERE source IN $source_ids;",
-        {"source_ids": [exact_record_id(value, "source") for value in scoped]},
+        "SELECT VALUE source FROM source_embedding WHERE source IN $source_ids "
+        "AND source.company_id = $company_id;",
+        {
+            "source_ids": [exact_record_id(value, "source") for value in scoped],
+            "company_id": payload.company_id,
+        },
     )
     embedded_sources = {str(value) for value in embedded_rows}
     return sorted(scoped.intersection(embedded_sources))

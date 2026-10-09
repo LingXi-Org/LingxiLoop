@@ -1,9 +1,10 @@
 import { File01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { Skeleton } from '@/components/ui/skeleton'
+import { DocumentSkeleton } from './DocumentSkeleton'
+import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import { useDocuments } from '../state'
@@ -18,10 +19,15 @@ export function DocumentPeekPane() {
   const load = useDocuments((s) => s.load)
   const selectDocument = useDocuments((s) => s.select)
   const doc = documentId ? list.find((d) => d.id === documentId) : null
+  const [error, setError] = useState('')
+  const [revision, setRevision] = useState(0)
 
   useEffect(() => {
-    if (!loaded) void load()
-  }, [load, loaded])
+    let active = true
+    setError('')
+    if (!loaded) void load().catch(reason => { if (active) setError(userFacingError(reason, '文档加载失败，请重试。')) })
+    return () => { active = false }
+  }, [load, loaded, revision])
 
   if (!documentId) return null
 
@@ -32,11 +38,7 @@ export function DocumentPeekPane() {
   }
 
   if (!loaded) {
-    return (
-      <aside className="grid h-full min-w-0 place-items-center border-s border-[var(--im-divider)] bg-card p-6">
-        <div className="w-full max-w-xs space-y-3"><Skeleton className="h-10" /><Skeleton className="h-40" /></div>
-      </aside>
-    )
+    return error ? <div role="alert" className="ui-enter grid gap-4 p-6 text-sm"><p>{error}</p><Button variant="outline" onClick={() => setRevision(value => value + 1)}>重试</Button></div> : <DocumentSkeleton />
   }
 
   if (!doc) {

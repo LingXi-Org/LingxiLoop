@@ -204,7 +204,7 @@ async function syncLearningMessages(input: {
   return messages.map((message) => ({
     clientMsgNo: message.clientMsgNo,
     fromUid: message.fromUid,
-    authoredByAgent: Boolean(message.payload.refs?.agentId),
+    authoredByAgent: message.payload.role === 'assistant',
   }))
 }
 

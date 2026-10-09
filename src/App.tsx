@@ -1,25 +1,22 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { AuthGate } from '@/components/AuthGate'
+import { WorkspaceSkeleton } from '@/components/WorkspaceSkeleton'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { NotificationToasts } from '@/components/NotificationToasts'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { bootConversations, isMuted, useConversations } from '@/features/conversations/store'
+import { isMuted, useConversations } from '@/features/conversations/store'
 import { chatTransport } from '@/features/chat/runtime'
-import { bootParticipants } from '@/features/agents/state'
-import { useWorkspace } from '@/features/knowledge/workspace'
+import { startWebNavigation } from '@/lib/navigation'
 import { usePrefs } from '@/stores/preferences'
 import { consumeInviteFromUrl, InviteAcceptScreen } from '@/features/companies/components/InviteAcceptScreen'
 
 const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
 
-function SurfaceFallback() {
-  return <div className="fixed inset-0 grid place-items-center bg-background text-sm text-muted-foreground">正在打开 LingxiLoop…</div>
-}
-
 function AuthedApp() {
   const convoId = useApp((s) => s.selectedConversationId)
+  const navigationReady = useApp((s) => s.navigationReady)
   const hasDockUnread = useConversations((s) =>
     s.list.some((c) => !isMuted(c) && (c.unread ?? 0) > 0),
   )
@@ -27,19 +24,9 @@ function AuthedApp() {
     convoId ? s.list.some((c) => c.id === convoId) : false,
   )
   useEffect(() => {
-    let disposed = false
-    void (async () => {
-      // IM conversations are project-scoped. Establish the authoritative
-      // general-project selection before any IM request can be issued for a
-      // new browser session or after an account/company switch.
-      await useWorkspace.getState().load()
-      if (disposed) return
-      chatTransport.boot()
-      bootParticipants()
-      bootConversations()
-    })()
+    const stopNavigation = startWebNavigation()
     void usePrefs.getState().load()
-    return () => { disposed = true }
+    return stopNavigation
   }, [])
 
   useEffect(() => {
@@ -59,7 +46,7 @@ function AuthedApp() {
 
   return (
     <TooltipProvider delayDuration={120}>
-      <Suspense fallback={<SurfaceFallback />}><DesktopApp /></Suspense>
+      <Suspense fallback={<WorkspaceSkeleton />}>{navigationReady ? <DesktopApp /> : <WorkspaceSkeleton />}</Suspense>
       {/* In-app message toasts (window-blur / different-convo only) —
           rendered at the AuthedApp level so they share auth context and
           unmount cleanly on sign-out. */}

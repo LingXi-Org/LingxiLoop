@@ -5,12 +5,13 @@ import { ws } from '@/api/core/realtime'
 import type { Conversation } from '@/types'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { chatTransport } from '@/features/chat/runtime'
+import { chatTransport } from '@/features/chat/runtime/transport'
 import { chatLatency } from '@/features/chat/runtime/latency'
 import { useChatThreadStore } from '@/features/chat/runtime/store'
 import { useParticipants } from '@/features/agents/state'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { userFacingError } from '@/lib/userFacingError'
+import { writeWebDestination } from '@/lib/webNavigation'
 
 interface ConversationsState {
   list: Conversation[]
@@ -29,11 +30,15 @@ interface ConversationsState {
 let requestEpoch = 0
 
 function reconcileConversationSelection(conversations: Conversation[]): void {
-  const active = useApp.getState().selectedConversationId
+  const state = useApp.getState()
+  if (state.navigationPending) return
+  const active = state.selectedConversationId
   if (active && conversations.some((conversation) => conversation.id === active)) return
-  const fallback = conversations[0]
+  const fallback = state.autoSelectConversation ? conversations[0] : undefined
   chatLatency.opened(fallback?.id ?? null)
-  useApp.setState({ selectedConversationId: fallback?.id ?? null })
+  useApp.setState({ selectedConversationId: fallback?.id ?? null, mobileConversationOpen: false,
+    ...(active ? { navigationError: '该对话不存在或无权访问，请选择其他对话。' } : {}) })
+  if (active && state.navigationReady) writeWebDestination({ projectId: getWorkspaceSession()?.projectId ?? null, view: state.view, conversationId: null }, 'replace')
 }
 
 function timeFromIso(iso?: string): string {
@@ -207,6 +212,8 @@ export const useConversations = create<ConversationsState>((set) => ({
   error: null,
   async load() {
     const workspace = getWorkspaceSession()
+    if (!workspace) { useConversations.getState().reset(); return }
+    const userId = useAuth.getState().user?.id
     const projectId = workspace?.projectId ?? null
     const epoch = ++requestEpoch
     // Clear stale data immediately so a workspace switch never shows the
@@ -217,6 +224,7 @@ export const useConversations = create<ConversationsState>((set) => ({
       const list = await conversationsApi.getConversations()
       const activeWorkspace = getWorkspaceSession()
       if (epoch !== requestEpoch
+        || useAuth.getState().user?.id !== userId
         || activeWorkspace?.companyId !== workspace?.companyId
         || activeWorkspace?.projectId !== projectId) return
       const conversations = list.map(fromApi)
@@ -227,6 +235,7 @@ export const useConversations = create<ConversationsState>((set) => ({
     } catch (error) {
       const activeWorkspace = getWorkspaceSession()
       if (epoch !== requestEpoch
+        || useAuth.getState().user?.id !== userId
         || activeWorkspace?.companyId !== workspace?.companyId
         || activeWorkspace?.projectId !== projectId) return
       set({ loading: false, error: userFacingError(error, '暂时无法加载对话，请稍后重试。') })
@@ -234,6 +243,8 @@ export const useConversations = create<ConversationsState>((set) => ({
   },
   async reload() {
     const workspace = getWorkspaceSession()
+    if (!workspace) { useConversations.getState().reset(); return }
+    const userId = useAuth.getState().user?.id
     const projectId = workspace?.projectId ?? null
     const epoch = ++requestEpoch
     set({ loading: true, error: null })
@@ -241,6 +252,7 @@ export const useConversations = create<ConversationsState>((set) => ({
       const list = await conversationsApi.getConversations()
       const activeWorkspace = getWorkspaceSession()
       if (epoch !== requestEpoch
+        || useAuth.getState().user?.id !== userId
         || activeWorkspace?.companyId !== workspace?.companyId
         || activeWorkspace?.projectId !== projectId) return
       const conversations = list.map(fromApi)
@@ -251,6 +263,7 @@ export const useConversations = create<ConversationsState>((set) => ({
     } catch (error) {
       const activeWorkspace = getWorkspaceSession()
       if (epoch !== requestEpoch
+        || useAuth.getState().user?.id !== userId
         || activeWorkspace?.companyId !== workspace?.companyId
         || activeWorkspace?.projectId !== projectId) return
       // A refresh failure keeps the last safe projection visible, but is
@@ -299,8 +312,8 @@ export const useConversations = create<ConversationsState>((set) => ({
 // on every call so workspace switches (App.tsx remounts the tree on
 // companyId change) pick up the new tenant's data.
 let wsBound = false
-export function bootConversations() {
-  void useConversations.getState().load()
+export function bootConversations(load = true) {
+  if (load) void useConversations.getState().load()
   if (wsBound) return
   wsBound = true
   ws.connect()
