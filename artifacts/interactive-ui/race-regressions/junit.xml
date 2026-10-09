@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="8.982">
+  <testsuite name="e2e/web/interactive-ui.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="8.982">
+    <testcase name="Composable interactive explanations &gt; reloading after a save conflict keeps an unconfirmed action retryable with the same identity [web]" classname="e2e/web/interactive-ui.e2e.ts" time="4.101"/>
+    <testcase name="Composable interactive explanations &gt; an unconfirmed newer result keeps the committed revision editable until native delivery [web]" classname="e2e/web/interactive-ui.e2e.ts" time="3.175"/>
+    <testcase name="Composable interactive explanations &gt; offscreen simulation cancels its worker and never labels old results as new parameters [web]" classname="e2e/web/interactive-ui.e2e.ts" time="1.706"/>
+  </testsuite>
+</testsuites>

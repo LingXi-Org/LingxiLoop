@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="1" errors="0" skipped="0" time="27.540">
+  <testsuite name="e2e/web/interactive-ui.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="27.540">
+    <testcase name="Composable interactive explanations &gt; reloading after a save conflict keeps an unconfirmed action retryable with the same identity [web]" classname="e2e/web/interactive-ui.e2e.ts" time="27.540">
+      <failure message="expect.toBeEnabled failed&#10;locator: getByRole(&quot;button&quot;, name: &quot;重试提交&quot;)&#10;expected: enabled&#10;observed: no node (match count 0)" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expect.toBeEnabled failed
+locator: getByRole(&quot;button&quot;, name: &quot;重试提交&quot;)
+expected: enabled
+observed: no node (match count 0)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

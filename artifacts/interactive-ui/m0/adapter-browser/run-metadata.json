@@ -1,0 +1,20 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:web",
+    "--",
+    "e2e/web/interactive-ui.e2e.ts",
+    "--grep",
+    "official adapter",
+    "--output",
+    "artifacts/interactive-ui/m0/adapter-browser"
+  ],
+  "buildMode": "existing production preview via E2E_BASE_URL",
+  "browser": "managed official @e2e-dev/web browser",
+  "build": {
+    "file": ".e2e/interactive-site/e2e/interactive-adapter.html",
+    "modifiedAt": "2026-10-09T05:02:23.658Z",
+    "sha256": "ccadc7ec126099d6899b72f695da61fc6b03f99f8de7ce9394d9ef5084586986"
+  }
+}

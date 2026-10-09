@@ -61,11 +61,49 @@ test('message updates require a recorded run timestamp and preserve it during pr
   assert.equal(state.messages[0].createdAt.getTime(),epoch+2000)
 })
 
+test('snapshot presentation follows rich content and clears stale card styling when content becomes text', () => {
+  const response = project({ type: 'state', state: snapshot('run', 'leased') })
+  if (response.message.role !== 'assistant') throw new Error('Expected assistant snapshot')
+  const card: AgentRunSnapshot = { ...response, message: { ...response.message, role: 'assistant', status: { type: 'running' }, content: [
+    { type: 'generative-ui', spec: { root: { component: 'Text', props: { value: '可交互讲解' } } } },
+  ] } }
+  const rendered = applyRunSnapshot(EMPTY_CONVERSATION_CHAT_STATE, target, card)
+  assert.equal(metadata(rendered.messages[0]).presentation, 'special-card')
+  const text: AgentRunSnapshot = { ...response, message: { ...response.message, content: [{ type: 'text', text: '文字讲解' }] } }
+  assert.equal(metadata(applyRunSnapshot(rendered, target, text).messages[0]).presentation, 'conversation')
+})
+
 function sent(id: string, sequence: number, runId = 'run'): ImEnvelope {
   return { channelId: 'room',channelType: 2,fromUid: 'agent',messageId: id,clientMsgNo: id,
     messageSeq: sequence,timestamp: (epoch + sequence * 1000) / 1000,
     payload: createNativeMessage({ id: id, role: 'assistant', createdAt: new Date(epoch + sequence * 1000).toISOString(), content: [{ type: 'text', text: id }], custom: { refs: { runId,agentId: 'agent' } } }) }
 }
+
+test('same-result snapshots preserve canonical IM fallback content while updating run controls', () => {
+  const response = project({ type: 'state', state: snapshot() })
+  if (response.message.role !== 'assistant') throw new Error('Expected assistant snapshot')
+  const harness = response.message.metadata.custom.harness as unknown as import('@/lib/agentRunSnapshot').RunDisplayState
+  const replay: AgentRunSnapshot = { message: { ...response.message, content: [
+    { type: 'generative-ui', spec: { root: { component: 'Text', props: { value: '未提交的交互讲解' } } } },
+  ], metadata: { ...response.message.metadata, custom: { ...response.message.metadata.custom,
+    harnessControl: false, harness: { ...harness, delivery: 'pending', lastSeq: harness.lastSeq + 1 },
+  } } } }
+  const envelope = sent('result-run', 3)
+  envelope.payload = { ...response.message, content: [{ type: 'text', text: '保留已送达的文字讲解' }] }
+  const canonical = convertEnvelope(envelope, { participants, meId: 'human' })
+  const history = { ...EMPTY_CONVERSATION_CHAT_STATE, messages: [canonical] }
+  const replayed = applyRunSnapshot(history, target, replay)
+  assert.deepEqual(replayed.messages[0].content, canonical.content)
+  assert.deepEqual({ presentation: metadata(replayed.messages[0]).presentation, sequence: metadata(replayed.messages[0]).sequence,
+    control: metadata(replayed.messages[0]).harnessControl, harness: metadata(replayed.messages[0]).harness },
+  { presentation: 'conversation', sequence: 3, control: false, harness: { ...harness, delivery: 'delivered', lastSeq: harness.lastSeq + 1 } })
+
+  if (replay.message.role !== 'assistant') throw new Error('Expected assistant replay')
+  const next: AgentRunSnapshot = { message: { ...replay.message, metadata: { ...replay.message.metadata,
+    custom: { ...replay.message.metadata.custom, harness: { ...harness, resultId: 'next-result', fence: harness.fence + 1,
+      messageFence: harness.messageFence + 1, requestVersion: harness.requestVersion + 1, lastSeq: harness.lastSeq + 2 } } } } }
+  assert.deepEqual(applyRunSnapshot(replayed, target, next).messages[0].content, replay.message.content)
+})
 
 test('sent messages, native final citations and interleaved users survive replay and reload in IM order', () => {
   const first = user('first',1,1000), followup = user('followup',4,4000)

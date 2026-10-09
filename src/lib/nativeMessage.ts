@@ -1,5 +1,7 @@
 import type { CompleteAttachment, ThreadMessage } from '@assistant-ui/react'
 import { z } from 'zod'
+import { openUiEnvelopeSchema, uiInteractionSchema } from './interactive-ui/protocol.js'
+import { OPENUI_COMPONENT } from './interactive-ui/catalog.js'
 
 type Wire<T> = T extends Date ? string : T extends readonly (infer U)[] ? Wire<U>[] : T extends object ? { [K in keyof T]: Wire<T[K]> } : T
 export type NativeMessage = Wire<ThreadMessage>
@@ -34,6 +36,7 @@ const textSize = z.enum(['sm', 'md', 'lg', 'xl', '2xl', '3xl']).optional()
 const gap = z.number().min(0).max(8).optional()
 const align = z.enum(['start', 'center', 'end']).optional()
 export const generativeComponentSchemas: Record<string, z.ZodType> = {
+  [OPENUI_COMPONENT]: openUiEnvelopeSchema,
   Text: z.object({ value: z.string(), size: textSize, weight: z.enum(['normal', 'medium', 'semibold', 'bold']).optional(),
     color: z.enum(['emphasis', 'secondary', 'alpha-70', 'white', 'white-70', 'white-50']).optional() }).strict(),
   Markdown: z.object({ value: z.string() }).strict(),
@@ -100,6 +103,7 @@ const bounded = z.unknown().superRefine((value, ctx) => {
 })
 export const nativeMessageSchema = bounded.pipe(message) as z.ZodType<NativeMessage>
 const humanCustom = z.object({ replyToClientMsgNo: id.optional(), mentionedIds: z.array(id).max(100).optional(), mentionAll: z.boolean().optional(),
+  uiInteraction: uiInteractionSchema.optional(),
   agentContinuation: z.object({ agentId: id, runId: id, requestVersion: z.number().int().positive().safe() }).strict().optional(),
   questionnaireReply: z.object({ questionId: id, answers: z.record(z.string(), z.union([z.string().max(4000), z.array(z.string().max(4000)).max(12)])) }).strict().optional(),
 }).strict()

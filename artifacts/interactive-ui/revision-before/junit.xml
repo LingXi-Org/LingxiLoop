@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="1" errors="0" skipped="0" time="16.821">
+  <testsuite name="e2e/web/interactive-ui.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="16.821">
+    <testcase name="Composable interactive explanations &gt; an unconfirmed newer result keeps the committed revision editable until native delivery [web]" classname="e2e/web/interactive-ui.e2e.ts" time="16.821">
+      <failure message="expect.toBeEnabled failed&#10;locator: locator(&quot;[data-revision=\&quot;1\&quot;]&quot;) &gt;&gt; getByRole(&quot;slider&quot;, name: &quot;发射角度&quot;)&#10;expected: enabled&#10;observed: states: disabled (match count 1)" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expect.toBeEnabled failed
+locator: locator(&quot;[data-revision=\&quot;1\&quot;]&quot;) &gt;&gt; getByRole(&quot;slider&quot;, name: &quot;发射角度&quot;)
+expected: enabled
+observed: states: disabled (match count 1)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

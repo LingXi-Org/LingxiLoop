@@ -1,0 +1,18 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:web",
+    "--",
+    "e2e/web/interactive-ui-wukong.e2e.ts",
+    "--output",
+    "artifacts/interactive-ui/wukong/browser"
+  ],
+  "buildMode": "existing production preview via E2E_BASE_URL",
+  "browser": "managed official @e2e-dev/web browser",
+  "build": {
+    "file": ".e2e/interactive-live-build/e2e/interactive-ui-live.html",
+    "modifiedAt": "2026-10-09T05:02:19.730Z",
+    "sha256": "33611282db1d385a6fb41ba2057b6beab18a03dd25e196121482f63943ee1b51"
+  }
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="4.843">
+  <testsuite name="e2e/web/interactive-ui.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="4.843">
+    <testcase name="Composable interactive explanations &gt; reduced-motion CSS and the touch pointer path preserve continuous control [web]" classname="e2e/web/interactive-ui.e2e.ts" time="4.843"/>
+  </testsuite>
+</testsuites>

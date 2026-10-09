@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="1" errors="0" skipped="0" time="2.306">
+  <testsuite name="e2e/web/interactive-ui.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="2.306">
+    <testcase name="Composable interactive explanations &gt; duplicate clicks submit once and uncertain failures retry the same request [web]" classname="e2e/web/interactive-ui.e2e.ts" time="2.306">
+      <failure message="expected &quot;3&quot; to be &quot;2&quot;" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected &quot;3&quot; to be &quot;2&quot;</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

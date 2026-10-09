@@ -12,11 +12,13 @@ import { MessageFooterContext, MessageFooterContents } from '@/components/assist
 import { styledGenerativeUILibrary } from '@/components/assistant-ui/elements/generative-ui'
 import { Citation } from '@/components/tool-ui/citation'
 import { generativeComponentSchemas } from '@/lib/nativeMessage'
+import { OPENUI_COMPONENT } from '@/lib/interactive-ui/catalog'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { BusinessMessagePart } from './BusinessMessagePart'
 import { MessagePartBoundary } from './MessagePartBoundary'
 import { NativeTool, hasRichTool } from './NativeTool'
 import { CalendarEventCard, TeacherBriefingStatsTool } from './ToolRenderers'
+import { NativeOpenUiLesson } from './interactive-ui/OpenUiLesson'
 
 const ReadOnlyMessage = createContext(false)
 const GroupOwnsFooter = createContext(false)
@@ -31,7 +33,9 @@ function SourcePart(part: SourceMessagePartProps) {
 
 const generativeComponents = Object.fromEntries(Object.entries(generativeComponentSchemas).map(([name, schema]) => [name,
   function NativeComponent({ children, ...props }: { children?: ReactNode }) {
+    const readOnly = useContext(ReadOnlyMessage)
     const parsed = z.record(z.string(), z.unknown()).parse(schema.parse(props))
+    if (name === OPENUI_COMPONENT) return <NativeOpenUiLesson value={parsed} readOnly={readOnly} />
     if (name === 'calendar-event') return <CalendarEventCard args={parsed} />
     if (name === 'learning-stats') return <TeacherBriefingStatsTool args={parsed} />
     const Component = styledGenerativeUILibrary[name]!.render

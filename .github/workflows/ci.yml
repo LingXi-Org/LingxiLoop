@@ -29,6 +29,7 @@ permissions:
 env:
   NODE_VERSION: "22"
   ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+  OPENUI_TELEMETRY_DISABLED: "1"
 
 jobs:
   changes:

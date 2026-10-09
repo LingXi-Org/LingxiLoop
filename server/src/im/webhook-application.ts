@@ -1,5 +1,6 @@
 import { attachmentMetadata, assertOwnedMessageAttachments } from './attachments.js'
 import { createHash } from 'node:crypto'
+import { assertUiInteractionAdmission } from './interactive-ui-admission.js'
 import { nativeText, nativeData, nativeAttachments, userMessageSchema, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import { parseMentions } from '../mentions.js'
@@ -90,6 +91,8 @@ export class WukongWebhookApplication {
         throw new Error('message author is not a bound channel member')
       }
       const author = members.find(member => member.id === input.fromUid)
+      await assertUiInteractionAdmission({ companyId: binding.company_id, userId: input.fromUid, channelId: input.channelId,
+        clientNonce: input.clientMsgNo, payload: input.payload }, db)
       if (author?.kind === 'human' && !userMessageSchema.safeParse(input.payload).success) {
         // Human-labelled product notices must have passed the server's acceptance boundary.
         const accepted = await db.query(`SELECT 1 FROM im_send_acceptances WHERE company_id=$1 AND user_id=$2
@@ -120,12 +123,12 @@ export class WukongWebhookApplication {
       }
       const refs = record(custom.refs)
       if (input.payload.role === 'user') await assertOwnedMessageAttachments(db, { companyId: binding.company_id, userId: input.fromUid, payload: input.payload })
-      const parsedMentions = parseMentions(nativeText(input.payload), members)
+      const parsedMentions = custom.uiInteraction ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(input.payload), members)
       const mentionedIds = [...new Set([
         ...(Array.isArray(custom.mentionedIds) ? custom.mentionedIds.map(String) : []),
         ...parsedMentions.mentionedIds,
       ])]
-      const mentionAll = custom.mentionAll === true || parsedMentions.mentionAll
+      const mentionAll = !custom.uiInteraction && (custom.mentionAll === true || parsedMentions.mentionAll)
       const recipients = resolveLearningAgentRecipients({
         authorId: input.fromUid,
         channelType: Number(binding.profile.channelType ?? 2),

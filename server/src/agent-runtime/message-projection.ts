@@ -2,6 +2,7 @@ import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } f
 import { responseSegments, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
+import { assertLessonCitationSpans, projectLessonText } from './interactive-ui-projection.js'
 
 export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number }
 export interface MarkdownConfidenceClaim {
@@ -44,8 +45,9 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
       ? { ...tool, result: { status: view.lifecycle }, isError: view.lifecycle === 'failed' } : tool)
   if (view.lifecycle === 'queued') return cards
   // Native drafts expose content deltas only; provider reasoning fields are excluded upstream.
-  if (view.lifecycle === 'leased' && view.draft) return [{ type: 'text', text: view.draft }, ...cards]
+  if (view.lifecycle === 'leased' && view.draft) return [...projectLessonText(view.draft, view.runId, true), ...cards]
   if (!view.message) return cards
+  assertLessonCitationSpans(view.message.envelope.body, view.message.envelope.citations)
   const segments = responseSegments(view.message.envelope)
   const evidence = view.message.envelope.citationEvidence
   const parts: ThreadAssistantMessagePart[] = []
@@ -83,7 +85,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
       title: evidence?.find(item => citation.markers.includes(item.marker))?.title ?? source.sourceId, mediaType: 'text/plain',
       providerMetadata: { lingxiloop: { sourceVersion: source.sourceVersion, chunkIds: source.chunkIds } } })
   }
-  return [...parts, ...sources.values(), ...cards]
+  return [...parts.flatMap(part => part.type === 'text' ? projectLessonText(part.text, view.runId, view.delivery !== 'delivered') : [part]), ...sources.values(), ...cards]
 
 }
 

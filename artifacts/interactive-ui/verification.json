@@ -1,0 +1,97 @@
+{
+  "recordedAt": "2026-10-09T05:12:29.338Z",
+  "completeAcceptance": false,
+  "checks": [
+    {
+      "command": "node --import tsx --test src/lib/interactive-ui/source.test.ts src/lib/interactive-ui/kernels/kernels.test.ts server/src/agent-runtime/interactive-ui-projection.test.ts src/lib/nativeMessage.test.ts",
+      "exitCode": 0,
+      "passed": 27,
+      "evidence": "core-checks.log"
+    },
+    {
+      "command": "node --test scripts/test-selectors.test.mjs",
+      "exitCode": 0,
+      "passed": 2
+    },
+    {
+      "command": "node --import tsx --test src/features/chat/runtime/run-updates.test.ts",
+      "exitCode": 0,
+      "passed": 16
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "includesWebTypecheck": true,
+      "evidence": "web-build.log"
+    },
+    {
+      "command": "npm run server:typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:e2e:typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "Scoped Biome lint over changed web/server/shared/E2E files and run-tests script",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "suites": {
+    "componentBrowser": {
+      "passed": 9,
+      "evidence": "browser/report.json"
+    },
+    "persistence": {
+      "passed": 9,
+      "evidence": "persistence-final.json"
+    },
+    "authorization": {
+      "passed": 26,
+      "evidence": "authorization-regressions.json"
+    },
+    "migrationAndNativeFlow": {
+      "passed": 30,
+      "evidence": "server-regressions.json",
+      "note": "Includes the earlier seven-case UI suite; counts overlap later suites."
+    },
+    "realWuKongAndBrowser": {
+      "passed": true,
+      "evidence": "wukong/results.json",
+      "realProvider": false
+    },
+    "adapter": {
+      "passed": 1,
+      "evidence": "m0/adapter-browser/report.json"
+    },
+    "performance": {
+      "passed": 1,
+      "evidence": "m0/independent-performance.json"
+    },
+    "reducedMotion": {
+      "passed": 1,
+      "evidence": "m0/motion-browser/report.json"
+    }
+  },
+  "blocked": {
+    "gate": "Current product real-model generation, revision, teaching and transfer evaluation",
+    "httpStatus": 402,
+    "usageMeasured": false,
+    "evidence": "live/provider-blocker.json",
+    "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui"
+  },
+  "limits": [
+    "No production deployment",
+    "No full repository test suite",
+    "No real-student learning-gain claim",
+    "No physical touch hardware or actual screen-reader audit"
+  ],
+  "buildWarnings": [
+    "Existing ::highlight CSS compatibility warning",
+    "Existing mixed static/dynamic import and large chunk warnings"
+  ]
+}

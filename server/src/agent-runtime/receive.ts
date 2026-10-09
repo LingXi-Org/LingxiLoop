@@ -11,6 +11,7 @@ import { syncConversationPolicy } from './conversations.js'
 import { bindProductRun, productRunIdentity, notifyRunAvailable } from './identity.js'
 import { parseMentions } from '../mentions.js'
 import { attachmentRefId, readRequestAttachments, selectRequestAttachments, unavailableAttachmentIds } from './attachments.js'
+import { assertUiInteractionAdmission } from '../im/interactive-ui-admission.js'
 
 export interface AgentRequest {
   companyId: string; agentId: string; channelId: string; clientMsgNo: string
@@ -50,6 +51,8 @@ export async function receiveAgentRequest(input: AgentRequest) {
   }
   if (message.payload.role !== 'user'
     || input.authenticatedUserId && input.authenticatedUserId !== message.fromUid) throw new Error('request must be committed by the authenticated human')
+  await assertUiInteractionAdmission({ companyId: input.companyId, channelId: input.channelId, userId: message.fromUid,
+    clientNonce: input.clientMsgNo, payload: message.payload })
   const identity = { tenantId: input.companyId, agentId: input.agentId, sessionId: input.channelId, principalId: message.fromUid }
   await loadRuntimeBinding({ ...identity, conversationId: input.channelId, createdAt: new Date(message.timestamp * 1000).toISOString() })
   const human = (await pool.query<{ name: string }>("SELECT name FROM participants WHERE company_id=$1 AND id=$2 AND kind='human' AND departed_at IS NULL",
@@ -91,9 +94,9 @@ export async function receiveAgentRequest(input: AgentRequest) {
   if (threadId) await api.conversations.registerThread({ tenantId: input.companyId, conversationId: input.channelId, threadId, policyVersion: policy.version })
   const members = (await pool.query<{ id: string; name: string; kind: 'human' | 'agent' }>(
     'SELECT id,name,kind FROM participants WHERE company_id=$1 AND id=ANY($2::text[])', [input.companyId,policy.participants.map(member => member.id)])).rows
-  const parsed = parseMentions(text,members)
+  const parsed = custom.uiInteraction ? { mentionedIds: [], mentionAll: false } : parseMentions(text,members)
   const mentionedIds = Array.isArray(custom.mentionedIds) ? custom.mentionedIds.filter((id): id is string => typeof id === 'string') : []
-  const mentions = parsed.mentionAll || custom.mentionAll === true
+  const mentions = !custom.uiInteraction && (parsed.mentionAll || custom.mentionAll === true)
     ? policy.participants.filter(member => member.kind === 'agent').map(member => member.id)
     : [...new Set([...parsed.mentionedIds,...mentionedIds])]
   const accepted = await api.conversations.ingest({ tenantId: input.companyId, conversationId: input.channelId,

@@ -14,6 +14,8 @@ import { imAccessApplication } from './access-facade.js'
 import { imChannelsApplication } from './channels-facade.js'
 import { imMessagesApplication } from './messages-facade.js'
 import { imSessionApplication } from './session-facade.js'
+import { getUiState, saveUiState, submitUiAction } from './interactive-ui.js'
+import { uiReferenceSchema } from '../../../src/lib/interactive-ui/protocol.js'
 import {
   approvalResolutionRequestSchema,
   imHistoryQuerySchema,
@@ -276,6 +278,33 @@ imRouter.get('/channels/:id/messages', safe(async (req, res) => {
   const messages = await imMessagesApplication.history({ companyId, userId, channelId, limit, beforeSequence: beforeSeq })
   if (!messages) { res.status(404).json({ error: 'channel not found' }); return }
   res.json(messages)
+}))
+
+async function uiCaller(req: Request & AuthedRequest, action: 'conversation:read' | 'conversation:write') {
+  const channelId = String(req.params.id)
+  const access = await requireConversationMember(req, channelId, action)
+  const projectId = requestedProjectId(req)
+  if (projectId && projectId !== access.projectId) throw new HttpError(403, 'conversation belongs to another workspace')
+  return { companyId: access.companyId, userId: access.userId, channelId, uiId: String(req.params.uiId) }
+}
+
+imRouter.get('/channels/:id/ui/:uiId/state', safe(async (req, res) => {
+  const caller = await uiCaller(req, 'conversation:read')
+  const reference = uiReferenceSchema.parse({ ...req.query, revision: Number(req.query.revision) })
+  res.setHeader('Cache-Control', 'no-store')
+  res.json(await getUiState({ ...caller, reference }))
+}))
+
+imRouter.put('/channels/:id/ui/:uiId/state', safe(async (req, res) => {
+  const caller = await uiCaller(req, 'conversation:write')
+  res.setHeader('Cache-Control', 'no-store')
+  res.json(await saveUiState({ ...caller, request: req.body }))
+}))
+
+imRouter.post('/channels/:id/ui/:uiId/actions', safe(async (req, res) => {
+  const caller = await uiCaller(req, 'conversation:write')
+  const result = await submitUiAction({ ...caller, request: req.body })
+  res.status(result.duplicate ? 200 : 202).json(result)
 }))
 
 imRouter.post('/channels/:id/reactions', safe(async (req, res) => {

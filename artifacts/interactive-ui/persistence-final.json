@@ -1,0 +1,99 @@
+{
+  "generatedAt": "2026-10-09T05:11:02.153Z",
+  "reproduce": "node e2e/server/run.mjs --file interactive-ui.test.ts",
+  "status": "passed",
+  "counts": {
+    "tests": 9,
+    "pass": 9,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "results": [
+    {
+      "command": "docker compose -f e2e/server/compose.yaml up -d --wait",
+      "startedAt": "2026-10-09T05:10:27.819Z",
+      "finishedAt": "2026-10-09T05:10:29.889Z",
+      "exitCode": 0
+    },
+    {
+      "command": "C:\\nvm4w\\nodejs\\node.exe --import tsx server/src/migrate-bin.ts",
+      "startedAt": "2026-10-09T05:10:29.889Z",
+      "finishedAt": "2026-10-09T05:10:31.993Z",
+      "exitCode": 0
+    },
+    {
+      "command": "C:\\nvm4w\\nodejs\\node.exe server/run-integration-tests.mjs --file interactive-ui.test.ts",
+      "startedAt": "2026-10-09T05:10:31.993Z",
+      "finishedAt": "2026-10-09T05:11:02.152Z",
+      "exitCode": 0
+    }
+  ],
+  "log": "artifacts/interactive-ui/persistence-final.log",
+  "selectedFiles": [
+    "interactive-ui.test.ts"
+  ],
+  "availableIntegrationFiles": [
+    "admin-workspace.test.ts",
+    "agent-bloub-avatar.test.ts",
+    "agent-protocols-live.test.ts",
+    "agent-protocols.test.ts",
+    "agents-vertical-slice.test.ts",
+    "attachment-answers.test.ts",
+    "calendar-vertical-slice.test.ts",
+    "closed-education.test.ts",
+    "companies-vertical-slice.test.ts",
+    "company-admin.test.ts",
+    "confidence-citations.test.ts",
+    "conversations.test.ts",
+    "courses.test.ts",
+    "document-mention.test.ts",
+    "domain-foundation.test.ts",
+    "email-reply-promote.test.ts",
+    "email-vertical-slice.test.ts",
+    "enterprise-governance.test.ts",
+    "html.test.ts",
+    "identity-vertical-slice.test.ts",
+    "im-conversation-style.test.ts",
+    "inbound.test.ts",
+    "interactive-ui-live.test.ts",
+    "interactive-ui-wukong.test.ts",
+    "interactive-ui.test.ts",
+    "knowledge-vertical-slice.test.ts",
+    "learning-activity-import.test.ts",
+    "learning-collaboration.test.ts",
+    "learning-foundation.test.ts",
+    "learning-preset-onboarding.test.ts",
+    "memory-summaries.test.ts",
+    "messages-vertical-slice.test.ts",
+    "metrics.test.ts",
+    "migration.test.ts",
+    "native-admission.test.ts",
+    "native-collaboration.test.ts",
+    "native-memory.test.ts",
+    "native-message-approvals.test.ts",
+    "native-message-cutover.test.ts",
+    "native-message-flow.test.ts",
+    "permission-resolver.test.ts",
+    "platform-lifecycle.test.ts",
+    "polls.test.ts",
+    "project-lifecycle-concurrency.test.ts",
+    "research-search.test.ts",
+    "resend-live.test.ts",
+    "retry.test.ts",
+    "runtime-compaction.test.ts",
+    "runtime-context-latency.test.ts",
+    "runtime-nonthinking.test.ts",
+    "runtime-notifications.test.ts",
+    "runtime-objects.test.ts",
+    "runtime-realtime.test.ts",
+    "runtime-response-policy.test.ts",
+    "runtime-retirement.test.ts",
+    "teacher-agent.test.ts",
+    "trust-bff.test.ts"
+  ],
+  "limitations": [
+    "Live model provider and Resend delivery are unverified; this isolated runner disables both.",
+    "Integration fixtures simulate WuKongIM and object storage."
+  ]
+}

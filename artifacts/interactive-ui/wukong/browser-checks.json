@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "realDatabase": true,
+  "realWuKong": true,
+  "realStateAndActionApi": true,
+  "modelCalls": 0,
+  "source": "Deterministic committed lesson; no model worker",
+  "savedAngle": 40,
+  "localActionDelta": 0,
+  "explicitActionDelta": 1,
+  "durableMessageDelta": 1,
+  "stateReloads": {
+    "attempted": 2,
+    "restored": 2
+  }
+}

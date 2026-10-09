@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "realTransport": true,
+  "pinnedCommit": "c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47",
+  "sendCalls": 2,
+  "durableMessages": 2,
+  "uiPublication": "pending → reconciled → committed",
+  "actionRetries": 2,
+  "modelCalls": 0,
+  "browser": {
+    "passed": true,
+    "report": "artifacts/interactive-ui/wukong/browser/report.json",
+    "checks": "artifacts/interactive-ui/wukong/browser-checks.json",
+    "durableMessagesAfterBrowser": 3,
+    "modelWorker": false
+  },
+  "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui --transport-only"
+}

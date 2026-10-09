@@ -1,0 +1,30 @@
+npm error code ERESOLVE
+npm error ERESOLVE unable to resolve dependency tree
+npm error
+npm error While resolving: openui-adapter-current@undefined
+npm error Found: zustand@5.0.15
+npm error node_modules/zustand
+npm error   zustand@"5.0.15" from the root project
+npm error   zustand@"^5.0.15" from @assistant-ui/react@0.15.16
+npm error   node_modules/@assistant-ui/react
+npm error     @assistant-ui/react@"0.15.16" from the root project
+npm error     peer @assistant-ui/react@"^0.15.0" from @openuidev/assistant-ui@0.1.2
+npm error     node_modules/@openuidev/assistant-ui
+npm error       @openuidev/assistant-ui@"0.1.2" from the root project
+npm error
+npm error Could not resolve dependency:
+npm error peer zustand@"^4.5.5" from @openuidev/react-headless@0.17.0
+npm error node_modules/@openuidev/react-headless
+npm error   @openuidev/react-headless@"0.17.0" from the root project
+npm error   peer @openuidev/react-headless@">=0.14.0 <0.18.0" from @openuidev/assistant-ui@0.1.2
+npm error   node_modules/@openuidev/assistant-ui
+npm error     @openuidev/assistant-ui@"0.1.2" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\34395\AppData\Local\npm-cache\_logs\2026-10-09T04_55_47_589Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\34395\AppData\Local\npm-cache\_logs\2026-10-09T04_55_47_589Z-debug-0.log

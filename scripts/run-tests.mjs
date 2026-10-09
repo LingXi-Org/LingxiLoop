@@ -17,6 +17,7 @@ const testsByScope = {
     'server/src/__tests__/agent-tool-registry.test.ts',
     'server/src/__tests__/assistant-text.test.ts',
     'server/src/__tests__/assistant-transport.test.ts',
+    'server/src/agent-runtime/interactive-ui-projection.test.ts',
     'server/src/__tests__/public-events.test.ts',
     'server/src/__tests__/research-search.test.ts',
     'server/src/__tests__/confidence-citations.test.ts',
@@ -31,6 +32,8 @@ const testsByScope = {
   ],
   admin: ['admin/src/lingxilit-url.test.ts', 'admin/src/record-presentation.test.ts', 'admin/src/management-session.test.ts'],
   web: [
+    'src/lib/interactive-ui/source.test.ts',
+    'src/lib/interactive-ui/kernels/kernels.test.ts',
     'src/components/assistant-ui/markdown-text.test.tsx',
     'src/features/chat/runtime/converter.test.ts',
     'src/features/chat/runtime/tool-card-results.test.ts',

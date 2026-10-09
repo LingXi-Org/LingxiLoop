@@ -1,0 +1,7 @@
+export { functionPlot, projectile } from './curves.js'
+export type { FunctionIntersection, FunctionPlotInput, FunctionPlotResult, Point, Polynomial, ProjectileInput, ProjectileResult } from './curves.js'
+export { dctImage } from './dct.js'
+export type { DctImageInput, DctImageResult } from './dct.js'
+export { DCT_FIXTURES, KERNEL_FIXTURES } from './fixtures.js'
+export { centralLimit, montyHallGame, montyHallSimulation } from './probability.js'
+export type { CentralLimitInput, CentralLimitResult, CltDistribution, Door, HistogramBin, MontyHallGameInput, MontyHallGameResult, MontyHallSimulationInput, MontyHallSimulationResult } from './probability.js'

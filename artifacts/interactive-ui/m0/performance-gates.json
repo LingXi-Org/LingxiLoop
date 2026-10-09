@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "measuredAt": "2026-10-09T04:36:22.600Z",
+  "viewport": {
+    "width": 1440,
+    "height": 960
+  },
+  "scenario": "Single mixed lesson; 30 alternating keyboard updates; isolated production fixture",
+  "samples": [
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 322.09999999962747
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 31.5
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 27.5
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 20.90000000037253
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 30
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 18.800000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 16
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 19.199999999254942
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 15.5
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 11.199999999254942
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 13.200000001117587
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 13.100000001490116
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 14.300000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 11.5
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 13.800000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10.800000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 13.299999998882413
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 13.199999999254942
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 15.600000001490116
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 15.5
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 13.800000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 15.5
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 16.799999998882413
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 13.800000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 14.900000000372529
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.900000000372529
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.200000001117587
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 11.399999998509884
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.799999998882413
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 13.5
+    }
+  ],
+  "baseline": {
+    "interactionP95Ms": 30,
+    "readyMs": 322.09999999962747
+  },
+  "limits": {
+    "interactionP95Ms": 100,
+    "readyMs": 2000
+  },
+  "policy": "Freeze before independent runs: 3× baseline with a 100 ms interaction / 2000 ms readiness floor; never change gates after seeing acceptance results."
+}

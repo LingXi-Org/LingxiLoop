@@ -3,7 +3,7 @@ import type { Participant } from '@/types'
 import type { AgentRunTarget } from './harness-api'
 import type { AgentRunSnapshot, RunDisplayState } from '@/lib/agentRunSnapshot'
 import { deserializeMessage } from '@/lib/nativeMessage'
-import { getLingxiMessageMetadata as metadata, type LingxiMessageMetadata } from './model'
+import { getLingxiMessageMetadata as metadata, resolveMessagePresentation, type LingxiMessageMetadata } from './model'
 import { mergeCanonicalMessages, messageKey, type ConversationChatState } from './store'
 import { isOlderRun } from './harness'
 
@@ -17,6 +17,11 @@ export function applyRunSnapshot(state: ConversationChatState, target: AgentRunT
   if (native.role !== 'assistant' || view?.runId !== target.runId || native.id !== `run-${target.runId}`) throw new Error('运行身份不一致')
   const current = state.messages.find(message => message.id === native.id), before = current && metadata(current)
   if (before?.harness && isOlderRun(before.harness,view)) return state
+  const sameResult = Boolean(view.resultId && before?.harness?.resultId === view.resultId
+    && before.harness.requestVersion === view.requestVersion && before.harness.fence === view.fence
+    && before.harness.messageFence === view.messageFence)
+  // Delivery may replace an uncommittable UI with text; SSE must not undo that canonical payload.
+  const content = sameResult && before?.sequence != null && current?.role === 'assistant' ? current.content : native.content
   const predecessor = state.messages.filter(message => message !== current && message.createdAt <= native.createdAt).at(-1)
   const lastSent = state.messages.filter(message => {
     const value = metadata(message)
@@ -27,16 +32,17 @@ export function applyRunSnapshot(state: ConversationChatState, target: AgentRunT
     schema: 'lingxiloop.thread-message.v2', conversationId: target.conversationId, clientMessageId: native.id,
     sequence: null, senderId: target.agentId, senderName: participant?.name ?? target.agentId, senderKind: 'agent',
     senderAvatarUrl: participant?.avatarUrl ?? null, isMine: false, delivery: 'sent', messageKind: 'text',
-    presentation: 'conversation', quotedMessageId: target.threadId ?? null, quote: null, reactions: [], replyCount: 0,
+    quotedMessageId: target.threadId ?? null, quote: null, reactions: [], replyCount: 0,
     threadRootId: target.threadId ?? null, groupStart: true, groupEnd: true, continuedFromPrevious: false,
     continuedToNext: false, clusterChromeAt: null, ...before, ...native.metadata.custom,
+    presentation: resolveMessagePresentation(content),
     positionAfter: before?.sequence != null ? undefined : lastSent ? messageKey(lastSent)
       : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
     harnessError: typeof native.metadata.custom.harnessError === 'string' ? native.metadata.custom.harnessError : undefined,
-    runId: target.runId, harness: before?.harness?.delivery === 'delivered' && before.harness.resultId === view.resultId
+    runId: target.runId, harness: before?.harness?.delivery === 'delivered' && sameResult
       ? { ...view, delivery: 'delivered' } : view,
   }
-  const message: ThreadMessage = { ...native, metadata: { ...native.metadata, custom } }
+  const message: ThreadMessage = { ...native, content, metadata: { ...native.metadata, custom } }
   const messages = mergeCanonicalMessages(state.messages,[message]), activeRuns = { ...state.activeRuns }
   for (const [key,run] of Object.entries(activeRuns)) if (run.id === target.runId) delete activeRuns[key]
   if (view.lifecycle === 'queued' || view.lifecycle === 'leased') activeRuns[native.id] = {

@@ -1,0 +1,16 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:web",
+    "--",
+    "e2e/web/interactive-ui.e2e.ts",
+    "--grep",
+    "reloading after",
+    "--output",
+    "artifacts/interactive-ui/action-reload-before"
+  ],
+  "buildMode": "external app via E2E_BASE_URL",
+  "browser": "managed official @e2e-dev/web browser",
+  "build": null
+}

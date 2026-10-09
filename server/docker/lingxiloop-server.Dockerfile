@@ -27,6 +27,7 @@ ARG NPM_REGISTRY=https://registry.npmjs.org
 ARG APT_MIRROR=http://mirrors.aliyun.com
 
 FROM ${NODE_BASE_IMAGE} AS deps
+ENV OPENUI_TELEMETRY_DISABLED=1
 ARG NPM_REGISTRY
 WORKDIR /app
 COPY server/package.json server/package-lock.json server/.npmrc ./
@@ -40,6 +41,7 @@ RUN --mount=type=secret,id=npm_token \
 #
 # The SPA uses same-origin `/api` routes through the control-plane Worker.
 FROM ${NODE_BASE_IMAGE} AS spa-build
+ENV OPENUI_TELEMETRY_DISABLED=1
 ARG NPM_REGISTRY
 WORKDIR /app
 ARG VITE_PUBLIC_POSTHOG_KEY=""
@@ -90,6 +92,7 @@ COPY server ./server
 # control-plane image as well (the SPA build stage's source is not copied into
 # this final stage).
 COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts src/lib/mentions.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts ./src/lib/
+COPY src/lib/interactive-ui ./src/lib/interactive-ui
 # Web SPA bundle — read by server/src/web.ts at boot via existsSync().
 # When this is absent (e.g. an older runtime image) the server falls
 # back to a JSON `/` response.

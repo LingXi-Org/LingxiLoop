@@ -1,0 +1,16 @@
+name: lingxiloop-ui-live
+services:
+  wukongim:
+    image: ${E2E_WUKONG_IMAGE:-lingxiloop-e2e-wukongim:local}
+    build:
+      context: ..
+      dockerfile: server/docker/wukongim.Dockerfile
+      args:
+        WUKONG_COMMIT: c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
+    ports:
+      - "127.0.0.1:55011:5001"
+      - "127.0.0.1:55210:5200"
+    environment:
+      WK_WEBHOOK_HTTP_ADDR: http://host.docker.internal:52996/webhooks/wukong?token=lingxiloop-ui-live-webhook
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

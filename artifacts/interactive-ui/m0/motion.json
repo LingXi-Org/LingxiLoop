@@ -1,0 +1,9 @@
+{
+  "measuredAt": "2026-10-09T05:06:09.746Z",
+  "media": "Native Chrome prefers-reduced-motion: reduce set through CDP; read and asserted through @e2e-dev/web",
+  "transition": "1e-05s",
+  "touchAction": "none",
+  "pointerEvidence": "Synthetic touch PointerEvents during native pointer capture; not physical touch hardware",
+  "finalAngle": "68",
+  "actionRequests": 0
+}

@@ -1,0 +1,241 @@
+{
+  "measuredAt": "2026-10-09T05:04:27.942Z",
+  "gatesFrom": "2026-10-09T04:36:22.600Z",
+  "scenario": "20 mixed lessons; 360 px; keyboard and continuous pointer changes",
+  "interactionP95Ms": 22.90000000037253,
+  "readyMs": 1138.0999999996275,
+  "samples": [
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1138.0999999996275
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1127.800000000745
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1115.2999999988824
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1104.2000000011176
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1090.0999999996275
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1079.199999999255
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1069.4000000003725
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1049.5
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1038
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1025.800000000745
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 1011.7999999988824
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 997.8999999985099
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 987.3000000007451
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 975.8000000007451
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 964.1999999992549
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 951.7999999988824
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 941.4000000003725
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 929.1000000014901
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 916
+    },
+    {
+      "name": "lingxiloop.ui.ready",
+      "duration": 902.3999999985099
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.5
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 11.400000000372529
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 11.900000000372529
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 8.800000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 9
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 9.199999999254942
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 21.699999999254942
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.399999998509884
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 16.09999999962747
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 11.699999999254942
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10.599999999627471
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10.5
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 22.40000000037253
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10.700000001117587
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.400000000372529
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 23.200000001117587
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10.600000001490116
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10.300000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.100000001490116
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 22.90000000037253
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.599999999627471
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 9.899999998509884
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 9.5
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 14.400000000372529
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 14.900000000372529
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 9.399999998509884
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 11.400000000372529
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10.800000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 9.299999998882413
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.800000000745058
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 8.900000000372529
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 9.699999999254942
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 8.899999998509884
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 12.099999999627471
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10.699999999254942
+    },
+    {
+      "name": "lingxiloop.ui.interaction",
+      "duration": 10.799999998882413
+    }
+  ],
+  "limits": {
+    "interactionP95Ms": 100,
+    "readyMs": 2000
+  }
+}

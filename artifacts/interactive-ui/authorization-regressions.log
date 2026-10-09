@@ -1,0 +1,204 @@
+ Container lingxiloop-e2e-postgres-1  Running
+ Container lingxiloop-e2e-redis-1  Running
+ Container lingxiloop-e2e-postgres-1  Waiting
+ Container lingxiloop-e2e-redis-1  Waiting
+ Container lingxiloop-e2e-redis-1  Healthy
+ Container lingxiloop-e2e-postgres-1  Healthy
+[db:migrate] already current · 219ms
+[integration] selected 4/57 file(s): interactive-ui.test.ts, teacher-agent.test.ts, native-message-approvals.test.ts, learning-foundation.test.ts
+TAP version 13
+# Subtest: personal state is scoped, conditionally saved, and restored only across compatible revisions
+ok 1 - personal state is scoped, conditionally saved, and restored only across compatible revisions
+  ---
+  duration_ms: 14968.1641
+  type: 'test'
+  ...
+# Subtest: actions are allowlisted, admitted once, and generic ingress cannot forge their receipts
+ok 2 - actions are allowlisted, admitted once, and generic ingress cannot forge their receipts
+  ---
+  duration_ms: 1029.6701
+  type: 'test'
+  ...
+# Subtest: mentions in lesson titles and prediction data cannot choose action recipients
+ok 3 - mentions in lesson titles and prediction data cannot choose action recipients
+  ---
+  duration_ms: 547.5521
+  type: 'test'
+  ...
+# Subtest: real student, teacher-room, conversation and tenant scopes remain authoritative for UI requests
+ok 4 - real student, teacher-room, conversation and tenant scopes remain authoritative for UI requests
+  ---
+  duration_ms: 695.7825
+  type: 'test'
+  ...
+# Subtest: pending delivery fences actions, survives ACK loss, and commits only the original recorded message
+ok 5 - pending delivery fences actions, survives ACK loss, and commits only the original recorded message
+  ---
+  duration_ms: 604.6471
+  type: 'test'
+  ...
+# [api] 500 Error: fixture ACK lost after durable write
+#     at WukongClient.<anonymous> (E:\\lyyzka\\LingxiLoop\\server\\src\\__integration__\\interactive-ui.test.ts:290:11)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+#     at async ImMessagesApplication.acceptMessage (E:\\lyyzka\\LingxiLoop\\server\\src\\im\\messages-application.ts:406:22)
+#     at async Object.withConnection (E:\\lyyzka\\LingxiLoop\\server\\src\\im\\messages-facade.ts:13:14)
+#     at async submitUiAction (E:\\lyyzka\\LingxiLoop\\server\\src\\im\\interactive-ui.ts:295:18)
+#     at async <anonymous> (E:\\lyyzka\\LingxiLoop\\server\\src\\im\\router.ts:306:18)
+# Subtest: an action whose send lost its ACK is reconciled without a second human message
+ok 6 - an action whose send lost its ACK is reconciled without a second human message
+  ---
+  duration_ms: 301.8979
+  type: 'test'
+  ...
+# Subtest: native UI dispatch reconciles a lost ACK and does not retry an unconfirmed absent message
+ok 7 - native UI dispatch reconciles a lost ACK and does not retry an unconfirmed absent message
+  ---
+  duration_ms: 226.0335
+  type: 'test'
+  ...
+# Subtest: competing revisions and same-version state writes admit exactly one winner
+ok 8 - competing revisions and same-version state writes admit exactly one winner
+  ---
+  duration_ms: 295.4065
+  type: 'test'
+  ...
+# Subtest: runtime control rejects cancelled or failed runs and binds only the original waiting request
+ok 9 - runtime control rejects cancelled or failed runs and binds only the original waiting request
+  ---
+  duration_ms: 526.5024
+  type: 'test'
+  ...
+# Subtest: [integration] Personal Project owns the complete learning foundation without a course
+ok 10 - [integration] Personal Project owns the complete learning foundation without a course
+  ---
+  duration_ms: 7123.1207
+  type: 'test'
+  ...
+# Subtest: [integration] same-company wrong-project learning links fail closed
+ok 11 - [integration] same-company wrong-project learning links fail closed
+  ---
+  duration_ms: 9133.4436
+  type: 'test'
+  ...
+# Subtest: [integration] cross-tenant learning links, duplicate open cases and action retries are rejected
+ok 12 - [integration] cross-tenant learning links, duplicate open cases and action retries are rejected
+  ---
+  duration_ms: 9535.9948
+  type: 'test'
+  ...
+# {"ts":"2026-10-09T04:51:34.745Z","level":"info","msg":"worker stopped","workerId":"approval-fixture","timedOut":false}
+# Subtest: HTTP approval decisions and expiry survive native message replay under a real worker lease
+ok 13 - HTTP approval decisions and expiry survive native message replay under a real worker lease
+  ---
+  duration_ms: 18393.4306
+  type: 'test'
+  ...
+# {"ts":"2026-10-09T04:51:34.762Z","level":"warn","msg":"dependencies failed","error":"control plane stopped"}
+# {"ts":"2026-10-09T04:51:34.762Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-09T04:51:52.926Z","level":"warn","msg":"dependencies failed","error":"control plane stopped"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"memory synthesis failed","error":"control plane stopped"}
+# {"ts":"2026-10-09T04:51:52.927Z","level":"warn","msg":"queue fairness failed","error":"control plane stopped"}
+# Subtest: [integration] Pulse can send conversational messages only in its active authorized teacher room
+ok 14 - [integration] Pulse can send conversational messages only in its active authorized teacher room
+  ---
+  duration_ms: 11239.5346
+  type: 'test'
+  ...
+# {"ts":"2026-10-09T04:52:02.538Z","level":"info","msg":"worker stopped","workerId":"teacher-memory-regression","timedOut":false}
+# {"ts":"2026-10-09T04:52:02.541Z","level":"warn","msg":"memory capture failed","error":"control plane stopped"}
+# [access] permission resolution failed closed {
+#   action: 'agent_memory:read',
+#   actorUserId: 'teacher-0e8f0819',
+#   error: 'control plane stopped'
+# }
+# {"ts":"2026-10-09T04:52:02.547Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-09T04:52:02.548Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# Subtest: [integration] Pulse replies over the control plane without memory and rejects revoked membership
+ok 15 - [integration] Pulse replies over the control plane without memory and rejects revoked membership
+  ---
+  duration_ms: 9618.003
+  type: 'test'
+  ...
+# Subtest: [integration] personal Agent avatars retain the six/seven roster and reject student Pulse writes
+ok 16 - [integration] personal Agent avatars retain the six/seven roster and reject student Pulse writes
+  ---
+  duration_ms: 8612.0869
+  type: 'test'
+  ...
+# Subtest: [integration] concurrent provisioning creates one Project Pulse and one Course teacher room
+ok 17 - [integration] concurrent provisioning creates one Project Pulse and one Course teacher room
+  ---
+  duration_ms: 9109.1068
+  type: 'test'
+  ...
+# Subtest: [integration] Pulse provisioning rolls back every owned row on persistence failure
+ok 18 - [integration] Pulse provisioning rolls back every owned row on persistence failure
+  ---
+  duration_ms: 9836.9977
+  type: 'test'
+  ...
+# Subtest: [integration] Pulse provisioning and lifecycle reject a foreign tenant scope
+ok 19 - [integration] Pulse provisioning and lifecycle reject a foreign tenant scope
+  ---
+  duration_ms: 7116.5544
+  type: 'test'
+  ...
+# Subtest: [integration] archive and restore retain the same Pulse identity and teacher room
+ok 20 - [integration] archive and restore retain the same Pulse identity and teacher room
+  ---
+  duration_ms: 6844.1452
+  type: 'test'
+  ...
+# Subtest: [integration] current course teachers and company administrators can discover Pulse and open its teacher endpoint
+ok 21 - [integration] current course teachers and company administrators can discover Pulse and open its teacher endpoint
+  ---
+  duration_ms: 11456.8035
+  type: 'test'
+  ...
+# Subtest: [integration] teacher digest calculation keeps local wall-clock time across DST
+ok 22 - [integration] teacher digest calculation keeps local wall-clock time across DST
+  ---
+  duration_ms: 9837.7761
+  type: 'test'
+  ...
+# Subtest: [integration] only critical teacher operations cross the approval boundary
+ok 23 - [integration] only critical teacher operations cross the approval boundary
+  ---
+  duration_ms: 8888.7196
+  type: 'test'
+  ...
+# Subtest: [integration] Pulse reporting repository cannot cross tenant course boundaries
+ok 24 - [integration] Pulse reporting repository cannot cross tenant course boundaries
+  ---
+  duration_ms: 12096.1836
+  type: 'test'
+  ...
+# Subtest: [integration] Pulse approval freshness binds the target room to the trusted tenant
+ok 25 - [integration] Pulse approval freshness binds the target room to the trusted tenant
+  ---
+  duration_ms: 10652.877
+  type: 'test'
+  ...
+# Subtest: [integration] Pulse runtime scope and counts reject foreign tenant state
+ok 26 - [integration] Pulse runtime scope and counts reject foreign tenant state
+  ---
+  duration_ms: 6864.9681
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 224373.0513
