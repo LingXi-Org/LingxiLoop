@@ -1,18 +1,23 @@
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { SelectField } from '@/components/ui/select-field'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { knowledgeApi } from '@/features/knowledge/api'
 import type { KnowledgeSource } from '@/features/knowledge/contracts'
 import { userFacingError } from '@/lib/userFacingError'
 import type { LearningSpace } from '../contracts'
 import { forumApi } from './api'
-import type { ForumAttachment } from './contracts'
 import { contentLinks, ForumContentFields } from './ForumContentFields'
-import { Button, Input, Label, MemoSelect } from './memos/MemoControls'
+import { composerDraftSchema, emptyContent, useForumDraft } from './useForumDraft'
 
 export function ForumComposer({ space, onCreated, onCancel }: { space: LearningSpace; onCreated(): void; onCancel(): void }) {
-  const [kind, setKind] = useState<'share' | 'resource' | 'case'>('share')
-  const [title, setTitle] = useState(''), [body, setBody] = useState(''), [tags, setTags] = useState(''), [links, setLinks] = useState('')
-  const [attachments, setAttachments] = useState<ForumAttachment[]>([])
-  const [sourceId, setSourceId] = useState('none'), [sources, setSources] = useState<KnowledgeSource[]>([])
+  const { draft, setDraft, discard, storageError } = useForumDraft(`post:${space.courseId}`, composerDraftSchema,
+    { ...emptyContent, kind: 'share' as const, title: '', tags: '', sourceId: 'none' })
+  const { kind, title, body, tags, links, attachments, sourceId } = draft
+  const [sources, setSources] = useState<KnowledgeSource[]>([])
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState('')
   useEffect(() => {
     let active = true
@@ -29,19 +34,23 @@ export function ForumComposer({ space, onCreated, onCancel }: { space: LearningS
     try {
       await forumApi.create(space.courseId, { kind,title,body,tags: tags.split(/[,，]/).map(tag => tag.trim()).filter(Boolean),
         links: contentLinks(links),attachments,...(sourceId !== 'none' ? { sourceId } : {}) })
-      onCreated()
+      discard(); toast.success('内容已发布'); onCreated()
     } catch (reason) { setError(userFacingError(reason, '内容发布失败，请重试。')) }
     finally { setBusy(false) }
   }}>
     <div className="flex flex-wrap items-end gap-3">
-      <div className="min-w-0 flex-1 space-y-2"><Label htmlFor="forum-post-title">内容标题</Label><Input autoFocus id="forum-post-title" value={title} onChange={event => setTitle(event.target.value)} maxLength={200} required disabled={disabled} /></div>
-      <div className="space-y-2"><Label htmlFor="forum-post-kind">内容类型</Label><MemoSelect id="forum-post-kind" value={kind} onChange={event => setKind(event.target.value as typeof kind)} disabled={disabled}><option value="share">普通分享</option><option value="resource">资料</option><option value="case">作品案例</option></MemoSelect></div>
+      <div className="min-w-0 flex-1 space-y-2"><Label htmlFor="forum-post-title">内容标题</Label><Input autoFocus id="forum-post-title" value={title} onChange={event => setDraft(previous => ({ ...previous, title: event.target.value }))} maxLength={200} required disabled={disabled} /></div>
+      <div className="space-y-2"><Label htmlFor="forum-post-kind">内容类型</Label><SelectField id="forum-post-kind" ariaLabel="内容类型" value={kind} onValueChange={kind => setDraft(previous => ({ ...previous, kind }))} disabled={disabled} options={[{ value: 'share', label: '普通分享' }, { value: 'resource', label: '资料' }, { value: 'case', label: '作品案例' }]} /></div>
     </div>
-    <ForumContentFields body={body} setBody={setBody} links={links} setLinks={setLinks} attachments={attachments} setAttachments={setAttachments} disabled={disabled} onUploading={setUploading} />
-    <div className="space-y-2"><Label htmlFor="forum-post-tags">标签</Label><Input id="forum-post-tags" value={tags} onChange={event => setTags(event.target.value)} placeholder="用逗号分隔，最多 10 个" disabled={disabled} /></div>
-    <div className="space-y-2"><Label htmlFor="forum-post-source">引用课程公共资料</Label><MemoSelect id="forum-post-source" value={sourceId} onChange={event => setSourceId(event.target.value)} disabled={disabled}><option value="none">不引用资料</option>{sources.map(source => <option key={source.id} value={source.id}>{source.title}</option>)}</MemoSelect></div>
+    <ForumContentFields body={body} setBody={body => setDraft(previous => ({ ...previous, body }))} links={links} setLinks={links => setDraft(previous => ({ ...previous, links }))}
+      attachments={attachments} setAttachments={attachments => setDraft(previous => ({ ...previous, attachments }))} disabled={disabled} onUploading={setUploading} tags={tags.split(/[,，]/).map(tag => tag.trim()).filter(Boolean)} />
+    <div className="space-y-2"><Label htmlFor="forum-post-tags">标签</Label><Input id="forum-post-tags" value={tags} onChange={event => setDraft(previous => ({ ...previous, tags: event.target.value }))} placeholder="用逗号分隔，最多 10 个" disabled={disabled} /></div>
+    <div className="space-y-2"><Label htmlFor="forum-post-source">引用课程公共资料</Label><SelectField id="forum-post-source" ariaLabel="引用课程公共资料" value={sourceId} onValueChange={sourceId => setDraft(previous => ({ ...previous, sourceId }))} disabled={disabled} options={[{ value: 'none', label: '不引用资料' }, ...sources.map(source => ({ value: source.id, label: source.title }))]} /></div>
     <p className="text-xs text-muted-foreground">发布后本课程师生可见。作业请使用“提交作业”，提交内容仅你和本课程教师可见。</p>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-    <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={disabled} onClick={onCancel}>取消</Button><Button type="submit" disabled={disabled || !title.trim()}>{uploading ? '上传中…' : busy ? '发布中…' : '发布'}</Button></div>
+    {storageError && <p role="status" className="text-sm text-destructive">无法保存本地草稿，请先复制内容再关闭。</p>}
+    <div className="flex flex-wrap items-center justify-end gap-2"><span className="me-auto text-xs text-muted-foreground">草稿保存在此设备，保留 7 天</span>
+      <AlertDialog><AlertDialogTrigger asChild><Button type="button" variant="ghost" disabled={disabled}>丢弃草稿</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>丢弃这份草稿？</AlertDialogTitle><AlertDialogDescription>尚未发布的正文与附件引用将被清除。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>继续编辑</AlertDialogCancel><AlertDialogAction onClick={() => { discard(); onCancel() }}>丢弃草稿</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+      <Button type="button" variant="outline" disabled={disabled} onClick={onCancel}>稍后继续</Button><Button type="submit" disabled={disabled || !title.trim()}>{uploading ? '上传中…' : busy ? '发布中…' : '发布'}</Button></div>
   </form>
 }

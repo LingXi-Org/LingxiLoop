@@ -21,7 +21,7 @@ export interface ForumItem {
   featured: boolean
   commentCount: number
 }
-export interface ForumComment { id: string; authorId: string; authorName: string; body: string; createdAt: string }
+export interface ForumComment { id: string; authorId: string; authorName: string; body: string; links: string[]; attachments: ForumAttachment[]; createdAt: string }
 export interface ForumPage<T> { items: T[]; nextOffset: number | null }
 export interface SubmissionVersion {
   id: string

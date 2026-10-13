@@ -103,6 +103,24 @@ test('[integration] submission versions preserve links, private files, late stat
   assert.equal(await canReadLearningFile(pool, input.attachments[0].key, student.userId), false)
 })
 
+// Comment attachments must persist, require the uploader's grant, and follow the
+// current target visibility rather than leaving an uploader or old-course bypass.
+test('[integration] comment files follow course membership and current source visibility', async () => {
+  const attachments = [{ key: 'attachments/forum-school/student.txt', name: 'student.txt' }]
+  const input = { body: '', links: ['https://example.com/discussion'], attachments }
+  await assert.rejects(forum.comment(peer, course, 'source', 'source-PROJECT', input))
+  await assert.rejects(forum.comment(outsider, course, 'source', 'source-PROJECT', input))
+  await forum.comment(student, course, 'source', 'source-PROJECT', input)
+  const comment = (await forum.comments(peer, course, 'source', 'source-PROJECT', 0)).items[0]
+  assert.deepEqual({ body: comment.body, links: comment.links, attachments: comment.attachments }, input)
+  assert.equal(await canReadLearningFile(pool, attachments[0].key, peer.userId), true)
+  assert.equal(await canReadLearningFile(pool, attachments[0].key, outsider.userId), false)
+  await pool.query(`UPDATE knowledge_sources SET visibility_scope='PRIVATE' WHERE id='source-PROJECT'`)
+  await assert.rejects(forum.comments(student, course, 'source', 'source-PROJECT', 0))
+  assert.equal(await canReadLearningFile(pool, attachments[0].key, student.userId), false)
+  assert.equal(await canReadLearningFile(pool, attachments[0].key, teacher.userId), false)
+})
+
 test('[integration] Agent provenance cannot become independent human evidence or change the submitting student', async () => {
   const result = await submitProjectLearningActivity(transaction, { companyId,projectId: 'forum-project',activityId: 'forum-homework',learnerId: student.userId,
     answer: 'Agent generated answer', idempotencyKey: 'forum-agent-generated', source: 'AGENT_GENERATED', agentId: 'forum-agent', agentWorkId: 'forum-work' })
@@ -201,6 +219,17 @@ test('[integration] HTTP forum and private download routes reject cross-course a
     assert.equal((await call(outsider,`${target}/comments`,'POST',{ body: 'forbidden' })).status,404)
     assert.equal((await call(student,target,'PATCH',{ pinned: true,official: true,featured: true })).status,403)
     assert.equal((await call(teacher,target,'PATCH',{ pinned: true,featured: true })).status,200)
+    const commentKey = 'attachments/forum-school/comment.txt'
+    await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
+      SELECT $1,$2,$3,period_id FROM company_memberships WHERE company_id=$2 AND user_id=$3 AND ended_at IS NULL`, [commentKey,companyId,student.userId])
+    await storage.put(commentKey, Buffer.from('Course discussion file'), 'text/plain')
+    const commentInput = { body: '', links: [], attachments: [{ key: commentKey,name: 'comment.txt' }] }
+    assert.equal((await call(peer,`${target}/comments`,'POST',commentInput)).status,403)
+    assert.equal((await call(student,`${target}/comments`,'POST',commentInput)).status,201)
+    const comments = await (await call(peer,`${target}/comments`)).json() as { items: { attachments: unknown }[] }
+    assert.deepEqual(comments.items[0].attachments,commentInput.attachments)
+    assert.equal((await call(peer,`/files?key=${encodeURIComponent(commentKey)}`)).status,200)
+    assert.equal((await call(outsider,`/files?key=${encodeURIComponent(commentKey)}`)).status,404)
     assert.equal((await call(student,`/courses/${course}/activities`,'POST',{ title: 'Unauthorized assignment',instructions: 'No',type: 'PRACTICE' })).status,403)
     await call(teacher,`/courses/${course}/activities/forum-homework/close`,'POST')
     assert.equal((await call(student,submit,'POST',{ answer: 'After close',idempotencyKey: 'after-http-close' })).status,409)

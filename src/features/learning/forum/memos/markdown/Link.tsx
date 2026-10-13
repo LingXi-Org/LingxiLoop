@@ -14,7 +14,14 @@ interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>, React
  */
 export const Link = ({ children, className, href, node: _node, ...props }: LinkProps) => {
   return (
-    <a href={href} target={href?.startsWith('#') ? undefined : '_blank'} rel="noopener noreferrer" className={cn(markdownStyles.link, className)} {...props}>
+    <a href={href} target={href?.startsWith('#') ? undefined : '_blank'} rel="noopener noreferrer" className={cn(markdownStyles.link, className)} {...props}
+      onClick={event => {
+        if (!href?.startsWith('#')) return
+        let id: string
+        try { id = decodeURIComponent(href.slice(1)) } catch { return }
+        const target = event.currentTarget.closest('[data-memo-content]')?.querySelector(`#${CSS.escape(id)}`)
+        if (target) { event.preventDefault(); target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'center' }) }
+      }}>
       {children}
     </a>
   );

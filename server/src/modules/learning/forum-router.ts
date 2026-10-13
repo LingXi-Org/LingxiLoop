@@ -32,7 +32,7 @@ forumRouter.get('/courses/:courseId/forum/:type/:id/comments', safe(async (req, 
 }))
 forumRouter.post('/courses/:courseId/forum/:type/:id/comments', safe(async (req, res) => {
   const scope = await requireCompany(req), type = parse(forumTargetSchema.safeParse(req.params.type)), input = parse(forumCommentSchema.safeParse(req.body))
-  res.status(201).json(await respond(() => forum.comment(scope, String(req.params.courseId), type, String(req.params.id), input.body)))
+  res.status(201).json(await respond(() => forum.comment(scope, String(req.params.courseId), type, String(req.params.id), input)))
 }))
 forumRouter.get('/courses/:courseId/activities/:activityId/submissions', safe(async (req, res) => {
   const scope = await requireCompany(req), query = parse(forumPageSchema.safeParse(req.query))

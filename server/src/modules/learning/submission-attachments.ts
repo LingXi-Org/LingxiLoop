@@ -27,7 +27,18 @@ export async function canReadLearningFile(db: Queryable, key: string, userId: st
     UNION SELECT p.company_id,p.project_id,NULL,(p.source_id IS NULL OR EXISTS (
       SELECT 1 FROM knowledge_sources s WHERE s.company_id=p.company_id AND s.project_id=p.project_id AND s.id=p.source_id
         AND s.visibility_scope='PROJECT' AND s.deleted_at IS NULL)) AS visible
-    FROM course_forum_posts p WHERE p.attachments @> jsonb_build_array(jsonb_build_object('key',$1::text))`, [key])
+    FROM course_forum_posts p WHERE p.attachments @> jsonb_build_array(jsonb_build_object('key',$1::text))
+    UNION SELECT c.company_id,c.project_id,NULL,CASE c.target_type
+      WHEN 'source' THEN EXISTS (SELECT 1 FROM knowledge_sources s WHERE s.company_id=c.company_id AND s.project_id=c.project_id
+        AND s.id=c.target_id AND s.visibility_scope='PROJECT' AND s.deleted_at IS NULL)
+      WHEN 'activity' THEN EXISTS (SELECT 1 FROM learning_activities a WHERE a.company_id=c.company_id AND a.project_id=c.project_id
+        AND a.id=c.target_id AND a.status IN ('PUBLISHED','CLOSED'))
+      WHEN 'post' THEN EXISTS (SELECT 1 FROM course_forum_posts p WHERE p.company_id=c.company_id AND p.project_id=c.project_id
+        AND p.id=c.target_id AND (p.source_id IS NULL OR EXISTS (SELECT 1 FROM knowledge_sources s
+          WHERE s.company_id=p.company_id AND s.project_id=p.project_id AND s.id=p.source_id
+            AND s.visibility_scope='PROJECT' AND s.deleted_at IS NULL)))
+      ELSE FALSE END AS visible
+    FROM course_forum_comments c WHERE c.attachments @> jsonb_build_array(jsonb_build_object('key',$1::text))`, [key])
   if (!rows.length) return null
   const permissions = createPermissionService(db)
   for (const row of rows) {

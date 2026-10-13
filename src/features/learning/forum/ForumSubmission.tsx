@@ -1,19 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { userFacingError } from '@/lib/userFacingError'
 import type { LearningSpace } from '../contracts'
 import { forumApi } from './api'
-import type { ForumAttachment, ForumItem, SubmissionVersion } from './contracts'
+import type { ForumItem, SubmissionVersion } from './contracts'
 import { contentLinks, ForumContentFields, ForumFiles } from './ForumContentFields'
 import { MemoCard } from './memos/MemoCard'
 import { MemoContent } from './memos/MemoContent'
-import { Button, MemoTag } from './memos/MemoControls'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './memos/MemoDialog'
+import { contentDraftSchema, emptyContent, useForumDraft } from './useForumDraft'
 
 const sourceLabels = { STUDENT_ORIGINAL: '学生原创',AGENT_RELAY: 'Agent 代交',AGENT_GENERATED: 'Agent 生成' }
 function Version({ submission }: { submission: SubmissionVersion }) {
   return <MemoCard label={`第 ${submission.version} 版提交`} author={submission.learnerName} createdAt={submission.submittedAt}
     actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>
-    <div className="flex flex-wrap items-center gap-2"><MemoTag>{sourceLabels[submission.source]}</MemoTag>{submission.late && <MemoTag>迟交</MemoTag>}</div>
+    <div className="flex flex-wrap items-center gap-2"><Badge variant="secondary">{sourceLabels[submission.source]}</Badge>{submission.late && <Badge variant="outline">迟交</Badge>}</div>
     <MemoContent content={submission.answer} />
     <ForumFiles links={submission.links} attachments={submission.attachments} />
     {submission.source === 'AGENT_GENERATED' && <p className="text-xs text-muted-foreground">此版本由 Agent 生成，不计为独立完成的学习证据。</p>}
@@ -22,9 +24,12 @@ function Version({ submission }: { submission: SubmissionVersion }) {
 
 export function ForumSubmission({ space, item, onClose }: { space: LearningSpace; item: ForumItem; onClose(): void }) {
   const [versions, setVersions] = useState<SubmissionVersion[]>([]), [nextOffset, setNextOffset] = useState<number | null>(null)
-  const [answer, setAnswer] = useState(''), [links, setLinks] = useState(''), [attachments, setAttachments] = useState<ForumAttachment[]>([])
+  const { draft, setDraft, discard, storageError } = useForumDraft(`submission:${space.courseId}:${item.id}`, contentDraftSchema, emptyContent)
+  const { body: answer, links, attachments } = draft
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState(''), [saved, setSaved] = useState(false)
   const pending = useRef<{ fingerprint: string; key: string } | null>(null)
+  const returnFocus = useRef(document.activeElement)
+  const titleFocus = useRef<HTMLHeadingElement>(null)
   const load = useCallback(async (offset = 0) => {
     setBusy(true); setError('')
     try {
@@ -38,8 +43,8 @@ export function ForumSubmission({ space, item, onClose }: { space: LearningSpace
   const groups = new Map<string, SubmissionVersion[]>()
   for (const version of versions) groups.set(version.learnerId,[...(groups.get(version.learnerId) ?? []),version])
   const disabled = busy || uploading
-  return <Dialog open onOpenChange={open => { if (!open && !uploading) onClose() }}><DialogContent>
-    <DialogHeader><DialogTitle>{item.title}</DialogTitle><DialogDescription>{space.canReview ? '查看本课程学生的提交与历史版本。' : '提交仅你和本课程教师可见。再次提交会保留旧版本。'}</DialogDescription></DialogHeader>
+  return <Dialog open onOpenChange={open => { if (!open && !uploading) onClose() }}><DialogContent className="sm:max-w-3xl" onOpenAutoFocus={event => { event.preventDefault(); titleFocus.current?.focus() }} onCloseAutoFocus={event => { event.preventDefault(); if (returnFocus.current instanceof HTMLElement) returnFocus.current.focus() }}>
+    <DialogHeader><DialogTitle ref={titleFocus} tabIndex={-1} className="outline-none">{item.title}</DialogTitle><DialogDescription>{space.canReview ? '查看本课程学生的提交与历史版本。' : '提交仅你和本课程教师可见。再次提交会保留旧版本。'}</DialogDescription></DialogHeader>
     <MemoContent content={item.body} />
     {item.dueAt && <p className="text-sm text-muted-foreground">截止时间：{new Date(item.dueAt).toLocaleString()}；截止后仍可提交，将标记为迟交。</p>}
     {item.status === 'CLOSED' ? <p role="status" className="text-sm">作业已关闭，停止接收提交。</p> : space.canSubmit && <form className="space-y-4" onSubmit={async event => {
@@ -51,12 +56,14 @@ export function ForumSubmission({ space, item, onClose }: { space: LearningSpace
       setBusy(true); setError(''); setSaved(false)
       try {
         await forumApi.submit(space.courseId,item.id,{ ...content,idempotencyKey: pending.current.key })
-        pending.current = null; setAnswer(''); setLinks(''); setAttachments([]); setSaved(true)
+        pending.current = null; setDraft(emptyContent); discard(); setSaved(true)
         await load()
       } catch (reason) { setError(userFacingError(reason, '提交失败，请确认作业仍开放后重试。')) }
       finally { setBusy(false) }
     }}>
-      <ForumContentFields body={answer} setBody={setAnswer} label="作业内容" links={links} setLinks={setLinks} attachments={attachments} setAttachments={setAttachments} disabled={disabled} onUploading={setUploading} />
+      <ForumContentFields body={answer} setBody={body => setDraft(previous => ({ ...previous, body }))} label="作业内容" links={links} setLinks={links => setDraft(previous => ({ ...previous, links }))}
+        attachments={attachments} setAttachments={attachments => setDraft(previous => ({ ...previous, attachments }))} disabled={disabled} onUploading={setUploading} />
+      {storageError && <p role="status" className="text-sm text-destructive">无法保存本地草稿，请先复制内容再关闭。</p>}
       <Button type="submit" disabled={disabled || !answer.trim() && !links.trim() && !attachments.length}>{uploading ? '上传中…' : busy ? '提交中…' : '提交作业'}</Button>
     </form>}
     {saved && <p role="status" className="text-sm">作业已提交</p>}

@@ -12,8 +12,8 @@ export const forumApi = {
     http<ForumItem>(itemPath(courseId, item), { method: 'PATCH',body: JSON.stringify(flags) }),
   comments: (courseId: string, item: ForumItem, offset = 0) =>
     http<ForumPage<ForumComment>>(`${itemPath(courseId, item)}/comments?offset=${offset}`),
-  comment: (courseId: string, item: ForumItem, body: string) =>
-    http<{ id: string }>(`${itemPath(courseId, item)}/comments`, { method: 'POST',body: JSON.stringify({ body }) }),
+  comment: (courseId: string, item: ForumItem, input: { body: string; links: string[]; attachments: ForumAttachment[] }) =>
+    http<{ id: string }>(`${itemPath(courseId, item)}/comments`, { method: 'POST',body: JSON.stringify(input) }),
   submissions: (courseId: string, activityId: string, offset = 0) =>
     http<ForumPage<SubmissionVersion>>(`${base(courseId)}/activities/${encodeURIComponent(activityId)}/submissions?offset=${offset}`),
   submit: (courseId: string, activityId: string, input: { answer: string; links: string[]; attachments: ForumAttachment[]; idempotencyKey: string }) =>

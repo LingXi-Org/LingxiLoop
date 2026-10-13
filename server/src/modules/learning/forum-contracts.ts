@@ -24,11 +24,13 @@ export const forumPostSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
   sourceId: id.optional(), ...learningContentFields,
 }).strict()
-export const forumCommentSchema = z.object({ body: z.string().trim().min(1).max(10000) }).strict()
+export const forumCommentSchema = z.object({ body: z.string().trim().max(10000).default(''), ...learningContentFields }).strict()
+  .refine(value => Boolean(value.body || value.links.length || value.attachments.length), 'comment content is required')
 export const forumFlagsSchema = z.object({ pinned: z.boolean().optional(), official: z.boolean().optional(), featured: z.boolean().optional() })
   .strict().refine(value => Object.keys(value).length > 0, 'a flag is required')
 
 export type ForumTarget = z.infer<typeof forumTargetSchema>
+export type ForumCommentInput = z.input<typeof forumCommentSchema>
 export type LearningAttachment = z.infer<typeof learningAttachmentSchema>
 export type ForumPostInput = z.infer<typeof forumPostSchema>
 export type ForumQuery = Partial<z.infer<typeof forumQuerySchema>>
