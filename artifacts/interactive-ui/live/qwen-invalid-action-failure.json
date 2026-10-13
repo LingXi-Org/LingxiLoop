@@ -1,0 +1,37 @@
+{
+  "reason": "Qwen made 13 measured calls but ended partial/inconclusive with an invalid LearningAction.actionId; model feedback named the property but did not state its ASCII identifier constraint. A failing-then-passing regression now requires that constraint in repair feedback; the catalog states it before generation. No tool-sent message in this run contained lesson source. Separately reviewed chat.send still allowed lesson source and requires a product boundary fix.",
+  "pricing": {
+    "source": "https://siliconflow.cn/pricing",
+    "candidateInputCNYPerMillion": 3,
+    "candidateOutputCNYPerMillion": 12,
+    "usdCny": 7
+  },
+  "metadata": {
+    "startedAt": "2026-10-13T15:31:08.112Z",
+    "finishedAt": "2026-10-13T15:34:39.460Z",
+    "passed": false,
+    "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui",
+    "runtime": "3.3.6",
+    "candidate": "Qwen/Qwen3.8-27B",
+    "judge": "zai-org/GLM-5.2",
+    "maxModelCalls": 16,
+    "maxModelTokens": 200000,
+    "maxRunCostUSD": 0.5,
+    "maxTotalCostUSD": 5,
+    "modelConcurrency": 1,
+    "database": "lingxiloop_ui_model_test",
+    "identity": "synthetic test-owner",
+    "realWuKong": true,
+    "realModel": true,
+    "authentication": "isolated test middleware"
+  },
+  "results": {
+    "passed": false,
+    "baseline": [],
+    "cases": [],
+    "attempts": [
+      "baseline-projectile"
+    ],
+    "error": "baseline-projectile: requested composition missing"
+  }
+}

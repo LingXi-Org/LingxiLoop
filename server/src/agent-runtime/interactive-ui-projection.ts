@@ -38,7 +38,7 @@ export function verifyLessonCandidate(body: string): VerificationRecord[] {
         hint: reason === 'interactive-ui:unbound-state' && error instanceof Error && Array.isArray(error.cause)
           ? `Declare literal defaults for ${error.cause.slice(0, 16).join(', ')} immediately after root. Keep each matching control and its binding.`
           : reason === 'interactive-ui:props' && error instanceof Error && Array.isArray(error.cause)
-          ? `Correct the catalog properties ${error.cause.join(', ')}. Omit optional trailing arguments for a new lesson; do not substitute null or zero for revision fields.`
+          ? `Correct the catalog properties ${error.cause.join(', ')}. Each control name and actionId must be an ASCII identifier: a letter followed by letters, digits or underscores, at most 48 characters. Omit optional trailing arguments for a new lesson; do not substitute null or zero for revision fields.`
           : reason === 'interactive-ui:fence'
           ? `Wrap the complete lesson source and all $state defaults in one top-level fenced code block with language ${OPENUI_LANGUAGE}. Each opening and closing fence must occupy its own line, with a blank line separating the block from prose. Do not attach a fence to a sentence or repeat source as prose.`
           : reason === 'interactive-ui:choice'

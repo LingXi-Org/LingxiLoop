@@ -1,0 +1,103 @@
+{
+  "reason": "Kimi-K2.7-Code passed both baselines (226.8s and 121.6s), but its first holdout produced no requested projectile lesson. This is a failed full run; slow baseline successes do not satisfy release acceptance.",
+  "pricing": {
+    "source": "https://siliconflow.cn/pricing",
+    "candidateInputCNYPerMillion": 6.5,
+    "candidateOutputCNYPerMillion": 27,
+    "usdCny": 7
+  },
+  "metadata": {
+    "startedAt": "2026-10-13T15:20:20.264Z",
+    "finishedAt": "2026-10-13T15:30:23.825Z",
+    "passed": false,
+    "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui",
+    "runtime": "3.3.6",
+    "candidate": "moonshotai/Kimi-K2.7-Code",
+    "judge": "zai-org/GLM-5.2",
+    "maxModelCalls": 16,
+    "maxModelTokens": 200000,
+    "maxRunCostUSD": 0.5,
+    "maxTotalCostUSD": 5,
+    "modelConcurrency": 1,
+    "database": "lingxiloop_ui_model_test",
+    "identity": "synthetic test-owner",
+    "realWuKong": true,
+    "realModel": true,
+    "authentication": "isolated test middleware"
+  },
+  "results": {
+    "passed": false,
+    "baseline": [
+      {
+        "id": "baseline-projectile",
+        "previewMs": 70776.7003,
+        "firstTextMs": 2127.3204000000005,
+        "readyMs": 226759.0354,
+        "sendAttempts": 1,
+        "streamReconnects": 1,
+        "modelCalls": 5,
+        "costUSD": 0.052526,
+        "uiCount": 2,
+        "teaching": {
+          "correct": true,
+          "transfer": true,
+          "correction": true,
+          "reasons": [
+            "速度固定为10m/s、重力9.81m/s²、起落同高且无阻力，与参考事实一致。",
+            "明确说明20°与70°射程相等、30°与60°射程相等，符合互余角射程相等的结论。",
+            "先预测20°与70°，再比较，最后问30°与60°，满足题目要求的顺序。",
+            "未引入与参考事实矛盾的科学内容或单位错误，未编造数值。"
+          ]
+        },
+        "runId": "im:bb2cab7558c3f330af11784279cf52bb2fc7ef44b189080e90f62d8248161815",
+        "sourceHashes": [
+          "7a26f2774fdf7a23bcdb9a59049673b35560fc98162ffab7217da1c6b3b6ea12",
+          "3b37e14f4bdc216449788c99cba42782a949c747b703470166b89bc6f05a118a"
+        ]
+      },
+      {
+        "id": "baseline-comparison",
+        "previewMs": 98255.94599999997,
+        "firstTextMs": 1504.624199999991,
+        "readyMs": 121620.671,
+        "sendAttempts": 1,
+        "streamReconnects": 1,
+        "modelCalls": 3,
+        "costUSD": 0.02882,
+        "uiCount": 2,
+        "teaching": {
+          "correct": true,
+          "transfer": true,
+          "correction": true,
+          "reasons": [
+            "TCP is correctly described as reliable, ordered, and loss-free via acknowledgements and retransmission; UDP is correctly described as best-effort, possibly lossy, unordered, and lower latency.",
+            "The transfer question about real-time voice packet loss is posed correctly and the correct option (interpolation with adjacent samples) is scientifically sound; no numeric fabrication.",
+            "No claim is made that UDP never loses packets; the answer explicitly states UDP may lose packets and does not guarantee order.",
+            "No correction was requested, so correction is set true."
+          ]
+        },
+        "runId": "im:b11350dca4605243db8e7aa5ec868435c559bf019ac54e46fae851df7f89cf19",
+        "sourceHashes": [
+          "74d794b8277fbdb50b33f0b92564bc7f8497d3fa7c42fee85d38a9e2a57ac12a",
+          "66e3a1fed1b915dc7103ea816a2cbf0077b9e9b7c165a5da7493ec66233979d1"
+        ]
+      }
+    ],
+    "cases": [],
+    "attempts": [
+      "baseline-projectile",
+      "baseline-comparison",
+      "projectile"
+    ],
+    "gates": {
+      "previewMs": 180000,
+      "readyMs": 240000,
+      "failureRate": 0,
+      "recoveryRate": 1,
+      "localModelCalls": 0,
+      "lockedAt": "2026-10-13T15:26:23.539Z",
+      "beforeHoldout": true
+    },
+    "error": "projectile: requested composition missing"
+  }
+}
