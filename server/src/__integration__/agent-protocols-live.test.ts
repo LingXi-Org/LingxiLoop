@@ -1,11 +1,10 @@
-import { nativeText } from '../im/message-types.js'
+import { createNativeMessage, nativeText } from '../im/message-types.js'
 import type { RunStreamEvent } from '@lyyzka/lingxios/ui'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { writeFile } from 'node:fs/promises'
-import { syncConversationPolicy } from '../agent-runtime/conversations.js'
-import { bindProductRun } from '../agent-runtime/identity.js'
+import { receiveAgentRequest } from '../agent-runtime/receive.js'
 import { lingxiOSControl, startLingxiOSWorker } from '../agent-runtime/runtime.js'
 import { assistantTextViolation } from '../agent-runtime/assistant-text.js'
 import { pool } from '../db/pool.js'
@@ -38,14 +37,20 @@ test('live provider delivers full learning help and native cards with measured f
       {id:'practice',text:'请把“大棚温度超过 35℃ 持续 2 分钟才告警”的实践检查清单保存成 greenhouse.md 文件，再用建议卡给我一个可以选择的下一步学习建议。',terms:[/35|温度/]},
       {id:'brief',text:'只用一句话回答：Wi-Fi 是否等于互联网？',terms:[/不/]},
     ]
+    const repeats=Number(process.env.LINGXIOS_LIVE_REPEATS ?? 1)
+    assert.ok(Number.isSafeInteger(repeats) && repeats>=1 && repeats<=10,'live repeats must be between 1 and 10')
     const failures:string[]=[]
-    for(const scenario of cases.filter(item=> !process.env.LINGXIOS_LIVE_CASES || process.env.LINGXIOS_LIVE_CASES.split(',').includes(item.id))){
-      const conversationId='live-'+scenario.id,members=['test-owner',agentId]
+    for(let repeat=0;repeat<repeats;repeat++) for(const scenario of cases.filter(item=> !process.env.LINGXIOS_LIVE_CASES || process.env.LINGXIOS_LIVE_CASES.split(',').includes(item.id))){
+      const conversationId=`live-${scenario.id}-${repeat}`,members=['test-owner',agentId]
       await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Live protocol regression',$4::jsonb)`,[conversationId,companyId,projectId,JSON.stringify(members)])
       await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',[conversationId,companyId,JSON.stringify({channelType:2,members})])
-      const policy=await syncConversationPolicy(api,companyId,conversationId),started=Date.now()
-      const result=await api.conversations.ingest({tenantId:companyId,conversationId,policyVersion:policy.version,messageId:'question',version:1,author:{id:'test-owner',kind:'human'},text:scenario.text,mentions:[agentId]}, {mode:'execute',deliveryMode:'auto',executionClass:'operation',codeExecution:'disabled'})
-      const run=result.runs[0];assert.ok(run);await bindProductRun(pool,run,conversationId)
+      const clientMsgNo=`question-${scenario.id}-${repeat}`
+      im.messages.push({channelId:conversationId,channelType:2,fromUid:'test-owner',messageId:clientMsgNo,clientMsgNo,messageSeq:1,timestamp:Date.now()/1000,
+        payload:createNativeMessage({id:clientMsgNo,role:'user',content:[{type:'text',text:scenario.text}],custom:{mentionedIds:[agentId]}})})
+      const started=Date.now()
+      const result=await receiveAgentRequest({companyId,agentId,channelId:conversationId,clientMsgNo})
+      assert.ok('runs' in result)
+      const run=result.runs[0];assert.ok(run)
       const cancel=new AbortController(),timeout=AbortSignal.timeout(250000)
       const stream=await api.streamRun(run,{signal:AbortSignal.any([cancel.signal,timeout])})
       let firstTextMs:number|null=null, pending='', streamValid=true, invalidPreview:string|undefined
@@ -74,7 +79,7 @@ test('live provider delivers full learning help and native cards with measured f
         while(state && (['queued','leased','waiting'].includes(state.run.status) || state.delivery==='pending')){timeout.throwIfAborted();await delay(100);state=await api.readRunState(run)}
       }finally{cancel.abort();await reading}
       if(!streamValid && process.env.LINGXIOS_LIVE_CAPTURE==='1')await writeFile(`.codex-tmp/live-preview-${scenario.id}.json`,JSON.stringify({invalidPreview,attempts:[...attempts.values()]},null,2))
-      const deliveredMessages=im.messages.filter(message=>message.channelId===conversationId)
+      const deliveredMessages=im.messages.filter(message=>message.channelId===conversationId && message.fromUid===agentId)
       const firstMessage=deliveredMessages.find(message=>nativeText(message.payload).trim())
       if(firstMessage)firstTextMs=Math.min(firstTextMs??Infinity,Math.max(0,firstMessage.timestamp*1000-started))
       const body=deliveredMessages.map(message=>nativeText(message.payload)).join('\n')
@@ -93,7 +98,8 @@ test('live provider delivers full learning help and native cards with measured f
       const expectedPartial=scenario.id==='course' && outcome?.status==='partial' && gaps.length>0
         && gaps.every(gap=>/讲义|course|资料/i.test(gap) && !/unavailable or returned invalid findings|exceeds the model context budget/i.test(gap))
       const checks={streamValid,nonthinking:calls.rows[0].reasoning_tokens===0,delivered:state?.delivery==='delivered',accepted:outcome?.status==='satisfied'||expectedPartial,bodyValid:validBody(body),coverage:scenario.terms.every(term=>term.test(body)),encoding:!body.includes('\\n\\n'),brief:scenario.id!=='brief'||body.length<180,cards:scenario.id!=='practice'||actions.includes('chat.recommend')&&actions.includes('files.create'),course:scenario.id!=='course'||actions.some(action=>action.startsWith('knowledge.'))}
-      console.info(JSON.stringify({scenario:scenario.id,firstTextMs,totalMs:Date.now()-started,calls:calls.rows[0].n,characters:body.length,actions,checks,status:state?.run.status}))
+      const modelCalls=await pool.query("SELECT purpose,latency_ms,input_tokens,cached_input_tokens,output_tokens,extras->>'firstContentMs' AS first_content_ms FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at",[companyId,run.runId])
+      console.info(JSON.stringify({scenario:scenario.id,repeat,firstTextMs,totalMs:Date.now()-started,calls:calls.rows[0].n,modelCalls:modelCalls.rows,characters:body.length,actions,checks,status:state?.run.status}))
       if(Object.values(checks).some(value=>!value))failures.push(scenario.id)
     }
     assert.deepEqual(failures,[],'real provider regressions must not be reported as passed')

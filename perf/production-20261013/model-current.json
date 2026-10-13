@@ -1,0 +1,966 @@
+{
+  "measuredAt": "2026-10-13T07:55:15.419Z",
+  "exitCode": 1,
+  "measurements": [
+    {
+      "scenario": "derivation",
+      "repeat": 0,
+      "firstTextMs": 2608,
+      "totalMs": 21810,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 16825,
+          "input_tokens": 23180,
+          "cached_input_tokens": 21888,
+          "output_tokens": 1945,
+          "first_content_ms": "925.9632000000001"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 1876,
+          "input_tokens": 3240,
+          "cached_input_tokens": 832,
+          "output_tokens": 144,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 3640,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": false,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "partial"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 0,
+      "firstTextMs": 3972,
+      "totalMs": 6360,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 3854,
+          "input_tokens": 23145,
+          "cached_input_tokens": 0,
+          "output_tokens": 57,
+          "first_content_ms": "3007.430500000002"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 687,
+          "input_tokens": 1121,
+          "cached_input_tokens": 0,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 114,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "derivation",
+      "repeat": 1,
+      "firstTextMs": 5533,
+      "totalMs": 48358,
+      "calls": 5,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 2859,
+          "input_tokens": 23180,
+          "cached_input_tokens": 23104,
+          "output_tokens": 204,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 18821,
+          "input_tokens": 23269,
+          "cached_input_tokens": 21888,
+          "output_tokens": 1600,
+          "first_content_ms": "912.5496999999959"
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 6109,
+          "input_tokens": 0,
+          "cached_input_tokens": 0,
+          "output_tokens": 0,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 15162,
+          "input_tokens": 25376,
+          "cached_input_tokens": 25280,
+          "output_tokens": 1402,
+          "first_content_ms": "4312.228099999993"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 959,
+          "input_tokens": 3598,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 2561,
+      "actions": [
+        "task.contract"
+      ],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 1,
+      "firstTextMs": 1585,
+      "totalMs": 3937,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1406,
+          "input_tokens": 23145,
+          "cached_input_tokens": 23104,
+          "output_tokens": 58,
+          "first_content_ms": "543.0953999999911"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 702,
+          "input_tokens": 1126,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 111,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "derivation",
+      "repeat": 2,
+      "firstTextMs": 37299,
+      "totalMs": 62850,
+      "calls": 5,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 7159,
+          "input_tokens": 23180,
+          "cached_input_tokens": 21888,
+          "output_tokens": 240,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 16739,
+          "input_tokens": 24001,
+          "cached_input_tokens": 21888,
+          "output_tokens": 8,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 9459,
+          "input_tokens": 24082,
+          "cached_input_tokens": 22400,
+          "output_tokens": 120,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 18770,
+          "input_tokens": 24667,
+          "cached_input_tokens": 22528,
+          "output_tokens": 1470,
+          "first_content_ms": "1843.1723999999813"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 4499,
+          "input_tokens": 5541,
+          "cached_input_tokens": 0,
+          "output_tokens": 53,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 2800,
+      "actions": [
+        "task.contract",
+        "learning.get_learner_state",
+        "chat.send"
+      ],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 2,
+      "firstTextMs": 2742,
+      "totalMs": 6866,
+      "calls": 3,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1275,
+          "input_tokens": 23145,
+          "cached_input_tokens": 23104,
+          "output_tokens": 51,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1226,
+          "input_tokens": 23607,
+          "cached_input_tokens": 21888,
+          "output_tokens": 45,
+          "first_content_ms": "900.4767999999749"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 772,
+          "input_tokens": 2393,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 148,
+      "actions": [
+        "chat.send"
+      ],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "derivation",
+      "repeat": 3,
+      "firstTextMs": 3557,
+      "totalMs": 34380,
+      "calls": 4,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 2086,
+          "input_tokens": 23180,
+          "cached_input_tokens": 23104,
+          "output_tokens": 109,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 12373,
+          "input_tokens": 23761,
+          "cached_input_tokens": 21888,
+          "output_tokens": 181,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 13317,
+          "input_tokens": 24488,
+          "cached_input_tokens": 22464,
+          "output_tokens": 1182,
+          "first_content_ms": "1011.7246999999916"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 999,
+          "input_tokens": 5592,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 2649,
+      "actions": [
+        "chat.send",
+        "chat.send"
+      ],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 3,
+      "firstTextMs": 1950,
+      "totalMs": 4305,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1423,
+          "input_tokens": 23145,
+          "cached_input_tokens": 21888,
+          "output_tokens": 38,
+          "first_content_ms": "825.9986000000208"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 814,
+          "input_tokens": 1102,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 76,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "derivation",
+      "repeat": 4,
+      "firstTextMs": 3640,
+      "totalMs": 39148,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 20624,
+          "input_tokens": 23180,
+          "cached_input_tokens": 0,
+          "output_tokens": 1619,
+          "first_content_ms": "2659.937799999985"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 16431,
+          "input_tokens": 2894,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 2923,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 4,
+      "firstTextMs": 5530,
+      "totalMs": 8326,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 5279,
+          "input_tokens": 23145,
+          "cached_input_tokens": 23104,
+          "output_tokens": 41,
+          "first_content_ms": "4504.767800000001"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 1213,
+          "input_tokens": 1111,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 82,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "derivation",
+      "repeat": 5,
+      "firstTextMs": 1865,
+      "totalMs": 125872,
+      "calls": 10,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 17045,
+          "input_tokens": 23180,
+          "cached_input_tokens": 23104,
+          "output_tokens": 1366,
+          "first_content_ms": "856.825600000011"
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 10430,
+          "input_tokens": 24954,
+          "cached_input_tokens": 0,
+          "output_tokens": 441,
+          "first_content_ms": "5235.419800000032"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 2375,
+          "input_tokens": 2826,
+          "cached_input_tokens": 832,
+          "output_tokens": 172,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1664,
+          "input_tokens": 25162,
+          "cached_input_tokens": 21888,
+          "output_tokens": 36,
+          "first_content_ms": "1059.5970000000088"
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 8254,
+          "input_tokens": 25579,
+          "cached_input_tokens": 23680,
+          "output_tokens": 705,
+          "first_content_ms": "1062.8208999999915"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 3972,
+          "input_tokens": 4621,
+          "cached_input_tokens": 1024,
+          "output_tokens": 325,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 25391,
+          "input_tokens": 25843,
+          "cached_input_tokens": 25536,
+          "output_tokens": 604,
+          "first_content_ms": "18679.483999999997"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 6664,
+          "input_tokens": 4520,
+          "cached_input_tokens": 0,
+          "output_tokens": 522,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 38235,
+          "input_tokens": 25962,
+          "cached_input_tokens": 0,
+          "output_tokens": 2102,
+          "first_content_ms": "18759.084900000016"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 2525,
+          "input_tokens": 6141,
+          "cached_input_tokens": 1024,
+          "output_tokens": 164,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 4022,
+      "actions": [
+        "chat.send",
+        "chat.history"
+      ],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": false,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "partial"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 5,
+      "firstTextMs": 1928,
+      "totalMs": 6481,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1636,
+          "input_tokens": 23145,
+          "cached_input_tokens": 21888,
+          "output_tokens": 38,
+          "first_content_ms": "795.1186999999918"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 3065,
+          "input_tokens": 1106,
+          "cached_input_tokens": 0,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 77,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "derivation",
+      "repeat": 6,
+      "firstTextMs": 1671,
+      "totalMs": 12645,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 9514,
+          "input_tokens": 23180,
+          "cached_input_tokens": 23104,
+          "output_tokens": 1055,
+          "first_content_ms": "662.6462000000174"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 1089,
+          "input_tokens": 2239,
+          "cached_input_tokens": 0,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 1771,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 6,
+      "firstTextMs": 4886,
+      "totalMs": 8155,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 5192,
+          "input_tokens": 23145,
+          "cached_input_tokens": 23104,
+          "output_tokens": 83,
+          "first_content_ms": "3902.487999999954"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 1266,
+          "input_tokens": 1159,
+          "cached_input_tokens": 832,
+          "output_tokens": 51,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 135,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": false,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "partial"
+    },
+    {
+      "scenario": "derivation",
+      "repeat": 7,
+      "firstTextMs": 2091,
+      "totalMs": 23398,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 20459,
+          "input_tokens": 23180,
+          "cached_input_tokens": 21888,
+          "output_tokens": 1715,
+          "first_content_ms": "1031.0636999999988"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 889,
+          "input_tokens": 2979,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 3151,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": false,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 7,
+      "firstTextMs": 1554,
+      "totalMs": 3695,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1289,
+          "input_tokens": 23145,
+          "cached_input_tokens": 23104,
+          "output_tokens": 49,
+          "first_content_ms": "612.725299999991"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 744,
+          "input_tokens": 1107,
+          "cached_input_tokens": 0,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 87,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "derivation",
+      "repeat": 8,
+      "firstTextMs": 5927,
+      "totalMs": 29798,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 26963,
+          "input_tokens": 23180,
+          "cached_input_tokens": 0,
+          "output_tokens": 1944,
+          "first_content_ms": "4915.519799999951"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 798,
+          "input_tokens": 3328,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 3590,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 8,
+      "firstTextMs": 1619,
+      "totalMs": 3912,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1308,
+          "input_tokens": 23145,
+          "cached_input_tokens": 23104,
+          "output_tokens": 50,
+          "first_content_ms": "659.4321999999811"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 954,
+          "input_tokens": 1110,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 87,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "derivation",
+      "repeat": 9,
+      "firstTextMs": 1875,
+      "totalMs": 19732,
+      "calls": 2,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 16700,
+          "input_tokens": 23180,
+          "cached_input_tokens": 23104,
+          "output_tokens": 1423,
+          "first_content_ms": "894.7635000000009"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 903,
+          "input_tokens": 2675,
+          "cached_input_tokens": 832,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 2569,
+      "actions": [],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    },
+    {
+      "scenario": "brief",
+      "repeat": 9,
+      "firstTextMs": 2724,
+      "totalMs": 6477,
+      "calls": 3,
+      "modelCalls": [
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1254,
+          "input_tokens": 23145,
+          "cached_input_tokens": 23104,
+          "output_tokens": 43,
+          "first_content_ms": null
+        },
+        {
+          "purpose": "lingxios.agent-turn",
+          "latency_ms": 1024,
+          "input_tokens": 23580,
+          "cached_input_tokens": 21888,
+          "output_tokens": 33,
+          "first_content_ms": "744.8384000000078"
+        },
+        {
+          "purpose": "lingxios.structured",
+          "latency_ms": 730,
+          "input_tokens": 2318,
+          "cached_input_tokens": 0,
+          "output_tokens": 7,
+          "first_content_ms": null
+        }
+      ],
+      "characters": 133,
+      "actions": [
+        "chat.send"
+      ],
+      "checks": {
+        "streamValid": true,
+        "nonthinking": true,
+        "delivered": true,
+        "accepted": true,
+        "bodyValid": true,
+        "coverage": true,
+        "encoding": true,
+        "brief": true,
+        "cards": true,
+        "course": true
+      },
+      "status": "succeeded"
+    }
+  ]
+}
