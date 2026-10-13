@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { ThreadAssistantMessagePart } from '@assistant-ui/react'
+import type { VerificationRecord } from '@lyyzka/lingxios'
 import type { NativeMessage } from '../../../src/lib/nativeMessage.js'
 import { OPENUI_CATALOG_VERSION, OPENUI_COMPONENT, OPENUI_LANGUAGE, OPENUI_RENDERER_VERSION } from '../../../src/lib/interactive-ui/catalog.js'
 import { openUiEnvelopeSchema, type OpenUiEnvelope } from '../../../src/lib/interactive-ui/protocol.js'
@@ -19,6 +20,23 @@ export function assertLessonCitationSpans(body: string, citations: readonly { st
   if (citations.some(citation => blocks.some(block => citation.start < block.end && citation.end > block.start))) {
     throw new Error('citation cannot intersect an interactive UI fence')
   }
+}
+
+/** Let the published runtime repair invalid candidates within its existing retry budget. */
+export function verifyLessonCandidate(body: string): VerificationRecord[] {
+  return extractLessonBlocks(body).slice(0, 5).map((block, index) => {
+    const checker = `product:interactive-ui:${index + 1}`
+    try {
+      if (index >= 4) throw new Error('interactive-ui:lesson-budget')
+      if (!block.closed) throw new Error('interactive-ui:unclosed')
+      parseLessonSource(block.source)
+      return { checker, status: 'passed', evidence: { sourceHash: createHash('sha256').update(block.source).digest('hex') } }
+    } catch (error) {
+      const reason = error instanceof Error && /^interactive-ui:[a-z-]+$/.test(error.message) ? error.message : 'interactive-ui:invalid'
+      return { checker, status: 'failed', evidence: { reason,
+        hint: 'Every $state reference needs a literal default and exactly one matching control. Use registered component signatures, closed source and at most four lessons.' } }
+    }
+  })
 }
 
 export function projectLessonText(body: string, runId: string, preview: boolean): ThreadAssistantMessagePart[] {

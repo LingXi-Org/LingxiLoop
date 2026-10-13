@@ -13,6 +13,7 @@ import type { AgentRunSnapshot } from '../../../src/lib/agentRunSnapshot.js'
 import { interactiveBaselineCases, interactiveCases } from '../../../e2e/interactive-ui-cases.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
 import { messageLessons } from '../agent-runtime/interactive-ui-projection.js'
+import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
 import { lingxiOSControl, startLingxiOSWorker } from '../agent-runtime/runtime.js'
 import { flushAgentWakes } from '../agent-runtime/ingress.js'
 import { pool } from '../db/pool.js'
@@ -34,6 +35,16 @@ test('current product generates, delivers and explores learning UI with a real m
   const results: { passed: boolean; baseline: unknown[]; cases: unknown[]; attempts: string[]; browser?: unknown; gates?: unknown; metrics?: unknown; error?: string } = { passed: false, baseline: [], cases: [], attempts: [] }
   const record = () => writeFile(`${output}/results.json`, JSON.stringify(results, null, 2))
   await record()
+  const originalApply = RunStreamProjection.prototype.apply
+  t.mock.method(RunStreamProjection.prototype, 'apply', function (this: RunStreamProjection, ...args: Parameters<typeof originalApply>) {
+    try { return originalApply.apply(this, args) }
+    catch (error) {
+      console.info(JSON.stringify({ projectionFailure: error instanceof Error ? error.name : 'unknown',
+        frames: error instanceof Error ? error.stack?.split('\n').filter(line => /^\s+at /.test(line)).slice(0, 3) : [],
+        ...(error instanceof z.ZodError ? { issues: error.issues.map(({ code, path }) => ({ code, path })) } : {}) }))
+      throw error
+    }
+  })
   await ensureSchemaOnce(); await resetAllTables(); _setWukongClientForTests(null)
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
@@ -118,7 +129,7 @@ test('current product generates, delivers and explores learning UI with a real m
     const run = runs[0], cancellation = new AbortController()
     const stream = await fetch(`${origin}/api/im/companies/${companyId}/channels/${channelId}/agents/${agentId}/runs/${run.runId}/stream`, { headers, signal: AbortSignal.any([cancellation.signal, timeout]) })
     assert.equal(stream.status, 200)
-    let previewMs: number | null = null, firstTextMs: number | null = null, streamFailure = false
+    let previewMs: number | null = null, firstTextMs: number | null = null, streamFailure: string | null = null
     const tracker = new AssistantTransportDeltaTracker()
     const reading = (async () => {
       for await (const chunk of AssistantStream.fromResponse(stream, new AssistantTransportDecoder())) {
@@ -131,7 +142,10 @@ test('current product generates, delivers and explores learning UI with a real m
           && lesson.source.includes(`${scenario.component}(`))) previewMs ??= performance.now() - started
         assert.ok(!snapshot.message.content.some(part => part.type === 'text' && /root\s*=\s*Lesson\(/.test(part.text)), 'DSL exposed as plain text')
       }
-    })().catch(() => { if (!cancellation.signal.aborted) streamFailure = true })
+    })().catch(error => {
+      if (!cancellation.signal.aborted) streamFailure = error instanceof assert.AssertionError ? error.message.split('\n')[0]
+        : error instanceof Error ? error.name : 'unknown stream error'
+    })
     let state = await api.readRunState(run)
     try {
       while (state?.delivery !== 'delivered') {
@@ -145,7 +159,7 @@ test('current product generates, delivers and explores learning UI with a real m
     const answers = history!.filter(item => item.payload.role === 'assistant'), lessons = answers.flatMap(item => messageLessons(item.payload))
     const measured = await stats(channelId)
     assert.ok(measured.measured && measured.modelCalls > 0 && measured.modelCalls <= 8, `${id}: known bounded usage required`)
-    assert.equal(streamFailure, false, `${id}: stream failed`)
+    assert.equal(streamFailure, null, `${id}: stream failed (${streamFailure})`)
     assert.ok(answers.length > 0, `${id}: no durable answer`)
     if (scenario.component) {
       assert.ok(lessons.some(lesson => lesson.source.includes(`${scenario.component}(`)), `${id}: requested composition missing`)

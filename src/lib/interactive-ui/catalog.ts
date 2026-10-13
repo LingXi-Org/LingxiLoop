@@ -64,13 +64,14 @@ export type LessonRenderProps = ComponentRenderProps<Record<string, unknown>, un
 export const lessonLibrary = createLessonLibrary(Object.fromEntries(Object.keys(lessonComponentSchemas).map(key => [key, null])) as Record<LessonComponentName, null>)
 
 export function lessonInstructions(): string {
-  return lessonLibrary.prompt({ bindings: true, toolCalls: false, inlineMode: true,
+  // The upstream inline template hardcodes a different fence language.
+  return lessonLibrary.prompt({ bindings: true, toolCalls: false,
     preamble: `Interactive learning is optional. Prefer plain text for concise/text-only requests and when no registered capability helps. If useful, compose text and a root-level fenced block with EXACT language ${OPENUI_LANGUAGE}. Do not use generic openui-lang fences.`,
     additionalRules: [
       'Only compose registered components, literal values, named references and $state references. No Query, Mutation, builtins, arithmetic, member access, assignments inside expressions, HTML, JS, links or external resources. Scientific calculations occur in registered kernels.',
-      'Define each identifier exactly once, put root first or after literal $defaults, and make every component reachable from root. Each $variable must have exactly one matching named control. Controls use $variable as value, never a literal.',
+      'Define each identifier exactly once, put root first or after literal $defaults, and make every component reachable from root. Declare a literal default for every $variable before using it, including $prediction = "" for a Prediction input. Each $variable must have exactly one matching named control. Controls use $variable as value, never a literal.',
       'Keep explanations and controls consistent with kernel units and assumptions. Begin with a prediction, enable observation, offer an explicit explanation/check action, and include a transfer question. Do not force every learning task into a fixed layout.',
-      'Write readable explanation outside the fence. Lesson fallback must explain the concept without the visualization. The DSL must be fully closed. At most four small lessons per message.',
+      'Write only student-facing explanation outside the fence, never planning, verification notes or DSL source. Lesson fallback must explain the concept without the visualization. The DSL must be fully closed. At most four small lessons per message.',
       'For a requested revision preserve stable variable names/meanings, update all text and graphs together, and use only revisionOf/baseRevision provided by the host. For a new lesson omit both revision fields. Never invent IDs.',
-    ], examples: [`$angle = 45\nroot = Lesson("抛射角与射程", "无空气阻力且起落等高时，45°的射程最大。", [angle,plot,explain])\nangle = Parameter("angle", "角度", $angle, 0, 90, 1, "°", "projectile.angle")\nplot = ProjectilePlot($angle, 20, 9.81, 0)\nexplain = LearningAction("explain", "explain", "解释当前结果")`] })
+    ], examples: [`\`\`\`${OPENUI_LANGUAGE}\n$angle = 45\n$prediction = ""\nroot = Lesson("抛射角与射程", "无空气阻力且起落等高时，45°的射程最大。", [prediction,angle,plot,explain])\nprediction = Prediction("prediction", "先预测：30°与60°谁更远？", $prediction)\nangle = Parameter("angle", "角度", $angle, 0, 90, 1, "°", "projectile.angle")\nplot = ProjectilePlot($angle, 20, 9.81, 0)\nexplain = LearningAction("explain", "explain", "解释当前结果")\n\`\`\``] })
 }

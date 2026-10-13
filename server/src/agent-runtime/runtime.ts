@@ -20,6 +20,7 @@ import { loadRuntimeBinding } from './context.js'
 import { siliconFlowCost, siliconFlowPricing } from './pricing.js'
 import { createRealtimeStore } from './realtime-store.js'
 import { createRuntimeObjectStore } from './object-store.js'
+import { verifyLessonCandidate } from './interactive-ui-projection.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -99,7 +100,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
         const scopes = await resolveMemoryScopes(work,database,signal)
         if (scopes.length) await (await lingxiOSControl()).freezeEvolutionBenchmark(work.tenantId,nativeEvolutionBenchmark)
         return scopes
-      } }, verifyRun: createCanvasRuntime(lingxiOSControl).verify,
+      } }, verifyRun: async context => [...await createCanvasRuntime(lingxiOSControl).verify(context), ...verifyLessonCandidate(context.candidate.body)],
       homesRoot: process.env.AGENT_OS_HOMES_ROOT?.trim() || '.agent-os/homes' }).catch(error => {
         previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined; control = undefined
         throw error

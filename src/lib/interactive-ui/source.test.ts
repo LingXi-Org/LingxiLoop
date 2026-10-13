@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { extractLessonBlocks, parseLessonSource, restoreLessonState, validateLessonState } from './source.js'
+import { lessonInstructions, OPENUI_LANGUAGE } from './catalog.js'
 
 const source = `$angle = 45
 $prediction = ""
@@ -9,6 +10,19 @@ control = Parameter("angle", "角度", $angle, 0, 90, 1, "°", "projectile.angle
 plot = ProjectilePlot($angle, 20, 9.81, 0)
 prediction = Prediction("prediction", "先预测结果", $prediction)
 explain = LearningAction("explain", "explain", "解释当前结果")`
+
+// Failure: upstream inline examples override the host fence and expose generated DSL as text.
+test('generated catalog instructions use the host fence and provide a parseable bound example', () => {
+  const instructions = lessonInstructions()
+  assert.ok(!instructions.includes('```openui-lang'))
+  const examples = extractLessonBlocks(instructions)
+  assert.ok(examples.length > 0)
+  assert.ok(instructions.includes(`EXACT language ${OPENUI_LANGUAGE}`))
+  for (const example of examples) {
+    assert.ok(example.closed)
+    assert.ok(parseLessonSource(example.source).fields.length > 0)
+  }
+})
 
 test('upstream parser produces a validated composable lesson and bounded state/action contracts', () => {
   const lesson = parseLessonSource(source)

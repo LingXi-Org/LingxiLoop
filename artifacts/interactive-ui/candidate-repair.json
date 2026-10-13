@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "generationCalls": 2,
+  "repairedBeforeDelivery": true,
+  "durableMessages": 1,
+  "provider": "scripted native worker",
+  "reasoningDisabled": true
+}

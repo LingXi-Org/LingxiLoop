@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { createRunView } from '@lyyzka/lingxios/ui'
 import { createNativeMessage, userMessageSchema } from '../../../src/lib/nativeMessage.js'
 import { OPENUI_LANGUAGE } from '../../../src/lib/interactive-ui/catalog.js'
-import { projectLessonText, messageLessons, assertLessonCitationSpans } from './interactive-ui-projection.js'
+import { projectLessonText, messageLessons, assertLessonCitationSpans, verifyLessonCandidate } from './interactive-ui-projection.js'
 import { runMessageParts } from './message-projection.js'
 
 // Failures: raw DSL flashes, unclosed final source, forged metadata, lost surrounding text,
@@ -36,6 +36,17 @@ test('draft/final malformed blocks fall back locally without exposing source', (
 test('citation source offsets cannot cross or enter a UI block', () => {
   assert.doesNotThrow(() => assertLessonCitationSpans(fenced(), [{ start: 0, end: 2 }]))
   assert.throws(() => assertLessonCitationSpans(fenced(), [{ start: 0, end: 50 }]), /citation/)
+})
+test('candidate validation reports bounded errors without source and preserves ordinary examples', () => {
+  assert.deepEqual(verifyLessonCandidate('普通回答'), [])
+  assert.deepEqual(verifyLessonCandidate('```js\nroot = Lesson("example")\n```'), [])
+  assert.equal(verifyLessonCandidate(fenced())[0].status, 'passed')
+  const failed = verifyLessonCandidate(fenced('root = Lesson("PRIVATE", "PRIVATE", [p])\np = Prediction("prediction", "PRIVATE", $prediction)'))
+  assert.equal(failed[0].status, 'failed')
+  assert.match(JSON.stringify(failed), /interactive-ui:unbound-state/)
+  assert.doesNotMatch(JSON.stringify(failed), /PRIVATE|root =/)
+  assert.equal(verifyLessonCandidate(`\`\`\`${OPENUI_LANGUAGE}\n${source}`)[0].status, 'failed')
+  assert.equal(verifyLessonCandidate(Array(5).fill(fenced()).join('\n\n')).at(-1)?.status, 'failed')
 })
 test('human UI events are bounded and reject identity/authority injection', () => {
   const uiInteraction = { uiId: 'ui', messageId: 'run-run', revision: 1, sourceHash: 'a'.repeat(64), actionId: 'explain', kind: 'explain', idempotencyKey: 'once', state: {} }
