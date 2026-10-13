@@ -17,7 +17,7 @@ test('generated catalog instructions use the host fence and provide a parseable 
   assert.ok(!instructions.includes('```openui-lang'))
   assert.ok(!instructions.includes('Undeclared $variables are auto-created'))
   assert.ok(!instructions.includes('## Built-in Functions'))
-  const examples = extractLessonBlocks(instructions)
+  const examples = extractLessonBlocks(instructions).filter(block => !block.unfenced)
   assert.ok(examples.length > 0)
   assert.ok(instructions.includes(`EXACT language ${OPENUI_LANGUAGE}`))
   for (const example of examples) {
@@ -60,6 +60,26 @@ test('only top-level exact fenced blocks enter the UI channel; ordinary examples
   assert.equal(extractLessonBlocks(body.split('\n').map(line => '> ' + line).join('\n')).length, 0)
   assert.equal(extractLessonBlocks('```js\n' + source + '\n```').length, 0)
   assert.equal(extractLessonBlocks('```lingxiloop-openui-v1\n' + source)[0].closed, false)
+})
+
+// Failures: list paragraphs leak reserved statements, nested fences bypass the top-level
+// boundary, reordered extraction corrupts surrounding prose, and quoted examples disappear.
+test('list lesson candidates are unfenced while inline code and quoted examples remain text', () => {
+  const statement = 'root = Lesson("example", "example", [Text("observe")])'
+  for (const body of [`- ${statement}`, `1. ${statement}`, `- outer\n  - ${statement}`]) {
+    assert.deepEqual(extractLessonBlocks(body), [{ start: body.indexOf(statement), end: body.length,
+      source: statement, closed: false, unfenced: true }])
+  }
+  const ordered = `before\n\n- $angle = 45\n- ${statement}\n\nafter`
+  assert.deepEqual(extractLessonBlocks(ordered).map(block => block.source), ['$angle = 45', statement])
+  const nestedFence = `- \`\`\`${OPENUI_LANGUAGE}\n  ${statement}\n  \`\`\``
+  const [block] = extractLessonBlocks(nestedFence)
+  assert.deepEqual(block, { start: 2, end: nestedFence.length, source: statement, closed: false, unfenced: true })
+  assert.deepEqual(extractLessonBlocks('- $angle = ', { preview: true }).map(block => block.unfenced), [true])
+  for (const example of [`- \`${statement}\``, `- \`\`\`js\n  ${statement}\n  \`\`\``,
+    `> - ${statement}`, `- > ${statement}`, `\`\`\`markdown\n- ${statement}\n\`\`\``]) {
+    assert.deepEqual(extractLessonBlocks(example), [])
+  }
 })
 
 test('revision hydration retains only compatible controls and never silently clamps values', () => {

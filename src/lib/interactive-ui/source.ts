@@ -20,7 +20,13 @@ const lessonStatement = (value: string) => [...value.matchAll(/^ {0,3}(\w+)\s*=\
 export function extractLessonBlocks(body: string, options: { preview?: boolean } = {}): LessonBlock[] {
   if (body.length > 1_000_000) return []
   const blocks: LessonBlock[] = []
-  for (const node of fromMarkdown(body).children) {
+  const pendingNodes = fromMarkdown(body).children.map(node => ({ node, nested: false })).reverse()
+  while (pendingNodes.length) {
+    const { node, nested } = pendingNodes.pop()!
+    if (node.type === 'list') {
+      for (const child of node.children.flatMap(item => item.children).reverse()) pendingNodes.push({ node: child, nested: true })
+      continue
+    }
     const start = node.position?.start.offset, end = node.position?.end.offset
     if (start === undefined || end === undefined) continue
     // Reserved transport statements need repair, never publication as ordinary prose.
@@ -34,11 +40,12 @@ export function extractLessonBlocks(body: string, options: { preview?: boolean }
       }
       continue
     }
-    if (node.type === 'code' && (!node.lang || node.lang === 'openui-lang' || node.lang === 'openui') && lessonStatement(node.value)) {
+    if (node.type === 'code' && (!node.lang || node.lang === 'openui-lang' || node.lang === 'openui'
+      || nested && node.lang === OPENUI_LANGUAGE && !node.meta) && lessonStatement(node.value)) {
       blocks.push({ start, end, source: node.value, closed: false, unfenced: true })
       continue
     }
-    if (node.type !== 'code' || node.lang !== OPENUI_LANGUAGE || node.meta) continue
+    if (nested || node.type !== 'code' || node.lang !== OPENUI_LANGUAGE || node.meta) continue
     const raw = body.slice(start, end), lines = raw.split(/\r?\n/), opener = /^ {0,3}(`{3,}|~{3,})/.exec(lines[0])?.[1]
     if (!opener) continue
     const last = lines.at(-1)!.trim()
