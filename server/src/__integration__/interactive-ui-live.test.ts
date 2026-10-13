@@ -1,3 +1,4 @@
+import { INTERACTIVE_LESSONS_ENABLED } from '../../../src/lib/interactive-ui/catalog.js'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createServer } from 'node:http'
@@ -22,6 +23,8 @@ import { wukongClient, _setWukongClientForTests } from '../im/wukong.js'
 import { wukongWebhookRouter } from '../im/webhook.js'
 import { imMessagesApplication } from '../im/messages-facade.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+
+if (process.env.LINGXIOS_LIVE_UI === '1' && !INTERACTIVE_LESSONS_ENABLED) throw new Error('Interactive lessons are hard-disabled; run interactive-ui-disabled.test.ts for release verification.')
 
 // Failure inventory precedes the live implementation: no preview, invalid source,
 // incorrect teaching/transfer answers, unmetered usage, retries counted as passes,

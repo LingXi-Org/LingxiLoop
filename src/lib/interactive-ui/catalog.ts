@@ -5,6 +5,8 @@ export const OPENUI_CATALOG_VERSION = 'learning-1'
 export const OPENUI_RENDERER_VERSION = 'openui-0.3.2'
 export const OPENUI_LANGUAGE = 'lingxiloop-openui-v1'
 export const OPENUI_COMPONENT = 'openui-lesson'
+// Re-enable only after the complete live-model and browser acceptance gate passes.
+export const INTERACTIVE_LESSONS_ENABLED = false
 export const UI_LIMITS = { sourceBytes: 32_768, depth: 16, nodes: 512, statements: 128, fields: 32, stateBytes: 8_192, actions: 16 } as const
 
 const text = z.string().max(4_000)

@@ -3,6 +3,7 @@ import { pool } from '../db/pool.js'
 import { HttpError } from '../http/errors.js'
 import { createPermissionService } from '../modules/access/public.js'
 import { uiInteractionSchema } from '../../../src/lib/interactive-ui/protocol.js'
+import { INTERACTIVE_LESSONS_ENABLED } from '../../../src/lib/interactive-ui/catalog.js'
 import type { NativeMessage } from './message-types.js'
 import { messageAcceptanceDigest } from './messages-digest.js'
 
@@ -19,6 +20,7 @@ export async function assertUiActor(db: Queryable, input: UiActor, action: 'conv
     WHERE room.company_id=$1 AND room.id=$2 AND room.members @> to_jsonb(ARRAY[$3::text])`,
   [input.companyId, input.channelId, input.userId])
   if (!member.rows.length) throw new HttpError(403, '交互讲解仅供当前会话成员使用。')
+  if (!INTERACTIVE_LESSONS_ENABLED) throw new HttpError(410, '交互讲解暂不可用，请继续使用文字对话。')
 }
 
 /** A generic send or webhook may replay an admitted action, but cannot mint its authority. */

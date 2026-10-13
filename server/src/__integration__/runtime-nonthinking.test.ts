@@ -163,15 +163,15 @@ test('production workers always expose full tools and disable thinking even with
   }
 })
 
-// Failures: an undeclared UI binding is published as a broken card; correction loops
-// bypass the native budget; source/answers leak through verification diagnostics.
-test('native candidate verification repairs invalid learning UI before durable delivery', { timeout: 180000 }, async () => {
+// Failures: disabled UI is still advertised, a valid lesson reaches IM, or bounded
+// native correction restores UI instead of producing a plain-text answer.
+test('disabled lessons are corrected into plain text before durable delivery', { timeout: 180000 }, async () => {
   await resetAllTables()
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   const source = 'root = Lesson("预测", "先预测，再核对。", [p])\np = Prediction("prediction", "预测结果", $prediction)'
-  const invalid = `\`\`\`lingxiloop-openui-v1\n${source}\n\`\`\``
-  const valid = `\`\`\`lingxiloop-openui-v1\n$prediction = ""\n${source}\n\`\`\``
+  const invalid = `\`\`\`lingxiloop-openui-v1\n$prediction = ""\n${source}\n\`\`\``
+  const valid = '先预测，再用文字核对结果。'
   let calls = 0, correction = false
   const originalBaseUrl = env.OPENAI_BASE_URL
   const provider = createServer(async (req, res) => {
@@ -183,7 +183,10 @@ test('native candidate verification repairs invalid learning UI before durable d
       res.end(JSON.stringify({ choices: [{ message: { role: 'assistant', content: '{"missing":[]}' }, finish_reason: 'stop' }], usage }))
       return
     }
-    correction ||= JSON.stringify(request.messages).includes('interactive-ui:unbound-state')
+    if (calls === 0) {
+      assert.equal(/installed interactive lesson renderer|Current lesson revisions|Declare a literal default/.test(JSON.stringify(request.messages)), false, 'disabled controls must not be advertised')
+    }
+    correction ||= JSON.stringify(request.messages).includes('interactive-ui:disabled')
     const body = ++calls === 1 ? invalid : valid
     res.writeHead(200, { 'content-type': 'text/event-stream' })
     res.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', content: body }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
@@ -215,10 +218,12 @@ test('native candidate verification repairs invalid learning UI before durable d
     assert.equal(correction, true)
     const answers = im.messages.filter(message => message.channelId === conversationId)
     assert.equal(answers.length, 1)
-    assert.equal(messageLessons(answers[0].payload)[0]?.fields.length, 1)
+    assert.deepEqual(messageLessons(answers[0].payload), [])
+    assert.equal(nativeText(answers[0].payload), valid)
+    assert.equal((await pool.query('SELECT count(*)::int AS count FROM im_ui_revisions WHERE company_id=$1', [companyId])).rows[0].count, 0)
     await mkdir('artifacts/interactive-ui', { recursive: true })
-    await writeFile('artifacts/interactive-ui/candidate-repair.json', JSON.stringify({ passed: true, generationCalls: calls,
-      repairedBeforeDelivery: true, durableMessages: answers.length, provider: 'scripted native worker', reasoningDisabled: true }, null, 2))
+    await writeFile('artifacts/interactive-ui/disabled-runtime.json', JSON.stringify({ passed: true, generationCalls: calls,
+      correctedToPlainText: true, durableMessages: answers.length, provider: 'scripted native worker', reasoningDisabled: true }, null, 2))
   } finally {
     await worker?.stop(); await stopLingxiOSControl()
     provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve()))

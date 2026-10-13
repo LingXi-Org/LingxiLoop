@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import type { ThreadAssistantMessagePart } from '@assistant-ui/react'
 import type { VerificationRecord } from '@lyyzka/lingxios'
 import type { NativeMessage } from '../../../src/lib/nativeMessage.js'
-import { OPENUI_CATALOG_VERSION, OPENUI_COMPONENT, OPENUI_LANGUAGE, OPENUI_RENDERER_VERSION } from '../../../src/lib/interactive-ui/catalog.js'
+import { INTERACTIVE_LESSONS_ENABLED, OPENUI_CATALOG_VERSION, OPENUI_COMPONENT, OPENUI_LANGUAGE, OPENUI_RENDERER_VERSION } from '../../../src/lib/interactive-ui/catalog.js'
 import { openUiEnvelopeSchema, type OpenUiEnvelope } from '../../../src/lib/interactive-ui/protocol.js'
 import { extractLessonBlocks, parseLessonSource } from '../../../src/lib/interactive-ui/source.js'
 
@@ -26,6 +26,8 @@ export function assertLessonCitationSpans(body: string, citations: readonly { st
 export function verifyLessonCandidate(body: string): VerificationRecord[] {
   return extractLessonBlocks(body).slice(0, 5).map((block, index) => {
     const checker = `product:interactive-ui:${index + 1}`
+    if (!INTERACTIVE_LESSONS_ENABLED) return { checker, status: 'failed', evidence: {
+      reason: 'interactive-ui:disabled', hint: 'Interactive lessons are unavailable. Replace the complete lesson source with a helpful plain text explanation. Do not generate controls or lesson source.' } }
     try {
       if (index >= 4) throw new Error('interactive-ui:lesson-budget')
       if (block.unfenced) throw new Error('interactive-ui:fence')
@@ -58,8 +60,9 @@ export function projectLessonText(body: string, runId: string, preview: boolean)
     text(body.slice(offset, block.start))
     offset = block.end
     try {
-      if (++index > 4 || block.unfenced || !preview && !block.closed) throw new Error('invalid lesson boundary')
-      const lesson = parseLessonSource(block.source, { preview })
+      if (++index > 4 || block.unfenced || (!preview || !INTERACTIVE_LESSONS_ENABLED) && !block.closed) throw new Error('invalid lesson boundary')
+      const lesson = parseLessonSource(block.source, { preview: preview && INTERACTIVE_LESSONS_ENABLED })
+      if (!INTERACTIVE_LESSONS_ENABLED) { text(lesson.fallback); continue }
       if (Boolean(lesson.revisionOf) !== Boolean(lesson.baseRevision)) throw new Error('invalid revision reference')
       const uiId = lesson.revisionOf ?? `ui-${createHash('sha256').update(`${runId}:${index}`).digest('hex').slice(0, 40)}`
       const envelope = openUiEnvelopeSchema.parse({ schemaVersion: 1, catalogVersion: OPENUI_CATALOG_VERSION, rendererVersion: OPENUI_RENDERER_VERSION,
@@ -68,7 +71,8 @@ export function projectLessonText(body: string, runId: string, preview: boolean)
         phase: preview ? 'preview' : 'ready', fields: lesson.fields, actions: lesson.actions })
       parts.push({ type: 'generative-ui', id: `${uiId}:${envelope.revision}`, spec: { root: { component: OPENUI_COMPONENT, props: envelope } } })
     } catch {
-      text(preview ? '正在生成交互讲解…' : '交互讲解暂不可用，请参考这条消息中的文字说明，或请助手用文字重新解释。')
+      text(!INTERACTIVE_LESSONS_ENABLED ? '交互讲解暂不可用，请继续使用文字对话。'
+        : preview ? '正在生成交互讲解…' : '交互讲解暂不可用，请参考这条消息中的文字说明，或请助手用文字重新解释。')
     }
   }
   let tail = body.slice(offset)
