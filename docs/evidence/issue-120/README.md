@@ -73,6 +73,29 @@ KaTeX CSS is imported as a Vite module so its font URLs are resolved from the
 package directory. A production fixture build emitted the hashed font assets;
 the browser font check explicitly loads `KaTeX_Main` through the preview server.
 
+The CI follow-up moves the CSS import to the app and fixture browser entries,
+so Node can load Markdown components without a CSS loader. The 47 affected
+Markdown, conversation, harness and run-update checks passed, as did Web/Node
+typecheck and scoped Biome. An earlier full Web run passed 102/104; its two stale
+copy/error expectations passed in the final affected rerun. The full Web run was
+not repeated. `ci-fonts.json` and `browser/ci-activity-math-fonts.png` retain the
+official browser font check against commit `d407d43e`, with its production build
+fingerprint. The default E2E app build exceeded the 300-second startup limit;
+the isolated production fixture build and external preview check passed.
+
+To repeat that production font check:
+
+```powershell
+node --input-type=module -e "import { build } from 'vite'; import { resolve } from 'node:path'; await build({ mode: 'interactive-test', build: { outDir: '.e2e/activity-ci-font-build', reportCompressedSize: false, rollupOptions: { input: resolve('e2e/run-activity.html') } } })"
+# Keep this preview running in another terminal:
+node node_modules/vite/bin/vite.js preview --outDir .e2e/activity-ci-font-build --host 127.0.0.1 --port 5193 --strictPort
+$env:E2E_PROJECT='web'
+$env:E2E_ACTIVITY_FIXTURE='1'
+$env:E2E_BASE_URL='http://127.0.0.1:5193'
+$env:E2E_BUILD_INDEX='.e2e/activity-ci-font-build/e2e/run-activity.html'
+node e2e/web/run.mjs e2e/web/run-activity.e2e.ts --grep 'math fonts' --output .e2e/activity-ci-fonts
+```
+
 ```powershell
 npm run typecheck
 npm run server:typecheck

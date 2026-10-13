@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a1357b-0387-795e-ba46-f0f1e7fe1a67",
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-13T13:37:00.967Z",
+    "finishedAt": "2026-10-13T13:37:07.006Z",
+    "vcs": {
+      "commit": "d407d43e2ac0508cdba239cf15fd0396770931ab",
+      "branch": "codex/issue120-activity",
+      "dirty": false
+    },
+    "results": [
+      {
+        "id": "7f66627da18c1c93c05445c82efbea9284c1f5cb28bfbff468703557b783b3a7",
+        "testId": "e2e/web/run-activity.e2e.ts::Public%20run%20activity::math%20fonts%20load%20through%20the%20production%20asset%20pipeline",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "Public run activity",
+          "math fonts load through the production asset pipeline"
+        ],
+        "file": "e2e/web/run-activity.e2e.ts",
+        "source": {
+          "file": "e2e/web/run-activity.e2e.ts",
+          "line": 73,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "run-activity"
+        ],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1357b-20dc-7576-9491-b274021f9baa",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T13:37:04.22Z",
+            "durationMs": 2602,
+            "artifacts": [
+              {
+                "id": "01a1357b-20dc-7576-9491-b274021f9baa:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1357b-20dc-7576-9491-b274021f9baa:2"
+                },
+                "path": "web/e2e_web_run-activity.e2e.ts__Public_20run_20activity__math_20fonts_20load_20through_20the_20production_20asset_-fd3e194e/default/attempt-0/screenshots/001-activity-math-fonts.png",
+                "size": 13984,
+                "sha256": "c3958df5c40200c97e6f5394cb020233ca4a37386048145cab861ab64d6f389e"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1357b-20dc-7576-9491-b274021f9baa:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/run-activity.html",
+                "status": "passed",
+                "startedAt": "2026-10-13T13:37:04.809Z",
+                "durationMs": 1567,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1357b-20dc-7576-9491-b274021f9baa:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T13:37:06.385Z",
+                "durationMs": 49,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1357b-20dc-7576-9491-b274021f9baa:2",
+                "index": 2,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "activity-math-fonts",
+                "status": "passed",
+                "startedAt": "2026-10-13T13:37:06.434Z",
+                "durationMs": 262,
+                "events": [],
+                "artifacts": [
+                  "01a1357b-20dc-7576-9491-b274021f9baa:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "build": {
+    "file": ".e2e/activity-ci-font-build/e2e/run-activity.html",
+    "modifiedAt": "2026-10-13T13:36:19.673Z",
+    "sha256": "ccd71b78492113c679e75a1355c1f32e2edf4832810dc7d91d58f019ef55cf9b"
+  },
+  "buildMode": "existing production preview via E2E_BASE_URL",
+  "browser": "managed official @e2e-dev/web browser",
+  "screenshot": "browser/ci-activity-math-fonts.png"
+}
