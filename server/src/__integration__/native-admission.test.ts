@@ -1,5 +1,5 @@
 import { decodeNativePayload } from '../im/wukong.js'
-import type { NativeMessage } from '../im/message-types.js'
+import { createNativeMessage, type NativeMessage } from '../im/message-types.js'
 import type { RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
@@ -10,7 +10,7 @@ import type { DeliveryPort, RunIdentity, WorkItem } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { createProductDelivery } from '../agent-runtime/delivery.js'
-import { syncConversationPolicy } from '../agent-runtime/conversations.js'
+import { receiveAgentRequest } from '../agent-runtime/receive.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { WukongClient, _setWukongClientForTests } from '../im/wukong.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
@@ -34,10 +34,18 @@ test('product native admission, cancellation, revision, independent delivery and
   const slowDelivery = new Promise<void>(resolve => { releaseDelivery = resolve })
   type DeliveryContext = NonNullable<Parameters<DeliveryPort['deliverMessage']>[2]>
   const deliveries: Record<string, { payload: NativeMessage; clientNonce: string; messageId: string; calls: number }> = {}
+  const requests = new Map<string, NativeMessage>()
   const im = createServer(async (req, res) => {
     const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(chunk)
     const input = JSON.parse(Buffer.concat(chunks).toString() || '{}')
     res.setHeader('content-type', 'application/json')
+    if (req.url === '/channel/messagesync') {
+      const payload = requests.get(input.channel_id)
+      res.end(JSON.stringify({ messages: payload ? [{ channel_id: input.channel_id, channel_type: 2, from_uid: 'test-owner',
+        client_msg_no: payload.id, message_id: payload.id, message_seq: 1, timestamp: Math.floor(Date.now() / 1000),
+        payload: Buffer.from(JSON.stringify({ type: 1001, ...payload })).toString('base64') }] : [] }))
+      return
+    }
     if (req.url !== '/message/send') { res.end(JSON.stringify({ messages: [] })); return }
     const payload = decodeNativePayload(input.payload)
     const record = deliveries[input.channel_id] ??= { payload, clientNonce: input.client_msg_no, messageId: `receipt-${input.channel_id}`, calls: 0 }
@@ -96,16 +104,19 @@ test('product native admission, cancellation, revision, independent delivery and
     await worker.start()
     await waitFor(() => backgroundStarted, 'background model must occupy its slot')
     const ingress = async (conversationId: string, text = 'Reply Ready.') => {
-      const policy = await syncConversationPolicy(api, companyId, conversationId)
-      const result = await api.conversations.ingest({ tenantId: companyId, conversationId, policyVersion: policy.version,
-        messageId: `source-${conversationId}`, version: 1, author: { id: 'test-owner', kind: 'human' }, text, mentions: [agentId] },
-      { mode: 'chat', executionClass: 'conversation', codeExecution: 'disabled' })
+      const clientMsgNo = `source-${conversationId}`
+      requests.set(conversationId, createNativeMessage({ id: clientMsgNo, role: 'user', content: [{ type: 'text', text }],
+        custom: { mentionedIds: [agentId] } }))
+      const result = await receiveAgentRequest({ companyId, agentId, channelId: conversationId, clientMsgNo })
+      assert.ok('runs' in result)
       assert.equal(result.runs.length, 1)
-      await bindProductRun(pool, result.runs[0], conversationId)
       return result.runs[0]
     }
+    const admissionStarted = Date.now()
     const slow = await ingress('slow-room')
     await waitFor(() => Boolean(deliveries['slow-room']), 'foreground must reach delivery while background holds its slot')
+    console.info(JSON.stringify({ scenario: 'human-message-with-busy-background', deliveryStartedMs: Date.now() - admissionStarted,
+      backgroundStillLeased: (await api.readRun(background))?.status === 'leased' }))
     const fast = await ingress('fast-room')
     await waitFor(async () => (await api.readRunState(fast))?.delivery === 'delivered', 'another room must deliver while slow room is blocked')
     assert.equal((await api.readRun(background))?.status, 'leased')
