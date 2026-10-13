@@ -132,6 +132,16 @@ learningApi.getDashboard = async () => dashboard
 // State-only scenarios run without credentials or a backend. Keep them separate
 // from the real API journeys so synthetic results cannot count as API acceptance.
 const scenario = new URLSearchParams(location.search).get('scenario')
+if (scenario === 'layout-rich') {
+  const rich = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', clientMsgNo: 'layout-rich',
+    messageId: 'layout-rich', messageSeq: 2, timestamp: 1790899201, payload: createNativeMessage({ id:'layout-rich',role:'assistant',createdAt:NOW,content:[
+      {type:'text',text:'长正文保持可读行长。'.repeat(30)+'\n\n```typescript\nconst evidence = "'+ 'content'.repeat(35)+'"\n```'},
+      {type:'image',image:'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="640" height="240"%3E%3Crect width="640" height="240" fill="%23e0e7ff"/%3E%3Ctext x="50" y="135" font-size="36" fill="%233730a3"%3EEvidence overview%3C/text%3E%3C/svg%3E',filename:'证据概览.svg'},
+      {type:'tool-call',toolCallId:'layout-tool',toolName:'documents.list',args:{},argsText:'{}',result:{status:'completed',value:[]}},
+    ] }) },{participants,meId:'me'})
+  updateConversation(CONVERSATION_ID,state=>({...state,messages:[rich]}))
+}
+if (new URLSearchParams(location.search).get('drawer') === '1') useSurface.getState().openAgentInfo('scout')
 if (scenario === 'retired-history') {
   harnessApi.readApproval = async id => ({id,status:'PENDING',summary:'calendar.create',action:{action:'calendar.create'},preview:{}})
   const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', clientMsgNo: 'retired-history',

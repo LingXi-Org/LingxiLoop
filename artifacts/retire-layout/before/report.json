@@ -1,0 +1,989 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a13507-c9f7-7c11-857f-fd1868679723",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-13T11:31:07.730Z",
+    "finishedAt": "2026-10-13T11:32:19.595Z",
+    "project": {
+      "id": "lingxiloop-retire-layout",
+      "configDigest": "05e871f57ebd55e322c247a885c2f494760debd7718c34de7fe28a8094ce23f6"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "win32 10.0.22621",
+      "arch": "x64",
+      "runtime": "node v22.22.2"
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5207",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "9a9aca532a2d85205bc4a89fa820549c6c3b7b4d0d1fb2d3789a1c624deb832c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281920%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "conversation edges and readable bodies (1920)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13507-e972-7891-aa65-112eb13808e0",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T11:31:13.395Z",
+            "durationMs": 31403,
+            "artifacts": [
+              {
+                "id": "01a13507-e972-7891-aa65-112eb13808e0:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13507-e972-7891-aa65-112eb13808e0:4"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281920_29-3e67b596/default/attempt-0/screenshots/001-conversation-edges-1920.png",
+                "size": 125451,
+                "sha256": "632e9e3d688c0a0ef28b77b27e7c92636d64543a2ef5c7de2b796e221cb25ed0"
+              },
+              {
+                "id": "01a13507-e972-7891-aa65-112eb13808e0:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281920_29-3e67b596/default/attempt-0/trace/trace.zip",
+                "size": 666100,
+                "sha256": "584d9040324e2338f09779462f1f3da9f1dec1b3fc133d829b3e2c8bcfc40a47"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13507-e972-7891-aa65-112eb13808e0:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:13.907Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1920,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13507-e972-7891-aa65-112eb13808e0:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:13.912Z",
+                "durationMs": 28874,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13507-e972-7891-aa65-112eb13808e0:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:42.788Z",
+                "durationMs": 707,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13507-e972-7891-aa65-112eb13808e0:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:43.496Z",
+                "durationMs": 74,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13507-e972-7891-aa65-112eb13808e0:4",
+                "index": 4,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-1920",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:43.572Z",
+                "durationMs": 509,
+                "events": [],
+                "artifacts": [
+                  "01a13507-e972-7891-aa65-112eb13808e0:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ee3b970565a71fbe19e8605fca68354f4dfe2e52a443c2205c7449841aeb5098",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "conversation edges and readable bodies (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13508-6421-7a3a-9bf7-a433322f4662",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T11:31:44.802Z",
+            "durationMs": 6754,
+            "artifacts": [
+              {
+                "id": "01a13508-6421-7a3a-9bf7-a433322f4662:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13508-6421-7a3a-9bf7-a433322f4662:4"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281440_29-5ba6301a/default/attempt-0/screenshots/001-conversation-edges-1440.png",
+                "size": 121487,
+                "sha256": "9c1fc677d4e2fa38af84dffacd69dbdb359bef50a703832b05c4665d296d5adb"
+              },
+              {
+                "id": "01a13508-6421-7a3a-9bf7-a433322f4662:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281440_29-5ba6301a/default/attempt-0/trace/trace.zip",
+                "size": 794180,
+                "sha256": "eb5f8ee882456ae7b08beb80f71c918e5f5d7169243885849fef8153a5edab22"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13508-6421-7a3a-9bf7-a433322f4662:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:44.837Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-6421-7a3a-9bf7-a433322f4662:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:44.838Z",
+                "durationMs": 5377,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-6421-7a3a-9bf7-a433322f4662:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:50.215Z",
+                "durationMs": 489,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-6421-7a3a-9bf7-a433322f4662:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:50.705Z",
+                "durationMs": 38,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-6421-7a3a-9bf7-a433322f4662:4",
+                "index": 4,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-1440",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:50.745Z",
+                "durationMs": 389,
+                "events": [],
+                "artifacts": [
+                  "01a13508-6421-7a3a-9bf7-a433322f4662:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b14d155c87e2ae459b589b6542aecbf9e07830629cdcf2f1a416324c3d2ebd1c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281024%29",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "conversation edges and readable bodies (1024)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13508-7e86-7daa-89b2-4158647e963f",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T11:31:51.559Z",
+            "durationMs": 7946,
+            "artifacts": [
+              {
+                "id": "01a13508-7e86-7daa-89b2-4158647e963f:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13508-7e86-7daa-89b2-4158647e963f:4"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281024_29-0579a8d7/default/attempt-0/screenshots/001-conversation-edges-1024.png",
+                "size": 113188,
+                "sha256": "0440d686936d713c05d065ae3f09d6dcc3e614e5ae4fdefc7cc6457602c7362c"
+              },
+              {
+                "id": "01a13508-7e86-7daa-89b2-4158647e963f:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281024_29-0579a8d7/default/attempt-0/trace/trace.zip",
+                "size": 986202,
+                "sha256": "38e4a7349b02a350d4b218ea7fbf4bf215065d40afe4db131b4c8bd63384e31b"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13508-7e86-7daa-89b2-4158647e963f:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:51.602Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1024,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-7e86-7daa-89b2-4158647e963f:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:51.603Z",
+                "durationMs": 4899,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-7e86-7daa-89b2-4158647e963f:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:56.503Z",
+                "durationMs": 537,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-7e86-7daa-89b2-4158647e963f:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:57.041Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-7e86-7daa-89b2-4158647e963f:4",
+                "index": 4,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-1024",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:57.070Z",
+                "durationMs": 344,
+                "events": [],
+                "artifacts": [
+                  "01a13508-7e86-7daa-89b2-4158647e963f:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9fddbfe7db736eecc1644f9fbe47fde87fcb3ec4336740710dcca4a2db7d4c00",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%28767%29",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "conversation edges and readable bodies (767)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T11:31:59.509Z",
+            "durationMs": 8919,
+            "artifacts": [
+              {
+                "id": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:5"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_28767_29-6255834c/default/attempt-0/screenshots/001-conversation-edges-767.png",
+                "size": 69688,
+                "sha256": "1873aadbf9fa58c53df60db0824d216f93e0a3c387db6ecc844c0479d8c81855"
+              },
+              {
+                "id": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_28767_29-6255834c/default/attempt-0/trace/trace.zip",
+                "size": 1133991,
+                "sha256": "7a85eb2719e67a165cb3dda4da598da63410fa89d97df08885546ec8b9841ddd"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:59.576Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 767,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:31:59.577Z",
+                "durationMs": 4922,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:04.502Z",
+                "durationMs": 1760,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:06.263Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:06.299Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-767",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:06.323Z",
+                "durationMs": 307,
+                "events": [],
+                "artifacts": [
+                  "01a13508-9d94-77e9-9fdc-6cd53bfc3d31:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9cfcb9943c68c2902c41a01fbed7d570a2c16a84f66a1a1814828d44d3f55e36",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "conversation edges and readable bodies (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13508-c073-78c7-992f-37bce87f2f93",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T11:32:08.442Z",
+            "durationMs": 9199,
+            "artifacts": [
+              {
+                "id": "01a13508-c073-78c7-992f-37bce87f2f93:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13508-c073-78c7-992f-37bce87f2f93:5"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_28390_29-59ef48f9/default/attempt-0/screenshots/001-conversation-edges-390.png",
+                "size": 52167,
+                "sha256": "6a65f7129b248ef69fd5c6fcc8265808c5c63c3ac411e6e523a8b348bae91070"
+              },
+              {
+                "id": "01a13508-c073-78c7-992f-37bce87f2f93:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_28390_29-59ef48f9/default/attempt-0/trace/trace.zip",
+                "size": 1074343,
+                "sha256": "386c5728126946430a1fc26c4de0547330fa2ed9618fb4412832aaa3db67041e"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13508-c073-78c7-992f-37bce87f2f93:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:08.635Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-c073-78c7-992f-37bce87f2f93:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:08.636Z",
+                "durationMs": 5697,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-c073-78c7-992f-37bce87f2f93:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:14.333Z",
+                "durationMs": 1446,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-c073-78c7-992f-37bce87f2f93:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:15.781Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-c073-78c7-992f-37bce87f2f93:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:15.809Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13508-c073-78c7-992f-37bce87f2f93:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-390",
+                "status": "passed",
+                "startedAt": "2026-10-13T11:32:15.832Z",
+                "durationMs": 119,
+                "events": [],
+                "artifacts": [
+                  "01a13508-c073-78c7-992f-37bce87f2f93:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c8315007c41446bf3cdabaafe288786fa776718d77c207ce1e0a4ad72a605676",
+        "testId": "e2e/visual/retire-layout.e2e.ts::retired%20history%20stays%20readable%20without%20actions%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "retired history stays readable without actions (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 35,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13508-e46c-763d-ae06-6849cd1dd82e",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T11:32:17.644Z",
+            "durationMs": 233,
+            "artifacts": [
+              {
+                "id": "01a13508-e46c-763d-ae06-6849cd1dd82e:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__retired_20history_20stays_20readable_20without_20actions_20_281440_29-41309d17/default/attempt-0/trace/trace.zip",
+                "size": 55025,
+                "sha256": "5e3ee2fe51466a383064fc3260d71d86e17b237578b029f3d22b2dbe7fe70b26"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": []
+          }
+        ]
+      },
+      {
+        "id": "6421c621af13449cba6d622052810fdc91f8e54af557a8fd92716525c36e3b3a",
+        "testId": "e2e/visual/retire-layout.e2e.ts::retired%20history%20stays%20readable%20without%20actions%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "retired history stays readable without actions (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 35,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13508-e555-7e48-8a07-d4b084bed058",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T11:32:17.877Z",
+            "durationMs": 113,
+            "artifacts": [
+              {
+                "id": "01a13508-e555-7e48-8a07-d4b084bed058:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__retired_20history_20stays_20readable_20without_20actions_20_28390_29-eb537a91/default/attempt-0/trace/trace.zip",
+                "size": 55025,
+                "sha256": "7131a41c9035e1a7513c884ca4dc2996f7259aeedfcc34a905da39f1a3bfb21b"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": []
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 7,
+      "selected": 7,
+      "executed": 7,
+      "passed": 7,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 7,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 5246847,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

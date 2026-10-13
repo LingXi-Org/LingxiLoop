@@ -1,0 +1,40 @@
+{
+  "database": "lingxiloop_retirement_20261013_test",
+  "redisDatabase": 5,
+  "results": [
+    {
+      "args": [
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "code": 0
+    },
+    {
+      "args": [
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "code": 0
+    },
+    {
+      "args": [
+        "server/run-integration-tests.mjs",
+        "--file",
+        "retired-product-tools.test.ts",
+        "--file",
+        "agent-protocols.test.ts",
+        "--file",
+        "migration.test.ts",
+        "--file",
+        "messages-vertical-slice.test.ts",
+        "--file",
+        "companies-vertical-slice.test.ts",
+        "--file",
+        "agents-vertical-slice.test.ts"
+      ],
+      "code": 0
+    }
+  ]
+}

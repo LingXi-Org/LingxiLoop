@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="10" failures="0" errors="0" skipped="0" time="102.548">
+  <testsuite name="e2e/visual/retire-layout.e2e.ts" tests="10" failures="0" errors="0" skipped="0" time="102.548">
+    <testcase name="conversation edges and readable bodies (1920) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="26.913"/>
+    <testcase name="conversation edges and readable bodies (1440) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="8.465"/>
+    <testcase name="conversation edges and readable bodies (1024) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="6.692"/>
+    <testcase name="conversation edges and readable bodies (767) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="7.105"/>
+    <testcase name="conversation edges and readable bodies (390) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="5.734"/>
+    <testcase name="retired history stays readable without actions (1440) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="6.026"/>
+    <testcase name="retired history stays readable without actions (390) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="6.271"/>
+    <testcase name="rich message and detail drawer fit (1440) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="14.084"/>
+    <testcase name="rich message and detail drawer fit (767) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="12.167"/>
+    <testcase name="rich message and detail drawer fit (390) [web]" classname="e2e/visual/retire-layout.e2e.ts" time="9.091"/>
+  </testsuite>
+</testsuites>

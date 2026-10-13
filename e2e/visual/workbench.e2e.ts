@@ -13,13 +13,13 @@ for (const theme of ['dark', 'light']) {
     await browser.evaluate(async () => { await document.fonts.ready; return null })
     const geometry = await browser.evaluate(() => {
       const width = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().width
-      return { rail: width('.server-rail'), list: width('[data-slot="sidebar"]'), message: width('[data-msg-id]'), composer: width('[data-composer-column]'), overflow: document.documentElement.scrollWidth > innerWidth }
+      return { rail: width('.server-rail'), list: width('[data-slot="sidebar"]'), message: width('[data-msg-id]'), body: width('[data-msg-id] .native-message-content'), column: width('[data-chat-message-column]'), composer: width('[data-composer-column]'), overflow: document.documentElement.scrollWidth > innerWidth }
     })
     expect(geometry.rail).toBe(64)
     expect(Math.abs(geometry.list - 300)).toBeLessThanOrEqual(1)
-    expect(geometry.message).toBeLessThanOrEqual(801)
+    expect(geometry.body).toBeLessThanOrEqual(801)
     expect(geometry.composer).toBeLessThanOrEqual(801)
-    expect(Math.abs(geometry.message - geometry.composer)).toBeLessThanOrEqual(1)
+    expect(Math.abs(geometry.message - geometry.column)).toBeLessThanOrEqual(1)
     expect(geometry.overflow).toBe(false)
     await expect(browser.locator('[data-slot="sidebar"] [aria-current="page"]')).toHaveAttribute('data-variant', 'muted')
     await app.screenshot(`chat-1440-${theme}`)
