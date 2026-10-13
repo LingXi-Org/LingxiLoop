@@ -15,7 +15,7 @@ export function ForumDiscussion({ courseId, item, canWrite, onClose, onComment }
   courseId: string; item: ForumItem; canWrite: boolean; onClose(): void; onComment(): void
 }) {
   const [comments, setComments] = useState<ForumComment[]>([]), [nextOffset, setNextOffset] = useState<number | null>(null)
-  const { draft, setDraft, discard, storageError } = useForumDraft(`comment:${courseId}:${item.targetType}:${item.id}`, contentDraftSchema, emptyContent)
+  const { draft, setDraft, discard, storageError } = useForumDraft(`comment:${courseId}:${item.targetType}:${item.id}`, contentDraftSchema, emptyContent, canWrite)
   const { body, links, attachments } = draft
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState('')
   const returnFocus = useRef(document.activeElement)

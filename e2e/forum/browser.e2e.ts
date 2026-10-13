@@ -10,6 +10,11 @@ test('forum history, public resources, student versions, private files, teacher 
     await expect(screen.getByLabel('搜索论坛')).toBeVisible({ timeout: 120_000 })
   }
   await openAs('student')
+  await browser.evaluate(() => {
+    for (let index = 0; index < 20; index++) localStorage.setItem(`lingxiloop.forum.draft:e2e-school:forum-peer:protected-${index}`,
+      JSON.stringify({ updatedAt: Date.now() - 1000, value: { body: 'A peer draft', links: '', attachments: [] } }))
+    return true
+  })
   await expect(screen.getByText('Historical public resource',{ exact: true })).toBeVisible()
   await screen.getByRole('navigation','工作区与功能').getByRole('button','资料',{ exact: true }).tap()
   await browser.back()
@@ -18,6 +23,17 @@ test('forum history, public resources, student versions, private files, teacher 
   await expect(screen.getByLabel('搜索论坛')).toBeVisible()
   const homework = browser.locator('article').filter({ hasText: 'Forum homework' })
   await homework.getByRole('button','提交作业',{ exact: true }).tap()
+  expect(await browser.evaluate(async () => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    return { emptyDraft: localStorage.getItem('lingxiloop.forum.draft:e2e-school:forum-student:submission:e2e-course:forum-homework'),
+      peerDrafts: Object.keys(localStorage).filter(key => key.startsWith('lingxiloop.forum.draft:e2e-school:forum-peer:protected-')).length }
+  })).toEqual({ emptyDraft: null, peerDrafts: 20 })
+  await screen.getByLabel('作业内容').fill('Temporary draft')
+  await screen.getByLabel('作业内容').fill('')
+  expect(await browser.evaluate(async () => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    return localStorage.getItem('lingxiloop.forum.draft:e2e-school:forum-student:submission:e2e-course:forum-homework')
+  })).toBe(null)
   await screen.getByLabel('作业内容').fill('Original student answer')
   await screen.getByText('附加链接',{ exact: true }).tap()
   await screen.getByLabel('链接（每行一个）').fill('https://example.com/my-homework')
@@ -88,6 +104,11 @@ test('forum history, public resources, student versions, private files, teacher 
   await expect(screen.getByText('还没有提交记录。',{ exact: true })).toBeVisible()
   await browser.keyboard.press('Escape')
   await openAs('teacher')
+  await browser.evaluate(() => {
+    for (let index = 0; index < 20; index++) localStorage.setItem(`lingxiloop.forum.draft:e2e-school:forum-teacher:protected-${index}`,
+      JSON.stringify({ updatedAt: Date.now() - 1000, value: { body: 'A teacher draft', links: '', attachments: [] } }))
+    return true
+  })
   await screen.getByRole('button',/^切换工作区/).tap()
   await screen.getByRole('menuitem').filter({ hasText: 'Other Forum Course' }).tap()
   await expect(screen.getByLabel('搜索论坛')).toBeVisible()
@@ -101,6 +122,12 @@ test('forum history, public resources, student versions, private files, teacher 
   await expect(card).toContainText('Forum student')
   await homework.getByRole('button','查看提交',{ exact: true }).tap()
   await expect(screen.getByText('Revised student answer',{ exact: true })).toBeVisible()
+  expect(await browser.evaluate(async () => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    return { readonlyDraft: localStorage.getItem('lingxiloop.forum.draft:e2e-school:forum-teacher:submission:e2e-course:forum-homework'),
+      teacherDrafts: Object.keys(localStorage).filter(key => key.startsWith('lingxiloop.forum.draft:e2e-school:forum-teacher:protected-')).length,
+      peerDrafts: Object.keys(localStorage).filter(key => key.startsWith('lingxiloop.forum.draft:e2e-school:forum-peer:protected-')).length }
+  })).toEqual({ readonlyDraft: null, teacherDrafts: 20, peerDrafts: 20 })
   expect(await browser.evaluate(async url => (await fetch(url!)).status,file)).toBe(200)
   await browser.keyboard.press('Escape')
   await homework.getByRole('button','管理：Forum homework',{ exact: true }).tap()

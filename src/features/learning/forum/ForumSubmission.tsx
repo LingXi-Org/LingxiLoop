@@ -24,7 +24,7 @@ function Version({ submission }: { submission: SubmissionVersion }) {
 
 export function ForumSubmission({ space, item, onClose }: { space: LearningSpace; item: ForumItem; onClose(): void }) {
   const [versions, setVersions] = useState<SubmissionVersion[]>([]), [nextOffset, setNextOffset] = useState<number | null>(null)
-  const { draft, setDraft, discard, storageError } = useForumDraft(`submission:${space.courseId}:${item.id}`, contentDraftSchema, emptyContent)
+  const { draft, setDraft, discard, storageError } = useForumDraft(`submission:${space.courseId}:${item.id}`, contentDraftSchema, emptyContent, space.canSubmit && item.status !== 'CLOSED')
   const { body: answer, links, attachments } = draft
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState(''), [saved, setSaved] = useState(false)
   const pending = useRef<{ fingerprint: string; key: string } | null>(null)

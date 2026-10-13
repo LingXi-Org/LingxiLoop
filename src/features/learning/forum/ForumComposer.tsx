@@ -49,7 +49,7 @@ export function ForumComposer({ space, onCreated, onCancel }: { space: LearningS
     <p className="text-xs text-muted-foreground">发布后本课程师生可见。作业请使用“提交作业”，提交内容仅你和本课程教师可见。</p>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {storageError && <p role="status" className="text-sm text-destructive">无法保存本地草稿，请先复制内容再关闭。</p>}
-    <div className="flex flex-wrap items-center justify-end gap-2"><span className="me-auto text-xs text-muted-foreground">草稿保存在此设备，保留 7 天</span>
+    <div className="flex flex-wrap items-center justify-end gap-2"><span className="me-auto text-xs text-muted-foreground">本设备保留最近 20 份草稿，最长 7 天</span>
       <AlertDialog><AlertDialogTrigger asChild><Button type="button" variant="ghost" disabled={disabled}>丢弃草稿</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>丢弃这份草稿？</AlertDialogTitle><AlertDialogDescription>尚未发布的正文与附件引用将被清除。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>继续编辑</AlertDialogCancel><AlertDialogAction onClick={() => { discard(); onCancel() }}>丢弃草稿</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <Button type="button" variant="outline" disabled={disabled} onClick={onCancel}>稍后继续</Button><Button type="submit" disabled={disabled || !title.trim()}>{uploading ? '上传中…' : busy ? '发布中…' : '发布'}</Button></div>
   </form>

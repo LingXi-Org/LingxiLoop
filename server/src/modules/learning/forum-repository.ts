@@ -66,12 +66,12 @@ export async function listSubmissionVersions(db: Queryable, companyId: string, p
     source: 'STUDENT_ORIGINAL' | 'AGENT_RELAY' | 'AGENT_GENERATED'; agentId: string | null; agentWorkId: string | null
     late: boolean; answer: string; links: string[]; attachments: LearningAttachment[]
   }>(`SELECT a.id,a.learner_id AS "learnerId",u.display_name AS "learnerName",a.submitted_at AS "submittedAt",
-      (ROW_NUMBER() OVER (PARTITION BY a.learner_id ORDER BY a.submitted_at,a.id))::int AS version,
+      (ROW_NUMBER() OVER (PARTITION BY a.learner_id ORDER BY a.submission_sequence))::int AS version,
       a.source,a.submitted_by_agent AS "agentId",a.agent_work_id AS "agentWorkId",a.late,
       COALESCE(e.data->>'answer','') AS answer,COALESCE(e.data->'links','[]') AS links,COALESCE(e.data->'attachments','[]') AS attachments
     FROM learning_attempts a JOIN evidence_records e ON e.company_id=a.company_id AND e.project_id=a.project_id AND e.id=a.evidence_id
     JOIN users u ON u.id=a.learner_id
     WHERE a.company_id=$1 AND a.project_id=$2 AND a.activity_id=$3 AND ($4::text IS NULL OR a.learner_id=$4)
-    ORDER BY a.submitted_at DESC,a.id DESC LIMIT 51 OFFSET $5`, [companyId,projectId,activityId,learnerId,offset])
+    ORDER BY a.submission_sequence DESC LIMIT 51 OFFSET $5`, [companyId,projectId,activityId,learnerId,offset])
   return rows
 }

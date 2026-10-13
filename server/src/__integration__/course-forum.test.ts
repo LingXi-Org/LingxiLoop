@@ -80,10 +80,17 @@ test('[integration] submission versions preserve links, private files, late stat
   const first = await submitProjectLearningActivity(transaction, input)
   assert.deepEqual(await submitProjectLearningActivity(transaction, input), first)
   await submitProjectLearningActivity(transaction, { ...input, answer: 'Revised answer', idempotencyKey: 'forum-original-v2' })
+  // Wall clocks may move backward, timestamps may tie, and retried writes must
+  // not consume a visible version. Acceptance order still defines the latest.
+  await pool.query(`UPDATE learning_attempts SET submitted_at=NOW()+INTERVAL '1 day' WHERE id=$1`, [first.attemptId])
   const history = await forum.submissions(student, course, 'forum-homework', 0)
   assert.equal(history.items.length, 2)
   assert.equal(history.items[0]?.answer, 'Revised answer')
   assert.equal(history.items[1]?.answer, 'My answer')
+  assert.deepEqual(history.items.map(item => [item.answer, item.version]), [['Revised answer', 2], ['My answer', 1]])
+  await pool.query(`UPDATE learning_attempts SET submitted_at='2026-01-01T00:00:00Z' WHERE activity_id='forum-homework'`)
+  assert.deepEqual((await forum.submissions(student, course, 'forum-homework', 0)).items.map(item => [item.answer, item.version]),
+    [['Revised answer', 2], ['My answer', 1]])
   assert.equal(history.items[0]?.late, true)
   assert.deepEqual(history.items[0]?.links, input.links)
   assert.deepEqual(history.items[0]?.attachments, input.attachments)
