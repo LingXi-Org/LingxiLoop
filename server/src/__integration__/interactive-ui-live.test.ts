@@ -62,7 +62,7 @@ test('current product generates, delivers and explores learning UI with a real m
   await pool.query('UPDATE participants SET capabilities=$1 WHERE company_id=$2 AND id=$3', [JSON.stringify([]), companyId, agentId])
   const api = await lingxiOSControl(), originalIngest = api.conversations.ingest.bind(api.conversations)
   t.mock.method(api.conversations, 'ingest', async (input: Parameters<typeof originalIngest>[0], options: Parameters<typeof originalIngest>[1]) => {
-    if (input.author.kind === 'human') assert.ok((await stats()).costUSD + judgeCostUSD + 0.25 <= 5, 'new turn exceeds total live budget')
+    if (input.author.kind === 'human') assert.ok((await stats()).costUSD + judgeCostUSD + 0.5 <= 5, 'new turn exceeds total live budget')
     return originalIngest(input, { ...options, codeExecution: 'disabled' })
   })
   const controlPort = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN!, port: 0 })
@@ -241,7 +241,7 @@ test('current product generates, delivers and explores learning UI with a real m
       assert.ok(result.teaching.correct && result.teaching.transfer, `${scenario.id}: independent teaching check failed`)
       assert.ok(result.readyMs <= gates.readyMs && (result.previewMs === null || result.previewMs <= gates.previewMs), `${scenario.id}: locked latency gate failed`)
     }
-    assert.ok((await stats()).costUSD + judgeCostUSD + 4 * 0.25 <= 5, 'browser follow-ups exceed total live budget')
+    assert.ok((await stats()).costUSD + judgeCostUSD + 4 * 0.5 <= 5, 'browser follow-ups exceed total live budget')
     await command(['node_modules/vite/bin/vite.js', 'build', '--config', 'e2e/vite.interactive-live.config.ts'])
     preview = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--config', 'e2e/vite.interactive-live.config.ts'], { env: process.env, stdio: 'inherit', windowsHide: true })
     const launch = AbortSignal.timeout(30_000)
