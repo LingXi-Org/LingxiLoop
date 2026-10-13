@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { CourseSourceDrive } from '@/features/knowledge/components/CourseSourceDrive'
+import { CourseForum } from '../forum/CourseForum'
 import { userFacingError } from '@/lib/userFacingError'
 import type { LearningCourse, LearningSpace } from '../contracts'
 import { CourseSettingsSection } from './CourseSettingsSection'
@@ -18,6 +19,7 @@ export function LearningDashboardPanel({ space, section }: {
 }) {
   if (section === 'calendar') return <CalendarView />
   if (section === 'resources') return <CourseSourceDrive space={space} />
+  if (section === 'forum') return <CourseForum key={space.courseId ?? space.projectId} space={space} />
   if (space.perspective === 'teacher') {
     if (section === 'settings' || section === 'content' || section === 'members' || section === 'status') {
       return <CourseSettingsSection space={space} section={section === 'settings' ? 'profile' : section} />

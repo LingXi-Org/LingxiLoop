@@ -8,13 +8,13 @@ const teacher = { perspective: 'teacher' as const, canManage: true, courseId: 'c
 test('joined course menus are derived from the server perspective without a role switch', () => {
   assert.deepEqual(
     getLearningDashboardMenu(learner).map((item) => item.label),
-    ['学习概览', '日历', '资料'],
+    ['学习概览', '日历', '论坛', '资料'],
   )
   assert.deepEqual(
     getLearningDashboardMenu(teacher).map((item) => item.label),
-    ['学习概览', '日历', '资料', '基本资料', '课程内容', '成员与邀请', '课程状态'],
+    ['学习概览', '日历', '论坛', '资料', '基本资料', '课程内容', '成员与邀请', '课程状态'],
   )
-  assert.deepEqual(getLearningDashboardMenu(teacher).filter((item) => !item.management).map((item) => item.label), ['学习概览', '日历', '资料'])
+  assert.deepEqual(getLearningDashboardMenu(teacher).filter((item) => !item.management).map((item) => item.label), ['学习概览', '日历', '论坛', '资料'])
   assert.deepEqual(getLearningDashboardMenu(teacher).filter((item) => item.management).map((item) => item.label), ['基本资料', '课程内容', '成员与邀请', '课程状态'])
   assert.deepEqual(getLearningDashboardMenu(learner).filter((item) => item.management), [])
   assert.equal(isLearningDashboardSectionAvailable('learners', teacher), false)

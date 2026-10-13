@@ -13,6 +13,7 @@ import { addLearningMissionSteps, completeLearningMission, finishLearningMission
 import { createLearningKnowledgeUnits, createProjectLearningActivity } from './curriculum-application.js'
 import { findLearningMission, findLearningRoomState, listProjectLearningKnowledgeUnits, findVisibleProjectLearningActivity } from './repository.js'
 import { proposeLearningEvaluation } from './evaluation-application.js'
+import { submitProjectLearningActivity } from './activities-application.js'
 
 type Method = keyof typeof schemas
 type Input<M extends Method> = z.output<(typeof schemas)[M]>
@@ -57,7 +58,8 @@ async function committedMessages(context: ActionContext, ids: string[]) {
 
 export async function readLearningAttempts(context: ActionContext, input: { attemptId?: string; activityId?: string; missionStepId?: string }) {
   const room = await scope(context), db = database(context)
-  const { rows } = await db.query<Record<string, unknown>>(`SELECT a.id,a.activity_id,a.mission_step_id,a.assistance,a.status,a.submitted_at,a.evidence_id
+  const { rows } = await db.query<Record<string, unknown>>(`SELECT a.id,a.activity_id,a.mission_step_id,a.assistance,a.status,a.submitted_at,a.evidence_id,
+      a.source,a.submitted_by_agent,a.agent_work_id,a.late
     FROM learning_attempts a JOIN participants p ON p.company_id=a.company_id AND p.id=a.learner_id
     WHERE a.company_id=$1 AND a.project_id=$2 AND a.learner_id=$3 AND p.kind='human' AND p.departed_at IS NULL
       AND ($4::text IS NULL OR a.id=$4) AND ($5::text IS NULL OR a.activity_id=$5) AND ($6::text IS NULL OR a.mission_step_id=$6)
@@ -111,6 +113,25 @@ export const learningTools: ToolDefinition[] = [
     return value
   }),
   read('list_attempts', readLearningAttempts), read('get_attempt', readLearningAttempts),
+  write('submit_activity', async (context, input) => {
+    const room = await scope(context, 'learning:submit'), db = database(context)
+    let answer = input.answer
+    if (input.source === 'AGENT_RELAY') {
+      const messages = await committedMessages(context, input.evidenceClientMsgNos)
+      answer = messages.map(message => message.payload.content.filter(part => part.type === 'text').map(part => part.text).join('\n')).join('\n\n')
+      const attachmentKeys = new Set(messages.flatMap(message => message.payload.role === 'user' ? message.payload.attachments.map(file => file.id) : []))
+      if (input.answer && input.answer !== answer || input.links.some(link => !answer.includes(link))
+        || input.attachments.some(file => !attachmentKeys.has(file.key))) {
+        throw new NoEffectError('relayed content must exactly reference the original human messages', 'forbidden')
+      }
+    }
+    return submitProjectLearningActivity(run => run(db), { ...input,answer,companyId: room.companyId,projectId: room.projectId,
+      learnerId: context.work.principalId!,agentId: context.work.agentId,agentWorkId: context.work.id })
+  }, async (context, _input, result) => {
+    const attempt = await readLearningAttempts(context, { attemptId: result.attemptId })
+    return { resource: `learning_attempt:${result.attemptId}`,observed: { evidence: Reflect.get(attempt, 'evidence'),
+      source: Reflect.get(attempt, 'source'),agentId: Reflect.get(attempt, 'submitted_by_agent'),late: Reflect.get(attempt, 'late') } }
+  }),
   write('draft_knowledge_units', async (context, input) => {
     const room = await scope(context, 'learning:submit'), db = database(context)
     return createLearningKnowledgeUnits(db, run => run(db), { ...input, companyId: room.companyId, projectId: room.projectId, actorId: context.work.agentId, actorKind: 'agent' })

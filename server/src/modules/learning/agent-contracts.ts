@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { createActivityRequestSchema, createObjectivesRequestSchema, learningScoreBreakdownSchema, reviewEvaluationRequestSchema } from './contracts.js'
+import { learningContentFields } from './forum-contracts.js'
 
 const id = z.string().trim().min(1).max(200)
 const text = z.string().trim().min(1).max(10_000)
@@ -18,6 +19,12 @@ export const learningAgentSchemas = {
   list_attempts: z.object({ activityId: id.optional(), missionStepId: id.optional() }).strict()
     .refine(value => !(value.activityId && value.missionStepId), 'filter by activity or step'),
   get_attempt: z.object({ attemptId: id }).strict(),
+  submit_activity: z.object({ activityId: id,idempotencyKey: z.string().trim().min(8).max(200),
+    source: z.enum(['AGENT_RELAY','AGENT_GENERATED']).describe('AGENT_RELAY forwards the original learner messages unchanged. AGENT_GENERATED submits generated work and never counts as independent human evidence.'),
+    answer: z.string().trim().max(20000).default(''),
+    evidenceClientMsgNos: ids(20).default([]).describe('Committed original learner message client IDs; required for AGENT_RELAY.'),assistance: z.enum(['NONE','HINT','GUIDED']).default('NONE'),
+    ...learningContentFields }).strict()
+    .refine(value => value.source !== 'AGENT_RELAY' || value.evidenceClientMsgNos.length > 0, 'relay requires committed original human messages'),
   draft_knowledge_units: z.object({ knowledgeUnits: z.array(objective.omit({ prerequisiteIds: true })
     .extend({ prerequisiteKnowledgeUnitIds: ids(100).optional() })).min(1).max(100) }).strict(),
   draft_activity: activity.omit({ type: true, objectiveIds: true }).extend({ kind: activity.shape.type, knowledgeUnitIds: ids(100).default([]) }),
