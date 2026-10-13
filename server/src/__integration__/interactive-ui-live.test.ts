@@ -26,6 +26,11 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 // Failure inventory precedes the live implementation: no preview, invalid source,
 // incorrect teaching/transfer answers, unmetered usage, retries counted as passes,
 // browser-only fixtures presented as product evidence, and changing gates after holdout.
+// Collection failure inventory: an unfinished run or unknown candidate/judge cost must
+// stop the matrix; a delivered, terminal, metered answer may fail acceptance without
+// hiding later cases. Failed or blocked cases must never yield zero failures or passed.
+// Minimal check: existing fixture-safety checks before edits, then this file's offline
+// assertions, server typecheck and scoped lint; real-model acceptance remains separate.
 // Inspect parsed components: whitespace in a call is valid and a quoted name is not a component.
 function containsComponent(value: unknown, name: string): boolean {
   return !!value && typeof value === 'object' && (
@@ -53,8 +58,21 @@ test('current product generates, delivers and explores learning UI with a real m
   const output = 'artifacts/interactive-ui/live'
   await mkdir(output, { recursive: true })
   await Promise.all(['performance-gates.json', 'stream-violation.json'].map(file => rm(`${output}/${file}`, { force: true })))
-  const results: { passed: boolean; baseline: unknown[]; cases: unknown[]; attempts: string[]; browser?: unknown; gates?: unknown; metrics?: unknown; error?: string } = { passed: false, baseline: [], cases: [], attempts: [] }
-  const record = () => writeFile(`${output}/results.json`, JSON.stringify(results, null, 2))
+  let judgeCostUSD = 0
+  type CaseEvidence = { id: string; status: 'passed' | 'failed' | 'blocked'; [key: string]: unknown }
+  const results: { passed: boolean; baseline: CaseEvidence[]; cases: CaseEvidence[]; attempts: string[]; browser?: unknown; gates?: unknown; metrics?: Record<string, unknown>; error?: string } = {
+    passed: false, baseline: [], cases: [], attempts: [], browser: { status: 'blocked', reason: 'Holdout validation has not completed' },
+    metrics: { restoreAttempts: 0, restored: 0, recoveryRate: null },
+  }
+  const record = () => {
+    const generationFailures = results.attempts.filter(id => [...results.baseline, ...results.cases].some(item => item.id === id && item.status === 'failed')).length
+    results.metrics = { ...results.metrics, judgeCostUSD, generationAttempts: results.attempts.length, generationFailures,
+      failureRate: results.attempts.length ? generationFailures / results.attempts.length : null,
+      holdoutPassed: results.cases.filter(item => item.status === 'passed' && interactiveCases.some(scenario => scenario.id === item.id)).length,
+      holdoutFailed: results.cases.filter(item => item.status === 'failed' && interactiveCases.some(scenario => scenario.id === item.id)).length,
+      holdoutBlocked: results.cases.filter(item => item.status === 'blocked').length }
+    return writeFile(`${output}/results.json`, JSON.stringify(results, null, 2))
+  }
   await record()
   await ensureSchemaOnce(); await resetAllTables(); _setWukongClientForTests(null)
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
@@ -104,7 +122,6 @@ test('current product generates, delivers and explores learning UI with a real m
     flushing = true
     void flushAgentWakes().catch(() => {}).finally(() => { flushing = false })
   }, 500)
-  let judgeCostUSD = 0
   const judge = new OpenAI({ apiKey: process.env.EVAL_JUDGE_API_KEY, baseURL: process.env.EVAL_JUDGE_BASE_URL, maxRetries: 0, timeout: 180_000 })
   const judgeSchema = z.object({ correct: z.boolean(), transfer: z.boolean(), correction: z.boolean(), reasons: z.array(z.string().max(500)).max(5) }).strict()
   async function grade(answer: string, facts: string, requireCorrection = false) {
@@ -119,6 +136,8 @@ test('current product generates, delivers and explores learning UI with a real m
     assert.ok(response.usage && response.usage.prompt_tokens > 0 && response.usage.completion_tokens > 0, 'judge usage missing')
     judgeCostUSD += (response.usage.prompt_tokens * Number(process.env.EVAL_JUDGE_INPUT_CNY_PER_MILLION)
       + response.usage.completion_tokens * Number(process.env.EVAL_JUDGE_OUTPUT_CNY_PER_MILLION)) / 7e6
+    assert.ok(Number.isFinite(judgeCostUSD) && judgeCostUSD >= 0
+      && (await stats()).costUSD + judgeCostUSD <= 5, 'known judge cost within total live budget required')
     const content = response.choices[0]?.message.content ?? ''
     return judgeSchema.parse(JSON.parse(content.replace(/^```(?:json)?\s*|\s*```$/g, '')))
   }
@@ -194,27 +213,37 @@ test('current product generates, delivers and explores learning UI with a real m
     })
     let state = await api.readRunState(run)
     try {
-      while (state?.delivery !== 'delivered' || !streamDelivered) {
+      while (state?.delivery !== 'delivered' || !streamDelivered || ['queued', 'leased'].includes(state.run.status)) {
         timeout.throwIfAborted()
         assert.equal(streamFailure, null, `${id}: stream failed (${streamFailure})`)
         assert.ok(state && state.run.status !== 'failed' && state.run.status !== 'cancelled', `${id}: product run failed`)
         await delay(150); state = await api.readRunState(run)
       }
     } finally { cancellation.abort(); await reading }
+    assert.ok(state && ['succeeded', 'partial'].includes(state.run.status), `${id}: successful terminal run required`)
     const readyMs = performance.now() - started
     const history = await imMessagesApplication.history({ companyId, userId: 'test-owner', channelId, limit: 100, beforeSequence: 0 })
     const answers = history!.filter(item => item.payload.role === 'assistant'), lessons = answers.flatMap(item => messageLessons(item.payload))
     const measured = await stats(channelId)
-    assert.ok(measured.measured && measured.modelCalls > 0 && measured.modelCalls <= 16, `${id}: known bounded usage required`)
+    assert.ok(measured.measured && measured.modelCalls > 0 && measured.modelCalls <= 16
+      && Number.isFinite(measured.costUSD) && measured.costUSD >= 0 && measured.costUSD <= 0.5, `${id}: known bounded usage required`)
     assert.equal(streamFailure, null, `${id}: stream failed (${streamFailure})`)
-    assert.ok(answers.length > 0, `${id}: no durable answer`)
-    if (scenario.component) {
-      assert.ok(lessons.some(lesson => containsComponent(parseLessonSource(lesson.source).root, scenario.component)), `${id}: requested composition missing`)
-      assert.ok(previewMs !== null, `${id}: useful preview missing`)
-    } else assert.equal(lessons.length, 0, `${id}: text-only preference ignored`)
+    assert.ok((await stats()).costUSD + judgeCostUSD <= 5, 'total live budget exceeded')
+    const errors: string[] = []
+    // Only content acceptance is recoverable. Transport, accounting and judge errors
+    // remain outside this catch because stopping the SSE reader does not stop a run.
+    try {
+      assert.ok(answers.length > 0, `${id}: no durable answer`)
+      if (scenario.component) {
+        assert.ok(lessons.some(lesson => containsComponent(parseLessonSource(lesson.source).root, scenario.component)), `${id}: requested composition missing`)
+        assert.ok(previewMs !== null, `${id}: useful preview missing`)
+      } else assert.equal(lessons.length, 0, `${id}: text-only preference ignored`)
+    } catch (error) {
+      errors.push(error instanceof assert.AssertionError ? error.message.split('\n')[0] : `${id}: invalid delivered composition`)
+    }
     const answer = answers.map(item => nativeText(item.payload)).join('\n') + lessons.map(lesson => lesson.source).join('\n')
     const teaching = await grade(answer, scenario.facts)
-    const result = { id, previewMs, firstTextMs, readyMs, sendAttempts, streamReconnects, modelCalls: measured.modelCalls, costUSD: measured.costUSD,
+    const result = { id, errors, previewMs, firstTextMs, readyMs, sendAttempts, streamReconnects, modelCalls: measured.modelCalls, costUSD: measured.costUSD,
       uiCount: lessons.length, teaching, runId: run.runId, sourceHashes: lessons.map(lesson => lesson.sourceHash) }
     return result
   }
@@ -222,35 +251,52 @@ test('current product generates, delivers and explores learning UI with a real m
     const child = spawn(process.execPath, args, { env: { ...process.env, ...extraEnv }, stdio: 'inherit', windowsHide: true })
     child.once('error', reject); child.once('exit', code => code === 0 ? resolve() : reject(new Error(`live command exited ${code}`)))
   })
+  let currentCase: { id: string; baseline: boolean } | undefined
   try {
     worker = await startLingxiOSWorker()
     for (const scenario of interactiveBaselineCases) {
+      currentCase = { id: scenario.id, baseline: true }
       const result = await runCase(scenario.id, scenario)
-      results.baseline.push(result); await record()
+      results.baseline.push({ ...result, status: result.errors.length ? 'failed' : 'passed' }); await record()
+      assert.equal(result.errors.length, 0, `${scenario.id}: baseline acceptance failed`)
+      currentCase = undefined
       console.info(JSON.stringify({ liveStage: 'M0', id: result.id, readyMs: result.readyMs, previewMs: result.previewMs, modelCalls: result.modelCalls }))
     }
-    const baseline = results.baseline as Awaited<ReturnType<typeof runCase>>[]
+    const baseline = results.baseline as (Awaited<ReturnType<typeof runCase>> & CaseEvidence)[]
     const gates = { previewMs: Math.min(180_000, Math.max(60_000, ...baseline.map(item => (item.previewMs ?? Infinity) * 2))),
       readyMs: Math.min(240_000, Math.max(120_000, ...baseline.map(item => item.readyMs * 2))), failureRate: 0, recoveryRate: 1, localModelCalls: 0 }
     results.gates = { ...gates, lockedAt: new Date().toISOString(), beforeHoldout: true }
     await writeFile(`${output}/performance-gates.json`, JSON.stringify(results.gates, null, 2)); await record()
     for (const scenario of interactiveCases) {
+      currentCase = { id: scenario.id, baseline: false }
       const result = await runCase(scenario.id, scenario)
-      results.cases.push(result); await record()
+      if (!result.teaching.correct || !result.teaching.transfer) result.errors.push(`${scenario.id}: independent teaching check failed`)
+      if (result.readyMs > gates.readyMs || (result.previewMs !== null && result.previewMs > gates.previewMs)) result.errors.push(`${scenario.id}: locked latency gate failed`)
+      results.cases.push({ ...result, status: result.errors.length ? 'failed' : 'passed' }); await record()
+      currentCase = undefined
       console.info(JSON.stringify({ liveStage: 'holdout', id: result.id, readyMs: result.readyMs, previewMs: result.previewMs, modelCalls: result.modelCalls, teaching: result.teaching }))
-      assert.ok(result.teaching.correct && result.teaching.transfer, `${scenario.id}: independent teaching check failed`)
-      assert.ok(result.readyMs <= gates.readyMs && (result.previewMs === null || result.previewMs <= gates.previewMs), `${scenario.id}: locked latency gate failed`)
     }
+    const missingBrowserCases = ['projectile', 'comparison'].filter(id => !results.cases.some(item => item.id === id && item.status === 'passed'))
+    if (missingBrowserCases.length) {
+      results.browser = { status: 'blocked', reason: 'Required holdout acceptance failed', cases: missingBrowserCases }
+      await record()
+      assert.fail(`browser blocked by failed prerequisites: ${missingBrowserCases.join(', ')}`)
+    }
+    results.browser = { status: 'blocked', reason: 'Browser follow-up budget check has not passed' }
     assert.ok((await stats()).costUSD + judgeCostUSD + 4 * 0.5 <= 5, 'browser follow-ups exceed total live budget')
+    results.browser = { status: 'running' }; await record()
     await command(['node_modules/vite/bin/vite.js', 'build', '--config', 'e2e/vite.interactive-live.config.ts'])
     preview = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--config', 'e2e/vite.interactive-live.config.ts'], { env: process.env, stdio: 'inherit', windowsHide: true })
     const launch = AbortSignal.timeout(30_000)
     while (true) { launch.throwIfAborted(); if (await fetch('http://127.0.0.1:52995/e2e/interactive-ui-live.html').then(response => response.ok).catch(() => false)) break; await delay(200) }
     await command(['e2e/web/run.mjs', 'e2e/web/interactive-ui-live.e2e.ts', '--output', `${output}/browser`], { E2E_PROJECT: 'web', E2E_BASE_URL: 'http://127.0.0.1:52995' })
     const browser = JSON.parse(await readFile(`${output}/browser/report.json`, 'utf8'))
-    results.browser = browser
+    results.browser = { ...browser, status: 'passed' }
     const revisions = JSON.parse(await readFile(`${output}/revisions.json`, 'utf8'))
     const localExploration = JSON.parse(await readFile(`${output}/exploration.json`, 'utf8'))
+    results.metrics = { ...results.metrics, restoreAttempts: 1, restored: localExploration.restored === true ? 1 : 0,
+      recoveryRate: localExploration.restored === true ? 1 : 0, localExploration, revisions }
+    await record()
     assert.equal(localExploration.modelCallsDelta, 0, 'local exploration invoked the model')
     assert.equal(localExploration.actionsDelta, 0, 'local exploration submitted an action')
     assert.equal(localExploration.restored, true, 'local exploration was not restored')
@@ -270,12 +316,25 @@ test('current product generates, delivers and explores learning UI with a real m
     const corrected = await grade(nativeText(correction.payload) + messageLessons(correction.payload).map(lesson => lesson.source).join('\n'),
       'TCP只保证可靠传输，不自动加密，完整到达仍可能被监听；应使用TLS等加密方案。错误预测必须纠正。', true)
     assert.ok(corrected.correct && corrected.correction, 'incorrect prediction was not corrected')
-    results.cases.push({ id: 'prediction-correction', teaching: corrected, total: await stats(), judgeCostUSD })
-    results.metrics = { generationAttempts: results.attempts.length, generationFailures: 0, failureRate: 0,
-      restoreAttempts: 1, restored: 1, recoveryRate: 1, localExploration, revisions, revisionGrades }
+    results.cases.push({ id: 'prediction-correction', status: 'passed', teaching: corrected, total: await stats(), judgeCostUSD })
+    results.metrics = { ...results.metrics, revisionGrades }
+    await record()
+    assert.equal(results.metrics.failureRate, gates.failureRate, 'holdout matrix contains failed generations')
+    assert.equal(results.cases.filter(item => item.status === 'passed' && interactiveCases.some(scenario => scenario.id === item.id)).length, interactiveCases.length, 'holdout matrix is incomplete')
     results.passed = true; await record()
   } catch (error) {
-    results.error = error instanceof Error ? error.message.slice(0, 300) : 'live validation failed'
+    // Do not serialize provider error bodies: they may contain credentials or prompts.
+    results.error = error instanceof assert.AssertionError ? error.message.split('\n')[0].slice(0, 300)
+      : error instanceof Error ? error.name : 'live validation failed'
+    if (currentCase) {
+      const cases = currentCase.baseline ? results.baseline : results.cases
+      if (!cases.some(item => item.id === currentCase!.id)) cases.push({ id: currentCase.id,
+        status: results.attempts.includes(currentCase.id) ? 'failed' : 'blocked', fatal: true, error: results.error })
+    }
+    for (const scenario of interactiveCases) {
+      if (!results.cases.some(item => item.id === scenario.id)) results.cases.push({ id: scenario.id, status: 'blocked', reason: 'Live evaluation stopped before this case' })
+    }
+    if ((results.browser as { status?: string })?.status === 'running') results.browser = { status: 'failed', error: results.error }
     await record(); throw error
   } finally {
     clearInterval(ingress); preview?.kill(); await worker?.stop(); await teardownAll(server)
