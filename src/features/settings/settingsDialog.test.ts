@@ -13,7 +13,6 @@ test('settings restores keyboard focus and interactive surfaces have accessible 
   assert.match(sonner, /customAriaLabel="[^"]+"/)
   assert.match(sonner, /closeButtonAriaLabel: "[^"]+"/)
   assert.match(read('../../components/assistant-ui/elements/attachment-card.tsx'), /aria-label=\{`[^`]*\$\{filename\}/)
-  assert.match(read('../email/components/EmailComposer.tsx'), /aria-label=\{`[^`]+\$\{/)
 })
 
 test('account exit clears identity and authentication submits the CAPTCHA response', () => {
@@ -39,7 +38,7 @@ test('invitation landing remains reachable before authentication and clears on c
 
 test('user-visible errors are mapped before rendering provider details', () => {
   for (const path of [
-    '../calendar/components/EventEditor.tsx', '../../components/WorkspaceChrome.tsx',
+    '../../components/WorkspaceChrome.tsx',
     '../../components/prompt-kit/tool.tsx', '../chat/components/ConversationThread.tsx',
   ]) assert.match(read(path), /userFacingError\(/)
 })

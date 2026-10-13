@@ -61,7 +61,7 @@ export async function authorizeAgent(context: ActionContext) {
   const agent = rows[0], namespace = context.action.action.split('.')[0]
   const capability = namespace === 'research' ? 'web' : namespace === 'presentations' ? 'knowledge' : namespace
   const assigned = ['handoffs.list','handoffs.update'].includes(context.action.action) && !!await assignedHandoff(db,work)
-  const teacherChat = context.action.action === 'chat.send' && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
+  const teacherChat = ['chat.send', 'chat.report_progress'].includes(context.action.action) && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
   const teacherKnowledge = TEACHER_KNOWLEDGE_ACTIONS.has(context.action.action) && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
   if (!agent || (agent.teacher_managed ? namespace !== 'teacher' && !teacherChat && !teacherKnowledge : namespace === 'teacher')
     || !['teacher', 'memory', 'chat', 'polls', 'directory'].includes(namespace) && !agent.capabilities.includes(capability) && !assigned) {

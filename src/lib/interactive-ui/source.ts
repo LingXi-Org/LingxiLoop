@@ -5,22 +5,47 @@ import { lessonComponentSchemas, lessonLibrary, OPENUI_LANGUAGE, UI_LIMITS, type
 import { uiStateSchema, type UiAction, type UiField, type UiState } from './protocol.js'
 
 export interface ParsedLesson { root: ElementNode; title: string; fallback: string; fields: UiField[]; actions: UiAction[]; defaults: UiState; revisionOf?: string; baseRevision?: number }
-export interface LessonBlock { start: number; end: number; source: string; closed: boolean }
+export interface LessonBlock { start: number; end: number; source: string; closed: boolean; unfenced?: boolean }
 const parser = createParser(lessonLibrary.toJSONSchema(), 'Lesson')
 const punctuation = (value: string) => tokenize(value)[0].t
 const newline = punctuation('\n'), eof = tokenize('').at(-1)!.t
 const opens = new Set(['(', '[', '{'].map(punctuation)), closes = new Set([')', ']', '}'].map(punctuation))
 const own = (value: object, key: string) => Object.hasOwn(value, key)
 const byteLength = (text: string) => new TextEncoder().encode(text).length
-const fail = (code: string): never => { throw new Error(`interactive-ui:${code}`) }
+const fail = (code: string, fields?: string[]): never => { throw new Error(`interactive-ui:${code}`, fields ? { cause: fields } : undefined) }
+const lessonStatement = (value: string) => [...value.matchAll(/^ {0,3}(\w+)\s*=\s*(\w+)\s*\(/gm)]
+  .some(match => own(lessonComponentSchemas, match[2]))
+  || /^ {0,3}\$[A-Za-z_]\w*\s*=\s*(?:"(?:\\.|[^"\\])*"|[-+]?\d+(?:\.\d+)?|true|false)\s*$/m.test(value)
 
-export function extractLessonBlocks(body: string): LessonBlock[] {
+export function extractLessonBlocks(body: string, options: { preview?: boolean } = {}): LessonBlock[] {
   if (body.length > 1_000_000) return []
   const blocks: LessonBlock[] = []
-  for (const node of fromMarkdown(body).children) {
-    if (node.type !== 'code' || node.lang !== OPENUI_LANGUAGE || node.meta) continue
+  const pendingNodes = fromMarkdown(body).children.map(node => ({ node, nested: false })).reverse()
+  while (pendingNodes.length) {
+    const { node, nested } = pendingNodes.pop()!
+    if (node.type === 'list') {
+      for (const child of node.children.flatMap(item => item.children).reverse()) pendingNodes.push({ node: child, nested: true })
+      continue
+    }
     const start = node.position?.start.offset, end = node.position?.end.offset
     if (start === undefined || end === undefined) continue
+    // Reserved transport statements need repair, never publication as ordinary prose.
+    if (node.type === 'paragraph') {
+      const source = body.slice(start, end)
+      const statement = node.children.some(child => child.type === 'text' && lessonStatement(child.value))
+      const pending = options.preview && end === body.length && node.children.every(child => child.type === 'text')
+        && /^\$(?:[A-Za-z_]\w*\s*(?:=\s*(?:"(?:\\.|[^"\\])*(?:"\s*)?|[-+]?\d*(?:\.\d*)?|true|false)?)?)?$/.test(source.trim())
+      if (statement || pending) {
+        blocks.push({ start, end, source, closed: false, unfenced: true })
+      }
+      continue
+    }
+    if (node.type === 'code' && (!node.lang || node.lang === 'openui-lang' || node.lang === 'openui'
+      || nested && node.lang === OPENUI_LANGUAGE && !node.meta) && lessonStatement(node.value)) {
+      blocks.push({ start, end, source: node.value, closed: false, unfenced: true })
+      continue
+    }
+    if (nested || node.type !== 'code' || node.lang !== OPENUI_LANGUAGE || node.meta) continue
     const raw = body.slice(start, end), lines = raw.split(/\r?\n/), opener = /^ {0,3}(`{3,}|~{3,})/.exec(lines[0])?.[1]
     if (!opener) continue
     const last = lines.at(-1)!.trim()
@@ -77,15 +102,17 @@ function preflight(source: string, preview: boolean): void {
   if (ids.size !== statements.length) fail('duplicate-id')
   if (!preview && significant.length !== statements.reduce((sum, statement) => sum + 2 + statement.tokens.filter(t => t.t !== newline && t.t !== eof).length, 0)) fail('discarded-statement')
   const graph = new Map<string, { references: string[]; weight: number }>()
+  const missingState = new Set<string>()
   for (const statement of statements) {
     const references: string[] = [], stateRefs = new Set<string>(), ast = parseExpression(statement.tokens)
     // A pending component may not have all required arguments yet, but it may never invoke a forbidden capability.
     const count = astSize(ast, references, stateRefs)
     if (!preview && count !== statement.tokens.filter(token => token.t !== newline && token.t !== eof).length) fail('discarded-expression')
     if (statement.id.startsWith('$') && !['Num', 'Str', 'Bool', 'UnaryOp'].includes(ast.k)) fail('state-default')
-    if (!preview && [...stateRefs].some(ref => !ids.has(ref))) fail('unbound-state')
+    if (!preview) for (const ref of stateRefs) if (!ids.has(ref)) missingState.add(ref)
     graph.set(statement.id, { references, weight: count })
   }
+  if (missingState.size) fail('unbound-state', [...missingState])
   let expanded = 0
   function visit(id: string, path: string[]) {
     if (path.includes(id) || path.length > UI_LIMITS.depth) fail('reference-cycle')
@@ -133,13 +160,18 @@ function checkProps(root: ElementNode, state: UiState, preview: boolean): Elemen
     const schema = lessonComponentSchemas[node.typeName as LessonComponentName]
     if (!schema) return fail('component')
     if (preview && node.partial) continue
-    if (!schema.safeParse(node.props).success) return fail('props')
+    const checked = schema.safeParse(node.props)
+    if (!checked.success) return fail('props', checked.error.issues.slice(0, 6).map(issue => [node.typeName, ...issue.path].join('.')))
     const p = node.props
     if (node.typeName === 'Parameter' && (Number(p.min) >= Number(p.max) || Number(p.value) < Number(p.min) || Number(p.value) > Number(p.max))) return fail('range')
     if (node.typeName === 'Choice' && !(p.options as string[]).includes(p.value as string)) return fail('choice')
     if (node.typeName === 'Steps' && (!Number.isInteger(p.value) || Number(p.value) < 0 || Number(p.value) >= (p.steps as unknown[]).length)) return fail('step')
     if (node.typeName === 'DctImage' && Number(p.keep) > Number(p.size) ** 2) return fail('coefficients')
-    if (node.typeName === 'FunctionPlot' && Number((p.domain as number[])[0]) >= Number((p.domain as number[])[1])) return fail('domain')
+    if (node.typeName === 'FunctionPlot') {
+      if (Number((p.domain as number[])[0]) >= Number((p.domain as number[])[1])) return fail('domain')
+      const curves = p.curves as { id: string }[]
+      if (new Set(curves.map(curve => curve.id)).size !== curves.length) return fail('curve-ids')
+    }
     if (node.typeName === 'Table' && (p.rows as unknown[][]).some(row => row.length !== (p.headers as unknown[]).length)) return fail('table')
   }
   return result

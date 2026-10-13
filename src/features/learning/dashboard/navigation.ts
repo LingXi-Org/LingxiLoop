@@ -1,6 +1,6 @@
 import {
   Archive02Icon,
-  Calendar03Icon,
+  BubbleChatIcon,
   ChartHistogramIcon,
   File01Icon,
   Folder01Icon,
@@ -17,8 +17,8 @@ export type LearningDashboardSection =
   | 'content'
   | 'reviews'
   | 'members'
-  | 'calendar'
   | 'resources'
+  | 'forum'
   | 'settings'
   | 'status'
 
@@ -31,7 +31,7 @@ export interface LearningDashboardMenuItem {
 
 const LEARNER_MENU: LearningDashboardMenuItem[] = [
   { section: 'overview', label: '学习概览', icon: ChartHistogramIcon },
-  { section: 'calendar', label: '日历', icon: Calendar03Icon },
+  { section: 'forum', label: '论坛', icon: BubbleChatIcon },
   { section: 'resources', label: '资料', icon: Folder01Icon },
 ]
 
@@ -45,9 +45,10 @@ const MANAGEMENT_MENU: LearningDashboardMenuItem[] = [
 type NavigationContext = Pick<LearningSpace, 'perspective' | 'canManage' | 'courseId'>
 
 export function getLearningDashboardMenu(input: NavigationContext): LearningDashboardMenuItem[] {
+  const menu = LEARNER_MENU.filter(item => item.section !== 'forum' || input.courseId)
   return input.perspective === 'teacher' && input.canManage && input.courseId
-    ? [...LEARNER_MENU, ...MANAGEMENT_MENU]
-    : LEARNER_MENU
+    ? [...menu, ...MANAGEMENT_MENU]
+    : menu
 }
 
 export function getLearningDashboardDefaultSection(input: NavigationContext): LearningDashboardSection {
@@ -62,7 +63,7 @@ export function isLearningDashboardSectionAvailable(
 }
 
 const SECTION_VIEWS = {
-  overview: 'learning', calendar: 'calendar', resources: 'library', settings: 'courses',
+  overview: 'learning', forum: 'forum', resources: 'library', settings: 'courses',
   content: 'course-content', members: 'course-members', status: 'course-status',
 } as const satisfies Partial<Record<LearningDashboardSection, ViewKey['view']>>
 
@@ -76,7 +77,7 @@ export function learningSectionForView(view: ViewKey['view']): LearningDashboard
 }
 
 export function viewForWorkspace(view: ViewKey['view'], space: NavigationContext): ViewKey['view'] {
-  if (view === 'conversations' || view === 'agents' || view === 'mail') return view
+  if (view === 'conversations' || view === 'agents') return view
   const section = learningSectionForView(view)
   return isLearningDashboardSectionAvailable(section, space) ? viewForLearningSection(section) : 'learning'
 }

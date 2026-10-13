@@ -9,6 +9,9 @@ import type {
   CreateProjectLearningActivityCommand,
 } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
+import { submitActivityRequestSchema } from './contracts.js'
+import type { LearningAttachment } from './forum-contracts.js'
+import { assertOwnedLearningAttachments } from './submission-attachments.js'
 import { requireLearningCourseProjectScope } from './project-scope-repository.js'
 import {
   closeProjectLearningActivityRecord,
@@ -24,6 +27,21 @@ import {
 
 type LearningTransaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
 type ActivityStatusInput = { companyId: string; projectId: string; activityId: string; teacherId: string }
+
+interface LearningSubmissionInput {
+  companyId: string
+  activityId: string
+  learnerId: string
+  answer: string
+  assistance?: 'NONE'|'HINT'|'GUIDED'
+  idempotencyKey: string
+  links?: string[]
+  attachments?: LearningAttachment[]
+  source?: 'STUDENT_ORIGINAL' | 'AGENT_RELAY' | 'AGENT_GENERATED'
+  agentId?: string
+  agentWorkId?: string
+  evidenceClientMsgNos?: string[]
+}
 
 function learningText(value: string, name: string, maxLength = 10_000): string {
   const text = value.trim()
@@ -202,15 +220,7 @@ export async function closeLearningActivity(
 
 async function submitProjectLearningActivityInTransaction(
   db: Queryable,
-  input: {
-    companyId: string
-    projectId: string
-    activityId: string
-    learnerId: string
-    answer: string
-    assistance?: 'NONE'|'HINT'|'GUIDED'
-    idempotencyKey: string
-  },
+  input: LearningSubmissionInput & { projectId: string },
 ): Promise<{ attemptId: string; assistance: 'NONE'|'HINT'|'GUIDED' }> {
   await assertProjectPermission(db, {
     companyId: input.companyId,
@@ -218,6 +228,29 @@ async function submitProjectLearningActivityInTransaction(
     userId: input.learnerId,
     action: 'learning:submit',
   })
+  const parsed = submitActivityRequestSchema.safeParse({ answer: input.answer,assistance: input.assistance,
+    idempotencyKey: input.idempotencyKey,links: input.links,attachments: input.attachments })
+  if (!parsed.success) throw new LearningApplicationError('invalid', parsed.error.issues[0]?.message ?? 'invalid submission')
+  const content = parsed.data
+  const source = input.source ?? 'STUDENT_ORIGINAL'
+  if (source !== 'STUDENT_ORIGINAL' && (!input.agentId || !input.agentWorkId)) {
+    throw new LearningApplicationError('invalid', 'Agent submissions require the executing Agent and work')
+  }
+  if (source === 'STUDENT_ORIGINAL' && (input.agentId || input.agentWorkId)) {
+    throw new LearningApplicationError('invalid', 'Agent submissions must preserve their source')
+  }
+  const activity = await db.query(`SELECT id FROM learning_activities
+    WHERE company_id=$1 AND project_id=$2 AND id=$3 AND status='PUBLISHED' FOR SHARE`,
+  [input.companyId,input.projectId,input.activityId])
+  if (!activity.rows.length) throw new LearningApplicationError('conflict', 'activity is closed or unavailable')
+  await assertOwnedLearningAttachments(db, { companyId: input.companyId,userId: input.learnerId }, content.attachments)
+  const generated = source === 'AGENT_GENERATED'
+  const data = { answer: content.answer,links: content.links,attachments: content.attachments,source,
+    ...(input.agentId ? { agentId: input.agentId,agentWorkId: input.agentWorkId! } : {}),
+    ...(input.evidenceClientMsgNos?.length ? { evidenceClientMsgNos: input.evidenceClientMsgNos } : {}) }
+  if (Buffer.byteLength(JSON.stringify(data), 'utf8') > 32000) {
+    throw new LearningApplicationError('invalid', 'submission exceeds the evidence size limit')
+  }
   const attemptId = randomUUID()
   const evidenceId = `evidence-${createHash('sha256').update(JSON.stringify([
     input.companyId, input.projectId, input.activityId, input.learnerId, input.idempotencyKey,
@@ -226,15 +259,15 @@ async function submitProjectLearningActivityInTransaction(
     id: evidenceId,
     companyId: input.companyId,
     projectId: input.projectId,
-    level: 'L1' as const,
-    derivation: 'OBSERVED' as const,
-    kind: 'LEARNER_SUBMISSION',
+    level: generated ? 'L2' as const : 'L1' as const,
+    derivation: generated ? 'COMPUTED' as const : 'OBSERVED' as const,
+    kind: generated ? 'AGENT_GENERATED_SUBMISSION' : 'LEARNER_SUBMISSION',
     subjectUserId: input.learnerId,
-    data: { answer: learningText(input.answer, 'answer', 100_000) },
-    createdBy: { type: 'USER' as const, id: input.learnerId },
+    data,
+    createdBy: input.agentId ? { type: 'AGENT' as const,id: input.agentId } : { type: 'USER' as const,id: input.learnerId },
   }
   await createEvidenceRecordInTransaction(db, evidenceInput)
-  const assistance = input.assistance ?? 'NONE'
+  const assistance = generated ? 'GUIDED' : content.assistance
   const acceptedId = await insertProjectLearningActivityAttempt(db, {
     id: attemptId,
     companyId: input.companyId,
@@ -244,6 +277,9 @@ async function submitProjectLearningActivityInTransaction(
     assistance,
     evidenceId,
     idempotencyKey: input.idempotencyKey,
+    source,
+    agentId: input.agentId,
+    agentWorkId: input.agentWorkId,
   })
   if (!acceptedId) throw new LearningApplicationError('not_found', 'published activity not found')
   await createEvidenceWithLinksInTransaction(db, evidenceInput, [{
@@ -254,15 +290,7 @@ async function submitProjectLearningActivityInTransaction(
 
 export async function submitProjectLearningActivity(
   transaction: LearningTransaction,
-  input: {
-    companyId: string
-    projectId: string
-    activityId: string
-    learnerId: string
-    answer: string
-    assistance?: 'NONE'|'HINT'|'GUIDED'
-    idempotencyKey: string
-  },
+  input: LearningSubmissionInput & { projectId: string },
 ): Promise<{ attemptId: string }> {
   const { result } = await commitDomainEvent(transaction, (db) => (
     submitProjectLearningActivityInTransaction(db, input)
@@ -279,15 +307,7 @@ export async function submitProjectLearningActivity(
 
 export async function submitLearningActivity(
   transaction: LearningTransaction,
-  input: {
-    companyId: string
-    courseId: string
-    activityId: string
-    learnerId: string
-    answer: string
-    assistance?: 'NONE'|'HINT'|'GUIDED'
-    idempotencyKey: string
-  },
+  input: LearningSubmissionInput & { courseId: string },
 ): Promise<{ attemptId: string }> {
   const { result } = await commitDomainEvent(transaction, async (db) => {
     const project = await requireLearningCourseProjectScope(db, input.companyId, input.courseId)

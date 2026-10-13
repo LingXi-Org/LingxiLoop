@@ -1,6 +1,5 @@
 import { RecommendationCard } from '@/components/assistant-ui/elements/recommendation-card'
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
-import { renderGenerativeUI, type UIElement, type UISpec } from '@assistant-ui/react-generative-ui'
 import { useState } from 'react'
 import { Plan } from '@/components/tool-ui/plan'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
@@ -12,14 +11,12 @@ import {
   ElicitationForm,
   type ElicitationValue,
 } from '@/components/assistant-ui/elements/elicitation-form'
-import { styledGenerativeUILibrary } from '@/components/assistant-ui/elements/generative-ui'
 import { ApprovalCard } from '@/components/assistant-ui/elements/approval-card'
 import { ScoreBreakdown, type ScoreCriterion } from '@/components/assistant-ui/elements/score-breakdown'
-import { CardSurface, conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
+import { conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
 import { StatsDisplay } from '@/components/tool-ui/stats-display'
 import { parseSerializableStatsDisplay } from '@/components/tool-ui/stats-display/schema'
 import { useParticipants } from '@/features/agents/state'
-import type { CalendarEvent } from '@/features/calendar/contracts'
 import {
   PresentationArtifactCard,
   parsePresentationArtifact,
@@ -170,61 +167,6 @@ export function CanvasProgressTool({ args }: Pick<CardProps, 'args'>) {
   return <ProgressTracker {...canvasProgress(args, names)} />
 }
 
-interface DraftEmailArgs {
-  id: string
-  subject: string
-  from: string
-  to: string[]
-  cc: string[]
-  body: string
-  outcome?: 'sent' | 'cancelled'
-}
-
-function draftEmailSpec(email: DraftEmailArgs, outcome?: DraftEmailArgs['outcome'], readOnly = false): UIElement {
-  const row = (key: string, label: string, value: string): UIElement => ({
-    $type: 'Row', $key: key, align: 'center', gap: 3,
-    children: [
-      { $type: 'Caption', $key: `${key}-label`, value: label },
-      { $type: 'Text', $key: `${key}-value`, value, size: 'sm' },
-    ],
-  })
-  return {
-    $type: 'Card',
-    title: outcome === 'sent' ? '邮件已发送' : outcome === 'cancelled' ? '邮件已取消' : '新邮件',
-    ...(outcome || readOnly ? {} : {
-      confirm: { label: '发送邮件', $action: { type: 'email.send' } },
-      cancel: { label: '取消', $action: { type: 'email.cancel' } },
-    }),
-    children: [
-      row('from', '发件人', email.from),
-      row('to', '收件人', email.to.join('、')),
-      ...(email.cc.length ? [row('cc', '抄送', email.cc.join('、'))] : []),
-      { $type: 'Divider', $key: 'divider' },
-      { $type: 'Header', $key: 'subject', text: email.subject, size: 'sm' },
-      { $type: 'Markdown', $key: 'body', value: email.body },
-    ],
-  }
-}
-
-export function DraftEmailTool({ args, result, addResult, readOnly = false }: CardProps & { readOnly?: boolean }) {
-  const email = args as unknown as DraftEmailArgs
-  const resultStatus = typeof result === 'object' && result !== null ? (result as { status?: unknown }).status : undefined
-  const outcome = resultStatus === 'sent' || email.outcome === 'sent'
-    ? 'sent'
-    : resultStatus === 'cancelled' || email.outcome === 'cancelled' ? 'cancelled' : undefined
-  const content = renderGenerativeUI(draftEmailSpec(email, outcome, readOnly), styledGenerativeUILibrary, {
-    status: 'done',
-    dispatch: ({ type }) => {
-      if (readOnly) return
-      if (type === 'email.send') addResult({ status: 'sent' })
-      if (type === 'email.cancel') addResult({ status: 'cancelled' })
-    },
-  })
-  return outcome
-    ? <CardSurface data-aui-theme="elements" data-assistant-ui-id={email.id} className={`${conversationCardSize.wide} gap-0 p-3`}>{content}</CardSurface>
-    : <div data-aui-theme="elements" data-assistant-ui-id={email.id} className={conversationCardSize.wide}>{content}</div>
-}
-
 export function TeacherBriefingStatsTool({ args }: Pick<CardProps, 'args'>) {
   const value = parseSerializableStatsDisplay(args)
   return <StatsDisplay {...value} locale="zh-CN" className={`${conversationCardSize.wide} min-w-0`} />
@@ -248,134 +190,6 @@ export function ScoreBreakdownTool({ result, isError }: ToolCallMessagePartProps
   />
 }
 
-const calendarDate = new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })
-const calendarDay = new Intl.DateTimeFormat('zh-CN', { day: 'numeric' })
-const calendarMonth = new Intl.DateTimeFormat('zh-CN', { month: 'short' })
-const calendarWeekday = new Intl.DateTimeFormat('zh-CN', { weekday: 'short' })
-const calendarTime = new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
-
-function validDate(value: string): Date {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) throw new Error('日历协议包含无效时间')
-  return date
-}
-
-function eventTime(event: Pick<CalendarEvent, 'allDay' | 'startAt' | 'endAt'>): string {
-  if (event.allDay) return '全天'
-  const start = calendarTime.format(validDate(event.startAt))
-  return event.endAt ? `${start} 至 ${calendarTime.format(validDate(event.endAt))}` : start
-}
-
-function viewEventSpec(event: CalendarEvent): UIElement {
-  return {
-    $type: 'Card',
-    $key: event.id,
-    padding: 3,
-    children: [
-      { $type: 'Caption', $key: 'date', value: calendarDate.format(validDate(event.startAt)) },
-      { $type: 'Header', $key: 'title', text: event.title, size: 'md' },
-      { $type: 'Caption', $key: 'time', value: eventTime(event) },
-    ],
-  }
-}
-
-function createEventSpec(
-  event: { title: string; at: string; endAt?: string; allDay?: boolean; kind?: 'personal' | 'agent_task' },
-  decision?: boolean,
-): UIElement {
-  const start = validDate(event.at)
-  const time = event.allDay
-    ? '全天'
-    : event.endAt
-      ? `${calendarTime.format(start)} 至 ${calendarTime.format(validDate(event.endAt))}`
-      : calendarTime.format(start)
-  return {
-    $type: 'Card',
-    padding: 3,
-    ...(decision === undefined ? {
-      confirm: { label: '加入安排', $action: { type: 'calendar.confirm' } },
-      cancel: { label: '取消', $action: { type: 'calendar.cancel' } },
-    } : {}),
-    children: [
-      {
-        $type: 'Row', $key: 'date-header', gap: 3, align: 'center',
-        children: [
-          { $type: 'Text', $key: 'day', value: calendarDay.format(start), size: '3xl', weight: 'bold' },
-          {
-            $type: 'Col', $key: 'date-meta', gap: 0,
-            children: [
-              { $type: 'Text', $key: 'month', value: calendarMonth.format(start), weight: 'semibold' },
-              { $type: 'Caption', $key: 'weekday', value: calendarWeekday.format(start) },
-            ],
-          },
-        ],
-      },
-      { $type: 'Divider', $key: 'divider' },
-      {
-        $type: 'Col', $key: 'events', gap: 3,
-        children: [{
-          $type: 'Row', $key: 'event-1', gap: 3, align: 'center',
-          children: [
-            {
-              $type: 'Box', $key: 'accent', width: 3, height: 32, radius: 'full',
-              background: 'color-mix(in oklab, var(--foreground) 80%, transparent)',
-            },
-            {
-              $type: 'Col', $key: 'info', gap: 0,
-              children: [
-                { $type: 'Text', $key: 'title', value: event.title, weight: 'medium' },
-                { $type: 'Caption', $key: 'time', value: time },
-              ],
-            },
-            { $type: 'Spacer', $key: 'spacer' },
-            {
-              $type: 'Badge', $key: 'tag', variant: 'info',
-              value: decision === undefined
-                ? event.kind === 'agent_task' ? '智能体任务' : '个人安排'
-                : decision ? '已确认' : '已取消',
-            },
-          ],
-        }],
-      },
-    ],
-  }
-}
-
-export function CreateCalendarEventTool({ args, approval, respondToApproval }: ToolCallMessagePartProps) {
-  if (!approval) return null
-  const input = args as { title: string; startAt: string; endAt?: string; allDay?: boolean; kind?: 'personal' | 'agent_task' }
-  const event = { ...input, at: input.startAt }
-  if (!event.title || !event.at) throw new Error('创建日程协议缺少标题或时间')
-  return <div data-aui-theme="elements" className={conversationCardSize.standard}>
-    {renderGenerativeUI(createEventSpec(event, approval.approved), styledGenerativeUILibrary, {
-      status: 'done',
-      dispatch: ({ type }) => {
-        if (type === 'calendar.confirm') respondToApproval({ approved: true })
-        if (type === 'calendar.cancel') respondToApproval({ approved: false })
-      },
-    })}
-  </div>
-}
-
-export function ViewCalendarEventTool({ result, isError }: ToolCallMessagePartProps) {
-  if (result === undefined || isError) return <p role="status">{isError ? '日历读取失败，请查看任务状态。' : '正在读取日历…'}</p>
-  const response = result as { status: string; value?: CalendarEvent | { events: CalendarEvent[]; truncated: boolean } }
-  if (response.status !== 'completed' || !response.value) return <p role="status">{response.status === 'cancelled' ? '日历读取已取消。' : '日历数据暂不可用。'}</p>
-  const events = 'events' in response.value ? response.value.events : [response.value]
-  const spec: UISpec = events.length > 0
-    ? { $type: 'Col', gap: 4, children: events.map(viewEventSpec) }
-    : { $type: 'Caption', value: '暂无安排' }
-  return <CardSurface data-aui-theme="elements" className={`${conversationCardSize.standard} gap-0 p-3`}>
-    {renderGenerativeUI(spec, styledGenerativeUILibrary, { status: 'done' })}
-  </CardSurface>
-}
-
-export function CalendarEventCard({ args }: Pick<CardProps, 'args'>) {
-  const event = args.event as CalendarEvent
-  if (!event?.id || !event.title || !event.startAt) throw new Error('日历卡片缺少授权记录')
-  return <CardSurface className={conversationCardSize.standard}>{renderGenerativeUI(viewEventSpec(event), styledGenerativeUILibrary, { status: 'done' })}</CardSurface>
-}
-
 export function PresentationArtifactTool({ args }: Pick<CardProps, 'args'>) {
   const openPresentation = useSurface((state) => state.openPresentationPeek)
   const artifact = parsePresentationArtifact(args)
@@ -385,6 +199,4 @@ export function PresentationArtifactTool({ args }: Pick<CardProps, 'args'>) {
 
 export const TOOL_DETAILS = {
   'learning.propose_evaluation': ScoreBreakdownTool,
-  'calendar.list': ViewCalendarEventTool,
-  'calendar.get': ViewCalendarEventTool,
 }

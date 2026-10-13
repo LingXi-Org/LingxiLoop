@@ -16,9 +16,7 @@ const CAPABILITY_DETAILS: Record<(typeof DEFAULT_AGENT_CAPABILITIES)[number], { 
   'canvas': { label: '共享画布', description: '查看并修改工作区共享画布与内容卡片' },
   'web': { label: '网页研究', description: '搜索和读取公开网页' },
   'files': { label: '文件', description: '读取已选附件并生成交付文件' },
-  'email': { label: '邮件', description: '起草邮件；发送前仍需你确认' },
   'documents': { label: '协作文档', description: '创建、读取和编辑协作文档' },
-  'calendar': { label: '日历', description: '查看和安排日程' },
   'knowledge': { label: '知识库', description: '检索并使用当前学习区的知识资料' },
   'learning': { label: '教学', description: '规划课程任务，跟进学习成果并提供反馈' },
   'handoffs': { label: '协作交接', description: '与同一会话中的其他智能助教分工并查看进展' },
@@ -39,7 +37,7 @@ export function AgentEditor({ agent, onClose }: Props) {
   const [role, setRole] = useState(agent?.role ?? '')
   const [systemPrompt, setSystemPrompt] = useState(agent?.systemPrompt ?? '')
   const [bio, setBio] = useState(agent?.bio ?? '')
-  const [capabilities, setCapabilities] = useState<AgentCapability[]>(agent?.capabilities ?? [...DEFAULT_AGENT_CAPABILITIES])
+  const [capabilities, setCapabilities] = useState<AgentCapability[]>((agent?.capabilities ?? [...DEFAULT_AGENT_CAPABILITIES]).filter(id => DEFAULT_AGENT_CAPABILITIES.some(option => option === id)))
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   // Esc to close

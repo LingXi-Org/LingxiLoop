@@ -15,7 +15,7 @@ function model(candidate: boolean, unsafe = false) {
           : last.action === 'documents.edit' ? { action: 'documents.read',args: { documentId: 'lesson-a' } } : { answer: 'Ready with peer note preserved.',status: 'satisfied' }
     else if (data.request.includes('Earlier append')) value = !last ? { action: 'task.check_receipt',args: { actionId: 'prior-action' } }
       : last.action === 'task.check_receipt' ? { action: 'documents.read',args: { documentId: 'lesson-b' } } : { answer: 'Recorded appears once.',status: 'satisfied' }
-    else if (data.request.includes('calendar')) value = !last ? { action: 'calendar.create',args: { title: 'Review',startAt: '2027-01-02T10:00:00Z' } }
+    else if (data.request.includes('Delete lesson-c')) value = !last ? { action: 'documents.delete',args: { documentId: 'lesson-c',expectedRevision: 'v1' } }
       : { answer: 'Human approval is required.',status: 'awaiting_approval' }
     else value = !last ? { action: 'documents.read',args: { documentId: 'lesson-c' } }
       : { answer: 'Learning requires evidence.',status: 'satisfied' }

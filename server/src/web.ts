@@ -11,7 +11,6 @@ import { attachWebSocket } from './ws.js'
 import { bootDocumentBus } from './modules/documents/public.js'
 import { closeDatabasePools } from './db/pool.js'
 import { redis, sub } from './redis.js'
-import { resendInboundEmailRouter } from './modules/email/index.js'
 import { wukongWebhookRouter } from './im/webhook.js'
 import { wukongClient } from './im/wukong.js'
 import { Lifecycle, type ServiceHandle } from './runtime/lifecycle.js'
@@ -54,12 +53,7 @@ export async function startWebProcess(): Promise<ServiceHandle> {
     }
     next()
   })
-  // Inbound-email webhook (Cloudflare Email Worker → here). Mount BEFORE
-  // the generic JSON parser — the router has its own express.json with a
-  // `verify` hook that captures rawBody for HMAC validation. Once it
-  // parses, body-parser flips req._body=true so the generic parser below
-  // becomes a no-op for these requests.
-  app.use('/webhooks/email', resendInboundEmailRouter)
+  app.use('/webhooks/email', (_req,res) => { res.status(410).json({ error: 'product email receiving is retired' }) })
   app.use('/webhooks/wukong', wukongWebhookRouter)
 
   // Keep legacy JSON payloads bounded independently from the 200 MB upload

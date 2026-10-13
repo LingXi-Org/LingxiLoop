@@ -21,7 +21,6 @@ The supported product is the browser SPA. These cases drive the actual app with 
 | Durable DM visibility and reload from the recipient account | `recipient.e2e.ts` | Real WuKongIM; fresh member/student logins; execution status is in the report |
 | Group create/persistence/leave; phone chat/list navigation | `conversations.e2e.ts` | Two peers named in `E2E_GROUP_PEERS`, separated by `|`; real WuKongIM |
 | Canvas text card create/edit/move/reload/download/delete | `canvas.e2e.ts` | Same group fixture, canvas API, actual WebSocket proxy; `run.mjs` checks exact exported bytes against the report's download artifact and emits `export-validation.json` |
-| Mail search reset, composer open/close, missing-body and missing-recipient rejection | `workspace.e2e.ts` | Mail read API; no external email is sent |
 | Settings sections, theme persistence, notifications form, focus return, phone drawer | `workspace.e2e.ts` | Preferences API |
 | Notification schedule/switch persistence; generated and uploaded avatar persistence | `preferences.e2e.ts` | Preferences API and object storage; reuses `public/icon-192.png` as the upload fixture |
 | Private text source ingestion/preview/rename/reload/delete | `knowledge.e2e.ts` | Student, actual worker, storage, Open Notebook/SurrealDB, `E2E_KNOWLEDGE=1`, `E2E_MUTATIONS=1` |

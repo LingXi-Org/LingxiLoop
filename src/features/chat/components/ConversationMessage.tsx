@@ -260,9 +260,10 @@ export function ConversationMessage() {
       data-message-presentation={custom.presentation}
       data-message-continued-from={custom.continuedFromPrevious}
       className={cn(
-        'group/message mx-auto grid w-full max-w-[800px] shrink-0',
+        'group/message grid w-full shrink-0',
         custom.replyBranches && 'fade-in slide-in-from-bottom-1 animate-in duration-300 motion-reduce:animate-none',
-        isMobile ? 'gap-x-2 px-2.5' : 'gap-x-2.5 px-3 sm:px-4',
+        'px-[clamp(1rem,3cqw,2.5rem)]',
+        isMobile ? 'gap-x-2' : 'gap-x-2.5',
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
         custom.continuedFromPrevious ? isSpecialCard ? 'pt-1' : 'pt-px' : 'pt-1.5',
         custom.continuedToNext ? isSpecialCard ? 'pb-0' : 'pb-px' : 'pb-1.5',
@@ -288,11 +289,11 @@ export function ConversationMessage() {
             <span className="font-medium">{custom.senderName}</span>
           </div>
         )}
-        <div className={cn('row-start-2 grid w-full min-w-0 gap-0.5', running && 'min-h-5')}>
+        <div className={cn('row-start-2 grid w-full max-w-[800px] min-w-0 gap-0.5', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {custom.quote && <QuotePart text={custom.quote.text} messageId={custom.quote.messageId} />}
-          <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={footer} />
-          {custom.senderKind === 'agent' && custom.harness && custom.runId && <HarnessDetails metadata={custom} />}
+          <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={footer}
+            attention={custom.senderKind === 'agent' && custom.harness && custom.runId ? <HarnessDetails metadata={custom} /> : null} />
           {custom.senderKind === 'agent' && <AssistantMessageActions />}
         </div>
         <Reactions metadata={custom} messageId={messageId} />

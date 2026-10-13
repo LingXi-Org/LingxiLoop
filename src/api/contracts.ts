@@ -101,28 +101,6 @@ export type WsEvent =
       activity?: CanvasActivity
     }
   | {
-      type: 'calendar.reminder'
-      eventId: string
-      title: string
-      occurrenceAt: string
-      leadMinutes: number
-      /** Server limits this to humans only; renderer further filters by
-       *  meId === one-of(recipientUserIds) before showing the toast. */
-      recipientUserIds: string[]
-      kind: 'personal' | 'agent_task'
-      assigneeId: string | null
-    }
-  | {
-      /** A calendar row was created / updated / deleted, or the dispatcher
-       *  advanced its last_fired_at. Payload is thin — clients refetch the
-       *  affected row (or drop it on delete) rather than diffing inline.
-       *  Mirrors the `doc.changed` shape. */
-      type: 'calendar.changed'
-      kind: 'event.created' | 'event.updated' | 'event.deleted' | 'event.dispatched'
-      eventId: string
-      actorId: string | null
-    }
-  | {
       type: 'poll.updated'
       conversationId: string
       messageId: string

@@ -9,5 +9,5 @@
     "types": ["node"],
     "allowImportingTsExtensions": true
   },
-  "include": ["../e2e.config.ts", "../e2e.visual.config.ts", "./**/*.ts"]
+  "include": ["../e2e.config.ts", "../e2e.visual.config.ts", "../e2e.forum.config.ts", "./**/*.ts"]
 }

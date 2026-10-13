@@ -288,6 +288,9 @@ interface ActivityAttemptWrite {
   assistance: 'NONE'|'HINT'|'GUIDED'
   evidenceId: string
   idempotencyKey: string
+  source?: 'STUDENT_ORIGINAL' | 'AGENT_RELAY' | 'AGENT_GENERATED'
+  agentId?: string
+  agentWorkId?: string
 }
 
 export async function insertProjectLearningActivityAttempt(
@@ -296,8 +299,9 @@ export async function insertProjectLearningActivityAttempt(
 ): Promise<string | null> {
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO learning_attempts
-       (id,company_id,project_id,learner_id,activity_id,assistance,evidence_id,client_submission_id)
-     SELECT $1,activity.company_id,activity.project_id,$5,activity.id,$6,$7,$8
+       (id,company_id,project_id,learner_id,activity_id,assistance,evidence_id,client_submission_id,source,submitted_by_agent,agent_work_id,late)
+     SELECT $1,activity.company_id,activity.project_id,$5,activity.id,$6,$7,$8,$9,$10,$11,
+       activity.due_at IS NOT NULL AND NOW()>activity.due_at
        FROM learning_activities activity
       WHERE activity.company_id=$2 AND activity.project_id=$3 AND activity.id=$4
         AND activity.status='PUBLISHED'
@@ -306,7 +310,7 @@ export async function insertProjectLearningActivityAttempt(
      DO UPDATE SET id=learning_attempts.id
      RETURNING id`,
     [args.id,args.companyId,args.projectId,args.activityId,args.learnerId,args.assistance,
-      args.evidenceId,args.idempotencyKey],
+      args.evidenceId,args.idempotencyKey,args.source ?? 'STUDENT_ORIGINAL',args.agentId ?? null,args.agentWorkId ?? null],
   )
   return rows[0]?.id ?? null
 }

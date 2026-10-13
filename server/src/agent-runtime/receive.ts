@@ -1,9 +1,7 @@
-import { createHash } from 'node:crypto'
 import { pool } from '../db/pool.js'
 import { getAgentChannelHistory, readAgentChannelMessages, agentContinuationSchema } from '../im/public.js'
 import type { AttachmentRef } from '../im/contracts.js'
 import { nativeText, nativeAttachments } from '../im/message-types.js'
-import { resolveCalendarAgentRequest } from '../modules/calendar/index.js'
 import { resolveAgentHandoffWake } from '../modules/agents/index.js'
 import { lingxiOSControl } from './runtime.js'
 import { loadRuntimeBinding } from './context.js'
@@ -25,6 +23,7 @@ export interface AgentRequest {
 
 /** Recover the author and payload from committed IM, including messages outside recent history. */
 export async function receiveAgentRequest(input: AgentRequest) {
+  if (input.kind === 'calendar') throw new Error('calendar tasks are retired')
   const signal = AbortSignal.any([AbortSignal.timeout(30_000),...input.signal ? [input.signal] : []])
   const messages = await readAgentChannelMessages({ ...input, messageIds: [...new Set([input.clientMsgNo,...input.attachmentRefs?.map(ref => ref.clientMsgNo) ?? []])], signal })
   const message = messages?.find(item => item.clientMsgNo === input.clientMsgNo)
@@ -36,18 +35,6 @@ export async function receiveAgentRequest(input: AgentRequest) {
     if (!await api.readRun(identity)) throw new Error('handoff child is unavailable')
     signal.throwIfAborted()
     return { id: identity.runId, deduplicated: true }
-  }
-  if (input.kind === 'calendar') {
-    const request = await resolveCalendarAgentRequest(input, message)
-    const identity = { tenantId: input.companyId, agentId: input.agentId, sessionId: input.channelId, principalId: request.principalId }
-    const profile = await loadRuntimeBinding({ ...identity, conversationId: input.channelId })
-    if (profile.teacher_managed || !profile.capabilities.includes('calendar')) throw new Error('calendar capability was revoked')
-    const id = createHash('sha256').update(JSON.stringify(['calendar', input.companyId,input.agentId,input.channelId,input.clientMsgNo])).digest('hex')
-    signal.throwIfAborted()
-    const run = { ...identity, sessionId: id, runId: id, threadId: input.clientMsgNo }
-    const result = await api.enqueueJob({ ...run, ...request, id, sourceRef: input.clientMsgNo, kind: 'calendar', lane: 'background', executionClass: 'operation', meta: { conversationId: input.channelId } })
-    await bindProductRun(pool, run, input.channelId)
-    return result
   }
   if (message.payload.role !== 'user'
     || input.authenticatedUserId && input.authenticatedUserId !== message.fromUid) throw new Error('request must be committed by the authenticated human')

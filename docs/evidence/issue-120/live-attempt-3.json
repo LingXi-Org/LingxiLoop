@@ -1,0 +1,26 @@
+{
+  "passed": false,
+  "realModel": true,
+  "observations": [
+    [],
+    [
+      "tool:tool-call"
+    ],
+    [
+      "commentary:generative-ui"
+    ],
+    [
+      "commentary:generative-ui",
+      "tool:tool-call"
+    ],
+    [
+      "commentary:generative-ui",
+      "tool:tool-call",
+      "tool:tool-call"
+    ],
+    [
+      "commentary:generative-ui",
+      "tool:tool-call"
+    ]
+  ]
+}

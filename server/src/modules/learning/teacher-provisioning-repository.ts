@@ -52,7 +52,7 @@ export async function findTeacherProvisioningCourse(
        JOIN projects project
          ON project.id=course.project_id AND project.company_id=course.company_id
       WHERE course.company_id=$1 AND course.id=$2 AND project.status='ACTIVE'
-      LIMIT 1`,
+      LIMIT 1 FOR UPDATE OF project`,
     [companyId, courseId],
   )
   const row = rows[0]

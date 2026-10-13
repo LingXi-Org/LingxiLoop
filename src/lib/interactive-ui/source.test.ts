@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { extractLessonBlocks, parseLessonSource, restoreLessonState, validateLessonState } from './source.js'
+import { lessonInstructions, OPENUI_LANGUAGE } from './catalog.js'
 
 const source = `$angle = 45
 $prediction = ""
@@ -9,6 +10,25 @@ control = Parameter("angle", "角度", $angle, 0, 90, 1, "°", "projectile.angle
 plot = ProjectilePlot($angle, 20, 9.81, 0)
 prediction = Prediction("prediction", "先预测结果", $prediction)
 explain = LearningAction("explain", "explain", "解释当前结果")`
+
+// Failure: upstream inline examples override the host fence and expose generated DSL as text.
+test('generated catalog instructions use the host fence and provide a parseable bound example', () => {
+  const instructions = lessonInstructions()
+  assert.ok(!instructions.includes('```openui-lang'))
+  assert.ok(!instructions.includes('Undeclared $variables are auto-created'))
+  assert.ok(!instructions.includes('## Built-in Functions'))
+  const examples = extractLessonBlocks(instructions).filter(block => !block.unfenced)
+  assert.ok(examples.length > 0)
+  assert.ok(instructions.includes(`EXACT language ${OPENUI_LANGUAGE}`))
+  for (const example of examples) {
+    assert.ok(example.closed)
+    assert.match(example.source, /^root = Lesson\(/)
+    assert.ok(parseLessonSource(example.source).fields.length > 0)
+  }
+  const steps = examples.find(example => example.source.includes('Steps('))
+  assert.ok(steps, 'demonstrate literal defaults and matching control names for Steps and Prediction')
+  assert.deepEqual(parseLessonSource(steps.source).defaults, { $step: 0, $prediction: '' })
+})
 
 test('upstream parser produces a validated composable lesson and bounded state/action contracts', () => {
   const lesson = parseLessonSource(source)
@@ -46,6 +66,26 @@ test('only top-level exact fenced blocks enter the UI channel; ordinary examples
   assert.equal(extractLessonBlocks('```lingxiloop-openui-v1\n' + source)[0].closed, false)
 })
 
+// Failures: list paragraphs leak reserved statements, nested fences bypass the top-level
+// boundary, reordered extraction corrupts surrounding prose, and quoted examples disappear.
+test('list lesson candidates are unfenced while inline code and quoted examples remain text', () => {
+  const statement = 'root = Lesson("example", "example", [Text("observe")])'
+  for (const body of [`- ${statement}`, `1. ${statement}`, `- outer\n  - ${statement}`]) {
+    assert.deepEqual(extractLessonBlocks(body), [{ start: body.indexOf(statement), end: body.length,
+      source: statement, closed: false, unfenced: true }])
+  }
+  const ordered = `before\n\n- $angle = 45\n- ${statement}\n\nafter`
+  assert.deepEqual(extractLessonBlocks(ordered).map(block => block.source), ['$angle = 45', statement])
+  const nestedFence = `- \`\`\`${OPENUI_LANGUAGE}\n  ${statement}\n  \`\`\``
+  const [block] = extractLessonBlocks(nestedFence)
+  assert.deepEqual(block, { start: 2, end: nestedFence.length, source: statement, closed: false, unfenced: true })
+  assert.deepEqual(extractLessonBlocks('- $angle = ', { preview: true }).map(block => block.unfenced), [true])
+  for (const example of [`- \`${statement}\``, `- \`\`\`js\n  ${statement}\n  \`\`\``,
+    `> - ${statement}`, `- > ${statement}`, `\`\`\`markdown\n- ${statement}\n\`\`\``]) {
+    assert.deepEqual(extractLessonBlocks(example), [])
+  }
+})
+
 test('revision hydration retains only compatible controls and never silently clamps values', () => {
   const before = parseLessonSource(source)
   const compatible = parseLessonSource(source.replace('角度改变轨迹。', '比较同一角度的轨迹。'))
@@ -63,6 +103,16 @@ test('moving a state binding between polynomial coefficients resets its computat
   const before = parseLessonSource(initial)
   const changed = parseLessonSource(initial.replace('a:$a,b:0,c:0', 'a:0,b:0,c:$a'))
   assert.deepEqual(restoreLessonState(before.fields, changed, { $a: 4 }), { state: { $a: 1 }, resetKeys: ['$a'] })
+})
+
+// Failure: duplicate curve IDs pass source verification but throw in the rendering kernel,
+// including when a valid lesson's editable label later collides with another curve.
+test('function curve IDs remain unique at initial verification and after state updates', () => {
+  const initial = '$curve = "g"\nroot = Lesson("函数", "比较函数。", [label,plot])\nlabel = Prediction("curve", "第二条曲线名称", $curve)\nplot = FunctionPlot([{id:"f",a:1,b:0,c:0},{id:$curve,a:1,b:0,c:0}],[-2,2])'
+  const lesson = parseLessonSource(initial)
+  assert.deepEqual(validateLessonState(lesson, { $curve: 'h' }), { $curve: 'h' })
+  assert.throws(() => parseLessonSource(initial.replace('$curve = "g"', '$curve = "f"')), /interactive-ui:curve-ids/)
+  assert.throws(() => validateLessonState(lesson, { $curve: 'f' }), /interactive-ui:curve-ids/)
 })
 
 test('a changed prediction question does not restore an answer to the old question', () => {

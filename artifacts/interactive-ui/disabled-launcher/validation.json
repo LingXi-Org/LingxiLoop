@@ -1,0 +1,12 @@
+{
+  "command": "node artifacts/interactive-ui/disabled-launcher/check.mjs",
+  "scope": "Disabled metered and transport-only launcher preflight",
+  "red": "Assertion failed: launcher attempted to read credentials before checking the disabled capability.",
+  "green": { "passed": 2, "failed": 0 },
+  "checks": [
+    "Both modes exit nonzero with an explicit disabled message before reading credentials or starting services",
+    "Existing live and WuKong results and run metadata remain byte-identical",
+    "Scoped Biome lint passes"
+  ],
+  "limits": "Local preflight only; no model, Docker, database or production requests were made."
+}

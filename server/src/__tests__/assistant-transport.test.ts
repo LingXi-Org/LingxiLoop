@@ -53,7 +53,9 @@ test('native state operations stream text once, retract it, and end with canonic
   }
   assert.ok(states.some(state => state.message.content[0]?.type === 'text' && state.message.content[0].text === '第一段\n\n第二段😀'))
   assert.ok(states.some((state, index) => index > 1 && !state.message.content.length))
-  assert.deepEqual(states.at(-1)!.message.content, [{ type: 'text', text: '最终正文' }])
+  assert.deepEqual(states.at(-1)!.message.content, [{ type: 'text', text: '最终正文', providerMetadata: {
+    lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } },
+  } }])
   assert.equal(states.at(-1)!.message.status?.type, 'complete')
   assert.ok(states.every(state => !('draft' in (state.message.metadata.custom.harness as object)) && !('message' in (state.message.metadata.custom.harness as object))))
 })

@@ -39,7 +39,6 @@ function tokenToNode(t: RichToken): RootContent {
     case 'mention': return customEl('cmention', { cid: t.id })
     case 'msgref': return customEl('cmsgref', { cn: String(t.n) })
     case 'document': return customEl('cartifact', { ckind: 'document', cid: t.id })
-    case 'calendar': return customEl('cartifact', { ckind: 'calendar', cid: t.id })
     case 'emoji': return customEl('cemoji', { cchar: t.value })
     case 'skype': return customEl('cskype', { cname: t.name })
     // The standard kinds below are normally handled by remark itself; we map

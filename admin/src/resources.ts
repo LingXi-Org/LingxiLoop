@@ -30,9 +30,9 @@ const learning = [
 const collaboration = [
   ['participants', '参与者与 Agent'], ['agent-runs', 'Agent 运行'],
   ['agent-routines', 'Agent 例程'],
-  ['conversations', '会话'], ['email-messages', '邮件'],
+  ['conversations', '会话'],
   ['documents', '文档'], ['canvases', '画布'], ['presentations', '演示'],
-  ['calendar-events', '日历事件'], ['notification-deliveries', '通知投递'],
+  ['notification-deliveries', '通知投递'],
   ['knowledge-sources', '知识源'], ['knowledge-jobs', '知识任务'],
 ] as const
 const operations = [

@@ -317,7 +317,8 @@ function AttemptEvidence({ detail }: { detail: LearningAttemptDetail }) {
   return (
     <div className="space-y-5">
       <section className="space-y-3">
-        <h3 className="font-heading text-base font-medium">原始证据</h3>
+        <h3 className="font-heading text-base font-medium">{detail.evidence?.kind === 'AGENT_GENERATED_SUBMISSION' ? 'Agent 生成的提交' : '原始证据'}</h3>
+        {detail.evidence?.kind === 'AGENT_GENERATED_SUBMISSION' && <p className="text-sm text-muted-foreground">此提交不计为学生独立完成的学习证据。</p>}
         {detail.evidence ? (
           <StructuredText value={detail.evidence.data} />
         ) : (

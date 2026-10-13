@@ -616,7 +616,7 @@ export class LearningApplication {
     await this.assertCourseScope(scope, courseId, 'learning:submit')
     const result = await this.classroom(() => submitLearningActivity(
       (work) => this.infrastructure.transaction(work), {
-      companyId: scope.companyId, courseId, activityId, learnerId: scope.userId, ...input,
+      companyId: scope.companyId, courseId, activityId, learnerId: scope.userId, ...input,answer: input.answer ?? '',
       },
     ))
     this.infrastructure.metric('learning.attempt.accepted', { source: 'ui' })
@@ -631,7 +631,7 @@ export class LearningApplication {
   ) {
     const result = await this.classroom(() => submitProjectLearningActivity(
       (work) => this.infrastructure.transaction(work), {
-      companyId: scope.companyId, projectId, activityId, learnerId: scope.userId, ...input,
+      companyId: scope.companyId, projectId, activityId, learnerId: scope.userId, ...input,answer: input.answer ?? '',
       },
     ))
     this.infrastructure.metric('learning.attempt.accepted', { source: 'ui' })

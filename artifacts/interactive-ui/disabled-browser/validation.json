@@ -1,0 +1,31 @@
+{
+  "scope": "Production NativeMessageContent renders preview and ready OpenUI history as fallback text while preserving other generated cards and questionnaire inputs",
+  "engine": "tester-army/e2e 0.17.0 with official @e2e-dev/web",
+  "environment": "Existing synthetic ui-experience fixture, served by Vite development server on 127.0.0.1:5207; no model or production services",
+  "command": "node e2e/web/run.mjs --config e2e.retire-layout.config.ts --grep \"disabled interactive history\" --output artifacts/interactive-ui/disabled-browser/green",
+  "red": {
+    "report": "red/report.json",
+    "passed": 0,
+    "failed": 2,
+    "reason": "Historical preview fallback existed only inside collapsed lesson details and was not visible"
+  },
+  "green": {
+    "report": "green/report.json",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "widths": [1440, 390],
+    "screenshotsVisuallyChecked": true
+  },
+  "checks": [
+    "Preview and ready history fallback text visible",
+    "No interactive lesson roots or generated lesson inputs/buttons",
+    "Ordinary generated text and agent plan preserved",
+    "Questionnaire input accepts and retains text",
+    "No horizontal document overflow",
+    "node node_modules/typescript/bin/tsc --noEmit",
+    "node node_modules/typescript/bin/tsc -p e2e/tsconfig.json --noEmit",
+    "Scoped Biome lint for the three changed source files"
+  ],
+  "artifactPolicy": "Native reports and screenshots retained; large browser trace archives remain local. Wrapper run-metadata.json is not retained because its generic buildMode does not describe this custom Vite fixture configuration."
+}

@@ -1,0 +1,32 @@
+{
+  "phase": "M0 calibration before holdout",
+  "reason": "Candidate provider aborted its third model call after two successful calls; no final lesson or delivered result. The published run reports blocked/inconclusive and failed. This attempt is retained as a failure.",
+  "metadata": {
+    "startedAt": "2026-10-13T13:31:13.237Z",
+    "finishedAt": "2026-10-13T13:34:42.292Z",
+    "passed": false,
+    "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui",
+    "runtime": "3.3.6",
+    "candidate": "zai-org/GLM-5.2",
+    "judge": "deepseek-ai/DeepSeek-V4-Flash",
+    "maxModelCalls": 16,
+    "maxModelTokens": 200000,
+    "maxRunCostUSD": 0.25,
+    "maxTotalCostUSD": 5,
+    "modelConcurrency": 1,
+    "database": "lingxiloop_ui_model_test",
+    "identity": "synthetic test-owner",
+    "realWuKong": true,
+    "realModel": true,
+    "authentication": "isolated test middleware"
+  },
+  "results": {
+    "passed": false,
+    "baseline": [],
+    "cases": [],
+    "attempts": [
+      "baseline-projectile"
+    ],
+    "error": "baseline-projectile: product run failed"
+  }
+}

@@ -141,31 +141,9 @@ export const env = {
   ),
   /** Public base URL used to build company invitation links. */
   INVITE_BASE_URL: required('LINGXILOOP_INVITE_BASE_URL'),
-  /**
-   * Real-email feature. When all three core vars are set, agents can send
-   * mail (Resend) and receive mail (Cloudflare Email Worker → /webhooks/
-   * email/inbound). All three values are required by the native subsystem.
-   *
-   *   RESEND_API_KEY            — Resend API key (re_… token)
-   *   EMAIL_DOMAIN              — root domain that hosts agent addresses,
-   *                               e.g. "loop.lingxilearn.cn". Per-agent address is
-   *                               <participantId>.<companySlug>@<EMAIL_DOMAIN>.
-   *   RESEND_WEBHOOK_SECRET     — endpoint-specific Resend/Svix signing
-   *                               secret for the `email.received` webhook.
-   */
+  /** Transactional organization invitations; never an Agent capability. */
   RESEND_API_KEY: process.env.RESEND_API_KEY ?? '',
-  RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET ?? '',
   EMAIL_DOMAIN: (process.env.EMAIL_DOMAIN ?? '').toLowerCase().replace(/^\.+|\.+$/g, ''),
-  /** Interval between outbound retry-loop ticks. Defaults to 60s; set to
-   *  0 to disable retry entirely (failed sends stay failed forever). The
-   *  loop uses SKIP LOCKED so multiple replicas can run it concurrently. */
-  EMAIL_RETRY_INTERVAL_MS: Number(process.env.EMAIL_RETRY_INTERVAL_MS ?? 60_000),
-  /** Interval between email-attachment GC sweeps. Defaults to 24h. The
-   *  sweep enumerates the storage prefix, compares against DB-referenced
-   *  keys, and deletes orphans older than the safety threshold. Setting
-   *  to 0 disables — useful when running on a backend whose enumeration
-   *  is expensive or when you'd rather invoke `runGcTick()` ad-hoc. */
-  EMAIL_GC_INTERVAL_MS: Number(process.env.EMAIL_GC_INTERVAL_MS ?? 24 * 60 * 60_000),
   /** Interval between DB row-retention sweeps (db-gc.ts). Each tick
    *  deletes up to 10 batches of DB_GC_BATCH rows per table, so the
    *  default 5min cadence burns a large backlog gradually without

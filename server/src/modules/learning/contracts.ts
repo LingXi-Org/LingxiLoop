@@ -1,5 +1,6 @@
 import { avatarInputSchema } from '../identity/contracts.js'
 import { z } from 'zod'
+import { learningContentFields } from './forum-contracts.js'
 
 // Data-only public contract used by Company onboarding without loading the
 // Learning runtime (and therefore runtime environment/infrastructure).
@@ -80,9 +81,10 @@ export const createActivityRequestSchema = z.object({
 }).strict()
 export const submitActivityRequestSchema = z.object({
   idempotencyKey: z.string().trim().min(8).max(200),
-  answer: z.string().trim().min(1),
+  answer: z.string().trim().max(20000).default(''),
   assistance: z.enum(['NONE', 'HINT', 'GUIDED']).default('NONE'),
-}).strict()
+  ...learningContentFields,
+}).strict().refine(value => Boolean(value.answer || value.links.length || value.attachments.length), 'submission content is required')
 const importedActivitySchema = z.object({
   externalId: z.string().trim().min(1).max(200),
   title: z.string().trim().min(1).max(200),
@@ -128,7 +130,7 @@ export type BindCourseRoomInput = z.infer<typeof bindCourseRoomRequestSchema>
 export type CreateObjectivesInput = z.infer<typeof createObjectivesRequestSchema>
 export type ObjectiveStatusInput = z.infer<typeof objectiveStatusRequestSchema>
 export type CreateActivityInput = z.infer<typeof createActivityRequestSchema>
-export type SubmitActivityInput = z.infer<typeof submitActivityRequestSchema>
+export type SubmitActivityInput = z.input<typeof submitActivityRequestSchema>
 export type LearningActivityImportInput = z.infer<typeof importLearningActivitiesRequestSchema>
 export type MissionCoordinatorInput = z.infer<typeof missionCoordinatorRequestSchema>
 export type ReviewEvaluationInput = z.infer<typeof reviewEvaluationRequestSchema>

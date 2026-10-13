@@ -6,6 +6,10 @@ import type { AgentRunSnapshot, RunDisplayState, RunMemory } from '../../../src/
 import { createNativeMessage } from '../im/message-types.js'
 import { runMessageParts, runMessageStatus, harnessToolParts, projectRunMemory, type HarnessToolPart } from './message-projection.js'
 import { nativeRunEvents, publicRunEvent } from './public-events.js'
+import { userFacingError } from '../../../src/lib/userFacingError.js'
+import { readPublicToolActivity } from './tool-activity.js'
+import { activityAnnotation } from '../../../src/lib/runActivity.js'
+import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 
 /** LingxiOS owns event ordering/fences; only public native messages cross HTTP. */
 export class RunStreamProjection {
@@ -32,7 +36,7 @@ export class RunStreamProjection {
       && this.view !== before && this.view.preview === null
     if (item.type === 'state' && this.view !== before) {
       this.createdAt = item.state.run.createdAt
-      this.error = item.state.run.error
+      this.error = item.state.run.error ? userFacingError(item.state.run.error, '这次任务未能完成，请稍后重试。') : null
     }
     if (item.type === 'event' && item.event.visibility === 'user') {
       const action = this.tools.find(tool => tool.toolCallId === item.event.data.toolCallId)?.toolName
@@ -60,25 +64,73 @@ export class RunStreamProjection {
     }
   }
 
+  async syncPresentation(identity: RunIdentity): Promise<void> {
+    const records = new Map((await readPublicToolActivity(identity)).map(record => [record.toolCallId, record]))
+    this.tools = this.tools.map(tool => {
+      const recorded = records.get(tool.toolCallId)
+      return recorded ? { ...tool, timing: recorded.timing, display: recorded.display } : tool
+    })
+  }
+
   committed(message: AssistantMessage, commit: { resultId: string; fence: number }): AgentRunSnapshot {
     if (this.view.requestVersion > message.envelope.requestVersion || this.view.messageFence > commit.fence) throw new Error('stale committed delivery')
     this.view = { ...consumeAssistantMessage(this.view,message,commit), delivery: 'delivered' }
     return this.snapshot
   }
 
+  activityPage(offset: number, attentionOnly = false) {
+    if (!Number.isSafeInteger(offset) || offset < 0) throw new Error('invalid activity offset')
+    const parts = runMessageParts(this.view, this.tools).filter(part => {
+      const kind = activityAnnotation(part)?.kind
+      return attentionOnly ? kind === 'attention' : kind === 'tool' || kind === 'commentary' || kind === 'attention'
+    })
+    const base = this.snapshot.message
+    const { activityHistory: _history, ...custom } = base.metadata.custom
+    let content = parts.slice(offset, offset + 40)
+    // Keep the existing structural bound even when individual rich cards differ
+    // substantially in size. The next cursor includes every deferred part.
+    while (content.length > 1 && !nativeMessageSchema.safeParse({ ...base, content, metadata: { ...base.metadata, custom } }).success) content = content.slice(0, -1)
+    const message = nativeMessageSchema.parse({ ...base, content, metadata: { ...base.metadata, custom } })
+    const next = offset + content.length
+    return { message, total: parts.length, nextOffset: next < parts.length ? next : null }
+  }
+
   get snapshot(): AgentRunSnapshot {
     if (!this.createdAt) throw new Error('run state must precede message updates')
     const { message, draft: _draft, preview: _preview, ...control } = this.view
-    const harness: RunDisplayState = { ...control, artifacts: message?.envelope.artifacts ?? [] }
+    // Outcome gaps are internal verification diagnostics, not product copy.
+    const { gaps: _gaps, ...outcome } = control.goalOutcome ?? {}
+    const harness: RunDisplayState = { ...control,
+      goalOutcome: control.goalOutcome ? outcome as NonNullable<RunDisplayState['goalOutcome']> : null,
+      artifacts: message?.envelope.artifacts ?? [] }
     const agentId = this.identity?.agentId ?? message?.agentId
-    return { message: createNativeMessage({ id: `run-${this.view.runId}`, role: 'assistant', createdAt: this.createdAt,
-      content: runMessageParts(this.view,this.tools), status: runMessageStatus(this.view),
-      custom: { runId: this.view.runId, harness, harnessControl: this.canControl,
+    const parts = runMessageParts(this.view, this.tools)
+    const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
+    const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
+    const activitySet = new Set(activity)
+    const selected = new Set([...activity.filter(part => activityAnnotation(part)?.kind !== 'attention').slice(-40), ...attention.slice(-40)])
+    const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
+      content: parts, status: runMessageStatus(this.view),
+      custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },
         ...(agentId ? { refs: { runId: this.view.runId, agentId } } : {}),
         ...(this.identity?.principalId ? { controlPrincipalId: this.identity.principalId } : {}),
         ...(this.identity?.threadId ? { replyToClientMsgNo: this.identity.threadId } : {}),
         ...(this.memory ? { memory: this.memory } : {}), ...(this.error ? { harnessError: this.error } : {}),
-        ...(this.sourceRef ? { sourceRef: this.sourceRef } : {}), suppressAgentWake: true } }) }
+        ...(this.sourceRef ? { sourceRef: this.sourceRef } : {}), suppressAgentWake: true } }
+    // Try the complete message first for ordinary histories; the wire protocol
+    // stays unchanged. Overflow becomes an authorized, bounded activity page.
+    if (activity.length <= 80) {
+      try { return { message: createNativeMessage(input) } } catch { /* preserve answer and page activity below */ }
+    }
+    const compact = { ...input, custom: { ...input.custom, activityHistory: { total: activity.length, attention: attention.length } } }
+    while (selected.size) {
+      compact.content = parts.filter(part => !activitySet.has(part) || selected.has(part))
+      try { return { message: createNativeMessage(compact) } }
+      catch { selected.delete(selected.values().next().value!) }
+    }
+    // Invalid answer content is never silently removed or changed.
+    compact.content = parts.filter(part => !activitySet.has(part))
+    return { message: createNativeMessage(compact) }
   }
 }
 
@@ -101,6 +153,7 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   if (!current) throw new Error('run not found')
   projection.apply({ type: 'state',state: current })
   await projection.syncApprovals(api,identity)
+  await projection.syncPresentation(identity)
   return projection
 }
 
@@ -130,6 +183,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
       }
       projection.apply(item)
       if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'tool.completed')) await projection.syncApprovals(approvals.api,approvals.identity)
+      if (approvals && (item.type === 'state' || item.type === 'event' && ['tool.started', 'tool.completed'].includes(item.event.kind))) await projection.syncPresentation(approvals.identity)
       const next = projection.snapshot
       const operations = changes(previous, next)
       if (operations.length) yield { type: 'update-state', path: [], operations }

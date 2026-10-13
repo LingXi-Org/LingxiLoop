@@ -1,7 +1,7 @@
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
-export type AgentCapability = 'canvas' | 'web' | 'files' | 'email' | 'documents' | 'calendar' | 'knowledge' | 'learning' | 'teacher_admin' | 'handoffs' | 'routines'
+export type AgentCapability = 'canvas' | 'web' | 'files' | 'documents' | 'knowledge' | 'learning' | 'teacher_admin' | 'handoffs' | 'routines'
 
 export type ProjectKind = 'TEACHING' | 'INSTITUTIONAL_COURSE'
 export type ProjectStatus =
@@ -60,10 +60,7 @@ export interface Participant {
   capabilities?: AgentCapability[]
   /** the agent's distinctive style — only set for agents */
   systemPrompt?: string
-  /** Real external email address. Agents get one of the form
-   *  `<id>@<companySlug>.<EMAIL_DOMAIN>` (auto-minted on first use);
-   *  humans carry their auth email here for the renderer's contact
-   *  picker. Null when the email feature isn't configured. */
+  /** Human account contact; Agent values are null. */
   email?: string | null
   /** non-null = agent has been off-boarded; ISO timestamp of when */
   departedAt?: string | null
@@ -73,6 +70,7 @@ export interface Participant {
   presetKey?: string | null
 }
 
+/** Legacy email rows remain in storage and are excluded from the conversation UI. */
 export type ConversationKind = 'group' | 'direct' | 'email'
 
 export interface Conversation {
@@ -139,5 +137,5 @@ export interface PollTally {
 }
 
 export interface ViewKey {
-  view: 'conversations' | 'agents' | 'mail' | 'calendar' | 'library' | 'learning' | 'courses' | 'course-content' | 'course-members' | 'course-status'
+  view: 'conversations' | 'agents' | 'library' | 'learning' | 'forum' | 'courses' | 'course-content' | 'course-members' | 'course-status'
 }

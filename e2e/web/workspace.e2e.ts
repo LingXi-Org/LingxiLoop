@@ -54,7 +54,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
 
   test('all top-level learner surfaces load without an error panel', async ({ app, browser, screen }) => {
     await app.open('/?project=e2e-classroom')
-    for (const [name, view] of [['Agent', 'agents'], ['邮件', 'mail'], ['学习概览', 'learning'], ['资料', 'library'], ['日历', 'calendar'], ['对话', 'conversations']]) {
+    for (const [name, view] of [['Agent', 'agents'], ['学习概览', 'learning'], ['资料', 'library'], ['对话', 'conversations']]) {
       await screen.getByRole('navigation', '工作区与功能').getByRole('button', name).tap()
       await expect(browser.locator(`[data-ui-page="${view}"]`)).toBeVisible()
       await expect(browser.locator(`[data-ui-page="${view}"] [data-resource-skeleton], [data-ui-page="${view}"] [data-skeleton-region], [data-ui-page="${view}"] [aria-busy="true"]`)).toHaveCount(0)
@@ -72,40 +72,6 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
     await expect(dialog.getByText('没有找到匹配的参与者')).toBeVisible()
     await dialog.getByRole('button', '取消').tap()
     await expect(dialog).toBeHidden()
-  })
-
-  test('mail search can be cleared and an empty composer cannot send', async ({ app, screen }) => {
-    await app.open('/?project=e2e-classroom')
-    await screen.getByRole('navigation', '工作区与功能').getByRole('button', '邮件').tap()
-    await screen.getByLabel('搜索邮件标题或发件人').fill('e2e-unmatched-mail')
-    await screen.getByRole('button', '清除搜索').tap()
-    await expect(screen.getByLabel('搜索邮件标题或发件人')).toHaveValue('')
-    await screen.getByRole('button', '写邮件').first().tap()
-    await expect(screen.getByLabel('至')).toBeVisible()
-    await screen.getByRole('button', '发送').tap()
-    await expect(screen.getByText('请输入邮件正文。')).toBeVisible()
-    await screen.getByPlaceholder('写下您的信息...').fill('E2E validation only; no recipient is selected.')
-    await screen.getByRole('button', '发送').tap()
-    await expect(screen.getByText('请至少添加一位收件人。')).toBeVisible()
-    await screen.getByRole('button', '关闭邮件编辑器').tap()
-    await expect(screen.getByLabel('至')).toBeHidden()
-  })
-
-  test('calendar view controls and cancelled edits leave the calendar usable', async ({ app, screen }) => {
-    await app.open('/?project=e2e-classroom')
-    await screen.getByRole('navigation', '工作区与功能').getByRole('button', '日历').tap()
-    for (const view of ['日', '周', '月']) {
-      await screen.getByRole('tab', view).tap()
-      await expect(screen.getByRole('tab', view)).toBeSelected()
-    }
-    await screen.getByRole('button', '下一时间段').tap()
-    await screen.getByRole('button', '上一时间段').tap()
-    await screen.getByRole('button', '今天').tap()
-    await screen.getByRole('button', '新事件').tap()
-    await expect(screen.getByLabel('标题')).toBeVisible()
-    await screen.getByRole('button', '取消').tap()
-    await expect(screen.getByLabel('标题')).toBeHidden()
-    await expect(screen.getByRole('button', '新事件')).toBeVisible()
   })
 
   test('settings tabs, appearance persistence and focus restoration work', async ({ app, screen, browser }) => {

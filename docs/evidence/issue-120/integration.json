@@ -1,0 +1,32 @@
+{
+  "database": "lingxiloop_activity_test",
+  "redisDatabase": 6,
+  "results": [
+    {
+      "args": [
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "code": 0
+    },
+    {
+      "args": [
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "code": 0
+    },
+    {
+      "args": [
+        "server/run-integration-tests.mjs",
+        "--file",
+        "public-run-activity.test.ts",
+        "--file",
+        "runtime-tool-recovery.test.ts"
+      ],
+      "code": 0
+    }
+  ]
+}

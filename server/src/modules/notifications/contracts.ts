@@ -7,7 +7,7 @@ export type NotificationChannel = 'IN_APP' | 'EMAIL'
 export const notificationPreferencesRequestSchema = z.object({
   projectId: z.string().trim().min(1).optional(),
   inAppEnabled: z.boolean(),
-  emailEnabled: z.boolean(),
+  emailEnabled: z.literal(false).default(false),
   timezone: z.string().trim().min(1).max(100),
   dailyTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   weeklyDay: z.number().int().min(1).max(7),

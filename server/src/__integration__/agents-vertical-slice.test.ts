@@ -22,7 +22,6 @@ const contextThreads = new ContextThreadsApplication({
 
 const application = new AgentApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
-  computeAddress: (id, slug) => `${id}.${slug}@agents.test`,
   invalidatePersona: () => undefined,
   assertNotManaged: async () => undefined,
   assertVisible: async () => undefined,

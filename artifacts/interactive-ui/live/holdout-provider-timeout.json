@@ -1,0 +1,93 @@
+{
+  "reason": "Both baselines passed and gates froze before holdout. The first holdout had two successful calls (2373/2440ms) then its third provider call timed out at 90031ms. Public run failed with blocked/inconclusive and no delivered lesson. Retained as a failed holdout, not counted as a pass.",
+  "metadata": {
+    "startedAt": "2026-10-13T13:52:39.993Z",
+    "finishedAt": "2026-10-13T13:56:06.751Z",
+    "passed": false,
+    "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui",
+    "runtime": "3.3.6",
+    "candidate": "zai-org/GLM-5.2",
+    "judge": "deepseek-ai/DeepSeek-V4-Flash",
+    "maxModelCalls": 16,
+    "maxModelTokens": 200000,
+    "maxRunCostUSD": 0.25,
+    "maxTotalCostUSD": 5,
+    "modelConcurrency": 1,
+    "database": "lingxiloop_ui_model_test",
+    "identity": "synthetic test-owner",
+    "realWuKong": true,
+    "realModel": true,
+    "authentication": "isolated test middleware"
+  },
+  "results": {
+    "passed": false,
+    "baseline": [
+      {
+        "id": "baseline-projectile",
+        "previewMs": 16548.364500000003,
+        "firstTextMs": 11805.347099999999,
+        "readyMs": 19132.7779,
+        "sendAttempts": 1,
+        "streamReconnects": 2,
+        "modelCalls": 3,
+        "costUSD": 0.017272,
+        "uiCount": 1,
+        "teaching": {
+          "correct": true,
+          "transfer": true,
+          "correction": true,
+          "reasons": [
+            "The answer correctly states that 45° gives maximum range and that 20° and 70° have equal range, consistent with the reference fact that complementary angles yield equal range under no resistance and same height.",
+            "The transfer question correctly asks about 30° and 60°, which are also complementary angles, and prompts the learner to predict and verify, without fabricating numeric results.",
+            "No correction is required as the answer contains no incorrect prediction; the correction flag is set true by default."
+          ]
+        },
+        "runId": "im:eef0784f78b65248e9f9c7e0c321985c858f6f907fb6f1a6f51a6897c9168136",
+        "sourceHashes": [
+          "27e2617791357979f4b7fb48cd06b0262da2dda9bf5fb4bdc353327585208f96"
+        ]
+      },
+      {
+        "id": "baseline-comparison",
+        "previewMs": 21838.542199999996,
+        "firstTextMs": 7573.097699999998,
+        "readyMs": 22883.762599999987,
+        "sendAttempts": 1,
+        "streamReconnects": 1,
+        "modelCalls": 4,
+        "costUSD": 0.01722171,
+        "uiCount": 1,
+        "teaching": {
+          "correct": true,
+          "transfer": true,
+          "correction": true,
+          "reasons": [
+            "TCP/UDP核心区别表述准确，无科学矛盾",
+            "实时语音丢包场景迁移题设问正确，答案UDP合理",
+            "未出现数值捏造或错误预测，无需纠正"
+          ]
+        },
+        "runId": "im:835941db2a1c0ae2da23c6d49f666f04848289388fb0263079303bf4775d02b1",
+        "sourceHashes": [
+          "e2e2ff2d7452fd7e99016013b4b2e3daa1c0961b7f80247e290ff8f3d13bd457"
+        ]
+      }
+    ],
+    "cases": [],
+    "attempts": [
+      "baseline-projectile",
+      "baseline-comparison",
+      "projectile"
+    ],
+    "gates": {
+      "previewMs": 60000,
+      "readyMs": 120000,
+      "failureRate": 0,
+      "recoveryRate": 1,
+      "localModelCalls": 0,
+      "lockedAt": "2026-10-13T13:54:24.591Z",
+      "beforeHoldout": true
+    },
+    "error": "projectile: product run failed"
+  }
+}

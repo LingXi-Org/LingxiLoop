@@ -1,3 +1,4 @@
+import { INTERACTIVE_LESSONS_ENABLED } from '../../../src/lib/interactive-ui/catalog.js'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -13,6 +14,8 @@ import { _setWukongClientForTests, wukongClient } from '../im/wukong.js'
 import { getUiState, reconcileUiDelivery, reserveUiRevisions, submitUiAction } from '../im/interactive-ui.js'
 import { messageLessons, projectLessonText } from '../agent-runtime/interactive-ui-projection.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+
+if (process.env.LINGXIOS_REAL_WUKONG === '1' && !INTERACTIVE_LESSONS_ENABLED) throw new Error('Interactive lessons are hard-disabled; run interactive-ui-disabled.test.ts for release verification.')
 
 // Real transport failures: durable send with lost ACK, a duplicate retry, pending UI
 // becoming interactive too soon, duplicate human actions after an unknown ACK,

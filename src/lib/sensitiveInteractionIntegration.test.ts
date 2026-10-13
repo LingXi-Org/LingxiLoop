@@ -11,17 +11,14 @@ test('sensitive actions retain confirmation prompts', () => {
   for (const path of [
     '../features/canvas/components/CanvasView.tsx',
     '../features/documents/components/DocumentEditor.tsx',
-    '../features/calendar/components/EventEditor.tsx',
-    '../features/calendar/components/CalendarEventPeekContent.tsx',
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
     '../features/knowledge/components/ProjectSourceLibrary.tsx',
-    '../features/calendar/components/CalendarView.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })
 
-test('dashboard role changes and destructive actions confirm before mutation and preserve Toast lifecycle', () => {
+test('dashboard invitations and destructive actions confirm before mutation and preserve Toast lifecycle', () => {
   const members = read('../features/learning/dashboard/CourseMembersSection.tsx')
   const settings = read('../features/learning/dashboard/CourseSettingsSection.tsx')
   const reviews = read('../features/learning/components/LearningReviewsSection.tsx')
@@ -29,11 +26,10 @@ test('dashboard role changes and destructive actions confirm before mutation and
   assert.match(members, /space\.perspective === 'teacher' && space\.canManage/)
   assert.match(members, /space\.canInviteMembers/)
   assert.match(members, /space\.canRevokeInvitations/)
-  assert.match(members, /space\.canUpdateMembers/)
   assert.match(members, /space\.canRemoveMembers/)
+  assert.match(members, /confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.createProjectInvitation/)
   assert.match(members, /confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.removeCourseMember/)
   assert.match(members, /confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.revokeProjectInvitation/)
-  assert.match(members, /confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.updateCourseMember/)
   assert.match(settings, /space\.perspective === 'teacher' && space\.canManage/)
   assert.match(settings, /space\.canUpdateCourse/)
   assert.match(settings, /confirmSensitiveAction\([\s\S]*?toastAction\(lifecycle\.run/)

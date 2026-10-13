@@ -16,10 +16,10 @@ import { runJob } from '../src/runner.js'
 import { buildReport, comparisonKey, type Report } from '../src/report.js'
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'))
-const dataset = datasetSchema.parse(read('../datasets/tool-initiative.v1.json'))
-const suite = suiteSchema.parse(read('../suites/tool-initiative.v1.json'))
+const dataset = datasetSchema.parse(read('../datasets/tool-initiative.v3.json'))
+const suite = suiteSchema.parse(read('../suites/tool-initiative.v3.json'))
 const checklist = dataset.cases[0]!
-const boundaries = datasetSchema.parse(read('../datasets/tool-boundaries.v1.json'))
+const boundaries = datasetSchema.parse(read('../datasets/tool-boundaries.v3.json'))
 const identity = { id: 'offline-test-target', version: '1', fingerprint: hash('test') }
 const manifest = (overrides: Partial<Manifest> = {}): Manifest => ({ schemaVersion: 2, engine: 'black-box-eval/2',
   suite, dataset, target: identity, judge: null, seed: 1, provenance: { revision: 'offline-test' }, baseline: null, ...overrides })
@@ -28,8 +28,8 @@ const request = { input: checklist.input, requestId: 'offline-test', seed: 1, si
 
 test('all bundled tool datasets validate before paid execution and keep independent evaluation conditions', () => {
   for (const name of ['tool-initiative', 'tool-boundaries', 'tool-recovery']) {
-    const data = datasetSchema.parse(read(`../datasets/${name}.v1.json`))
-    const config = suiteSchema.parse(read(`../suites/${name}.v1.json`))
+    const data = datasetSchema.parse(read(`../datasets/${name}.v3.json`))
+    const config = suiteSchema.parse(read(`../suites/${name}.v3.json`))
     manifestSchema.parse(manifest({ suite: config, dataset: data }))
     for (const c of data.cases) {
       validateScenario(c.scenario!)
@@ -74,7 +74,7 @@ test('grading requires scoped action evidence, distinguishes no-tool tasks and a
 })
 
 test('recovery requires a fresh read after conflict, not repeating stale writes', () => {
-  const c = datasetSchema.parse(read('../datasets/tool-recovery.v1.json')).cases[0]!
+  const c = datasetSchema.parse(read('../datasets/tool-recovery.v3.json')).cases[0]!
   const calls: ToolTrace['calls'] = []
   const call = (name: string, args: object) => executeFixture(c.scenario!, calls, name, JSON.stringify(args))
   call('documents__read', { documentId: 'doc_delivery_38' })
@@ -156,7 +156,7 @@ test('local HTTP tool loop and CLI export real action receipts without fixture o
     for (const [key, value] of Object.entries({ BASE_URL: config.baseURL, MODEL: config.model, API_KEY: config.apiKey,
       INPUT_CNY_PER_MILLION: 1, OUTPUT_CNY_PER_MILLION: 2, MAX_TOKENS: 512, TIMEOUT_MS: 2000 })) env[`EVAL_CANDIDATE_${key}`] = String(value)
     const child = spawn(process.execPath, ['--import', 'tsx', 'src/cli.ts', 'run', '--db', join(dir, 'eval.sqlite'),
-      '--suite', 'suites/tool-boundaries.v1.json', '--dataset', 'datasets/tool-boundaries.v1.json', '--revision', 'offline-scripted-test', '--out', dir],
+      '--suite', 'suites/tool-boundaries.v3.json', '--dataset', 'datasets/tool-boundaries.v3.json', '--revision', 'offline-scripted-test', '--out', dir],
     { cwd: resolve(import.meta.dirname, '..'), env, stdio: ['ignore', 'pipe', 'pipe'] })
     let output = ''
     child.stdout.on('data', data => { output += data })
@@ -188,7 +188,7 @@ test('serial runs pass remaining spend to the next sample and stop after a budge
       return { output: '我可以帮忙', usage: { ...zeroUsage(), costCny: 0.05 },
         tools: { modelCalls: 1, stop: budgets.length === 1 ? 'completed' : 'cost_limit', calls: [] } }
     } }
-    const job = store.create(manifest({ suite: { ...suite, gate: { ...suite.gate, maxCandidateCostCny: 0.1 } } }))
+    const job = store.create(manifest({ dataset: { ...dataset,cases:dataset.cases.slice(0,3) }, suite: { ...suite, gate: { ...suite.gate, maxCandidateCostCny: 0.1 } } }))
     await assert.rejects(runJob(store, job, target), /spend_limit_reached/)
     assert.deepEqual(budgets, [0.08, 0.05])
     assert.equal(store.job(job).status, 'failed')
@@ -196,7 +196,7 @@ test('serial runs pass remaining spend to the next sample and stop after a budge
     assert.equal(report.tools?.conversationOnly, 1)
     assert(report.gate.reasons.includes('incomplete_samples'))
     assert(report.gate.reasons.includes('tool_execution_incomplete'))
-    const unknown = store.create(manifest({ suite: { ...suite, version: 'unknown-usage' } }))
+    const unknown = store.create(manifest({ dataset: { ...dataset,cases:dataset.cases.slice(0,3) }, suite: { ...suite, version: 'unknown-usage' } }))
     let calls = 0
     await assert.rejects(runJob(store, unknown, { identity, async execute() { calls++; return { output: 'done' } } }), /usage_or_execution_error_stop/)
     assert.equal(calls, 1)
@@ -205,12 +205,12 @@ test('serial runs pass remaining spend to the next sample and stop after a budge
 })
 
 test('semantic suites validate; verification reads see current state and duplicate writes do not execute', () => {
-  for (const name of ['tool-initiative.v2', 'tool-boundaries.v2', 'tool-recovery.v2', 'education-autonomy.v1', 'education-autonomy.v2', 'education-autonomy.v3', 'education-autonomy.v4']) {
+  for (const name of ['tool-initiative.v4', 'tool-boundaries.v4', 'tool-recovery.v4', 'education-autonomy.v1', 'education-autonomy.v2', 'education-autonomy.v3', 'education-autonomy.v4']) {
     const data = datasetSchema.parse(read(`../datasets/${name}.json`)), config = suiteSchema.parse(read(`../suites/${name}.json`))
     manifestSchema.parse(manifest({ dataset: data, suite: config, judge: 'offline-judge' }))
     for (const c of data.cases) validateScenario(c.scenario!)
   }
-  const data = datasetSchema.parse(read('../datasets/tool-initiative.v2.json'))
+  const data = datasetSchema.parse(read('../datasets/tool-initiative.v4.json'))
   const c = data.cases[0]!, calls: ToolTrace['calls'] = [], evidence: ToolEvidence = []
   const call = (name: string, args: object) => executeFixture(c.scenario!, calls, name, JSON.stringify(args), evidence)
   call('documents__list', {}); call('documents__read', { documentId: 'doc_accept_73' })
@@ -240,8 +240,8 @@ test('semantic suites validate; verification reads see current state and duplica
 })
 
 test('diagnostic efficiency never fails correct work; required actions still block release and portable baselines agree', async () => {
-  const config = suiteSchema.parse(read('../suites/tool-initiative.v2.json'))
-  const data = datasetSchema.parse(read('../datasets/tool-initiative.v2.json'))
+  const config = suiteSchema.parse(read('../suites/tool-initiative.v4.json'))
+  const data = datasetSchema.parse(read('../datasets/tool-initiative.v4.json'))
   const grades = config.graders.map(g => ({ id: g.id, score: g.id === 'efficiency' ? 0 : 1, passed: g.id !== 'efficiency' }))
   assert.deepEqual(summarizeGrades(config.graders, grades), { score: 1, passed: true, failure: undefined })
   const store = new Store(':memory:'), imported = new Store(':memory:')

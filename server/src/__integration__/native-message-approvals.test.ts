@@ -18,7 +18,7 @@ after(async () => { await teardownAll() })
 test('HTTP approval decisions and expiry survive native message replay under a real worker lease', async () => {
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner',companyId)
-  await pool.query(`UPDATE participants SET capabilities='["calendar"]'::jsonb WHERE id=$1`,[agentId])
+  await pool.query(`UPDATE participants SET capabilities='["routines"]'::jsonb WHERE id=$1`,[agentId])
   const conversationId = 'approval-room', members = ['test-owner',agentId]
   await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group',$1,$4::jsonb)`,[conversationId,companyId,projectId,JSON.stringify(members)])
   await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)`,[conversationId,companyId,JSON.stringify({ channelType: 2,members })])
@@ -28,8 +28,8 @@ test('HTTP approval decisions and expiry survive native message replay under a r
     modelBudget: { inputCostMicrosPerMillion: 1,outputCostMicrosPerMillion: 1 },
     model: { modelId: 'approval-fixture',contextWindowTokens: 200000,async run() {
       const usage = { available: true,inputTokens: 100,outputTokens: 20 }
-      if (calls++ === 0) return { text: '',output: [{ type: 'function_call',callId: `calendar-${outcome}`,name: 'calendar__create',
-        arguments: JSON.stringify({ title: outcome,startAt: '2026-10-03T10:00:00Z' }) }],usage }
+      if (calls++ === 0) return { text: '',output: [{ type: 'function_call',callId: `routine-${outcome}`,name: 'routines__create',
+        arguments: JSON.stringify({ kind: 'review',title: outcome,instructions: 'Review the learning plan.',schedule: { everyMinutes: 60 } }) }],usage }
       return { text: '已处理审批结果。',output: [{ role: 'assistant',content: '已处理审批结果。' }],usage }
     },async structured() { return { model: 'approval-fixture',value: { missing: [] },usage: { available: true,inputTokens: 10,outputTokens: 5 } } },async compact() { throw new Error('bounded approval fixture must not compact') } } })
   const next = async () => {
@@ -45,7 +45,7 @@ test('HTTP approval decisions and expiry survive native message replay under a r
     for (outcome of ['approved','denied','expired']) {
       calls = 0
       const accepted = await api.conversations.ingest({ tenantId: companyId,conversationId,policyVersion: policy.version,messageId: `approval-${outcome}`,
-        version: 1,author: { id: 'test-owner',kind: 'human' },text: 'Schedule an approved review.',mentions: [agentId] },{ mode: 'execute',executionClass: 'conversation',codeExecution: 'disabled' })
+        version: 1,author: { id: 'test-owner',kind: 'human' },text: 'Create a paused review routine after approval.',mentions: [agentId] },{ mode: 'execute',executionClass: 'conversation',codeExecution: 'disabled' })
       const identity = accepted.runs[0]
       await next()
       const pending = (await readRunProjection(api,identity,true)).snapshot.message.content.find(part => part.type === 'tool-call' && part.approval)
@@ -72,7 +72,7 @@ test('HTTP approval decisions and expiry survive native message replay under a r
       await api.cancel(identity)
       checks.push(outcome)
     }
-    assert.deepEqual((await pool.query('SELECT title FROM calendar_events WHERE company_id=$1',[companyId])).rows,[{ title: 'approved' }])
+    assert.deepEqual((await pool.query('SELECT title,status FROM agent_routines WHERE company_id=$1',[companyId])).rows,[{ title: 'approved',status: 'paused' }])
     await mkdir('artifacts/native-message',{ recursive: true })
     await writeFile('artifacts/native-message/approvals.json',JSON.stringify({ passed: true,checks },null,2))
   } finally {

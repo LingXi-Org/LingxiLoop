@@ -103,7 +103,7 @@ export function NotificationSettingsPanel() {
       const next = await toastAction(learningApi.setNotificationPreferences({
         projectId: selectedWorkspace.id,
         inAppEnabled: preferences.in_app_enabled,
-        emailEnabled: preferences.email_enabled,
+        emailEnabled: false,
         timezone: preferences.timezone.trim(),
         dailyTime: shortTime(preferences.daily_time),
         weeklyDay: preferences.weekly_day,
@@ -137,13 +137,6 @@ export function NotificationSettingsPanel() {
             aria-label="应用内通知"
             checked={preferences.in_app_enabled}
             onCheckedChange={(checked) => updatePreference('in_app_enabled', checked)}
-          />
-        </SettingsRow>
-        <SettingsRow title="邮件通知" description="将学习提醒与摘要发送到账号邮箱。">
-          <Switch
-            aria-label="邮件通知"
-            checked={preferences.email_enabled}
-            onCheckedChange={(checked) => updatePreference('email_enabled', checked)}
           />
         </SettingsRow>
       </SettingsGroup>

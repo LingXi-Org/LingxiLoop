@@ -1,4 +1,4 @@
-import { BubbleChatIcon, RoboticIcon, Mail01Icon, PlusSignIcon, Settings02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { BubbleChatIcon, RoboticIcon, PlusSignIcon, Settings02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeftRight } from 'lucide-react'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
@@ -59,7 +59,6 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
   const menu = [
     { view: 'conversations' as const, label: '对话', icon: BubbleChatIcon, management: false },
     { view: 'agents' as const, label: 'Agent', icon: RoboticIcon, management: false },
-    { view: 'mail' as const, label: '邮件', icon: Mail01Icon, management: false },
     ...(activeSpace ? getLearningDashboardMenu(activeSpace).map((item) => ({ ...item, view: viewForLearningSection(item.section) })) : []),
   ]
   const managementMenu = menu.filter((item) => item.management)

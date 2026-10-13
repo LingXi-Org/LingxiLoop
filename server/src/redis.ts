@@ -57,11 +57,6 @@ export const CH_DOC_ACCESS_REVOKED = 'lingxiloop:doc.access.revoked'
  *  bridge) — recipients listen by their participant id, regardless of
  *  whether they currently have the doc open. */
 export const CH_DOC_MENTION = 'lingxiloop:doc.mention'
-export const CH_CALENDAR_REMINDER = 'lingxiloop:calendar.reminder'
-/** Calendar row CRUD + dispatch-driven status changes. Sent on create /
- *  update / delete / cancel / run-now / dispatcher auto-done so every
- *  client in the company can patch their Calendar view in real time. */
-export const CH_CALENDAR_EVENTS = 'lingxiloop:calendar.events'
 /** Safe, user-visible Agent lifecycle facts. This is bridged through the same
  * tenant-scoped WebSocket path as messages; raw reasoning/tool payloads never
  * enter this channel. */
@@ -325,49 +320,6 @@ export interface DocMentionEvent extends TenantTagged {
   workspaceId?: string
 }
 
-/** "Heads-up — this calendar event fires in N minutes." Broadcast on
- *  CH_CALENDAR_REMINDER and bridged to every WS client in the company;
- *  the renderer filters on `recipientUserIds.includes(meId)` so only the
- *  intended humans actually pop a toast. Note: recipients can be empty
- *  on agent-only events — the WS bridge still delivers it but no
- *  renderer will match. */
-export interface CalendarReminderEvent extends TenantTagged {
-  type: 'calendar.reminder'
-  eventId: string
-  title: string
-  occurrenceAt: string
-  /** Minutes between now and occurrenceAt at fire time, for the toast copy. */
-  leadMinutes: number
-  /** When non-empty, the renderer only shows the toast if the local user
-   *  id appears here. Agents are intentionally excluded (they're already
-   *  woken via the dispatch path). */
-  recipientUserIds: string[]
-  /** Surfaces in the toast subtitle. */
-  kind: 'personal' | 'agent_task'
-  assigneeId: string | null
-  workspaceId?: string
-}
-
-/** A calendar row was created / updated / deleted. We deliberately keep
- *  the payload thin — clients refetch the affected row (or the whole
- *  list, when the event signals a deletion) rather than diffing inline.
- *  This matches how `doc.changed` works and avoids having to keep two
- *  CalendarEventPayload encoders in sync (router vs. CLI). */
-export interface CalendarEventChangedEvent extends TenantTagged {
-  type: 'calendar.changed'
-  kind:
-    | 'event.created'
-    | 'event.updated'
-    | 'event.deleted'
-    | 'event.dispatched'
-  eventId: string
-  /** When non-null, the participant id that drove this change. Useful
-   *  for renderers that want to avoid echoing the actor's own
-   *  optimistic write back at them. */
-  actorId: string | null
-  workspaceId?: string
-}
-
 /** Poll state changed — a new vote was cast, an existing vote was changed,
  *  or the poll was closed (manually or by the expiration sweeper). Carries
  *  the full denormalized poll snapshot so renderers can patch in place
@@ -446,8 +398,7 @@ export interface DocAccessRevokedEvent extends TenantTagged {
 export type BroadcastEvent = MessageNewEvent | TypingEvent
   | StatusEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
-  | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent | CalendarReminderEvent
-  | CalendarEventChangedEvent
+  | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent
   | PollUpdatedEvent
   | DocAccessRevokedEvent
   | AgentActivityEvent

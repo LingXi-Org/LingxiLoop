@@ -1,7 +1,6 @@
 import { useParticipants } from '@/features/agents/state'
 import type { CanvasFrame, CanvasSnapshot, CanvasWorkspaceSummary } from '@/features/canvas/contracts'
 import { useCanvas } from '@/features/canvas/state'
-import { useCalendar } from '@/features/calendar/state'
 import { type ActiveAgentRun, mergeCanonicalMessages, replaceMessageReactions, updateConversation, useChatThreadStore } from '@/features/chat/runtime/store'
 import { messagesApi } from '@/features/chat/api'
 import { lingxiIm } from '@/lib/im/wukong'
@@ -25,6 +24,8 @@ import { useAuth } from '@/stores/auth'
 import { useSurface } from '@/stores/surface'
 import { convertEnvelope } from '@/features/chat/runtime/converter'
 import { createNativeMessage, userMessageSchema } from '@/lib/nativeMessage'
+import { OPENUI_CATALOG_VERSION, OPENUI_COMPONENT, OPENUI_RENDERER_VERSION } from '@/lib/interactive-ui/catalog'
+import { parseLessonSource } from '@/lib/interactive-ui/source'
 import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { createRunView } from '@lyyzka/lingxios/ui'
 import { harnessApi } from '@/features/chat/runtime/harness-api'
@@ -121,7 +122,6 @@ const nextStep = { title: '验证移动端学习路径', evidence: '完整观察
 useChatThreadStore.setState({ conversations: { [CONVERSATION_ID]: { messages: [convertEnvelope({channelId:CONVERSATION_ID,channelType:2,fromUid:'scout',clientMsgNo:'local-chat',messageId:'local-chat',messageSeq:1,timestamp:1790899200,payload:createNativeMessage({id:'local-chat',role:'assistant',createdAt:NOW,content:[{type:'text',text:chatPreview}],status:{type:'complete',reason:'stop'}})}, {participants,meId:'me'})], typingAgentIds: [], activeRuns: {}, loaded: true, isLoading: false, isLoadingOlder: false, hasMoreOlder: false, error: null } } })
 useCanvas.setState({ snapshot: canvas, previews: { [CANVAS_ID]: canvas }, workspaces: [canvasSummary], activeCanvasId: CANVAS_ID, loading: false, error: null, selectedFrameId: null, load: async () => undefined, loadPreview: async () => undefined, loadWorkspaces: async () => undefined, ensureForConversation: async () => canvas, setStatus: async () => undefined, stopAgent: async () => undefined, stopWorkspace: async () => undefined })
 useKnowledgeSources.setState({ list: sources, loading: false, error: null, selectedSource: null, detailLoading: false, conversationSelection: { conversationId: CONVERSATION_ID, sources: sources.map((source) => ({ sourceId: source.id, title: source.title, status: source.status, enabled: true })) }, load: async () => undefined, loadConversationSelection: async () => undefined, open: async (sourceId) => { useKnowledgeSources.setState({ selectedSource: sources.find((source) => source.id === sourceId) ?? null }) }, close: () => useKnowledgeSources.setState({ selectedSource: null }), setSourceEnabled: async () => undefined })
-useCalendar.setState({ events: [{ id: 'calendar-review', companyId: COMPANY_ID, createdBy: 'me', kind: 'personal', title: '移动端方案评审', description: '检查 767px 与 768px 的布局切换。', assigneeId: null, targetConversationId: CONVERSATION_ID, agentPrompt: null, startAt: '2026-09-04T09:00:00.000Z', endAt: '2026-09-04T10:00:00.000Z', allDay: false, recurrence: null, status: 'active', lastFiredAt: null, reminderMinutesBefore: 15, reminderChannel: 'toast', isPrivate: false, createdAt: NOW, updatedAt: NOW }], loaded: true, loading: false, loadingEventId: null, error: null, load: async () => undefined, loadEvent: async () => useCalendar.getState().events[0] })
 
 learningApi.listSpaces = async () => ({ data: [learningSpace], nextCursor: null })
 learningApi.getOverview = async () => overview
@@ -134,6 +134,53 @@ learningApi.getDashboard = async () => dashboard
 // State-only scenarios run without credentials or a backend. Keep them separate
 // from the real API journeys so synthetic results cannot count as API acceptance.
 const scenario = new URLSearchParams(location.search).get('scenario')
+if (scenario === 'layout-rich') {
+  const rich = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', clientMsgNo: 'layout-rich',
+    messageId: 'layout-rich', messageSeq: 2, timestamp: 1790899201, payload: createNativeMessage({ id:'layout-rich',role:'assistant',createdAt:NOW,content:[
+      {type:'text',text:'长正文保持可读行长。'.repeat(30)+'\n\n```typescript\nconst evidence = "'+ 'content'.repeat(35)+'"\n```'},
+      {type:'image',image:'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="640" height="240"%3E%3Crect width="640" height="240" fill="%23e0e7ff"/%3E%3Ctext x="50" y="135" font-size="36" fill="%233730a3"%3EEvidence overview%3C/text%3E%3C/svg%3E',filename:'证据概览.svg'},
+      {type:'tool-call',toolCallId:'layout-tool',toolName:'documents.list',args:{},argsText:'{}',result:{status:'completed',value:[]}},
+    ] }) },{participants,meId:'me'})
+  updateConversation(CONVERSATION_ID,state=>({...state,messages:[rich]}))
+}
+if (new URLSearchParams(location.search).get('drawer') === '1') useSurface.getState().openAgentInfo('scout')
+if (scenario === 'disabled-interactive-history') {
+  const source = '$prediction = ""\nroot = Lesson("历史交互讲解", "历史说明", [Prediction("prediction", "你的预测", $prediction), LearningAction("explain", "explain", "解释当前结果")])'
+  const lesson = parseLessonSource(source)
+  const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', clientMsgNo: 'disabled-interactive-history',
+    messageId: 'disabled-interactive-history', messageSeq: 2, timestamp: 1790899201,
+    payload: createNativeMessage({ id: 'disabled-interactive-history', role: 'assistant', createdAt: NOW, content: [
+      ...(['preview', 'ready'] as const).map(phase => ({ type: 'generative-ui' as const, spec: { root: { component: OPENUI_COMPONENT, props: {
+        schemaVersion: 1, catalogVersion: OPENUI_CATALOG_VERSION, rendererVersion: OPENUI_RENDERER_VERSION,
+        uiId: `history-${phase}`, messageId: 'disabled-interactive-history', runId: 'history-run', revision: 1, baseRevision: 0,
+        source, sourceHash: 'a'.repeat(64), fallback: phase === 'preview' ? '历史预览的文字讲解。' : '历史完整版本的文字讲解。',
+        phase, fields: lesson.fields, actions: lesson.actions,
+      } } } })),
+      { type: 'generative-ui', spec: { root: { component: 'Text', props: { value: '普通生成内容仍可阅读。' } } } },
+      { type: 'generative-ui', spec: { root: { component: 'agent-plan', props: { title: '保留的学习计划',
+        steps: [{ id: 'read', label: '阅读材料' }, { id: 'practice', label: '完成练习' }], activeIndex: 1 } } } },
+      { type: 'data', name: 'questionnaire', data: { title: '保留的学习问卷', items: [
+        { name: 'topic', prompt: '你想学习什么？', required: true, input: { label: '学习主题', placeholder: '填写学习主题' } },
+      ] } },
+    ] }),
+  }, { participants, meId: 'me' })
+  updateConversation(CONVERSATION_ID, state => ({ ...state, messages: [message] }))
+}
+if (scenario === 'retired-history') {
+  harnessApi.readApproval = async id => ({id,status:'PENDING',summary:'calendar.create',action:{action:'calendar.create'},preview:{}})
+  const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', clientMsgNo: 'retired-history',
+    messageId: 'retired-history', messageSeq: 2, timestamp: 1790899201,
+    payload: createNativeMessage({ id: 'run-retired-run', role: 'assistant', createdAt: NOW,
+      status: { type: 'requires-action', reason: 'tool-calls' }, custom: { runId: 'retired-run', refs:{agentId:'scout'}, controlPrincipalId: 'me',
+        harness:{...createRunView('retired-run'),artifacts:[],lifecycle:'waiting',goalOutcome:{status:'awaiting_approval',approvalId:'retired-fallback',requestVersion:1,verification:'inconclusive'}} }, content: [
+        { type: 'data', name: 'email', data: { subject: '历史邮件标题', from: 'a@example.test', to: ['b@example.test'], body: '历史邮件正文' } },
+        { type: 'generative-ui', spec: { root: { component: 'calendar-event', props: { event: { id: 'retired-event', title: '历史日程标题', startAt: NOW, allDay: false } } } } },
+        ...['email.send','calendar.create'].map((toolName,index) => ({ type: 'tool-call' as const, toolCallId: `retired-${index}`, toolName,
+          args: {}, argsText: '{}', approval: { id: `retired-approval-${index}` } })),
+      ] }),
+  }, { participants, meId: 'me' })
+  updateConversation(CONVERSATION_ID,state => ({ ...state,messages:[message] }))
+}
 if (scenario === 'mention-names') {
   useParticipants.setState({ byId: { ...participants, scout: { ...participants.scout, name: '思南' } } })
   const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'me',
@@ -301,8 +348,8 @@ if (scenario === 'chat-regressions') {
     updateConversation(CONVERSATION_ID, state => applyRunSnapshot(state, target, snapshot, participants.scout))
   }) as EventListener)
 } else if (scenario?.startsWith('chat-') && scenario !== 'chat-bubble-colors') {
-  harnessApi.readApproval = async () => ({ id: 'approval-feedback', status: 'PENDING', summary: 'calendar.create',
-    action: { action: 'calendar.create' }, preview: { input: { title: '学习复盘', at: NOW } } })
+  harnessApi.readApproval = async () => ({ id: 'approval-feedback', status: 'PENDING', summary: 'documents.create',
+    action: { action: 'documents.create' }, preview: { input: { title: '学习复盘', at: NOW } } })
   const kind = scenario.slice(5)
   const failed = kind === 'failed'
   const outcome = kind === 'partial' ? 'partial' : kind === 'blocked' || kind === 'empty-blocked' ? 'blocked' : 'satisfied'

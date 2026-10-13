@@ -13,7 +13,7 @@ import { assertUiInteractionAdmission } from '../im/interactive-ui-admission.js'
 import { WukongWebhookApplication } from '../im/webhook-application.js'
 import { enqueueAgentWakes } from '../agent-runtime/ingress.js'
 import { ensureTeacherAgentForCourse } from '../modules/learning/teacher-agent-application.js'
-import { OPENUI_CATALOG_VERSION, OPENUI_COMPONENT, OPENUI_RENDERER_VERSION } from '../../../src/lib/interactive-ui/catalog.js'
+import { INTERACTIVE_LESSONS_ENABLED, OPENUI_CATALOG_VERSION, OPENUI_COMPONENT, OPENUI_RENDERER_VERSION } from '../../../src/lib/interactive-ui/catalog.js'
 import { parseLessonSource } from '../../../src/lib/interactive-ui/source.js'
 import type { OpenUiEnvelope, UiState, UiStateResponse } from '../../../src/lib/interactive-ui/protocol.js'
 import { installRecordingWukong } from './_recording-wukong.js'
@@ -38,6 +38,7 @@ async function writeEvidence() {
   }, null, 2))
 }
 before(async () => {
+  if (!INTERACTIVE_LESSONS_ENABLED) return
   await writeEvidence()
   await ensureSchemaOnce(); await resetAllTables()
   recording = await installRecordingWukong()
@@ -56,7 +57,7 @@ before(async () => {
   const address = server.address(); assert.ok(address && typeof address === 'object')
   baseUrl = `http://127.0.0.1:${address.port}`
 })
-after(async () => { await writeEvidence(); await recording?.close(); await teardownAll(server) })
+after(async () => { if (INTERACTIVE_LESSONS_ENABLED) { await writeEvidence(); await recording?.close(); await teardownAll(server) } })
 
 function source(uiId: string, revision: number, semantic = 'projectile.angle') {
   return `$angle = 30\nroot = Lesson("抛射实验", "无空气阻力且起落等高时，45°射程最大。", [angle, plot, explain]${revision > 1 ? `, ${JSON.stringify(uiId)}, ${revision - 1}` : ''})
@@ -104,7 +105,7 @@ function action(envelope: OpenUiEnvelope, idempotencyKey: string, state: UiState
   })
 }
 
-test('personal state is scoped, conditionally saved, and restored only across compatible revisions', async () => {
+test('personal state is scoped, conditionally saved, and restored only across compatible revisions', { skip: !INTERACTIVE_LESSONS_ENABLED && 'Interactive lessons are hard-disabled; disabled behavior is covered by interactive-ui-disabled.test.ts' }, async () => {
   const first = await publish('state-lesson', 1)
   const read = await fetch(stateUrl(first.envelope), { headers: headers() })
   assert.equal(read.status, 200)
@@ -131,7 +132,7 @@ test('personal state is scoped, conditionally saved, and restored only across co
   completedChecks.push('personal-state-and-recovery')
 })
 
-test('actions are allowlisted, admitted once, and generic ingress cannot forge their receipts', async () => {
+test('actions are allowlisted, admitted once, and generic ingress cannot forge their receipts', { skip: !INTERACTIVE_LESSONS_ENABLED && 'Interactive lessons are hard-disabled; disabled behavior is covered by interactive-ui-disabled.test.ts' }, async () => {
   const first = await publish('action-lesson', 1)
   const beforeCount = recording.messages.length
   const accepted = await action(first.envelope, 'one-action')
@@ -162,7 +163,7 @@ test('actions are allowlisted, admitted once, and generic ingress cannot forge t
   completedChecks.push('action-admission')
 })
 
-test('mentions in lesson titles and prediction data cannot choose action recipients', async () => {
+test('mentions in lesson titles and prediction data cannot choose action recipients', { skip: !INTERACTIVE_LESSONS_ENABLED && 'Interactive lessons are hard-disabled; disabled behavior is covered by interactive-ui-disabled.test.ts' }, async () => {
   const otherAgentId = 'ui-other-agent'
   await seedCompanyWithAgent({ companyId, agentId: otherAgentId })
   const members = ['test-owner', 'ui-peer', agentId, otherAgentId]
@@ -195,7 +196,7 @@ test('mentions in lesson titles and prediction data cannot choose action recipie
   completedChecks.push('action-recipient-authority')
 })
 
-test('real student, teacher-room, conversation and tenant scopes remain authoritative for UI requests', async () => {
+test('real student, teacher-room, conversation and tenant scopes remain authoritative for UI requests', { skip: !INTERACTIVE_LESSONS_ENABLED && 'Interactive lessons are hard-disabled; disabled behavior is covered by interactive-ui-disabled.test.ts' }, async () => {
   const first = await publish('scope-lesson', 1)
   const foreign = await seedCompanyWithAgent({ companyId: 'ui-foreign-company', agentId: 'ui-foreign-agent' })
   await assert.rejects(getUiState({ companyId: foreign.companyId, channelId, userId: 'test-owner',
@@ -259,7 +260,7 @@ test('real student, teacher-room, conversation and tenant scopes remain authorit
   completedChecks.push('student-teacher-room-and-scope')
 })
 
-test('pending delivery fences actions, survives ACK loss, and commits only the original recorded message', async () => {
+test('pending delivery fences actions, survives ACK loss, and commits only the original recorded message', { skip: !INTERACTIVE_LESSONS_ENABLED && 'Interactive lessons are hard-disabled; disabled behavior is covered by interactive-ui-disabled.test.ts' }, async () => {
   const first = await publish('pending-lesson', 1)
   const second = await draft('pending-lesson', 2)
   assert.equal(await reserveUiRevisions(second.identity), 'reserved')
@@ -284,7 +285,7 @@ test('pending delivery fences actions, survives ACK loss, and commits only the o
   completedChecks.push('pending-publication')
 })
 
-test('an action whose send lost its ACK is reconciled without a second human message', async t => {
+test('an action whose send lost its ACK is reconciled without a second human message', { skip: !INTERACTIVE_LESSONS_ENABLED && 'Interactive lessons are hard-disabled; disabled behavior is covered by interactive-ui-disabled.test.ts' }, async t => {
   const lesson = await publish('action-ack-lesson', 1)
   const client = wukongClient(), send = client.sendMessage.bind(client), count = recording.messages.length
   const lostAck = t.mock.method(client, 'sendMessage', async (...args: Parameters<typeof client.sendMessage>) => {
@@ -298,7 +299,7 @@ test('an action whose send lost its ACK is reconciled without a second human mes
   completedChecks.push('action-lost-ACK')
 })
 
-test('native UI dispatch reconciles a lost ACK and does not retry an unconfirmed absent message', async t => {
+test('native UI dispatch reconciles a lost ACK and does not retry an unconfirmed absent message', { skip: !INTERACTIVE_LESSONS_ENABLED && 'Interactive lessons are hard-disabled; disabled behavior is covered by interactive-ui-disabled.test.ts' }, async t => {
   const lesson = await draft('dispatch-ack-lesson', 1)
   await reserveUiRevisions(lesson.identity)
   const input = { companyId, userId: agentId, channelId, clientNonce: lesson.identity.clientNonce, payload: lesson.payload }
@@ -329,7 +330,7 @@ test('native UI dispatch reconciles a lost ACK and does not retry an unconfirmed
   completedChecks.push('dispatch-unknown')
 })
 
-test('competing revisions and same-version state writes admit exactly one winner', async () => {
+test('competing revisions and same-version state writes admit exactly one winner', { skip: !INTERACTIVE_LESSONS_ENABLED && 'Interactive lessons are hard-disabled; disabled behavior is covered by interactive-ui-disabled.test.ts' }, async () => {
   const first = await publish('concurrent-lesson', 1)
   const writes = await Promise.all([60, 70].map(angle => fetch(stateUrl(first.envelope).split('?')[0], {
     method: 'PUT', headers: headers(), body: JSON.stringify({ ...reference(first.envelope), expectedVersion: 0, state: { $angle: angle } }),
@@ -346,7 +347,7 @@ test('competing revisions and same-version state writes admit exactly one winner
   completedChecks.push('concurrent-writes')
 })
 
-test('runtime control rejects cancelled or failed runs and binds only the original waiting request', async t => {
+test('runtime control rejects cancelled or failed runs and binds only the original waiting request', { skip: !INTERACTIVE_LESSONS_ENABLED && 'Interactive lessons are hard-disabled; disabled behavior is covered by interactive-ui-disabled.test.ts' }, async t => {
   const lesson = await publish('runtime-control-lesson', 1)
   const { lingxiOSControl } = await import('../agent-runtime/runtime.js')
   const api = await lingxiOSControl(), originalRead = api.readRun

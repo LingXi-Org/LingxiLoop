@@ -78,7 +78,7 @@ export async function independentLearningEvidenceKeys(
          ON step.company_id=attempt.company_id AND step.project_id=attempt.project_id
         AND step.id=attempt.mission_step_id
       WHERE evaluation.company_id=$1 AND evaluation.project_id=$2 AND attempt.learner_id=$3
-        AND evaluation.status='ACCEPTED' AND attempt.assistance='NONE'
+        AND evaluation.status='ACCEPTED' AND attempt.assistance='NONE' AND attempt.source<>'AGENT_GENERATED'
         AND evaluation.demonstrated_level>=3 AND evaluation.id<>$5
         AND (activity_unit.knowledge_unit_id=$4 OR step.knowledge_unit_id=$4)`,
     [
@@ -105,7 +105,7 @@ export async function learningEvaluationEvidenceKey(
        JOIN learning_attempts attempt
          ON attempt.id=evaluation.attempt_id AND attempt.company_id=evaluation.company_id
         AND attempt.project_id=evaluation.project_id
-      WHERE evaluation.id=$1 AND evaluation.company_id=$2 AND evaluation.project_id=$3`,
+      WHERE evaluation.id=$1 AND evaluation.company_id=$2 AND evaluation.project_id=$3 AND attempt.source<>'AGENT_GENERATED'`,
     [args.evaluationId, args.companyId, args.projectId],
   )
   return rows[0]?.evidence_key ?? null

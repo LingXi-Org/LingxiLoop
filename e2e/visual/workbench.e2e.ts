@@ -13,42 +13,22 @@ for (const theme of ['dark', 'light']) {
     await browser.evaluate(async () => { await document.fonts.ready; return null })
     const geometry = await browser.evaluate(() => {
       const width = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().width
-      return { rail: width('.server-rail'), list: width('[data-slot="sidebar"]'), message: width('[data-msg-id]'), composer: width('[data-composer-column]'), overflow: document.documentElement.scrollWidth > innerWidth }
+      return { rail: width('.server-rail'), list: width('[data-slot="sidebar"]'), message: width('[data-msg-id]'), body: width('[data-msg-id] .native-message-content'), column: width('[data-chat-message-column]'), composer: width('[data-composer-column]'), overflow: document.documentElement.scrollWidth > innerWidth }
     })
     expect(geometry.rail).toBe(64)
     expect(Math.abs(geometry.list - 300)).toBeLessThanOrEqual(1)
-    expect(geometry.message).toBeLessThanOrEqual(801)
+    expect(geometry.body).toBeLessThanOrEqual(801)
     expect(geometry.composer).toBeLessThanOrEqual(801)
-    expect(Math.abs(geometry.message - geometry.composer)).toBeLessThanOrEqual(1)
+    expect(Math.abs(geometry.message - geometry.column)).toBeLessThanOrEqual(1)
     expect(geometry.overflow).toBe(false)
     await expect(browser.locator('[data-slot="sidebar"] [aria-current="page"]')).toHaveAttribute('data-variant', 'muted')
     await app.screenshot(`chat-1440-${theme}`)
-    for (const [name, view] of [['Agent', 'agents'], ['邮件', 'mail'], ['学习概览', 'learning'], ['资料', 'library']]) {
+    for (const [name, view] of [['Agent', 'agents'], ['学习概览', 'learning'], ['资料', 'library']]) {
       await screen.getByRole('navigation', '工作区与功能').getByRole('button', name).tap()
       await expect(browser.locator(`[data-ui-page="${view}"]`)).toBeVisible()
       await expect(browser.locator(`[data-ui-page="${view}"] [aria-busy="true"], [data-ui-page="${view}"] [data-skeleton-region]`)).toHaveCount(0)
       expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
       await app.screenshot(`${view}-1440-${theme}`)
-      if (view === 'mail') {
-        await screen.getByRole('button').filter({ hasText: '本地邮件标题' }).tap()
-        const contrast = await browser.evaluate(() => {
-          const style = getComputedStyle(document.querySelector('[data-page="mail"] button[aria-current="page"]')!)
-          const context = document.createElement('canvas').getContext('2d')!
-          const luminance = (color: string) => {
-            context.fillStyle = color
-            context.fillRect(0, 0, 1, 1)
-            const rgb = Array.from(context.getImageData(0, 0, 1, 1).data).slice(0, 3).map(value => {
-              const channel = value / 255
-              return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
-            })
-            return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722
-          }
-          const a = luminance(style.color), b = luminance(style.backgroundColor)
-          return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
-        })
-        expect(contrast).toBeGreaterThanOrEqual(4.5)
-        await app.screenshot(`mail-selected-1440-${theme}`)
-      }
     }
     await screen.getByRole('button', '打开账户菜单').tap()
     await screen.getByRole('menuitem', '设置').tap()

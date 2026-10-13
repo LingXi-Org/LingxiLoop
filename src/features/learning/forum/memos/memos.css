@@ -1,0 +1,8 @@
+/* Memos search paints ranges without rewriting rendered Markdown. */
+::highlight(memo-search-match) {
+  background: color-mix(in oklab, var(--primary) 25%, transparent);
+  color: var(--foreground);
+}
+.dark [data-code-highlighted] span[style] {
+  color: var(--shiki-dark) !important;
+}

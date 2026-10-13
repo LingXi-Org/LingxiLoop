@@ -2,10 +2,16 @@ import { z } from 'zod'
 import type { RunEvent, RunStreamEvent } from '@lyyzka/lingxios/ui'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
+import { publicActivitySchema } from '../../../src/lib/runActivity.js'
+import { userFacingError } from '../../../src/lib/userFacingError.js'
 
 const memories = z.object({ documents: z.array(z.object({ id: z.string().max(500), description: z.string().max(500), status: z.enum(['active','candidate','retired','expired']) })).max(256), deleted: z.array(z.string().max(500)).max(256) })
 /** User transport allowlist; full results remain private to the native runtime. */
 export function publicToolValue(action: string, value: unknown): unknown {
+  if (action === 'chat.report_progress') {
+    const parsed = publicActivitySchema.safeParse(value)
+    return parsed.success ? parsed.data : undefined
+  }
   const card = toolCardResult(action, value)
   if (card !== undefined) return action === 'learning.propose_evaluation' ? { result: card } : card
   if (action === 'research.search') { const results = researchSources(value); return results === null ? undefined : { results } }
@@ -21,6 +27,10 @@ export function publicToolValue(action: string, value: unknown): unknown {
 }
 
 export function publicRunEvent(event: RunEvent, action = ''): RunEvent {
+  if (event.visibility !== 'user') return { ...event, data: {} }
+  if (event.kind === 'run.failed' || event.kind === 'run.cancelled') return { ...event, data: {
+    ...(event.kind === 'run.failed' ? { error: userFacingError(event.data.error, '这次任务未能完成，请稍后重试。') } : {}),
+  } }
   if (event.kind === 'tool.started') return { ...event, data: { toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, name: event.data.name } }
   if (event.kind !== 'tool.completed') return event
   const raw = event.data.result && typeof event.data.result === 'object' ? event.data.result : {}

@@ -12,6 +12,7 @@ import { createImMessagesApplication } from './messages-facade.js'
 import { agentMessageSchemas } from './agent-contracts.js'
 import { createNativeMessage, nativeText, type NativeMessage } from './message-types.js'
 import { appendReadReceiptAdvance } from './read-receipts-repository.js'
+import { extractLessonBlocks } from '../../../src/lib/interactive-ui/source.js'
 
 const identity = ({ work }: ActionContext) => ({ companyId: work.tenantId, userId: work.agentId, channelId: productConversationId(work) })
 const application = (context: ActionContext) => createImMessagesApplication(context.signal)
@@ -92,8 +93,9 @@ export function createMessageTools(control: () => ReturnType<typeof createLingxi
   return [
   nativeTool('chat.send', agentMessageSchemas.send, { ...communication,
     semanticVersion: '2',
-    description: 'Send one settled conversational message now. Use distinct messages for useful lead-in thoughts, then finish with the native final response without repeating them. Keep reviewed conclusions, citations and complete deliverables in the final result.',
+    description: 'Send one settled conversational message now. Use distinct messages for useful lead-in thoughts, then finish with the native final response without repeating them. Keep reviewed conclusions, citations and complete deliverables in the final result. Interactive lessons belong only in the native final response; never send lesson source here.',
     async execute(context, input) {
+      if (extractLessonBlocks(input.body).length) throw new NoEffectError('Deliver interactive lessons in the native final response, not chat.send, so their source can be verified and rendered.', 'invalid_answer')
       const result = await communication.execute(context,input)
       await recordSentMessage(context,result.value.messageId,input.body)
       return result

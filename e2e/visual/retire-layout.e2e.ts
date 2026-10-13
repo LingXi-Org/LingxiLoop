@@ -1,0 +1,99 @@
+import { test } from '@e2e-dev/web'
+import { expect } from 'e2e'
+import { mkdir,writeFile } from 'node:fs/promises'
+
+// Failure modes: centered rows retain wide gutters; body stretches; drawer or mobile
+// overflows; legacy mail/calendar cards still offer approval or navigation.
+// Disabled interactive lessons: preview/ready history must show fallback immediately,
+// with no lesson controls, while ordinary generated content, plans and questionnaires work.
+for (const width of [1440,390]) {
+  test(`disabled interactive history preserves other cards (${width})`, async ({ app, browser, screen }) => {
+    await browser.setViewport({ width, height: 960 })
+    await app.open('/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=disabled-interactive-history')
+    if (width < 768) await browser.locator('[data-slot="sidebar"] [role="button"]').first().tap()
+    const message = browser.locator('[data-msg-id="disabled-interactive-history"]')
+    await expect(message).toContainText('普通生成内容仍可阅读。')
+    await expect(browser.locator('[data-msg-id="disabled-interactive-history"] [data-slot="agent-plan"]')).toContainText('保留的学习计划')
+    await expect(browser.locator('[data-msg-id="disabled-interactive-history"] [data-slot="agent-plan"]')).toContainText('完成练习')
+    await screen.getByPlaceholder('填写学习主题').fill('抛射运动')
+    await expect(screen.getByPlaceholder('填写学习主题')).toHaveValue('抛射运动')
+    await expect(screen.getByText('历史预览的文字讲解。', { exact: true })).toBeVisible()
+    await expect(screen.getByText('历史完整版本的文字讲解。', { exact: true })).toBeVisible()
+    await expect(browser.locator('[data-msg-id="disabled-interactive-history"] [data-interactive-ui]')).toHaveCount(0)
+    await expect(browser.locator('[data-msg-id="disabled-interactive-history"] [data-native-part="generative-ui"] input, [data-msg-id="disabled-interactive-history"] [data-native-part="generative-ui"] button')).toHaveCount(0)
+    expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await app.screenshot(`disabled-interactive-history-${width}`)
+  })
+}
+
+for (const width of [1920, 1440, 1024, 767, 390]) {
+  test(`conversation edges and readable bodies (${width})`, async ({ app, browser }) => {
+    await browser.setViewport({ width, height: 960 })
+    await app.open('/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors')
+    if (width < 768) await browser.locator('[data-slot="sidebar"] [role="button"]').first().tap()
+    await expect(browser.locator('[data-msg-id="bubble-me"]')).toBeVisible()
+    const layout = await browser.evaluate(() => {
+      const rect = (selector: string) => {
+        const bounds = document.querySelector(selector)!.getBoundingClientRect()
+        return { left: bounds.left, right: bounds.right, width: bounds.width }
+      }
+      const row = document.querySelector('[data-msg-id="bubble-me"]')!
+      return { column: rect('[data-chat-message-column]'), row: rect('[data-msg-id="bubble-me"]'),
+        left: rect('[data-message-bubble="human"]'), right: rect('[data-message-bubble="user"]'),
+        gutter: parseFloat(getComputedStyle(row).paddingInlineStart),
+        overflow: document.documentElement.scrollWidth > innerWidth }
+    })
+    expect(layout.overflow).toBe(false)
+    expect(layout.left.width).toBeLessThanOrEqual(800)
+    expect(layout.right.width).toBeLessThanOrEqual(800)
+    if (process.env.E2E_LAYOUT_PHASE !== 'before') {
+      expect(Math.abs(layout.row.left - layout.column.left)).toBeLessThan(2)
+      expect(Math.abs(layout.row.right - layout.column.right)).toBeLessThan(2)
+      expect(layout.gutter).toBeGreaterThanOrEqual(16)
+      expect(layout.gutter).toBeLessThanOrEqual(40)
+      if (width >= 1440) expect(layout.gutter).toBeGreaterThanOrEqual(24)
+      expect(layout.left.left - layout.column.left).toBeLessThan(110)
+      expect(layout.column.right - layout.right.right).toBeLessThan(110)
+      const folder = process.env.E2E_LAYOUT_PHASE === 'gutters' ? 'gutters' : 'after'
+      await mkdir(`artifacts/retire-layout/${folder}/geometry`,{recursive:true})
+      await writeFile(`artifacts/retire-layout/${folder}/geometry/${width}.json`,JSON.stringify(layout,null,2))
+    }
+    await app.screenshot(`conversation-edges-${width}`)
+  })
+}
+
+for (const width of [1440,390]) {
+  test(`retired history stays readable without actions (${width})`, async ({ app, browser, screen }) => {
+    if (process.env.E2E_LAYOUT_PHASE === 'before') return
+    await browser.setViewport({width,height:960})
+    await app.open('/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=retired-history')
+    if (width < 768) await browser.locator('[data-slot="sidebar"] [role="button"]').first().tap()
+    await expect(screen.getByText('历史邮件标题',{exact:true})).toBeVisible()
+    await expect(screen.getByText('历史邮件正文',{exact:true})).toBeVisible()
+    await expect(browser.locator('[data-msg-id="retired-history"]')).toContainText('历史日程标题')
+    await expect(browser.locator('[data-msg-id="retired-history"]')).toContainText('此记录仅供查看')
+    await expect(browser.locator('[data-msg-id="retired-history"]')).toContainText('此审批已不可执行')
+    await expect(browser.locator('[data-msg-id="retired-history"] [data-native-part="tool-call"] button, [data-msg-id="retired-history"] [data-native-part="generative-ui"] button')).toHaveCount(0)
+    await app.screenshot(`retired-history-${width}`)
+  })
+}
+
+for (const width of [1440,767,390]) {
+  test(`rich message and detail drawer fit (${width})`, async ({ app,browser,screen }) => {
+    if (process.env.E2E_LAYOUT_PHASE === 'before') return
+    await browser.setViewport({width,height:960})
+    await app.open('/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=layout-rich')
+    if (width < 768) await browser.locator('[data-slot="sidebar"] [role="button"]').first().tap()
+    await expect(browser.locator('[data-msg-id="layout-rich"]')).toBeVisible()
+    await expect(browser.locator('[data-msg-id="layout-rich"] pre')).toBeVisible()
+    await expect(browser.locator('[data-msg-id="layout-rich"] [data-native-part="image"] img')).toBeVisible()
+    expect(await browser.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await app.screenshot(`rich-message-${width}`)
+    await app.open('/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=layout-rich&drawer=1')
+    await expect(screen.getByRole('dialog')).toBeVisible()
+    expect(await browser.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await app.screenshot(`conversation-detail-${width}`)
+    await browser.keyboard.press('Escape')
+    await expect(screen.getByRole('dialog')).toHaveCount(0)
+  })
+}

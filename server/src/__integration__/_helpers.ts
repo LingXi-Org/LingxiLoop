@@ -15,13 +15,11 @@
  */
 import type { Queryable } from '../db/queryable.js'
 import { randomUUID } from 'node:crypto'
-import { Webhook } from 'svix'
 import { assertMigrationsCurrent } from '../db/migrate.js'
 import { closeDatabasePools, pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { ensureEducationPlan } from '../modules/entitlements/public.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
-import type { InboundEmailPayload } from '../modules/email/contracts.js'
 import {
   type BoundedStorageReader,
   installStorageProvider,
@@ -233,37 +231,13 @@ export async function resetAllTables(): Promise<void> {
   await ensureEducationPlan(pool)
 }
 
-export function signInboundPayload(body: string): Record<string, string> {
-  const secret = env.RESEND_WEBHOOK_SECRET
-  if (!secret) throw new Error('RESEND_WEBHOOK_SECRET not set in test env')
-  const id = `msg_${randomUUID()}`
-  const timestamp = new Date()
-  return {
-    'svix-id': id,
-    'svix-timestamp': String(Math.floor(timestamp.getTime() / 1000)),
-    'svix-signature': new Webhook(secret).sign(id, timestamp, body),
-  }
-}
-
-const inboundFixtures = new Map<string, InboundEmailPayload>()
-
-export function registerInboundFixture(payload: InboundEmailPayload): string {
-  const emailId = randomUUID()
-  inboundFixtures.set(emailId, payload)
-  return emailId
-}
-
-/** Insert the minimum scaffolding an email row needs: one company + one
- *  agent participant whose participants.email is pre-minted. Returns the
- *  ids the caller will use as recipient / sender. */
+/** Seed the minimum company, project and Agent membership. */
 export async function seedCompanyWithAgent(opts?: {
-  companyId?: string; agentId?: string; agentEmail?: string
-}): Promise<{ companyId: string; projectId: string; agentId: string; agentEmail: string }> {
+  companyId?: string; agentId?: string
+}): Promise<{ companyId: string; projectId: string; agentId: string }> {
   const companyId = opts?.companyId ?? `c-${randomUUID().slice(0, 8)}`
   const projectId = `general-${companyId}`
   const agentId = opts?.agentId ?? `a-${randomUUID().slice(0, 8)}`
-  const dom = env.EMAIL_DOMAIN || 'lingxiloop.local'
-  const agentEmail = opts?.agentEmail ?? `${agentId}.${companyId}@${dom}`
   const { rows: ownerMemberships } = await pool.query<{ company_id: string }>(`SELECT company_id FROM company_memberships WHERE user_id='test-owner' AND ended_at IS NULL`)
   const ownerId = ownerMemberships[0] && ownerMemberships[0].company_id!==companyId ? `test-owner-${companyId}` : 'test-owner'
   await pool.query(
@@ -298,12 +272,12 @@ export async function seedCompanyWithAgent(opts?: {
   )
   // participants composite PK is (id, company_id) — see the v1 baseline migration.
   await pool.query(
-    `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status, email)
-     VALUES ($1, $2, 'agent', $3, 'tester', $4, '#abcdef', 'avail', $5)
+    `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status)
+     VALUES ($1, $2, 'agent', $3, 'tester', $4, '#abcdef', 'avail')
      ON CONFLICT DO NOTHING`,
-    [agentId, companyId, `Agent ${agentId}`, agentId.slice(0, 1).toUpperCase(), agentEmail],
+    [agentId, companyId, `Agent ${agentId}`, agentId.slice(0, 1).toUpperCase()],
   )
-  return { companyId, projectId, agentId, agentEmail }
+  return { companyId, projectId, agentId }
 }
 
 /** Install an explicit in-process WuKongIM provider for domain integration
@@ -323,33 +297,9 @@ export function installFakeWukong(): void {
   }({ apiUrl: 'http://unused', wsUrl: 'ws://unused', apiToken: 'test', webhookSecret: 'test' }))
 }
 
-/** Build a minimum-viable Express app that mounts only the routes under
- *  test. Avoids booting the full server (auth middleware, schedulers,
- *  etc.) — slow, more failure modes. */
-export async function buildTestApp(storageProvider?: Pick<Storage, 'put'>): Promise<import('express').Express> {
-  const expressMod = await import('express')
-  const express = expressMod.default
-  const app = express()
-  const { createResendInboundEmailRouter, resendInboundEmailRouter } = await import('../modules/email/index.js')
-  // Match the production mount path: web.ts mounts resendInboundEmailRouter
-  // at /webhooks/email — see server/src/web.ts.
-  app.use(
-    '/webhooks/email',
-    storageProvider ? createResendInboundEmailRouter({
-      storage: storageProvider,
-      retrieve: async (emailId) => {
-        const payload = inboundFixtures.get(emailId)
-        if (!payload) throw new Error(`missing inbound fixture: ${emailId}`)
-        return payload
-      },
-    }) : resendInboundEmailRouter,
-  )
-  return app
-}
-
 /** Build a test app with the full /api router mounted + a stubbed auth
  *  middleware that stamps every request as the given userId. Used for
- *  exercising auth-gated endpoints (HTML viewer, send/reply) without
+ *  exercising auth-gated product endpoints without
  *  having to mint real sessions. The caller is responsible for seeding
  *  the user + company_memberships rows so requireCompany() succeeds. */
 export async function buildApiTestApp(userId: string): Promise<import('express').Express> {
@@ -372,10 +322,7 @@ export async function buildApiTestApp(userId: string): Promise<import('express')
 
 /** Insert a user + company_memberships row so requireCompany resolves to the
  *  given tenant. ALSO inserts a corresponding participants row, matching
- *  what production onboarding does — human users get a participants
- *  entry so they can have a minted lingxiloop email, climate signals,
- *  /participants visibility, etc. Without this, ensureParticipantAddress
- *  returns null and email-reply paths 500. */
+ *  what production onboarding does for participant visibility and presence. */
 export async function seedUserMembership(userId: string, companyId: string, opts?: {
   email?: string; displayName?: string; role?: 'TEACHER' | 'STUDENT'; isAdmin?: boolean;
 }): Promise<void> {
@@ -396,9 +343,7 @@ export async function seedUserMembership(userId: string, companyId: string, opts
   await seedMembershipPeriod(pool, companyId, userId)
   await seedActiveEducationSeat(companyId, userId)
   // Mirror what production onboarding does: a human is also a participant
-  // in the company. We leave participants.email NULL so ensureParticipantAddress
-  // lazy-mints `<userId>.<slug>@<EMAIL_DOMAIN>` on first access (matches
-  // the production code path).
+  // in the company; the directory resolves its account contact from users.
   await pool.query(
     `INSERT INTO participants (id, company_id, kind, name, role, initial, avatar_bg, status)
      VALUES ($1, $2, 'human', $3, 'owner', $4, '#abcdef', 'avail')

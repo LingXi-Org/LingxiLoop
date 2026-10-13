@@ -28,6 +28,7 @@ export function ApprovalRequestCard({ approvalId, sender, busy, onApprove, onDen
     <p role={error ? 'alert' : 'status'} className="text-xs text-muted-foreground">{error || '正在读取审批详情…'}</p>
     {error && <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => setRevision(value => value + 1)}>重试读取</Button>}
   </CardSurface>
+  if (review.retired) return <p className="text-sm text-muted-foreground">邮件和日历功能已停止支持；此审批已不可执行。</p>
   return <ApprovalCard title="任务审批" summary={review.summary} approved={review.approved} context={[{ label: '执行者', value: sender }, ...review.context]}
     busy={busy} onApprove={onApprove} onDeny={onDeny} />
 }

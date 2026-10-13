@@ -1,6 +1,4 @@
 import { nativeText, nativeData } from '../im/message-types.js'
-import { calendarApplication } from '../modules/calendar/index.js'
-import { createCalendarEventRequestSchema } from '../modules/calendar/contracts.js'
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
 import { pool } from '../db/pool.js'
@@ -26,7 +24,9 @@ test('native capability registry executes cards and artifacts, gates approval, a
   assert.ok(work)
   const context = await host.loadContext(work)
   assert.equal(context.responseProfile,'deep')
-  for (const name of ['calendar','documents','files','canvas','learning','handoffs','research','chat','polls','knowledge','email','routines']) assert.ok(context.grants?.some(grant=>grant.name===name), name)
+  for (const name of ['documents','files','canvas','learning','handoffs','research','chat','polls','knowledge','routines']) assert.ok(context.grants?.some(grant=>grant.name===name), name)
+  assert.ok(!context.grants?.some(grant => ['email','calendar'].includes(grant.name)))
+  assert.match(context.productRules ?? '', /does not support email or calendar/)
   assert.ok(!context.grants?.some(grant=>grant.name==='teacher'))
   await host.saveSession(work, {
     key: JSON.stringify([work.tenantId,work.agentId,work.sessionId,work.threadId ?? null]),
@@ -39,7 +39,7 @@ test('native capability registry executes cards and artifacts, gates approval, a
     const callIndex = counter++
     return host.executeAction(work,{ runId:work.id, cellId:'protocol', callIndex, action,args,idempotencyKey:JSON.stringify([work.id,'protocol',callIndex]) })
   }
-  for (const action of ['documents.list','canvas.current','handoffs.list','email.inbox','routines.list','knowledge.list_sources','learning.get_learner_state','directory.statuses','chat.metadata']) {
+  for (const action of ['documents.list','canvas.current','handoffs.list','routines.list','knowledge.list_sources','learning.get_learner_state','directory.statuses','chat.metadata']) {
     const result = await call(action,{})
     assert.equal(result.ok,true,`${action}: ${JSON.stringify(result)}`)
   }
@@ -59,18 +59,35 @@ test('native capability registry executes cards and artifacts, gates approval, a
   const malformed = await call('chat.send',{body:'<think>private</think>Answer'})
   assert.equal(malformed.ok,false)
   assert.ok(!im.messages.some(message=>nativeText(message.payload).includes('<think>')))
-  const calendar = await call('calendar.list',{from:'2026-09-01T00:00:00Z',to:'2026-10-01T00:00:00Z'})
-  assert.equal(calendar.ok,true,JSON.stringify(calendar))
-  const approval = await call('calendar.create',{title:'复习',startAt:'2026-09-27T10:00:00Z'})
-  assert.ok(approval.approval,JSON.stringify(approval))
+  // Failures: chat.send bypasses final lesson verification, publishes raw DSL, or rejects ordinary quoted examples.
+  const lesson = 'root = Lesson("对比", "观察共同点和区别。", [Text("观察异同")])'
+  const beforeLessonMessages = im.messages.length
+  const acceptanceCount = async () => (await pool.query<{ count: number }>(
+    'SELECT count(*)::int AS count FROM im_send_acceptances WHERE company_id=$1', [companyId])).rows[0].count
+  const beforeLessonAcceptances = await acceptanceCount()
+  for (const body of [lesson, `\`\`\`lingxiloop-openui-v1\n${lesson}\n\`\`\``, `- ${lesson}`,
+    `$angle = 45\n${lesson}`, `\`\`\`openui-lang\n${lesson}\n\`\`\``]) {
+    const rejected = await call('chat.send', { body })
+    assert.equal(rejected.ok, false, 'interactive lessons must use the native final response')
+    assert.match(JSON.stringify(rejected), /native final response/)
+    assert.equal(im.messages.length, beforeLessonMessages)
+    assert.equal(await acceptanceCount(), beforeLessonAcceptances)
+  }
+  const examples = ['先观察两种情况。', `写法示例：\`${lesson}\``, `\`\`\`js\n${lesson}\n\`\`\``, `> ${lesson}`]
+  for (const body of examples) assert.equal((await call('chat.send', { body })).ok, true)
+  assert.deepEqual(im.messages.slice(beforeLessonMessages).map(message => nativeText(message.payload)), examples)
+  assert.equal(await acceptanceCount(), beforeLessonAcceptances + examples.length)
+  // Old persisted grants and actions must remain inert after retirement.
+  await pool.query(`UPDATE participants SET capabilities=capabilities || '["email","calendar"]'::jsonb WHERE company_id=$1 AND id=$2`, [companyId,agentId])
+  const staleContext = await host.loadContext(work)
+  assert.ok(!staleContext.grants?.some(grant => ['email','calendar'].includes(grant.name)))
+  for (const action of ['calendar.list','calendar.create','email.inbox','email.send','email.reply']) {
+    assert.equal((await call(action,{})).ok,false,action)
+  }
   assert.equal((await pool.query('SELECT count(*)::int AS count FROM calendar_events WHERE company_id=$1',[companyId])).rows[0].count,0)
-  const event=await calendarApplication.create({companyId,projectId,userId:'test-owner'},createCalendarEventRequestSchema.parse({title:'Authorized event',startAt:'2026-09-28T10:00:00Z'}))
-  const presentation=await call('presentation.render',{type:'calendar-event',reference:event.id})
-  assert.equal(presentation.ok,true,JSON.stringify(presentation))
-  assert.equal((await call('presentation.render',{type:'calendar-event',reference:event.id,fields:{title:'fabricated'}})).ok,false)
+  assert.equal((await call('presentation.render',{type:'calendar-event',reference:'retired-event'})).ok,false)
   await pool.query(`UPDATE participants SET capabilities=capabilities-'files'-'calendar' WHERE company_id=$1 AND id=$2`,[companyId,agentId])
   assert.equal((await call('files.create',{name:'blocked.txt',text:'blocked'})).ok,false)
   assert.equal((await call('calendar.list',{from:'2026-09-01T00:00:00Z',to:'2026-10-01T00:00:00Z'})).ok,false)
-  assert.equal((await call('presentation.render',{type:'calendar-event',reference:event.id})).ok,false)
   assert.equal((await call('teacher.overview',{})).ok,false)
 })

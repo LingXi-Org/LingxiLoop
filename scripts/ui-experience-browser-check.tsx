@@ -14,8 +14,6 @@ import { WorkspaceSkeleton } from '@/components/WorkspaceSkeleton'
 import { AuthScreen } from '@/components/AuthScreen'
 import { ConversationSkeleton } from '@/features/chat/components/ConversationSkeleton'
 import { AgentsPage, AgentsSkeleton } from '@/features/agents/components/AgentsPage'
-import { CalendarView } from '@/features/calendar/components/CalendarView'
-import { CalendarSkeleton } from '@/features/calendar/components/CalendarSkeleton'
 import { CanvasView } from '@/features/canvas/components/CanvasView'
 import { CanvasSkeleton } from '@/features/canvas/components/CanvasSkeleton'
 import { DocumentSkeleton } from '@/features/documents/components/DocumentSkeleton'
@@ -30,9 +28,7 @@ import { installResourceFixtures, teacherSpace } from './ui-experience-resource-
 import { OverviewSkeleton, CourseSettingsSkeleton } from '@/features/learning/dashboard/LearningSkeletons'
 import { SourceCardsSkeleton, SourceFoldersSkeleton } from '@/features/knowledge/components/SourceSkeletons'
 import { ProjectSourceLibrary } from '@/features/knowledge/components/ProjectSourceLibrary'
-import { emailApi } from '@/features/email/api'
 import { adminFixtures } from './ui-experience-admin-fixtures'
-import { MailPage, MailThreadSkeleton } from '@/features/email/components/MailPage'
 import { openSettingsDialog } from '@/features/settings/store'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { DesktopApp } from '@/desktop/DesktopApp'
@@ -41,7 +37,6 @@ import { useEntrance } from '@/hooks/use-entrance'
 import { knowledgeApi } from '@/features/knowledge/api'
 import { useParticipants } from '@/features/agents/state'
 import { useCanvas } from '@/features/canvas/state'
-import { useCalendar } from '@/features/calendar/state'
 import { AdminDashboardSkeleton, AdminShellSkeleton, AdminTabSkeleton, AdminRecordSkeleton } from '../admin/src/loading'
 import { AdminApp } from '../admin/src/app'
 import { adminQueryClient } from '../admin/src/api'
@@ -50,7 +45,7 @@ import { sources, participants, canvas, learningSpace } from './ui-experience-fi
 type Mode = 'success' | 'slow' | 'empty' | 'error'
 let mode: Mode = 'success'
 let pending: (() => void)[] = []
-const release = () => { const callbacks = pending; pending = []; callbacks.forEach(resolve => resolve()) }
+const release = () => { const callbacks = pending; pending = []; callbacks.forEach(resolve => { resolve() }) }
 let processingSource = false
 const pause = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
 async function data<T>(value: T, empty: T): Promise<T> {
@@ -61,9 +56,6 @@ async function data<T>(value: T, empty: T): Promise<T> {
 installResourceFixtures(data)
 knowledgeApi.listProjectSources = () => data(processingSource ? sources.map((source, index) => index === 0 ? {...source,status:'processing' as const} : source) : sources, [])
 knowledgeApi.listCourseReviewSources = () => data(sources, [])
-const mail = {conversationId:'mail-local',title:'本地邮件标题',updatedAt:'2026-10-02T08:00:00Z',lastSubject:'本地邮件标题',lastFrom:'reader@example.test',lastAt:'2026-10-02T08:00:00Z',lastBody:'隔离的邮件正文'}
-emailApi.listThreads = query => data({items:query ? [] : [mail],hasMore:false},{items:[],hasMore:false})
-emailApi.getMessages = () => data([{id:'mail-message',sequence:1,body:'本地邮件正文',createdAt:mail.updatedAt,email:{subject:mail.title,from:mail.lastFrom,to:['review@example.test'],cc:[],direction:'in' as const,hasHtml:false,transportStatus:'sent',attachments:[]}}],[])
 
 knowledgeApi.getProjectSource = async (_project, id) => data(sources.find(source => source.id === id)!, sources[0])
 adminQueryClient.setDefaultOptions({ queries: { retry: false, refetchOnWindowFocus: false } })
@@ -91,7 +83,7 @@ window.fetch = async (input, init) => {
     catch { return new Response('{"error":"本地模拟加载失败"}', {status:503}) }
   }
   if (/\/resources\/[^/]+\/[^/]+$/.test(url.pathname)) {
-    const record = {id:'local-record',name:'本地详情长标题'.repeat(5),email:'review@example.test',status:'ACTIVE',created_at:mail.updatedAt}
+    const record = {id:'local-record',name:'本地详情长标题'.repeat(5),email:'review@example.test',status:'ACTIVE',created_at:'2026-10-02T08:00:00Z'}
     try { return json(await data(record, record)) }
     catch { return new Response('{"error":"本地模拟加载失败"}', {status:503}) }
   }
@@ -104,9 +96,8 @@ window.fetch = async (input, init) => {
 
 const gallery: Record<string, ReactNode> = {
   '启动外壳': <WorkspaceSkeleton />, '会话与回复串': <ConversationSkeleton />,
-  'Agent': <AgentsSkeleton />, '邮件阅读': <MailThreadSkeleton />,
+  'Agent': <AgentsSkeleton />,
   '学生概览': <OverviewSkeleton />, '教师概览': <OverviewSkeleton perspective="teacher" />,
-  '日历月': <CalendarSkeleton mode="month" />, '日历周': <CalendarSkeleton />, '日历日': <CalendarSkeleton mode="day" />,
   '资料文件夹': <SourceFoldersSkeleton />, '资料卡片': <SourceCardsSkeleton />,
   '文档': <DocumentSkeleton />, '画布': <CanvasSkeleton />, '演示文稿': <PresentationSkeleton />,
   '课程设置': <CourseSettingsSkeleton section="profile" />, '课程成员': <CourseSettingsSkeleton section="members" />,
@@ -133,7 +124,6 @@ function App() {
     mode = nextMode
     useParticipants.setState({byId: nextMode === 'empty' || nextMode === 'slow' ? {} : participants, loaded: nextMode !== 'slow' && nextMode !== 'error', error: nextMode === 'error' ? '本地模拟失败' : null})
     useCanvas.setState({snapshot: nextMode === 'slow' || nextMode === 'error' ? null : canvas, loading: nextMode === 'slow', error: nextMode === 'error' ? '本地模拟失败' : null})
-    useCalendar.setState({loaded: nextMode !== 'slow' && nextMode !== 'error', loading: nextMode === 'slow', error: nextMode === 'error' ? '本地模拟失败' : null})
     useDocuments.getState().reset()
     usePresentations.getState().reset()
     setRevision(value => value + 1)
@@ -196,17 +186,6 @@ function App() {
       assert(document.querySelector('#check-stage')!.textContent!.includes(sources[0].title), '错误重试恢复内容')
       mode = 'empty'; setRevision(value => value + 1); await next(); await next()
       assert(document.querySelector('#check-stage')!.textContent!.includes('还没有资料'), '成功空结果显示添加入口')
-      mode = 'slow'; setSurface('邮件'); await next()
-      assert(Boolean(document.querySelector('#check-stage [role=status]')), '邮件首次加载骨架')
-      mode = 'success'; release(); await next(); await next()
-      const mailRow = [...document.querySelectorAll<HTMLButtonElement>('#check-stage button')].find(button => button.textContent?.includes(mail.title))!
-      assert(Boolean(mailRow), '邮件列表展示成功')
-      mode = 'slow'; [...document.querySelectorAll<HTMLButtonElement>('#check-stage button')].find(button => button.textContent === '刷新邮件')!.click(); await next()
-      assert(mailRow.isConnected && !document.querySelector('#check-stage [data-resource-skeleton]'), '邮件刷新保留已有列表')
-      mode = 'error'; release(); await next(); await next()
-      assert(mailRow.isConnected && Boolean(document.querySelector('#check-stage [role=alert]')), '邮件刷新失败保留内容并提示')
-      mode = 'success'; mailRow.click(); await next(); await next()
-      assert(document.querySelector('#check-stage')!.textContent!.includes('本地邮件正文'), '邮件阅读区展示正文')
       setSurface('主应用'); await next(); await next()
       let conversationButton: HTMLElement | undefined
       for (let attempt = 0; attempt < 100 && !conversationButton; attempt++) {
@@ -291,7 +270,7 @@ function App() {
   }
   return <div className="flex h-dvh min-w-0 flex-col bg-background text-foreground">
     <header className={`${new URLSearchParams(location.search).get('capture') === '1' ? 'hidden' : 'flex'} shrink-0 flex-wrap items-center gap-2 border-b p-2 text-xs`}>
-      <label>界面 <select aria-label="验收界面" value={surface} onChange={event => setSurface(event.target.value)}>{['骨架总览','主应用','Agent','邮件','日历','画布','资料','动效与焦点','学生概览','教师概览','课程资料','课程设置','课程内容','课程成员','课程状态','文档编辑','演示文稿','登录'].map(name => <option key={name}>{name}</option>)}</select></label>
+      <label>界面 <select aria-label="验收界面" value={surface} onChange={event => setSurface(event.target.value)}>{['骨架总览','主应用','Agent','画布','资料','动效与焦点','学生概览','教师概览','课程资料','课程设置','课程内容','课程成员','课程状态','文档编辑','演示文稿','登录'].map(name => <option key={name}>{name}</option>)}</select></label>
       {surface === '骨架总览' && <select aria-label="骨架页面" value={selected} onChange={event => setSelected(event.target.value)}>{Object.keys(gallery).map(name => <option key={name}>{name}</option>)}</select>}
       <Button size="sm" variant="outline" onClick={() => document.documentElement.classList.toggle('dark')}>切换主题</Button>
       <Button size="sm" variant="outline" onClick={() => openSettingsDialog()}>设置弹窗</Button>
@@ -301,13 +280,12 @@ function App() {
       {report && <details><summary>检查报告</summary><pre className="max-h-48 max-w-full overflow-auto whitespace-pre-wrap">{JSON.stringify(report, null, 2)}</pre></details>}
       <details><summary>加载场景</summary><div className="flex flex-wrap gap-2">{(['slow','success','empty','error'] as Mode[]).map(value => <Button key={value} size="sm" onClick={() => change(value)}>{value}</Button>)}<Button size="sm" onClick={() => { mode = 'success'; release?.() }}>完成请求</Button></div></details>
     </header>
-    <main id="check-stage" className={`@container/calendar min-h-0 min-w-0 flex-1 overflow-auto ${surface === '骨架总览' ? 'p-4 admin-content' : ''}`}>
+    <main id="check-stage" className={`min-h-0 min-w-0 flex-1 overflow-auto ${surface === '骨架总览' ? 'p-4 admin-content' : ''}`}>
       {surface === '骨架总览' && gallery[selected]}
       {surface === '主应用' && <DesktopApp />}
       {surface === '登录' && <AuthScreen />}
       {surface === 'Agent' && <AgentsPage />}
-      {surface === '邮件' && <MailPage key={revision} />}
-      {surface === '日历' && <CalendarView />}
+
       {surface === '画布' && <CanvasView canvasId={canvas.id} />}
       {surface === '资料' && <div className="p-4"><ProjectSourceLibrary key={revision} projectId="workspace-personal" canManage /></div>}
       {surface === '学生概览' && <LearningDashboardPanel key={revision} space={learningSpace} section="overview" />}

@@ -14,6 +14,7 @@ import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
+import { messageLessons } from '../agent-runtime/interactive-ui-projection.js'
 
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
@@ -124,7 +125,8 @@ test('production workers always expose full tools and disable thinking even with
         if (chunk.type === 'update-state') replayState.append(chunk.operations)
       }
       const final = replayState.state as unknown as AgentRunSnapshot
-      assert.deepEqual(final.message.content.filter(part => part.type === 'text'), [{ type: 'text', text: body }])
+      assert.deepEqual(final.message.content.filter(part => part.type === 'text'), [{ type: 'text', text: body,
+        providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }])
       assert.equal((final.message.metadata.custom.harness as RunDisplayState).delivery, 'delivered')
       assert.ok(snapshots.some(snapshot => snapshot.message.status?.type === 'running' && snapshot.message.content.some(part => part.type === 'text' && part.text === '第一段')))
       const snapshotResponse = await fetch(`${origin}/api/im/channels/${conversationId}/agents/${agentId}/runs/${run.runId}`, { headers, signal: timeout })
@@ -158,5 +160,73 @@ test('production workers always expose full tools and disable thinking even with
       env.OPENAI_BASE_URL = originalBaseUrl
     }
     if (streamError) throw streamError
+  }
+})
+
+// Failures: disabled UI is still advertised, a valid lesson reaches IM, or bounded
+// native correction restores UI instead of producing a plain-text answer.
+test('disabled lessons are corrected into plain text before durable delivery', { timeout: 180000 }, async () => {
+  await resetAllTables()
+  const { companyId, projectId, agentId } = await seedCompanyWithAgent()
+  await seedUserMembership('test-owner', companyId)
+  const source = 'root = Lesson("预测", "先预测，再核对。", [p])\np = Prediction("prediction", "预测结果", $prediction)'
+  const invalid = `\`\`\`lingxiloop-openui-v1\n$prediction = ""\n${source}\n\`\`\``
+  const valid = '先预测，再用文字核对结果。'
+  let calls = 0, correction = false
+  const originalBaseUrl = env.OPENAI_BASE_URL
+  const provider = createServer(async (req, res) => {
+    let raw = ''; for await (const chunk of req) raw += chunk
+    const request = JSON.parse(raw), usage = { prompt_tokens: 100, completion_tokens: 20 }
+    assert.equal(request.enable_thinking, false)
+    if (!request.stream) {
+      res.writeHead(200, { 'content-type': 'application/json' })
+      res.end(JSON.stringify({ choices: [{ message: { role: 'assistant', content: '{"missing":[]}' }, finish_reason: 'stop' }], usage }))
+      return
+    }
+    if (calls === 0) {
+      assert.equal(/installed interactive lesson renderer|Current lesson revisions|Declare a literal default/.test(JSON.stringify(request.messages)), false, 'disabled controls must not be advertised')
+    }
+    correction ||= JSON.stringify(request.messages).includes('interactive-ui:disabled')
+    const body = ++calls === 1 ? invalid : valid
+    res.writeHead(200, { 'content-type': 'text/event-stream' })
+    res.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', content: body }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
+  })
+  await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
+  const address = provider.address(); assert.ok(address && typeof address !== 'string')
+  env.OPENAI_BASE_URL = `http://127.0.0.1:${address.port}/v1`
+  process.env.LINGXIOS_SERVICE_TOKEN = 'interactive-repair-integration-service-token'
+  process.env.AGENT_OS_WORKER_PORT = '52994'
+  let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
+  try {
+    const api = await lingxiOSControl()
+    const port = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN, port: 0 })
+    process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${port}`
+    const conversationId = `ui-repair-${companyId}`, members = ['test-owner', agentId]
+    await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','UI repair',$4::jsonb)`,
+      [conversationId, companyId, projectId, JSON.stringify(members)])
+    await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',
+      [conversationId, companyId, JSON.stringify({ channelType: 2, members })])
+    const policy = await syncConversationPolicy(api, companyId, conversationId)
+    const accepted = await api.conversations.ingest({ tenantId: companyId, conversationId, policyVersion: policy.version,
+      messageId: 'question', version: 1, author: { id: 'test-owner', kind: 'human' }, text: '请给出可以填写预测的交互讲解。', mentions: [agentId] },
+    { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation', codeExecution: 'disabled' })
+    const run = accepted.runs[0]; assert.ok(run); await bindProductRun(pool, run, conversationId)
+    worker = await startLingxiOSWorker()
+    const timeout = AbortSignal.timeout(120000)
+    while ((await api.readRunState(run))?.delivery !== 'delivered') { timeout.throwIfAborted(); await delay(50) }
+    assert.equal(calls, 2)
+    assert.equal(correction, true)
+    const answers = im.messages.filter(message => message.channelId === conversationId)
+    assert.equal(answers.length, 1)
+    assert.deepEqual(messageLessons(answers[0].payload), [])
+    assert.equal(nativeText(answers[0].payload), valid)
+    assert.equal((await pool.query('SELECT count(*)::int AS count FROM im_ui_revisions WHERE company_id=$1', [companyId])).rows[0].count, 0)
+    await mkdir('artifacts/interactive-ui', { recursive: true })
+    await writeFile('artifacts/interactive-ui/disabled-runtime.json', JSON.stringify({ passed: true, generationCalls: calls,
+      correctedToPlainText: true, durableMessages: answers.length, provider: 'scripted native worker', reasoningDisabled: true }, null, 2))
+  } finally {
+    await worker?.stop(); await stopLingxiOSControl()
+    provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve()))
+    env.OPENAI_BASE_URL = originalBaseUrl
   }
 })

@@ -1,15 +1,18 @@
+import { INTERACTIVE_LESSONS_ENABLED } from '../../../src/lib/interactive-ui/catalog.js'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import OpenAI from 'openai'
+import { fromMarkdown } from 'mdast-util-from-markdown'
 import { z } from 'zod'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import type { RunIdentity } from '@lyyzka/lingxios'
-import type { AgentRunSnapshot } from '../../../src/lib/agentRunSnapshot.js'
+import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
+import { extractLessonBlocks, parseLessonSource } from '../../../src/lib/interactive-ui/source.js'
 import { interactiveBaselineCases, interactiveCases } from '../../../e2e/interactive-ui-cases.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
 import { messageLessons } from '../agent-runtime/interactive-ui-projection.js'
@@ -21,9 +24,38 @@ import { wukongWebhookRouter } from '../im/webhook.js'
 import { imMessagesApplication } from '../im/messages-facade.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
+if (process.env.LINGXIOS_LIVE_UI === '1' && !INTERACTIVE_LESSONS_ENABLED) throw new Error('Interactive lessons are hard-disabled; run interactive-ui-disabled.test.ts for release verification.')
+
 // Failure inventory precedes the live implementation: no preview, invalid source,
 // incorrect teaching/transfer answers, unmetered usage, retries counted as passes,
 // browser-only fixtures presented as product evidence, and changing gates after holdout.
+// Collection failure inventory: an unfinished run or unknown candidate/judge cost must
+// stop the matrix; a delivered, terminal, metered answer may fail acceptance without
+// hiding later cases. Failed or blocked cases must never yield zero failures or passed.
+// Minimal check: existing fixture-safety checks before edits, then this file's offline
+// assertions, server typecheck and scoped lint; real-model acceptance remains separate.
+// Ledger reconciliation failures: three recorded calls cannot settle four public calls;
+// pending public calls cannot settle even when counts match; estimated or unmeasured
+// usage cannot pass. Check these with synthetic usage/ledger reads before implementation.
+// Inspect parsed components: whitespace in a call is valid and a quoted name is not a component.
+function containsComponent(value: unknown, name: string): boolean {
+  return !!value && typeof value === 'object' && (
+    'type' in value && value.type === 'element' && 'typeName' in value && value.typeName === name
+    || Object.values(value).some(child => containsComponent(child, name)))
+}
+const hasPlainLessonSource = (body: string) => extractLessonBlocks(body, { preview: true }).length > 0
+assert.ok(containsComponent(parseLessonSource('root = Lesson("test", "test", [Table (["A"], [["B"]])])').root, 'Table'))
+assert.ok(!containsComponent(parseLessonSource('root = Lesson("test", "Table(", [Text("Table(")])').root, 'Table'))
+// Markdown examples are text by contract; raw statements (including in lists) must stay hidden.
+assert.ok(hasPlainLessonSource('root = Lesson("test")'))
+assert.ok(hasPlainLessonSource('- root = Lesson("test")'))
+assert.ok(!hasPlainLessonSource('写法示例：`root = Lesson(...)`'))
+assert.ok(!hasPlainLessonSource('写法示例：`root = Lesson('))
+assert.ok(!hasPlainLessonSource('```js\nroot = Lesson("example")\n```'))
+assert.ok(!hasPlainLessonSource('> root = Lesson("example")'))
+assert.ok(hasPlainLessonSource('```openui-lang\nroot = Lesson("test")\n```'))
+assert.ok(hasPlainLessonSource('```lingxiloop-openui-v1\nroot = Lesson("test")\n```'))
+
 test('current product generates, delivers and explores learning UI with a real model and browser', {
   skip: process.env.LINGXIOS_LIVE_UI !== '1', timeout: 3_600_000,
 }, async t => {
@@ -31,8 +63,22 @@ test('current product generates, delivers and explores learning UI with a real m
   assert.equal(process.env.AGENT_OS_MAX_CONCURRENT_RUNS, '1')
   const output = 'artifacts/interactive-ui/live'
   await mkdir(output, { recursive: true })
-  const results: { passed: boolean; baseline: unknown[]; cases: unknown[]; attempts: string[]; browser?: unknown; gates?: unknown; metrics?: unknown; error?: string } = { passed: false, baseline: [], cases: [], attempts: [] }
-  const record = () => writeFile(`${output}/results.json`, JSON.stringify(results, null, 2))
+  await Promise.all(['performance-gates.json', 'stream-violation.json'].map(file => rm(`${output}/${file}`, { force: true })))
+  let judgeCostUSD = 0
+  type CaseEvidence = { id: string; status: 'passed' | 'failed' | 'blocked'; [key: string]: unknown }
+  const results: { passed: boolean; baseline: CaseEvidence[]; cases: CaseEvidence[]; attempts: string[]; browser?: unknown; gates?: unknown; metrics?: Record<string, unknown>; error?: string } = {
+    passed: false, baseline: [], cases: [], attempts: [], browser: { status: 'blocked', reason: 'Holdout validation has not completed' },
+    metrics: { restoreAttempts: 0, restored: 0, recoveryRate: null },
+  }
+  const record = () => {
+    const generationFailures = results.attempts.filter(id => [...results.baseline, ...results.cases].some(item => item.id === id && item.status === 'failed')).length
+    results.metrics = { ...results.metrics, judgeCostUSD, generationAttempts: results.attempts.length, generationFailures,
+      failureRate: results.attempts.length ? generationFailures / results.attempts.length : null,
+      holdoutPassed: results.cases.filter(item => item.status === 'passed' && interactiveCases.some(scenario => scenario.id === item.id)).length,
+      holdoutFailed: results.cases.filter(item => item.status === 'failed' && interactiveCases.some(scenario => scenario.id === item.id)).length,
+      holdoutBlocked: results.cases.filter(item => item.status === 'blocked').length }
+    return writeFile(`${output}/results.json`, JSON.stringify(results, null, 2))
+  }
   await record()
   await ensureSchemaOnce(); await resetAllTables(); _setWukongClientForTests(null)
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
@@ -40,7 +86,7 @@ test('current product generates, delivers and explores learning UI with a real m
   await pool.query('UPDATE participants SET capabilities=$1 WHERE company_id=$2 AND id=$3', [JSON.stringify([]), companyId, agentId])
   const api = await lingxiOSControl(), originalIngest = api.conversations.ingest.bind(api.conversations)
   t.mock.method(api.conversations, 'ingest', async (input: Parameters<typeof originalIngest>[0], options: Parameters<typeof originalIngest>[1]) => {
-    if (input.author.kind === 'human') assert.ok((await stats()).costUSD + judgeCostUSD + 0.25 <= 5, 'new turn exceeds total live budget')
+    if (input.author.kind === 'human') assert.ok((await stats()).costUSD + judgeCostUSD + 0.5 <= 5, 'new turn exceeds total live budget')
     return originalIngest(input, { ...options, codeExecution: 'disabled' })
   })
   const controlPort = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN!, port: 0 })
@@ -82,7 +128,6 @@ test('current product generates, delivers and explores learning UI with a real m
     flushing = true
     void flushAgentWakes().catch(() => {}).finally(() => { flushing = false })
   }, 500)
-  let judgeCostUSD = 0
   const judge = new OpenAI({ apiKey: process.env.EVAL_JUDGE_API_KEY, baseURL: process.env.EVAL_JUDGE_BASE_URL, maxRetries: 0, timeout: 180_000 })
   const judgeSchema = z.object({ correct: z.boolean(), transfer: z.boolean(), correction: z.boolean(), reasons: z.array(z.string().max(500)).max(5) }).strict()
   async function grade(answer: string, facts: string, requireCorrection = false) {
@@ -97,6 +142,8 @@ test('current product generates, delivers and explores learning UI with a real m
     assert.ok(response.usage && response.usage.prompt_tokens > 0 && response.usage.completion_tokens > 0, 'judge usage missing')
     judgeCostUSD += (response.usage.prompt_tokens * Number(process.env.EVAL_JUDGE_INPUT_CNY_PER_MILLION)
       + response.usage.completion_tokens * Number(process.env.EVAL_JUDGE_OUTPUT_CNY_PER_MILLION)) / 7e6
+    assert.ok(Number.isFinite(judgeCostUSD) && judgeCostUSD >= 0
+      && (await stats()).costUSD + judgeCostUSD <= 5, 'known judge cost within total live budget required')
     const content = response.choices[0]?.message.content ?? ''
     return judgeSchema.parse(JSON.parse(content.replace(/^```(?:json)?\s*|\s*```$/g, '')))
   }
@@ -110,86 +157,161 @@ test('current product generates, delivers and explores learning UI with a real m
     await wukongClient().upsertChannel({ channelId, channelType: 2, title: 'Synthetic live UI', members })
     const nonce = randomUUID(), payload = createNativeMessage({ id: nonce, role: 'user', content: [{ type: 'text', text: scenario.prompt }], custom: { mentionedIds: [agentId] } })
     const started = performance.now(), timeout = AbortSignal.timeout(265_000)
-    const accepted = await fetch(`${origin}/api/im/channels/${channelId}/messages/accept`, { method: 'POST', headers, body: JSON.stringify({ clientNonce: nonce, payload }), signal: timeout })
-    assert.equal(accepted.status, 202, `${id}: committed user acceptance`)
+    const send = () => fetch(`${origin}/api/im/channels/${channelId}/messages/accept`, { method: 'POST', headers, body: JSON.stringify({ clientNonce: nonce, payload }), signal: timeout })
+    let sendAttempts = 1, accepted = await send()
+    // Reuse the product's immutable nonce for a transient WuKong rejection; never create another model turn.
+    while (accepted.status >= 500 && sendAttempts < 3) {
+      await delay(500); sendAttempts++; accepted = await send()
+    }
+    assert.ok(accepted.status === 202 || accepted.status === 200, `${id}: committed user acceptance`)
+    const acceptance = z.object({ status: z.literal('accepted'), duplicate: z.boolean().optional(),
+      echo: z.object({ clientMsgNo: z.string(), channelId: z.string() }) }).parse(await accepted.json())
+    assert.equal(acceptance.echo?.clientMsgNo, nonce, `${id}: immutable accepted nonce`)
+    assert.equal(acceptance.echo?.channelId, channelId, `${id}: accepted channel`)
+    if (accepted.status === 200) assert.equal(acceptance.duplicate, true, `${id}: duplicate acceptance`)
     let runs = await identities(channelId)
     while (!runs.length) { timeout.throwIfAborted(); await delay(100); runs = await identities(channelId) }
     assert.equal(runs.length, 1, `${id}: single product run`)
     const run = runs[0], cancellation = new AbortController()
-    const stream = await fetch(`${origin}/api/im/companies/${companyId}/channels/${channelId}/agents/${agentId}/runs/${run.runId}/stream`, { headers, signal: AbortSignal.any([cancellation.signal, timeout]) })
-    assert.equal(stream.status, 200)
-    let previewMs: number | null = null, firstTextMs: number | null = null, streamFailure = false
-    const tracker = new AssistantTransportDeltaTracker()
+    let previewMs: number | null = null, firstTextMs: number | null = null, streamFailure: string | null = null
+    let streamReconnects = 0, streamDelivered = false
     const reading = (async () => {
-      for await (const chunk of AssistantStream.fromResponse(stream, new AssistantTransportDecoder())) {
-        if (chunk.type !== 'update-state') continue
-        tracker.append(chunk.operations)
-        const snapshot = tracker.state as unknown as AgentRunSnapshot
-        if (!snapshot?.message) continue
-        if (nativeText(snapshot.message).trim()) firstTextMs ??= performance.now() - started
-        if (scenario.component && messageLessons(snapshot.message).some(lesson => lesson.fields.length > 0
-          && lesson.source.includes(`${scenario.component}(`))) previewMs ??= performance.now() - started
-        assert.ok(!snapshot.message.content.some(part => part.type === 'text' && /root\s*=\s*Lesson\(/.test(part.text)), 'DSL exposed as plain text')
+      // The public preview protocol requests snapshot reconnection on gaps, as the browser does.
+      while (!streamDelivered) {
+        timeout.throwIfAborted()
+        const tracker = new AssistantTransportDeltaTracker()
+        try {
+          const stream = await fetch(`${origin}/api/im/companies/${companyId}/channels/${channelId}/agents/${agentId}/runs/${run.runId}/stream`, { headers, signal: AbortSignal.any([cancellation.signal, timeout]) })
+          assert.equal(stream.status, 200)
+          for await (const chunk of AssistantStream.fromResponse(stream, new AssistantTransportDecoder())) {
+            if (chunk.type !== 'update-state') continue
+            tracker.append(chunk.operations)
+            const snapshot = tracker.state as unknown as AgentRunSnapshot
+            if (!snapshot?.message) continue
+            if (nativeText(snapshot.message).trim()) firstTextMs ??= performance.now() - started
+            if (scenario.component && messageLessons(snapshot.message).some(lesson => lesson.fields.length > 0
+              && containsComponent(parseLessonSource(lesson.source, { preview: true }).root, scenario.component!))) previewMs ??= performance.now() - started
+            const leaked = snapshot.message.content.find(part => part.type === 'text' && hasPlainLessonSource(part.text))
+            if (leaked?.type === 'text') {
+              const structure = (node: unknown): unknown => {
+                const value = node as { type: string; lang?: string; value?: string; children?: unknown[] }
+                return { type: value.type, language: value.lang, containsRoot: /root\s*=\s*Lesson\(/.test(value.value ?? ''),
+                  ...(value.children ? { children: value.children.map(structure) } : {}) }
+              }
+              await writeFile(`${output}/stream-violation.json`, JSON.stringify({ id, structure: structure(fromMarkdown(leaked.text)) }, null, 2))
+            }
+            assert.ok(!leaked, 'DSL exposed as plain text')
+            streamDelivered = (snapshot.message.metadata.custom.harness as RunDisplayState).delivery === 'delivered'
+          }
+        } catch (error) {
+          if (!(error instanceof TypeError) || cancellation.signal.aborted || timeout.aborted) throw error
+        }
+        if (!streamDelivered) {
+          assert.ok(++streamReconnects <= 8, 'stream recovery budget exhausted')
+          await delay(500, undefined, { signal: AbortSignal.any([cancellation.signal, timeout]) })
+        }
       }
-    })().catch(() => { if (!cancellation.signal.aborted) streamFailure = true })
+    })().catch(error => {
+      if (!cancellation.signal.aborted) {
+        streamFailure = error instanceof assert.AssertionError ? error.message.split('\n')[0]
+          : error instanceof Error ? error.name : 'unknown stream error'
+      }
+    })
     let state = await api.readRunState(run)
     try {
-      while (state?.delivery !== 'delivered') {
+      while (state?.delivery !== 'delivered' || !streamDelivered || ['queued', 'leased'].includes(state.run.status)) {
         timeout.throwIfAborted()
+        assert.equal(streamFailure, null, `${id}: stream failed (${streamFailure})`)
         assert.ok(state && state.run.status !== 'failed' && state.run.status !== 'cancelled', `${id}: product run failed`)
         await delay(150); state = await api.readRunState(run)
       }
     } finally { cancellation.abort(); await reading }
+    assert.ok(state && ['succeeded', 'partial'].includes(state.run.status), `${id}: successful terminal run required`)
     const readyMs = performance.now() - started
     const history = await imMessagesApplication.history({ companyId, userId: 'test-owner', channelId, limit: 100, beforeSequence: 0 })
     const answers = history!.filter(item => item.payload.role === 'assistant'), lessons = answers.flatMap(item => messageLessons(item.payload))
-    const measured = await stats(channelId)
-    assert.ok(measured.measured && measured.modelCalls > 0 && measured.modelCalls <= 8, `${id}: known bounded usage required`)
-    assert.equal(streamFailure, false, `${id}: stream failed`)
-    assert.ok(answers.length > 0, `${id}: no durable answer`)
-    if (scenario.component) {
-      assert.ok(lessons.some(lesson => lesson.source.includes(`${scenario.component}(`)), `${id}: requested composition missing`)
-      assert.ok(previewMs !== null, `${id}: useful preview missing`)
-    } else assert.equal(lessons.length, 0, `${id}: text-only preference ignored`)
+    // Reconcile terminal public usage with the asynchronously written product ledger.
+    timeout.throwIfAborted()
+    let usage = await api.readUsage(run), measured = await stats(channelId)
+    while (!usage || usage.pendingCalls !== 0 || measured.modelCalls !== usage.calls) {
+      timeout.throwIfAborted()
+      await delay(150, undefined, { signal: timeout })
+      usage = await api.readUsage(run); measured = await stats(channelId)
+    }
+    timeout.throwIfAborted()
+    assert.equal(usage.estimatedCalls, 0, `${id}: estimated public usage is not settled usage`)
+    assert.ok(measured.measured && measured.modelCalls > 0 && measured.modelCalls <= 16
+      && Number.isFinite(measured.costUSD) && measured.costUSD >= 0 && measured.costUSD <= 0.5, `${id}: known bounded usage required`)
+    assert.equal(streamFailure, null, `${id}: stream failed (${streamFailure})`)
+    assert.ok((await stats()).costUSD + judgeCostUSD <= 5, 'total live budget exceeded')
+    const errors: string[] = []
+    // Only content acceptance is recoverable. Transport, accounting and judge errors
+    // remain outside this catch because stopping the SSE reader does not stop a run.
+    try {
+      assert.ok(answers.length > 0, `${id}: no durable answer`)
+      if (scenario.component) {
+        assert.ok(lessons.some(lesson => containsComponent(parseLessonSource(lesson.source).root, scenario.component)), `${id}: requested composition missing`)
+        assert.ok(previewMs !== null, `${id}: useful preview missing`)
+      } else assert.equal(lessons.length, 0, `${id}: text-only preference ignored`)
+    } catch (error) {
+      errors.push(error instanceof assert.AssertionError ? error.message.split('\n')[0] : `${id}: invalid delivered composition`)
+    }
     const answer = answers.map(item => nativeText(item.payload)).join('\n') + lessons.map(lesson => lesson.source).join('\n')
     const teaching = await grade(answer, scenario.facts)
-    const result = { id, previewMs, firstTextMs, readyMs, modelCalls: measured.modelCalls, costUSD: measured.costUSD,
-      uiCount: lessons.length, teaching, runId: run.runId, sourceHashes: lessons.map(lesson => lesson.sourceHash) }
+    const result = { id, errors, previewMs, firstTextMs, readyMs, sendAttempts, streamReconnects, modelCalls: measured.modelCalls, costUSD: measured.costUSD,
+      uiCount: lessons.length, teaching, runId: run.runId, usage, sourceHashes: lessons.map(lesson => lesson.sourceHash) }
     return result
   }
   const command = (args: string[], extraEnv: Record<string, string> = {}) => new Promise<void>((resolve, reject) => {
     const child = spawn(process.execPath, args, { env: { ...process.env, ...extraEnv }, stdio: 'inherit', windowsHide: true })
     child.once('error', reject); child.once('exit', code => code === 0 ? resolve() : reject(new Error(`live command exited ${code}`)))
   })
+  let currentCase: { id: string; baseline: boolean } | undefined
   try {
     worker = await startLingxiOSWorker()
     for (const scenario of interactiveBaselineCases) {
+      currentCase = { id: scenario.id, baseline: true }
       const result = await runCase(scenario.id, scenario)
-      results.baseline.push(result); await record()
+      results.baseline.push({ ...result, status: result.errors.length ? 'failed' : 'passed' }); await record()
+      assert.equal(result.errors.length, 0, `${scenario.id}: baseline acceptance failed`)
+      currentCase = undefined
       console.info(JSON.stringify({ liveStage: 'M0', id: result.id, readyMs: result.readyMs, previewMs: result.previewMs, modelCalls: result.modelCalls }))
     }
-    const baseline = results.baseline as Awaited<ReturnType<typeof runCase>>[]
+    const baseline = results.baseline as (Awaited<ReturnType<typeof runCase>> & CaseEvidence)[]
     const gates = { previewMs: Math.min(180_000, Math.max(60_000, ...baseline.map(item => (item.previewMs ?? Infinity) * 2))),
       readyMs: Math.min(240_000, Math.max(120_000, ...baseline.map(item => item.readyMs * 2))), failureRate: 0, recoveryRate: 1, localModelCalls: 0 }
     results.gates = { ...gates, lockedAt: new Date().toISOString(), beforeHoldout: true }
     await writeFile(`${output}/performance-gates.json`, JSON.stringify(results.gates, null, 2)); await record()
     for (const scenario of interactiveCases) {
+      currentCase = { id: scenario.id, baseline: false }
       const result = await runCase(scenario.id, scenario)
-      results.cases.push(result); await record()
+      if (!result.teaching.correct || !result.teaching.transfer) result.errors.push(`${scenario.id}: independent teaching check failed`)
+      if (result.readyMs > gates.readyMs || (result.previewMs !== null && result.previewMs > gates.previewMs)) result.errors.push(`${scenario.id}: locked latency gate failed`)
+      results.cases.push({ ...result, status: result.errors.length ? 'failed' : 'passed' }); await record()
+      currentCase = undefined
       console.info(JSON.stringify({ liveStage: 'holdout', id: result.id, readyMs: result.readyMs, previewMs: result.previewMs, modelCalls: result.modelCalls, teaching: result.teaching }))
-      assert.ok(result.teaching.correct && result.teaching.transfer, `${scenario.id}: independent teaching check failed`)
-      assert.ok(result.readyMs <= gates.readyMs && (result.previewMs === null || result.previewMs <= gates.previewMs), `${scenario.id}: locked latency gate failed`)
     }
-    assert.ok((await stats()).costUSD + judgeCostUSD + 4 * 0.25 <= 5, 'browser follow-ups exceed total live budget')
+    const missingBrowserCases = ['projectile', 'comparison'].filter(id => !results.cases.some(item => item.id === id && item.status === 'passed'))
+    if (missingBrowserCases.length) {
+      results.browser = { status: 'blocked', reason: 'Required holdout acceptance failed', cases: missingBrowserCases }
+      await record()
+      assert.fail(`browser blocked by failed prerequisites: ${missingBrowserCases.join(', ')}`)
+    }
+    results.browser = { status: 'blocked', reason: 'Browser follow-up budget check has not passed' }
+    assert.ok((await stats()).costUSD + judgeCostUSD + 4 * 0.5 <= 5, 'browser follow-ups exceed total live budget')
+    results.browser = { status: 'running' }; await record()
     await command(['node_modules/vite/bin/vite.js', 'build', '--config', 'e2e/vite.interactive-live.config.ts'])
     preview = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--config', 'e2e/vite.interactive-live.config.ts'], { env: process.env, stdio: 'inherit', windowsHide: true })
     const launch = AbortSignal.timeout(30_000)
     while (true) { launch.throwIfAborted(); if (await fetch('http://127.0.0.1:52995/e2e/interactive-ui-live.html').then(response => response.ok).catch(() => false)) break; await delay(200) }
     await command(['e2e/web/run.mjs', 'e2e/web/interactive-ui-live.e2e.ts', '--output', `${output}/browser`], { E2E_PROJECT: 'web', E2E_BASE_URL: 'http://127.0.0.1:52995' })
     const browser = JSON.parse(await readFile(`${output}/browser/report.json`, 'utf8'))
-    results.browser = browser
+    results.browser = { ...browser, status: 'passed' }
     const revisions = JSON.parse(await readFile(`${output}/revisions.json`, 'utf8'))
     const localExploration = JSON.parse(await readFile(`${output}/exploration.json`, 'utf8'))
+    results.metrics = { ...results.metrics, restoreAttempts: 1, restored: localExploration.restored === true ? 1 : 0,
+      recoveryRate: localExploration.restored === true ? 1 : 0, localExploration, revisions }
+    await record()
     assert.equal(localExploration.modelCallsDelta, 0, 'local exploration invoked the model')
     assert.equal(localExploration.actionsDelta, 0, 'local exploration submitted an action')
     assert.equal(localExploration.restored, true, 'local exploration was not restored')
@@ -209,12 +331,25 @@ test('current product generates, delivers and explores learning UI with a real m
     const corrected = await grade(nativeText(correction.payload) + messageLessons(correction.payload).map(lesson => lesson.source).join('\n'),
       'TCP只保证可靠传输，不自动加密，完整到达仍可能被监听；应使用TLS等加密方案。错误预测必须纠正。', true)
     assert.ok(corrected.correct && corrected.correction, 'incorrect prediction was not corrected')
-    results.cases.push({ id: 'prediction-correction', teaching: corrected, total: await stats(), judgeCostUSD })
-    results.metrics = { generationAttempts: results.attempts.length, generationFailures: 0, failureRate: 0,
-      restoreAttempts: 1, restored: 1, recoveryRate: 1, localExploration, revisions, revisionGrades }
+    results.cases.push({ id: 'prediction-correction', status: 'passed', teaching: corrected, total: await stats(), judgeCostUSD })
+    results.metrics = { ...results.metrics, revisionGrades }
+    await record()
+    assert.equal(results.metrics.failureRate, gates.failureRate, 'holdout matrix contains failed generations')
+    assert.equal(results.cases.filter(item => item.status === 'passed' && interactiveCases.some(scenario => scenario.id === item.id)).length, interactiveCases.length, 'holdout matrix is incomplete')
     results.passed = true; await record()
   } catch (error) {
-    results.error = error instanceof Error ? error.message.slice(0, 300) : 'live validation failed'
+    // Do not serialize provider error bodies: they may contain credentials or prompts.
+    results.error = error instanceof assert.AssertionError ? error.message.split('\n')[0].slice(0, 300)
+      : error instanceof Error ? error.name : 'live validation failed'
+    if (currentCase) {
+      const cases = currentCase.baseline ? results.baseline : results.cases
+      if (!cases.some(item => item.id === currentCase!.id)) cases.push({ id: currentCase.id,
+        status: results.attempts.includes(currentCase.id) ? 'failed' : 'blocked', fatal: true, error: results.error })
+    }
+    for (const scenario of interactiveCases) {
+      if (!results.cases.some(item => item.id === scenario.id)) results.cases.push({ id: scenario.id, status: 'blocked', reason: 'Live evaluation stopped before this case' })
+    }
+    if ((results.browser as { status?: string })?.status === 'running') results.browser = { status: 'failed', error: results.error }
     await record(); throw error
   } finally {
     clearInterval(ingress); preview?.kill(); await worker?.stop(); await teardownAll(server)

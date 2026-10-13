@@ -4,16 +4,23 @@ import { readFile, mkdir, writeFile, appendFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { parse } from 'dotenv'
 import pg from 'pg'
+import { tsImport } from 'tsx/esm/api'
 
 // Fail closed: no ambient product DB, model credentials or outbound services are inherited.
 assert.equal(process.argv[2], '--live-generative-ui', 'Explicit --live-generative-ui is required (metered synthetic evaluation).')
 assert.ok(process.argv.length === 3 || process.argv.length === 4 && process.argv[3] === '--transport-only', 'Unknown live validation option.')
+const { INTERACTIVE_LESSONS_ENABLED } = await tsImport('../../src/lib/interactive-ui/catalog.ts', import.meta.url)
+assert.equal(INTERACTIVE_LESSONS_ENABLED, true, 'Interactive lessons are disabled; restore isolated acceptance before reactivation.')
 const transportOnly = process.argv[3] === '--transport-only'
 const cwd = resolve(import.meta.dirname, '../..'), output = resolve(cwd, `artifacts/interactive-ui/${transportOnly ? 'wukong' : 'live'}`)
 await mkdir(output, { recursive: true })
-const credentials = parse(await readFile(resolve(cwd, 'eval/.env.local')))
+// Worktrees can read the existing source or explicitly injected credentials without copying secrets.
+const credentials = process.env.E2E_EVAL_CREDENTIALS === 'env' ? process.env
+  : parse(await readFile(process.env.E2E_EVAL_CREDENTIALS || resolve(cwd, 'eval/.env.local')))
 for (const role of ['CANDIDATE', 'JUDGE']) for (const key of ['BASE_URL', 'MODEL', 'API_KEY', 'INPUT_CNY_PER_MILLION', 'OUTPUT_CNY_PER_MILLION']) {
   assert.ok(credentials[`EVAL_${role}_${key}`]?.trim(), `Missing EVAL_${role}_${key}; missing credentials never count as a pass.`)
+  if (key.endsWith('CNY_PER_MILLION')) assert.ok(Number.isFinite(Number(credentials[`EVAL_${role}_${key}`]))
+    && Number(credentials[`EVAL_${role}_${key}`]) >= 0, `Invalid EVAL_${role}_${key}; an explicit finite non-negative price is required.`)
 }
 assert.notEqual(credentials.EVAL_CANDIDATE_MODEL, credentials.EVAL_JUDGE_MODEL, 'Use an independent judge model.')
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
@@ -28,7 +35,7 @@ Object.assign(env, {
   RESEND_API_KEY: '', ALERT_WEBHOOK_URL: '', LINGXIOS_LIVE_UI: transportOnly ? '0' : '1', LINGXIOS_REAL_WUKONG: '1', LINGXIOS_LIVE_PROTOCOL: '0', RESEND_LIVE_TEST: '0',
   LINGXIOS_SERVICE_TOKEN: 'interactive-ui-live-isolated-service-token', AGENT_OS_WORKER_PORT: '52997',
   AGENT_OS_MAX_CONCURRENT_RUNS: '1', AGENT_OS_RESERVED_INTERACTIVE_RUNS: '0', AGENT_OS_MODEL_CONCURRENCY: '1',
-  AGENT_OS_MAX_MODEL_CALLS: '8', AGENT_OS_MAX_MODEL_TOKENS: '120000', AGENT_OS_MAX_MODEL_COST_MICROS: '250000', AGENT_OS_MAX_WORK_MS: '240000',
+  AGENT_OS_MAX_MODEL_CALLS: '16', AGENT_OS_MAX_MODEL_TOKENS: '200000', AGENT_OS_MAX_MODEL_COST_MICROS: '500000', AGENT_OS_MAX_WORK_MS: '240000',
   AGENT_OS_INPUT_COST_MICROS_PER_MILLION: String(Math.ceil(Number(credentials.EVAL_CANDIDATE_INPUT_CNY_PER_MILLION) / 7 * 1e6)),
   AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: String(Math.ceil(Number(credentials.EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION) / 7 * 1e6)),
   AGENT_OS_HOMES_ROOT: resolve(output, 'runtime-homes'),
@@ -67,7 +74,7 @@ try {
 } finally {
   await writeFile(resolve(output, 'run-metadata.json'), JSON.stringify({ startedAt, finishedAt: new Date().toISOString(), passed,
     reproduce: `node e2e/server/interactive-ui-live.mjs --live-generative-ui${transportOnly ? ' --transport-only' : ''}`, runtime: '3.3.6', candidate: transportOnly ? null : credentials.EVAL_CANDIDATE_MODEL,
-    judge: credentials.EVAL_JUDGE_MODEL, maxRunCostUSD: 0.25, maxTotalCostUSD: 5, modelConcurrency: 1,
+    judge: credentials.EVAL_JUDGE_MODEL, maxModelCalls: 16, maxModelTokens: 200000, maxRunCostUSD: 0.5, maxTotalCostUSD: 5, modelConcurrency: 1,
     database: 'lingxiloop_ui_model_test', identity: 'synthetic test-owner', realWuKong: true, realModel: !transportOnly, authentication: 'isolated test middleware',
   }, null, 2))
 }

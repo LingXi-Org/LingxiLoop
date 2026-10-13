@@ -18,6 +18,13 @@ const path = (target: AgentRunTarget) => `/im/channels/${encodeURIComponent(targ
 const thread = (target: AgentRunTarget): Record<string, string> => target.threadId ? { threadId: target.threadId } : {}
 
 export const harnessApi = {
+  async activity(target: AgentRunTarget, offset: number, attentionOnly: boolean, signal?: AbortSignal) {
+    const value = await http<{ message: unknown; total: number; nextOffset: number | null }>(`${path(target)}?${new URLSearchParams({ ...thread(target), activityOffset: String(offset), ...(attentionOnly ? { attentionOnly: '1' } : {}) })}`, { signal })
+    const message = nativeMessageSchema.parse(value.message)
+    if (message.metadata.custom.runId !== target.runId || !Number.isSafeInteger(value.total) || value.total < 0
+      || value.nextOffset !== null && (!Number.isSafeInteger(value.nextOffset) || value.nextOffset <= offset)) throw new Error('活动记录身份或分页信息不正确')
+    return { ...value, message }
+  },
   memories: (conversationId: string, query: { threadId?: string; cursor?: string }, signal?: AbortSignal) => http<MemorySummaryPage>(
     `/im/channels/${encodeURIComponent(conversationId)}/memories?${new URLSearchParams(query)}`, { signal }),
   readApproval: (id: string, signal?: AbortSignal) => http<unknown>(`/im/approvals/${encodeURIComponent(id)}`, { signal }),

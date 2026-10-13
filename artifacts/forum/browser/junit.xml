@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="89.603">
+  <testsuite name="e2e/forum/browser.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="89.603">
+    <testcase name="forum history, public resources, student versions, private files, teacher moderation and closure [forum]" classname="e2e/forum/browser.e2e.ts" time="89.603"/>
+  </testsuite>
+</testsuites>

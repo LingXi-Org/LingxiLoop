@@ -6,6 +6,7 @@ import { confidenceCopyText, type MarkdownConfidenceClaim } from '@/components/a
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { nativeText } from '@/lib/nativeMessage'
 
 export async function copyMessageText(text: string) {
   try {
@@ -65,10 +66,7 @@ export function MessageActions({ isMine, getText, className }: { isMine: boolean
 
 export function useMessageCopyText(bodyRef: RefObject<HTMLElement | null>) {
   const inlineCitations = useAuiState(state => Boolean(state.message.metadata.custom.runId))
-  const rawText = useAuiState((state) => state.message.content
-    .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
-    .map((part) => part.text)
-    .join('\n'))
+  const rawText = useAuiState((state) => nativeText(state.message))
   const confidenceClaims = useAuiState((state) => {
     const part = state.message.content.find((part) => part.type === 'data' && part.name === 'citation-claims')
     if (part?.type !== 'data' || !part.data || typeof part.data !== 'object') return undefined

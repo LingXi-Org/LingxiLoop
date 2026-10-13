@@ -4,8 +4,7 @@
  *
  * The integration suite needs a REAL Postgres (we test SKIP LOCKED + jsonb
  * + indexes that pg-mem doesn't reproduce faithfully) and a REAL Redis
- * (persistEmailMessage publishes the wake event; we don't want to monkey-
- * patch that path because it's prod-critical).
+ * for durable product coordination).
  *
  * To run:
  *   1. Create a DEDICATED test DB (the suite TRUNCATEs everything, so
@@ -76,8 +75,7 @@ if (missingFiles.length > 0) {
   console.error(`[integration] unknown test file(s): ${missingFiles.join(', ')}`)
   process.exit(2)
 }
-const LIVE_RESEND = process.env.RESEND_LIVE_TEST === '1'
-const defaultFiles = availableFiles.filter((name) => name !== 'resend-live.test.ts' || LIVE_RESEND)
+const defaultFiles = availableFiles
 const selectedFiles = requestedFiles.length > 0 ? requestedFiles : defaultFiles
 console.log(`[integration] selected ${selectedFiles.length}/${availableFiles.length} file(s): ${selectedFiles.join(', ')}`)
 const testFiles = selectedFiles.map((name) => join(integrationDir, name))
@@ -125,31 +123,9 @@ process.env.DATABASE_URL = INTEGRATION_URL
 // real embeddings API with the runner's placeholder key.
 if (!process.env.LINGXILOOP_DISABLE_EMBEDDINGS) process.env.LINGXILOOP_DISABLE_EMBEDDINGS = '1'
 
-// By default we force-empty RESEND_API_KEY so the suite never hits live
-// Resend — a developer's real key in .env would otherwise reject because
-// the test EMAIL_DOMAIN isn't verified. RESEND_LIVE_TEST=1 OPTS IN to
-// the live path: keep the real key + real EMAIL_DOMAIN, and the
-// resend-live.test.ts spec runs against Resend's magic test addresses
-// (delivered@resend.dev / bounced@resend.dev — these consume no quota).
-if (!LIVE_RESEND) {
-  process.env.RESEND_API_KEY = ''
-  if (!process.env.EMAIL_DOMAIN) process.env.EMAIL_DOMAIN = 'lingxiloop.local'
-} else {
-  // Live mode: refuse to run if the key OR a verified domain isn't set.
-  if (!process.env.RESEND_API_KEY) {
-    console.error('[integration] RESEND_LIVE_TEST=1 but RESEND_API_KEY is empty.')
-    process.exit(2)
-  }
-  if (!process.env.EMAIL_DOMAIN) {
-    console.error('[integration] RESEND_LIVE_TEST=1 but EMAIL_DOMAIN is empty — Resend will reject the From line.')
-    process.exit(2)
-  }
-  console.log(`[integration] LIVE RESEND mode · domain=${process.env.EMAIL_DOMAIN}`)
-}
-
-if (!process.env.RESEND_WEBHOOK_SECRET) {
-  process.env.RESEND_WEBHOOK_SECRET = `whsec_${Buffer.alloc(32, 7).toString('base64')}`
-}
+// Transactional invitations use an explicit recording provider in integration tests.
+process.env.RESEND_API_KEY = ''
+if (!process.env.EMAIL_DOMAIN) process.env.EMAIL_DOMAIN = 'lingxiloop.local'
 
 // Legacy scripted model fixtures exercise deep execution; the response-policy
 // spec explicitly opts into auto and supplies both model profiles.

@@ -23,20 +23,21 @@ test('native response text and presentation cards retain segment order and stabl
   })))
 })
 
-test('public native tool events project into bounded assistant-ui history and survive committed IM replay', () => {
+test('public native tool events retain complete assistant-ui history and survive committed IM replay', () => {
   const started = { runId: 'run',seq: 1,kind: 'tool.started',stage: 'started' as const,visibility: 'user' as const,
     data: { toolCallId: 'host:call',name: 'documents.read' } }
   const completed = { ...started,seq: 2,kind: 'tool.completed',stage: 'completed' as const,
     data: { toolCallId: 'host:call',result: { status: 'completed',value: { body: 'Do not duplicate this payload' } },isError: false } }
   const tools = harnessToolParts('run',[started,completed,{ ...started,visibility: 'internal',data: { toolCallId: 'host:private',name: 'internal' } }])
-  assert.deepEqual(tools,[{ type: 'tool-call',toolCallId: 'host:call',toolName: 'documents.read',args: {},argsText: '{}',result: { status: 'completed' },isError: false,eventSeq: 2 }])
+  assert.deepEqual(tools,[{ type: 'tool-call',toolCallId: 'host:call',toolName: 'documents.read',args: {},argsText: '{}',result: { status: 'completed' },isError: false,eventSeq: 2,startedSeq: 1 }])
   assert.deepEqual(harnessToolParts('run',[started,completed],tools),tools)
   assert.deepEqual(harnessToolParts('another-run',[started,completed]),[])
   const message = convertEnvelope(envelope(1,1),{ participants,meId: 'human' })
   assert.ok(message.role === 'assistant')
   const replay = { ...message, content: [...message.content, ...tools.map(({ eventSeq: _seq, ...part }) => part)] }
   assert.deepEqual(mergeCanonicalMessages([message],[replay])[0].content,replay.content)
-  assert.equal(harnessToolParts('run',Array.from({length: 300},(_,index)=>({ ...started,seq: index+1,data: { toolCallId: `host:${index}`,name: 'read' } }))).length,256)
+  assert.deepEqual(harnessToolParts('run',Array.from({length: 300},(_,index)=>({ ...started,seq: index+1,data: { toolCallId: `host:${index}`,name: 'read' } }))).map(part => part.toolCallId),
+    Array.from({length: 300},(_,index) => `host:${index}`))
 })
 function runView(version: number, fence: number, outcome: ResponseEnvelope['goalOutcome']['status'] = 'partial') {
   const body = '查看[原文](#cite-S1)'
@@ -87,7 +88,8 @@ test('native citations keep occurrence identities, all source versions and trunc
   }))
   view.message!.envelope = { ...view.message!.envelope, body, citations: annotations }
   const parts = harnessParts(view)
-  assert.deepEqual(parts[0], { type: 'text', text: body })
+  assert.deepEqual(parts[0], { type: 'text', text: body,
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } })
   const part = parts.find(part => part.type === 'data' && part.name === 'citation-claims')!
   assert.equal(part.type, 'data')
   if (part.type !== 'data') return
@@ -118,14 +120,16 @@ test('native citations keep occurrence identities, all source versions and trunc
   view.draft = '新的草稿'
   assert.deepEqual(harnessParts(view), [])
   view.lifecycle = 'leased'
-  assert.deepEqual(harnessParts(view), [{ type: 'text', text: '新的草稿' }])
+  assert.deepEqual(harnessParts(view), [{ type: 'text', text: '新的草稿',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }])
   view.lifecycle = 'succeeded'
   view.message!.envelope.citations[0].sources = []
   assert.throws(() => harnessParts(view), /recorded sources/)
   view.message!.envelope.citations = []
   view.message!.envelope.citationEvidence = []
   view.message!.envelope.body = '无引用'
-  assert.deepEqual(harnessParts(view), [{ type: 'text', text: '无引用' }])
+  assert.deepEqual(harnessParts(view), [{ type: 'text', text: '无引用',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }])
 })
 
 test('distinct chunks of one PDF remain specific across repeated and combined citations', () => {
@@ -173,7 +177,8 @@ test('history, API snapshots and later attempts converge to one current message 
   currentView = consumeRunStreamEvent(currentView,{ type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 3,
     requestVersion: 3, attemptId: 'attempt', seq: 1, draft: '新版内容' } })
   assert.equal(consumeRunEvent(currentView,event),currentView)
-  assert.deepEqual(harnessParts(currentView),[{ type: 'text', text: '新版内容' }])
+  assert.deepEqual(harnessParts(currentView),[{ type: 'text', text: '新版内容',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:3:0', kind: 'answer', label: '答复' } } } }])
   assert.equal(currentView.message?.envelope.artifacts[0].source?.version,'7')
   currentView = consumeRunStreamEvent(currentView,{ type: 'reset', runId: 'run', reason: 'superseded' })
   assert.equal(currentView.draft,'')

@@ -1,0 +1,126 @@
+{
+  "recordedAtUtc": "2026-10-13T16:39:55.598Z",
+  "passed": true,
+  "purpose": "Hard-disable native interactive lessons while preserving text answers, authorization, historical messages and immutable delivery recovery.",
+  "provenance": "Observed checks on the working tree; implementation, regression tests and this bounded report are committed together. No clean-checkout rerun is claimed.",
+  "hardOff": {
+    "flag": "INTERACTIVE_LESSONS_ENABLED",
+    "value": false,
+    "environmentOverride": false
+  },
+  "isolation": {
+    "database": "lingxiloop_ui_disabled_20261014_test",
+    "postgresHost": "127.0.0.1",
+    "postgresPort": 55432,
+    "redisHost": "127.0.0.1",
+    "redisPort": 56379,
+    "redisDatabase": 8,
+    "migratedVersions": 38,
+    "migrationExitCode": 0,
+    "models": "Scripted model drivers and loopback SSE providers only; no real-provider call or deployment."
+  },
+  "red": [
+    {
+      "command": "node --import tsx --test server/src/agent-runtime/interactive-ui-projection.test.ts",
+      "exitCode": 1,
+      "tests": 6,
+      "passed": 2,
+      "failed": 4,
+      "reason": "Existing production projection emitted UI and verification accepted valid lesson candidates."
+    },
+    {
+      "command": "node server/run-integration-tests.mjs --file interactive-ui-disabled.test.ts",
+      "exitCode": 1,
+      "tests": 3,
+      "passed": 0,
+      "failed": 3,
+      "reason": "Before the production fix, UI state returned 200, old admitted receipts passed, and model context still advertised the catalog."
+    }
+  ],
+  "checks": [
+    {
+      "command": "node --import tsx --test server/src/agent-runtime/interactive-ui-projection.test.ts src/lib/interactive-ui/source.test.ts src/lib/interactive-ui/kernels/kernels.test.ts",
+      "exitCode": 0,
+      "tests": 29,
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node server/run-integration-tests.mjs --file interactive-ui-disabled.test.ts --file interactive-ui.test.ts --file runtime-nonthinking.test.ts --file native-admission.test.ts --file native-message-flow.test.ts",
+      "exitCode": 0,
+      "tests": 16,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 9
+    },
+    {
+      "command": "node server/run-integration-tests.mjs --file interactive-ui-disabled.test.ts",
+      "exitCode": 0,
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Final strengthening verifies a historical Parameter/LearningAction and unchanged persisted personal state."
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -p server/tsconfig.json --noEmit",
+      "exitCode": 0
+    },
+    {
+      "command": "node node_modules/@biomejs/biome/bin/biome lint src/lib/interactive-ui/catalog.ts server/src/agent-runtime/context.ts server/src/agent-runtime/delivery.ts server/src/agent-runtime/interactive-ui-projection.ts server/src/agent-runtime/interactive-ui-projection.test.ts server/src/im/interactive-ui-admission.ts server/src/__integration__/interactive-ui-disabled.test.ts server/src/__integration__/interactive-ui.test.ts server/src/__integration__/runtime-nonthinking.test.ts server/src/__integration__/interactive-ui-live.test.ts server/src/__integration__/interactive-ui-wukong.test.ts",
+      "exitCode": 0,
+      "files": 11
+    },
+    {
+      "command": "git diff --check -- src/lib/interactive-ui/catalog.ts server/src/agent-runtime/context.ts server/src/agent-runtime/delivery.ts server/src/agent-runtime/interactive-ui-projection.ts server/src/agent-runtime/interactive-ui-projection.test.ts server/src/im/interactive-ui-admission.ts server/src/__integration__/interactive-ui-disabled.test.ts server/src/__integration__/interactive-ui.test.ts server/src/__integration__/runtime-nonthinking.test.ts server/src/__integration__/interactive-ui-live.test.ts server/src/__integration__/interactive-ui-wukong.test.ts",
+      "exitCode": 0
+    }
+  ],
+  "covered": [
+    "Preview and final projection return historical text fallback; valid, malformed, unfenced, nested-list and partial source never creates lesson controls or leaks transport source.",
+    "New lesson candidates are rejected with bounded plain-text correction; ordinary code and quoted examples remain text.",
+    "Production context no longer advertises the catalog or historical revisions; native worker corrects a valid lesson to one durable plain-text reply without UI revision rows.",
+    "GET state, PUT state and POST action return 410 for an authorized caller; foreign tenant/project still return 403 or 404 through existing authorization.",
+    "Historical IM content, revision rows and saved personal state remain unchanged after blocked operations.",
+    "Old admitted receipts fail generic acceptance and webhook admission; invalid webhook signature remains 401, valid signature reaches the 410 shutdown boundary.",
+    "Committed receive rejects old UI actions with 410 and rejects a mismatched authenticated principal before shutdown; blocked actions create no send, state or Agent wake effects.",
+    "Accepted historical delivery returns the stored receipt without another send; unknown ACK with a durable message reconciles the original payload/digest and commits its pending revision.",
+    "Unknown dispatch with no authoritative IM message remains pending and is never resent; new deliveries contain text and reserve no UI revision.",
+    "Existing native admission/cancellation/revision/ACK replay and mixed attachment message regressions remain successful."
+  ],
+  "explicitOptInRefusal": [
+    {
+      "environment": "LINGXIOS_LIVE_UI=1",
+      "command": "node --import tsx --test --test-force-exit server/src/__integration__/interactive-ui-live.test.ts",
+      "expectedExitCode": 1,
+      "observedExitCode": 1
+    },
+    {
+      "environment": "LINGXIOS_REAL_WUKONG=1",
+      "command": "node --import tsx --test --test-force-exit server/src/__integration__/interactive-ui-wukong.test.ts",
+      "expectedExitCode": 1,
+      "observedExitCode": 1
+    }
+  ],
+  "historicalEvidence": {
+    "unchangedByRefusalChecks": true,
+    "files": [
+      "artifacts/interactive-ui/live/results.json",
+      "artifacts/interactive-ui/live/run-metadata.json",
+      "artifacts/interactive-ui/wukong/results.json",
+      "artifacts/interactive-ui/wukong/run-metadata.json"
+    ]
+  },
+  "reproduction": {
+    "prerequisites": "Repository-locked dependencies, existing local PostgreSQL/Redis services and a freshly migrated dedicated test database. Never use a product/shared database.",
+    "migration": "node --import tsx server/src/migrate-bin.ts",
+    "environment": "Use the repository integration test environment with INTEGRATION_DATABASE_URL naming the dedicated database above, REDIS_URL database 8, NODE_ENV=test, embeddings and Open Notebook disabled, loopback model endpoint and synthetic local placeholders. Set AGENT_OS_PYTHON to an available Python 3 executable for worker doctor checks."
+  },
+  "limitations": [
+    "Nine former enabled-mode persistence/action cases are explicitly skipped because controls are hard-disabled; these skips do not establish enabled-mode acceptance.",
+    "Offline source parsing and numerical kernels remain tested for historical data and experiments. Production re-enablement still requires the complete real-model and browser gate.",
+    "No complete repository suite, real model, production browser, physical-device accessibility or production deployment was run in this server task.",
+    "Raw terminal logs remain local; this report and the scripted-runtime artifact contain no prompts or real credentials."
+  ]
+}

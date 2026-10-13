@@ -5,7 +5,7 @@ import { pipeline } from 'node:stream/promises'
 import { pool } from '../db/pool.js'
 import { productRunIdentity } from '../agent-runtime/identity.js'
 import { Router, type Request, type Response, type NextFunction } from 'express'
-import type { ZodType } from 'zod'
+import { z, type ZodType } from 'zod'
 import type { AuthedRequest } from '../auth.js'
 import { assertTeacherRoomAccessible } from '../modules/learning/public.js'
 import type { PermissionAction } from '../modules/access/public.js'
@@ -183,7 +183,16 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) 
   const { userId, companyId } = await identity(req)
   const sessionId = String(req.params.id)
   await assertChannelPermission(userId, companyId, sessionId, 'conversation:read')
-  const { threadId } = requestInput(lingxiOSRunQuerySchema, req.query)
+  const { threadId, activityOffset, attentionOnly } = requestInput(lingxiOSRunQuerySchema.extend({
+    activityOffset: z.coerce.number().int().nonnegative().safe().optional(), attentionOnly: z.enum(['1']).optional(),
+  }), req.query)
+  if (activityOffset !== undefined) {
+    const access = await requireConversationMember(req, sessionId, 'conversation:read')
+    const projectId = requestedProjectId(req)
+    if (projectId && projectId !== access.projectId) throw new HttpError(403, 'conversation belongs to another workspace')
+    await assertTeacherRoomAccessible(sessionId, companyId, userId)
+    res.setHeader('Cache-Control', 'no-store')
+  }
   const runIdentity = await productRunIdentity({ companyId, conversationId: sessionId, agentId: String(req.params.agentId), runId: String(req.params.runId), principalId: userId,
     ...(threadId ? { threadId } : {}) })
   const app = await lingxiOSControl()
@@ -191,7 +200,7 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) 
   if (!state) { res.status(404).json({ error: 'run not found' }); return }
   const permission = await permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: sessionId } })
   const projection = await readRunProjection(app,runIdentity,permission.allowed)
-  res.json(projection.snapshot)
+  res.json(activityOffset === undefined ? projection.snapshot : projection.activityPage(activityOffset, attentionOnly === '1'))
 }))
 
 imRouter.post('/channels/:id/agents/:agentId/runs/:runId/reconcile', safe(async (req, res) => {

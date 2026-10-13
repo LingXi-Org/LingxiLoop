@@ -2,6 +2,7 @@ import type { CompleteAttachment, ThreadMessage } from '@assistant-ui/react'
 import { z } from 'zod'
 import { openUiEnvelopeSchema, uiInteractionSchema } from './interactive-ui/protocol.js'
 import { OPENUI_COMPONENT } from './interactive-ui/catalog.js'
+import { activityAnnotation } from './runActivity.js'
 
 type Wire<T> = T extends Date ? string : T extends readonly (infer U)[] ? Wire<U>[] : T extends object ? { [K in keyof T]: Wire<T[K]> } : T
 export type NativeMessage = Wire<ThreadMessage>
@@ -37,6 +38,7 @@ const gap = z.number().min(0).max(8).optional()
 const align = z.enum(['start', 'center', 'end']).optional()
 export const generativeComponentSchemas: Record<string, z.ZodType> = {
   [OPENUI_COMPONENT]: openUiEnvelopeSchema,
+  'agent-plan': z.object({ title: z.string().max(120), steps: z.array(z.object({ id, label: z.string().max(160), description: z.string().max(500).optional() }).strict()).min(1).max(50), activeIndex: z.number().int().nonnegative().max(50) }).strict(),
   Text: z.object({ value: z.string(), size: textSize, weight: z.enum(['normal', 'medium', 'semibold', 'bold']).optional(),
     color: z.enum(['emphasis', 'secondary', 'alpha-70', 'white', 'white-70', 'white-50']).optional() }).strict(),
   Markdown: z.object({ value: z.string() }).strict(),
@@ -48,6 +50,7 @@ export const generativeComponentSchemas: Record<string, z.ZodType> = {
   Divider: z.object({ flush: z.boolean().optional() }).strict(),
   Spacer: z.object({}).strict(),
   Card: z.object({ title: z.string().optional(), padding: gap }).strict(),
+  // Legacy history reader only; the runtime presentation registry no longer exposes this card.
   'calendar-event': z.object({ event: z.object({ id, title: z.string(), startAt: z.string(), endAt: z.string().nullable().optional(), allDay: z.boolean() }).strict() }).strict(),
   'learning-stats': z.object({ id, title: z.string(), description: z.string(), stats: z.array(z.object({ key: id, label: z.string(), value: z.number() }).strict()).max(100) }).strict(),
 }
@@ -56,7 +59,7 @@ const node: z.ZodType<unknown> = z.lazy(() => z.union([z.string(), z.object({ co
     const schema = generativeComponentSchemas[value.component as keyof typeof generativeComponentSchemas]
     if (!schema || !schema.safeParse(value.props ?? {}).success) ctx.addIssue({ code: 'custom', message: 'unsupported component or properties' })
   })]))
-const generative = z.object({ type: z.literal('generative-ui'), spec: z.object({ root: z.union([node, z.array(node).max(256)]) }).strict(), id: id.optional(), parentId }).strict()
+const generative = z.object({ type: z.literal('generative-ui'), spec: z.object({ root: z.union([node, z.array(node).max(256)]) }).strict(), id: id.optional(), parentId, providerMetadata }).strict()
 const approval = z.object({ id, approved: z.boolean().optional(), reason: z.string().optional(), isAutomatic: z.boolean().optional(), optionId: id.optional(),
   resolution: z.enum(['cancelled','expired']).optional(), options: z.array(z.object({ id, kind: z.string(), label: z.string().optional(), description: z.string().optional(),
     grants: z.array(z.string()).optional(), confirm: z.union([z.boolean(), z.object({ title: z.string().optional(), description: z.string().optional() }).strict()]).optional() }).strict()).max(32).optional() }).strict()
@@ -113,6 +116,7 @@ const humanCustom = z.object({ replyToClientMsgNo: id.optional(), regenerateOfCl
 })
 export const userMessageSchema = nativeMessageSchema.superRefine((value, ctx) => {
   if (value.role !== 'user' || !humanCustom.safeParse(value.metadata.custom).success || value.content.some(part => part.type === 'data')
+    || value.content.some(part => activityAnnotation(part) !== undefined)
     || !value.content.length && !value.attachments?.length) ctx.addIssue({ code: 'custom', message: 'invalid human message' })
 })
 
@@ -131,8 +135,8 @@ export function createNativeMessage(input: { id: string; role: ThreadMessage['ro
     ...(input.role === 'assistant' ? { status: input.status ?? { type: 'complete', reason: 'stop' } } : {}),
     metadata: { ...(input.role === 'assistant' ? { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [] } : {}), custom: input.custom ?? {} } })))
 }
-export function nativeText(message: Pick<NativeMessage, 'content'>): string {
-  return message.content.filter(part => part.type === 'text').map(part => part.text).join('\n')
+export function nativeText(message: Pick<NativeMessage, 'content'> | Pick<ThreadMessage, 'content'>): string {
+  return message.content.flatMap(part => part.type === 'text' && activityAnnotation(part)?.kind !== 'commentary' ? [part.text] : []).join('\n')
 }
 export function nativeData<T = Record<string, unknown>>(message: Pick<NativeMessage, 'content'>, name: string): T | undefined {
   const part = message.content.find(part => part.type === 'data' && part.name === name)

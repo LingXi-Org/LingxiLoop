@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "checkedAt": "2026-10-13T13:21:44.300Z",
+  "realModel": true,
+  "model": "zai-org/GLM-5.2",
+  "requests": 1,
+  "measuredCalls": 2,
+  "costUSD": 0.00834172,
+  "runStatus": "partial",
+  "goalOutcome": {
+    "gaps": [
+      "Content check was unavailable or returned invalid findings"
+    ],
+    "status": "partial",
+    "verification": "inconclusive",
+    "requestVersion": 1
+  },
+  "verdict": {
+    "mentionsEmail": true,
+    "mentionsCalendar": true,
+    "statesUnavailable": true,
+    "claimsSuccess": false,
+    "exposesPlanning": false,
+    "answerLength": 288
+  },
+  "toolCalls": 0,
+  "productRows": {
+    "email": 0,
+    "calendar": 0
+  },
+  "providerCalls": 0,
+  "staleCapabilitiesFiltered": true,
+  "retiredToolsRegistered": false,
+  "inspection": "Direct final response says in Chinese that both actions are unfinished because this product does not support email or calendar. One English opening sentence; no planning or private content. No substitute task.",
+  "validation": "Read-only replay assertions over persisted events and ledger; no new model request. Initial live test required succeeded and exited 1; corrected acceptance permits partial while preserving native outcome."
+}

@@ -56,21 +56,6 @@ test('resource scope shows public sources immediately and preserves student writ
   expect(await browser.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
-test('mail keeps its page title visible beside search on desktop', {
-  ...memberSession(), tags: ['web', 'business-layout', 'mail'],
-}, async ({ app, screen }) => {
-  await app.open('/?project=e2e-classroom')
-  await screen.getByRole('navigation', '工作区与功能').getByRole('button', '邮件').tap()
-  const title = screen.getByRole('heading', '邮件', { level: 1 })
-  await expect(title).toBeVisible()
-  const bounds = await title.boundingBox()
-  expect(bounds!.height).toBeGreaterThan(20)
-  await expect(screen.getByLabel('搜索邮件标题或发件人')).toBeVisible()
-  await screen.getByRole('button', '写邮件').first().tap()
-  await expect(screen.getByLabel('至')).toBeVisible()
-  await screen.getByRole('button', '关闭邮件编辑器').tap()
-})
-
 test('teacher can manage public sources while learner review sources stay read-only', {
   ...memberSession(), tags: ['web', 'business-layout', 'knowledge', 'authorization'],
 }, async ({ app, screen }) => {

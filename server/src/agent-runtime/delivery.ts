@@ -9,8 +9,9 @@ import { pool } from '../db/pool.js'
 import { syncConversationPolicy } from './conversations.js'
 import { commitUiRevisions, reserveUiRevisions, UiRevisionConflict } from '../im/interactive-ui.js'
 import { messageLessons } from './interactive-ui-projection.js'
-import { OPENUI_COMPONENT } from '../../../src/lib/interactive-ui/catalog.js'
+import { INTERACTIVE_LESSONS_ENABLED, OPENUI_COMPONENT } from '../../../src/lib/interactive-ui/catalog.js'
 import { nativeMessageSchema } from '../im/message-types.js'
+import { getSendAcceptance } from '../im/messages-repository.js'
 
 export function approvalView(approval: ApprovalSnapshot) {
   const status = approval.decision === null ? 'PENDING' : approval.decision === false ? 'REJECTED'
@@ -46,9 +47,17 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
       const projection = await readRunProjection(api,{ tenantId: work.tenantId, agentId: work.agentId, sessionId: work.sessionId,
         runId: work.id, principalId: work.principalId!, ...(work.threadId ? { threadId: work.threadId } : {}) },true)
       let payload = projection.committed(message,context.commit).message
+      if (!INTERACTIVE_LESSONS_ENABLED) {
+        const receipt = await getSendAcceptance(pool, { companyId: work.tenantId, userId: work.agentId, clientNonce })
+        if (receipt) {
+          const recorded = nativeMessageSchema.parse(receipt.payload)
+          // An existing dispatch keeps its immutable payload; history renders its text fallback.
+          if (messageLessons(recorded).length) payload = recorded
+        }
+      }
       const uiDelivery = { companyId: work.tenantId, channelId: conversationId, agentId: work.agentId, runId: work.id,
         clientNonce, resultId: context.commit.resultId, fence: context.commit.fence, envelopes: messageLessons(payload) }
-      while (uiDelivery.envelopes.length) {
+      while (INTERACTIVE_LESSONS_ENABLED && uiDelivery.envelopes.length) {
         try { await reserveUiRevisions(uiDelivery); break }
         catch (error) {
           if (!(error instanceof UiRevisionConflict)) throw error

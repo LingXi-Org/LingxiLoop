@@ -45,10 +45,8 @@ import { ThreadDrawer } from './ThreadDrawer'
 import { WorkspaceRail } from './WorkspaceRail'
 import { useLearningSpaces } from './useLearningSpaces'
 import { AgentsPage } from '@/features/agents/components/AgentsPage'
-import { MailPage } from '@/features/email/components/MailPage'
 
 const CanvasView = lazy(() => import('@/features/canvas/components/CanvasView').then((module) => ({ default: module.CanvasView })))
-const CalendarPeekPane = lazy(() => import('@/features/calendar/components/CalendarPeekPane').then((module) => ({ default: module.CalendarPeekPane })))
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
 const PresentationDrawerContent = lazy(() => import('@/features/presentations/components/PresentationDrawerContent').then((module) => ({ default: module.PresentationDrawerContent })))
 const PersonalDashboard = lazy(() => import('./PersonalDashboard').then((module) => ({ default: module.PersonalDashboard })))
@@ -92,7 +90,6 @@ export function DesktopApp() {
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
   const openThread = surface?.kind === 'thread' ? surface : null
   const documentId = surface?.kind === 'document' ? surface.documentId : null
-  const calendarEventId = surface?.kind === 'calendar' ? surface.eventId : null
   const canvasId = surface?.kind === 'canvas' ? surface.canvasId : null
   const presentationId = surface?.kind === 'presentation' ? surface.presentationId : null
   const selectedConversationId = useApp((state) => state.selectedConversationId)
@@ -154,7 +151,7 @@ export function DesktopApp() {
     return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [commandPaletteOpen, isMobile, selectedConversationId, view])
 
-  const dashboardOpen = !['conversations', 'agents', 'mail'].includes(view)
+  const dashboardOpen = !['conversations', 'agents'].includes(view)
   const handleSidebarLayoutChanged = (_layout: Record<string, number>, meta: LayoutChangedMeta) => {
     if (!meta.isUserInteraction) return
     const width = document.querySelector<HTMLElement>('[data-panel="conversations"]')?.getBoundingClientRect().width
@@ -189,14 +186,13 @@ export function DesktopApp() {
     })
   }
   const drawerCanvasId = isMobile ? canvasId : null
-  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || calendarEventId || presentationId || drawerCanvasId)
+  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || presentationId || drawerCanvasId)
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
 
   if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> }
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
-  else if (calendarEventId) { drawerTitle = '日历事件'; drawerContent = <CalendarPeekPane /> }
   else if (presentationId) { drawerTitle = '演示文稿'; drawerContent = <PresentationDrawerContent presentationId={presentationId} /> }
   else if (drawerCanvasId) { drawerTitle = 'Canvas'; drawerContent = <CanvasView canvasId={drawerCanvasId} onBack={closeCanvasView} /> }
 
@@ -205,11 +201,10 @@ export function DesktopApp() {
     if (infoParticipantId) surfaces.closeAgentInfo()
     else if (openThread) surfaces.closeThreadView()
     else if (documentId) surfaces.closeDocumentPeek()
-    else if (calendarEventId) surfaces.closeCalendarEventPeek()
     else if (presentationId) closePresentationView()
     else if (drawerCanvasId) closeCanvasView()
   }
-  const drawerOwnsHeader = Boolean(calendarEventId || drawerCanvasId)
+  const drawerOwnsHeader = Boolean(drawerCanvasId)
   const fullBleedDrawer = Boolean(presentationId || drawerCanvasId)
   const mobileChatOpen = !dashboardOpen && !learningSpaces.pending && isMobile && mobileConversationOpen && Boolean(selectedConversation)
   const drawerWidth = isMobile
@@ -249,7 +244,7 @@ export function DesktopApp() {
                 onCreateCourse={() => setCreateCourseOpen(true)}
               />
             </Suspense>
-          ) : view === 'agents' ? <AgentsPage key={selectedWorkspaceId} onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> : view === 'mail' ? <MailPage key={selectedWorkspaceId} /> : isMobile ? (
+          ) : view === 'agents' ? <AgentsPage key={selectedWorkspaceId} onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> : isMobile ? (
             <div className="h-full min-h-0 min-w-0" data-mobile-conversation-page={mobileChatOpen ? 'chat' : 'list'}>
               <Activity mode={mobileChatOpen ? 'visible' : 'hidden'}>
                 <ChatPane

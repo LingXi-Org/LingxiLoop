@@ -29,8 +29,8 @@ export const LEARNING_SECTION_COPY: Record<
   content: { title: '课程内容' },
   reviews: { title: '评价审核' },
   members: { title: '成员与邀请' },
-  calendar: { title: '日历' },
   resources: { title: '课程资料' },
+  forum: { title: '论坛' },
   settings: { title: '基本资料' },
   status: { title: '课程状态' },
 }

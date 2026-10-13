@@ -1,0 +1,2303 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a13526-5aa4-71af-8530-4abcdfb8da3a",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-13T12:04:32.928Z",
+    "finishedAt": "2026-10-13T12:06:26.729Z",
+    "project": {
+      "id": "lingxiloop-retire-layout",
+      "configDigest": "05e871f57ebd55e322c247a885c2f494760debd7718c34de7fe28a8094ce23f6"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "win32 10.0.22621",
+      "arch": "x64",
+      "runtime": "node v22.22.2"
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5207",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "9a9aca532a2d85205bc4a89fa820549c6c3b7b4d0d1fb2d3789a1c624deb832c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281920%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "conversation edges and readable bodies (1920)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13526-9390-75a9-a2e8-9f330d426091",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:04:43.025Z",
+            "durationMs": 26913,
+            "artifacts": [
+              {
+                "id": "01a13526-9390-75a9-a2e8-9f330d426091:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13526-9390-75a9-a2e8-9f330d426091:4"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281920_29-3e67b596/default/attempt-0/screenshots/001-conversation-edges-1920.png",
+                "size": 124963,
+                "sha256": "a60536dbf7904b4f5b07908a13cf54ee57c408ee49b64452981d34b2d0636eca"
+              },
+              {
+                "id": "01a13526-9390-75a9-a2e8-9f330d426091:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281920_29-3e67b596/default/attempt-0/trace/trace.zip",
+                "size": 554031,
+                "sha256": "69f196f6b4d5f791aea9dffeffbbab9fe8aeb6d1868cea7e9b2ab23e2c3929a1"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13526-9390-75a9-a2e8-9f330d426091:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:04:44.215Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1920,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13526-9390-75a9-a2e8-9f330d426091:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:04:44.224Z",
+                "durationMs": 22779,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13526-9390-75a9-a2e8-9f330d426091:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:07.006Z",
+                "durationMs": 488,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13526-9390-75a9-a2e8-9f330d426091:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:07.496Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13526-9390-75a9-a2e8-9f330d426091:4",
+                "index": 4,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-1920",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:07.526Z",
+                "durationMs": 671,
+                "events": [],
+                "artifacts": [
+                  "01a13526-9390-75a9-a2e8-9f330d426091:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ee3b970565a71fbe19e8605fca68354f4dfe2e52a443c2205c7449841aeb5098",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "conversation edges and readable bodies (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13526-fcd3-7f7b-9430-8e55a93e3c97",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:05:09.972Z",
+            "durationMs": 8465,
+            "artifacts": [
+              {
+                "id": "01a13526-fcd3-7f7b-9430-8e55a93e3c97:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13526-fcd3-7f7b-9430-8e55a93e3c97:4"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281440_29-5ba6301a/default/attempt-0/screenshots/001-conversation-edges-1440.png",
+                "size": 121131,
+                "sha256": "2dcf52a98dcb699d9d89f8ef9578d867c8c05abab6a1ed2680dc9288bce3ad96"
+              },
+              {
+                "id": "01a13526-fcd3-7f7b-9430-8e55a93e3c97:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281440_29-5ba6301a/default/attempt-0/trace/trace.zip",
+                "size": 977475,
+                "sha256": "909752ac1eefc45bf2f4b802e2a3adeac7a155fe5ce426fcfec0f3fda24b75a4"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13526-fcd3-7f7b-9430-8e55a93e3c97:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:10.059Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13526-fcd3-7f7b-9430-8e55a93e3c97:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:10.060Z",
+                "durationMs": 6558,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13526-fcd3-7f7b-9430-8e55a93e3c97:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:16.620Z",
+                "durationMs": 537,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13526-fcd3-7f7b-9430-8e55a93e3c97:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:17.158Z",
+                "durationMs": 120,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13526-fcd3-7f7b-9430-8e55a93e3c97:4",
+                "index": 4,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-1440",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:17.280Z",
+                "durationMs": 391,
+                "events": [],
+                "artifacts": [
+                  "01a13526-fcd3-7f7b-9430-8e55a93e3c97:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b14d155c87e2ae459b589b6542aecbf9e07830629cdcf2f1a416324c3d2ebd1c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281024%29",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "conversation edges and readable bodies (1024)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13527-1de9-7cc4-b84e-3f0a823403c6",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:05:18.442Z",
+            "durationMs": 6692,
+            "artifacts": [
+              {
+                "id": "01a13527-1de9-7cc4-b84e-3f0a823403c6:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13527-1de9-7cc4-b84e-3f0a823403c6:4"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281024_29-0579a8d7/default/attempt-0/screenshots/001-conversation-edges-1024.png",
+                "size": 113203,
+                "sha256": "4978a9a4e1ce13a4799269374435015a58a358eb78f038f90d64dcdafb540996"
+              },
+              {
+                "id": "01a13527-1de9-7cc4-b84e-3f0a823403c6:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_281024_29-0579a8d7/default/attempt-0/trace/trace.zip",
+                "size": 971166,
+                "sha256": "39ded07970d9a0cf4f9e4f08b92b1b3624dcdf0463b8acc00ce80e27e4e1b666"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13527-1de9-7cc4-b84e-3f0a823403c6:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:18.504Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1024,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-1de9-7cc4-b84e-3f0a823403c6:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:18.506Z",
+                "durationMs": 5211,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-1de9-7cc4-b84e-3f0a823403c6:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:23.718Z",
+                "durationMs": 573,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-1de9-7cc4-b84e-3f0a823403c6:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:24.292Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-1de9-7cc4-b84e-3f0a823403c6:4",
+                "index": 4,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-1024",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:24.340Z",
+                "durationMs": 265,
+                "events": [],
+                "artifacts": [
+                  "01a13527-1de9-7cc4-b84e-3f0a823403c6:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9fddbfe7db736eecc1644f9fbe47fde87fcb3ec4336740710dcca4a2db7d4c00",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%28767%29",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "conversation edges and readable bodies (767)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13527-3810-77a9-b1ab-3cb26e127211",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:05:25.136Z",
+            "durationMs": 7105,
+            "artifacts": [
+              {
+                "id": "01a13527-3810-77a9-b1ab-3cb26e127211:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13527-3810-77a9-b1ab-3cb26e127211:5"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_28767_29-6255834c/default/attempt-0/screenshots/001-conversation-edges-767.png",
+                "size": 69689,
+                "sha256": "c2d645cda7be342cd60f99369331dc629a95500f86998a6406feea56f55a10e3"
+              },
+              {
+                "id": "01a13527-3810-77a9-b1ab-3cb26e127211:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_28767_29-6255834c/default/attempt-0/trace/trace.zip",
+                "size": 1030518,
+                "sha256": "8e52c20b9e534b041a1da732e3d3c631796dae52344134538faff446c7d9ecd1"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13527-3810-77a9-b1ab-3cb26e127211:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:25.190Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 767,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-3810-77a9-b1ab-3cb26e127211:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:25.191Z",
+                "durationMs": 4616,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-3810-77a9-b1ab-3cb26e127211:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:29.809Z",
+                "durationMs": 1555,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-3810-77a9-b1ab-3cb26e127211:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:31.365Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-3810-77a9-b1ab-3cb26e127211:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:31.411Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-3810-77a9-b1ab-3cb26e127211:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-767",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:31.432Z",
+                "durationMs": 209,
+                "events": [],
+                "artifacts": [
+                  "01a13527-3810-77a9-b1ab-3cb26e127211:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9cfcb9943c68c2902c41a01fbed7d570a2c16a84f66a1a1814828d44d3f55e36",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "conversation edges and readable bodies (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13527-53d1-7b2c-8203-907bdeb6d474",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:05:32.242Z",
+            "durationMs": 5734,
+            "artifacts": [
+              {
+                "id": "01a13527-53d1-7b2c-8203-907bdeb6d474:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13527-53d1-7b2c-8203-907bdeb6d474:5"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_28390_29-59ef48f9/default/attempt-0/screenshots/001-conversation-edges-390.png",
+                "size": 52169,
+                "sha256": "7cc08012916acbc3606140c74f97fb372095702524af48d2973ed19cc2080433"
+              },
+              {
+                "id": "01a13527-53d1-7b2c-8203-907bdeb6d474:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__conversation_20edges_20and_20readable_20bodies_20_28390_29-59ef48f9/default/attempt-0/trace/trace.zip",
+                "size": 1092926,
+                "sha256": "8eed8c03f9a3813ecd7ed51d36cdf573dee2658d3c06f43c77326e806d3924cf"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13527-53d1-7b2c-8203-907bdeb6d474:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:32.263Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-53d1-7b2c-8203-907bdeb6d474:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-bubble-colors",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:32.264Z",
+                "durationMs": 3534,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-53d1-7b2c-8203-907bdeb6d474:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:35.799Z",
+                "durationMs": 1302,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-53d1-7b2c-8203-907bdeb6d474:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"bubble-me\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:37.101Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-53d1-7b2c-8203-907bdeb6d474:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:37.130Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-53d1-7b2c-8203-907bdeb6d474:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-edges-390",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:37.162Z",
+                "durationMs": 126,
+                "events": [],
+                "artifacts": [
+                  "01a13527-53d1-7b2c-8203-907bdeb6d474:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c8315007c41446bf3cdabaafe288786fa776718d77c207ce1e0a4ad72a605676",
+        "testId": "e2e/visual/retire-layout.e2e.ts::retired%20history%20stays%20readable%20without%20actions%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "retired history stays readable without actions (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 35,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:05:37.980Z",
+            "durationMs": 6026,
+            "artifacts": [
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:8"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__retired_20history_20stays_20readable_20without_20actions_20_281440_29-41309d17/default/attempt-0/screenshots/001-retired-history-1440.png",
+                "size": 81134,
+                "sha256": "9fdf68df0cb5cee348a00ff2801fed35dd0b9fc245004963bcc3d265ed07c9fd"
+              },
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__retired_20history_20stays_20readable_20without_20actions_20_281440_29-41309d17/default/attempt-0/trace/trace.zip",
+                "size": 783239,
+                "sha256": "a7ac8da70a2c5bd0aab1c0fecc71cbe491cf69ebeddbefd5f30e7850980b7cf3"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:38.027Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=retired-history",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:38.029Z",
+                "durationMs": 4059,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"历史邮件标题\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:42.089Z",
+                "durationMs": 480,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"历史邮件正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:42.571Z",
+                "durationMs": 44,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"retired-history\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:42.616Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"retired-history\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:42.663Z",
+                "durationMs": 49,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"retired-history\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:42.712Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"retired-history\\\"] [data-native-part=\\\"tool-call\\\"] button, [data-msg-id=\\\"retired-history\\\"] [data-native-part=\\\"generative-ui\\\"] button\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:42.734Z",
+                "durationMs": 47,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "retired-history-1440",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:42.782Z",
+                "durationMs": 325,
+                "events": [],
+                "artifacts": [
+                  "01a13527-6a3b-7987-ac8b-7d64b8c5b67f:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6421c621af13449cba6d622052810fdc91f8e54af557a8fd92716525c36e3b3a",
+        "testId": "e2e/visual/retire-layout.e2e.ts::retired%20history%20stays%20readable%20without%20actions%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "retired history stays readable without actions (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 35,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13527-81c7-7541-a1df-356bac9ea17c",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:05:44.007Z",
+            "durationMs": 6271,
+            "artifacts": [
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13527-81c7-7541-a1df-356bac9ea17c:9"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__retired_20history_20stays_20readable_20without_20actions_20_28390_29-eb537a91/default/attempt-0/screenshots/001-retired-history-390.png",
+                "size": 29149,
+                "sha256": "a93e1f7ddec1778a2bb54b2114853e4fe40ae8ae368a8befce76b76fa845fd92"
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__retired_20history_20stays_20readable_20without_20actions_20_28390_29-eb537a91/default/attempt-0/trace/trace.zip",
+                "size": 1042092,
+                "sha256": "af34f252cbcb1d594058dd76f951df8b89b67f6fb5fd8fc9cdd89c24f537d545"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:44.039Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=retired-history",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:44.040Z",
+                "durationMs": 3963,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:48.004Z",
+                "durationMs": 1034,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"历史邮件标题\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:49.039Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"历史邮件正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:49.072Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"retired-history\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:49.098Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"retired-history\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:49.126Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"retired-history\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:49.154Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"retired-history\\\"] [data-native-part=\\\"tool-call\\\"] button, [data-msg-id=\\\"retired-history\\\"] [data-native-part=\\\"generative-ui\\\"] button\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:49.176Z",
+                "durationMs": 38,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-81c7-7541-a1df-356bac9ea17c:9",
+                "index": 9,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "retired-history-390",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:49.215Z",
+                "durationMs": 136,
+                "events": [],
+                "artifacts": [
+                  "01a13527-81c7-7541-a1df-356bac9ea17c:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b777d05ba4f5caea382f538d133ddc01d952c210e047b4ff7892412e354e8508",
+        "testId": "e2e/visual/retire-layout.e2e.ts::rich%20message%20and%20detail%20drawer%20fit%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "rich message and detail drawer fit (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 51,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13527-9a48-7e08-88dd-939496bc2ea4",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:05:50.280Z",
+            "durationMs": 14084,
+            "artifacts": [
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13527-9a48-7e08-88dd-939496bc2ea4:6"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__rich_20message_20and_20detail_20drawer_20fit_20_281440_29-b91091f6/default/attempt-0/screenshots/001-rich-message-1440.png",
+                "size": 108399,
+                "sha256": "7c8b0d43885e4bcafc07694d9d87cfbffbc5087afb8c9b83f3b199ae3f836367"
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13527-9a48-7e08-88dd-939496bc2ea4:10"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__rich_20message_20and_20detail_20drawer_20fit_20_281440_29-b91091f6/default/attempt-0/screenshots/002-conversation-detail-1440.png",
+                "size": 213316,
+                "sha256": "413b49c71745c846583f1ea9aef13a18b4186bcdd74f1fb8bedaf5cc08cfcc3c"
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__rich_20message_20and_20detail_20drawer_20fit_20_281440_29-b91091f6/default/attempt-0/trace/trace.zip",
+                "size": 1791278,
+                "sha256": "8c52a4446e112f9a7c62e914ab24557ef0ad3f9dec2a1e08c02696f17964fda9"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:50.312Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=layout-rich",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:50.313Z",
+                "durationMs": 4840,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"layout-rich\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:55.154Z",
+                "durationMs": 611,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"layout-rich\\\"] pre\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:55.767Z",
+                "durationMs": 38,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"layout-rich\\\"] [data-native-part=\\\"image\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:55.805Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:55.832Z",
+                "durationMs": 64,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:6",
+                "index": 6,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "rich-message-1440",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:55.897Z",
+                "durationMs": 401,
+                "events": [],
+                "artifacts": [
+                  "01a13527-9a48-7e08-88dd-939496bc2ea4:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:7",
+                "index": 7,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=layout-rich&drawer=1",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:56.299Z",
+                "durationMs": 3470,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:05:59.771Z",
+                "durationMs": 546,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:00.319Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:10",
+                "index": 10,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-detail-1440",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:00.348Z",
+                "durationMs": 1155,
+                "events": [],
+                "artifacts": [
+                  "01a13527-9a48-7e08-88dd-939496bc2ea4:artifact:1"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:01.506Z",
+                "durationMs": 353,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-9a48-7e08-88dd-939496bc2ea4:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:01.861Z",
+                "durationMs": 899,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4efc184ae2c518be8956fceb3ce3413259f365de256de0765eb5b257d44fa869",
+        "testId": "e2e/visual/retire-layout.e2e.ts::rich%20message%20and%20detail%20drawer%20fit%20%28767%29",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "rich message and detail drawer fit (767)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 51,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13527-d163-7819-9bdf-353616841902",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:06:04.391Z",
+            "durationMs": 12167,
+            "artifacts": [
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13527-d163-7819-9bdf-353616841902:7"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__rich_20message_20and_20detail_20drawer_20fit_20_28767_29-04b38256/default/attempt-0/screenshots/001-rich-message-767.png",
+                "size": 58201,
+                "sha256": "bb3606b99c443b00385be38c94e688c71c4ba5c9a796a766bf20043ded60ebdf"
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13527-d163-7819-9bdf-353616841902:11"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__rich_20message_20and_20detail_20drawer_20fit_20_28767_29-04b38256/default/attempt-0/screenshots/002-conversation-detail-767.png",
+                "size": 126486,
+                "sha256": "23a944c08a0050921cf57a7d7ebf707c26f4385ef4380d0e1e99685b63b9e0e1"
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__rich_20message_20and_20detail_20drawer_20fit_20_28767_29-04b38256/default/attempt-0/trace/trace.zip",
+                "size": 2011200,
+                "sha256": "01e0908379835c1063e93194f005f0972cebd74897bba58c489502b895c8b31f"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:04.474Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 767,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=layout-rich",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:04.477Z",
+                "durationMs": 4574,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:09.053Z",
+                "durationMs": 1271,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"layout-rich\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:10.325Z",
+                "durationMs": 50,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"layout-rich\\\"] pre\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:10.376Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"layout-rich\\\"] [data-native-part=\\\"image\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:10.409Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:10.435Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:7",
+                "index": 7,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "rich-message-767",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:10.462Z",
+                "durationMs": 172,
+                "events": [],
+                "artifacts": [
+                  "01a13527-d163-7819-9bdf-353616841902:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=layout-rich&drawer=1",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:10.634Z",
+                "durationMs": 3428,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:14.063Z",
+                "durationMs": 285,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:14.349Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-detail-767",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:14.372Z",
+                "durationMs": 501,
+                "events": [],
+                "artifacts": [
+                  "01a13527-d163-7819-9bdf-353616841902:artifact:1"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:14.873Z",
+                "durationMs": 151,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13527-d163-7819-9bdf-353616841902:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:15.025Z",
+                "durationMs": 827,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c289269c2f394ad0d771d11f795d7d19cc16e627c7d3d7681dbfb0e0ba642b45",
+        "testId": "e2e/visual/retire-layout.e2e.ts::rich%20message%20and%20detail%20drawer%20fit%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 9,
+        "titlePath": [
+          "rich message and detail drawer fit (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 51,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13528-00f1-7917-b19e-54cee2826760",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-13T12:06:16.562Z",
+            "durationMs": 9091,
+            "artifacts": [
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13528-00f1-7917-b19e-54cee2826760:7"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__rich_20message_20and_20detail_20drawer_20fit_20_28390_29-02b6b0ca/default/attempt-0/screenshots/001-rich-message-390.png",
+                "size": 52757,
+                "sha256": "65637f5cdab5904cf886a17e8438b8a6ef8bf25138a953c62c8edf603157c63e"
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13528-00f1-7917-b19e-54cee2826760:11"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__rich_20message_20and_20detail_20drawer_20fit_20_28390_29-02b6b0ca/default/attempt-0/screenshots/002-conversation-detail-390.png",
+                "size": 60439,
+                "sha256": "e52c06cab49110644f17f416bd8d15ac334e919dac93a7a1c426abf57031ada5"
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__rich_20message_20and_20detail_20drawer_20fit_20_28390_29-02b6b0ca/default/attempt-0/trace/trace.zip",
+                "size": 2086579,
+                "sha256": "d2e6a2e00f7104d21298474d54fe1471e906a651ef408b6735f634b650791d17"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:16.604Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=layout-rich",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:16.605Z",
+                "durationMs": 3604,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:20.210Z",
+                "durationMs": 1091,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"layout-rich\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:21.301Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"layout-rich\\\"] pre\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:21.325Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"layout-rich\\\"] [data-native-part=\\\"image\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:21.358Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:21.382Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:7",
+                "index": 7,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "rich-message-390",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:21.400Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [
+                  "01a13528-00f1-7917-b19e-54cee2826760:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=layout-rich&drawer=1",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:21.492Z",
+                "durationMs": 2474,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:23.967Z",
+                "durationMs": 203,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:24.170Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "conversation-detail-390",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:24.186Z",
+                "durationMs": 249,
+                "events": [],
+                "artifacts": [
+                  "01a13528-00f1-7917-b19e-54cee2826760:artifact:1"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:24.436Z",
+                "durationMs": 102,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13528-00f1-7917-b19e-54cee2826760:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:06:24.540Z",
+                "durationMs": 668,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 10,
+      "selected": 10,
+      "executed": 10,
+      "passed": 10,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 10,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 13551540,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

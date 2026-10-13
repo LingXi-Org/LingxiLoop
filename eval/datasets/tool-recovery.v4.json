@@ -1,0 +1,328 @@
+{
+  "schemaVersion": 1,
+  "id": "tool-recovery",
+  "version": "4",
+  "cases": [
+    {
+      "id": "reconcile-title-conflict",
+      "input": "doc_delivery_38 的标题看着还像草稿，帮我改成《课程交付清单》吧。",
+      "expected": "先读当前标题后重命名；遇到并发修改冲突，重新读取已变更的标题并携带最新 expectedTitle 再执行，成功后才确认改好。 按语义判断，接受合理复查、等价措辞和标题；已保存产物的事实可在工具参数中体现，不要求最终回复重复所有内容或裸文档ID。",
+      "tags": [
+        "initiative",
+        "documents",
+        "recovery",
+        "optimistic-concurrency"
+      ],
+      "scenario": {
+        "tools": [
+          "documents__read",
+          "documents__rename",
+          "documents__delete"
+        ],
+        "fixtures": [
+          {
+            "id": "read-original",
+            "tool": "documents__read",
+            "arguments": {
+              "documentId": "doc_delivery_38"
+            },
+            "after": [],
+            "outcome": "ok",
+            "result": {
+              "ok": true,
+              "value": {
+                "id": "doc_delivery_38",
+                "title": "课程交付（草稿）",
+                "body": "交付内容已齐。",
+                "revision": "rev-2"
+              }
+            }
+          },
+          {
+            "id": "title-conflict",
+            "tool": "documents__rename",
+            "arguments": {
+              "documentId": "doc_delivery_38",
+              "expectedTitle": "课程交付（草稿）"
+            },
+            "after": [
+              [
+                "read-original"
+              ]
+            ],
+            "outcome": "error",
+            "result": {
+              "ok": false,
+              "code": "resource_conflict",
+              "error": "document title changed; read it again"
+            },
+            "once": true
+          },
+          {
+            "id": "read-current",
+            "tool": "documents__read",
+            "arguments": {
+              "documentId": "doc_delivery_38"
+            },
+            "after": [
+              [
+                "title-conflict"
+              ]
+            ],
+            "outcome": "ok",
+            "result": {
+              "ok": true,
+              "value": {
+                "id": "doc_delivery_38",
+                "title": "课程交付（已复核）",
+                "body": "交付内容已齐。",
+                "revision": "rev-3"
+              }
+            }
+          },
+          {
+            "id": "renamed",
+            "tool": "documents__rename",
+            "arguments": {
+              "documentId": "doc_delivery_38",
+              "expectedTitle": "课程交付（已复核）"
+            },
+            "after": [
+              [
+                "read-current"
+              ]
+            ],
+            "outcome": "ok",
+            "result": {
+              "ok": true,
+              "executionState": "succeeded",
+              "value": {
+                "documentId": "doc_delivery_38",
+                "title": "课程交付清单",
+                "revision": "rev-4",
+                "notification": "queued"
+              }
+            },
+            "once": true
+          },
+          {
+            "id": "verify-renamed",
+            "tool": "documents__read",
+            "arguments": {
+              "documentId": "doc_delivery_38"
+            },
+            "after": [
+              [
+                "renamed"
+              ]
+            ],
+            "outcome": "ok",
+            "result": {
+              "ok": true,
+              "value": {
+                "documentId": "doc_delivery_38",
+                "revision": "rev-4"
+              }
+            }
+          }
+        ]
+      },
+      "behavior": {
+        "required": [
+          [
+            "read-original"
+          ],
+          [
+            "title-conflict"
+          ],
+          [
+            "read-current"
+          ],
+          [
+            "renamed"
+          ]
+        ],
+        "forbiddenTools": [
+          "documents__delete"
+        ],
+        "answer": [],
+        "maxToolCalls": 4
+      }
+    },
+    {
+      "id": "follow-history-before-saving",
+      "input": "把群里定下来的资料交付时间留个简短记录，省得下回又翻聊天。",
+      "expected": "最新一页只有指向更早决议的消息，应继续读取历史，取出何青在北京时间 2026-09-15 18:00 前交付的决定，再创建文档并返回保存回执。 按语义判断，接受合理复查、等价措辞和标题；已保存产物的事实可在工具参数中体现，不要求最终回复重复所有内容或裸文档ID。",
+      "tags": [
+        "initiative",
+        "chat",
+        "documents",
+        "pagination",
+        "artifact"
+      ],
+      "scenario": {
+        "tools": [
+          "chat__history",
+          "documents__create",
+          "documents__read"
+        ],
+        "fixtures": [
+          {
+            "id": "recent-page",
+            "tool": "chat__history",
+            "arguments": {
+              "beforeSequence": 0
+            },
+            "after": [],
+            "outcome": "ok",
+            "result": {
+              "ok": true,
+              "value": {
+                "messages": [
+                  {
+                    "clientMsgNo": "msg_104",
+                    "messageSeq": 104,
+                    "payload": {
+                      "body": "资料交付仍按上面的决议，没有改期。"
+                    }
+                  },
+                  {
+                    "clientMsgNo": "msg_103",
+                    "messageSeq": 103,
+                    "payload": {
+                      "body": "收到，负责人和具体时间前面已经定了。"
+                    }
+                  }
+                ],
+                "readThroughSeq": 104
+              }
+            }
+          },
+          {
+            "id": "decision-page",
+            "tool": "chat__history",
+            "arguments": {
+              "beforeSequence": 103
+            },
+            "after": [
+              [
+                "recent-page"
+              ]
+            ],
+            "outcome": "ok",
+            "result": {
+              "ok": true,
+              "value": {
+                "messages": [
+                  {
+                    "clientMsgNo": "msg_102",
+                    "messageSeq": 102,
+                    "payload": {
+                      "body": "确定：何青负责全部资料交付，北京时间 2026-09-15 18:00 前完成。"
+                    }
+                  }
+                ],
+                "readThroughSeq": 102
+              }
+            }
+          },
+          {
+            "id": "overlapping-page",
+            "tool": "chat__history",
+            "arguments": {
+              "beforeSequence": 104
+            },
+            "after": [
+              [
+                "recent-page"
+              ]
+            ],
+            "outcome": "ok",
+            "result": {
+              "ok": true,
+              "value": {
+                "messages": [
+                  {
+                    "clientMsgNo": "msg_103",
+                    "messageSeq": 103,
+                    "payload": {
+                      "body": "收到，负责人和具体时间前面已经定了。"
+                    }
+                  },
+                  {
+                    "clientMsgNo": "msg_102",
+                    "messageSeq": 102,
+                    "payload": {
+                      "body": "确定：何青负责全部资料交付，北京时间 2026-09-15 18:00 前完成。"
+                    }
+                  }
+                ],
+                "readThroughSeq": 103
+              }
+            }
+          },
+          {
+            "id": "saved-decision",
+            "tool": "documents__create",
+            "arguments": {},
+            "after": [
+              [
+                "decision-page",
+                "overlapping-page"
+              ]
+            ],
+            "outcome": "ok",
+            "result": {
+              "ok": true,
+              "executionState": "succeeded",
+              "value": {
+                "documentId": "doc_delivery_25",
+                "title": "资料交付记录",
+                "revision": "rev-1",
+                "notification": "queued"
+              }
+            },
+            "once": true
+          },
+          {
+            "id": "verify-saved-document",
+            "tool": "documents__read",
+            "arguments": {
+              "documentId": "doc_delivery_25"
+            },
+            "after": [
+              [
+                "saved-decision"
+              ]
+            ],
+            "outcome": "ok",
+            "result": {
+              "ok": true,
+              "value": {
+                "documentId": "doc_delivery_25",
+                "revision": "rev-1"
+              }
+            }
+          }
+        ]
+      },
+      "behavior": {
+        "required": [
+          [
+            "recent-page"
+          ],
+          [
+            "decision-page",
+            "overlapping-page"
+          ],
+          [
+            "saved-decision"
+          ]
+        ],
+        "forbiddenTools": [],
+        "answer": [],
+        "maxToolCalls": 3
+      }
+    }
+  ]
+}

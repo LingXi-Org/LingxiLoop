@@ -1,0 +1,59 @@
+{
+  "reason": "The current production GLM model passed projectile calibration but repeatedly omitted a literal default for a Steps binding despite native correction, then exhausted content-acceptance correction. The valid-state guard and live gate both rejected it. The configured alternative evaluation candidate is assessed separately; this production-model failure remains retained.",
+  "metadata": {
+    "startedAt": "2026-10-13T14:33:07.088Z",
+    "finishedAt": "2026-10-13T14:34:23.678Z",
+    "passed": false,
+    "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui",
+    "runtime": "3.3.6",
+    "candidate": "zai-org/GLM-5.2",
+    "judge": "deepseek-ai/DeepSeek-V4-Flash",
+    "maxModelCalls": 16,
+    "maxModelTokens": 200000,
+    "maxRunCostUSD": 0.25,
+    "maxTotalCostUSD": 5,
+    "modelConcurrency": 1,
+    "database": "lingxiloop_ui_model_test",
+    "identity": "synthetic test-owner",
+    "realWuKong": true,
+    "realModel": true,
+    "authentication": "isolated test middleware"
+  },
+  "results": {
+    "passed": false,
+    "baseline": [
+      {
+        "id": "baseline-projectile",
+        "previewMs": 10081.515900000002,
+        "firstTextMs": 5075.5472,
+        "readyMs": 11951.170600000001,
+        "sendAttempts": 1,
+        "streamReconnects": 1,
+        "modelCalls": 3,
+        "costUSD": 0.01881028,
+        "uiCount": 1,
+        "teaching": {
+          "correct": true,
+          "transfer": true,
+          "correction": true,
+          "reasons": [
+            "射程公式R=v0^2·sin(2θ)/g正确，且明确说明20°与70°、30°与60°射程相等，符合参考事实。",
+            "速度10m/s、重力9.81m/s²与参考一致，无单位或数值矛盾。",
+            "迁移问题“30°和60°谁更远？”被正确提出，并给出等远及原因解释，无数字捏造。",
+            "未要求纠正，且答案无错误预测，故correction设为true。"
+          ]
+        },
+        "runId": "im:9319340ed7e593b2471eae459ba8c136fc197016ea95003aeb941efbbebed3e1",
+        "sourceHashes": [
+          "1f7479702eb8cb305679c8e84d32dbf189a053bea3c0f9c7c3f6ca98e53e7e02"
+        ]
+      }
+    ],
+    "cases": [],
+    "attempts": [
+      "baseline-projectile",
+      "baseline-comparison"
+    ],
+    "error": "baseline-comparison: requested composition missing"
+  }
+}

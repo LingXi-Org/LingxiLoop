@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { bootParticipants, useParticipants } from '@/features/agents/state'
-import { useCalendar } from '@/features/calendar/state'
 import { bootConversations, useConversations } from '@/features/conversations/store'
 import { chatTransport } from '@/features/chat/runtime/transport'
 import { useDocuments } from '@/features/documents/state'
@@ -93,7 +92,6 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     useConversations.getState().reset()
     useCanvas.getState().reset()
     useKnowledgeSources.getState().reset()
-    useCalendar.getState().reset()
     useDocuments.getState().reset()
     await Promise.all([
       useParticipants.getState().load(),
@@ -119,7 +117,6 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     useApp.setState({ selectedConversationId: null, mobileConversationOpen: false, autoSelectConversation: false, canManageWorkspace: false })
     useParticipants.getState().reset()
     useConversations.getState().reset()
-    useCalendar.getState().reset()
     useDocuments.getState().reset()
     useCanvas.getState().reset()
     useKnowledgeSources.getState().reset()
@@ -165,7 +162,6 @@ export async function selectLearningSpace(selection: LearningSpaceSelection): Pr
   useWorkspace.getState().reset()
   useParticipants.getState().reset()
   useConversations.getState().reset()
-  useCalendar.getState().reset()
   useDocuments.getState().reset()
   useCanvas.getState().reset()
   useKnowledgeSources.getState().reset()
