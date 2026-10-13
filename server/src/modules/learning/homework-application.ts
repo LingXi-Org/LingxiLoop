@@ -4,6 +4,8 @@ import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
 import { createHomeworkThread } from '../context-threads/public.js'
 import { getAgentChannelHistory, readAgentChannelMessages } from '../../im/public.js'
+import { nativeAttachments } from '../../im/message-types.js'
+import { unavailableAttachmentIds } from '../../agent-runtime/attachments.js'
 import type { LearningScope } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
 import { enqueueLearningEffect } from './effects-repository.js'
@@ -141,21 +143,49 @@ export class HomeworkApplication {
     const scopedHomework=await homeworkRow(this.db,scope,courseId,id),scopedState=await homeworkState(this.db,scopedHomework,scope.userId)
     if(scopedState.agent_id!==binding.agentId||scopedState.channel_id!==binding.channelId) throw new LearningApplicationError('forbidden','证据不属于此作业的私人学习对话')
     const messages=await readAgentChannelMessages({companyId:scope.companyId,agentId:binding.agentId,channelId:binding.channelId,messageIds:data.messageIds})
-    if(!messages||data.messageIds.some(messageId=>!messages.some(message=>(message.clientMsgNo===messageId||message.messageId===messageId)
-      && message.fromUid===scope.userId&&message.payload.role==='user'))) throw new LearningApplicationError('forbidden','只能使用当前学生已发送的真实学习证据')
-    await this.transaction(async db=>{
+    const selected=data.messageIds.map(messageId=>messages?.find(message=>(message.clientMsgNo===messageId||message.messageId===messageId)
+      && message.fromUid===scope.userId&&message.payload.role==='user'))
+    if(selected.some(message=>!message)) throw new LearningApplicationError('forbidden','只能使用当前学生已发送的真实学习证据')
+    const messageIds=[...new Set(selected.map(message=>message!.clientMsgNo))].sort()
+    const attachments=selected.flatMap(message=>nativeAttachments(message!.payload).map(file=>({clientMsgNo:message!.clientMsgNo,attachmentId:file.id})))
+    return this.transaction(async db=>{
       await homeworkScope(db,scope,courseId,'submit')
       const hw=await homeworkRow(db,scope,courseId,id,true);assertHomeworkPublished(hw)
       const state=await homeworkState(db,hw,scope.userId,true)
       if(state.agent_id!==binding.agentId||state.channel_id!==binding.channelId) throw new LearningApplicationError('forbidden','证据不属于此作业的私人学习对话')
+      if((await unavailableAttachmentIds(db,scope.companyId,binding.channelId,attachments,[scope.userId])).size) {
+        throw new LearningApplicationError('forbidden','学习证据附件的访问权限已变化，请重新选择可读取的证据后验证。')
+      }
+      const {rows}=await db.query<{id:string;message_ids:string[];status:'PENDING'|'READY';evidence:Array<{materials:HomeworkMaterial[]}>}>(`
+        SELECT id,message_ids,status,evidence FROM homework_assessments WHERE id=$1 AND company_id=$2 AND homework_id=$3
+          AND learner_id=$4 AND evidence_revision=$5 AND return_epoch=$6 AND status IN ('PENDING','READY')`,
+        [state.assessment_id,scope.companyId,id,scope.userId,state.evidence_revision,state.return_epoch])
+      const current=rows[0]
+      if(current) {
+        const previousIds=[...new Set(current.message_ids.map(messageId=>selected.find(message=>message!.clientMsgNo===messageId||message!.messageId===messageId)?.clientMsgNo))].sort()
+        if(previousIds.length===messageIds.length&&previousIds.every((messageId,index)=>messageId===messageIds[index])) {
+          if(!await homeworkEvidenceAvailable(db,scope,state,current.evidence.flatMap(message=>message.materials))) {
+            throw new LearningApplicationError('forbidden','学习证据附件的访问权限已变化，请重新选择可读取的证据后验证。')
+          }
+          const receipt={assessmentId:current.id,evidenceRevision:state.evidence_revision,returnEpoch:state.return_epoch,status:current.status}
+          if(current.status==='PENDING') {
+            const payload={homeworkId:id,userId:scope.userId,assessmentId:current.id,evidenceRevision:state.evidence_revision,returnEpoch:state.return_epoch}
+            const active=await db.query(`SELECT 1 FROM learning_effects WHERE company_id=$1 AND course_id=$2 AND kind='homework.assess'
+              AND effect_key=$3 AND status IN ('pending','processing','failed') AND (payload @> $4::jsonb OR queued_payload @> $4::jsonb)`,
+              [scope.companyId,courseId,`${id}:${scope.userId}`,JSON.stringify(payload)])
+            if(!active.rows.length) await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.assess',effectKey:`${id}:${scope.userId}`,payload})
+          }
+          return receipt
+        }
+      }
       const assessmentId=randomUUID(),evidenceRevision=state.evidence_revision+1
       await db.query(`INSERT INTO homework_assessments(id,company_id,homework_id,learner_id,evidence_revision,return_epoch,message_ids)
-        VALUES($1,$2,$3,$4,$5,$6,$7::jsonb)`,[assessmentId,scope.companyId,id,scope.userId,evidenceRevision,state.return_epoch,JSON.stringify(data.messageIds)])
+        VALUES($1,$2,$3,$4,$5,$6,$7::jsonb)`,[assessmentId,scope.companyId,id,scope.userId,evidenceRevision,state.return_epoch,JSON.stringify(messageIds)])
       await db.query(`UPDATE homework_learner_state SET assessment_id=$4,evidence_revision=$5,report=NULL,report_status='NONE',report_feedback='',manual_evidence=NULL,manual_unlock=NULL,updated_at=NOW()
         WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3`,[scope.companyId,id,scope.userId,assessmentId,evidenceRevision])
       await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.assess',effectKey:`${id}:${scope.userId}`,payload:{homeworkId:id,userId:scope.userId,assessmentId,evidenceRevision,returnEpoch:state.return_epoch}})
+      return {assessmentId,evidenceRevision,returnEpoch:state.return_epoch,status:'PENDING' as const}
     })
-    return (await this.detail(scope,courseId,id)).student!
   }
 
   async requestReport(scope:LearningScope,courseId:string,id:string,input:z.input<typeof homeworkReportSchema>) {

@@ -2,10 +2,12 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 import { contentReviewDiagnostics, structuredRequestShape } from './content-review-diagnostics.js'
+import { homeworkJudgmentDiagnostics } from './homework-judgment-diagnostics.js'
 
 type Role = 'CANDIDATE' | 'JUDGE'
 type Receipt = { id: string; role: Role; inputTokens: number; outputTokens: number; costCNY: number; status: 'measured' | 'failed'; model: string;
-  contentReview?: NonNullable<ReturnType<typeof contentReviewDiagnostics>>; structuredRequest?: NonNullable<ReturnType<typeof structuredRequestShape>> }
+  contentReview?: NonNullable<ReturnType<typeof contentReviewDiagnostics>>; structuredRequest?: NonNullable<ReturnType<typeof structuredRequestShape>>;
+  homeworkJudgment?: NonNullable<ReturnType<typeof homeworkJudgmentDiagnostics>> }
 const cost = (input: number, output: number, inputRate: number, outputRate: number) => (input * inputRate + output * outputRate) / 1e6
 // Failure inventory: concurrent reservations overspend; missing/streamed usage is hidden;
 // an unknown failure retries with fresh money; credential or prompt text leaks into evidence.
@@ -38,6 +40,55 @@ assert.ok(cost(1000, 2000, 2, 4) > cost(1000, 1000, 2, 4))
   assert.doesNotMatch(JSON.stringify(observed), /PRIVATE_\w+_SENTINEL|explain the area|cannot inspect the source/)
   assert.deepEqual(request, before)
   assert.deepEqual(raw, rawBefore)
+}
+
+// Failure inventory: optional context prevents recognition; schema errors leak arbitrary keys;
+// missing/duplicate criteria, forged IDs/quotes, assistant quotes or unsupported mastery pass;
+// report/assessment are confused; malformed/truncated responses pass; observation mutates wire data.
+{
+  const input = { homework: { criteria: ['PRIVATE_CRITERION_SENTINEL'] }, messages: [
+    { messageId: 'PRIVATE_USER_ID_SENTINEL', role: 'user', text: 'PRIVATE_USER_TEXT_SENTINEL demonstrates this result' },
+    { messageId: 'PRIVATE_AGENT_ID_SENTINEL', role: 'assistant', text: 'PRIVATE_AGENT_TEXT_SENTINEL supplies a result' },
+  ] }
+  const request = { response_format: { type: 'json_object' }, messages: [{ role: 'user', content: JSON.stringify(input) }] }
+  const valid = { criteria: [{ criterion: input.homework.criteria[0], met: true, independent: true, feedback: 'PRIVATE_FEEDBACK_SENTINEL' }],
+    completion: 'PRIVATE_COMPLETION_SENTINEL', assistance: '', independence: '', weaknesses: [],
+    evidence: [{ messageId: '  PRIVATE_USER_ID_SENTINEL  ', excerpt: 'PRIVATE_USER_TEXT_SENTINEL' }] }
+  const response = (value: unknown) => ({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(value) } }] })
+  const inspect = (value: unknown) => {
+    const result = homeworkJudgmentDiagnostics(request, response(value))
+    assert.ok(result, 'Canonical homework judgment requests must produce safe diagnostics')
+    return result
+  }
+  const accepted = inspect(valid)
+  assert.deepEqual([accepted.schemaValid, accepted.criteriaMatch, accepted.matchesHostValidation, accepted.hasAnswer], [true, true, true, false])
+  assert.deepEqual(accepted.evidence.map(item => [item.sourceFound, item.userRole, item.exactSubstring]), [[true, true, true]])
+  assert.equal(homeworkJudgmentDiagnostics({ ...request, messages: [{ role: 'user', content: JSON.stringify({ ...input, answer: {} }) }] }, response(valid))!.hasAnswer, true)
+  assert.equal(inspect({ ...valid, criteria: [] }).criteriaMatch, false)
+  assert.equal(inspect({ ...valid, criteria: [valid.criteria[0], valid.criteria[0]] }).criteriaMatch, false)
+  const forgedId = inspect({ ...valid, evidence: [{ ...valid.evidence[0], messageId: 'PRIVATE_FORGED_ID_SENTINEL' }] })
+  assert.deepEqual([forgedId.matchesHostValidation, forgedId.evidence[0].sourceFound], [false, false])
+  const forgedQuote = inspect({ ...valid, evidence: [{ ...valid.evidence[0], excerpt: 'PRIVATE_FORGED_QUOTE_SENTINEL' }] })
+  assert.deepEqual([forgedQuote.matchesHostValidation, forgedQuote.evidence[0].exactSubstring], [false, false])
+  const assistant = inspect({ ...valid, evidence: [{ messageId: input.messages[1].messageId, excerpt: input.messages[1].text }] })
+  assert.deepEqual([assistant.matchesHostValidation, assistant.evidence[0].sourceFound, assistant.evidence[0].userRole], [false, true, false])
+  assert.equal(inspect({ ...valid, evidence: [] }).metWithoutEvidence, true)
+  assert.equal(inspect({ ...valid, criteria: [{ ...valid.criteria[0], met: false, independent: true }], evidence: [] }).matchesHostValidation, false)
+  assert.equal(inspect({ ...valid, criteria: [{ ...valid.criteria[0], met: false, independent: false }], evidence: [] }).matchesHostValidation, true)
+  assert.equal(inspect({ ...valid, criteria: [{ ...valid.criteria[0], met: 'PRIVATE_INVALID_TYPE_SENTINEL' }] }).schemaValid, false)
+  const raw = response({ ...valid, PRIVATE_UNKNOWN_KEY_SENTINEL: 'PRIVATE_UNKNOWN_VALUE_SENTINEL',
+    criteria: [{ ...valid.criteria[0], PRIVATE_NESTED_KEY_SENTINEL: 'PRIVATE_NESTED_VALUE_SENTINEL' }] })
+  const before = structuredClone(request), rawBefore = structuredClone(raw)
+  const observed = homeworkJudgmentDiagnostics(request, raw)!
+  assert.equal(observed.schemaValid, false)
+  assert.doesNotMatch(JSON.stringify([accepted, observed, forgedId, forgedQuote, assistant]), /PRIVATE_\w+_SENTINEL/)
+  assert.deepEqual(request, before)
+  assert.deepEqual(raw, rawBefore)
+  assert.equal(homeworkJudgmentDiagnostics(request, { choices: [{ finish_reason: 'length', message: { content: JSON.stringify(valid) } }] })!.matchesHostValidation, false)
+  assert.equal(homeworkJudgmentDiagnostics(request, { choices: [{ message: { content: 'PRIVATE_INVALID_JSON_SENTINEL' } }] })!.schemaValid, false)
+  assert.equal(homeworkJudgmentDiagnostics({ ...request, stream: true }, response(valid)), undefined)
+  assert.equal(homeworkJudgmentDiagnostics({ ...request, response_format: { type: 'text' } }, response(valid)), undefined)
+  assert.equal(homeworkJudgmentDiagnostics({ ...request, messages: [{ role: 'user', content: JSON.stringify({ homework: input.homework, messages: [{ role: 'user' }] }) }] }, response(valid)), undefined)
 }
 
 export async function startHomeworkMeter(maxCNY: number) {
@@ -81,8 +132,9 @@ export async function startHomeworkMeter(maxCNY: number) {
       spentCNY += actual
       const contentReview = contentReviewDiagnostics(input, messages[0])
       const structuredRequest = structuredRequestShape(input)
+      const homeworkJudgment = homeworkJudgmentDiagnostics(input, messages[0])
       receipts.push({ id, role, inputTokens: usage.prompt_tokens, outputTokens: usage.completion_tokens, costCNY: actual, status: 'measured', model,
-        ...(contentReview ? { contentReview } : {}), ...(structuredRequest ? { structuredRequest } : {}) })
+        ...(contentReview ? { contentReview } : {}), ...(structuredRequest ? { structuredRequest } : {}), ...(homeworkJudgment ? { homeworkJudgment } : {}) })
       response.writeHead(200, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' }); response.end(body)
     } catch {
       failed = true

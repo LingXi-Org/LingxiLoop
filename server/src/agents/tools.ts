@@ -49,7 +49,7 @@ export async function authorizeAgent(context: ActionContext) {
   if (!work.principalId) throw new NoEffectError('original human principal is required', 'forbidden')
   const db = context.database as Queryable
   const principal = await db.query(`SELECT 1 FROM users WHERE id=$1 AND suspended_at IS NULL AND deleted_at IS NULL AND departed_at IS NULL
-    AND (access_revoked_at IS NULL OR access_revoked_at<$2::timestamptz) FOR SHARE`, [work.principalId,work.createdAt ?? null])
+    AND (access_revoked_at IS NULL OR access_revoked_at<$2::timestamptz) FOR UPDATE`, [work.principalId,work.createdAt ?? null])
   if (!principal.rows[0]) throw new NoEffectError('original authorization period has ended', 'forbidden')
   const { rows } = await db.query<{ capabilities: string[]; teacher_managed: boolean; canvas_reporter: boolean }>(`SELECT p.capabilities,
       EXISTS(SELECT 1 FROM canvas_agent_runs run WHERE run.work_id=$4 AND run.company_id=p.company_id

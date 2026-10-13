@@ -67,17 +67,19 @@ export const homeworkLearnerTools:ToolDefinition[]=[
     },
   }),
   nativeTool('learning.assess_homework',homeworkAssessmentSchema.extend({homeworkId:id}),{
-    description:'Request host verification of genuine committed student messages in this homework conversation. Incorrect or incomplete evidence is valid input; do not wait for mastery before requesting assessment. Supply message IDs, never mastery claims, scores or flags. Explain unresolved criteria and tutor independent transfer. Assessment is asynchronous; read get_homework for the result.',
+    description:'Request host verification of genuine committed student messages in this homework conversation. Incorrect or incomplete evidence is valid input; do not wait for mastery before requesting assessment. Supply message IDs, never mastery claims, scores or flags. Repeating the same evidence reuses its PENDING or READY assessment; an INVALID assessment may be retried. Explain unresolved criteria and tutor independent transfer. Assessment is asynchronous; read get_homework for the result.',
     effect:'transaction',approval:false,authorize:async(context,input)=>{await learner(context,input.homeworkId)},
     async execute(context,input) {
       const {db,binding,scope}=await learner(context,input.homeworkId)
       const result=await application(db).requestAssessment(scope,binding.course_id,input.homeworkId,{messageIds:input.messageIds},{agentId:context.work.agentId,channelId:productConversationId(context.work)})
-      return {ok:true,executionState:'succeeded',value:{homeworkId:input.homeworkId,evidenceRevision:result?.evidenceRevision,status:'PENDING'}}
+      return {ok:true,executionState:'succeeded',value:{homeworkId:input.homeworkId,...result}}
     },
     async verify(context,input,value) {
       const {db,binding,scope}=await learner(context,input.homeworkId),hw=await homeworkRow(db,scope,binding.course_id,input.homeworkId)
       const state=await homeworkState(db,hw,scope.userId)
-      return compareResource(`homework:${input.homeworkId}`,{evidenceRevision:(value as {evidenceRevision:number}).evidenceRevision},{evidenceRevision:state.evidence_revision})
+      const receipt=value as {assessmentId:string;evidenceRevision:number;returnEpoch:number}
+      return compareResource(`homework:${input.homeworkId}`,{assessmentId:receipt.assessmentId,evidenceRevision:receipt.evidenceRevision,returnEpoch:receipt.returnEpoch},
+        {assessmentId:state.assessment_id,evidenceRevision:state.evidence_revision,returnEpoch:state.return_epoch})
     },
   }),
 ]

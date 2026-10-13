@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { after, afterEach, before, beforeEach, test } from 'node:test'
@@ -17,6 +18,11 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, 
 
 // Failure inventory, written before implementation: see e2e/homework/acceptance.md.
 // These cases exercise persisted business boundaries, not a browser-only hidden-field check.
+// Assessment retry failures: aliases/order or concurrent calls bill the same evidence twice;
+// a retry supersedes an in-flight/READY judgment or erases the report/shared/manual review;
+// INVALID cannot recover, or concurrent recovery creates multiple revisions; new evidence
+// or a teacher return reuses stale mastery/receipts; cached evidence bypasses a revoked file grant.
+// A missing/completed delivery effect must not strand PENDING evidence forever on an idempotent retry.
 const companyId = 'homework-school'
 const courseId = 'homework-course'
 const projectId = 'homework-project'
@@ -210,6 +216,50 @@ test('[integration] each homework learner resumes one private thread and renewed
   await assert.rejects(createHomeworkThread(scope, input))
 })
 
+function evidenceJudgment(criteria: string[], messageId: string, text: string, met: boolean) {
+  return { criteria: criteria.map(criterion => ({ criterion, met, independent: met, feedback: met ? 'Explained and transferred independently.' : 'Explain the relationship in your own words.' })),
+    completion: met ? 'All requirements demonstrated.' : 'More evidence needed.', assistance: 'A similar example was discussed.', independence: met ? 'New example solved independently.' : 'Independence remains unverified.',
+    weaknesses: met ? [] : ['Explain the factor one half.'], evidence: [{ messageId, excerpt: text }] }
+}
+
+function commitLearnerEvidence(thread: { channelId: string }, text: string) {
+  const clientMsgNo = `canonical-evidence-${im.messages.length + 1}`, messageId = `stored-${clientMsgNo}`
+  im.messages.push({ channelId: thread.channelId, channelType: 2, messageId, clientMsgNo, messageSeq: im.messages.length + 1,
+    fromUid: student.userId, timestamp: Date.now() / 1000,
+    payload: createNativeMessage({ id: clientMsgNo, role: 'user', content: [{ type: 'text', text }] }) })
+  return { messageId, clientMsgNo, text }
+}
+
+async function nativeAssessment(id: string, thread: { channelId: string; agentId: string }, messageIds: string[]) {
+  const { homeworkLearnerTools } = await import('../modules/learning/homework-tools.js')
+  const tool = homeworkLearnerTools.find(item => item.action === 'learning.assess_homework')!
+  const data = tool.parse({ homeworkId: id, messageIds })
+  const runId = `homework-assessment-${randomUUID()}`
+  const context = { database: pool, signal: AbortSignal.timeout(30000), requestVersion: 1,
+    work: { id: runId, tenantId: companyId, agentId: thread.agentId, principalId: student.userId,
+      sessionId: 'homework-learner-session', kind: 'turn', lane: 'interactive', triggerRef: messageIds[0], fence: 1, homeEpoch: 1, createdAt: new Date().toISOString(),
+      conversation: { conversationId: thread.channelId, policyVersion: 1, source: { messageId: messageIds[0], version: 1 }, internal: false,
+        audience: { visibility: 'conversation', participantIds: [student.userId, thread.agentId] } } },
+    action: { runId, cellId: 'assess', callIndex: 0, action: tool.action, args: data, idempotencyKey: `${runId}-assess` },
+  } as unknown as import('@lyyzka/lingxios').ActionContext
+  const result = await transaction(async db => { const action = { ...context, database: db }; await tool.authorize(action, data); return tool.execute(action, data) })
+  assert.equal(result.ok, true)
+  const value = (result as { value: { homeworkId: string; assessmentId: string; evidenceRevision: number; returnEpoch: number; status: 'PENDING' | 'READY' } }).value
+  return { value, verify: () => tool.verify!(context, data, value) }
+}
+
+async function concurrentAssessments(id: string, thread: { channelId: string; agentId: string }, variants: string[][]) {
+  const results = await Promise.allSettled(variants.map(ids => nativeAssessment(id, thread, ids)))
+  for (const result of results) if (result.status === 'rejected') throw result.reason
+  return results.map(result => { assert.ok(result.status === 'fulfilled'); return result.value })
+}
+
+async function assessmentHistory(id: string) {
+  return (await pool.query<{ id: string; status: string; evidence_revision: number; return_epoch: number }>(
+    'SELECT id,status,evidence_revision,return_epoch FROM homework_assessments WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3 ORDER BY evidence_revision',
+    [companyId, id, student.userId])).rows
+}
+
 async function assess(id: string, met: boolean, scope = student, text = 'Two congruent triangles form a rectangle. For base 10 and height 3, half of 30 is 15 square units.', attachmentKey?: string) {
   const thread = await homework.start(scope, courseId, id)
   const messageId = `evidence-${scope.userId}-${im.messages.length + 1}`
@@ -221,9 +271,7 @@ async function assess(id: string, met: boolean, scope = student, text = 'Two con
     } : {}) }) })
   await homework.requestAssessment(scope, courseId, id, { messageIds: [messageId] }, { agentId: thread.agentId, channelId: thread.channelId })
   const required = (await homework.detail(scope, courseId, id)).homework.criteria
-  const judgment = { criteria: required.map(criterion => ({ criterion, met, independent: met, feedback: met ? 'Explained and transferred independently.' : 'Explain the relationship in your own words.' })),
-    completion: met ? 'All requirements demonstrated.' : 'More evidence needed.', assistance: 'A similar example was discussed.', independence: met ? 'New example solved independently.' : 'Independence remains unverified.',
-    weaknesses: met ? [] : ['Explain the factor one half.'], evidence: [{ messageId, excerpt: text }] }
+  const judgment = evidenceJudgment(required, messageId, text, met)
   modelReplies.push(judgment)
   await runLearningEffects()
   return { thread, messageId, judgment, state: (await homework.detail(scope, courseId, id)).student! }
@@ -239,6 +287,124 @@ async function report(id: string, judgment: Awaited<ReturnType<typeof assess>>['
   assert.ok(ready.report)
   return ready
 }
+
+test('[integration] canonical assessment retries reuse pending and negative ready evidence without erasing manual review or reports', async () => {
+  const [{ claimLearningEffects, completeLearningEffect }, { runHomeworkEffect }] = await Promise.all([
+    import('../modules/learning/effects-repository.js'), import('../modules/learning/homework-effects.js'),
+  ])
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const firstMessage = commitLearnerEvidence(thread, 'I think base times height is the full triangle area.')
+  const secondMessage = commitLearnerEvidence(thread, 'For base 10 and height 3 I got 30 and cannot explain the one-half factor.')
+  const first = await nativeAssessment(task.id, thread, [firstMessage.messageId, secondMessage.clientMsgNo])
+  const retried = await concurrentAssessments(task.id, thread, [
+    [secondMessage.messageId, firstMessage.clientMsgNo],
+    [firstMessage.clientMsgNo, firstMessage.messageId, secondMessage.messageId],
+    [firstMessage.clientMsgNo, secondMessage.clientMsgNo],
+  ])
+  assert.deepEqual([first, ...retried].map(item => item.value.evidenceRevision), [1, 1, 1, 1])
+  assert.deepEqual(retried.map(item => item.value), retried.map(() => first.value))
+  assert.deepEqual(await assessmentHistory(task.id), [{ id: first.value.assessmentId, status: 'PENDING', evidence_revision: 1, return_epoch: 0 }])
+  const negative = evidenceJudgment(task.criteria, secondMessage.clientMsgNo, secondMessage.text, false)
+  const [effect] = await claimLearningEffects(pool, 1)
+  assert.equal(effect.kind, 'homework.assess')
+  let entered!: () => void, release!: () => void
+  const started = new Promise<void>(resolve => { entered = resolve }), held = new Promise<void>(resolve => { release = resolve })
+  modelReplies.push(async () => { entered(); await held; return negative })
+  const running = runHomeworkEffect(effect).then(() => null, error => error as Error)
+  try {
+    await Promise.race([started, delay(10_000).then(() => assert.fail('Assessment model did not start'))])
+    assert.deepEqual((await nativeAssessment(task.id, thread, [secondMessage.messageId, firstMessage.messageId])).value, first.value)
+    release(); assert.equal(await running, null); await completeLearningEffect(pool, effect)
+  } finally { release(); await running }
+  assert.deepEqual(await assessmentHistory(task.id), [{ id: first.value.assessmentId, status: 'READY', evidence_revision: 1, return_epoch: 0 }])
+  const ready = await nativeAssessment(task.id, thread, [firstMessage.clientMsgNo, secondMessage.clientMsgNo])
+  assert.deepEqual(ready.value, { ...first.value, status: 'READY' })
+  assert.equal((await first.verify()).status, 'passed', 'Completing and repeating the same evidence preserves the native receipt')
+  await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: 'My private answer is still being reviewed.', links: [], attachments: [] })
+  await homework.shareEvidence(student, courseId, task.id, { expectedEvidenceRevision: 1 })
+  await homework.manualUnlock(teacher, courseId, task.id, { learnerId: student.userId, expectedEvidenceRevision: 1, reason: 'I checked the shared evidence orally and retain the recorded doubts.' })
+  const beforeRetry = await report(task.id, negative)
+  assert.ok(beforeRetry.report!.manualReview && beforeRetry.manualReview)
+  assert.ok(beforeRetry.criteria.every(item => !item.met && !item.independent))
+  assert.deepEqual((await nativeAssessment(task.id, thread, [secondMessage.clientMsgNo, firstMessage.messageId])).value, ready.value)
+  assert.deepEqual((await homework.detail(student, courseId, task.id)).student, beforeRetry)
+  await runLearningEffects()
+  assert.equal(modelReplies.length, 0)
+  assert.equal((await pool.query<{ count: number }>("SELECT count(*)::int AS count FROM llm_calls WHERE company_id=$1 AND purpose='homework.assess'", [companyId])).rows[0].count, 1)
+  assert.equal((await first.verify()).status, 'passed')
+})
+
+test('[integration] invalid assessment retries converge once while new evidence and teacher returns invalidate old native receipts', async () => {
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const message = commitLearnerEvidence(thread, 'Two equal triangles make a rectangle, so each has half the area. Base 10 and height 3 gives 15 square units.')
+  const initial = await nativeAssessment(task.id, thread, [message.clientMsgNo])
+  const judgment = evidenceJudgment(task.criteria, message.clientMsgNo, message.text, true)
+  modelReplies.push({ ...judgment, evidence: [{ messageId: 'invented-evidence', excerpt: 'not committed by the learner' }] })
+  await runLearningEffects()
+  assert.equal((await assessmentHistory(task.id))[0].status, 'INVALID')
+  assert.equal(modelReplies.length, 0)
+  const retry = await concurrentAssessments(task.id, thread, [[message.messageId], [message.clientMsgNo], [message.clientMsgNo, message.messageId]])
+  assert.deepEqual(retry.map(item => item.value.evidenceRevision), [2, 2, 2])
+  assert.deepEqual(retry.map(item => item.value), retry.map(() => retry[0].value))
+  assert.notEqual(retry[0].value.assessmentId, initial.value.assessmentId)
+  assert.deepEqual((await assessmentHistory(task.id)).map(item => ({ status: item.status, revision: item.evidence_revision })),
+    [{ status: 'INVALID', revision: 1 }, { status: 'PENDING', revision: 2 }])
+  modelReplies.push(judgment); await runLearningEffects()
+  assert.deepEqual((await nativeAssessment(task.id, thread, [message.clientMsgNo])).value, { ...retry[0].value, status: 'READY' })
+  assert.equal((await retry[0].verify()).status, 'passed')
+  const newMessage = commitLearnerEvidence(thread, 'With base 8 and height 5, half of the rectangle area 40 is 20 square units.')
+  const changed = await nativeAssessment(task.id, thread, [newMessage.messageId])
+  assert.equal(changed.value.evidenceRevision, 3)
+  assert.notEqual(changed.value.assessmentId, retry[0].value.assessmentId)
+  assert.equal((await retry[0].verify()).status, 'failed', 'A receipt for older evidence cannot verify the replacement')
+  const newJudgment = evidenceJudgment(task.criteria, newMessage.clientMsgNo, newMessage.text, true)
+  modelReplies.push(newJudgment); await runLearningEffects()
+  await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: 'The independently explained triangle area is 20 square units.', links: [], attachments: [] })
+  const ready = await report(task.id, newJudgment)
+  assert.deepEqual((await nativeAssessment(task.id, thread, [newMessage.clientMsgNo])).value, { ...changed.value, status: 'READY' })
+  assert.deepEqual((await homework.detail(student, courseId, task.id)).student, ready)
+  await homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: 'retry-contract-submission' })
+  const submitted = (await homework.submissions(student, courseId, task.id)).items[0]
+  await homework.review(teacher, courseId, task.id, { learnerId: student.userId, expectedSubmissionId: submitted.id, decision: 'RETURNED', reason: 'Explain how doubling the height changes the area.' })
+  assert.equal((await homework.detail(student, courseId, task.id)).student!.evidenceRevision, 3)
+  assert.equal((await changed.verify()).status, 'failed', 'A teacher return invalidates the native receipt before any new assessment')
+  const afterReturn = await nativeAssessment(task.id, thread, [newMessage.clientMsgNo])
+  assert.equal(afterReturn.value.evidenceRevision, 4)
+  assert.equal(afterReturn.value.returnEpoch, changed.value.returnEpoch + 1)
+  assert.notEqual(afterReturn.value.assessmentId, changed.value.assessmentId)
+  await runLearningEffects()
+  assert.deepEqual((await assessmentHistory(task.id)).map(item => ({ status: item.status, revision: item.evidence_revision, epoch: item.return_epoch })),
+    [{ status: 'INVALID', revision: 1, epoch: 0 }, { status: 'READY', revision: 2, epoch: 0 }, { status: 'READY', revision: 3, epoch: 0 }, { status: 'INVALID', revision: 4, epoch: 1 }])
+  assert.equal((await homework.detail(student, courseId, task.id)).student!.unlocked, false)
+  assert.equal(modelReplies.length, 0, 'Pre-return evidence must fail before another model request')
+})
+
+for (const orphanedEffect of ['missing', 'completed'] as const) test(`[integration] pending assessment retry restores a ${orphanedEffect} effect without replacing the evidence receipt`, async () => {
+  const [{ claimLearningEffects, completeLearningEffect }, { runHomeworkEffect }] = await Promise.all([
+    import('../modules/learning/effects-repository.js'), import('../modules/learning/homework-effects.js'),
+  ])
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const message = commitLearnerEvidence(thread, 'Two equal triangles make a rectangle. Base 10 and height 3 gives half of 30, which is 15 square units.')
+  const first = await nativeAssessment(task.id, thread, [message.clientMsgNo])
+  const [pending] = await assessmentHistory(task.id)
+  const effectScope = [companyId, task.id]
+  if (orphanedEffect === 'missing') await pool.query("DELETE FROM learning_effects WHERE company_id=$1 AND kind='homework.assess' AND payload->>'homeworkId'=$2", effectScope)
+  else await pool.query("UPDATE learning_effects SET status='completed',completed_at=clock_timestamp() WHERE company_id=$1 AND kind='homework.assess' AND payload->>'homeworkId'=$2", effectScope)
+  assert.deepEqual((await nativeAssessment(task.id, thread, [message.messageId])).value, first.value)
+  assert.deepEqual(await assessmentHistory(task.id), [pending])
+  const effects = await claimLearningEffects(pool, 1)
+  assert.equal(effects.length, 1, 'A retry must make the original pending assessment runnable again')
+  assert.equal(effects[0].kind, 'homework.assess')
+  modelReplies.push(evidenceJudgment(task.criteria, message.clientMsgNo, message.text, true))
+  await runHomeworkEffect(effects[0]); await completeLearningEffect(pool, effects[0])
+  assert.deepEqual(await assessmentHistory(task.id), [{ ...pending, status: 'READY' }])
+  assert.equal((await homework.detail(student, courseId, task.id)).student!.unlocked, true)
+  assert.equal((await first.verify()).status, 'passed')
+  assert.equal(modelReplies.length, 0)
+})
 
 test('[integration] host assessment sees the assistants published commentary and public explanation when judging copied help', async () => {
   const { homework: task } = await published()
@@ -447,10 +613,14 @@ test('[integration] manual unlock needs learner-shared evidence and preserves un
 test('[integration] fabricated host evidence fails closed with actionable feedback; unreadable answer material retains the draft', async () => {
   const { homework: task } = await published()
   const missing = await assess(task.id, false)
-  await homework.requestAssessment(student, courseId, task.id, { messageIds: [missing.messageId] }, { agentId: missing.thread.agentId, channelId: missing.thread.channelId })
+  const revised = commitLearnerEvidence(missing.thread, 'I now propose a new independent explanation for review.')
+  await homework.requestAssessment(student, courseId, task.id, { messageIds: [revised.clientMsgNo] }, { agentId: missing.thread.agentId, channelId: missing.thread.channelId })
   modelReplies.push({ ...missing.judgment, criteria: missing.judgment.criteria.map(item => ({ ...item, met: true, independent: true })),
     evidence: [{ messageId: 'fabricated-uncommitted-message', excerpt: 'invented mastery' }] })
   await runLearningEffects()
+  assert.equal(modelReplies.length, 0, 'The fabricated provider result must actually be consumed by a new evidence assessment')
+  assert.deepEqual((await assessmentHistory(task.id)).map(item => ({ status: item.status, revision: item.evidence_revision })),
+    [{ status: 'READY', revision: 1 }, { status: 'INVALID', revision: 2 }])
   const rejected = (await homework.detail(student, courseId, task.id)).student!
   assert.equal(rejected.unlocked, false)
   assert.ok(rejected.criteria.every(item => !item.met && item.feedback.length > 0 && item.feedback !== '等待学习证据'))
@@ -499,6 +669,23 @@ async function assessWithRevocableFile(id: string) {
     [companyId, projectId, checked.thread.channelId, student.userId, checked.messageId, key])
   return checked
 }
+
+test('[integration] cached ready assessment cannot bypass revoked access to its committed attachment', async () => {
+  const { homework: task } = await published()
+  const checked = await assessWithRevocableFile(task.id)
+  const cached = await nativeAssessment(task.id, checked.thread, [checked.messageId])
+  assert.equal(cached.value.evidenceRevision, checked.state.evidenceRevision)
+  assert.equal(cached.value.status, 'READY')
+  const before = await assessmentHistory(task.id)
+  const calls = Number((await pool.query('SELECT count(*) FROM llm_calls')).rows[0].count)
+  await pool.query(`INSERT INTO conversation_source_exclusions(conversation_id,source_id,user_id) VALUES($1,'homework-evidence-source',$2)`,
+    [checked.thread.channelId, student.userId])
+  await assert.rejects(nativeAssessment(task.id, checked.thread, [checked.messageId]), 'Same message IDs do not preserve a revoked attachment grant')
+  assert.deepEqual(await assessmentHistory(task.id), before)
+  await runLearningEffects()
+  assert.equal(Number((await pool.query('SELECT count(*) FROM llm_calls')).rows[0].count), calls)
+  assert.equal(modelReplies.length, 0)
+})
 
 test('[integration] revoked access to committed chat evidence blocks an existing report and preserves the private draft', async () => {
   const { homework: task } = await published()
