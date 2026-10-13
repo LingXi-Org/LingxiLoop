@@ -16,6 +16,7 @@ interface AppState {
   canManageWorkspace: boolean
   setView: (view: ViewKey['view']) => void
   selectConversation: (id: string | null) => void
+  showConversationList: () => void
   setSelectedIfNone: (id: string) => void
 }
 
@@ -44,6 +45,12 @@ export const useApp = create<AppState>((set, get) => ({
     beginWebNavigation()
     set({ view: 'conversations', selectedConversationId: id, mobileConversationOpen: Boolean(id), navigationPending: false, navigationError: null, autoSelectConversation: false })
     if (get().navigationReady) writeWebDestination({ projectId: getWorkspaceSession()?.projectId ?? null, view: 'conversations', conversationId: id }, 'push')
+  },
+  showConversationList: () => {
+    useSurface.getState().closeForConversationChange()
+    beginWebNavigation()
+    set({ mobileConversationOpen: false })
+    if (get().navigationReady) writeWebDestination({ projectId: getWorkspaceSession()?.projectId ?? null, view: 'conversations', conversationId: null }, 'push')
   },
   setSelectedIfNone: (id) => set((state) => {
     if (state.selectedConversationId || !state.autoSelectConversation || state.navigationPending) return {}

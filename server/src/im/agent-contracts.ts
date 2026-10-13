@@ -8,6 +8,7 @@ const question = z.object({ name: z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}
   input: z.object({ label: text(120), placeholder: text(160).optional() }).strict().optional(),
 }).strict().refine(item => (!!item.choices.length || !!item.input) && new Set(item.choices.map(choice => choice.value)).size === item.choices.length,
   'question requires unique choices or freeform input')
+  .describe('Include at least one choice with a unique value, or an input object for free text. An empty choices array without input is invalid.')
 
 export const agentMessageSchemas = {
   recommend: z.object({ title: text(160), explanation: text(4000), nextStep: text(500) }).strict(),
@@ -16,7 +17,8 @@ export const agentMessageSchemas = {
   search: z.object({ query: text(200), limit: z.number().int().min(1).max(50).default(10) }).strict(),
   ack: z.object({}).strict(),
   react: z.object({ messageId: id, emoji: text(64) }).strict(),
-  send: z.object({ body: text(64_000), replyToClientMsgNo: id.optional() }).strict(),
+  send: z.object({ body: text(64_000).describe('Settled user-facing Markdown. Use actual line breaks in the decoded string, not literal backslash-n sequences.'), replyToClientMsgNo: id.optional() }).strict(),
   ask: z.object({ title: text(160).default('Agent 提问'), items: z.array(question).min(1).max(8).refine(items =>
-    new Set(items.map((item, index) => item.name ?? `question_${index + 1}`)).size === items.length, 'question names must be unique'), submitLabel: text(80).optional() }).strict(),
+    new Set(items.map((item, index) => item.name ?? `question_${index + 1}`)).size === items.length, 'question names must be unique')
+    .describe('Question names must be unique. Omitted names are assigned question_1, question_2, and so on; do not collide with those generated names.'), submitLabel: text(80).optional() }).strict(),
 }

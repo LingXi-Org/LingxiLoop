@@ -1,0 +1,243 @@
+{
+  "ready": 1120.699999999255,
+  "workspace": 0,
+  "input": 1487.800000000745,
+  "lcp": 1132,
+  "longTasks": 62,
+  "cls": 0,
+  "measuredAt": "2026-10-13T07:19:51.201Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "shifts": [],
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 51.900000002235174,
+      "end": 683.1000000014901,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-BAug5IzZ.js",
+      "type": "script",
+      "start": 52.5,
+      "end": 465.6000000014901,
+      "encoded": 63246,
+      "decoded": 200648,
+      "transfer": 63546
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 52.80000000074506,
+      "end": 417.69999999925494,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06B05HAl9Kpp68vdOwa0oWtYF9hbrEPHp0_XhIFHcKjjkaxVRcOBFcRqcC4j89sfwnQXyndI-u_iMF1pKWqgDOfBQ/init",
+      "type": "xmlhttprequest",
+      "start": 694.9000000022352,
+      "end": 732.4000000022352,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/App-BjY3zZ2r.js",
+      "type": "script",
+      "start": 725.6000000014901,
+      "end": 946.3000000007451,
+      "encoded": 31597,
+      "decoded": 97415,
+      "transfer": 31897
+    },
+    {
+      "name": "/assets/button-OCWv6aMB.js",
+      "type": "script",
+      "start": 725.6999999992549,
+      "end": 867.1999999992549,
+      "encoded": 10079,
+      "decoded": 29241,
+      "transfer": 10379
+    },
+    {
+      "name": "/assets/Loading03Icon-DTfF9MVQ.js",
+      "type": "script",
+      "start": 725.8000000007451,
+      "end": 866.6999999992549,
+      "encoded": 7668,
+      "decoded": 19951,
+      "transfer": 7968
+    },
+    {
+      "name": "/assets/GlobalInteractionProvider-CrsmeMe9.js",
+      "type": "script",
+      "start": 725.9000000022352,
+      "end": 792.1999999992549,
+      "encoded": 2625,
+      "decoded": 7501,
+      "transfer": 2925
+    },
+    {
+      "name": "/assets/index-tI_qGQRD.js",
+      "type": "script",
+      "start": 726.1000000014901,
+      "end": 807.6999999992549,
+      "encoded": 2095,
+      "decoded": 5893,
+      "transfer": 2395
+    },
+    {
+      "name": "/assets/confirmAction-CIXS4Cea.js",
+      "type": "script",
+      "start": 726.1000000014901,
+      "end": 867.4000000022352,
+      "encoded": 8601,
+      "decoded": 23232,
+      "transfer": 8901
+    },
+    {
+      "name": "/assets/InformationCircleIcon-CUKxAkIj.js",
+      "type": "script",
+      "start": 726.3000000007451,
+      "end": 853.4000000022352,
+      "encoded": 543,
+      "decoded": 543,
+      "transfer": 843
+    },
+    {
+      "name": "/assets/index-tXNv65mA.js",
+      "type": "script",
+      "start": 726.3000000007451,
+      "end": 900.5,
+      "encoded": 9787,
+      "decoded": 34801,
+      "transfer": 10087
+    },
+    {
+      "name": "/assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+      "type": "script",
+      "start": 726.4000000022352,
+      "end": 885.4000000022352,
+      "encoded": 332,
+      "decoded": 332,
+      "transfer": 632
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 739.6999999992549,
+      "end": 916.1999999992549,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/B20717BA-A1E4-411C-886D-0FF31DD17555/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 741.9000000022352,
+      "end": 807.4000000022352,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 978.3000000007451,
+      "end": 1193.4000000022352,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 991.1999999992549,
+      "end": 1039.800000000745,
+      "encoded": 55,
+      "decoded": 35,
+      "transfer": 355
+    },
+    {
+      "name": "/assets/avatarCache-B_mnd2ZU.js",
+      "type": "script",
+      "start": 1046.300000000745,
+      "end": 1085.9000000022352,
+      "encoded": 791,
+      "decoded": 1588,
+      "transfer": 1091
+    },
+    {
+      "name": "/assets/transport-BsyVWA0A.js",
+      "type": "script",
+      "start": 1046.9000000022352,
+      "end": 1473.699999999255,
+      "encoded": 129349,
+      "decoded": 415163,
+      "transfer": 129649
+    },
+    {
+      "name": "/assets/realtime-BScaDZav.js",
+      "type": "script",
+      "start": 1047.199999999255,
+      "end": 1096.699999999255,
+      "encoded": 1149,
+      "decoded": 2696,
+      "transfer": 1449
+    },
+    {
+      "name": "/assets/state-KoYoOTxN.js",
+      "type": "script",
+      "start": 1047.4000000022352,
+      "end": 1086.9000000022352,
+      "encoded": 767,
+      "decoded": 1685,
+      "transfer": 1067
+    },
+    {
+      "name": "/assets/state-C1-w3wD2.js",
+      "type": "script",
+      "start": 1047.699999999255,
+      "end": 1099.800000000745,
+      "encoded": 1302,
+      "decoded": 3129,
+      "transfer": 1602
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 1063.4000000022352,
+      "end": 1270.6000000014901,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/logo.svg",
+      "type": "img",
+      "start": 1106.5,
+      "end": 1162.5,
+      "encoded": 2556,
+      "decoded": 5647,
+      "transfer": 2856
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/B20717BA-A1E4-411C-886D-0FF31DD17555/to/dp.onGetFields",
+      "type": "xmlhttprequest",
+      "start": 1484.9000000022352,
+      "end": 1565.300000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 14.199999999254942
+    }
+  ]
+}

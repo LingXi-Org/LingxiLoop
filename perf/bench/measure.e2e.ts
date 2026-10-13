@@ -74,7 +74,12 @@ else for (const scenario of scenarios) for (let run = 0; run < runs; run++) for 
     const close = await instrumentTarget(marker)
     try {
       await browser.addInitScript(() => {
-        const metrics = { ready: 0, workspace: 0, input: 0, lcp: 0, longTasks: 0, cls: 0 }
+        const metrics = { ready: 0, workspace: 0, input: 0, lcp: 0, longTasks: 0, cls: 0, avatarRenders: 0 }
+        const encode = window.encodeURIComponent
+        window.encodeURIComponent = value => {
+          if (typeof value === 'string' && value.startsWith('<svg')) metrics.avatarRenders++
+          return encode(value)
+        }
         const shifts: unknown[] = []
         Object.assign(window, { __perf: metrics, __shifts: shifts })
         new PerformanceObserver(list => { for (const entry of list.getEntries()) metrics.longTasks += entry.duration }).observe({ type: 'longtask', buffered: true })

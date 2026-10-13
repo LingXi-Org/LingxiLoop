@@ -1,0 +1,950 @@
+{
+  "ready": 13406.10000000149,
+  "workspace": 13410.199999999255,
+  "input": 67501.5,
+  "lcp": 14136,
+  "longTasks": 70512,
+  "cls": 0.14804246238425928,
+  "avatarRenders": 3,
+  "measuredAt": "2026-10-13T08:16:48.422Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "shifts": [
+    {
+      "at": 13939.89999999851,
+      "value": 0.14645543981481482,
+      "sources": [
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 493.5,
+            "y": 583,
+            "width": 800,
+            "height": 274,
+            "top": 583,
+            "right": 1293.5,
+            "bottom": 857,
+            "left": 493.5
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 265,
+            "width": 800,
+            "height": 260.75,
+            "top": 265,
+            "right": 1293.5,
+            "bottom": 525.75,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 493.5,
+            "y": 146.25,
+            "width": 800,
+            "height": 366.75,
+            "top": 146.25,
+            "right": 1293.5,
+            "bottom": 513,
+            "left": 493.5
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 93,
+            "width": 800,
+            "height": 102,
+            "top": 93,
+            "right": 1293.5,
+            "bottom": 195,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 595.75,
+            "width": 800,
+            "height": 260.75,
+            "top": 595.75,
+            "right": 1293.5,
+            "bottom": 856.5,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[auto_minmax(0,1fr)]",
+          "previousRect": {
+            "x": 493.5,
+            "y": 513,
+            "width": 800,
+            "height": 70,
+            "top": 513,
+            "right": 1293.5,
+            "bottom": 583,
+            "left": 493.5
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 195,
+            "width": 800,
+            "height": 70,
+            "top": 195,
+            "right": 1293.5,
+            "bottom": 265,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[auto_minmax(0,1fr)]",
+          "previousRect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 525.75,
+            "width": 800,
+            "height": 70,
+            "top": 525.75,
+            "right": 1293.5,
+            "bottom": 595.75,
+            "left": 493.5
+          }
+        }
+      ]
+    },
+    {
+      "at": 17710.89999999851,
+      "value": 0.0015870225694444445,
+      "sources": [
+        {
+          "tag": "DIV",
+          "className": null,
+          "previousRect": {
+            "x": 73,
+            "y": 93,
+            "width": 284,
+            "height": 12,
+            "top": 93,
+            "right": 357,
+            "bottom": 105,
+            "left": 73
+          },
+          "currentRect": {
+            "x": 73,
+            "y": 556.5,
+            "width": 284,
+            "height": 12,
+            "top": 556.5,
+            "right": 357,
+            "bottom": 568.5,
+            "left": 73
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 91.5,
+      "end": 736.3000000007451,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-DJwdDxsm.js",
+      "type": "script",
+      "start": 93.30000000074506,
+      "end": 504.80000000074506,
+      "encoded": 63250,
+      "decoded": 200648,
+      "transfer": 63550
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 94.19999999925494,
+      "end": 442.19999999925494,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06Bt1okEPrucmDWEs28gYA06JB5WDiRw9ehXzmShc-IJY3dOBxmavVwZh5GQTIV5qYKuLh_TLlEleOomLzcjeT4GA/init",
+      "type": "xmlhttprequest",
+      "start": 816.6999999992549,
+      "end": 859.6000000014901,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 958.3999999985099,
+      "end": 1012.3000000007451,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/App-CcUzMKPS.js",
+      "type": "script",
+      "start": 1036.5,
+      "end": 1259.800000000745,
+      "encoded": 31627,
+      "decoded": 97654,
+      "transfer": 31927
+    },
+    {
+      "name": "/assets/button-DxAQKNCG.js",
+      "type": "script",
+      "start": 1037.6000000014901,
+      "end": 1182.1000000014901,
+      "encoded": 10077,
+      "decoded": 29241,
+      "transfer": 10377
+    },
+    {
+      "name": "/assets/Loading03Icon-CJHLqOjQ.js",
+      "type": "script",
+      "start": 1038.300000000745,
+      "end": 1134.6000000014901,
+      "encoded": 7667,
+      "decoded": 19951,
+      "transfer": 7967
+    },
+    {
+      "name": "/assets/GlobalInteractionProvider-CQcD6wrs.js",
+      "type": "script",
+      "start": 1039.8999999985099,
+      "end": 1104.6000000014901,
+      "encoded": 2623,
+      "decoded": 7501,
+      "transfer": 2923
+    },
+    {
+      "name": "/assets/confirmAction-ANDVGuRR.js",
+      "type": "script",
+      "start": 1040.5,
+      "end": 1167.300000000745,
+      "encoded": 8601,
+      "decoded": 23232,
+      "transfer": 8901
+    },
+    {
+      "name": "/assets/index-DxfYU_ZF.js",
+      "type": "script",
+      "start": 1041.1000000014901,
+      "end": 1110.199999999255,
+      "encoded": 2091,
+      "decoded": 5893,
+      "transfer": 2391
+    },
+    {
+      "name": "/assets/index-Dz3VMCjr.js",
+      "type": "script",
+      "start": 1042.800000000745,
+      "end": 1213.699999999255,
+      "encoded": 9787,
+      "decoded": 34801,
+      "transfer": 10087
+    },
+    {
+      "name": "/assets/InformationCircleIcon-CUKxAkIj.js",
+      "type": "script",
+      "start": 1043.800000000745,
+      "end": 1147.3999999985099,
+      "encoded": 543,
+      "decoded": 543,
+      "transfer": 843
+    },
+    {
+      "name": "/assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+      "type": "script",
+      "start": 1044.3999999985099,
+      "end": 1167,
+      "encoded": 332,
+      "decoded": 332,
+      "transfer": 632
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 1083,
+      "end": 1214.300000000745,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 1536.800000000745,
+      "end": 1678,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 1595.6000000014901,
+      "end": 1694.199999999255,
+      "encoded": 314,
+      "decoded": 490,
+      "transfer": 614
+    },
+    {
+      "name": "/assets/realtime-DDBp8Exa.js",
+      "type": "script",
+      "start": 1867.300000000745,
+      "end": 1902.5,
+      "encoded": 1148,
+      "decoded": 2696,
+      "transfer": 1448
+    },
+    {
+      "name": "/assets/AuthedApp-Crx5Y2FU.js",
+      "type": "script",
+      "start": 1878.800000000745,
+      "end": 2188.800000000745,
+      "encoded": 55645,
+      "decoded": 260613,
+      "transfer": 55945
+    },
+    {
+      "name": "/assets/transport-Bg7O3hDD.js",
+      "type": "script",
+      "start": 1879.699999999255,
+      "end": 2357.800000000745,
+      "encoded": 129348,
+      "decoded": 415163,
+      "transfer": 129648
+    },
+    {
+      "name": "/assets/avatarCache-D1AY34s3.js",
+      "type": "script",
+      "start": 1881,
+      "end": 1903.199999999255,
+      "encoded": 789,
+      "decoded": 1588,
+      "transfer": 1089
+    },
+    {
+      "name": "/assets/BloubAvatar-CbaMaMHf.js",
+      "type": "script",
+      "start": 1882.300000000745,
+      "end": 2003.199999999255,
+      "encoded": 13127,
+      "decoded": 31339,
+      "transfer": 13427
+    },
+    {
+      "name": "/assets/workspace-DkQ7PUFD.js",
+      "type": "script",
+      "start": 1882.6000000014901,
+      "end": 1950.199999999255,
+      "encoded": 5307,
+      "decoded": 17279,
+      "transfer": 5607
+    },
+    {
+      "name": "/assets/state-B1PAgFCP.js",
+      "type": "script",
+      "start": 1883.1000000014901,
+      "end": 1949.6000000014901,
+      "encoded": 1300,
+      "decoded": 3129,
+      "transfer": 1600
+    },
+    {
+      "name": "/assets/state-Bk3qeBjq.js",
+      "type": "script",
+      "start": 1885.199999999255,
+      "end": 1935.199999999255,
+      "encoded": 761,
+      "decoded": 1685,
+      "transfer": 1061
+    },
+    {
+      "name": "/assets/state-BfRfea0f.js",
+      "type": "script",
+      "start": 1886.300000000745,
+      "end": 1973.300000000745,
+      "encoded": 2487,
+      "decoded": 7632,
+      "transfer": 2787
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 2308.39999999851,
+      "end": 2405,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 3209.5,
+      "end": 3245.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-DBHB_uRe.js",
+      "type": "script",
+      "start": 3306.300000000745,
+      "end": 4660.60000000149,
+      "encoded": 545237,
+      "decoded": 1784098,
+      "transfer": 545537
+    },
+    {
+      "name": "/assets/avatar-v7rKRbwY.js",
+      "type": "script",
+      "start": 3309.39999999851,
+      "end": 3420.199999999255,
+      "encoded": 37830,
+      "decoded": 114473,
+      "transfer": 38130
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-DJgCPkqK.css",
+      "type": "link",
+      "start": 3313.89999999851,
+      "end": 3342.199999999255,
+      "encoded": 988,
+      "decoded": 988,
+      "transfer": 1288
+    },
+    {
+      "name": "/api/projects",
+      "type": "fetch",
+      "start": 3327.300000000745,
+      "end": 3518.39999999851,
+      "encoded": 1259,
+      "decoded": 8209,
+      "transfer": 1559
+    },
+    {
+      "name": "/api/me/preferences",
+      "type": "fetch",
+      "start": 3335.699999999255,
+      "end": 3472.60000000149,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/agents/autonomy",
+      "type": "fetch",
+      "start": 3340.10000000149,
+      "end": 3503,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/projects/e2e-classroom/open",
+      "type": "fetch",
+      "start": 3524.800000000745,
+      "end": 3641.5,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/api/participants",
+      "type": "fetch",
+      "start": 3655.89999999851,
+      "end": 3765.5,
+      "encoded": 2837,
+      "decoded": 12424,
+      "transfer": 3137
+    },
+    {
+      "name": "/api/im/channels",
+      "type": "fetch",
+      "start": 3659.199999999255,
+      "end": 3796,
+      "encoded": 887,
+      "decoded": 3144,
+      "transfer": 1187
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 3720.5,
+      "end": 3750.300000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/bootstrap",
+      "type": "fetch",
+      "start": 3805.699999999255,
+      "end": 4010.699999999255,
+      "encoded": 151,
+      "decoded": 167,
+      "transfer": 451
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 3807.60000000149,
+      "end": 4010,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/messages",
+      "type": "fetch",
+      "start": 3831.89999999851,
+      "end": 4036.39999999851,
+      "encoded": 818,
+      "decoded": 3943,
+      "transfer": 1118
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/runs",
+      "type": "fetch",
+      "start": 4087.39999999851,
+      "end": 4198.199999999255,
+      "encoded": 385,
+      "decoded": 1213,
+      "transfer": 685
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 4225.699999999255,
+      "end": 4259.300000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3A5178c8e6f8f1ad81b1aab2283cab66644d9a5c5a8ddc8674925be901254398dd/stream",
+      "type": "fetch",
+      "start": 4234.199999999255,
+      "end": 4428.5,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Ad7bd2a987027c9a6dccda1da47588831b35ac65cc3a447e4a7fba112b5bbccd6/stream",
+      "type": "fetch",
+      "start": 4238.10000000149,
+      "end": 4506.5,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa9bc4b7b6a487f99cfce441e800da2891a4a28901934e2127e16968f371b7305/stream",
+      "type": "fetch",
+      "start": 4244.300000000745,
+      "end": 4490.800000000745,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aac317c802cf1264013b50c894ecb546f1f1aaff1a976592f296976f81906e997/stream",
+      "type": "fetch",
+      "start": 4253.800000000745,
+      "end": 4537.5,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aad742a298318f3d5b25d947ac63668e823daf925c9bb3c97c9db151e9cca1e79/stream",
+      "type": "fetch",
+      "start": 4257.5,
+      "end": 4552.699999999255,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa12c83bbd449f1e0713884721dda3e778f041b134fec2f57e279c05ee3655021/stream",
+      "type": "fetch",
+      "start": 4262.699999999255,
+      "end": 4598.300000000745,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 6014.199999999255,
+      "end": 6056.89999999851,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 6017,
+      "end": 6118.699999999255,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 6582.800000000745,
+      "end": 6629.39999999851,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/highlighted-body-KPVGNVTW-K1UK8Ddj.js",
+      "type": "script",
+      "start": 6983.10000000149,
+      "end": 7031.699999999255,
+      "encoded": 1003,
+      "decoded": 1003,
+      "transfer": 1303
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 7102.699999999255,
+      "end": 7140.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 7637.199999999255,
+      "end": 7727.699999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 8572.10000000149,
+      "end": 8659.39999999851,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 10659.10000000149,
+      "end": 10701.89999999851,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 10690.5,
+      "end": 10735.699999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 10730.199999999255,
+      "end": 10773.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 10764.89999999851,
+      "end": 10804.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 10801.89999999851,
+      "end": 10840.39999999851,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 10827.800000000745,
+      "end": 10879.300000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 10980.10000000149,
+      "end": 11142.10000000149,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/api/learning/spaces",
+      "type": "fetch",
+      "start": 11064.800000000745,
+      "end": 11509.39999999851,
+      "encoded": 1102,
+      "decoded": 7804,
+      "transfer": 1402
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 14131.199999999255,
+      "end": 14220.199999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 19302.5,
+      "end": 19339.10000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 19339,
+      "end": 19461.300000000745,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 23369.800000000745,
+      "end": 23529.699999999255,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 23395,
+      "end": 23437.89999999851,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 27489.5,
+      "end": 27539.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 32624.10000000149,
+      "end": 32673,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 39161.300000000745,
+      "end": 39201.300000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 43725.39999999851,
+      "end": 43779.199999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 49211.800000000745,
+      "end": 49250.39999999851,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 49214.89999999851,
+      "end": 49326.699999999255,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 53052.10000000149,
+      "end": 53077.699999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 56727.199999999255,
+      "end": 56775.39999999851,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 60285.699999999255,
+      "end": 60335,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 67418.10000000149,
+      "end": 67568.19999999925,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 71431.80000000075,
+      "end": 71548.19999999925,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 74877,
+      "end": 74990.19999999925,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 76563.5,
+      "end": 76597.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/participants",
+      "type": "fetch",
+      "start": 76588.39999999851,
+      "end": 76689.89999999851,
+      "encoded": 2837,
+      "decoded": 12424,
+      "transfer": 3137
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 76600.39999999851,
+      "end": 76705.69999999925,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 78211.19999999925,
+      "end": 78342.39999999851,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/C6CE8664-D288-4435-98AC-C2D7E3D90D59/from",
+      "type": "xmlhttprequest",
+      "start": 79243.89999999851,
+      "end": 79295.89999999851,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 12.100000001490116
+    }
+  ]
+}

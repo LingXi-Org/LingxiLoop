@@ -1,0 +1,68 @@
+import assert from 'node:assert/strict'
+import { createServer } from 'node:http'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { test } from 'node:test'
+import { setTimeout as delay } from 'node:timers/promises'
+import { pool } from '../db/pool.js'
+import { env } from '../env.js'
+import { lingxiOSControl, startLingxiOSWorker } from '../agent-runtime/runtime.js'
+import { syncConversationPolicy } from '../agent-runtime/conversations.js'
+import { bindProductRun } from '../agent-runtime/identity.js'
+import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { installRecordingWukong } from './_recording-wukong.js'
+
+test('a nonresponsive provider stops after bounded attempts and settles failed calls', { timeout: 30000 }, async () => {
+  await ensureSchemaOnce(); await resetAllTables()
+  const im = await installRecordingWukong(), originalBaseUrl = env.OPENAI_BASE_URL
+  let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
+  let attempts = 0, disconnected = 0
+  const provider = createServer((request, response) => {
+    attempts++
+    request.resume()
+    response.on('close', () => { disconnected++ })
+  })
+  await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
+  const address = provider.address(); assert.ok(address && typeof address !== 'string')
+  env.OPENAI_BASE_URL = `http://127.0.0.1:${address.port}/v1`
+  process.env.AGENT_OS_MODEL_REQUEST_TIMEOUT_MS = '200'
+  process.env.LINGXIOS_SERVICE_TOKEN = 'provider-timeout-integration-service-token'
+  process.env.AGENT_OS_WORKER_PORT = '52995'
+  try {
+    const { companyId, projectId, agentId } = await seedCompanyWithAgent()
+    await seedUserMembership('test-owner', companyId)
+    const conversationId = 'provider-timeout-room', members = ['test-owner', agentId]
+    await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Timeout',$4::jsonb)",
+      [conversationId, companyId, projectId, JSON.stringify(members)])
+    await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',
+      [conversationId, companyId, JSON.stringify({ channelType: 2, members })])
+    const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, conversationId)
+    const port = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN, port: 0 })
+    process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${port}`
+    const result = await api.conversations.ingest({ tenantId: companyId, conversationId, policyVersion: policy.version,
+      messageId: 'timeout-question', version: 1, author: { id: 'test-owner', kind: 'human' }, text: '请直接回答。', mentions: [agentId] },
+    { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation', codeExecution: 'disabled' })
+    const run = result.runs[0]; assert.ok(run); await bindProductRun(pool, run, conversationId)
+    worker = await startLingxiOSWorker()
+    const started = Date.now(), deadline = AbortSignal.timeout(5000)
+    let state = await api.readRunState(run)
+    while (state && ['queued', 'leased', 'waiting'].includes(state.run.status)) {
+      deadline.throwIfAborted(); await delay(20); state = await api.readRunState(run)
+    }
+    const elapsedMs = Date.now() - started
+    assert.equal(state?.run.status, 'failed')
+    assert.equal(attempts, 3)
+    assert.equal(disconnected, attempts, 'timed-out requests must release their connections')
+    let calls = await pool.query('SELECT status FROM llm_calls WHERE run_id=$1', [run.runId])
+    while (calls.rows.length < attempts) { deadline.throwIfAborted(); await delay(20); calls = await pool.query('SELECT status FROM llm_calls WHERE run_id=$1', [run.runId]) }
+    assert.deepEqual(calls.rows.map(row => row.status), ['failed', 'failed', 'failed'])
+    assert.equal(im.messages.filter(message => message.channelId === conversationId).length, 0)
+    await mkdir('.codex-tmp/harness-recovery', { recursive: true })
+    await writeFile('.codex-tmp/harness-recovery/provider-timeout.json', JSON.stringify({ elapsedMs, attempts, disconnected, status: state.run.status, ledgerSettled: true }))
+  } finally {
+    provider.closeAllConnections()
+    await worker?.stop(); await teardownAll(); await im.close()
+    await new Promise<void>(resolve => provider.close(() => resolve()))
+    env.OPENAI_BASE_URL = originalBaseUrl
+    delete process.env.AGENT_OS_MODEL_REQUEST_TIMEOUT_MS
+  }
+})

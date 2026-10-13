@@ -176,6 +176,7 @@ export async function startLingxiOSWorker() {
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),
     model: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL,
+      requestTimeoutMs: positiveInteger('AGENT_OS_MODEL_REQUEST_TIMEOUT_MS', 90_000),
       maxThinkingTokens: 0, capabilities: { parallelTools: false },
       ...(env.OPENAI_MODEL === 'deepseek-ai/DeepSeek-V4-Flash' && new URL(env.OPENAI_BASE_URL).hostname === 'api.siliconflow.cn'
         ? { contextWindowTokens: 1_000_000 } : {}) },

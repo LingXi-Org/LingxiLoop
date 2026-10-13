@@ -1,0 +1,986 @@
+{
+  "ready": 20324,
+  "workspace": 20324.5,
+  "input": 65021.900000002235,
+  "lcp": 21004,
+  "longTasks": 63141,
+  "cls": 0.14804246238425928,
+  "avatarRenders": 3,
+  "measuredAt": "2026-10-13T07:54:26.044Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "shifts": [
+    {
+      "at": 20800.199999999255,
+      "value": 0.14645543981481482,
+      "sources": [
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 493.5,
+            "y": 583,
+            "width": 800,
+            "height": 274,
+            "top": 583,
+            "right": 1293.5,
+            "bottom": 857,
+            "left": 493.5
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 265,
+            "width": 800,
+            "height": 260.75,
+            "top": 265,
+            "right": 1293.5,
+            "bottom": 525.75,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 493.5,
+            "y": 146.25,
+            "width": 800,
+            "height": 366.75,
+            "top": 146.25,
+            "right": 1293.5,
+            "bottom": 513,
+            "left": 493.5
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 93,
+            "width": 800,
+            "height": 102,
+            "top": 93,
+            "right": 1293.5,
+            "bottom": 195,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 595.75,
+            "width": 800,
+            "height": 260.75,
+            "top": 595.75,
+            "right": 1293.5,
+            "bottom": 856.5,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[auto_minmax(0,1fr)]",
+          "previousRect": {
+            "x": 493.5,
+            "y": 513,
+            "width": 800,
+            "height": 70,
+            "top": 513,
+            "right": 1293.5,
+            "bottom": 583,
+            "left": 493.5
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 195,
+            "width": 800,
+            "height": 70,
+            "top": 195,
+            "right": 1293.5,
+            "bottom": 265,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[auto_minmax(0,1fr)]",
+          "previousRect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 525.75,
+            "width": 800,
+            "height": 70,
+            "top": 525.75,
+            "right": 1293.5,
+            "bottom": 595.75,
+            "left": 493.5
+          }
+        }
+      ]
+    },
+    {
+      "at": 23946.900000002235,
+      "value": 0.0015870225694444445,
+      "sources": [
+        {
+          "tag": "DIV",
+          "className": null,
+          "previousRect": {
+            "x": 73,
+            "y": 93,
+            "width": 284,
+            "height": 12,
+            "top": 93,
+            "right": 357,
+            "bottom": 105,
+            "left": 73
+          },
+          "currentRect": {
+            "x": 73,
+            "y": 556.5,
+            "width": 284,
+            "height": 12,
+            "top": 556.5,
+            "right": 357,
+            "bottom": 568.5,
+            "left": 73
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 90.69999999925494,
+      "end": 734.6999999992549,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-DJwdDxsm.js",
+      "type": "script",
+      "start": 97,
+      "end": 612.4000000022352,
+      "encoded": 63250,
+      "decoded": 200648,
+      "transfer": 63550
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 102,
+      "end": 566.6999999992549,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06BNwTYhgVKULUiZOMuLqaYa3_Bls9FOB6WtVT8ppqhHJ1HHVb3ZwGCNrHZHTAXq7FCg6M4xcks7pFyZV_iXzRD_Q/init",
+      "type": "xmlhttprequest",
+      "start": 833.1000000014901,
+      "end": 873.6000000014901,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 1038.300000000745,
+      "end": 1103.199999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/App-CcUzMKPS.js",
+      "type": "script",
+      "start": 1142.4000000022352,
+      "end": 1395.5,
+      "encoded": 31627,
+      "decoded": 97654,
+      "transfer": 31927
+    },
+    {
+      "name": "/assets/button-DxAQKNCG.js",
+      "type": "script",
+      "start": 1144.1000000014901,
+      "end": 1315.699999999255,
+      "encoded": 10077,
+      "decoded": 29241,
+      "transfer": 10377
+    },
+    {
+      "name": "/assets/Loading03Icon-CJHLqOjQ.js",
+      "type": "script",
+      "start": 1146.699999999255,
+      "end": 1302.6000000014901,
+      "encoded": 7667,
+      "decoded": 19951,
+      "transfer": 7967
+    },
+    {
+      "name": "/assets/GlobalInteractionProvider-CQcD6wrs.js",
+      "type": "script",
+      "start": 1149.699999999255,
+      "end": 1242.300000000745,
+      "encoded": 2623,
+      "decoded": 7501,
+      "transfer": 2923
+    },
+    {
+      "name": "/assets/confirmAction-ANDVGuRR.js",
+      "type": "script",
+      "start": 1153.199999999255,
+      "end": 1303,
+      "encoded": 8601,
+      "decoded": 23232,
+      "transfer": 8901
+    },
+    {
+      "name": "/assets/index-DxfYU_ZF.js",
+      "type": "script",
+      "start": 1155.800000000745,
+      "end": 1242.5,
+      "encoded": 2091,
+      "decoded": 5893,
+      "transfer": 2391
+    },
+    {
+      "name": "/assets/index-Dz3VMCjr.js",
+      "type": "script",
+      "start": 1159.5,
+      "end": 1349.9000000022352,
+      "encoded": 9787,
+      "decoded": 34801,
+      "transfer": 10087
+    },
+    {
+      "name": "/assets/InformationCircleIcon-CUKxAkIj.js",
+      "type": "script",
+      "start": 1163.6000000014901,
+      "end": 1288.800000000745,
+      "encoded": 543,
+      "decoded": 543,
+      "transfer": 843
+    },
+    {
+      "name": "/assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+      "type": "script",
+      "start": 1168,
+      "end": 1318.4000000022352,
+      "encoded": 332,
+      "decoded": 332,
+      "transfer": 632
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 1228.5,
+      "end": 1364.4000000022352,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 1776.800000000745,
+      "end": 1915.800000000745,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 1892.800000000745,
+      "end": 1975.9000000022352,
+      "encoded": 314,
+      "decoded": 490,
+      "transfer": 614
+    },
+    {
+      "name": "/assets/realtime-DDBp8Exa.js",
+      "type": "script",
+      "start": 2608.900000002235,
+      "end": 2641.10000000149,
+      "encoded": 1148,
+      "decoded": 2696,
+      "transfer": 1448
+    },
+    {
+      "name": "/assets/AuthedApp-Crx5Y2FU.js",
+      "type": "script",
+      "start": 2619,
+      "end": 2925.5,
+      "encoded": 55645,
+      "decoded": 260613,
+      "transfer": 55945
+    },
+    {
+      "name": "/assets/transport-Bg7O3hDD.js",
+      "type": "script",
+      "start": 2620.5,
+      "end": 3091.300000000745,
+      "encoded": 129348,
+      "decoded": 415163,
+      "transfer": 129648
+    },
+    {
+      "name": "/assets/avatarCache-D1AY34s3.js",
+      "type": "script",
+      "start": 2621.60000000149,
+      "end": 2649.60000000149,
+      "encoded": 789,
+      "decoded": 1588,
+      "transfer": 1089
+    },
+    {
+      "name": "/assets/BloubAvatar-CbaMaMHf.js",
+      "type": "script",
+      "start": 2623.800000000745,
+      "end": 2757.5,
+      "encoded": 13127,
+      "decoded": 31339,
+      "transfer": 13427
+    },
+    {
+      "name": "/assets/workspace-DkQ7PUFD.js",
+      "type": "script",
+      "start": 2625.699999999255,
+      "end": 2692.800000000745,
+      "encoded": 5307,
+      "decoded": 17279,
+      "transfer": 5607
+    },
+    {
+      "name": "/assets/state-B1PAgFCP.js",
+      "type": "script",
+      "start": 2626.60000000149,
+      "end": 2692.300000000745,
+      "encoded": 1300,
+      "decoded": 3129,
+      "transfer": 1600
+    },
+    {
+      "name": "/assets/state-Bk3qeBjq.js",
+      "type": "script",
+      "start": 2628.400000002235,
+      "end": 2680.800000000745,
+      "encoded": 761,
+      "decoded": 1685,
+      "transfer": 1061
+    },
+    {
+      "name": "/assets/state-BfRfea0f.js",
+      "type": "script",
+      "start": 2629.5,
+      "end": 2728.199999999255,
+      "encoded": 2487,
+      "decoded": 7632,
+      "transfer": 2787
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 3189.10000000149,
+      "end": 3276.400000002235,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 3419,
+      "end": 3459.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 4673.900000002235,
+      "end": 4714.400000002235,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-DBHB_uRe.js",
+      "type": "script",
+      "start": 4866.60000000149,
+      "end": 6214.10000000149,
+      "encoded": 545237,
+      "decoded": 1784098,
+      "transfer": 545537
+    },
+    {
+      "name": "/assets/avatar-v7rKRbwY.js",
+      "type": "script",
+      "start": 4868.900000002235,
+      "end": 5005.300000000745,
+      "encoded": 37830,
+      "decoded": 114473,
+      "transfer": 38130
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-DJgCPkqK.css",
+      "type": "link",
+      "start": 4872.900000002235,
+      "end": 4899.10000000149,
+      "encoded": 988,
+      "decoded": 988,
+      "transfer": 1288
+    },
+    {
+      "name": "/api/projects",
+      "type": "fetch",
+      "start": 4884.400000002235,
+      "end": 5082.900000002235,
+      "encoded": 1260,
+      "decoded": 8209,
+      "transfer": 1560
+    },
+    {
+      "name": "/api/me/preferences",
+      "type": "fetch",
+      "start": 4890.400000002235,
+      "end": 5021,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/agents/autonomy",
+      "type": "fetch",
+      "start": 4896.5,
+      "end": 5067.900000002235,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/projects/e2e-classroom/open",
+      "type": "fetch",
+      "start": 5094.800000000745,
+      "end": 5203.300000000745,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 5177.900000002235,
+      "end": 5218.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/participants",
+      "type": "fetch",
+      "start": 5222.400000002235,
+      "end": 5418.5,
+      "encoded": 2837,
+      "decoded": 12424,
+      "transfer": 3137
+    },
+    {
+      "name": "/api/im/channels",
+      "type": "fetch",
+      "start": 5228,
+      "end": 5372.699999999255,
+      "encoded": 887,
+      "decoded": 3144,
+      "transfer": 1187
+    },
+    {
+      "name": "/api/im/bootstrap",
+      "type": "fetch",
+      "start": 5430.300000000745,
+      "end": 5547.10000000149,
+      "encoded": 151,
+      "decoded": 167,
+      "transfer": 451
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 5435.10000000149,
+      "end": 5563.10000000149,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/messages",
+      "type": "fetch",
+      "start": 5463.900000002235,
+      "end": 5600.199999999255,
+      "encoded": 818,
+      "decoded": 3943,
+      "transfer": 1118
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/runs",
+      "type": "fetch",
+      "start": 5716.800000000745,
+      "end": 5832.800000000745,
+      "encoded": 385,
+      "decoded": 1213,
+      "transfer": 685
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 5783.60000000149,
+      "end": 5817.199999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3A5178c8e6f8f1ad81b1aab2283cab66644d9a5c5a8ddc8674925be901254398dd/stream",
+      "type": "fetch",
+      "start": 5849.199999999255,
+      "end": 6030.900000002235,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Ad7bd2a987027c9a6dccda1da47588831b35ac65cc3a447e4a7fba112b5bbccd6/stream",
+      "type": "fetch",
+      "start": 5855.5,
+      "end": 6091.900000002235,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa9bc4b7b6a487f99cfce441e800da2891a4a28901934e2127e16968f371b7305/stream",
+      "type": "fetch",
+      "start": 5858.699999999255,
+      "end": 6107.10000000149,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aac317c802cf1264013b50c894ecb546f1f1aaff1a976592f296976f81906e997/stream",
+      "type": "fetch",
+      "start": 5862.60000000149,
+      "end": 6159.60000000149,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aad742a298318f3d5b25d947ac63668e823daf925c9bb3c97c9db151e9cca1e79/stream",
+      "type": "fetch",
+      "start": 5866,
+      "end": 6154.900000002235,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa12c83bbd449f1e0713884721dda3e778f041b134fec2f57e279c05ee3655021/stream",
+      "type": "fetch",
+      "start": 5871,
+      "end": 6213.699999999255,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 6343.5,
+      "end": 6382.10000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 8846.10000000149,
+      "end": 8944.800000000745,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 8860.800000000745,
+      "end": 8899,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 9439.699999999255,
+      "end": 9480.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 9953.199999999255,
+      "end": 10001.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 10547.800000000745,
+      "end": 10599,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 11076.400000002235,
+      "end": 11124.300000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 11211.199999999255,
+      "end": 11308.800000000745,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/assets/highlighted-body-KPVGNVTW-K1UK8Ddj.js",
+      "type": "script",
+      "start": 12840.900000002235,
+      "end": 12892,
+      "encoded": 1003,
+      "decoded": 1003,
+      "transfer": 1303
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 13095,
+      "end": 13136.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 14485.60000000149,
+      "end": 14578.900000002235,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 15583.10000000149,
+      "end": 15674.300000000745,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 18014,
+      "end": 18063.10000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 18064.60000000149,
+      "end": 18103.10000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 18097.900000002235,
+      "end": 18139.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 18136.10000000149,
+      "end": 18175.300000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 18172.199999999255,
+      "end": 18209.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 18206.5,
+      "end": 18249.10000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 18330.699999999255,
+      "end": 18737.800000000745,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/api/learning/spaces",
+      "type": "fetch",
+      "start": 18377.300000000745,
+      "end": 18722.699999999255,
+      "encoded": 1102,
+      "decoded": 7804,
+      "transfer": 1402
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 20973.800000000745,
+      "end": 21070.400000002235,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 26247.60000000149,
+      "end": 26293.699999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 26261.900000002235,
+      "end": 26370.800000000745,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 29218.10000000149,
+      "end": 29388.5,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 29235.400000002235,
+      "end": 29281.900000002235,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 32065.800000000745,
+      "end": 32110.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 36114.800000000745,
+      "end": 36154.10000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 42453.300000000745,
+      "end": 42493.10000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 46920.300000000745,
+      "end": 46962,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 51800.10000000149,
+      "end": 51853,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 54809.800000000745,
+      "end": 54848.699999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 57370.800000000745,
+      "end": 57524.60000000149,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 57983.10000000149,
+      "end": 58032.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 61143.199999999255,
+      "end": 61187,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 64966.400000002235,
+      "end": 65080.800000000745,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 68826.80000000075,
+      "end": 68954.30000000075,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 71930.69999999925,
+      "end": 71964.19999999925,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/participants",
+      "type": "fetch",
+      "start": 71940.80000000075,
+      "end": 72054,
+      "encoded": 2837,
+      "decoded": 12424,
+      "transfer": 3137
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 73580,
+      "end": 73692.5,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D07DC258-1583-43DF-BB69-3ABDE372CEBD/from",
+      "type": "xmlhttprequest",
+      "start": 74457.69999999925,
+      "end": 74503.19999999925,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 13.900000002235174
+    }
+  ]
+}

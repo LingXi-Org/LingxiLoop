@@ -1,0 +1,235 @@
+{
+  "ready": 1162.5,
+  "workspace": 0,
+  "input": 1706.2999999970198,
+  "lcp": 1172,
+  "longTasks": 65,
+  "cls": 0,
+  "avatarRenders": 0,
+  "measuredAt": "2026-10-13T08:33:07.697Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "shifts": [],
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 66.59999999776483,
+      "end": 719.0999999977648,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-DJwdDxsm.js",
+      "type": "script",
+      "start": 67,
+      "end": 491.29999999701977,
+      "encoded": 63250,
+      "decoded": 200648,
+      "transfer": 63550
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 67.29999999701977,
+      "end": 438.29999999701977,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06BCvddWPxjWzU2G-vTjMODhQjAE6fsPRZU2OQekiFnNEXxtvDlkyNzIkph3jtZfpCs9aXPsItcOqB5WC_J6F-pUQ/init",
+      "type": "xmlhttprequest",
+      "start": 732.7999999970198,
+      "end": 765.8999999985099,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/App-CcUzMKPS.js",
+      "type": "script",
+      "start": 759.3999999985099,
+      "end": 964,
+      "encoded": 31627,
+      "decoded": 97654,
+      "transfer": 31927
+    },
+    {
+      "name": "/assets/button-DxAQKNCG.js",
+      "type": "script",
+      "start": 759.5999999977648,
+      "end": 896.6999999992549,
+      "encoded": 10077,
+      "decoded": 29241,
+      "transfer": 10377
+    },
+    {
+      "name": "/assets/Loading03Icon-CJHLqOjQ.js",
+      "type": "script",
+      "start": 759.6999999992549,
+      "end": 883.5999999977648,
+      "encoded": 7667,
+      "decoded": 19951,
+      "transfer": 7967
+    },
+    {
+      "name": "/assets/GlobalInteractionProvider-CQcD6wrs.js",
+      "type": "script",
+      "start": 759.7999999970198,
+      "end": 826.7999999970198,
+      "encoded": 2623,
+      "decoded": 7501,
+      "transfer": 2923
+    },
+    {
+      "name": "/assets/index-DxfYU_ZF.js",
+      "type": "script",
+      "start": 760,
+      "end": 827.5,
+      "encoded": 2091,
+      "decoded": 5893,
+      "transfer": 2391
+    },
+    {
+      "name": "/assets/confirmAction-ANDVGuRR.js",
+      "type": "script",
+      "start": 760,
+      "end": 887.6999999992549,
+      "encoded": 8601,
+      "decoded": 23232,
+      "transfer": 8901
+    },
+    {
+      "name": "/assets/index-Dz3VMCjr.js",
+      "type": "script",
+      "start": 760.2999999970198,
+      "end": 933.3999999985099,
+      "encoded": 9787,
+      "decoded": 34801,
+      "transfer": 10087
+    },
+    {
+      "name": "/assets/InformationCircleIcon-CUKxAkIj.js",
+      "type": "script",
+      "start": 760.5,
+      "end": 873.0999999977648,
+      "encoded": 543,
+      "decoded": 543,
+      "transfer": 843
+    },
+    {
+      "name": "/assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+      "type": "script",
+      "start": 760.6999999992549,
+      "end": 903.1999999992549,
+      "encoded": 332,
+      "decoded": 332,
+      "transfer": 632
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 767.3999999985099,
+      "end": 933.7999999970198,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/EB313648-DBCC-4F3A-8658-DD822D9114F9/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 775.6999999992549,
+      "end": 827.1999999992549,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 1014,
+      "end": 1192.2999999970198,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 1045.5,
+      "end": 1078.2999999970198,
+      "encoded": 55,
+      "decoded": 35,
+      "transfer": 355
+    },
+    {
+      "name": "/assets/avatarCache-D1AY34s3.js",
+      "type": "script",
+      "start": 1094.7999999970198,
+      "end": 1120.5999999977648,
+      "encoded": 789,
+      "decoded": 1588,
+      "transfer": 1089
+    },
+    {
+      "name": "/assets/transport-Bg7O3hDD.js",
+      "type": "script",
+      "start": 1095.0999999977648,
+      "end": 1498.0999999977648,
+      "encoded": 129348,
+      "decoded": 415163,
+      "transfer": 129648
+    },
+    {
+      "name": "/assets/realtime-DDBp8Exa.js",
+      "type": "script",
+      "start": 1095.2999999970198,
+      "end": 1146.2999999970198,
+      "encoded": 1148,
+      "decoded": 2696,
+      "transfer": 1448
+    },
+    {
+      "name": "/assets/state-Bk3qeBjq.js",
+      "type": "script",
+      "start": 1095.3999999985099,
+      "end": 1131.5,
+      "encoded": 761,
+      "decoded": 1685,
+      "transfer": 1061
+    },
+    {
+      "name": "/assets/state-B1PAgFCP.js",
+      "type": "script",
+      "start": 1095.5999999977648,
+      "end": 1146.5999999977648,
+      "encoded": 1300,
+      "decoded": 3129,
+      "transfer": 1600
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 1111.5,
+      "end": 1284.5,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/logo.svg",
+      "type": "img",
+      "start": 1158.5,
+      "end": 1207.8999999985099,
+      "encoded": 2556,
+      "decoded": 5647,
+      "transfer": 2856
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 20.599999997764826
+    }
+  ]
+}

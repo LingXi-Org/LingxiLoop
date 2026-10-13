@@ -57,6 +57,7 @@ test('mobile history and drafts survive opening and closing the conversation lis
   await expect(input).toHaveText('不要丢失的草稿 draft')
   await screen.getByRole('button', '返回会话列表').tap()
   await expect(input).toBeHidden()
+  expect(await browser.evaluate(() => new URLSearchParams(location.search).has('conversation'))).toBe(false)
   await browser.locator('[data-slot="sidebar"] [role="button"]').filter({ hasText: 'E2E Classroom · Study Room' }).tap()
   await expect(input).toHaveText('不要丢失的草稿 draft')
   expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
