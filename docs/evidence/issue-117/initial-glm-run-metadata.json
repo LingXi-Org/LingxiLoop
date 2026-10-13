@@ -1,0 +1,15 @@
+{
+  "startedAt": "2026-10-13T13:17:29.886Z",
+  "finishedAt": "2026-10-13T13:18:06.407Z",
+  "passed": false,
+  "model": "zai-org/GLM-5.2",
+  "maxRunCostUSD": 0.25,
+  "maxTotalCostUSD": 0.25,
+  "modelConcurrency": 1,
+  "syntheticIdentity": true,
+  "database": "lingxiloop_activity_test",
+  "redisDatabase": 6,
+  "realModel": true,
+  "realWuKong": false,
+  "reproduce": "node e2e/server/run-activity-live.mjs --live-retired-capabilities"
+}

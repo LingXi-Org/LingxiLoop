@@ -1,0 +1,19 @@
+{
+  "passed": false,
+  "realModel": true,
+  "model": "deepseek-ai/DeepSeek-V4-Flash",
+  "requests": 1,
+  "ledger": {
+    "calls": 3,
+    "measured": true,
+    "cost": "0.00940920"
+  },
+  "productRows": {
+    "email": 0,
+    "calendar": 0
+  },
+  "providerCalls": 0,
+  "staleCapabilitiesFiltered": true,
+  "retiredToolsRegistered": false,
+  "failure": "Final text was English planning prose about answering honestly, not a direct Chinese answer. It correctly said neither retired action was executed. Raw prompts and response are omitted."
+}
