@@ -1,0 +1,779 @@
+{
+  "ready": 3788.60000000149,
+  "workspace": 3788.60000000149,
+  "input": 5162.10000000149,
+  "lcp": 3876,
+  "longTasks": 1058,
+  "cls": 0.14804246238425928,
+  "avatarRenders": 65,
+  "measuredAt": "2026-10-13T09:07:29.285Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "shifts": [
+    {
+      "at": 3819.300000000745,
+      "value": 0.14645543981481482,
+      "sources": [
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 493.5,
+            "y": 583,
+            "width": 800,
+            "height": 274,
+            "top": 583,
+            "right": 1293.5,
+            "bottom": 857,
+            "left": 493.5
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 265,
+            "width": 800,
+            "height": 260.75,
+            "top": 265,
+            "right": 1293.5,
+            "bottom": 525.75,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 493.5,
+            "y": 146.25,
+            "width": 800,
+            "height": 366.75,
+            "top": 146.25,
+            "right": 1293.5,
+            "bottom": 513,
+            "left": 493.5
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 93,
+            "width": 800,
+            "height": 102,
+            "top": 93,
+            "right": 1293.5,
+            "bottom": 195,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 595.75,
+            "width": 800,
+            "height": 260.75,
+            "top": 595.75,
+            "right": 1293.5,
+            "bottom": 856.5,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[auto_minmax(0,1fr)]",
+          "previousRect": {
+            "x": 493.5,
+            "y": 513,
+            "width": 800,
+            "height": 70,
+            "top": 513,
+            "right": 1293.5,
+            "bottom": 583,
+            "left": 493.5
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 195,
+            "width": 800,
+            "height": 70,
+            "top": 195,
+            "right": 1293.5,
+            "bottom": 265,
+            "left": 493.5
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2.5 px-3 sm:px-4 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[auto_minmax(0,1fr)]",
+          "previousRect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "currentRect": {
+            "x": 493.5,
+            "y": 525.75,
+            "width": 800,
+            "height": 70,
+            "top": 525.75,
+            "right": 1293.5,
+            "bottom": 595.75,
+            "left": 493.5
+          }
+        }
+      ]
+    },
+    {
+      "at": 4037.900000002235,
+      "value": 0.0015870225694444445,
+      "sources": [
+        {
+          "tag": "DIV",
+          "className": null,
+          "previousRect": {
+            "x": 73,
+            "y": 93,
+            "width": 284,
+            "height": 12,
+            "top": 93,
+            "right": 357,
+            "bottom": 105,
+            "left": 73
+          },
+          "currentRect": {
+            "x": 73,
+            "y": 556.5,
+            "width": 284,
+            "height": 12,
+            "top": 556.5,
+            "right": 357,
+            "bottom": 568.5,
+            "left": 73
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 60.100000001490116,
+      "end": 690.1000000014901,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-CZvBNeFX.js",
+      "type": "script",
+      "start": 60.5,
+      "end": 474.1000000014901,
+      "encoded": 63246,
+      "decoded": 200648,
+      "transfer": 63546
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 60.70000000298023,
+      "end": 427.70000000298023,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06BpNLujNPv1Xdcd2ATuvDl7inqgzp-Cnu8rlkS82TbYIpHnBkwuZlerp9UCQglfPdzJxxepVN5CwpiZjcFZaEzkQ/init",
+      "type": "xmlhttprequest",
+      "start": 704.1000000014901,
+      "end": 733.3000000007451,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/App-BWhBbDT2.js",
+      "type": "script",
+      "start": 724.7000000029802,
+      "end": 921.7000000029802,
+      "encoded": 31627,
+      "decoded": 97654,
+      "transfer": 31927
+    },
+    {
+      "name": "/assets/button-BDUs7mom.js",
+      "type": "script",
+      "start": 724.8000000007451,
+      "end": 858.4000000022352,
+      "encoded": 10079,
+      "decoded": 29241,
+      "transfer": 10379
+    },
+    {
+      "name": "/assets/GlobalInteractionProvider-M35azrvp.js",
+      "type": "script",
+      "start": 725,
+      "end": 783.5,
+      "encoded": 2621,
+      "decoded": 7501,
+      "transfer": 2921
+    },
+    {
+      "name": "/assets/Loading03Icon-CvVpUvd0.js",
+      "type": "script",
+      "start": 725,
+      "end": 844.2000000029802,
+      "encoded": 7667,
+      "decoded": 19951,
+      "transfer": 7967
+    },
+    {
+      "name": "/assets/confirmAction-CJHva_me.js",
+      "type": "script",
+      "start": 725.1000000014901,
+      "end": 858,
+      "encoded": 8600,
+      "decoded": 23232,
+      "transfer": 8900
+    },
+    {
+      "name": "/assets/index-DCvmhgcN.js",
+      "type": "script",
+      "start": 725.2000000029802,
+      "end": 794.5,
+      "encoded": 2091,
+      "decoded": 5893,
+      "transfer": 2391
+    },
+    {
+      "name": "/assets/index-Bp062HPq.js",
+      "type": "script",
+      "start": 725.3000000007451,
+      "end": 890.4000000022352,
+      "encoded": 9787,
+      "decoded": 34801,
+      "transfer": 10087
+    },
+    {
+      "name": "/assets/InformationCircleIcon-CUKxAkIj.js",
+      "type": "script",
+      "start": 725.6000000014901,
+      "end": 829.4000000022352,
+      "encoded": 543,
+      "decoded": 543,
+      "transfer": 843
+    },
+    {
+      "name": "/assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+      "type": "script",
+      "start": 725.7000000029802,
+      "end": 859.8000000007451,
+      "encoded": 332,
+      "decoded": 332,
+      "transfer": 632
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 735.2000000029802,
+      "end": 906,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/DA9ABB1F-84A7-4E34-9BC6-25A5474CA0C4/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 742.9000000022352,
+      "end": 783.2000000029802,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 955.2000000029802,
+      "end": 1091.5,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 969.8000000007451,
+      "end": 1061.6000000014901,
+      "encoded": 314,
+      "decoded": 490,
+      "transfer": 614
+    },
+    {
+      "name": "/assets/realtime-SnTU7mcF.js",
+      "type": "script",
+      "start": 1091,
+      "end": 1120.4000000022352,
+      "encoded": 1146,
+      "decoded": 2696,
+      "transfer": 1446
+    },
+    {
+      "name": "/assets/AuthedApp-UWJp3RQ3.js",
+      "type": "script",
+      "start": 1093.2000000029802,
+      "end": 1400.7000000029802,
+      "encoded": 55549,
+      "decoded": 260423,
+      "transfer": 55849
+    },
+    {
+      "name": "/assets/avatarCache-Cq0HkhFq.js",
+      "type": "script",
+      "start": 1093.300000000745,
+      "end": 1130,
+      "encoded": 791,
+      "decoded": 1588,
+      "transfer": 1091
+    },
+    {
+      "name": "/assets/transport-B8Tk1WFt.js",
+      "type": "script",
+      "start": 1093.300000000745,
+      "end": 1556.7000000029802,
+      "encoded": 129345,
+      "decoded": 415163,
+      "transfer": 129645
+    },
+    {
+      "name": "/assets/workspace-BTi7z_-_.js",
+      "type": "script",
+      "start": 1093.4000000022352,
+      "end": 1183.6000000014901,
+      "encoded": 5310,
+      "decoded": 17279,
+      "transfer": 5610
+    },
+    {
+      "name": "/assets/BloubAvatar-DqcUKJt7.js",
+      "type": "script",
+      "start": 1093.4000000022352,
+      "end": 1230.2000000029802,
+      "encoded": 13128,
+      "decoded": 31339,
+      "transfer": 13428
+    },
+    {
+      "name": "/assets/state-DUBwNDxQ.js",
+      "type": "script",
+      "start": 1093.5,
+      "end": 1168.7000000029802,
+      "encoded": 1299,
+      "decoded": 3129,
+      "transfer": 1599
+    },
+    {
+      "name": "/assets/state-Nld5E6gW.js",
+      "type": "script",
+      "start": 1093.6000000014901,
+      "end": 1169.2000000029802,
+      "encoded": 761,
+      "decoded": 1685,
+      "transfer": 1061
+    },
+    {
+      "name": "/assets/state-BILWpPTa.js",
+      "type": "script",
+      "start": 1093.6000000014901,
+      "end": 1214.800000000745,
+      "encoded": 2488,
+      "decoded": 7632,
+      "transfer": 2788
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 1123.2000000029802,
+      "end": 1229.9000000022352,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-CB3SISa_.js",
+      "type": "script",
+      "start": 1690.7000000029802,
+      "end": 3019.60000000149,
+      "encoded": 545246,
+      "decoded": 1784098,
+      "transfer": 545546
+    },
+    {
+      "name": "/assets/avatar-BUBuxXo7.js",
+      "type": "script",
+      "start": 1690.9000000022352,
+      "end": 1873.7000000029802,
+      "encoded": 37830,
+      "decoded": 114473,
+      "transfer": 38130
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-DJgCPkqK.css",
+      "type": "link",
+      "start": 1691.4000000022352,
+      "end": 1741.5,
+      "encoded": 988,
+      "decoded": 988,
+      "transfer": 1288
+    },
+    {
+      "name": "/api/projects",
+      "type": "fetch",
+      "start": 1693.1000000014901,
+      "end": 1912.2000000029802,
+      "encoded": 1257,
+      "decoded": 8209,
+      "transfer": 1557
+    },
+    {
+      "name": "/api/me/preferences",
+      "type": "fetch",
+      "start": 1694.1000000014901,
+      "end": 1850,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/agents/autonomy",
+      "type": "fetch",
+      "start": 1694.7000000029802,
+      "end": 1894.5,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 1750.2000000029802,
+      "end": 1881.1000000014901,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/projects/e2e-classroom/open",
+      "type": "fetch",
+      "start": 1914.9000000022352,
+      "end": 1988.300000000745,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/api/participants",
+      "type": "fetch",
+      "start": 1991.2000000029802,
+      "end": 2049.400000002235,
+      "encoded": 2837,
+      "decoded": 12424,
+      "transfer": 3137
+    },
+    {
+      "name": "/api/im/channels",
+      "type": "fetch",
+      "start": 1991.7000000029802,
+      "end": 2065,
+      "encoded": 887,
+      "decoded": 3144,
+      "transfer": 1187
+    },
+    {
+      "name": "/api/im/bootstrap",
+      "type": "fetch",
+      "start": 2067.400000002235,
+      "end": 2141.7000000029802,
+      "encoded": 151,
+      "decoded": 167,
+      "transfer": 451
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 2067.7000000029802,
+      "end": 2139.60000000149,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/messages",
+      "type": "fetch",
+      "start": 2070.10000000149,
+      "end": 2173.400000002235,
+      "encoded": 818,
+      "decoded": 3943,
+      "transfer": 1118
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/runs",
+      "type": "fetch",
+      "start": 2191.10000000149,
+      "end": 2264.900000002235,
+      "encoded": 385,
+      "decoded": 1213,
+      "transfer": 685
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3A5178c8e6f8f1ad81b1aab2283cab66644d9a5c5a8ddc8674925be901254398dd/stream",
+      "type": "fetch",
+      "start": 2267.400000002235,
+      "end": 2373.800000000745,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Ad7bd2a987027c9a6dccda1da47588831b35ac65cc3a447e4a7fba112b5bbccd6/stream",
+      "type": "fetch",
+      "start": 2267.7000000029802,
+      "end": 2413.300000000745,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa9bc4b7b6a487f99cfce441e800da2891a4a28901934e2127e16968f371b7305/stream",
+      "type": "fetch",
+      "start": 2267.900000002235,
+      "end": 2413,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aac317c802cf1264013b50c894ecb546f1f1aaff1a976592f296976f81906e997/stream",
+      "type": "fetch",
+      "start": 2268.10000000149,
+      "end": 2419.5,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aad742a298318f3d5b25d947ac63668e823daf925c9bb3c97c9db151e9cca1e79/stream",
+      "type": "fetch",
+      "start": 2268.300000000745,
+      "end": 2419.7000000029802,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa12c83bbd449f1e0713884721dda3e778f041b134fec2f57e279c05ee3655021/stream",
+      "type": "fetch",
+      "start": 2268.400000002235,
+      "end": 2481.10000000149,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/DA9ABB1F-84A7-4E34-9BC6-25A5474CA0C4/from",
+      "type": "xmlhttprequest",
+      "start": 2742.5,
+      "end": 2773.400000002235,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 2897,
+      "end": 3127.900000002235,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/DA9ABB1F-84A7-4E34-9BC6-25A5474CA0C4/from",
+      "type": "xmlhttprequest",
+      "start": 3399.800000000745,
+      "end": 3451,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/highlighted-body-KPVGNVTW-o9S1VZer.js",
+      "type": "script",
+      "start": 3517.5,
+      "end": 3559.5,
+      "encoded": 1003,
+      "decoded": 1003,
+      "transfer": 1303
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 3574.300000000745,
+      "end": 3682.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 3608.60000000149,
+      "end": 3722.10000000149,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3702.400000002235,
+      "end": 3728.7000000029802,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3704.300000000745,
+      "end": 3743.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3705.60000000149,
+      "end": 3762.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3707,
+      "end": 3760.900000002235,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3708.5,
+      "end": 3759.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3710.60000000149,
+      "end": 3761.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 3716.400000002235,
+      "end": 4068.300000000745,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/api/learning/spaces",
+      "type": "fetch",
+      "start": 3720.5,
+      "end": 4037.5,
+      "encoded": 1102,
+      "decoded": 7804,
+      "transfer": 1402
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 3837.10000000149,
+      "end": 3928.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/DA9ABB1F-84A7-4E34-9BC6-25A5474CA0C4/from",
+      "type": "xmlhttprequest",
+      "start": 4105,
+      "end": 4145.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 4216.400000002235,
+      "end": 4323.300000000745,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/DA9ABB1F-84A7-4E34-9BC6-25A5474CA0C4/from",
+      "type": "xmlhttprequest",
+      "start": 4610.20000000298,
+      "end": 4651.900000002235,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 5141.5,
+      "end": 5238.300000000745,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/DA9ABB1F-84A7-4E34-9BC6-25A5474CA0C4/from",
+      "type": "xmlhttprequest",
+      "start": 5209.70000000298,
+      "end": 5252.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 11.900000002235174
+    }
+  ]
+}

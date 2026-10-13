@@ -1,0 +1,68 @@
+{
+  "verifiedAt": "2026-10-13T09:20:56.695Z",
+  "commit": "515400eaabd5b990bbf0148a85d99d103fde77d9",
+  "updateId": "6acdf5aed8838102d0f9bc7c",
+  "status": "Complete",
+  "success": true,
+  "stacks": [
+    {
+      "name": "lingxiloop-app-a",
+      "services": [
+        {
+          "name": "db-migrate",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:515400eaabd5b990bbf0148a85d99d103fde77d9",
+          "state": "Exited",
+          "status": "Exited (0) 2 minutes ago"
+        },
+        {
+          "name": "lingxiloop",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:515400eaabd5b990bbf0148a85d99d103fde77d9",
+          "state": "Running",
+          "status": "Up 2 minutes (healthy)"
+        },
+        {
+          "name": "worker",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:515400eaabd5b990bbf0148a85d99d103fde77d9",
+          "state": "Running",
+          "status": "Up 2 minutes (healthy)"
+        }
+      ]
+    },
+    {
+      "name": "lingxiloop-app-b",
+      "services": [
+        {
+          "name": "db-migrate",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:515400eaabd5b990bbf0148a85d99d103fde77d9",
+          "state": "Exited",
+          "status": "Exited (0) About a minute ago"
+        },
+        {
+          "name": "gateway",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-gateway:78082e1d93717740616111f5f5bf86e048896a37",
+          "state": "Running",
+          "status": "Up 4 days (healthy)"
+        },
+        {
+          "name": "lingxiloop",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:515400eaabd5b990bbf0148a85d99d103fde77d9",
+          "state": "Running",
+          "status": "Up About a minute (healthy)"
+        },
+        {
+          "name": "worker",
+          "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:515400eaabd5b990bbf0148a85d99d103fde77d9",
+          "state": "Running",
+          "status": "Up About a minute (healthy)"
+        }
+      ]
+    }
+  ],
+  "http": {
+    "web": 200,
+    "health": 200
+  },
+  "pullRequests": [
+    116
+  ]
+}
