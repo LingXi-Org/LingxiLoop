@@ -1,6 +1,6 @@
 import { Cancel01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { Activity, lazy, Suspense, useEffect, useState } from 'react'
 import type { LayoutChangedMeta } from 'react-resizable-panels'
 import { CommandPalette } from '@/components/CommandPalette'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
@@ -251,14 +251,13 @@ export function DesktopApp() {
             </Suspense>
           ) : view === 'agents' ? <AgentsPage key={selectedWorkspaceId} onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> : view === 'mail' ? <MailPage key={selectedWorkspaceId} /> : isMobile ? (
             <div className="h-full min-h-0 min-w-0" data-mobile-conversation-page={mobileChatOpen ? 'chat' : 'list'}>
-              {mobileChatOpen ? (
+              <Activity mode={mobileChatOpen ? 'visible' : 'hidden'}>
                 <ChatPane
                   onChooseWorkspace={chooseWorkspace}
-                  onBackToConversations={() => {
-                    useApp.getState().selectConversation(null)
-                  }}
+                  onBackToConversations={() => useApp.getState().showConversationList()}
                 />
-              ) : (
+              </Activity>
+              {!mobileChatOpen && (
                 <div className="flex h-full min-h-0 flex-col bg-card">
                   <ConversationsPane />
                 </div>
