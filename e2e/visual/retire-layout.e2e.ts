@@ -1,5 +1,6 @@
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
+import { mkdir,writeFile } from 'node:fs/promises'
 
 // Failure modes: centered rows retain wide gutters; body stretches; drawer or mobile
 // overflows; legacy mail/calendar cards still offer approval or navigation.
@@ -14,8 +15,10 @@ for (const width of [1920, 1440, 1024, 767, 390]) {
         const bounds = document.querySelector(selector)!.getBoundingClientRect()
         return { left: bounds.left, right: bounds.right, width: bounds.width }
       }
+      const row = document.querySelector('[data-msg-id="bubble-me"]')!
       return { column: rect('[data-chat-message-column]'), row: rect('[data-msg-id="bubble-me"]'),
         left: rect('[data-message-bubble="human"]'), right: rect('[data-message-bubble="user"]'),
+        gutter: parseFloat(getComputedStyle(row).paddingInlineStart),
         overflow: document.documentElement.scrollWidth > innerWidth }
     })
     expect(layout.overflow).toBe(false)
@@ -24,8 +27,14 @@ for (const width of [1920, 1440, 1024, 767, 390]) {
     if (process.env.E2E_LAYOUT_PHASE !== 'before') {
       expect(Math.abs(layout.row.left - layout.column.left)).toBeLessThan(2)
       expect(Math.abs(layout.row.right - layout.column.right)).toBeLessThan(2)
-      expect(layout.left.left - layout.column.left).toBeLessThan(75)
-      expect(layout.column.right - layout.right.right).toBeLessThan(75)
+      expect(layout.gutter).toBeGreaterThanOrEqual(16)
+      expect(layout.gutter).toBeLessThanOrEqual(40)
+      if (width >= 1440) expect(layout.gutter).toBeGreaterThanOrEqual(24)
+      expect(layout.left.left - layout.column.left).toBeLessThan(110)
+      expect(layout.column.right - layout.right.right).toBeLessThan(110)
+      const folder = process.env.E2E_LAYOUT_PHASE === 'gutters' ? 'gutters' : 'after'
+      await mkdir(`artifacts/retire-layout/${folder}/geometry`,{recursive:true})
+      await writeFile(`artifacts/retire-layout/${folder}/geometry/${width}.json`,JSON.stringify(layout,null,2))
     }
     await app.screenshot(`conversation-edges-${width}`)
   })

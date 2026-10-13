@@ -262,7 +262,8 @@ export function ConversationMessage() {
       className={cn(
         'group/message grid w-full shrink-0',
         custom.replyBranches && 'fade-in slide-in-from-bottom-1 animate-in duration-300 motion-reduce:animate-none',
-        isMobile ? 'gap-x-2 px-2.5' : 'gap-x-2.5 px-3 sm:px-4',
+        'px-[clamp(1rem,3cqw,2.5rem)]',
+        isMobile ? 'gap-x-2' : 'gap-x-2.5',
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
         custom.continuedFromPrevious ? isSpecialCard ? 'pt-1' : 'pt-px' : 'pt-1.5',
         custom.continuedToNext ? isSpecialCard ? 'pb-0' : 'pb-px' : 'pb-1.5',

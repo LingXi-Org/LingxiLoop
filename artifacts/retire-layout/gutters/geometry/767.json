@@ -1,0 +1,24 @@
+{
+  "column": {
+    "left": 1,
+    "right": 748,
+    "width": 747
+  },
+  "row": {
+    "left": 1,
+    "right": 748,
+    "width": 747
+  },
+  "left": {
+    "left": 63.40625,
+    "right": 376.546875,
+    "width": 313.140625
+  },
+  "right": {
+    "left": 350.453125,
+    "right": 685.59375,
+    "width": 335.140625
+  },
+  "gutter": 22.41,
+  "overflow": false
+}
