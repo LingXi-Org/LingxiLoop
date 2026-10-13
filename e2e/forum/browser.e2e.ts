@@ -1,6 +1,6 @@
+import { fileURLToPath } from 'node:url'
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
-import { fileURLToPath } from 'node:url'
 
 test('forum history, public resources, student versions, private files, teacher moderation and closure', async ({ app,screen,browser }) => {
   const openAs = async (role: 'teacher' | 'student' | 'peer') => {
@@ -36,17 +36,23 @@ test('forum history, public resources, student versions, private files, teacher 
   await browser.keyboard.press('Escape')
   await screen.getByRole('button','发布内容',{ exact: true }).tap()
   await screen.getByLabel('内容标题').fill('Student geometry case')
-  await screen.getByLabel('内容正文').fill('A student-owned public example.')
-  await screen.getByLabel('内容类型').tap()
-  await screen.getByRole('option','作品案例').tap()
+  await screen.getByLabel('内容正文').fill('## 用图形理解面积\n\n把长方形分成两个三角形，观察面积怎样变化。\n\n> 先写下你的预测，再比较测量结果。\n\n- 保持底边不变\n- 改变三角形的高度\n\n| 底 | 高 | 面积 |\n| --- | --- | --- |\n| 6 | 4 | 12 |\n\n```typescript\nconst area = (base: number, height: number) => base * height / 2;\n```\n\n用 `底 × 高 ÷ 2` 解释你的发现。 [参考资料](https://example.com/geometry)')
+  await screen.getByLabel('内容类型').selectOption({ value: 'case' })
   await screen.getByLabel('标签').fill('geometry')
   await screen.getByRole('button','发布',{ exact: true }).tap()
   const card = browser.locator('article').filter({ hasText: 'Student geometry case' })
+  await expect(browser.locator('article[aria-label="Student geometry case"] [data-memo-content] h2')).toContainText('用图形理解面积')
+  await expect(browser.locator('article[aria-label="Student geometry case"] [data-memo-content] table')).toBeVisible()
+  await expect(card.getByRole('button','复制代码',{ exact: true })).toBeVisible()
+  expect(await browser.evaluate(() => getComputedStyle(document.querySelector('article[aria-label="Student geometry case"] [data-memo-content]')!).fontSize)).toBe('16px')
   await card.getByRole('button','评论',{ exact: true }).tap()
-  await screen.getByLabel('发表评论').fill('A persisted discussion')
+  await screen.getByLabel('发表评论').fill('A persisted discussion\n\n> 我预测：高度加倍，面积也会加倍。\n\n- [x] 已完成第一次测量')
   await screen.getByRole('button','发送评论').tap()
   await expect(screen.getByText('A persisted discussion',{ exact: true })).toBeVisible()
+  await expect(browser.locator('[role="dialog"] [data-memo-comments-section] blockquote')).toBeVisible()
+  await app.screenshot('memos-detail-and-comments')
   await browser.keyboard.press('Escape')
+  expect(await browser.evaluate(() => Boolean(document.activeElement?.textContent?.startsWith('评论')))).toBe(true)
   await openAs('peer')
   expect(await browser.evaluate(async url => (await fetch(url!)).status,file)).toBe(404)
   await homework.getByRole('button','提交作业',{ exact: true }).tap()
@@ -82,6 +88,10 @@ test('forum history, public resources, student versions, private files, teacher 
   expect(await browser.evaluate(() => document.activeElement?.tagName !== 'BODY')).toBe(true)
   expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await app.screenshot('forum-mobile-dark-keyboard')
+  await card.getByRole('button',/^评论/).tap()
+  expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await app.screenshot('memos-mobile-dark-discussion')
+  await browser.keyboard.press('Escape')
   await browser.setViewport({ width: 1440,height: 1000 })
   await browser.evaluate(() => { document.documentElement.classList.remove('dark'); return true })
   await screen.getByLabel('搜索论坛').fill('')

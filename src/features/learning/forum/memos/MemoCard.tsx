@@ -8,13 +8,13 @@ const MEMO_CARD_BASE_CLASSES = 'relative group flex flex-col justify-start items
 export function MemoCard({ author, createdAt, pinned, children, actions, label }: {
   author: string; createdAt: string; pinned?: boolean; children: ReactNode; actions?: ReactNode; label: string
 }) {
-  return <article aria-label={label} className={cn(MEMO_CARD_BASE_CLASSES, 'group/memo min-w-0 [overflow-wrap:anywhere]')}>
+  return <article data-memo-card aria-label={label} className={cn(MEMO_CARD_BASE_CLASSES, 'group/memo min-w-0 [overflow-wrap:anywhere]')}>
     {pinned && <MemoPinnedMark />}
     <div className="flex min-h-6 w-full flex-wrap items-center justify-between gap-2 pe-3">
-      <div data-slot="memo-header-meta" className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
-        <span className="font-medium text-foreground">{author}</span>
+      <div data-slot="memo-header-meta" className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-[13px]">
+        <span className="flex min-w-0 shrink items-center gap-1.5 font-medium text-foreground"><span aria-hidden="true" className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px]">{author.slice(0,1)}</span><span className="min-w-0 truncate">{author}</span></span>
         <span aria-hidden="true" className="shrink-0 text-muted-foreground/40">·</span>
-        <time dateTime={createdAt} className="text-muted-foreground">{new Date(createdAt).toLocaleString()}</time>
+        <time dateTime={createdAt} title={new Date(createdAt).toLocaleString()} className="shrink-0 whitespace-nowrap text-muted-foreground">{new Date(createdAt).toLocaleString(undefined,{ month: 'short',day: 'numeric',hour: '2-digit',minute: '2-digit' })}</time>
       </div>
       <div data-slot="memo-header-actions" className="flex shrink-0 flex-wrap items-center gap-1">{actions}</div>
     </div>

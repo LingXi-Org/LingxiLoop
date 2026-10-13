@@ -1,8 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { knowledgeApi } from '@/features/knowledge/api'
 import type { KnowledgeSource } from '@/features/knowledge/contracts'
 import { userFacingError } from '@/lib/userFacingError'
@@ -10,6 +6,7 @@ import type { LearningSpace } from '../contracts'
 import { forumApi } from './api'
 import type { ForumAttachment } from './contracts'
 import { contentLinks, ForumContentFields } from './ForumContentFields'
+import { Button, Input, Label, MemoSelect } from './memos/MemoControls'
 
 export function ForumComposer({ space, onCreated, onCancel }: { space: LearningSpace; onCreated(): void; onCancel(): void }) {
   const [kind, setKind] = useState<'share' | 'resource' | 'case'>('share')
@@ -38,11 +35,11 @@ export function ForumComposer({ space, onCreated, onCancel }: { space: LearningS
   }}>
     <div className="flex flex-wrap items-end gap-3">
       <div className="min-w-0 flex-1 space-y-2"><Label htmlFor="forum-post-title">内容标题</Label><Input autoFocus id="forum-post-title" value={title} onChange={event => setTitle(event.target.value)} maxLength={200} required disabled={disabled} /></div>
-      <div className="space-y-2"><Label htmlFor="forum-post-kind">内容类型</Label><Select value={kind} onValueChange={value => setKind(value as typeof kind)} disabled={disabled}><SelectTrigger id="forum-post-kind"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="share">普通分享</SelectItem><SelectItem value="resource">资料</SelectItem><SelectItem value="case">作品案例</SelectItem></SelectContent></Select></div>
+      <div className="space-y-2"><Label htmlFor="forum-post-kind">内容类型</Label><MemoSelect id="forum-post-kind" value={kind} onChange={event => setKind(event.target.value as typeof kind)} disabled={disabled}><option value="share">普通分享</option><option value="resource">资料</option><option value="case">作品案例</option></MemoSelect></div>
     </div>
     <ForumContentFields body={body} setBody={setBody} links={links} setLinks={setLinks} attachments={attachments} setAttachments={setAttachments} disabled={disabled} onUploading={setUploading} />
     <div className="space-y-2"><Label htmlFor="forum-post-tags">标签</Label><Input id="forum-post-tags" value={tags} onChange={event => setTags(event.target.value)} placeholder="用逗号分隔，最多 10 个" disabled={disabled} /></div>
-    <div className="space-y-2"><Label htmlFor="forum-post-source">引用课程公共资料</Label><Select value={sourceId} onValueChange={setSourceId} disabled={disabled}><SelectTrigger id="forum-post-source" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">不引用资料</SelectItem>{sources.map(source => <SelectItem key={source.id} value={source.id}>{source.title}</SelectItem>)}</SelectContent></Select></div>
+    <div className="space-y-2"><Label htmlFor="forum-post-source">引用课程公共资料</Label><MemoSelect id="forum-post-source" value={sourceId} onChange={event => setSourceId(event.target.value)} disabled={disabled}><option value="none">不引用资料</option>{sources.map(source => <option key={source.id} value={source.id}>{source.title}</option>)}</MemoSelect></div>
     <p className="text-xs text-muted-foreground">发布后本课程师生可见。作业请使用“提交作业”，提交内容仅你和本课程教师可见。</p>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={disabled} onClick={onCancel}>取消</Button><Button type="submit" disabled={disabled || !title.trim()}>{uploading ? '上传中…' : busy ? '发布中…' : '发布'}</Button></div>

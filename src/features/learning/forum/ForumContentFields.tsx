@@ -1,11 +1,8 @@
 import { useId, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { uploadsApi } from '@/features/platform/api'
 import { userFacingError } from '@/lib/userFacingError'
 import type { ForumAttachment } from './contracts'
+import { Button, Input, Label, Textarea } from './memos/MemoControls'
 
 export function ForumContentFields({ body, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文' }: {
   body: string; setBody(value: string): void; links: string; setLinks(value: string): void
