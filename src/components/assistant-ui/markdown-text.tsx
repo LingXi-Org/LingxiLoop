@@ -3,15 +3,16 @@
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
 import { Block, type BlockProps, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'
-import { useReducedMotion } from 'framer-motion'
 import { createContext, memo, useContext, useMemo, useState } from 'react'
 import type { Root } from 'hast'
-import { visit } from 'unist-util-visit'
+import { SKIP, visit } from 'unist-util-visit'
+import { rehypeStreamingWords, useStreamingTail } from './streaming-text'
 import {
   ConfidenceMarker, ConfidenceMarkerInline,
 } from '@/components/assistant-ui/elements/confidence-marker'
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
+import type { MentionTarget } from '@/lib/mentions'
 export type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 
 declare module 'hast' {
@@ -34,6 +35,19 @@ const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['s
   return claim && node?.properties['data-citation-start'] === undefined ? marker : <span {...props}>{marker}</span>
 }
 const confidenceComponents = { span: ConfidenceSpan }
+
+function rehypeMentionNames({ targets }: { targets: readonly MentionTarget[] }) {
+  const names = new Map(targets.map(target => [target.id, target.name]))
+  names.set('all', '所有人')
+  return (tree: Root) => {
+    visit(tree, node => {
+      if (node.type === 'element' && ['a', 'code', 'pre'].includes(node.tagName)) return SKIP
+      if (node.type !== 'text') return
+      node.value = node.value.replace(/(^|[^A-Za-z0-9_@])@([\p{L}\p{N}_-]+)(?![\p{L}\p{N}_-]|\.[\p{L}\p{N}])/gu,
+        (match, prefix: string, id: string) => names.has(id) ? `${prefix}@${names.get(id)}` : match)
+    })
+  }
+}
 
 function rehypeConfidence({ claims, offset, inlineCitations }: {
   claims: readonly MarkdownConfidenceClaim[]; offset: number; inlineCitations: boolean
@@ -70,15 +84,17 @@ function rehypeConfidence({ claims, offset, inlineCitations }: {
 }
 
 const CitationBlocks = createContext<{
-  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean
-}>({ offsets: [], claims: [], inlineCitations: false })
+  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; agent: boolean; mentionTargets: readonly MentionTarget[]
+}>({ offsets: [], claims: [], inlineCitations: false, agent: false, mentionTargets: [] })
 
 function CitationBlock(props: BlockProps) {
-  const { offsets, claims, inlineCitations } = useContext(CitationBlocks)
+  const { offsets, claims, inlineCitations, agent, mentionTargets } = useContext(CitationBlocks)
   const offset = offsets[props.index]
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...Object.values(defaultRehypePlugins), [rehypeConfidence, { claims, offset, inlineCitations }],
-  ], [claims, offset, inlineCitations])
+    [rehypeMentionNames, { targets: mentionTargets }],
+    ...agent ? [rehypeStreamingWords] : [],
+  ], [claims, offset, inlineCitations, agent, mentionTargets])
   return <Block {...props} rehypePlugins={rehypePlugins} />
 }
 
@@ -86,18 +102,20 @@ const MarkdownTextImpl = ({
   agent = false,
   confidenceClaims = [],
   inlineCitations = false,
+  mentionTargets = [],
 }: {
   agent?: boolean
   confidenceClaims?: readonly MarkdownConfidenceClaim[]
   inlineCitations?: boolean
+  mentionTargets?: readonly MentionTarget[]
 }) => {
   const [hoveredId, setHoveredId] = useState('')
   const { text, status } = useMessagePartText()
   // Citation spans use nativeText's joined-message coordinates, including between cards.
   const textOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
     .reduce((offset, part) => offset + (part.type === 'text' ? part.text.length + 1 : 0), 0))
-  const reducedMotion = useReducedMotion()
-  const streaming = agent && status.type === 'running' && !reducedMotion
+  const streaming = agent && status.type === 'running'
+  const streamingRef = useStreamingTail(text, streaming)
   const hasCitations = Boolean(confidenceClaims.length) || inlineCitations
   // Use Streamdown's own blocks; only restore document coordinates for citations.
   const blocks = useMemo(() => hasCitations ? parseMarkdownIntoBlocks(text) : [], [hasCitations, text])
@@ -106,16 +124,20 @@ const MarkdownTextImpl = ({
     let offset = textOffset
     return blocks.map(block => { const start = offset; offset += block.length; return start })
   }, [blocks, textOffset])
-  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations }), [offsets, confidenceClaims, inlineCitations])
+  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, agent, mentionTargets }), [offsets, confidenceClaims, inlineCitations, agent, mentionTargets])
+  const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
+    ...Object.values(defaultRehypePlugins), ...agent ? [rehypeStreamingWords] : [],
+    [rehypeMentionNames, { targets: mentionTargets }],
+  ], [agent, mentionTargets])
   return <ConfidenceMarker claims={confidenceClaims} hoveredId={hoveredId} onHover={setHoveredId} floatingBasis={inlineCitations}>
     <CitationBlocks.Provider value={citationBlocks}>
-      <div className="im-markdown-host" data-find-content>
+      <div ref={streamingRef} className="im-markdown-host" data-find-content data-streaming={streaming || undefined}>
         <StreamdownTextPrimitive
-          animated={streaming}
+          rehypePlugins={rehypePlugins}
           controls
           parseIncompleteMarkdown
           {...hasCitations ? { parseMarkdownIntoBlocksFn: parseBlocks, BlockComponent: CitationBlock, components: confidenceComponents } : {}}
-          className={`im-markdown${agent ? ' im-markdown-agent' : ''}${streaming ? ' motion-safe:shimmer' : ''}`}
+          className={`im-markdown${agent ? ' im-markdown-agent' : ''}`}
         />
       </div>
     </CitationBlocks.Provider>

@@ -31,9 +31,8 @@ import type { ApiInvitationPreview } from '@/features/companies/contracts'
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
-import { selectLearningSpace } from '@/features/knowledge/workspace'
 import { userFacingError } from '@/lib/userFacingError'
-import { ProductLogo } from '@/components/Avatar'
+import { ProductLogo } from '@/components/ProductLogo'
 import { WindowDragStrip } from '@/components/WindowDragStrip'
 import { writeWebDestination } from '@/lib/webNavigation'
 
@@ -243,6 +242,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
             onSwitchInBrowser={async () => {
               if (inv) {
                 if ('course' in inv) {
+                  const { selectLearningSpace } = await import('@/features/knowledge/workspace')
                   await selectLearningSpace({ companyId: inv.company.id, projectId: inv.course.projectId })
                   useApp.getState().selectConversation(inv.course.studyRoomId)
                 } else {

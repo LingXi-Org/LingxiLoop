@@ -44,7 +44,7 @@ test('the real conversation thread displays native v2 messages', () => {
     const runtime = useExternalStoreRuntime({ messages: [message('1')], onNew: async () => {} })
     return <AssistantRuntimeProvider runtime={runtime}><ConversationThread conversationId="room" readOnly /></AssistantRuntimeProvider>
   }
-  assert.match(renderToStaticMarkup(<ThreadPreview />), /正文1/)
+  assert.match(load(renderToStaticMarkup(<ThreadPreview />)).text(), /正文1/)
 })
 
 test('tool terminal and approval states are visible without requiring a result', () => {
@@ -60,7 +60,7 @@ test('tool terminal and approval states are visible without requiring a result',
     assert.ok($.text().includes(label), `${label}: ${$.text()}`)
     assert.doesNotMatch($.text(), /执行中/)
     assert.equal($('[data-slot="tool-group-root"]').length, 0)
-    assert.equal($('time').length, 1)
+    assert.equal($('time').length, 0)
   }
 })
 
@@ -73,7 +73,7 @@ test('adjacent ordinary tools group in place while rich results stay visible', (
   assert.equal($('[data-slot="tool-group-root"]').length, 1)
   assert.match($.text(), /2 项工具调用/)
   assert.match($.text(), /暂无安排/)
-  assert.equal($('time').length, 1)
+  assert.equal($('time').length, 0)
   assert.match($('[data-agent-body]').last().text(), /最后正文/)
 })
 
@@ -86,7 +86,7 @@ test('existing data names render descriptive cards without dumping JSON', () => 
   const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
   for (const label of ['证据文档', '可核对的证据', '研究总结', '邮件正文', '整理资料']) assert.ok($.text().includes(label), label)
   assert.equal($('pre').length, 0)
-  assert.equal($('time').length, 1)
+  assert.equal($('time').length, 0)
   assert.equal($('button').filter((_, node) => /发送邮件|批准|加入安排/.test($(node).text())).length, 0)
 })
 
@@ -98,32 +98,33 @@ test('memory metadata does not expose summaries in conversation messages', () =>
   metadata.memory = { chips: [{ id: 'memory', text: '隐藏的记忆摘要' }], calls: {}, revision: 1 }
   const html = renderToStaticMarkup(<Preview messages={[reply]} />)
   assert.doesNotMatch(html, /隐藏的记忆摘要|memory-chips|已记住/)
-  assert.match(html, /正文1/)
+  assert.match(load(html).text(), /正文1/)
 })
 
-test('text timestamps sit at the bottom right for every sender and attachments omit time', () => {
+test('all senders omit bubble timestamps and only outgoing messages show delivery', () => {
   for (const sender of ['agent', 'human', 'me']) {
     const html = renderToStaticMarkup(<Preview messages={[message('1', sender, true), message('2', sender)]} />)
     const $ = load(html)
     if (sender !== 'me') assert.equal((html.match(new RegExp(`class="font-medium">${participants[sender].name}`, 'g')) ?? []).length, 1)
-    assert.equal($('time').length, 1)
+    assert.equal($('time').length, 0)
     assert.equal($('[data-slot="attachment-card"] time').length, 0)
-    assert.equal($(sender === 'agent' ? '[data-agent-body] time' : '[data-message-bubble] time').length, 1)
-    assert.equal($('[data-message-footer][data-align="end"]').length, 1)
+    assert.equal($(sender === 'agent' ? '[data-agent-body] time' : '[data-message-bubble] time').length, 0)
+    assert.equal($('[data-message-footer][data-align="end"]').length, sender === 'me' ? 2 : 0)
+    if (sender === 'me') assert.equal($('[role="status"][aria-label="已送达"]').length, 2)
   }
 })
 
 test('attachments retain delivery feedback without a timestamp', () => {
-  for (const delivery of ['sending', 'failed'] as const) {
+  for (const delivery of ['sending', 'sent', 'failed'] as const) {
     const attachment = message('1', 'me', true)
     attachment.metadata.custom.delivery = delivery
     const $ = load(renderToStaticMarkup(<Preview messages={[attachment]} />))
     assert.equal($('time').length, 0)
-    assert.ok($('[data-slot="attachment-card"]').text().includes(delivery === 'sending' ? '发送中…' : '发送失败'))
+    assert.equal($('[data-slot="attachment-card"] [role="status"]').attr('aria-label'), delivery === 'sending' ? '发送中' : delivery === 'sent' ? '已送达' : '发送失败')
   }
 })
 
-test('running replies reserve their footer and successful completion shows a timestamp without a completion label', () => {
+test('running and completed replies omit timestamps and completion labels', () => {
   for (const running of [true, false]) {
     const reply = message('1')
     const harness = { ...createRunView('run'), artifacts: [], lifecycle: running ? 'leased' as const : 'succeeded' as const,
@@ -132,27 +133,53 @@ test('running replies reserve their footer and successful completion shows a tim
       metadata: { ...reply.metadata, custom: { ...getLingxiMessageMetadata(reply), runId: 'run', harness } },
     } as ThreadMessage]
     const html = renderToStaticMarkup(<Preview messages={messages} />)
-    assert.equal(html.includes('data-message-footer'), !running)
-    assert.equal(html.includes('<time '), !running)
+    assert.equal(html.includes('data-message-footer'), false)
+    assert.equal(html.includes('<time '), false)
     assert.doesNotMatch(html, /已完成/)
   }
 })
 
-test('mixed content ends with one internal timestamp and missing timestamps remain hidden', () => {
+test('mixed content and cards omit timestamps', () => {
   const attachment = message('1', 'agent', true)
   const mixed = { ...attachment, content: [...attachment.content, { type: 'text', text: '第一段\n\n最后一段' }] } as ThreadMessage
   let $ = load(renderToStaticMarkup(<Preview messages={[mixed]} />))
-  assert.equal($('time').length, 1)
-  assert.equal($('[data-agent-body]').last().find('time').length, 1)
+  assert.equal($('time').length, 0)
+  assert.equal($('[data-agent-body]').last().find('time').length, 0)
   assert.equal($('[data-slot="attachment-card"] time').length, 0)
   const poll = { ...message('2'), content: [{ type: 'data', name: 'poll', data: { poll: { question: '投票', mode: 'single', options: [{ id: 'a',text: 'A' }] }, pollTallies: [] } }] } as ThreadMessage
   $ = load(renderToStaticMarkup(<Preview messages={[poll]} />))
-  assert.equal($('[data-slot="poll-card"] time').length, 1)
-  assert.equal($('time').length, 1)
+  assert.equal($('[data-slot="poll-card"] time').length, 0)
+  assert.equal($('time').length, 0)
   mixed.metadata.custom.timestampMissing = true
   $ = load(renderToStaticMarkup(<Preview messages={[mixed]} />))
   assert.equal($('time').length, 0)
   assert.ok($.text().includes('最后一段'))
+})
+
+test('agent replies have one complete action row after all message parts', () => {
+  const reply = { ...message('1'), content: [{ type: 'text', text: '开始正文' },
+    { type: 'data', name: 'tool-activity', data: { title: '整理资料', status: 'completed' } },
+    { type: 'text', text: '最后正文' }] } as ThreadMessage
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply, message('2', 'human')]} />))
+  const actions = $('[data-slot="message-actions"]')
+  assert.equal(actions.length, 1)
+  assert.deepEqual(actions.find('button').map((_, node) => $(node).attr('aria-label')).get(),
+    ['复制回复', '评价为有帮助', '评价为无帮助', '重新生成回复', '更多回复操作'])
+  assert.equal(actions.prevAll('.native-message-content').length, 1)
+  assert.equal($('[data-agent-body] [role="toolbar"]').length, 0)
+})
+
+test('failed streamed replies retain prose and show the official error banner with retry', () => {
+  const reply = { ...message('1'), status: { type: 'incomplete', reason: 'error' }, metadata: { custom: {
+    ...getLingxiMessageMetadata(message('1')), sequence: null, sourceRef: 'original-question',
+    harnessError: 'The operation was aborted due to timeout',
+  } } } as ThreadMessage
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  assert.match($.text(), /正文1/)
+  const error = $('[data-slot="error-state"][role="alert"]')
+  assert.match(error.text(), /回复生成失败.*超时/)
+  assert.equal(error.find('button').text(), '重试')
+  assert.match(error.attr('class') ?? '', /rounded-2xl.*bg-red-500/)
 })
 
 // Failure cases: incoming humans mistaken for agents; long replies center avatars;
@@ -165,7 +192,7 @@ test('sender kind owns bubble chrome and agent avatars align at the top', () => 
     if (sender === 'agent') {
       assert.match($('[data-message-avatar]').attr('class') ?? '', /self-start/)
       assert.doesNotMatch($('[data-agent-body]').attr('class') ?? '', /bg-|rounded-|border-/)
-      assert.match($('[data-agent-body]').attr('class') ?? '', /text-\[14px\]/)
+      assert.match($('[data-agent-body]').attr('class') ?? '', /text-base/)
     }
   }
 })

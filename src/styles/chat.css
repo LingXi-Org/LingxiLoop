@@ -4,6 +4,31 @@
 .chat-surface { background: var(--im-chat-surface, var(--panel)); color: var(--ink); }
 .chat-composer-shell { background: var(--panel); border-color: var(--hairline); }
 
+/* WhatsApp's classic default bubble palette; keep it separate from button colors.
+ * Reference: https://chatmock.net/blog/messaging-app-ui-colour-reference */
+[data-message-bubble] {
+  --foreground: #111b21;
+  --muted-foreground: #52666b;
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  background-color: #ffffff;
+  color: var(--foreground);
+  outline: 1px solid rgb(0 0 0 / 6%);
+  outline-offset: -1px;
+}
+[data-message-bubble='user'] { background-color: #d9fdd3; }
+:root[data-theme='dark'] [data-message-bubble] {
+  --foreground: #e9edef;
+  --muted-foreground: #c3d1d7;
+  background-color: #202c33;
+  outline: none;
+}
+:root[data-theme='dark'] [data-message-bubble='user'] { background-color: #005c4b; }
+[data-message-bubble] .im-markdown :where(a, [data-streamdown='link']) {
+  color: inherit;
+  text-decoration-color: currentColor;
+}
+
 .chat-pane { container: chat-pane / inline-size; }
 .chat-pane:has([data-canvas-popover-trigger][data-state='open']) .chat-thread-layout {
   padding-block-start: 224px;
@@ -11,7 +36,12 @@
 @container chat-pane (min-width: 48rem) {
   .chat-pane:has([data-canvas-popover-trigger][data-state='open']) .chat-thread-layout {
     padding-block-start: 0;
-    margin-inline-end: 384px;
+  }
+  .chat-pane:has([data-canvas-popover-trigger][data-state='open']) :is([data-chat-message-column], [data-chat-composer-bar]) {
+    padding-inline-end: 384px;
+  }
+  .chat-pane:has([data-canvas-popover-trigger][data-state='open']) [data-chat-scroll-bottom] {
+    inset-inline-end: calc(384px + 1.25rem);
   }
 }
 
@@ -497,18 +527,25 @@ input:focus, textarea:focus, button:focus { outline: none; }
 .thinking-card-dots i { width: 4px; height: 4px; border-radius: 50%; background: var(--skype); animation: thinking-dot 1.05s ease-in-out infinite; }
 .thinking-card-dots i:nth-child(2) { animation-delay: 130ms; }
 .thinking-card-dots i:nth-child(3) { animation-delay: 260ms; }
-.streaming-caret {
+.im-markdown-host { --streaming-tail-color: var(--color-blue-500); }
+:root[data-theme='dark'] .im-markdown-host { --streaming-tail-color: var(--color-blue-400); }
+.im-markdown [data-streaming-word] { transition: color 700ms; }
+.im-markdown-host[data-streaming] [data-streaming-word] { animation: streaming-word-in 500ms both; }
+.im-markdown [data-streaming-fresh] { color: var(--streaming-tail-color); }
+.im-markdown [data-streaming-cursor]::after {
+  content: '';
   display: inline-block;
   width: 2px;
-  height: 1.05em;
-  margin-left: 3px;
-  border-radius: 2px;
-  vertical-align: -.14em;
-  background: var(--skype-deep);
-  animation: streaming-caret 760ms steps(1, end) infinite;
+  height: 16px;
+  margin-left: 2px;
+  margin-bottom: -2px;
+  border-radius: 9999px;
+  background: var(--streaming-tail-color);
+  animation: streaming-tail-pulse 2s cubic-bezier(.4, 0, .6, 1) infinite;
 }
 @keyframes thinking-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-3px); opacity: 1; } }
-@keyframes streaming-caret { 0%, 48% { opacity: 1; } 49%, 100% { opacity: 0; } }
+@keyframes streaming-word-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes streaming-tail-pulse { 50% { opacity: .5; } }
 
 @keyframes bloub-avatar-float {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.7deg) scale(1); }
@@ -525,9 +562,11 @@ input:focus, textarea:focus, button:focus { outline: none; }
   .bloub-activity-thinking,
   .bloub-activity-working,
   .thinking-card-dots i,
-  .streaming-caret {
+  .im-markdown-host[data-streaming] [data-streaming-word],
+  .im-markdown [data-streaming-cursor]::after {
     animation: none !important;
   }
+  .im-markdown [data-streaming-word] { transition: none; }
   .reaction-control {
     transition: none !important;
     transform: none !important;

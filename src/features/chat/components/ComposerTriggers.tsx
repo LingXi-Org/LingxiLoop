@@ -61,7 +61,6 @@ function TriggerItems() {
             <span className="block truncate text-xs font-semibold text-foreground">{item.label}</span>
             {item.description ? <span className="block truncate text-[10.5px] text-muted-foreground">{item.description}</span> : null}
           </span>
-          <span className="text-[10px] text-muted-foreground">{item.type === 'command' ? `/${item.id}` : `@${item.id}`}</span>
         </ComposerPrimitive.Unstable_TriggerPopoverItem>
       ))}
     </ComposerPrimitive.Unstable_TriggerPopoverItems>

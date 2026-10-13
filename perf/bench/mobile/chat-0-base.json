@@ -1,0 +1,784 @@
+{
+  "ready": 4342.4000000003725,
+  "workspace": 0,
+  "input": 5584.5,
+  "lcp": 4412,
+  "longTasks": 606,
+  "cls": 0.33781857625240524,
+  "measuredAt": "2026-10-13T05:07:58.636Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "shifts": [
+    {
+      "at": 4354,
+      "value": 0.3376313050770049,
+      "sources": [
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2 px-2.5 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 1,
+            "y": 262.125,
+            "width": 374.3125,
+            "height": 419.53125,
+            "top": 262.125,
+            "right": 375.3125,
+            "bottom": 681.65625,
+            "left": 1
+          },
+          "currentRect": {
+            "x": 1,
+            "y": 65,
+            "width": 374.3125,
+            "height": 298.65625,
+            "top": 65,
+            "right": 375.3125,
+            "bottom": 363.65625,
+            "left": 1
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2 px-2.5 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "currentRect": {
+            "x": 1,
+            "y": 427.65625,
+            "width": 374.3125,
+            "height": 313.34375,
+            "top": 427.65625,
+            "right": 375.3125,
+            "bottom": 741,
+            "left": 1
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2 px-2.5 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[minmax(0,1fr)_auto]",
+          "previousRect": {
+            "x": 1,
+            "y": 65,
+            "width": 374.3125,
+            "height": 133.125,
+            "top": 65,
+            "right": 375.3125,
+            "bottom": 198.125,
+            "left": 1
+          },
+          "currentRect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2 px-2.5 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[auto_minmax(0,1fr)]",
+          "previousRect": {
+            "x": 1,
+            "y": 681.65625,
+            "width": 374.3125,
+            "height": 59.34375,
+            "top": 681.65625,
+            "right": 375.3125,
+            "bottom": 741,
+            "left": 1
+          },
+          "currentRect": {
+            "x": 1,
+            "y": 363.65625,
+            "width": 374.3125,
+            "height": 64,
+            "top": 363.65625,
+            "right": 375.3125,
+            "bottom": 427.65625,
+            "left": 1
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "group/message mx-auto grid w-full max-w-[800px] shrink-0 gap-x-2 px-2.5 [&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1 pt-1.5 pb-1.5 grid-cols-[auto_minmax(0,1fr)]",
+          "previousRect": {
+            "x": 1,
+            "y": 198.125,
+            "width": 374.3125,
+            "height": 64,
+            "top": 198.125,
+            "right": 375.3125,
+            "bottom": 262.125,
+            "left": 1
+          },
+          "currentRect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        }
+      ]
+    },
+    {
+      "at": 4452.200000001118,
+      "value": 0.00018727117540037286,
+      "sources": [
+        {
+          "tag": "DIV",
+          "className": "pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur",
+          "previousRect": {
+            "x": 210,
+            "y": 246,
+            "width": 70,
+            "height": 34,
+            "top": 246,
+            "right": 280,
+            "bottom": 280,
+            "left": 210
+          },
+          "currentRect": {
+            "x": 206,
+            "y": 246,
+            "width": 70,
+            "height": 34,
+            "top": 246,
+            "right": 276,
+            "bottom": 280,
+            "left": 206
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur",
+          "previousRect": {
+            "x": 210,
+            "y": 623,
+            "width": 70,
+            "height": 34,
+            "top": 623,
+            "right": 280,
+            "bottom": 657,
+            "left": 210
+          },
+          "currentRect": {
+            "x": 206,
+            "y": 623,
+            "width": 70,
+            "height": 34,
+            "top": 623,
+            "right": 276,
+            "bottom": 657,
+            "left": 206
+          }
+        },
+        {
+          "tag": "DIV",
+          "className": "omb-no-drag ms-auto flex items-center gap-1",
+          "previousRect": {
+            "x": 333.3125,
+            "y": 10.5,
+            "width": 44,
+            "height": 44,
+            "top": 10.5,
+            "right": 377.3125,
+            "bottom": 54.5,
+            "left": 333.3125
+          },
+          "currentRect": {
+            "x": 329,
+            "y": 10.5,
+            "width": 44,
+            "height": 44,
+            "top": 10.5,
+            "right": 373,
+            "bottom": 54.5,
+            "left": 329
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "className": "group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap motion-reduce:transition-none outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-11 rounded-full transition-opacity disabled:opacity-30 md:size-9",
+          "previousRect": {
+            "x": 322.3125,
+            "y": 766,
+            "width": 44,
+            "height": 44,
+            "top": 766,
+            "right": 366.3125,
+            "bottom": 810,
+            "left": 322.3125
+          },
+          "currentRect": {
+            "x": 318,
+            "y": 766,
+            "width": 44,
+            "height": 44,
+            "top": 766,
+            "right": 362,
+            "bottom": 810,
+            "left": 318
+          }
+        },
+        {
+          "tag": "IMG",
+          "className": "absolute inset-0 w-full h-full object-cover rounded-full",
+          "previousRect": {
+            "x": 333.3125,
+            "y": 568.421875,
+            "width": 32,
+            "height": 32,
+            "top": 568.421875,
+            "right": 365.3125,
+            "bottom": 600.421875,
+            "left": 333.3125
+          },
+          "currentRect": {
+            "x": 329,
+            "y": 568.421875,
+            "width": 32,
+            "height": 32,
+            "top": 568.421875,
+            "right": 361,
+            "bottom": 600.421875,
+            "left": 329
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 47.80000000074506,
+      "end": 672.3000000007451,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-DFeRPGXH.js",
+      "type": "script",
+      "start": 48.100000001490116,
+      "end": 456.30000000074506,
+      "encoded": 63214,
+      "decoded": 200582,
+      "transfer": 63514
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 48.30000000074506,
+      "end": 409.90000000037253,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06BV7p1UsP0fah-pLMj2fFeyNperWoliotnUVFomtMGCV2YE7iKcnNyUUt1XuS0Fs2EGnsverhpztd3SfLbbru-cg/init",
+      "type": "xmlhttprequest",
+      "start": 684.9000000003725,
+      "end": 722,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/App-DL78tVmi.js",
+      "type": "script",
+      "start": 715.5,
+      "end": 1332.800000000745,
+      "encoded": 222147,
+      "decoded": 804553,
+      "transfer": 222447
+    },
+    {
+      "name": "/assets/button-BwrTsEuD.js",
+      "type": "script",
+      "start": 715.6000000014901,
+      "end": 840.2000000011176,
+      "encoded": 10079,
+      "decoded": 29241,
+      "transfer": 10379
+    },
+    {
+      "name": "/assets/BloubAvatar-Dpgxdb_I.js",
+      "type": "script",
+      "start": 715.7000000011176,
+      "end": 872.8000000007451,
+      "encoded": 13127,
+      "decoded": 31339,
+      "transfer": 13427
+    },
+    {
+      "name": "/assets/index-DQe5JJE5.js",
+      "type": "script",
+      "start": 715.9000000003725,
+      "end": 903,
+      "encoded": 18783,
+      "decoded": 60696,
+      "transfer": 19083
+    },
+    {
+      "name": "/assets/GlobalInteractionProvider-C424ilaX.js",
+      "type": "script",
+      "start": 716.1000000014901,
+      "end": 779.7000000011176,
+      "encoded": 2587,
+      "decoded": 7417,
+      "transfer": 2887
+    },
+    {
+      "name": "/assets/confirmAction-DloJjWb9.js",
+      "type": "script",
+      "start": 716.2000000011176,
+      "end": 835.9000000003725,
+      "encoded": 8579,
+      "decoded": 23191,
+      "transfer": 8879
+    },
+    {
+      "name": "/assets/InformationCircleIcon-CUKxAkIj.js",
+      "type": "script",
+      "start": 716.3000000007451,
+      "end": 825.6000000014901,
+      "encoded": 543,
+      "decoded": 543,
+      "transfer": 843
+    },
+    {
+      "name": "/assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+      "type": "script",
+      "start": 716.6000000014901,
+      "end": 856.7000000011176,
+      "encoded": 332,
+      "decoded": 332,
+      "transfer": 632
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 721.5,
+      "end": 888.2000000011176,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/60BF6F3F-9EE3-42A1-A4B4-C2D8406CC461/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 731.3000000007451,
+      "end": 779.4000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 1474,
+      "end": 1611.2000000011176,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 1488.2000000011176,
+      "end": 1570.4000000003725,
+      "encoded": 314,
+      "decoded": 490,
+      "transfer": 614
+    },
+    {
+      "name": "/api/projects",
+      "type": "fetch",
+      "start": 1587.5,
+      "end": 1832.7000000011176,
+      "encoded": 1257,
+      "decoded": 8209,
+      "transfer": 1557
+    },
+    {
+      "name": "/api/me/preferences",
+      "type": "fetch",
+      "start": 1588,
+      "end": 1765.2000000011176,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/agents/autonomy",
+      "type": "fetch",
+      "start": 1588.2000000011176,
+      "end": 1821.7000000011176,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 1588.9000000003725,
+      "end": 1810.800000000745,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/projects/e2e-classroom/open",
+      "type": "fetch",
+      "start": 1834.6000000014901,
+      "end": 1963.6000000014901,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/api/participants",
+      "type": "fetch",
+      "start": 1967,
+      "end": 2155.10000000149,
+      "encoded": 2837,
+      "decoded": 12424,
+      "transfer": 3137
+    },
+    {
+      "name": "/api/im/channels",
+      "type": "fetch",
+      "start": 1967.7000000011176,
+      "end": 2208.9000000003725,
+      "encoded": 887,
+      "decoded": 3144,
+      "transfer": 1187
+    },
+    {
+      "name": "/api/im/bootstrap",
+      "type": "fetch",
+      "start": 2212.300000000745,
+      "end": 2328.9000000003725,
+      "encoded": 151,
+      "decoded": 167,
+      "transfer": 451
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 2213.2000000011176,
+      "end": 2361.7000000011176,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-BMXcfv_2.js",
+      "type": "script",
+      "start": 2215.9000000003725,
+      "end": 3920.60000000149,
+      "encoded": 688278,
+      "decoded": 2253640,
+      "transfer": 688578
+    },
+    {
+      "name": "/assets/avatar-Ci6hcVYP.js",
+      "type": "script",
+      "start": 2216.4000000003725,
+      "end": 2452.5,
+      "encoded": 37830,
+      "decoded": 114473,
+      "transfer": 38130
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-CojW92VU.css",
+      "type": "link",
+      "start": 2218.9000000003725,
+      "end": 2560,
+      "encoded": 55609,
+      "decoded": 164383,
+      "transfer": 55909
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/messages",
+      "type": "fetch",
+      "start": 2223.800000000745,
+      "end": 2391.7000000011176,
+      "encoded": 818,
+      "decoded": 3943,
+      "transfer": 1118
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/runs",
+      "type": "fetch",
+      "start": 2403.800000000745,
+      "end": 2529.5,
+      "encoded": 385,
+      "decoded": 1213,
+      "transfer": 685
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3A5178c8e6f8f1ad81b1aab2283cab66644d9a5c5a8ddc8674925be901254398dd/stream",
+      "type": "fetch",
+      "start": 2532.7000000011176,
+      "end": 2760,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Ad7bd2a987027c9a6dccda1da47588831b35ac65cc3a447e4a7fba112b5bbccd6/stream",
+      "type": "fetch",
+      "start": 2533.10000000149,
+      "end": 3008.4000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 300
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa9bc4b7b6a487f99cfce441e800da2891a4a28901934e2127e16968f371b7305/stream",
+      "type": "fetch",
+      "start": 2533.300000000745,
+      "end": 2887.4000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 300
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aac317c802cf1264013b50c894ecb546f1f1aaff1a976592f296976f81906e997/stream",
+      "type": "fetch",
+      "start": 2533.7000000011176,
+      "end": 2894.10000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 300
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aad742a298318f3d5b25d947ac63668e823daf925c9bb3c97c9db151e9cca1e79/stream",
+      "type": "fetch",
+      "start": 2534,
+      "end": 3019,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 300
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa12c83bbd449f1e0713884721dda3e778f041b134fec2f57e279c05ee3655021/stream",
+      "type": "fetch",
+      "start": 2534.2000000011176,
+      "end": 3234.4000000003725,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/60BF6F3F-9EE3-42A1-A4B4-C2D8406CC461/from",
+      "type": "xmlhttprequest",
+      "start": 2731.300000000745,
+      "end": 2759.4000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/60BF6F3F-9EE3-42A1-A4B4-C2D8406CC461/from",
+      "type": "xmlhttprequest",
+      "start": 3232.4000000003725,
+      "end": 3256.2000000011176,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 3394.2000000011176,
+      "end": 3488,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/60BF6F3F-9EE3-42A1-A4B4-C2D8406CC461/from",
+      "type": "xmlhttprequest",
+      "start": 3734.300000000745,
+      "end": 3766.4000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/highlighted-body-KPVGNVTW-9QY3hiBv.js",
+      "type": "script",
+      "start": 4170.60000000149,
+      "end": 4217.10000000149,
+      "encoded": 694,
+      "decoded": 694,
+      "transfer": 994
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 4230.9000000003725,
+      "end": 4417.10000000149,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 4275.10000000149,
+      "end": 4630.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 4293.60000000149,
+      "end": 4684.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 4295.200000001118,
+      "end": 4685.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 4297,
+      "end": 4692.200000001118,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 4298.300000000745,
+      "end": 4700.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 4299.60000000149,
+      "end": 4700.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 4305.700000001118,
+      "end": 4708.5,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/api/learning/spaces",
+      "type": "fetch",
+      "start": 4307.300000000745,
+      "end": 4686.200000001118,
+      "encoded": 1101,
+      "decoded": 7804,
+      "transfer": 1401
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 4365.700000001118,
+      "end": 4722.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/60BF6F3F-9EE3-42A1-A4B4-C2D8406CC461/from",
+      "type": "xmlhttprequest",
+      "start": 4372.5,
+      "end": 4417.60000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 4510.10000000149,
+      "end": 4753.300000000745,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/60BF6F3F-9EE3-42A1-A4B4-C2D8406CC461/from",
+      "type": "xmlhttprequest",
+      "start": 4976,
+      "end": 5027.10000000149,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/60BF6F3F-9EE3-42A1-A4B4-C2D8406CC461/from",
+      "type": "xmlhttprequest",
+      "start": 5477.800000000745,
+      "end": 5513.200000001118,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 5511.4000000003725,
+      "end": 5598,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 5576.9000000003725,
+      "end": 5690,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 15
+    }
+  ]
+}

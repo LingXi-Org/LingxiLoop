@@ -1,0 +1,161 @@
+{
+  "ready": 1040,
+  "workspace": 0,
+  "input": 1624.4000000003725,
+  "lcp": 1084,
+  "longTasks": 67,
+  "cls": 0,
+  "measuredAt": "2026-10-13T04:54:11.825Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 53.59999999962747,
+      "end": 828.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 53.90000000037253,
+      "end": 394.7999999988824,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/assets/index-rGT3Smlt.js",
+      "type": "script",
+      "start": 53.90000000037253,
+      "end": 750.6999999992549,
+      "encoded": 131818,
+      "decoded": 418537,
+      "transfer": 132118
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06BLoMI8_KsmF1t4kYWZzGmrKoMhscNbwx4OjLndmtXrXbay1mmnyg4pIGjI7RH-U2-M-_EgfiSGhcd962aWIww7A/init",
+      "type": "xmlhttprequest",
+      "start": 839.2999999988824,
+      "end": 890.2999999988824,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 888.2999999988824,
+      "end": 1122.0999999996275,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 904.4000000003725,
+      "end": 938.4000000003725,
+      "encoded": 55,
+      "decoded": 35,
+      "transfer": 355
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/8186C64D-3548-48ED-95B4-C199521D2674/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 907.9000000003725,
+      "end": 965.2999999988824,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 963.2999999988824,
+      "end": 1014.9000000003725,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/assets/transport-DJCi2B_H.js",
+      "type": "script",
+      "start": 972.4000000003725,
+      "end": 1401.4000000003725,
+      "encoded": 129291,
+      "decoded": 415012,
+      "transfer": 129591
+    },
+    {
+      "name": "/assets/realtime-BaGlrOE7.js",
+      "type": "script",
+      "start": 972.6999999992549,
+      "end": 1025.4000000003725,
+      "encoded": 1090,
+      "decoded": 2605,
+      "transfer": 1390
+    },
+    {
+      "name": "/assets/avatarCache-C52rAQGw.js",
+      "type": "script",
+      "start": 973,
+      "end": 1025.7999999988824,
+      "encoded": 789,
+      "decoded": 1588,
+      "transfer": 1089
+    },
+    {
+      "name": "/assets/state-NwrYfAup.js",
+      "type": "script",
+      "start": 973.1999999992549,
+      "end": 1025.9000000003725,
+      "encoded": 707,
+      "decoded": 1594,
+      "transfer": 1007
+    },
+    {
+      "name": "/assets/state-BNNvk9pE.js",
+      "type": "script",
+      "start": 973.4000000003725,
+      "end": 1075.5999999996275,
+      "encoded": 1242,
+      "decoded": 3038,
+      "transfer": 1542
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 992,
+      "end": 1198.5999999996275,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/logo.svg",
+      "type": "img",
+      "start": 1035.5999999996275,
+      "end": 1093.7999999988824,
+      "encoded": 2556,
+      "decoded": 5647,
+      "transfer": 2856
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/8186C64D-3548-48ED-95B4-C199521D2674/to/dp.onGetFields",
+      "type": "xmlhttprequest",
+      "start": 1622.4000000003725,
+      "end": 1697,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 11.699999999254942
+    }
+  ]
+}

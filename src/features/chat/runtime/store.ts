@@ -1,6 +1,6 @@
 import type { ThreadMessage } from '@assistant-ui/react'
 import { create } from 'zustand'
-import { getLingxiMessageMetadata, mergeProgressMessage, preserveMessageTime, type LingxiMessageMetadata } from './model'
+import { getLingxiMessageMetadata, mergeProgressMessage, preserveMessageTime, resolveMessagePresentation, type LingxiMessageMetadata } from './model'
 import { projectMessageGroups } from './converter'
 import { isRunMessage, isOlderRun } from './harness'
 
@@ -72,7 +72,14 @@ export function mergeCanonicalMessages(
       const old = before.harness, next = after.harness
       if (isOlderRun(old,next)) continue
       const receipt = after.sequence !== null ? after : before
-      byId.set(key,{ ...message, metadata: { ...message.metadata, custom: { ...after,
+      // Failed runs keep visible prose; cancellation, supersession and new attempts still retract it.
+      // shortcut: drafts survive only in this session; add durable recovery when they must survive a page reload.
+      const content = next.lifecycle === 'failed' && !next.resultId
+        && old.requestVersion === next.requestVersion && old.fence === next.fence && old.messageFence === next.messageFence
+        && !message.content.some(part => part.type === 'text' && part.text)
+        ? [...previous.content.filter(part => part.type === 'text'), ...message.content] : message.content
+      byId.set(key,{ ...message, content, metadata: { ...message.metadata, custom: { ...after,
+        presentation: resolveMessagePresentation(content),
         sequence: receipt.sequence, clientMessageId: receipt.clientMessageId, imMessageId: receipt.imMessageId,
         harnessControl: after.harnessControl ?? before.harnessControl } } } as ThreadMessage)
     } else byId.set(key,message)
@@ -98,9 +105,12 @@ export function mergeCanonicalMessages(
   }
   for (const [key,message] of byId) {
     const value = metadata(message), lastSent = lastSentByRun.get(runKey(value))
-    if (!isRunMessage(value) || !lastSent) continue
+    if (!isRunMessage(value)) continue
     // Sent messages use IM order; only the pending final reply needs an anchor after the latest send.
-    byId.set(key,patchMetadata(message,{ positionAfter: value.sequence === null ? messageKey(lastSent) : undefined }))
+    const anchor = lastSent ? messageKey(lastSent) : typeof value.sourceRef === 'string' ? value.sourceRef : undefined
+    if (anchor !== undefined) byId.set(key,patchMetadata(message,{
+      positionAfter: value.sequence === null ? anchor : undefined,
+    }))
   }
   const positioned = [...byId.values()].filter(message => metadata(message).positionAfter !== undefined)
   const sorted = [...byId.values()].filter(message => metadata(message).positionAfter === undefined).sort((left, right) => {

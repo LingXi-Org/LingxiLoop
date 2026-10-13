@@ -43,6 +43,7 @@ export function harnessFailure(reason: string): string {
     'Tool protocol correction exhausted': '模型未能生成有效的工具调用，修正次数已用尽。',
     'Tool execution failed after bounded correction': '工具执行失败，修正次数已用尽。',
     'Tool execution timed out': '工具执行超时。',
+    'The operation was aborted due to timeout': '回复生成超时，请重试。',
     'No valid answer was produced for the current request': '本次请求没有生成可交付的有效答复。',
     'Model returned an invalid response format': '模型返回了无效的答复格式。',
   }

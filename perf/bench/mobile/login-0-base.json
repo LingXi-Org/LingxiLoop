@@ -1,0 +1,180 @@
+{
+  "ready": 1755,
+  "workspace": 0,
+  "input": 1996,
+  "lcp": 1776,
+  "longTasks": 198,
+  "cls": 0,
+  "measuredAt": "2026-10-13T05:07:49.708Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "shifts": [],
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 57.899999998509884,
+      "end": 699.5999999996275,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-DFeRPGXH.js",
+      "type": "script",
+      "start": 58.59999999962747,
+      "end": 469,
+      "encoded": 63214,
+      "decoded": 200582,
+      "transfer": 63514
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 59,
+      "end": 437.09999999962747,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06BnQNMXoeDJucFG6wDmtvHbpV08LTo_qaxDakoQ8dJUSIsErVYOrW-3tzr_ZFYCRWWC91wTfDITDbuTSNOqlGpyg/init",
+      "type": "xmlhttprequest",
+      "start": 716,
+      "end": 749.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/App-DL78tVmi.js",
+      "type": "script",
+      "start": 743.5999999996275,
+      "end": 1363.2999999988824,
+      "encoded": 222147,
+      "decoded": 804553,
+      "transfer": 222447
+    },
+    {
+      "name": "/assets/button-BwrTsEuD.js",
+      "type": "script",
+      "start": 743.6999999992549,
+      "end": 856.3999999985099,
+      "encoded": 10079,
+      "decoded": 29241,
+      "transfer": 10379
+    },
+    {
+      "name": "/assets/BloubAvatar-Dpgxdb_I.js",
+      "type": "script",
+      "start": 743.8999999985099,
+      "end": 884.6999999992549,
+      "encoded": 13127,
+      "decoded": 31339,
+      "transfer": 13427
+    },
+    {
+      "name": "/assets/index-DQe5JJE5.js",
+      "type": "script",
+      "start": 744,
+      "end": 930.1999999992549,
+      "encoded": 18783,
+      "decoded": 60696,
+      "transfer": 19083
+    },
+    {
+      "name": "/assets/GlobalInteractionProvider-C424ilaX.js",
+      "type": "script",
+      "start": 744.1999999992549,
+      "end": 808.8999999985099,
+      "encoded": 2587,
+      "decoded": 7417,
+      "transfer": 2887
+    },
+    {
+      "name": "/assets/confirmAction-DloJjWb9.js",
+      "type": "script",
+      "start": 744.3999999985099,
+      "end": 869.3999999985099,
+      "encoded": 8579,
+      "decoded": 23191,
+      "transfer": 8879
+    },
+    {
+      "name": "/assets/InformationCircleIcon-CUKxAkIj.js",
+      "type": "script",
+      "start": 744.5,
+      "end": 855.8999999985099,
+      "encoded": 543,
+      "decoded": 543,
+      "transfer": 843
+    },
+    {
+      "name": "/assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+      "type": "script",
+      "start": 744.6999999992549,
+      "end": 900.2999999988824,
+      "encoded": 332,
+      "decoded": 332,
+      "transfer": 632
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 749.5999999996275,
+      "end": 914.5,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/DEB2EC1B-7008-4318-8F0F-14ACB551CF9C/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 761.6999999992549,
+      "end": 808.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 1548.2999999988824,
+      "end": 1701.699999999255,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 1564.5,
+      "end": 1687.3999999985099,
+      "encoded": 55,
+      "decoded": 35,
+      "transfer": 355
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 1700,
+      "end": 1802.2999999988824,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/logo.svg",
+      "type": "img",
+      "start": 1753.699999999255,
+      "end": 1796,
+      "encoded": 2556,
+      "decoded": 5647,
+      "transfer": 2856
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 13.099999999627471
+    }
+  ]
+}

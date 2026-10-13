@@ -135,6 +135,8 @@ YAML 中 `light-*` 和 `dark-*` 是对应主题的明确色值，映射到 `src/
 
 内容文字使用 foreground，辅助信息使用 muted-foreground。主按钮、未读标记和当前功能强调使用 primary。危险操作使用 destructive，成功、警告与图表继续使用现有语义变量，不以角色颜色表示权限。
 
+人类对话气泡独立于按钮配色，参考 [WhatsApp 默认气泡配色](https://chatmock.net/blog/messaging-app-ui-colour-reference)。浅色发送/接收背景为 `#D9FDD3` / `#FFFFFF`，正文 `#111B21`、辅助文字 `#52666B`；深色发送/接收背景为 `#005C4B` / `#202C33`，正文 `#E9EDEF`、辅助文字 `#C3D1D7`。色号来自第三方界面参考，并非官方跨版本规范；辅助文字按对比度调整。浅色气泡使用细微内描边，与白色聊天背景区分。
+
 选中会话使用 `color-mix(in srgb, var(--primary) 12%, var(--sidebar))`，文字保持 foreground，并有可见的绿色选中标识。使用 sRGB 混色避免中性底面的 Oklch 色相使浅绿偏色。悬停使用 accent；悬停、选中与键盘焦点必须能区分。工作区外层使用 `color-mix(in oklch, var(--background) 96%, var(--foreground))`。
 
 普通文字对背景至少达到 WCAG AA 的 4.5:1。浅色辅助文字使用更深的中性色。半透明背景按实际合成后的颜色检查，不仅检查源色。不能仅用颜色传达未读、错误、只读或选中状态。

@@ -16,6 +16,7 @@ import { ConversationStart } from './ConversationStart'
 import { ConversationSkeleton } from './ConversationSkeleton'
 import { messageKey } from '../runtime/store'
 import { chatLatency } from '../runtime/latency'
+import type { LingxiMessageMetadata } from '../runtime/model'
 
 const MESSAGE_COMPONENTS = { Message: ConversationMessage }
 
@@ -53,6 +54,7 @@ export function ConversationThread({
   const lastReadSequenceRef = useRef(0)
   const pendingJumpId = useConversationUi((state) => state.pendingJumpMessageId)
   const clearPendingJump = useConversationUi((state) => state.clearPendingJump)
+  const selectReplyBranch = useConversationUi(state => state.selectReplyBranch)
   useEffect(() => {
     const scope = `${conversationId}:${threadRootId ?? ''}`
     const messages = runtimeMessages.filter(message => message.metadata.custom.schema === 'lingxiloop.thread-message.v2')
@@ -160,34 +162,41 @@ export function ConversationThread({
     if (!pendingJumpId) return
     const viewport = viewportRef.current
     const element = viewport?.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(pendingJumpId)}"]`)
-    if (!element) return
+    if (!element) {
+      const branch = snapshot.messages.map(message => (message.metadata.custom as LingxiMessageMetadata).replyBranches)
+        .find(branch => branch?.clientIds.includes(pendingJumpId))
+      if (branch) selectReplyBranch(branch.key, branch.ids[branch.clientIds.indexOf(pendingJumpId)], branch.ids.at(-1)!)
+      return
+    }
     element.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
     element.classList.add('quote-jump-flash')
     window.setTimeout(() => element.classList.remove('quote-jump-flash'), 1_100)
     clearPendingJump()
-  }, [clearPendingJump, pendingJumpId, snapshot.messages])
+  }, [clearPendingJump, pendingJumpId, selectReplyBranch, snapshot.messages])
 
   return (
     <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread>
       <ThreadPrimitive.Viewport ref={viewportRef} data-chat-viewport className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
-        {!threadRootId && (
-          <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
-            {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
-              <ConversationStart createdAt={snapshot.messages[0]?.createdAt} timestampMissing={snapshot.messages[0]?.metadata.custom.timestampMissing === true} />
-            )}
-          </div>
-        )}
-        <ThreadPrimitive.Empty>
-          {snapshot.isLoading && !snapshot.error ? <ConversationSkeleton /> : <div className="ui-enter grid flex-1 place-items-center px-8 py-20 text-center text-sm text-muted-foreground">
-            {snapshot.error ? (
-              <div role="alert" className="grid gap-3">
-                <span>{userFacingError(snapshot.error, '消息加载失败，请稍后重试。')}</span>
-                <Button size="sm" onClick={() => void chatTransport.reloadConversation(conversationId)}>重试</Button>
-              </div>
-            ) : threadRootId ? '尚无回复' : '开始一段新对话'}
-          </div>}
-        </ThreadPrimitive.Empty>
-        <ConversationMessages />
+        <div data-chat-message-column className="flex min-h-full shrink-0 flex-col">
+          {!threadRootId && (
+            <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
+              {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
+                <ConversationStart createdAt={snapshot.messages[0]?.createdAt} timestampMissing={snapshot.messages[0]?.metadata.custom.timestampMissing === true} />
+              )}
+            </div>
+          )}
+          <ThreadPrimitive.Empty>
+            {snapshot.isLoading && !snapshot.error ? <ConversationSkeleton /> : <div className="ui-enter grid flex-1 place-items-center px-8 py-20 text-center text-sm text-muted-foreground">
+              {snapshot.error ? (
+                <div role="alert" className="grid gap-3">
+                  <span>{userFacingError(snapshot.error, '消息加载失败，请稍后重试。')}</span>
+                  <Button size="sm" onClick={() => void chatTransport.reloadConversation(conversationId)}>重试</Button>
+                </div>
+              ) : threadRootId ? '尚无回复' : '开始一段新对话'}
+            </div>}
+          </ThreadPrimitive.Empty>
+          <ConversationMessages />
+        </div>
       </ThreadPrimitive.Viewport>
       {!readOnly && <div className={`relative z-20 shrink-0 ${isMobile ? 'bg-background pt-2' : 'bg-gradient-to-t from-background via-background to-transparent pt-4'}`} data-chat-composer-bar>
         <ConversationComposer
@@ -203,6 +212,7 @@ export function ConversationThread({
           size="icon"
           className="absolute bottom-24 end-5 z-10 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:invisible md:size-9"
           aria-label="滚动到底部"
+          data-chat-scroll-bottom
         >
           <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
         </Button>

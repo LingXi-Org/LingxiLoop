@@ -1,7 +1,8 @@
 import { ActionBarPrimitive, useAui, useAuiState } from '@assistant-ui/react'
 import { Copy01Icon, ReplyIcon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useState } from 'react'
+import { type RefObject, useEffect, useState } from 'react'
+import { confidenceCopyText, type MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -60,4 +61,35 @@ export function MessageActions({ isMine, getText, className }: { isMine: boolean
       </Button>
     </ActionBarPrimitive.Root>
   )
+}
+
+export function useMessageCopyText(bodyRef: RefObject<HTMLElement | null>) {
+  const inlineCitations = useAuiState(state => Boolean(state.message.metadata.custom.runId))
+  const rawText = useAuiState((state) => state.message.content
+    .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
+    .map((part) => part.text)
+    .join('\n'))
+  const confidenceClaims = useAuiState((state) => {
+    const part = state.message.content.find((part) => part.type === 'data' && part.name === 'citation-claims')
+    if (part?.type !== 'data' || !part.data || typeof part.data !== 'object') return undefined
+    const claims = (part.data as { claims?: unknown }).claims
+    return Array.isArray(claims) ? claims as MarkdownConfidenceClaim[] : undefined
+  })
+  const getText = () => {
+    const body = bodyRef.current?.closest('.native-message-content')
+      ?? bodyRef.current?.closest('[data-msg-id]')?.querySelector('.native-message-content')
+    if (inlineCitations) {
+      const ranges = Array.from(body?.querySelectorAll<HTMLElement>('[data-citation-start]') ?? []).filter(node => node.closest('.native-message-content') === body).flatMap(node => {
+        const start = Number(node.dataset.citationStart), end = Number(node.dataset.citationEnd)
+        const link = /^\[([\s\S]+)\]\(#cite-[^)]*\)$/.exec(rawText.slice(start, end))
+        return link && Number.isSafeInteger(start) && Number.isSafeInteger(end) && end <= rawText.length
+          ? [{ start, end, text: node.dataset.citationHidden ? '' : link[1] }] : []
+      })
+      return confidenceCopyText(rawText, ranges)
+    }
+    const renderedIds = new Set(Array.from(body?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [])
+      .filter(node => node.closest('.native-message-content') === body).map(node => node.dataset.confidenceId))
+    return confidenceCopyText(rawText, confidenceClaims?.filter(claim => renderedIds.has(claim.id)))
+  }
+  return { rawText, confidenceClaims, getText }
 }

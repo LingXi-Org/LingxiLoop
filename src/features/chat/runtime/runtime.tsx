@@ -13,6 +13,8 @@ import type { ConversationThreadSnapshot } from './model'
 import { EMPTY_CONVERSATION_CHAT_STATE, useChatThreadStore } from './store'
 import { chatTransport, filterThreadMessages } from './transport'
 import { uploadedAttachment } from './attachment-messages'
+import { projectReplyBranches } from './reply-branches'
+import { useConversationUi } from '@/stores/conversationUi'
 
 type UploadedAttachment = PendingAttachment & {
   apiAttachment: Awaited<ReturnType<typeof uploadsApi.uploadFile>>
@@ -46,9 +48,10 @@ export function useConversationThreadSnapshot(
   const state = useChatThreadStore((store) => (
     store.conversations[conversationId] ?? EMPTY_CONVERSATION_CHAT_STATE
   ))
+  const selectedReplyBranches = useConversationUi(state => state.selectedReplyBranches)
   const messages = useMemo(
-    () => filterThreadMessages(state.messages, threadRootId),
-    [state.messages, threadRootId],
+    () => filterThreadMessages(projectReplyBranches(state.messages, selectedReplyBranches), threadRootId),
+    [state.messages, selectedReplyBranches, threadRootId],
   )
   const activeRuns = useMemo(
     () => Object.values(state.activeRuns).filter((run) => run.state === 'queued' || run.state === 'running'),

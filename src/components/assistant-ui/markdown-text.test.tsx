@@ -5,6 +5,10 @@ import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, Mes
 import { confidenceCopyText, MarkdownText, type MarkdownConfidenceClaim } from './markdown-text'
 import { ConfidenceMarker } from './elements/confidence-marker'
 
+// Markdown assertions ignore the decorative word wrappers; browser tests check their animation.
+const renderMarkdown: typeof renderToStaticMarkup = element => renderToStaticMarkup(element)
+  .replace(/<span data-streaming-word="">([^<]*)<\/span>/g, '$1')
+
 function Text() { return <MarkdownText agent /> }
 function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
 function Preview({ text, content, running, claims, inlineCitations, interrupted = false }: { text: string; content?: Extract<ThreadMessage, { role: 'assistant' }>['content']; running: boolean; claims?: MarkdownConfidenceClaim[]; inlineCitations?: boolean; interrupted?: boolean }) {
@@ -23,7 +27,7 @@ test('streamed prose and incomplete Markdown blocks appear before completion', (
   ] as const) {
     for (const inlineCitations of [true, false]) {
       for (const running of [true, false]) {
-        const html = renderToStaticMarkup(<Preview text={text} running={running} inlineCitations={inlineCitations} />)
+        const html = renderMarkdown(<Preview text={text} running={running} inlineCitations={inlineCitations} />)
         assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
         assert.ok(html.includes('第一段'))
       }
@@ -39,7 +43,7 @@ test('mixed message text keeps global citation positions and copy across non-tex
   const claims = [...text.matchAll(/\[事实\]\(#cite-S1\)/g)].map((match, index) => ({
     id: `mixed:${index}`, text: '事实', confidence: 'grounded' as const, basis: `证据 ${index}`, markers: ['S1'], start: match.index, end: match.index + match[0].length,
   }))
-  const html = renderToStaticMarkup(<Preview text={text} content={[
+  const html = renderMarkdown(<Preview text={text} content={[
     { type: 'text', text: first }, { type: 'data', name: 'separator', data: {} }, { type: 'text', text: second },
   ]} running={false} claims={claims} inlineCitations />)
   assert.deepEqual([...html.matchAll(/data-confidence-id="([^"]+)"/g)].map(match => match[1]), ['mixed:0', 'mixed:1'])
@@ -52,7 +56,7 @@ test('lists and paragraphs retain their semantic layout without bubble wrappers'
   for (const lead of ['学习方面', '**学习方面**', '## 学习方面']) {
     for (const list of ['- 一\n- 二', '1. 一\n2. 二']) {
       for (const running of [false, true]) {
-        const html = renderToStaticMarkup(<Preview text={`${lead}\n\n${list}\n\n接下来`} running={running} />)
+        const html = renderMarkdown(<Preview text={`${lead}\n\n${list}\n\n接下来`} running={running} />)
         assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
         assert.match(html, /学习方面[\s\S]*<\/(?:p|h2)>\s*<(?:ul|ol)/)
         assert.ok(html.includes('接下来'))
@@ -64,22 +68,22 @@ test('lists and paragraphs retain their semantic layout without bubble wrappers'
 test('unfinished structural blocks remain visible during streaming and interruption', () => {
   for (const tail of ['- 一\n\n- 二', '> 引用\n>\n> 继续', '```js\nconst x = 1\n\n', '| 表头 |\n| --- |\n| 值 |']) {
     for (const interrupted of [false, true]) {
-      const html = renderToStaticMarkup(<Preview text={`已展示\n\n${tail}`} running={!interrupted} interrupted={interrupted} inlineCitations />)
+      const html = renderMarkdown(<Preview text={`已展示\n\n${tail}`} running={!interrupted} interrupted={interrupted} inlineCitations />)
       assert.match(html, /已展示/)
       assert.match(html, /<ul|<blockquote|<table|<pre/)
     }
   }
 })
 
-test('only live agent text uses native reveal and shimmer; settled and interrupted text is static', () => {
+test('only live agent text enables the streaming tail; settled and interrupted text is static', () => {
   for (const running of [false, true]) {
-    const html = renderToStaticMarkup(<Preview text="完整消息" running={running} />)
-    assert.equal(html.includes('data-sd-animate='), running)
-    assert.equal(html.includes('motion-safe:shimmer'), running)
+    const html = renderMarkdown(<Preview text="完整消息" running={running} />)
+    assert.equal(html.includes('data-streaming="true"'), running)
+    assert.doesNotMatch(html, /motion-safe:shimmer/)
     assert.doesNotMatch(html, /data-bubble-enter|im-markdown-bubble/)
   }
-  const interrupted = renderToStaticMarkup(<Preview text="中断正文" running={false} interrupted />)
-  assert.doesNotMatch(interrupted, /data-sd-animate=|motion-safe:shimmer/)
+  const interrupted = renderMarkdown(<Preview text="中断正文" running={false} interrupted />)
+  assert.doesNotMatch(interrupted, /data-streaming="true"|motion-safe:shimmer/)
 })
 
 test('committed citations preserve Markdown and normal links, with one shared basis slot', () => {
@@ -88,7 +92,7 @@ test('committed citations preserve Markdown and normal links, with one shared ba
     id: `run:result:${index}`, text: match[1], confidence: 'grounded' as const, basis: '真实来源 · 版本 7',
     markers: match[2].split(','), start: match.index, end: match.index + match[0].length,
   }))
-  const html = renderToStaticMarkup(<Preview text={text} running={false} claims={claims} />)
+  const html = renderMarkdown(<Preview text={text} running={false} claims={claims} />)
   assert.equal((html.match(/data-confidence-id=/g) ?? []).length, 3)
   assert.equal((html.match(/data-slot="confidence-basis"/g) ?? []).length, 1)
   assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
@@ -110,7 +114,7 @@ test('committed citations preserve Markdown and normal links, with one shared ba
 test('only the active occurrence describes its fixed, accessible basis region', () => {
   const claims = ['first', 'second'].map(id => ({ id, text: '同一来源', confidence: 'grounded' as const, basis: 'source · 版本 v1' }))
   for (const hoveredId of ['', 'first', 'second', 'stale']) {
-    const html = renderToStaticMarkup(<ConfidenceMarker claims={claims} hoveredId={hoveredId} onHover={() => {}} />)
+    const html = renderMarkdown(<ConfidenceMarker claims={claims} hoveredId={hoveredId} onHover={() => {}} />)
     const active = hoveredId === 'first' || hoveredId === 'second'
     assert.equal((html.match(/aria-describedby=/g) ?? []).length, active ? 1 : 0)
     assert.equal(html.includes('source · 版本 v1'), active)
@@ -129,7 +133,7 @@ test('copying and quoting strip only supplied citation spans', () => {
   const claims: MarkdownConfidenceClaim[] = [{ id: 'a', text: '事实', confidence: 'grounded', basis: '资料', markers: ['S1'], start, end: start + '[事实](#cite-S1)'.length }]
   assert.equal(confidenceCopyText(text, claims), '普通 事实 和 [网页](https://example.com)')
   assert.equal(confidenceCopyText(text), text)
-  const html = renderToStaticMarkup(<Preview text="没有引用" running={false} />)
+  const html = renderMarkdown(<Preview text="没有引用" running={false} />)
   assert.doesNotMatch(html, /confidence-basis|data-confidence-id/)
 })
 
@@ -139,7 +143,7 @@ test('citation excerpts render safe compact Markdown while source titles remain 
       excerpt: '**重点**\n\n- 列表\n\n> 引用\n\n`inline`\n\n```js\nconst x = 1\n```\n\n| 列 |\n| --- |\n| 值 |\n\n[安全](https://example.com) [危险](javascript:alert%281%29)\n\n<script>alert(1)</script>\n\n![图片](https://example.com/track.png)' },
     { marker: 'S2', chunkId: 'two', title: '第二片段', excerpt: '另一个段落。' },
   ] }
-  const html = renderToStaticMarkup(<ConfidenceMarker claims={[claim]} hoveredId="first" onHover={() => {}} />)
+  const html = renderMarkdown(<ConfidenceMarker claims={[claim]} hoveredId="first" onHover={() => {}} />)
   for (const pattern of [/<strong>重点<\/strong>/, /<ul>/, /<blockquote>/, /<code>inline<\/code>/,
     /<pre>/, /<table/, /overflow-x-auto/, /href="https:\/\/example.com"/, /\*\*标题\*\* &lt;img src=x&gt;/, /节选/, /第二片段/]) assert.match(html, pattern)
   assert.doesNotMatch(html, /<script|<img|javascript:|legacy fallback/)
@@ -151,7 +155,7 @@ test('new citations underline answer wording and consume internal links before L
   const matches = [...text.matchAll(/\[([^\]\n]+)\]\(#cite-(S\d+(?:,S\d+)*)\)/g)]
   const claims = matches.slice(0, 3).map((match, index) => ({ id: `claim:${index}`, text: match[1], confidence: 'grounded' as const,
     basis: '学习指南\n实际检索的原文。', markers: [...new Set(match[2].split(','))], start: match.index, end: match.index + match[0].length }))
-  const html = renderToStaticMarkup(<Preview text={text} running={false} claims={claims} inlineCitations />)
+  const html = renderMarkdown(<Preview text={text} running={false} claims={claims} inlineCitations />)
   assert.equal((html.match(/data-confidence-id=/g) ?? []).length, 3)
   assert.equal((html.match(/data-streamdown="link"/g) ?? []).length, 1)
   assert.doesNotMatch(html, /data-slot="confidence-basis"|h-32/)
@@ -172,14 +176,14 @@ test('new citations underline answer wording and consume internal links before L
 
 test('new drafts show only body text and never activate citation navigation or stale confidence', () => {
   for (const running of [true, false]) {
-    const html = renderToStaticMarkup(<Preview text={'[间隔复习](#cite-S1) [【S2】](#cite-S2) [**【S2】**](#cite-S2)\n\n第二段\n\n'} running={running} inlineCitations />)
+    const html = renderMarkdown(<Preview text={'[间隔复习](#cite-S1) [【S2】](#cite-S2) [**【S2】**](#cite-S2)\n\n第二段\n\n'} running={running} inlineCitations />)
     assert.match(html, /间隔复习/)
     assert.ok(html.includes('第二段'))
     assert.doesNotMatch(html, /data-streamdown="link"|data-confidence-id|confidence-basis|【S2】/)
     assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
   }
   const claims = [{ id: 'source', text: '间隔复习', confidence: 'grounded' as const, basis: '来源标题\n原文第一段。\n<script>只是原文</script>' }]
-  const html = renderToStaticMarkup(<ConfidenceMarker claims={claims} hoveredId="source" onHover={() => {}} />)
+  const html = renderMarkdown(<ConfidenceMarker claims={claims} hoveredId="source" onHover={() => {}} />)
   assert.match(html, /原文第一段。/)
   assert.match(html, /&lt;script&gt;只是原文&lt;\/script&gt;/)
   assert.doesNotMatch(html, /<script>/)
@@ -189,7 +193,7 @@ test('cached Markdown processors keep each message and regenerated claim identit
   const text = '[间隔复习有助记忆](#cite-S1)'
   for (const id of ['message-a', 'message-b', 'message-a-retry']) {
     const claim = { id, text: '间隔复习有助记忆', confidence: 'grounded' as const, basis: `原文 ${id}`, markers: ['S1'], start: 0, end: text.length }
-    const html = renderToStaticMarkup(<Preview text={text} running={false} claims={[claim]} inlineCitations />)
+    const html = renderMarkdown(<Preview text={text} running={false} claims={[claim]} inlineCitations />)
     assert.deepEqual([...html.matchAll(/data-confidence-id="([^"]+)"/g)].map(match => match[1]), [id])
     assert.doesNotMatch(html, /data-streamdown="link"/)
   }

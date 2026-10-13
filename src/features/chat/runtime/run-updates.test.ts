@@ -156,15 +156,43 @@ test('a run discovered after a sent message owns a separate preview and cannot e
   }
 })
 
-test('a failure discards the uncommitted preview while retaining the specific error', () => {
+test('a failure retains streamed text and the specific error across snapshot replay', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
   state = applyRunUpdate(state,target,event('完整段落\n\n尚未完成的尾段'),participants.agent)
   state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 8,kind: 'run.failed',stage: 'failed',visibility: 'user',
-    data: { error: 'Final assessment protocol correction exhausted' } } },participants.agent)
+    data: { error: 'The operation was aborted due to timeout' } } },participants.agent)
   assert.deepEqual(state.activeRuns,{})
-  assert.deepEqual(state.messages[0].content,[])
+  const content = [{ type: 'text', text: '完整段落\n\n尚未完成的尾段' }]
+  assert.deepEqual(state.messages[0].content,content)
   assert.deepEqual(state.messages[0].status,{ type: 'incomplete',reason: 'error' })
-  assert.equal(metadata(state.messages[0]).harnessError,'Final assessment protocol correction exhausted')
+  assert.equal(metadata(state.messages[0]).harnessError,'The operation was aborted due to timeout')
+  state = applyRunUpdate(state,target,{ type: 'state',state: { ...snapshot('run','failed'), run: {
+    ...snapshot('run','failed').run, error: 'The operation was aborted due to timeout',
+  } } },participants.agent)
+  assert.deepEqual(state.messages[0].content,content)
+  assert.deepEqual(mergeCanonicalMessages(state.messages,state.messages)[0].content,content)
+  state = applyRunUpdate(state,target,{ type: 'state',state: { ...snapshot('run','leased'), run: {
+    ...snapshot('run','leased').run, fence: 2, requestVersion: 2,
+  } } },participants.agent)
+  assert.deepEqual(state.messages[0].content,[])
+})
+
+test('live replies follow the triggering user despite clock skew, late receipts and late source events', () => {
+  let state = { ...EMPTY_CONVERSATION_CHAT_STATE, messages: [user('older',1,0),user('first',null,5000)] }
+  state = applyRunUpdate(state,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
+  assert.deepEqual(state.messages.map(message => message.id),['older','first','run-run'])
+  state = applyRunUpdate(state,target,event('正在回答'),participants.agent)
+  state = { ...state,messages: mergeCanonicalMessages(state.messages,[user('followup',3,6000)]) }
+  state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 2,kind: 'run.started',stage: 'started',visibility: 'user',data: { sourceRef: 'first' } } },participants.agent)
+  state = { ...state,messages: mergeCanonicalMessages(state.messages,[user('first',2,5000)]) }
+  assert.deepEqual(state.messages.map(message => message.id),['older','first','run-run','followup'])
+
+  projections.clear()
+  state = applyRunUpdate({ ...EMPTY_CONVERSATION_CHAT_STATE,messages: [user('older',1,0)] },target,
+    { type: 'state',state: snapshot('run','leased') },participants.agent)
+  state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 1,kind: 'run.started',stage: 'started',visibility: 'user',data: { sourceRef: 'first' } } },participants.agent)
+  state = { ...state,messages: mergeCanonicalMessages(state.messages,[user('first',2,5000),user('followup',3,6000)]) }
+  assert.deepEqual(state.messages.map(message => message.id),['older','first','run-run','followup'])
 })
 
 test('a live reply keeps its anchor until canonical delivery establishes IM order', () => {
