@@ -1,11 +1,47 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { matchesGlob } from 'node:path'
+import { dirname, matchesGlob, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import test from 'node:test'
+import ts from 'typescript'
 import { computeScope } from './ci-scope.mjs'
 import { updateImageTags } from './update-deployment-images.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
+
+// Failure: development resolves shared imports that the production image never copies.
+test('server image includes the complete shared runtime import graph', () => {
+  const root = fileURLToPath(new URL('../', import.meta.url))
+  const copied = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1).split(/\r?\n/)
+    .filter(line => /^COPY src[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
+  const pending = ts.sys.readDirectory(resolve(root, 'server/src'), ['.ts'], ['**/*.test.ts', '**/__tests__/**', '**/__integration__/**'])
+  const visited = new Set(), missing = new Set()
+  for (const file of pending) {
+    if (visited.has(file)) continue
+    visited.add(file)
+    const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true)
+    const visit = node => {
+      let specifier
+      if (ts.isImportDeclaration(node) && !node.importClause?.isTypeOnly
+        && (!node.importClause?.namedBindings || !ts.isNamedImports(node.importClause.namedBindings)
+          || node.importClause.name || node.importClause.namedBindings.elements.some(item => !item.isTypeOnly))) specifier = node.moduleSpecifier
+      if (ts.isExportDeclaration(node) && !node.isTypeOnly
+        && (!node.exportClause || !ts.isNamedExports(node.exportClause) || node.exportClause.elements.some(item => !item.isTypeOnly))) specifier = node.moduleSpecifier
+      if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) specifier = node.arguments[0]
+      if (specifier && ts.isStringLiteral(specifier) && specifier.text.startsWith('.')) {
+        const target = resolve(dirname(file), specifier.text.replace(/\.js$/, '.ts'))
+        const path = relative(root, target).replaceAll('\\', '/')
+        if (path.startsWith('src/lib/')) {
+          if (!copied.some(item => path === item || path.startsWith(`${item}/`))) missing.add(path)
+          pending.push(target)
+        }
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(source)
+  }
+  assert.deepEqual([...missing].sort(), [])
+})
 
 test('production Open Notebook receives only the explicit RAG environment', () => {
   const compose = read('deploy/komodo/lingxiloop-knowledge-agent/compose.yml')
