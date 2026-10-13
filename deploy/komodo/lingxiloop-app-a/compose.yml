@@ -7,7 +7,7 @@ x-logging: &logging
     max-file: "3"
 
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:0f856f4f2d3934f1dfac2a61c9bf53cda87eafeb
+  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:515400eaabd5b990bbf0148a85d99d103fde77d9
   pull_policy: always
   restart: unless-stopped
   environment: &runtime-environment
@@ -42,6 +42,7 @@ x-runtime: &runtime
     AGENT_OS_MAX_MODEL_TOKENS: ${AGENT_OS_MAX_MODEL_TOKENS:-1000000}
     AGENT_OS_MAX_MODEL_COST_MICROS: ${AGENT_OS_MAX_MODEL_COST_MICROS:-10000000}
     AGENT_OS_MAX_WORK_MS: ${AGENT_OS_MAX_WORK_MS:-1800000}
+    AGENT_OS_MODEL_REQUEST_TIMEOUT_MS: ${AGENT_OS_MODEL_REQUEST_TIMEOUT_MS:-90000}
     AGENT_OS_INPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_INPUT_COST_MICROS_PER_MILLION:?AGENT_OS_INPUT_COST_MICROS_PER_MILLION is required}
     AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION:?AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION is required}
     SILICONFLOW_USD_CNY_RATE: ${SILICONFLOW_USD_CNY_RATE:?SILICONFLOW_USD_CNY_RATE is required}
