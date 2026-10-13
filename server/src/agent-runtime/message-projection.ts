@@ -3,8 +3,9 @@ import { responseSegments, type RunEvent, type RunView } from '@lyyzka/lingxios/
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { assertLessonCitationSpans, projectLessonText } from './interactive-ui-projection.js'
+import { publicActivitySchema, toolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
-export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number }
+export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; display?: ToolDisplay }
 export interface MarkdownConfidenceClaim {
   id: string
   text: string
@@ -24,7 +25,7 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
     const id = event.data.toolCallId
     if (typeof id !== 'string' || !id.startsWith('host:')) continue
     if (event.kind === 'tool.started' && typeof event.data.name === 'string' && !calls.has(id)) {
-      calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: event.data.name,args: {},argsText: '{}',eventSeq: event.seq })
+      calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: event.data.name,args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq })
     }
     const previous = calls.get(id)
     if (event.kind === 'tool.completed' && previous && event.seq > (previous.eventSeq ?? 0) && event.data.result && typeof event.data.result === 'object') {
@@ -33,19 +34,60 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
       calls.set(id,{ ...previous,eventSeq: event.seq,result: { status: Reflect.get(result,'status'),
         ...(cardValue === undefined ? {} : { value: cardValue }),
         ...(previous.toolName === 'research.search' ? { sources: researchSources(value) } : {}),
-        ...(previous.toolName.startsWith('knowledge.') && value && typeof value === 'object' ? { sourceStatus: Reflect.get(value,'status') } : {}) },isError: event.data.isError === true,
+        ...(previous.toolName.startsWith('knowledge.') && value && typeof value === 'object' ? { sourceStatus: Reflect.get(value,'status') } : {}),
+        ...(previous.toolName === 'chat.report_progress' && publicActivitySchema.safeParse(value).success ? { activity: publicActivitySchema.parse(value) } : {}),
+      },isError: event.data.isError === true,
         ...(typeof Reflect.get(result,'approvalId') === 'string' ? { approval: { id: String(Reflect.get(result,'approvalId')) } } : {}) })
     }
   }
-  return [...calls.values()].slice(-256)
+  return [...calls.values()].sort((a, b) => (a.startedSeq ?? a.eventSeq ?? 0) - (b.startedSeq ?? b.eventSeq ?? 0))
+}
+function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Omit<ActivityAnnotation, 'version'>): T {
+  return { ...part, providerMetadata: { ...('providerMetadata' in part ? part.providerMetadata : {}),
+    lingxiloop: { activity: { version: 1, ...annotation } } } }
+}
+function activityParts(view: RunView, tools: readonly HarnessToolPart[]): ThreadAssistantMessagePart[] {
+  const parts = new Map<string, ThreadAssistantMessagePart>()
+  for (const { eventSeq: _eventSeq, startedSeq: _startedSeq, display: recordedDisplay, ...tool } of tools) {
+    const result = tool.result && typeof tool.result === 'object' ? tool.result : undefined
+    const explanation = publicActivitySchema.safeParse(result && Reflect.get(result, 'activity'))
+    if (tool.toolName === 'chat.report_progress' && explanation.success) {
+      const entry = explanation.data, id = `public:${entry.id}`
+      if (entry.kind === 'plan' && entry.plan) {
+        parts.set(id, annotated({ type: 'generative-ui', id, spec: { root: { component: 'agent-plan', props: { title: entry.label, ...entry.plan } } } },
+          { id, kind: 'commentary', label: entry.label }))
+        continue
+      }
+      const status = entry.state === 'complete' ? { type: 'complete' as const }
+        : view.lifecycle === 'cancelled' || view.lifecycle === 'failed' ? { type: 'incomplete' as const, reason: view.lifecycle === 'cancelled' ? 'cancelled' as const : 'error' as const }
+        : view.lifecycle === 'succeeded' ? { type: 'incomplete' as const, reason: 'other' as const } : { type: 'running' as const }
+      parts.set(id, annotated({ type: entry.kind === 'reasoning' ? 'reasoning' : 'text', text: entry.text, status,
+        ...(entry.kind === 'reasoning' ? { unstable_summary: entry.label } : {}) }, { id, kind: 'commentary', label: entry.label }))
+      continue
+    }
+    // A completed progress report is represented by its explicit explanation,
+    // while a pending/failed report remains an honest ordinary tool activity.
+    const stopped = tool.result === undefined && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed')
+    const projected = stopped ? { ...tool, result: { status: view.lifecycle }, isError: view.lifecycle === 'failed' } : tool
+    const status = projected.result && typeof projected.result === 'object' ? Reflect.get(projected.result, 'status') : undefined
+    const display = { ...toolDisplay(tool.toolName, status), ...recordedDisplay }
+    if (status !== 'completed') display.summary = toolDisplay(tool.toolName, status).summary
+    const attention = !!tool.approval || !!tool.interrupt || projected.isError || ['failed', 'cancelled', 'unknown'].includes(String(status))
+    parts.set(tool.toolCallId, annotated({ ...projected, args: { fields: display.input ?? [] }, argsText: '',
+      ...(projected.result !== undefined ? { result: { ...(projected.result as object), display } } : {}),
+    }, { id: tool.toolCallId, kind: attention ? 'attention' : 'tool', label: display.title }))
+  }
+  return [...parts.values()]
+}
+function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]): ThreadAssistantMessagePart[] {
+  return parts.map((part, index) => part.type === 'text'
+    ? annotated(part, { id: `answer:${view.requestVersion}:${index}`, kind: 'answer', label: '答复' }) : part)
 }
 export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[] = []): ThreadAssistantMessagePart[] {
-  const cards = tools.map(({ eventSeq: _eventSeq, ...tool }) =>
-    tool.result === undefined && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed')
-      ? { ...tool, result: { status: view.lifecycle }, isError: view.lifecycle === 'failed' } : tool)
+  const cards = activityParts(view, tools)
   if (view.lifecycle === 'queued') return cards
   // Native drafts expose content deltas only; provider reasoning fields are excluded upstream.
-  if (view.lifecycle === 'leased' && view.draft) return [...projectLessonText(view.draft, view.runId, true), ...cards]
+  if (view.lifecycle === 'leased' && view.draft) return [...cards, ...answerParts(view, projectLessonText(view.draft, view.runId, true))]
   if (!view.message) return cards
   assertLessonCitationSpans(view.message.envelope.body, view.message.envelope.citations)
   const segments = responseSegments(view.message.envelope)
@@ -85,7 +127,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
       title: evidence?.find(item => citation.markers.includes(item.marker))?.title ?? source.sourceId, mediaType: 'text/plain',
       providerMetadata: { lingxiloop: { sourceVersion: source.sourceVersion, chunkIds: source.chunkIds } } })
   }
-  return [...parts.flatMap(part => part.type === 'text' ? projectLessonText(part.text, view.runId, view.delivery !== 'delivered') : [part]), ...sources.values(), ...cards]
+  return [...cards, ...answerParts(view, parts.flatMap(part => part.type === 'text' ? projectLessonText(part.text, view.runId, view.delivery !== 'delivered') : [part])), ...sources.values()]
 
 }
 

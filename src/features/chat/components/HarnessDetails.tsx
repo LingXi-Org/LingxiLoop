@@ -7,6 +7,8 @@ import { userFacingError } from '@/lib/userFacingError'
 import type { LingxiMessageMetadata } from '../runtime/model'
 import { chatTransport } from '../runtime/transport'
 import { DeliveryCard } from './RunResultCards'
+import { ElicitationForm } from '@/components/assistant-ui/elements/elicitation-form'
+import { activityAnnotation } from '@/lib/runActivity'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const aui = useAui()
@@ -19,10 +21,12 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
   const outcome = view.goalOutcome
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [answer, setAnswer] = useState('')
+  const [submitted, setSubmitted] = useState<number | null>(null)
   const [resolvedApproval, setResolvedApproval] = useState<string | null>(null)
   const inFlight = useRef(false)
   const active = view.lifecycle === 'queued' || view.lifecycle === 'leased' || view.lifecycle === 'waiting'
-  const hasAnswer = content.some(part => part.type === 'text' ? Boolean(part.text.trim()) : ['image', 'file', 'generative-ui'].includes(part.type))
+  const hasAnswer = content.some(part => activityAnnotation(part)?.kind !== 'commentary' && (part.type === 'text' ? Boolean(part.text.trim()) : ['image', 'file', 'generative-ui'].includes(part.type)))
   async function perform(action: () => Promise<unknown>) {
     if (inFlight.current) return
     inFlight.current = true
@@ -47,7 +51,16 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
       <p>答复投递失败，请重试。</p>
       {metadata.harnessControl && <Button type="button" size="sm" className="mt-2" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button>}
     </ErrorPrimitive.Root>}
-    {outcome?.question && <p className="text-sm text-foreground">{outcome.question}</p>}
+    {outcome?.status === 'awaiting_input' ? <ElicitationForm server="补充信息" message={outcome.question ?? '请补充信息以继续任务。'}
+      fields={[{ name: 'answer', label: '补充信息', kind: 'text', value: answer, required: true }]}
+      state={submitted === view.requestVersion ? 'accepted' : 'request'} acceptDisabled={!metadata.harnessControl || busy || !answer.trim()}
+      acceptLabel={busy ? '正在提交…' : '提交并继续'} onFieldChange={(_, value) => setAnswer(String(value))}
+      onAccept={() => void perform(async () => {
+        const current = aui.message.getState().metadata.custom as LingxiMessageMetadata
+        if (!current.harnessControl || current.harness?.goalOutcome?.status !== 'awaiting_input' || current.harness.requestVersion !== view.requestVersion || !answer.trim()) throw new Error('409')
+        await chatTransport.continueRun(target, answer.trim(), view.requestVersion)
+        setSubmitted(view.requestVersion)
+      })} /> : outcome?.question && <p className="text-sm text-foreground">{outcome.question}</p>}
     {view.artifacts.length ? <DeliveryCard artifacts={view.artifacts} busy={busy} onDownload={artifact => void perform(() => harnessApi.download(target,artifact))} /> : null}
     {metadata.harnessControl && active && outcome?.status === 'awaiting_approval' && !tools.some(tool => tool.approval?.id === outcome.approvalId) && <ApprovalRequestCard
           key={outcome.approvalId} approvalId={outcome.approvalId} sender={metadata.senderName} busy={busy || resolvedApproval === outcome.approvalId}

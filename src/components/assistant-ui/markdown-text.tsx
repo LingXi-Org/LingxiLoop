@@ -1,6 +1,9 @@
 "use client"
 
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
+import { code } from '@streamdown/code'
+import { createMathPlugin } from '@streamdown/math'
+import { createMermaidPlugin } from '@streamdown/mermaid'
 import { Block, type BlockProps, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'
 import { createContext, memo, useContext, useMemo, useState } from 'react'
@@ -13,7 +16,23 @@ import {
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 import type { MentionTarget } from '@/lib/mentions'
+import { activityAnnotation } from '@/lib/runActivity'
 export type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
+
+const plugins = { code, math: createMathPlugin({ singleDollarTextMath: true }), mermaid: createMermaidPlugin({ config: { securityLevel: 'strict', startOnLoad: false } }) }
+const translations = {
+  close: '关闭', copied: '已复制', copyCode: '复制代码', copyLink: '复制链接', copyTable: '复制表格',
+  copyTableAsCsv: '复制为 CSV', copyTableAsMarkdown: '复制为 Markdown', copyTableAsTsv: '复制为 TSV',
+  downloadDiagram: '下载图表', downloadDiagramAsMmd: '下载图表源文件', downloadDiagramAsPng: '下载 PNG 图片', downloadDiagramAsSvg: '下载 SVG 图片',
+  downloadFile: '下载文件', downloadImage: '下载图片', downloadTable: '下载表格', downloadTableAsCsv: '下载 CSV 表格', downloadTableAsMarkdown: '下载 Markdown 表格',
+  exitFullscreen: '退出全屏', externalLinkWarning: '即将打开外部网站，请确认链接。', imageNotAvailable: '图片暂时无法显示',
+  mermaidFormatMmd: '图表源文件', mermaidFormatPng: 'PNG 图片', mermaidFormatSvg: 'SVG 图片', openExternalLink: '打开外部链接', openLink: '打开链接',
+  resetView: '重置视图', tableFormatCsv: 'CSV 表格', tableFormatMarkdown: 'Markdown 表格', tableFormatTsv: 'TSV 表格',
+  viewFullscreen: '全屏查看', zoomIn: '放大', zoomOut: '缩小',
+}
+const mermaidOptions = { config: { securityLevel: 'strict', startOnLoad: false }, errorComponent: ({ chart }: { chart: string }) => <div>
+  <p role="status">图表暂时无法显示。</p><details><summary>查看图表源代码</summary><pre className="overflow-auto">{chart}</pre></details>
+</div> }
 
 declare module 'hast' {
   interface ElementData { confidenceClaim?: MarkdownConfidenceClaim }
@@ -95,7 +114,7 @@ function CitationBlock(props: BlockProps) {
     [rehypeMentionNames, { targets: mentionTargets }],
     ...agent ? [rehypeStreamingWords] : [],
   ], [claims, offset, inlineCitations, agent, mentionTargets])
-  return <Block {...props} rehypePlugins={rehypePlugins} />
+  return <Block {...props} rehypePlugins={[...rehypePlugins ?? [], plugins.math.rehypePlugin]} />
 }
 
 const MarkdownTextImpl = ({
@@ -113,7 +132,7 @@ const MarkdownTextImpl = ({
   const { text, status } = useMessagePartText()
   // Citation spans use nativeText's joined-message coordinates, including between cards.
   const textOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
-    .reduce((offset, part) => offset + (part.type === 'text' ? part.text.length + 1 : 0), 0))
+    .reduce((offset, part) => offset + (part.type === 'text' && activityAnnotation(part)?.kind !== 'commentary' ? part.text.length + 1 : 0), 0))
   const streaming = agent && status.type === 'running'
   const streamingRef = useStreamingTail(text, streaming)
   const hasCitations = Boolean(confidenceClaims.length) || inlineCitations
@@ -133,6 +152,9 @@ const MarkdownTextImpl = ({
     <CitationBlocks.Provider value={citationBlocks}>
       <div ref={streamingRef} className="im-markdown-host" data-find-content data-streaming={streaming || undefined}>
         <StreamdownTextPrimitive
+          plugins={plugins}
+          translations={translations}
+          mermaid={mermaidOptions}
           rehypePlugins={rehypePlugins}
           controls
           parseIncompleteMarkdown

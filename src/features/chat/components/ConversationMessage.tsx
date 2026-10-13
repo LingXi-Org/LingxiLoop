@@ -291,8 +291,8 @@ export function ConversationMessage() {
         <div className={cn('row-start-2 grid w-full min-w-0 gap-0.5', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {custom.quote && <QuotePart text={custom.quote.text} messageId={custom.quote.messageId} />}
-          <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={footer} />
-          {custom.senderKind === 'agent' && custom.harness && custom.runId && <HarnessDetails metadata={custom} />}
+          <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={footer}
+            attention={custom.senderKind === 'agent' && custom.harness && custom.runId ? <HarnessDetails metadata={custom} /> : null} />
           {custom.senderKind === 'agent' && <AssistantMessageActions />}
         </div>
         <Reactions metadata={custom} messageId={messageId} />

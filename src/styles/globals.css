@@ -2,12 +2,16 @@
 @import "tw-animate-css";
 @import "tw-shimmer";
 @import "streamdown/styles.css";
+@import "katex/dist/katex.min.css";
 @import "./typeset.css";
 @import "./chat.css";
 @import "./generative-ui-elements.css";
 @import "./experience.css";
 @import "shadcn/tailwind.css";
 @source "../../node_modules/streamdown/dist/*.js";
+@source "../../node_modules/@streamdown/code/dist/*.js";
+@source "../../node_modules/@streamdown/math/dist/*.js";
+@source "../../node_modules/@streamdown/mermaid/dist/*.js";
 
 @custom-variant dark (&:is(.dark *));
 @config "../../tailwind.config.ts";

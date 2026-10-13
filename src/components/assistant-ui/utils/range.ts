@@ -17,3 +17,5 @@ export function progressOf(index: number, total: number) {
   if (!(total > 0)) return 0
   return Math.floor(clamp(index, 0, total))
 }
+
+export const announced = (value: number) => Math.round(value)

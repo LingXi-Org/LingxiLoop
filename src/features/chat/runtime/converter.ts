@@ -1,7 +1,7 @@
 import type { ThreadMessage } from '@assistant-ui/react'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import type { ImEnvelope } from '@/lib/im/wukong'
-import { deserializeMessage } from '@/lib/nativeMessage'
+import { deserializeMessage, nativeText } from '@/lib/nativeMessage'
 import type { Participant } from '@/types'
 import type { LingxiMessageMetadata, LingxiQuoteMetadata, LingxiReactionMetadata } from './model'
 import { mergeProgressMessage, preserveMessageTime, resolveMessagePresentation } from './model'
@@ -140,7 +140,7 @@ export function projectMessageGroups(messages: readonly ThreadMessage[]): Thread
     // same authorized conversation history for both live sends and reloads.
     const original = custom.quotedMessageId && !custom.quote?.text ? byId.get(custom.quotedMessageId) : null
     const originalMetadata = original?.metadata.custom as LingxiMessageMetadata | undefined
-    const originalText = original?.content.flatMap(part => part.type === 'text' ? [part.text] : []).join('\n').slice(0, 240)
+    const originalText = original ? nativeText(original).slice(0, 240) : undefined
     const resolvedQuote = original && originalMetadata && originalText ? {
       messageId: original.id,
       authorId: originalMetadata.senderId,

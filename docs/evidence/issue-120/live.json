@@ -1,0 +1,58 @@
+{
+  "passed": true,
+  "realModel": true,
+  "model": "deepseek-ai/DeepSeek-V4-Flash",
+  "runtime": "3.3.6",
+  "measuredCalls": 6,
+  "costUSD": 0.01346871,
+  "observations": [
+    [],
+    [
+      "tool:tool-call"
+    ],
+    [
+      "tool:tool-call",
+      "tool:tool-call"
+    ],
+    [
+      "tool:tool-call",
+      "commentary:generative-ui"
+    ],
+    [
+      "tool:tool-call",
+      "commentary:generative-ui",
+      "tool:tool-call"
+    ],
+    [
+      "tool:tool-call",
+      "commentary:generative-ui",
+      "commentary:reasoning"
+    ],
+    [
+      "tool:tool-call",
+      "commentary:generative-ui",
+      "commentary:reasoning",
+      "tool:tool-call"
+    ],
+    [
+      "tool:tool-call",
+      "commentary:generative-ui",
+      "commentary:reasoning"
+    ]
+  ],
+  "finalKinds": [
+    "tool-call",
+    "generative-ui",
+    "reasoning",
+    "text"
+  ],
+  "checks": [
+    "public explanation",
+    "public plan",
+    "real files.list",
+    "measured tool duration",
+    "authoritative answer",
+    "replay",
+    "measured model ledger"
+  ]
+}
