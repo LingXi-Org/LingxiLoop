@@ -31,6 +31,9 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 // hiding later cases. Failed or blocked cases must never yield zero failures or passed.
 // Minimal check: existing fixture-safety checks before edits, then this file's offline
 // assertions, server typecheck and scoped lint; real-model acceptance remains separate.
+// Ledger reconciliation failures: three recorded calls cannot settle four public calls;
+// pending public calls cannot settle even when counts match; estimated or unmeasured
+// usage cannot pass. Check these with synthetic usage/ledger reads before implementation.
 // Inspect parsed components: whitespace in a call is valid and a quoted name is not a component.
 function containsComponent(value: unknown, name: string): boolean {
   return !!value && typeof value === 'object' && (
@@ -224,7 +227,16 @@ test('current product generates, delivers and explores learning UI with a real m
     const readyMs = performance.now() - started
     const history = await imMessagesApplication.history({ companyId, userId: 'test-owner', channelId, limit: 100, beforeSequence: 0 })
     const answers = history!.filter(item => item.payload.role === 'assistant'), lessons = answers.flatMap(item => messageLessons(item.payload))
-    const measured = await stats(channelId)
+    // Reconcile terminal public usage with the asynchronously written product ledger.
+    timeout.throwIfAborted()
+    let usage = await api.readUsage(run), measured = await stats(channelId)
+    while (!usage || usage.pendingCalls !== 0 || measured.modelCalls !== usage.calls) {
+      timeout.throwIfAborted()
+      await delay(150, undefined, { signal: timeout })
+      usage = await api.readUsage(run); measured = await stats(channelId)
+    }
+    timeout.throwIfAborted()
+    assert.equal(usage.estimatedCalls, 0, `${id}: estimated public usage is not settled usage`)
     assert.ok(measured.measured && measured.modelCalls > 0 && measured.modelCalls <= 16
       && Number.isFinite(measured.costUSD) && measured.costUSD >= 0 && measured.costUSD <= 0.5, `${id}: known bounded usage required`)
     assert.equal(streamFailure, null, `${id}: stream failed (${streamFailure})`)
@@ -244,7 +256,7 @@ test('current product generates, delivers and explores learning UI with a real m
     const answer = answers.map(item => nativeText(item.payload)).join('\n') + lessons.map(lesson => lesson.source).join('\n')
     const teaching = await grade(answer, scenario.facts)
     const result = { id, errors, previewMs, firstTextMs, readyMs, sendAttempts, streamReconnects, modelCalls: measured.modelCalls, costUSD: measured.costUSD,
-      uiCount: lessons.length, teaching, runId: run.runId, sourceHashes: lessons.map(lesson => lesson.sourceHash) }
+      uiCount: lessons.length, teaching, runId: run.runId, usage, sourceHashes: lessons.map(lesson => lesson.sourceHash) }
     return result
   }
   const command = (args: string[], extraEnv: Record<string, string> = {}) => new Promise<void>((resolve, reject) => {
