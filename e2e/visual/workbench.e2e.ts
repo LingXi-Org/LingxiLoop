@@ -21,16 +21,7 @@ for (const theme of ['dark', 'light']) {
     expect(geometry.composer).toBeLessThanOrEqual(801)
     expect(Math.abs(geometry.message - geometry.composer)).toBeLessThanOrEqual(1)
     expect(geometry.overflow).toBe(false)
-    const selectedColor = await browser.evaluate(() => {
-      const selected = document.querySelector('[data-slot="sidebar"] [aria-current="page"]')!
-      const canvas = document.createElement('canvas')
-      const context = canvas.getContext('2d')!
-      context.fillStyle = getComputedStyle(selected).backgroundColor
-      context.fillRect(0, 0, 1, 1)
-      return Array.from(context.getImageData(0, 0, 1, 1).data)
-    })
-    expect(selectedColor[1]).toBeGreaterThan(selectedColor[0])
-    expect(selectedColor[1]).toBeGreaterThan(selectedColor[2])
+    await expect(browser.locator('[data-slot="sidebar"] [aria-current="page"]')).toHaveAttribute('data-variant', 'muted')
     await app.screenshot(`chat-1440-${theme}`)
     for (const [name, view] of [['Agent', 'agents'], ['邮件', 'mail'], ['学习概览', 'learning'], ['资料', 'library']]) {
       await screen.getByRole('navigation', '工作区与功能').getByRole('button', name).tap()

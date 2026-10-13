@@ -22,6 +22,8 @@ import { useAuth } from '@/stores/auth'
 import { useSurface } from '@/stores/surface'
 import { convertEnvelope } from '@/features/chat/runtime/converter'
 import { createNativeMessage } from '@/lib/nativeMessage'
+import { createRunView } from '@lyyzka/lingxios/ui'
+import { harnessApi } from '@/features/chat/runtime/harness-api'
 import type { Conversation, Participant, WorkspaceSummary } from '@/types'
 import '@/styles/globals.css'
 import { ws } from '@/api/core/realtime'
@@ -128,6 +130,36 @@ learningApi.getDashboard = async () => dashboard
 // State-only scenarios run without credentials or a backend. Keep them separate
 // from the real API journeys so synthetic results cannot count as API acceptance.
 const scenario = new URLSearchParams(location.search).get('scenario')
+if (scenario?.startsWith('chat-')) {
+  harnessApi.readApproval = async () => ({ id: 'approval-feedback', status: 'PENDING', summary: 'calendar.create',
+    action: { action: 'calendar.create' }, preview: { input: { title: '学习复盘', at: NOW } } })
+  const kind = scenario.slice(5)
+  const failed = kind === 'failed'
+  const outcome = kind === 'partial' ? 'partial' : kind === 'blocked' || kind === 'empty-blocked' ? 'blocked' : 'satisfied'
+  const view = { ...createRunView('feedback'), artifacts: [],
+    lifecycle: failed ? 'failed' as const : kind === 'cancelled' ? 'cancelled' as const : kind === 'approval' ? 'waiting' as const : 'succeeded' as const,
+    delivery: kind === 'delivery' ? 'failed' as const : 'delivered' as const,
+    resultId: failed || kind === 'empty-blocked' || kind === 'approval' ? null : 'result-feedback',
+    goalOutcome: kind === 'approval'
+      ? { status: 'awaiting_approval' as const, approvalId: 'approval-feedback', requestVersion: 1, verification: 'inconclusive' as const }
+      : { status: outcome, requestVersion: 1, verification: 'inconclusive' as const,
+        gaps: ['Declared delivery limitation: no activity records exist.'] },
+  }
+  const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout',
+    clientMsgNo: 'run-feedback', messageId: 'run-feedback', messageSeq: 2, timestamp: 1790899201,
+    payload: createNativeMessage({ id: 'run-feedback', role: 'assistant', createdAt: NOW,
+      content: failed || kind === 'empty-blocked' || kind === 'approval' ? [] : [{ type: 'text', text: '目前没有学习活动记录。' }],
+      status: failed ? { type: 'incomplete', reason: 'error' } : kind === 'cancelled' ? { type: 'incomplete', reason: 'cancelled' }
+        : kind === 'approval' ? { type: 'requires-action', reason: 'tool-calls' }
+        : outcome === 'satisfied' ? { type: 'complete', reason: 'stop' } : { type: 'incomplete', reason: 'other' },
+      custom: { runId: 'feedback', refs: { agentId: 'scout' }, harness: view, controlPrincipalId: 'me',
+        ...(failed ? { harnessError: 'Model provider request failed (HTTP 402)' } : {}) },
+    }),
+  }, { participants, meId: 'me' })
+  useChatThreadStore.setState({ conversations: { ...useChatThreadStore.getState().conversations,
+    [CONVERSATION_ID]: { ...useChatThreadStore.getState().conversations[CONVERSATION_ID], messages: [message] },
+  } })
+}
 if (scenario === 'empty-conversations' || scenario === 'read-only-empty') {
   useConversations.setState({ list: [] })
   useApp.setState({ selectedConversationId: null })

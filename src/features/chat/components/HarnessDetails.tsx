@@ -1,13 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
-import { useAui, useAuiState } from '@assistant-ui/react'
+import { ErrorPrimitive, useAui, useAuiState } from '@assistant-ui/react'
 import { Button } from '@/components/ui/button'
 import { ApprovalRequestCard } from './ApprovalRequestCard'
 import { harnessApi } from '../runtime/harness-api'
 import { userFacingError } from '@/lib/userFacingError'
 import type { LingxiMessageMetadata } from '../runtime/model'
 import { chatTransport } from '../runtime/transport'
-import { harnessLabel } from '../runtime/harness'
-import { DeliveryCard, RunProgressCard } from './RunResultCards'
+import { DeliveryCard } from './RunResultCards'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const aui = useAui()
@@ -23,8 +22,7 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
   const [resolvedApproval, setResolvedApproval] = useState<string | null>(null)
   const inFlight = useRef(false)
   const active = view.lifecycle === 'queued' || view.lifecycle === 'leased' || view.lifecycle === 'waiting'
-  const needsAttention = view.delivery === 'failed' || view.lifecycle === 'failed' || view.lifecycle === 'cancelled'
-    || outcome?.status === 'partial' || outcome?.status === 'blocked' || Boolean(metadata.harnessError)
+  const hasAnswer = content.some(part => part.type === 'text' ? Boolean(part.text.trim()) : ['image', 'file', 'generative-ui'].includes(part.type))
   async function perform(action: () => Promise<unknown>) {
     if (inFlight.current) return
     inFlight.current = true
@@ -42,10 +40,13 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
     setResolvedApproval(id)
   })
 
-  return <section aria-label="任务结果与操作" className="mt-2 grid w-full max-w-xl gap-2 text-xs text-muted-foreground empty:hidden">
-    {needsAttention ? <RunProgressCard view={view} error={metadata.harnessError}>
-      {metadata.harnessControl && view.delivery === 'failed' && <div className="mt-3 flex justify-end"><Button type="button" size="sm" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button></div>}
-    </RunProgressCard> : !active && outcome?.status !== 'satisfied' && <p role="status">{harnessLabel(view)}</p>}
+  return <section aria-label="答复附件与操作" className="mt-2 grid w-full max-w-xl gap-2 text-xs text-muted-foreground empty:hidden">
+    {view.lifecycle === 'cancelled' && <p role="status">已取消</p>}
+    {view.lifecycle === 'succeeded' && !hasAnswer && (outcome?.status === 'partial' || outcome?.status === 'blocked') && <ErrorPrimitive.Root className="text-destructive">本次请求未能生成答复，请补充信息后重试。</ErrorPrimitive.Root>}
+    {view.delivery === 'failed' && <ErrorPrimitive.Root className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+      <p>答复投递失败，请重试。</p>
+      {metadata.harnessControl && <Button type="button" size="sm" className="mt-2" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button>}
+    </ErrorPrimitive.Root>}
     {outcome?.question && <p className="text-sm text-foreground">{outcome.question}</p>}
     {view.artifacts.length ? <DeliveryCard artifacts={view.artifacts} busy={busy} onDownload={artifact => void perform(() => harnessApi.download(target,artifact))} /> : null}
     {metadata.harnessControl && active && outcome?.status === 'awaiting_approval' && !tools.some(tool => tool.approval?.id === outcome.approvalId) && <ApprovalRequestCard
@@ -54,9 +55,9 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
           onDeny={() => approve(outcome.approvalId, false)}
         />}
     {outcome?.status === 'awaiting_approval' && resolvedApproval === outcome.approvalId && <p role="status">已提交，正在同步任务状态…</p>}
-    {error && <div role="alert" className="text-destructive">
+    {error && <ErrorPrimitive.Root className="text-destructive">
       <p>{error}</p>
       <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => void perform(() => chatTransport.refreshRun(target))}>刷新状态</Button>
-    </div>}
+    </ErrorPrimitive.Root>}
   </section>
 }

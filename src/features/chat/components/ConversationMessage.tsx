@@ -1,4 +1,5 @@
 import {
+  ErrorPrimitive,
   MessagePrimitive,
   useAui,
   useAuiState,
@@ -23,6 +24,7 @@ import type { LingxiMessageMetadata } from '../runtime/model'
 import { NativeMessageContent } from './NativeMessageContent'
 import { HarnessDetails } from './HarnessDetails'
 import { chatLatency } from '../runtime/latency'
+import { harnessFailure } from '../runtime/harness'
 import { copyMessageText, MessageActions } from './MessageActions'
 
 function QuotePart({ text, messageId }: { text: string; messageId: string }) {
@@ -313,9 +315,11 @@ export function ConversationMessage() {
           {custom.quote && <QuotePart text={custom.quote.text} messageId={custom.quote.messageId} />}
           <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={deliveryLabel && <span className="text-xs text-muted-foreground">{deliveryLabel}</span>} />
           {custom.senderKind === 'agent' && custom.harness && custom.runId && <HarnessDetails metadata={custom} />}
-          {!custom.harness && <MessagePrimitive.Error>
-            <div className="mt-2 text-xs text-destructive">消息生成失败</div>
-          </MessagePrimitive.Error>}
+          <MessagePrimitive.Error>
+            <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              <ErrorPrimitive.Message>{custom.harnessError ? harnessFailure(custom.harnessError) : '消息生成失败，请重试。'}</ErrorPrimitive.Message>
+            </ErrorPrimitive.Root>
+          </MessagePrimitive.Error>
         </div>
         <Reactions metadata={custom} messageId={messageId} />
       </div>

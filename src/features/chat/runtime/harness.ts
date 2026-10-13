@@ -47,5 +47,5 @@ export function harnessFailure(reason: string): string {
     'Model returned an invalid response format': '模型返回了无效的答复格式。',
   }
   if (reason.startsWith('Model provider request failed')) return `模型服务请求失败${reason.match(/\(HTTP \d+\)/)?.[0] ?? ''}。`
-  return messages[reason] ?? reason.slice(0,2000)
+  return messages[reason] ?? '消息生成失败，请稍后重试。'
 }
