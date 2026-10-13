@@ -66,9 +66,9 @@ The current semantic suites use Eval-owned snapshots of public tool contracts, i
 
 | Suite / version | Cases | Coverage | Candidate / Judge run budgets (CNY) |
 |---|---:|---|---:|
-| tool-initiative / 2 | 6 | Act on vague document, memory, research, ingestion, calendar and email requests | 1.20 / 0.60 |
-| tool-boundaries / 2 | 4 | Text-only tasks, consequential ambiguity, prompt injection and denied reads | 0.80 / 0.40 |
-| tool-recovery / 2 | 2 | Concurrent title changes and historical decisions | 0.40 / 0.20 |
+| tool-initiative / 4 | 6 | Act on document, memory, research and ingestion requests; decline retired email/calendar effects | 1.20 / 0.60 |
+| tool-boundaries / 4 | 4 | Text-only tasks, consequential ambiguity, prompt injection and denied reads | 0.80 / 0.40 |
+| tool-recovery / 4 | 2 | Concurrent title changes and historical decisions | 0.40 / 0.20 |
 | education-autonomy / 3 | 16 | Teacher drafts and approvals, student state cards and personalized Missions, evidence/self-report records, deduplication, specialist handoffs, collaborative Canvas, simple answers, hypothetical/third-party records | 4.80 / 1.60 |
 
 Select the relevant suite; running every suite is not required. Each case has one sample and at most one independent Autoevals TaskSuccess Judge call. Cases run serially, bounded by 8 Candidate calls and 10 tool calls for general suites, or 16 of each for education so multi-activity drafts and their approvals can finish. Both use at most 1536 requested output tokens per call. Candidate sample allowances are CNY 0.20 for general suites and CNY 0.30 for education; the latter leaves room for conservative request-byte reservations when a plan has multiple activities. The configured model token ceiling can be lower. The offline command `npm run eval:check` uses only local HTTP fixtures and makes no paid calls.
@@ -77,7 +77,7 @@ From `eval/`:
 
 ```sh
 npm run eval -- run --env .env.local --suite suites/education-autonomy.v3.json --dataset datasets/education-autonomy.v3.json --revision YOUR_COMMIT
-npm run eval -- run --env .env.local --suite suites/tool-initiative.v2.json --dataset datasets/tool-initiative.v2.json --revision YOUR_COMMIT
+npm run eval -- run --env .env.local --suite suites/tool-initiative.v4.json --dataset datasets/tool-initiative.v4.json --revision YOUR_COMMIT
 ```
 
 These commands are alternatives. The earlier v1 tool suites and their datasets remain immutable and available locally with deterministic grading and zero Judge calls. New versions remove brittle final-answer fragments and wording constraints on authored documents; post-write verification reads return actual authored content and ingestion rechecks reflect the queued state. Single-use mutations prevent duplicate side effects. Read ordering is required only where it supplies IDs, current facts or concurrency prerequisites.
@@ -129,3 +129,5 @@ Old scripts, suites/baselines, server Eval modules, internal runtime adapters/te
 Stop old Eval readers/writers and archive required historical Eval results before deployment. Run `npm run db:migrate` before starting the new processes. Old binaries are incompatible with the removed tables; rollback requires the operations backup. Existing signed Trust snapshots remain immutable historical records; new snapshots omit old Eval fields. No production database is modified by this merge.
 
 Accounting uses CNY (人民币), including prices per million tokens, `costCny`, gate budgets and `eval.cost.cny` spans. Values are used directly without exchange-rate conversion. The v2 engine, suite/manifest/report/baseline schemas reject former USD artifacts; create fresh runs and reviewed baselines instead of relabeling historical costs. The smoke suite is version 2; dataset content is unchanged.
+
+Product retirement versions are v3 (deterministic) and v4 (semantic). Earlier datasets/suites remain immutable historical artifacts and are no longer current executable acceptance suites. They require their historical sandbox if replayed; do not use their baselines with the current catalog.

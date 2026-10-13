@@ -72,7 +72,7 @@ test('adjacent ordinary tools group in place while rich results stay visible', (
   const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
   assert.equal($('[data-slot="tool-group-root"]').length, 1)
   assert.match($.text(), /2 项工具调用/)
-  assert.match($.text(), /暂无安排/)
+  assert.match($.text(), /此记录仅供查看/)
   assert.equal($('time').length, 0)
   assert.match($('[data-agent-body]').last().text(), /最后正文/)
 })

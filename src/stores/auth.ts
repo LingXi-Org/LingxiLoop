@@ -74,7 +74,6 @@ export const useAuth = create<AuthState>((set) => ({
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([
       import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
-      import('../features/calendar/state').then(({ useCalendar }) => useCalendar.getState().reset()),
     ])
   },
   markReady() {

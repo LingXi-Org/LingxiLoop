@@ -2,11 +2,9 @@ import { randomUUID } from 'node:crypto'
 import { pool } from '../../db/pool.js'
 import type { Queryable } from '../../db/queryable.js'
 import { withTransaction } from '../../db/transaction.js'
-import { env } from '../../env.js'
 import { inc } from '../../metrics.js'
 import type { WorkerTaskHandle } from '../../runtime/lifecycle.js'
 import { isActiveProjectMember } from '../access/public.js'
-import { formatAddress, mintMessageId, sendViaProvider } from '../email/index.js'
 import type { NotificationChannel } from './contracts.js'
 import { findNotificationPreferences } from './repository.js'
 import {
@@ -90,7 +88,6 @@ async function routeIntent(intentId: string, now: Date): Promise<void> {
     if (!windowKey) return
     const channels: NotificationChannel[] = [
       ...(preference.in_app_enabled ? ['IN_APP' as const] : []),
-      ...(preference.email_enabled ? ['EMAIL' as const] : []),
     ]
     if (channels.length === 0) {
       await db.query(`UPDATE notification_intents SET status='CANCELLED' WHERE id=$1`, [intent.id])
@@ -165,17 +162,7 @@ async function deliverPending(now: Date): Promise<void> {
   const leaseToken = randomUUID()
   for (const delivery of await claimDeliveries(now, leaseToken)) {
     try {
-      if (delivery.channel === 'EMAIL') {
-        if (!env.EMAIL_DOMAIN || !delivery.email) throw new Error('email delivery is not configured for this user')
-        const result = await sendViaProvider({
-          from: formatAddress(`notifications@${env.EMAIL_DOMAIN}`, 'LingxiLoop'),
-          to: [delivery.email], subject: 'LingxiLoop 通知',
-          text: `${delivery.summary}\n\n打开：${delivery.link_path}`,
-          messageId: mintMessageId(), idempotencyKey: `notification:${delivery.id}`,
-          autoSubmitted: 'auto-generated',
-        })
-        if (!result.ok) throw new Error(result.error ?? 'email provider rejected notification')
-      }
+      if (delivery.channel === 'EMAIL') throw new Error('product email notifications are retired')
       await pool.query(
         `UPDATE notification_deliveries SET status='SENT',sent_at=NOW(),error=NULL,
            lease_token=NULL,lease_expires_at=NULL,updated_at=NOW()

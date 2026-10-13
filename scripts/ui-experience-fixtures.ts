@@ -1,7 +1,6 @@
 import { useParticipants } from '@/features/agents/state'
 import type { CanvasFrame, CanvasSnapshot, CanvasWorkspaceSummary } from '@/features/canvas/contracts'
 import { useCanvas } from '@/features/canvas/state'
-import { useCalendar } from '@/features/calendar/state'
 import { type ActiveAgentRun, mergeCanonicalMessages, replaceMessageReactions, updateConversation, useChatThreadStore } from '@/features/chat/runtime/store'
 import { messagesApi } from '@/features/chat/api'
 import { lingxiIm } from '@/lib/im/wukong'
@@ -121,7 +120,6 @@ const nextStep = { title: '验证移动端学习路径', evidence: '完整观察
 useChatThreadStore.setState({ conversations: { [CONVERSATION_ID]: { messages: [convertEnvelope({channelId:CONVERSATION_ID,channelType:2,fromUid:'scout',clientMsgNo:'local-chat',messageId:'local-chat',messageSeq:1,timestamp:1790899200,payload:createNativeMessage({id:'local-chat',role:'assistant',createdAt:NOW,content:[{type:'text',text:chatPreview}],status:{type:'complete',reason:'stop'}})}, {participants,meId:'me'})], typingAgentIds: [], activeRuns: {}, loaded: true, isLoading: false, isLoadingOlder: false, hasMoreOlder: false, error: null } } })
 useCanvas.setState({ snapshot: canvas, previews: { [CANVAS_ID]: canvas }, workspaces: [canvasSummary], activeCanvasId: CANVAS_ID, loading: false, error: null, selectedFrameId: null, load: async () => undefined, loadPreview: async () => undefined, loadWorkspaces: async () => undefined, ensureForConversation: async () => canvas, setStatus: async () => undefined, stopAgent: async () => undefined, stopWorkspace: async () => undefined })
 useKnowledgeSources.setState({ list: sources, loading: false, error: null, selectedSource: null, detailLoading: false, conversationSelection: { conversationId: CONVERSATION_ID, sources: sources.map((source) => ({ sourceId: source.id, title: source.title, status: source.status, enabled: true })) }, load: async () => undefined, loadConversationSelection: async () => undefined, open: async (sourceId) => { useKnowledgeSources.setState({ selectedSource: sources.find((source) => source.id === sourceId) ?? null }) }, close: () => useKnowledgeSources.setState({ selectedSource: null }), setSourceEnabled: async () => undefined })
-useCalendar.setState({ events: [{ id: 'calendar-review', companyId: COMPANY_ID, createdBy: 'me', kind: 'personal', title: '移动端方案评审', description: '检查 767px 与 768px 的布局切换。', assigneeId: null, targetConversationId: CONVERSATION_ID, agentPrompt: null, startAt: '2026-09-04T09:00:00.000Z', endAt: '2026-09-04T10:00:00.000Z', allDay: false, recurrence: null, status: 'active', lastFiredAt: null, reminderMinutesBefore: 15, reminderChannel: 'toast', isPrivate: false, createdAt: NOW, updatedAt: NOW }], loaded: true, loading: false, loadingEventId: null, error: null, load: async () => undefined, loadEvent: async () => useCalendar.getState().events[0] })
 
 learningApi.listSpaces = async () => ({ data: [learningSpace], nextCursor: null })
 learningApi.getOverview = async () => overview
@@ -134,6 +132,21 @@ learningApi.getDashboard = async () => dashboard
 // State-only scenarios run without credentials or a backend. Keep them separate
 // from the real API journeys so synthetic results cannot count as API acceptance.
 const scenario = new URLSearchParams(location.search).get('scenario')
+if (scenario === 'retired-history') {
+  harnessApi.readApproval = async id => ({id,status:'PENDING',summary:'calendar.create',action:{action:'calendar.create'},preview:{}})
+  const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', clientMsgNo: 'retired-history',
+    messageId: 'retired-history', messageSeq: 2, timestamp: 1790899201,
+    payload: createNativeMessage({ id: 'run-retired-run', role: 'assistant', createdAt: NOW,
+      status: { type: 'requires-action', reason: 'tool-calls' }, custom: { runId: 'retired-run', refs:{agentId:'scout'}, controlPrincipalId: 'me',
+        harness:{...createRunView('retired-run'),artifacts:[],lifecycle:'waiting',goalOutcome:{status:'awaiting_approval',approvalId:'retired-fallback',requestVersion:1,verification:'inconclusive'}} }, content: [
+        { type: 'data', name: 'email', data: { subject: '历史邮件标题', from: 'a@example.test', to: ['b@example.test'], body: '历史邮件正文' } },
+        { type: 'generative-ui', spec: { root: { component: 'calendar-event', props: { event: { id: 'retired-event', title: '历史日程标题', startAt: NOW, allDay: false } } } } },
+        ...['email.send','calendar.create'].map((toolName,index) => ({ type: 'tool-call' as const, toolCallId: `retired-${index}`, toolName,
+          args: {}, argsText: '{}', approval: { id: `retired-approval-${index}` } })),
+      ] }),
+  }, { participants, meId: 'me' })
+  updateConversation(CONVERSATION_ID,state => ({ ...state,messages:[message] }))
+}
 if (scenario === 'mention-names') {
   useParticipants.setState({ byId: { ...participants, scout: { ...participants.scout, name: '思南' } } })
   const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'me',
@@ -301,8 +314,8 @@ if (scenario === 'chat-regressions') {
     updateConversation(CONVERSATION_ID, state => applyRunSnapshot(state, target, snapshot, participants.scout))
   }) as EventListener)
 } else if (scenario?.startsWith('chat-') && scenario !== 'chat-bubble-colors') {
-  harnessApi.readApproval = async () => ({ id: 'approval-feedback', status: 'PENDING', summary: 'calendar.create',
-    action: { action: 'calendar.create' }, preview: { input: { title: '学习复盘', at: NOW } } })
+  harnessApi.readApproval = async () => ({ id: 'approval-feedback', status: 'PENDING', summary: 'documents.create',
+    action: { action: 'documents.create' }, preview: { input: { title: '学习复盘', at: NOW } } })
   const kind = scenario.slice(5)
   const failed = kind === 'failed'
   const outcome = kind === 'partial' ? 'partial' : kind === 'blocked' || kind === 'empty-blocked' ? 'blocked' : 'satisfied'

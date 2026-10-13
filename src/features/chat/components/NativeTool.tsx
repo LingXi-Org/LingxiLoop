@@ -14,7 +14,7 @@ import { MessagePartBoundary } from './MessagePartBoundary'
 import { ResearchSources } from './ResearchSources'
 import { TOOL_DETAILS } from './ToolRenderers'
 
-export const hasRichTool = (name: string) => Object.hasOwn(TOOL_DETAILS, name) || name === 'research.search'
+export const hasRichTool = (name: string) => /^(email|calendar)\./.test(name) || Object.hasOwn(TOOL_DETAILS, name) || name === 'research.search'
   || ['knowledge.search', 'knowledge.read_source', 'knowledge.list_sources'].includes(name)
 
 export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean; children?: ReactNode }) {
@@ -70,6 +70,8 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
     await chatTransport.continueRun({ conversationId: meta.conversationId, agentId: meta.senderId, runId: view.runId,
       ...(typeof meta.threadRootId === 'string' ? { threadId: meta.threadRootId } : {}) }, answer.trim(), view.requestVersion)
   })
+
+  if (/^(email|calendar)\./.test(toolName)) return <p className="whitespace-pre-wrap text-sm text-muted-foreground">邮件和日历功能已停止支持；此记录仅供查看。</p>
 
   return <section aria-label={`工具：${toolName}`} data-tool-state={displayStatus.type} className="grid min-w-0 gap-2 text-sm">
     <MessageFooterContents inset={false}>

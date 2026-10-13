@@ -1,33 +1,17 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { Storage } from '../../storage.js'
 import type { ReactionChangedEvent } from './contracts.js'
 import {
   addWukongReaction,
   aggregateReactions,
-  listEmailMessages,
   lockWukongReaction,
-  type MessageProjectionRow,
   reactionExists,
   reactionsForWukongMessages,
   removeReaction,
 } from './repository.js'
 
-export type MessageErrorCode = 'storage_attachment_invalid'
-
-export class MessageApplicationError extends Error {
-  constructor(readonly code: MessageErrorCode, message: string) { super(message) }
-}
-
 export interface MessagesInfrastructure {
   db: Queryable
-  storage: Storage
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
-  replyEmail(input: { conversationId: string; companyId: string; authorId: string; body: string }): Promise<{
-    messageId: string
-    sequence: number
-    transportStatus: string
-    error?: string | null
-  }>
   bumpReactionClimate(input: {
     companyId: string
     agentId: string
@@ -39,17 +23,6 @@ export interface MessagesInfrastructure {
 
 export class MessagesApplication {
   constructor(private readonly infrastructure: MessagesInfrastructure) {}
-
-  async emailHistory(input: { companyId: string; conversationId: string; before?: number; limit: number }) {
-    const rows = await listEmailMessages(this.infrastructure.db, input)
-    rows.reverse()
-    await this.freshen(rows)
-    return rows
-  }
-
-  replyEmail(input: { conversationId: string; companyId: string; authorId: string; body: string }) {
-    return this.infrastructure.replyEmail(input)
-  }
 
   async toggleWukongReaction(input: {
     companyId: string; userId: string; conversationId: string; messageId: string; messageSeq: number; messageAuthorId: string; emoji: string
@@ -77,21 +50,4 @@ export class MessagesApplication {
     return reactionsForWukongMessages(this.infrastructure.db, companyId, conversationId, messageIds)
   }
 
-  private async freshen(rows: MessageProjectionRow[]): Promise<void> {
-    for (const row of rows) {
-      if (row.attachment) {
-        if (!row.attachment.key) {
-          throw new MessageApplicationError('storage_attachment_invalid', 'attachment storage key is required')
-        }
-        row.attachment.url = await this.infrastructure.storage.publicUrl(row.attachment.key)
-      }
-      for (const attachment of row.email?.attachments ?? []) {
-        if (attachment.truncated) { attachment.url = null; continue }
-        if (!attachment.storageKey) {
-          throw new MessageApplicationError('storage_attachment_invalid', 'email attachment storage key is required')
-        }
-        attachment.url = await this.infrastructure.storage.publicUrl(attachment.storageKey)
-      }
-    }
-  }
 }

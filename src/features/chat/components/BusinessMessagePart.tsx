@@ -7,7 +7,7 @@ import { MessageFooterContents, MessageFooterContext } from '@/components/assist
 import { userFacingError } from '@/lib/userFacingError'
 import { getMeId } from '@/stores/auth'
 import { chatTransport } from '../runtime/transport'
-import { AgentHandoffTool, AgentPlanTool, CanvasArtifactTool, CanvasProgressTool, DraftEmailTool, ElicitationFormTool,
+import { AgentHandoffTool, AgentPlanTool, CanvasArtifactTool, CanvasProgressTool, ElicitationFormTool,
   PollFormTool, PresentationArtifactTool, RecommendationTool, TeacherBriefingStatsTool } from './ToolRenderers'
 
 const record = (value: unknown) => z.record(z.string(), z.unknown()).parse(value)
@@ -82,7 +82,11 @@ export function BusinessMessagePart({ name, data, readOnly }: DataMessagePartPro
     case 'presentation-artifact': content = <PresentationArtifactTool args={value} />; break
     case 'citation-claims': return null
     case 'document-reference': content = <MessageFooterContents inset={false}><DocumentReference {...documentSchema.parse(value)} activePage={-1} /></MessageFooterContents>; break
-    case 'email': content = <DraftEmailTool args={{ id: message.id, ...emailSchema.parse(value) }} readOnly addResult={() => {}} />; break
+    case 'email': {
+      const email = emailSchema.parse(value)
+      content = <div className="whitespace-pre-wrap text-sm"><p>{email.subject}</p><p>{email.body}</p><p className="text-muted-foreground">邮件功能已停止支持；此记录仅供查看。</p></div>
+      break
+    }
     case 'tool-activity': {
       const activity = z.object({ title: z.string().optional(), status: z.string().optional(), description: z.string().optional(),
         steps: z.array(z.object({ id: z.string(), label: z.string(), status: z.string(), description: z.string().optional() })).optional() }).parse(value)

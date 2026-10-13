@@ -48,7 +48,7 @@ const initial: ThreadMessage[] = [
   ], { type: 'running' }),
   assistant('tools', [tool('one', { result: { status: 'completed' } }), tool('two', { result: { status: 'completed' } }),
     { type: 'text', text: '工具分组后的答复。' }]),
-  assistant('partial', [tool('partial', { toolName: 'calendar.list', argsText: '{"query":"par' })], { type: 'running' }),
+  assistant('partial', [tool('partial', { toolName: 'documents.list', argsText: '{"query":"par' })], { type: 'running' }),
   assistant('cancelled', [tool('cancelled')], { type: 'incomplete', reason: 'cancelled' }),
   assistant('expired', [tool('expired', { approval: { id: 'expired', resolution: 'expired' } })]),
   assistant('denied', [tool('denied', { approval: { id: 'denied', approved: false } })]),
@@ -80,7 +80,7 @@ const initial: ThreadMessage[] = [
   assistant('invalid', [data('questionnaire', { items: [] }), { type: 'text', text: '异常卡片后的正文仍可阅读。' }]),
 ]
 
-harnessApi.readApproval = async id => ({ id, summary: '创建一次证据评审', status: 'PENDING', action: { action: 'calendar.create' }, preview: { input: { title: '证据评审', startAt: now } } })
+harnessApi.readApproval = async id => ({ id, summary: '创建一次证据评审', status: 'PENDING', action: { action: 'documents.create' }, preview: { input: { title: '证据评审', startAt: now } } })
 chatTransport.resolveApproval = async (id, decision) => {
   counts.approval++; await delay()
   publish(messages => messages.map(message => ({ ...message, content: message.content.map(part => part.type === 'tool-call' && part.approval?.id === id
@@ -138,7 +138,7 @@ function App() {
       reasoning.click(); await paint(); check(reasoning.getAttribute('aria-expanded') === 'false', '推理无法手动收起')
       check(row('tools').querySelectorAll('[data-slot="tool-group-root"]').length === 1, '连续工具未分组')
       check(row('cancelled').textContent?.includes('已取消') && !row('cancelled').textContent?.includes('执行中'), '取消仍显示运行')
-      check(row('partial').textContent?.includes('正在读取日历'), '参数增量没有加载状态')
+      check(row('partial').textContent?.includes('执行中'), '参数增量没有加载状态')
       check(row('expired').textContent?.includes('审批已过期') && row('denied').textContent?.includes('已拒绝'), '审批终态丢失')
       check(row('invalid').textContent?.includes('暂时无法显示') && row('invalid').textContent?.includes('仍可阅读'), '异常未局部隔离')
       checks.push('分组 / 流式参数 / 取消 / 终态 / 局部错误隔离')

@@ -18,7 +18,7 @@ export interface AgentWakeInput {
 export async function enqueueAgentWakes(db: Queryable, input: AgentWakeInput): Promise<number> {
   const custom = input.payload.metadata.custom
   if (custom.suppressAgentWake === true) return 0
-  let kind: 'message' | 'handoff' | 'calendar'
+  let kind: 'message' | 'handoff'
   let recipients = input.recipients
   if (input.payload.role === 'user') {
     kind = 'message'
@@ -27,13 +27,7 @@ export async function enqueueAgentWakes(db: Queryable, input: AgentWakeInput): P
       recipients = recipients.filter(id => id === continuation.agentId)
     }
   } else if (nativeData(input.payload,'handoff')) kind = 'handoff'
-  else if (input.payload.role === 'system' && typeof custom.calendarEventId === 'string' && typeof custom.scheduledFor === 'string') {
-    kind = 'calendar'
-    const { rows } = await db.query<{ assignee_id: string }>(
-      `SELECT assignee_id FROM calendar_events WHERE company_id=$1 AND id=$2 AND kind='agent_task'
-        AND target_conversation_id=$3 AND assignee_id IS NOT NULL`,[input.companyId,custom.calendarEventId,input.channelId])
-    recipients = rows[0] ? [rows[0].assignee_id] : []
-  } else return 0
+  else return 0
   const dependencies = [...new Set(input.knowledgeSourceIds ?? [])].sort()
 
   let inserted = 0

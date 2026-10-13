@@ -11,12 +11,9 @@ test('sensitive actions retain confirmation prompts', () => {
   for (const path of [
     '../features/canvas/components/CanvasView.tsx',
     '../features/documents/components/DocumentEditor.tsx',
-    '../features/calendar/components/EventEditor.tsx',
-    '../features/calendar/components/CalendarEventPeekContent.tsx',
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
     '../features/knowledge/components/ProjectSourceLibrary.tsx',
-    '../features/calendar/components/CalendarView.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })

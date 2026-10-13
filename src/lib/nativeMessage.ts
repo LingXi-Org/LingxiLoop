@@ -48,6 +48,7 @@ export const generativeComponentSchemas: Record<string, z.ZodType> = {
   Divider: z.object({ flush: z.boolean().optional() }).strict(),
   Spacer: z.object({}).strict(),
   Card: z.object({ title: z.string().optional(), padding: gap }).strict(),
+  // Legacy history reader only; the runtime presentation registry no longer exposes this card.
   'calendar-event': z.object({ event: z.object({ id, title: z.string(), startAt: z.string(), endAt: z.string().nullable().optional(), allDay: z.boolean() }).strict() }).strict(),
   'learning-stats': z.object({ id, title: z.string(), description: z.string(), stats: z.array(z.object({ key: id, label: z.string(), value: z.number() }).strict()).max(100) }).strict(),
 }

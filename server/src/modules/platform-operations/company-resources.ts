@@ -18,8 +18,8 @@ const projectReads: Record<string, PermissionAction> = {
 }
 const resourceReads: Record<string, [PermissionAction, PermissionResource['type']]> = {
   conversations: ['conversation:read', 'conversation'], documents: ['document:read', 'document'],
-  canvases: ['canvas:read', 'canvas'], 'calendar-events': ['calendar:read', 'calendar_event'],
-  'email-messages': ['email:read', 'message'], 'knowledge-sources': ['knowledge:read', 'knowledge_source'],
+  canvases: ['canvas:read', 'canvas'],
+  'knowledge-sources': ['knowledge:read', 'knowledge_source'],
   participants: ['agent:read', 'agent'], 'agent-routines': ['agent_approval:list', 'routine'],
 }
 export const COMPANY_RESOURCES = [...Object.keys(companyReads), ...Object.keys(projectReads), ...Object.keys(resourceReads), 'knowledge-jobs', 'presentations', 'llm-calls', 'agent-runs']

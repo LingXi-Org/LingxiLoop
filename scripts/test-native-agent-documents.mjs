@@ -19,8 +19,6 @@ const database = new Pool({ connectionString, max: 8, connectionTimeoutMillis: 5
 const loader = register({ namespace: 'native-document-check' })
 const { createDocumentTools } = await loader.import('../server/src/modules/documents/agent-tools.ts', import.meta.url)
 const { readDocumentSnapshot } = await loader.import('../server/src/modules/documents/collaboration-application.ts', import.meta.url)
-const { calendarTools } = await loader.import('../server/src/modules/calendar/agent-tools.ts', import.meta.url)
-const { CalendarApplication } = await loader.import('../server/src/modules/calendar/application.ts', import.meta.url)
 const { pollTools } = await loader.import('../server/src/modules/polls/agent-tools.ts', import.meta.url)
 const { PollApplication } = await loader.import('../server/src/modules/polls/application.ts', import.meta.url)
 const { flushNativeEvents } = await loader.import('../server/src/agents/native-events.ts', import.meta.url)
@@ -55,16 +53,7 @@ const model = {
       if (hop === 3) return call('ipython', { code: `print(host.polls.show(messageId=${JSON.stringify(row.poll_client_msg_no)}))` })
       return answer('The poll is created and I voted for Algebra.')
     }
-    if (mode === 'calendar') {
-      const input = { title: 'Lesson', startAt: '2027-01-02T10:00:00Z' }
-      if (hop === 1) return call('calendar__create', { ...input, startAt: 'invalid-date' })
-      if (hop === 2) return call('calendar__create', input)
-      const eventId = (await database.query('SELECT id FROM calendar_events')).rows[0].id
-      const app = new CalendarApplication(database, { publish: async () => {} }, { dispatch: async () => { throw new Error('not dispatched by fixture') } })
-      if (hop === 3) return call('calendar__update', { eventId, expected: await app.get({ companyId: 't', projectId: 'p', userId: 'human' }, eventId), patch: { title: 'Updated lesson' } })
-      if (hop === 4) return call('ipython', { code: `print(host.calendar.get(eventId=${JSON.stringify(eventId)}))` })
-      return answer('The approved calendar event is created and renamed Updated lesson.')
-    }
+
     if (mode === 'delete') {
       if (hop === 1) return call('documents__delete', { documentId, expectedRevision: (await readDocumentSnapshot(database, documentId, 't')).revision })
       return answer('The approved document was deleted.')
@@ -114,11 +103,11 @@ try {
     INSERT INTO courses(id,company_id,project_id,created_by) VALUES('course','t','p','human');
     INSERT INTO project_memberships(company_id,project_id,user_id,role,status) VALUES('t','p','human','TEACHER','ACTIVE');
     INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status,capabilities)
-      VALUES('agent','t','agent','Agent','A','blue','avail','["documents","calendar"]'),('human','t','human','Human','H','blue','avail','[]');
+      VALUES('agent','t','agent','Agent','A','blue','avail','["documents"]'),('human','t','human','Human','H','blue','avail','[]');
     INSERT INTO conversations(id,kind,title,company_id,project_id,members,leader_id) VALUES('room','group','Room','t','p','["human","agent"]','human');
     INSERT INTO im_channel_bindings(company_id,channel_id,profile) VALUES('t','room','{"channelId":"room","channelType":2,"members":["human","agent"]}');
   `)
-  const tools = [...createDocumentTools(imageStorage), ...calendarTools, ...pollTools]
+  const tools = [...createDocumentTools(imageStorage), ...pollTools]
   const options = { database: pool, harness: createProductHarness(tools), ...createProductContext(tools), homesRoot: directory,
     modelBudget: { maxModelCalls: 24 }, delivery: { onEvent: async (_work, event, context) => { context.signal.throwIfAborted(); events.push(event) },
       deliverMessage: async (_work, message, context) => { context.signal.throwIfAborted(); delivered.push(message); return { messageId: context.im.messageKey } } } }
@@ -197,20 +186,10 @@ try {
   assert.equal(await polls.reconcilePendingPublications(), 0)
   assert.equal(publications.length, 1)
 
-  mode = 'calendar'; hop = 0
-  const calendarIdentity = await enqueue('native-calendar','Create a Lesson calendar event on January 2, 2027 at 10:00 UTC after approval, then rename it Updated lesson.')
-  assert.equal(await worker.runNext(), true)
-  const calendarWaiting = await control.readOutcome(calendarIdentity)
-  assert.equal(calendarWaiting.status, 'awaiting_approval')
-  await control.decideApproval({ ...calendarIdentity, approvalId: calendarWaiting.approvalId, approved: true })
-  assert.equal(await worker.runNext(), true)
-  assert.equal((await control.readOutcome(calendarIdentity))?.status, 'satisfied')
-  assert.deepEqual((await database.query('SELECT title,created_by FROM calendar_events')).rows, [{ title: 'Updated lesson', created_by: 'human' }])
   const nativeEvents = []
   await flushNativeEvents(database, async event => { nativeEvents.push(event) }, new AbortController().signal)
-  assert.ok(nativeEvents.some(event => event.type === 'calendar.changed' && event.actorId === 'agent'))
   assert.equal((await database.query('SELECT id FROM agent_native_event_outbox WHERE delivered_at IS NULL')).rows.length, 0)
-  console.log('Public tarball + real PostgreSQL: document, calendar and poll tools; both channels; atomic receipts; permission revocation; cross-worker approval; downloaded bytes; native event and message delivery receipts passed.')
+  console.log('Public tarball + real PostgreSQL: document and poll tools; both channels; atomic receipts; permission revocation; cross-worker approval; downloaded bytes; native event and message delivery receipts passed.')
 } finally {
   await worker?.stop()
   await control?.stop()

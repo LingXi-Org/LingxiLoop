@@ -6,7 +6,7 @@ import { intentPresentation, isQuiet, routingWindow } from '../modules/notificat
 
 const preference: NotificationPreferencesRow = {
   company_id: 'company-1', user_id: 'user-1', project_id: 'project-1',
-  in_app_enabled: true, email_enabled: true, push_enabled: false,
+  in_app_enabled: true, email_enabled: false, push_enabled: false,
   timezone: 'UTC', daily_time: '09:00', weekly_day: 1, quiet_start: null, quiet_end: null,
 }
 

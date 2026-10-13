@@ -32,7 +32,7 @@ await writeFile(output, JSON.stringify({
   generatedAt: new Date().toISOString(), scope: 'Latest selected result per Web test id; collection alone is not verification',
   counts, runs, cases,
   limits: [
-    'No dedicated live model account or email receiver was supplied; model completions/quality and email delivery are not verified.',
+    'No dedicated live model account  was supplied; model completions/quality and transactional invitation delivery are not verified.',
     'Local Notebook model fixture validates ingestion plumbing, not live provider quality.',
     'Composer image upload is unverified because the official engine cannot select the detached native file picker.',
   ],

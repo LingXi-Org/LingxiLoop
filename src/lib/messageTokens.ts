@@ -4,7 +4,6 @@ import { findSkypeByShortcode, SKYPE_SHORTCODE_RE } from '@/lib/skypeEmojis'
 export type RichToken =
   | { kind: 'text'; value: string }
   | { kind: 'document'; id: string }
-  | { kind: 'calendar'; id: string }
   | { kind: 'mention'; id: string }
   | { kind: 'msgref'; n: number }
   | { kind: 'bold'; value: string }
@@ -14,7 +13,6 @@ export type RichToken =
   | { kind: 'link'; url: string; text: string }
 
 const DOC_REF_TOKEN_RE = /^doc_[A-Za-z0-9]+$/
-const CALENDAR_REF_TOKEN_RE = /^ce-[A-Za-z0-9-]+$/
 
 function splitUnicodeEmoji(segment: string, output: RichToken[]): void {
   if (!segment) return
@@ -78,14 +76,13 @@ export function parseBody(body: string): RichToken[] {
     } else if (token.startsWith('`')) {
       const value = token.slice(1, -1)
       if (DOC_REF_TOKEN_RE.test(value)) tokens.push({ kind: 'document', id: value })
-      else if (CALENDAR_REF_TOKEN_RE.test(value)) tokens.push({ kind: 'calendar', id: value })
       else tokens.push({ kind: 'code', value })
     } else if (token.startsWith('http')) {
       const { url, trail } = trimUrlTrailing(token)
       tokens.push({ kind: 'link', url, text: url })
       if (trail) splitEmoji(trail, tokens)
     } else if (token.startsWith('doc_')) tokens.push({ kind: 'document', id: token })
-    else if (token.startsWith('ce-')) tokens.push({ kind: 'calendar', id: token })
+    else if (token.startsWith('ce-')) tokens.push({ kind: 'text', value: token })
     else if (token.startsWith('#')) tokens.push({ kind: 'msgref', n: Number(token.slice(1)) })
     else tokens.push({ kind: 'mention', id: token.slice(1) })
     last = match.index + token.length

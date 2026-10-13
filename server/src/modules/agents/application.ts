@@ -24,7 +24,6 @@ export class AgentApplicationError extends Error {
 
 export interface AgentInfrastructure {
   transaction<T>(work: (db: PoolClient) => Promise<T>): Promise<T>
-  computeAddress(agentId: string, companySlug: string): string | null
   invalidatePersona(agentId?: string): void
   assertNotManaged(agentId: string, companyId: string): Promise<void>
   assertVisible(agentId: string, companyId: string, userId: string): Promise<void>
@@ -40,11 +39,9 @@ export class AgentApplication {
     const prefs = await preferences(this.db, scope.userId)
     const avatars = (prefs.agentAvatars ?? {}) as Record<string, PersonalAgentAvatar>
     return rows.map((row) => {
-      const { companySlug, ...fields } = row
+      const { companySlug: _companySlug, ...fields } = row
       const participant = { ...fields, personalAvatar: row.kind === 'agent' ? avatars[agentAvatarKey(scope.companyId, row.id)] ?? null : null }
-      if (row.managed) return { ...participant, email: null }
-      if (row.kind !== 'agent' || row.email || !companySlug) return participant
-      return { ...participant, email: this.infra.computeAddress(row.id, companySlug) }
+      return { ...participant, capabilities: row.capabilities?.filter(capability => capability !== 'email' && capability !== 'calendar'), email: row.kind === 'agent' ? null : row.email }
     })
   }
 

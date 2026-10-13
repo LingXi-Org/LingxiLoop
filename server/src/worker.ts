@@ -2,13 +2,11 @@ import { closeDatabasePools } from './db/pool.js'
 import { startDbGcWorker } from './db-gc.js'
 import { env } from './env.js'
 import { reconcileImChannels, startImChannelReconciliation } from './im/reconcile.js'
-import { startCalendarScheduler } from './modules/calendar/index.js'
 import { startAttentionProjectionWorker } from './modules/attention/public.js'
 import { startTeacherBriefingWorker } from './modules/briefings/public.js'
 import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.js'
 import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
 import { startEducationContractExpiryWorker } from './modules/education/public.js'
-import { startEmailGcWorker, startEmailRetryWorker } from './modules/email/worker.js'
 import { startKnowledgeStorageGc, startKnowledgeWorker } from './modules/knowledge/worker.js'
 import { startLearningEffectWorker } from './modules/learning/worker.js'
 import { startNotificationScheduler } from './modules/notifications/public.js'
@@ -36,8 +34,6 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'learning-effects', concurrency: 'queue-claim', start: () => startLearningEffectWorker() },
   { name: 'company-onboarding-effects', concurrency: 'queue-claim', start: () => startCompanyOnboardingEffectWorker() },
   { name: 'im-channel-reconciliation', concurrency: 'idempotent', start: () => startImChannelReconciliation() },
-  { name: 'email-retry', concurrency: 'queue-claim', start: () => startEmailRetryWorker() },
-  { name: 'email-storage-gc', concurrency: 'idempotent', start: () => startEmailGcWorker() },
   { name: 'document-mention-delivery', concurrency: 'queue-claim', start: () => startDocumentMentionDeliveryWorker() },
   { name: 'education-contract-expiry', concurrency: 'queue-claim', start: () => startEducationContractExpiryWorker() },
   { name: 'database-gc', concurrency: 'idempotent', start: () => startDbGcWorker() },
@@ -45,7 +41,6 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'knowledge-storage-gc', concurrency: 'idempotent', start: () => startKnowledgeStorageGc() },
   { name: 'presentation-generation', concurrency: 'queue-claim', start: () => startPresentationWorker() },
   { name: 'presentation-storage-gc', concurrency: 'idempotent', start: () => startPresentationStorageGc() },
-  { name: 'calendar-dispatch', concurrency: 'idempotent', start: () => startCalendarScheduler() },
   { name: 'poll-expiration', concurrency: 'database-lock', start: () => startPollExpirationSweeper(env.POLL_SWEEP_INTERVAL_MS) },
 ]
 

@@ -18,9 +18,6 @@ const required = [
   'R2_SECRET_ACCESS_KEY',
   'R2_PUBLIC_BASE',
   'R2_URL_SIGNING_SECRET',
-  'RESEND_API_KEY',
-  'RESEND_WEBHOOK_SECRET',
-  'EMAIL_DOMAIN',
 ]
 
 const missing = required.filter((name) => {

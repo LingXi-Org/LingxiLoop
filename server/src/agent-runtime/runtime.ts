@@ -188,7 +188,7 @@ export async function startLingxiOSWorker() {
     performance: { checkpointDedup: true, promptCache: true, asyncCompaction: true, onDemandAttachments: true },
     evolutionEvaluator: createNativeEvolutionEvaluator(lingxiOSControl),
     processors: { canvas_worker: 'conversation', canvas_summary: 'conversation', routine: 'conversation',
-      teacher_digest: 'conversation', mission_coordinator: 'conversation', handoff: 'conversation', calendar: 'conversation' },
+      teacher_digest: 'conversation', mission_coordinator: 'conversation', handoff: 'conversation' },
   } satisfies WorkerOptions
   if (env.NODE_ENV === 'production') execFileSync('bwrap', [
     '--die-with-parent', '--unshare-all', '--new-session', '--ro-bind', '/', '/',

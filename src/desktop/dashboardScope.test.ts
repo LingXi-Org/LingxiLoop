@@ -21,11 +21,11 @@ test('workspace navigation preserves views and restores the original conversatio
   const { switchLearningWorkspace } = await import('./dashboardScope')
   const target = { companyId: 'company', projectId: 'next', perspective: 'teacher', canManage: true, courseId: 'course' } as LearningSpace
   try {
-    useApp.setState({ view: 'calendar', selectedConversationId: 'room' })
+    useApp.setState({ view: 'library', selectedConversationId: 'room' })
     useSurface.getState().openCanvasPeek('canvas')
-    useApp.setState({ view: 'calendar' })
+    useApp.setState({ view: 'library' })
     await switchLearningWorkspace(target)
-    assert.equal(useApp.getState().view, 'calendar')
+    assert.equal(useApp.getState().view, 'library')
     assert.equal(useSurface.getState().surface, null)
     assert.equal(workspace.selectedId, 'next')
     await switchLearningWorkspace(target)
@@ -35,7 +35,7 @@ test('workspace navigation preserves views and restores the original conversatio
     await switchLearningWorkspace({ ...target, projectId: 'learner', perspective: 'learner', canManage: false })
     assert.equal(useApp.getState().view, 'learning')
 
-    for (const view of ['agents', 'mail'] as const) {
+    for (const view of ['agents'] as const) {
       useApp.setState({ view })
       await switchLearningWorkspace({ ...target, projectId: view })
       assert.equal(useApp.getState().view, view)

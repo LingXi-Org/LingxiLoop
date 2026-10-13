@@ -12,7 +12,7 @@ import { useParticipants } from '../state'
 import { AgentAvatarEditor } from './AgentAvatarEditor'
 
 const STATUS: Record<Status, string> = { avail: '可用', working: '工作中', thinking: '思考中', waiting: '等待确认', resting: '休息中' }
-const CAPABILITIES: Record<AgentCapability, string> = { canvas: '共享画布', web: '网页研究', files: '文件', email: '邮件', documents: '文档', calendar: '日历', knowledge: '知识库', learning: '学习辅导', teacher_admin: '教学管理', handoffs: '协作交接', routines: '定时任务' }
+const CAPABILITIES: Record<AgentCapability, string> = { canvas: '共享画布', web: '网页研究', files: '文件', documents: '文档', knowledge: '知识库', learning: '学习辅导', teacher_admin: '教学管理', handoffs: '协作交接', routines: '定时任务' }
 const ORDER = ['nova', 'sage', 'milo', 'trace', 'scout', 'forge', 'pulse']
 
 export function AgentsSkeleton() {
@@ -69,7 +69,6 @@ function AgentCard({ agent, ...actions }: AgentActionProps & { agent: Participan
             <div className="flex items-center gap-4"><AgentAvatarEditor agent={agent} /><p className="text-xs leading-relaxed text-muted-foreground">点击头像更换</p></div>
             {agent.bio && <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">{agent.bio}</p>}
             {!!agent.capabilities?.length && <div><h3 className="mb-2 text-xs font-medium text-muted-foreground">可用能力</h3><ul className="flex flex-wrap gap-1.5">{agent.capabilities.map(capability => <li key={capability} className="rounded-md border bg-muted/30 px-2 py-1 text-xs">{CAPABILITIES[capability]}</li>)}</ul></div>}
-            {agent.email && <p className="break-all text-xs text-muted-foreground">邮箱：{agent.email}</p>}
             {action}{feedback}
           </DialogContent>
         </Dialog>

@@ -1,5 +1,5 @@
 import { pool } from '../db/pool.js'
-import { CH_CALENDAR_EVENTS, CH_DOCS, CH_DOC_UPDATE, CH_CONVO_UPDATED, CH_REACTIONS, CH_CANVAS, publish } from '../redis.js'
+import { CH_DOCS, CH_DOC_UPDATE, CH_CONVO_UPDATED, CH_REACTIONS, CH_CANVAS, publish } from '../redis.js'
 import { flushNativeEvents } from './native-events.js'
 import { channelProfileForCompany } from '../im/messages-repository.js'
 import { syncProductChannel } from '../agent-runtime/conversations.js'
@@ -32,7 +32,6 @@ export function startNativeEventWorker() {
         case 'im.read_receipt': await publishReadReceiptAdvance(event.advance); return
         case 'conversation.updated': await publish(CH_CONVO_UPDATED, event); return
         case 'message.reactions': await publish(CH_REACTIONS, event); return
-        case 'calendar.changed': await publish(CH_CALENDAR_EVENTS, event); return
         case 'canvas.changed': await publish(CH_CANVAS, event); return
         case 'doc.changed': await publish(CH_DOCS, event); return
         case 'doc.update': await publish(CH_DOC_UPDATE, event); return

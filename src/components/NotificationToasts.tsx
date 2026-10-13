@@ -31,7 +31,6 @@ import {
 import { isElectron } from '@/lib/runtime'
 import { playNotificationChime } from '@/lib/chime'
 import { Avatar } from './Avatar'
-import { ICalendar } from './icons'
 
 const AUTO_DISMISS_MS = 12_000
 const MAX_TOASTS = 5
@@ -40,22 +39,12 @@ interface Toast {
   /** Stable id we use for React key + dismissal lookup. */
   id: string
   /** What surface this toast points at — drives the click handler. */
-  kind: 'message' | 'doc.mention' | 'calendar.reminder'
+  kind: 'message' | 'doc.mention'
   /** Set when kind === 'message'. The conversation the message belongs to. */
   conversationId?: string
   /** Set when kind === 'doc.mention'. The doc that was mentioned in. */
   documentId?: string
-  /** Set when kind === 'calendar.reminder'. The calendar_event id; the
-   *  click handler opens Calendar view and (in a follow-up) could deep
-   *  link to this specific event. */
-  eventId?: string
-  /** ISO timestamp the calendar event is about to fire (reminder only). */
-  occurrenceAt?: string
-  /** "Heads-up in N minutes" — captured at toast time so the copy stays
-   *  truthful even after a few seconds tick by. */
-  leadMinutes?: number
-  /** Identity of the most recent author (avatar/name shown). Unused for
-   *  reminder toasts — we render a calendar icon instead of an avatar. */
+  /** Most recent author identity. */
   authorId: string
   /** Most recent message body (we replace older bodies on coalesce). */
   body: string
@@ -245,47 +234,6 @@ export function NotificationToasts() {
       })
     })
 
-    // ============ calendar.reminder toasts ============
-    // Calendar reminders bypass the attentive-window gate too — they're
-    // explicitly scheduled by the user (or an agent on their behalf), so
-    // popping while the app is foreground is exactly the desired UX.
-    // Filter: only show if the current user is in `recipientUserIds`.
-    const offReminder = ws.on((e) => {
-      if (e.type !== 'calendar.reminder') return
-      const me = meRef.current
-      if (!me || !e.recipientUserIds.includes(me)) return
-      const at = Date.now()
-      setToasts((prev) => {
-        // Coalesce against same eventId so a duplicate publish (multi-
-        // tab WS sub) merges instead of stacking.
-        const idx = prev.findIndex((t) => t.kind === 'calendar.reminder' && t.eventId === e.eventId)
-        if (idx >= 0) {
-          const next = prev.slice()
-          next[idx] = { ...next[idx], at, count: next[idx].count + 1 }
-          return next
-        }
-        queueMicrotask(playNotificationChime)
-        const inText = e.leadMinutes <= 1
-          ? '即将开始'
-          : e.leadMinutes < 60
-            ? `${e.leadMinutes} 分钟后开始`
-            : `${Math.round(e.leadMinutes / 60)} 小时后开始`
-        const fresh: Toast = {
-          id: `toast-reminder-${e.eventId}-${at}`,
-          kind: 'calendar.reminder',
-          eventId: e.eventId,
-          occurrenceAt: e.occurrenceAt,
-          leadMinutes: e.leadMinutes,
-          authorId: '',                          // unused — calendar icon shown
-          body: inText,
-          conversationTitle: e.title,
-          at, count: 1,
-        }
-        const merged = [fresh, ...prev]
-        return merged.length > MAX_TOASTS ? merged.slice(0, MAX_TOASTS) : merged
-      })
-    })
-
     // Electron: chime is played from the MAIN WINDOW (always loaded,
     // zero boot delay) the instant main signals the notification panel
     // is on screen. Firing from inside the notification window's React
@@ -305,7 +253,6 @@ export function NotificationToasts() {
     return () => {
       offMessage()
       offMention()
-      offReminder()
       offFocus?.()
       offVisible?.()
     }
@@ -324,10 +271,6 @@ export function NotificationToasts() {
       void import('@/features/documents/state').then(({ useDocuments }) => {
         useDocuments.getState().select(t.documentId!)
       })
-    } else if (t.kind === 'calendar.reminder') {
-      // Jump to Calendar. Deep-linking to the specific event is a
-      // follow-up — Calendar will scroll to the day on load anyway.
-      setView('calendar')
     } else if (t.conversationId) {
       select(t.conversationId)
     }
@@ -394,18 +337,7 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
       }}
     >
       <div className="flex items-start gap-2.5">
-        {toast.kind === 'calendar.reminder' ? (
-          // Reminder toasts: skype-tinted calendar tile in place of avatar.
-          // The author slot is meaningless for these (the "sender" is the
-          // scheduler), so we render an icon chip that visually anchors the
-          // reminder as system-originated.
-          <div
-            className="w-8 h-8 rounded-full grid place-items-center shrink-0"
-            style={{ background: 'var(--sky-100)', color: 'var(--skype-deep)' }}
-          >
-            <ICalendar className="w-4 h-4" />
-          </div>
-        ) : author ? (
+        {author ? (
           <Avatar p={author} size={32} ringColor="var(--cloud)" />
         ) : (
           <div className="w-8 h-8 rounded-full bg-ink-100 shrink-0" />
@@ -413,10 +345,10 @@ function ToastCard({ toast, onClick, onDismiss }: { toast: Toast; onClick: () =>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="text-[12.5px] font-semibold text-ink-900 truncate">
-              {toast.kind === 'calendar.reminder' ? toast.conversationTitle : (author?.name ?? '成员')}
+              {author?.name ?? '成员'}
             </span>
             <span className="text-[10.5px] text-ink-300 italic font-display truncate">
-              {toast.kind === 'calendar.reminder' ? "日历提醒" : toast.conversationTitle}
+              {toast.conversationTitle}
             </span>
             {toast.count > 1 && (
               <span

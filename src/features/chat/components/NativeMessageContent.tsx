@@ -17,7 +17,7 @@ import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { BusinessMessagePart } from './BusinessMessagePart'
 import { MessagePartBoundary } from './MessagePartBoundary'
 import { NativeTool, hasRichTool } from './NativeTool'
-import { CalendarEventCard, TeacherBriefingStatsTool } from './ToolRenderers'
+import { TeacherBriefingStatsTool } from './ToolRenderers'
 const NativeOpenUiLesson = lazy(() => import('./interactive-ui/OpenUiLesson').then(module => ({ default: module.NativeOpenUiLesson })))
 
 const ReadOnlyMessage = createContext(false)
@@ -38,7 +38,10 @@ const generativeComponents = Object.fromEntries(Object.entries(generativeCompone
     if (name === OPENUI_COMPONENT) return <Suspense fallback={<p className="whitespace-pre-wrap break-words text-sm">{String(parsed.fallback)}</p>}>
       <NativeOpenUiLesson value={parsed} readOnly={readOnly} />
     </Suspense>
-    if (name === 'calendar-event') return <CalendarEventCard args={parsed} />
+    if (name === 'calendar-event') {
+      const event = parsed.event as { title: string; startAt: string }
+      return <p className="whitespace-pre-wrap text-sm">{event.title} · {event.startAt}（日历功能已停止支持）</p>
+    }
     if (name === 'learning-stats') return <TeacherBriefingStatsTool args={parsed} />
     const Component = styledGenerativeUILibrary[name]!.render
     return <Component {...parsed} $status="done">{children}</Component>

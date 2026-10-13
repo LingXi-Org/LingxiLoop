@@ -14,9 +14,7 @@ const MESSAGE_ID = 'wk-message-reaction-slice'
 
 const application = new MessagesApplication({
   db: pool,
-  storage: { publicUrl: async () => { throw new Error('not used') } } as never,
   transaction: (work) => withTransaction(pool, work),
-  replyEmail: async () => { throw new Error('not used') },
   bumpReactionClimate: async () => undefined,
   publishReaction: async () => undefined,
 })

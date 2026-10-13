@@ -23,8 +23,6 @@ import { consumeWsTicket } from './modules/identity/public.js'
 import {
   CH_AGENT_ACTIVITY,
   CH_AGENT_RUN_AVAILABLE,
-  CH_CALENDAR_EVENTS,
-  CH_CALENDAR_REMINDER,
   CH_CANVAS,
   CH_CONVENE,
   CH_CONVO_UPDATED,
@@ -359,7 +357,7 @@ export function attachWebSocket(httpServer: Server) {
     COMPANY_ACCESS_REVOKED,
     CH_STATUS,
     CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
-    CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_CALENDAR_REMINDER, CH_CALENDAR_EVENTS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
+    CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
     CH_IM_READ_RECEIPTS, CH_AGENT_RUN_AVAILABLE,
   ).then((count) => {
     console.log(`[ws] subscribed to ${count} redis channels`)

@@ -15,7 +15,6 @@ import { insertCourse, addInstitutionalCourseMember } from '../modules/learning/
 import { createPermissionService, listActiveActorProjectScopes } from '../modules/access/public.js'
 import { canPersistHumanUpdate, humanWriteAuthorization } from '../modules/documents/collaboration-repository.js'
 import { changeUserLifecycle } from '../modules/platform-operations/user-lifecycle.js'
-import { listCalendarReminderRecipients } from '../modules/calendar/repository.js'
 import { findLearningDashboardLearner } from '../modules/learning/teacher-reporting-repository.js'
 import { listProjects } from '../modules/knowledge/repository.js'
 import { seedMemberLearningContextThreads } from '../modules/context-threads/facade.js'
@@ -172,7 +171,7 @@ test('platform suspension cannot be lifted with an invitation', async () => {
   await assert.rejects(accept('banned',await studentInvitation('math'),'project'),/non-suspended/)
 })
 
-test('departure fences pending document writes and reminder recipients across readmission', async () => {
+test('departure fences pending document writes across readmission', async () => {
   await user('student')
   await accept('student',await studentInvitation('math'),'project')
   await pool.query(`INSERT INTO documents(id,company_id,project_id,title,created_by) VALUES('queued-doc',$1,'math','Doc','student')`,[companyId])
@@ -180,7 +179,6 @@ test('departure fences pending document writes and reminder recipients across re
   assert.equal(await transaction((db) => canPersistHumanUpdate(db,'queued-doc',companyId,'student',queuedAt)),true)
   await transaction((db) => removeMemberState(db,companyId,'student'))
   assert.equal(await transaction((db) => canPersistHumanUpdate(db,'queued-doc',companyId,'student',queuedAt)),false)
-  assert.deepEqual(await listCalendarReminderRecipients(pool,{companyId,creatorId:'student',assigneeId:null}),[])
   await pool.query(`UPDATE company_onboarding_effects SET status='completed' WHERE kind='access.revoke'`)
   await accept('student',await studentInvitation('math'),'project')
   assert.equal(await transaction((db) => canPersistHumanUpdate(db,'queued-doc',companyId,'student',queuedAt)),false)

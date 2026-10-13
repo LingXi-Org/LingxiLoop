@@ -1,7 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { ActionContext } from '@lyyzka/lingxios'
 import type { Queryable } from '../db/queryable.js'
-import type { CalendarChangedEvent } from '../modules/calendar/contracts.js'
 import type { DocumentChangedEvent, DocumentUpdateEvent } from '../modules/documents/contracts.js'
 import type { ConversationUpdatedEvent } from '../modules/conversations/contracts.js'
 import type { ReactionChangedEvent } from '../modules/messages/contracts.js'
@@ -9,7 +8,8 @@ import type { ReadReceiptAdvance } from '../im/read-receipts-contracts.js'
 import type { NativeMessage } from '../im/message-types.js'
 import type { CanvasEvent } from '../redis.js'
 
-export type NativeEvent = CalendarChangedEvent | DocumentChangedEvent | DocumentUpdateEvent | ConversationUpdatedEvent | ReactionChangedEvent | CanvasEvent
+export type NativeEvent = DocumentChangedEvent | DocumentUpdateEvent | ConversationUpdatedEvent | ReactionChangedEvent | CanvasEvent
+
   | { type: 'im.channel_sync'; companyId: string; channelId: string }
   | { type: 'im.membership'; companyId: string; conversationId: string; actorId: string; participantId: string; kind: 'joined' | 'left'; clientNonce: string }
   | { type: 'im.clear_hold'; agentId: string; conversationId: string }
