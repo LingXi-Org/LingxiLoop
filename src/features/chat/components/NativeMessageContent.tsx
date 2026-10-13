@@ -1,5 +1,5 @@
 import { MessagePrimitive, MessagePartPrimitive, PartByIndexProvider, useScrollLock, useAui, useAuiState, type PartState, type SourceMessagePartProps, type TextMessagePartComponent } from '@assistant-ui/react'
-import { createContext, lazy, type ReactNode, Suspense, useContext, useRef, useState } from 'react'
+import { createContext, type ReactNode, useContext, useRef, useState } from 'react'
 import { z } from 'zod'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { DocumentReference } from '@/components/assistant-ui/elements/document-reference'
@@ -22,7 +22,6 @@ import { MessagePartBoundary } from './MessagePartBoundary'
 import { RunActivityHistory } from './RunActivityHistory'
 import { NativeTool, hasRichTool } from './NativeTool'
 import { TeacherBriefingStatsTool } from './ToolRenderers'
-const NativeOpenUiLesson = lazy(() => import('./interactive-ui/OpenUiLesson').then(module => ({ default: module.NativeOpenUiLesson })))
 
 const ReadOnlyMessage = createContext(false)
 const GroupOwnsFooter = createContext(false)
@@ -37,13 +36,10 @@ function SourcePart(part: SourceMessagePartProps) {
 
 const generativeComponents = Object.fromEntries(Object.entries(generativeComponentSchemas).map(([name, schema]) => [name,
   function NativeComponent({ children, ...props }: { children?: ReactNode }) {
-    const readOnly = useContext(ReadOnlyMessage)
     const running = useAuiState(state => state.message.status?.type === 'running')
     const parsed = z.record(z.string(), z.unknown()).parse(schema.parse(props))
     if (name === 'agent-plan') return <AgentPlan title={String(parsed.title)} steps={parsed.steps as AgentPlanStep[]} activeIndex={Number(parsed.activeIndex)} paused={!running} />
-    if (name === OPENUI_COMPONENT) return <Suspense fallback={<p className="whitespace-pre-wrap break-words text-sm">{String(parsed.fallback)}</p>}>
-      <NativeOpenUiLesson value={parsed} readOnly={readOnly} />
-    </Suspense>
+    if (name === OPENUI_COMPONENT) return <p className="whitespace-pre-wrap break-words text-sm">{String(parsed.fallback)}</p>
     if (name === 'calendar-event') {
       const event = parsed.event as { title: string; startAt: string }
       return <p className="whitespace-pre-wrap text-sm">{event.title} · {event.startAt}（日历功能已停止支持）</p>

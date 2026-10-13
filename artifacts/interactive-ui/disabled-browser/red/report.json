@@ -1,0 +1,889 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a13611-3e5e-75d3-ae6a-e877f8b4d29d",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-13T16:21:03.107Z",
+    "finishedAt": "2026-10-13T16:22:18.402Z",
+    "project": {
+      "id": "lingxiloop-retire-layout",
+      "configDigest": "05e871f57ebd55e322c247a885c2f494760debd7718c34de7fe28a8094ce23f6"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "win32 10.0.22621",
+      "arch": "x64",
+      "runtime": "node v22.22.2"
+    },
+    "vcs": {
+      "commit": "32b44f00977dd323aa21b72d923ba6302e249374",
+      "branch": "codex/five-issues-release",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5207",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "6e6551a6bbfc08c91e7768d3d9cdb9f214665cb036e7ac25923c5dd356551e6c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::disabled%20interactive%20history%20preserves%20other%20cards%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "disabled interactive history preserves other cards (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 10,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a13611-4905-718b-b867-617901fd6fb5",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-13T16:21:04.901Z",
+            "durationMs": 40337,
+            "artifacts": [
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__disabled_20interactive_20history_20preserves_20other_20cards_20_281440_29-16dd91a8/default/attempt-0/failure/screen.txt",
+                "size": 5431,
+                "sha256": "18cc123db00e5268db4f457ab3150ec77abee068ac271675e5f8df5cc0d813c5"
+              },
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__disabled_20interactive_20history_20preserves_20other_20cards_20_281440_29-16dd91a8/default/attempt-0/screenshots/001-failure.png",
+                "size": 95973,
+                "sha256": "a4656f1b8ea7961045a6cffbac67b8c97e13969076b993969efb0a8f1fccb349"
+              },
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__disabled_20interactive_20history_20preserves_20other_20cards_20_281440_29-16dd91a8/default/attempt-0/trace/trace.zip",
+                "size": 54680305,
+                "sha256": "74249bc9e6cbabd0c43faa45b136e46af75a9dcec49448dcc61755763df583c3"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expect.toBeVisible failed\nlocator: getByText(\"历史预览的文字讲解。\")\nexpected: visible\nobserved: states: hidden (match count 1)",
+              "retryable": false,
+              "phase": "body",
+              "details": {
+                "locator": "getByText(\"历史预览的文字讲解。\")",
+                "expected": "visible",
+                "observed": "states: hidden",
+                "matches": 1
+              },
+              "source": {
+                "file": "node_modules/e2e/dist/expect/async.js",
+                "line": 112,
+                "column": 28
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:5207/scripts/ui-experience-browser-check.html?surface=%E4%B8%BB%E5%BA%94%E7%94%A8&capture=1&theme=light&scenario=disabled-interactive-history",
+              "screen": "01a13611-4905-718b-b867-617901fd6fb5:artifact:0",
+              "screenshot": "01a13611-4905-718b-b867-617901fd6fb5:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:05.087Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=disabled-interactive-history",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:05.088Z",
+                "durationMs": 5873,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"disabled-interactive-history\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:10.961Z",
+                "durationMs": 192,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"disabled-interactive-history\\\"] [data-slot=\\\"agent-plan\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:11.154Z",
+                "durationMs": 55,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"disabled-interactive-history\\\"] [data-slot=\\\"agent-plan\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:11.209Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByPlaceholder(\"填写学习主题\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:11.253Z",
+                "durationMs": 181,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveValue",
+                "label": "getByPlaceholder(\"填写学习主题\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:11.435Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-4905-718b-b867-617901fd6fb5:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"历史预览的文字讲解。\")",
+                "status": "failed",
+                "startedAt": "2026-10-13T16:21:11.448Z",
+                "durationMs": 30017,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                },
+                "error": {
+                  "category": "test",
+                  "code": "ASSERTION_FAILED",
+                  "message": "expect.toBeVisible failed\nlocator: getByText(\"历史预览的文字讲解。\")\nexpected: visible\nobserved: states: hidden (match count 1)",
+                  "retryable": false,
+                  "details": {
+                    "locator": "getByText(\"历史预览的文字讲解。\")",
+                    "expected": "visible",
+                    "observed": "states: hidden",
+                    "matches": 1
+                  },
+                  "source": {
+                    "file": "node_modules/e2e/dist/expect/async.js",
+                    "line": 112,
+                    "column": 28
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b6fa43d740305be454993ff5003f6eaac3fcb9238e25fe1925fdb2b75abb7388",
+        "testId": "e2e/visual/retire-layout.e2e.ts::disabled%20interactive%20history%20preserves%20other%20cards%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "disabled interactive history preserves other cards (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 10,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a13611-e6cc-7c94-bf95-05111f92858e",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-13T16:21:45.292Z",
+            "durationMs": 32475,
+            "artifacts": [
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__disabled_20interactive_20history_20preserves_20other_20cards_20_28390_29-bf9e28ee/default/attempt-0/failure/screen.txt",
+                "size": 2577,
+                "sha256": "715fbd7b9abec44edcf86b6257209847c9209cd80080d8a10a373b26396b7cfe"
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__disabled_20interactive_20history_20preserves_20other_20cards_20_28390_29-bf9e28ee/default/attempt-0/screenshots/001-failure.png",
+                "size": 40910,
+                "sha256": "c7852ed418f1088ea985982779dc8c1493c79d2e9e031fbdb53d91ee8fb7c0ef"
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_retire-layout.e2e.ts__disabled_20interactive_20history_20preserves_20other_20cards_20_28390_29-bf9e28ee/default/attempt-0/trace/trace.zip",
+                "size": 1865110,
+                "sha256": "47e4cf989801d8716a4ee9a9dde7c5da345e1b243203175eaaf87dc76017df87"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expect.toBeVisible failed\nlocator: getByText(\"历史预览的文字讲解。\")\nexpected: visible\nobserved: states: hidden (match count 1)",
+              "retryable": false,
+              "phase": "body",
+              "details": {
+                "locator": "getByText(\"历史预览的文字讲解。\")",
+                "expected": "visible",
+                "observed": "states: hidden",
+                "matches": 1
+              },
+              "source": {
+                "file": "node_modules/e2e/dist/expect/async.js",
+                "line": 112,
+                "column": 28
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:5207/scripts/ui-experience-browser-check.html?surface=%E4%B8%BB%E5%BA%94%E7%94%A8&capture=1&theme=light&scenario=disabled-interactive-history",
+              "screen": "01a13611-e6cc-7c94-bf95-05111f92858e:artifact:0",
+              "screenshot": "01a13611-e6cc-7c94-bf95-05111f92858e:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:45.307Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=disabled-interactive-history",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:45.308Z",
+                "durationMs": 1353,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:46.662Z",
+                "durationMs": 499,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"disabled-interactive-history\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:47.162Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"disabled-interactive-history\\\"] [data-slot=\\\"agent-plan\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:47.178Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"disabled-interactive-history\\\"] [data-slot=\\\"agent-plan\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:47.187Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByPlaceholder(\"填写学习主题\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:47.197Z",
+                "durationMs": 36,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveValue",
+                "label": "getByPlaceholder(\"填写学习主题\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T16:21:47.233Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13611-e6cc-7c94-bf95-05111f92858e:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"历史预览的文字讲解。\")",
+                "status": "failed",
+                "startedAt": "2026-10-13T16:21:47.247Z",
+                "durationMs": 30087,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                },
+                "error": {
+                  "category": "test",
+                  "code": "ASSERTION_FAILED",
+                  "message": "expect.toBeVisible failed\nlocator: getByText(\"历史预览的文字讲解。\")\nexpected: visible\nobserved: states: hidden (match count 1)",
+                  "retryable": false,
+                  "details": {
+                    "locator": "getByText(\"历史预览的文字讲解。\")",
+                    "expected": "visible",
+                    "observed": "states: hidden",
+                    "matches": 1
+                  },
+                  "source": {
+                    "file": "node_modules/e2e/dist/expect/async.js",
+                    "line": 112,
+                    "column": 28
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9a9aca532a2d85205bc4a89fa820549c6c3b7b4d0d1fb2d3789a1c624deb832c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281920%29",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "conversation edges and readable bodies (1920)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ee3b970565a71fbe19e8605fca68354f4dfe2e52a443c2205c7449841aeb5098",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "conversation edges and readable bodies (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b14d155c87e2ae459b589b6542aecbf9e07830629cdcf2f1a416324c3d2ebd1c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281024%29",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "conversation edges and readable bodies (1024)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9fddbfe7db736eecc1644f9fbe47fde87fcb3ec4336740710dcca4a2db7d4c00",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%28767%29",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "conversation edges and readable bodies (767)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9cfcb9943c68c2902c41a01fbed7d570a2c16a84f66a1a1814828d44d3f55e36",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "conversation edges and readable bodies (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c8315007c41446bf3cdabaafe288786fa776718d77c207ce1e0a4ad72a605676",
+        "testId": "e2e/visual/retire-layout.e2e.ts::retired%20history%20stays%20readable%20without%20actions%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "retired history stays readable without actions (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 66,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "6421c621af13449cba6d622052810fdc91f8e54af557a8fd92716525c36e3b3a",
+        "testId": "e2e/visual/retire-layout.e2e.ts::retired%20history%20stays%20readable%20without%20actions%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "retired history stays readable without actions (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 66,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b777d05ba4f5caea382f538d133ddc01d952c210e047b4ff7892412e354e8508",
+        "testId": "e2e/visual/retire-layout.e2e.ts::rich%20message%20and%20detail%20drawer%20fit%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 9,
+        "titlePath": [
+          "rich message and detail drawer fit (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 82,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "4efc184ae2c518be8956fceb3ce3413259f365de256de0765eb5b257d44fa869",
+        "testId": "e2e/visual/retire-layout.e2e.ts::rich%20message%20and%20detail%20drawer%20fit%20%28767%29",
+        "kind": "test",
+        "declarationIndex": 10,
+        "titlePath": [
+          "rich message and detail drawer fit (767)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 82,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c289269c2f394ad0d771d11f795d7d19cc16e627c7d3d7681dbfb0e0ba642b45",
+        "testId": "e2e/visual/retire-layout.e2e.ts::rich%20message%20and%20detail%20drawer%20fit%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 11,
+        "titlePath": [
+          "rich message and detail drawer fit (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 82,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 12,
+      "selected": 2,
+      "executed": 2,
+      "passed": 0,
+      "failed": 2,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 12,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 56690306,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
