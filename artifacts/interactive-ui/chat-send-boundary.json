@@ -1,0 +1,142 @@
+{
+  "recordedAtUtc": "2026-10-13T15:41:36Z",
+  "purpose": "Prevent chat.send from publishing interactive lesson source outside native-final verification and rendering.",
+  "fixCommit": "041ca5ea72548dad7a209077b9c85df88e9c84c6",
+  "preFixCommit": "f399ecad884a885935c832860ab4a71d9dbfdf6a",
+  "files": [
+    "server/src/im/agent-tools.ts",
+    "server/src/__integration__/agent-protocols.test.ts"
+  ],
+  "provenance": {
+    "execution": "Observed terminal executions on the working tree; the passing implementation and regression were then committed together.",
+    "savedLogFiles": [],
+    "note": "No separate log files were saved. This artifact records the actual terminal results and executable regression assertions; it does not claim a clean-checkout test or a rerun for evidence collection."
+  },
+  "isolation": {
+    "postgres": {
+      "host": "127.0.0.1",
+      "port": 55432,
+      "database": "lingxiloop_chat_boundary_20261013_test",
+      "createdFresh": true
+    },
+    "redis": {
+      "host": "127.0.0.1",
+      "port": 56379,
+      "database": 7
+    },
+    "migration": {
+      "command": "node --import tsx server/src/migrate-bin.ts",
+      "exitCode": 0,
+      "appliedRange": "0001_v1_baseline through 0038_learning_submission_sequence",
+      "appliedCount": 38,
+      "reportedDurationMs": 4511
+    },
+    "effects": "Real PostgreSQL and existing recording WuKong integration provider; no real model, browser, outbound notifications, push or deployment.",
+    "preserved": "No shared/default integration database was rebuilt; no changes to policy, vendored runtime or reconciliation."
+  },
+  "reproduce": {
+    "shell": "PowerShell",
+    "workingDirectory": "Repository root (observed: E:/lyyzka/ll-five)",
+    "prerequisites": "Install the repository's locked dependencies and start its local PostgreSQL/Redis services with docker compose -f e2e/server/compose.yaml up -d --wait. Services were already running during the observed check.",
+    "environmentCommands": [
+      "$env:NODE_ENV='test'",
+      "$env:DOTENV_CONFIG_PATH='E:/lyyzka/ll-five/artifacts/interactive-ui/__no_dotenv__'",
+      "$env:INTEGRATION_DATABASE_URL='postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_chat_boundary_20261013_test'",
+      "$env:DATABASE_URL=$env:INTEGRATION_DATABASE_URL",
+      "$env:REDIS_URL='redis://127.0.0.1:56379/7'",
+      "$env:OPENAI_API_KEY='isolated-chat-boundary-test'",
+      "$env:OPENAI_BASE_URL='http://127.0.0.1:1/v1'",
+      "$env:OPENAI_EMBEDDING_MODEL='disabled'",
+      "$env:LINGXILOOP_DISABLE_EMBEDDINGS='1'",
+      "$env:OPEN_NOTEBOOK_ENABLED='false'",
+      "$env:RESEND_API_KEY=''",
+      "$env:ALERT_WEBHOOK_URL=''",
+      "$env:WUKONG_USER_TOKEN_SECRET='isolated-chat-boundary-test-secret'",
+      "$env:LINGXILOOP_GATEWAY_HMAC_SECRET='isolated-chat-boundary-test-gateway'",
+      "$env:LINGXILOOP_INVITE_BASE_URL='http://127.0.0.1:53098'",
+      "$env:LINGXIOS_LIVE_UI='0'",
+      "$env:LINGXIOS_REAL_WUKONG='0'",
+      "$env:LINGXIOS_LIVE_PROTOCOL='0'",
+      "$env:RESEND_LIVE_TEST='0'"
+    ],
+    "databasePreparation": "For a fresh run, create only lingxiloop_chat_boundary_20261013_test on the above local PostgreSQL service, then run the migration command. If reusing this already-owned disposable database, the owning integration runner truncates test tables; do not point these commands at another database.",
+    "sourcePreparation": {
+      "note": "Only perform these source-selection commands in a separate disposable checkout. They were not used to reset the shared working tree during the observed executions.",
+      "red": [
+        "git switch --detach f399ecad884a885935c832860ab4a71d9dbfdf6a",
+        "git restore --source=041ca5ea72548dad7a209077b9c85df88e9c84c6 -- server/src/__integration__/agent-protocols.test.ts"
+      ],
+      "green": [
+        "git switch --detach 041ca5ea72548dad7a209077b9c85df88e9c84c6"
+      ]
+    },
+    "redCommand": "node server/run-integration-tests.mjs --file agent-protocols.test.ts",
+    "greenCommand": "node server/run-integration-tests.mjs --file agent-protocols.test.ts",
+    "sameEnvironment": true
+  },
+  "red": {
+    "productionFixPresent": false,
+    "regressionWrittenFirst": true,
+    "exitCode": 1,
+    "tests": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "testDurationMs": 7144.4288,
+    "totalDurationMs": 11805.7621,
+    "assertion": "interactive lessons must use the native final response",
+    "expectedRejectedOk": false,
+    "actualRejectedOk": true,
+    "firstFailingInput": "Raw root = Lesson(...) source.",
+    "limitation": "Execution stopped at the first rejection assertion; RED did not reach the subsequent persistence-count assertions."
+  },
+  "green": {
+    "exitCode": 0,
+    "tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "testDurationMs": 10731.4155,
+    "totalDurationMs": 14479.8783,
+    "rejectedCases": [
+      "raw lesson",
+      "top-level lingxiloop-openui-v1 fence",
+      "list lesson",
+      "state default followed by lesson",
+      "openui-lang fence"
+    ],
+    "rejectionAssertions": {
+      "ok": false,
+      "messageIncludes": "native final response",
+      "recordingWukongMessageDeltaPerCase": 0,
+      "imSendAcceptancesDeltaPerCase": 0
+    },
+    "preservedCases": [
+      "ordinary prose",
+      "inline code example",
+      "JavaScript fenced example",
+      "blockquote example"
+    ],
+    "preservedAssertions": {
+      "everySendSucceeded": true,
+      "persistedBodiesExactlyMatched": true,
+      "recordingWukongMessageDelta": 4,
+      "imSendAcceptancesDelta": 4
+    }
+  },
+  "additionalChecks": [
+    {
+      "command": "node node_modules/typescript/bin/tsc -p server/tsconfig.json --noEmit",
+      "exitCode": 0
+    },
+    {
+      "command": "node node_modules/@biomejs/biome/bin/biome lint server/src/im/agent-tools.ts server/src/__integration__/agent-protocols.test.ts",
+      "exitCode": 0,
+      "files": 2
+    },
+    {
+      "command": "git diff --check -- server/src/im/agent-tools.ts server/src/__integration__/agent-protocols.test.ts",
+      "exitCode": 0
+    }
+  ]
+}
