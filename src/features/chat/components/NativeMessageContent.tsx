@@ -19,6 +19,7 @@ import { OPENUI_COMPONENT } from '@/lib/interactive-ui/catalog'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { BusinessMessagePart } from './BusinessMessagePart'
 import { MessagePartBoundary } from './MessagePartBoundary'
+import { RunActivityHistory } from './RunActivityHistory'
 import { NativeTool, hasRichTool } from './NativeTool'
 import { TeacherBriefingStatsTool } from './ToolRenderers'
 const NativeOpenUiLesson = lazy(() => import('./interactive-ui/OpenUiLesson').then(module => ({ default: module.NativeOpenUiLesson })))
@@ -148,7 +149,7 @@ function ActivityParts({ Text, footer, mediaFooter, attention }: { Text: TextMes
     restingLabel={`工具执行记录 · ${tools.length} 项`} activeLabel="工具正在处理" stats={[]} /> })
   return <div ref={root}><RunActivity status={status} statusLabel={labels[status]} open={open} onOpenChange={next => { lockScroll(); setOpen(next) }}
     entries={entries}
-    attention={<>{parts.filter(part => part.attention).map(part => <div key={part.id} role="group" aria-label={part.label}>{part.content}</div>)}{attention}</>}>
+    attention={<>{parts.filter(part => part.attention).map(part => <div key={part.id} role="group" aria-label={part.label}>{part.content}</div>)}<RunActivityHistory message={message} />{attention}</>}>
     {parts.filter(part => !part.attention && part.kind !== 'tool' && part.kind !== 'commentary').map(part => part.content)}
   </RunActivity></div>
 }

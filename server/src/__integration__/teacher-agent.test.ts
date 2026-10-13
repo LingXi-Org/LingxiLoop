@@ -7,7 +7,8 @@ import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
 import { createWorker } from '@lyyzka/lingxios/worker'
-import type { ActionContext } from '@lyyzka/lingxios'
+import { assembleHarness, type ActionContext } from '@lyyzka/lingxios'
+import { createProductHarness } from '../agent-runtime/harness.js'
 import { lingxiOSControl, stopLingxiOSControl } from '../agent-runtime/runtime.js'
 import { createProductContext } from '../agent-runtime/context.js'
 import { createProductTools } from '../agent-runtime/tools.js'
@@ -57,16 +58,25 @@ test('[integration] Pulse can send conversational messages only in its active au
     fence: 1,homeEpoch: 1,createdAt: new Date().toISOString(),meta: { text: '解释班级情况。' },
     conversation: { conversationId: pulse.roomId,policyVersion: policy.version,source,internal: false,
       audience: { visibility: 'conversation',participantIds: policy.participants.map(member => member.id) } } }
-  const tools = createProductTools(lingxiOSControl), product = createProductContext(tools)
+  const { tools } = assembleHarness(createProductHarness(createProductTools(lingxiOSControl))), product = createProductContext(tools)
   const loaded = await product.contextProvider.loadContext(work)
   assert.match(loaded.productRules ?? '',/User-facing IM conversation/)
   assert.match(loaded.productRules ?? '',/answer from them without tools when they are sufficient/)
   assert.match(JSON.stringify(loaded.dynamic?.teacherContext),/"learners":1/)
-  assert.deepEqual((await product.capabilityResolver.resolve(work)).filter(grant => grant.name === 'chat'),[{ name: 'chat',methods: ['send'] }])
+  assert.deepEqual((await product.capabilityResolver.resolve(work)).filter(grant => grant.name === 'chat'),[{ name: 'chat',methods: ['send', 'report_progress'] }])
   const input = { body: '先从班级整体情况看起。' }, send = tools.find(tool => tool.action === 'chat.send')!
   const context = { work,database: pool,signal: AbortSignal.timeout(15000),requestVersion: 1,
     action: { runId: run.runId,cellId: 'teacher-send',callIndex: 0,action: 'chat.send',args: input,idempotencyKey: 'teacher-style-send' },
   } as unknown as ActionContext
+  const progress = tools.find(tool => tool.action === 'chat.report_progress')!
+  const update = progress.parse({ version: 1, id: 'teacher-check', kind: 'commentary', label: '核对班级情况', text: '正在核对当前班级统计。', state: 'running' })
+  const progressContext = { ...context, action: { ...context.action, action: progress.action, args: update, idempotencyKey: 'teacher-progress' } }
+  await progress.authorize(progressContext, update)
+  assert.equal((await progress.execute(progressContext, update)).ok, true)
+  for (const restricted of [{ ...work, kind: 'teacher_digest' as const, lane: 'background' as const },
+    { ...work, conversation: { ...work.conversation!, internal: true } }]) {
+    await assert.rejects(progress.authorize({ ...progressContext, work: restricted }, update))
+  }
   assert.equal(loaded.persona?.name,'望远')
   assert.deepEqual((await product.capabilityResolver.resolve(work)).find(grant => grant.name === 'knowledge')?.methods,
     ['search','read_source','list_sources'])

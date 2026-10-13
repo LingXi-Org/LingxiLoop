@@ -76,9 +76,9 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const available = tools.filter(tool => {
       const namespace = tool.action.split('.')[0]
       if (namespace === 'learning' && !learningAudienceSafe) return false
-      if (work.conversation?.internal && ['chat.send','chat.ask','chat.recommend'].includes(tool.action)) return false
+      if (work.conversation?.internal && ['chat.send','chat.ask','chat.recommend','chat.report_progress'].includes(tool.action)) return false
       if (profile.teacher_managed) return namespace === 'teacher' && (work.kind !== 'teacher_digest' || digestActions.has(tool.action))
-        || tool.action === 'chat.send' && work.kind === 'turn' && work.lane === 'interactive' && !!teacherContext
+        || ['chat.send', 'chat.report_progress'].includes(tool.action) && work.kind === 'turn' && work.lane === 'interactive' && !!teacherContext
         || TEACHER_KNOWLEDGE_ACTIONS.has(tool.action) && profile.capabilities.includes('knowledge')
           && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal && !!teacherContext
       if (namespace === 'teacher') return false

@@ -8,6 +8,8 @@ import { runMessageParts, runMessageStatus, harnessToolParts, projectRunMemory, 
 import { nativeRunEvents, publicRunEvent } from './public-events.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { readPublicToolActivity } from './tool-activity.js'
+import { activityAnnotation } from '../../../src/lib/runActivity.js'
+import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 
 /** LingxiOS owns event ordering/fences; only public native messages cross HTTP. */
 export class RunStreamProjection {
@@ -76,6 +78,23 @@ export class RunStreamProjection {
     return this.snapshot
   }
 
+  activityPage(offset: number, attentionOnly = false) {
+    if (!Number.isSafeInteger(offset) || offset < 0) throw new Error('invalid activity offset')
+    const parts = runMessageParts(this.view, this.tools).filter(part => {
+      const kind = activityAnnotation(part)?.kind
+      return attentionOnly ? kind === 'attention' : kind === 'tool' || kind === 'commentary' || kind === 'attention'
+    })
+    const base = this.snapshot.message
+    const { activityHistory: _history, ...custom } = base.metadata.custom
+    let content = parts.slice(offset, offset + 40)
+    // Keep the existing structural bound even when individual rich cards differ
+    // substantially in size. The next cursor includes every deferred part.
+    while (content.length > 1 && !nativeMessageSchema.safeParse({ ...base, content, metadata: { ...base.metadata, custom } }).success) content = content.slice(0, -1)
+    const message = nativeMessageSchema.parse({ ...base, content, metadata: { ...base.metadata, custom } })
+    const next = offset + content.length
+    return { message, total: parts.length, nextOffset: next < parts.length ? next : null }
+  }
+
   get snapshot(): AgentRunSnapshot {
     if (!this.createdAt) throw new Error('run state must precede message updates')
     const { message, draft: _draft, preview: _preview, ...control } = this.view
@@ -85,14 +104,33 @@ export class RunStreamProjection {
       goalOutcome: control.goalOutcome ? outcome as NonNullable<RunDisplayState['goalOutcome']> : null,
       artifacts: message?.envelope.artifacts ?? [] }
     const agentId = this.identity?.agentId ?? message?.agentId
-    return { message: createNativeMessage({ id: `run-${this.view.runId}`, role: 'assistant', createdAt: this.createdAt,
-      content: runMessageParts(this.view,this.tools), status: runMessageStatus(this.view),
+    const parts = runMessageParts(this.view, this.tools)
+    const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
+    const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
+    const activitySet = new Set(activity)
+    const selected = new Set([...activity.filter(part => activityAnnotation(part)?.kind !== 'attention').slice(-40), ...attention.slice(-40)])
+    const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
+      content: parts, status: runMessageStatus(this.view),
       custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },
         ...(agentId ? { refs: { runId: this.view.runId, agentId } } : {}),
         ...(this.identity?.principalId ? { controlPrincipalId: this.identity.principalId } : {}),
         ...(this.identity?.threadId ? { replyToClientMsgNo: this.identity.threadId } : {}),
         ...(this.memory ? { memory: this.memory } : {}), ...(this.error ? { harnessError: this.error } : {}),
-        ...(this.sourceRef ? { sourceRef: this.sourceRef } : {}), suppressAgentWake: true } }) }
+        ...(this.sourceRef ? { sourceRef: this.sourceRef } : {}), suppressAgentWake: true } }
+    // Try the complete message first for ordinary histories; the wire protocol
+    // stays unchanged. Overflow becomes an authorized, bounded activity page.
+    if (activity.length <= 80) {
+      try { return { message: createNativeMessage(input) } } catch { /* preserve answer and page activity below */ }
+    }
+    const compact = { ...input, custom: { ...input.custom, activityHistory: { total: activity.length, attention: attention.length } } }
+    while (selected.size) {
+      compact.content = parts.filter(part => !activitySet.has(part) || selected.has(part))
+      try { return { message: createNativeMessage(compact) } }
+      catch { selected.delete(selected.values().next().value!) }
+    }
+    // Invalid answer content is never silently removed or changed.
+    compact.content = parts.filter(part => !activitySet.has(part))
+    return { message: createNativeMessage(compact) }
   }
 }
 

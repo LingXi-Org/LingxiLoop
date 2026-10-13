@@ -3,6 +3,7 @@
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
 import { code } from '@streamdown/code'
 import { createMathPlugin } from '@streamdown/math'
+import 'katex/dist/katex.min.css'
 import { createMermaidPlugin } from '@streamdown/mermaid'
 import { Block, type BlockProps, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'

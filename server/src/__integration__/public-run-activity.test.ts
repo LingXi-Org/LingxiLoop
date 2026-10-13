@@ -3,6 +3,7 @@ import { after, before, test } from 'node:test'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
 import { createWorker } from '@lyyzka/lingxios/worker'
+import { createServer } from 'node:http'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
@@ -10,7 +11,7 @@ import { readRunProjection } from '../agent-runtime/assistant-transport.js'
 import { readPublicToolActivity } from '../agent-runtime/tool-activity.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { createNativeMessage, nativeText, userMessageSchema } from '../../../src/lib/nativeMessage.js'
-import { ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 // Written before persistence implementation. Failures: cross-tenant/principal reads,
 // leaked private inputs/results, lost public report order on replay, fake times on
@@ -57,6 +58,23 @@ test('published worker persists authorized public activity and measured tool bou
     assert.deepEqual(projected.content, history.content)
     assert.deepEqual(projected.content.map(part => part.type), ['reasoning', 'tool-call', 'generative-ui', 'text', 'text'])
     assert.equal(nativeText(projected), '最终答复。')
+    const httpServer = createServer(await buildApiTestApp('test-owner'))
+    await new Promise<void>(resolve => httpServer.listen(0, '127.0.0.1', resolve))
+    try {
+      const address = httpServer.address(); assert.ok(address && typeof address !== 'string')
+      const url = `http://127.0.0.1:${address.port}/api/im/channels/${conversationId}/agents/${agentId}/runs/${identity.runId}`
+      const request = (query: string, company = companyId, project = projectId) => fetch(`${url}?${query}`, { headers: { 'x-company-id': company, 'x-project-id': project } })
+      const response = await request('activityOffset=0')
+      assert.equal(response.status, 200)
+      const page = await response.json() as { message: { content: unknown[] }; total: number; nextOffset: number | null }
+      assert.equal(page.total, 4); assert.equal(page.nextOffset, null)
+      assert.equal(page.message.content.length, 4)
+      assert.doesNotMatch(JSON.stringify(page), /PRIVATE_SECRET|scratchpad|system_prompt/)
+      assert.notEqual((await request('activityOffset=0&threadId=another-thread')).status, 200)
+      assert.notEqual((await request('activityOffset=0', 'other-company')).status, 200)
+      assert.notEqual((await request('activityOffset=0', companyId, 'other-project')).status, 200)
+      assert.equal((await request('activityOffset=-1')).status, 400)
+    } finally { await new Promise<void>((resolve, reject) => httpServer.close(error => error ? reject(error) : resolve())) }
     assert.equal(activityAnnotation(projected.content.at(-1))?.kind, 'answer')
     const call = projected.content.find(part => part.type === 'tool-call')
     assert.ok(call?.type === 'tool-call' && call.timing && call.timing.completedAt! >= call.timing.startedAt)

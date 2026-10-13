@@ -4,11 +4,20 @@ import { AssistantRuntimeProvider, MessagePrimitive, ThreadPrimitive, useExterna
 import '@/styles/globals.css'
 import { NativeMessageContent } from '@/features/chat/components/NativeMessageContent'
 import { createNativeMessage, deserializeMessage, type NativeMessage } from '@/lib/nativeMessage'
+import { harnessApi } from '@/features/chat/runtime/harness-api'
 
 if (!import.meta.env.DEV && import.meta.env.MODE !== 'interactive-test') throw new Error('This fixture requires the isolated test build')
 const params = new URLSearchParams(location.search)
 document.documentElement.classList.toggle('dark', params.get('theme') === 'dark')
 const annotation = (id: string, kind: 'commentary' | 'tool' | 'answer' | 'attention', label: string) => ({ lingxiloop: { activity: { version: 1, id, kind, label } } })
+if (params.has('paged')) harnessApi.activity = async (_target, offset, attentionOnly) => {
+  const total = attentionOnly ? 110 : 1100, end = Math.min(total, offset + 40)
+  return { total, nextOffset: end < total ? end : null, message: createNativeMessage({ id: 'history-fixture', role: 'assistant',
+    content: Array.from({ length: end - offset }, (_, index) => ({ type: 'tool-call', toolCallId: `page-${offset + index}`, toolName: 'files.list', args: {}, argsText: '',
+      result: { status: attentionOnly ? 'failed' : 'completed' }, ...(attentionOnly ? { isError: true } : {}),
+      providerMetadata: annotation(`page-${offset + index}`, attentionOnly ? 'attention' : 'tool', `活动 ${offset + index + 1}`) })),
+    custom: { runId: 'fixture', activityPresentation: { version: 1 }, harnessControl: false } }) }
+}
 function Message() { return <MessagePrimitive.Root><NativeMessageContent /></MessagePrimitive.Root> }
 function Fixture() {
   const [mode, setMode] = useState('complete')
@@ -27,7 +36,8 @@ function Fixture() {
   ]
   const message = deserializeMessage(createNativeMessage({ id: 'fixture-run', role: 'assistant', content,
     status: mode === 'pending' ? { type: 'requires-action', reason: 'tool-calls' } : mode === 'failed' ? { type: 'incomplete', reason: 'error' } : { type: 'complete', reason: 'stop' },
-    custom: { activityPresentation: { version: 1 }, harnessControl: false },
+    custom: { activityPresentation: { version: 1 }, harnessControl: false,
+      ...(params.has('paged') ? { runId: 'fixture', senderId: 'fixture-agent', conversationId: 'fixture-room', activityHistory: { total: 1100, attention: 110 } } : {}) },
   }))
   const runtime = useExternalStoreRuntime({ messages: [message], isRunning: false, onNew: async () => {} })
   return <main className="mx-auto max-w-3xl space-y-4 p-4"><p>原生消息组件验收 · 合成数据</p>

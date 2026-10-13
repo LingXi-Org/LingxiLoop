@@ -57,6 +57,22 @@ are limited to the adapters above, Chinese copy and the existing theme tokens.
 
 ## Reproduction
 
+The cross-review follow-up adds regression coverage for 1,100 tool calls and
+110 attention records without raising the native 512-part/50,000-node limits.
+All calls are accessible through authorized pages; the answer and attention
+entry remain outside the activity disclosure. Eight targeted transport/projection
+checks and the new browser paging check passed. The public runtime integration
+also passed the HTTP page, wrong-tenant, wrong-thread and wrong-Project checks.
+The teacher grant owning test passed with the production assembled harness.
+The complete teacher integration file passed 12 of 13 tests; its concurrent
+provisioning test hit an existing `participants_pkey` conflict in unchanged
+teacher provisioning code. That independent failure was handed to the release
+owner and is not counted as passing.
+
+KaTeX CSS is imported as a Vite module so its font URLs are resolved from the
+package directory. A production fixture build emitted the hashed font assets;
+the browser font check explicitly loads `KaTeX_Main` through the preview server.
+
 ```powershell
 npm run typecheck
 npm run server:typecheck

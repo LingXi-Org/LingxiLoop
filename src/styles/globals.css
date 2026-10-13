@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 @import "tw-shimmer";
 @import "streamdown/styles.css";
-@import "katex/dist/katex.min.css";
 @import "./typeset.css";
 @import "./chat.css";
 @import "./generative-ui-elements.css";

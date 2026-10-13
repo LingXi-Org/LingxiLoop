@@ -55,4 +55,27 @@ test.describe('Public run activity', { tags: ['web', 'run-activity'], timeout: 1
       await app.screenshot(`official-${component}-1440`)
     }
   })
+  test('wire history pages replace the page while answer and attention stay visible', async ({ app, browser, screen }) => {
+    await app.open('/e2e/run-activity.html?paged=1')
+    await expect(screen.getByText('最终答复始终可见。', { exact: true })).toBeVisible()
+    await screen.getByRole('button', '查看全部活动（1100 条）').tap()
+    await expect(screen.getByText('活动记录 · 1–40 / 1100', { exact: true })).toBeVisible()
+    await screen.getByRole('button', '下一页活动').tap()
+    await expect(screen.getByText('活动记录 · 41–80 / 1100', { exact: true })).toBeVisible()
+    await screen.getByRole('button', '上一页活动').tap()
+    await expect(screen.getByText('活动记录 · 1–40 / 1100', { exact: true })).toBeVisible()
+    await screen.getByRole('button', '查看需要注意的记录（110 条）').tap()
+    await expect(screen.getByText('活动记录 · 1–40 / 110', { exact: true })).toBeVisible()
+    expect(await browser.locator('[data-tool-state="incomplete"]').count()).toBeLessThanOrEqual(40)
+    await expect(screen.getByText('最终答复始终可见。', { exact: true })).toBeVisible()
+    await app.screenshot('activity-wire-pages')
+  })
+  test('math fonts load through the production asset pipeline', async ({ app, browser }) => {
+    await app.open('/e2e/run-activity.html')
+    expect(await browser.evaluate(async () => {
+      const fonts = await document.fonts.load('16px KaTeX_Main')
+      return fonts.length > 0 && fonts.every(font => font.status === 'loaded')
+    })).toBe(true)
+    await app.screenshot('activity-math-fonts')
+  })
 })

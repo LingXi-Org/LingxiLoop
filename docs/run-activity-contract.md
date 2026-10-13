@@ -28,8 +28,15 @@ execution timing. Long histories may be revealed incrementally but are never
 silently truncated to the most recent calls.
 
 The existing native limits still apply (512 top-level parts, 50,000 structural
-nodes and depth 32; upstream stream frames are bounded at 2 MB). The browser reveals 40 activity entries at a time;
-it does not delete older entries. Server metadata reads join the full
+nodes and depth 32; upstream stream frames are bounded at 2 MB). Histories over
+80 entries use a bounded main-message summary and native activity pages of at
+most 40 entries; structural-budget pressure can make a page smaller. The next
+offset includes every deferred entry. The answer is never removed to fit activity.
+All attention records remain accessible from a separate entry outside disclosure.
+Each page replaces the previous page in the browser rather than accumulating
+unbounded content. The existing run GET endpoint accepts `activityOffset` and
+`attentionOnly=1`, rechecking tenant, principal, agent, thread and current Project
+and teacher-room access. Server metadata reads join the full
 tenant/run/agent/principal/session identity before exposing persisted details.
 Migration 0036 stores only allowlisted public labels/inputs/results and actual
 tool execution boundary timestamps. It does not store a second execution

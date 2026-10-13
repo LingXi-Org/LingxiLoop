@@ -4,7 +4,7 @@ import { createRunView, type RunEvent } from '@lyyzka/lingxios/ui'
 import { harnessToolParts, runMessageParts } from '../agent-runtime/message-projection.js'
 import { publicRunEvent, publicToolValue } from '../agent-runtime/public-events.js'
 import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
-import { createNativeMessage, deserializeMessage } from '../../../src/lib/nativeMessage.js'
+import { createNativeMessage, deserializeMessage, nativeText, nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 
 // Failure inventory: docs/run-activity-contract.md (written before product edits).
@@ -57,6 +57,40 @@ test('every user-visible call survives a history longer than 256 calls, with sta
   assert.equal(parts.length, 300)
   assert.equal(parts[0].type === 'tool-call' && parts[0].toolCallId, 'host:0')
   assert.equal(createNativeMessage({ id: 'history', role: 'assistant', content: parts }).content.length, 300)
+})
+
+// Boundary failures: a valid final answer disappears after call 512; early
+// approvals disappear; a new higher cap fails again; wire/DOM grow without bound.
+test('wire pages preserve more than 512 calls, attention and final answer without raising protocol limits', () => {
+  const projection = new RunStreamProjection('run', true)
+  projection.apply({ type: 'state', state: { run: { id: 'run', status: 'leased', fence: 1, requestVersion: 1,
+    resultId: null, resultFence: null, kind: 'turn', attempts: 1, createdAt: '2026-10-13T00:00:00Z',
+    availableAt: '', heartbeatAt: null, lastProgressAt: null, goalOutcome: null, error: null }, message: null, delivery: null } })
+  projection.apply({ type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'a', seq: 1, draft: '结论不可丢失。' } })
+  for (let index = 0; index < 1100; index++) {
+    projection.apply({ type: 'event', event: start(String(index), index * 2 + 1) })
+    projection.apply({ type: 'event', event: { ...finish(String(index), index * 2 + 2), data: { toolCallId: `host:${index}`,
+      result: { status: index % 10 === 0 ? 'failed' : 'completed' }, isError: index % 10 === 0 } } })
+  }
+  const snapshot = projection.snapshot.message
+  assert.equal(nativeText(snapshot), '结论不可丢失。')
+  assert.ok(snapshot.content.length <= 81)
+  assert.deepEqual(snapshot.metadata.custom.activityHistory, { total: 1100, attention: 110 })
+  const ids: string[] = []
+  let after = 0
+  do {
+    const page = projection.activityPage(after)
+    assert.ok(page.message.content.length <= 40)
+    assert.equal(nativeMessageSchema.safeParse(page.message).success, true)
+    ids.push(...page.message.content.flatMap(part => part.type === 'tool-call' ? [part.toolCallId] : []))
+    if (page.nextOffset === null) break
+    assert.ok(page.nextOffset > after)
+    after = page.nextOffset
+  } while (after < 1100)
+  assert.deepEqual(ids, Array.from({ length: 1100 }, (_, index) => `host:${index}`))
+  assert.equal(projection.activityPage(0, true).total, 110)
+  assert.throws(() => projection.activityPage(-1))
+  assert.equal(nativeMessageSchema.safeParse({ ...snapshot, content: Array.from({ length: 513 }, () => ({ type: 'text', text: 'x' })) }).success, false)
 })
 
 test('server projection removes diagnostics and private outcome gaps before transport', () => {
