@@ -11,9 +11,13 @@ assert.ok(process.argv.length === 3 || process.argv.length === 4 && process.argv
 const transportOnly = process.argv[3] === '--transport-only'
 const cwd = resolve(import.meta.dirname, '../..'), output = resolve(cwd, `artifacts/interactive-ui/${transportOnly ? 'wukong' : 'live'}`)
 await mkdir(output, { recursive: true })
-const credentials = parse(await readFile(resolve(cwd, 'eval/.env.local')))
+// Worktrees can read the existing source or explicitly injected credentials without copying secrets.
+const credentials = process.env.E2E_EVAL_CREDENTIALS === 'env' ? process.env
+  : parse(await readFile(process.env.E2E_EVAL_CREDENTIALS || resolve(cwd, 'eval/.env.local')))
 for (const role of ['CANDIDATE', 'JUDGE']) for (const key of ['BASE_URL', 'MODEL', 'API_KEY', 'INPUT_CNY_PER_MILLION', 'OUTPUT_CNY_PER_MILLION']) {
   assert.ok(credentials[`EVAL_${role}_${key}`]?.trim(), `Missing EVAL_${role}_${key}; missing credentials never count as a pass.`)
+  if (key.endsWith('CNY_PER_MILLION')) assert.ok(Number.isFinite(Number(credentials[`EVAL_${role}_${key}`]))
+    && Number(credentials[`EVAL_${role}_${key}`]) >= 0, `Invalid EVAL_${role}_${key}; an explicit finite non-negative price is required.`)
 }
 assert.notEqual(credentials.EVAL_CANDIDATE_MODEL, credentials.EVAL_JUDGE_MODEL, 'Use an independent judge model.')
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) =>

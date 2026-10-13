@@ -149,6 +149,8 @@ Offline browser reproduction uses `e2e/vite.interactive.config.ts` to build/serv
 
 The live entry requires the configured candidate/judge credentials, explicit opt-in, synthetic identity, single model concurrency, a dedicated `lingxiloop_ui_model_test` database, real isolated WuKong, and bounded budgets (USD 0.25/run, USD 5 total). It disables unrelated email, embeddings and notebook activity and fails when credentials or usage are missing. Ordinary offline E2E does not opt into this entry. `eval` results from a separate harness do not satisfy this gate.
 
+An isolated worktree can set `E2E_EVAL_CREDENTIALS` to an existing credential file path, or explicitly to `env` to use injected `EVAL_CANDIDATE_*` / `EVAL_JUDGE_*` values in memory. The environment mode requires both complete model configurations and finite non-negative prices, and still rejects the same candidate and judge model. It does not copy secrets or inherit an ambient product database. SQL migrations use Git's original LF bytes on every platform so their recorded checksums remain stable.
+
 The `--transport-only` entry uses the same isolated database and pinned WuKong but does not start a model worker. Its zero-call ledger result confirms this run made no model requests; it cannot establish model generation, feedback or follow-up behavior. The browser still uses the actual product converter, Renderer, GET/PUT state endpoints and POST action endpoint, and verifies durable IM history rather than replacing those responses.
 
 Final release evidence also requires affected lint, web/server/E2E typechecks and the web build. Keep their actual command results alongside the finished reports. This work does not authorize production deployment and does not claim real-student learning gains.
