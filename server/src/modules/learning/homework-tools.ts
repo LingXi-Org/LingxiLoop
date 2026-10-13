@@ -67,7 +67,7 @@ export const homeworkLearnerTools:ToolDefinition[]=[
     },
   }),
   nativeTool('learning.assess_homework',homeworkAssessmentSchema.extend({homeworkId:id}),{
-    description:'Request host verification of genuine committed student messages in this homework conversation. Supply message IDs, never mastery claims, scores or flags. Explain unresolved criteria and tutor independent transfer. Assessment is asynchronous; read get_homework for the result.',
+    description:'Request host verification of genuine committed student messages in this homework conversation. Incorrect or incomplete evidence is valid input; do not wait for mastery before requesting assessment. Supply message IDs, never mastery claims, scores or flags. Explain unresolved criteria and tutor independent transfer. Assessment is asynchronous; read get_homework for the result.',
     effect:'transaction',approval:false,authorize:async(context,input)=>{await learner(context,input.homeworkId)},
     async execute(context,input) {
       const {db,binding,scope}=await learner(context,input.homeworkId)
