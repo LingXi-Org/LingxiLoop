@@ -5,7 +5,7 @@ import { lessonComponentSchemas, lessonLibrary, OPENUI_LANGUAGE, UI_LIMITS, type
 import { uiStateSchema, type UiAction, type UiField, type UiState } from './protocol.js'
 
 export interface ParsedLesson { root: ElementNode; title: string; fallback: string; fields: UiField[]; actions: UiAction[]; defaults: UiState; revisionOf?: string; baseRevision?: number }
-export interface LessonBlock { start: number; end: number; source: string; closed: boolean }
+export interface LessonBlock { start: number; end: number; source: string; closed: boolean; unfenced?: boolean }
 const parser = createParser(lessonLibrary.toJSONSchema(), 'Lesson')
 const punctuation = (value: string) => tokenize(value)[0].t
 const newline = punctuation('\n'), eof = tokenize('').at(-1)!.t
@@ -13,14 +13,32 @@ const opens = new Set(['(', '[', '{'].map(punctuation)), closes = new Set([')', 
 const own = (value: object, key: string) => Object.hasOwn(value, key)
 const byteLength = (text: string) => new TextEncoder().encode(text).length
 const fail = (code: string): never => { throw new Error(`interactive-ui:${code}`) }
+const lessonStatement = (value: string) => [...value.matchAll(/^ {0,3}(\w+)\s*=\s*(\w+)\s*\(/gm)]
+  .some(match => own(lessonComponentSchemas, match[2]))
+  || /^ {0,3}\$[A-Za-z_]\w*\s*=\s*(?:"(?:\\.|[^"\\])*"|[-+]?\d+(?:\.\d+)?|true|false)\s*$/m.test(value)
 
-export function extractLessonBlocks(body: string): LessonBlock[] {
+export function extractLessonBlocks(body: string, options: { preview?: boolean } = {}): LessonBlock[] {
   if (body.length > 1_000_000) return []
   const blocks: LessonBlock[] = []
   for (const node of fromMarkdown(body).children) {
-    if (node.type !== 'code' || node.lang !== OPENUI_LANGUAGE || node.meta) continue
     const start = node.position?.start.offset, end = node.position?.end.offset
     if (start === undefined || end === undefined) continue
+    // Reserved transport statements need repair, never publication as ordinary prose.
+    if (node.type === 'paragraph') {
+      const source = body.slice(start, end)
+      const statement = node.children.some(child => child.type === 'text' && lessonStatement(child.value))
+      const pending = options.preview && end === body.length && node.children.every(child => child.type === 'text')
+        && /^\$(?:[A-Za-z_]\w*\s*(?:=\s*(?:"(?:\\.|[^"\\])*(?:"\s*)?|[-+]?\d*(?:\.\d*)?|true|false)?)?)?$/.test(source.trim())
+      if (statement || pending) {
+        blocks.push({ start, end, source, closed: false, unfenced: true })
+      }
+      continue
+    }
+    if (node.type === 'code' && (!node.lang || node.lang === 'openui-lang' || node.lang === 'openui') && lessonStatement(node.value)) {
+      blocks.push({ start, end, source: node.value, closed: false, unfenced: true })
+      continue
+    }
+    if (node.type !== 'code' || node.lang !== OPENUI_LANGUAGE || node.meta) continue
     const raw = body.slice(start, end), lines = raw.split(/\r?\n/), opener = /^ {0,3}(`{3,}|~{3,})/.exec(lines[0])?.[1]
     if (!opener) continue
     const last = lines.at(-1)!.trim()
@@ -139,7 +157,11 @@ function checkProps(root: ElementNode, state: UiState, preview: boolean): Elemen
     if (node.typeName === 'Choice' && !(p.options as string[]).includes(p.value as string)) return fail('choice')
     if (node.typeName === 'Steps' && (!Number.isInteger(p.value) || Number(p.value) < 0 || Number(p.value) >= (p.steps as unknown[]).length)) return fail('step')
     if (node.typeName === 'DctImage' && Number(p.keep) > Number(p.size) ** 2) return fail('coefficients')
-    if (node.typeName === 'FunctionPlot' && Number((p.domain as number[])[0]) >= Number((p.domain as number[])[1])) return fail('domain')
+    if (node.typeName === 'FunctionPlot') {
+      if (Number((p.domain as number[])[0]) >= Number((p.domain as number[])[1])) return fail('domain')
+      const curves = p.curves as { id: string }[]
+      if (new Set(curves.map(curve => curve.id)).size !== curves.length) return fail('curve-ids')
+    }
     if (node.typeName === 'Table' && (p.rows as unknown[][]).some(row => row.length !== (p.headers as unknown[]).length)) return fail('table')
   }
   return result

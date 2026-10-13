@@ -6,14 +6,14 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import OpenAI from 'openai'
+import { fromMarkdown } from 'mdast-util-from-markdown'
 import { z } from 'zod'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import type { RunIdentity } from '@lyyzka/lingxios'
-import type { AgentRunSnapshot } from '../../../src/lib/agentRunSnapshot.js'
+import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { interactiveBaselineCases, interactiveCases } from '../../../e2e/interactive-ui-cases.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
 import { messageLessons } from '../agent-runtime/interactive-ui-projection.js'
-import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
 import { lingxiOSControl, startLingxiOSWorker } from '../agent-runtime/runtime.js'
 import { flushAgentWakes } from '../agent-runtime/ingress.js'
 import { pool } from '../db/pool.js'
@@ -35,16 +35,6 @@ test('current product generates, delivers and explores learning UI with a real m
   const results: { passed: boolean; baseline: unknown[]; cases: unknown[]; attempts: string[]; browser?: unknown; gates?: unknown; metrics?: unknown; error?: string } = { passed: false, baseline: [], cases: [], attempts: [] }
   const record = () => writeFile(`${output}/results.json`, JSON.stringify(results, null, 2))
   await record()
-  const originalApply = RunStreamProjection.prototype.apply
-  t.mock.method(RunStreamProjection.prototype, 'apply', function (this: RunStreamProjection, ...args: Parameters<typeof originalApply>) {
-    try { return originalApply.apply(this, args) }
-    catch (error) {
-      console.info(JSON.stringify({ projectionFailure: error instanceof Error ? error.name : 'unknown',
-        frames: error instanceof Error ? error.stack?.split('\n').filter(line => /^\s+at /.test(line)).slice(0, 3) : [],
-        ...(error instanceof z.ZodError ? { issues: error.issues.map(({ code, path }) => ({ code, path })) } : {}) }))
-      throw error
-    }
-  })
   await ensureSchemaOnce(); await resetAllTables(); _setWukongClientForTests(null)
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
@@ -127,29 +117,55 @@ test('current product generates, delivers and explores learning UI with a real m
     while (!runs.length) { timeout.throwIfAborted(); await delay(100); runs = await identities(channelId) }
     assert.equal(runs.length, 1, `${id}: single product run`)
     const run = runs[0], cancellation = new AbortController()
-    const stream = await fetch(`${origin}/api/im/companies/${companyId}/channels/${channelId}/agents/${agentId}/runs/${run.runId}/stream`, { headers, signal: AbortSignal.any([cancellation.signal, timeout]) })
-    assert.equal(stream.status, 200)
     let previewMs: number | null = null, firstTextMs: number | null = null, streamFailure: string | null = null
-    const tracker = new AssistantTransportDeltaTracker()
+    let streamReconnects = 0, streamDelivered = false
     const reading = (async () => {
-      for await (const chunk of AssistantStream.fromResponse(stream, new AssistantTransportDecoder())) {
-        if (chunk.type !== 'update-state') continue
-        tracker.append(chunk.operations)
-        const snapshot = tracker.state as unknown as AgentRunSnapshot
-        if (!snapshot?.message) continue
-        if (nativeText(snapshot.message).trim()) firstTextMs ??= performance.now() - started
-        if (scenario.component && messageLessons(snapshot.message).some(lesson => lesson.fields.length > 0
-          && lesson.source.includes(`${scenario.component}(`))) previewMs ??= performance.now() - started
-        assert.ok(!snapshot.message.content.some(part => part.type === 'text' && /root\s*=\s*Lesson\(/.test(part.text)), 'DSL exposed as plain text')
+      // The public preview protocol requests snapshot reconnection on gaps, as the browser does.
+      while (!streamDelivered) {
+        timeout.throwIfAborted()
+        const tracker = new AssistantTransportDeltaTracker()
+        try {
+          const stream = await fetch(`${origin}/api/im/companies/${companyId}/channels/${channelId}/agents/${agentId}/runs/${run.runId}/stream`, { headers, signal: AbortSignal.any([cancellation.signal, timeout]) })
+          assert.equal(stream.status, 200)
+          for await (const chunk of AssistantStream.fromResponse(stream, new AssistantTransportDecoder())) {
+            if (chunk.type !== 'update-state') continue
+            tracker.append(chunk.operations)
+            const snapshot = tracker.state as unknown as AgentRunSnapshot
+            if (!snapshot?.message) continue
+            if (nativeText(snapshot.message).trim()) firstTextMs ??= performance.now() - started
+            if (scenario.component && messageLessons(snapshot.message).some(lesson => lesson.fields.length > 0
+              && lesson.source.includes(`${scenario.component}(`))) previewMs ??= performance.now() - started
+            const leaked = snapshot.message.content.find(part => part.type === 'text' && /root\s*=\s*Lesson\(/.test(part.text))
+            if (leaked?.type === 'text') {
+              const structure = (node: unknown): unknown => {
+                const value = node as { type: string; lang?: string; value?: string; children?: unknown[] }
+                return { type: value.type, language: value.lang, containsRoot: /root\s*=\s*Lesson\(/.test(value.value ?? ''),
+                  ...(value.children ? { children: value.children.map(structure) } : {}) }
+              }
+              await writeFile(`${output}/stream-violation.json`, JSON.stringify({ id, structure: structure(fromMarkdown(leaked.text)) }, null, 2))
+            }
+            assert.ok(!leaked, 'DSL exposed as plain text')
+            streamDelivered = (snapshot.message.metadata.custom.harness as RunDisplayState).delivery === 'delivered'
+          }
+        } catch (error) {
+          if (!(error instanceof TypeError) || cancellation.signal.aborted || timeout.aborted) throw error
+        }
+        if (!streamDelivered) {
+          assert.ok(++streamReconnects <= 8, 'stream recovery budget exhausted')
+          await delay(500, undefined, { signal: AbortSignal.any([cancellation.signal, timeout]) })
+        }
       }
     })().catch(error => {
-      if (!cancellation.signal.aborted) streamFailure = error instanceof assert.AssertionError ? error.message.split('\n')[0]
-        : error instanceof Error ? error.name : 'unknown stream error'
+      if (!cancellation.signal.aborted) {
+        streamFailure = error instanceof assert.AssertionError ? error.message.split('\n')[0]
+          : error instanceof Error ? error.name : 'unknown stream error'
+      }
     })
     let state = await api.readRunState(run)
     try {
-      while (state?.delivery !== 'delivered') {
+      while (state?.delivery !== 'delivered' || !streamDelivered) {
         timeout.throwIfAborted()
+        assert.equal(streamFailure, null, `${id}: stream failed (${streamFailure})`)
         assert.ok(state && state.run.status !== 'failed' && state.run.status !== 'cancelled', `${id}: product run failed`)
         await delay(150); state = await api.readRunState(run)
       }
@@ -167,7 +183,7 @@ test('current product generates, delivers and explores learning UI with a real m
     } else assert.equal(lessons.length, 0, `${id}: text-only preference ignored`)
     const answer = answers.map(item => nativeText(item.payload)).join('\n') + lessons.map(lesson => lesson.source).join('\n')
     const teaching = await grade(answer, scenario.facts)
-    const result = { id, previewMs, firstTextMs, readyMs, modelCalls: measured.modelCalls, costUSD: measured.costUSD,
+    const result = { id, previewMs, firstTextMs, readyMs, streamReconnects, modelCalls: measured.modelCalls, costUSD: measured.costUSD,
       uiCount: lessons.length, teaching, runId: run.runId, sourceHashes: lessons.map(lesson => lesson.sourceHash) }
     return result
   }

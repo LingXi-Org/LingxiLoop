@@ -15,6 +15,8 @@ explain = LearningAction("explain", "explain", "解释当前结果")`
 test('generated catalog instructions use the host fence and provide a parseable bound example', () => {
   const instructions = lessonInstructions()
   assert.ok(!instructions.includes('```openui-lang'))
+  assert.ok(!instructions.includes('Undeclared $variables are auto-created'))
+  assert.ok(!instructions.includes('## Built-in Functions'))
   const examples = extractLessonBlocks(instructions)
   assert.ok(examples.length > 0)
   assert.ok(instructions.includes(`EXACT language ${OPENUI_LANGUAGE}`))
@@ -77,6 +79,16 @@ test('moving a state binding between polynomial coefficients resets its computat
   const before = parseLessonSource(initial)
   const changed = parseLessonSource(initial.replace('a:$a,b:0,c:0', 'a:0,b:0,c:$a'))
   assert.deepEqual(restoreLessonState(before.fields, changed, { $a: 4 }), { state: { $a: 1 }, resetKeys: ['$a'] })
+})
+
+// Failure: duplicate curve IDs pass source verification but throw in the rendering kernel,
+// including when a valid lesson's editable label later collides with another curve.
+test('function curve IDs remain unique at initial verification and after state updates', () => {
+  const initial = '$curve = "g"\nroot = Lesson("函数", "比较函数。", [label,plot])\nlabel = Prediction("curve", "第二条曲线名称", $curve)\nplot = FunctionPlot([{id:"f",a:1,b:0,c:0},{id:$curve,a:1,b:0,c:0}],[-2,2])'
+  const lesson = parseLessonSource(initial)
+  assert.deepEqual(validateLessonState(lesson, { $curve: 'h' }), { $curve: 'h' })
+  assert.throws(() => parseLessonSource(initial.replace('$curve = "g"', '$curve = "f"')), /interactive-ui:curve-ids/)
+  assert.throws(() => validateLessonState(lesson, { $curve: 'f' }), /interactive-ui:curve-ids/)
 })
 
 test('a changed prediction question does not restore an answer to the old question', () => {

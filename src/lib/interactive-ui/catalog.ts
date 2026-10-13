@@ -45,12 +45,12 @@ const descriptions: Record<LessonComponentName, string> = {
   Lesson: 'Root of one learning explanation. fallback is a complete plain-text alternative. For a revision only, copy revisionOf/baseRevision from authorized context.',
   Layout: 'Compose children in one or two responsive columns.', Text: 'A short explanation in safe Markdown; scientific results belong to kernels, not generated arithmetic.',
   Parameter: 'Continuous number slider. value MUST bind a declared $variable. name is that variable without $. Include its unit and stable scientific meaning.',
-  Choice: 'A labelled choice from the listed strings. value MUST bind a declared $variable.', Toggle: 'A labelled true/false control; value MUST bind a declared $variable.',
+  Choice: 'A labelled choice from the listed strings. value MUST bind a declared $variable whose literal default exactly matches one of the options strings, never an empty placeholder.', Toggle: 'A labelled true/false control; value MUST bind a declared $variable.',
   Prediction: 'Ask for a prediction or answer before observing. value MUST bind a declared string $variable. Never include a score.',
-  Steps: 'Step-by-step explanation with a bound zero-based numeric step variable.',
+  Steps: 'Step-by-step explanation with a bound zero-based integer step variable. Its default must be between 0 and steps.length-1.',
   Table: 'Compare concepts in a bounded table.', LearningAction: 'An explicit authorized learning event: explain, check-prediction, or submit-answer. No tools, URLs, grades or implicit execution.',
   ProjectilePlot: 'No-drag projectile motion in SI units; angle in degrees, speed m/s, gravity m/s², height m. Shows trajectory and computed range/time/height.',
-  FunctionPlot: 'Compare up to four real polynomials a*x²+b*x+c with analytic intersections in the domain. a=0 makes a linear function.',
+  FunctionPlot: 'Compare up to four real polynomials a*x²+b*x+c with analytic intersections. Each curve needs a unique id. domain is [min,max] with min strictly less than max. a=0 makes a linear function.',
   DctImage: 'A fixed reproducible grayscale image, orthonormal 2D DCT with zigzag coefficient retention, reconstruction and error; keep <= size².',
   CltPlot: 'Seeded sampling of means from U(0,1), Bernoulli(0.5), or Exp(1). At most 1,000,000 sample operations.',
   MontyHall: 'Three-door Monty Hall experiment. Doors are indexed 0..2; host knows prize, always opens an unselected losing door. Switch wins with probability 2/3.',
@@ -64,14 +64,15 @@ export type LessonRenderProps = ComponentRenderProps<Record<string, unknown>, un
 export const lessonLibrary = createLessonLibrary(Object.fromEntries(Object.keys(lessonComponentSchemas).map(key => [key, null])) as Record<LessonComponentName, null>)
 
 export function lessonInstructions(): string {
-  // The upstream inline template hardcodes a different fence language.
-  return lessonLibrary.prompt({ bindings: true, toolCalls: false,
-    preamble: `Interactive learning is optional. Prefer plain text for concise/text-only requests and when no registered capability helps. If useful, compose text and a root-level fenced block with EXACT language ${OPENUI_LANGUAGE}. Do not use generic openui-lang fences.`,
+  // Upstream bindings also advertise forbidden expressions and implicit null defaults.
+  return lessonLibrary.prompt({ bindings: false, toolCalls: false,
+    preamble: `This chat has an installed interactive lesson renderer. A root-level fenced block with EXACT language ${OPENUI_LANGUAGE} in your native final answer is rendered as a working interactive lesson automatically; no tool, file, separate page or publishing step is needed. When the user asks for an interactive explanation supported by the registered components below, provide that fenced lesson together with your explanation. Otherwise choose interaction only when useful; prefer plain text for concise/text-only requests and when no registered capability helps. Do not use generic openui-lang fences.`,
     additionalRules: [
       'Only compose registered components, literal values, named references and $state references. No Query, Mutation, builtins, arithmetic, member access, assignments inside expressions, HTML, JS, links or external resources. Scientific calculations occur in registered kernels.',
       'Define each identifier exactly once, put root first or after literal $defaults, and make every component reachable from root. Declare a literal default for every $variable before using it, including $prediction = "" for a Prediction input. Each $variable must have exactly one matching named control. Controls use $variable as value, never a literal.',
       'Keep explanations and controls consistent with kernel units and assumptions. Begin with a prediction, enable observation, offer an explicit explanation/check action, and include a transfer question. Do not force every learning task into a fixed layout.',
       'Write only student-facing explanation outside the fence, never planning, verification notes or DSL source. Lesson fallback must explain the concept without the visualization. The DSL must be fully closed. At most four small lessons per message.',
+      'Deliver the complete fenced lesson in the native final answer, never through chat.send. Check the source silently; do not print the verification checklist or repeat the candidate.',
       'For a requested revision preserve stable variable names/meanings, update all text and graphs together, and use only revisionOf/baseRevision provided by the host. For a new lesson omit both revision fields. Never invent IDs.',
     ], examples: [`\`\`\`${OPENUI_LANGUAGE}\n$angle = 45\n$prediction = ""\nroot = Lesson("抛射角与射程", "无空气阻力且起落等高时，45°的射程最大。", [prediction,angle,plot,explain])\nprediction = Prediction("prediction", "先预测：30°与60°谁更远？", $prediction)\nangle = Parameter("angle", "角度", $angle, 0, 90, 1, "°", "projectile.angle")\nplot = ProjectilePlot($angle, 20, 9.81, 0)\nexplain = LearningAction("explain", "explain", "解释当前结果")\n\`\`\``] })
 }

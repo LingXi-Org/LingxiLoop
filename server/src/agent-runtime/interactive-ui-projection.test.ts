@@ -33,6 +33,29 @@ test('draft/final malformed blocks fall back locally without exposing source', (
   assert.ok(runMessageParts(view).some(part => part.type === 'generative-ui'))
   assert.deepEqual(projectLessonText('只用一句话回答。', 'run', false), [{ type: 'text', text: '只用一句话回答。' }])
 })
+// Live generation can omit fences entirely, or stream its defaults before the root.
+test('unfenced lesson candidates stay private until the runtime repairs the boundary', () => {
+  for (const body of [source, '$angle = 45', 'plot = ProjectilePlot($angle, 20, 9.81, 0)', `$angle = 45\n${source}`,
+    `\`\`\`\n${source}\n\`\`\``, `\`\`\`openui-lang\n${source}\n\`\`\``, `    ${source}`,
+    `前文\n\n$angle = 45\n${source}\n\n后文`]) {
+    const checks = verifyLessonCandidate(body)
+    assert.equal(checks.length, 1)
+    assert.equal(checks[0].status, 'failed')
+    assert.match(JSON.stringify(checks), /fence/)
+    for (const preview of [true, false]) {
+      const parts = projectLessonText(body, 'run', preview)
+      assert.ok(parts.every(part => part.type === 'text'))
+      assert.doesNotMatch(JSON.stringify(parts), /root =|\$angle|ProjectilePlot/)
+    }
+  }
+  for (const example of [`\`\`\`js\n${source}\n\`\`\``, `> ${source}`, `写法示例：\`${source}\``, `\`example\n${source}\n\``, '$x = 45$', 'root = sqrt(4)']) {
+    assert.deepEqual(verifyLessonCandidate(example), [])
+    assert.deepEqual(projectLessonText(example, 'run', true), [{ type: 'text', text: example }])
+  }
+  for (const partial of ['$', '$angle', '$angle ', '$angle = ', '$answer = "']) {
+    assert.deepEqual(projectLessonText(partial, 'run', true), [{ type: 'text', text: '正在生成交互讲解…' }])
+  }
+})
 test('citation source offsets cannot cross or enter a UI block', () => {
   assert.doesNotThrow(() => assertLessonCitationSpans(fenced(), [{ start: 0, end: 2 }]))
   assert.throws(() => assertLessonCitationSpans(fenced(), [{ start: 0, end: 50 }]), /citation/)
@@ -45,6 +68,10 @@ test('candidate validation reports bounded errors without source and preserves o
   assert.equal(failed[0].status, 'failed')
   assert.match(JSON.stringify(failed), /interactive-ui:unbound-state/)
   assert.doesNotMatch(JSON.stringify(failed), /PRIVATE|root =/)
+  // A model cannot repair a rejected default from a generic component error.
+  const choice = verifyLessonCandidate(fenced('$answer = ""\nroot = Lesson("PRIVATE", "PRIVATE", [c])\nc = Choice("answer", "PRIVATE", $answer, ["one", "two"])'))
+  assert.match(JSON.stringify(choice), /Choice.*default.*exactly.*options/)
+  assert.doesNotMatch(JSON.stringify(choice), /PRIVATE|root =/)
   assert.equal(verifyLessonCandidate(`\`\`\`${OPENUI_LANGUAGE}\n${source}`)[0].status, 'failed')
   assert.equal(verifyLessonCandidate(Array(5).fill(fenced()).join('\n\n')).at(-1)?.status, 'failed')
 })
