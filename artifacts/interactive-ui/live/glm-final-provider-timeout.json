@@ -1,0 +1,206 @@
+{
+  "observedAt": "2026-10-13T15:59:12.500Z",
+  "metadata": {
+    "startedAt": "2026-10-13T15:55:35.206Z",
+    "finishedAt": "2026-10-13T15:58:16.563Z",
+    "passed": false,
+    "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui",
+    "runtime": "3.3.6",
+    "candidate": "zai-org/GLM-5.2",
+    "judge": "deepseek-ai/DeepSeek-V4-Flash",
+    "maxModelCalls": 16,
+    "maxModelTokens": 200000,
+    "maxRunCostUSD": 0.5,
+    "maxTotalCostUSD": 5,
+    "modelConcurrency": 1,
+    "database": "lingxiloop_ui_model_test",
+    "identity": "synthetic test-owner",
+    "realWuKong": true,
+    "realModel": true,
+    "authentication": "isolated test middleware"
+  },
+  "results": {
+    "passed": false,
+    "baseline": [
+      {
+        "id": "baseline-projectile",
+        "errors": [],
+        "previewMs": 49117.516,
+        "firstTextMs": 46304.8726,
+        "readyMs": 54239.746,
+        "sendAttempts": 1,
+        "streamReconnects": 1,
+        "modelCalls": 3,
+        "costUSD": 0.03247885,
+        "uiCount": 1,
+        "teaching": {
+          "correct": true,
+          "transfer": true,
+          "correction": true,
+          "reasons": [
+            "射程公式R=v0^2 sin(2θ)/g正确，且sin(2θ)与sin(180°-2θ)相等，正确说明20°与70°、30°与60°射程相等",
+            "速度10m/s、重力9.81m/s²与参考事实一致，无单位或数值矛盾",
+            "迁移问题30°与60°射程相等且大于20°/70°的射程，回答正确，无数值捏造",
+            "未要求纠正，且无错误预测需纠正，故correction为true"
+          ]
+        },
+        "runId": "im:853784aebcd1fc68167d0698243ff102b7cca8e64489357e462af7c6730b8f69",
+        "sourceHashes": [
+          "b4295c2556a144dd92fec147d6314195a5b94f79e2afe59550f0e05c1d25bb94"
+        ],
+        "status": "passed"
+      },
+      {
+        "id": "baseline-comparison",
+        "status": "failed",
+        "fatal": true,
+        "error": "baseline-comparison: product run failed"
+      }
+    ],
+    "cases": [
+      {
+        "id": "projectile",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      },
+      {
+        "id": "functions",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      },
+      {
+        "id": "dct",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      },
+      {
+        "id": "clt",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      },
+      {
+        "id": "monty",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      },
+      {
+        "id": "comparison",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      },
+      {
+        "id": "steps",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      },
+      {
+        "id": "mixed",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      },
+      {
+        "id": "brief",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      },
+      {
+        "id": "unsupported",
+        "status": "blocked",
+        "reason": "Live evaluation stopped before this case"
+      }
+    ],
+    "attempts": [
+      "baseline-projectile",
+      "baseline-comparison"
+    ],
+    "browser": {
+      "status": "blocked",
+      "reason": "Holdout validation has not completed"
+    },
+    "metrics": {
+      "restoreAttempts": 0,
+      "restored": 0,
+      "recoveryRate": null,
+      "judgeCostUSD": 0.0005892857142857143,
+      "generationAttempts": 2,
+      "generationFailures": 1,
+      "failureRate": 0.5,
+      "holdoutPassed": 0,
+      "holdoutFailed": 0,
+      "holdoutBlocked": 10
+    },
+    "error": "baseline-comparison: product run failed"
+  },
+  "diagnosis": {
+    "status": "failed",
+    "error": "The operation was aborted due to timeout",
+    "delivery": null,
+    "goalOutcome": {
+      "gaps": [
+        "The operation was aborted due to timeout"
+      ],
+      "status": "blocked",
+      "verification": "inconclusive",
+      "requestVersion": 1
+    }
+  },
+  "ledger": [
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "latency_ms": 42903,
+      "input_tokens": 8930,
+      "output_tokens": 1226,
+      "cost_usd": "0.01510971"
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "latency_ms": 780,
+      "input_tokens": 9355,
+      "output_tokens": 5,
+      "cost_usd": "0.00368971"
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "latency_ms": 5906,
+      "input_tokens": 9369,
+      "output_tokens": 743,
+      "cost_usd": "0.01367943"
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "latency_ms": 1621,
+      "input_tokens": 2589,
+      "output_tokens": 80,
+      "cost_usd": "0.00327886"
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "failed",
+      "measured": false,
+      "latency_ms": 90017,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": "0.07696900"
+    }
+  ],
+  "prices": {
+    "source": "https://siliconflow.cn/pricing",
+    "candidate": {
+      "inputCnyPerMillion": 8,
+      "outputCnyPerMillion": 28
+    },
+    "judge": {
+      "inputCnyPerMillion": 3,
+      "outputCnyPerMillion": 9
+    }
+  },
+  "limit": "Production-default GLM-5.2 failed its second baseline after a 90-second provider timeout with no measured usage. Holdouts and live browser follow-ups were blocked; no production deployment."
+}
