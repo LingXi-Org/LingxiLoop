@@ -4,10 +4,13 @@ import { readFile, mkdir, writeFile, appendFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { parse } from 'dotenv'
 import pg from 'pg'
+import { tsImport } from 'tsx/esm/api'
 
 // Fail closed: no ambient product DB, model credentials or outbound services are inherited.
 assert.equal(process.argv[2], '--live-generative-ui', 'Explicit --live-generative-ui is required (metered synthetic evaluation).')
 assert.ok(process.argv.length === 3 || process.argv.length === 4 && process.argv[3] === '--transport-only', 'Unknown live validation option.')
+const { INTERACTIVE_LESSONS_ENABLED } = await tsImport('../../src/lib/interactive-ui/catalog.ts', import.meta.url)
+assert.equal(INTERACTIVE_LESSONS_ENABLED, true, 'Interactive lessons are disabled; restore isolated acceptance before reactivation.')
 const transportOnly = process.argv[3] === '--transport-only'
 const cwd = resolve(import.meta.dirname, '../..'), output = resolve(cwd, `artifacts/interactive-ui/${transportOnly ? 'wukong' : 'live'}`)
 await mkdir(output, { recursive: true })
