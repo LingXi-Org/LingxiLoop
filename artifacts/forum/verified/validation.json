@@ -1,0 +1,82 @@
+{
+  "featureCommit": "de2f864678ae15b724154f2bce6c0fa77c648634",
+  "browserRun": "01a13519-2d7d-7c42-8500-d506ad5e7275",
+  "browserSummary": {
+    "discovered": 1,
+    "selected": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "interrupted": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "integration": {
+    "failed": 0,
+    "tests": 5,
+    "skipped": 0,
+    "passed": 5,
+    "command": {
+      "command": [
+        "node",
+        "server/run-integration-tests.mjs",
+        "--file",
+        "course-forum.test.ts"
+      ],
+      "startedAt": "2026-10-13T11:30:43.24Z",
+      "finishedAt": "2026-10-13T11:33:14.46Z",
+      "exitCode": 0
+    }
+  },
+  "migrationChecks": [
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-13T11:30:40.618Z",
+      "finishedAt": "2026-10-13T11:30:41.974Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-13T11:30:41.974Z",
+      "finishedAt": "2026-10-13T11:30:43.24Z",
+      "exitCode": 0
+    }
+  ],
+  "otherChecks": [
+    "web TypeScript",
+    "server TypeScript",
+    "E2E TypeScript",
+    "node config TypeScript",
+    "scoped Biome lint",
+    "navigation tests: 2 passed"
+  ],
+  "reproduce": "node e2e/server/forum.mjs --browser",
+  "limitations": [
+    "Synthetic gateway identities, recorded WuKong and in-memory object storage; live authentication provider and external services excluded.",
+    "Browser run uses Vite development server; production build is owned by the integrating release task."
+  ],
+  "screenshots": [
+    {
+      "sha256": "6fa3395e7ca8df988e3cd96d7c07640d88778d967a64c507b7e6640e3356b886",
+      "file": "001-student-submission-history.png"
+    },
+    {
+      "sha256": "85b3a1b2390410a59396798aaa61d45c735e894e72292f1ec4a37198bd24b538",
+      "file": "002-forum-mobile-dark-keyboard.png"
+    },
+    {
+      "sha256": "fd6c1c5bbdaa27fff6317898d3abf26ab5fa6d90fe0bfe868968a7404a747709",
+      "file": "003-forum-desktop.png"
+    }
+  ]
+}
