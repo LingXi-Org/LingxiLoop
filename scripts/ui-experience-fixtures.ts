@@ -2,7 +2,10 @@ import { useParticipants } from '@/features/agents/state'
 import type { CanvasFrame, CanvasSnapshot, CanvasWorkspaceSummary } from '@/features/canvas/contracts'
 import { useCanvas } from '@/features/canvas/state'
 import { useCalendar } from '@/features/calendar/state'
-import { useChatThreadStore } from '@/features/chat/runtime/store'
+import { type ActiveAgentRun, mergeCanonicalMessages, replaceMessageReactions, updateConversation, useChatThreadStore } from '@/features/chat/runtime/store'
+import { messagesApi } from '@/features/chat/api'
+import { lingxiIm } from '@/lib/im/wukong'
+import { applyRunSnapshot } from '@/features/chat/runtime/run-updates'
 import { useConversations } from '@/features/conversations/store'
 import type { KnowledgeSource } from '@/features/knowledge/contracts'
 import { useKnowledgeSources } from '@/features/knowledge/state'
@@ -21,7 +24,8 @@ import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useSurface } from '@/stores/surface'
 import { convertEnvelope } from '@/features/chat/runtime/converter'
-import { createNativeMessage } from '@/lib/nativeMessage'
+import { createNativeMessage, userMessageSchema } from '@/lib/nativeMessage'
+import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { createRunView } from '@lyyzka/lingxios/ui'
 import { harnessApi } from '@/features/chat/runtime/harness-api'
 import type { Conversation, Participant, WorkspaceSummary } from '@/types'
@@ -130,7 +134,173 @@ learningApi.getDashboard = async () => dashboard
 // State-only scenarios run without credentials or a backend. Keep them separate
 // from the real API journeys so synthetic results cannot count as API acceptance.
 const scenario = new URLSearchParams(location.search).get('scenario')
-if (scenario?.startsWith('chat-')) {
+if (scenario === 'mention-names') {
+  useParticipants.setState({ byId: { ...participants, scout: { ...participants.scout, name: '思南' } } })
+  const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'me',
+    clientMsgNo: 'mention-names', messageId: 'mention-names', messageSeq: 2, timestamp: 1790899200,
+    payload: createNativeMessage({ id: 'mention-names', role: 'user', createdAt: NOW, content: [{ type: 'text',
+      text: '请找@scout，@all @unknown @scouter\n\n`@scout` [@scout](https://example.com) mail@scout.cn' }] }),
+  }, { participants, meId: 'me' })
+  updateConversation(CONVERSATION_ID, state => ({ ...state, messages: [message] }))
+}
+if (scenario === 'message-actions') {
+  const reply = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', messageId: 'actions-reply',
+    clientMsgNo: 'actions-reply', messageSeq: 1, timestamp: Date.parse(NOW) / 1000,
+    payload: createNativeMessage({ id: 'actions-reply', role: 'assistant', createdAt: NOW, content: [
+      { type: 'text', text: '第一段回复。' }, { type: 'data', name: 'tool-activity', data: { title: '整理资料', status: 'completed' } },
+      { type: 'text', text: '最后一段回复。' },
+    ] }),
+  }, { participants, meId: 'me' })
+  updateConversation(CONVERSATION_ID, state => ({ ...state, messages: [reply] }))
+  let reactions: Array<{ emoji: string; count: number; users: string[]; mine: boolean }> = []
+  messagesApi.toggleReaction = async (conversationId, messageId, sequence, emoji) => {
+    if (conversationId !== CONVERSATION_ID || messageId !== 'actions-reply' || sequence !== 1) throw new Error('Invalid reaction identity')
+    reactions = reactions.some(reaction => reaction.emoji === emoji) ? reactions.filter(reaction => reaction.emoji !== emoji)
+      : [...reactions, { emoji, count: 1, users: ['me'], mine: true }]
+    return { reactions }
+  }
+  let finishSend: (() => void) | undefined
+  let sendFailed = false
+  let branchCount = 0
+  let lastPayload: ReturnType<typeof createNativeMessage> | undefined
+  const nextSequence = () => Math.max(0, ...useChatThreadStore.getState().conversations[CONVERSATION_ID].messages.map(message => Number(message.metadata.custom.sequence) || 0)) + 1
+  const showBranch = (running: boolean) => {
+    if (!lastPayload) throw new Error('Regeneration must precede its reply')
+    const response = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', messageId: `branch-${branchCount}`,
+      clientMsgNo: `branch-${branchCount}`, messageSeq: running ? 0 : nextSequence(), timestamp: Date.parse(NOW) / 1000,
+      payload: createNativeMessage({ id: `branch-${branchCount}`, role: 'assistant', createdAt: NOW,
+        content: [{ type: 'text', text: `重新生成的第 ${branchCount + 1} 版回复${running ? '（生成中）' : '。'}` }],
+        status: running ? { type: 'running' } : { type: 'complete', reason: 'stop' },
+        custom: { sourceRef: lastPayload.id, replyToClientMsgNo: lastPayload.id } }),
+    }, { participants, meId: 'me' })
+    const activeRuns: Record<string, ActiveAgentRun> = {}
+    if (running) activeRuns.fixture = { id: 'fixture', agentId: 'scout', messageId: response.id, lastSequence: null, state: 'running' }
+    updateConversation(CONVERSATION_ID, state => ({ ...state, messages: mergeCanonicalMessages(state.messages, [response]), activeRuns }))
+  }
+  lingxiIm.send = async (conversationId, payload) => {
+    userMessageSchema.parse(payload)
+    lastPayload = payload
+    document.documentElement.dataset.regeneratePayload = JSON.stringify(payload)
+    await new Promise<void>(resolve => { finishSend = resolve })
+    if (sendFailed) throw new Error('Synthetic send failure')
+    return { channelId: conversationId, channelType: 2, fromUid: 'me', messageId: payload.id, clientMsgNo: payload.id,
+      messageSeq: nextSequence(), timestamp: Date.parse(payload.createdAt) / 1000, payload }
+  }
+  window.addEventListener('message-actions-step', ((event: CustomEvent<string>) => {
+    if (event.detail === 'sent') finishSend?.()
+    if (event.detail === 'branch-start') { branchCount += 1; showBranch(true) }
+    if (event.detail === 'branch-complete') showBranch(false)
+    if (event.detail === 'branch-failed') {
+      lastPayload = createNativeMessage({ id: 'failed-regeneration', role: 'user', createdAt: NOW, content: [{ type: 'text', text: '请重新生成这条回复。' }],
+        custom: { replyToClientMsgNo: 'actions-reply', regenerateOfClientMsgNo: 'actions-reply', mentionedIds: ['scout'] } })
+      const request = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'me', messageId: lastPayload.id, clientMsgNo: lastPayload.id,
+        messageSeq: nextSequence(), timestamp: Date.parse(NOW) / 1000, payload: lastPayload }, { participants, meId: 'me' })
+      updateConversation(CONVERSATION_ID, state => ({ ...state, messages: mergeCanonicalMessages(state.messages, [request]) }))
+      branchCount += 1
+      showBranch(true)
+      updateConversation(CONVERSATION_ID, state => ({ ...state, activeRuns: {}, messages: state.messages.map(message =>
+        message.id === `branch-${branchCount}` && message.role === 'assistant' ? { ...message, status: { type: 'incomplete', reason: 'error' },
+          metadata: { ...message.metadata, custom: { ...message.metadata.custom, harnessError: 'The operation was aborted due to timeout' } } } : message) }))
+      useConversations.setState(state => ({ list: state.list.map(room => ({ ...room, readOnly: false })) }))
+    }
+    if (event.detail === 'followup') {
+      const followup = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'me', messageId: 'actions-followup',
+        clientMsgNo: 'actions-followup', messageSeq: nextSequence(), timestamp: Date.parse(NOW) / 1000,
+        payload: createNativeMessage({ id: 'actions-followup', role: 'user', createdAt: NOW, content: [{ type: 'text', text: '后续消息仍在原处。' }] }),
+      }, { participants, meId: 'me' })
+      updateConversation(CONVERSATION_ID, state => ({ ...state, messages: mergeCanonicalMessages(state.messages, [followup]) }))
+    }
+    if (event.detail === 'send-failed') { sendFailed = true; finishSend?.() }
+    if (event.detail === 'failed') {
+      const question = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'me', messageId: 'actions-question',
+        clientMsgNo: 'actions-question', messageSeq: 1, timestamp: Date.parse(NOW) / 1000,
+        payload: createNativeMessage({ id: 'actions-question', role: 'user', createdAt: NOW, content: [{ type: 'text', text: '请回答这个问题。' }] }),
+      }, { participants, meId: 'me' })
+      if (reply.role !== 'assistant') throw new Error('Expected assistant error fixture')
+      const failed = { ...reply, status: { type: 'incomplete' as const, reason: 'error' as const }, metadata: { ...reply.metadata,
+        custom: { ...reply.metadata.custom, sequence: null, sourceRef: 'actions-question', harnessError: 'The operation was aborted due to timeout' } } }
+      updateConversation(CONVERSATION_ID, state => ({ ...state, messages: [question, failed] }))
+      useConversations.setState(state => ({ list: state.list.map(room => ({ ...room, readOnly: false })) }))
+    }
+    if (event.detail === 'read-only') useConversations.setState(state => ({ list: state.list.map(room => ({ ...room, readOnly: true })) }))
+    if (event.detail === 'replay-ratings') replaceMessageReactions(CONVERSATION_ID, 'actions-reply', reactions)
+  }) as EventListener)
+  if (new URLSearchParams(location.search).get('branched') === '1') {
+    for (let index = 1; index <= 2; index++) {
+      lastPayload = createNativeMessage({ id: `recorded-regeneration-${index}`, role: 'user', createdAt: NOW, content: [{ type: 'text', text: '请重新生成这条回复。' }],
+        custom: { replyToClientMsgNo: 'actions-reply', regenerateOfClientMsgNo: 'actions-reply', mentionedIds: ['scout'] } })
+      const recorded = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'me', messageId: lastPayload.id, clientMsgNo: lastPayload.id,
+        messageSeq: nextSequence(), timestamp: Date.parse(NOW) / 1000, payload: lastPayload }, { participants, meId: 'me' })
+      updateConversation(CONVERSATION_ID, state => ({ ...state, messages: mergeCanonicalMessages(state.messages, [recorded]) }))
+      branchCount = index
+      showBranch(false)
+    }
+  }
+}
+if (scenario === 'streaming-text') {
+  const initial = useChatThreadStore.getState().conversations[CONVERSATION_ID].messages[0]
+  if (initial.role !== 'assistant') throw new Error('Expected assistant streaming fixture')
+  const message = { ...initial, id: 'streaming-preview', content: [{ type: 'text' as const, text: 'Ready' }], status: { type: 'running' as const },
+    metadata: { ...initial.metadata, custom: { ...initial.metadata.custom, clientMessageId: 'streaming-preview' } } }
+  updateConversation(CONVERSATION_ID, state => ({ ...state, messages: [message] }))
+  window.addEventListener('streaming-text-step', ((event: CustomEvent<{ text: string; done: boolean }>) => {
+    updateConversation(CONVERSATION_ID, state => ({ ...state, messages: [{ ...message,
+      content: [{ type: 'text', text: event.detail.text }],
+      status: event.detail.done ? { type: 'complete', reason: 'stop' } : { type: 'running' },
+    }] }))
+  }) as EventListener)
+}
+if (scenario === 'chat-bubble-colors') {
+  const messages = ['maya', 'me'].map((fromUid, index) => convertEnvelope({
+    channelId: CONVERSATION_ID, channelType: 2, fromUid, clientMsgNo: `bubble-${fromUid}`,
+    messageId: `bubble-${fromUid}`, messageSeq: index + 2, timestamp: 1790899201 + index,
+    payload: createNativeMessage({ id: `bubble-${fromUid}`, role: 'user', createdAt: NOW,
+      content: [{ type: 'text', text: '**对话气泡**：检查正文与状态文字的颜色。\n\n> 引用内容也需要清晰可读。\n\n[查看资料](https://example.com)' }] }),
+  }, { participants, meId: 'me' }))
+  useChatThreadStore.setState({ conversations: { ...useChatThreadStore.getState().conversations,
+    [CONVERSATION_ID]: { ...useChatThreadStore.getState().conversations[CONVERSATION_ID],
+      messages: [...useChatThreadStore.getState().conversations[CONVERSATION_ID].messages, ...messages] },
+  } })
+}
+if (scenario === 'chat-regressions') {
+  const target = { conversationId: CONVERSATION_ID, agentId: 'scout', runId: 'regression' }
+  const user = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'me', clientMsgNo: 'regression-user',
+    messageId: 'regression-user', messageSeq: 0, timestamp: Date.parse(NOW) / 1000 + 10,
+    payload: createNativeMessage({ id: 'regression-user', role: 'user', createdAt: new Date(Date.parse(NOW) + 10_000).toISOString(),
+      content: [{ type: 'text', text: '请按顺序回答，保留已输出的内容。' }] }),
+  }, { participants, meId: 'me' })
+  user.metadata.custom.delivery = 'sending'
+  let snapshot: AgentRunSnapshot = { message: createNativeMessage({ id: 'run-regression', role: 'assistant', createdAt: NOW, content: [],
+    status: { type: 'running' }, custom: { runId: target.runId, harness: { ...createRunView(target.runId),
+      lifecycle: 'leased', requestVersion: 1, fence: 1, artifacts: [] } } }) }
+  const history = useChatThreadStore.getState().conversations[CONVERSATION_ID].messages[0]
+  if (history.role !== 'assistant' || user.role !== 'user') throw new Error('Invalid chat regression fixture')
+  updateConversation(CONVERSATION_ID, state => applyRunSnapshot({ ...state, messages: [
+    ...Array.from({ length: 6 }, (_, index) => ({ ...history, id: `older-${index}`, metadata: { ...history.metadata,
+      custom: { ...history.metadata.custom, clientMessageId: `older-${index}`, sequence: index + 1 } } })), user,
+  ] }, target, snapshot, participants.scout))
+  window.addEventListener('chat-regression-step', ((event: CustomEvent<string>) => {
+    if (snapshot.message.role !== 'assistant') throw new Error('Expected assistant snapshot')
+    if (event.detail === 'delivered') {
+      const receipt = { ...user, metadata: { ...user.metadata, custom: { ...user.metadata.custom, sequence: 7, delivery: 'sent' as const } } }
+      updateConversation(CONVERSATION_ID, state => ({ ...state, messages: mergeCanonicalMessages(state.messages, [receipt]) }))
+      snapshot = { message: { ...snapshot.message, metadata: { ...snapshot.message.metadata,
+        custom: { ...snapshot.message.metadata.custom, sourceRef: 'regression-user' } } } }
+    } else if (event.detail === 'preview') {
+      snapshot = { message: { ...snapshot.message, content: [{ type: 'text', text: '第一段已显示。\n\n第二段 **仍在输出' }] } }
+    } else if (event.detail === 'timeout') {
+      snapshot = { message: { ...snapshot.message, content: [], status: { type: 'incomplete', reason: 'error' },
+        metadata: { ...snapshot.message.metadata, custom: { ...snapshot.message.metadata.custom,
+          harnessError: 'The operation was aborted due to timeout',
+          harness: { ...snapshot.message.metadata.custom.harness as ReturnType<typeof createRunView>, lifecycle: 'failed', artifacts: [] } } } } }
+    } else if (event.detail === 'retry') {
+      snapshot = { message: { ...snapshot.message, content: [], status: { type: 'running' },
+        metadata: { ...snapshot.message.metadata, custom: { ...snapshot.message.metadata.custom, harnessError: null,
+          harness: { ...snapshot.message.metadata.custom.harness as ReturnType<typeof createRunView>, lifecycle: 'leased', fence: 2, requestVersion: 2, artifacts: [] } } } } }
+    }
+    updateConversation(CONVERSATION_ID, state => applyRunSnapshot(state, target, snapshot, participants.scout))
+  }) as EventListener)
+} else if (scenario?.startsWith('chat-') && scenario !== 'chat-bubble-colors') {
   harnessApi.readApproval = async () => ({ id: 'approval-feedback', status: 'PENDING', summary: 'calendar.create',
     action: { action: 'calendar.create' }, preview: { input: { title: '学习复盘', at: NOW } } })
   const kind = scenario.slice(5)

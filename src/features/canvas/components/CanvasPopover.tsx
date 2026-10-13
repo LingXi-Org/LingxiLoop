@@ -1,13 +1,13 @@
 import { CanvasIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { userFacingError } from '@/lib/userFacingError'
 import { useSurface } from '@/stores/surface'
 import { useCanvas } from '../state'
-import { CanvasPreview } from './CanvasPreview'
+const CanvasPreview = lazy(() => import('./CanvasPreview').then(module => ({ default: module.CanvasPreview })))
 
 export function CanvasPopover({ conversationId }: { conversationId: string }) {
   const [open, setOpen] = useState(false)
@@ -51,7 +51,7 @@ function CanvasPopoverPreview({ conversationId, onOpenCanvas }: { conversationId
     {error ? <div role="alert" className="grid aspect-video place-content-center gap-3 p-4 text-center"><p className="text-sm text-muted-foreground">{error}</p><Button variant="outline" onClick={() => setAttempt((current) => current + 1)}>重试</Button></div>
       : !preview ? <ResourceSkeleton variant="media" label="正在准备画布" className="aspect-video" />
         : <Button type="button" variant="outline" aria-label={`打开完整画布：${preview.title}`} onClick={() => onOpenCanvas(preview.id)} className="canvas-preview-shell relative aspect-video h-auto w-full overflow-hidden rounded-2xl border-border bg-card p-0 text-start font-normal whitespace-normal shadow-none hover:bg-card">
-          <div className="pointer-events-none h-full w-full" inert><CanvasPreview snapshot={preview} title={preview.title} frameCount={preview.frames.length} fill /></div>
+          <div className="pointer-events-none h-full w-full" inert><Suspense fallback={<ResourceSkeleton variant="media" label="正在准备画布" className="h-full" />}><CanvasPreview snapshot={preview} title={preview.title} frameCount={preview.frames.length} fill /></Suspense></div>
           {!preview.frames.some((frame) => frame.type !== 'artifact') && <span className="pointer-events-none absolute inset-0 grid place-content-center gap-1 text-center"><span className="text-sm font-medium">画布还是空的</span><span className="text-xs text-muted-foreground">打开完整画布开始创作</span></span>}
         </Button>}
   </>

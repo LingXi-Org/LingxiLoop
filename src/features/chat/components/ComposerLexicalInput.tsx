@@ -14,6 +14,7 @@ import {
   $setSelection,
   COMMAND_PRIORITY_CRITICAL,
   KEY_ENTER_COMMAND,
+  type LexicalEditor,
   type RangeSelection,
 } from 'lexical'
 import { useEffect, useImperativeHandle, useRef, type ComponentProps, type Ref } from 'react'
@@ -51,8 +52,9 @@ function ConcurrentSubmitPlugin() {
   return null
 }
 
-function MentionTriggerPlugin({ insertMentionRef }: { insertMentionRef: Ref<() => void> }) {
+function MentionTriggerPlugin({ insertMentionRef, editorRef }: { insertMentionRef: Ref<() => void>; editorRef: Ref<LexicalEditor> }) {
   const [editor] = useLexicalComposerContext()
+  useImperativeHandle(editorRef, () => editor, [editor])
   const savedSelection = useRef<RangeSelection | null>(null)
   useEffect(() => editor.registerUpdateListener(({ editorState }) => {
     editorState.read(() => {
@@ -80,11 +82,20 @@ function MentionTriggerPlugin({ insertMentionRef }: { insertMentionRef: Ref<() =
 }
 
 export function ComposerLexicalInput({ conversationId, insertMentionRef, ...props }: Omit<ComponentProps<typeof LexicalComposerInput>, 'directiveChip'> & { conversationId: string; insertMentionRef: Ref<() => void> }) {
+  const editorRef = useRef<LexicalEditor>(null)
   return (
-    <LexicalComposerInput {...props} directiveChip={ComposerDirectiveChip}>
+    <LexicalComposerInput {...props} directiveChip={ComposerDirectiveChip} directivePluginProps={{
+      onDirectiveSelect: (item) => {
+        editorRef.current?.update(() => {
+          const selection = $getSelection()
+          if ($isRangeSelection(selection)) selection.insertText(' ')
+        }, { tag: 'history-merge' })
+        props.directivePluginProps?.onDirectiveSelect?.(item)
+      },
+    }}>
       <ConcurrentSubmitPlugin />
       <ComposerReadyPlugin conversationId={conversationId} />
-      <MentionTriggerPlugin insertMentionRef={insertMentionRef} />
+      <MentionTriggerPlugin insertMentionRef={insertMentionRef} editorRef={editorRef} />
     </LexicalComposerInput>
   )
 }

@@ -632,5 +632,6 @@ export function filterThreadMessages(
   threadRootId: string | null,
 ): ThreadMessage[] {
   return projectMessageGroups(messages.filter(message => messageMetadata(message).messageKind !== 'tool_activity'
-    && (!threadRootId || message.id === threadRootId || messageMetadata(message).quotedMessageId === threadRootId)))
+    && (!threadRootId || message.id === threadRootId || messageMetadata(message).quotedMessageId === threadRootId
+      || messageMetadata(message).replyBranches?.threadRootId === threadRootId || messageMetadata(message).replyBranches?.rootId === threadRootId)))
 }

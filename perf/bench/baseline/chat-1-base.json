@@ -1,0 +1,395 @@
+{
+  "ready": 4474.0999999996275,
+  "workspace": 4474.200000000186,
+  "input": 5343.5,
+  "lcp": 4512,
+  "longTasks": 425,
+  "cls": 0.0015870225694444445,
+  "measuredAt": "2026-10-13T04:18:23.309Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 37.5,
+      "end": 680.7999999998137,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-DFeRPGXH.js",
+      "type": "script",
+      "start": 37.799999999813735,
+      "end": 446.8999999994412,
+      "encoded": 63214,
+      "decoded": 200582,
+      "transfer": 63514
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 37.89999999944121,
+      "end": 401.20000000018626,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06BGMIAsoOUX2ERXSU8puzfaVUN2lLKdCHqU1MRmOq5NV7hhxaHgz9WE9Ida2GIVlvdPu3YTYY-gB3UKctEDDhofw/init",
+      "type": "xmlhttprequest",
+      "start": 690.8999999994412,
+      "end": 718.0999999996275,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/App-DL78tVmi.js",
+      "type": "script",
+      "start": 705.8999999994412,
+      "end": 1346,
+      "encoded": 222147,
+      "decoded": 804553,
+      "transfer": 222447
+    },
+    {
+      "name": "/assets/button-BwrTsEuD.js",
+      "type": "script",
+      "start": 706.0999999996275,
+      "end": 834.2999999998137,
+      "encoded": 10079,
+      "decoded": 29241,
+      "transfer": 10379
+    },
+    {
+      "name": "/assets/BloubAvatar-Dpgxdb_I.js",
+      "type": "script",
+      "start": 706.2000000001863,
+      "end": 851.5,
+      "encoded": 13127,
+      "decoded": 31339,
+      "transfer": 13427
+    },
+    {
+      "name": "/assets/index-DQe5JJE5.js",
+      "type": "script",
+      "start": 706.3999999994412,
+      "end": 898.2999999998137,
+      "encoded": 18783,
+      "decoded": 60696,
+      "transfer": 19083
+    },
+    {
+      "name": "/assets/GlobalInteractionProvider-C424ilaX.js",
+      "type": "script",
+      "start": 706.5999999996275,
+      "end": 758.7000000001863,
+      "encoded": 2587,
+      "decoded": 7417,
+      "transfer": 2887
+    },
+    {
+      "name": "/assets/confirmAction-DloJjWb9.js",
+      "type": "script",
+      "start": 706.7999999998137,
+      "end": 821.0999999996275,
+      "encoded": 8579,
+      "decoded": 23191,
+      "transfer": 8879
+    },
+    {
+      "name": "/assets/InformationCircleIcon-CUKxAkIj.js",
+      "type": "script",
+      "start": 707,
+      "end": 789.5999999996275,
+      "encoded": 543,
+      "decoded": 543,
+      "transfer": 843
+    },
+    {
+      "name": "/assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+      "type": "script",
+      "start": 707.3999999994412,
+      "end": 822.8999999994412,
+      "encoded": 332,
+      "decoded": 332,
+      "transfer": 632
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 718.3999999994412,
+      "end": 882.5,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D27C71A9-297A-41A4-9B08-C5287BB8810D/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 721.7999999998137,
+      "end": 759.7999999998137,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 1524.7000000001863,
+      "end": 1669.2000000001863,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 1546.7999999998137,
+      "end": 1624.0999999996275,
+      "encoded": 314,
+      "decoded": 490,
+      "transfer": 614
+    },
+    {
+      "name": "/api/projects",
+      "type": "fetch",
+      "start": 1676.0999999996275,
+      "end": 2083.2999999998137,
+      "encoded": 1254,
+      "decoded": 8209,
+      "transfer": 1554
+    },
+    {
+      "name": "/api/me/preferences",
+      "type": "fetch",
+      "start": 1676.7999999998137,
+      "end": 2049.899999999441,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/agents/autonomy",
+      "type": "fetch",
+      "start": 1677.3999999994412,
+      "end": 2050.7000000001863,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 1678.5999999996275,
+      "end": 2087.2000000001863,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/projects/e2e-classroom/open",
+      "type": "fetch",
+      "start": 2085.5,
+      "end": 2221.7000000001863,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/api/participants",
+      "type": "fetch",
+      "start": 2224.2000000001863,
+      "end": 2359.2999999998137,
+      "encoded": 2837,
+      "decoded": 12424,
+      "transfer": 3137
+    },
+    {
+      "name": "/api/im/channels",
+      "type": "fetch",
+      "start": 2225,
+      "end": 2420.2000000001863,
+      "encoded": 627,
+      "decoded": 2812,
+      "transfer": 927
+    },
+    {
+      "name": "/api/im/bootstrap",
+      "type": "fetch",
+      "start": 2422.7000000001863,
+      "end": 2557.7000000001863,
+      "encoded": 151,
+      "decoded": 167,
+      "transfer": 451
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 2422.899999999441,
+      "end": 2588.5,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-BMXcfv_2.js",
+      "type": "script",
+      "start": 2424,
+      "end": 4123.5,
+      "encoded": 688278,
+      "decoded": 2253640,
+      "transfer": 688578
+    },
+    {
+      "name": "/assets/avatar-Ci6hcVYP.js",
+      "type": "script",
+      "start": 2424.0999999996275,
+      "end": 2646.7000000001863,
+      "encoded": 37830,
+      "decoded": 114473,
+      "transfer": 38130
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-CojW92VU.css",
+      "type": "link",
+      "start": 2425,
+      "end": 2756.2999999998137,
+      "encoded": 55609,
+      "decoded": 164383,
+      "transfer": 55909
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/messages",
+      "type": "fetch",
+      "start": 2428.2999999998137,
+      "end": 2614.2000000001863,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/runs",
+      "type": "fetch",
+      "start": 2617.5,
+      "end": 2723.899999999441,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 2644.5999999996275,
+      "end": 2741,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D27C71A9-297A-41A4-9B08-C5287BB8810D/from",
+      "type": "xmlhttprequest",
+      "start": 2721.5,
+      "end": 2756.899999999441,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D27C71A9-297A-41A4-9B08-C5287BB8810D/from",
+      "type": "xmlhttprequest",
+      "start": 3222.7000000001863,
+      "end": 3268.899999999441,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D27C71A9-297A-41A4-9B08-C5287BB8810D/from",
+      "type": "xmlhttprequest",
+      "start": 3723.0999999996275,
+      "end": 3750.7000000001863,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 3770,
+      "end": 4029.7000000001863,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D27C71A9-297A-41A4-9B08-C5287BB8810D/from",
+      "type": "xmlhttprequest",
+      "start": 4362.299999999814,
+      "end": 4403.700000000186,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 4425.0999999996275,
+      "end": 4527.899999999441,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/api/learning/spaces",
+      "type": "fetch",
+      "start": 4454.5,
+      "end": 4930.299999999814,
+      "encoded": 1101,
+      "decoded": 7804,
+      "transfer": 1401
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 4469.0999999996275,
+      "end": 4574.5999999996275,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D27C71A9-297A-41A4-9B08-C5287BB8810D/from",
+      "type": "xmlhttprequest",
+      "start": 4892.200000000186,
+      "end": 4928.899999999441,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 5326.399999999441,
+      "end": 5445.5999999996275,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/D27C71A9-297A-41A4-9B08-C5287BB8810D/from",
+      "type": "xmlhttprequest",
+      "start": 5412.200000000186,
+      "end": 5439.399999999441,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 14.899999999441206
+    }
+  ]
+}

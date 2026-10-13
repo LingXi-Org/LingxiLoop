@@ -1,9 +1,10 @@
 import { PanelsTopLeftIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { ArtifactCard } from '@/components/assistant-ui/elements/artifact-card'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { useSurface } from '@/stores/surface'
 import { useCanvas } from '../state'
-import { CanvasPreview } from './CanvasPreview'
+const CanvasPreview = lazy(() => import('./CanvasPreview').then(module => ({ default: module.CanvasPreview })))
 
 export function CanvasArtifactCard({ canvasId, title, description }: { canvasId: string; title: string; description?: string }) {
   const snapshot = useCanvas(state => state.snapshot?.id === canvasId ? state.snapshot : state.previews[canvasId])
@@ -23,7 +24,7 @@ export function CanvasArtifactCard({ canvasId, title, description }: { canvasId:
     preview={snapshot && !frameCount
       ? <p className="grid h-full place-items-center text-xs text-muted-foreground">画布暂无可预览内容</p>
       : snapshot || loadedId !== canvasId
-      ? <div className="pointer-events-none h-full" inert><CanvasPreview snapshot={snapshot ?? null} title={title} frameCount={frameCount} fill /></div>
+      ? <div className="pointer-events-none h-full" inert><Suspense fallback={<ResourceSkeleton variant="media" label="正在准备画布" className="h-full" />}><CanvasPreview snapshot={snapshot ?? null} title={title} frameCount={frameCount} fill /></Suspense></div>
       : <p className="grid h-full place-items-center px-4 text-center text-xs text-muted-foreground">预览暂不可用，可打开画布查看</p>}
     onOpen={() => openCanvas(canvasId)}
     openLabel="打开画布"

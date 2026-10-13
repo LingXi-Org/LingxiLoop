@@ -1,0 +1,386 @@
+{
+  "ready": 4373.700000000186,
+  "workspace": 4373.799999999814,
+  "input": 5177.200000000186,
+  "lcp": 4428,
+  "longTasks": 446,
+  "cls": 0.0015870225694444445,
+  "measuredAt": "2026-10-13T04:19:13.509Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 63.799999999813735,
+      "end": 718.0999999996275,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-DFeRPGXH.js",
+      "type": "script",
+      "start": 64.09999999962747,
+      "end": 501.59999999962747,
+      "encoded": 63214,
+      "decoded": 200582,
+      "transfer": 63514
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 64.29999999981374,
+      "end": 438.29999999981374,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06BvgwQXVCmF1wCOFb5O-fca3_nOMo30UOw1KvFUrooT0QQVr1uakOuovWp5d91oKWUhDD9cGxYMrC-75Yhu_FHEQ/init",
+      "type": "xmlhttprequest",
+      "start": 728.0999999996275,
+      "end": 755.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/App-DL78tVmi.js",
+      "type": "script",
+      "start": 747.7999999998137,
+      "end": 1382.2999999998137,
+      "encoded": 222147,
+      "decoded": 804553,
+      "transfer": 222447
+    },
+    {
+      "name": "/assets/button-BwrTsEuD.js",
+      "type": "script",
+      "start": 748,
+      "end": 873,
+      "encoded": 10079,
+      "decoded": 29241,
+      "transfer": 10379
+    },
+    {
+      "name": "/assets/BloubAvatar-Dpgxdb_I.js",
+      "type": "script",
+      "start": 748.0999999996275,
+      "end": 903.9000000003725,
+      "encoded": 13127,
+      "decoded": 31339,
+      "transfer": 13427
+    },
+    {
+      "name": "/assets/index-DQe5JJE5.js",
+      "type": "script",
+      "start": 748.0999999996275,
+      "end": 951.0999999996275,
+      "encoded": 18783,
+      "decoded": 60696,
+      "transfer": 19083
+    },
+    {
+      "name": "/assets/GlobalInteractionProvider-C424ilaX.js",
+      "type": "script",
+      "start": 748.2000000001863,
+      "end": 811.7999999998137,
+      "encoded": 2587,
+      "decoded": 7417,
+      "transfer": 2887
+    },
+    {
+      "name": "/assets/confirmAction-DloJjWb9.js",
+      "type": "script",
+      "start": 748.2999999998137,
+      "end": 873.5,
+      "encoded": 8579,
+      "decoded": 23191,
+      "transfer": 8879
+    },
+    {
+      "name": "/assets/InformationCircleIcon-CUKxAkIj.js",
+      "type": "script",
+      "start": 748.4000000003725,
+      "end": 842.4000000003725,
+      "encoded": 543,
+      "decoded": 543,
+      "transfer": 843
+    },
+    {
+      "name": "/assets/CheckmarkCircle02Icon-D-PTcbNP.js",
+      "type": "script",
+      "start": 748.5,
+      "end": 875.4000000003725,
+      "encoded": 332,
+      "decoded": 332,
+      "transfer": 632
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 760.4000000003725,
+      "end": 929.5999999996275,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/BA1D35C8-39F0-4E56-BAA1-2170069E4085/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 763.0999999996275,
+      "end": 825.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 1512,
+      "end": 1647.5,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 1525.5,
+      "end": 1600.7000000001863,
+      "encoded": 314,
+      "decoded": 490,
+      "transfer": 614
+    },
+    {
+      "name": "/api/projects",
+      "type": "fetch",
+      "start": 1612.7000000001863,
+      "end": 1816.0999999996275,
+      "encoded": 1254,
+      "decoded": 8209,
+      "transfer": 1554
+    },
+    {
+      "name": "/api/me/preferences",
+      "type": "fetch",
+      "start": 1613.2999999998137,
+      "end": 1783.0999999996275,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/agents/autonomy",
+      "type": "fetch",
+      "start": 1613.7000000001863,
+      "end": 1800.0999999996275,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 1614.7000000001863,
+      "end": 1815.5999999996275,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/projects/e2e-classroom/open",
+      "type": "fetch",
+      "start": 1818.2999999998137,
+      "end": 1983.7999999998137,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/api/participants",
+      "type": "fetch",
+      "start": 1985.9000000003725,
+      "end": 2214,
+      "encoded": 2837,
+      "decoded": 12424,
+      "transfer": 3137
+    },
+    {
+      "name": "/api/im/channels",
+      "type": "fetch",
+      "start": 1986.2000000001863,
+      "end": 2106.2999999998137,
+      "encoded": 627,
+      "decoded": 2812,
+      "transfer": 927
+    },
+    {
+      "name": "/api/im/bootstrap",
+      "type": "fetch",
+      "start": 2216,
+      "end": 2330.2000000001863,
+      "encoded": 151,
+      "decoded": 167,
+      "transfer": 451
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 2216.4000000003725,
+      "end": 2366.7000000001863,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-BMXcfv_2.js",
+      "type": "script",
+      "start": 2217.4000000003725,
+      "end": 3891.7000000001863,
+      "encoded": 688278,
+      "decoded": 2253640,
+      "transfer": 688578
+    },
+    {
+      "name": "/assets/avatar-Ci6hcVYP.js",
+      "type": "script",
+      "start": 2217.5999999996275,
+      "end": 2417.0999999996275,
+      "encoded": 37830,
+      "decoded": 114473,
+      "transfer": 38130
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-CojW92VU.css",
+      "type": "link",
+      "start": 2218.7000000001863,
+      "end": 2534.5,
+      "encoded": 55609,
+      "decoded": 164383,
+      "transfer": 55909
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/messages",
+      "type": "fetch",
+      "start": 2221.2000000001863,
+      "end": 2378.7000000001863,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/runs",
+      "type": "fetch",
+      "start": 2380.7999999998137,
+      "end": 2488.4000000003725,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/BA1D35C8-39F0-4E56-BAA1-2170069E4085/from",
+      "type": "xmlhttprequest",
+      "start": 2767.0999999996275,
+      "end": 2798.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/BA1D35C8-39F0-4E56-BAA1-2170069E4085/from",
+      "type": "xmlhttprequest",
+      "start": 3268.0999999996275,
+      "end": 3290.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 3401.0999999996275,
+      "end": 3491.5,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/BA1D35C8-39F0-4E56-BAA1-2170069E4085/from",
+      "type": "xmlhttprequest",
+      "start": 3769.5,
+      "end": 3814.7999999998137,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/BA1D35C8-39F0-4E56-BAA1-2170069E4085/from",
+      "type": "xmlhttprequest",
+      "start": 4278.200000000186,
+      "end": 4317.299999999814,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 4315.5999999996275,
+      "end": 4403.5,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/api/learning/spaces",
+      "type": "fetch",
+      "start": 4352,
+      "end": 4692.9000000003725,
+      "encoded": 1101,
+      "decoded": 7804,
+      "transfer": 1401
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 4367.4000000003725,
+      "end": 4464.700000000186,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/BA1D35C8-39F0-4E56-BAA1-2170069E4085/from",
+      "type": "xmlhttprequest",
+      "start": 4833.5,
+      "end": 4876.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 5161.799999999814,
+      "end": 5288,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/BA1D35C8-39F0-4E56-BAA1-2170069E4085/from",
+      "type": "xmlhttprequest",
+      "start": 5334.5999999996275,
+      "end": 5379.299999999814,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 17.09999999962747
+    }
+  ]
+}

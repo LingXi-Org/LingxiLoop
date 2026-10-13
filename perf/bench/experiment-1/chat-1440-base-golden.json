@@ -1,0 +1,34 @@
+{
+  "title": "LingxiLoop — 人与智能助教协作",
+  "text": "E2E Classroom\n+6\nE2E Classroom · Study Room\n1/1\n\n还没有消息\n\nE2E canvas group ced74b22\n10/5\n\n还没有消息\n\nE2E student\n10/5\n\n还没有消息\n\nE2E canvas group 5db27c7c\n10/5\n\n还没有消息\n\n司南\n10/9\n\n还没有消息\n\nE2E canvas group 0d8872a7\n10/9\n\n还没有消息\n\n+6\nE2E Classroom · Study Room\n开始一段新对话\n\n性能测试 abc\n\n快捷操作\n\n搜索并运行操作",
+  "fields": [
+    {
+      "label": "搜索会话和消息",
+      "type": null,
+      "rect": {
+        "x": 102,
+        "y": 43,
+        "width": 214,
+        "height": 36,
+        "top": 43,
+        "right": 316,
+        "bottom": 79,
+        "left": 102
+      }
+    },
+    {
+      "label": null,
+      "type": null,
+      "rect": {
+        "x": 567.5,
+        "y": 896,
+        "width": 658,
+        "height": 24,
+        "top": 896,
+        "right": 1225.5,
+        "bottom": 920,
+        "left": 567.5
+      }
+    }
+  ]
+}

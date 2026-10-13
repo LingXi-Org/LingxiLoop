@@ -96,6 +96,16 @@ test('one native message survives acceptance and replay; every attachment settle
   assert.equal((await rows()).rows.length,1)
   assert.equal((await insertAttachmentKnowledgeJob(pool,inputs[1],30_000)).sourceId,sources[1])
   assert.equal((await pool.query('SELECT status FROM knowledge_source_jobs WHERE source_id=$1',[sources[1]])).rows[0].status,'failed')
+  const regeneration = createNativeMessage({ id: 'native-regenerate-input', role: 'user', content: [{ type: 'text', text: 'Regenerate this reply.' }],
+    custom: { regenerateOfClientMsgNo: message.id, replyToClientMsgNo: message.id, mentionedIds: [agentId] } })
+  const acceptRegeneration = (payload: unknown) => fetch(`${baseUrl}/api/im/channels/${channelId}/messages/accept`, {
+    method: 'POST', headers, body: JSON.stringify({ clientNonce: regeneration.id, payload }) })
+  assert.equal((await acceptRegeneration({ ...regeneration, metadata: { custom: { ...regeneration.metadata.custom, replyToClientMsgNo: 'other' } } })).status, 400)
+  assert.equal((await acceptRegeneration(regeneration)).status, 202)
+  const branchHistory = await fetch(`${baseUrl}/api/im/channels/${channelId}/messages`, { headers })
+  const regenerated = (await branchHistory.json() as { payload: { id: string; metadata: { custom: Record<string, unknown> } } }[])
+    .find(row => row.payload.id === regeneration.id)
+  assert.equal(regenerated?.payload.metadata.custom.regenerateOfClientMsgNo, message.id)
   await mkdir('artifacts/native-message',{ recursive: true })
   await writeFile('artifacts/native-message/flow.json',JSON.stringify({ passed: true,checks: ['single-send','ordered-replay','idempotency','old-protocol-rejected','attachment-ownership','tenant-isolation','signed-webhook','duplicate-webhook','two-sources','all-settled-single-wake','terminal-failure-stable'] },null,2))
 })

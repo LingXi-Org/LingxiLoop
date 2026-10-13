@@ -1,0 +1,557 @@
+{
+  "ready": 3282.5,
+  "workspace": 3282.5,
+  "input": 5102.300000000745,
+  "lcp": 3380,
+  "longTasks": 1172,
+  "cls": 0.24971105806327162,
+  "measuredAt": "2026-10-13T04:55:41.569Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "resources": [
+    {
+      "name": "/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js",
+      "type": "script",
+      "start": 57.30000000074506,
+      "end": 834,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/index-rGT3Smlt.js",
+      "type": "script",
+      "start": 57.5,
+      "end": 772.1999999992549,
+      "encoded": 131818,
+      "decoded": 418537,
+      "transfer": 132118
+    },
+    {
+      "name": "/assets/index-CZ-Q6-cX.css",
+      "type": "link",
+      "start": 57.59999999962747,
+      "end": 417.30000000074506,
+      "encoded": 52829,
+      "decoded": 347610,
+      "transfer": 53129
+    },
+    {
+      "name": "/7D8B79A2-8974-4D7B-A76A-F4F29624C06BE-qN-27pSnjYFfu4DDMKR6IQ56RPBTPEjhiF98dd8-H4YsDIOPK9Hv1FjdWruI2Crqk5eD6_9Sxamw9Z87GQZA/init",
+      "type": "xmlhttprequest",
+      "start": 843.1999999992549,
+      "end": 895.3000000007451,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+      "type": "css",
+      "start": 903.8000000007451,
+      "end": 1042.5,
+      "encoded": 48256,
+      "decoded": 48256,
+      "transfer": 48556
+    },
+    {
+      "name": "/api/session",
+      "type": "fetch",
+      "start": 925.1999999992549,
+      "end": 995.8000000007451,
+      "encoded": 314,
+      "decoded": 490,
+      "transfer": 614
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/3641167A-9566-41AC-9296-E705E2EA7344/to/wsm.sessionActivated",
+      "type": "xmlhttprequest",
+      "start": 945.1999999992549,
+      "end": 995.5,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 991,
+      "end": 1040.300000000745,
+      "encoded": 3658,
+      "decoded": 15086,
+      "transfer": 3958
+    },
+    {
+      "name": "/assets/AuthedApp-BNZwf0Hg.js",
+      "type": "script",
+      "start": 1029.5999999996275,
+      "end": 1091.5999999996275,
+      "encoded": 4207,
+      "decoded": 10331,
+      "transfer": 4507
+    },
+    {
+      "name": "/assets/realtime-BaGlrOE7.js",
+      "type": "script",
+      "start": 1029.9000000003725,
+      "end": 1079.699999999255,
+      "encoded": 1090,
+      "decoded": 2605,
+      "transfer": 1390
+    },
+    {
+      "name": "/assets/transport-DJCi2B_H.js",
+      "type": "script",
+      "start": 1030,
+      "end": 1817.4000000003725,
+      "encoded": 129291,
+      "decoded": 415012,
+      "transfer": 129591
+    },
+    {
+      "name": "/assets/avatarCache-C52rAQGw.js",
+      "type": "script",
+      "start": 1030.0999999996275,
+      "end": 1079.9000000003725,
+      "encoded": 789,
+      "decoded": 1588,
+      "transfer": 1089
+    },
+    {
+      "name": "/assets/navigation-CR191XEF.js",
+      "type": "script",
+      "start": 1030.300000000745,
+      "end": 1463.5,
+      "encoded": 51561,
+      "decoded": 249921,
+      "transfer": 51861
+    },
+    {
+      "name": "/assets/BloubAvatar-BbV1jV3C.js",
+      "type": "script",
+      "start": 1030.4000000003725,
+      "end": 1172.300000000745,
+      "encoded": 13126,
+      "decoded": 31339,
+      "transfer": 13426
+    },
+    {
+      "name": "/assets/workspace-ByZHNFok.js",
+      "type": "script",
+      "start": 1030.5999999996275,
+      "end": 1157,
+      "encoded": 5311,
+      "decoded": 17285,
+      "transfer": 5611
+    },
+    {
+      "name": "/assets/state-BNNvk9pE.js",
+      "type": "script",
+      "start": 1030.699999999255,
+      "end": 1140.5999999996275,
+      "encoded": 1242,
+      "decoded": 3038,
+      "transfer": 1542
+    },
+    {
+      "name": "/assets/state-NwrYfAup.js",
+      "type": "script",
+      "start": 1030.800000000745,
+      "end": 1142.0999999996275,
+      "encoded": 707,
+      "decoded": 1594,
+      "transfer": 1007
+    },
+    {
+      "name": "/assets/state-BX9VTuz9.js",
+      "type": "script",
+      "start": 1030.9000000003725,
+      "end": 1186.9000000003725,
+      "encoded": 2485,
+      "decoded": 7634,
+      "transfer": 2785
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-DwwZwjee.js",
+      "type": "script",
+      "start": 1034.300000000745,
+      "end": 2807.800000000745,
+      "encoded": 545194,
+      "decoded": 1783610,
+      "transfer": 545494
+    },
+    {
+      "name": "/assets/use-reduced-motion-EUf6wGjQ.js",
+      "type": "script",
+      "start": 1034.5,
+      "end": 1478.4000000003725,
+      "encoded": 37796,
+      "decoded": 114440,
+      "transfer": 38096
+    },
+    {
+      "name": "/assets/mermaid-HWGCJPDP-DJgCPkqK.css",
+      "type": "link",
+      "start": 1035.5,
+      "end": 1105.199999999255,
+      "encoded": 988,
+      "decoded": 988,
+      "transfer": 1288
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 1087.5,
+      "end": 1388,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 1920.9000000003725,
+      "end": 2247.199999999255,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/projects",
+      "type": "fetch",
+      "start": 1922.4000000003725,
+      "end": 2242,
+      "encoded": 1253,
+      "decoded": 8209,
+      "transfer": 1553
+    },
+    {
+      "name": "/api/me/preferences",
+      "type": "fetch",
+      "start": 1922.800000000745,
+      "end": 2221.5999999996275,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/agents/autonomy",
+      "type": "fetch",
+      "start": 1923.0999999996275,
+      "end": 2267.800000000745,
+      "encoded": 22,
+      "decoded": 2,
+      "transfer": 322
+    },
+    {
+      "name": "/api/projects/e2e-classroom/open",
+      "type": "fetch",
+      "start": 2245.0999999996275,
+      "end": 2389.5999999996275,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/api/participants",
+      "type": "fetch",
+      "start": 2392.699999999255,
+      "end": 2515.300000000745,
+      "encoded": 2837,
+      "decoded": 12424,
+      "transfer": 3137
+    },
+    {
+      "name": "/api/im/channels",
+      "type": "fetch",
+      "start": 2393.300000000745,
+      "end": 2562.9000000003725,
+      "encoded": 887,
+      "decoded": 3144,
+      "transfer": 1187
+    },
+    {
+      "name": "/api/im/bootstrap",
+      "type": "fetch",
+      "start": 2565.300000000745,
+      "end": 2716,
+      "encoded": 151,
+      "decoded": 167,
+      "transfer": 451
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 2565.5,
+      "end": 2716.300000000745,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/messages",
+      "type": "fetch",
+      "start": 2567.4000000003725,
+      "end": 2758.699999999255,
+      "encoded": 818,
+      "decoded": 3943,
+      "transfer": 1118
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/runs",
+      "type": "fetch",
+      "start": 2764.9000000003725,
+      "end": 2884.5999999996275,
+      "encoded": 385,
+      "decoded": 1213,
+      "transfer": 685
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/3641167A-9566-41AC-9296-E705E2EA7344/from",
+      "type": "xmlhttprequest",
+      "start": 2998,
+      "end": 3023.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3A5178c8e6f8f1ad81b1aab2283cab66644d9a5c5a8ddc8674925be901254398dd/stream",
+      "type": "fetch",
+      "start": 3020.300000000745,
+      "end": 3348.5999999996275,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Ad7bd2a987027c9a6dccda1da47588831b35ac65cc3a447e4a7fba112b5bbccd6/stream",
+      "type": "fetch",
+      "start": 3020.5999999996275,
+      "end": 3422.5,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa9bc4b7b6a487f99cfce441e800da2891a4a28901934e2127e16968f371b7305/stream",
+      "type": "fetch",
+      "start": 3020.800000000745,
+      "end": 3561.5999999996275,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aac317c802cf1264013b50c894ecb546f1f1aaff1a976592f296976f81906e997/stream",
+      "type": "fetch",
+      "start": 3020.9000000003725,
+      "end": 3420,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aad742a298318f3d5b25d947ac63668e823daf925c9bb3c97c9db151e9cca1e79/stream",
+      "type": "fetch",
+      "start": 3021.0999999996275,
+      "end": 3434.199999999255,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/api/im/companies/e2e-school/channels/e2e-study-room/agents/nova-4473/runs/im%3Aa12c83bbd449f1e0713884721dda3e778f041b134fec2f57e279c05ee3655021/stream",
+      "type": "fetch",
+      "start": 3021.199999999255,
+      "end": 3562.0999999996275,
+      "encoded": 1065,
+      "decoded": 1065,
+      "transfer": 1365
+    },
+    {
+      "name": "/assets/highlighted-body-KPVGNVTW-D6U9Rr2f.js",
+      "type": "script",
+      "start": 3095.699999999255,
+      "end": 3454.4000000003725,
+      "encoded": 833,
+      "decoded": 833,
+      "transfer": 1133
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 3134,
+      "end": 3225.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "type": "css",
+      "start": 3160,
+      "end": 3485.0999999996275,
+      "encoded": 29400,
+      "decoded": 29400,
+      "transfer": 29700
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3223.4000000003725,
+      "end": 3270.4000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 3227.800000000745,
+      "end": 3928.5,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/api/learning/spaces",
+      "type": "fetch",
+      "start": 3230.4000000003725,
+      "end": 3850.800000000745,
+      "encoded": 1101,
+      "decoded": 7804,
+      "transfer": 1401
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 3318.800000000745,
+      "end": 3433.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/auth/ws-ticket",
+      "type": "fetch",
+      "start": 3328.300000000745,
+      "end": 3669.5,
+      "encoded": 113,
+      "decoded": 95,
+      "transfer": 413
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3682.300000000745,
+      "end": 3728.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3796,
+      "end": 3840.199999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 3879.199999999255,
+      "end": 3984.9000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 3974.5,
+      "end": 4022.199999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 4018.4000000003725,
+      "end": 4057.300000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "img",
+      "start": 4079.4000000003725,
+      "end": 4174.0999999996275,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/3641167A-9566-41AC-9296-E705E2EA7344/from",
+      "type": "xmlhttprequest",
+      "start": 4092.4000000003725,
+      "end": 4143.300000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/im/channels/e2e-study-room/read",
+      "type": "fetch",
+      "start": 4104.699999999255,
+      "end": 4343.5999999996275,
+      "encoded": 60,
+      "decoded": 40,
+      "transfer": 360
+    },
+    {
+      "name": "/lingxiloop-e2e/avatars/e2e-school/ecfd3026-b560-40f0-9f7e-1d403d2ba42e.png",
+      "type": "fetch",
+      "start": 4276,
+      "end": 4324.199999999255,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/3641167A-9566-41AC-9296-E705E2EA7344/from",
+      "type": "xmlhttprequest",
+      "start": 4636.199999999255,
+      "end": 4682.800000000745,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    },
+    {
+      "name": "/api/conversations/e2e-study-room/typing",
+      "type": "fetch",
+      "start": 5083.699999999255,
+      "end": 5225.199999999255,
+      "encoded": 31,
+      "decoded": 11,
+      "transfer": 331
+    },
+    {
+      "name": "/511C6043-28DD-4D55-9C23-DA33349C7A4F/3641167A-9566-41AC-9296-E705E2EA7344/from",
+      "type": "xmlhttprequest",
+      "start": 5180.9000000003725,
+      "end": 5215.4000000003725,
+      "encoded": 0,
+      "decoded": 0,
+      "transfer": 0
+    }
+  ],
+  "navigation": [
+    {
+      "ttfb": 16.300000000745058
+    }
+  ]
+}

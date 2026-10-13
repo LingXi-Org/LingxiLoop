@@ -22,7 +22,9 @@ export function applyRunSnapshot(state: ConversationChatState, target: AgentRunT
     && before.harness.messageFence === view.messageFence)
   // Delivery may replace an uncommittable UI with text; SSE must not undo that canonical payload.
   const content = sameResult && before?.sequence != null && current?.role === 'assistant' ? current.content : native.content
-  const predecessor = state.messages.filter(message => message !== current && message.createdAt <= native.createdAt).at(-1)
+  const pendingUser = needsRunStream(view.lifecycle, view.delivery)
+    ? state.messages.filter(message => message.role === 'user' && metadata(message).threadRootId === (target.threadId ?? null)).at(-1) : undefined
+  const predecessor = pendingUser ?? state.messages.filter(message => message !== current && message.createdAt <= native.createdAt).at(-1)
   const lastSent = state.messages.filter(message => {
     const value = metadata(message)
     return value.runId === target.runId && value.senderId === target.agentId && !value.harness && value.sequence !== null

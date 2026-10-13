@@ -19,6 +19,7 @@ for (const width of [1440, 390]) {
     await browser.keyboard.type('@')
     const menu = browser.locator('[aria-label="提及成员"]')
     await expect(menu).toBeVisible()
+    await expect(menu).not.toContainText('@')
     await expect.poll(() => browser.evaluate(() => getComputedStyle(document.querySelector('[aria-label="提及成员"]')!).opacity)).toBe('1')
     const hit = await browser.evaluate(() => {
       const menu = document.querySelector('[aria-label="提及成员"]')!
@@ -36,6 +37,8 @@ for (const width of [1440, 390]) {
     await expect(menu).toHaveCount(0)
     await expect(browser.locator('[data-directive-id="maya"]').first()).toBeVisible()
     await expect(input).toBeFocused()
+    await browser.keyboard.type('你好')
+    await expect(input).toContainText('@Maya 你好')
     await browser.keyboard.press('Control+A')
     await browser.keyboard.press('Backspace')
     await browser.keyboard.type('@')
@@ -43,6 +46,14 @@ for (const width of [1440, 390]) {
     await browser.keyboard.press('Escape')
     await expect(menu).toHaveCount(0)
     await expect(input).toBeFocused()
+    await browser.keyboard.press('Control+A')
+    await browser.keyboard.press('Backspace')
+    await browser.keyboard.type('/poll')
+    const commands = browser.locator('[aria-label="快捷命令"]')
+    await expect(commands).toBeVisible()
+    await expect(commands).toContainText('投票')
+    await expect(commands).not.toContainText('/poll')
+    await app.screenshot(`poll-menu-label-only-${width}`)
   })
 }
 
@@ -53,7 +64,7 @@ for (const scenario of ['partial', 'blocked', 'failed', 'delivery', 'cancelled',
     await expect(screen.getByText('任务结果', { exact: true })).toHaveCount(0)
     await expect(screen.getByText('Declared delivery limitation', { exact: false })).toHaveCount(0)
     if (scenario === 'failed') {
-      await expect(screen.getByRole('alert')).toHaveText('模型服务请求失败(HTTP 402)。')
+      await expect(screen.getByRole('alert')).toContainText('模型服务请求失败(HTTP 402)。')
     } else if (scenario === 'delivery') {
       await expect(screen.getByRole('alert')).toContainText('答复投递失败')
       await expect(screen.getByRole('button', '重试投递')).toBeVisible()

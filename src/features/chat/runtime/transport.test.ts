@@ -7,7 +7,7 @@ import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { RunStreamProjection } from '../../../../server/src/agent-runtime/assistant-transport'
 
 test('run notifications and discovery subscribe before blocked history, deduplicate and recover closed streams', async () => {
-  let receive!: (event: WsEvent) => void, discover!: () => void
+  let receive!: (event: WsEvent) => void
   const opened: Array<{ runId: string; signal: AbortSignal; close(): void; receive(event: RunStreamEvent): void }> = []
   const listed: Array<{ conversationId: string; agentId: string; runId: string; status: string }> = []
   let reads = 0
@@ -19,7 +19,7 @@ test('run notifications and discovery subscribe before blocked history, deduplic
   mock.module('@/features/chat/api', { namedExports: { messagesApi: {} } })
   mock.module('@/features/conversations/store', { namedExports: { useConversations: { getState: () => ({ byId: {} }) } } })
   mock.module('@/lib/actionToast', { namedExports: { toastAction: () => {} } })
-  mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: { connect: async () => {}, disconnect: () => {}, subscribe: () => () => {} } } })
+  mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: { connect: async () => {}, disconnect: () => {}, subscribe: () => () => {}, history: async () => [] } } })
   mock.module('@/stores/auth', { namedExports: { getMeId: () => 'human', getActiveCompanyId: () => 'company' } })
   mock.module('./outbox', { namedExports: { readChatOutbox: () => [], forgetChatOutbox: () => {}, rememberChatOutbox: () => {} } })
   mock.module('./converter', { namedExports: { convertEnvelope: () => {}, convertEnvelopeBatch: () => [],
@@ -37,7 +37,6 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     }),
   } } })
   Object.defineProperty(globalThis, 'window', { configurable: true, value: {
-    setInterval: (callback: () => void) => { discover = callback; return 1 }, clearInterval: () => {},
     setTimeout: (callback: () => void) => { retries.push(callback); return retries.length }, clearTimeout: () => {},
   } })
   const { ChatTransport } = await import('./transport')
@@ -75,10 +74,12 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     updateConversation('room', state => ({ ...state, loaded: true, isLoading: false }))
     listed.push({ conversationId: 'room', agentId: 'agent', runId: 'missed-notification', status: 'leased' })
     await setImmediate()
-    discover()
+    receive({ type: 'hello', instanceId: 'reconnected', ts: Date.now() })
     await setImmediate()
     assert.deepEqual(opened.map(stream => stream.runId), ['run', 'run', 'missed-notification'])
     const stale = opened.at(-1)!
+    stale.receive({ type: 'state', state: { run: { id: 'missed-notification', status: 'leased', fence: 1,
+      requestVersion: 1, createdAt: new Date(0).toISOString() }, message: null, delivery: null } as RunState })
     transport.disconnect(); transport.boot()
     stale.receive({ type: 'preview', preview: { runId: 'missed-notification', fence: 1, requestVersion: 1,
       attemptId: 'old', seq: 1, kind: 'snapshot', draft: '旧会话' } })

@@ -102,11 +102,15 @@ const bounded = z.unknown().superRefine((value, ctx) => {
   }
 })
 export const nativeMessageSchema = bounded.pipe(message) as z.ZodType<NativeMessage>
-const humanCustom = z.object({ replyToClientMsgNo: id.optional(), mentionedIds: z.array(id).max(100).optional(), mentionAll: z.boolean().optional(),
+const humanCustom = z.object({ replyToClientMsgNo: id.optional(), regenerateOfClientMsgNo: id.optional(), mentionedIds: z.array(id).max(100).optional(), mentionAll: z.boolean().optional(),
   uiInteraction: uiInteractionSchema.optional(),
   agentContinuation: z.object({ agentId: id, runId: id, requestVersion: z.number().int().positive().safe() }).strict().optional(),
   questionnaireReply: z.object({ questionId: id, answers: z.record(z.string(), z.union([z.string().max(4000), z.array(z.string().max(4000)).max(12)])) }).strict().optional(),
-}).strict()
+}).strict().superRefine((value, ctx) => {
+  if (value.regenerateOfClientMsgNo && (value.regenerateOfClientMsgNo !== value.replyToClientMsgNo || value.mentionedIds?.length !== 1)) {
+    ctx.addIssue({ code: 'custom', message: 'regeneration requires its quoted reply and one target agent' })
+  }
+})
 export const userMessageSchema = nativeMessageSchema.superRefine((value, ctx) => {
   if (value.role !== 'user' || !humanCustom.safeParse(value.metadata.custom).success || value.content.some(part => part.type === 'data')
     || !value.content.length && !value.attachments?.length) ctx.addIssue({ code: 'custom', message: 'invalid human message' })

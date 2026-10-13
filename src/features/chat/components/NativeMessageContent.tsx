@@ -1,5 +1,5 @@
 import { MessagePrimitive, MessagePartPrimitive, useAuiState, type PartState, type SourceMessagePartProps, type TextMessagePartComponent } from '@assistant-ui/react'
-import { createContext, type ReactNode, useContext } from 'react'
+import { createContext, lazy, type ReactNode, Suspense, useContext } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { z } from 'zod'
@@ -18,7 +18,7 @@ import { BusinessMessagePart } from './BusinessMessagePart'
 import { MessagePartBoundary } from './MessagePartBoundary'
 import { NativeTool, hasRichTool } from './NativeTool'
 import { CalendarEventCard, TeacherBriefingStatsTool } from './ToolRenderers'
-import { NativeOpenUiLesson } from './interactive-ui/OpenUiLesson'
+const NativeOpenUiLesson = lazy(() => import('./interactive-ui/OpenUiLesson').then(module => ({ default: module.NativeOpenUiLesson })))
 
 const ReadOnlyMessage = createContext(false)
 const GroupOwnsFooter = createContext(false)
@@ -35,7 +35,9 @@ const generativeComponents = Object.fromEntries(Object.entries(generativeCompone
   function NativeComponent({ children, ...props }: { children?: ReactNode }) {
     const readOnly = useContext(ReadOnlyMessage)
     const parsed = z.record(z.string(), z.unknown()).parse(schema.parse(props))
-    if (name === OPENUI_COMPONENT) return <NativeOpenUiLesson value={parsed} readOnly={readOnly} />
+    if (name === OPENUI_COMPONENT) return <Suspense fallback={<p className="whitespace-pre-wrap break-words text-sm">{String(parsed.fallback)}</p>}>
+      <NativeOpenUiLesson value={parsed} readOnly={readOnly} />
+    </Suspense>
     if (name === 'calendar-event') return <CalendarEventCard args={parsed} />
     if (name === 'learning-stats') return <TeacherBriefingStatsTool args={parsed} />
     const Component = styledGenerativeUILibrary[name]!.render

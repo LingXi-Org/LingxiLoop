@@ -1,5 +1,4 @@
-import { useContext, useState } from 'react'
-import { MessageFooterContext } from '../message-footer'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { File, getFileDataKind } from './file'
@@ -9,7 +8,6 @@ export function AttachmentCard({ filename, data, mimeType, sourceType }: {
   filename: string; data: string; mimeType: string; sourceType?: 'url' | 'id'
 }) {
   const [failedPreview, setFailedPreview] = useState<string | null>(null)
-  const footer = useContext(MessageFooterContext)
   const kind = getFileDataKind(data, sourceType)
   const href = kind === 'id' ? `/api/files?key=${encodeURIComponent(data)}` : kind === 'base64' ? `data:${mimeType};base64,${data}` : data
   const safeHref = href && /^(https?:\/\/|\/api\/files\?|blob:|data:(?:image|audio|video)\/|data:application\/pdf;)/i.test(href) ? href : null
@@ -25,6 +23,5 @@ export function AttachmentCard({ filename, data, mimeType, sourceType }: {
       <div className="min-w-0 flex-1"><File.Name className="block text-sm">{filename}</File.Name><p className="text-xs text-muted-foreground">{failedPreview && failedPreview === safeHref ? isImage ? '图片预览不可用' : '媒体预览不可用' : isImage ? '图片附件' : '文件附件'}</p></div>
       {safeHref && <Button asChild variant="outline" size="sm"><a href={safeHref} target="_blank" rel="noopener noreferrer" aria-label={`打开附件：${filename}`}>打开</a></Button>}
     </File.Root>
-    {footer && <div className="px-3.5 pb-2">{footer}</div>}
   </CardSurface>
 }

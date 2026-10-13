@@ -1,0 +1,9 @@
+{
+  "profile": "cold Fast 4G, CPU 1x, 1440x960, gzip, Chrome 154, local E2E backend, six durable history messages",
+  "reference": "accepted/summary.json; p75 ceilings rounded above accepted values by approximately 5%",
+  "minimumRuns": 10,
+  "ceilings": {
+    "login": { "ready": 1160, "input": 1550 },
+    "chat": { "ready": 3800, "input": 5330 }
+  }
+}

@@ -1,59 +1,11 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
 import { AuthGate } from '@/components/AuthGate'
 import { WorkspaceSkeleton } from '@/components/WorkspaceSkeleton'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { NotificationToasts } from '@/components/NotificationToasts'
-import { TooltipProvider } from '@/components/ui/tooltip'
-import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import { isMuted, useConversations } from '@/features/conversations/store'
-import { chatTransport } from '@/features/chat/runtime'
-import { startWebNavigation } from '@/lib/navigation'
-import { usePrefs } from '@/stores/preferences'
 import { consumeInviteFromUrl, InviteAcceptScreen } from '@/features/companies/components/InviteAcceptScreen'
 
-const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({ default: module.DesktopApp })))
-
-function AuthedApp() {
-  const convoId = useApp((s) => s.selectedConversationId)
-  const navigationReady = useApp((s) => s.navigationReady)
-  const hasDockUnread = useConversations((s) =>
-    s.list.some((c) => !isMuted(c) && (c.unread ?? 0) > 0),
-  )
-  const selectedConvoExists = useConversations((s) =>
-    convoId ? s.list.some((c) => c.id === convoId) : false,
-  )
-  useEffect(() => {
-    const stopNavigation = startWebNavigation()
-    void usePrefs.getState().load()
-    return stopNavigation
-  }, [])
-
-  useEffect(() => {
-    window.lingxiloop?.dock?.setUnreadDot(hasDockUnread)
-  }, [hasDockUnread])
-
-  useEffect(() => {
-    return () => window.lingxiloop?.dock?.setUnreadDot(false)
-  }, [])
-
-  // Lazy-load messages when selected. The visible-range receipt path marks
-  // only messages the user has actually seen.
-  useEffect(() => {
-    if (!convoId || !selectedConvoExists) return
-    void chatTransport.loadConversation(convoId)
-  }, [convoId, selectedConvoExists])
-
-  return (
-    <TooltipProvider delayDuration={120}>
-      <Suspense fallback={<WorkspaceSkeleton />}>{navigationReady ? <DesktopApp /> : <WorkspaceSkeleton />}</Suspense>
-      {/* In-app message toasts (window-blur / different-convo only) —
-          rendered at the AuthedApp level so they share auth context and
-          unmount cleanly on sign-out. */}
-      <NotificationToasts />
-    </TooltipProvider>
-  )
-}
+const AuthedApp = lazy(() => import('./AuthedApp').then((module) => ({ default: module.AuthedApp })))
 
 export function App() {
   const [invitation, setInvitation] = useState(consumeInviteFromUrl)
@@ -73,7 +25,9 @@ export function App() {
   return (
     <AuthGate unauthFallback={invitationScreen}>
       <ErrorBoundary>
-        {invitationScreen ?? <AuthedApp key={`${userId ?? 'anon'}::${companyId ?? 'none'}`} />}
+        <Suspense fallback={<WorkspaceSkeleton />}>
+          {invitationScreen ?? <AuthedApp key={`${userId ?? 'anon'}::${companyId ?? 'none'}`} />}
+        </Suspense>
       </ErrorBoundary>
     </AuthGate>
   )

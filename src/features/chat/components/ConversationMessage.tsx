@@ -1,20 +1,21 @@
 import {
-  ErrorPrimitive,
   MessagePrimitive,
   useAui,
   useAuiState,
 } from '@assistant-ui/react'
 import { Copy01Icon, ReplyIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { CheckCheck, LoaderCircle } from 'lucide-react'
 import { type PointerEvent as ReactPointerEvent, useContext, useEffect, useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
-import { confidenceCopyText, type MarkdownConfidenceClaim, MarkdownText } from '@/components/assistant-ui/markdown-text'
+import { MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
 import { TypingIndicator } from '@/components/typing-indicator'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from '@/components/ui/drawer'
 import { useParticipants } from '@/features/agents/state'
+import { useConversations } from '@/features/conversations/store'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { useConversationUi } from '@/stores/conversationUi'
@@ -24,8 +25,8 @@ import type { LingxiMessageMetadata } from '../runtime/model'
 import { NativeMessageContent } from './NativeMessageContent'
 import { HarnessDetails } from './HarnessDetails'
 import { chatLatency } from '../runtime/latency'
-import { harnessFailure } from '../runtime/harness'
-import { copyMessageText, MessageActions } from './MessageActions'
+import { copyMessageText, MessageActions, useMessageCopyText } from './MessageActions'
+import { AssistantMessageActions } from './AssistantMessageActions'
 
 function QuotePart({ text, messageId }: { text: string; messageId: string }) {
   const jumpToMessage = useConversationUi((state) => state.jumpToMessage)
@@ -109,39 +110,18 @@ function MessageTextPart() {
   const longPressOrigin = useRef({ x: 0, y: 0 })
   const bodyRef = useRef<HTMLDivElement>(null)
   const metadata = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
+  const members = useConversations(state => state.list.find(conversation => conversation.id === metadata.conversationId)?.members)
+  const participants = useParticipants(state => state.byId)
+  const mentionTargets = (members ?? []).flatMap(id => participants[id] ? [participants[id]] : [])
   const footer = useContext(MessageFooterContext)
   const isAgent = metadata.senderKind === 'agent'
   const isHuman = metadata.senderKind === 'human'
   const inlineCitations = Boolean(metadata.runId)
-  const rawText = useAuiState((state) => state.message.content
-    .filter((part): part is Extract<(typeof state.message.content)[number], { type: 'text' }> => part.type === 'text')
-    .map((part) => part.text)
-    .join('\n'))
+  const { rawText, confidenceClaims, getText } = useMessageCopyText(bodyRef)
   useEffect(() => {
     if (!metadata.runId || metadata.isMine || !rawText.trim() || document.visibilityState !== 'visible') return
     if (bodyRef.current) chatLatency.painted(metadata.runId, bodyRef.current)
   }, [metadata.runId, metadata.isMine, rawText])
-  const confidenceClaims = useAuiState((state) => {
-    const part = state.message.content.find((part) => part.type === 'data' && part.name === 'citation-claims')
-    if (part?.type !== 'data' || !part.data || typeof part.data !== 'object') return undefined
-    const claims = (part.data as { claims?: unknown }).claims
-    return Array.isArray(claims) ? claims as MarkdownConfidenceClaim[] : undefined
-  })
-  const getText = () => {
-    const body = bodyRef.current?.closest('.native-message-content') ?? bodyRef.current
-    if (inlineCitations) {
-      const ranges = Array.from(body?.querySelectorAll<HTMLElement>('[data-citation-start]') ?? []).filter(node => node.closest('.native-message-content') === body).flatMap(node => {
-        const start = Number(node.dataset.citationStart), end = Number(node.dataset.citationEnd)
-        const link = /^\[([\s\S]+)\]\(#cite-[^)]*\)$/.exec(rawText.slice(start, end))
-        return link && Number.isSafeInteger(start) && Number.isSafeInteger(end) && end <= rawText.length
-          ? [{ start, end, text: node.dataset.citationHidden ? '' : link[1] }] : []
-      })
-      return confidenceCopyText(rawText, ranges)
-    }
-    const renderedIds = new Set(Array.from(body?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [])
-      .filter(node => node.closest('.native-message-content') === body).map(node => node.dataset.confidenceId))
-    return confidenceCopyText(rawText, confidenceClaims?.filter(claim => renderedIds.has(claim.id)))
-  }
   const groupPosition = metadata.groupStart
     ? metadata.groupEnd ? 'single' : 'start'
     : metadata.groupEnd ? 'end' : 'middle'
@@ -178,7 +158,7 @@ function MessageTextPart() {
   useEffect(() => () => {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
-  const markdown = <MarkdownText agent={isAgent} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations} />
+  const markdown = <MarkdownText agent={isAgent} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations} mentionTargets={mentionTargets} />
   return <div className={cn('relative min-w-0', isAgent ? 'w-full max-w-full' : ['w-fit', isMobile ? 'max-w-full' : 'max-w-[85%]'], metadata.isMine && 'ms-auto')}>
     {!isMobile && !isAgent && <MessageActions isMine={metadata.isMine} getText={getText} />}
     <div
@@ -200,15 +180,13 @@ function MessageTextPart() {
       className={cn(
         'min-w-0 tracking-[-0.01em]',
         'text-base leading-[1.65]',
-        isHuman && metadata.isMine && ['px-3.5 py-2', bubbleRadius, 'bg-primary text-primary-foreground [&_[data-message-footer]]:text-primary-foreground/75 [&_.typeset]:!text-primary-foreground [&_.typeset_*]:!text-primary-foreground'],
+        isHuman && ['px-3.5 py-2', bubbleRadius],
         !metadata.isMine && 'text-foreground',
-        isHuman && !metadata.isMine && ['px-3.5 py-2 bg-muted', bubbleRadius],
         isHuman && metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
       )}
     >
       {isAgent ? <>{markdown}{footer}</> : <MessageFooterContents inset={false}>{markdown}</MessageFooterContents>}
     </div>
-    {!isMobile && isAgent && <MessageActions isMine={false} getText={getText} className="static mt-1 translate-y-0 justify-end opacity-100" />}
     {isMobile && <MobileMessageActions metadata={metadata} getText={getText} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
   </div>
 }
@@ -247,7 +225,6 @@ export function ConversationMessage() {
   const custom = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
   const isSpecialCard = custom.presentation === 'special-card'
   const running = useAuiState((state) => state.message.status?.type === 'running')
-  const createdAt = useAuiState((state) => state.message.createdAt)
   const messageId = useAuiState((state) => state.message.id)
   const awaitingContent = useAuiState((state) => (
     state.message.status?.type === 'running' && state.message.content.length === 0
@@ -265,13 +242,13 @@ export function ConversationMessage() {
   // The external runtime adds an empty assistant placeholder after a mid-run user turn.
   // Real replies come from the transport and already carry their own typing state.
   if (custom.schema !== 'lingxiloop.thread-message.v2') return null
-  const showTime = !running && !custom.timestampMissing && Number.isFinite(createdAt.getTime()) && createdAt.getTime() > 0
-  const showDelivery = custom.isMine && custom.delivery !== 'sent'
-  const deliveryLabel = showDelivery ? custom.delivery === 'sending' ? '发送中…' : '发送失败' : null
-  const footer = showTime || showDelivery ? (
+  const deliveryLabel = custom.delivery === 'sending' ? '发送中' : custom.delivery === 'sent' ? '已送达' : '发送失败'
+  const footer = custom.isMine ? (
     <div data-message-footer data-align="end" className="flex items-center justify-end gap-2 whitespace-nowrap text-xs leading-4 tabular-nums text-muted-foreground">
-      {showTime && <time dateTime={createdAt.toISOString()}>{createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>}
-      {deliveryLabel && <span>{deliveryLabel}</span>}
+      <span role="status" aria-label={deliveryLabel}>
+        {custom.delivery === 'sending' ? <LoaderCircle aria-hidden="true" className="size-3.5 motion-safe:animate-spin" />
+          : custom.delivery === 'sent' ? <CheckCheck aria-hidden="true" className="size-3.5" /> : deliveryLabel}
+      </span>
     </div>
   ) : null
   return (
@@ -284,6 +261,7 @@ export function ConversationMessage() {
       data-message-continued-from={custom.continuedFromPrevious}
       className={cn(
         'group/message mx-auto grid w-full max-w-[800px] shrink-0',
+        custom.replyBranches && 'fade-in slide-in-from-bottom-1 animate-in duration-300 motion-reduce:animate-none',
         isMobile ? 'gap-x-2 px-2.5' : 'gap-x-2.5 px-3 sm:px-4',
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
         custom.continuedFromPrevious ? isSpecialCard ? 'pt-1' : 'pt-px' : 'pt-1.5',
@@ -313,13 +291,9 @@ export function ConversationMessage() {
         <div className={cn('row-start-2 grid w-full min-w-0 gap-0.5', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {custom.quote && <QuotePart text={custom.quote.text} messageId={custom.quote.messageId} />}
-          <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={deliveryLabel && <span className="text-xs text-muted-foreground">{deliveryLabel}</span>} />
+          <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={footer} />
           {custom.senderKind === 'agent' && custom.harness && custom.runId && <HarnessDetails metadata={custom} />}
-          <MessagePrimitive.Error>
-            <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-              <ErrorPrimitive.Message>{custom.harnessError ? harnessFailure(custom.harnessError) : '消息生成失败，请重试。'}</ErrorPrimitive.Message>
-            </ErrorPrimitive.Root>
-          </MessagePrimitive.Error>
+          {custom.senderKind === 'agent' && <AssistantMessageActions />}
         </div>
         <Reactions metadata={custom} messageId={messageId} />
       </div>

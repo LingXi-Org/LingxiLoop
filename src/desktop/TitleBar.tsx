@@ -1,4 +1,4 @@
-import { ProductLogo } from '@/components/Avatar'
+import { ProductLogo } from '@/components/ProductLogo'
 import { isElectron, isWindows, trafficLightInset } from '@/lib/runtime'
 
 export function TitleBar() {

@@ -72,6 +72,8 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   harnessControl?: boolean
   memory?: RunMemory
   harnessError?: string
+  regenerateOfClientMsgNo?: string
+  replyBranches?: { key: string; rootId: string; threadRootId: string | null; ids: string[]; clientIds: string[]; index: number }
   unresolvedActions?: Array<{ actionKey: string; action: string }>
   quotedMessageId: string | null
   quote: LingxiQuoteMetadata | null
