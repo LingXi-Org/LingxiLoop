@@ -125,7 +125,8 @@ test('production workers always expose full tools and disable thinking even with
         if (chunk.type === 'update-state') replayState.append(chunk.operations)
       }
       const final = replayState.state as unknown as AgentRunSnapshot
-      assert.deepEqual(final.message.content.filter(part => part.type === 'text'), [{ type: 'text', text: body }])
+      assert.deepEqual(final.message.content.filter(part => part.type === 'text'), [{ type: 'text', text: body,
+        providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }])
       assert.equal((final.message.metadata.custom.harness as RunDisplayState).delivery, 'delivered')
       assert.ok(snapshots.some(snapshot => snapshot.message.status?.type === 'running' && snapshot.message.content.some(part => part.type === 'text' && part.text === '第一段')))
       const snapshotResponse = await fetch(`${origin}/api/im/channels/${conversationId}/agents/${agentId}/runs/${run.runId}`, { headers, signal: timeout })
