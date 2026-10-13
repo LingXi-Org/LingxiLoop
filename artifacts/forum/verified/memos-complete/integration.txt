@@ -1,0 +1,49 @@
+[db:migrate] applied 0038_learning_submission_sequence · 405ms
+[db:migrate] already current · 137ms
+[integration] selected 1/60 file(s): course-forum.test.ts
+TAP version 13
+# Subtest: [integration] forum discovers existing public sources and assignments, isolating every content operation
+ok 1 - [integration] forum discovers existing public sources and assignments, isolating every content operation
+  ---
+  duration_ms: 12783.0454
+  type: 'test'
+  ...
+# Subtest: [integration] submission versions preserve links, private files, late status and idempotency; closure blocks browser and Agent
+ok 2 - [integration] submission versions preserve links, private files, late status and idempotency; closure blocks browser and Agent
+  ---
+  duration_ms: 12205.2259
+  type: 'test'
+  ...
+# Subtest: [integration] comment files follow course membership and current source visibility
+ok 3 - [integration] comment files follow course membership and current source visibility
+  ---
+  duration_ms: 14407.0105
+  type: 'test'
+  ...
+# Subtest: [integration] Agent provenance cannot become independent human evidence or change the submitting student
+ok 4 - [integration] Agent provenance cannot become independent human evidence or change the submitting student
+  ---
+  duration_ms: 14754.0577
+  type: 'test'
+  ...
+# Subtest: [integration] native submission tools bind principal, frozen audience, original messages and Agent provenance
+ok 5 - [integration] native submission tools bind principal, frozen audience, original messages and Agent provenance
+  ---
+  duration_ms: 22026.3915
+  type: 'test'
+  ...
+# Subtest: [integration] HTTP forum and private download routes reject cross-course access and forged browser provenance
+ok 6 - [integration] HTTP forum and private download routes reject cross-course access and forged browser provenance
+  ---
+  duration_ms: 46797.8105
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 127686.726
