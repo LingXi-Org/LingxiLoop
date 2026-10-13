@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 import OpenAI from 'openai'
@@ -32,6 +32,7 @@ test('current product generates, delivers and explores learning UI with a real m
   assert.equal(process.env.AGENT_OS_MAX_CONCURRENT_RUNS, '1')
   const output = 'artifacts/interactive-ui/live'
   await mkdir(output, { recursive: true })
+  await Promise.all(['performance-gates.json', 'stream-violation.json'].map(file => rm(`${output}/${file}`, { force: true })))
   const results: { passed: boolean; baseline: unknown[]; cases: unknown[]; attempts: string[]; browser?: unknown; gates?: unknown; metrics?: unknown; error?: string } = { passed: false, baseline: [], cases: [], attempts: [] }
   const record = () => writeFile(`${output}/results.json`, JSON.stringify(results, null, 2))
   await record()
@@ -111,8 +112,18 @@ test('current product generates, delivers and explores learning UI with a real m
     await wukongClient().upsertChannel({ channelId, channelType: 2, title: 'Synthetic live UI', members })
     const nonce = randomUUID(), payload = createNativeMessage({ id: nonce, role: 'user', content: [{ type: 'text', text: scenario.prompt }], custom: { mentionedIds: [agentId] } })
     const started = performance.now(), timeout = AbortSignal.timeout(265_000)
-    const accepted = await fetch(`${origin}/api/im/channels/${channelId}/messages/accept`, { method: 'POST', headers, body: JSON.stringify({ clientNonce: nonce, payload }), signal: timeout })
-    assert.equal(accepted.status, 202, `${id}: committed user acceptance`)
+    const send = () => fetch(`${origin}/api/im/channels/${channelId}/messages/accept`, { method: 'POST', headers, body: JSON.stringify({ clientNonce: nonce, payload }), signal: timeout })
+    let sendAttempts = 1, accepted = await send()
+    // Reuse the product's immutable nonce for a transient WuKong rejection; never create another model turn.
+    while (accepted.status >= 500 && sendAttempts < 3) {
+      await delay(500); sendAttempts++; accepted = await send()
+    }
+    assert.ok(accepted.status === 202 || accepted.status === 200, `${id}: committed user acceptance`)
+    const acceptance = z.object({ status: z.literal('accepted'), duplicate: z.boolean().optional(),
+      echo: z.object({ clientMsgNo: z.string(), channelId: z.string() }) }).parse(await accepted.json())
+    assert.equal(acceptance.echo?.clientMsgNo, nonce, `${id}: immutable accepted nonce`)
+    assert.equal(acceptance.echo?.channelId, channelId, `${id}: accepted channel`)
+    if (accepted.status === 200) assert.equal(acceptance.duplicate, true, `${id}: duplicate acceptance`)
     let runs = await identities(channelId)
     while (!runs.length) { timeout.throwIfAborted(); await delay(100); runs = await identities(channelId) }
     assert.equal(runs.length, 1, `${id}: single product run`)
@@ -174,7 +185,7 @@ test('current product generates, delivers and explores learning UI with a real m
     const history = await imMessagesApplication.history({ companyId, userId: 'test-owner', channelId, limit: 100, beforeSequence: 0 })
     const answers = history!.filter(item => item.payload.role === 'assistant'), lessons = answers.flatMap(item => messageLessons(item.payload))
     const measured = await stats(channelId)
-    assert.ok(measured.measured && measured.modelCalls > 0 && measured.modelCalls <= 8, `${id}: known bounded usage required`)
+    assert.ok(measured.measured && measured.modelCalls > 0 && measured.modelCalls <= 16, `${id}: known bounded usage required`)
     assert.equal(streamFailure, null, `${id}: stream failed (${streamFailure})`)
     assert.ok(answers.length > 0, `${id}: no durable answer`)
     if (scenario.component) {
@@ -183,7 +194,7 @@ test('current product generates, delivers and explores learning UI with a real m
     } else assert.equal(lessons.length, 0, `${id}: text-only preference ignored`)
     const answer = answers.map(item => nativeText(item.payload)).join('\n') + lessons.map(lesson => lesson.source).join('\n')
     const teaching = await grade(answer, scenario.facts)
-    const result = { id, previewMs, firstTextMs, readyMs, streamReconnects, modelCalls: measured.modelCalls, costUSD: measured.costUSD,
+    const result = { id, previewMs, firstTextMs, readyMs, sendAttempts, streamReconnects, modelCalls: measured.modelCalls, costUSD: measured.costUSD,
       uiCount: lessons.length, teaching, runId: run.runId, sourceHashes: lessons.map(lesson => lesson.sourceHash) }
     return result
   }

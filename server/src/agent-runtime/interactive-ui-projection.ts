@@ -35,7 +35,11 @@ export function verifyLessonCandidate(body: string): VerificationRecord[] {
     } catch (error) {
       const reason = error instanceof Error && /^interactive-ui:[a-z-]+$/.test(error.message) ? error.message : 'interactive-ui:invalid'
       return { checker, status: 'failed', evidence: { reason,
-        hint: reason === 'interactive-ui:fence'
+        hint: reason === 'interactive-ui:unbound-state' && error instanceof Error && Array.isArray(error.cause)
+          ? `Declare literal defaults for ${error.cause.slice(0, 16).join(', ')} before root. Keep each matching control and its binding.`
+          : reason === 'interactive-ui:props' && error instanceof Error && Array.isArray(error.cause)
+          ? `Correct the catalog properties ${error.cause.join(', ')}. Omit optional trailing arguments for a new lesson; do not substitute null or zero for revision fields.`
+          : reason === 'interactive-ui:fence'
           ? `Wrap the complete lesson source and all $state defaults in one top-level fenced code block with language ${OPENUI_LANGUAGE}. Do not repeat source as prose.`
           : reason === 'interactive-ui:choice'
           ? 'Choice default must exactly match one of its options strings. Empty defaults are invalid. Use Prediction for free text.'

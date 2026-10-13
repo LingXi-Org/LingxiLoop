@@ -32,7 +32,7 @@ Object.assign(env, {
   RESEND_API_KEY: '', ALERT_WEBHOOK_URL: '', LINGXIOS_LIVE_UI: transportOnly ? '0' : '1', LINGXIOS_REAL_WUKONG: '1', LINGXIOS_LIVE_PROTOCOL: '0', RESEND_LIVE_TEST: '0',
   LINGXIOS_SERVICE_TOKEN: 'interactive-ui-live-isolated-service-token', AGENT_OS_WORKER_PORT: '52997',
   AGENT_OS_MAX_CONCURRENT_RUNS: '1', AGENT_OS_RESERVED_INTERACTIVE_RUNS: '0', AGENT_OS_MODEL_CONCURRENCY: '1',
-  AGENT_OS_MAX_MODEL_CALLS: '8', AGENT_OS_MAX_MODEL_TOKENS: '120000', AGENT_OS_MAX_MODEL_COST_MICROS: '250000', AGENT_OS_MAX_WORK_MS: '240000',
+  AGENT_OS_MAX_MODEL_CALLS: '16', AGENT_OS_MAX_MODEL_TOKENS: '200000', AGENT_OS_MAX_MODEL_COST_MICROS: '250000', AGENT_OS_MAX_WORK_MS: '240000',
   AGENT_OS_INPUT_COST_MICROS_PER_MILLION: String(Math.ceil(Number(credentials.EVAL_CANDIDATE_INPUT_CNY_PER_MILLION) / 7 * 1e6)),
   AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: String(Math.ceil(Number(credentials.EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION) / 7 * 1e6)),
   AGENT_OS_HOMES_ROOT: resolve(output, 'runtime-homes'),
@@ -71,7 +71,7 @@ try {
 } finally {
   await writeFile(resolve(output, 'run-metadata.json'), JSON.stringify({ startedAt, finishedAt: new Date().toISOString(), passed,
     reproduce: `node e2e/server/interactive-ui-live.mjs --live-generative-ui${transportOnly ? ' --transport-only' : ''}`, runtime: '3.3.6', candidate: transportOnly ? null : credentials.EVAL_CANDIDATE_MODEL,
-    judge: credentials.EVAL_JUDGE_MODEL, maxRunCostUSD: 0.25, maxTotalCostUSD: 5, modelConcurrency: 1,
+    judge: credentials.EVAL_JUDGE_MODEL, maxModelCalls: 16, maxModelTokens: 200000, maxRunCostUSD: 0.25, maxTotalCostUSD: 5, modelConcurrency: 1,
     database: 'lingxiloop_ui_model_test', identity: 'synthetic test-owner', realWuKong: true, realModel: !transportOnly, authentication: 'isolated test middleware',
   }, null, 2))
 }

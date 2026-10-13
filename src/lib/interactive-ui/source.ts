@@ -12,7 +12,7 @@ const newline = punctuation('\n'), eof = tokenize('').at(-1)!.t
 const opens = new Set(['(', '[', '{'].map(punctuation)), closes = new Set([')', ']', '}'].map(punctuation))
 const own = (value: object, key: string) => Object.hasOwn(value, key)
 const byteLength = (text: string) => new TextEncoder().encode(text).length
-const fail = (code: string): never => { throw new Error(`interactive-ui:${code}`) }
+const fail = (code: string, fields?: string[]): never => { throw new Error(`interactive-ui:${code}`, fields ? { cause: fields } : undefined) }
 const lessonStatement = (value: string) => [...value.matchAll(/^ {0,3}(\w+)\s*=\s*(\w+)\s*\(/gm)]
   .some(match => own(lessonComponentSchemas, match[2]))
   || /^ {0,3}\$[A-Za-z_]\w*\s*=\s*(?:"(?:\\.|[^"\\])*"|[-+]?\d+(?:\.\d+)?|true|false)\s*$/m.test(value)
@@ -95,15 +95,17 @@ function preflight(source: string, preview: boolean): void {
   if (ids.size !== statements.length) fail('duplicate-id')
   if (!preview && significant.length !== statements.reduce((sum, statement) => sum + 2 + statement.tokens.filter(t => t.t !== newline && t.t !== eof).length, 0)) fail('discarded-statement')
   const graph = new Map<string, { references: string[]; weight: number }>()
+  const missingState = new Set<string>()
   for (const statement of statements) {
     const references: string[] = [], stateRefs = new Set<string>(), ast = parseExpression(statement.tokens)
     // A pending component may not have all required arguments yet, but it may never invoke a forbidden capability.
     const count = astSize(ast, references, stateRefs)
     if (!preview && count !== statement.tokens.filter(token => token.t !== newline && token.t !== eof).length) fail('discarded-expression')
     if (statement.id.startsWith('$') && !['Num', 'Str', 'Bool', 'UnaryOp'].includes(ast.k)) fail('state-default')
-    if (!preview && [...stateRefs].some(ref => !ids.has(ref))) fail('unbound-state')
+    if (!preview) for (const ref of stateRefs) if (!ids.has(ref)) missingState.add(ref)
     graph.set(statement.id, { references, weight: count })
   }
+  if (missingState.size) fail('unbound-state', [...missingState])
   let expanded = 0
   function visit(id: string, path: string[]) {
     if (path.includes(id) || path.length > UI_LIMITS.depth) fail('reference-cycle')
@@ -151,7 +153,8 @@ function checkProps(root: ElementNode, state: UiState, preview: boolean): Elemen
     const schema = lessonComponentSchemas[node.typeName as LessonComponentName]
     if (!schema) return fail('component')
     if (preview && node.partial) continue
-    if (!schema.safeParse(node.props).success) return fail('props')
+    const checked = schema.safeParse(node.props)
+    if (!checked.success) return fail('props', checked.error.issues.slice(0, 6).map(issue => [node.typeName, ...issue.path].join('.')))
     const p = node.props
     if (node.typeName === 'Parameter' && (Number(p.min) >= Number(p.max) || Number(p.value) < Number(p.min) || Number(p.value) > Number(p.max))) return fail('range')
     if (node.typeName === 'Choice' && !(p.options as string[]).includes(p.value as string)) return fail('choice')
