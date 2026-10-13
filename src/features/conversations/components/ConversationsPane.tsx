@@ -45,15 +45,15 @@ ConversationItemGroup.displayName = 'ConversationItemGroup'
 const ConversationListRow = forwardRef<HTMLDivElement, {
   children: React.ReactNode
   selected?: boolean
-  mobile?: boolean
   onSelect: () => void
 } & Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'>>(
-  ({ children, selected = false, mobile = false, onSelect, className, ...props }, ref) => (
+  ({ children, selected = false, onSelect, className, ...props }, ref) => (
     <Item
       ref={ref}
       role="button"
       tabIndex={0}
-      size="xs"
+      size="sm"
+      variant={selected ? 'muted' : 'default'}
       aria-current={selected ? 'page' : undefined}
       onClick={onSelect}
       onKeyDown={(event) => {
@@ -62,11 +62,7 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
         onSelect()
       }}
       className={cn(
-        'im-navigation-row group relative cursor-pointer flex-nowrap gap-2.5 overflow-hidden rounded-xl border-0 text-left shadow-none focus-visible:ring-inset',
-        mobile ? 'px-3 py-2' : 'px-2 py-1.5',
-        selected
-          ? 'bg-[var(--im-conversation-selected)] text-foreground before:absolute before:inset-y-4 before:start-0 before:w-0.5 before:rounded-full before:bg-primary'
-          : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        'mb-2 cursor-pointer flex-nowrap text-left hover:bg-muted focus-visible:ring-inset',
         className,
       )}
       {...props}
@@ -91,13 +87,12 @@ function ConversationRow({ conversation, selected, items, onConversationSelected
   items: ConversationMenuItem[]
   onConversationSelected?: (conversationId: string) => void
 }) {
-  const isMobile = useIsMobile()
   const select = useApp((s) => s.selectConversation)
   return (
     <ContextMenu>
     <ContextMenuTrigger asChild>
-      <ConversationListRow mobile={isMobile} selected={selected} onSelect={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}>
-        <ConversationListItemContent conversation={conversation} selected={selected} variant={isMobile ? 'mobile' : 'desktop'} />
+      <ConversationListRow selected={selected} onSelect={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}>
+        <ConversationListItemContent conversation={conversation} selected={selected} />
       </ConversationListRow>
     </ContextMenuTrigger>
     <ContextMenuContent aria-label="会话操作" className="min-w-[200px]"><ConversationMenuItems items={items} /></ContextMenuContent>
@@ -292,7 +287,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
             {!searching && resultRows.length === 0 && <div className="ui-enter px-3 py-5 text-sm text-muted-foreground"><p>没有找到匹配结果</p><Button variant="outline" size="sm" className="mt-3" onClick={() => setQuery('')}>清除搜索</Button></div>}
             <ItemGroup className="!gap-0">
               {resultRows.map((row) => (
-                <ConversationListRow key={row.id} mobile={isMobile} selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>
+                <ConversationListRow key={row.id} selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>
                   <ItemContent className="min-w-0">
                     <ItemTitle className={cn('block w-full truncate text-sm font-medium', selected === row.id ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground')}>{row.title}</ItemTitle>
                     <ItemDescription className="line-clamp-1 text-xs text-muted-foreground">{row.preview}</ItemDescription>

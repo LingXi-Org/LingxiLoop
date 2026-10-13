@@ -189,7 +189,7 @@ export function ConversationThread({
         </ThreadPrimitive.Empty>
         <ConversationMessages />
       </ThreadPrimitive.Viewport>
-      {!readOnly && <div className={`shrink-0 overflow-y-auto [scrollbar-gutter:stable] ${isMobile ? 'bg-background pt-2' : 'bg-gradient-to-t from-background via-background to-transparent pt-4'}`} data-chat-composer-bar>
+      {!readOnly && <div className={`relative z-20 shrink-0 ${isMobile ? 'bg-background pt-2' : 'bg-gradient-to-t from-background via-background to-transparent pt-4'}`} data-chat-composer-bar>
         <ConversationComposer
           conversationId={conversationId}
           compact={compact}

@@ -199,7 +199,7 @@ function App() {
     <main className="desktop-openmaus mx-auto overflow-hidden rounded-2xl border border-border bg-background text-foreground" style={{ width: narrow ? 'min(375px, 100%)' : 'min(1100px, 100%)' }}>
       <div className="grid" style={{ gridTemplateColumns: narrow ? '1fr' : '310px minmax(0, 1fr)' }}>
         <aside className="bg-sidebar p-2">{conversations.map(conversation => <div key={conversation.id} data-check-row className="flex items-center gap-2.5 p-2">
-          <ConversationListItemContent conversation={conversation} variant={narrow ? 'mobile' : 'desktop'} />
+          <ConversationListItemContent conversation={conversation} />
         </div>)}</aside>
         <section className="flex min-w-0 flex-col">
           <ConversationHeader conversationId="check-3" variant={narrow ? 'mobile' : 'desktop'} actions={<CanvasPopover key={canvasKey} conversationId="check-3" />} />

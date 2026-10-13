@@ -1,6 +1,7 @@
 import { NotificationOff01Icon, PinIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Badge } from '@/components/ui/badge'
+import { ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item'
 import { useEffect } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { PreviewText } from '@/components/PreviewText'
@@ -72,17 +73,13 @@ export function ConversationAvatar({
   )
 }
 
-/** Shared content for conversation rows. Desktop and mobile keep their own
- * pointer/gesture wrappers but render the same titles, activity, previews,
- * mute state and unread semantics. */
+/** Shared native Item content for conversation rows. */
 export function ConversationListItemContent({
   conversation,
   selected = false,
-  variant = 'desktop',
 }: {
   conversation: Conversation
   selected?: boolean
-  variant?: 'desktop' | 'mobile'
 }) {
   // Zustand's external-store selector must return a stable snapshot when no
   // one is typing. A fresh `[]` here causes an infinite render loop in React.
@@ -94,11 +91,10 @@ export function ConversationListItemContent({
     .filter((id) => id !== meId)
     .map((id) => byId[id]?.name?.trim())
     .filter((name): name is string => Boolean(name))
-  const isMobile = variant === 'mobile'
   const secondaryText = 'text-muted-foreground'
   return (
     <>
-      <span className="relative flex shrink-0">
+      <ItemMedia className="relative">
         <ConversationAvatar conversation={conversation} size={40} />
         {!selected && muted && (conversation.unread ?? 0) > 0 && <span className="absolute -end-0.5 -top-0.5 size-2.5 rounded-full bg-destructive" aria-label={`${conversation.unread} 条未读消息`} />}
         {!selected && (conversation.unread ?? 0) > 0 && !muted && (
@@ -106,24 +102,20 @@ export function ConversationListItemContent({
             {conversation.unread! > 99 ? '99+' : conversation.unread}
           </Badge>
         )}
-      </span>
-      <span className="min-w-0 flex-1 self-center">
-        <span className="flex min-w-0 items-center gap-1.5">
-          <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-            <span className={cn('truncate font-semibold', isMobile ? 'text-base' : 'text-sm', 'text-foreground')}>
-              {conversation.title}
-            </span>
-          </span>
+      </ItemMedia>
+      <ItemContent className="min-w-0">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <ItemTitle className="block min-w-0 flex-1 truncate">{conversation.title}</ItemTitle>
           <span className={cn('flex shrink-0 items-center gap-1 whitespace-nowrap', secondaryText)}>
             <span className="text-xs tabular-nums">{conversation.lastAt}</span>
           </span>
-        </span>
-        <span className={cn('mt-1 flex min-w-0 items-center gap-1.5', isMobile ? 'text-sm' : 'text-xs', !selected && typingNames.length > 0 ? 'text-primary' : secondaryText)}>
+        </div>
+        <ItemDescription className={cn('flex min-w-0 items-center gap-1.5', !selected && typingNames.length > 0 && 'text-primary')}>
           <span className="min-w-0 flex-1 truncate">{typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}</span>
           {conversation.pinned && <span className="inline-flex size-4 shrink-0 items-center justify-center" aria-label="已置顶" title="已置顶"><HugeiconsIcon icon={PinIcon} strokeWidth={2} className="size-3.5" /></span>}
           {muted && <span className="inline-flex size-4 shrink-0 items-center justify-center" aria-label="已静音" title="已静音"><HugeiconsIcon icon={NotificationOff01Icon} strokeWidth={2} className="size-3.5" /></span>}
-        </span>
-      </span>
+        </ItemDescription>
+      </ItemContent>
     </>
   )
 }
