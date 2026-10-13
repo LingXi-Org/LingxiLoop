@@ -265,7 +265,9 @@ test('[integration] personal Agent avatars retain the six/seven roster and rejec
 
 test('[integration] concurrent provisioning creates one Project Pulse and one Course teacher room',async()=>{
   const fixture=await seedTeacherCourse()
-  const results=await Promise.all(Array.from({length:6},()=>ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)))
+  // Settle every transaction before the next fixture reset, including a regression failure.
+  const attempts=await Promise.allSettled(Array.from({length:6},()=>ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)))
+  const results=attempts.map(attempt=>{if(attempt.status==='rejected')throw attempt.reason;return attempt.value})
   assert.equal(new Set(results.map((item)=>item.agentId)).size,1)
   assert.equal(new Set(results.map((item)=>item.roomId)).size,1)
   assert.equal(results.filter((item)=>item.created).length,1)
