@@ -1,6 +1,6 @@
 {
-  "featureCommit": "de2f864678ae15b724154f2bce6c0fa77c648634",
-  "browserRun": "01a13519-2d7d-7c42-8500-d506ad5e7275",
+  "featureCommit": "1a307f6dc072c370440fb619d417f6625839f6b9",
+  "browserRun": "01a1353c-2468-71db-8fee-15c5a678d342",
   "browserSummary": {
     "discovered": 1,
     "selected": 1,
@@ -67,16 +67,42 @@
   ],
   "screenshots": [
     {
-      "sha256": "6fa3395e7ca8df988e3cd96d7c07640d88778d967a64c507b7e6640e3356b886",
-      "file": "001-student-submission-history.png"
+      "file": "001-student-submission-history.png",
+      "source": "001-student-submission-history.png",
+      "sha256": "2b12fcdc4c8e0b50ea8312993cbfc59e39024484f76c1168c7f5d9e425434523"
     },
     {
-      "sha256": "85b3a1b2390410a59396798aaa61d45c735e894e72292f1ec4a37198bd24b538",
-      "file": "002-forum-mobile-dark-keyboard.png"
+      "file": "002-forum-mobile-dark-keyboard.png",
+      "source": "003-forum-mobile-dark-keyboard.png",
+      "sha256": "7491cbefcb5a9daa0e80d9bfeae479ec48d7b71ecec32833c4e24380c71ab2b6"
     },
     {
-      "sha256": "fd6c1c5bbdaa27fff6317898d3abf26ab5fa6d90fe0bfe868968a7404a747709",
-      "file": "003-forum-desktop.png"
+      "file": "003-forum-desktop.png",
+      "source": "005-forum-desktop.png",
+      "sha256": "39310cb7ef4a52904b1c3729a3bcab645ba47d97330eeaf3c9e7d01bf9d50691"
+    },
+    {
+      "file": "004-memos-detail-and-comments.png",
+      "source": "002-memos-detail-and-comments.png",
+      "sha256": "f4039a018d6530d923a35901f6088f2b7d88d7ae49e6a0a924eeec0a19ff2519"
+    },
+    {
+      "file": "005-memos-mobile-dark-discussion.png",
+      "source": "004-memos-mobile-dark-discussion.png",
+      "sha256": "5d3314afdd44f44ea5fd5f99a17c981bc4777971ac10edde56f63ee03ee0d3dc"
     }
-  ]
+  ],
+  "memosSource": "usememos/memos@8120a6cee03003ee7968b49b2109f816fa4d96a4",
+  "styleRevision": {
+    "integration": "Existing 5/5 database coverage retained above; no backend changes or integration rerun for the Memos style revision.",
+    "checks": [
+      "web TypeScript",
+      "E2E TypeScript",
+      "scoped Biome: 22 files",
+      "official browser E2E: 1 passed, 0 skipped, 51.86 seconds",
+      "five screenshots visually reviewed",
+      "git diff --cached --check"
+    ],
+    "reproduce": "node e2e/server/forum.mjs --browser-only"
+  }
 }

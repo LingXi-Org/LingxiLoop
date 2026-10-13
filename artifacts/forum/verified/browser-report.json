@@ -1,7 +1,7 @@
 {
   "schemaVersion": "report-1",
   "run": {
-    "id": "01a13519-2d7d-7c42-8500-d506ad5e7275",
+    "id": "01a1353c-2468-71db-8fee-15c5a678d342",
     "specVersion": "0.1",
     "runner": {
       "name": "e2e",
@@ -9,8 +9,8 @@
     },
     "status": "passed",
     "exitCode": 0,
-    "startedAt": "2026-10-13T11:50:07.494Z",
-    "finishedAt": "2026-10-13T11:51:12.739Z",
+    "startedAt": "2026-10-13T12:28:19.772Z",
+    "finishedAt": "2026-10-13T12:29:15.990Z",
     "project": {
       "id": "lingxiloop-forum",
       "configDigest": "d0c1b7ff05b55890c132ea6f5a5fe62e3ddac3f57a2e5f968fc47f40deb3c0f0"
@@ -23,7 +23,7 @@
       "runtime": "node v22.22.2"
     },
     "vcs": {
-      "commit": "0813ac72fb95c260b5a57302e0d95c85c6aa77c6",
+      "commit": "38b34516e774593043b38fb51163eb3ca2a59423",
       "branch": "codex/issue121-forum",
       "dirty": true
     },
@@ -82,64 +82,90 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57",
+            "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-13T11:50:11.384Z",
-            "durationMs": 60231,
+            "startedAt": "2026-10-13T12:28:23.279Z",
+            "durationMs": 51859,
             "artifacts": [
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:artifact:0",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:24"
+                  "stepId": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:24"
                 },
                 "path": "forum/e2e_forum_browser.e2e.ts__forum_20history_2C_20public_20resources_2C_20student_20versions_2C_20private_20files_-559b79e3/default/attempt-0/screenshots/001-student-submission-history.png",
-                "size": 99577,
-                "sha256": "6fa3395e7ca8df988e3cd96d7c07640d88778d967a64c507b7e6640e3356b886"
+                "size": 78733,
+                "sha256": "2b12fcdc4c8e0b50ea8312993cbfc59e39024484f76c1168c7f5d9e425434523"
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:artifact:1",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:1",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:81"
+                  "stepId": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:41"
                 },
-                "path": "forum/e2e_forum_browser.e2e.ts__forum_20history_2C_20public_20resources_2C_20student_20versions_2C_20private_20files_-559b79e3/default/attempt-0/screenshots/002-forum-mobile-dark-keyboard.png",
-                "size": 41302,
-                "sha256": "85b3a1b2390410a59396798aaa61d45c735e894e72292f1ec4a37198bd24b538"
+                "path": "forum/e2e_forum_browser.e2e.ts__forum_20history_2C_20public_20resources_2C_20student_20versions_2C_20private_20files_-559b79e3/default/attempt-0/screenshots/002-memos-detail-and-comments.png",
+                "size": 86462,
+                "sha256": "f4039a018d6530d923a35901f6088f2b7d88d7ae49e6a0a924eeec0a19ff2519"
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:artifact:2",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:2",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:86"
+                  "stepId": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:87"
                 },
-                "path": "forum/e2e_forum_browser.e2e.ts__forum_20history_2C_20public_20resources_2C_20student_20versions_2C_20private_20files_-559b79e3/default/attempt-0/screenshots/003-forum-desktop.png",
-                "size": 69128,
-                "sha256": "fd6c1c5bbdaa27fff6317898d3abf26ab5fa6d90fe0bfe868968a7404a747709"
+                "path": "forum/e2e_forum_browser.e2e.ts__forum_20history_2C_20public_20resources_2C_20student_20versions_2C_20private_20files_-559b79e3/default/attempt-0/screenshots/003-forum-mobile-dark-keyboard.png",
+                "size": 58460,
+                "sha256": "7491cbefcb5a9daa0e80d9bfeae479ec48d7b71ecec32833c4e24380c71ab2b6"
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:3",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:90"
+                },
+                "path": "forum/e2e_forum_browser.e2e.ts__forum_20history_2C_20public_20resources_2C_20student_20versions_2C_20private_20files_-559b79e3/default/attempt-0/screenshots/004-memos-mobile-dark-discussion.png",
+                "size": 48175,
+                "sha256": "5d3314afdd44f44ea5fd5f99a17c981bc4777971ac10edde56f63ee03ee0d3dc"
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:4",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:96"
+                },
+                "path": "forum/e2e_forum_browser.e2e.ts__forum_20history_2C_20public_20resources_2C_20student_20versions_2C_20private_20files_-559b79e3/default/attempt-0/screenshots/005-forum-desktop.png",
+                "size": 83470,
+                "sha256": "39310cb7ef4a52904b1c3729a3bcab645ba47d97330eeaf3c9e7d01bf9d50691"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:0",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:11.929Z",
-                "durationMs": 787,
+                "startedAt": "2026-10-13T12:28:23.992Z",
+                "durationMs": 846,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -149,14 +175,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:1",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:1",
                 "index": 1,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:12.718Z",
-                "durationMs": 308,
+                "startedAt": "2026-10-13T12:28:24.843Z",
+                "durationMs": 327,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -166,14 +192,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:2",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:2",
                 "index": 2,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/?project=e2e-classroom&view=forum",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:13.028Z",
-                "durationMs": 608,
+                "startedAt": "2026-10-13T12:28:25.171Z",
+                "durationMs": 817,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -183,14 +209,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:3",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByLabel(\"搜索论坛\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:13.637Z",
-                "durationMs": 14654,
+                "startedAt": "2026-10-13T12:28:25.991Z",
+                "durationMs": 14529,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -200,14 +226,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:4",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:4",
                 "index": 4,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByText(\"Historical public resource\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:28.292Z",
-                "durationMs": 300,
+                "startedAt": "2026-10-13T12:28:40.522Z",
+                "durationMs": 236,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -217,14 +243,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:5",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:5",
                 "index": 5,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "getByRole(\"navigation\", name: \"工作区与功能\") >> getByRole(\"button\", name: \"资料\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:28.595Z",
-                "durationMs": 414,
+                "startedAt": "2026-10-13T12:28:40.760Z",
+                "durationMs": 319,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -234,14 +260,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:6",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:6",
                 "index": 6,
                 "kind": "resource",
                 "api": "browser.back",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:29.009Z",
-                "durationMs": 166,
+                "startedAt": "2026-10-13T12:28:41.080Z",
+                "durationMs": 111,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -251,14 +277,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:7",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:7",
                 "index": 7,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByLabel(\"搜索论坛\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:29.177Z",
-                "durationMs": 55,
+                "startedAt": "2026-10-13T12:28:41.191Z",
+                "durationMs": 39,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -268,14 +294,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:8",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:8",
                 "index": 8,
                 "kind": "resource",
                 "api": "browser.reload",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:29.235Z",
-                "durationMs": 329,
+                "startedAt": "2026-10-13T12:28:41.231Z",
+                "durationMs": 241,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -285,14 +311,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:9",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:9",
                 "index": 9,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByLabel(\"搜索论坛\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:29.566Z",
-                "durationMs": 4004,
+                "startedAt": "2026-10-13T12:28:41.472Z",
+                "durationMs": 3396,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -302,14 +328,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:10",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:10",
                 "index": 10,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "locator(\"article\").filter({ hasText: \"Forum homework\" }) >> getByRole(\"button\", name: \"提交作业\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:33.572Z",
-                "durationMs": 680,
+                "startedAt": "2026-10-13T12:28:44.870Z",
+                "durationMs": 688,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -319,13 +345,270 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:11",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:11",
                 "index": 11,
                 "kind": "locator",
                 "api": "locator.fill",
                 "label": "getByLabel(\"作业内容\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:34.253Z",
+                "startedAt": "2026-10-13T12:28:45.559Z",
+                "durationMs": 165,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"链接（每行一个）\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:45.724Z",
+                "durationMs": 100,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:13",
+                "index": 13,
+                "kind": "locator",
+                "api": "locator.setInputFiles",
+                "label": "getByLabel(\"附件\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:45.826Z",
+                "durationMs": 128,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:14",
+                "index": 14,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"移除附件：submission.txt\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:45.955Z",
+                "durationMs": 299,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:15",
+                "index": 15,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"dialog\") >> getByRole(\"button\", name: \"提交作业\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:46.255Z",
+                "durationMs": 133,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"作业已提交\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:46.389Z",
+                "durationMs": 277,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:17",
+                "index": 17,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"作业内容\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:46.666Z",
+                "durationMs": 145,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"dialog\") >> getByRole(\"button\", name: \"提交作业\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:46.813Z",
+                "durationMs": 181,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Revised student answer\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:46.995Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:20",
+                "index": 20,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByText(\"历史版本（1）\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:47.022Z",
+                "durationMs": 774,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Original student answer\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:47.797Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:22",
+                "index": 22,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"link\", name: \"submission.txt\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:47.841Z",
+                "durationMs": 48,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:47.916Z",
+                "durationMs": 97,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:24",
+                "index": 24,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "student-submission-history",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:48.014Z",
+                "durationMs": 178,
+                "events": [],
+                "artifacts": [
+                  "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:48.193Z",
+                "durationMs": 72,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"发布内容\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:48.265Z",
                 "durationMs": 176,
                 "events": [],
                 "artifacts": [],
@@ -336,576 +619,13 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:12",
-                "index": 12,
-                "kind": "locator",
-                "api": "locator.fill",
-                "label": "getByLabel(\"链接（每行一个）\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:34.430Z",
-                "durationMs": 112,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:13",
-                "index": 13,
-                "kind": "locator",
-                "api": "locator.setInputFiles",
-                "label": "getByLabel(\"附件\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:34.544Z",
-                "durationMs": 136,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:14",
-                "index": 14,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"button\", name: \"移除附件：submission.txt\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:34.681Z",
-                "durationMs": 310,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:15",
-                "index": 15,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"dialog\") >> getByRole(\"button\", name: \"提交作业\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:34.992Z",
-                "durationMs": 336,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:16",
-                "index": 16,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"作业已提交\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:35.330Z",
-                "durationMs": 436,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:17",
-                "index": 17,
-                "kind": "locator",
-                "api": "locator.fill",
-                "label": "getByLabel(\"作业内容\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:35.767Z",
-                "durationMs": 183,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:18",
-                "index": 18,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"dialog\") >> getByRole(\"button\", name: \"提交作业\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:35.950Z",
-                "durationMs": 209,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:19",
-                "index": 19,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"Revised student answer\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:36.160Z",
-                "durationMs": 25,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:20",
-                "index": 20,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByText(\"历史版本（1）\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:36.186Z",
-                "durationMs": 724,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:21",
-                "index": 21,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"Original student answer\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:36.911Z",
-                "durationMs": 23,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:22",
-                "index": 22,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"link\", name: \"submission.txt\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:36.935Z",
-                "durationMs": 24,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:23",
-                "index": 23,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:36.987Z",
-                "durationMs": 107,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:24",
-                "index": 24,
-                "kind": "app",
-                "api": "app.screenshot",
-                "label": "student-submission-history",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:37.096Z",
-                "durationMs": 684,
-                "events": [],
-                "artifacts": [
-                  "01a13519-46b7-7afc-bf1f-e67ba03a1f57:artifact:0"
-                ],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:25",
-                "index": 25,
-                "kind": "resource",
-                "api": "browser.keyboard.press",
-                "label": "Escape",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:37.782Z",
-                "durationMs": 73,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:26",
-                "index": 26,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"发布内容\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:37.855Z",
-                "durationMs": 447,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:27",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:27",
                 "index": 27,
                 "kind": "locator",
                 "api": "locator.fill",
                 "label": "getByLabel(\"内容标题\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:38.303Z",
-                "durationMs": 207,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:28",
-                "index": 28,
-                "kind": "locator",
-                "api": "locator.fill",
-                "label": "getByLabel(\"内容正文\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:38.512Z",
-                "durationMs": 134,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:29",
-                "index": 29,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByLabel(\"内容类型\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:38.647Z",
-                "durationMs": 500,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:30",
-                "index": 30,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"option\", name: \"作品案例\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:39.147Z",
-                "durationMs": 370,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:31",
-                "index": 31,
-                "kind": "locator",
-                "api": "locator.fill",
-                "label": "getByLabel(\"标签\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:39.519Z",
-                "durationMs": 149,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:32",
-                "index": 32,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"发布\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:39.668Z",
-                "durationMs": 242,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:33",
-                "index": 33,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" }) >> getByRole(\"button\", name: \"评论\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:39.912Z",
-                "durationMs": 663,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:34",
-                "index": 34,
-                "kind": "locator",
-                "api": "locator.fill",
-                "label": "getByLabel(\"发表评论\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:40.575Z",
-                "durationMs": 146,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:35",
-                "index": 35,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"发送评论\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:40.723Z",
-                "durationMs": 451,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:36",
-                "index": 36,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"A persisted discussion\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:41.175Z",
-                "durationMs": 26,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:37",
-                "index": 37,
-                "kind": "resource",
-                "api": "browser.keyboard.press",
-                "label": "Escape",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:41.201Z",
-                "durationMs": 78,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:38",
-                "index": 38,
-                "kind": "app",
-                "api": "app.open",
-                "label": "/",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:41.280Z",
-                "durationMs": 288,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:39",
-                "index": 39,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:41.569Z",
-                "durationMs": 553,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:40",
-                "index": 40,
-                "kind": "app",
-                "api": "app.open",
-                "label": "/?project=e2e-classroom&view=forum",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:42.122Z",
-                "durationMs": 518,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:41",
-                "index": 41,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByLabel(\"搜索论坛\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:42.641Z",
-                "durationMs": 3570,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:42",
-                "index": 42,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:46.212Z",
-                "durationMs": 249,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:43",
-                "index": 43,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" }) >> getByRole(\"button\", name: \"提交作业\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:46.463Z",
-                "durationMs": 404,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:44",
-                "index": 44,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"还没有提交记录。\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:46.867Z",
-                "durationMs": 26,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:45",
-                "index": 45,
-                "kind": "resource",
-                "api": "browser.keyboard.press",
-                "label": "Escape",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:46.894Z",
+                "startedAt": "2026-10-13T12:28:48.443Z",
                 "durationMs": 94,
                 "events": [],
                 "artifacts": [],
@@ -916,14 +636,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:46",
-                "index": 46,
-                "kind": "app",
-                "api": "app.open",
-                "label": "/",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:28",
+                "index": 28,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"内容正文\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:46.988Z",
-                "durationMs": 271,
+                "startedAt": "2026-10-13T12:28:48.537Z",
+                "durationMs": 144,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -933,14 +653,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:47",
-                "index": 47,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:29",
+                "index": 29,
+                "kind": "locator",
+                "api": "locator.selectOption",
+                "label": "getByLabel(\"内容类型\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:47.260Z",
-                "durationMs": 552,
+                "startedAt": "2026-10-13T12:28:48.682Z",
+                "durationMs": 80,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -950,14 +670,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:48",
-                "index": 48,
-                "kind": "app",
-                "api": "app.open",
-                "label": "/?project=e2e-classroom&view=forum",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:30",
+                "index": 30,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"标签\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:47.813Z",
-                "durationMs": 310,
+                "startedAt": "2026-10-13T12:28:48.763Z",
+                "durationMs": 91,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -967,31 +687,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:49",
-                "index": 49,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByLabel(\"搜索论坛\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:48.124Z",
-                "durationMs": 3731,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:50",
-                "index": 50,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:31",
+                "index": 31,
                 "kind": "locator",
                 "api": "locator.tap",
-                "label": "getByRole(\"button\", name: /^切换工作区/)",
+                "label": "getByRole(\"button\", name: \"发布\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:51.857Z",
-                "durationMs": 617,
+                "startedAt": "2026-10-13T12:28:48.855Z",
+                "durationMs": 150,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1001,133 +704,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:51",
-                "index": 51,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"menuitem\").filter({ hasText: \"Other Forum Course\" })",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:52.475Z",
-                "durationMs": 849,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:52",
-                "index": 52,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByLabel(\"搜索论坛\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:53.325Z",
-                "durationMs": 371,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:53",
-                "index": 53,
-                "kind": "assertion",
-                "api": "expect.toBeHidden",
-                "label": "getByText(\"Student geometry case\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:53.696Z",
-                "durationMs": 22,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:54",
-                "index": 54,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: /^切换工作区/)",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:53.719Z",
-                "durationMs": 394,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:55",
-                "index": 55,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"menuitem\").filter({ hasText: \"E2E Classroom\" })",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:54.115Z",
-                "durationMs": 794,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:56",
-                "index": 56,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" })",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:54.909Z",
-                "durationMs": 576,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:57",
-                "index": 57,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" }) >> getByRole(\"button\", name: \"精选\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:55.486Z",
-                "durationMs": 197,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:58",
-                "index": 58,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:32",
+                "index": 32,
                 "kind": "assertion",
                 "api": "expect.toContainText",
-                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" })",
+                "label": "locator(\"article[aria-label=\\\"Student geometry case\\\"] [data-memo-content] h2\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:55.685Z",
-                "durationMs": 288,
+                "startedAt": "2026-10-13T12:28:49.007Z",
+                "durationMs": 559,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1137,48 +721,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:59",
-                "index": 59,
-                "kind": "assertion",
-                "api": "expect.toContainText",
-                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" })",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:55.975Z",
-                "durationMs": 22,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:60",
-                "index": 60,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" }) >> getByRole(\"button\", name: \"查看提交\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:55.997Z",
-                "durationMs": 344,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:61",
-                "index": 61,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:33",
+                "index": 33,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
-                "label": "getByText(\"Revised student answer\")",
+                "label": "locator(\"article[aria-label=\\\"Student geometry case\\\"] [data-memo-content] table\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:56.343Z",
-                "durationMs": 50,
+                "startedAt": "2026-10-13T12:28:49.567Z",
+                "durationMs": 31,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1188,183 +738,13 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:62",
-                "index": 62,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:56.393Z",
-                "durationMs": 126,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:63",
-                "index": 63,
-                "kind": "resource",
-                "api": "browser.keyboard.press",
-                "label": "Escape",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:56.520Z",
-                "durationMs": 75,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:64",
-                "index": 64,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" }) >> getByRole(\"button\", name: \"关闭作业\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:56.596Z",
-                "durationMs": 401,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:65",
-                "index": 65,
-                "kind": "assertion",
-                "api": "expect.toContainText",
-                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" })",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:56.998Z",
-                "durationMs": 307,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:66",
-                "index": 66,
-                "kind": "app",
-                "api": "app.open",
-                "label": "/",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:57.306Z",
-                "durationMs": 305,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:67",
-                "index": 67,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:57.611Z",
-                "durationMs": 603,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:68",
-                "index": 68,
-                "kind": "app",
-                "api": "app.open",
-                "label": "/?project=e2e-classroom&view=forum",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:50:58.215Z",
-                "durationMs": 904,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:69",
-                "index": 69,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:34",
+                "index": 34,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
-                "label": "getByLabel(\"搜索论坛\")",
+                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" }) >> getByRole(\"button\", name: \"复制代码\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:50:59.121Z",
-                "durationMs": 4855,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:70",
-                "index": 70,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" }) >> getByRole(\"button\", name: \"查看提交记录\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:51:03.976Z",
-                "durationMs": 734,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:71",
-                "index": 71,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"作业已关闭，停止接收提交。\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:51:04.711Z",
-                "durationMs": 24,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:72",
-                "index": 72,
-                "kind": "assertion",
-                "api": "expect.toBeHidden",
-                "label": "getByLabel(\"作业内容\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:51:04.735Z",
+                "startedAt": "2026-10-13T12:28:49.599Z",
                 "durationMs": 23,
                 "events": [],
                 "artifacts": [],
@@ -1375,14 +755,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:73",
-                "index": 73,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:35",
+                "index": 35,
                 "kind": "resource",
-                "api": "browser.keyboard.press",
-                "label": "Escape",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:51:04.759Z",
-                "durationMs": 86,
+                "startedAt": "2026-10-13T12:28:49.623Z",
+                "durationMs": 16,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1392,14 +772,764 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:74",
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" }) >> getByRole(\"button\", name: \"评论\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:49.639Z",
+                "durationMs": 327,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:37",
+                "index": 37,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"发表评论\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:49.967Z",
+                "durationMs": 114,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:38",
+                "index": 38,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"发送评论\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:50.083Z",
+                "durationMs": 178,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"A persisted discussion\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:50.262Z",
+                "durationMs": 471,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:40",
+                "index": 40,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[role=\\\"dialog\\\"] [data-memo-comments-section] blockquote\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:50.734Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:41",
+                "index": 41,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "memos-detail-and-comments",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:50.765Z",
+                "durationMs": 218,
+                "events": [],
+                "artifacts": [
+                  "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:1"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:42",
+                "index": 42,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:50.984Z",
+                "durationMs": 68,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:51.053Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:44",
+                "index": 44,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:51.070Z",
+                "durationMs": 260,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:45",
+                "index": 45,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:51.330Z",
+                "durationMs": 442,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:46",
+                "index": 46,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=e2e-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:51.774Z",
+                "durationMs": 228,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:47",
+                "index": 47,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:52.003Z",
+                "durationMs": 3064,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:48",
+                "index": 48,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:55.067Z",
+                "durationMs": 120,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:49",
+                "index": 49,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" }) >> getByRole(\"button\", name: \"提交作业\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:55.188Z",
+                "durationMs": 457,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:50",
+                "index": 50,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"还没有提交记录。\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:55.647Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:51",
+                "index": 51,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:55.675Z",
+                "durationMs": 71,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:52",
+                "index": 52,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:55.746Z",
+                "durationMs": 209,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:53",
+                "index": 53,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:55.956Z",
+                "durationMs": 336,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:54",
+                "index": 54,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=e2e-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:56.293Z",
+                "durationMs": 224,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:55",
+                "index": 55,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:28:56.518Z",
+                "durationMs": 4381,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:56",
+                "index": 56,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: /^切换工作区/)",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:00.901Z",
+                "durationMs": 556,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:57",
+                "index": 57,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"menuitem\").filter({ hasText: \"Other Forum Course\" })",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:01.459Z",
+                "durationMs": 687,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:58",
+                "index": 58,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:02.148Z",
+                "durationMs": 383,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:59",
+                "index": 59,
+                "kind": "assertion",
+                "api": "expect.toBeHidden",
+                "label": "getByText(\"Student geometry case\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:02.532Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:60",
+                "index": 60,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: /^切换工作区/)",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:02.562Z",
+                "durationMs": 406,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:61",
+                "index": 61,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"menuitem\").filter({ hasText: \"E2E Classroom\" })",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:02.968Z",
+                "durationMs": 595,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:62",
+                "index": 62,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" })",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:03.563Z",
+                "durationMs": 690,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:63",
+                "index": 63,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" }) >> getByRole(\"button\", name: \"精选\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:04.254Z",
+                "durationMs": 222,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:64",
+                "index": 64,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" })",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:04.478Z",
+                "durationMs": 521,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:65",
+                "index": 65,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" })",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:04.999Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:66",
+                "index": 66,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" }) >> getByRole(\"button\", name: \"查看提交\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:05.017Z",
+                "durationMs": 232,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:67",
+                "index": 67,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Revised student answer\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:05.250Z",
+                "durationMs": 153,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:68",
+                "index": 68,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:05.404Z",
+                "durationMs": 113,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:69",
+                "index": 69,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:05.518Z",
+                "durationMs": 69,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:70",
+                "index": 70,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" }) >> getByRole(\"button\", name: \"关闭作业\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:05.588Z",
+                "durationMs": 138,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:71",
+                "index": 71,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" })",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:05.727Z",
+                "durationMs": 264,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:72",
+                "index": 72,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:05.992Z",
+                "durationMs": 197,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:73",
+                "index": 73,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:06.190Z",
+                "durationMs": 333,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:74",
                 "index": 74,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=e2e-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:06.523Z",
+                "durationMs": 197,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:75",
+                "index": 75,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:06.720Z",
+                "durationMs": 2636,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:76",
+                "index": 76,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"article\").filter({ hasText: \"Forum homework\" }) >> getByRole(\"button\", name: \"查看提交记录\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:09.357Z",
+                "durationMs": 527,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:77",
+                "index": 77,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"作业已关闭，停止接收提交。\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:09.886Z",
+                "durationMs": 42,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:78",
+                "index": 78,
+                "kind": "assertion",
+                "api": "expect.toBeHidden",
+                "label": "getByLabel(\"作业内容\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:09.929Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:79",
+                "index": 79,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:09.947Z",
+                "durationMs": 55,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:80",
+                "index": 80,
                 "kind": "resource",
                 "api": "browser.setViewport",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:51:04.847Z",
-                "durationMs": 67,
+                "startedAt": "2026-10-13T12:29:10.002Z",
+                "durationMs": 175,
                 "events": [],
                 "artifacts": [],
                 "viewport": {
@@ -1414,13 +1544,98 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:75",
-                "index": 75,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:81",
+                "index": 81,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:51:04.914Z",
+                "startedAt": "2026-10-13T12:29:10.177Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:82",
+                "index": 82,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"搜索论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:10.188Z",
+                "durationMs": 75,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:83",
+                "index": 83,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" })",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:10.264Z",
+                "durationMs": 400,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:84",
+                "index": 84,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Tab",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:10.664Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:85",
+                "index": 85,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:10.686Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:86",
+                "index": 86,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:10.701Z",
                 "durationMs": 17,
                 "events": [],
                 "artifacts": [],
@@ -1431,102 +1646,17 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:76",
-                "index": 76,
-                "kind": "locator",
-                "api": "locator.fill",
-                "label": "getByLabel(\"搜索论坛\")",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:51:04.931Z",
-                "durationMs": 260,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:77",
-                "index": 77,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" })",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:51:05.192Z",
-                "durationMs": 494,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:78",
-                "index": 78,
-                "kind": "resource",
-                "api": "browser.keyboard.press",
-                "label": "Tab",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:51:05.686Z",
-                "durationMs": 32,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:79",
-                "index": 79,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:51:05.719Z",
-                "durationMs": 23,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:80",
-                "index": 80,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-13T11:51:05.743Z",
-                "durationMs": 20,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "node_modules/e2e/dist/run/steps.js",
-                  "line": 26,
-                  "column": 16
-                }
-              },
-              {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:81",
-                "index": 81,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:87",
+                "index": 87,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "forum-mobile-dark-keyboard",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:51:05.763Z",
-                "durationMs": 125,
+                "startedAt": "2026-10-13T12:29:10.718Z",
+                "durationMs": 95,
                 "events": [],
                 "artifacts": [
-                  "01a13519-46b7-7afc-bf1f-e67ba03a1f57:artifact:1"
+                  "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:2"
                 ],
                 "source": {
                   "file": "node_modules/e2e/dist/run/steps.js",
@@ -1535,14 +1665,84 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:82",
-                "index": 82,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:88",
+                "index": 88,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"article\").filter({ hasText: \"Student geometry case\" }) >> getByRole(\"button\", name: /^评论/)",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:10.815Z",
+                "durationMs": 229,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:89",
+                "index": 89,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:11.045Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:90",
+                "index": 90,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "memos-mobile-dark-discussion",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:11.071Z",
+                "durationMs": 63,
+                "events": [],
+                "artifacts": [
+                  "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:3"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:91",
+                "index": 91,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-13T12:29:11.136Z",
+                "durationMs": 47,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:92",
+                "index": 92,
                 "kind": "resource",
                 "api": "browser.setViewport",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:51:05.889Z",
-                "durationMs": 247,
+                "startedAt": "2026-10-13T12:29:11.183Z",
+                "durationMs": 149,
                 "events": [],
                 "artifacts": [],
                 "viewport": {
@@ -1557,14 +1757,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:83",
-                "index": 83,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:93",
+                "index": 93,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:51:06.136Z",
-                "durationMs": 54,
+                "startedAt": "2026-10-13T12:29:11.333Z",
+                "durationMs": 45,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1574,14 +1774,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:84",
-                "index": 84,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:94",
+                "index": 94,
                 "kind": "locator",
                 "api": "locator.fill",
                 "label": "getByLabel(\"搜索论坛\")",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:51:06.190Z",
-                "durationMs": 240,
+                "startedAt": "2026-10-13T12:29:11.379Z",
+                "durationMs": 143,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1591,14 +1791,14 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:85",
-                "index": 85,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:95",
+                "index": 95,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "locator(\"article\").filter({ hasText: \"Forum homework\" })",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:51:06.431Z",
-                "durationMs": 468,
+                "startedAt": "2026-10-13T12:29:11.522Z",
+                "durationMs": 283,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1608,17 +1808,17 @@
                 }
               },
               {
-                "id": "01a13519-46b7-7afc-bf1f-e67ba03a1f57:86",
-                "index": 86,
+                "id": "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:96",
+                "index": 96,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "forum-desktop",
                 "status": "passed",
-                "startedAt": "2026-10-13T11:51:06.900Z",
-                "durationMs": 253,
+                "startedAt": "2026-10-13T12:29:11.806Z",
+                "durationMs": 106,
                 "events": [],
                 "artifacts": [
-                  "01a13519-46b7-7afc-bf1f-e67ba03a1f57:artifact:2"
+                  "01a1353c-3f6e-7931-b9c8-6c02783dc7bd:artifact:4"
                 ],
                 "source": {
                   "file": "node_modules/e2e/dist/run/steps.js",
@@ -1654,7 +1854,7 @@
       "maxAgentContextBytes": 0,
       "maxLedgerBytes": 0,
       "maxObservationBytes": 0,
-      "artifactBytes": 210007,
+      "artifactBytes": 355300,
       "downloads": 0,
       "events": 0,
       "modelTokens": 0,
