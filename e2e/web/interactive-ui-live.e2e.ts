@@ -64,6 +64,9 @@ async function waitForNewAnswer(browser: Browser, caseId: string, before: LiveCo
 
 // Written before the live harness: missing UI, local drags invoking the model,
 // duplicate actions, refresh replay, state regression and fabricated usage cannot pass.
+// Fixture failures: a slider starting at its maximum cannot move right;
+// legal whitespace before Table's parentheses must not fail rendered-table checks;
+// another lesson's input or identically labelled action must not receive the prediction.
 test.describe('Product live interactive learning', { tags: ['web', 'interactive-ui-live'], timeout: 300_000,
   ...(process.env.LINGXIOS_LIVE_UI === '1' ? {} : { skip: 'Explicit isolated live-model entry point only.' }),
 }, () => {
@@ -88,14 +91,19 @@ test.describe('Product live interactive learning', { tags: ['web', 'interactive-
     const lesson = lessons(context).find(item => item.fields.some(field => field.semantic.includes('ProjectilePlot.angle')))!
     expect(Boolean(lesson)).toBe(true)
     const angle = lesson.fields.find(field => field.semantic.includes('ProjectilePlot.angle'))!
-    const slider = screen.getByRole('slider', controlLabel(lesson, angle.key))
+    const lessonRoot = browser.locator(`[data-interactive-ui="${lesson.uiId}"][data-revision="${lesson.revision}"]`)
+    const slider = lessonRoot.getByRole('slider', controlLabel(lesson, angle.key))
     await expect(slider).toBeEnabled()
     const before = await browser.evaluate(async () => (await fetch('/__ui_live/stats?case=projectile')).json()) as { modelCalls: number; actions: number }
     let writes = 0
     await browser.route(/\/ui\/[^/]+\/state$/, async route => { if (route.request.method === 'PUT') writes++; await route.continue() })
+    const initialValue = await slider.getAttribute('aria-valuenow')
+    expect(initialValue).not.toBe(null)
+    const direction = Number(initialValue) < (angle.min! + angle.max!) / 2 ? 'ArrowRight' : 'ArrowLeft'
     await slider.focus()
-    for (let index = 0; index < 10; index++) await browser.keyboard.press('ArrowRight')
+    for (let index = 0; index < 10; index++) await browser.keyboard.press(direction)
     const value = await slider.getAttribute('aria-valuenow')
+    expect(value).not.toBe(initialValue)
     await expect.poll(() => writes).toBeGreaterThan(0)
     await expect.poll(async () => (await readState(browser, context, lesson)).state[angle.key]).toBe(Number(value))
     const after = await browser.evaluate(async () => (await fetch('/__ui_live/stats?case=projectile')).json()) as { modelCalls: number; actions: number }
@@ -125,11 +133,11 @@ test.describe('Product live interactive learning', { tags: ['web', 'interactive-
     expect(Boolean(added)).toBe(true)
     const toggle = added.fields.find(field => field.type === 'boolean' && !first.fields.some(prior => prior.key === field.key))!
     expect(Boolean(toggle)).toBe(true)
-    expect(added.source.includes('Table(')).toBe(true)
     const addedState = await readState(browser, addedContext, added)
     expect(addedState.state[angle.key]).toBe(saved.state[angle.key])
     expect(addedState.resetKeys.includes(angle.key)).toBe(false)
     const addedRoot = browser.locator(`[data-interactive-ui="${added.uiId}"][data-revision="${added.revision}"]`)
+    await expect(addedRoot.getByRole('table').first()).toBeVisible()
     await expect(addedRoot.getByRole('slider', controlLabel(added, angle.key))).toHaveAttribute('aria-valuenow', String(saved.state[angle.key]))
     await expect(addedRoot.getByRole('checkbox', controlLabel(added, toggle.key))).toBeEnabled()
     await expect(firstRoot.getByRole('slider', controlLabel(first, angle.key))).toBeDisabled()
@@ -180,14 +188,15 @@ test.describe('Product live interactive learning', { tags: ['web', 'interactive-
     const context = await readContext(browser, 'comparison')
     const lesson = lessons(context).find(item => item.actions.some(action => action.kind === 'check-prediction')) ?? lessons(context)[0]
     const action = lesson.actions.find(item => item.kind === 'check-prediction') ?? lesson.actions[0]
-    await screen.getByRole('textbox').first().fill('只要TCP保证数据完整到达，就不需要加密，也无法被监听。')
+    const lessonSelector = `[data-interactive-ui="${lesson.uiId}"][data-revision="${lesson.revision}"]`
+    await browser.locator(lessonSelector).getByRole('textbox').first().fill('只要TCP保证数据完整到达，就不需要加密，也无法被监听。')
     const before = await browser.evaluate(async () => (await fetch('/__ui_live/stats?case=comparison')).json()) as { modelCalls: number; actions: number }
-    await browser.evaluate(label => {
-      const button = [...document.querySelectorAll('[data-interactive-ui] button')].find(item => item.textContent === label) as HTMLButtonElement
+    await browser.evaluate(({ selector, label }) => {
+      const button = [...document.querySelectorAll(`${selector} button`)].find(item => item.textContent === label) as HTMLButtonElement
       if (!button) throw new Error('Authorized prediction action not found')
       button.click(); button.click()
       return true
-    }, action.label)
+    }, { selector: lessonSelector, label: action.label })
     await expect.poll(async () => (await browser.evaluate(async () => (await fetch('/__ui_live/stats?case=comparison')).json()) as { actions: number }).actions).toBe(before.actions + 1)
     await expect.poll(async () => (await browser.evaluate(async () => (await fetch('/__ui_live/stats?case=comparison')).json()) as { modelCalls: number }).modelCalls, { timeout: 240_000 }).toBeGreaterThan(before.modelCalls)
     const answered = await waitForNewAnswer(browser, 'comparison', context)
