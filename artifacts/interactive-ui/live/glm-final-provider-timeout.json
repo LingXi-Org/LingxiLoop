@@ -202,5 +202,13 @@
       "outputCnyPerMillion": 9
     }
   },
-  "limit": "Production-default GLM-5.2 failed its second baseline after a 90-second provider timeout with no measured usage. Holdouts and live browser follow-ups were blocked; no production deployment."
+  "limit": "Production-default GLM-5.2 failed its second baseline after a 90-second provider timeout with no measured usage. Holdouts and live browser follow-ups were blocked; no production deployment.",
+  "accountingNote": "The original baseline result was sampled before the fourth, structured auxiliary call reached the product ledger. Its three generation calls and one later auxiliary call remain separate observations, not a corrected passing result. A failed row with measured:false has conservative reserved cost and zero-token placeholders, not provider-measured cost or usage.",
+  "settledBaselineUsage": {
+    "publicRuntimeCalls": 4,
+    "publicRuntimePendingCalls": 0,
+    "publicRuntimeEstimatedCalls": 0,
+    "ledgerMeasuredCalls": 4,
+    "ledgerCostUSD": 0.03575771
+  }
 }
