@@ -64,14 +64,14 @@ test('tool terminal and approval states are visible without requiring a result',
   }
 })
 
-test('adjacent ordinary tools group in place while rich results stay visible', () => {
+test('adjacent ordinary tools group in place while retired records stay visible', () => {
   const tool = (id: string) => ({ type: 'tool-call' as const, toolCallId: id, toolName: 'fixture.tool', args: {}, argsText: '{}', result: { ok: true } })
   const reply = { ...message('1'), content: [{ type: 'text', text: '开始正文' }, tool('one'), tool('two'),
     { type: 'tool-call', toolCallId: 'calendar', toolName: 'calendar.list', args: {}, argsText: '{}', result: { status: 'completed', value: { events: [], truncated: false } } },
     { type: 'text', text: '最后正文' }] } as ThreadMessage
   const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
   assert.equal($('[data-slot="tool-group-root"]').length, 1)
-  assert.match($.text(), /2 项工具调用/)
+  assert.match($.text(), /2 项操作/)
   assert.match($.text(), /此记录仅供查看/)
   assert.equal($('time').length, 0)
   assert.match($('[data-agent-body]').last().text(), /最后正文/)

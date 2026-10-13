@@ -156,20 +156,22 @@ test('a run discovered after a sent message owns a separate preview and cannot e
   }
 })
 
-test('a failure retains streamed text and the specific error across snapshot replay', () => {
+test('a failure retains streamed text and a safe error across snapshot replay', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
   state = applyRunUpdate(state,target,event('完整段落\n\n尚未完成的尾段'),participants.agent)
   state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 8,kind: 'run.failed',stage: 'failed',visibility: 'user',
     data: { error: 'The operation was aborted due to timeout' } } },participants.agent)
   assert.deepEqual(state.activeRuns,{})
-  const content = [{ type: 'text', text: '完整段落\n\n尚未完成的尾段' }]
+  const content = [{ type: 'text', text: '完整段落\n\n尚未完成的尾段',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }]
   assert.deepEqual(state.messages[0].content,content)
   assert.deepEqual(state.messages[0].status,{ type: 'incomplete',reason: 'error' })
-  assert.equal(metadata(state.messages[0]).harnessError,'The operation was aborted due to timeout')
+  assert.equal(metadata(state.messages[0]).harnessError,'这次任务未能完成，请稍后重试。')
   state = applyRunUpdate(state,target,{ type: 'state',state: { ...snapshot('run','failed'), run: {
     ...snapshot('run','failed').run, error: 'The operation was aborted due to timeout',
   } } },participants.agent)
   assert.deepEqual(state.messages[0].content,content)
+  assert.equal(metadata(state.messages[0]).harnessError,'这次任务未能完成，请稍后重试。')
   assert.deepEqual(mergeCanonicalMessages(state.messages,state.messages)[0].content,content)
   state = applyRunUpdate(state,target,{ type: 'state',state: { ...snapshot('run','leased'), run: {
     ...snapshot('run','leased').run, fence: 2, requestVersion: 2,
@@ -212,7 +214,8 @@ test('a live reply keeps its anchor until canonical delivery establishes IM orde
   state = { ...state, messages: mergeCanonicalMessages(state.messages, [committed]) }
   state = applyRunUpdate(state, target, delta, participants.agent)
   assert.deepEqual(state.messages.map(message => message.id), ['first', 'followup', 'run-run'])
-  assert.deepEqual(state.messages[2]!.content, [{ type: 'text', text: 'run 的完整历史回复' }])
+  assert.deepEqual(state.messages[2]!.content, [{ type: 'text', text: 'run 的完整历史回复',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }])
   assert.deepEqual(state.messages.map(message => [metadata(message).groupStart, metadata(message).groupEnd]),
     [[true, false], [false, true], [true, true]])
 })
@@ -281,7 +284,8 @@ test('committed replies ignore duplicate snapshots and stale deltas without regr
   state = applyRunUpdate(state, target, event('旧草稿'), participants.agent)
   state = applyRunUpdate(state, target, { type: 'state', state: snapshot() }, participants.agent)
   assert.equal(state.messages.length, 1)
-  assert.deepEqual(state.messages[0]!.content, [{ type: 'text', text: 'run 的完整历史回复' }])
+  assert.deepEqual(state.messages[0]!.content, [{ type: 'text', text: 'run 的完整历史回复',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }])
   assert.deepEqual(state.activeRuns, {})
   assert.equal(needsRunStream('succeeded', 'delivered'), false)
   assert.equal(needsRunStream('failed'), false)
@@ -323,12 +327,14 @@ test('citation projections agree across snapshots and IM replay and disappear be
 test('paragraph deltas display immediately, deduplicate, and cancellation clears uncommitted drafts', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: snapshot('run', 'leased') })
   state = applyRunUpdate(state, target, event('第一段'))
-  assert.deepEqual(state.messages[0]!.content, [{type:'text',text:'第一段'}])
+  assert.deepEqual(state.messages[0]!.content, [{type:'text',text:'第一段',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }])
   const delta: RunStreamEvent = { type: 'preview', preview: { kind: 'delta', runId: 'run', fence: 1,
     requestVersion: 1, attemptId: 'attempt', fromSeq: 1, seq: 2, delta: '\n\n第二段 **正在' } }
   state = applyRunUpdate(state, target, delta)
   state = applyRunUpdate(state, target, delta)
-  const content = [{type:'text',text:'第一段\n\n第二段 **正在'}]
+  const content = [{type:'text',text:'第一段\n\n第二段 **正在',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }]
   assert.deepEqual(state.messages[0]!.content, content)
   state = applyRunUpdate(state, target, { type: 'event', event: { runId: 'run', seq: 3,
     kind: 'run.cancelled', stage: 'completed', visibility: 'user', data: {} } })
@@ -396,11 +402,15 @@ test('initial history is ready before slow run snapshots, which merge without du
     assert.deepEqual(subscribed, ['run', 'second', 'active'])
     const messages = useChatThreadStore.getState().conversations.room!.messages
     assert.deepEqual(messages.slice(0, 2).map(message => message.content), [
-      [{ type: 'text', text: 'run 的完整历史回复' }], [{ type: 'text', text: 'second 的完整历史回复' }],
+      [{ type: 'text', text: 'run 的完整历史回复',
+        providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }],
+      [{ type: 'text', text: 'second 的完整历史回复',
+        providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }],
     ])
     callbacks.get('active')!(project({ type: 'state', state: snapshot('active', 'leased') }, 'active'))
     callbacks.get('active')!(project({ type: 'preview', preview: { ...(event('实时新内容') as Extract<RunStreamEvent, { type: 'preview' }>).preview, runId: 'active' } }, 'active'))
-    assert.deepEqual(useChatThreadStore.getState().conversations.room!.messages.at(-1)!.content, [{type:'text',text:'实时新内容'}])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room!.messages.at(-1)!.content, [{type:'text',text:'实时新内容',
+      providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }])
     const tool = { ...messages[0]!, metadata: { ...messages[0]!.metadata, custom: { ...metadata(messages[0]!), messageKind: 'tool_activity' } } } as ThreadMessage
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], null).map(message => message.id), ['visible'])
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], 'visible').map(message => message.id), ['visible'])
