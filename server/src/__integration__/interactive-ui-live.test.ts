@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import type { RunIdentity } from '@lyyzka/lingxios'
 import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
+import { extractLessonBlocks, parseLessonSource } from '../../../src/lib/interactive-ui/source.js'
 import { interactiveBaselineCases, interactiveCases } from '../../../e2e/interactive-ui-cases.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
 import { messageLessons } from '../agent-runtime/interactive-ui-projection.js'
@@ -25,6 +26,25 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 // Failure inventory precedes the live implementation: no preview, invalid source,
 // incorrect teaching/transfer answers, unmetered usage, retries counted as passes,
 // browser-only fixtures presented as product evidence, and changing gates after holdout.
+// Inspect parsed components: whitespace in a call is valid and a quoted name is not a component.
+function containsComponent(value: unknown, name: string): boolean {
+  return !!value && typeof value === 'object' && (
+    'type' in value && value.type === 'element' && 'typeName' in value && value.typeName === name
+    || Object.values(value).some(child => containsComponent(child, name)))
+}
+const hasPlainLessonSource = (body: string) => extractLessonBlocks(body, { preview: true }).length > 0
+assert.ok(containsComponent(parseLessonSource('root = Lesson("test", "test", [Table (["A"], [["B"]])])').root, 'Table'))
+assert.ok(!containsComponent(parseLessonSource('root = Lesson("test", "Table(", [Text("Table(")])').root, 'Table'))
+// Markdown examples are text by contract; raw statements (including in lists) must stay hidden.
+assert.ok(hasPlainLessonSource('root = Lesson("test")'))
+assert.ok(hasPlainLessonSource('- root = Lesson("test")'))
+assert.ok(!hasPlainLessonSource('写法示例：`root = Lesson(...)`'))
+assert.ok(!hasPlainLessonSource('写法示例：`root = Lesson('))
+assert.ok(!hasPlainLessonSource('```js\nroot = Lesson("example")\n```'))
+assert.ok(!hasPlainLessonSource('> root = Lesson("example")'))
+assert.ok(hasPlainLessonSource('```openui-lang\nroot = Lesson("test")\n```'))
+assert.ok(hasPlainLessonSource('```lingxiloop-openui-v1\nroot = Lesson("test")\n```'))
+
 test('current product generates, delivers and explores learning UI with a real model and browser', {
   skip: process.env.LINGXIOS_LIVE_UI !== '1', timeout: 3_600_000,
 }, async t => {
@@ -145,8 +165,8 @@ test('current product generates, delivers and explores learning UI with a real m
             if (!snapshot?.message) continue
             if (nativeText(snapshot.message).trim()) firstTextMs ??= performance.now() - started
             if (scenario.component && messageLessons(snapshot.message).some(lesson => lesson.fields.length > 0
-              && lesson.source.includes(`${scenario.component}(`))) previewMs ??= performance.now() - started
-            const leaked = snapshot.message.content.find(part => part.type === 'text' && /root\s*=\s*Lesson\(/.test(part.text))
+              && containsComponent(parseLessonSource(lesson.source, { preview: true }).root, scenario.component!))) previewMs ??= performance.now() - started
+            const leaked = snapshot.message.content.find(part => part.type === 'text' && hasPlainLessonSource(part.text))
             if (leaked?.type === 'text') {
               const structure = (node: unknown): unknown => {
                 const value = node as { type: string; lang?: string; value?: string; children?: unknown[] }
@@ -189,7 +209,7 @@ test('current product generates, delivers and explores learning UI with a real m
     assert.equal(streamFailure, null, `${id}: stream failed (${streamFailure})`)
     assert.ok(answers.length > 0, `${id}: no durable answer`)
     if (scenario.component) {
-      assert.ok(lessons.some(lesson => lesson.source.includes(`${scenario.component}(`)), `${id}: requested composition missing`)
+      assert.ok(lessons.some(lesson => containsComponent(parseLessonSource(lesson.source).root, scenario.component)), `${id}: requested composition missing`)
       assert.ok(previewMs !== null, `${id}: useful preview missing`)
     } else assert.equal(lessons.length, 0, `${id}: text-only preference ignored`)
     const answer = answers.map(item => nativeText(item.payload)).join('\n') + lessons.map(lesson => lesson.source).join('\n')

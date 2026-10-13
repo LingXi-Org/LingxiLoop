@@ -37,11 +37,13 @@ test('draft/final malformed blocks fall back locally without exposing source', (
 test('unfenced lesson candidates stay private until the runtime repairs the boundary', () => {
   for (const body of [source, '$angle = 45', 'plot = ProjectilePlot($angle, 20, 9.81, 0)', `$angle = 45\n${source}`,
     `\`\`\`\n${source}\n\`\`\``, `\`\`\`openui-lang\n${source}\n\`\`\``, `    ${source}`,
-    `前文\n\n$angle = 45\n${source}\n\n后文`]) {
+    `前文\n\n$angle = 45\n${source}\n\n后文`, `前文\n\n- ${source}`, `1. $angle = 45\n   ${source}`,
+    `- \`\`\`${OPENUI_LANGUAGE}\n  ${source}\n  \`\`\``]) {
     const checks = verifyLessonCandidate(body)
     assert.equal(checks.length, 1)
     assert.equal(checks[0].status, 'failed')
     assert.match(JSON.stringify(checks), /fence/)
+    assert.match(JSON.stringify(checks), /own line/)
     for (const preview of [true, false]) {
       const parts = projectLessonText(body, 'run', preview)
       assert.ok(parts.every(part => part.type === 'text'))

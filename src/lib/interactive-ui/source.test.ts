@@ -22,8 +22,12 @@ test('generated catalog instructions use the host fence and provide a parseable 
   assert.ok(instructions.includes(`EXACT language ${OPENUI_LANGUAGE}`))
   for (const example of examples) {
     assert.ok(example.closed)
+    assert.match(example.source, /^root = Lesson\(/)
     assert.ok(parseLessonSource(example.source).fields.length > 0)
   }
+  const steps = examples.find(example => example.source.includes('Steps('))
+  assert.ok(steps, 'demonstrate literal defaults and matching control names for Steps and Prediction')
+  assert.deepEqual(parseLessonSource(steps.source).defaults, { $step: 0, $prediction: '' })
 })
 
 test('upstream parser produces a validated composable lesson and bounded state/action contracts', () => {
