@@ -1,0 +1,102 @@
+{
+  "observedAt": "2026-10-13T15:43:54.668Z",
+  "metadata": {
+    "startedAt": "2026-10-13T15:41:26.293Z",
+    "finishedAt": "2026-10-13T15:43:54.668Z",
+    "passed": false,
+    "reproduce": "node e2e/server/interactive-ui-live.mjs --live-generative-ui",
+    "runtime": "3.3.6",
+    "candidate": "deepseek-ai/DeepSeek-V4-Pro",
+    "judge": "zai-org/GLM-5.2",
+    "maxModelCalls": 16,
+    "maxModelTokens": 200000,
+    "maxRunCostUSD": 0.5,
+    "maxTotalCostUSD": 5,
+    "modelConcurrency": 1,
+    "database": "lingxiloop_ui_model_test",
+    "identity": "synthetic test-owner",
+    "realWuKong": true,
+    "realModel": true,
+    "authentication": "isolated test middleware"
+  },
+  "results": {
+    "passed": false,
+    "baseline": [
+      {
+        "id": "baseline-projectile",
+        "previewMs": 8107.202,
+        "firstTextMs": 2168.5173000000004,
+        "readyMs": 17260.1738,
+        "sendAttempts": 1,
+        "streamReconnects": 1,
+        "modelCalls": 2,
+        "costUSD": 0.021307,
+        "uiCount": 1,
+        "teaching": {
+          "correct": true,
+          "transfer": true,
+          "correction": true,
+          "reasons": [
+            "答案正确使用了水平射程公式 R = v₀² sin(2θ) / g，并准确指出互余角（20°与70°、30°与60°）射程相等，符合参考事实。",
+            "初速 10 m/s 和重力 9.81 m/s² 与参考事实一致，无单位或数值矛盾。",
+            "迁移问题（30°与60°谁更远）正确提出，未捏造数值，符合互余角射程相等的规律。"
+          ]
+        },
+        "runId": "im:f156d41712c2cc84689fde07d4e709de479790dca7069dcc3f2884477a2b7283",
+        "sourceHashes": [
+          "1868ee29a8f70a13fc5cf8ae4dc86c034cac83a399f0b84c9ea699a74dcdfce6"
+        ]
+      },
+      {
+        "id": "baseline-comparison",
+        "previewMs": 9073.174199999998,
+        "firstTextMs": 2213.085500000001,
+        "readyMs": 22548.3683,
+        "sendAttempts": 1,
+        "streamReconnects": 1,
+        "modelCalls": 2,
+        "costUSD": 0.022359,
+        "uiCount": 1,
+        "teaching": {
+          "correct": true,
+          "transfer": true,
+          "correction": true,
+          "reasons": [
+            "TCP可靠有序、UDP不保证送达和顺序的对比与参考事实一致",
+            "实时语音场景正确迁移：权衡延迟与重传，指出UDP丢包不重传以保持实时性，未声称UDP绝不丢包",
+            "未编造数值，未与参考事实产生科学或单位矛盾"
+          ]
+        },
+        "runId": "im:c7034951c9b7dd3fa1b8fb12489b46cfdce4a10fb79a2efeb302e385fa488cbf",
+        "sourceHashes": [
+          "75701426fa9742829352e86cb0fddb1ff9ae65dc38d0fdd57af7195733c768a3"
+        ]
+      }
+    ],
+    "cases": [],
+    "attempts": [
+      "baseline-projectile",
+      "baseline-comparison",
+      "projectile"
+    ],
+    "gates": {
+      "previewMs": 60000,
+      "readyMs": 120000,
+      "failureRate": 0,
+      "recoveryRate": 1,
+      "localModelCalls": 0,
+      "lockedAt": "2026-10-13T15:42:20.296Z",
+      "beforeHoldout": true
+    },
+    "error": "projectile: requested composition missing"
+  },
+  "diagnosis": {
+    "publicRunStatus": "partial",
+    "delivery": "delivered",
+    "verification": "interactive-ui:incomplete",
+    "component": "Steps",
+    "cause": "Missing closing parenthesis after the steps array",
+    "sourceExposed": false
+  },
+  "limit": "Two M0 baselines passed; the first holdout failed. No complete live or browser acceptance."
+}

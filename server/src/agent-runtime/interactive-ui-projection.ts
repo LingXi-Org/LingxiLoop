@@ -43,6 +43,8 @@ export function verifyLessonCandidate(body: string): VerificationRecord[] {
           ? `Wrap the complete lesson source and all $state defaults in one top-level fenced code block with language ${OPENUI_LANGUAGE}. Each opening and closing fence must occupy its own line, with a blank line separating the block from prose. Do not attach a fence to a sentence or repeat source as prose.`
           : reason === 'interactive-ui:choice'
           ? 'Choice default must exactly match one of its options strings. Empty defaults are invalid. Use Prediction for free text.'
+          : reason === 'interactive-ui:incomplete' || reason === 'interactive-ui:unbalanced'
+          ? 'Close every component call with ), array with ] and object with } before starting the next assignment. In particular, Steps ends with ]). A closing Markdown fence does not complete unfinished source.'
           : 'Every $state reference needs a literal default and exactly one matching control. Use registered component signatures, closed source and at most four lessons.' } }
     }
   })
