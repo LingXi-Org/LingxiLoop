@@ -27,11 +27,11 @@ export function ForumDiscussion({ courseId, item, canWrite, onClose, onComment }
   useEffect(() => { void load() }, [load])
   return <Dialog open onOpenChange={open => { if (!open) onClose() }}><DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl">
     <DialogHeader><DialogTitle>{item.title}</DialogTitle><DialogDescription>本课程讨论</DialogDescription></DialogHeader>
-    <TypesetMarkdown content={item.body} preset="preview" />
+    <TypesetMarkdown content={item.body} preset="document" />
     <ForumFiles links={item.links} attachments={item.attachments} />
     <section aria-label="评论" className="w-full space-y-4 border-t pt-4">
       {comments.length === 0 && !busy && <p className="text-sm text-muted-foreground">还没有评论。</p>}
-      {comments.map(comment => <div key={comment.id} className="min-w-0 space-y-1 border-b pb-3"><p className="flex flex-wrap gap-2 text-xs text-muted-foreground"><span>{comment.authorName}</span><time dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleString()}</time></p><TypesetMarkdown content={comment.body} preset="preview" /></div>)}
+      {comments.map(comment => <div key={comment.id} className="min-w-0 space-y-1 border-b pb-3"><p className="flex flex-wrap gap-2 text-xs text-muted-foreground"><span>{comment.authorName}</span><time dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleString()}</time></p><TypesetMarkdown content={comment.body} preset="document" /></div>)}
       {nextOffset !== null && <div className="flex justify-center"><Button variant="outline" disabled={busy} onClick={() => void load(nextOffset)}>更多评论</Button></div>}
       {canWrite && <form className="space-y-2" onSubmit={async event => {
         event.preventDefault()

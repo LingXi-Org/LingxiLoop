@@ -69,7 +69,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
           actions={<Badge variant="outline">{kindLabels[item.kind]}</Badge>}>
           <h3 className="text-base font-semibold">{item.title}</h3>
           {(item.featured || item.official) && <div className="flex flex-wrap gap-2">{item.official && <Badge>官方案例</Badge>}{item.featured && <Badge variant="secondary">精选案例</Badge>}</div>}
-          {item.body && <TypesetMarkdown content={item.body} preset="preview" className="w-full min-w-0" />}
+          {item.body && <TypesetMarkdown content={item.body} preset="document" className="w-full min-w-0" />}
           <ForumFiles links={item.links} attachments={item.attachments} />
           {item.tags.length > 0 && <div className="flex flex-wrap gap-1">{item.tags.map(value => <Button key={value} variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground" onClick={() => setTag(value)}>#{value}</Button>)}</div>}
           {item.dueAt && <p className="text-xs text-muted-foreground">截止：{new Date(item.dueAt).toLocaleString()}</p>}
