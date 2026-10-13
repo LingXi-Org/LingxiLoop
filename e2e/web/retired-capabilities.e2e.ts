@@ -1,6 +1,7 @@
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
 import { memberSession, mutationPermission } from './support'
+import { semanticEvidence } from './evidence'
 
 test('retired mail and calendar links redirect and no capability controls remain', { ...memberSession(), tags: ['web','retirement'] }, async ({ app, browser, screen }) => {
   for (const view of ['mail','calendar']) {
@@ -12,7 +13,7 @@ test('retired mail and calendar links redirect and no capability controls remain
   await app.open('/?view=agents')
   await expect(browser.locator('[data-page="agents"]')).toBeVisible()
   await expect(browser.locator('[data-page="agents"]')).not.toContainText('起草邮件')
-  await app.screenshot('retired-product-navigation')
+  await semanticEvidence(screen, browser, 'retired-product-navigation')
 })
 
 test('Agent explicitly refuses retired effects without invoking old tools', { ...memberSession(), ...mutationPermission,

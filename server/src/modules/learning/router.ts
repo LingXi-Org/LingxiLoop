@@ -6,6 +6,7 @@ import { permissionService } from '../access/public.js'
 import { classroomRouter } from './classroom-router.js'
 import { learningCasesRouter } from './cases-router.js'
 import { forumRouter } from './forum-router.js'
+import { homeworkRouter } from './homework-router.js'
 import {
   addInstitutionalCourseMemberRequestSchema,
   createProjectInvitationRequestSchema,
@@ -36,6 +37,7 @@ async function requireCoursePermission(
 learningRouter.use(classroomRouter)
 learningRouter.use(learningCasesRouter)
 learningRouter.use(forumRouter)
+learningRouter.use(homeworkRouter)
 
 learningRouter.get('/courses', safe(async (req, res) => {
   const scope = await requireCompany(req)

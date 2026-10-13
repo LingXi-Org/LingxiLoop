@@ -1,16 +1,17 @@
 import { test } from '@e2e-dev/web'
 import { credentials, expect } from 'e2e'
 import { adminFixtures as f } from './seed'
+import { submitSignIn } from '../web/accounts'
 
 const enabled = process.env.E2E_ADMIN_FIXTURES === '1' && process.env.E2E_MUTATIONS === '1'
   && Boolean(process.env.E2E_USER_ADMIN_USERNAME && process.env.E2E_USER_ADMIN_PASSWORD)
 
-if (enabled) test.setup('authenticate detailed administration', { sessions: ['admin-details'] }, async ({ app, screen, session }) => {
+if (enabled) test.setup('authenticate detailed administration', { sessions: ['admin-details'] }, async ({ app, screen, browser, session }) => {
   await app.open('/login')
   await screen.getByLabel('邮箱').fill(credentials.user('admin').username)
   await screen.getByLabel('密码').fill(credentials.user('admin').password)
   await expect(screen.getByRole('button', '登录')).toBeEnabled({ timeout: 60_000 })
-  await screen.getByRole('button', '登录').tap()
+  await submitSignIn({ screen, browser })
   await expect(screen.getByRole('heading', '平台总览')).toBeVisible({ timeout: 60_000 })
   await session.save('admin-details')
 })

@@ -28,6 +28,13 @@ export async function runLearningEffect(
 ): Promise<void> {
   const payload = effect.payload
   switch (effect.kind) {
+    case 'homework.validate':
+    case 'homework.assess':
+    case 'homework.report': {
+      const { runHomeworkEffect } = await import('./homework-effects.js')
+      await runHomeworkEffect(effect)
+      return
+    }
     case 'study_room.sync':
       await infrastructure.syncStudyRoom(effect.companyId, effect.courseId)
       return

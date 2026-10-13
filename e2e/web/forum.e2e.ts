@@ -1,6 +1,7 @@
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
 import { memberSession, mutationPermission, testName } from './support'
+import { semanticEvidence } from './evidence'
 
 test.describe('Course forum', { ...memberSession(), tags: ['web', 'learning', 'forum'] }, () => {
   test('forum follows course URLs, reload and history at mobile and desktop widths', async ({ app, screen, browser }) => {
@@ -15,9 +16,9 @@ test.describe('Course forum', { ...memberSession(), tags: ['web', 'learning', 'f
     await browser.setViewport({ width: 390, height: 844 })
     await expect(screen.getByLabel('搜索论坛')).toBeVisible()
     expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    await app.screenshot('forum-mobile')
+    await semanticEvidence(screen, browser, 'forum-mobile')
     await browser.setViewport({ width: 1440, height: 1000 })
-    await app.screenshot('forum-desktop')
+    await semanticEvidence(screen, browser, 'forum-desktop')
   })
   test('publish a case, comment and select it without changing the author', { skip: mutationPermission.skip }, async ({ app, screen, browser }) => {
     const title = testName('Forum case')
@@ -41,6 +42,6 @@ test.describe('Course forum', { ...memberSession(), tags: ['web', 'learning', 'f
     await browser.reload()
     await screen.getByLabel('搜索论坛').fill(title)
     await expect(card).toContainText('精选案例')
-    await app.screenshot('forum-case')
+    await semanticEvidence(screen, browser, 'forum-case')
   })
 })

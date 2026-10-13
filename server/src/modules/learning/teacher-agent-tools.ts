@@ -1,5 +1,5 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
-import { z } from 'zod'
+import type { z } from 'zod'
 import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeContext, nativeTool, compareResource, authorizeAudienceRead } from '../../agents/tools.js'
@@ -8,6 +8,7 @@ import { createPermissionService } from '../access/public.js'
 import { teacherAgentSchemas as schemas } from './agent-contracts.js'
 import { describeTeacherAction, executeTeacherAction, resolveTeacherScope, teacherActionRequiresApproval } from './teacher-agent-application.js'
 import { findTeacherScopeBinding } from './teacher-runtime-repository.js'
+import { homeworkTeacherTools } from './homework-tools.js'
 
 type Method = keyof typeof schemas
 const digestReads = new Set<Method>(['current', 'overview', 'list_learners', 'list_objectives', 'list_activities', 'get_digest_schedule'])
@@ -83,4 +84,7 @@ function teacherTool<M extends Method>(method: M): ToolDefinition<z.output<(type
   })
 }
 
-export const teacherTools = Object.keys(schemas).map(method => teacherTool(method as Method))
+export const teacherTools = [
+  ...Object.keys(schemas).filter(method => !['draft_objectives','draft_activity','publish_objective','publish_activity'].includes(method)).map(method => teacherTool(method as Method)),
+  ...homeworkTeacherTools,
+]

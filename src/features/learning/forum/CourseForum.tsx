@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
+import { useConversations } from '@/features/conversations/store'
 import { learningApi } from '../api'
 import type { LearningSpace } from '../contracts'
 import { DashboardSectionFrame } from '../dashboard/DashboardSectionFrame'
@@ -17,6 +18,7 @@ import { ForumComposer } from './ForumComposer'
 import { ForumFiles } from './ForumContentFields'
 import { ForumDiscussion } from './ForumDiscussion'
 import { ForumSubmission } from './ForumSubmission'
+import { HomeworkDetail } from '../homework/HomeworkDetail'
 import { MemoCard } from './memos/MemoCard'
 import { MemoContent } from './memos/MemoContent'
 
@@ -58,7 +60,12 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   if (!space.courseId) return <p role="status">请选择一门课程查看论坛。</p>
   const courseId = space.courseId
   return <DashboardSectionFrame space={space} section="forum" headerActions={<div className="flex flex-wrap gap-2">
-    {space.canEditContent && <Button variant="outline" onClick={() => useApp.getState().setView('course-content')}>发布作业</Button>}
+    {space.canEditContent && <Button variant="outline" disabled={busy} onClick={() => void mutate(async () => {
+      const agent = await learningApi.getTeacherAgent(courseId)
+      await useConversations.getState().reload()
+      if (agent.roomStatus !== 'active' || useConversations.getState().projectId !== space.projectId || !useConversations.getState().list.some(item => item.id === agent.roomId)) throw new Error('404')
+      useApp.getState().selectConversation(agent.roomId)
+    })}>发布作业</Button>}
     {canWrite && <Button onClick={() => setComposing(value => !value)}>发布内容</Button>}
   </div>}>
     <div data-ui-page="forum" className="mx-auto w-full max-w-3xl space-y-4">
@@ -89,12 +96,15 @@ export function CourseForum({ space }: { space: LearningSpace }) {
             <Button variant="ghost" size="sm" onClick={() => setDiscussion(item)}>评论{item.commentCount > 0 ? `（${item.commentCount}）` : ''}</Button>
             {item.sourceId && <Button variant="ghost" size="sm" onClick={() => useApp.getState().setView('library')}>在课程资料中查看</Button>}
             {item.targetType === 'activity' && <Button variant="outline" size="sm" onClick={() => setSubmission(item)}>{space.canReview ? '查看提交' : item.status === 'CLOSED' ? '查看提交记录' : '提交作业'}</Button>}
+            {item.targetType === 'homework' && <Button variant="outline" size="sm" onClick={() => setSubmission(item)}>{space.canReview ? '查看进度与验收' : '查看作业'}</Button>}
           </div>
         </MemoCard>)}
         {nextOffset !== null && <Button variant="outline" className="w-full" disabled={loading} onClick={() => void load(nextOffset)}>加载更多</Button>}
       </div>
       {discussion && <ForumDiscussion key={`${discussion.targetType}:${discussion.id}`} courseId={courseId} item={discussion} canWrite={canWrite} onClose={() => setDiscussion(null)} onComment={() => void load()} />}
-      {submission && <ForumSubmission key={submission.id} space={space} item={submission} onClose={() => setSubmission(null)} />}
+      {submission && (submission.targetType === 'homework'
+        ? <HomeworkDetail key={submission.id} space={space} item={submission} onClose={() => setSubmission(null)} onChanged={() => void load()} />
+        : <ForumSubmission key={submission.id} space={space} item={submission} onClose={() => setSubmission(null)} />)}
       <AlertDialog open={Boolean(closing)} onOpenChange={open => { if (!open) setClosing(null) }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>关闭这份作业？</AlertDialogTitle><AlertDialogDescription>关闭后不再接收新的提交，已有提交与历史版本会保留。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>暂不关闭</AlertDialogCancel><AlertDialogAction onClick={() => { if (closing) void mutate(() => learningApi.closeActivity(courseId, closing.id)); setClosing(null) }}>确认关闭</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </div>
   </DashboardSectionFrame>

@@ -34,6 +34,13 @@ async function tracked<T>(
   operation: (client: OpenAI) => Promise<T>,
   usageOf: (value: T) => LlmUsage | null = () => null,
 ): Promise<T> {
+  const rates = model === env.OPENAI_MODEL ? [
+    'AGENT_OS_INPUT_COST_MICROS_PER_MILLION', 'AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION',
+  ].map(name => {
+    const rate = Number(process.env[name]?.trim() || 0)
+    if (!Number.isSafeInteger(rate) || rate < 0) throw new Error(`${name} must be a non-negative integer`)
+    return rate
+  }) : null
   const startedAt = Date.now()
   let value: T
   try {
@@ -44,8 +51,13 @@ async function tracked<T>(
     })
     throw error
   }
+  const usage = usageOf(value)
   await persistTrackedCall({
-    context, model, usage: usageOf(value), latencyMs: Date.now() - startedAt, status: 'succeeded',
+    context, model, usage, latencyMs: Date.now() - startedAt, status: 'succeeded',
+    ...(rates && usage ? {
+      costUsd: ((usage.prompt_tokens ?? 0) * rates[0]! + (usage.completion_tokens ?? 0) * rates[1]!) / 1e12,
+      costEstimated: true,
+    } : {}),
   })
   return value
 }

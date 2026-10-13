@@ -1,6 +1,7 @@
 import {
   AttachmentPrimitive,
   ComposerPrimitive,
+  useAui,
   useAuiState,
 } from '@assistant-ui/react'
 import { Alert02Icon, ArrowUp02Icon, Cancel01Icon, Loading03Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
@@ -43,11 +44,16 @@ export function ConversationComposer({
   placeholder?: string
 }) {
   const inputRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const addRef = useRef<HTMLButtonElement>(null)
   const insertMentionRef = useRef<(() => void) | null>(null)
   const afterMenuClose = useRef<(() => void) | null>(null)
   const [actionsOpen, setActionsOpen] = useState(false)
+  const aui = useAui()
   const text = useAuiState((state) => state.composer.text)
+  const attachmentAccept = useAuiState((state) => state.composer.attachmentAccept)
+  const attachmentDisabled = useAuiState((state) => !state.composer.isEditing)
+  const [attachmentError, setAttachmentError] = useState<string | null>(null)
   const canCancel = useChatThreadStore((state) => state.conversations[conversationId]?.messages
     .some(message => canCancelRun(getLingxiMessageMetadata(message))) ?? false)
   const [cancelling, setCancelling] = useState(false)
@@ -80,6 +86,7 @@ export function ConversationComposer({
   return (
     <div data-composer-column className={compact ? 'mx-auto w-full min-w-0 max-w-[800px] px-3 pb-3' : 'mx-auto w-full min-w-0 max-w-[800px] px-2.5 pb-4 pt-2 sm:px-4'}>
       {cancelError && <p role="alert" className="mb-2 px-2 text-xs text-destructive">{cancelError}</p>}
+      {attachmentError && <p role="alert" className="mb-2 px-2 text-xs text-destructive">{attachmentError}</p>}
       {pollOpen ? (
         <PollComposer conversationId={conversationId} onSubmitted={closePoll} onCancel={closePoll} />
       ) : (
@@ -90,6 +97,13 @@ export function ConversationComposer({
             className="chat-composer group/composer relative flex w-full flex-col rounded-2xl border border-border bg-card px-2 py-2 text-card-foreground"
             onSubmit={finalizeTyping}
           >
+        <input ref={fileInputRef} type="file" hidden multiple aria-label="上传文件" disabled={attachmentDisabled}
+          accept={attachmentAccept === '*' ? undefined : attachmentAccept} onChange={event => {
+            const files = Array.from(event.currentTarget.files ?? [])
+            event.currentTarget.value = ''
+            setAttachmentError(null)
+            void Promise.all(files.map(file => aui.composer.addAttachment(file).catch(() => setAttachmentError('附件未能添加，请重新选择文件。'))))
+          }} />
         <ComposerPrimitive.Quote className="mx-1 mb-2 flex min-w-0 items-center gap-2 rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
           <div className="h-4 w-0.5 shrink-0 rounded-full bg-primary" />
           <ComposerPrimitive.QuoteText className="min-w-0 flex-1 truncate" />
@@ -195,12 +209,10 @@ export function ConversationComposer({
             }}
           >
             <p className="px-3 pb-1.5 pt-1 text-xs text-muted-foreground">添加</p>
-            <ComposerPrimitive.AddAttachment asChild>
-              <Button type="button" variant="ghost" className={actionClassName} onClick={() => chooseAction(focusInput)}>
+              <Button type="button" variant="ghost" className={actionClassName} disabled={attachmentDisabled} onClick={() => { fileInputRef.current?.click(); chooseAction(focusInput) }}>
                 <PaperclipIcon className="size-5" aria-hidden />
                 <span className="flex min-w-0 flex-wrap items-baseline gap-x-2"><span>上传文件</span><span className="text-xs font-normal text-muted-foreground">添加图片或文件</span></span>
               </Button>
-            </ComposerPrimitive.AddAttachment>
             <Button type="button" variant="ghost" className={actionClassName} onClick={() => chooseAction(() => insertMentionRef.current?.())}>
               <AtSignIcon className="size-5" aria-hidden />
               <span className="flex min-w-0 flex-wrap items-baseline gap-x-2"><span>提及成员</span><span className="text-xs font-normal text-muted-foreground">选择要提醒的人</span></span>

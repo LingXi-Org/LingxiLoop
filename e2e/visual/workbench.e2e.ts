@@ -49,7 +49,14 @@ test('wide chat, narrow desktop and mobile preserve layout and actions', async (
   await browser.setViewport({ width: 2560, height: 1440 })
   await app.open('/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=dark&long=1')
   await expect(browser.locator('[data-msg-id]').first()).toBeVisible()
-  expect(await browser.evaluate(() => document.querySelector('[data-msg-id]')!.getBoundingClientRect().width)).toBeLessThanOrEqual(801)
+  const geometry = await browser.evaluate(() => {
+    const width = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().width
+    return { body: width('[data-msg-id] .native-message-content'), composer: width('[data-composer-column]'), row: width('[data-msg-id]'), column: width('[data-chat-message-column]'), overflow: document.documentElement.scrollWidth > innerWidth }
+  })
+  expect(geometry.body).toBeLessThanOrEqual(801)
+  expect(geometry.composer).toBeLessThanOrEqual(801)
+  expect(Math.abs(geometry.row - geometry.column)).toBeLessThanOrEqual(1)
+  expect(geometry.overflow).toBe(false)
   await app.screenshot('chat-2560-dark')
   await browser.setViewport({ width: 1366, height: 768 })
   expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

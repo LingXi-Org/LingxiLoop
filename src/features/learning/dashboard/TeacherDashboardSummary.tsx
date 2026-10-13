@@ -2,9 +2,9 @@ import { ArrowRight, CheckCheck } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { statusLabel } from '../components/learningDisplay'
-import type { LearningActivity, LearningObjective, TeacherLearningOverview } from '../contracts'
+import type { TeacherLearningOverview } from '../contracts'
 
 const countChartConfig = { count: { label: '数量', color: 'var(--chart-1)' } } satisfies ChartConfig
 const ATTENTION_REASON_LABELS: Record<string, string> = {
@@ -80,26 +80,4 @@ export function TeacherLearningInsights({ overview }: { overview: TeacherLearnin
       ))}
     </div>
   )
-}
-
-export function TeacherContentChart({ objectives, activities }: {
-  objectives: LearningObjective[]
-  activities: LearningActivity[]
-}) {
-  const data = [
-    { label: '学习目标', draft: objectives.filter((item) => item.status === 'DRAFT').length, published: objectives.filter((item) => item.status === 'PUBLISHED').length, closed: objectives.filter((item) => item.status === 'ARCHIVED').length },
-    { label: '课程活动', draft: activities.filter((item) => item.status === 'DRAFT').length, published: activities.filter((item) => item.status === 'PUBLISHED').length, closed: activities.filter((item) => item.status === 'CLOSED').length },
-  ]
-  if (objectives.length + activities.length === 0) return <div className="grid min-h-44 place-content-center rounded-xl bg-muted/50 text-sm text-muted-foreground">暂无课程内容，点击查看详情</div>
-  return <ChartContainer config={{ published: { label: '已发布', color: 'var(--chart-1)' }, draft: { label: '草稿', color: 'var(--chart-2)' }, closed: { label: '已归档 / 结束', color: 'var(--chart-3)' } }} className="h-44 w-full aspect-auto">
-    <BarChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
-      <CartesianGrid vertical={false} />
-      <XAxis dataKey="label" tickLine={false} axisLine={false} />
-      <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
-      <ChartLegend content={<ChartLegendContent className="flex-wrap gap-3" />} />
-      <Bar dataKey="published" stackId="content" fill="var(--color-published)" maxBarSize={48} isAnimationActive={false} />
-      <Bar dataKey="draft" stackId="content" fill="var(--color-draft)" maxBarSize={48} isAnimationActive={false} />
-      <Bar dataKey="closed" stackId="content" fill="var(--color-closed)" maxBarSize={48} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-    </BarChart>
-  </ChartContainer>
 }

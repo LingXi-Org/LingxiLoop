@@ -3,10 +3,8 @@ import { expect } from 'e2e'
 import { memberSession, mutationPermission, testName } from './support'
 
 test.describe('Disposable course lifecycle', { ...memberSession(), ...mutationPermission, tags: ['web', 'learning', 'mutations'], timeout: 180_000 }, () => {
-  test('teacher creates a course, updates its profile, publishes content, revokes an invite and ends it', async ({ app, screen, browser }) => {
+  test('teacher creates a course, updates its profile, opens the homework conversation, revokes an invite and ends it', async ({ app, screen, browser }) => {
     const course = testName('course')
-    const objective = testName('objective')
-    const activity = testName('activity')
     await app.open('/?project=e2e-classroom')
     await screen.getByRole('button', /^切换工作区/).tap()
     await screen.getByRole('menuitem', '新建课程').tap()
@@ -19,31 +17,16 @@ test.describe('Disposable course lifecycle', { ...memberSession(), ...mutationPe
     await screen.getByLabel('课程说明').fill('Updated by an end-to-end browser flow')
     await screen.getByRole('button', '保存基本资料').tap()
     await screen.getByRole('alertdialog').getByRole('button', '保存更改').tap()
-    await screen.getByRole('button', '课程内容').tap()
+    await screen.getByRole('button', '成员与邀请').tap()
     await screen.getByRole('button', '基本资料').tap()
     await expect(screen.getByLabel('课程说明')).toHaveValue('Updated by an end-to-end browser flow')
 
-    await screen.getByRole('button', '课程内容').tap()
-    await screen.getByRole('button', '创建目标').tap()
-    await screen.getByLabel('目标标题').fill(objective)
-    await screen.getByLabel('成功标准').fill('Can explain the result and reproduce it.')
-    await screen.getByRole('dialog', '创建学习目标').getByRole('button', '创建目标').tap()
-    await screen.getByRole('alertdialog').getByRole('button', '创建目标').tap()
-    await expect(screen.getByText(objective)).toBeVisible()
-    await screen.getByRole('button', '发布目标').tap()
-    await screen.getByRole('alertdialog').getByRole('button', '发布目标').tap()
-    await expect(screen.getByRole('button', '发布目标')).toBeHidden()
-
-    await screen.getByRole('button', '创建活动').tap()
-    await screen.getByLabel('活动标题').fill(activity)
-    await screen.getByLabel('活动说明').fill('Describe one concrete example and its evidence.')
-    await screen.getByRole('dialog', '创建学习活动').getByLabel(objective).check()
-    await screen.getByRole('dialog', '创建学习活动').getByRole('button', '创建活动').tap()
-    await screen.getByRole('alertdialog').getByRole('button', '创建活动').tap()
-    await expect(screen.getByText(activity)).toBeVisible()
-    await screen.getByRole('button', '发布').tap()
-    await screen.getByRole('alertdialog').getByRole('button', '发布活动').tap()
-    await expect(screen.getByRole('button', '发布')).toBeHidden()
+    await expect(screen.getByRole('button', '创建目标')).toBeHidden()
+    await expect(screen.getByRole('button', '创建活动')).toBeHidden()
+    await screen.getByRole('button', '论坛', { exact: true }).tap()
+    await screen.getByRole('button', '发布作业', { exact: true }).tap()
+    await expect(browser.locator('[contenteditable="true"]').first()).toBeVisible()
+    await screen.getByRole('button', '课程管理').tap()
 
     await screen.getByRole('button', '成员与邀请').tap()
     await screen.getByRole('button', '创建邀请').tap()

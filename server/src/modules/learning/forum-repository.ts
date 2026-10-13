@@ -34,6 +34,10 @@ const itemsSql = `WITH items AS (
     COALESCE(a.published_at,a.created_at),'{}'::text[],'[]'::jsonb,'[]'::jsonb,NULL,a.due_at,a.status
   FROM learning_activities a WHERE a.company_id=$1 AND a.project_id=$2 AND a.status IN ('PUBLISHED','CLOSED')
   UNION ALL
+  SELECT h.id,'homework','assignment',h.title,h.instructions,h.created_by,
+    h.published_at,'{}'::text[],h.links,h.attachments,NULL,h.due_at,h.status
+  FROM homeworks h WHERE h.company_id=$1 AND h.project_id=$2 AND h.status IN ('PUBLISHED','CLOSED')
+  UNION ALL
   SELECT s.id,'source','resource',s.title,''::text,s.created_by_user_id,s.created_at,'{}'::text[],
     CASE WHEN s.original_url ~ '^https?://' THEN jsonb_build_array(s.original_url) ELSE '[]'::jsonb END,
     CASE WHEN s.storage_key IS NOT NULL THEN jsonb_build_array(jsonb_build_object('key',s.storage_key,'name',s.title)) ELSE '[]'::jsonb END,

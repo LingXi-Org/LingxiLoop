@@ -1,6 +1,7 @@
 import { test } from '@e2e-dev/web'
 import { credentials, expect, type TestFixtures } from 'e2e'
 import { adminFixtures as f } from './seed'
+import { submitSignIn } from '../web/accounts'
 
 const enabled = process.env.E2E_ADMIN_FIXTURES === '1' && process.env.E2E_MUTATIONS === '1'
 const available = (name: string) => enabled && Boolean(process.env[`E2E_USER_${name.toUpperCase()}_USERNAME`] && process.env[`E2E_USER_${name.toUpperCase()}_PASSWORD`])
@@ -8,12 +9,12 @@ const admin = available('admin') ? { session: 'admin-operations' } : { skip: 'Re
 const manager = available('manager') ? { session: 'isolated-manager' } : { skip: 'Requires the dedicated local manager credentials, fixtures and mutation opt-in.' }
 
 for (const [name, sessionName, heading] of [['admin', 'admin-operations', '平台总览'], ['manager', 'isolated-manager', /本公司概览/]] as const) {
-  if (available(name)) test.setup(`authenticate ${sessionName}`, { sessions: [sessionName] }, async ({ app, screen, session }) => {
+  if (available(name)) test.setup(`authenticate ${sessionName}`, { sessions: [sessionName] }, async ({ app, screen, browser, session }) => {
     await app.open('/login')
     await screen.getByLabel('邮箱').fill(credentials.user(name).username)
     await screen.getByLabel('密码').fill(credentials.user(name).password)
     await expect(screen.getByRole('button', '登录')).toBeEnabled({ timeout: 60_000 })
-    await screen.getByRole('button', '登录').tap()
+    await submitSignIn({ screen, browser })
     await expect(screen.getByRole('heading', heading)).toBeVisible({ timeout: 60_000 })
     await session.save(sessionName)
   })

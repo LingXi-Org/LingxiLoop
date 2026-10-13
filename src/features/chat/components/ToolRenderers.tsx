@@ -22,6 +22,7 @@ import {
   parsePresentationArtifact,
 } from '@/features/presentations'
 import { useSurface } from '@/stores/surface'
+import { HomeworkDraftTool } from '@/features/learning/homework/HomeworkDraftCard'
 
 interface CardProps {
   args: Record<string, unknown>
@@ -199,4 +200,5 @@ export function PresentationArtifactTool({ args }: Pick<CardProps, 'args'>) {
 
 export const TOOL_DETAILS = {
   'learning.propose_evaluation': ScoreBreakdownTool,
+  'teacher.draft_homework': HomeworkDraftTool,
 }

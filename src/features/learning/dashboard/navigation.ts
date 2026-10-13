@@ -2,7 +2,6 @@ import {
   Archive02Icon,
   BubbleChatIcon,
   ChartHistogramIcon,
-  File01Icon,
   Folder01Icon,
   Settings02Icon,
   UserGroupIcon,
@@ -37,7 +36,6 @@ const LEARNER_MENU: LearningDashboardMenuItem[] = [
 
 const MANAGEMENT_MENU: LearningDashboardMenuItem[] = [
   { section: 'settings', label: '基本资料', icon: Settings02Icon, management: true },
-  { section: 'content', label: '课程内容', icon: File01Icon, management: true },
   { section: 'members', label: '成员与邀请', icon: UserGroupIcon, management: true },
   { section: 'status', label: '课程状态', icon: Archive02Icon, management: true },
 ]

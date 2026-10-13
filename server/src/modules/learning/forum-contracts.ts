@@ -10,7 +10,7 @@ export const learningContentFields = {
   links: z.array(learningLinkSchema).max(20).default([]),
   attachments: z.array(learningAttachmentSchema).max(20).default([]),
 }
-export const forumTargetSchema = z.enum(['post', 'activity', 'source'])
+export const forumTargetSchema = z.enum(['post', 'activity', 'source', 'homework'])
 export const forumQuerySchema = z.object({
   kind: z.enum(['all', 'assignment', 'resource', 'case']).default('all'),
   search: z.string().trim().max(200).default(''),

@@ -3,6 +3,14 @@ import {
   openDefaultLearningContextThread,
   seedMemberLearningContextThreads,
 } from './facade.js'
+import type { ContextThreadScope } from './contracts.js'
+
+export function createHomeworkThread(
+  scope: ContextThreadScope,
+  input: { homeworkId: string; agentId: string },
+) {
+  return contextThreadsApplication.createHomeworkThread(scope, input)
+}
 
 export function openLearningContextThread(args: {
   companyId: string

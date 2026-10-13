@@ -1,1 +1,2 @@
 server/src/db/migrations/*.sql text eol=lf
+e2e/homework/*.pdf binary

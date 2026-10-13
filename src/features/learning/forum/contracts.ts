@@ -1,5 +1,5 @@
 export interface ForumAttachment { key: string; name: string }
-export type ForumTarget = 'post' | 'activity' | 'source'
+export type ForumTarget = 'post' | 'activity' | 'source' | 'homework'
 export type ForumFilter = 'all' | 'assignment' | 'resource' | 'case'
 export interface ForumItem {
   id: string

@@ -1,16 +1,33 @@
 import type { Browser } from '@e2e-dev/web'
+import { setTimeout as delay } from 'node:timers/promises'
 import { credentials, expect, type TestFixtures } from 'e2e'
 
 type AccountBrowser = Pick<TestFixtures, 'app' | 'screen'> & { browser: Browser }
 
-export async function signIn({ app, screen }: AccountBrowser, role: 'member' | 'student') {
+export async function signIn({ app, screen, browser }: AccountBrowser, role: 'member' | 'student') {
   const user = credentials.user(role)
   await app.open('/')
   await screen.getByLabel('邮箱').fill(user.username)
   await screen.getByLabel('密码').fill(user.password)
   await expect(screen.getByRole('button', '登录')).toBeEnabled({ timeout: 45_000 })
-  await screen.getByRole('button', '登录').tap()
+  await submitSignIn({ screen, browser })
   await expect(screen.getByRole('button', '新建对话')).toBeVisible({ timeout: 45_000 })
+}
+
+export async function submitSignIn({ screen, browser }: Pick<AccountBrowser, 'screen' | 'browser'>) {
+  const login = () => Promise.all([
+    browser.waitForResponse(/\/api\/auth\/sign-in\/email(?:\?|$)/),
+    screen.getByRole('button', '登录').tap(),
+  ]).then(([response]) => response)
+  const response = await login()
+  if (response.status === 429) {
+    // Better Auth's real per-IP window also covers rapid account switches across tests.
+    const seconds = Number(response.headers['retry-after'] ?? response.headers['x-retry-after'])
+    expect(Number.isFinite(seconds) && seconds > 0 && seconds <= 60).toBe(true)
+    await delay((seconds + 1) * 1000)
+    await expect(screen.getByRole('button', '登录')).toBeEnabled()
+    expect((await login()).status).toBe(200)
+  } else expect(response.status).toBe(200)
 }
 
 export async function signOut({ screen, browser }: AccountBrowser) {

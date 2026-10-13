@@ -2,6 +2,7 @@ import { CheckmarkCircle02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight, ClipboardCheck, Users } from 'lucide-react'
 import { useState } from 'react'
+import { useApp } from '@/stores/app'
 import { OverviewSkeleton } from './LearningSkeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -18,14 +19,12 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/
 import { Progress } from '@/components/ui/progress'
 import { statusLabel } from '../components/learningDisplay'
 import type {
-  LearningActivity,
-  LearningObjective,
   LearningReview,
   LearningSpace,
   TeacherLearningOverview,
 } from '../contracts'
 import { LearningGrowthVine } from './LearningGrowthVine'
-import { TeacherAttention, TeacherContentChart, TeacherLearningInsights } from './TeacherDashboardSummary'
+import { TeacherAttention, TeacherLearningInsights } from './TeacherDashboardSummary'
 import { TeacherLearnersSection } from './TeacherLearnersSection'
 import {
   type TeacherDetailView,
@@ -35,12 +34,6 @@ import { OverviewBarChart, OverviewChartCard, OverviewDonutChart } from './Overv
 import { useTeacherOverviewData } from './useTeacherOverviewData'
 
 const REVIEW_PREVIEW_LIMIT = 5
-const CONTENT_STATUS_LABELS: Record<string, string> = {
-  DRAFT: '草稿',
-  PUBLISHED: '已发布',
-  ARCHIVED: '已归档',
-  CLOSED: '已关闭',
-}
 
 export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
   const { data, loading, error, refresh, revision } = useTeacherOverviewData(
@@ -106,14 +99,10 @@ export function TeacherOverviewDashboard({ space }: { space: LearningSpace }) {
         >
           <TeacherLearningInsights overview={data.overview} />
         </OverviewChartCard>
-        <OverviewChartCard
-          title="课程内容" value={data.objectives.length + ' 个目标 · ' + data.activities.length + ' 项活动'} description="查看课程目标与活动的发布情况"
-          className="@min-[48rem]/learning-grid:col-span-5"
-          open={detail === 'content'} onOpenChange={(open) => setDetail(open ? 'content' : null)}
-          chart={<TeacherContentChart objectives={data.objectives} activities={data.activities} />}
-        >
-          <CourseContentStatus objectives={data.objectives} activities={data.activities} />
-        </OverviewChartCard>
+        <Card className="@min-[48rem]/learning-grid:col-span-5">
+          <CardHeader><CardTitle>作业与验收</CardTitle><CardDescription>在课程论坛查看学生进度，验收正式提交的作答和学习报告。</CardDescription></CardHeader>
+          <CardContent><Button variant="outline" disabled={!space.courseId} onClick={() => useApp.getState().setView('forum')}>查看课程作业 <ArrowRight aria-hidden="true" /></Button></CardContent>
+        </Card>
       </div>
       <LearningGrowthVine key={space.projectId} projectId={space.projectId} />
       <TeacherLearningDetailDialog
@@ -158,59 +147,6 @@ function TeachingPriorities({ overview, canReview, onOpenSection }: {
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-function CourseContentStatus({
-  objectives,
-  activities,
-}: {
-  objectives: LearningObjective[]
-  activities: LearningActivity[]
-}) {
-  const objectiveStatus = ['DRAFT', 'PUBLISHED', 'ARCHIVED'].map((status) => ({
-    status,
-    count: objectives.filter((objective) => objective.status === status).length,
-  }))
-  const activityStatus = ['DRAFT', 'PUBLISHED', 'CLOSED'].map((status) => ({
-    status,
-    count: activities.filter((activity) => activity.status === status).length,
-  }))
-
-  return (
-    <Card className="@min-[64rem]/learning-grid:col-span-12">
-      <CardHeader>
-        <CardTitle>课程内容状态</CardTitle>
-        <CardDescription>学习目标与课程活动的当前发布状态</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-6 @min-[48rem]/learning-grid:grid-cols-2">
-        <StatusGroup title="学习目标" items={objectiveStatus} />
-        <StatusGroup title="课程活动" items={activityStatus} />
-      </CardContent>
-    </Card>
-  )
-}
-
-function StatusGroup({ title, items }: { title: string; items: Array<{ status: string; count: number }> }) {
-  return (
-    <section className="space-y-2">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="font-medium">{title}</h3>
-        <span className="text-xs text-muted-foreground">
-          共 {items.reduce((total, item) => total + item.count, 0)} 项
-        </span>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        {items.map((item) => (
-          <div key={item.status} className="rounded-xl bg-muted/50 p-3">
-            <p className="text-xs text-muted-foreground">
-              {CONTENT_STATUS_LABELS[item.status] ?? statusLabel(item.status)}
-            </p>
-            <p className="mt-1 font-heading text-xl font-medium tabular-nums">{item.count}</p>
-          </div>
-        ))}
-      </div>
-    </section>
   )
 }
 

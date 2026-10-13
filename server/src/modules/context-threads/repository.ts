@@ -47,6 +47,21 @@ export async function learningCaseBelongsToStudent(
   return Boolean(rows[0])
 }
 
+export async function findHomeworkThreadSubject(db: Queryable, args: {
+  companyId: string; projectId: string; userId: string; homeworkId: string
+}): Promise<{ title: string; agent_id: string | null } | null> {
+  const { rows } = await db.query<{ title: string; agent_id: string | null }>(
+    `SELECT homework.title,learner.agent_id FROM homeworks homework
+       LEFT JOIN homework_learner_state learner
+         ON learner.company_id=homework.company_id AND learner.homework_id=homework.id
+        AND learner.learner_id=$4
+      WHERE homework.company_id=$1 AND homework.project_id=$2 AND homework.id=$3
+        AND homework.status IN ('PUBLISHED','CLOSED')`,
+    [args.companyId, args.projectId, args.homeworkId, args.userId],
+  )
+  return rows[0] ?? null
+}
+
 export async function isManagedTeacherAgent(db: Queryable, companyId: string, agentId: string): Promise<boolean> {
   const { rows } = await db.query(
     `SELECT 1 FROM learning_project_teacher_agents WHERE company_id=$1 AND agent_id=$2`,

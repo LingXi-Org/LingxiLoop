@@ -1,0 +1,102 @@
+import { useRef, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { useConversations } from '@/features/conversations/store'
+import { userFacingError } from '@/lib/userFacingError'
+import { useApp } from '@/stores/app'
+import type { LearningSpace } from '../contracts'
+import { contentLinks, ForumContentFields, ForumFiles } from '../forum/ForumContentFields'
+import { MemoContent } from '../forum/memos/MemoContent'
+import { contentDraftSchema, useForumDraft } from '../forum/useForumDraft'
+import { homeworkApi } from './api'
+import { homeworkStatus, type Homework, type HomeworkStudent as StudentState } from './contracts'
+import { HomeworkCriteria, HomeworkReport, HomeworkSubmissionView } from './HomeworkReport'
+
+export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitted, onNavigate, onUploading, onRefresh }: {
+  homework: Homework; student: StudentState; space: LearningSpace
+  onUpdated(value: StudentState): void; onSubmitted(): Promise<void>; onNavigate(): void; onUploading(value: boolean): void; onRefresh(): Promise<void>
+}) {
+  const { draft, setDraft, storageError, discard } = useForumDraft(`homework:${homework.courseId}:${homework.id}`, contentDraftSchema,
+    { body: student.answer.text, links: student.answer.links.join('\n'), attachments: student.answer.attachments }, space.canSubmit && student.status !== 'PASSED')
+  const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')
+  const [preview, setPreview] = useState(false), [sharing, setSharing] = useState(false)
+  const pending = useRef<{ reportId: string; key: string } | null>(null)
+  const inFlight = useRef(false)
+  const answer = { text: draft.body, links: contentLinks(draft.links), attachments: draft.attachments }
+  const dirty = JSON.stringify(answer) !== JSON.stringify(student.answer)
+  const disabled = busy || uploading || !space.canSubmit
+  const report = !dirty && student.reportStatus === 'READY' && student.report?.answerRevision === student.answerRevision ? student.report : null
+  const editable = student.status !== 'PASSED'
+  const canSubmit = student.canSubmit && Boolean(report) && !dirty && editable
+  const act = async (work: () => Promise<void>) => {
+    if (inFlight.current || disabled) return
+    inFlight.current = true; setBusy(true); setError(''); setNotice('')
+    try { await work() }
+    catch (reason) { setError(userFacingError(reason, '操作未完成，草稿仍会保留，请重试。')) }
+    finally { inFlight.current = false; setBusy(false) }
+  }
+  return <div className="space-y-6">
+    <section aria-label="我的学习进度" className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">我的学习进度</h3><div className="flex flex-wrap items-center gap-2"><Badge variant="secondary">{homeworkStatus[student.status]}</Badge><Button variant="ghost" size="sm" disabled={disabled} onClick={() => void act(onRefresh)}>刷新进度</Button></div></div>
+      {student.feedback && <p role="status" className="whitespace-pre-wrap rounded-lg bg-muted p-3 text-sm">教师意见：{student.feedback}</p>}
+      {homework.status === 'CLOSED' && <p role="status" className="text-sm text-muted-foreground">{student.status === 'RETURNED' ? '作业已关闭。你可以根据退回意见继续学习，并补交一次修订。' : '作业已关闭，仍可继续学习和查看记录，暂不接收提交。'}</p>}
+      {student.status === 'PASSED' ? <p className="text-sm text-muted-foreground">作业已通过。教师退回后，你可以修改并重新提交。</p> : !student.unlocked && <p className="text-sm text-muted-foreground">先和自己的助手核对每条要求。确认能够独立完成后，可以提交作答和报告；现在也可以先保存草稿。</p>}
+      <HomeworkCriteria criteria={student.criteria} />
+      <Button variant="outline" disabled={disabled} onClick={() => void act(async () => {
+        if (dirty && editable) {
+          const next = await homeworkApi.saveAnswer(homework.courseId, homework.id, { ...answer, expectedRevision: student.answerRevision })
+          discard(); onUpdated(next)
+        }
+        const thread = await homeworkApi.thread(homework.courseId, homework.id)
+        await useConversations.getState().reload()
+        if (useConversations.getState().projectId !== space.projectId || !useConversations.getState().list.some(item => item.id === thread.channelId)) throw new Error('404')
+        onNavigate(); useApp.getState().selectConversation(thread.channelId)
+      })}>{student.channelId ? '继续学习' : '开始学习'}</Button>
+    </section>
+    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
+    {editable && (preview && report ? <section aria-label="提交预览" className="space-y-5 rounded-xl border p-4">
+      <h3 className="font-semibold">提交预览</h3><p className="text-sm text-muted-foreground">以下作答和学习报告将一起提交，仅你和本课程教师可见。</p>
+      <MemoContent content={answer.text} /><ForumFiles links={answer.links} attachments={answer.attachments} /><HomeworkReport report={report} />
+      <div className="sticky bottom-0 flex flex-wrap gap-2 border-t bg-popover py-3">
+        <Button variant="outline" disabled={disabled} onClick={() => setPreview(false)}>返回修改</Button>
+        <Button disabled={disabled || !canSubmit} onClick={() => void act(async () => {
+          if (!report || !canSubmit) return
+          if (pending.current?.reportId !== report.id) pending.current = { reportId: report.id, key: crypto.randomUUID() }
+          await homeworkApi.submit(homework.courseId, homework.id, { expectedAnswerRevision: student.answerRevision, reportId: report.id, idempotencyKey: pending.current.key })
+          setPreview(false); discard(); setNotice('作答和报告已一起提交，等待教师验收。'); await onSubmitted()
+        })}>{busy ? '提交中…' : '提交作业'}</Button>
+      </div>
+    </section> : <section aria-label="我的作答草稿" className="space-y-4">
+      <div className="space-y-1"><h3 className="font-semibold">我的作答</h3><p className="text-sm text-muted-foreground">草稿仅自己可见。正式提交后，教师才能看到作答和报告。</p></div>
+      <ForumContentFields label="我的作答" body={draft.body} setBody={body => setDraft(previous => ({ ...previous, body }))} links={draft.links} setLinks={links => setDraft(previous => ({ ...previous, links }))} attachments={draft.attachments} setAttachments={attachments => setDraft(previous => ({ ...previous, attachments }))} disabled={disabled} onUploading={value => { setUploading(value); onUploading(value) }} />
+      <p className="text-xs text-muted-foreground">可核对文字、公开网页、含可提取文字的 PDF 和 Word 文档（.docx）。图片、扫描件、音视频需要补充文字说明；上传完成不代表已被阅读。</p>
+      {storageError && <p role="alert" className="text-sm text-destructive">本地草稿无法保存，请先保存到课程或复制内容。</p>}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" disabled={disabled || !dirty} onClick={() => void act(async () => {
+          const next = await homeworkApi.saveAnswer(homework.courseId, homework.id, { ...answer, expectedRevision: student.answerRevision })
+          discard(); onUpdated(next); setNotice('草稿已保存。')
+        })}>保存草稿</Button>
+        <Button variant="outline" disabled={disabled || dirty || !student.unlocked || student.reportStatus === 'PENDING' || !answer.text.trim() && !answer.links.length && !answer.attachments.length} onClick={() => void act(async () => {
+          onUpdated(await homeworkApi.report(homework.courseId, homework.id, student.answerRevision)); setNotice('正在更新学习报告。')
+        })}>{student.reportStatus === 'PENDING' ? '报告更新中…' : '更新报告'}</Button>
+        <Button disabled={disabled || !canSubmit} onClick={() => setPreview(true)}>预览并提交</Button>
+      </div>
+      {dirty && <div className="space-y-1"><p role="status" className="text-sm text-muted-foreground">本地作答与已保存的草稿不同，请保存并更新报告后再提交。</p><Button variant="link" size="sm" disabled={disabled} onClick={() => { setDraft({ body: student.answer.text, links: student.answer.links.join('\n'), attachments: student.answer.attachments }); discard() }}>放弃本地修改，恢复已保存的草稿</Button></div>}
+      {student.reportStatus === 'INVALID' && !dirty && <p role="status" className="text-sm text-muted-foreground">{student.reportFeedback || '报告需要更新。请继续学习或补充可读资料，然后重试。'}</p>}
+      {report && <><p className="text-xs text-muted-foreground">报告由你的助手根据学习证据整理。可以继续对话、补充证据来更新报告。</p><HomeworkReport report={report} /></>}
+    </section>)}
+    {!student.unlocked && student.manualReviewPreview.length > 0 && <section aria-label="人工复核" className="space-y-3">
+      <h3 className="font-semibold">人工复核</h3><p className="text-sm text-muted-foreground">如果你认为助手判断有误，可以把相关证据摘要分享给教师复核。</p>
+      {!sharing ? <Button variant="outline" disabled={disabled} onClick={() => setSharing(true)}>申请人工复核</Button> : <div className="space-y-3 rounded-lg border p-4">
+        <p className="text-sm">教师将看到以下内容，你的草稿和完整私聊不会随申请分享。</p>
+        {student.manualReviewPreview.map((text, index) => <blockquote key={index} className="whitespace-pre-wrap border-s-2 ps-3 text-sm text-muted-foreground">{text}</blockquote>)}
+        <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={disabled} onClick={() => setSharing(false)}>取消</Button><Button disabled={disabled} onClick={() => void act(async () => {
+          onUpdated(await homeworkApi.shareEvidence(homework.courseId, homework.id, student.evidenceRevision)); setSharing(false); setNotice('已向教师提交复核申请。')
+        })}>确认分享并申请</Button></div>
+      </div>}
+      {student.manualReview && <p className="text-sm text-muted-foreground">已于 {new Date(student.manualReview.sharedAt).toLocaleString('zh-CN')} 分享证据。</p>}
+    </section>}
+    {student.latestSubmission && <section aria-label="最近一次提交" className="space-y-3"><h3 className="font-semibold">最近一次提交</h3><HomeworkSubmissionView submission={student.latestSubmission} /></section>}
+  </div>
+}

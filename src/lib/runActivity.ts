@@ -63,6 +63,7 @@ const labels: Record<string, readonly [string, string]> = {
   'chat.send': ['发送消息', '向已授权的对话发送本次任务消息。'],
   'chat.ask': ['补充信息', '收集继续完成任务所需的信息。'],
   'learning.propose_evaluation': ['检查学习结果', '根据实际学习表现和评分标准提交评价。'],
+  'teacher.draft_homework': ['拟定作业', '整理作业要求与验收标准，等待你确认发布。'],
   'task.ask': ['补充信息', '等待你补充继续任务所需的信息。'],
   'task.contract': ['制定任务计划', '整理本次请求的交付内容与检查条件。'],
   'task.inspect': ['核对执行结果', '核对任务中待处理的操作和已确认结果。'],

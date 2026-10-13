@@ -2,16 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { userFacingError } from '@/lib/userFacingError'
 import { learningApi } from '../api'
 import type {
-  LearningActivity,
-  LearningObjective,
   LearningReview,
   TeacherLearningOverview,
 } from '../contracts'
 
 export interface TeacherOverviewData {
   overview: TeacherLearningOverview
-  objectives: LearningObjective[]
-  activities: LearningActivity[]
   reviews: LearningReview[]
 }
 
@@ -27,15 +23,13 @@ export function useTeacherOverviewData(projectId: string, canReview: boolean) {
     setLoading(true)
     setError('')
     try {
-      const [overview, objectives, activities, reviews] = await Promise.all([
+      const [overview, reviews] = await Promise.all([
         learningApi.getOverview(projectId),
-        learningApi.listKnowledgeUnits(projectId),
-        learningApi.listActivities(projectId),
         canReview ? learningApi.listReviews(projectId) : Promise.resolve<LearningReview[]>([]),
       ])
       if (epoch !== requestEpoch.current) return
       if (overview.perspective !== 'teacher') throw new Error('teacher overview returned learner data')
-      setData({ overview, objectives, activities, reviews })
+      setData({ overview, reviews })
       setRevision((current) => current + 1)
     } catch (reason) {
       if (epoch === requestEpoch.current) {

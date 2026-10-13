@@ -14,6 +14,7 @@ import { createLearningKnowledgeUnits, createProjectLearningActivity } from './c
 import { findLearningMission, findLearningRoomState, listProjectLearningKnowledgeUnits, findVisibleProjectLearningActivity } from './repository.js'
 import { proposeLearningEvaluation } from './evaluation-application.js'
 import { submitProjectLearningActivity } from './activities-application.js'
+import { homeworkLearnerTools } from './homework-tools.js'
 
 type Method = keyof typeof schemas
 type Input<M extends Method> = z.output<(typeof schemas)[M]>
@@ -21,6 +22,11 @@ const database = (context: ActionContext) => context.database as Queryable
 const roomInput = (context: ActionContext) => ({ companyId: context.work.tenantId, channelId: productConversationId(context.work) })
 
 async function scope(context: ActionContext, action: 'learning:read' | 'learning:submit' = 'learning:read') {
+  if(action==='learning:submit') {
+    const homework=await database(context).query(`SELECT 1 FROM context_threads WHERE company_id=$1 AND channel_id=$2 AND context_type='HOMEWORK'`,
+      [context.work.tenantId,productConversationId(context.work)])
+    if(homework.rows.length) throw new NoEffectError('homework uses its dedicated evidence assessment and human submission flow','forbidden')
+  }
   const room = await findLearningRoomState(database(context), roomInput(context))
   if (!room) throw new NoEffectError('conversation is not bound to a learning project')
   for (const userId of await audienceHumanIds(context)) if (userId !== context.work.principalId) {
@@ -102,6 +108,7 @@ async function missionState(context: ActionContext, input: { missionId: string }
 }
 
 export const learningTools: ToolDefinition[] = [
+  ...homeworkLearnerTools,
   read('current', contextView), read('get_learner_state', contextView),
   read('list_knowledge_units', async context => (await contextView(context))?.knowledgeUnits ?? []),
   read('list_due', async context => (await contextView(context))?.due ?? []),

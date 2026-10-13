@@ -5,6 +5,7 @@ import { insertCourse } from '../server/src/modules/learning/courses-repository'
 import { syncStudyRoomMembers } from '../server/src/modules/learning/reporting-repository'
 import { seedAdminFixtures } from './admin/seed'
 import { seedLearningFixtures } from './learning-seed'
+import { seedNavigationFixtures } from './navigation-seed'
 
 const url = new URL(process.env.DATABASE_URL ?? '')
 if (!['postgres:', 'postgresql:'].includes(url.protocol) || url.search || url.hash
@@ -57,6 +58,7 @@ try {
   })
   await seedAdminFixtures(db)
   await seedLearningFixtures(db)
+  await seedNavigationFixtures(db)
   await db.query('COMMIT')
 } catch (error) { await db.query('ROLLBACK'); throw error }
 finally { await db.end() }

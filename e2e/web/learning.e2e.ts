@@ -3,11 +3,11 @@ import { credentials, expect } from 'e2e'
 import { memberSession, mutationPermission, testName } from './support'
 
 // Fresh sessions keep this multi-role journey from revoking other tests' saved sessions.
-test('teacher publishes an activity, student submits, and teacher opens the persisted evidence', {
+test('student completes a historical activity and teacher opens its persisted evidence', {
   skip: memberSession().skip ?? memberSession('student').skip ?? mutationPermission.skip,
   tags: ['web', 'learning', 'mutations'], timeout: 300_000,
 }, async ({ app, screen, browser }) => {
-  const activity = testName('student activity')
+  const activity = 'E2E Triangle explanation'
   const answer = `${testName('evidence')}: A triangle has three sides. A triangular road sign is one example.`
   const workspace = process.env.E2E_WORKSPACE_NAME ?? 'E2E Classroom'
   const signIn = async (role: 'member' | 'student') => {
@@ -31,32 +31,16 @@ test('teacher publishes an activity, student submits, and teacher opens the pers
     await expect.poll(() => browser.evaluate(async () => (await fetch('/api/session', { credentials: 'include' })).status)).toBe(401)
   }
 
-  await signIn('member')
-  await screen.getByRole('button', '课程管理').tap()
-  await screen.getByRole('button', '课程内容').tap()
-  await screen.getByRole('button', '创建活动').tap()
-  const creation = screen.getByRole('dialog', '创建学习活动')
-  await creation.getByLabel('活动标题').fill(activity)
-  await creation.getByLabel('活动说明').fill('Explain how many sides a triangle has and give one example.')
-  await creation.getByLabel('E2E Explain triangle sides').check()
-  await creation.getByRole('button', '创建活动').tap()
-  await screen.getByRole('alertdialog').getByRole('button', '创建活动').tap()
-  const card = browser.locator('[data-slot="card"]').filter({ hasText: activity }).last()
-  await card.getByRole('button', '发布').tap()
-  await screen.getByRole('alertdialog').getByRole('button', '发布活动').tap()
-  await expect(card.getByRole('button', '关闭')).toBeVisible()
-  await signOut()
-
   await signIn('student')
-  await screen.getByRole('button', '学习概览').tap()
-  await screen.getByRole('button', /^查看课程活动：/).tap()
-  const studentCard = browser.locator('[data-slot="card"]').filter({ hasText: activity }).last()
-  await expect(studentCard.getByRole('button', '提交为学习证据')).toBeDisabled()
-  await screen.getByLabel(`${activity}的作答或反思`).fill(answer)
-  await studentCard.getByRole('button', '提交为学习证据').tap()
-  await expect(screen.getByText('学习证据已提交', { exact: true })).toBeVisible()
-  await expect(screen.getByLabel(`${activity}的作答或反思`)).toBeHidden()
+  await screen.getByRole('button', '论坛', { exact: true }).tap()
+  await browser.locator('article').filter({ hasText: activity }).getByRole('button', '提交作业', { exact: true }).tap()
+  const answerEditor = screen.getByRole('textbox', '作业内容')
+  await expect(answerEditor).toBeEnabled()
+  await answerEditor.fill(answer)
+  await screen.getByRole('dialog').getByRole('button', '提交作业', { exact: true }).tap()
+  await expect(screen.getByText('作业已提交', { exact: true })).toBeVisible()
   await browser.keyboard.press('Escape')
+  await screen.getByRole('button', '学习概览').tap()
   await screen.getByRole('button', /^查看学习记录：/).tap()
   await expect(screen.getByText(answer, { exact: true })).toBeVisible()
   await browser.reload()
@@ -71,7 +55,7 @@ test('teacher publishes an activity, student submits, and teacher opens the pers
   await screen.getByRole('button', /^查看课程学生：/).tap()
   await screen.getByLabel('搜索全部学习者').fill(process.env.E2E_USER_STUDENT_USERNAME!)
   await screen.getByRole('row').filter({ hasText: process.env.E2E_USER_STUDENT_USERNAME! }).getByRole('button', '查看').tap()
-  await browser.locator('[aria-labelledby="learner-attempts-title"] > div').filter({ hasText: activity }).getByRole('button', '查看证据').tap()
+  await browser.locator('[aria-labelledby="learner-attempts-title"] > div').filter({ hasText: activity }).first().getByRole('button', '查看证据').tap()
   await expect(screen.getByRole('dialog', activity)).toContainText(answer)
   await expect(screen.getByRole('dialog', activity)).toContainText('原始证据')
   await expect(screen.getByRole('dialog', activity)).toContainText('这条证据还没有评价记录。')

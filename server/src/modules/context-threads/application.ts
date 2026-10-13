@@ -10,6 +10,7 @@ import type {
 } from './contracts.js'
 import {
   findContextThread,
+  findHomeworkThreadSubject,
   findScopedParticipant,
   insertContextThreadBundle,
   isManagedTeacherAgent,
@@ -101,6 +102,34 @@ export class ContextThreadsApplication {
     })
   }
 
+  async createHomeworkThread(
+    scope: ContextThreadScope,
+    input: { homeworkId: string; agentId: string },
+  ): Promise<ContextThreadResult> {
+    await this.infrastructure.assertCanWriteConversation(scope)
+    return this.create(scope, {
+      contextType: 'HOMEWORK',
+      contextId: `${input.homeworkId}:${scope.userId}`,
+      otherId: input.agentId,
+      validate: async (db) => {
+        if (!await this.infrastructure.isActiveProjectStudent(db, scope, scope.userId)) {
+          throw new ContextThreadApplicationError('invalid_student', 'active homework student required')
+        }
+        const homework = await findHomeworkThreadSubject(db, { ...scope, homeworkId: input.homeworkId })
+        if (!homework) throw new ContextThreadApplicationError('not_found', 'published homework not found')
+        if (homework.agent_id && homework.agent_id !== input.agentId) {
+          throw new ContextThreadApplicationError('idempotency_conflict', 'homework agent is already bound')
+        }
+        const agent = await findScopedParticipant(db, { companyId: scope.companyId, participantId: input.agentId })
+        if (!agent || agent.kind !== 'agent' || agent.departed_at
+          || await isManagedTeacherAgent(db, scope.companyId, input.agentId)) {
+          throw new ContextThreadApplicationError('invalid_agent', 'active learning Agent not found')
+        }
+        return `${homework.title} · ${agent.name}`
+      },
+    })
+  }
+
   private async create(
     scope: ContextThreadScope,
     input: {
@@ -116,6 +145,13 @@ export class ContextThreadsApplication {
     let profile: ImChannelProfile | null = null
     const committed = await commitDomainEvent(this.infrastructure.transaction, async (db) => {
       await lockContextIdentity(db, `${scope.companyId}:${scope.projectId}:${input.contextType}:${input.contextId}`)
+      const actor = await findScopedParticipant(db, {
+        companyId: scope.companyId, participantId: scope.userId,
+      })
+      if (!actor || actor.kind !== 'human' || actor.departed_at) {
+        throw new ContextThreadApplicationError('not_found', 'active Project participant not found')
+      }
+      const title = await input.validate(db)
       const existing = await findContextThread(db, { ...scope, ...input })
       if (existing) {
         if (existing.id !== id || existing.created_by !== scope.userId
@@ -137,13 +173,6 @@ export class ContextThreadsApplication {
           profile: null,
         }
       }
-      const actor = await findScopedParticipant(db, {
-        companyId: scope.companyId, participantId: scope.userId,
-      })
-      if (!actor || actor.kind !== 'human' || actor.departed_at) {
-        throw new ContextThreadApplicationError('not_found', 'active Project participant not found')
-      }
-      const title = await input.validate(db)
       const now = new Date().toISOString()
       profile = {
         channelId, channelType: 2, kind: 'direct', title,
