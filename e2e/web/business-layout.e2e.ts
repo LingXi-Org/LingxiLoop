@@ -39,8 +39,7 @@ test('teacher priorities and follow-up precede charts and open the existing revi
 test('resource scope shows public sources immediately and preserves student write permissions', {
   ...memberSession('student'), tags: ['web', 'business-layout', 'knowledge', 'authorization'],
 }, async ({ app, screen, browser }) => {
-  await app.open('/?project=e2e-classroom')
-  await screen.getByRole('navigation', '工作区与功能').getByRole('button', '资料').tap()
+  await app.open('/?project=e2e-classroom&view=library')
   await expect(screen.getByRole('heading', '课程资料', { level: 1 })).toBeVisible()
   await expect(screen.getByRole('combobox', '资料范围')).toContainText('公共资料')
   await expect(browser.locator('[data-ui-page="library"] [aria-busy="true"]')).toHaveCount(0)
@@ -59,8 +58,7 @@ test('resource scope shows public sources immediately and preserves student writ
 test('teacher can manage public sources while learner review sources stay read-only', {
   ...memberSession(), tags: ['web', 'business-layout', 'knowledge', 'authorization'],
 }, async ({ app, screen }) => {
-  await app.open('/?project=e2e-classroom')
-  await screen.getByRole('navigation', '工作区与功能').getByRole('button', '资料').tap()
+  await app.open('/?project=e2e-classroom&view=library')
   await expect(screen.getByRole('combobox', '资料范围')).toContainText('公共资料')
   await expect(screen.getByRole('button', '添加资料')).toBeVisible()
   await screen.getByRole('combobox', '资料范围').tap()
