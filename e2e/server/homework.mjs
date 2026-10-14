@@ -70,7 +70,7 @@ Object.assign(env, {
   LINGXIOS_SERVICE_TOKEN: 'homework-live-isolated-service-token', LINGXIOS_CONTROL_HOST: '127.0.0.1',
   LINGXIOS_CONTROL_PORT: '53197', LINGXIOS_CONTROL_URL: 'http://127.0.0.1:53197',
   AGENT_OS_WORKER_PORT: '53195', AGENT_OS_MAX_CONCURRENT_RUNS: '1', AGENT_OS_RESERVED_INTERACTIVE_RUNS: '0', AGENT_OS_MODEL_CONCURRENCY: '1',
-  AGENT_OS_MAX_MODEL_CALLS: '16', AGENT_OS_MAX_MODEL_TOKENS: '200000', AGENT_OS_MAX_MODEL_COST_MICROS: '500000', AGENT_OS_MAX_WORK_MS: '240000',
+  AGENT_OS_MAX_MODEL_CALLS: '16', AGENT_OS_MAX_MODEL_TOKENS: '1000000', AGENT_OS_MAX_MODEL_COST_MICROS: '500000', AGENT_OS_MAX_WORK_MS: '240000',
   AGENT_OS_INPUT_COST_MICROS_PER_MILLION: String(Math.ceil(Number(credentials.EVAL_CANDIDATE_INPUT_CNY_PER_MILLION) / 7 * 1e6)),
   AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: String(Math.ceil(Number(credentials.EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION) / 7 * 1e6)),
   AGENT_OS_HOMES_ROOT: resolve(output, 'runtime-homes'), HOMEWORK_ARTIFACT_DIR: output,
@@ -122,7 +122,7 @@ try {
     candidate: credentials.EVAL_CANDIDATE_MODEL, judge: credentials.EVAL_JUDGE_MODEL, database: dbUrl.pathname.slice(1),
     maxRunCostUSD: 0.5, maxTotalCostUSD: 5, maxTotalCostCNY: 5 * Number(env.SILICONFLOW_USD_CNY_RATE || 7),
     conversion: 'SILICONFLOW_USD_CNY_RATE or established runtime fallback 7 CNY/USD; configured prices are estimates, not verified invoices',
-    maxModelCallsPerRun: 16, maxModelTokensPerRun: 200000, modelConcurrency: 1,
+    maxModelCallsPerRun: 16, maxModelTokensPerRun: 1000000, modelConcurrency: 1,
   }, null, 2))
   assert.equal(sourceChanged, false, 'Source content changed during live acceptance; rerun against the final source snapshot')
 }
