@@ -209,25 +209,20 @@ export const learningTools: ToolDefinition[] = [
       source_evidence_id,verifier_evidence_id FROM learning_evaluations WHERE company_id=$1 AND project_id=$2 AND id=$3`, [room.companyId,room.projectId,result.evaluationId])
     return { resource: `learning_evaluation:${result.evaluationId}`, observed: row.rows[0] ?? { missing: true } }
   }),
-  nativeTool('learning.start_mission', schemas.start_mission, { description: 'Create a learner Mission and its coordinator child in the same transaction.',
+  nativeTool('learning.start_mission', schemas.start_mission, { description: 'Create a learner Mission owned by the current agent. Assign contributions through explicit @id group messages.',
     effect: 'transaction', approval: false, authorize: async context => { await scope(context, 'learning:submit') },
     async execute(context, input) {
-      const source = input.sourceClientMsgNo ?? (typeof context.work.meta?.sourceClientMsgNo === 'string' ? context.work.meta.sourceClientMsgNo : context.work.triggerRef)
+      const binding = (await database(context).query<{ source_client_msg_no: string | null }>('SELECT source_client_msg_no FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2 AND principal_id=$3', [context.work.id,context.work.tenantId,context.work.principalId])).rows[0]
+      const source = input.sourceClientMsgNo ?? binding?.source_client_msg_no ?? context.work.triggerRef
       const messages = await committedMessages(context, [source]), db = database(context)
       if (messages[0]?.payload.role !== 'user') throw new NoEffectError('a Mission requires the original learner’s committed text')
-      let childId: string | undefined
       const result = await startLearningMission(db, run => run(db), {
         syncMessages: async () => messages.map(message => ({ clientMsgNo: message.clientMsgNo, fromUid: message.fromUid, authoredByAgent: false })),
-        metric: inc, enqueueCoordinator: async (_db, child) => {
-          const queued = await context.enqueueChild({ id: child.id, agentId: child.coordinatorAgentId, kind: 'mission_coordinator',
-            executionClass: 'operation', text: `Plan and coordinate Mission ${child.missionId}: ${input.goal}\nSuccess criteria: ${input.successCriteria}`, meta: { conversationId: child.channelId, missionId: child.missionId, sourceClientMsgNo: source } })
-          childId = queued.id
-        }, publishMission: async ({ mission, projectId }) => publishMissionProgress(db, {
+        metric: inc, publishMission: async ({ mission, projectId }) => publishMissionProgress(db, {
           companyId: context.work.tenantId, projectId, missionId: mission.id, workId: context.work.id }),
       }, { ...roomInput(context), workId: context.work.id, agentId: context.work.agentId, triggerClientMsgNo: source, ...input })
       if (result.learnerId !== context.work.principalId) throw new NoEffectError('Mission principal changed', 'forbidden')
-      return { ok: true, executionState: 'succeeded', value: result,
-        ...(childId ? { directive: await context.waitForChildren([childId]) } : {}) }
+      return { ok: true, executionState: 'succeeded', value: result }
     }, async verify(context, _input, value) {
       const expected = value as { id: string; learnerId: string; goal: string; successCriteria: string; coordinatorAgentId: string }
       return compareResource(`learning_mission:${expected.id}`, { learnerId: expected.learnerId, goal: expected.goal, successCriteria: expected.successCriteria,

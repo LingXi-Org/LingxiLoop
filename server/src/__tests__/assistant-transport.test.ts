@@ -6,7 +6,7 @@ import { RunStreamProjection, assistantRunResponse } from '../agent-runtime/assi
 import type { AgentRunSnapshot } from '../../../src/lib/agentRunSnapshot.js'
 
 // Failure cases: split UTF-8 frames; stale/duplicate drafts; gaps and retractions;
-// leaked tool payloads; lost cancellation, approvals, citations or replayed memory;
+// leaked memory names/summaries/payloads; lost cancellation, approvals or citations;
 // a protocol wrapper that still sends native events or repeats full growing text.
 export function runState(status: RunState['run']['status'] = 'leased'): RunState {
   const goalOutcome = { status: 'satisfied' as const, verification: 'passed' as const, requestVersion: 1 }
@@ -78,8 +78,11 @@ test('projection owns gaps, cancellation, failures, approvals and filtered tool/
     data: { toolCallId: 'host:memory', result: { status: 'completed', value: {
       documents: [{ id: 'm', description: '喜欢中文', status: 'active', body: 'PRIVATE' }], deleted: [],
     } } } } })
-  assert.deepEqual((memory.message.metadata.custom.memory as { chips: unknown[] })?.chips, [{ id: 'm', text: '喜欢中文' }])
-  assert.doesNotMatch(JSON.stringify(memory), /PRIVATE|arguments/)
+  assert.equal(memory.message.metadata.custom.memory, undefined)
+  assert.deepEqual(memory.message.content, [{ type: 'text', text: '正文', providerMetadata: {
+    lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } },
+  } }])
+  assert.doesNotMatch(JSON.stringify(memory), /PRIVATE|arguments|喜欢中文|memory[._]/)
   const waiting = runState('waiting')
   waiting.run.goalOutcome = { status: 'awaiting_approval', requestVersion: 1, verification: 'not_run', approvalId: 'approval' }
   const result = projection.apply({ type: 'state', state: waiting })
@@ -96,4 +99,33 @@ test('truncated native frames and old browser wire format fail instead of fallin
   await assert.rejects(async () => {
     for await (const _ of AssistantStream.fromResponse(new Response('event: preview\ndata: {}\n\n'), new AssistantTransportDecoder())) { /* consume */ }
   }, /Unknown SSE event type/)
+})
+
+// Failure cases: the ephemeral preview resets after a durable model.delta;
+// a rejected delta promotes a stale preview; tool activity restarts the animator.
+test('commit handoff and tool activity preserve the live answer part', () => {
+  const stale = new RunStreamProjection('run', true)
+  stale.apply({ type: 'state', state: runState() })
+  stale.apply(draft('未确认的草稿'))
+  stale.apply({ type: 'event', event: { runId: 'run', seq: 1, kind: 'model.delta', stage: 'delta', visibility: 'user',
+    data: { partType: 'text', delta: '已过期', requestVersion: 0 } } })
+  assert.deepEqual(stale.apply({ type: 'reset', runId: 'run', reason: 'superseded' }).message.content, [])
+  const projection = new RunStreamProjection('run', true)
+  projection.apply({ type: 'state', state: runState() })
+  projection.apply(draft('最终正'))
+  const tool = projection.apply({ type: 'event', event: { runId: 'run', seq: 1, kind: 'tool.started', stage: 'started', visibility: 'user',
+    data: { toolCallId: 'host:search', name: 'research.search' } } })
+  assert.equal(tool.message.content[0]?.type, 'text')
+  const durable = projection.apply({ type: 'event', event: { runId: 'run', seq: 2, kind: 'model.delta', stage: 'delta', visibility: 'user',
+    data: { partType: 'text', delta: '最终正文', requestVersion: 1 } } })
+  const reset = projection.apply({ type: 'reset', runId: 'run', reason: 'superseded' })
+  assert.deepEqual(reset.message.content[0], durable.message.content[0])
+  const rejected = projection.apply({ type: 'event', event: { runId: 'run', seq: 3, kind: 'model.delta', stage: 'delta', visibility: 'user',
+    data: { partType: 'text', delta: '已过期', requestVersion: 0 } } })
+  assert.deepEqual(rejected.message.content[0], durable.message.content[0])
+  const committed = projection.apply({ type: 'event', event: { runId: 'run', seq: 4, kind: 'response.committed', stage: 'completed', visibility: 'user', data: {} } })
+  assert.deepEqual(committed.message.content[0], durable.message.content[0])
+  const final = projection.apply({ type: 'state', state: runState('succeeded') })
+  assert.equal(final.message.content[0]?.type === 'text' && final.message.content[0].text, '最终正文')
+  assert.equal(final.message.status?.type, 'complete')
 })

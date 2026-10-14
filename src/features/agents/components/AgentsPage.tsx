@@ -12,7 +12,7 @@ import { useParticipants } from '../state'
 import { AgentAvatarEditor } from './AgentAvatarEditor'
 
 const STATUS: Record<Status, string> = { avail: '可用', working: '工作中', thinking: '思考中', waiting: '等待确认', resting: '休息中' }
-const CAPABILITIES: Record<AgentCapability, string> = { canvas: '共享画布', web: '网页研究', files: '文件', documents: '文档', knowledge: '知识库', learning: '学习辅导', teacher_admin: '教学管理', handoffs: '协作交接', routines: '定时任务' }
+const CAPABILITIES: Record<AgentCapability, string> = { canvas: '共享画布', web: '网页研究', files: '文件', documents: '文档', knowledge: '知识库', learning: '学习辅导', teacher_admin: '教学管理', routines: '定时任务' }
 const ORDER = ['nova', 'sage', 'milo', 'trace', 'scout', 'forge', 'pulse']
 
 export function AgentsSkeleton() {

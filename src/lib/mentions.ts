@@ -1,6 +1,14 @@
+import { fromMarkdown } from 'mdast-util-from-markdown'
+
 export interface MentionTarget {
   id: string
   name: string
+}
+
+export interface MentionRange {
+  id: string
+  start: number
+  end: number
 }
 
 export interface ParsedMentions {
@@ -10,81 +18,87 @@ export interface ParsedMentions {
 
 const WORD = /[\p{L}\p{N}_-]/u
 const HAN = /\p{Script=Han}/u
+const HORIZONTAL = /[\p{Zs}\t]/u
+const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+const NON_PROSE = new Set(['code', 'inlineCode', 'link', 'image', 'linkReference', 'imageReference', 'definition', 'blockquote', 'html'])
 
-function maskRange(chars: string[], start: number, end: number): void {
-  for (let i = start; i < end; i += 1) chars[i] = ' '
-}
-
-/** Remove surfaces where an @ is data, not chat syntax, while preserving
- * indexes. This deliberately covers fenced/inline code, URLs and email. */
+/** Mask Markdown examples and addresses without changing UTF-16 source offsets. */
 export function maskNonMentionText(input: string): string {
-  const chars = Array.from(input)
-  const ranges: Array<[number, number]> = []
-  const collect = (re: RegExp) => {
-    for (const match of input.matchAll(re)) {
-      if (match.index == null) continue
-      ranges.push([
-        Array.from(input.slice(0, match.index)).length,
-        Array.from(input.slice(0, match.index + match[0].length)).length,
-      ])
+  const chars = input.split('')
+  const mask = (start: number, end: number) => chars.fill(' ', start, end)
+  const visit = (node: ReturnType<typeof fromMarkdown> | ReturnType<typeof fromMarkdown>['children'][number]): void => {
+    if (NON_PROSE.has(node.type)) {
+      if (node.position) mask(node.position.start.offset!, node.position.end.offset!)
+    } else if ('children' in node) {
+      for (const child of node.children) visit(child as typeof node)
     }
   }
-  collect(/```[\s\S]*?(?:```|$)/g)
-  collect(/`[^`\n]*`/g)
-  collect(/https?:\/\/[^\s<>()]+/gi)
-  collect(/\b[^\s@]+@[^\s@]+\.[^\s@]+\b/giu)
-  for (const [start, end] of ranges) maskRange(chars, start, end)
+  visit(fromMarkdown(input))
+  for (const re of [/https?:\/\/[^\s<>()]+/gi, /\b[^\s@]+@[^\s@]+\.[^\s@]+\b/giu]) {
+    for (const match of input.matchAll(re)) mask(match.index, match.index + match[0].length)
+  }
   return chars.join('')
 }
 
-/** Resolve mentions only against the current conversation roster. IDs and
- * unique display names are case-insensitive; longest token wins so `ann`
- * never steals `anna`. */
-export function parseMentions(input: string, targets: MentionTarget[]): ParsedMentions {
-  const text = Array.from(maskNonMentionText(input).normalize('NFKC'))
-  const nameCounts = new Map<string, number>()
-  for (const target of targets) {
-    const name = target.name.normalize('NFKC').toLocaleLowerCase()
-    if (name) nameCounts.set(name, (nameCounts.get(name) ?? 0) + 1)
-  }
-  const candidates = targets
-    .flatMap((target) => {
-      const id = target.id.normalize('NFKC')
-      const name = target.name.normalize('NFKC')
-      const tokens = [id]
-      if (name && nameCounts.get(name.toLocaleLowerCase()) === 1) tokens.push(name)
-      return tokens.map((token) => ({ target, token: Array.from(token), lower: token.toLocaleLowerCase() }))
-    })
-    .sort((a, b) => b.token.length - a.token.length)
-  const found = new Set<string>()
-  let mentionAll = false
-
-  for (let i = 0; i < text.length; i += 1) {
-    if (text[i] !== '@') continue
-    const prev = text[i - 1]
-    // Start boundaries intentionally use the ASCII identifier class. In CJK
-    // prose users naturally type “请找@小灵” with no whitespace; treating the
-    // preceding Chinese character as part of an identifier would miss it.
-    if (prev && (/[A-Za-z0-9_]/.test(prev) || prev === '@')) continue
-    const tail = text.slice(i + 1).join('').toLocaleLowerCase()
-    const broadcast = tail.startsWith('all') ? 'all' : undefined
-    if (broadcast) {
-      const after = text[i + 1 + broadcast.length]
-      if (!after || !WORD.test(after)) {
-        mentionAll = true
-        i += broadcast.length - 1
+function normalized(input: string): { text: string; starts: number[]; ends: number[] } {
+  let text = ''
+  const starts: number[] = []
+  const ends: number[] = []
+  for (const { segment, index: offset } of GRAPHEMES.segment(input)) {
+    for (const char of segment.normalize('NFKC').toLowerCase()) {
+      const value = HORIZONTAL.test(char) ? ' ' : char
+      if (value === ' ' && text.endsWith(' ')) {
+        ends[ends.length - 1] = offset + segment.length
         continue
       }
-    }
-    const match = candidates.find((candidate) => {
-      if (!tail.startsWith(candidate.lower)) return false
-      const after = text[i + 1 + candidate.token.length]
-      return !after || !WORD.test(after) || HAN.test(after)
-    })
-    if (match) {
-      found.add(match.target.id)
-      i += match.token.length
+      text += value
+      for (let i = 0; i < value.length; i += 1) {
+        starts.push(offset)
+        ends.push(offset + segment.length)
+      }
     }
   }
-  return { mentionedIds: [...found], mentionAll }
+  return { text, starts, ends }
+}
+
+/** IDs and unique names resolve against the current roster; ranges refer to the original text. */
+export function scanMentions(input: string, targets: readonly MentionTarget[]): MentionRange[] {
+  const { text, starts, ends } = normalized(maskNonMentionText(input))
+  const names = targets.map(target => normalized(target.name).text.trim())
+  const counts = new Map<string, number>()
+  for (const name of names) counts.set(name, (counts.get(name) ?? 0) + 1)
+  const candidates = [
+    { id: 'all', token: 'all' }, { id: 'all', token: '所有人' },
+    ...targets.map(target => ({ id: target.id, token: normalized(target.id).text })),
+    ...targets.flatMap((target, i) => names[i] && counts.get(names[i]!) === 1 ? [{ id: target.id, token: names[i]! }] : []),
+  ].filter(candidate => candidate.token).sort((a, b) => b.token.length - a.token.length)
+  const result: MentionRange[] = []
+  let previousEnd = -1
+  for (let i = 0; i < text.length; i += 1) {
+    if (text[i] !== '@' || i !== previousEnd && /[A-Za-z0-9_@]/.test(text[i - 1] ?? '')) continue
+    const start = i + (text[i + 1] === ' ' ? 2 : 1)
+    const match = candidates.find(candidate => {
+      if (!text.startsWith(candidate.token, start)) return false
+      const after = text[start + candidate.token.length]
+      return !after || !WORD.test(after) || HAN.test(after)
+    })
+    if (!match) continue
+    previousEnd = start + match.token.length
+    result.push({ id: match.id, start: starts[i]!, end: ends[previousEnd - 1]! })
+    i = previousEnd - 1
+  }
+  return result
+}
+
+export function parseMentions(input: string, targets: readonly MentionTarget[]): ParsedMentions {
+  const mentions = scanMentions(input, targets)
+  return { mentionedIds: [...new Set(mentions.filter(mention => mention.id !== 'all').map(mention => mention.id))],
+    mentionAll: mentions.some(mention => mention.id === 'all') }
+}
+
+export function canonicalizeMentions(input: string, targets: readonly MentionTarget[]): string {
+  for (const mention of scanMentions(input, targets).reverse()) {
+    input = input.slice(0, mention.start) + '@' + mention.id + input.slice(mention.end)
+  }
+  return input
 }

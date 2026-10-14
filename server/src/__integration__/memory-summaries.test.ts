@@ -20,84 +20,59 @@ before(async () => {
 })
 after(async () => { await teardownAll(server) })
 
-test('read-only memory summaries paginate native scopes and isolate tenants, projects, principals, threads and revoked audiences', async () => {
-  const { companyId, projectId, agentId } = await seedCompanyWithAgent()
-  await seedUserMembership('test-owner', companyId)
-  await seedUserMembership('memory-other', companyId)
-  const conversationId = 'memory-summary-room', members = ['test-owner', 'memory-other', agentId]
-  await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members)
-    VALUES($1,$2,$3,'group','Memory summaries',$4::jsonb)`, [conversationId, companyId, projectId, JSON.stringify(members)])
-  await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',
-    [conversationId, companyId, JSON.stringify({ channelType: 2, members })])
-  const app = await lingxiOSControl(), memory = app.memory
-  assert.ok(memory)
-  const policy = await syncConversationPolicy(app, companyId, conversationId)
-  const headers = { 'x-company-id': companyId, 'x-project-id': projectId }
-  const url = `${baseUrl}/channels/${conversationId}/memories`
-  const initial = await fetch(url, { headers })
-  assert.equal(initial.status, 200)
-  assert.deepEqual(await initial.json(), { items: [], nextCursor: null })
-
-  async function seedRun(principalId: string, messageId: string, threadId?: string) {
-    const accepted = await app.conversations.ingest({ tenantId: companyId, conversationId, policyVersion: policy.version,
-      messageId, version: 1, author: { id: principalId, kind: 'human' }, text: 'Remember this checked fact', mentions: [agentId],
-      ...(threadId ? { threadId } : {}) }, { mode: 'execute', executionClass: 'operation' })
-    const run = accepted.runs[0]; assert.ok(run)
-    await bindProductRun(pool, run, conversationId)
-    return { ...run, workId: run.runId }
+// Failure cases: a removed browser route still exposes content, or a memory scope
+// crosses tenant/project/user/agent/room/thread/audience boundaries after restoration.
+test('memory remains internal and native scopes isolate identities and revoked audiences', async () => {
+  const { companyId,projectId,agentId } = await seedCompanyWithAgent()
+  await seedUserMembership('test-owner',companyId)
+  await seedUserMembership('memory-other',companyId)
+  await pool.query(`INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status)
+    VALUES('memory-peer',$1,'agent','Peer','tester','P','#abcdef','avail')`,[companyId])
+  const members=['test-owner','memory-other',agentId,'memory-peer']
+  for(const room of ['memory-room','memory-other-room']) {
+    await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members)
+      VALUES($1,$2,$3,'group','Memory',$4::jsonb)`,[room,companyId,projectId,JSON.stringify(members)])
+    await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',
+      [room,companyId,JSON.stringify({channelType:2,members})])
   }
-  const identity = await seedRun('test-owner', 'summary-owner')
-  const scopes = await memory.scopes(identity)
-  const content = (description: string) => ({ path: `notes/${description}.md`, title: description,
-    description, body: 'PRIVATE BODY MUST NOT LEAK', layer: 'reference' as const })
-  for (let offset = 0; offset < 31; offset += 12) {
-    await memory.initialize(identity, { scope: scopes[0], documents: Array.from({ length: Math.min(12, 31 - offset) },
-      (_, index) => content(`summary-${String(offset + index).padStart(2, '0')}`)),
-    idempotencyKey: `summary-seed-${offset}`, sourceRef: 'summary-owner' })
+  const app=await lingxiOSControl(),memory=app.memory!
+  let sequence=0
+  async function seedRun(principalId='test-owner',agent=agentId,room='memory-room',threadId?:string) {
+    const policy=await syncConversationPolicy(app,companyId,room)
+    if(threadId) await app.conversations.registerThread({tenantId:companyId,conversationId:room,threadId,policyVersion:policy.version})
+    const accepted=await app.conversations.ingest({tenantId:companyId,conversationId:room,policyVersion:policy.version,
+      messageId:`memory-${++sequence}`,version:1,author:{id:principalId,kind:'human'},text:'Remember the checked fact',mentions:[agent],
+      ...(threadId?{threadId}:{})},{mode:'execute',executionClass:'operation'})
+    const run=accepted.runs[0];assert.ok(run);await bindProductRun(pool,run,room)
+    return {...run,workId:run.runId}
   }
-  await memory.initialize(identity, { scope: scopes[1], documents: [content('course-summary')],
-    idempotencyKey: 'summary-course', sourceRef: 'summary-owner' })
-  const other = await seedRun('memory-other', 'summary-other')
-  await memory.initialize(other, { scope: (await memory.scopes(other))[0], documents: [content('other-private-summary')],
-    idempotencyKey: 'summary-other', sourceRef: 'summary-other' })
-
-  const first = await fetch(url, { headers })
-  assert.equal(first.status, 200)
-  assert.equal(first.headers.get('cache-control'), 'no-store')
-  type Page = { items: Array<{ id: string; text: string; agentId: string; agentName: string }>; nextCursor: string | null }
-  const firstPage = await first.json() as Page
-  assert.equal(firstPage.items.length, 30); assert.ok(firstPage.nextCursor)
-  const second = await fetch(`${url}?${new URLSearchParams({ cursor: firstPage.nextCursor })}`, { headers })
-  assert.equal(second.status, 200)
-  const secondPage = await second.json() as Page
-  assert.equal(secondPage.nextCursor, null)
-  const items = [...firstPage.items, ...secondPage.items]
-  assert.equal(items.length, 32)
-  assert.equal(new Set(items.map(item => item.id)).size, 32)
-  assert.deepEqual(items.map(item => item.text).sort(), [...Array.from({ length: 31 }, (_, index) => `summary-${String(index).padStart(2, '0')}`), 'course-summary'].sort())
-  assert.ok(items.every(item => item.agentId === agentId && Object.keys(item).sort().join(',') === 'agentId,agentName,id,text'))
-  assert.doesNotMatch(JSON.stringify(items), /PRIVATE|sources|body|other-private/)
-
-  await app.conversations.registerThread({ tenantId: companyId, conversationId, threadId: 'summary-thread', policyVersion: policy.version })
-  const threaded = await seedRun('test-owner', 'summary-thread-message', 'summary-thread')
-  await memory.initialize(threaded, { scope: (await memory.scopes(threaded))[0], documents: [content('thread-summary')],
-    idempotencyKey: 'summary-thread', sourceRef: 'summary-thread-message' })
-  const threadPage = await (await fetch(`${url}?threadId=summary-thread`, { headers })).json() as Page
-  assert.deepEqual(threadPage.items.map(item => item.text), ['thread-summary'])
-  assert.equal((await fetch(`${url}?${new URLSearchParams({ threadId: 'summary-thread', cursor: firstPage.nextCursor })}`, { headers })).status, 400)
-  assert.equal((await fetch(`${url}?principalId=memory-other`, { headers })).status, 400)
-  assert.equal((await fetch(`${url}?cursor=invalid`, { headers })).status, 400)
-  assert.equal((await fetch(url, { headers: { ...headers, 'x-project-id': 'other-project' } })).status, 403)
-  assert.equal((await fetch(url, { headers: { ...headers, 'x-company-id': 'other-tenant' } })).status, 404)
-  assert.equal((await fetch(url, { headers, method: 'DELETE' })).status, 404)
-
-  const reduced = JSON.stringify(['test-owner', agentId])
-  await pool.query('UPDATE conversations SET members=$2::jsonb WHERE id=$1', [conversationId, reduced])
-  await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1", [conversationId, reduced])
-  await syncConversationPolicy(app, companyId, conversationId)
-  const revokedAudience = await fetch(url, { headers })
-  assert.equal(revokedAudience.status, 403, 'native frozen audience denial is an authorization failure')
-  assert.doesNotMatch(await revokedAudience.text(), /summary-00|PRIVATE BODY/)
-  await pool.query('UPDATE conversations SET members=$2::jsonb WHERE id=$1', [conversationId, JSON.stringify([agentId])])
-  assert.equal((await fetch(url, { headers })).status, 403)
+  const identity=await seedRun(),scope=(await memory.scopes(identity))[0]
+  const input={scope,documents:[{path:'notes/fact.md',title:'Private fact',description:'PRIVATE SUMMARY',body:'PRIVATE BODY',layer:'core' as const}],
+    idempotencyKey:'private-seed',sourceRef:'memory-1'}
+  const created=await memory.initialize(identity,input)
+  assert.deepEqual(await memory.initialize(identity,input),created,'replayed initialization must be idempotent')
+  assert.equal((await memory.list(identity,scope)).items.length,1)
+  for(const other of [await seedRun('memory-other'),await seedRun('test-owner','memory-peer'),
+    await seedRun('test-owner',agentId,'memory-other-room'),await seedRun('test-owner',agentId,'memory-room','thread')]) {
+    const otherScope=(await memory.scopes(other))[0]
+    assert.notEqual(otherScope.scopeId,scope.scopeId)
+    assert.deepEqual((await memory.list(other,otherScope)).items,[])
+    await assert.rejects(memory.list(other,scope),/revoked/)
+  }
+  await assert.rejects(memory.list({...identity,tenantId:'other-tenant'},scope))
+  await assert.rejects(memory.list({...identity,agentId:'memory-peer'},scope))
+  const requestHeaders: Record<string,string>[] = [{'x-company-id':companyId,'x-project-id':projectId},
+    {'x-company-id':companyId,'x-project-id':'other-project'},{'x-company-id':'other-tenant'}]
+  for(const headers of requestHeaders) {
+    const response=await fetch(`${baseUrl}/channels/memory-room/memories`,{headers})
+    assert.equal(response.status,404)
+    assert.doesNotMatch(await response.text(),/PRIVATE/)
+  }
+  const reduced=JSON.stringify(['test-owner',agentId])
+  await pool.query("UPDATE conversations SET members=$2::jsonb WHERE id=$1",['memory-room',reduced])
+  await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1",['memory-room',reduced])
+  await syncConversationPolicy(app,companyId,'memory-room')
+  await assert.rejects(memory.list(identity,scope),'changed audience invalidates the old scope')
+  await pool.query("UPDATE participants SET departed_at=NOW() WHERE company_id=$1 AND id='test-owner'",[companyId])
+  await assert.rejects(memory.scopes(identity),/revoked/)
 })

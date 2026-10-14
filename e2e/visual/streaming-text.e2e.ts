@@ -15,7 +15,7 @@ for (const theme of ['light', 'dark']) {
     }, { text, done })
     await step('Here is what changed in the latest release: the composer now')
     await expect(root).toContainText('the composer now')
-    await expect(browser.locator('[data-streaming-fresh]')).toHaveCount(2)
+    await expect(browser.locator('[data-streaming-fresh]')).toHaveCount(0)
     await expect(browser.locator('[data-streaming-cursor]')).toHaveText('now')
     await app.screenshot(`streaming-tail-${theme}`)
     await step('Here is what changed in the latest release: the composer now restores drafts')
@@ -30,7 +30,7 @@ for (const theme of ['light', 'dark']) {
     await expect(browser.locator('[data-msg-id="streaming-preview"] ul')).toHaveCount(1)
     await expect(browser.locator('[data-msg-id="streaming-preview"] code')).toHaveText('useAuiState')
     await expect(browser.locator('[data-streaming-cursor]')).toHaveText('置')
-    await expect(browser.locator('[data-streaming-fresh]')).toHaveCount(2)
+    await expect(browser.locator('[data-streaming-fresh]')).toHaveCount(0)
     const styles = await browser.evaluate(() => {
       const tail = document.querySelector('[data-streaming-cursor]')!
       return { width: getComputedStyle(tail, '::after').width,

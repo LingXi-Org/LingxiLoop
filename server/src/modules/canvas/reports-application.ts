@@ -18,13 +18,10 @@ import {
   assignmentVerifierId,
   canvasById,
   completeCanvasWorkState,
-  existingReportIds,
   insertReport,
   lockReportWork,
   missingEvidenceRefs,
-  reportExists,
   reportIdentity,
-  workReportContext,
 } from './repository.js'
 
 type Transaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
@@ -89,7 +86,7 @@ async function submitCanvasReport(input: {
   consumedReportIds?:string[];conflictResolution?:unknown[]
   principalId: string; requestVersion: number; actionId: string; signal?: AbortSignal
 }): Promise<CanvasAssignmentReport> {
-  if (!['specialist','verifier','reporter'].includes(input.executionRole)) throw new Error('coordinator work cannot submit an assignment report')
+  if (!['specialist','verifier'].includes(input.executionRole)) throw new Error('coordinator work cannot submit an assignment report')
   const confidence=Number(input.confidence)
   if (!Number.isFinite(confidence)||confidence<0||confidence>1) throw new Error('confidence must be between 0 and 1')
   const finding=input.finding.trim()
@@ -120,13 +117,7 @@ async function submitCanvasReport(input: {
       verifiesReportId=input.verifiesReportId
     } else if (input.verifiesReportId||input.verdict||input.disconfirmingChecks?.length) throw new Error('only verifier reports may set verification fields')
     const consumed=(input.consumedReportIds??[]).map(String)
-    if (input.executionRole==='reporter') {
-      if (!consumed.length) throw new Error('reporter reports must consume at least one persisted report')
-      const persisted = await existingReportIds(client,input.companyId,input.canvasId,consumed)
-      if (new Set(persisted).size!==new Set(consumed).size) throw new Error('reporter consumed report is outside the current Canvas')
-      const current = await client.query<{ id: string }>('SELECT id FROM canvas_assignment_reports WHERE canvas_id=$1 AND assignment_id IS NOT NULL', [input.canvasId])
-      if (current.rows.some(report => !consumed.includes(report.id))) throw new Error('reporter must consume every current assignment report')
-    } else if (consumed.length || input.conflictResolution?.length) throw new Error('only reporter reports may consume reports or resolve conflicts')
+    if (consumed.length || input.conflictResolution?.length) throw new Error('report aggregation is retired; reference evidence directly')
     const id=`report-${createHash('sha256').update(JSON.stringify([input.workId,input.requestVersion,input.actionId,'learning_report_v1'])).digest('hex').slice(0,28)}`
     const refs: CanvasEvidenceRef[] = [...input.evidenceRefs, ...consumed.map(id => ({ kind: 'report' as const, id }))]
     const uniqueRefs = [...new Map(refs.map((ref) => [`${ref.kind}:${ref.id}`, ref])).values()]
@@ -178,17 +169,6 @@ async function submitCanvasReport(input: {
   })
 }
 
-async function assertCanvasWorkReportReady(workId:string,companyId:string):Promise<void> {
-  const work = await workReportContext(db, workId, companyId)
-  if (!work?.canvas_id) return
-  const ready = work.reason==='canvas_summary'
-    ? await reportExists(db, { canvasId: work.canvas_id, reporter: true })
-    : await reportExists(db, { assignmentId: work.canvas_assignment_id ?? undefined })
-  if (!ready) throw new Error(work.reason==='canvas_summary'
-    ? 'reporter work requires a learning_report_v1 submission before completion'
-    : 'canvas worker requires a learning_report_v1 submission before completion')
-}
-
 async function completeCanvasWork(input: {
   workId: string; companyId: string; status: 'completed' | 'failed' | 'cancelled'; resultText?: string; error?: string
 }): Promise<void> {
@@ -236,5 +216,5 @@ async function completeCanvasWork(input: {
     })
   }
 }
-  return { assertCanvasWorkReportReady, completeCanvasWork, submitCanvasReport }
+  return { completeCanvasWork, submitCanvasReport }
 }

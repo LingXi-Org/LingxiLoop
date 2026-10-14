@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { nativeData, type NativeMessage } from '../im/message-types.js'
+import type { NativeMessage } from '../im/message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import { pool } from '../db/pool.js'
 import { receiveAgentRequest } from './receive.js'
@@ -18,7 +18,7 @@ export interface AgentWakeInput {
 export async function enqueueAgentWakes(db: Queryable, input: AgentWakeInput): Promise<number> {
   const custom = input.payload.metadata.custom
   if (custom.suppressAgentWake === true) return 0
-  let kind: 'message' | 'handoff'
+  let kind: 'message'
   let recipients = input.recipients
   if (input.payload.role === 'user') {
     kind = 'message'
@@ -26,8 +26,7 @@ export async function enqueueAgentWakes(db: Queryable, input: AgentWakeInput): P
       const continuation = agentContinuationSchema.parse(custom.agentContinuation)
       recipients = recipients.filter(id => id === continuation.agentId)
     }
-  } else if (nativeData(input.payload,'handoff')) kind = 'handoff'
-  else return 0
+  } else return 0
   const dependencies = [...new Set(input.knowledgeSourceIds ?? [])].sort()
 
   let inserted = 0
@@ -62,11 +61,11 @@ export async function flushAgentWakes(eventId?: string, signal?: AbortSignal): P
     const token = randomUUID()
     const { rows } = await pool.query<{
       event_id: string; agent_id: string; company_id: string; channel_id: string; client_msg_no: string
-      kind: 'message' | 'handoff' | 'calendar'
+      kind: 'message' | 'calendar'
     }>(
       `WITH candidate AS (
          SELECT event_id,agent_id FROM lingxios_ingress_outbox
-          WHERE delivered_at IS NULL AND failed_at IS NULL AND attempts<12 AND available_at<=NOW()
+          WHERE delivered_at IS NULL AND failed_at IS NULL AND attempts<12 AND available_at<=NOW() AND kind IN ('message','calendar')
             AND (claimed_until IS NULL OR claimed_until<NOW())
             AND ($1::text IS NULL OR event_id=$1)
           ORDER BY available_at,created_at LIMIT 1 FOR UPDATE SKIP LOCKED)

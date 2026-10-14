@@ -2,7 +2,6 @@ import { pool } from '../db/pool.js'
 import { getAgentChannelHistory, readAgentChannelMessages, agentContinuationSchema } from '../im/public.js'
 import type { AttachmentRef } from '../im/contracts.js'
 import { nativeText, nativeAttachments } from '../im/message-types.js'
-import { resolveAgentHandoffWake } from '../modules/agents/index.js'
 import { lingxiOSControl } from './runtime.js'
 import { loadRuntimeBinding } from './context.js'
 import { syncConversationPolicy } from './conversations.js'
@@ -14,7 +13,7 @@ import { assertUiInteractionAdmission } from '../im/interactive-ui-admission.js'
 export interface AgentRequest {
   companyId: string; agentId: string; channelId: string; clientMsgNo: string
   attachmentRefs?: AttachmentRef[]
-  kind?: 'message' | 'calendar' | 'handoff'
+  kind?: 'message' | 'calendar'
   continuation?: { runId: string; requestVersion: number }
   /** Required when a human invokes the HTTP continuation endpoint. */
   authenticatedUserId?: string
@@ -29,13 +28,7 @@ export async function receiveAgentRequest(input: AgentRequest) {
   const message = messages?.find(item => item.clientMsgNo === input.clientMsgNo)
   if (!message) throw new Error('committed request is unavailable')
   const api = await lingxiOSControl()
-  if (input.kind === 'handoff') {
-    const identity = await resolveAgentHandoffWake(input, message)
-    await loadRuntimeBinding({ ...identity, conversationId: input.channelId })
-    if (!await api.readRun(identity)) throw new Error('handoff child is unavailable')
-    signal.throwIfAborted()
-    return { id: identity.runId, deduplicated: true }
-  }
+
   if (message.payload.role !== 'user'
     || input.authenticatedUserId && input.authenticatedUserId !== message.fromUid) throw new Error('request must be committed by the authenticated human')
   await assertUiInteractionAdmission({ companyId: input.companyId, channelId: input.channelId, userId: message.fromUid,
@@ -82,13 +75,12 @@ export async function receiveAgentRequest(input: AgentRequest) {
   const members = (await pool.query<{ id: string; name: string; kind: 'human' | 'agent' }>(
     'SELECT id,name,kind FROM participants WHERE company_id=$1 AND id=ANY($2::text[])', [input.companyId,policy.participants.map(member => member.id)])).rows
   const parsed = custom.uiInteraction ? { mentionedIds: [], mentionAll: false } : parseMentions(text,members)
-  const mentionedIds = Array.isArray(custom.mentionedIds) ? custom.mentionedIds.filter((id): id is string => typeof id === 'string') : []
-  const mentions = !custom.uiInteraction && (parsed.mentionAll || custom.mentionAll === true)
+  const mentions = parsed.mentionAll
     ? policy.participants.filter(member => member.kind === 'agent').map(member => member.id)
-    : [...new Set([...parsed.mentionedIds,...mentionedIds])]
+    : custom.uiInteraction && Array.isArray(custom.mentionedIds) ? custom.mentionedIds.map(String) : parsed.mentionedIds
   const accepted = await api.conversations.ingest({ tenantId: input.companyId, conversationId: input.channelId,
     policyVersion: policy.version, messageId: input.clientMsgNo, version: 1, author: { id: message.fromUid, kind: 'human' },
     text, mentions, attachments: files, ...(threadId ? { threadId } : {}) }, { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation' })
-  for (const run of accepted.runs) await bindProductRun(pool,run,input.channelId)
+  for (const run of accepted.runs) await bindProductRun(pool,run,input.channelId,false,input.clientMsgNo)
   return accepted
 }

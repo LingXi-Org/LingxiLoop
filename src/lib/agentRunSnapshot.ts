@@ -19,9 +19,3 @@ export interface MarkdownConfidenceClaim {
   end: number
   evidence?: readonly { marker: string; chunkId: string; title: string; excerpt: string; truncated?: boolean }[]
 }
-
-export interface RunMemory {
-  chips: Array<{ id: string; text: string }>
-  calls: Record<string, { action: string; seq: number; unavailable?: boolean }>
-  revision: number
-}

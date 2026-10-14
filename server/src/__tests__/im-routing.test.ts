@@ -9,9 +9,8 @@ const members: RoutingParticipant[] = [
   { id: 'sage', kind: 'agent', presetKey: 'sage' },
 ]
 
-test('learning routing is deterministic for mentions, replies, handoffs and the default leader', () => {
+test('human routing is deterministic for mentions, replies and the default leader', () => {
   const base = { authorId: 'student', channelType: 2, members }
-  assert.deepEqual(resolveLearningAgentRecipients({ ...base, handoffTargetId: 'forge' }), ['forge'])
   assert.deepEqual(resolveLearningAgentRecipients({ ...base, mentionedIds: ['sage'] }), ['sage'])
   assert.deepEqual(resolveLearningAgentRecipients({ ...base, mentionAll: true }), ['nova', 'forge', 'sage'])
   assert.deepEqual(resolveLearningAgentRecipients({ ...base, replyAuthorId: 'forge' }), ['forge'])
@@ -19,7 +18,8 @@ test('learning routing is deterministic for mentions, replies, handoffs and the 
   assert.deepEqual(resolveLearningAgentRecipients({ ...base, leaderAgentId: 'forge' }), ['forge'])
 })
 
-test('agent messages do not fan out without an explicit mention or handoff', () => {
+test('agent webhook echoes never create a second dispatch path', () => {
   assert.deepEqual(resolveLearningAgentRecipients({ authorId: 'nova', channelType: 2, members }), [])
-  assert.deepEqual(resolveLearningAgentRecipients({ authorId: 'nova', channelType: 2, members, mentionedIds: ['sage'] }), ['sage'])
+  assert.deepEqual(resolveLearningAgentRecipients({ authorId: 'nova', channelType: 2, members, mentionedIds: ['sage'] }), [])
+  assert.deepEqual(resolveLearningAgentRecipients({ authorId: 'nova', channelType: 2, members, mentionAll: true }), [])
 })

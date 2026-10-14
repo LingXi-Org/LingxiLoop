@@ -28,15 +28,16 @@ export async function assertFrozenAudience(db: Queryable, work: Pick<WorkItem, '
   }
 }
 
-export async function bindProductRun(db: Queryable, identity: RunIdentity, conversationId: string, internal = false) {
+export async function bindProductRun(db: Queryable, identity: RunIdentity, conversationId: string, internal = false, sourceClientMsgNo?: string) {
   const result = await db.query(`INSERT INTO agent_run_bindings
-    (run_id,company_id,conversation_id,session_id,agent_id,principal_id,thread_id,internal,message_protocol)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,2) ON CONFLICT(run_id) DO UPDATE SET run_id=EXCLUDED.run_id
+    (run_id,company_id,conversation_id,session_id,agent_id,principal_id,thread_id,internal,message_protocol,source_client_msg_no)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,2,$9) ON CONFLICT(run_id) DO UPDATE SET run_id=EXCLUDED.run_id,
+      source_client_msg_no=COALESCE(agent_run_bindings.source_client_msg_no,EXCLUDED.source_client_msg_no)
     WHERE agent_run_bindings.company_id=EXCLUDED.company_id AND agent_run_bindings.conversation_id=EXCLUDED.conversation_id
       AND agent_run_bindings.session_id=EXCLUDED.session_id AND agent_run_bindings.agent_id=EXCLUDED.agent_id
       AND agent_run_bindings.principal_id=EXCLUDED.principal_id AND agent_run_bindings.thread_id IS NOT DISTINCT FROM EXCLUDED.thread_id
       AND agent_run_bindings.internal=EXCLUDED.internal RETURNING run_id,(xmax=0) AS inserted`,
-  [identity.runId,identity.tenantId,conversationId,identity.sessionId,identity.agentId,identity.principalId,identity.threadId ?? null,internal])
+  [identity.runId,identity.tenantId,conversationId,identity.sessionId,identity.agentId,identity.principalId,identity.threadId ?? null,internal,sourceClientMsgNo ?? null])
   if (result.rows.length !== 1) throw new Error('runtime product binding changed')
   if (result.rows[0].inserted && !internal) notifyRunAvailable(identity, conversationId)
 }

@@ -6,7 +6,7 @@ import { insertActivity } from './workspace-repository.js'
 
 export async function insertAssignment(db: Queryable, args: {
   id: string; canvasId: string; agentId: string; assignment: string; color: string
-  status: 'queued' | 'blocked'; x: number; y: number; workId: string; executionRole: CanvasAssignmentExecutionRole
+  status: 'waiting'; x: number; y: number; workId: string | null; executionRole: CanvasAssignmentExecutionRole
 }) {
   const { rows } = await db.query<AssignmentRow>(
     `INSERT INTO canvas_agent_assignments
@@ -23,13 +23,6 @@ export function setAssignmentVerifier(db: Queryable, assignmentId: string, targe
   return db.query(`UPDATE canvas_agent_assignments SET verifies_assignment_id=$2 WHERE id=$1`, [assignmentId, targetId])
 }
 
-export function insertAssignmentDependency(db: Queryable, assignmentId: string, dependencyId: string) {
-  return db.query(
-    `INSERT INTO canvas_assignment_dependencies (assignment_id,depends_on_assignment_id)
-     VALUES ($1,$2) ON CONFLICT DO NOTHING`,
-    [assignmentId, dependencyId],
-  )
-}
 
 export async function insertAgentWorkspace(db: Queryable, args: {
   id: string; companyId: string; title: string; conversationId: string; triggerClientMsgNo: string
@@ -65,10 +58,6 @@ export async function lockCanvas(db: Queryable, companyId: string, canvasId: str
   return rows[0] ?? null
 }
 
-export async function assignmentExists(db: Queryable, canvasId: string, agentId: string) {
-  const { rows } = await db.query(`SELECT 1 FROM canvas_agent_assignments WHERE canvas_id=$1 AND agent_id=$2`, [canvasId, agentId])
-  return Boolean(rows[0])
-}
 
 export async function lockAssignment(db: Queryable, canvasId: string, agentId: string) {
   const { rows } = await db.query<AssignmentRow>(
@@ -78,22 +67,8 @@ export async function lockAssignment(db: Queryable, canvasId: string, agentId: s
   return rows[0] ?? null
 }
 
-export function updateAssignmentText(db: Queryable, assignmentId: string, assignment: string) {
-  return db.query(`UPDATE canvas_agent_assignments SET assignment=$2,updated_at=NOW() WHERE id=$1`, [assignmentId, assignment])
-}
 
-export function deleteAssignmentDependencies(db: Queryable, assignmentId: string) {
-  return db.query(`DELETE FROM canvas_assignment_dependencies WHERE assignment_id=$1`, [assignmentId])
-}
 
-export async function resetAssignment(db: Queryable, args: { assignmentId: string; assignment: string; workId: string }) {
-  const { rows } = await db.query<AssignmentRow>(
-    `UPDATE canvas_agent_assignments SET assignment=$2,status='queued',active_frame_id=NULL,work_id=$3,
-       result=NULL,error=NULL,started_at=NULL,completed_at=NULL,updated_at=NOW() WHERE id=$1 RETURNING *`,
-    [args.assignmentId, args.assignment, args.workId],
-  )
-  return rows[0]
-}
 
 export async function canvasAssignmentPublicationRows(db: Queryable, companyId: string, canvasId: string) {
   const [assignments, dependencies] = await Promise.all([
@@ -132,13 +107,6 @@ export async function canvasFrameIds(db: Queryable, canvasId: string, ids: strin
   return rows.map((row) => row.id)
 }
 
-export async function updateAssignmentTextReturning(db: Queryable, assignmentId: string, assignment: string) {
-  const { rows } = await db.query<AssignmentRow>(
-    `UPDATE canvas_agent_assignments SET assignment=$2,updated_at=NOW() WHERE id=$1 RETURNING *`,
-    [assignmentId, assignment],
-  )
-  return rows[0]
-}
 
 export async function participantNames(db: Queryable, companyId: string, ids: string[]) {
   const { rows } = await db.query<{ id: string; name: string }>(
@@ -164,7 +132,7 @@ export function releaseCanvasSharedFence(db: Queryable, canvasId: string) {
 export async function stopCanvasAssignmentState(db: Queryable, args: {
   companyId: string; canvasId: string; agentId: string
 }) {
-  const { rows } = await db.query<AssignmentRow>(
+  const { rows } = await db.query<AssignmentRow & { request_client_msg_no: string | null }>(
     `UPDATE canvas_agent_assignments a SET status='cancelled',error='Stopped by request',completed_at=NOW(),updated_at=NOW()
       FROM canvases c WHERE a.canvas_id=c.id AND c.company_id=$1 AND a.canvas_id=$2 AND a.agent_id=$3
       AND a.status NOT IN ('completed','failed','cancelled') RETURNING a.*`,
@@ -172,7 +140,7 @@ export async function stopCanvasAssignmentState(db: Queryable, args: {
   const assignment = rows[0]
   if (!assignment) throw new Error('active canvas assignment not found')
   return insertActivity(db, {
-    id: 'activity-' + createHash('sha256').update('canvas-stop:' + assignment.work_id).digest('hex').slice(0,32),
+      id: 'activity-' + createHash('sha256').update('canvas-stop:' + assignment.id + ':' + (assignment.request_client_msg_no ?? assignment.work_id ?? 'initial')).digest('hex').slice(0,32),
     canvasId: args.canvasId, frameId: assignment.active_frame_id, actorId: args.agentId, actorKind: 'agent',
     action: 'task_cancelled', detail: { status: 'cancelled', error: 'Stopped by request' },
   })

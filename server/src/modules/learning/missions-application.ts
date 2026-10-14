@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
 import { createEvidenceRecordInTransaction, createEvidenceWithLinksInTransaction } from '../evidence/public.js'
@@ -26,7 +26,7 @@ import {
   updateLearningMissionCoordinator,
   upsertLearningMission,
 } from './repository.js'
-import type { LearningMission, LearningMissionKind, LearningTurnContext } from './types.js'
+import type { LearningMission, LearningTurnContext } from './types.js'
 import { getLearningMission } from './mission-lifecycle-application.js'
 import { isTeacherRoom } from './visibility.js'
 import { publishMissionProgress } from './mission-progress.js'
@@ -153,10 +153,6 @@ async function requireLearningRoomState(db: Queryable, scope: LearningAgentRoomS
 }
 
 export interface LearningMissionInfrastructure {
-  enqueueCoordinator(db: Queryable, input: {
-    id: string; companyId: string; coordinatorAgentId: string; channelId: string;
-    threadRootClientMsgNo: string; missionId: string; authorizationUserId: string
-  }): Promise<void>
   syncMessages(input: {
     channelId: string
     channelType: number
@@ -172,10 +168,6 @@ export interface LearningMissionInfrastructure {
     courseId?: string
   }): Promise<void>
   metric(name: string, labels?: Record<string, string>): void
-}
-
-export function preferredLearningMissionCoordinator(kind: LearningMissionKind): 'nova'|'scout'|'forge' {
-  return kind === 'PROJECT' ? 'forge' : kind === 'RESEARCH' ? 'scout' : 'nova'
 }
 
 export async function startLearningMission(
@@ -212,7 +204,6 @@ export async function startLearningMission(
       companyId: room.companyId,
       projectId: room.projectId,
       channelId: input.channelId,
-      preferredPreset: preferredLearningMissionCoordinator(kind),
       currentAgentId: input.agentId,
     })
     if (!coordinatorAgentId) {
@@ -231,17 +222,6 @@ export async function startLearningMission(
       coordinatorAgentId,
       createdBy: input.agentId,
     })
-    if (stored.inserted && coordinatorAgentId !== input.agentId) {
-      await infrastructure.enqueueCoordinator(client, {
-        id: `mission-coordinator-${createHash('sha256').update(stored.id).digest('hex').slice(0, 24)}`,
-        companyId: room.companyId,
-        coordinatorAgentId,
-        channelId: input.channelId,
-        threadRootClientMsgNo: input.threadRootClientMsgNo ?? triggerClientMsgNo,
-        missionId: stored.id,
-        authorizationUserId: trigger.fromUid,
-      })
-    }
     const mission = await findLearningMission(client, room.companyId, room.projectId, stored.id)
     if (!mission) throw new LearningApplicationError('conflict', 'mission could not be loaded after creation')
     return { mission, inserted: stored.inserted }

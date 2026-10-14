@@ -11,7 +11,6 @@ import { createCanvasRuntime, completeCanvasWork } from '../modules/canvas/index
 import { resolveMemoryScopes } from '../modules/memory/public.js'
 import { nativeEvolutionBenchmark, createNativeEvolutionEvaluator } from '../modules/memory/evolution.js'
 import { scheduleRoutines } from '../modules/routines/public.js'
-import { reconcileHandoffs } from '../modules/agents/handoff-progress.js'
 import { withTransaction } from '../db/transaction.js'
 import { createProductHarness } from './harness.js'
 import { productConversationId, assertFrozenAudience } from './identity.js'
@@ -93,7 +92,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
         await authorizeAudienceRead({ work,database: pool },{ action: 'conversation:read',resource: { type: 'conversation',id: productConversationId(work) } })
         return true
       } },
-      // Writes stay inside trusted Agent execution; HTTP exposes only authorized summaries.
+      // Memory stays inside trusted Agent execution, including summaries and maintenance.
       memory: { contextBudget: { ratio: 0.08, maxTokens: 8000, concurrency: 2, timeoutMs: 10000, optionalRecall: true },
         reflection: { afterInteractions: 5, idleMs: 600000 },
         evolution: { benchmarkId: nativeEvolutionBenchmark.id }, async resolveScopes(work,database,signal) {
@@ -187,8 +186,7 @@ export async function startLingxiOSWorker() {
     resources: { model: positiveInteger('AGENT_OS_MODEL_CONCURRENCY', 2), python: 1 },
     performance: { checkpointDedup: true, promptCache: true, asyncCompaction: true, onDemandAttachments: true },
     evolutionEvaluator: createNativeEvolutionEvaluator(lingxiOSControl),
-    processors: { canvas_worker: 'conversation', canvas_summary: 'conversation', routine: 'conversation',
-      teacher_digest: 'conversation', mission_coordinator: 'conversation', handoff: 'conversation' },
+    processors: { routine: 'conversation', teacher_digest: 'conversation' },
   } satisfies WorkerOptions
   if (env.NODE_ENV === 'production') execFileSync('bwrap', [
     '--die-with-parent', '--unshare-all', '--new-session', '--ro-bind', '/', '/',
@@ -208,7 +206,6 @@ export async function startLingxiOSWorker() {
     pending = Promise.allSettled([
       scheduleRoutines(run => withTransaction(pool, run), lingxiOSControl),
       canvas.reconcile(pool, completeCanvasWork, cancellation.signal),
-      reconcileHandoffs(pool, run => withTransaction(pool, run), lingxiOSControl, cancellation.signal),
     ]).then(results => { for (const result of results) if (result.status === 'rejected') console.error('[lingxios] product scheduling failed', result.reason instanceof Error ? result.reason.name : 'error') })
       .finally(() => { pending = undefined })
   }

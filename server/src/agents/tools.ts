@@ -5,7 +5,6 @@ import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/
 import type { Queryable } from '../db/queryable.js'
 import { createPermissionService, type PermissionRequest } from '../modules/access/public.js'
 import type { AgentActionContext } from './contracts.js'
-import { assignedHandoff } from '../modules/agents/handoff-repository.js'
 import { resolveTeacherScope } from '../modules/learning/teacher-agent-application.js'
 import { TEACHER_KNOWLEDGE_ACTIONS } from '../modules/learning/teacher-preset.js'
 
@@ -23,7 +22,7 @@ export function nativeContext(context: Pick<ActionContext, 'work'>): AgentAction
   return { id: work.id, companyId: work.tenantId, authorizationUserId: work.principalId,
     agentId: work.agentId, channelId: productConversationId(work), triggerClientMsgNo: work.triggerRef,
     ...(work.threadId ? { threadRootClientMsgNo: work.threadId } : {}),
-    reason: work.kind === 'teacher_digest' ? 'routine' : ['handoff', 'routine', 'resume', 'canvas_worker', 'canvas_summary'].includes(work.kind)
+    reason: work.kind === 'teacher_digest' ? 'routine' : ['routine', 'resume'].includes(work.kind)
       ? work.kind as AgentActionContext['reason'] : 'message' }
 }
 
@@ -51,20 +50,17 @@ export async function authorizeAgent(context: ActionContext) {
   const principal = await db.query(`SELECT 1 FROM users WHERE id=$1 AND suspended_at IS NULL AND deleted_at IS NULL AND departed_at IS NULL
     AND (access_revoked_at IS NULL OR access_revoked_at<$2::timestamptz) FOR UPDATE`, [work.principalId,work.createdAt ?? null])
   if (!principal.rows[0]) throw new NoEffectError('original authorization period has ended', 'forbidden')
-  const { rows } = await db.query<{ capabilities: string[]; teacher_managed: boolean; canvas_reporter: boolean }>(`SELECT p.capabilities,
-      EXISTS(SELECT 1 FROM canvas_agent_runs run WHERE run.work_id=$4 AND run.company_id=p.company_id
-        AND run.agent_id=p.id AND run.execution_role='reporter') AS canvas_reporter,
+  const { rows } = await db.query<{ capabilities: string[]; teacher_managed: boolean }>(`SELECT p.capabilities,
       EXISTS(SELECT 1 FROM learning_project_teacher_agents teacher WHERE teacher.company_id=p.company_id AND teacher.agent_id=p.id) AS teacher_managed
     FROM participants p JOIN im_channel_bindings b ON b.company_id=p.company_id AND b.channel_id=$3
     WHERE p.id=$2 AND p.company_id=$1 AND p.kind='agent' AND p.departed_at IS NULL
-      AND b.profile->'members' ? p.id FOR SHARE OF p,b`, [work.tenantId,work.agentId,productConversationId(work),work.id])
+      AND b.profile->'members' ? p.id FOR SHARE OF p,b`, [work.tenantId,work.agentId,productConversationId(work)])
   const agent = rows[0], namespace = context.action.action.split('.')[0]
   const capability = namespace === 'research' ? 'web' : namespace === 'presentations' ? 'knowledge' : namespace
-  const assigned = ['handoffs.list','handoffs.update'].includes(context.action.action) && !!await assignedHandoff(db,work)
   const teacherChat = ['chat.send', 'chat.report_progress'].includes(context.action.action) && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
   const teacherKnowledge = TEACHER_KNOWLEDGE_ACTIONS.has(context.action.action) && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
   if (!agent || (agent.teacher_managed ? namespace !== 'teacher' && !teacherChat && !teacherKnowledge : namespace === 'teacher')
-    || !['teacher', 'memory', 'chat', 'polls', 'directory'].includes(namespace) && !agent.capabilities.includes(capability) && !assigned) {
+    || !['teacher', 'memory', 'chat', 'polls', 'directory'].includes(namespace) && !agent.capabilities.includes(capability)) {
     throw new NoEffectError('agent capability or membership was revoked', 'forbidden')
   }
   await createPermissionService(db, { lockDependencies: true }).assertCan({ actorUserId: work.principalId,
@@ -85,10 +81,7 @@ export function nativeTool<S extends z.ZodObject>(action: string, schema: S,
     parse: input => schema.parse(input),
     async authorize(context, input) {
       try {
-        const agent = await authorizeAgent(context)
-        if (agent.canvas_reporter && !['canvas.current','canvas.submit_report'].includes(action)) {
-          throw new NoEffectError('Canvas reporters may only read the workspace and submit reports', 'forbidden')
-        }
+        await authorizeAgent(context)
         await definition.authorize(context, input)
       }
       catch (error) { if (error instanceof Error && 'reason' in error) throw new NoEffectError(error.message, 'forbidden'); throw error }

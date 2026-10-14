@@ -91,13 +91,13 @@ export function contentReviewDiagnostics(request: Record<string, unknown>, respo
   const limitationItems = limitationEntries.slice(0, 16).map(raw => {
     const item = object(raw), quote = textField(item?.quote, [input!.body as string]), reason = textField(item?.reason), requestQuote = textField(item?.requestQuote, texts)
     return { type: type(raw), unknownKeyCount: unknownKeys(item, ['quote', 'reason', 'requestQuote']), quote, reason, requestQuote,
-      accepted: quote.nonempty && quote.withinLimit && quote.grounded === true && reason.nonempty && reason.withinLimit
+      accepted: quote.nonempty && quote.withinLimit && (item?.requestQuote === null || quote.grounded === true) && reason.nonempty && reason.withinLimit
         && (item?.requestQuote === null || requestQuote.nonempty && requestQuote.withinLimit && requestQuote.grounded === true) }
   })
   const missingAccepted = Array.isArray(missingValue) && missingEntries.length <= 16 && missingItems.every(item => item.accepted)
   const limitationsAccepted = (limitationsValue === undefined || limitationsValue === null || Array.isArray(limitationsValue))
     && limitationEntries.length <= 16 && limitationItems.every(item => item.accepted)
-  return { contract: 'lingxios-3.3.6-content-review' as const, workIdSha256: hash(input.workId), inputSha256: hash(message.content), bodySha256: hash(input.body),
+  return { contract: 'lingxios-3.4.2-content-review' as const, workIdSha256: hash(input.workId), inputSha256: hash(message.content), bodySha256: hash(input.body),
     requestVersion: Number.isSafeInteger(input.requestVersion) ? input.requestVersion as number : null,
     revisionCount: input.revisions.length, responseJson, finishedNormally: choice?.finish_reason === 'stop',
     responseSha256: typeof content === 'string' ? hash(content) : null, valueType: type(parsed), unknownKeyCount: unknownKeys(value, ['missing', 'limitations']),

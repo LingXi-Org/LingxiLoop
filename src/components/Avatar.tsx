@@ -48,7 +48,7 @@ export function Avatar({ p, size = 44, statusOverride, ringColor = 'var(--paper)
   }
 
   return (
-    <div className={cn('relative inline-grid place-items-center rounded-full font-display font-medium text-white tracking-tight shrink-0', className)} style={style}>
+    <span className={cn('relative inline-grid place-items-center rounded-full font-display font-medium text-white tracking-tight shrink-0', className)} style={style}>
       {p.kind === 'agent' && !showImg ? (
         <BloubAvatar participant={p} status={status} size={size} paper={ringColor} animated={animated} mode={mode} seed={p.personalAvatar && 'seed' in p.personalAvatar ? p.personalAvatar.seed : undefined} />
       ) : showImg ? (
@@ -63,7 +63,7 @@ export function Avatar({ p, size = 44, statusOverride, ringColor = 'var(--paper)
       ) : (
         <span style={{ letterSpacing: '-0.02em' }}>{p.initial}</span>
       )}
-    </div>
+    </span>
   )
 }
 

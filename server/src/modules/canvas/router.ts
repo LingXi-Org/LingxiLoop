@@ -5,7 +5,6 @@ import {
   updateCanvasSharedState,
   addCanvasComment,
   assignCanvasWorkspaceWork,
-  steerCanvasAssignment,
   appendCanvasFrameContent,
   createCanvasFrame,
   deleteCanvasFrame,
@@ -85,9 +84,9 @@ api.post('/canvases/:id/assignments', safe(async (req, res) => {
 }))
 
 api.post('/canvases/:id/assignments/:agentId/steer', safe(async (req, res) => {
-  const { companyId } = await requireCanvasWorkspace(req, String(req.params.id), true)
-  await steerCanvasAssignment({ ...canvasSteerRequestSchema.parse(req.body), companyId,
-    canvasId: String(req.params.id), agentId: String(req.params.agentId) })
+  const { companyId, userId } = await requireCanvasWorkspace(req, String(req.params.id), true)
+  await assignCanvasWorkspaceWork({ assignment: canvasSteerRequestSchema.parse(req.body).text, companyId,
+    canvasId: String(req.params.id), agentId: String(req.params.agentId), actorId: userId, actorKind: 'user' })
   res.json({ ok: true })
 }))
 

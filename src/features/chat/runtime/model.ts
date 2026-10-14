@@ -1,7 +1,6 @@
 import { serializeMessage, type NativeMessage } from '@/lib/nativeMessage'
 import type { ThreadMessage } from '@assistant-ui/react'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
-import type { RunMemory } from '@/lib/agentRunSnapshot'
 export type { HarnessToolPart } from '@/lib/agentRunSnapshot'
 
 export type LingxiDeliveryStatus = 'sending' | 'sent' | 'failed'
@@ -70,7 +69,6 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   runId: string | null
   harness?: RunDisplayState
   harnessControl?: boolean
-  memory?: RunMemory
   harnessError?: string
   regenerateOfClientMsgNo?: string
   replyBranches?: { key: string; rootId: string; threadRootId: string | null; ids: string[]; clientIds: string[]; index: number }

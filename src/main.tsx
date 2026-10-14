@@ -1,25 +1,15 @@
-import { StrictMode, type ComponentType } from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/inter'
 import '@fontsource-variable/geist'
 import 'katex/dist/katex.min.css'
 import { AppThemeProvider } from './components/AppThemeProvider'
-import { isElectron, isNotificationWindow } from './lib/runtime'
+import { isElectron } from './lib/runtime'
 import './styles/globals.css'
 
 const root = createRoot(document.getElementById('root')!)
 
-function render(Component: ComponentType) {
-  root.render(<StrictMode><AppThemeProvider><Component /></AppThemeProvider></StrictMode>)
-}
-
 async function boot() {
-  if (isNotificationWindow) {
-    const { NotificationWindow } = await import('./components/NotificationWindow')
-    render(NotificationWindow)
-    return
-  }
-
   if (isElectron) document.body.classList.add('electron')
   const [{ App }, { GlobalInteractionProvider }] = await Promise.all([
     import('./App'),

@@ -3,7 +3,7 @@ import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { useState } from 'react'
 import { Plan } from '@/components/tool-ui/plan'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
-import { canvasProgress, handoffProgress, missionPlan } from '../runtime/task-progress'
+import { canvasProgress, missionPlan } from '../runtime/task-progress'
 import { PollCard } from '@/components/assistant-ui/elements/poll-card'
 import { CanvasArtifactCard } from '@/features/canvas/components/CanvasArtifactCard'
 import {
@@ -156,11 +156,6 @@ export function ElicitationFormTool({ args, result, addResult }: CardProps) {
 export function AgentPlanTool({ args }: Pick<CardProps, 'args'>) {
   const names = useParticipants(state => state.byId)
   return <Plan {...missionPlan(args, names)} />
-}
-
-export function AgentHandoffTool({ args }: Pick<CardProps, 'args'>) {
-  const names = useParticipants(state => state.byId)
-  return <ProgressTracker {...handoffProgress(args, names)} />
 }
 
 export function CanvasProgressTool({ args }: Pick<CardProps, 'args'>) {

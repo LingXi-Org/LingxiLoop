@@ -35,15 +35,6 @@ export function missionPlan(data: Data, names: Names) {
   })
 }
 
-export function handoffProgress(data: Data, names: Names) {
-  const status = text(data.status,'queued')
-  return parseSerializableProgressTracker({ id: text(data.id), steps: [{ id: `${text(data.id)}:child`,
-    label: `${person(names,data.toAgentId)} · ${text(data.title,'协作任务')} · ${labels[status] ?? '等待状态'}`,
-    description: `${person(names,data.fromAgentId)} 派发 · ${labels[status] ?? '等待状态'}`, status: stepStatus(status) }],
-    ...(receipt(status,data.updatedAt) ? { choice: receipt(status,data.updatedAt) } : {}),
-  })
-}
-
 export function canvasProgress(data: Data, names: Names) {
   const status = text(data.status,'active'), assignments = rows(data.assignments)
   return parseSerializableProgressTracker({ id: text(data.id), steps: [

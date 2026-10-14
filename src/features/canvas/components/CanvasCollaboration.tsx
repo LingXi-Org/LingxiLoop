@@ -35,7 +35,7 @@ export function CanvasCollaboration() {
     try {
       const result = await canvasApi.updateSharedState(canvas.id,{ operationId: crypto.randomUUID(),changes: [{ field: field.trim(),
         expectedVersion: data?.state?.fields[field.trim()]?.version ?? 0,...remove ? { delete: true } : { value } }] })
-      setData(current => ({ graphs: current?.graphs ?? [],history: current?.history ?? { items: [],nextSeq: 0 },state: result.state }))
+      setData(current => ({ history: current?.history ?? { items: [],nextSeq: 0 },state: result.state }))
       if (!result.ok) setError(`以下内容已被其他参与者修改：${result.conflicts.join('、')}。请核对新版本后再保存。`)
       else await load()
     } catch (cause) { setError(userFacingError(cause,'共享内容保存失败')) }
@@ -47,10 +47,6 @@ export function CanvasCollaboration() {
       <DialogHeader><DialogTitle>共享内容</DialogTitle><DialogDescription>查看协作结果，更新团队共享的信息。</DialogDescription></DialogHeader>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <Button type="button" variant="outline" disabled={busy} onClick={() => void load()}>刷新</Button>
-      {data?.graphs.map(graph => <details key={graph.id} className="rounded border p-3"><summary>协作结果（{graph.nodes.length}）</summary>
-        {graph.nodes.map((node,index) => <div key={node.id} className="mt-2 border-t pt-2 text-sm"><p>{canvas?.assignments.find(assignment => assignment.id === node.id)?.assignment ?? `协作任务 ${index + 1}`}</p><p className="whitespace-pre-wrap">{node.text ?? '正在收集结果…'}</p>
-          {Boolean(node.error) && <p className="text-destructive">这项协作未能完成。</p>}</div>)}
-      </details>)}
       <ul className="space-y-2">{Object.entries(data?.state?.fields ?? {}).filter(([,entry]) => !entry.deleted).map(([name,entry]) => <li key={name} className="rounded border p-2">
         <Button type="button" variant="link" onClick={() => { setField(name); setValue(typeof entry.value === 'string' ? entry.value : JSON.stringify(entry.value)) }}>{name}</Button>
         <p className="whitespace-pre-wrap break-words text-sm">{typeof entry.value === 'string' ? entry.value : JSON.stringify(entry.value)}</p>

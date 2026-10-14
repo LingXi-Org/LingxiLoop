@@ -23,10 +23,12 @@ assert.ok(cost(1000, 2000, 2, 4) > cost(1000, 1000, 2, 4))
   const response = (value: unknown) => ({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(value) } }] })
   const inspect = (value: unknown) => {
     const result = contentReviewDiagnostics(request, response(value))!
-    assert.ok(result.contract === 'lingxios-3.3.6-content-review')
+    assert.ok(result.contract === 'lingxios-3.4.2-content-review')
     return result
   }
   assert.equal(inspect(valid).matchesInstalledContract, true)
+  assert.equal(inspect({ ...valid, limitations: [{ quote: 'Paraphrased explanation', requestQuote: null, reason: 'Not a current request gap' }] }).limitations.accepted, true)
+  assert.equal(inspect({ ...valid, limitations: [{ quote: 'Paraphrased explanation', requestQuote: 'explain the area', reason: 'A current request gap' }] }).limitations.accepted, false)
   const minimal = { workId: input.workId, originalText: input.originalText, body: input.body, revisions: [] }
   const minimalRequest = { ...request, messages: [{ role: 'user', content: JSON.stringify(minimal) }] }
   assert.equal(contentReviewDiagnostics(minimalRequest, response(valid))!.matchesInstalledContract, true)

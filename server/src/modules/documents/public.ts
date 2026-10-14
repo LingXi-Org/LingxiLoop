@@ -1,6 +1,5 @@
 import { documentCollaboration } from './collaboration-facade.js'
 import { documentsApplication } from './facade.js'
-import { documentMentionApplication } from './mention-facade.js'
 import { createDocumentTools } from './agent-tools.js'
 import { normalizeStorageKey, storageKeyFromPublicUrl, signedUrlExpiresSoon, storage } from '../../storage.js'
 export { createDocumentTools } from './agent-tools.js'
@@ -16,15 +15,6 @@ export const bootDocumentBus = documentCollaboration.boot
 export const instanceOrigin = documentCollaboration.instanceOrigin
 export const readDocumentText = documentCollaboration.readDocumentText
 export const applyAgentEdit = documentCollaboration.applyAgentEdit
-
-export function notifyDocumentMention(args: {
-  documentId: string
-  companyId: string
-  mentionerId: string
-  requestedIds: string[]
-}): Promise<{ deliveryId: string | null; mentionedIds: string[] }> {
-  return documentMentionApplication.notify(args)
-}
 
 export const listAgentDocuments = documentsApplication.list.bind(documentsApplication)
 export const getAgentDocument = documentsApplication.get.bind(documentsApplication)
