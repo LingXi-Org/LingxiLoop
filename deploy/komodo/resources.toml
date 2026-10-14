@@ -82,7 +82,8 @@ file_paths = ["compose.yml"]
 
 [[stack]]
 name = "lingxiloop-app-a"
-deploy = true
+# Only the ordered procedure may deploy applications, after stopping both old workers.
+deploy = false
 after = ["lingxiloop-knowledge-agent", "lingxilit"]
 [stack.config]
 server = "shanghai-a"
@@ -127,7 +128,7 @@ OPEN_NOTEBOOK_PASSWORD = [[OPEN_NOTEBOOK_PASSWORD]]
 
 [[stack]]
 name = "lingxiloop-app-b"
-deploy = true
+deploy = false
 after = ["lingxiloop-app-a"]
 [stack.config]
 server = "shanghai-b"
@@ -206,6 +207,13 @@ name = "Knowledge"
 executions = [
   { execution.type = "DeployStack", execution.params.stack = "lingxiloop-knowledge-agent" },
   { execution.type = "DeployStack", execution.params.stack = "lingxilit" },
+]
+
+[[procedure.config.stage]]
+name = "Stop old workers"
+executions = [
+  { execution.type = "StopStack", execution.params.stack = "lingxiloop-app-a", execution.params.services = ["worker"] },
+  { execution.type = "StopStack", execution.params.stack = "lingxiloop-app-b", execution.params.services = ["worker"] },
 ]
 
 [[procedure.config.stage]]
