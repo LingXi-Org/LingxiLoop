@@ -51,7 +51,7 @@ The following versions and licenses were read from the installed package manifes
 | `fft.js` | 4.0.4 | MIT | FFT primitive used by the orthonormal two-dimensional DCT |
 | `mdast-util-from-markdown` | 2.0.3 | MIT | Identify only root-level, exact-language fenced blocks |
 | `@openuidev/assistant-ui` | 0.1.2 | MIT | Isolated official-adapter compatibility comparison |
-| `@lyyzka/lingxios` | 3.3.6 | MIT | Unchanged published runtime and control-plane contracts |
+| `@lyyzka/lingxios` | 3.3.8 | MIT | Published runtime and control-plane contracts |
 | `@assistant-ui/react` | 0.15.16 resolved | MIT | Existing external-store conversation runtime |
 | `recharts` | 3.8.0 resolved | MIT | Existing charting dependency reused for scientific displays |
 
