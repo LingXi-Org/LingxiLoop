@@ -515,7 +515,7 @@ input:focus, textarea:focus, button:focus { outline: none; }
 .im-markdown-host { --streaming-tail-color: var(--color-blue-500); }
 :root[data-theme='dark'] .im-markdown-host { --streaming-tail-color: var(--color-blue-400); }
 .im-markdown [data-streaming-word] { transition: color 700ms; }
-.im-markdown-host[data-streaming] [data-streaming-word] { animation: streaming-word-in 500ms both; }
+.im-markdown-host[data-streaming] [data-streaming-fresh] { animation: streaming-word-in 180ms both; }
 .im-markdown [data-streaming-fresh] { color: var(--streaming-tail-color); }
 .im-markdown [data-streaming-cursor]::after {
   content: '';
@@ -547,7 +547,7 @@ input:focus, textarea:focus, button:focus { outline: none; }
   .bloub-activity-thinking,
   .bloub-activity-working,
   .thinking-card-dots i,
-  .im-markdown-host[data-streaming] [data-streaming-word],
+  .im-markdown-host[data-streaming] [data-streaming-fresh],
   .im-markdown [data-streaming-cursor]::after {
     animation: none !important;
   }
