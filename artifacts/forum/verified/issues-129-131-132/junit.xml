@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="4" failures="0" errors="0" skipped="0" time="94.887">
-  <testsuite name="e2e/forum/browser.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="66.970">
-    <testcase name="inline Memos lifecycle, drafts, moderation, assignments and private history [forum]" classname="e2e/forum/browser.e2e.ts" time="66.970"/>
+<testsuites name="e2e" tests="4" failures="0" errors="0" skipped="0" time="58.545">
+  <testsuite name="e2e/forum/browser.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="36.497">
+    <testcase name="inline Memos lifecycle, drafts, moderation, assignments and private history [forum]" classname="e2e/forum/browser.e2e.ts" time="36.497"/>
   </testsuite>
-  <testsuite name="e2e/forum/composer.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="13.184">
-    <testcase name="composer bounds, cancellation, completion and blur (1440) [forum]" classname="e2e/forum/composer.e2e.ts" time="7.602"/>
-    <testcase name="composer bounds, cancellation, completion and blur (390) [forum]" classname="e2e/forum/composer.e2e.ts" time="5.582"/>
+  <testsuite name="e2e/forum/composer.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="9.543">
+    <testcase name="composer bounds, cancellation, completion and blur (1440) [forum]" classname="e2e/forum/composer.e2e.ts" time="5.278"/>
+    <testcase name="composer bounds, cancellation, completion and blur (390) [forum]" classname="e2e/forum/composer.e2e.ts" time="4.265"/>
   </testsuite>
-  <testsuite name="e2e/forum/retirement.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="14.733">
-    <testcase name="retired learning URLs, reload and browser history cannot restore old screens [forum]" classname="e2e/forum/retirement.e2e.ts" time="14.733"/>
+  <testsuite name="e2e/forum/retirement.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="12.505">
+    <testcase name="retired learning URLs, reload and browser history cannot restore old screens [forum]" classname="e2e/forum/retirement.e2e.ts" time="12.505"/>
   </testsuite>
 </testsuites>

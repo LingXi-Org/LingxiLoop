@@ -1,9 +1,9 @@
 {
   "scope": "Issues 129, 131, 132",
-  "sourceCommit": "830fec38",
+  "sourceCommit": "45d55af67299a7636dc01e6ce71a04292921e451",
   "runtime": "@lyyzka/lingxios@3.4.1",
   "schema": 40,
-  "browserRun": "01a13aaa-ddb5-7922-a1a4-e94a8629c1d8",
+  "browserRun": "01a13abc-7cad-7c3a-9e00-c1cb7cb59428",
   "browserTests": 4,
   "engine": "tester-army/e2e official @e2e-dev/web",
   "databaseIntegrationTests": 8,
@@ -18,55 +18,55 @@
   "files": [
     {
       "name": "001-composer-streaming-light-1440.png",
-      "sha256": "0c0bb0e70127f031b80663fae38749714c3f2ea595b457d27fa76b8ebf39f3a6"
+      "sha256": "e80f516216716ddd34adb135134a6907a19dff89648b41c387a2ef95170121a1"
     },
     {
       "name": "001-composer-streaming-light-390.png",
-      "sha256": "c1960448b3f3802de6f52db5c0ceed5fcb94c3825a24ca67e2b0cb7f6c4a469b"
+      "sha256": "bca9c03b69d4e79634d30e3a11f41f316cb7f003a4584d58ce1ac4f95c303a27"
     },
     {
       "name": "001-retired-navigation-normalized.png",
-      "sha256": "e03ac4524dbcc944e9c6339c840ad6e2544d0f9af3ed0296be9366950ed2b017"
+      "sha256": "ebe0d7b5fb2e126280168056903b5cb5ee8e9510522defa7313553a126b9ce8a"
     },
     {
       "name": "001-student-inline-light.png",
-      "sha256": "b1ad1d52cd119aeecb2c9172e9e592c15f84f413cb10f9bcf1bfda6848cec78e"
+      "sha256": "b91af3c3495c67682b45659ee1e033ff534794d29c867b36ab8d7bba4cefc35d"
     },
     {
       "name": "002-composer-complete-dark-1440.png",
-      "sha256": "06709cd9f8dcff3760fc7792f1b445cba636721c90b386f395a8327b7c156f83"
+      "sha256": "408352e9a874a4348335b2f5216f94b02ad0db8d156dadea4f07ea7dec88c570"
     },
     {
       "name": "002-composer-complete-dark-390.png",
-      "sha256": "38d9d914f336a9deae1d9b5cc3bc0fa11ac1e71bdcbc41fb8d9d33ef623a6f3a"
+      "sha256": "5c463e503e1cd6bcc8cd7d5816ddf49bc46faf16ee6f71523f362cc90e401e9f"
     },
     {
       "name": "002-native-editor-preview.png",
-      "sha256": "eda36faf7f767695528174b1490540908a3e8e95e04f38699efb186ed15cddd6"
+      "sha256": "0dd5efb2196aaae5bff89306ffb695d86164246d0e7b8dd5b777a6ec57a3f3e8"
     },
     {
       "name": "003-discussion-edited.png",
-      "sha256": "15d3ac8b92d24474ed2c570f03847938f75a972bf5fca438ce2bc469a4d0d9de"
+      "sha256": "11f7b26c839e5ff09b2cc47965e32e91211357c024b8ec7541602ff489ec5502"
     },
     {
       "name": "004-student-private-versions.png",
-      "sha256": "5ccf8c6cbf9003a22957ea25ade77b38ea4c16683525a190ee581ea9dd1ecb67"
+      "sha256": "120109d662c16a9641f6c5159f55b5549081cfe0659a5adad36c30f5527bd6bc"
     },
     {
       "name": "005-teacher-inline-homework.png",
-      "sha256": "e4d452abdec94d7c424872a9a4bf7a6fe65ebab15765fd3fad577e3f46cc145d"
+      "sha256": "4f7a82a7a7c66cfc926949394001f28c6ca50b524e05eb801627d07831c6b965"
     },
     {
       "name": "006-forum-mobile-navigation.png",
-      "sha256": "c28e01255d9ce0150ae4a3a7585317ca863c1d4c31d368344f1fc402237e9d91"
+      "sha256": "551f8dd4a5f23f731135500408c992d9dfde35a4739570393bcc0d856f5eea4d"
     },
     {
       "name": "007-forum-mobile-dark.png",
-      "sha256": "3bd5366f0e2a22d2d60f812bd4300edf0ba97365e56268e245cd6277f1a16c3b"
+      "sha256": "67eb456ba630c5b66aa8698d9adaa3e19cd7a4353377897ffc464ed2731a39f7"
     },
     {
       "name": "008-forum-desktop-complete.png",
-      "sha256": "0bf18de79acb32dc819b27305037216ff79a406f7f32a2f90d9b90752f4c6a00"
+      "sha256": "707289e9e3040f01a76c8d01aa6c366322fc0e267efa2caec5ee1a76bc4114f0"
     }
   ],
   "serverTestsIncludingChangedFiles": 108
