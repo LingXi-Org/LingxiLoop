@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 import { contentReviewDiagnostics, structuredRequestShape } from './content-review-diagnostics.js'
 import { homeworkJudgmentDiagnostics } from './homework-judgment-diagnostics.js'
@@ -61,6 +61,17 @@ assert.ok(cost(1000, 2000, 2, 4) > cost(1000, 1000, 2, 4))
     return result
   }
   const accepted = inspect(valid)
+  const privateMaterial = 'PRIVATE_MATERIAL_TEXT_SENTINEL'
+  const materialSha = createHash('sha256').update(privateMaterial).digest('hex')
+  const materialInput = { ...input, messages: [{ ...input.messages[0], materials: [{
+    source: 'PRIVATE_MATERIAL_SOURCE_SENTINEL', hash: `sha256:${materialSha}`, text: privateMaterial,
+  }] }] }
+  const materialRequest = { ...request, messages: [{ role: 'user', content: JSON.stringify(materialInput) }] }
+  const materialBefore = structuredClone(materialRequest)
+  const materialProof = homeworkJudgmentDiagnostics(materialRequest, response(valid))!
+  assert.deepEqual(materialProof.materials, [{ declaredHash: `sha256:${materialSha}`, textSha256: materialSha, textChars: privateMaterial.length }])
+  assert.doesNotMatch(JSON.stringify(materialProof), /PRIVATE_\w+_SENTINEL/)
+  assert.deepEqual(materialRequest, materialBefore)
   assert.deepEqual([accepted.schemaValid, accepted.criteriaMatch, accepted.matchesHostValidation, accepted.hasAnswer], [true, true, true, false])
   assert.deepEqual(accepted.evidence.map(item => [item.sourceFound, item.userRole, item.exactSubstring]), [[true, true, true]])
   assert.equal(homeworkJudgmentDiagnostics({ ...request, messages: [{ role: 'user', content: JSON.stringify({ ...input, answer: {} }) }] }, response(valid))!.hasAnswer, true)

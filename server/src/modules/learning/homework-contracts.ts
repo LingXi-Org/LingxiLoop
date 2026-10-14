@@ -31,7 +31,8 @@ export type HomeworkAnswer = z.output<typeof homeworkAnswerSchema>
 export type HomeworkJudgment = z.output<typeof homeworkJudgmentSchema>
 export type HomeworkReport = Omit<HomeworkJudgment,'evidence'> & {
   id: string; answerRevision: number; homeworkRevision: number; answerHash: string; evidenceRevision: number; returnEpoch: number;
+  evidenceHash: string; conversationSequence: number; verification?: 'verified'|'unverified'; coverage?: { messageCount:number; truncated:boolean };
   materialHashes: string[]; evidence: string[]; evidenceSources: Array<{messageId:string;excerpt:string}>;
   manualReview: { reason: string; remainingDoubts: string[] } | null
 }
-export type HomeworkMaterial = { source: string; hash: string; text: string }
+export type HomeworkMaterial = { source: string; hash: string; text: string; contentStatus?: 'unsupported'|'empty'|'failed'|'too_large' }

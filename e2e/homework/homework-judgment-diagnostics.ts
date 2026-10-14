@@ -25,6 +25,16 @@ export function homeworkJudgmentDiagnostics(request: Record<string, unknown>, re
   if (!input || !Array.isArray(requiredCriteria) || !requiredCriteria.every(item => typeof item === 'string')
     || !Array.isArray(input.messages) || !input.messages.every(canonical)) return undefined
   const messages = input.messages
+  const sourceMaterials = messages.flatMap(message => {
+    const materials = object(message)?.materials
+    return Array.isArray(materials) ? materials : []
+  })
+  const materials = sourceMaterials.slice(0, 40).map(raw => {
+    const material = object(raw)
+    return { declaredHash: typeof material?.hash === 'string' && /^sha256:[a-f0-9]{64}$/.test(material.hash) ? material.hash : null,
+      textSha256: typeof material?.text === 'string' ? hash(material.text) : null,
+      textChars: typeof material?.text === 'string' ? material.text.length : null }
+  })
   const choice = object(Array.isArray(object(response)?.choices) ? (object(response)!.choices as unknown[])[0] : undefined)
   const content = object(choice?.message)?.content
   let parsed: unknown, responseJson = false
@@ -69,6 +79,7 @@ export function homeworkJudgmentDiagnostics(request: Record<string, unknown>, re
       type: type(value?.[field]), count: Array.isArray(value?.[field]) ? value[field].length : null,
       chars: typeof value?.[field] === 'string' ? value[field].length : null }])),
     unknownTopLevelKeyCount: value ? Object.keys(value).filter(key => !fields.some(field => field === key)).length : 0,
+    materials, materialCount: sourceMaterials.length, materialsTruncated: sourceMaterials.length > materials.length,
     evidence, evidenceCount: quotes.length, evidenceTruncated: quotes.length > evidence.length, metWithoutEvidence,
     matchesHostValidation: responseComplete && responseJson && schema.success && criteriaMatch
       && evidence.every(item => item.sourceFound && item.userRole && item.exactSubstring) && !metWithoutEvidence }

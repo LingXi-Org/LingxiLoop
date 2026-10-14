@@ -10,7 +10,7 @@ import type { LearningScope } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
 import { enqueueLearningEffect } from './effects-repository.js'
 import { assertOwnedLearningAttachments } from './submission-attachments.js'
-import { homeworkEvidenceAvailable, readHomeworkEvidenceMaterials, readHomeworkMaterials } from './homework-effects.js'
+import { homeworkEvidenceAvailable, readHomeworkReportEvidence, readHomeworkMaterials } from './homework-effects.js'
 import { homeworkAssessmentSchema, homeworkDeadlineSchema, homeworkDraftSchema, homeworkEditSchema, homeworkPublishSchema,
   homeworkReportSchema, homeworkReviewSchema, homeworkRevisionSchema, homeworkSaveAnswerSchema, homeworkShareSchema,
   homeworkSubmitSchema, homeworkUnlockSchema, type HomeworkDraft, type HomeworkMaterial } from './homework-contracts.js'
@@ -181,7 +181,7 @@ export class HomeworkApplication {
       const assessmentId=randomUUID(),evidenceRevision=state.evidence_revision+1
       await db.query(`INSERT INTO homework_assessments(id,company_id,homework_id,learner_id,evidence_revision,return_epoch,message_ids)
         VALUES($1,$2,$3,$4,$5,$6,$7::jsonb)`,[assessmentId,scope.companyId,id,scope.userId,evidenceRevision,state.return_epoch,JSON.stringify(messageIds)])
-      await db.query(`UPDATE homework_learner_state SET assessment_id=$4,evidence_revision=$5,report=NULL,report_status='NONE',report_feedback='',manual_evidence=NULL,manual_unlock=NULL,updated_at=NOW()
+      await db.query(`UPDATE homework_learner_state SET assessment_id=$4,evidence_revision=$5,manual_evidence=NULL,manual_unlock=NULL,updated_at=NOW()
         WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3`,[scope.companyId,id,scope.userId,assessmentId,evidenceRevision])
       await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.assess',effectKey:`${id}:${scope.userId}`,payload:{homeworkId:id,userId:scope.userId,assessmentId,evidenceRevision,returnEpoch:state.return_epoch}})
       return {assessmentId,evidenceRevision,returnEpoch:state.return_epoch,status:'PENDING' as const}
@@ -195,12 +195,12 @@ export class HomeworkApplication {
       const hw=await homeworkRow(db,scope,courseId,id,true);assertHomeworkPublished(hw)
       const state=await homeworkState(db,hw,scope.userId,true),view=await studentHomeworkView(db,hw,state)
       assertHomeworkRevision(state.answer_revision,data.expectedAnswerRevision)
-      if(!view.unlocked||!state.assessment_id) throw new LearningApplicationError('conflict','请先完成学习验证')
+      if(!view.hasLearningRecord) throw new LearningApplicationError('conflict','请先在本作业学习对话中留下真实学习记录')
       if(!state.answer.text.trim()&&!state.answer.links.length&&!state.answer.attachments.length) throw new LearningApplicationError('invalid','请先保存作答内容')
-      if(view.status==='PASSED') throw new LearningApplicationError('conflict','作业已通过')
+      if(!view.canSubmit) throw new LearningApplicationError('conflict',hw.status==='CLOSED'?'作业已关闭，仅当前被退回的学生可提交一次修订':'作业已通过')
       await db.query(`UPDATE homework_learner_state SET report=NULL,report_status='PENDING',report_feedback='' WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3`,[scope.companyId,id,scope.userId])
       await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.report',effectKey:`${id}:${scope.userId}`,
-        payload:{homeworkId:id,userId:scope.userId,answerRevision:state.answer_revision,evidenceRevision:state.evidence_revision,returnEpoch:state.return_epoch,assessmentId:state.assessment_id}})
+        payload:{homeworkId:id,userId:scope.userId,answerRevision:state.answer_revision,returnEpoch:state.return_epoch}})
     })
     return (await this.detail(scope,courseId,id)).student!
   }
@@ -211,15 +211,18 @@ export class HomeworkApplication {
     const snapshot=await homeworkRow(this.db,scope,courseId,id),snapshotState=await homeworkState(this.db,snapshot,scope.userId)
     const duplicate=await this.db.query<{content_hash:string}>(`SELECT content_hash FROM homework_submissions WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3 AND idempotency_key=$4`,[scope.companyId,id,scope.userId,data.idempotencyKey])
     let materialHashes:string[]|null=null
+    let evidenceHash:string|null=null
+    let conversationSequence:number|null=null
     let evidenceMaterials:HomeworkMaterial[]=[]
     if(!duplicate.rows.length) {
       if(!snapshotState.report||snapshotState.report_status!=='READY'||snapshotState.report.id!==data.reportId)
         throw new LearningApplicationError('conflict','请先为最新内容生成并确认学习报告')
       try {
         const taskMaterials=await readHomeworkMaterials(this.db,scope,snapshot,AbortSignal.timeout(90000))
-        const answerMaterials=await readHomeworkMaterials(this.db,scope,snapshotState.answer,AbortSignal.timeout(90000))
-        evidenceMaterials=await readHomeworkEvidenceMaterials(this.db,scope,snapshot,snapshotState,AbortSignal.timeout(90000))
-        materialHashes=[...taskMaterials,...answerMaterials,...evidenceMaterials].map(item=>`${item.source}:${item.hash}`)
+        const answerMaterials=await readHomeworkMaterials(this.db,scope,snapshotState.answer,AbortSignal.timeout(90000),'answer')
+        const evidence=await readHomeworkReportEvidence(this.db,scope,snapshot,snapshotState,AbortSignal.timeout(90000))
+        evidenceMaterials=evidence.materials;evidenceHash=evidence.hash;conversationSequence=evidence.conversationSequence
+        materialHashes=[...taskMaterials,...answerMaterials,...evidenceMaterials].map(item=>`${item.source}:${item.hash}${item.contentStatus?`:${item.contentStatus}`:''}`)
       } catch { throw new LearningApplicationError('conflict','作答材料无法完整读取，请检查后重新生成报告') }
     }
     const submissionId=await this.transaction(async db=>{
@@ -235,14 +238,19 @@ export class HomeworkApplication {
       const view=await studentHomeworkView(db,hw,state),report=state.report
       if(!view.canSubmit) throw new LearningApplicationError('conflict',hw.status==='CLOSED'?'作业已关闭，仅当前被退回的学生可提交一次修订':'当前作业尚不可提交')
       if(!report||state.report_status!=='READY'||report.id!==data.reportId||report.answerRevision!==state.answer_revision
-        ||report.answerHash!==homeworkHash(state.answer)||report.evidenceRevision!==state.evidence_revision||report.returnEpoch!==state.return_epoch
+        ||report.answerHash!==homeworkHash(state.answer)||report.evidenceHash!==evidenceHash||report.conversationSequence!==conversationSequence||report.returnEpoch!==state.return_epoch
         ||report.homeworkRevision!==hw.revision||homeworkHash(report.materialHashes)!==homeworkHash(materialHashes)
-        ||snapshotState.answer_revision!==state.answer_revision||snapshotState.evidence_revision!==state.evidence_revision)
+        ||snapshotState.answer_revision!==state.answer_revision)
         throw new LearningApplicationError('conflict','答案或材料已变化，请先为最新内容生成并确认学习报告')
       if(!await homeworkEvidenceAvailable(db,scope,state,evidenceMaterials)) {
-        throw new LearningApplicationError('conflict','学习证据附件的访问权限已变化，请重新验证并生成报告')
+        throw new LearningApplicationError('conflict','学习记录附件的访问权限已变化，请重新选择可访问的材料并生成报告')
       }
       await assertOwnedLearningAttachments(db,scope,state.answer.attachments)
+      const latest=await getAgentChannelHistory({companyId:scope.companyId,agentId:state.agent_id!,channelId:state.channel_id!,limit:1})
+      if(!latest||latest.some(message=>message.channelId!==state.channel_id||!Number.isSafeInteger(message.messageSeq))
+        ||Math.max(0,...latest.map(message=>message.messageSeq))!==report.conversationSequence) {
+        throw new LearningApplicationError('conflict','学习对话已更新，请先重新生成并确认学习报告')
+      }
       const submission=randomUUID(),version=(view.latestSubmission?.version??0)+1
       await db.query(`INSERT INTO homework_submissions(id,company_id,project_id,homework_id,learner_id,version,idempotency_key,content_hash,answer,report,answer_revision,return_epoch,late,submitted_at)
         SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,($13::timestamptz<submission_clock.submitted_at) IS TRUE,submission_clock.submitted_at
@@ -270,7 +278,7 @@ export class HomeworkApplication {
       FROM project_memberships m JOIN users u ON u.id=m.user_id WHERE m.company_id=$1 AND m.project_id=$2 AND m.role='STUDENT' AND m.status='ACTIVE'
       ORDER BY m.user_id LIMIT 51 OFFSET $3`,[scope.companyId,hw.project_id,offset])
     const items=await Promise.all(rows.slice(0,50).map(async learner=>{
-      const state=await homeworkState(this.db,hw,learner.learnerId),view=await studentHomeworkView(this.db,hw,state)
+      const state=await homeworkState(this.db,hw,learner.learnerId),view=await studentHomeworkView(this.db,hw,state,{readLearningRecord:false})
       return {...learner,status:view.status,missingCriteria:view.criteria.filter(item=>!item.met||!item.independent).map(item=>item.criterion),
         evidenceRevision:state.evidence_revision,latestSubmission:view.latestSubmission,manualReview:state.manual_evidence}
     }))
@@ -317,7 +325,7 @@ export class HomeworkApplication {
       const hw=await homeworkRow(db,scope,courseId,id,true);assertHomeworkPublished(hw)
       const state=await homeworkState(db,hw,data.learnerId,true)
       if(!state.latest_submission_id||state.latest_submission_id!==data.expectedSubmissionId) throw new LearningApplicationError('conflict','学生已更新提交，请先查看最新版本')
-      const view=await studentHomeworkView(db,hw,state)
+      const view=await studentHomeworkView(db,hw,state,{readLearningRecord:false})
       if(view.status===data.decision) return
       if(data.decision==='PASSED'&&view.status!=='PENDING') throw new LearningApplicationError('conflict','只能验收当前待批阅的提交')
       await db.query(`INSERT INTO homework_teacher_decisions(id,company_id,homework_id,learner_id,submission_id,teacher_id,decision,reason,evidence_revision,return_epoch,created_at)

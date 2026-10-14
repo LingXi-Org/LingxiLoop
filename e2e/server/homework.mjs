@@ -10,7 +10,7 @@ import pg from 'pg'
 assert.equal(process.argv[2], '--live-homework', 'Explicit --live-homework is required (metered synthetic evaluation).')
 assert.ok(process.argv.slice(3).every(option => ['--check-config', '--documents-only'].includes(option)), 'Unknown live homework validation option.')
 const documentsOnly = process.argv.includes('--documents-only')
-const publicInput = process.env.E2E_HOMEWORK_PUBLIC_URL || 'https://www.mathsisfun.com/geometry/triangle-area.html'
+const publicInput = process.env.E2E_HOMEWORK_PUBLIC_URL || 'https://www.mathsisfun.com/algebra/trig-area-triangle-without-right-angle.html'
 let publicURL
 try { publicURL = new URL(publicInput) } catch { assert.fail('Invalid E2E_HOMEWORK_PUBLIC_URL; use one credential-free HTTP(S) URL.') }
 assert.ok(['http:', 'https:'].includes(publicURL.protocol) && !publicURL.username && !publicURL.password

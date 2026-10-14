@@ -44,7 +44,7 @@ export async function loadHomeworkTurnContext(work:AgentActionContext,db:Queryab
   return {homework:{id:hw.id,title:hw.title,instructions:hw.instructions,criteria:hw.criteria,dueAt:hw.due_at,status:hw.status},
     materialReading:{available:Boolean(hw.links.length||hw.attachments.length),tool:'learning.get_homework',section:'materials',
       instruction:'Read the complete requirements and material text with learning.get_homework before tutoring about them. Follow nextOffset until null and keep sourceVersion consistent; file names alone are not material evidence.'},
-    progress:{status:view.status,criteria:view.criteria,unlocked:view.unlocked,feedback:view.feedback},answerRevision:state.answer_revision,evidenceRevision:state.evidence_revision}
+    progress:{status:view.status,criteria:view.criteria,unlocked:view.unlocked,hasLearningRecord:view.hasLearningRecord,canSubmit:view.canSubmit,feedback:view.feedback},answerRevision:state.answer_revision,evidenceRevision:state.evidence_revision}
 }
 
 async function learner(context:ActionContext,homeworkId:string) {
@@ -57,7 +57,7 @@ async function learner(context:ActionContext,homeworkId:string) {
 export const homeworkLearnerTools:ToolDefinition[]=[
   nativeTool('learning.get_homework',z.object({homeworkId:id,section:z.enum(['summary','requirements','materials','answer','report']).default('summary'),
     offset:z.number().int().min(0).max(1000000).default(0)}).strict(),{
-    description:'Read this private homework. Default summary gives bounded progress with abbreviated criterion labels and zero-based indexes. Use requirements for full task and criteria, materials for actual safely extracted source/hash/text, answer for your learner own saved draft, or report for the learner own visible preview. Read complete requirements and materials before tutoring about them. Text sections are character pages: follow nextOffset until null, keep sourceVersion unchanged, and restart if it changes. File names and partial pages are not proof that a material was read. Only host assessment can unlock submission.',effect:'read',approval:false,
+    description:'Read this private homework. Default summary gives bounded progress with abbreviated criterion labels and zero-based indexes. Use requirements for full task and criteria, materials for actual safely extracted source/hash/text, answer for your learner own saved draft, or report for the learner own visible preview. Read complete requirements and materials before tutoring about them. Text sections are character pages: follow nextOffset until null, keep sourceVersion unchanged, and restart if it changes. File names and partial pages are not proof that a material was read. A genuine learning record permits report preview and submission in the forum; mastery and the optional assessment tool are not submission prerequisites. An unverified report records uncertainty, not confirmed failure.',effect:'read',approval:false,
     authorize:async(context,input)=>{await learner(context,input.homeworkId)},
     async execute(context,input) {
       const {db,binding,scope}=await learner(context,input.homeworkId)
@@ -67,7 +67,7 @@ export const homeworkLearnerTools:ToolDefinition[]=[
     },
   }),
   nativeTool('learning.assess_homework',homeworkAssessmentSchema.extend({homeworkId:id}),{
-    description:'Request host verification of genuine committed student messages in this homework conversation. Incorrect or incomplete evidence is valid input; do not wait for mastery before requesting assessment. Supply message IDs, never mastery claims, scores or flags. Repeating the same evidence reuses its PENDING or READY assessment; an INVALID assessment may be retried. Explain unresolved criteria and tutor independent transfer. Assessment is asynchronous; read get_homework for the result.',
+    description:'Optionally request learning feedback on genuine committed student messages in this homework conversation. This assessment is not required to generate a report or submit. Incorrect or incomplete evidence is valid input. Supply message IDs, never mastery claims, scores or flags. Repeating the same evidence reuses its PENDING or READY assessment; an INVALID assessment may be retried. Explain unresolved criteria and tutor independent transfer. Assessment is asynchronous; read get_homework for the result.',
     effect:'transaction',approval:false,authorize:async(context,input)=>{await learner(context,input.homeworkId)},
     async execute(context,input) {
       const {db,binding,scope}=await learner(context,input.homeworkId)
@@ -113,7 +113,7 @@ export const homeworkTeacherTools:ToolDefinition[]=[
   nativeTool('teacher.homework_overview',z.object({homeworkId:id.optional(),learnerId:id.optional(),
     section:z.enum(['report','answer','shared_evidence']).default('report'),offset:z.number().int().min(0).max(1000000).default(0)}).strict()
     .refine(input=>!input.learnerId||Boolean(input.homeworkId),'learnerId requires homeworkId'),{
-    description:'List published homework, or provide homeworkId for whole-class status counts, missing-criterion counts and a short learner page. Criterion labels are abbreviated; indexes start at zero. Provide learnerId plus homeworkId to read a submitted report, submitted answer, or explicitly shared_evidence text. Follow nextOffset until null: offset counts rows for lists and characters for learner text. Never treat a partial text page as the full evidence; submission metadata identifies the snapshot. Draft answers and private chat are never returned. Give recommendations; teachers alone pass, return or manually unlock in the forum.',
+    description:'List published homework, or provide homeworkId for whole-class status counts, missing-criterion counts and a short learner page. Criterion labels are abbreviated; indexes start at zero. Provide learnerId plus homeworkId to read a submitted report, submitted answer, or explicitly shared_evidence text. Follow nextOffset until null: offset counts rows for lists and characters for learner text. Never treat a partial text page as the full evidence; submission metadata identifies the snapshot. Report verification=unverified means criteria were not verified, not confirmed failures. Draft answers and private chat are never returned. Give recommendations; teachers alone pass or return submissions in the forum.',
     effect:'read',approval:false,authorize:async context=>{await teacher(context)},
     async execute(context,input) {
       const {db,binding,scope}=await teacher(context)

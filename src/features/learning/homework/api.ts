@@ -22,12 +22,8 @@ export const homeworkApi = {
     http<HomeworkStudent>(`${base(courseId, id)}/report`, { method: 'POST', body: JSON.stringify({ expectedAnswerRevision }) }),
   submit: (courseId: string, id: string, input: { expectedAnswerRevision: number; reportId: string; idempotencyKey: string }) =>
     http<HomeworkSubmission>(`${base(courseId, id)}/submit`, { method: 'POST', body: JSON.stringify(input) }),
-  shareEvidence: (courseId: string, id: string, expectedEvidenceRevision: number) =>
-    http<HomeworkStudent>(`${base(courseId, id)}/share-evidence`, { method: 'POST', body: JSON.stringify({ expectedEvidenceRevision }) }),
   learners: (courseId: string, id: string, offset = 0) => http<ForumPage<HomeworkLearner>>(`${base(courseId, id)}/learners?offset=${offset}`),
   submissions: (courseId: string, id: string, offset = 0) => http<ForumPage<HomeworkSubmission>>(`${base(courseId, id)}/submissions?offset=${offset}`),
   review: (courseId: string, id: string, input: { learnerId: string; expectedSubmissionId: string; decision: 'PASSED' | 'RETURNED'; reason: string }) =>
     http<{ ok: true }>(`${base(courseId, id)}/review`, { method: 'POST', body: JSON.stringify(input) }),
-  unlock: (courseId: string, id: string, input: { learnerId: string; expectedEvidenceRevision: number; reason: string }) =>
-    http<{ ok: true }>(`${base(courseId, id)}/manual-unlock`, { method: 'POST', body: JSON.stringify(input) }),
 }

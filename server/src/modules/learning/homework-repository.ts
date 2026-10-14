@@ -6,6 +6,7 @@ import { LearningApplicationError } from './errors.js'
 import type { HomeworkAnswer, HomeworkJudgment, HomeworkMaterial, HomeworkReport } from './homework-contracts.js'
 import type { LearningAttachment } from './forum-contracts.js'
 import { requireLearningCourseProjectScope } from './project-scope-repository.js'
+import { hasHomeworkLearningRecord } from './homework-evidence.js'
 
 export const homeworkHash = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex')
 export type HomeworkTransaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
@@ -71,15 +72,16 @@ export async function homeworkSubmissions(db: Queryable,hw: HomeworkRow,learnerI
     ORDER BY s.submitted_at DESC,s.version DESC LIMIT 51 OFFSET $4`,[hw.company_id,hw.id,learnerId,offset,submissionId??null])
   return rows
 }
-export async function studentHomeworkView(db:Queryable,hw:HomeworkRow,state:HomeworkStateRow) {
+export async function studentHomeworkView(db:Queryable,hw:HomeworkRow,state:HomeworkStateRow,options:{readLearningRecord?:boolean}={}) {
   const assessment=await homeworkAssessment(db,state)
   const latestSubmission=state.latest_submission_id?(await homeworkSubmissions(db,hw,state.learner_id,0,state.latest_submission_id))[0]??null:null
-  const criteria=assessment?.criteria??hw.criteria.map(criterion=>({criterion,met:false,independent:false,feedback:'等待学习证据'}))
+  const criteria=state.report?.criteria??assessment?.criteria??hw.criteria.map(criterion=>({criterion,met:false,independent:false,feedback:'等待学习证据'}))
   const unlocked=independentMastery(criteria,hw.criteria)||manualMastery(state)
   const status=latestSubmission?.reviewStatus??(unlocked?'MASTERED':state.channel_id||state.evidence_revision?'LEARNING':'NOT_STARTED')
-  const canSubmit=unlocked && status!=='PASSED' && hw.status!=='DRAFT' && (hw.status!=='CLOSED'||status==='RETURNED')
+  const hasLearningRecord=options.readLearningRecord===false?Boolean(state.report||latestSubmission):await hasHomeworkLearningRecord(db,hw,state)
+  const canSubmit=hasLearningRecord && status!=='PASSED' && hw.status!=='DRAFT' && (hw.status!=='CLOSED'||status==='RETURNED')
   return {answer:state.answer,answerRevision:state.answer_revision,evidenceRevision:state.evidence_revision,channelId:state.channel_id,
-    status,unlocked,canSubmit,criteria,report:state.report,reportStatus:state.report_status,reportFeedback:state.report_feedback,latestSubmission,
+    status,unlocked,hasLearningRecord,canSubmit,criteria,report:state.report,reportStatus:state.report_status,reportFeedback:state.report_feedback,latestSubmission,
     feedback:latestSubmission?.feedback??'',manualReview:state.manual_evidence,
     manualReviewPreview:assessment?.evidence.map(item=>item.excerpt)??[]}
 }

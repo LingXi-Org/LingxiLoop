@@ -9,7 +9,7 @@ import { contentLinks, ForumContentFields, ForumFiles } from '../forum/ForumCont
 import { MemoContent } from '../forum/memos/MemoContent'
 import { contentDraftSchema, useForumDraft } from '../forum/useForumDraft'
 import { homeworkApi } from './api'
-import { homeworkStatus, type Homework, type HomeworkStudent as StudentState } from './contracts'
+import { type Homework, homeworkStatus, type HomeworkStudent as StudentState } from './contracts'
 import { HomeworkCriteria, HomeworkReport, HomeworkSubmissionView } from './HomeworkReport'
 
 export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitted, onNavigate, onUploading, onRefresh }: {
@@ -19,7 +19,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
   const { draft, setDraft, storageError, discard } = useForumDraft(`homework:${homework.courseId}:${homework.id}`, contentDraftSchema,
     { body: student.answer.text, links: student.answer.links.join('\n'), attachments: student.answer.attachments }, space.canSubmit && student.status !== 'PASSED')
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')
-  const [preview, setPreview] = useState(false), [sharing, setSharing] = useState(false)
+  const [preview, setPreview] = useState(false)
   const pending = useRef<{ reportId: string; key: string } | null>(null)
   const inFlight = useRef(false)
   const answer = { text: draft.body, links: contentLinks(draft.links), attachments: draft.attachments }
@@ -39,8 +39,8 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
     <section aria-label="我的学习进度" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">我的学习进度</h3><div className="flex flex-wrap items-center gap-2"><Badge variant="secondary">{homeworkStatus[student.status]}</Badge><Button variant="ghost" size="sm" disabled={disabled} onClick={() => void act(onRefresh)}>刷新进度</Button></div></div>
       {student.feedback && <p role="status" className="whitespace-pre-wrap rounded-lg bg-muted p-3 text-sm">教师意见：{student.feedback}</p>}
-      {homework.status === 'CLOSED' && <p role="status" className="text-sm text-muted-foreground">{student.status === 'RETURNED' ? '作业已关闭。你可以根据退回意见继续学习，并补交一次修订。' : '作业已关闭，仍可继续学习和查看记录，暂不接收提交。'}</p>}
-      {student.status === 'PASSED' ? <p className="text-sm text-muted-foreground">作业已通过。教师退回后，你可以修改并重新提交。</p> : !student.unlocked && <p className="text-sm text-muted-foreground">先和自己的助手核对每条要求。确认能够独立完成后，可以提交作答和报告；现在也可以先保存草稿。</p>}
+      {homework.status === 'CLOSED' && <p role="status" className="text-sm text-muted-foreground">{student.status === 'RETURNED' ? '作业已关闭。你可以根据退回意见修订作答，更新报告后补交一次。已有学习记录仍然有效。' : '作业已关闭，仍可继续学习和查看记录，暂不接收提交。'}</p>}
+      {student.status === 'PASSED' ? <p className="text-sm text-muted-foreground">作业已通过。教师退回后，你可以修改并重新提交。</p> : <p className="text-sm text-muted-foreground">{student.hasLearningRecord ? '已有学习记录。报告会如实记录完成情况、获得的帮助和尚待核实的内容。保存作答并更新报告后，可以预览提交内容。' : '先和自己的助手聊一聊这份作业，留下学习记录，再保存作答并更新报告。现在也可以先保存草稿。'}</p>}
       <HomeworkCriteria criteria={student.criteria} />
       <Button variant="outline" disabled={disabled} onClick={() => void act(async () => {
         if (dirty && editable) {
@@ -77,25 +77,19 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
           const next = await homeworkApi.saveAnswer(homework.courseId, homework.id, { ...answer, expectedRevision: student.answerRevision })
           discard(); onUpdated(next); setNotice('草稿已保存。')
         })}>保存草稿</Button>
-        <Button variant="outline" disabled={disabled || dirty || !student.unlocked || student.reportStatus === 'PENDING' || !answer.text.trim() && !answer.links.length && !answer.attachments.length} onClick={() => void act(async () => {
+        <Button variant="outline" disabled={disabled || dirty || !student.hasLearningRecord || !student.canSubmit || student.reportStatus === 'PENDING' || !answer.text.trim() && !answer.links.length && !answer.attachments.length} onClick={() => void act(async () => {
           onUpdated(await homeworkApi.report(homework.courseId, homework.id, student.answerRevision)); setNotice('正在更新学习报告。')
         })}>{student.reportStatus === 'PENDING' ? '报告更新中…' : '更新报告'}</Button>
         <Button disabled={disabled || !canSubmit} onClick={() => setPreview(true)}>预览并提交</Button>
       </div>
       {dirty && <div className="space-y-1"><p role="status" className="text-sm text-muted-foreground">本地作答与已保存的草稿不同，请保存并更新报告后再提交。</p><Button variant="link" size="sm" disabled={disabled} onClick={() => { setDraft({ body: student.answer.text, links: student.answer.links.join('\n'), attachments: student.answer.attachments }); discard() }}>放弃本地修改，恢复已保存的草稿</Button></div>}
-      {student.reportStatus === 'INVALID' && !dirty && <p role="status" className="text-sm text-muted-foreground">{student.reportFeedback || '报告需要更新。请继续学习或补充可读资料，然后重试。'}</p>}
+      {student.reportStatus === 'INVALID' && !dirty && <p role="status" className="text-sm text-muted-foreground">{student.reportFeedback || '报告暂未生成，请重试。已保存的作答和学习记录仍会保留。'}</p>}
       {report && <><p className="text-xs text-muted-foreground">报告由你的助手根据学习证据整理。可以继续对话、补充证据来更新报告。</p><HomeworkReport report={report} /></>}
     </section>)}
-    {!student.unlocked && student.manualReviewPreview.length > 0 && <section aria-label="人工复核" className="space-y-3">
-      <h3 className="font-semibold">人工复核</h3><p className="text-sm text-muted-foreground">如果你认为助手判断有误，可以把相关证据摘要分享给教师复核。</p>
-      {!sharing ? <Button variant="outline" disabled={disabled} onClick={() => setSharing(true)}>申请人工复核</Button> : <div className="space-y-3 rounded-lg border p-4">
-        <p className="text-sm">教师将看到以下内容，你的草稿和完整私聊不会随申请分享。</p>
-        {student.manualReviewPreview.map((text, index) => <blockquote key={index} className="whitespace-pre-wrap border-s-2 ps-3 text-sm text-muted-foreground">{text}</blockquote>)}
-        <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={disabled} onClick={() => setSharing(false)}>取消</Button><Button disabled={disabled} onClick={() => void act(async () => {
-          onUpdated(await homeworkApi.shareEvidence(homework.courseId, homework.id, student.evidenceRevision)); setSharing(false); setNotice('已向教师提交复核申请。')
-        })}>确认分享并申请</Button></div>
-      </div>}
-      {student.manualReview && <p className="text-sm text-muted-foreground">已于 {new Date(student.manualReview.sharedAt).toLocaleString('zh-CN')} 分享证据。</p>}
+    {student.manualReview && <section aria-label="已分享的复核证据" className="space-y-3">
+      <h3 className="font-semibold">已分享的复核证据</h3>
+      {student.manualReview.evidence.map((text, index) => <blockquote key={index} className="whitespace-pre-wrap border-s-2 ps-3 text-sm text-muted-foreground">{text}</blockquote>)}
+      <p className="text-sm text-muted-foreground">已于 {new Date(student.manualReview.sharedAt).toLocaleString('zh-CN')} 分享给教师。</p>
     </section>}
     {student.latestSubmission && <section aria-label="最近一次提交" className="space-y-3"><h3 className="font-semibold">最近一次提交</h3><HomeworkSubmissionView submission={student.latestSubmission} /></section>}
   </div>

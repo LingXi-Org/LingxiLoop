@@ -33,7 +33,7 @@ export function HomeworkDetail({ space, item, onClose, onChanged }: { space: Lea
   }, [detail?.student?.reportStatus, load])
   const homework = detail?.homework
   return <Dialog open onOpenChange={open => { if (!open && !uploading) onClose() }}><DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto [overflow-wrap:anywhere] sm:max-w-3xl" onOpenAutoFocus={event => { event.preventDefault(); titleFocus.current?.focus() }} onCloseAutoFocus={event => { event.preventDefault(); if (!navigating.current && returnFocus.current instanceof HTMLElement) returnFocus.current.focus() }}>
-    <DialogHeader><DialogTitle ref={titleFocus} tabIndex={-1} className="pe-6 outline-none">{homework?.title ?? item.title}</DialogTitle><DialogDescription>{detail?.teacher ? '查看学习进度，并验收学生正式提交的作答和报告。' : '根据要求独立完成作业，与自己的助手核对后提交。'}</DialogDescription></DialogHeader>
+    <DialogHeader><DialogTitle ref={titleFocus} tabIndex={-1} className="pe-6 outline-none">{homework?.title ?? item.title}</DialogTitle><DialogDescription>{detail?.teacher ? '查看学习进度，并验收学生正式提交的作答和报告。' : '和自己的助手学习后，预览并提交作答和如实记录学习情况的报告。'}</DialogDescription></DialogHeader>
     {error && <p role="alert" className="text-sm text-destructive">{error}<Button variant="link" onClick={() => void load()}>重新加载</Button></p>}
     {!detail && !error && <p role="status">正在加载作业…</p>}
     {homework && <>

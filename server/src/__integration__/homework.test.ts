@@ -9,7 +9,7 @@ import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { HomeworkApplication } from '../modules/learning/homework-application.js'
 import type { LearningAttachment } from '../modules/learning/forum-contracts.js'
-import { runLearningEffects } from '../modules/learning/worker.js'
+import { runLearningEffects as runLearningEffectsOnce } from '../modules/learning/worker.js'
 import { createHomeworkThread } from '../modules/context-threads/public.js'
 import { __setLlmClientOverrideForTesting } from '../llm.js'
 import { createNativeMessage } from '../im/message-types.js'
@@ -23,6 +23,17 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, 
 // INVALID cannot recover, or concurrent recovery creates multiple revisions; new evidence
 // or a teacher return reuses stale mastery/receipts; cached evidence bypasses a revoked file grant.
 // A missing/completed delivery effect must not strand PENDING evidence forever on an idempotent retry.
+// Learning-record submission failures: requiring assessment/mastery rejects a real learner's
+// incomplete work; opening a thread, saving an answer, assistant text, another person's text,
+// or another homework's messages falsely count as learning; a report hides gaps/dependence.
+// Returned work wrongly requires new mastery evidence, omits current feedback, or accepts an
+// old report; answer changes, evidence permissions, idempotency, and atomic pairing still apply.
+// A malformed/ungrounded model report must discard unsupported conclusions and explicitly
+// remain unverified; that fallback must never turn required task material or revoked access into success.
+// Authorized learning/answer attachments still count when content cannot be extracted;
+// report that limitation without inventing a read, while required task material and ACL failures block.
+// A report fingerprint read before the submit transaction can become stale while authorization
+// locks are held: a genuine learner or assistant message during that wait must reject the old pair.
 const companyId = 'homework-school'
 const courseId = 'homework-course'
 const projectId = 'homework-project'
@@ -104,6 +115,23 @@ async function published(overrides: Partial<typeof visible> = {}) {
   return homework.publish(teacher, courseId, draft.homework.id, {
     expectedRevision: validated.homework.revision, visibleHash: validated.homework.visibleHash, idempotencyKey: `publish-${draft.homework.id}`,
   })
+}
+
+async function runLearningEffects() {
+  const snapshot = () => pool.query<{ clock: Date; transaction_time: Date; statement_time: Date; blocked_sessions: number;
+    effects: Array<{ status: string; attempts: number }> }>(`SELECT clock_timestamp() AS clock,NOW() AS transaction_time,
+    statement_timestamp() AS statement_time,
+    (SELECT count(*)::int FROM pg_stat_activity WHERE datname=current_database() AND cardinality(pg_blocking_pids(pid))>0) AS blocked_sessions,
+    COALESCE((SELECT jsonb_agg(jsonb_build_object('kind',kind,'status',status,'attempts',attempts,'generation',generation,'queued_generation',queued_generation,
+      'available_at',available_at,'eligible',available_at<=NOW(),'lease_expires_at',lease_expires_at,
+      'error_kind',CASE WHEN error IS NULL THEN 'none' WHEN error ILIKE '%deadlock%' THEN 'deadlock'
+        WHEN error ILIKE '%lease%' THEN 'lease' ELSE 'other' END)) FROM learning_effects),'[]'::jsonb) AS effects`)
+  const before = (await snapshot()).rows[0]
+  await runLearningEffectsOnce()
+  const after = (await snapshot()).rows[0]
+  if (after.effects.some(effect => effect.status === 'pending' && effect.attempts === 0)) {
+    console.info('[homework] unclaimed effect diagnostic', JSON.stringify({ before, after }))
+  }
 }
 
 async function waitForActorLock(blockerPid: number) {
@@ -287,6 +315,194 @@ async function report(id: string, judgment: Awaited<ReturnType<typeof assess>>['
   assert.ok(ready.report)
   return ready
 }
+
+test('[integration] a genuine learning record permits a truthful report and paired submission without an assessment', async () => {
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const message = commitLearnerEvidence(thread, 'I am still unsure why the triangle needs one half and currently calculate 30 square units.')
+  const saved = await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: 'My current answer is 30 square units; I still need help explaining the one-half factor.', links: [], attachments: [] })
+  assert.equal(saved.unlocked, false, 'Submitting a learning record must not imply demonstrated mastery')
+  const judgment = evidenceJudgment(task.criteria, message.clientMsgNo, message.text, false)
+  const ready = await report(task.id, judgment)
+  assert.equal(Reflect.get(saved, 'hasLearningRecord'), true)
+  assert.equal(saved.canSubmit, true)
+  assert.equal(Reflect.get(ready.report!, 'verification'), 'verified')
+  assert.match(Reflect.get(ready.report!, 'evidenceHash'), /^[a-f0-9]{64}$/)
+  assert.equal(ready.unlocked, false)
+  assert.deepEqual(ready.report!.criteria, judgment.criteria)
+  assert.deepEqual(ready.report!.weaknesses, judgment.weaknesses)
+  assert.equal(ready.report!.independence, judgment.independence)
+  assert.deepEqual(await assessmentHistory(task.id), [], 'The learner never needed the assess tool to run')
+  const result = await homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: 'learning-record-without-assess' })
+  assert.deepEqual({ answer: result.answer, report: result.report }, { answer: saved.answer, report: ready.report })
+  assert.equal((await homework.submissions(teacher, courseId, task.id)).items[0].id, result.id)
+  assert.equal((await pool.query<{ count: number }>("SELECT count(*)::int AS count FROM llm_calls WHERE company_id=$1 AND purpose='homework.assess'", [companyId])).rows[0].count, 0)
+})
+
+test('[integration] only the current learner persisted nonempty messages in this homework count as learning records', async () => {
+  const { homework: task } = await published()
+  const { homework: other } = await published({ title: 'A separate homework with separate learning records' })
+  const thread = await homework.start(student, courseId, task.id)
+  const otherThread = await homework.start(student, courseId, other.id)
+  await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: 'An answer draft alone is not a learning conversation.', links: [], attachments: [] })
+  const variants = [
+    { name: 'no message', messages: [] },
+    { name: 'empty learner message', channelId: thread.channelId, fromUid: student.userId, role: 'user' as const, text: '   ' },
+    { name: 'assistant answer', channelId: thread.channelId, fromUid: thread.agentId, role: 'assistant' as const, text: 'The assistant supplies a complete solution.' },
+    { name: 'peer learner', channelId: thread.channelId, fromUid: peer.userId, role: 'user' as const, text: 'A different learner supplies the explanation.' },
+    { name: 'outsider learner', channelId: thread.channelId, fromUid: outsider.userId, role: 'user' as const, text: 'An outsider supplies the explanation.' },
+    { name: 'different homework', channelId: otherThread.channelId, fromUid: student.userId, role: 'user' as const, text: 'My genuine learning for another homework.' },
+  ]
+  for (const variant of variants) {
+    im.messages.length = 0
+    if ('channelId' in variant) im.messages.push({ channelId: variant.channelId!, channelType: 2, messageId: `invalid-${variant.name}`, clientMsgNo: `invalid-${variant.name}`,
+      messageSeq: 1, fromUid: variant.fromUid!, timestamp: Date.now() / 1000,
+      payload: createNativeMessage({ id: `invalid-${variant.name}`, role: variant.role!, content: [{ type: 'text', text: variant.text! }] }) })
+    const state = (await homework.detail(student, courseId, task.id)).student!
+    assert.equal(Reflect.get(state, 'hasLearningRecord'), false, variant.name)
+    assert.equal(state.canSubmit, false, variant.name)
+    await assert.rejects(homework.requestReport(student, courseId, task.id, { expectedAnswerRevision: 1 }), variant.name)
+    await assert.rejects(homework.submit(student, courseId, task.id, { expectedAnswerRevision: 1, reportId: 'invented-ready-report', idempotencyKey: `no-record-${variant.name}` }), variant.name)
+  }
+  assert.deepEqual(await assessmentHistory(task.id), [])
+  assert.equal((await homework.submissions(student, courseId, task.id)).items.length, 0)
+  assert.equal((await pool.query<{ count: number }>("SELECT count(*)::int AS count FROM llm_calls WHERE company_id=$1 AND purpose='homework.report'", [companyId])).rows[0].count, 0)
+})
+
+test('[integration] an authorized unreadable learning attachment alone permits an unverified submission while revoked access still rejects', async () => {
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const { storage } = await import('../storage.js')
+  const key = `attachments/${companyId}/learning-photo.png`, messageId = 'committed-learning-photo'
+  const bytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a4NQAAAAASUVORK5CYII=', 'base64')
+  await storage.put(key, bytes, 'image/png')
+  await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
+    SELECT $1,$2,$3,period_id FROM company_memberships WHERE company_id=$2 AND user_id=$3 AND ended_at IS NULL`, [key, companyId, student.userId])
+  im.messages.push({ channelId: thread.channelId, channelType: 2, messageId, clientMsgNo: messageId, messageSeq: im.messages.length + 1,
+    fromUid: student.userId, timestamp: Date.now() / 1000,
+    payload: createNativeMessage({ id: messageId, role: 'user', content: [], attachments: [{ id: key, type: 'file', name: 'learning-photo.png',
+      contentType: 'image/png', status: { type: 'complete' }, content: [{ type: 'file', data: key, sourceType: 'id', mimeType: 'image/png' }] }] }) })
+  await pool.query(`INSERT INTO knowledge_sources(id,company_id,project_id,conversation_id,title,kind,status,visibility_scope,
+    owner_user_id,created_by_user_id,created_via,origin_client_msg_no,origin_attachment_id)
+    VALUES('homework-photo-source',$1,$2,$3,'Learner photo','text','ready','PRIVATE',$4,$4,'USER',$5,$6)`,
+    [companyId, projectId, thread.channelId, student.userId, messageId, key])
+  await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: 'My current attempt is attached in the learning conversation; I need teacher feedback.', links: [], attachments: [] })
+  const judgment = { ...evidenceJudgment(task.criteria, messageId, '', false), evidence: [] }
+  const ready = await report(task.id, judgment)
+  assert.equal(Reflect.get(ready, 'hasLearningRecord'), true)
+  assert.equal(Reflect.get(ready.report!, 'verification'), 'unverified')
+  assert.equal(ready.unlocked, false)
+  assert.ok(ready.report!.criteria.every(item => !item.met && !item.independent))
+  assert.match(JSON.stringify(ready.report), /附件[^。\n]{0,100}(?:未|无法|不能|不可)[^。\n]{0,30}(?:读取|核实|核验)/)
+  assert.deepEqual(ready.report!.evidenceSources, [], 'An unread image cannot become a fabricated textual excerpt')
+  assert.deepEqual(await assessmentHistory(task.id), [])
+  const submitted = await homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: 'file-only-learning-record' })
+  assert.deepEqual(submitted.report, ready.report)
+  await pool.query(`INSERT INTO conversation_source_exclusions(conversation_id,source_id,user_id) VALUES($1,'homework-photo-source',$2)`, [thread.channelId, student.userId])
+  await assert.rejects(homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: 'revoked-file-only-learning-record' }))
+  assert.equal((await homework.submissions(student, courseId, task.id)).items.length, 1)
+})
+
+test('[integration] a changed learning conversation invalidates its report preview even when no assessment ran', async () => {
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const first = commitLearnerEvidence(thread, 'I currently multiply base 10 by height 3 and get 30 square units.')
+  const answer = { text: 'I need help with the factor one half.', links: [], attachments: [] }
+  await homework.saveAnswer(student, courseId, task.id, { ...answer, expectedRevision: 0 })
+  const ready = await report(task.id, evidenceJudgment(task.criteria, first.clientMsgNo, first.text, false))
+  const second = commitLearnerEvidence(thread, 'I copied the assistant explanation and still cannot justify why dividing by two is valid.')
+  await assert.rejects(homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: 'stale-learning-preview' }))
+  assert.equal((await homework.submissions(student, courseId, task.id)).items.length, 0)
+  const updated = await report(task.id, evidenceJudgment(task.criteria, second.clientMsgNo, second.text, false))
+  assert.notEqual(Reflect.get(updated.report!, 'evidenceHash'), Reflect.get(ready.report!, 'evidenceHash'))
+  assert.equal(updated.answerRevision, ready.answerRevision)
+  const submitted = await homework.submit(student, courseId, task.id, { expectedAnswerRevision: updated.answerRevision, reportId: updated.report!.id, idempotencyKey: 'current-learning-preview' })
+  assert.deepEqual(submitted.answer, answer)
+  assert.deepEqual(await assessmentHistory(task.id), [])
+})
+
+for (const appendedRole of ['user', 'assistant'] as const) test(`[integration] a genuine ${appendedRole} message committed while submission waits for authorization rejects the old report`, async () => {
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const original = commitLearnerEvidence(thread, 'I still need help explaining why the triangle is half of the rectangle.')
+  const answer = { text: 'Keep this private partial answer after the stale submission is rejected.', links: [], attachments: [] }
+  await homework.saveAnswer(student, courseId, task.id, { ...answer, expectedRevision: 0 })
+  const ready = await report(task.id, evidenceJudgment(task.criteria, original.clientMsgNo, original.text, false))
+  let entered!: () => void, release!: () => void
+  const started = new Promise<void>(resolve => { entered = resolve }), held = new Promise<void>(resolve => { release = resolve })
+  const delayed = new HomeworkApplication(pool, work => withTransaction(pool, async db => { entered(); await held; return work(db) }))
+  const completed = delayed.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: `waiting-report-${appendedRole}` })
+    .then(value => ({ value }), error => ({ error }))
+  const blocker = await pool.connect()
+  try {
+    await Promise.race([started, delay(10000).then(() => assert.fail('Submission did not reach its final transaction'))])
+    await blocker.query('BEGIN')
+    await blocker.query('SELECT id FROM users WHERE id=$1 FOR UPDATE', [student.userId])
+    const { rows: [{ pid }] } = await blocker.query<{ pid: number }>('SELECT pg_backend_pid() AS pid')
+    release(); await waitForActorLock(pid)
+    if (appendedRole === 'user') commitLearnerEvidence(thread, 'I now admit that I copied the explanation and cannot solve the new example.')
+    else {
+      const messageId = `assistant-help-during-submit-${im.messages.length + 1}`
+      im.messages.push({ channelId: thread.channelId, channelType: 2, messageId, clientMsgNo: messageId, messageSeq: im.messages.length + 1,
+        fromUid: thread.agentId, timestamp: Date.now() / 1000, payload: createNativeMessage({ id: messageId, role: 'assistant',
+          content: [{ type: 'text', text: 'Here is additional help: multiply base by perpendicular height and divide by two.' }] }) })
+    }
+    await blocker.query('COMMIT')
+    assert.ok('error' in await completed, 'A report checked before the lock wait must not cover a newer conversation')
+    assert.deepEqual((await homework.detail(student, courseId, task.id)).student!.answer, answer)
+    assert.equal((await homework.submissions(student, courseId, task.id)).items.length, 0)
+  } finally { release(); await blocker.query('ROLLBACK'); blocker.release(); await completed }
+})
+
+test('[integration] invalid model claims yield an explicitly unverified factual report that the learner may submit', async () => {
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const message = commitLearnerEvidence(thread, 'I asked for help because I do not understand the factor one half.')
+  await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: 'This is my current partial answer and request for teacher feedback.', links: [], attachments: [] })
+  const badJudgment = { ...evidenceJudgment(task.criteria, message.clientMsgNo, message.text, true),
+    completion: 'unsupported-completion-sentinel', independence: 'unsupported-independence-sentinel',
+    evidence: [{ messageId: 'invented-model-evidence', excerpt: 'unsupported-evidence-sentinel' }] }
+  const ready = await report(task.id, badJudgment)
+  assert.equal(modelReplies.length, 0, 'The actual model attempt precedes the safe unverified record')
+  assert.equal(Reflect.get(ready.report!, 'verification'), 'unverified')
+  assert.equal(ready.unlocked, false)
+  assert.ok(ready.report!.criteria.every(item => !item.met && !item.independent && /未.*核实|未.*核验|无法.*核实/.test(item.feedback)))
+  assert.match(ready.report!.completion, /未.*核实|未.*核验|无法.*核实/)
+  assert.doesNotMatch(JSON.stringify(ready.report), /unsupported-(?:completion|independence|evidence)-sentinel|invented-model-evidence/)
+  assert.ok(ready.report!.evidenceSources.some(item => item.messageId === message.clientMsgNo && message.text.includes(item.excerpt)))
+  const { learnerHomeworkRead, teacherHomeworkOverview } = await import('../modules/learning/homework-reporting.js')
+  const learnerView = await learnerHomeworkRead(pool, student, courseId, { homeworkId: task.id, section: 'report', offset: 0 }, AbortSignal.timeout(10000))
+  assert.ok('text' in learnerView)
+  assert.equal(JSON.parse(learnerView.text).verification, 'unverified', 'The learner native read must retain the qualification')
+  const submitted = await homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: 'explicit-unverified-submission' })
+  assert.deepEqual(submitted.report, ready.report)
+  const teacherView = await teacherHomeworkOverview(pool, teacher, courseId, { homeworkId: task.id, learnerId: student.userId, section: 'report', offset: 0 })
+  assert.ok('text' in teacherView)
+  assert.equal(JSON.parse(teacherView.text).verification, 'unverified', 'The teacher native read must not present unverified flags as a confirmed finding')
+  assert.equal((await pool.query<{ count: number }>("SELECT count(*)::int AS count FROM llm_calls WHERE company_id=$1 AND purpose='homework.report'", [companyId])).rows[0].count, 1)
+})
+
+test('[integration] optional assessment diagnostics do not invalidate a ready report for unchanged learning records', async () => {
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const first = commitLearnerEvidence(thread, 'I understand that two triangles form a rectangle, but need help using the formula.')
+  const second = commitLearnerEvidence(thread, 'My attempted new example is still incomplete.')
+  await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: 'This partial answer needs teacher feedback.', links: [], attachments: [] })
+  const judgment = evidenceJudgment(task.criteria, first.clientMsgNo, first.text, false)
+  const ready = await report(task.id, judgment)
+  const receipt = await nativeAssessment(task.id, thread, [second.clientMsgNo])
+  const pending = (await homework.detail(student, courseId, task.id)).student!
+  assert.deepEqual(pending.report, ready.report)
+  assert.equal(pending.reportStatus, 'READY')
+  assert.notEqual(pending.evidenceRevision, ready.evidenceRevision)
+  modelReplies.push(evidenceJudgment(task.criteria, second.clientMsgNo, second.text, false))
+  await runLearningEffects()
+  const assessed = (await homework.detail(student, courseId, task.id)).student!
+  assert.deepEqual(assessed.report, ready.report)
+  assert.equal((await receipt.verify()).status, 'passed')
+  const submitted = await homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: 'assessment-is-informational' })
+  assert.deepEqual(submitted.report, ready.report)
+})
 
 test('[integration] canonical assessment retries reuse pending and negative ready evidence without erasing manual review or reports', async () => {
   const [{ claimLearningEffects, completeLearningEffect }, { runHomeworkEffect }] = await Promise.all([
@@ -485,10 +701,17 @@ test('[integration] submitted time and late status use the same post-lock databa
     const { rows: [{ wait_ms }] } = await pool.query<{ wait_ms: number }>(
       'SELECT GREATEST(0,EXTRACT(EPOCH FROM $1::timestamptz-clock_timestamp())*1000)::float AS wait_ms', [dueAt])
     await delay(wait_ms + 25)
+    const clockWaitEnd = performance.now() + 10_000
+    let dbBeforeRelease = (await pool.query<{ now: Date }>('SELECT clock_timestamp() AS now')).rows[0].now
+    while (dbBeforeRelease.getTime() <= Date.parse(dueAt) && performance.now() < clockWaitEnd) {
+      await delay(20)
+      dbBeforeRelease = (await pool.query<{ now: Date }>('SELECT clock_timestamp() AS now')).rows[0].now
+    }
+    assert.ok(dbBeforeRelease.getTime() > Date.parse(dueAt), 'The database clock must pass the deadline before the authorization lock is released')
     await blocker.query('COMMIT')
     const outcome = await completed
     if ('error' in outcome) throw outcome.error
-    assert.equal(outcome.value.late, true)
+    assert.equal(outcome.value.late, true, JSON.stringify({ dueAt, waitMs: wait_ms, dbBeforeRelease, submittedAt: outcome.value.submittedAt }))
     assert.ok(new Date(outcome.value.submittedAt).getTime() > Date.parse(dueAt), 'The recorded submission time must be after its deadline')
     const { rows } = await pool.query(`SELECT s.late=(s.submitted_at>h.due_at) AS consistent
       FROM homework_submissions s JOIN homeworks h ON h.id=s.homework_id WHERE s.id=$1`, [outcome.value.id])
@@ -522,7 +745,7 @@ test('[integration] manual review waiting for the learner cannot deadlock with t
   } finally { await blocker.query('ROLLBACK'); blocker.release(); await reviewed }
 })
 
-test('[integration] locked drafts stay private and only host-verified independent criteria unlock a versioned answer/report pair', async () => {
+test('[integration] private drafts and truthful partial mastery reports form one idempotent versioned submission pair', async () => {
   const { homework: task } = await published({ dueAt: '2020-01-01T00:00:00.000Z' })
   const locked = (await homework.detail(student, courseId, task.id)).student!
   assert.equal(locked.unlocked, false)
@@ -536,9 +759,11 @@ test('[integration] locked drafts stay private and only host-verified independen
   assert.equal(missing.state.unlocked, false)
   await assert.rejects(homework.requestAssessment(student, courseId, task.id, { messageIds: [missing.messageId] }, { agentId: missing.thread.agentId, channelId: 'foreign-thread' }))
   await assert.rejects(homework.requestAssessment(peer, courseId, task.id, { messageIds: [missing.messageId] }, { agentId: missing.thread.agentId, channelId: missing.thread.channelId }))
-  const mastered = await assess(task.id, true)
-  assert.equal(mastered.state.unlocked, true)
-  const ready = await report(task.id, mastered.judgment)
+  const partial = { ...missing.judgment, criteria: missing.judgment.criteria.map((item, index) => ({ ...item, met: index === 0, independent: false })) }
+  const ready = await report(task.id, partial)
+  assert.equal(ready.unlocked, false)
+  assert.equal(Reflect.get(ready.report!, 'verification'), 'verified')
+  assert.deepEqual(ready.report!.criteria, partial.criteria)
   const input = { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: 'same-human-click' }
   const [first, retried] = await Promise.all([homework.submit(student, courseId, task.id, input), homework.submit(student, courseId, task.id, input)])
   assert.deepEqual(retried, first)
@@ -578,17 +803,28 @@ test('[integration] pending replacement preserves history, stale teacher review 
   await homework.close(teacher, courseId, task.id, { expectedRevision: task.revision })
   await homework.review(teacher, courseId, task.id, { learnerId: student.userId, expectedSubmissionId: latest.id, decision: 'RETURNED', reason: 'Explain how the area changes when the height doubles.' })
   await assert.rejects(homework.submit(student, courseId, task.id, { expectedAnswerRevision: state.answerRevision, reportId: state.report!.id, idempotencyKey: 'return-without-recheck' }))
-  const rechecked = await assess(task.id, true, student, 'Doubling the height doubles the rectangle and its half, so the triangle area doubles from 15 to 30 square units.')
+  const returned = (await homework.detail(student, courseId, task.id)).student!
+  assert.equal(returned.canSubmit, true, 'A returned learner retains a genuine learning record without proving mastery again')
+  const assessmentCount = (await assessmentHistory(task.id)).length
   state = await homework.saveAnswer(student, courseId, task.id, { expectedRevision: state.answerRevision, text: 'The area doubles because the rectangle area doubles and the triangle remains one half.', links: [], attachments: [] })
-  state = await report(task.id, rechecked.judgment)
+  const currentFeedback = 'Explain how the area changes when the height doubles.'
+  const revisionJudgment = { ...mastered.judgment, criteria: mastered.judgment.criteria.map(item => ({ ...item, met: false, independent: false, feedback: currentFeedback })),
+    completion: `Current teacher feedback still needs review: ${currentFeedback}`, weaknesses: [currentFeedback] }
+  state = await report(task.id, revisionJudgment)
+  assert.equal((await assessmentHistory(task.id)).length, assessmentCount, 'Returning work must not require another assessment call')
+  const request = lastModelRequest as { messages: { role: string; content: string }[] }
+  const data = JSON.parse(request.messages.find(message => message.role === 'user')!.content) as { teacherFeedback: string }
+  assert.equal(data.teacherFeedback, currentFeedback)
+  assert.ok(state.report!.completion.includes(currentFeedback))
+  assert.ok(state.report!.returnEpoch > latest.report.returnEpoch)
   await homework.submit(student, courseId, task.id, { expectedAnswerRevision: state.answerRevision, reportId: state.report!.id, idempotencyKey: 'closed-return-resubmission' })
   assert.deepEqual((await homework.submissions(student, courseId, task.id)).items.map(item => item.version), [3, 2, 1])
   await assert.rejects(homework.submit(student, courseId, task.id, { expectedAnswerRevision: state.answerRevision, reportId: state.report!.id, idempotencyKey: 'closed-exception-consumed' }))
   const other = await assess(task.id, true, peer)
   const peerAnswer = await homework.saveAnswer(peer, courseId, task.id, { expectedRevision: other.state.answerRevision, text: 'First answer after close', links: [], attachments: [] })
   assert.ok(peerAnswer)
-  const peerReport = await report(task.id, other.judgment, peer)
-  await assert.rejects(homework.submit(peer, courseId, task.id, { expectedAnswerRevision: peerAnswer.answerRevision, reportId: peerReport.report!.id, idempotencyKey: 'closed-first-submission' }))
+  await assert.rejects(homework.requestReport(peer, courseId, task.id, { expectedAnswerRevision: peerAnswer.answerRevision }))
+  await assert.rejects(homework.submit(peer, courseId, task.id, { expectedAnswerRevision: peerAnswer.answerRevision, reportId: 'closed-first-report', idempotencyKey: 'closed-first-submission' }))
 })
 
 test('[integration] manual unlock needs learner-shared evidence and preserves unresolved host findings without exposing private drafts', async () => {
@@ -610,7 +846,7 @@ test('[integration] manual unlock needs learner-shared evidence and preserves un
   await assert.rejects(homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, idempotencyKey: 'manual-does-not-bypass-close' }))
 })
 
-test('[integration] fabricated host evidence fails closed with actionable feedback; unreadable answer material retains the draft', async () => {
+test('[integration] fabricated assessment evidence stays invalid while an unreadable authorized answer permits an unverified submission', async () => {
   const { homework: task } = await published()
   const missing = await assess(task.id, false)
   const revised = commitLearnerEvidence(missing.thread, 'I now propose a new independent explanation for review.')
@@ -629,18 +865,26 @@ test('[integration] fabricated host evidence fails closed with actionable feedba
   await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
     SELECT $1,$2,$3,period_id FROM company_memberships WHERE company_id=$2 AND user_id=$3 AND ended_at IS NULL`, [key, companyId, student.userId])
   const { storage } = await import('../storage.js')
-  await storage.put(key, Buffer.from('Not extractable text'), 'image/png')
+  await storage.put(key, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a4NQAAAAASUVORK5CYII=', 'base64'), 'image/png')
   const answer = { text: 'Preserve this answer on failed file reading', links: [], attachments: [{ key, name: 'unreadable.png' }] }
   const saved = await homework.saveAnswer(student, courseId, task.id, { ...answer, expectedRevision: mastered.state.answerRevision })
   assert.ok(saved)
   await homework.requestReport(student, courseId, task.id, { expectedAnswerRevision: saved.answerRevision })
+  modelReplies.push({ ...mastered.judgment, criteria: mastered.judgment.criteria.map(item => ({ ...item, met: false, independent: false })) })
   await runLearningEffects()
-  const failed = (await homework.detail(student, courseId, task.id)).student!
-  assert.equal(failed.reportStatus, 'INVALID')
-  assert.deepEqual(failed.answer, answer)
-  assert.ok(failed.reportFeedback.length > 0)
-  assert.doesNotMatch(failed.reportFeedback, /API_KEY|Authorization|Bearer|prompt_tokens/)
-  await assert.rejects(homework.submit(student, courseId, task.id, { expectedAnswerRevision: saved.answerRevision, reportId: 'fake-ready-report', idempotencyKey: 'unreadable-not-understood' }))
+  const ready = (await homework.detail(student, courseId, task.id)).student!
+  const effectState = ready.reportStatus === 'READY' ? [] : (await pool.query(`SELECT status,attempts,available_at,lease_expires_at,NOW() AS transaction_time,clock_timestamp() AS observed_at,
+    CASE WHEN error IS NULL THEN 'none' WHEN error ILIKE '%deadlock%' THEN 'deadlock' WHEN error ILIKE '%lease%' THEN 'lease' ELSE 'other' END AS error_kind
+    FROM learning_effects WHERE company_id=$1 AND kind='homework.report' AND payload->>'homeworkId'=$2`, [companyId, task.id])).rows
+  assert.equal(ready.reportStatus, 'READY', JSON.stringify(effectState))
+  assert.deepEqual(ready.answer, answer)
+  assert.equal(Reflect.get(ready.report!, 'verification'), 'unverified')
+  assert.equal(ready.unlocked, false, 'A previous positive assessment cannot hide the current answer-reading limitation')
+  assert.ok(ready.report!.criteria.every(item => !item.met && !item.independent))
+  assert.match(JSON.stringify(ready.report), /附件[^。\n]{0,100}(?:未|无法|不能|不可)[^。\n]{0,30}(?:读取|核实|核验)/)
+  assert.doesNotMatch(JSON.stringify(ready.report), /API_KEY|Authorization|Bearer|prompt_tokens/)
+  const submitted = await homework.submit(student, courseId, task.id, { expectedAnswerRevision: saved.answerRevision, reportId: ready.report!.id, idempotencyKey: 'unreadable-answer-not-understood' })
+  assert.deepEqual({ answer: submitted.answer, report: submitted.report }, { answer, report: ready.report })
 })
 
 test('[integration] changed bytes of a committed chat attachment invalidate a ready report without losing the answer', async () => {

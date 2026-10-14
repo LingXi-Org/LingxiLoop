@@ -23,6 +23,7 @@ export type HomeworkFields = Pick<Homework, 'title' | 'instructions' | 'criteria
 export interface HomeworkReport {
   id: string
   answerRevision: number
+  verification?: 'verified' | 'unverified'
   completion: string
   criteria: HomeworkCriterion[]
   assistance: string
@@ -50,6 +51,7 @@ export interface HomeworkStudent {
   answerRevision: number
   evidenceRevision: number
   status: HomeworkLearnerStatus
+  hasLearningRecord: boolean
   unlocked: boolean
   canSubmit: boolean
   criteria: HomeworkCriterion[]
@@ -58,7 +60,6 @@ export interface HomeworkStudent {
   reportFeedback: string
   latestSubmission: HomeworkSubmission | null
   feedback: string
-  manualReviewPreview: string[]
   manualReview: { evidence: string[]; sharedAt: string } | null
 }
 export interface HomeworkDetail { homework: Homework; student: HomeworkStudent | null; teacher: boolean }

@@ -30,7 +30,7 @@ function page<T>(base: object, rows: T[], offset: number) {
 
 function visibleReport(report:HomeworkReport) {
   return {completion:report.completion,criteria:report.criteria,assistance:report.assistance,independence:report.independence,
-    weaknesses:report.weaknesses,evidence:report.evidenceSources,manualReview:report.manualReview}
+    weaknesses:report.weaknesses,evidence:report.evidenceSources,manualReview:report.manualReview,verification:report.verification??'verified',coverage:report.coverage}
 }
 
 function textPage(base:object,content:unknown,offset:number) {
@@ -51,7 +51,7 @@ export async function learnerHomeworkRead(db:Queryable,scope:LearningScope,cours
   const state=await homeworkState(db,hw,scope.userId),view=await studentHomeworkView(db,hw,state)
   if(input.section==='summary') return {
     homework:{id:hw.id,title:label(hw.title,160),revision:hw.revision,status:hw.status,dueAt:hw.due_at,hasMaterials:Boolean(hw.links.length||hw.attachments.length)},
-    progress:{status:view.status,unlocked:view.unlocked,canSubmit:view.canSubmit,feedback:label(view.feedback,160),
+    progress:{status:view.status,unlocked:view.unlocked,hasLearningRecord:view.hasLearningRecord,canSubmit:view.canSubmit,feedback:label(view.feedback,160),
       criteria:hw.criteria.map((criterion,index)=>{
         const judgment=view.criteria.find(item=>item.criterion===criterion)
         return {index,criterion:label(criterion,64),met:judgment?.met??false,independent:judgment?.independent??false,feedback:label(judgment?.feedback??'等待学习证据',64)}
@@ -89,7 +89,7 @@ export async function teacherHomeworkOverview(db:Queryable,scope:LearningScope,c
     const {rows}=await db.query<{name:string}>(`SELECT u.display_name AS name FROM project_memberships m JOIN users u ON u.id=m.user_id
       WHERE m.company_id=$1 AND m.project_id=$2 AND m.user_id=$3 AND m.role='STUDENT' AND m.status='ACTIVE'`,[scope.companyId,hw.project_id,input.learnerId])
     if(!rows[0]) throw new NoEffectError('homework learner not found','not_found')
-    const state=await homeworkState(db,hw,input.learnerId),view=await studentHomeworkView(db,hw,state),submitted=view.latestSubmission
+    const state=await homeworkState(db,hw,input.learnerId),view=await studentHomeworkView(db,hw,state,{readLearningRecord:false}),submitted=view.latestSubmission
     const report=submitted?.report
     const content=input.section==='shared_evidence'
       ? state.manual_evidence?{evidence:state.manual_evidence.evidence,sharedAt:state.manual_evidence.sharedAt}:null
@@ -104,9 +104,9 @@ export async function teacherHomeworkOverview(db:Queryable,scope:LearningScope,c
       SELECT m.user_id AS learner_id,u.display_name AS learner_name,s.channel_id,COALESCE(s.evidence_revision,0) AS evidence_revision,
         sub.id AS submission_id,sub.version AS submission_version,d.decision,
         COALESCE(s.manual_unlock->>'evidenceRevision'=s.evidence_revision::text AND s.manual_unlock->>'returnEpoch'=s.return_epoch::text,FALSE) AS manual,
-        COALESCE(jsonb_array_length(a.result->'criteria'),0)=jsonb_array_length($4::jsonb) AS complete,
+        COALESCE(jsonb_array_length(COALESCE(sub.report->'criteria',a.result->'criteria')),0)=jsonb_array_length($4::jsonb) AS complete,
         ARRAY(SELECT c.ordinality::integer-1 FROM jsonb_array_elements_text($4::jsonb) WITH ORDINALITY c(criterion,ordinality)
-          WHERE NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(a.result->'criteria','[]'::jsonb)) j
+          WHERE NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(sub.report->'criteria',a.result->'criteria','[]'::jsonb)) j
             WHERE j->>'criterion'=c.criterion AND j->'met'='true'::jsonb AND j->'independent'='true'::jsonb)) AS missing
       FROM project_memberships m JOIN users u ON u.id=m.user_id
       LEFT JOIN homework_learner_state s ON s.company_id=m.company_id AND s.homework_id=$2 AND s.learner_id=m.user_id
