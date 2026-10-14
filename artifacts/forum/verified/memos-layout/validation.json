@@ -1,0 +1,34 @@
+{
+  "run": {
+    "id": "01a13874-be41-76aa-82af-dc252154acda",
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-14T03:29:00.160Z",
+    "finishedAt": "2026-10-14T03:30:33.718Z"
+  },
+  "checks": {
+    "forumBrowser": "passed: complete existing journey plus standard calendar selection/month navigation, full-width mobile feed, Sheet selection/close/Escape/focus and exit to workspace",
+    "webTypecheck": "passed",
+    "e2eTypecheck": "passed",
+    "scopedLint": "passed",
+    "webBuild": "passed (existing CSS highlight and large-chunk warnings)",
+    "calendarSource": "Exact official shadcn source after import mapping and attribution comment; no date-grid overrides"
+  },
+  "reproduce": "node e2e/server/forum.mjs --browser-only",
+  "isolatedRun": {
+    "reason": "Default local test database contained a newer migration from separate development; preserved it.",
+    "postgres": "Disposable pgvector/pgvector:pg16 container lingxiloop-forum-layout-pg on 127.0.0.1:55433, same guarded lingxiloop_forum_test database.",
+    "launcher": "Copied e2e/server/forum.mjs to .codex-tmp/forum-layout.mjs; replaced cwd ../.. with .., port 55432 with 55433, artifact output artifacts/forum with artifacts/forum/layout. No fixture or database guard was changed.",
+    "command": "node .codex-tmp/forum-layout.mjs --browser-only"
+  },
+  "limitations": [
+    "Synthetic identities and in-memory object storage; no production-account business mutations.",
+    "Calendar uses standard single-date selection and month navigation; no scheduling backend or forum date filtering.",
+    "Backend APIs and migrations unchanged."
+  ],
+  "source": {
+    "calendar": "https://github.com/shadcn-ui/ui/blob/c257f688cf4de7ec10cc1be84cad29cd4631182c/apps/v4/registry/new-york-v4/ui/calendar.tsx",
+    "localCalendarSha256": "8b4dcce3255a2a854bbe681d392f99ed498f81dde9b4152afb9613289e7fe1ec",
+    "mobileReference": "https://github.com/usememos/memos/blob/25419a5239b0522a13dd451b4eaf5ae2b9a55908/web/src/components/AppSidebar/AppSidebar.tsx"
+  }
+}
