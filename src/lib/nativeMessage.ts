@@ -2,7 +2,8 @@ import type { CompleteAttachment, ThreadMessage } from '@assistant-ui/react'
 import { z } from 'zod'
 import { openUiEnvelopeSchema, uiInteractionSchema } from './interactive-ui/protocol.js'
 import { OPENUI_COMPONENT } from './interactive-ui/catalog.js'
-import { activityAnnotation } from './runActivity.js'
+import { activityAnnotation, toolDisplaySchema } from './runActivity.js'
+import { memoryActivitySchema } from './memoryActivity.js'
 
 type Wire<T> = T extends Date ? string : T extends readonly (infer U)[] ? Wire<U>[] : T extends object ? { [K in keyof T]: Wire<T[K]> } : T
 export type NativeMessage = Wire<ThreadMessage>
@@ -128,8 +129,15 @@ export function deserializeMessage(value: unknown): ThreadMessage {
   // Old IM records and browser caches may still contain private memory projections.
   const { memory: _memory, ...custom } = parsed.metadata.custom
   return { ...parsed, metadata: { ...parsed.metadata, custom }, createdAt: new Date(parsed.createdAt),
-    content: parsed.content.filter(part => part.type !== 'tool-call' || !/^memory(?:\.|__)/.test(part.toolName)).map(part => part.type === 'tool-call' && part.messages
-    ? { ...part, messages: part.messages.map(deserializeMessage) } : part) } as ThreadMessage
+    content: parsed.content.map(part => {
+      if (part.type !== 'tool-call') return part
+      if (/^memory(?:\.|__)/.test(part.toolName)) {
+        const result = z.object({ status: z.enum(['completed', 'failed', 'unknown', 'cancelled', 'awaiting-approval']).optional(),
+          memory: memoryActivitySchema.optional(), display: toolDisplaySchema.optional() }).safeParse(part.result)
+        part = { ...part, args: {}, argsText: '', ...(part.result === undefined ? {} : { result: result.success ? result.data : {} }) }
+      }
+      return part.messages ? { ...part, messages: part.messages.map(deserializeMessage) } : part
+    }) } as ThreadMessage
 }
 export function createNativeMessage(input: { id: string; role: ThreadMessage['role']; content: ThreadMessage['content'] | NativeMessage['content'];
   createdAt?: string; custom?: Record<string, unknown>; attachments?: NativeAttachment[]; status?: ThreadMessage['status'] }): NativeMessage {

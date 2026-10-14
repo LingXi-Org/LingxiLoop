@@ -20,9 +20,9 @@ before(async () => {
 })
 after(async () => { await teardownAll(server) })
 
-// Failure cases: a removed browser route still exposes content, or a memory scope
-// crosses tenant/project/user/agent/room/thread/audience boundaries after restoration.
-test('memory remains internal and native scopes isolate identities and revoked audiences', async () => {
+// Failure cases: stale or repeated forget removes a newer/other fact, raw bodies leak,
+// or a browser request crosses tenant/project/user/agent/room/thread/audience boundaries.
+test('memory chips and explicit forgetting preserve native authorization and versions', async () => {
   const { companyId,projectId,agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner',companyId)
   await seedUserMembership('memory-other',companyId)
@@ -47,7 +47,7 @@ test('memory remains internal and native scopes isolate identities and revoked a
     return {...run,workId:run.runId}
   }
   const identity=await seedRun(),scope=(await memory.scopes(identity))[0]
-  const input={scope,documents:[{path:'notes/fact.md',title:'Private fact',description:'PRIVATE SUMMARY',body:'PRIVATE BODY',layer:'core' as const}],
+  const input={scope,documents:[{path:'notes/fact.md',title:'Preference',description:'Use Chinese',body:'PRIVATE BODY',layer:'core' as const}],
     idempotencyKey:'private-seed',sourceRef:'memory-1'}
   const created=await memory.initialize(identity,input)
   assert.deepEqual(await memory.initialize(identity,input),created,'replayed initialization must be idempotent')
@@ -68,10 +68,32 @@ test('memory remains internal and native scopes isolate identities and revoked a
     assert.equal(response.status,404)
     assert.doesNotMatch(await response.text(),/PRIVATE/)
   }
+  const doc=created.documents[0], headers={ 'x-company-id':companyId,'x-project-id':projectId,'Content-Type':'application/json' }
+  const url=`${baseUrl}/channels/memory-room/agents/${agentId}/runs/${identity.runId}/memory`
+  const read=await fetch(`${url}?ids=${doc.id}`,{headers})
+  assert.equal(read.status,200)
+  assert.deepEqual(await read.json(),{chips:[{id:doc.id,text:'Use Chinese',version:1,change:'existing'}]})
+  for(const patch of [{'x-project-id':'other-project'},{'x-company-id':'other-tenant'}]) {
+    assert.equal((await fetch(`${url}?ids=${doc.id}`,{headers:{...headers,...patch}})).status,403)
+  }
+  assert.equal((await fetch(url.replace(identity.runId,'missing')+`?ids=${doc.id}`,{headers})).status,404)
+  const other=await seedRun('memory-other')
+  assert.equal((await fetch(url.replace(identity.runId,other.runId)+`?ids=${doc.id}`,{headers})).status,404)
+  const another=await memory.initialize(identity,{...input,documents:[{...input.documents[0],path:'notes/other.md'}],idempotencyKey:'second'})
+  const forget=(version:number)=>fetch(`${url}/${doc.id}`,{method:'DELETE',headers,body:JSON.stringify({expectedVersion:version})})
+  assert.equal((await forget(2)).status,409)
+  assert.ok(await memory.read(identity,scope,doc.id))
+  assert.equal((await forget(1)).status,200)
+  assert.equal((await forget(1)).status,200,'retry is idempotent')
+  assert.equal(await memory.read(identity,scope,doc.id),null)
+  assert.ok(await memory.read(identity,scope,another.documents[0].id),'forget only affects the selected document')
+  assert.deepEqual(await (await fetch(`${url}?ids=${doc.id}`,{headers})).json(),{chips:[]},'reload does not restore forgotten chips')
   const reduced=JSON.stringify(['test-owner',agentId])
   await pool.query("UPDATE conversations SET members=$2::jsonb WHERE id=$1",['memory-room',reduced])
   await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1",['memory-room',reduced])
   await syncConversationPolicy(app,companyId,'memory-room')
+  assert.equal((await fetch(`${url}?ids=${another.documents[0].id}`,{headers})).status,403)
+  assert.equal((await fetch(`${url}/${another.documents[0].id}`,{method:'DELETE',headers,body:JSON.stringify({expectedVersion:1})})).status,403)
   await assert.rejects(memory.list(identity,scope),'changed audience invalidates the old scope')
   await pool.query("UPDATE participants SET departed_at=NOW() WHERE company_id=$1 AND id='test-owner'",[companyId])
   await assert.rejects(memory.scopes(identity),/revoked/)

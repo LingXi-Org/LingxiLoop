@@ -1,6 +1,7 @@
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { responseSegments, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import { researchSources } from '../../../src/lib/researchSources.js'
+import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
 import { assertLessonCitationSpans, projectLessonText } from './interactive-ui-projection.js'
 import { publicActivitySchema, toolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
@@ -18,13 +19,12 @@ export interface MarkdownConfidenceClaim {
 
 /** Display projection only: lifecycle, preview and results remain in the native RunView. */
 export function harnessToolParts(runId: string, events: readonly RunEvent[], current: readonly HarnessToolPart[] = []): HarnessToolPart[] {
-  const calls = new Map(current.filter(part => !/^memory(?:\.|__)/.test(part.toolName)).map(part => [part.toolCallId,part]))
+  const calls = new Map(current.map(part => [part.toolCallId,part]))
   for (const event of [...events].sort((a,b) => a.seq-b.seq)) {
     if (event.runId !== runId || event.visibility !== 'user') continue
     const id = event.data.toolCallId
     if (typeof id !== 'string' || !id.startsWith('host:')) continue
     if (event.kind === 'tool.started' && typeof event.data.name === 'string' && !calls.has(id)) {
-      if (/^memory(?:\.|__)/.test(event.data.name)) continue
       calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: event.data.name,args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq })
     }
     const previous = calls.get(id)
@@ -34,6 +34,7 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
       calls.set(id,{ ...previous,eventSeq: event.seq,result: { status: Reflect.get(result,'status'),
         ...(previous.toolName === 'research.search' ? { sources: researchSources(value) } : {}),
         ...(previous.toolName.startsWith('knowledge.') && value && typeof value === 'object' ? { sourceStatus: Reflect.get(value,'status') } : {}),
+        ...(previous.toolName.startsWith('memory.') && Reflect.get(result, 'status') === 'completed' && memoryActivitySchema.safeParse(value).success ? { memory: memoryActivitySchema.parse(value) } : {}),
         ...(previous.toolName === 'chat.report_progress' && publicActivitySchema.safeParse(value).success ? { activity: publicActivitySchema.parse(value) } : {}),
       },isError: event.data.isError === true,
         ...(typeof Reflect.get(result,'approvalId') === 'string' ? { approval: { id: String(Reflect.get(result,'approvalId')) } } : {}) })
