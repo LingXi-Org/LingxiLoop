@@ -1,0 +1,28 @@
+{
+  "run": {
+    "id": "01a13869-1ecf-7f94-b53b-88cab6c6c186",
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-14T03:16:17.717Z",
+    "finishedAt": "2026-10-14T03:17:14.366Z"
+  },
+  "checks": {
+    "forumBrowser": "passed: complete existing journey plus sidebar, month navigation, date spacing and mobile collapse",
+    "webTypecheck": "passed",
+    "e2eTypecheck": "passed",
+    "scopedLint": "passed",
+    "webBuild": "passed (existing CSS highlight and large-chunk warnings)"
+  },
+  "reproduce": "node e2e/server/forum.mjs --browser-only",
+  "isolatedRun": {
+    "reason": "Default local test database contained a newer migration from separate development; preserved it.",
+    "postgres": "Disposable pgvector/pgvector:pg16 container lingxiloop-forum-layout-pg on 127.0.0.1:55433, same guarded lingxiloop_forum_test database.",
+    "launcher": "Copied e2e/server/forum.mjs to .codex-tmp/forum-layout.mjs; replaced cwd ../.. with .., port 55432 with 55433, artifact output artifacts/forum with artifacts/forum/layout. No fixture or database guard was changed.",
+    "command": "node .codex-tmp/forum-layout.mjs --browser-only"
+  },
+  "limitations": [
+    "Synthetic identities and in-memory object storage; no production-account business mutations.",
+    "Calendar supports month navigation and today indication; no calendar scheduling or date filtering.",
+    "Backend APIs and migrations unchanged."
+  ]
+}
