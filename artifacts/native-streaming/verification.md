@@ -9,7 +9,7 @@ The production renderer now lets `StreamdownTextPrimitive` own smoothing, animat
 | 11k-character Chinese reply, before | 548 ms maximum event-loop interval, 5 visible states, 10,920 custom spans; responsiveness assertion failed |
 | Same browser fixture, after | 69.3 ms maximum interval, 48 visible states, zero custom spans; passed |
 | Browser renderer coverage | 5 passed: long conversation/tool insertion, light/dark/mobile, Markdown/code/table/citations, completion/cancellation, reduced motion |
-| Published Worker integration | 2 passed: auto/deep, native transport, streaming before completion, durable delivery/reconnect, tenant/thread isolation |
+| Published Worker integration | 3 passed: auto/deep, native transport, streaming before completion, durable delivery/reconnect, public activity order, tenant/thread isolation |
 | Real provider | Passed; 148 non-empty preview frames, 10 measured calls, $0.02043061, zero final-answer retractions |
 | Real Worker snapshot browser replay | Passed; 169 snapshots, 45 ms maximum interval (109 ms on the compressed-artifact repeat), zero unexpected blank frames; final DOM equals reload |
 | Existing web/server smoke tests | 95/97 passed |
@@ -35,6 +35,6 @@ $env:E2E_STREAMING_REPLAY='/artifacts/native-streaming/live/replay.json.gz'
 npm run test:e2e:web -- --grep 'Native streaming conversation|Streaming renderer|Recorded native stream' --output .e2e/native-streaming
 ```
 
-`live/replay.json.gz` contains only the synthetic integration conversation, and `live/result.json` records real-provider counts. `real-worker-replay.png` shows the rendered final reply. Deterministic Worker coverage can be repeated with `npm run test:e2e:server -- --file runtime-nonthinking.test.ts` against the documented disposable local services.
+`live/replay.json.gz` contains only the synthetic integration conversation, and `live/result.json` records real-provider counts. `real-worker-replay.png` shows the rendered final reply. Deterministic Worker coverage can be repeated with `npm run test:e2e:server -- --file runtime-nonthinking.test.ts --file public-run-activity.test.ts` against the documented disposable local services.
 
 The opt-in real-provider test is `runtime-streaming-live.test.ts`, invoked through `npm run test:integration -- --file runtime-streaming-live.test.ts`. It requires `LINGXIOS_LIVE_STREAMING=1`, a migrated disposable database named `lingxiloop_streaming_test`, `AGENT_OS_MAX_CONCURRENT_RUNS=1`, a local Redis instance, and ordinary test service/provider environment settings. Supply provider credentials externally; do not save them in evidence. Set the runtime model budget to at most 250,000 cost micros and ten calls. The test verifies measured ledger usage and rejects costs above $0.25.

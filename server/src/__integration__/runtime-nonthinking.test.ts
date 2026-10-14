@@ -61,7 +61,8 @@ test('production workers always expose full tools and disable thinking even with
     env.OPENAI_BASE_URL = `http://127.0.0.1:${address.port}/v1`
     process.env.AGENT_OS_RESPONSE_POLICY = mode === 'deep' ? 'deep' : 'auto'
     process.env.LINGXIOS_SERVICE_TOKEN = 'nonthinking-integration-service-token'
-    process.env.AGENT_OS_WORKER_PORT = '52993'
+    // Keep health listeners outside the ephemeral ports used by the fixture servers.
+    process.env.AGENT_OS_WORKER_PORT = '29093'
     const api = await lingxiOSControl()
     const port = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN, port: 0 })
     process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${port}`
@@ -200,7 +201,7 @@ test('disabled lessons are corrected into plain text before durable delivery', {
   const address = provider.address(); assert.ok(address && typeof address !== 'string')
   env.OPENAI_BASE_URL = `http://127.0.0.1:${address.port}/v1`
   process.env.LINGXIOS_SERVICE_TOKEN = 'interactive-repair-integration-service-token'
-  process.env.AGENT_OS_WORKER_PORT = '52994'
+  process.env.AGENT_OS_WORKER_PORT = '29094'
   let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
   try {
     const api = await lingxiOSControl()
