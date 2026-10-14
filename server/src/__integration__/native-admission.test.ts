@@ -59,7 +59,7 @@ test('product native admission, cancellation, revision, independent delivery and
       return
     }
     if (input.channel_id === 'slow-room') await slowDelivery
-    res.end(JSON.stringify({ message_id: record.messageId, message_seq: 1 }))
+    res.end(JSON.stringify({ message_id: record.messageId, message_seq: 1, reason: 1 }))
   })
   await new Promise<void>(resolve => im.listen(0, '127.0.0.1', resolve))
   const address = im.address(); assert.ok(address && typeof address === 'object')
