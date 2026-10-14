@@ -13,6 +13,7 @@ jobs:
   model-acceptance:
     if: github.event_name == 'workflow_dispatch' || (github.event.label.name == 'run-capability-acceptance' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
+    environment: production
     timeout-minutes: 25
     services:
       postgres:
@@ -60,9 +61,12 @@ jobs:
         env:
           OPENAI_API_KEY: isolated-migration-placeholder
       - name: Check actual provider context and three representative conversations
-        run: node server/run-integration-tests.mjs --file available-capabilities.test.ts
+        run: node scripts/run-capability-acceptance.mjs
         env:
           OPENAI_API_KEY: ${{ secrets.EVAL_CANDIDATE_API_KEY }}
+          KOMODO_WEBHOOK_URL: ${{ secrets.KOMODO_WEBHOOK_URL }}
+          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

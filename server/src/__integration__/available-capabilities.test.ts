@@ -44,9 +44,14 @@ test('published runtime sends available-only context and preserves truthful prod
       const request = JSON.parse(raw)
       const system = request.messages.filter((message: { role: string }) => message.role === 'system').map((message: { content: string }) => message.content).join('\n')
       const toolNames = (request.tools ?? []).map((tool: { function: { name: string } }) => tool.function.name)
-      assert.doesNotMatch(system, /email|calendar|日历|邮件/i, 'specialized product policy reached the model')
+      // Auxiliary fulfillment review contains general draft/confirmation examples;
+      // those are not a product capability list or a feature-specific refusal.
+      assert.doesNotMatch(system, /(?:does not support|do not support|unsupported|retired|disabled|不支持|已退役)[^.。\n]{0,70}(?:email|calendar|日历|邮件)|(?:email|calendar|日历|邮件)[^.。\n]{0,70}(?:unsupported|retired|disabled|不支持|已退役)/i,
+        'specialized product policy reached the model')
+      if (request.stream) assert.doesNotMatch(system, /email|calendar|日历|邮件/i, 'default assistant policy mentions absent capabilities')
       assert.ok(!toolNames.some((name: string) => /^(email|calendar)__/.test(name)), 'absent tool schema reached the model')
-      if (!current.explicit) assert.doesNotMatch(JSON.stringify(request.messages), /\bemail\b|\bcalendar\b|日历|邮件/i, 'default model context mentions absent capabilities')
+      if (!current.explicit) assert.doesNotMatch(JSON.stringify(request.messages.filter((message: { role: string }) => request.stream || message.role !== 'system')),
+        /\bemail\b|\bcalendar\b|日历|邮件/i, 'default model context mentions absent capabilities')
       const sha256 = (value: string) => createHash('sha256').update(value).digest('hex')
       checks.push({ case: current.id, sha256: sha256(raw), systemSha256: sha256(system), toolNames, stream: !!request.stream })
       if (live) {

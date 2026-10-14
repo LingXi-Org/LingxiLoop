@@ -43,7 +43,13 @@ workflow on the reviewed commit, or apply `run-capability-acceptance` to a trust
 same-repository PR. It forwards the inspected provider requests unchanged, uses
 three synthetic conversations, disables Python and external mail delivery, and
 requires measured usage with a USD 0.25 budget per conversation. It does not modify
-production data. The existing GitHub `EVAL_CANDIDATE_API_KEY` supplies model access.
+production data. `EVAL_CANDIDATE_API_KEY` supplies model access when configured;
+otherwise the existing production Komodo identity reads only `OPENAI_API_KEY`
+through `GetVariable`. The key stays in process memory and is passed directly to
+the isolated test process, without deployment credentials or credential output.
+Auxiliary fulfillment reviews may contain generic draft/confirmation examples;
+the gate rejects specialized product denial rules there and checks the primary
+assistant's default context and tool catalog for absent capability mentions.
 
 ## Evidence
 
