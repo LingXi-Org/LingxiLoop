@@ -14,13 +14,6 @@ export type {
   ResourceAccessMode,
 } from './access/public.js'
 export { ENTITLEMENT_CODES, PERMISSION_ACTIONS } from './access/public.js'
-export {
-  ATTENTION_STATUSES,
-  transitionAttention,
-  type AttentionCommand,
-  type AttentionStatus,
-  type AttentionTransition,
-} from './attention/public.js'
 export type { Entitlement, EntitlementValue, Plan, PlanEntitlement, PlanStatus } from './entitlement/public.js'
 export {
   EDUCATION_CONTRACT_STATUSES,
@@ -36,14 +29,6 @@ export type {
 } from './education/public.js'
 export { EDUCATION_PLAN } from './entitlement/public.js'
 export type { User } from './identity/user.js'
-export {
-  LEARNING_CASE_ACTION_KINDS,
-  LEARNING_CASE_STATUSES,
-  type LearningCaseActionKind,
-  type LearningCaseStatus,
-  type LearningCaseTransition,
-  transitionLearningCase,
-} from './learning/public.js'
 export {
   type LifecycleTransition,
   PROJECT_KINDS,

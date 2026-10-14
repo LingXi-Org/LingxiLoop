@@ -6,8 +6,8 @@ export type EvidenceActor = { type: 'SYSTEM' } | { type: 'USER' | 'AGENT'; id: s
 export type EvidenceTargetLevel = 'L0' | 'L1' | 'L2' | 'L3' | 'L4'
 export type EvidenceTargetKind =
   | 'DOMAIN_EVENT'
-  | 'LEARNING_ATTEMPT'
-  | 'LEARNING_EVALUATION'
+  | 'FORUM_SUBMISSION'
+  | 'FORUM_FEEDBACK'
   | 'CANVAS_REPORT'
   | 'AUDIT_EVENT'
   | 'AGENT_RUN'

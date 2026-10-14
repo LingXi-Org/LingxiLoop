@@ -1,0 +1,30 @@
+ Container lingxiloop-e2e-redis-1  Running
+ Container lingxiloop-e2e-postgres-1  Running
+ Container lingxiloop-e2e-redis-1  Waiting
+ Container lingxiloop-e2e-postgres-1  Waiting
+ Container lingxiloop-e2e-redis-1  Healthy
+ Container lingxiloop-e2e-postgres-1  Healthy
+[db:migrate] already current · 71ms
+[integration] selected 1/59 file(s): dependency-readiness.test.ts
+TAP version 13
+# Subtest: a slow successful knowledge readiness probe stays healthy without delaying API liveness
+ok 1 - a slow successful knowledge readiness probe stays healthy without delaying API liveness
+  ---
+  duration_ms: 4854.690589
+  type: 'test'
+  ...
+# Subtest: an unavailable knowledge dependency still reports 503
+ok 2 - an unavailable knowledge dependency still reports 503
+  ---
+  duration_ms: 9.407425
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7342.399127

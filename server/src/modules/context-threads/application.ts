@@ -14,7 +14,6 @@ import {
   findScopedParticipant,
   insertContextThreadBundle,
   isManagedTeacherAgent,
-  learningCaseBelongsToStudent,
   lockContextIdentity,
 } from './repository.js'
 
@@ -59,7 +58,7 @@ export class ContextThreadsApplication {
     input: CreateTeacherThreadInput,
   ): Promise<ContextThreadResult> {
     await this.infrastructure.assertCanManageLearning(scope)
-    const contextId = input.contextType === 'INTERVENTION' ? input.caseId! : input.studentId
+    const contextId = input.studentId
     return this.create(scope, {
       contextType: input.contextType,
       contextId,
@@ -71,11 +70,6 @@ export class ContextThreadsApplication {
         if (!student || student.kind !== 'human' || student.departed_at
           || !await this.infrastructure.isActiveProjectStudent(db, scope, input.studentId)) {
           throw new ContextThreadApplicationError('invalid_student', 'student must be active in the same Project')
-        }
-        if (input.contextType === 'INTERVENTION' && !await learningCaseBelongsToStudent(db, {
-          ...scope, caseId: contextId, studentId: input.studentId,
-        })) {
-          throw new ContextThreadApplicationError('not_found', 'LearningCase not found for student')
         }
         return student.name
       },

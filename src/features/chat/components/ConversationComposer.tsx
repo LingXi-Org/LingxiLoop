@@ -84,7 +84,7 @@ export function ConversationComposer({
   }, [focusInput, uiCommand])
 
   return (
-    <div data-composer-column className={compact ? 'mx-auto w-full min-w-0 max-w-[800px] px-3 pb-3' : 'mx-auto w-full min-w-0 max-w-[800px] px-2.5 pb-4 pt-2 sm:px-4'}>
+    <div data-composer-column className={compact ? 'mx-auto w-full min-w-0 max-w-[960px] px-3 pb-3' : 'mx-auto w-full min-w-0 max-w-[960px] px-3 pb-4 pt-2 sm:px-6'}>
       {cancelError && <p role="alert" className="mb-2 px-2 text-xs text-destructive">{cancelError}</p>}
       {attachmentError && <p role="alert" className="mb-2 px-2 text-xs text-destructive">{attachmentError}</p>}
       {pollOpen ? (
@@ -170,10 +170,10 @@ export function ConversationComposer({
             autoFocus={!compact}
             submitMode="enter"
             placeholder={placeholder}
-            className="relative max-h-52 min-h-11 flex-1 overflow-y-auto bg-transparent py-2.5 pr-2 pl-1 text-base text-foreground outline-none md:min-h-9 md:py-1.5 [&_.aui-lexical-input]:min-h-6 [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-2.5 [&_.aui-lexical-placeholder]:text-muted-foreground md:[&_.aui-lexical-placeholder]:top-1.5"
+            className="relative min-w-0 max-h-52 min-h-11 flex-1 overflow-y-auto bg-transparent py-2.5 pr-2 pl-1 text-base text-foreground outline-none md:min-h-9 md:py-1.5 [&_.aui-lexical-input]:min-h-6 [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-2.5 [&_.aui-lexical-placeholder]:text-muted-foreground md:[&_.aui-lexical-placeholder]:top-1.5"
           />
           <div className="flex shrink-0 items-center gap-1">
-            {canCancel && (
+            {canCancel || cancelling ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button type="button" disabled={cancelling} onClick={() => void cancel()} className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground md:size-9" aria-label="停止全部智能助教" aria-busy={cancelling}>
@@ -182,7 +182,7 @@ export function ConversationComposer({
                 </TooltipTrigger>
                 <TooltipContent side="top">停止当前会话中的全部智能助教</TooltipContent>
               </Tooltip>
-            )}
+            ) : (
             <Tooltip>
               <TooltipTrigger asChild>
                 <ComposerPrimitive.Send asChild>
@@ -193,6 +193,7 @@ export function ConversationComposer({
               </TooltipTrigger>
               <TooltipContent side="top">发送</TooltipContent>
             </Tooltip>
+            )}
           </div>
         </div>
           </ComposerPrimitive.Root>

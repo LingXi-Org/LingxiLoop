@@ -26,7 +26,7 @@ test('real learning records allow honest report pairs, closed return without new
     return response.json()
   }, url)
   const detail = (id: string) => api(`/api/courses/${courseId}/homeworks/${id}`)
-  const forum = async () => { await app.open(`/?project=${projectId}&view=forum`); await expect(screen.getByLabel('搜索论坛')).toBeVisible() }
+  const forum = async () => { await app.open(`/?project=${projectId}&view=forum`); await expect(screen.getByLabel('搜索学习论坛')).toBeVisible() }
   const openTask = async (name: string, teacher = false) => {
     await forum(); await browser.locator('article').filter({ hasText: name }).getByRole('button', teacher ? '查看进度与验收' : '查看作业', { exact: true }).tap()
     await expect(screen.getByRole('dialog', name, { exact: true })).toBeVisible()

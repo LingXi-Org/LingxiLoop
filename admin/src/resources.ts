@@ -22,10 +22,7 @@ const identity = [
 ] as const
 const learning = [
   ['projects', '项目'], ['project-memberships', '项目成员'], ['project-invitations', '项目邀请'],
-  ['project-transfers', '项目转移'], ['courses', '课程'], ['knowledge-units', '知识单元'],
-  ['learning-activities', '学习活动'], ['learning-attempts', '学习尝试'],
-  ['learning-missions', '学习任务'], ['learning-cases', '学习案例'],
-  ['learning-evaluations', '学习评估'], ['evidence-records', '证据'], ['trust-snapshots', '信任快照'],
+  ['project-transfers', '项目转移'], ['courses', '课程'], ['evidence-records', '证据'], ['trust-snapshots', '信任快照'],
 ] as const
 const collaboration = [
   ['participants', '参与者与 Agent'], ['agent-runs', 'Agent 运行'],

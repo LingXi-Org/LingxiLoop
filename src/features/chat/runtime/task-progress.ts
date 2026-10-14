@@ -1,5 +1,4 @@
 import type { ToolCallMessagePart } from '@assistant-ui/react'
-import { parseSerializablePlan } from '@/components/tool-ui/plan/schema'
 import { parseSerializableProgressTracker, type ProgressStep } from '@/components/tool-ui/progress-tracker/schema'
 import type { ToolUIReceipt } from '@/components/tool-ui/shared/schema'
 
@@ -22,18 +21,6 @@ function receipt(status: string, at: unknown): ToolUIReceipt | undefined {
     ? { outcome, summary: labels[status], at: new Date(at).toISOString() } : undefined
 }
 
-export function missionPlan(data: Data, names: Names) {
-  const status = text(data.status).toLowerCase(), steps = rows(data.steps)
-  return parseSerializablePlan({ id: text(data.id), title: text(data.goal, '学习任务'),
-    description: [person(names,data.coordinatorAgentId),text(data.successCriteria),status === 'paused' ? '已暂停' : status === 'planning' ? '规划中' : ''].filter(Boolean).join(' · '),
-    todos: steps.length ? steps.map(step => ({ id: text(step.id), label: text(step.description, '学习步骤'),
-      description: [text(step.successCriteria),text(step.outcome)].filter(Boolean).join(' · '),
-      status: ({ OPEN: 'pending', IN_PROGRESS: 'in_progress', COMPLETED: 'completed', CANCELLED: 'cancelled' } as const)[text(step.status) as 'OPEN'] ?? 'pending',
-    })) : [{ id: `${text(data.id)}:planning`, label: status === 'planning' ? '制定可检查的学习步骤' : text(data.goal, '学习任务'),
-      status: status === 'completed' ? 'completed' : status === 'cancelled' ? 'cancelled' : 'in_progress' }],
-    ...(receipt(status,data.updatedAt) ? { receipt: receipt(status,data.updatedAt) } : {}),
-  })
-}
 
 export function canvasProgress(data: Data, names: Names) {
   const status = text(data.status,'active'), assignments = rows(data.assignments)

@@ -1,17 +1,16 @@
 import type { RunEvent, RunStreamEvent } from '@lyyzka/lingxios/ui'
-import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { publicActivitySchema } from '../../../src/lib/runActivity.js'
+import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 
 /** User transport allowlist; full results remain private to the native runtime. */
 export function publicToolValue(action: string, value: unknown): unknown {
+  if (action === 'teacher.draft_homework') return toolCardResult(action, value)
   if (action === 'chat.report_progress') {
     const parsed = publicActivitySchema.safeParse(value)
     return parsed.success ? parsed.data : undefined
   }
-  const card = toolCardResult(action, value)
-  if (card !== undefined) return action === 'learning.propose_evaluation' ? { result: card } : card
   if (action === 'research.search') { const results = researchSources(value); return results === null ? undefined : { results } }
   if (action.startsWith('knowledge.') && value && typeof value === 'object') {
     const status = Reflect.get(value, 'status')

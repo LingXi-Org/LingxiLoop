@@ -47,9 +47,6 @@ export type CounterName =
   | 'knowledge.retrieval.errors'
   | 'knowledge.retrieval.latency_ms'
   | 'knowledge.retrieval.miss'
-  | 'learning.mission.created'
-  | 'learning.mission.deduplicated'
-  | 'learning.mission.planning_completed'
   | 'learning.attempt.accepted'
   | 'learning.evaluation.proposed'
   | 'learning.state.changed'
@@ -99,9 +96,6 @@ const REGISTRY: Readonly<Record<CounterName, CounterDef>> = {
   'knowledge.retrieval.errors':          { help: 'Open Notebook retrieval requests that failed.', labels: [] },
   'knowledge.retrieval.latency_ms':      { help: 'Cumulative Open Notebook retrieval latency in milliseconds.', labels: [] },
   'knowledge.retrieval.miss':            { help: 'Agent turns with ready sources but no sufficient retrieval hit.', labels: [] },
-  'learning.mission.created':             { help: 'Learning Missions created.', labels: ['mode'] },
-  'learning.mission.deduplicated':        { help: 'Duplicate Mission creation attempts returned the existing Mission.', labels: [] },
-  'learning.mission.planning_completed':  { help: 'Mission boards that passed the explicit planning gate.', labels: ['mode'] },
   'learning.attempt.accepted':            { help: 'Host-verified learning attempts accepted.', labels: ['source'] },
   'learning.evaluation.proposed':         { help: 'Learning evaluations proposed by status.', labels: ['status'] },
   'learning.state.changed':               { help: 'Deterministic LearningState projection changes.', labels: ['status'] },

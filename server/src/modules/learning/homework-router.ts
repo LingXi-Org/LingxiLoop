@@ -3,6 +3,9 @@ import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { safe } from '../../http/async-handler.js'
 import { requireCompany } from '../../http/request-context.js'
+import { requireLearningCourseRole } from './membership-application.js'
+import { findActiveTeacherRoom } from './teacher-provisioning-repository.js'
+import { LearningApplicationError } from './errors.js'
 import { HomeworkApplication } from './homework-application.js'
 import { homeworkDeadlineSchema, homeworkEditSchema, homeworkPublishSchema, homeworkReportSchema, homeworkReviewSchema,
   homeworkRevisionSchema, homeworkSaveAnswerSchema, homeworkShareSchema, homeworkSubmitSchema, homeworkUnlockSchema } from './homework-contracts.js'
@@ -11,6 +14,15 @@ import { parseLearningRequest as parse, respondWithLearning as respond } from '.
 
 export const homeworkRouter=Router()
 const homework=new HomeworkApplication(pool,work=>withTransaction(pool,work))
+homeworkRouter.get('/courses/:courseId/teacher-agent',safe(async(req,res)=>{
+  const scope=await requireCompany(req),courseId=String(req.params.courseId)
+  res.json(await respond(async()=>{
+    await requireLearningCourseRole(pool,{...scope,courseId,role:'teacher'})
+    const room=await findActiveTeacherRoom(pool,scope.companyId,courseId)
+    if (!room) throw new LearningApplicationError('not_found','teacher room not found')
+    return {roomId:room.conversationId,agentId:room.agentId,roomStatus:'active'}
+  }))
+}))
 const path='/courses/:courseId/homeworks/:homeworkId'
 homeworkRouter.get(path,safe(async(req,res)=>{
   const scope=await requireCompany(req)

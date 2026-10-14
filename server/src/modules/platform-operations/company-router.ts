@@ -108,7 +108,7 @@ companyAdminRouter.get('/resources/:resource/:id/content/:field', safe(async (re
 companyAdminRouter.get('/resources/:resource/:id/summary', safe(async (req, res) => {
   const admin = identity(res), resource = String(req.params.resource), id = String(req.params.id)
   await detail(admin, resource, id)
-  const related = resource === 'companies' ? ['company-memberships', 'projects', 'education-contracts', 'organization-seats'] : resource === 'projects' ? ['project-memberships', 'courses', 'learning-activities', 'knowledge-sources'] : resource === 'users' ? ['company-memberships', 'project-memberships'] : []
+  const related = resource === 'companies' ? ['company-memberships', 'projects', 'education-contracts', 'organization-seats'] : resource === 'projects' ? ['project-memberships', 'courses', 'knowledge-sources'] : resource === 'users' ? ['company-memberships', 'project-memberships'] : []
   const filter = resource === 'companies' ? { companyId: id } : resource === 'projects' ? { projectId: id } : { userId: id }
   res.json({ metrics: await Promise.all(related.map(async name => ({ label: adminResourceCatalog().find(item => item.name === name)?.label, resource: name, value: (await list(admin, name, filter)).total }))) })
 }))

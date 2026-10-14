@@ -1085,8 +1085,8 @@ test('[integration] homework draft is teacher-owned and absent from learner feed
   })).status, 409)
   const feed = await (await call(student, `/courses/${courseId}/forum`)).json() as { items: { id: string }[] }
   assert.ok(!feed.items.some(item => item.id === id))
-  const counts = await pool.query(`SELECT (SELECT count(*)::int FROM learning_activities) activities,(SELECT count(*)::int FROM learning_missions) missions`)
-  assert.deepEqual(counts.rows, [{ activities: 0, missions: 0 }])
+  const counts = await pool.query(`SELECT to_regclass('learning_activities') activities,to_regclass('learning_missions') missions`)
+  assert.deepEqual(counts.rows, [{ activities: null, missions: null }])
 })
 
 test('[integration] card edits reject stale revisions, foreign course scope and forbidden client authority fields', async () => {
@@ -1126,7 +1126,7 @@ test('[integration] existing managed teacher bindings refresh their persona whil
 
 test('[integration] native teacher revisions update the same draft and require fresh human confirmation; no model publication/review tool exists', async () => {
   const [{ teacherTools }, { ensureTeacherAgentForCourse }] = await Promise.all([
-    import('../modules/learning/teacher-agent-tools.js'), import('../modules/learning/teacher-agent-application.js'),
+    import('../modules/learning/public.js'), import('../modules/learning/teacher-agent-application.js'),
   ])
   const tool = teacherTools.find(item => item.action === 'teacher.draft_homework')!
   assert.ok(tool)
@@ -1159,7 +1159,7 @@ test('[integration] native teacher revisions update the same draft and require f
 
 test('[integration] native homework overview bounds long reports, aggregates the whole class and pages submitted sections without private drafts', async () => {
   const [{ teacherTools }, { ensureTeacherAgentForCourse }] = await Promise.all([
-    import('../modules/learning/teacher-agent-tools.js'), import('../modules/learning/teacher-agent-application.js'),
+    import('../modules/learning/public.js'), import('../modules/learning/teacher-agent-application.js'),
   ])
   const criteria = Array.from({ length: 20 }, (_, index) => `Explain independently ${index}: ${'Use the half-rectangle relationship. '.repeat(20)}`)
   const { homework: task } = await published({ criteria })
@@ -1302,4 +1302,37 @@ test('[integration] learner native reads page full requirements and real materia
   await assert.rejects(invoke({ homeworkId: task.id, section: 'materials' }))
   await pool.query(`UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id=$2 AND user_id=$3`, [companyId, projectId, student.userId])
   await assert.rejects(invoke({ homeworkId: task.id, section: 'materials' }))
+})
+
+// Merge failures: equal post/homework IDs leak comments or flags; pagination and archives
+// omit one kind; teacher-room lookup skips course membership checks.
+test('[integration] homework shares forum filters while keeping target flags, comments and room grants separate', async () => {
+  const { ForumApplication } = await import('../modules/learning/forum-application.js')
+  const { ensureTeacherAgentForCourse } = await import('../modules/learning/teacher-agent-application.js')
+  const forum = new ForumApplication(pool, transaction)
+  const { homework: task } = await published()
+  await pool.query(`INSERT INTO course_forum_posts(id,company_id,project_id,author_user_id,kind,title,body)
+    VALUES($1,$2,$3,$4,'share','Separate forum discussion','Separate content')`, [task.id,companyId,projectId,teacher.userId])
+  const comment = await forum.comment(student,courseId,'homework',task.id,'Homework comment')
+  await assert.rejects(forum.editComment(student,courseId,task.id,comment.id,{body:'Wrong target'}))
+  await forum.comment(student,courseId,'post',task.id,'Post comment')
+  const initial = await forum.list(student,courseId,{})
+  assert.deepEqual(initial.items.map(item=>({type:item.targetType,count:item.commentCount})).sort((a,b)=>a.type.localeCompare(b.type)),
+    [{type:'homework',count:1},{type:'post',count:1}])
+  assert.equal((await forum.detail(student,courseId,'post',task.id)).title,'Separate forum discussion')
+  assert.equal((await forum.detail(student,courseId,'homework',task.id)).title,task.title)
+  assert.deepEqual((await forum.list(student,courseId,{kind:'assignment',search:task.title})).items.map(item=>item.targetType),['homework'])
+  await assert.rejects(forum.updateFlags(student,courseId,'homework',task.id,{pinned:true}))
+  await forum.updateFlags(teacher,courseId,'homework',task.id,{pinned:true,archived:true})
+  assert.deepEqual((await forum.list(student,courseId,{})).items.map(item=>item.targetType),['post'])
+  const archived = await forum.list(student,courseId,{archived:'true'})
+  assert.deepEqual(archived.items.map(item=>({type:item.targetType,pinned:item.pinned})),[{type:'homework',pinned:true}])
+  assert.deepEqual((await forum.comments(student,courseId,'homework',task.id,0)).items.map(item=>item.body),['Homework comment'])
+  await forum.updateFlags(teacher,courseId,'homework',task.id,{archived:false})
+  assert.equal((await forum.list(student,courseId,{})).items[0].targetType,'homework')
+  assert.equal((await forum.list(student,courseId,{offset:1})).items[0].targetType,'post')
+  const room = await ensureTeacherAgentForCourse(companyId,courseId,pool,transaction)
+  assert.deepEqual(await (await call(teacher,`/courses/${courseId}/teacher-agent`)).json(),{roomId:room.roomId,agentId:room.agentId,roomStatus:'active'})
+  assert.equal((await call(student,`/courses/${courseId}/teacher-agent`)).status,403)
+  assert.equal((await call(outsider,`/courses/${courseId}/teacher-agent`)).status,404)
 })

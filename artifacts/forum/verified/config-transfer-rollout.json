@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "successfulCalls": 6,
+  "recoveryCalls": 10,
+  "schema40SkipsMaintenance": true,
+  "realPgDumpRestore": true,
+  "postMigrationCountsVerified": true,
+  "configurationTransferVerified": true,
+  "configurationFailuresPrecedeMaintenance": true,
+  "retriedReleasePreservesFirstBackup": true,
+  "limitations": [
+    "Komodo stop/start is recorded by a local HTTP fixture; production update state is verified separately."
+  ]
+}

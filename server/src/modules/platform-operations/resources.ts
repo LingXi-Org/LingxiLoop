@@ -38,12 +38,6 @@ export const ADMIN_RESOURCES = {
   'project-invitations': { label: '项目邀请', group: 'learning', table: 'project_invitations', idColumn: 'token_hash', companyColumn: 'company_id', projectColumn: 'project_id', searchColumns: ['email', 'note'], orderColumn: 'created_at', listOmit: ['token_hash'], detailOmit: ['token_hash'], detail: false },
   'project-transfers': { label: '项目转移', group: 'learning', table: 'project_transfers', idColumn: 'id', projectColumn: 'project_id', statusColumn: 'status', searchColumns: ['id', 'project_id', 'source_company_id', 'target_company_id'], orderColumn: 'created_at' },
   courses: { label: '课程', group: 'learning', table: 'courses', idColumn: 'id', companyColumn: 'company_id', projectColumn: 'project_id', searchColumns: ['id', 'created_by'], orderColumn: 'created_at', total: true },
-  'knowledge-units': { label: '知识单元', group: 'learning', table: 'learning_knowledge_units', idColumn: 'id', companyColumn: 'company_id', projectColumn: 'project_id', statusColumn: 'status', searchColumns: ['id', 'title', 'success_criteria'], orderColumn: 'created_at' },
-  'learning-activities': { label: '学习活动', group: 'learning', table: 'learning_activities', idColumn: 'id', companyColumn: 'company_id', projectColumn: 'project_id', statusColumn: 'status', searchColumns: ['id', 'title', 'instructions'], orderColumn: 'created_at', listOmit: ['instructions', 'rubric'] },
-  'learning-attempts': { label: '学习尝试', group: 'learning', table: 'learning_attempts', idColumn: 'id', companyColumn: 'company_id', projectColumn: 'project_id', statusColumn: 'status', searchColumns: ['id', 'learner_id', 'activity_id'], orderColumn: 'submitted_at' },
-  'learning-missions': { label: '学习任务', group: 'learning', table: 'learning_missions', idColumn: 'id', companyColumn: 'company_id', projectColumn: 'project_id', statusColumn: 'status', searchColumns: ['id', 'goal'], orderColumn: 'created_at' },
-  'learning-cases': { label: '学习案例', group: 'learning', table: 'learning_cases', idColumn: 'id', companyColumn: 'company_id', projectColumn: 'project_id', statusColumn: 'status', searchColumns: ['id', 'user_id', 'reason'], orderColumn: 'created_at' },
-  'learning-evaluations': { label: '学习评估', group: 'learning', table: 'learning_evaluations', idColumn: 'id', companyColumn: 'company_id', projectColumn: 'project_id', statusColumn: 'status', searchColumns: ['id', 'attempt_id', 'evaluator_id'], orderColumn: 'created_at' },
   'evidence-records': { label: '证据', group: 'learning', table: 'evidence_records', idColumn: 'id', companyColumn: 'company_id', projectColumn: 'project_id', searchColumns: ['id', 'kind'], orderColumn: 'created_at', listOmit: ['data'], sensitive: true },
   'trust-snapshots': { label: '信任快照', group: 'learning', table: 'trust_snapshots', idColumn: 'id', companyColumn: 'company_id', projectColumn: 'project_id', statusColumn: 'audience_level', searchColumns: ['id', 'dataset_release'], orderColumn: 'created_at', listOmit: ['payload', 'signature'], sensitive: true },
 
@@ -152,7 +146,7 @@ export async function listAdminResources(
   if (query.projectId?.trim() && resource.projectColumn) where.push(`item.${resource.projectColumn}=${add(query.projectId.trim())}`)
 
   const userColumns: Record<string, string> = { 'company-memberships': 'user_id', 'project-memberships': 'user_id' }
-  const parentColumns: Record<string, [string, string]> = { sourceId: ['knowledge-jobs', 'source_id'], activityId: ['learning-attempts', 'activity_id'], attemptId: ['learning-evaluations', 'attempt_id'] }
+  const parentColumns: Record<string, [string, string]> = { sourceId: ['knowledge-jobs', 'source_id'] }
   if (query.userId) {
     const column = userColumns[resourceName]
     if (!column) throw new HttpError(400, 'user filter is not available')
@@ -274,8 +268,8 @@ export async function resourceSummary(db: Queryable, resource: string, id: strin
   const queries: Record<string, Array<[string, string]>> = {
     users: [['所属组织', 'SELECT COUNT(*)::int AS count FROM company_memberships WHERE user_id=$1'], ['所属项目', 'SELECT COUNT(*)::int AS count FROM project_memberships WHERE user_id=$1']],
     companies: [['成员', 'SELECT COUNT(*)::int AS count FROM company_memberships WHERE company_id=$1'], ['项目', "SELECT COUNT(*)::int AS count FROM projects WHERE company_id=$1 AND status<>'DELETED'"], ['合同', 'SELECT COUNT(*)::int AS count FROM education_contracts WHERE company_id=$1'], ['席位', 'SELECT COUNT(*)::int AS count FROM organization_seats WHERE company_id=$1']],
-    projects: [['成员', 'SELECT COUNT(*)::int AS count FROM project_memberships WHERE project_id=$1'], ['课程', 'SELECT COUNT(*)::int AS count FROM courses WHERE project_id=$1'], ['学习活动', 'SELECT COUNT(*)::int AS count FROM learning_activities WHERE project_id=$1'], ['知识源', 'SELECT COUNT(*)::int AS count FROM knowledge_sources WHERE project_id=$1']],
+    projects: [['成员', 'SELECT COUNT(*)::int AS count FROM project_memberships WHERE project_id=$1'], ['课程', 'SELECT COUNT(*)::int AS count FROM courses WHERE project_id=$1'], ['学习论坛作业', "SELECT COUNT(*)::int AS count FROM course_forum_posts WHERE project_id=$1 AND kind='assignment'"], ['知识源', 'SELECT COUNT(*)::int AS count FROM knowledge_sources WHERE project_id=$1']],
   }
-  const related: Record<string, string[]> = { users: ['company-memberships', 'project-memberships'], companies: ['company-memberships', 'projects', 'education-contracts', 'organization-seats'], projects: ['project-memberships', 'courses', 'learning-activities', 'knowledge-sources'] }
+  const related: Record<string, string[]> = { users: ['company-memberships', 'project-memberships'], companies: ['company-memberships', 'projects', 'education-contracts', 'organization-seats'], projects: ['project-memberships', 'courses', 'knowledge-sources'] }
   return { metrics: await Promise.all(queries[resource].map(async ([label, sql], index) => ({ label, resource: related[resource][index], value: (await db.query<{ count: number }>(sql, [id])).rows[0].count }))) }
 }

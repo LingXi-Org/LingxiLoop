@@ -105,7 +105,9 @@ export class PlatformApplication {
       timeout(this.infrastructure.redisPing(), 2_000, 'redis').then(() => { checks.redis = true }),
     ]
     if (this.infrastructure.openNotebookEnabled()) {
-      probes.push(timeout(this.infrastructure.openNotebookHealth(), 3_000, 'Open Notebook').then(() => {
+      // /readyz verifies search and an R2 write/read/delete round-trip. Match the
+      // provider's bounded request deadline; API liveness remains independent.
+      probes.push(timeout(this.infrastructure.openNotebookHealth(), 30_000, 'Open Notebook').then(() => {
         checks.openNotebook = true
       }))
     }

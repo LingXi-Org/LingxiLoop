@@ -11,7 +11,9 @@ import { z } from 'zod'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { installStarterAgents } from '../modules/companies/onboarding-repository.js'
-import { learningApplication } from '../modules/learning/facade.js'
+import { insertCourse } from '../modules/learning/courses-repository.js'
+import { ensureTeacherAgentForCourse } from '../modules/learning/teacher-agent-application.js'
+import { enqueueLearningEffect } from '../modules/learning/effects-repository.js'
 import { wukongClient, _setWukongClientForTests } from '../im/wukong.js'
 import { nativeText } from '../im/message-types.js'
 import type { NativeMessage } from '../../../src/lib/nativeMessage.js'
@@ -84,8 +86,17 @@ test('[live] homework normal authentication, real production worker, measured mo
       await pool.query('UPDATE users SET email_verified_at=NOW() WHERE id=$1', [id])
     }
     await withTransaction(pool, db => installStarterAgents(db, companyId))
-    const course = await learningApplication.createCourse({ companyId, userId: teacherId }, { name: 'Homework Live Classroom', description: 'Disposable live homework acceptance', color: '#5266d6' })
-    await pool.query(`INSERT INTO project_memberships(company_id,project_id,user_id,role,status) VALUES($1,$2,$3,'STUDENT','ACTIVE')`, [companyId, course.projectId, studentId])
+    const course = { id: 'homework-live-course', projectId: 'homework-live-project' }
+    await withTransaction(pool, async db => {
+      await insertCourse(db, { companyId, userId: teacherId, projectId: course.projectId, courseId: course.id,
+        roomId: 'homework-live-study-room', kind: 'TEACHING', planId: 'plan-education',
+        input: { name: 'Homework Live Classroom', description: 'Disposable live homework acceptance', color: '#5266d6' } })
+      await db.query(`INSERT INTO project_memberships(company_id,project_id,user_id,role,status) VALUES($1,$2,$3,'STUDENT','ACTIVE')`, [companyId, course.projectId, studentId])
+      await ensureTeacherAgentForCourse(companyId, course.id, db, work => work(db))
+      for (const kind of ['study_room.sync', 'teacher_room.sync', 'teacher_agent.welcome'] as const) {
+        await enqueueLearningEffect(db, { companyId, courseId: course.id, kind })
+      }
+    })
     Object.assign(env, { E2E_HOMEWORK_COURSE_ID: course.id, E2E_HOMEWORK_PROJECT_ID: course.projectId })
     const objects = new S3Client({ endpoint: process.env.R2_ENDPOINT, region: 'auto', forcePathStyle: true,
       credentials: { accessKeyId: process.env.R2_ACCESS_KEY_ID!, secretAccessKey: process.env.R2_SECRET_ACCESS_KEY! } })

@@ -11,14 +11,15 @@ import { chatTransport } from '../runtime/transport'
 import { knowledgeProgress } from '../runtime/task-progress'
 import { ApprovalRequestCard } from './ApprovalRequestCard'
 import { MessagePartBoundary } from './MessagePartBoundary'
-import { ResearchSources } from './ResearchSources'
 import { TOOL_DETAILS } from './ToolRenderers'
+import { ResearchSources } from './ResearchSources'
 
-export const hasRichTool = (name: string) => /^(email|calendar)\./.test(name) || Object.hasOwn(TOOL_DETAILS, name) || name === 'research.search'
+export const hasRichTool = (name: string) => Object.hasOwn(TOOL_DETAILS,name) || /^(email|calendar)\./.test(name) || name === 'research.search'
   || ['knowledge.search', 'knowledge.read_source', 'knowledge.list_sources'].includes(name)
 
 export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean; children?: ReactNode }) {
   const { toolCallId, toolName, result, isError, approval, interrupt, status, readOnly, children } = props
+  const Detail = TOOL_DETAILS[toolName as keyof typeof TOOL_DETAILS]
   const aui = useAui()
   const message = useAuiState(state => state.message)
   const custom = message.metadata.custom
@@ -45,7 +46,6 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
     : pending || interrupt && !ended ? { type: 'requires-action', reason: interrupt ? 'interrupt' : 'tool-calls' }
     : resultStatus === 'completed' ? { type: 'complete' } : status.type === 'running' ? status : { type: 'incomplete', reason: 'other' }
   const lifecycle = cancelled ? 'cancelled' : failed ? 'failed' : displayStatus.type === 'running' ? 'leased' : 'succeeded'
-  const Detail = TOOL_DETAILS[toolName as keyof typeof TOOL_DETAILS]
   const retrieval = knowledgeProgress(toolCallId, [props], lifecycle, String(custom.senderName ?? '助手'))
 
   async function act(work: (current: ReturnType<typeof aui.message.getState>) => Promise<void>) {
@@ -88,7 +88,7 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
         {props.timing?.completedAt !== undefined && <p>耗时 {((props.timing.completedAt - props.timing.startedAt) / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 秒</p>}
       </div>}
       {hasRichTool(toolName) && (result !== undefined || displayStatus.type === 'running') && <MessagePartBoundary resetKey={result} running={displayStatus.type === 'running'}>
-        {Detail && <Detail {...props} />}
+        {Detail && <Detail {...props} readOnly={readOnly} />}
         {toolName === 'research.search' && <ResearchSources calls={[props]} lifecycle={lifecycle} />}
         {retrieval && <ProgressTracker {...retrieval} />}
       </MessagePartBoundary>}

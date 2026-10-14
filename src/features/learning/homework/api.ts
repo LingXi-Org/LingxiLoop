@@ -5,6 +5,7 @@ import type { HomeworkAnswer, HomeworkDetail, HomeworkFields, HomeworkLearner, H
 
 const base = (courseId: string, homeworkId: string) => `/courses/${encodeURIComponent(courseId)}/homeworks/${encodeURIComponent(homeworkId)}`
 export const homeworkApi = {
+  teacherRoom: (courseId: string) => http<{ roomId: string; agentId: string; roomStatus: 'active' }>(`/courses/${encodeURIComponent(courseId)}/teacher-agent`),
   detail: (courseId: string, id: string) => http<HomeworkDetail>(base(courseId, id)),
   saveDraft: (courseId: string, id: string, input: HomeworkFields & { expectedRevision: number }) =>
     http<HomeworkDetail>(`${base(courseId, id)}/draft`, { method: 'PATCH', body: JSON.stringify(input) }),

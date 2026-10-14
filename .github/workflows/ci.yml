@@ -19,7 +19,7 @@ on:
 
 concurrency:
   group: lingxiloop-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -173,9 +173,14 @@ jobs:
               - 'scripts/production-rag-contract.test.mjs'
               - 'scripts/update-deployment-images.mjs'
               - 'scripts/trigger-komodo-rollout.mjs'
+              - 'scripts/prepare-forum-rollout.mjs'
+              - 'scripts/sync-komodo-config.mjs'
               - 'scripts/test-distributed-realtime.mjs'
               - 'scripts/test-native-agent-*.mjs'
             deployment:
+              - 'scripts/trigger-komodo-rollout.mjs'
+              - 'scripts/prepare-forum-rollout.mjs'
+              - 'scripts/sync-komodo-config.mjs'
               - 'deploy/**'
               - '!deploy/**/*.md'
             control_migrations:
@@ -344,7 +349,7 @@ jobs:
           PGPASSWORD: postgres
           LINGXIOS_NATIVE_TEST_REDIS_URL: redis://127.0.0.1:6379
         run: |
-          for capability in documents canvas learning eval; do
+          for capability in documents canvas eval; do
             createdb "native_${capability}"
             LINGXIOS_NATIVE_TEST_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/native_${capability}" \
               node "scripts/test-native-agent-${capability}.mjs"
