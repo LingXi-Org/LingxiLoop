@@ -164,6 +164,7 @@ test('group mention upgrade preserves customized preset profiles and retires onl
 test('interactive UI upgrade preserves product rows and adds empty scoped state once', async () => {
   await withDatabase(async database => {
     await migrateDatabase(database)
+    await restoreSchema38(database)
     await database.query(`DROP TABLE agent_public_tool_activity, course_forum_flags, course_forum_comments, course_forum_posts,
       im_ui_user_states, im_ui_revisions;
     DROP INDEX learning_evidence_submission_files;
