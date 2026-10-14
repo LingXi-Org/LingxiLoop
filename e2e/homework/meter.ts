@@ -5,7 +5,9 @@ import { contentReviewDiagnostics, structuredRequestShape } from './content-revi
 import { homeworkJudgmentDiagnostics } from './homework-judgment-diagnostics.js'
 
 type Role = 'CANDIDATE' | 'JUDGE'
+type MeterStage = 'request' | 'provider-request' | 'provider-status' | 'provider-body' | 'response-json' | 'usage' | 'cost' | 'diagnostics'
 type Receipt = { id: string; role: Role; inputTokens: number; outputTokens: number; costCNY: number; status: 'measured' | 'failed'; model: string;
+  failure?: { stage: MeterStage; httpStatus: number | null };
   contentReview?: NonNullable<ReturnType<typeof contentReviewDiagnostics>>; structuredRequest?: NonNullable<ReturnType<typeof structuredRequestShape>>;
   homeworkJudgment?: NonNullable<ReturnType<typeof homeworkJudgmentDiagnostics>> }
 const cost = (input: number, output: number, inputRate: number, outputRate: number) => (input * inputRate + output * outputRate) / 1e6
@@ -174,6 +176,7 @@ export async function startHomeworkMeter(maxCNY: number) {
   const server = createServer(async (request, response) => {
     let reservation = 0
     let reserved = false
+    let stage: MeterStage = 'request', httpStatus: number | null = null
     const role: Role = request.url?.startsWith('/judge/') ? 'JUDGE' : 'CANDIDATE'
     const id = randomUUID(), model = process.env[`EVAL_${role}_MODEL`]!
     try {
@@ -193,19 +196,26 @@ export async function startHomeworkMeter(maxCNY: number) {
       assert.ok(spentCNY + reservedCNY + reservation <= maxCNY, 'Live model cost ceiling reached before request')
       reservedCNY += reservation
       reserved = true
+      stage = 'provider-request'
       const upstream = await fetch(`${process.env[`EVAL_${role}_BASE_URL`]!.replace(/\/$/, '')}/chat/completions`, {
         method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env[`EVAL_${role}_API_KEY`]}` },
         body: JSON.stringify(input), signal: AbortSignal.timeout(240_000),
       })
+      stage = 'provider-status'; httpStatus = upstream.status
       assert.ok(upstream.ok, `Model provider returned HTTP ${upstream.status}`)
+      stage = 'provider-body'
       const body = await upstream.text()
       assert.ok(Buffer.byteLength(body) <= 4 * 1024 * 1024, 'Model response too large')
+      stage = 'response-json'
       const messages = input.stream ? body.split('\n').filter(line => line.startsWith('data: ') && !line.includes('[DONE]')).map(line => JSON.parse(line.slice(6))) : [JSON.parse(body)]
+      stage = 'usage'
       const usage = messages.map(message => message.usage).reverse().find(Boolean) as { prompt_tokens: number; completion_tokens: number } | undefined
       assert.ok(usage && Number.isInteger(usage.prompt_tokens) && usage.prompt_tokens > 0 && Number.isInteger(usage.completion_tokens) && usage.completion_tokens > 0, 'Measured provider usage is required')
+      stage = 'cost'
       const actual = cost(usage.prompt_tokens, usage.completion_tokens, inputRate, outputRate)
       assert.ok(actual <= reservation && spentCNY + actual <= maxCNY, 'Provider usage exceeded reserved cost')
       spentCNY += actual
+      stage = 'diagnostics'
       const contentReview = contentReviewDiagnostics(input, messages[0])
       const structuredRequest = structuredRequestShape(input)
       const homeworkJudgment = homeworkJudgmentDiagnostics(input, messages[0])
@@ -214,7 +224,7 @@ export async function startHomeworkMeter(maxCNY: number) {
       response.writeHead(200, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' }); response.end(body)
     } catch {
       failed = true
-      receipts.push({ id, role, inputTokens: 0, outputTokens: 0, costCNY: 0, status: 'failed', model })
+      receipts.push({ id, role, inputTokens: 0, outputTokens: 0, costCNY: 0, status: 'failed', model, failure: { stage, httpStatus } })
       response.writeHead(502, { 'content-type': 'application/json' }); response.end(JSON.stringify({ error: { message: 'Live metering failed closed; inspect receipt status.' } }))
     } finally { if (reserved) reservedCNY -= reservation }
   })
