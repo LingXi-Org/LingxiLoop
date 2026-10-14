@@ -8,7 +8,7 @@ import { audienceHumanIds, authorizeAudienceRead, compareResource, nativeContext
 import { HomeworkApplication } from './homework-application.js'
 import { homeworkAssessmentSchema, homeworkDraftSchema } from './homework-contracts.js'
 import { homeworkRow, homeworkScope, homeworkState, studentHomeworkView } from './homework-repository.js'
-import { learnerHomeworkRead, teacherHomeworkOverview } from './homework-reporting.js'
+import { learnerHomeworkRead, teacherHomeworkDraftReceipt, teacherHomeworkOverview } from './homework-reporting.js'
 import { resolveTeacherScope } from './teacher-agent-application.js'
 
 const id=z.string().trim().min(1).max(200)
@@ -92,7 +92,7 @@ async function teacher(context:ActionContext) {
 
 export const homeworkTeacherTools:ToolDefinition[]=[
   nativeTool('teacher.draft_homework',teacherHomeworkDraftSchema,{
-    description:'Create or revise a homework draft with clear instructions and a few human-readable independent mastery criteria. To revise the same draft provide both homeworkId and its current expectedRevision. The initiating teacher must edit/review and explicitly click the latest draft card to publish. Every revision requires renewed confirmation. This tool never publishes. Do not create legacy activities, objectives or Missions for homework.',
+    description:'Create or revise a homework draft with clear instructions and a few human-readable independent mastery criteria. To revise the same draft provide both homeworkId and its current expectedRevision. The result contains the card locator, verified title/revision/hash and a first text page of actual requirements. Read further pages or verify current draft state with teacher.homework_overview using homeworkId and section=requirements; keep sourceVersion consistent. Published-only lists cannot verify an unpublished draft. The initiating teacher must edit/review and explicitly click the latest draft card to publish. Every revision requires renewed confirmation. This tool never publishes. Do not create legacy activities, objectives or Missions for homework.',
     effect:'transaction',approval:false,authorize:async context=>{
       if(context.work.kind==='teacher_digest') throw new NoEffectError('scheduled summaries are read only','forbidden')
       await teacher(context)
@@ -101,8 +101,7 @@ export const homeworkTeacherTools:ToolDefinition[]=[
       const {db,binding,scope}=await teacher(context),{homeworkId,expectedRevision,...draft}=input
       const detail=homeworkId?await application(db).updateDraft(scope,binding.courseId,homeworkId,{...draft,expectedRevision:expectedRevision!})
         :await application(db).draft(scope,binding.courseId,draft)
-      return {ok:true,executionState:'succeeded',value:{result:{homeworkId:detail.homework.id,courseId:binding.courseId,revision:detail.homework.revision},
-        state:{revision:detail.homework.revision,visibleHash:detail.homework.visibleHash,title:detail.homework.title}}}
+      return {ok:true,executionState:'succeeded',value:teacherHomeworkDraftReceipt(detail.homework,binding.courseId)}
     },
     async verify(context,_input,value) {
       const {db,binding,scope}=await teacher(context),stored=value as {result:{homeworkId:string};state:{revision:number;visibleHash:string;title:string}}
@@ -111,9 +110,10 @@ export const homeworkTeacherTools:ToolDefinition[]=[
     },
   }),
   nativeTool('teacher.homework_overview',z.object({homeworkId:id.optional(),learnerId:id.optional(),
-    section:z.enum(['report','answer','shared_evidence']).default('report'),offset:z.number().int().min(0).max(1000000).default(0)}).strict()
-    .refine(input=>!input.learnerId||Boolean(input.homeworkId),'learnerId requires homeworkId'),{
-    description:'List published homework, or provide homeworkId for whole-class status counts, missing-criterion counts and a short learner page. Criterion labels are abbreviated; indexes start at zero. Provide learnerId plus homeworkId to read a submitted report, submitted answer, or explicitly shared_evidence text. Follow nextOffset until null: offset counts rows for lists and characters for learner text. Never treat a partial text page as the full evidence; submission metadata identifies the snapshot. Report verification=unverified means criteria were not verified, not confirmed failures. Draft answers and private chat are never returned. Give recommendations; teachers alone pass or return submissions in the forum.',
+    section:z.enum(['report','answer','shared_evidence','requirements']).default('report'),offset:z.number().int().min(0).max(1000000).default(0)}).strict()
+    .refine(input=>!input.learnerId||Boolean(input.homeworkId),'learnerId requires homeworkId')
+    .refine(input=>input.section!=='requirements'||Boolean(input.homeworkId)&&!input.learnerId,'requirements requires homeworkId without learnerId'),{
+    description:'Read current draft or published task contents with homeworkId and section=requirements (without learnerId): returns title, status, revision, sourceVersion and actual requirement text pages. Keep sourceVersion consistent across pages. Default lists published homework only, or provide homeworkId for whole-class status counts, missing-criterion counts and a short learner page. Criterion labels are abbreviated; indexes start at zero. Provide learnerId plus homeworkId to read a submitted report, submitted answer, or explicitly shared_evidence text. Follow nextOffset until null: offset counts rows for lists and characters for text. Never treat a partial text page as the full evidence; submission metadata identifies the snapshot. Report verification=unverified means criteria were not verified, not confirmed failures. Draft answers and private chat are never returned. Give recommendations; teachers alone pass or return submissions in the forum.',
     effect:'read',approval:false,authorize:async context=>{await teacher(context)},
     async execute(context,input) {
       const {db,binding,scope}=await teacher(context)

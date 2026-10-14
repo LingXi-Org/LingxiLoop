@@ -66,7 +66,7 @@ The current semantic suites use Eval-owned snapshots of public tool contracts, i
 
 | Suite / version | Cases | Coverage | Candidate / Judge run budgets (CNY) |
 |---|---:|---|---:|
-| tool-initiative / 4 | 6 | Act on document, memory, research and ingestion requests; decline retired email/calendar effects | 1.20 / 0.60 |
+| tool-initiative / 5 | 6 | Act on document, memory, research and ingestion requests; report unavailable information honestly from the actual tool context | 1.20 / 0.60 |
 | tool-boundaries / 4 | 4 | Text-only tasks, consequential ambiguity, prompt injection and denied reads | 0.80 / 0.40 |
 | tool-recovery / 4 | 2 | Concurrent title changes and historical decisions | 0.40 / 0.20 |
 | education-autonomy / 3 | 16 | Teacher drafts and approvals, student state cards and personalized Missions, evidence/self-report records, deduplication, specialist handoffs, collaborative Canvas, simple answers, hypothetical/third-party records | 4.80 / 1.60 |
@@ -77,7 +77,7 @@ From `eval/`:
 
 ```sh
 npm run eval -- run --env .env.local --suite suites/education-autonomy.v3.json --dataset datasets/education-autonomy.v3.json --revision YOUR_COMMIT
-npm run eval -- run --env .env.local --suite suites/tool-initiative.v4.json --dataset datasets/tool-initiative.v4.json --revision YOUR_COMMIT
+npm run eval -- run --env .env.local --suite suites/tool-initiative.v5.json --dataset datasets/tool-initiative.v5.json --revision YOUR_COMMIT
 ```
 
 These commands are alternatives. The earlier v1 tool suites and their datasets remain immutable and available locally with deterministic grading and zero Judge calls. New versions remove brittle final-answer fragments and wording constraints on authored documents; post-write verification reads return actual authored content and ingestion rechecks reflect the queued state. Single-use mutations prevent duplicate side effects. Read ordering is required only where it supplies IDs, current facts or concurrency prerequisites.

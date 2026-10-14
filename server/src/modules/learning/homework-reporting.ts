@@ -3,9 +3,9 @@ import type { Queryable } from '../../db/queryable.js'
 import type { LearningScope } from './contracts.js'
 import type { HomeworkReport } from './homework-contracts.js'
 import { readHomeworkMaterials } from './homework-effects.js'
-import { assertHomeworkPublished, homeworkHash, homeworkRow, homeworkScope, homeworkState, studentHomeworkView } from './homework-repository.js'
+import { assertHomeworkPublished, homeworkHash, homeworkRow, homeworkScope, homeworkState, studentHomeworkView, type homeworkView } from './homework-repository.js'
 
-type OverviewInput = { homeworkId?: string; learnerId?: string; section: 'report'|'answer'|'shared_evidence'; offset: number }
+type OverviewInput = { homeworkId?: string; learnerId?: string; section: 'report'|'answer'|'shared_evidence'|'requirements'; offset: number }
 type LearnerReadInput = { homeworkId: string; section: 'summary'|'requirements'|'materials'|'answer'|'report'; offset: number }
 type Progress = 'NOT_STARTED'|'LEARNING'|'MASTERED'|'PENDING'|'PASSED'|'RETURNED'
 type LearnerProgress = { learnerId: string; learnerName: string; status: Progress; missingCriterionIndexes: number[];
@@ -42,6 +42,13 @@ function textPage(base:object,content:unknown,offset:number) {
     result.text=result.text.slice(0,Math.floor(result.text.length*0.9));result.nextOffset=next()
   }
   return result
+}
+
+export function teacherHomeworkDraftReceipt(draft:ReturnType<typeof homeworkView>,courseId:string) {
+  const {title,instructions,criteria,links,attachments,dueAt}=draft
+  return textPage({result:{homeworkId:draft.id,courseId,revision:draft.revision},
+    state:{revision:draft.revision,visibleHash:draft.visibleHash,title},sourceVersion:draft.visibleHash},
+  {title,instructions,criteria,links,attachments,dueAt},0)
 }
 
 export async function learnerHomeworkRead(db:Queryable,scope:LearningScope,courseId:string,input:LearnerReadInput,signal:AbortSignal) {
@@ -84,6 +91,9 @@ export async function teacherHomeworkOverview(db:Queryable,scope:LearningScope,c
     return page({},rows.map(row=>({...row,title:label(row.title,200)})),input.offset)
   }
   const hw=await homeworkRow(db,scope,courseId,input.homeworkId)
+  if(input.section==='requirements') return textPage({homeworkId:hw.id,title:hw.title,status:hw.status,revision:hw.revision,
+    sourceVersion:hw.visible_hash,section:input.section},
+  {title:hw.title,instructions:hw.instructions,criteria:hw.criteria,links:hw.links,attachments:hw.attachments,dueAt:hw.due_at},input.offset)
   assertHomeworkPublished(hw)
   if(input.learnerId) {
     const {rows}=await db.query<{name:string}>(`SELECT u.display_name AS name FROM project_memberships m JOIN users u ON u.id=m.user_id

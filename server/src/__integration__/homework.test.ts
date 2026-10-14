@@ -1135,33 +1135,63 @@ test('[integration] native teacher revisions update the same draft and require f
   assert.throws(() => tool.parse({ ...visible, expectedRevision: 1 }))
   const draft = await homework.draft(teacher, courseId, visible)
   const binding = await ensureTeacherAgentForCourse(companyId, courseId, pool, transaction)
-  const invoke = async (scope: typeof teacher, input: object) => {
-    const data = tool.parse(input)
+  const invoke = async (selectedTool: typeof tool, scope: typeof teacher, input: object) => {
+    const data = selectedTool.parse(input)
     const context = { database: pool, signal: AbortSignal.timeout(15000), requestVersion: 1,
       work: { id: 'homework-teacher-tool', tenantId: companyId, agentId: binding.agentId, principalId: scope.userId,
         sessionId: 'homework-teacher-session', kind: 'turn', lane: 'interactive', triggerRef: 'homework-teacher-message', fence: 1, homeEpoch: 1, createdAt: new Date().toISOString(),
         conversation: { conversationId: binding.roomId, policyVersion: 1, source: { messageId: 'homework-teacher-message', version: 1 }, internal: false,
           audience: { visibility: 'conversation', participantIds: [teacher.userId, colleague.userId, binding.agentId] } } },
-      action: { runId: 'homework-teacher-tool', cellId: 'draft', callIndex: 0, action: tool.action, args: data, idempotencyKey: 'native-draft-edit' },
+      action: { runId: 'homework-teacher-tool', cellId: 'draft', callIndex: 0, action: selectedTool.action, args: data, idempotencyKey: 'native-draft-edit' },
     } as unknown as import('@lyyzka/lingxios').ActionContext
     return transaction(async db => {
-      const action = { ...context, database: db }; await tool.authorize(action, data)
-      const result = await tool.execute(action, data)
-      if (result.ok) assert.equal((await tool.verify!(action, data, result.value)).status, 'passed')
+      const action = { ...context, database: db }; await selectedTool.authorize(action, data)
+      const result = await selectedTool.execute(action, data)
+      if (result.ok && selectedTool.verify) assert.equal((await selectedTool.verify(action, data, result.value)).status, 'passed')
       return result
     })
   }
   const edit = { ...visible, title: 'Agent-revised exact title', homeworkId: draft.homework.id, expectedRevision: draft.homework.revision }
-  await assert.rejects(invoke(colleague, edit))
-  const receipt = await invoke(teacher, edit)
+  await assert.rejects(invoke(tool, colleague, edit))
+  const receipt = await invoke(tool, teacher, edit)
   assert.ok(receipt.ok)
   assert.equal((receipt.value as { state: { title: string } }).state.title, edit.title)
+  assert.deepEqual(JSON.parse((receipt.value as { text: string }).text), { ...visible, title: edit.title })
+  assert.equal((receipt.value as { nextOffset: null }).nextOffset, null)
   const updated = await homework.detail(teacher, courseId, draft.homework.id)
   assert.deepEqual({ id: updated.homework.id, title: updated.homework.title, revision: updated.homework.revision, validation: updated.homework.validation.status },
     { id: draft.homework.id, title: edit.title, revision: draft.homework.revision + 1, validation: 'PENDING' })
   await assert.rejects(homework.publish(teacher, courseId, draft.homework.id, {
     expectedRevision: draft.homework.revision, visibleHash: draft.homework.visibleHash, idempotencyKey: 'pre-agent-edit-card',
   }))
+  const readTool = teacherTools.find(item => item.action === 'teacher.homework_overview')!
+  assert.throws(() => readTool.parse({ section: 'requirements' }))
+  assert.throws(() => readTool.parse({ homeworkId: draft.homework.id, learnerId: student.userId, section: 'requirements' }))
+  const content = { ...visible, instructions: 'Explain each step. '.repeat(900).trim(),
+    criteria: Array.from({ length: 20 }, (_, i) => `${i}: ${'Use independent reasoning. '.repeat(50)}`.trim()) }
+  const longReceipt = await invoke(tool, teacher, content)
+  assert.ok(longReceipt.ok)
+  assert.ok(JSON.stringify(longReceipt.value).length < 8000)
+  const longValue = longReceipt.value as { result: { homeworkId: string }; nextOffset: number | null }
+  assert.ok(longValue.nextOffset !== null)
+  const longDraft = await homework.detail(teacher, courseId, longValue.result.homeworkId)
+  const pages: string[] = []
+  let offset: number | null = 0
+  while (offset !== null) {
+    assert.ok(pages.length < 30)
+    const result = await invoke(readTool, teacher, { homeworkId: longDraft.homework.id, section: 'requirements', offset })
+    assert.ok(result.ok)
+    const page = result.value as { text: string; nextOffset: number | null; sourceVersion: string; revision: number }
+    assert.ok(JSON.stringify(result.value).length < 8000)
+    assert.equal(page.sourceVersion, longDraft.homework.visibleHash)
+    assert.equal(page.revision, longDraft.homework.revision)
+    assert.ok(page.nextOffset === null || page.nextOffset > offset)
+    pages.push(page.text); offset = page.nextOffset
+  }
+  assert.ok(pages.length > 1)
+  assert.deepEqual(JSON.parse(pages.join('')), content)
+  assert.equal((await homework.detail(teacher, courseId, longDraft.homework.id)).homework.status, 'DRAFT')
+  await assert.rejects(invoke(readTool, student, { homeworkId: longDraft.homework.id, section: 'requirements' }))
 })
 
 test('[integration] native homework overview bounds long reports, aggregates the whole class and pages submitted sections without private drafts', async () => {
