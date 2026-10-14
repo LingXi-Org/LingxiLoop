@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { after, test } from 'node:test'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
@@ -86,10 +86,12 @@ test('[live] homework normal authentication, real production worker, measured mo
       await pool.query('UPDATE users SET email_verified_at=NOW() WHERE id=$1', [id])
     }
     await withTransaction(pool, db => installStarterAgents(db, companyId))
-    const course = { id: 'homework-live-course', projectId: 'homework-live-project' }
+    // WuKong retains history when PostgreSQL fixtures reset, so room identities must be fresh.
+    const fixtureId = randomUUID()
+    const course = { id: `homework-live-course-${fixtureId}`, projectId: `homework-live-project-${fixtureId}` }
     await withTransaction(pool, async db => {
       await insertCourse(db, { companyId, userId: teacherId, projectId: course.projectId, courseId: course.id,
-        roomId: 'homework-live-study-room', kind: 'TEACHING', planId: 'plan-education',
+        roomId: `homework-live-study-room-${fixtureId}`, kind: 'TEACHING', planId: 'plan-education',
         input: { name: 'Homework Live Classroom', description: 'Disposable live homework acceptance', color: '#5266d6' } })
       await db.query(`INSERT INTO project_memberships(company_id,project_id,user_id,role,status) VALUES($1,$2,$3,'STUDENT','ACTIVE')`, [companyId, course.projectId, studentId])
       await ensureTeacherAgentForCourse(companyId, course.id, db, work => work(db))
