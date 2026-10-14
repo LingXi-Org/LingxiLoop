@@ -38,7 +38,7 @@ export function SourceDetailOverlay() {
   const open = Boolean(selectedSource)
   const closeDetail = () => {
     close()
-    if (isMobile) window.requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-workspace-view="library"]')?.focus({ preventScroll: true }))
+    if (isMobile) window.requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-workspace-view="conversations"]')?.focus({ preventScroll: true }))
   }
   return <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) closeDetail() }} direction="right">
     <DrawerContent

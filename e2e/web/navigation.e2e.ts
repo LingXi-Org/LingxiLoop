@@ -21,7 +21,9 @@ test.describe('Workspace URL navigation', { ...memberSession(), tags: ['web', 'n
   test('module navigation and browser history restore the selected conversation', async ({ app, browser, screen }) => {
     await app.open(room)
     await expect(browser.locator('[contenteditable="true"]')).toBeVisible()
-    await screen.getByRole('navigation', '工作区与功能').getByRole('button', '资料').tap()
+    await browser.keyboard.press('ControlOrMeta+k')
+    await screen.getByPlaceholder('输入命令或会话名称…').fill('打开资料库')
+    await screen.getByRole('option', '打开资料库').tap()
     await expect.poll(() => browser.evaluate(() => location.search)).toBe('?project=e2e-classroom&view=library')
     await browser.back()
     await expect(browser.locator('[contenteditable="true"]')).toBeVisible()

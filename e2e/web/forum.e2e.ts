@@ -6,8 +6,8 @@ test.describe('Course forum', { ...memberSession(), tags: ['web', 'learning', 'f
   test('forum follows course URLs, reload and history at mobile and desktop widths', async ({ app, screen, browser }) => {
     await app.open('/?project=e2e-classroom&view=forum')
     await expect(screen.getByRole('heading', '论坛', { exact: true })).toBeVisible()
-    await expect(screen.getByRole('button', '全部', { exact: true })).toBeVisible()
-    await screen.getByRole('navigation', '工作区与功能').getByRole('button', '资料', { exact: true }).tap()
+    await expect(screen.getByRole('button', '自由论坛', { exact: true })).toBeVisible()
+    await screen.getByRole('navigation', '工作区与功能').getByRole('button', '学习概览', { exact: true }).tap()
     await browser.back()
     await expect(screen.getByLabel('搜索论坛')).toBeVisible()
     await browser.reload()
