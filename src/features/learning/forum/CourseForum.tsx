@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { MessageCircleIcon, MoreHorizontalIcon, PencilLineIcon, SearchIcon } from 'lucide-react'
+import { ClipboardListIcon, MoreHorizontalIcon, PencilLineIcon, SearchIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { learningApi } from '../api'
 import type { LearningSpace } from '../contracts'
 import { DashboardSectionFrame } from '../dashboard/DashboardSectionFrame'
@@ -24,6 +25,7 @@ import { MemoContent } from './memos/MemoContent'
 const kindLabels = { share: '分享',assignment: '作业',resource: '资料',case: '作品案例' }
 
 export function CourseForum({ space }: { space: LearningSpace }) {
+  const isMobile = useIsMobile()
   const [items, setItems] = useState<ForumItem[]>([]), [nextOffset, setNextOffset] = useState<number | null>(null)
   const [kind, setKind] = useState<ForumFilter>('all'), [search, setSearch] = useState(''), [tag, setTag] = useState('')
   const [composing, setComposing] = useState(false), [discussion, setDiscussion] = useState<ForumItem | null>(null), [submission, setSubmission] = useState<ForumItem | null>(null)
@@ -57,15 +59,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   }
   if (!space.courseId) return <p role="status">请选择一门课程查看论坛。</p>
   const courseId = space.courseId
-  return <DashboardSectionFrame space={space} section="forum" headerActions={space.canEditContent && <div className="flex justify-end"><Button variant="outline" onClick={() => useApp.getState().setView('course-content')}>发布作业</Button></div>}>
-    <div data-ui-page="forum" className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6 @min-[56rem]/learning-grid:grid-cols-[16rem_minmax(0,1fr)] @min-[56rem]/learning-grid:gap-10">
-      <ForumSidebar kind={kind} onSelect={setKind} />
-      <div className="min-w-0 space-y-5">
-        <section aria-label="欢迎信息" className="rounded-xl border border-border/60 bg-muted/30 p-5 @min-[40rem]/learning-grid:p-6">
-          <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground"><MessageCircleIcon aria-hidden="true" className="size-4" /><span className="min-w-0 break-words">{space.title}</span></div>
-          <h2 className="text-xl font-semibold tracking-tight">欢迎来到课程论坛</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">在这里分享学习中的发现，提出问题，与同学交流想法。</p>
-        </section>
+  const content = <div className="min-w-0 space-y-5">
         {canWrite && !composing && <Button variant="outline" className="h-auto min-h-16 w-full justify-between gap-4 rounded-xl px-4 py-4 text-start" onClick={() => setComposing(true)} aria-label="发布内容"><span className="min-w-0 whitespace-normal font-normal text-muted-foreground">分享一个想法，或提出你的问题…</span><span className="flex shrink-0 items-center gap-2"><PencilLineIcon aria-hidden="true" />发布内容</span></Button>}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-base font-semibold">{forumSections.find(section => section.kind === kind)?.label}</h2>
@@ -103,7 +97,19 @@ export function CourseForum({ space }: { space: LearningSpace }) {
       {discussion && <ForumDiscussion key={`${discussion.targetType}:${discussion.id}`} courseId={courseId} item={discussion} canWrite={canWrite} onClose={() => setDiscussion(null)} onComment={() => void load()} />}
       {submission && <ForumSubmission key={submission.id} space={space} item={submission} onClose={() => setSubmission(null)} />}
       <AlertDialog open={Boolean(closing)} onOpenChange={open => { if (!open) setClosing(null) }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>关闭这份作业？</AlertDialogTitle><AlertDialogDescription>关闭后不再接收新的提交，已有提交与历史版本会保留。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>暂不关闭</AlertDialogCancel><AlertDialogAction onClick={() => { if (closing) void mutate(() => learningApi.closeActivity(courseId, closing.id)); setClosing(null) }}>确认关闭</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
-      </div>
+  </div>
+  if (isMobile) return <section className="flex h-full min-h-0 flex-col bg-background">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
+      <ForumSidebar kind={kind} onSelect={setKind} />
+      <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">{space.title}</h1>
+      {space.canEditContent && <Button variant="ghost" size="icon" className="size-11" aria-label="发布作业" onClick={() => useApp.getState().setView('course-content')}><ClipboardListIcon aria-hidden="true" /></Button>}
+    </header>
+    <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-3"><div data-ui-page="forum">{content}</div></div>
+  </section>
+  return <DashboardSectionFrame space={space} section="forum" headerActions={space.canEditContent && <div className="flex justify-end"><Button variant="outline" onClick={() => useApp.getState().setView('course-content')}>发布作业</Button></div>}>
+    <div data-ui-page="forum" className="mx-auto grid w-full max-w-6xl grid-cols-[16rem_minmax(0,1fr)] gap-6 @min-[56rem]/learning-grid:gap-10">
+      <ForumSidebar kind={kind} onSelect={setKind} />
+      {content}
     </div>
   </DashboardSectionFrame>
 }

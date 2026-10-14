@@ -1,17 +1,18 @@
 {
   "run": {
-    "id": "01a13869-1ecf-7f94-b53b-88cab6c6c186",
+    "id": "01a13874-be41-76aa-82af-dc252154acda",
     "status": "passed",
     "exitCode": 0,
-    "startedAt": "2026-10-14T03:16:17.717Z",
-    "finishedAt": "2026-10-14T03:17:14.366Z"
+    "startedAt": "2026-10-14T03:29:00.160Z",
+    "finishedAt": "2026-10-14T03:30:33.718Z"
   },
   "checks": {
-    "forumBrowser": "passed: complete existing journey plus sidebar, month navigation, date spacing and mobile collapse",
+    "forumBrowser": "passed: complete existing journey plus standard calendar selection/month navigation, full-width mobile feed, Sheet selection/close/Escape/focus and exit to workspace",
     "webTypecheck": "passed",
     "e2eTypecheck": "passed",
     "scopedLint": "passed",
-    "webBuild": "passed (existing CSS highlight and large-chunk warnings)"
+    "webBuild": "passed (existing CSS highlight and large-chunk warnings)",
+    "calendarSource": "Exact official shadcn source after import mapping and attribution comment; no date-grid overrides"
   },
   "reproduce": "node e2e/server/forum.mjs --browser-only",
   "isolatedRun": {
@@ -22,7 +23,12 @@
   },
   "limitations": [
     "Synthetic identities and in-memory object storage; no production-account business mutations.",
-    "Calendar supports month navigation and today indication; no calendar scheduling or date filtering.",
+    "Calendar uses standard single-date selection and month navigation; no scheduling backend or forum date filtering.",
     "Backend APIs and migrations unchanged."
-  ]
+  ],
+  "source": {
+    "calendar": "https://github.com/shadcn-ui/ui/blob/c257f688cf4de7ec10cc1be84cad29cd4631182c/apps/v4/registry/new-york-v4/ui/calendar.tsx",
+    "localCalendarSha256": "8b4dcce3255a2a854bbe681d392f99ed498f81dde9b4152afb9613289e7fe1ec",
+    "mobileReference": "https://github.com/usememos/memos/blob/25419a5239b0522a13dd451b4eaf5ae2b9a55908/web/src/components/AppSidebar/AppSidebar.tsx"
+  }
 }
