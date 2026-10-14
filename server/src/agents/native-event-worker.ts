@@ -8,6 +8,9 @@ import { postMembershipSystemMessage } from './membership.js'
 import { clearHold } from './seen-boundary.js'
 import { publishReadReceiptAdvance } from '../im/read-receipts.js'
 import { sendSystemChannelMessage } from '../im/public.js'
+import { createImMessagesApplication } from '../im/messages-facade.js'
+import { createPermissionService } from '../modules/access/public.js'
+import { withTransaction } from '../db/transaction.js'
 
 export function startNativeEventWorker() {
   const controller = new AbortController()
@@ -17,6 +20,27 @@ export function startNativeEventWorker() {
     active = flushNativeEvents(pool, async (event, signal) => {
       signal.throwIfAborted()
       switch (event.type) {
+        case 'im.user': {
+          await withTransaction(pool, async db => {
+            // Hold the assignment and authorization until admission so cancellation cannot overtake it.
+            const { rows } = await db.query(`SELECT assignment.id FROM canvas_agent_assignments assignment
+              JOIN canvases canvas ON canvas.id=assignment.canvas_id JOIN users principal ON principal.id=$1
+              WHERE assignment.id=$2 AND canvas.id=$3 AND canvas.company_id=$4 AND canvas.conversation_id=$5
+                AND canvas.status='active' AND assignment.status<>'cancelled' AND assignment.request_client_msg_no=$6
+                AND principal.departed_at IS NULL AND principal.suspended_at IS NULL AND principal.deleted_at IS NULL
+                AND COALESCE(principal.access_revoked_at::text,'')=$7 FOR SHARE OF assignment,canvas,principal`,
+            [event.userId,event.assignmentId,event.canvasId,event.companyId,event.channelId,event.clientNonce,event.authorization])
+            if (!rows.length) return
+            const permissions = createPermissionService(db, { lockDependencies: true })
+            for (const [action, resource] of [['conversation:write', { type: 'conversation', id: event.channelId }],
+              ['canvas:write', { type: 'canvas', id: event.canvasId }]] as const) {
+              if (!(await permissions.can({ companyId: event.companyId, actorUserId: event.userId, action, resource })).allowed) return
+            }
+            const result = await createImMessagesApplication(signal, db).acceptUserMessage(event)
+            if (result.kind !== 'accepted') throw new Error(`user assignment message ${result.kind}`)
+          })
+          return
+        }
         case 'im.system': {
           const result = await sendSystemChannelMessage({ ...event, signal })
           if (result.kind !== 'accepted') throw new Error(`system message ${result.kind}`)

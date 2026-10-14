@@ -1,5 +1,6 @@
 import { assertOwnedMessageAttachments } from './attachments.js'
 import { messageAcceptanceDigest } from './messages-digest.js'
+import { canonicalMessageMentions } from '../mentions.js'
 import { assertUiInteractionAdmission } from './interactive-ui-admission.js'
 import { OPENUI_COMPONENT } from '../../../src/lib/interactive-ui/catalog.js'
 import { nativeMessageSchema, nativeText, type NativeMessage } from './message-types.js'
@@ -375,14 +376,17 @@ export class ImMessagesApplication {
     }
     await lockSendAcceptance(db, identity)
     try {
-      await ensureSendAcceptance(db, {
-        ...identity,
-        inputDigest,
-        channelId: input.channelId,
-        channelType,
-        payload: input.payload,
-      })
-      const acceptance = await getSendAcceptance(db, identity)
+      let acceptance = await getSendAcceptance(db, identity)
+      if (!acceptance) {
+        const members = input.payload.role !== 'system' && /[@＠]/u.test(nativeText(input.payload))
+          ? (await db.query<{ id: string; name: string }>(`SELECT member.id,member.name FROM participants member
+              JOIN im_channel_bindings channel ON channel.company_id=member.company_id AND channel.channel_id=$2
+              WHERE member.company_id=$1 AND member.departed_at IS NULL AND channel.profile->'members' ? member.id`,
+            [input.companyId,input.channelId])).rows : []
+        await ensureSendAcceptance(db, { ...identity, inputDigest, channelId: input.channelId, channelType,
+          payload: input.payload.role === 'system' ? input.payload : canonicalMessageMentions(input.payload, members) })
+        acceptance = await getSendAcceptance(db, identity)
+      }
       if (!acceptance || acceptance.input_digest !== inputDigest) return { kind: 'nonce_conflict' }
       if (acceptance.status === 'accepted' && acceptance.echo) {
         return { kind: 'accepted', duplicate: true, echo: acceptance.echo }
@@ -394,7 +398,8 @@ export class ImMessagesApplication {
       if (requiresReconciliation && acceptance.error) {
         const found = (await this.readMessages({ ...input, messageIds: [input.clientNonce] }, db))?.find(message => message.clientMsgNo === input.clientNonce)
         if (!found) throw new Error('interactive message acceptance is unknown; reconciliation is required')
-        if (found.fromUid !== input.userId || messageAcceptanceDigest({ ...input, payload: found.payload, channelType: found.channelType }) !== inputDigest) {
+        if (found.fromUid !== input.userId || messageAcceptanceDigest({ ...input, payload: found.payload, channelType: found.channelType })
+          !== messageAcceptanceDigest({ ...input, payload, channelType })) {
           return { kind: 'nonce_conflict' }
         }
         const echo = { ...found }

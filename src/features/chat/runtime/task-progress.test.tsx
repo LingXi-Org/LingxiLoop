@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { Plan } from '@/components/tool-ui/plan'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
 import type { ImEnvelope } from '@/lib/im/wukong'
-import { canvasProgress, handoffProgress, knowledgeProgress, missionPlan } from './task-progress'
+import { canvasProgress, knowledgeProgress, missionPlan } from './task-progress'
 import { convertEnvelope, convertEnvelopeBatch } from './converter'
 import { mergeCanonicalMessages } from './store'
 import { getLingxiMessageMetadata } from './model'
@@ -15,21 +15,12 @@ import { harnessToolParts } from '../../../../server/src/agent-runtime/message-p
 const names = { nova: { name: '司南' }, sage: { name: '明理' }, trace: { name: '溯源' } }
 const at = '2026-09-21T08:00:00.000Z'
 
-test('official ToolUI renders persisted Mission steps and actual handoff outcomes', () => {
+test('official ToolUI renders persisted Mission steps and Canvas outcomes', () => {
   const plan = missionPlan({ id: 'mission', goal: '完成实践', coordinatorAgentId: 'nova', status: 'ACTIVE',
     steps: [{ id: 'check', description: '检查产出', successCriteria: '可复现', status: 'IN_PROGRESS' },
       { id: 'reflect', description: '反思', status: 'OPEN' }] }, names)
   assert.deepEqual(plan.todos.map(todo => todo.status), ['in_progress','pending'])
   assert.match(renderToStaticMarkup(<Plan {...plan} />), /data-tool-ui-id="mission"/)
-  const handoff = { id: 'handoff', fromAgentId: 'nova', toAgentId: 'sage', title: '验证概念', updatedAt: at }
-  const accepted = handoffProgress({ ...handoff,status: 'accepted' }, names)
-  assert.equal(accepted.steps[0].status, 'pending')
-  assert.equal(accepted.choice, undefined)
-  for (const [status,outcome] of [['completed','success'],['failed','failed'],['cancelled','cancelled']] as const) {
-    const progress = handoffProgress({ ...handoff,status }, names)
-    assert.equal(progress.choice?.outcome,outcome)
-    assert.match(renderToStaticMarkup(<ProgressTracker {...progress} />), /data-receipt="true"/)
-  }
   const canvas = canvasProgress({ id: 'canvas', status: 'summarizing', coordinatorAgentId: 'nova',
     assignments: [{ id: 'builder',agentId: 'sage',task: '验证概念',status: 'completed' },
       { id: 'verifier',agentId: 'trace',task: '复核',status: 'failed',executionRole: 'verifier' }] }, names)

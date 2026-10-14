@@ -50,6 +50,7 @@ export async function syncConversationPolicy(control: Control, companyId: string
       ?? agents.find(agent => members.find(member => member.id === agent.id)?.preset_key === 'nova')?.id
       ?? agents.find(agent => members.find(member => member.id === agent.id)?.preset_key === 'forge')?.id ?? agents[0]?.id
     const value = { tenantId: companyId, conversationId, kind: binding.kind,
+      ...(binding.kind === 'group' ? { agentMentions: { maxDepth: 8, maxRuns: 32 } } : {}),
       owner: { kind: 'organization' as const, id: companyId }, participants, ...defaultAgentId ? { defaultAgentId } : {} }
     const updated = await db.query<{ runtime_policy_version: number }>(`UPDATE im_channel_bindings SET
       runtime_policy_version=runtime_policy_version+CASE WHEN runtime_policy IS DISTINCT FROM $3::jsonb THEN 1 ELSE 0 END,

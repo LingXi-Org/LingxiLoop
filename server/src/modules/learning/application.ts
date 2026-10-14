@@ -105,7 +105,6 @@ export {
   getLearningMission,
   listVisibleLearningMissions,
   loadLearningContext,
-  preferredLearningMissionCoordinator,
   recordLearningAttempt,
   startLearningMission,
   updateLearningMissionStep,

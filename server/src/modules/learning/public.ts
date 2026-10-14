@@ -10,7 +10,6 @@ export {
   describeTeacherAction,
   loadLearningTurnContext,
   loadTeacherTurnContext,
-  assertMissionCoordinatorRun,
 } from './runtime.js'
 export {
   assertNotManagedPulse,

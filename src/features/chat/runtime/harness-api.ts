@@ -10,10 +10,6 @@ import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 
 export interface AgentRunTarget { conversationId: string; agentId: string; runId: string; threadId?: string }
 export type AgentRunResponse = AgentRunSnapshot
-export interface MemorySummaryPage {
-  items: Array<{ id: string; text: string; agentId: string; agentName: string }>
-  nextCursor: string | null
-}
 const path = (target: AgentRunTarget) => `/im/channels/${encodeURIComponent(target.conversationId)}/agents/${encodeURIComponent(target.agentId)}/runs/${encodeURIComponent(target.runId)}`
 const thread = (target: AgentRunTarget): Record<string, string> => target.threadId ? { threadId: target.threadId } : {}
 
@@ -25,8 +21,6 @@ export const harnessApi = {
       || value.nextOffset !== null && (!Number.isSafeInteger(value.nextOffset) || value.nextOffset <= offset)) throw new Error('活动记录身份或分页信息不正确')
     return { ...value, message }
   },
-  memories: (conversationId: string, query: { threadId?: string; cursor?: string }, signal?: AbortSignal) => http<MemorySummaryPage>(
-    `/im/channels/${encodeURIComponent(conversationId)}/memories?${new URLSearchParams(query)}`, { signal }),
   readApproval: (id: string, signal?: AbortSignal) => http<unknown>(`/im/approvals/${encodeURIComponent(id)}`, { signal }),
   list: (conversationId: string, signal?: AbortSignal) => http<(AgentRunTarget & Pick<RunState['run'], 'requestVersion' | 'fence' | 'status'>)[]>(`/im/channels/${encodeURIComponent(conversationId)}/runs`,{ signal }),
   async subscribe(target: AgentRunTarget, receive: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal): Promise<void> {

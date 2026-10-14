@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
 import { isPostHogConfigured, getPostHogConfig, PostHogProvider } from '@/lib/observability'
-import { isNotificationWindow } from '@/lib/runtime'
 
 export function ConditionalPostHogProvider({ children }: { children: ReactNode }) {
-  if (!isPostHogConfigured() || isNotificationWindow) {
+  if (!isPostHogConfigured()) {
     return <>{children}</>
   }
 

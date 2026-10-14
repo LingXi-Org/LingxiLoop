@@ -8,7 +8,7 @@ import { useParticipants } from '@/features/agents/state'
 import { messagesApi } from '@/features/chat/api'
 import { toastAction } from '@/lib/actionToast'
 import { hasBroadcastMention } from '@/lib/chatMessages'
-import { parseMentions } from '@/lib/mentions'
+import { canonicalizeMentions, parseMentions } from '@/lib/mentions'
 import { useConversations } from '@/features/conversations/store'
 import {
   type ImEnvelope,
@@ -70,10 +70,13 @@ function quoteIdFromAppend(message: AppendMessage): string | null {
   return typeof messageId === 'string' ? messageId : null
 }
 
-function mentionedAgentIds(body: string, conversationId: string): string[] {
+function mentionRoster(conversationId: string) {
   const members = useConversations.getState().list.find(room => room.id === conversationId)?.members ?? []
-  const roster = Object.values(useParticipants.getState().byId).filter(participant => members.includes(participant.id))
-  return parseMentions(body, roster).mentionedIds.filter(id => useParticipants.getState().byId[id]?.kind === 'agent')
+  return Object.values(useParticipants.getState().byId).filter(participant => members.includes(participant.id))
+}
+
+function mentionedAgentIds(body: string, conversationId: string): string[] {
+  return parseMentions(body, mentionRoster(conversationId)).mentionedIds.filter(id => useParticipants.getState().byId[id]?.kind === 'agent')
 }
 
 function optimisticMessage(conversationId: string, payload: NativeMessage): ThreadMessage {
@@ -298,7 +301,7 @@ export class ChatTransport {
   }
 
   async sendAppend(conversationId: string, message: AppendMessage, threadRootId: string | null): Promise<void> {
-    const text = textFromAppend(message)
+    const text = canonicalizeMentions(textFromAppend(message), mentionRoster(conversationId))
     const quotedMessageId = threadRootId ?? quoteIdFromAppend(message)
     const payload = attachmentMessage(message.attachments ?? [], text, quotedMessageId,
       { mentionedIds: mentionedAgentIds(text, conversationId), mentionAll: hasBroadcastMention(text) })
@@ -313,7 +316,7 @@ export class ChatTransport {
     clientMessageId = `temp-${crypto.randomUUID()}`,
     replayPayload?: NativeMessage,
   ): Promise<boolean> {
-    const text = body.trim()
+    const text = canonicalizeMentions(body.trim(), mentionRoster(conversationId))
     const payload = replayPayload ?? createNativeMessage({ id: clientMessageId, role: 'user',
       content: text ? [{ type: 'text', text }] : [], attachments: attachment ? [uploadedAttachment(attachment)] : [],
       custom: { ...(quotedMessageId ? { replyToClientMsgNo: quotedMessageId } : {}),
@@ -549,7 +552,7 @@ export class ChatTransport {
             const meta = messageMetadata(message)
             if (meta.runId !== target.runId || !isRunMessage(meta)) return message
             return { ...message, metadata: { ...message.metadata, custom: { ...meta,
-              ...(inaccessible ? { harnessControl: false, memory: undefined } : {}),
+              ...(inaccessible ? { harnessControl: false } : {}),
               harnessError: inaccessible ? '无权读取任务进度。' : '连接已中断，正在重新连接…',
             } } } as ThreadMessage
           }) }))

@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { WorkspaceSkeleton } from '@/components/WorkspaceSkeleton'
-import { NotificationToasts } from '@/components/NotificationToasts'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useApp } from '@/stores/app'
 import { isMuted, useConversations } from '@/features/conversations/store'
@@ -46,7 +45,6 @@ export function AuthedApp() {
     <TooltipProvider delayDuration={120}>
       <Suspense fallback={<WorkspaceSkeleton />}>{navigationReady ? <DesktopApp /> : <WorkspaceSkeleton />}</Suspense>
       {/* Mounted inside the auth boundary so notifications unmount on sign-out. */}
-      <NotificationToasts />
     </TooltipProvider>
   )
 }

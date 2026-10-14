@@ -6,7 +6,7 @@ import { RunStreamProjection, assistantRunResponse } from '../agent-runtime/assi
 import type { AgentRunSnapshot } from '../../../src/lib/agentRunSnapshot.js'
 
 // Failure cases: split UTF-8 frames; stale/duplicate drafts; gaps and retractions;
-// leaked tool payloads; lost cancellation, approvals, citations or replayed memory;
+// leaked memory names/summaries/payloads; lost cancellation, approvals or citations;
 // a protocol wrapper that still sends native events or repeats full growing text.
 export function runState(status: RunState['run']['status'] = 'leased'): RunState {
   const goalOutcome = { status: 'satisfied' as const, verification: 'passed' as const, requestVersion: 1 }
@@ -78,8 +78,11 @@ test('projection owns gaps, cancellation, failures, approvals and filtered tool/
     data: { toolCallId: 'host:memory', result: { status: 'completed', value: {
       documents: [{ id: 'm', description: '喜欢中文', status: 'active', body: 'PRIVATE' }], deleted: [],
     } } } } })
-  assert.deepEqual((memory.message.metadata.custom.memory as { chips: unknown[] })?.chips, [{ id: 'm', text: '喜欢中文' }])
-  assert.doesNotMatch(JSON.stringify(memory), /PRIVATE|arguments/)
+  assert.equal(memory.message.metadata.custom.memory, undefined)
+  assert.deepEqual(memory.message.content, [{ type: 'text', text: '正文', providerMetadata: {
+    lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } },
+  } }])
+  assert.doesNotMatch(JSON.stringify(memory), /PRIVATE|arguments|喜欢中文|memory[._]/)
   const waiting = runState('waiting')
   waiting.run.goalOutcome = { status: 'awaiting_approval', requestVersion: 1, verification: 'not_run', approvalId: 'approval' }
   const result = projection.apply({ type: 'state', state: waiting })

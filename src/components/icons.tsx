@@ -32,9 +32,6 @@ export const ICanvas = (p: IconProps) => (
 export const ITasks = (p: IconProps) => (
   <svg {...base} {...p}><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
 )
-export const IMemory = (p: IconProps) => (
-  <svg {...base} {...p}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h4M16 3h6v6"/><path d="M21 3l-5.5 5.5"/></svg>
-)
 export const IObserve = (p: IconProps) => (
   <svg {...base} {...p}><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 20h16M7 20v-3M12 20v-2M17 20v-3"/></svg>
 )

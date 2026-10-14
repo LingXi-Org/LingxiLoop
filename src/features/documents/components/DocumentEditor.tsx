@@ -31,7 +31,6 @@ import { type Editor, EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as Y from 'yjs'
-import { ws } from '@/api/core/realtime'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -51,22 +50,6 @@ import { openDocument, type YDocSession } from '@/lib/yjsClient'
 import { useAuth } from '@/stores/auth'
 import { useDocuments } from '../state'
 
-/** Walk every `mention` node currently in the editor's doc and return
- *  the set of mentioned participant ids (deduped, order-preserving).
- *  Cheaper than diffing the whole ProseMirror tree on every update —
- *  the editor doc traversal is O(N) over the leaves and fires only on
- *  doc changes, so it's well below render-budget. */
-function collectMentionIds(editor: Editor): string[] {
-  const out = new Set<string>()
-  editor.state.doc.descendants((node) => {
-    if (node.type.name === 'mention') {
-      const id = (node.attrs as { id?: string }).id
-      if (id) out.add(id)
-    }
-    return true
-  })
-  return Array.from(out)
-}
 
 /** Stable color per user. Hash → palette so two clients with the same
  *  user id agree on the same swatch without coordination. */
@@ -335,37 +318,6 @@ function CollaborativeEditor({ session, synced, userName, userColor, documentId,
     if (editor) editor.setEditable(synced)
   }, [editor, synced])
 
-  // Detect newly-inserted @mentions and notify the server. We diff
-  // against the mention set we observed at the LAST tick so:
-  //   - On initial sync we seed the "known" set without re-firing
-  //     notifications for mentions that were already in the doc.
-  //   - Subsequent edits — local OR remote (agent / other human) —
-  //     fire only on the delta. Remote-inserted mentions go through
-  //     the server-side scanner anyway (the original inserter's
-  //     client already notified), so we'd double-fire without the
-  //     diff.
-  // Single-fire-per-id semantics: once an id appears in the set it's
-  // "seen"; removing+re-adding the same id within a session won't
-  // re-notify, which is the correct UX (treat as no-op churn).
-  useEffect(() => {
-    if (!editor || !synced) return
-    const seen = new Set<string>(collectMentionIds(editor))
-    const onUpdate = () => {
-      const current = collectMentionIds(editor)
-      const fresh: string[] = []
-      for (const id of current) {
-        if (!seen.has(id)) {
-          seen.add(id)
-          fresh.push(id)
-        }
-      }
-      if (fresh.length > 0) {
-        ws.send({ type: 'doc.mention.notify', documentId, mentionedIds: fresh })
-      }
-    }
-    editor.on('update', onUpdate)
-    return () => { editor.off('update', onUpdate) }
-  }, [editor, synced, documentId])
 
   useEffect(() => {
     if (!editor) return

@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import test, { mock } from 'node:test'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, MessagePrimitive, type ThreadMessage } from '@assistant-ui/react'
-import { confidenceCopyText, MarkdownText, type MarkdownConfidenceClaim } from './markdown-text'
+import type { MarkdownConfidenceClaim } from './markdown-text'
 import { ConfidenceMarker } from './elements/confidence-marker'
+import { create } from 'zustand'
+
+mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })) } })
+const { confidenceCopyText, MarkdownText } = await import('./markdown-text')
 
 // Markdown assertions ignore the decorative word wrappers; browser tests check their animation.
 const renderMarkdown: typeof renderToStaticMarkup = element => renderToStaticMarkup(element)
