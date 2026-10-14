@@ -10,9 +10,9 @@ test('retired learning URLs, reload and browser history cannot restore old scree
   }
   await browser.reload()
   await expect.poll(()=>browser.evaluate(()=>new URLSearchParams(location.search).get('view'))).toBe('conversations')
-  await browser.evaluate(()=>{history.back();return true})
+  await browser.back()
   await expect.poll(()=>browser.evaluate(()=>new URLSearchParams(location.search).get('view'))).toBe('conversations')
-  await browser.evaluate(()=>{history.forward();return true})
+  await browser.forward()
   await expect.poll(()=>browser.evaluate(()=>new URLSearchParams(location.search).get('view'))).toBe('conversations')
   expect(await browser.evaluate(async()=>{
     const paths=['/api/courses/e2e-classroom/activities','/api/projects/e2e-classroom/learning/objectives','/api/projects/e2e-classroom/learning/missions']

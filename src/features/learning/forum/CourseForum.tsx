@@ -87,7 +87,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
         {canWrite && <ForumComposer key={`${space.companyId}:${userId}:${courseId}`} space={space} onCreated={() => { setKind('all'); setSearch(''); setTag(''); void load() }} />}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-base font-semibold">{forumSections.find(section => section.kind === kind)?.label}</h2>
-          <div className="relative min-w-0 flex-1 basis-48 @min-[40rem]/learning-grid:max-w-64"><SearchIcon aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground" /><Input type="search" className="ps-9" aria-label="搜索学习论坛" placeholder="搜索标题与内容" value={search} onChange={event => setSearch(event.target.value)} maxLength={200} /></div>
+          <div className="relative min-w-0 flex-1 basis-48 @min-[40rem]/learning-grid:max-w-64"><SearchIcon aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground" /><Input type="search" style={{paddingInlineStart: '2.25rem'}} aria-label="搜索学习论坛" placeholder="搜索标题与内容" value={search} onChange={event => setSearch(event.target.value)} maxLength={200} /></div>
         </div>
       {tag && <Button variant="outline" size="sm" onClick={() => setTag('')}>#{tag} · 清除标签筛选</Button>}
       <Button variant="ghost" size="sm" aria-pressed={archived} onClick={() => setArchived(value => !value)}>{archived ? '返回内容流' : '已归档'}</Button>
