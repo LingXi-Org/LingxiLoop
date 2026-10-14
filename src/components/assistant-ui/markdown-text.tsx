@@ -5,11 +5,10 @@ import { code } from '@streamdown/code'
 import { createMathPlugin } from '@streamdown/math'
 import { createMermaidPlugin } from '@streamdown/mermaid'
 import { Block, type BlockProps, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
-import { useAuiState, useMessagePartText, useSmooth } from '@assistant-ui/react'
-import { createContext, memo, useCallback, useContext, useMemo, useState } from 'react'
+import { useAuiState, useMessagePartText } from '@assistant-ui/react'
+import { createContext, memo, useContext, useMemo, useState } from 'react'
 import type { Root } from 'hast'
 import { SKIP, visit } from 'unist-util-visit'
-import { rehypeStreamingWords, useStreamingTail } from './streaming-text'
 import {
   ConfidenceMarker, ConfidenceMarkerInline,
 } from '@/components/assistant-ui/elements/confidence-marker'
@@ -20,6 +19,8 @@ import { activityAnnotation } from '@/lib/runActivity'
 export type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 
 const plugins = { code, math: createMathPlugin({ singleDollarTextMath: true }), mermaid: createMermaidPlugin({ config: { securityLevel: 'strict', startOnLoad: false } }) }
+const smooth = { minCommitMs: 32 }
+const animated = { animation: 'fadeIn', duration: 180, sep: 'word' as const }
 const translations = {
   close: '关闭', copied: '已复制', copyCode: '复制代码', copyLink: '复制链接', copyTable: '复制表格',
   copyTableAsCsv: '复制为 CSV', copyTableAsMarkdown: '复制为 Markdown', copyTableAsTsv: '复制为 TSV',
@@ -105,20 +106,24 @@ function rehypeConfidence({ claims, offset, inlineCitations }: {
 }
 
 const CitationBlocks = createContext<{
-  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; agent: boolean; mentionTargets: readonly MentionTarget[]
-}>({ offsets: [], claims: [], inlineCitations: false, agent: false, mentionTargets: [] })
+  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly MentionTarget[]
+}>({ offsets: [], claims: [], inlineCitations: false, mentionTargets: [] })
 
 function CitationBlock(props: BlockProps) {
-  const { offsets, claims, inlineCitations, agent, mentionTargets } = useContext(CitationBlocks)
-  const offset = offsets[props.index]
-  const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
-    ...Object.values(defaultRehypePlugins), [rehypeConfidence, { claims, offset, inlineCitations }],
-    [rehypeMentionNames, { targets: mentionTargets }],
-    ...agent ? [rehypeStreamingWords] : [],
-    plugins.math.rehypePlugin,
-  ], [claims, offset, inlineCitations, agent, mentionTargets])
-  return <Block {...props} rehypePlugins={rehypePlugins} />
+  const { offsets, ...context } = useContext(CitationBlocks)
+  return <CitedBlock {...props} {...context} offset={offsets[props.index]} />
 }
+
+// New tail offsets must not reparse every already completed citation block.
+const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, ...props }: BlockProps & {
+  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly MentionTarget[]
+}) {
+  const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
+    ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
+    [rehypeMentionNames, { targets: mentionTargets }],
+  ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets])
+  return <Block {...props} rehypePlugins={rehypePlugins} />
+})
 
 const MarkdownTextImpl = ({
   agent = false,
@@ -133,40 +138,37 @@ const MarkdownTextImpl = ({
 }) => {
   const [hoveredId, setHoveredId] = useState('')
   const part = useMessagePartText()
-  const { text, status } = useSmooth(part, agent && typeof window !== 'undefined' && part.status.type !== 'incomplete')
-  // Markdown, citation offsets and the tail must share the same revealed prefix.
-  const revealedText = useCallback(() => text, [text])
+  const { text } = part
   // Citation spans use nativeText's joined-message coordinates, including between cards.
   const textOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
     .reduce((offset, part) => offset + (part.type === 'text' && activityAnnotation(part)?.kind !== 'commentary' ? part.text.length + 1 : 0), 0))
-  const streaming = agent && status.type === 'running'
-  const streamingRef = useStreamingTail(text, streaming)
-  const hasCitations = Boolean(confidenceClaims.length) || inlineCitations
-  // Use Streamdown's own blocks; only restore document coordinates for citations.
+  const hasCitations = Boolean(confidenceClaims.length) || inlineCitations && text.includes('#cite-')
+  // Complete block starts are identical in the raw text and its revealed prefix.
   const blocks = useMemo(() => hasCitations ? parseMarkdownIntoBlocks(text) : [], [hasCitations, text])
-  const parseBlocks = useMemo(() => () => blocks, [blocks])
   const offsets = useMemo(() => {
     let offset = textOffset
     return blocks.map(block => { const start = offset; offset += block.length; return start })
   }, [blocks, textOffset])
-  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, agent, mentionTargets }), [offsets, confidenceClaims, inlineCitations, agent, mentionTargets])
+  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, mentionTargets }), [offsets, confidenceClaims, inlineCitations, mentionTargets])
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
-    ...Object.values(defaultRehypePlugins), ...agent ? [rehypeStreamingWords] : [],
+    ...Object.values(defaultRehypePlugins),
     [rehypeMentionNames, { targets: mentionTargets }],
-  ], [agent, mentionTargets])
+  ], [mentionTargets])
   return <ConfidenceMarker claims={confidenceClaims} hoveredId={hoveredId} onHover={setHoveredId} floatingBasis={inlineCitations}>
     <CitationBlocks.Provider value={citationBlocks}>
-      <div ref={streamingRef} className="im-markdown-host" data-find-content data-streaming={streaming || undefined}>
+      <div data-find-content>
         <StreamdownTextPrimitive
-          preprocess={revealedText}
-          isAnimating={streaming}
+          smooth={agent && typeof window !== 'undefined' && part.status.type !== 'incomplete' ? smooth : false}
+          animated={agent ? animated : false}
+          caret={agent ? 'block' : undefined}
+          containerClassName="im-markdown-host"
           plugins={plugins}
           translations={translations}
           mermaid={mermaidOptions}
           rehypePlugins={rehypePlugins}
           controls
           parseIncompleteMarkdown
-          {...hasCitations ? { parseMarkdownIntoBlocksFn: parseBlocks, BlockComponent: CitationBlock, components: confidenceComponents } : {}}
+          {...hasCitations ? { BlockComponent: CitationBlock, components: confidenceComponents } : {}}
           className={`im-markdown${agent ? ' im-markdown-agent' : ''}`}
         />
       </div>

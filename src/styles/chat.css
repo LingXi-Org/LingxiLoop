@@ -514,23 +514,8 @@ input:focus, textarea:focus, button:focus { outline: none; }
 .thinking-card-dots i:nth-child(3) { animation-delay: 260ms; }
 .im-markdown-host { --streaming-tail-color: var(--color-blue-500); }
 :root[data-theme='dark'] .im-markdown-host { --streaming-tail-color: var(--color-blue-400); }
-.im-markdown [data-streaming-word] { transition: color 700ms; }
-.im-markdown-host[data-streaming] [data-streaming-fresh] { animation: streaming-word-in 180ms both; }
-.im-markdown [data-streaming-fresh] { color: var(--streaming-tail-color); }
-.im-markdown [data-streaming-cursor]::after {
-  content: '';
-  display: inline-block;
-  width: 2px;
-  height: 16px;
-  margin-left: 2px;
-  margin-bottom: -2px;
-  border-radius: 9999px;
-  background: var(--streaming-tail-color);
-  animation: streaming-tail-pulse 2s cubic-bezier(.4, 0, .6, 1) infinite;
-}
+.im-markdown-agent > :last-child::after { color: var(--streaming-tail-color); }
 @keyframes thinking-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-3px); opacity: 1; } }
-@keyframes streaming-word-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes streaming-tail-pulse { 50% { opacity: .5; } }
 
 @keyframes bloub-avatar-float {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.7deg) scale(1); }
@@ -546,12 +531,9 @@ input:focus, textarea:focus, button:focus { outline: none; }
   }
   .bloub-activity-thinking,
   .bloub-activity-working,
-  .thinking-card-dots i,
-  .im-markdown-host[data-streaming] [data-streaming-fresh],
-  .im-markdown [data-streaming-cursor]::after {
+  .thinking-card-dots i {
     animation: none !important;
   }
-  .im-markdown [data-streaming-word] { transition: none; }
   .reaction-control {
     transition: none !important;
     transform: none !important;

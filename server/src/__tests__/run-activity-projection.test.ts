@@ -19,16 +19,16 @@ const report = (text: string, state: 'running' | 'complete' = 'complete') => ({
   version: 1, id: 'approach', kind: 'reasoning', label: '解题说明', text, state,
 })
 
-test('public activity is explicit, stable, ordered before the authoritative answer and replayable', () => {
+test('public activity is explicit and replayable while the answer keeps its native part index', () => {
   const events = [start('read', 1), finish('read', 2), start('explain', 3, 'chat.report_progress'), finish('explain', 4, report('依据已读资料核对条件。'))]
   const tools = harnessToolParts('run', events)
   const view = { ...createRunView('run'), lifecycle: 'leased' as const, draft: '最终答案的流式预览' }
   const parts = runMessageParts(view, tools)
-  assert.deepEqual(parts.map(part => part.type), ['tool-call', 'reasoning', 'text'])
-  assert.equal(activityAnnotation(parts[0])?.kind, 'tool')
-  assert.equal(activityAnnotation(parts[1])?.kind, 'commentary')
-  assert.equal(activityAnnotation(parts[2])?.kind, 'answer')
-  assert.equal(parts[1].type === 'reasoning' && parts[1].text, '依据已读资料核对条件。')
+  assert.deepEqual(parts.map(part => part.type), ['text', 'tool-call', 'reasoning'])
+  assert.equal(activityAnnotation(parts[0])?.kind, 'answer')
+  assert.equal(activityAnnotation(parts[1])?.kind, 'tool')
+  assert.equal(activityAnnotation(parts[2])?.kind, 'commentary')
+  assert.equal(parts[2].type === 'reasoning' && parts[2].text, '依据已读资料核对条件。')
   assert.doesNotMatch(JSON.stringify(parts), /PRIVATE_BODY/)
   const native = createNativeMessage({ id: 'run-run', role: 'assistant', content: parts })
   assert.deepEqual(deserializeMessage(native).content, parts)
