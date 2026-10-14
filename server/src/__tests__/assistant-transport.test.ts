@@ -76,13 +76,18 @@ test('projection owns gaps, cancellation, failures, approvals and filtered tool/
     data: { toolCallId: 'host:memory', name: 'memory.apply', arguments: 'PRIVATE' } } })
   const memory = projection.apply({ type: 'event', event: { runId: 'run', seq: 2, kind: 'tool.completed', stage: 'completed', visibility: 'user',
     data: { toolCallId: 'host:memory', result: { status: 'completed', value: {
-      documents: [{ id: 'm', description: '喜欢中文', status: 'active', body: 'PRIVATE' }], deleted: [],
+      documents: [{ id: 'm', title: '偏好', description: '喜欢中文', version: 1, status: 'active', body: 'PRIVATE' }], deleted: [],
     } } } } })
   assert.equal(memory.message.metadata.custom.memory, undefined)
-  assert.deepEqual(memory.message.content, [{ type: 'text', text: '正文', providerMetadata: {
+  assert.deepEqual(memory.message.content.slice(0, 1), [{ type: 'text', text: '正文', providerMetadata: {
     lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } },
   } }])
-  assert.doesNotMatch(JSON.stringify(memory), /PRIVATE|arguments|喜欢中文|memory[._]/)
+  const call = memory.message.content[1]
+  assert.ok(call?.type === 'tool-call')
+  assert.equal(call.toolName, 'memory.apply')
+  assert.deepEqual((call.result as { memory: unknown }).memory, { chips: [{ id: 'm', text: '喜欢中文', version: 1, change: 'added' }] })
+  assert.equal(call.providerMetadata?.lingxiloop?.activity && (call.providerMetadata.lingxiloop.activity as { kind: string }).kind, 'tool')
+  assert.doesNotMatch(JSON.stringify(memory), /PRIVATE|arguments/)
   const waiting = runState('waiting')
   waiting.run.goalOutcome = { status: 'awaiting_approval', requestVersion: 1, verification: 'not_run', approvalId: 'approval' }
   const result = projection.apply({ type: 'state', state: waiting })

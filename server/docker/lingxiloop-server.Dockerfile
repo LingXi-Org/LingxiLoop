@@ -91,7 +91,7 @@ COPY server ./server
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into
 # this final stage).
-COPY src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts src/lib/mentions.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/userFacingError.ts src/lib/runActivity.ts ./src/lib/
+COPY src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts src/lib/mentions.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/memoryActivity.ts ./src/lib/
 COPY src/lib/interactive-ui ./src/lib/interactive-ui
 # Web SPA bundle — read by server/src/web.ts at boot via existsSync().
 # When this is absent (e.g. an older runtime image) the server falls

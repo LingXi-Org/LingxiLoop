@@ -7,6 +7,7 @@ import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId } from '@/stores/auth'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
+import { memoryActivitySchema } from '@/lib/memoryActivity'
 
 export interface AgentRunTarget { conversationId: string; agentId: string; runId: string; threadId?: string }
 export type AgentRunResponse = AgentRunSnapshot
@@ -14,6 +15,12 @@ const path = (target: AgentRunTarget) => `/im/channels/${encodeURIComponent(targ
 const thread = (target: AgentRunTarget): Record<string, string> => target.threadId ? { threadId: target.threadId } : {}
 
 export const harnessApi = {
+  async memory(target: AgentRunTarget, ids: string[], signal?: AbortSignal) {
+    return memoryActivitySchema.parse(await http(`${path(target)}/memory?${new URLSearchParams({ ...thread(target), ids: ids.join(',') })}`, { signal }))
+  },
+  forgetMemory: (target: AgentRunTarget, id: string, expectedVersion: number) => http<{ ok: boolean }>(`${path(target)}/memory/${encodeURIComponent(id)}`, {
+    method: 'DELETE', body: JSON.stringify({ ...thread(target), expectedVersion }),
+  }),
   async activity(target: AgentRunTarget, offset: number, attentionOnly: boolean, signal?: AbortSignal) {
     const value = await http<{ message: unknown; total: number; nextOffset: number | null }>(`${path(target)}?${new URLSearchParams({ ...thread(target), activityOffset: String(offset), ...(attentionOnly ? { attentionOnly: '1' } : {}) })}`, { signal })
     const message = nativeMessageSchema.parse(value.message)

@@ -1,6 +1,37 @@
-import { NoEffectError, type MemoryOptions } from '@lyyzka/lingxios'
+import { NoEffectError, type MemoryOptions, type MemoryIdentity, type MemoryDocument, type createLingxiOS } from '@lyyzka/lingxios'
 import { createPermissionService, ForbiddenError } from '../access/public.js'
 import type { Queryable } from '../../db/queryable.js'
+import { HttpError } from '../../http/errors.js'
+import { memoryActivity } from '../../../../src/lib/memoryActivity.js'
+
+type MemoryApi = NonNullable<Awaited<ReturnType<typeof createLingxiOS>>['memory']>
+
+async function readDocuments(memory: MemoryApi, identity: MemoryIdentity, ids: string[]) {
+  const documents: MemoryDocument[] = []
+  for (const scope of await memory.scopes(identity)) for (const id of new Set(ids)) {
+    const document = await memory.read(identity, scope, id)
+    if (document) documents.push(document)
+  }
+  return documents
+}
+
+export async function readMemoryChips(memory: MemoryApi, identity: MemoryIdentity, ids: string[]) {
+  return memoryActivity('memory.list', { items: await readDocuments(memory, identity, ids) })!
+}
+
+export async function forgetMemoryChip(memory: MemoryApi, identity: MemoryIdentity, id: string, expectedVersion: number) {
+  const document = (await readDocuments(memory, identity, [id]))[0]
+  if (!document) return
+  if (document.version !== expectedVersion) throw new HttpError(409, '这条记忆已更新，请刷新后再操作。')
+  try {
+    await memory.apply(identity, { scope: { tenantId: document.tenantId, scopeType: document.scopeType, scopeId: document.scopeId },
+      changes: [{ action: 'delete', id, expectedVersion }], idempotencyKey: `forget:${identity.principalId}:${id}:${expectedVersion}`,
+      sourceRef: `run:${identity.workId}:forget:${id}` })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'memory is unavailable or stale') throw new HttpError(409, '这条记忆已更新，请刷新后再操作。')
+    throw error
+  }
+}
 
 /** The native service additionally partitions IM scopes by principal, Agent and frozen audience. */
 export const resolveMemoryScopes: MemoryOptions['resolveScopes'] = async (identity, database, signal) => {
