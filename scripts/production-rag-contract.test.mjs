@@ -9,13 +9,15 @@ import { updateImageTags } from './update-deployment-images.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
-// Failure: an old worker acknowledges an unknown homework effect during a rolling release.
+// Failures: sync deploys an application before the worker stop; an old worker acknowledges a new effect.
 test('production stops both old workers before an application can enqueue new effect kinds', () => {
   const resources = read('deploy/komodo/resources.toml')
   const stages = [...resources.matchAll(/\[\[procedure\.config\.stage\]\]\s*name = "([^"]+)"([\s\S]*?)(?=\[\[procedure\.config\.stage\]\]|$)/g)]
   const stopIndex = stages.findIndex(([, name]) => name === 'Stop old workers')
   assert.ok(stopIndex >= 0)
   for (const stack of ['lingxiloop-app-a', 'lingxiloop-app-b']) {
+    const definition = resources.match(new RegExp(`\\[\\[stack\\]\\]\\s*name = "${stack}"([\\s\\S]*?)(?=\\[\\[stack\\]\\]|\\[\\[procedure\\]\\]|$)`))?.[1]
+    assert.match(definition ?? '', /^deploy = false$/m, `${stack} must not deploy during RunSync`)
     assert.match(stages[stopIndex][2], new RegExp(`execution\\.type = "StopStack", execution\\.params\\.stack = "${stack}", execution\\.params\\.services = \\["worker"\\]`))
   }
   for (const name of ['Application A', 'Application B']) {
