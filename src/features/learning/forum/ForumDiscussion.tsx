@@ -1,3 +1,6 @@
+import { useAuth } from '@/stores/auth'
+import { ForumCommentEditor } from './ForumCommentEditor'
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog'
 import { MessageCircleIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -11,9 +14,11 @@ import { MemoContent } from './memos/MemoContent'
 import { contentDraftSchema, emptyContent, useForumDraft } from './useForumDraft'
 
 // The content/comment stack and load-more row adapt Memos MemoCommentSection; see memos/README.md.
-export function ForumDiscussion({ courseId, item, canWrite, onClose, onComment }: {
-  courseId: string; item: ForumItem; canWrite: boolean; onClose(): void; onComment(): void
+export function ForumDiscussion({ courseId, item, canWrite, canManage, onClose, onComment }: {
+  courseId: string; item: ForumItem; canWrite: boolean; canManage: boolean; onClose(): void; onComment(): void
 }) {
+  const userId=useAuth(state=>state.user?.id)
+  const [editing,setEditing]=useState<string | null>(null),[deleting,setDeleting]=useState<string | null>(null)
   const [comments, setComments] = useState<ForumComment[]>([]), [nextOffset, setNextOffset] = useState<number | null>(null)
   const { draft, setDraft, discard, storageError } = useForumDraft(`comment:${courseId}:${item.targetType}:${item.id}`, contentDraftSchema, emptyContent, canWrite)
   const { body, links, attachments } = draft
@@ -41,7 +46,11 @@ export function ForumDiscussion({ courseId, item, canWrite, onClose, onComment }
       <div className="flex items-center gap-1 px-3 mb-3 text-sm text-muted-foreground"><MessageCircleIcon className="size-4" /><h3>评论</h3><span>（{Math.max(item.commentCount, comments.length)}）</span></div>
       <div className="relative mx-auto w-full flex flex-col items-start gap-y-1">
       {comments.length === 0 && !busy && <p className="text-sm text-muted-foreground">还没有评论。</p>}
-      {comments.map(comment => <MemoCard key={comment.id} label={`${comment.authorName}的评论`} author={comment.authorName} createdAt={comment.createdAt}><MemoContent content={comment.body} /><ForumFiles links={comment.links} attachments={comment.attachments} /></MemoCard>)}
+      {comments.map(comment => <MemoCard key={comment.id} label={`${comment.authorName}的评论`} author={comment.authorName} createdAt={comment.createdAt}
+        actions={<>{canWrite&&comment.authorId===userId&&<Button variant="ghost" size="sm" onClick={()=>setEditing(comment.id)}>编辑评论</Button>}{canWrite&&(canManage||comment.authorId===userId)&&<Button variant="ghost" size="sm" onClick={()=>setDeleting(comment.id)}>删除评论</Button>}</>}>
+        {editing===comment.id ? <ForumCommentEditor courseId={courseId} item={item} comment={comment} onSaved={()=>{setEditing(null);void load();onComment()}} onClose={()=>setEditing(null)}/> : <><MemoContent content={comment.body}/><ForumFiles links={comment.links} attachments={comment.attachments}/></>}
+      </MemoCard>)}
+      <AlertDialog open={Boolean(deleting)} onOpenChange={open=>{if(!open)setDeleting(null)}}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>删除这条评论？</AlertDialogTitle><AlertDialogDescription>删除后不再显示在讨论中。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction onClick={()=>{if(deleting)void forumApi.deleteComment(courseId,item,deleting).then(()=>{onComment();return load()}).catch(reason=>setError(userFacingError(reason,'删除失败。')));setDeleting(null)}}>确认删除评论</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       {nextOffset !== null && <div className="flex justify-center"><Button variant="outline" disabled={busy} onClick={() => void load(nextOffset)}>更多评论</Button></div>}
       {canWrite && <form className="w-full mt-3 space-y-2" onSubmit={async event => {
         event.preventDefault()

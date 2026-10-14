@@ -74,8 +74,8 @@ export async function evidenceTargetExists(
   if (scope.targetKind === 'AGENT_RUN') return modelRunBelongsToProject(db, scope.companyId, scope.projectId, scope.targetId)
   const statements: Record<Exclude<EvidenceLinkInput['targetKind'], 'AGENT_RUN'>, string> = {
     DOMAIN_EVENT: `SELECT 1 FROM domain_events WHERE company_id=$1 AND project_id=$2 AND id=$3`,
-    LEARNING_ATTEMPT: `SELECT 1 FROM learning_attempts WHERE company_id=$1 AND project_id=$2 AND id=$3`,
-    LEARNING_EVALUATION: `SELECT 1 FROM learning_evaluations WHERE company_id=$1 AND project_id=$2 AND id=$3`,
+    FORUM_SUBMISSION: `SELECT 1 FROM course_forum_submissions WHERE company_id=$1 AND project_id=$2 AND id=$3`,
+    FORUM_FEEDBACK: `SELECT 1 FROM course_forum_feedback WHERE company_id=$1 AND project_id=$2 AND id=$3`,
     CANVAS_REPORT: `SELECT 1 FROM canvas_assignment_reports report
       JOIN canvases canvas ON canvas.id=report.canvas_id AND canvas.company_id=report.company_id
       WHERE report.company_id=$1 AND canvas.project_id=$2 AND report.id=$3`,

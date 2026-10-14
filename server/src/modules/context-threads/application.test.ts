@@ -36,10 +36,6 @@ class FakeDb implements Queryable {
         departed_at: null,
       }] : [], rowCount: participant ? 1 : 0 }
     }
-    if (text.includes('FROM learning_cases')) {
-      const matches = this.cases.get(String(params[2])) === String(params[3])
-      return { rows: matches ? [{ '?column?': 1 }] : [], rowCount: matches ? 1 : 0 }
-    }
     if (text.includes('FROM learning_project_teacher_agents')) {
       const matches = this.managedAgentIds.has(String(params[1]))
       return { rows: matches ? [{ '?column?': 1 }] : [], rowCount: matches ? 1 : 0 }
@@ -132,15 +128,7 @@ test('teacher thread rejects a human without an active same-Project Student memb
   assert.equal(synced.length, 0)
 })
 
-test('intervention thread requires the case to belong to the selected Student', async () => {
-  const { application } = harness()
-  await assert.rejects(
-    application.createTeacherThread(scope, {
-      contextType: 'INTERVENTION', studentId: 'student-1', caseId: 'case-other',
-    }),
-    (error) => error instanceof ContextThreadApplicationError && error.code === 'not_found',
-  )
-})
+
 
 test('an exact retry reuses the authoritative thread without another event or WuKong sync', async () => {
   const { application, db, synced } = harness()

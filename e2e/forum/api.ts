@@ -22,7 +22,7 @@ await insertCourse(pool, { companyId: 'e2e-school',userId: 'forum-teacher',proje
 await insertCourse(pool, { companyId: 'e2e-school',userId: 'forum-teacher',projectId: 'forum-other',courseId: 'forum-other-course',roomId: 'forum-other-room',kind: 'TEACHING',planId: null,
   input: { name: 'Other Forum Course',description: 'Isolated other course',color: '#5266d6' } })
 for (const name of ['student','peer']) await pool.query("INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES ('e2e-school','e2e-classroom',$1,'STUDENT')", [`forum-${name}`])
-await pool.query("INSERT INTO learning_activities(id,company_id,project_id,title,instructions,kind,status,created_by,published_by,published_at,due_at) VALUES ('forum-homework','e2e-school','e2e-classroom','Forum homework','Explain your result','PRACTICE','PUBLISHED','forum-teacher','forum-teacher',NOW()-INTERVAL '2 days',NOW()-INTERVAL '1 day')")
+await pool.query("INSERT INTO course_forum_posts(id,company_id,project_id,title,body,kind,status,author_user_id,created_at,due_at) VALUES ('forum-homework','e2e-school','e2e-classroom','Forum homework','Explain your result','assignment','PUBLISHED','forum-teacher',NOW()-INTERVAL '2 days',NOW()-INTERVAL '1 day')")
 await pool.query("INSERT INTO knowledge_sources(id,company_id,project_id,kind,title,visibility_scope,owner_user_id,created_by_user_id,created_via) VALUES ('forum-resource','e2e-school','e2e-classroom','text','Historical public resource','PROJECT','forum-teacher','forum-teacher','USER')")
 await installRecordingWukong()
 // Synthetic auth and in-memory objects are confined to this loopback-only test server.
@@ -32,6 +32,9 @@ app.get('/api/fixture-role/:role', (req,res) => {
   res.setHeader('Set-Cookie', `forum-role=${req.params.role}; Path=/; SameSite=Strict; HttpOnly`)
   res.json({ role: req.params.role })
 })
+let failPost=false
+app.post('/api/fixture-fail-next-post',(_req,res)=>{failPost=true;res.sendStatus(200)})
+app.use((req,res,next)=>{if(failPost&&req.method==='POST'&&/^\/api\/courses\/[^/]+\/forum$/.test(req.path)){failPost=false;res.status(503).json({error:'Temporary fixture failure'});return}next()})
 app.put('/api/fixture-object', express.raw({ type: '*/*',limit: '1mb' }), async (req,res) => {
   await storage.put(String(req.query.key),req.body,req.headers['content-type'] ?? 'text/plain')
   res.sendStatus(200)

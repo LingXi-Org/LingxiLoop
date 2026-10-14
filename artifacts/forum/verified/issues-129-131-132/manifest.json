@@ -1,0 +1,61 @@
+{
+  "scope": "Issues 129, 131, 132",
+  "browserRun": "01a13aa3-e86a-7cfb-ac1d-f2d1ebe1b069",
+  "browserTests": 4,
+  "engine": "tester-army/e2e official @e2e-dev/web",
+  "databaseIntegrationTests": 8,
+  "files": [
+    {
+      "name": "001-composer-streaming-light-1440.png",
+      "sha256": "4aea8aba76c5319ee6eb6a38316f63ba70ff3a7d3effbad093f593be2f3a0904"
+    },
+    {
+      "name": "001-composer-streaming-light-390.png",
+      "sha256": "be82f1e206471e6f3c8cdfbf3438877b2e5835a9401da980c31ff56603627bcf"
+    },
+    {
+      "name": "001-retired-navigation-normalized.png",
+      "sha256": "95f23d6016abb8eb2813df1c284240eff30953d4ecd16d61737b231d980e8da2"
+    },
+    {
+      "name": "001-student-inline-light.png",
+      "sha256": "bca47e6fd2a75b944adc624c5de0570e84a66c914e8eedf9aa8bc8aa21de028d"
+    },
+    {
+      "name": "002-composer-complete-dark-1440.png",
+      "sha256": "69a3c138e6c7fe6f9d95b281770fee3e7d07054f69b0e532db30a64a58c186ee"
+    },
+    {
+      "name": "002-composer-complete-dark-390.png",
+      "sha256": "f6fb49fb8d0bb1743747ff01debf474114a95292055101927d3f2766ac8b94e8"
+    },
+    {
+      "name": "002-native-editor-preview.png",
+      "sha256": "be06ea5c2c0e582a2d8fbaa50ce0922d6df7a62a1323496f4b848d17d4a8035c"
+    },
+    {
+      "name": "003-discussion-edited.png",
+      "sha256": "2a4d037d728246d32bdab244da1cc9778aa69e26ecfaa4c13cd41c2b9996b090"
+    },
+    {
+      "name": "004-student-private-versions.png",
+      "sha256": "d6f84787f8c4ec894766c184a78b4fe83435791b2fffce09e2438e9f2f45facf"
+    },
+    {
+      "name": "005-teacher-inline-homework.png",
+      "sha256": "2e9d4ac36a6efa3ddba8d5868474ed05a87f740f12bf8beb432b5623c8bf36df"
+    },
+    {
+      "name": "006-forum-mobile-navigation.png",
+      "sha256": "32f22fa3c89c0c5a028a25deaf60265e06733b3bb6294c33020562b5634a637c"
+    },
+    {
+      "name": "007-forum-mobile-dark.png",
+      "sha256": "3bd5366f0e2a22d2d60f812bd4300edf0ba97365e56268e245cd6277f1a16c3b"
+    },
+    {
+      "name": "008-forum-desktop-complete.png",
+      "sha256": "c7fad82ad3d5cf21937f26f37c09e1bde4ba72200cc8c58821d0cab3464285ab"
+    }
+  ]
+}

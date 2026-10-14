@@ -22,7 +22,7 @@ export function RecordCover({ record }: { record: AdminRecord }) {
   return <div className="admin-record-cover">{src && !failed ? <img src={src} alt={recordTitle(record)} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} /> : <><ImageIcon className="size-7" /><span>暂无封面</span></>}</div>
 }
 
-const RELATIONS: Record<string, string> = { company_id: 'companies', project_id: 'projects', user_id: 'users', agent_id: 'participants', source_id: 'knowledge-sources', activity_id: 'learning-activities', attempt_id: 'learning-attempts' }
+const RELATIONS: Record<string, string> = { company_id: 'companies', project_id: 'projects', user_id: 'users', agent_id: 'participants', source_id: 'knowledge-sources' }
 
 export function RecordValue({ value, field = '', depth = 0, label }: { value: unknown; field?: string; depth?: number; label?: string }) {
   if (value == null || value === '') return <span className="text-muted-foreground">—</span>

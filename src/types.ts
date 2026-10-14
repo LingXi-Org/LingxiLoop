@@ -137,5 +137,5 @@ export interface PollTally {
 }
 
 export interface ViewKey {
-  view: 'conversations' | 'agents' | 'library' | 'learning' | 'forum' | 'courses' | 'course-content' | 'course-members' | 'course-status'
+  view: 'conversations' | 'agents' | 'forum'
 }

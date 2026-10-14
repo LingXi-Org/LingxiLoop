@@ -21,7 +21,6 @@ import { BusinessMessagePart } from './BusinessMessagePart'
 import { MessagePartBoundary } from './MessagePartBoundary'
 import { RunActivityHistory } from './RunActivityHistory'
 import { NativeTool, hasRichTool } from './NativeTool'
-import { TeacherBriefingStatsTool } from './ToolRenderers'
 
 const ReadOnlyMessage = createContext(false)
 const GroupOwnsFooter = createContext(false)
@@ -44,7 +43,7 @@ const generativeComponents = Object.fromEntries(Object.entries(generativeCompone
       const event = parsed.event as { title: string; startAt: string }
       return <p className="whitespace-pre-wrap text-sm">{event.title} · {event.startAt}（日历功能已停止支持）</p>
     }
-    if (name === 'learning-stats') return <TeacherBriefingStatsTool args={parsed} />
+    if (name === 'learning-stats') return <p className="text-sm text-muted-foreground">历史学习统计已归档。</p>
     const Component = styledGenerativeUILibrary[name]!.render
     return <Component {...parsed} $status="done">{children}</Component>
   },

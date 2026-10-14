@@ -1,5 +1,7 @@
-import { countPendingApprovals } from '@lyyzka/lingxios'
+
+
 import type { Queryable } from '../../db/queryable.js'
+
 
 export interface TeacherProvisioningCourse {
   companyId: string
@@ -7,6 +9,7 @@ export interface TeacherProvisioningCourse {
   courseTitle: string
   projectName: string
 }
+
 
 export interface TeacherProvisioningInput extends TeacherProvisioningCourse {
   courseId: string
@@ -19,21 +22,6 @@ export interface TeacherProvisioningInput extends TeacherProvisioningCourse {
   presetVersion: number
 }
 
-export interface TeacherRoomRoutineRow {
-  id: string
-  schedule: Record<string, unknown>
-  timezone: string
-}
-
-export interface TeacherAgentSummaryRow {
-  agent_id: string
-  name: string
-  project_id: string
-  conversation_id: string
-  room_status: 'active' | 'closed'
-  company_id: string
-  pending: number
-}
 
 export async function findTeacherProvisioningCourse(
   db: Queryable,
@@ -64,6 +52,7 @@ export async function findTeacherProvisioningCourse(
   } : undefined
 }
 
+
 export async function findProjectTeacherAgentId(
   db: Queryable,
   companyId: string,
@@ -76,6 +65,7 @@ export async function findProjectTeacherAgentId(
   )
   return rows[0]?.agent_id
 }
+
 
 export async function persistTeacherProvisioning(
   db: Queryable,
@@ -167,6 +157,7 @@ export async function persistTeacherProvisioning(
   return { created: rows[0]?.created ?? false }
 }
 
+
 export async function findTeacherWelcomeDescriptor(
   db: Queryable,
   companyId: string,
@@ -198,6 +189,7 @@ export async function findTeacherWelcomeDescriptor(
   } : undefined
 }
 
+
 export async function findActiveTeacherRoom(
   db: Queryable,
   companyId: string,
@@ -224,6 +216,7 @@ export async function findActiveTeacherRoom(
     : undefined
 }
 
+
 export async function listCourseTeacherIds(
   db: Queryable,
   companyId: string,
@@ -239,6 +232,7 @@ export async function listCourseTeacherIds(
   )
   return rows.map((row) => row.user_id)
 }
+
 
 export async function updateTeacherRoomMembers(
   db: Queryable,
@@ -265,6 +259,7 @@ export async function updateTeacherRoomMembers(
   return rows[0]?.profile
 }
 
+
 export async function closeTeacherRoomState(
   db: Queryable,
   companyId: string,
@@ -276,17 +271,9 @@ export async function closeTeacherRoomState(
       WHERE company_id=$1 AND course_id=$2 AND status='active'`,
     [companyId, courseId],
   )
-  await db.query(
-    `UPDATE agent_routines routine
-        SET status='paused',next_run_at=NULL,version=version+1,updated_at=NOW()
-       FROM learning_course_teacher_rooms teacher_room
-      WHERE teacher_room.company_id=$1 AND teacher_room.course_id=$2
-        AND routine.company_id=teacher_room.company_id
-        AND routine.channel_id=teacher_room.conversation_id
-        AND routine.kind='teacher_project_digest'`,
-    [companyId, courseId],
-  )
+
 }
+
 
 export async function reactivateTeacherRoomState(
   db: Queryable,
@@ -306,60 +293,4 @@ export async function reactivateTeacherRoomState(
     [companyId, courseId],
   )
   return rows[0]?.conversation_id
-}
-
-export async function listTeacherRoomRoutines(
-  db: Queryable,
-  companyId: string,
-  conversationId: string,
-): Promise<TeacherRoomRoutineRow[]> {
-  const { rows } = await db.query<TeacherRoomRoutineRow>(
-    `SELECT id,schedule,timezone FROM agent_routines
-      WHERE company_id=$1 AND channel_id=$2 AND kind='teacher_project_digest'`,
-    [companyId, conversationId],
-  )
-  return rows
-}
-
-export async function activateTeacherRoomRoutine(
-  db: Queryable,
-  companyId: string,
-  routineId: string,
-  nextRunAt: string,
-): Promise<void> {
-  await db.query(
-    `UPDATE agent_routines
-        SET status='active',next_run_at=$3,version=version+1,updated_at=NOW()
-      WHERE company_id=$1 AND id=$2`,
-    [companyId, routineId, nextRunAt],
-  )
-}
-
-export async function findTeacherAgentSummaryRow(
-  db: Queryable,
-  companyId: string,
-  courseId: string,
-): Promise<TeacherAgentSummaryRow | undefined> {
-  const { rows } = await db.query<Omit<TeacherAgentSummaryRow, 'pending'>>(
-    `SELECT project_agent.agent_id,participant.name,course.project_id,
-            teacher_room.conversation_id,teacher_room.status AS room_status,
-            course.company_id
-       FROM courses course
-       JOIN learning_project_teacher_agents project_agent
-         ON project_agent.project_id=course.project_id
-        AND project_agent.company_id=course.company_id
-       JOIN participants participant
-         ON participant.id=project_agent.agent_id
-        AND participant.company_id=project_agent.company_id
-       JOIN learning_course_teacher_rooms teacher_room
-         ON teacher_room.course_id=course.id AND teacher_room.company_id=course.company_id
-      WHERE course.company_id=$1 AND course.id=$2`,
-    [companyId, courseId],
-  )
-  const row = rows[0]
-  if (!row) return undefined
-  const sessions = await db.query<{ session_id: string }>('SELECT DISTINCT session_id FROM agent_run_bindings WHERE company_id=$1 AND conversation_id=$2 AND agent_id=$3', [companyId,row.conversation_id,row.agent_id])
-  let pending = 0
-  for (const session of sessions.rows) pending += await countPendingApprovals(db,companyId,session.session_id)
-  return { ...row,pending }
 }

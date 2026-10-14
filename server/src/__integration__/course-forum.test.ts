@@ -3,7 +3,6 @@ import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { ForumApplication, canReadLearningFile } from '../modules/learning/forum-application.js'
-import { submitProjectLearningActivity } from '../modules/learning/activities-application.js'
 import { ensureEducationPlan } from '../modules/entitlements/public.js'
 import { seedUserMembership, ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
 
@@ -37,8 +36,8 @@ beforeEach(async () => {
     for (const scope of users) await pool.query(`INSERT INTO project_memberships(company_id,project_id,user_id,role,status)
       VALUES ($1,$2,$3,$4,'ACTIVE')`, [companyId,projectId,scope.userId,scope === teacher ? 'TEACHER' : 'STUDENT'])
   }
-  await pool.query(`INSERT INTO learning_activities(id,company_id,project_id,title,instructions,kind,status,created_by,published_by,published_at,due_at)
-    VALUES ('forum-homework',$1,'forum-project','Historical homework','Explain your result','PRACTICE','PUBLISHED',$2,$2,NOW()-INTERVAL '2 days',NOW()-INTERVAL '1 day')`, [companyId,teacher.userId])
+  await pool.query(`INSERT INTO course_forum_posts(id,company_id,project_id,title,body,kind,status,author_user_id,created_at,due_at)
+    VALUES ('forum-homework',$1,'forum-project','Historical homework','Explain your result','assignment','PUBLISHED',$2,NOW()-INTERVAL '2 days',NOW()-INTERVAL '1 day')`, [companyId,teacher.userId])
   for (const visibility of ['PROJECT','PRIVATE']) await pool.query(`INSERT INTO knowledge_sources
     (id,company_id,project_id,kind,title,visibility_scope,owner_user_id,created_by_user_id,created_via)
     VALUES ($1,$2,'forum-project','text',$1,$3,$4,$4,'USER')`, [`source-${visibility}`,companyId,visibility,student.userId])
@@ -49,13 +48,20 @@ beforeEach(async () => {
 after(() => teardownAll())
 const course = 'course-forum-project'
 
-const post = { kind: 'case' as const, title: 'My project', body: 'Student work', tags: ['geometry'], links: [], attachments: [] }
+const post = { kind: 'share' as const, title: 'My project', body: 'Student work', tags: ['geometry'], links: [], attachments: [] }
+
+async function submit(input: { companyId: string; projectId: string; activityId: string; learnerId: string; answer: string; idempotencyKey: string;
+  links?: string[]; attachments?: { key: string; name: string }[]; source?: 'AGENT_RELAY' | 'AGENT_GENERATED'; agentId?: string; agentWorkId?: string }) {
+  return forum.submit({ companyId: input.companyId, userId: input.learnerId }, `course-${input.projectId}`, input.activityId,
+    { answer: input.answer, idempotencyKey: input.idempotencyKey, links: input.links, attachments: input.attachments },
+    input.source ? { source: input.source, id: input.agentId!, workId: input.agentWorkId! } : undefined)
+}
 
 test('[integration] forum discovers existing public sources and assignments, isolating every content operation', async () => {
   const created = await forum.createPost(student, course, post)
   assert.equal(created.authorId, student.userId)
   const feed = await forum.list(student, course, {})
-  assert.deepEqual(new Set(feed.items.map(item => item.id)), new Set([created.id,'forum-homework','source-PROJECT']))
+  assert.deepEqual(new Set(feed.items.map(item => item.id)), new Set([created.id,'forum-homework']))
   assert.equal((await forum.list(student, course, { search: 'PRIVATE' })).items.length, 0)
   assert.equal((await forum.list(student, course, { tag: 'geometry' })).items[0]?.id, created.id)
   await assert.rejects(forum.list(outsider, course, {}))
@@ -67,28 +73,28 @@ test('[integration] forum discovers existing public sources and assignments, iso
   await assert.rejects(forum.createPost(student, course, { ...post, sourceId: 'source-PRIVATE' }))
   await forum.comment(student, course, 'post', created.id, 'A comment')
   assert.equal((await forum.comments(peer, course, 'post', created.id, 0)).items[0]?.body, 'A comment')
-  await assert.rejects(forum.updateFlags(student, course, 'post', created.id, { featured: true }))
-  const featured = await forum.updateFlags(teacher, course, 'post', created.id, { featured: true, pinned: true })
-  assert.equal(featured.featured, true)
+  await assert.rejects(forum.updateFlags(student, course, 'post', created.id, { pinned: true }))
+  const featured = await forum.updateFlags(teacher, course, 'post', created.id, { pinned: true })
+  assert.equal(featured.pinned, true)
   assert.equal(featured.authorId, student.userId)
-  await assert.rejects(forum.updateFlags(teacher, course, 'source', 'source-PRIVATE', { pinned: true }))
+  await assert.rejects(forum.updateFlags(teacher, course, 'post', 'source-PRIVATE', { pinned: true }))
 })
 
 test('[integration] submission versions preserve links, private files, late status and idempotency; closure blocks browser and Agent', async () => {
   const input = { companyId, projectId: 'forum-project', activityId: 'forum-homework', learnerId: student.userId,
     answer: 'My answer', links: ['https://example.com/student-work'], attachments: [{ key: 'attachments/forum-school/student.txt', name: 'student.txt' }], idempotencyKey: 'forum-original-v1' }
-  const first = await submitProjectLearningActivity(transaction, input)
-  assert.deepEqual(await submitProjectLearningActivity(transaction, input), first)
-  await submitProjectLearningActivity(transaction, { ...input, answer: 'Revised answer', idempotencyKey: 'forum-original-v2' })
+  const first = await submit(input)
+  assert.deepEqual(await submit(input), first)
+  await submit({ ...input, answer: 'Revised answer', idempotencyKey: 'forum-original-v2' })
   // Wall clocks may move backward, timestamps may tie, and retried writes must
   // not consume a visible version. Acceptance order still defines the latest.
-  await pool.query(`UPDATE learning_attempts SET submitted_at=NOW()+INTERVAL '1 day' WHERE id=$1`, [first.attemptId])
+  await pool.query(`UPDATE course_forum_submissions SET submitted_at=NOW()+INTERVAL '1 day' WHERE id=$1`, [first.attemptId])
   const history = await forum.submissions(student, course, 'forum-homework', 0)
   assert.equal(history.items.length, 2)
   assert.equal(history.items[0]?.answer, 'Revised answer')
   assert.equal(history.items[1]?.answer, 'My answer')
   assert.deepEqual(history.items.map(item => [item.answer, item.version]), [['Revised answer', 2], ['My answer', 1]])
-  await pool.query(`UPDATE learning_attempts SET submitted_at='2026-01-01T00:00:00Z' WHERE activity_id='forum-homework'`)
+  await pool.query(`UPDATE course_forum_submissions SET submitted_at='2026-01-01T00:00:00Z' WHERE assignment_id='forum-homework'`)
   assert.deepEqual((await forum.submissions(student, course, 'forum-homework', 0)).items.map(item => [item.answer, item.version]),
     [['Revised answer', 2], ['My answer', 1]])
   assert.equal(history.items[0]?.late, true)
@@ -101,10 +107,10 @@ test('[integration] submission versions preserve links, private files, late stat
   assert.equal(await canReadLearningFile(pool, input.attachments[0].key, peer.userId), false)
   assert.equal(await canReadLearningFile(pool, input.attachments[0].key, outsider.userId), false)
   assert.equal((await forum.list(peer, course, { search: 'Revised answer' })).items.length, 0)
-  await assert.rejects(submitProjectLearningActivity(transaction, { ...input, learnerId: peer.userId, idempotencyKey: 'stolen-file' }))
-  await pool.query(`UPDATE learning_activities SET status='CLOSED' WHERE id='forum-homework'`)
-  await assert.rejects(submitProjectLearningActivity(transaction, { ...input, idempotencyKey: 'after-close-web' }))
-  await assert.rejects(submitProjectLearningActivity(transaction, { ...input, idempotencyKey: 'after-close-agent',
+  await assert.rejects(submit({ ...input, learnerId: peer.userId, idempotencyKey: 'stolen-file' }))
+  await pool.query(`UPDATE course_forum_posts SET status='CLOSED' WHERE id='forum-homework'`)
+  await assert.rejects(submit({ ...input, idempotencyKey: 'after-close-web' }))
+  await assert.rejects(submit({ ...input, idempotencyKey: 'after-close-agent',
     source: 'AGENT_GENERATED', agentId: 'forum-agent', agentWorkId: 'forum-work' }))
   await pool.query(`UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id='forum-project' AND user_id=$2`, [companyId,student.userId])
   assert.equal(await canReadLearningFile(pool, input.attachments[0].key, student.userId), false)
@@ -113,29 +119,30 @@ test('[integration] submission versions preserve links, private files, late stat
 // Comment attachments must persist, require the uploader's grant, and follow the
 // current target visibility rather than leaving an uploader or old-course bypass.
 test('[integration] comment files follow course membership and current source visibility', async () => {
+  const referenced = await forum.createPost(student, course, { ...post, sourceId: 'source-PROJECT' })
   const attachments = [{ key: 'attachments/forum-school/student.txt', name: 'student.txt' }]
   const input = { body: '', links: ['https://example.com/discussion'], attachments }
-  await assert.rejects(forum.comment(peer, course, 'source', 'source-PROJECT', input))
-  await assert.rejects(forum.comment(outsider, course, 'source', 'source-PROJECT', input))
-  await forum.comment(student, course, 'source', 'source-PROJECT', input)
-  const comment = (await forum.comments(peer, course, 'source', 'source-PROJECT', 0)).items[0]
+  await assert.rejects(forum.comment(peer, course, 'post', referenced.id, input))
+  await assert.rejects(forum.comment(outsider, course, 'post', referenced.id, input))
+  await forum.comment(student, course, 'post', referenced.id, input)
+  const comment = (await forum.comments(peer, course, 'post', referenced.id, 0)).items[0]
   assert.deepEqual({ body: comment.body, links: comment.links, attachments: comment.attachments }, input)
   assert.equal(await canReadLearningFile(pool, attachments[0].key, peer.userId), true)
   assert.equal(await canReadLearningFile(pool, attachments[0].key, outsider.userId), false)
   await pool.query(`UPDATE knowledge_sources SET visibility_scope='PRIVATE' WHERE id='source-PROJECT'`)
-  await assert.rejects(forum.comments(student, course, 'source', 'source-PROJECT', 0))
+  await assert.rejects(forum.comments(student, course, 'post', referenced.id, 0))
   assert.equal(await canReadLearningFile(pool, attachments[0].key, student.userId), false)
   assert.equal(await canReadLearningFile(pool, attachments[0].key, teacher.userId), false)
 })
 
 test('[integration] Agent provenance cannot become independent human evidence or change the submitting student', async () => {
-  const result = await submitProjectLearningActivity(transaction, { companyId,projectId: 'forum-project',activityId: 'forum-homework',learnerId: student.userId,
+  const result = await submit({ companyId,projectId: 'forum-project',activityId: 'forum-homework',learnerId: student.userId,
     answer: 'Agent generated answer', idempotencyKey: 'forum-agent-generated', source: 'AGENT_GENERATED', agentId: 'forum-agent', agentWorkId: 'forum-work' })
-  const { rows } = await pool.query(`SELECT a.learner_id,a.source,a.assistance,a.submitted_by_agent,a.agent_work_id,e.level,e.derivation,e.created_by_type
-    FROM learning_attempts a JOIN evidence_records e ON e.id=a.evidence_id WHERE a.id=$1`, [result.attemptId])
-  assert.deepEqual(rows, [{ learner_id: student.userId,source: 'AGENT_GENERATED',assistance: 'GUIDED',submitted_by_agent: 'forum-agent',agent_work_id: 'forum-work',level: 'L2',derivation: 'COMPUTED',created_by_type: 'AGENT' }])
-  await assert.rejects(pool.query(`UPDATE learning_attempts SET assistance='NONE' WHERE id=$1`, [result.attemptId]))
-  await assert.rejects(submitProjectLearningActivity(transaction, { companyId,projectId: 'forum-other',activityId: 'forum-homework',learnerId: student.userId,
+  const { rows } = await pool.query(`SELECT learner_id,source,assistance,submitted_by_agent,agent_work_id
+    FROM course_forum_submissions WHERE id=$1`, [result.attemptId])
+  assert.deepEqual(rows, [{ learner_id: student.userId,source: 'AGENT_GENERATED',assistance: 'GUIDED',submitted_by_agent: 'forum-agent',agent_work_id: 'forum-work' }])
+  await assert.rejects(pool.query(`UPDATE course_forum_submissions SET assistance='NONE' WHERE id=$1`, [result.attemptId]))
+  await assert.rejects(submit({ companyId,projectId: 'forum-other',activityId: 'forum-homework',learnerId: student.userId,
     answer: 'Out of scope',idempotencyKey: 'forum-agent-outside',source: 'AGENT_GENERATED',agentId: 'forum-agent',agentWorkId: 'forum-work' }))
 })
 
@@ -151,12 +158,10 @@ test('[integration] native submission tools bind principal, frozen audience, ori
       VALUES ('forum-room',$1,'forum-project','group','Forum room',$2::jsonb)`, [companyId,JSON.stringify([student.userId,'forum-agent'])])
     await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile)
       VALUES ('forum-room',$1,$2::jsonb)`, [companyId,JSON.stringify({ channelType: 2,members: [student.userId,'forum-agent'] })])
-    await pool.query(`INSERT INTO learning_course_rooms(course_id,company_id,conversation_id,purpose,created_by)
-      VALUES ($1,$2,'forum-room','discussion',$3)`, [course,companyId,teacher.userId])
     const original = 'My independently written answer. https://example.com/original'
     im.messages.push({ channelId: 'forum-room',channelType: 2,messageId: 'forum-message',clientMsgNo: 'forum-message',messageSeq: 1,
       fromUid: student.userId,timestamp: Date.now()/1000,payload: createNativeMessage({ id: 'forum-message',role: 'user',createdAt: new Date().toISOString(),content: [{ type: 'text',text: original }] }) })
-    const tool = learningTools.find(tool => tool.action === 'learning.submit_activity')!
+    const tool = learningTools.find(tool => tool.action === 'learning.submit_assignment')!
     assert.ok(tool)
     const invoke = async (input: object, audience = [student.userId,'forum-agent']) => {
       const data = tool.parse(input)
@@ -173,17 +178,17 @@ test('[integration] native submission tools bind principal, frozen audience, ori
         return tool.execute(action,data)
       })
     }
-    await invoke({ activityId: 'forum-homework',source: 'AGENT_RELAY',evidenceClientMsgNos: ['forum-message'],idempotencyKey: 'forum-native-relay' })
+    await invoke({ assignmentId: 'forum-homework',source: 'AGENT_RELAY',answer: original,messageIds: ['forum-message'],idempotencyKey: 'forum-native-relay' })
     const history = await forum.submissions(student,course,'forum-homework',0)
     assert.equal(history.items[0]?.answer,original)
     assert.equal(history.items[0]?.source,'AGENT_RELAY')
     assert.equal(history.items[0]?.agentId,'forum-agent')
-    await invoke({ activityId: 'forum-homework',source: 'AGENT_GENERATED',answer: 'Generated draft',idempotencyKey: 'forum-native-generated' })
-    await assert.rejects(invoke({ activityId: 'forum-homework',source: 'AGENT_RELAY',answer: 'Forged original',evidenceClientMsgNos: ['forum-message'],idempotencyKey: 'forum-forged-relay' }))
-    await assert.rejects(invoke({ activityId: 'forum-homework',source: 'AGENT_RELAY',evidenceClientMsgNos: ['non-human-message'],idempotencyKey: 'forum-forged-message' }))
-    await assert.rejects(invoke({ activityId: 'forum-homework',source: 'AGENT_GENERATED',answer: 'Private',idempotencyKey: 'forum-peer-audience' },[student.userId,peer.userId,'forum-agent']))
-    await pool.query(`UPDATE learning_activities SET status='CLOSED' WHERE id='forum-homework'`)
-    await assert.rejects(invoke({ activityId: 'forum-homework',source: 'AGENT_GENERATED',answer: 'Too late',idempotencyKey: 'forum-native-closed' }))
+    await invoke({ assignmentId: 'forum-homework',source: 'AGENT_GENERATED',answer: 'Generated draft',idempotencyKey: 'forum-native-generated' })
+    await assert.rejects(invoke({ assignmentId: 'forum-homework',source: 'AGENT_RELAY',answer: 'Forged original',messageIds: ['forum-message'],idempotencyKey: 'forum-forged-relay' }))
+    await assert.rejects(invoke({ assignmentId: 'forum-homework',source: 'AGENT_RELAY',answer: original,messageIds: ['non-human-message'],idempotencyKey: 'forum-forged-message' }))
+    await assert.rejects(invoke({ assignmentId: 'forum-homework',source: 'AGENT_GENERATED',answer: 'Private',idempotencyKey: 'forum-peer-audience' },[student.userId,peer.userId,'forum-agent']))
+    await pool.query(`UPDATE course_forum_posts SET status='CLOSED' WHERE id='forum-homework'`)
+    await assert.rejects(invoke({ assignmentId: 'forum-homework',source: 'AGENT_GENERATED',answer: 'Too late',idempotencyKey: 'forum-native-closed' }))
   } finally { await im.close() }
 })
 
@@ -207,7 +212,7 @@ test('[integration] HTTP forum and private download routes reject cross-course a
     const call = (scope: typeof teacher, path: string, method = 'GET', data?: unknown) => fetch(`${clients.get(scope.userId)}${path}`, {
       method,headers: { 'content-type': 'application/json','x-company-id': companyId },...(data ? { body: JSON.stringify(data) } : {}),
     })
-    const submit = `/courses/${course}/activities/forum-homework/submit`
+    const submit = `/courses/${course}/forum/post/forum-homework/submit`
     assert.equal((await call(student, submit, 'POST', { answer: 'Cannot forge Agent provenance',idempotencyKey: 'forged-http-source',source: 'AGENT_GENERATED' })).status,400)
     assert.equal((await call(student, submit, 'POST', { answer: 'Browser submission',links: ['https://example.com/browser'],attachments: [{ key,name: 'student.txt' }],idempotencyKey: 'http-submission-1' })).status,201)
     for (const scope of [student,teacher]) {
@@ -224,8 +229,8 @@ test('[integration] HTTP forum and private download routes reject cross-course a
     const target = `/courses/${course}/forum/post/${item.id}`
     assert.equal((await call(outsider,target)).status,404)
     assert.equal((await call(outsider,`${target}/comments`,'POST',{ body: 'forbidden' })).status,404)
-    assert.equal((await call(student,target,'PATCH',{ pinned: true,official: true,featured: true })).status,403)
-    assert.equal((await call(teacher,target,'PATCH',{ pinned: true,featured: true })).status,200)
+    assert.equal((await call(student,target,'PATCH',{ pinned: true })).status,403)
+    assert.equal((await call(teacher,target,'PATCH',{ pinned: true })).status,200)
     const commentKey = 'attachments/forum-school/comment.txt'
     await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
       SELECT $1,$2,$3,period_id FROM company_memberships WHERE company_id=$2 AND user_id=$3 AND ended_at IS NULL`, [commentKey,companyId,student.userId])
@@ -237,10 +242,53 @@ test('[integration] HTTP forum and private download routes reject cross-course a
     assert.deepEqual(comments.items[0].attachments,commentInput.attachments)
     assert.equal((await call(peer,`/files?key=${encodeURIComponent(commentKey)}`)).status,200)
     assert.equal((await call(outsider,`/files?key=${encodeURIComponent(commentKey)}`)).status,404)
-    assert.equal((await call(student,`/courses/${course}/activities`,'POST',{ title: 'Unauthorized assignment',instructions: 'No',type: 'PRACTICE' })).status,403)
-    await call(teacher,`/courses/${course}/activities/forum-homework/close`,'POST')
+    assert.equal((await call(student,`/courses/${course}/activities`,'POST',{ title: 'Unauthorized assignment',instructions: 'No',type: 'PRACTICE' })).status,404)
+    await call(teacher,`/courses/${course}/forum/post/forum-homework/close`,'POST')
     assert.equal((await call(student,submit,'POST',{ answer: 'After close',idempotencyKey: 'after-http-close' })).status,409)
   } finally {
     for (const server of servers) await new Promise<void>((resolve,reject) => server.close(error => error ? reject(error) : resolve()))
   }
+})
+
+test('[integration] inline edits, comments, reactions, archive and filters obey author and course grants', async () => {
+  const item = await forum.createPost(student,course,{...post,body:'Original https://example.test #geometry'})
+  await assert.rejects(forum.updatePost(peer,course,item.id,{...post,body:'Forged edit'}))
+  await forum.updatePost(student,course,item.id,{...post,body:'Edited explanation'})
+  assert.equal((await forum.detail(peer,course,'post',item.id)).body,'Edited explanation')
+  await forum.react(peer,course,item.id,{emoji:'👍',active:true})
+  await forum.react(peer,course,item.id,{emoji:'👍',active:true})
+  assert.deepEqual((await forum.detail(student,course,'post',item.id)).reactions,[{emoji:'👍',userIds:[peer.userId]}])
+  await assert.rejects(forum.react(outsider,course,item.id,{emoji:'👍',active:true}))
+  const comment = await forum.comment(student,course,'post',item.id,'Original comment')
+  await assert.rejects(forum.editComment(peer,course,item.id,comment.id,{body:'Forged'}))
+  await forum.editComment(student,course,item.id,comment.id,{body:'Edited comment'})
+  assert.equal((await forum.comments(peer,course,'post',item.id,0)).items[0].body,'Edited comment')
+  await forum.editComment(teacher,course,item.id,comment.id,null)
+  assert.equal((await forum.comments(peer,course,'post',item.id,0)).items.length,0)
+  await forum.updateFlags(student,course,'post',item.id,{archived:true})
+  assert.equal((await forum.list(student,course,{})).items.some(row=>row.id===item.id),false)
+  assert.equal((await forum.list(student,course,{archived:'true'})).items[0].id,item.id)
+  await assert.rejects(forum.react(student,course,item.id,{emoji:'👍',active:true}))
+  await forum.updateFlags(student,course,'post',item.id,{archived:false})
+  assert.equal((await forum.list(student,course,{from:'2099-01-01T00:00:00Z'})).items.length,0)
+  await assert.rejects(forum.deletePost(peer,course,item.id))
+  await forum.deletePost(student,course,item.id)
+  await assert.rejects(forum.detail(student,course,'post',item.id))
+  await assert.rejects(forum.createPost(student,course,{...post,kind:'assignment'}))
+})
+
+test('[integration] concurrent retries preserve one version and teacher feedback survives closure and revocation', async () => {
+  const input={answer:'One accepted submission',idempotencyKey:'concurrent-key'}
+  const results=await Promise.all(Array.from({length:8},()=>forum.submit(student,course,'forum-homework',input)))
+  assert.equal(new Set(results.map(row=>row.attemptId)).size,1)
+  assert.equal((await forum.submissions(student,course,'forum-homework',0)).items.length,1)
+  await assert.rejects(forum.submit(student,course,'forum-homework',{...input,answer:'Different content'}))
+  await assert.rejects(forum.feedback(peer,course,'forum-homework',results[0].attemptId,{body:'Forged teacher feedback'}))
+  await forum.feedback(teacher,course,'forum-homework',results[0].attemptId,{body:'Verified feedback'})
+  await assert.rejects(forum.deletePost(teacher,course,'forum-homework'))
+  await forum.closeAssignment(teacher,course,'forum-homework')
+  assert.equal((await forum.submissions(student,course,'forum-homework',0)).items[0].feedback[0].body,'Verified feedback')
+  assert.equal((await forum.submissions(peer,course,'forum-homework',0)).items.length,0)
+  await pool.query("UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id='forum-project' AND user_id=$2",[companyId,student.userId])
+  await assert.rejects(forum.submissions(student,course,'forum-homework',0))
 })

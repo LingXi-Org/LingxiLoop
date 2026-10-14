@@ -1,10 +1,17 @@
 import { LEARNING_PERSONA_KEYS } from './preset.js'
+
 import { HttpError } from '../../http/errors.js'
+
 import type { Queryable } from '../../db/queryable.js'
+
 import { type ProjectRole, projectRoleFromLearningWire } from '../../domain/access/public.js'
+
 import type { ProjectKind } from '../../domain/public.js'
-import type { CourseManager, CreateCourseInput, UpdateCourseInput } from './contracts.js'
+
+import type { CourseManager, CreateCourseInput, } from './contracts.js'
+
 import type { CourseMemberChangeOutcome } from './types.js'
+
 
 export async function listCourses(db: Queryable, companyId: string, userId: string) {
   const { rows } = await db.query<Record<string, unknown> & { id: string }>(
@@ -34,6 +41,7 @@ export async function listCourses(db: Queryable, companyId: string, userId: stri
   )
   return rows
 }
+
 
 export async function insertCourse(db: Queryable, args: {
   companyId: string; userId: string; projectId: string; courseId: string; roomId: string
@@ -74,6 +82,7 @@ export async function insertCourse(db: Queryable, args: {
   )
 }
 
+
 export async function addInstitutionalCourseMember(db: Queryable, args: {
   companyId: string
   courseId: string
@@ -111,6 +120,7 @@ export async function addInstitutionalCourseMember(db: Queryable, args: {
     : null
 }
 
+
 export async function countActiveTeachingProjects(db: Queryable, companyId: string): Promise<number> {
   const { rows } = await db.query<{ count: number }>(
     `SELECT COUNT(*)::int AS count FROM projects
@@ -119,6 +129,7 @@ export async function countActiveTeachingProjects(db: Queryable, companyId: stri
   )
   return Number(rows[0]?.count ?? 0)
 }
+
 
 export async function findCourse(db: Queryable, courseId: string, companyId: string, userId: string) {
   const { rows } = await db.query(
@@ -146,6 +157,7 @@ export async function findCourse(db: Queryable, courseId: string, companyId: str
   )
   return rows[0] ?? null
 }
+
 
 export async function courseManager(
   db: Queryable,
@@ -177,44 +189,6 @@ export async function courseManager(
   } : null
 }
 
-export async function updateCourseMetadata(db: Queryable, args: {
-  courseId: string; companyId: string; projectId: string; patch: UpdateCourseInput
-  avatar?: { avatarSeed: string | null; avatarUrl: string }
-}): Promise<void> {
-  const values: unknown[] = []
-  const sets: string[] = []
-  for (const [field, column] of Object.entries({ name: 'name', description: 'description', color: 'color' }) as Array<[keyof UpdateCourseInput, string]>) {
-    if (!Object.hasOwn(args.patch, field)) continue
-    values.push(args.patch[field]); sets.push(`${column}=$${values.length}`)
-  }
-  if (args.avatar) {
-    values.push(args.avatar.avatarSeed); sets.push(`avatar_seed=$${values.length}`)
-    values.push(args.avatar.avatarUrl); sets.push(`avatar_url=$${values.length}`)
-  }
-  values.push(args.projectId, args.companyId)
-  await db.query(
-    `UPDATE projects SET ${sets.join(',')},updated_at=NOW()
-      WHERE id=$${values.length - 1} AND company_id=$${values.length}`,
-    values,
-  )
-  if (args.patch.name !== undefined) {
-    await db.query(
-      `UPDATE conversations conversation SET title=$3,updated_at=NOW()
-        FROM courses course
-       WHERE course.id=$1 AND course.company_id=$2
-         AND conversation.id=course.study_room_conversation_id AND conversation.company_id=course.company_id`,
-      [args.courseId, args.companyId, `${args.patch.name} · Study Room`],
-    )
-    await db.query(
-      `UPDATE participants participant SET name=$3,updated_at=NOW()
-       FROM courses course JOIN learning_project_teacher_agents pulse
-         ON pulse.project_id=course.project_id AND pulse.company_id=course.company_id
-      WHERE course.id=$1 AND course.company_id=$2
-        AND participant.id=pulse.agent_id AND participant.company_id=pulse.company_id`,
-      [args.courseId, args.companyId, '望远'],
-    )
-  }
-}
 
 export async function listCourseMembers(db: Queryable, courseId: string, companyId: string) {
   const { rows } = await db.query(
@@ -230,6 +204,7 @@ export async function listCourseMembers(db: Queryable, courseId: string, company
   )
   return rows
 }
+
 
 export async function changeCourseMember(db: Queryable, args: {
   courseId: string; companyId: string; userId: string; role: 'teacher' | 'learner' | null
@@ -265,6 +240,7 @@ export async function changeCourseMember(db: Queryable, args: {
   return 'updated'
 }
 
+
 export async function removeMemberFromProjectChannels(db: Queryable, args: {
   companyId: string; projectId: string; userId: string
 }) {
@@ -288,6 +264,7 @@ export async function removeMemberFromProjectChannels(db: Queryable, args: {
   )
   return rows
 }
+
 
 export async function listProjectChannels(db: Queryable, args: {
   companyId: string; projectId: string

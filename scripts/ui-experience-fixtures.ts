@@ -10,15 +10,7 @@ import type { KnowledgeSource } from '@/features/knowledge/contracts'
 import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { learningApi } from '@/features/learning/api'
-import type {
-  LearnerLearningOverview,
-  LearningActivity,
-  LearningDashboard,
-  LearningEvidence,
-  LearningMission,
-  LearningObjective,
-  LearningSpace,
-} from '@/features/learning/contracts'
+import type { LearningSpace } from '@/features/learning/contracts'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useSurface } from '@/stores/surface'
@@ -85,12 +77,7 @@ const sources: KnowledgeSource[] = [
 ]
 
 const learningSpace: LearningSpace = { companyId: COMPANY_ID, projectId: PROJECT_ID, projectKind: 'TEACHING', title: '我的学习', description: '个人学习与研究工作区', color: '#7257d9', status: 'ACTIVE', perspective: 'learner', canManage: true, canEditContent: true, canUpdateCourse: true, canInviteMembers: true, canRevokeInvitations: true, canUpdateMembers: true, canRemoveMembers: true, canSubmit: true, canReview: false, lifecycleAction: null, isDefault: true, lastVisitedAt: NOW }
-const overview: LearnerLearningOverview = { perspective: 'learner', windowDays: 30, summary: { dueReviews: 2, verifiedObjectives: 7, activeMissions: 2, evidenceAttempts: 18 }, masteryDistribution: [{ level: 1, count: 2 }, { level: 2, count: 4 }, { level: 3, count: 5 }, { level: 4, count: 2 }], attemptTrend: [{ date: '2026-08-14', count: 2 }, { date: '2026-08-21', count: 4 }, { date: '2026-08-28', count: 6 }], assistanceDistribution: [{ assistance: 'NONE', count: 11 }, { assistance: 'HINT', count: 5 }, { assistance: 'GUIDED', count: 2 }], dueReviews: [{ knowledgeUnitId: 'objective-evidence', title: '用证据支持设计判断', level: 3, status: 'DUE', nextReviewAt: '2026-09-04T09:00:00.000Z' }, { knowledgeUnitId: 'objective-prototype', title: '用原型验证关键假设', level: 2, status: 'DUE', nextReviewAt: '2026-09-05T09:00:00.000Z' }], missionProgress: [{ missionId: 'mission-report', goal: '完成可验证的研究报告', status: 'ACTIVE', completedSteps: 2, totalSteps: 4, updatedAt: NOW }] }
-const objectives: LearningObjective[] = [{ id: 'objective-evidence', projectId: PROJECT_ID, title: '用证据支持设计判断', successCriteria: '每个结论都能回溯到原始观察', targetLevel: 3, position: 0, status: 'PUBLISHED', prerequisiteIds: [] }, { id: 'objective-prototype', projectId: PROJECT_ID, title: '用原型验证关键假设', successCriteria: '完成至少一轮多场景验证', targetLevel: 4, position: 1, status: 'PUBLISHED', prerequisiteIds: ['objective-evidence'] }]
-const activities: LearningActivity[] = [{ id: 'activity-cards', projectId: PROJECT_ID, title: '整理访谈证据卡', instructions: '提交观察、推理和结论。', kind: 'PRACTICE', status: 'PUBLISHED', evaluationMode: 'AGENT_FORMATIVE', targetLevel: 3, rubric: [{ criterion: '结论可追溯' }], knowledgeUnitIds: ['objective-evidence'], dueAt: '2026-09-06T09:00:00.000Z' }, { id: 'activity-test', projectId: PROJECT_ID, title: '提交可用性测试记录', instructions: '提交观察记录与迭代说明。', kind: 'ASSESSMENT', status: 'PUBLISHED', evaluationMode: 'TEACHER_REQUIRED', targetLevel: 4, rubric: [{ criterion: '观察与选择对应' }], knowledgeUnitIds: ['objective-prototype'], dueAt: '2026-09-08T09:00:00.000Z' }]
-const missions: LearningMission[] = [{ id: 'mission-report', projectId: PROJECT_ID, learnerId: 'me', conversationId: CONVERSATION_ID, triggerClientMsgNo: 'm3', goal: '完成可验证的研究报告', successCriteria: '核心判断都有证据来源', kind: 'PROJECT', coordinatorAgentId: 'scout', coordinatorName: '小研', status: 'ACTIVE', steps: [{ id: 'step-patterns', kind: 'LEARN', description: '归纳访谈模式', successCriteria: '形成三个带出处的模式', knowledgeUnitId: 'objective-evidence', status: 'COMPLETED', position: 0, outcome: '已形成三个模式' }, { id: 'step-verify', kind: 'CHECK', description: '验证移动端路径', successCriteria: '记录验证结果和下一步', knowledgeUnitId: 'objective-prototype', status: 'OPEN', position: 1 }], createdAt: NOW, updatedAt: NOW }]
-const evidence: LearningEvidence[] = [{ id: 'evidence-1', activity_id: 'activity-cards', mission_step_id: 'step-patterns', assistance: 'HINT', status: 'ACCEPTED', evidence: { summary: '三个模式及访谈索引' }, created_at: NOW, evaluation_id: 'evaluation-1', demonstrated_level: 3, confidence: 0.88, rubric_results: [{ criterion: '结论可追溯', met: true }], feedback: '证据链清楚。', evaluation_status: 'ACCEPTED' }]
-const dashboard: LearningDashboard = { projects: [{ projectId: PROJECT_ID, projectKind: 'TEACHING', title: '我的学习', description: learningSpace.description, status: 'ACTIVE', perspective: 'learner', canManage: true, canEditContent: true, canSubmit: true, canReview: false }], due: [{ projectId: PROJECT_ID, knowledgeUnitId: 'objective-evidence', title: '用证据支持设计判断', level: 3, status: 'DUE', nextReviewAt: '2026-09-04T09:00:00.000Z' }], states: [{ projectId: PROJECT_ID, knowledgeUnitId: 'objective-evidence', title: '用证据支持设计判断', level: 3, status: 'VERIFIED', nextReviewAt: '2026-09-10T09:00:00.000Z', reviewIntervalDays: 7 }, { projectId: PROJECT_ID, knowledgeUnitId: 'objective-prototype', title: '用原型验证关键假设', level: 2, status: 'LEARNING', nextReviewAt: '2026-09-05T09:00:00.000Z', reviewIntervalDays: 3 }], pendingReviews: 0 }
+
 
 localStorage.setItem('lingxiloop-theme', new URLSearchParams(location.search).get('theme') === 'light' ? 'light' : 'dark')
 if (new URLSearchParams(location.search).get('long') === '1') conversations[0].title = '产品研究协作：把新用户访谈中的证据转化为可以验证的学习路径与下一步行动'
@@ -124,12 +111,7 @@ useCanvas.setState({ snapshot: canvas, previews: { [CANVAS_ID]: canvas }, worksp
 useKnowledgeSources.setState({ list: sources, loading: false, error: null, selectedSource: null, detailLoading: false, conversationSelection: { conversationId: CONVERSATION_ID, sources: sources.map((source) => ({ sourceId: source.id, title: source.title, status: source.status, enabled: true })) }, load: async () => undefined, loadConversationSelection: async () => undefined, open: async (sourceId) => { useKnowledgeSources.setState({ selectedSource: sources.find((source) => source.id === sourceId) ?? null }) }, close: () => useKnowledgeSources.setState({ selectedSource: null }), setSourceEnabled: async () => undefined })
 
 learningApi.listSpaces = async () => ({ data: [learningSpace], nextCursor: null })
-learningApi.getOverview = async () => overview
 learningApi.listKnowledgeUnits = async () => objectives
-learningApi.listActivities = async () => activities
-learningApi.listEvidence = async () => evidence
-learningApi.listMissions = async () => missions
-learningApi.getDashboard = async () => dashboard
 
 // State-only scenarios run without credentials or a backend. Keep them separate
 // from the real API journeys so synthetic results cannot count as API acceptance.
@@ -318,7 +300,7 @@ if (scenario === 'chat-regressions') {
   }, { participants, meId: 'me' })
   user.metadata.custom.delivery = 'sending'
   let snapshot: AgentRunSnapshot = { message: createNativeMessage({ id: 'run-regression', role: 'assistant', createdAt: NOW, content: [],
-    status: { type: 'running' }, custom: { runId: target.runId, harness: { ...createRunView(target.runId),
+    status: { type: 'running' }, custom: { runId: target.runId, refs: {agentId:'scout'}, controlPrincipalId:'me', harnessControl:true, harness: { ...createRunView(target.runId),
       lifecycle: 'leased', requestVersion: 1, fence: 1, artifacts: [] } } }) }
   const history = useChatThreadStore.getState().conversations[CONVERSATION_ID].messages[0]
   if (history.role !== 'assistant' || user.role !== 'user') throw new Error('Invalid chat regression fixture')
@@ -326,6 +308,13 @@ if (scenario === 'chat-regressions') {
     ...Array.from({ length: 6 }, (_, index) => ({ ...history, id: `older-${index}`, metadata: { ...history.metadata,
       custom: { ...history.metadata.custom, clientMessageId: `older-${index}`, sequence: index + 1 } } })), user,
   ] }, target, snapshot, participants.scout))
+  let cancelFailed = false
+  harnessApi.cancel = async () => {
+    if (!cancelFailed) { cancelFailed = true; throw new Error('Fixture cancellation failure') }
+    window.dispatchEvent(new CustomEvent('chat-regression-step', { detail: 'cancelled' }))
+    return { cancelled: true }
+  }
+  harnessApi.read = async () => snapshot
   window.addEventListener('chat-regression-step', ((event: CustomEvent<string>) => {
     if (snapshot.message.role !== 'assistant') throw new Error('Expected assistant snapshot')
     if (event.detail === 'delivered') {
@@ -335,6 +324,10 @@ if (scenario === 'chat-regressions') {
         custom: { ...snapshot.message.metadata.custom, sourceRef: 'regression-user' } } } }
     } else if (event.detail === 'preview') {
       snapshot = { message: { ...snapshot.message, content: [{ type: 'text', text: '第一段已显示。\n\n第二段 **仍在输出' }] } }
+    } else if (event.detail === 'complete' || event.detail === 'cancelled') {
+      snapshot = { message: { ...snapshot.message, status: event.detail === 'complete' ? { type: 'complete', reason: 'stop' } : { type: 'incomplete', reason: 'cancelled' },
+        metadata: { ...snapshot.message.metadata, custom: { ...snapshot.message.metadata.custom,
+          harness: { ...snapshot.message.metadata.custom.harness as ReturnType<typeof createRunView>, lifecycle: event.detail === 'complete' ? 'succeeded' : 'cancelled', artifacts: [] } } } } }
     } else if (event.detail === 'timeout') {
       snapshot = { message: { ...snapshot.message, content: [], status: { type: 'incomplete', reason: 'error' },
         metadata: { ...snapshot.message.metadata, custom: { ...snapshot.message.metadata.custom,
@@ -393,4 +386,4 @@ if (scenario === 'empty-spaces') {
   learningApi.listSpaces = async () => ({ data: [], nextCursor: null })
 }
 
-export { sources, canvas, participants, learningSpace, overview, objectives, activities, missions, evidence, dashboard }
+export { sources, canvas, participants, learningSpace }

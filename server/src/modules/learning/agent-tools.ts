@@ -1,229 +1,64 @@
-import { productConversationId } from '../../agent-runtime/identity.js'
-import type { z } from 'zod'
+import { z } from 'zod'
 import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
+import { productConversationId } from '../../agent-runtime/identity.js'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, compareResource, audienceHumanIds } from '../../agents/tools.js'
-import { publishMissionProgress } from './mission-progress.js'
-import { readAgentChannelMessages } from '../../im/public.js'
-import { inc } from '../../metrics.js'
 import { createPermissionService } from '../access/public.js'
-import { learningAgentSchemas as schemas } from './agent-contracts.js'
-import { loadLearningContext, recordLearningAttempt, startLearningMission } from './missions-application.js'
-import { addLearningMissionSteps, completeLearningMission, finishLearningMissionPlanning, updateLearningMissionStep } from './mission-lifecycle-application.js'
-import { createLearningKnowledgeUnits, createProjectLearningActivity } from './curriculum-application.js'
-import { findLearningMission, findLearningRoomState, listProjectLearningKnowledgeUnits, findVisibleProjectLearningActivity } from './repository.js'
-import { proposeLearningEvaluation } from './evaluation-application.js'
-import { submitProjectLearningActivity } from './activities-application.js'
-
-type Method = keyof typeof schemas
-type Input<M extends Method> = z.output<(typeof schemas)[M]>
-const database = (context: ActionContext) => context.database as Queryable
-const roomInput = (context: ActionContext) => ({ companyId: context.work.tenantId, channelId: productConversationId(context.work) })
+import { ForumApplication } from './forum-application.js'
+import { readAgentChannelMessages } from '../../im/public.js'
 
 async function scope(context: ActionContext, action: 'learning:read' | 'learning:submit' = 'learning:read') {
-  const room = await findLearningRoomState(database(context), roomInput(context))
-  if (!room) throw new NoEffectError('conversation is not bound to a learning project')
-  for (const userId of await audienceHumanIds(context)) if (userId !== context.work.principalId) {
-    await createPermissionService(database(context),{ lockDependencies: true }).assertCan({ actorUserId: userId,
-      companyId: room.companyId,projectId: room.projectId,action: 'learning:manage',resource: { type: 'project',id: room.projectId } })
+  const db=context.database as Queryable, companyId=context.work.tenantId, userId=context.work.principalId!
+  const permission=createPermissionService(db,{lockDependencies:true})
+  const access=await permission.assertCan({actorUserId:userId,companyId,action,resource:{type:'conversation',id:productConversationId(context.work)}})
+  const projectId=access.project?.id
+  if (!projectId) throw new NoEffectError('forum project is required','forbidden')
+  for (const actorUserId of await audienceHumanIds(context)) if (actorUserId!==userId) {
+    await permission.assertCan({actorUserId,companyId,action:'learning:review',resource:{type:'project',id:projectId}})
   }
-  await createPermissionService(database(context), { lockDependencies: true }).assertCan({
-    actorUserId: context.work.principalId!, companyId: context.work.tenantId, action,
-    resource: { type: 'conversation', id: productConversationId(context.work) } })
-  return room
+  const course=await db.query<{id:string}>('SELECT id FROM courses WHERE company_id=$1 AND project_id=$2',[companyId,projectId])
+  if (!course.rows[0]) throw new NoEffectError('course forum is required','forbidden')
+  return { db, companyId, userId, projectId, courseId:course.rows[0].id, forum:new ForumApplication(db,run=>run(db)) }
 }
-
-async function contextView(context: ActionContext) {
-  await scope(context)
-  return loadLearningContext(database(context), { syncMessages: async () => [] }, { ...roomInput(context),
-    agentId: context.work.agentId, triggerClientMsgNo: context.work.triggerRef, actorId: context.work.principalId! })
-}
-
-async function mission(context: ActionContext, id?: string) {
-  const room = await scope(context)
-  if (!id) return (await contextView(context))?.activeMission ?? null
-  const result = await findLearningMission(database(context), room.companyId, room.projectId, id)
-  if (!result || result.learnerId !== context.work.principalId || result.conversationId !== productConversationId(context.work)) throw new NoEffectError('mission is outside the original learner and conversation', 'forbidden')
-  return result
-}
-
-async function committedMessages(context: ActionContext, ids: string[]) {
-  if (!ids.length) return []
-  const messages = await readAgentChannelMessages({ companyId: context.work.tenantId, agentId: context.work.agentId,
-    channelId: productConversationId(context.work), messageIds: ids, signal: context.signal })
-  if (!messages || new Set(messages.map(message => message.messageId)).size !== ids.length
-    || messages.some(message => message.fromUid !== context.work.principalId || message.payload.role !== 'user')) throw new NoEffectError('evidence must be committed messages from the original human', 'forbidden')
-  return ids.map(id => ({ ...messages.find(message => message.messageId === id || message.payload.id === id)!, clientMsgNo: id }))
-}
-
-export async function readLearningAttempts(context: ActionContext, input: { attemptId?: string; activityId?: string; missionStepId?: string }) {
-  const room = await scope(context), db = database(context)
-  const { rows } = await db.query<Record<string, unknown>>(`SELECT a.id,a.activity_id,a.mission_step_id,a.assistance,a.status,a.submitted_at,a.evidence_id,
-      a.source,a.submitted_by_agent,a.agent_work_id,a.late
-    FROM learning_attempts a JOIN participants p ON p.company_id=a.company_id AND p.id=a.learner_id
-    WHERE a.company_id=$1 AND a.project_id=$2 AND a.learner_id=$3 AND p.kind='human' AND p.departed_at IS NULL
-      AND ($4::text IS NULL OR a.id=$4) AND ($5::text IS NULL OR a.activity_id=$5) AND ($6::text IS NULL OR a.mission_step_id=$6)
-    ORDER BY a.submitted_at DESC,a.id DESC LIMIT 101`,
-  [room.companyId,room.projectId,context.work.principalId,input.attemptId ?? null,input.activityId ?? null,input.missionStepId ?? null])
-  if (!input.attemptId) return { attempts: rows.slice(0,100), truncated: rows.length > 100 }
-  const attempt = rows[0]
-  if (!attempt) throw new NoEffectError('attempt is outside the original learner and project', 'forbidden')
-  const evidence = await db.query('SELECT id,data,created_by_type,created_by_id,created_at FROM evidence_records WHERE company_id=$1 AND project_id=$2 AND id=$3',
-    [room.companyId,room.projectId,attempt.evidence_id])
-  if (evidence.rows.length !== 1) throw new NoEffectError('attempt evidence is missing')
-  const evaluations = await db.query(`SELECT id,demonstrated_level,confidence,rubric_results,feedback,evaluator_id,evaluator_kind,status,source_evidence_id,verifier_evidence_id,created_at
-    FROM learning_evaluations WHERE company_id=$1 AND project_id=$2 AND attempt_id=$3 ORDER BY created_at DESC,id DESC LIMIT 101`, [room.companyId,room.projectId,input.attemptId])
-  return { ...attempt, evidence: evidence.rows[0], evaluations: evaluations.rows.slice(0,100), evaluationsTruncated: evaluations.rows.length > 100 }
-}
-
-function read<M extends Method>(method: M, run: (context: ActionContext, input: Input<M>) => Promise<unknown>) {
-  return nativeTool(`learning.${method}`, schemas[method], { description: `Read ${method.replaceAll('_', ' ')} for the original learner in this project.`,
-    effect: 'read', approval: false, authorize: async context => { await scope(context) },
-    async execute(context, input) { return { ok: true, executionState: 'succeeded', value: await run(context, input) } } })
-}
-
-function write<M extends Method, R>(method: M, run: (context: ActionContext, input: Input<M>) => Promise<R>,
-  inspect: (context: ActionContext, input: Input<M>, result: R) => Promise<{ resource: string; observed: Record<string, unknown> }>) {
-  return nativeTool(`learning.${method}`, schemas[method], { description: `Persist ${method.replaceAll('_', ' ')} with native learner and evidence checks.`,
-    effect: 'transaction', approval: false, authorize: async context => { await scope(context, 'learning:submit') },
-    async execute(context, input) {
-      const result = await run(context, input)
-      return { ok: true, executionState: 'succeeded', value: { result, state: await inspect(context, input, result) } }
-    }, async verify(context, input, value) {
-      const expected = value as { result: R; state: { observed: Record<string, unknown> } }
-      const actual = await inspect(context, input, expected.result)
-      return compareResource(actual.resource, expected.state.observed, actual.observed)
-    } })
-}
-
-async function missionState(context: ActionContext, input: { missionId: string }) {
-  const result = await mission(context, input.missionId)
-  return { resource: `learning_mission:${input.missionId}`, observed: { status: result?.status, steps: result?.steps } }
-}
-
+const id=z.string().min(1).max(200)
 export const learningTools: ToolDefinition[] = [
-  read('current', contextView), read('get_learner_state', contextView),
-  read('list_knowledge_units', async context => (await contextView(context))?.knowledgeUnits ?? []),
-  read('list_due', async context => (await contextView(context))?.due ?? []),
-  read('get_mission', (context, input) => mission(context, input.missionId)),
-  read('get_activity', async (context, input) => {
-    const room = await scope(context)
-    const value = await findVisibleProjectLearningActivity(database(context), room.companyId, room.projectId, input.activityId)
-    if (!value) throw new NoEffectError('activity not found')
-    return value
-  }),
-  read('list_attempts', readLearningAttempts), read('get_attempt', readLearningAttempts),
-  write('submit_activity', async (context, input) => {
-    const room = await scope(context, 'learning:submit'), db = database(context)
-    let answer = input.answer
-    if (input.source === 'AGENT_RELAY') {
-      const messages = await committedMessages(context, input.evidenceClientMsgNos)
-      answer = messages.map(message => message.payload.content.filter(part => part.type === 'text').map(part => part.text).join('\n')).join('\n\n')
-      const attachmentKeys = new Set(messages.flatMap(message => message.payload.role === 'user' ? message.payload.attachments.map(file => file.id) : []))
-      if (input.answer && input.answer !== answer || input.links.some(link => !answer.includes(link))
-        || input.attachments.some(file => !attachmentKeys.has(file.key))) {
-        throw new NoEffectError('relayed content must exactly reference the original human messages', 'forbidden')
+  nativeTool('learning.list_assignments',z.object({}).strict(),{description:'Read teacher assignments in the current course forum.',effect:'read',approval:false,
+    authorize:async context=>{await scope(context)},async execute(context) {
+      const s=await scope(context)
+      return {ok:true,executionState:'succeeded',value:await s.forum.list(s,s.courseId,{kind:'assignment'})}
+    }}),
+  nativeTool('learning.get_assignment',z.object({assignmentId:id}).strict(),{description:'Read a teacher forum assignment.',effect:'read',approval:false,
+    authorize:async context=>{await scope(context)},async execute(context,input) {
+      const s=await scope(context), item=await s.forum.detail(s,s.courseId,'post',input.assignmentId)
+      if(item.kind!=='assignment') throw new NoEffectError('assignment not found')
+      return {ok:true,executionState:'succeeded',value:item}
+    }}),
+  nativeTool('learning.list_submissions',z.object({assignmentId:id}).strict(),{description:'Read only the original human’s private submission history.',effect:'read',approval:false,
+    authorize:async context=>{await scope(context,'learning:submit')},async execute(context,input) {
+      const s=await scope(context,'learning:submit')
+      return {ok:true,executionState:'succeeded',value:await s.forum.submissions(s,s.courseId,input.assignmentId,0)}
+    }}),
+  nativeTool('learning.submit_assignment',z.object({assignmentId:id,answer:z.string().min(1).max(20000),
+    source:z.enum(['AGENT_RELAY','AGENT_GENERATED']),messageIds:z.array(id).max(20).default([]),idempotencyKey:id}).strict(),{
+    description:'Submit to a teacher forum assignment for the original student, preserving relay/generated attribution. Relay must exactly match committed human messages.',
+    effect:'transaction',approval:false,authorize:async context=>{await scope(context,'learning:submit')},async execute(context,input) {
+      const s=await scope(context,'learning:submit')
+      if(input.source==='AGENT_RELAY') {
+        const messages=await readAgentChannelMessages({companyId:s.companyId,agentId:context.work.agentId,
+          channelId:productConversationId(context.work),messageIds:input.messageIds,signal:context.signal})
+        if(!input.messageIds.length || !messages || messages.length!==input.messageIds.length
+          || messages.some(m=>m.fromUid!==s.userId || m.payload.role!=='user')
+          || input.answer!==messages.map(m=>m.payload.content.filter(p=>p.type==='text').map(p=>'text' in p ? p.text : '').join('\n')).join('\n')) {
+          throw new NoEffectError('relay must exactly preserve committed human text','forbidden')
+        }
       }
-    }
-    return submitProjectLearningActivity(run => run(db), { ...input,answer,companyId: room.companyId,projectId: room.projectId,
-      learnerId: context.work.principalId!,agentId: context.work.agentId,agentWorkId: context.work.id })
-  }, async (context, _input, result) => {
-    const attempt = await readLearningAttempts(context, { attemptId: result.attemptId })
-    return { resource: `learning_attempt:${result.attemptId}`,observed: { evidence: Reflect.get(attempt, 'evidence'),
-      source: Reflect.get(attempt, 'source'),agentId: Reflect.get(attempt, 'submitted_by_agent'),late: Reflect.get(attempt, 'late') } }
-  }),
-  write('draft_knowledge_units', async (context, input) => {
-    const room = await scope(context, 'learning:submit'), db = database(context)
-    return createLearningKnowledgeUnits(db, run => run(db), { ...input, companyId: room.companyId, projectId: room.projectId, actorId: context.work.agentId, actorKind: 'agent' })
-  }, async (context, _input, result) => {
-    const room = await scope(context), ids = new Set(result.map(unit => unit.id))
-    const units = (await listProjectLearningKnowledgeUnits(database(context), room.companyId, room.projectId)).filter(unit => ids.has(unit.id))
-      .map(({ status: _status, ...unit }) => unit)
-    return { resource: `learning_units:${room.projectId}`, observed: { units } }
-  }),
-  write('draft_activity', async (context, input) => {
-    const room = await scope(context, 'learning:submit'), db = database(context)
-    return createProjectLearningActivity(db, run => run(db), { ...input, companyId: room.companyId, projectId: room.projectId, actorId: context.work.agentId, actorKind: 'agent' })
-  }, async (context, _input, result) => {
-    const room = await scope(context)
-    const activity = await findVisibleProjectLearningActivity(database(context), room.companyId, room.projectId, result.id)
-    return { resource: `learning_activity:${result.id}`, observed: { title: activity?.title, instructions: activity?.instructions,
-      kind: activity?.kind, rubric: activity?.rubric, knowledgeUnitIds: activity?.knowledgeUnitIds } }
-  }),
-  write('add_steps', async (context, input) => {
-    await mission(context, input.missionId)
-    const db = database(context)
-    return addLearningMissionSteps(db, run => run(db), roomInput(context), input.missionId, input.steps)
-  }, missionState),
-  write('update_step', async (context, input) => {
-    await mission(context, input.missionId)
-    const db = database(context)
-    return updateLearningMissionStep(db, run => run(db), roomInput(context), input)
-  }, async (context, input) => ({
-    resource: `learning_mission_step:${input.stepId}`,
-    observed: { step: (await mission(context, input.missionId))?.steps.find(step => step.id === input.stepId) ?? null },
-  })),
-  write('finish_planning', async (context, input) => {
-    await mission(context, input.missionId)
-    const db = database(context)
-    return finishLearningMissionPlanning(db, run => run(db), roomInput(context), input.missionId)
-  }, missionState),
-  write('complete_mission', async (context, input) => {
-    await mission(context, input.missionId)
-    const db = database(context)
-    return completeLearningMission(db, run => run(db), roomInput(context), input.missionId)
-  }, missionState),
-  write('record_attempt', async (context, input) => {
-    const messages = await committedMessages(context, input.evidenceClientMsgNos), db = database(context)
-    const result = await recordLearningAttempt(db, run => run(db), {
-      syncMessages: async () => messages.map(message => ({ clientMsgNo: message.clientMsgNo, fromUid: message.fromUid, authoredByAgent: false })), metric: inc,
-    }, { ...roomInput(context), agentId: context.work.agentId, ...input })
-    if (result.learnerId !== context.work.principalId) throw new NoEffectError('evidence belongs to another learner', 'forbidden')
-    return result
-  }, async (context, _input, result) => {
-    const attempt = await readLearningAttempts(context, { attemptId: result.id })
-    return { resource: `learning_attempt:${result.id}`, observed: { evidence: Reflect.get(attempt, 'evidence'), assistance: Reflect.get(attempt, 'assistance') } }
-  }),
-  write('propose_evaluation', async (context, input) => {
-    const room = await scope(context, 'learning:submit'), db = database(context)
-    await readLearningAttempts(context, { attemptId: input.attemptId })
-    for (const id of [input.sourceEvidenceId,input.verifierEvidenceId]) if (id) {
-      const found = await db.query('SELECT 1 FROM evidence_records WHERE company_id=$1 AND project_id=$2 AND id=$3', [room.companyId,room.projectId,id])
-      if (found.rows.length !== 1) throw new NoEffectError('evaluation evidence is outside this project', 'forbidden')
-    }
-    const result = await proposeLearningEvaluation(db, run => run(db), inc, { ...roomInput(context), agentId: context.work.agentId, ...input })
-    const { rows } = await db.query<{ demonstrated_level: number; rubric_results: unknown }>('SELECT demonstrated_level,rubric_results FROM learning_evaluations WHERE company_id=$1 AND project_id=$2 AND id=$3', [room.companyId,room.projectId,result.evaluationId])
-    if (!rows[0]) throw new Error('committed evaluation is missing')
-    return { ...result, display: { demonstratedLevel: rows[0].demonstrated_level, rubricResults: rows[0].rubric_results } }
-  }, async (context, input, result) => {
-    const room = await scope(context)
-    await readLearningAttempts(context, { attemptId: input.attemptId })
-    const row = await context.database.query(`SELECT id,attempt_id,demonstrated_level,confidence,rubric_results,feedback,evaluator_id,status,
-      source_evidence_id,verifier_evidence_id FROM learning_evaluations WHERE company_id=$1 AND project_id=$2 AND id=$3`, [room.companyId,room.projectId,result.evaluationId])
-    return { resource: `learning_evaluation:${result.evaluationId}`, observed: row.rows[0] ?? { missing: true } }
-  }),
-  nativeTool('learning.start_mission', schemas.start_mission, { description: 'Create a learner Mission and its coordinator child in the same transaction.',
-    effect: 'transaction', approval: false, authorize: async context => { await scope(context, 'learning:submit') },
-    async execute(context, input) {
-      const source = input.sourceClientMsgNo ?? (typeof context.work.meta?.sourceClientMsgNo === 'string' ? context.work.meta.sourceClientMsgNo : context.work.triggerRef)
-      const messages = await committedMessages(context, [source]), db = database(context)
-      if (messages[0]?.payload.role !== 'user') throw new NoEffectError('a Mission requires the original learner’s committed text')
-      let childId: string | undefined
-      const result = await startLearningMission(db, run => run(db), {
-        syncMessages: async () => messages.map(message => ({ clientMsgNo: message.clientMsgNo, fromUid: message.fromUid, authoredByAgent: false })),
-        metric: inc, enqueueCoordinator: async (_db, child) => {
-          const queued = await context.enqueueChild({ id: child.id, agentId: child.coordinatorAgentId, kind: 'mission_coordinator',
-            executionClass: 'operation', text: `Plan and coordinate Mission ${child.missionId}: ${input.goal}\nSuccess criteria: ${input.successCriteria}`, meta: { conversationId: child.channelId, missionId: child.missionId, sourceClientMsgNo: source } })
-          childId = queued.id
-        }, publishMission: async ({ mission, projectId }) => publishMissionProgress(db, {
-          companyId: context.work.tenantId, projectId, missionId: mission.id, workId: context.work.id }),
-      }, { ...roomInput(context), workId: context.work.id, agentId: context.work.agentId, triggerClientMsgNo: source, ...input })
-      if (result.learnerId !== context.work.principalId) throw new NoEffectError('Mission principal changed', 'forbidden')
-      return { ok: true, executionState: 'succeeded', value: result,
-        ...(childId ? { directive: await context.waitForChildren([childId]) } : {}) }
-    }, async verify(context, _input, value) {
-      const expected = value as { id: string; learnerId: string; goal: string; successCriteria: string; coordinatorAgentId: string }
-      return compareResource(`learning_mission:${expected.id}`, { learnerId: expected.learnerId, goal: expected.goal, successCriteria: expected.successCriteria,
-        coordinatorAgentId: expected.coordinatorAgentId }, await mission(context, expected.id) ?? {})
-    } }),
+      const result=await s.forum.submit(s,s.courseId,input.assignmentId,{answer:input.answer,idempotencyKey:input.idempotencyKey},
+        {id:context.work.agentId,workId:context.work.id,source:input.source})
+      return {ok:true,executionState:'succeeded',value:result}
+    },async verify(context,input,value) {
+      const s=await scope(context,'learning:submit'), result=value as {attemptId:string}
+      const row=await s.db.query('SELECT answer,source FROM course_forum_submissions WHERE company_id=$1 AND project_id=$2 AND learner_id=$3 AND assignment_id=$4 AND id=$5',
+        [s.companyId,s.projectId,s.userId,input.assignmentId,result.attemptId])
+      return compareResource(`forum_submission:${result.attemptId}`,{answer:input.answer,source:input.source},row.rows[0] ?? {})
+    }}),
 ]

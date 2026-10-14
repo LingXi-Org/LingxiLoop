@@ -3,16 +3,13 @@ import { safe } from '../../http/async-handler.js'
 import { requireAuth, requireCompany, requireWorkspace } from '../../http/request-context.js'
 import type { PermissionAction } from '../access/public.js'
 import { permissionService } from '../access/public.js'
-import { classroomRouter } from './classroom-router.js'
-import { learningCasesRouter } from './cases-router.js'
 import { forumRouter } from './forum-router.js'
 import {
   addInstitutionalCourseMemberRequestSchema,
   createProjectInvitationRequestSchema,
-  createCourseRequestSchema,
   updateCourseMemberRequestSchema,
-  updateCourseRequestSchema,
 } from './contracts.js'
+import { learningSpacesQuerySchema } from './contracts.js'
 import { learningApplication } from './facade.js'
 import { parseLearningRequest as parse, respondWithLearning as respond } from './http-adapter.js'
 
@@ -33,8 +30,6 @@ async function requireCoursePermission(
   return scope
 }
 
-learningRouter.use(classroomRouter)
-learningRouter.use(learningCasesRouter)
 learningRouter.use(forumRouter)
 
 learningRouter.get('/courses', safe(async (req, res) => {
@@ -42,19 +37,7 @@ learningRouter.get('/courses', safe(async (req, res) => {
   res.json(await learningApplication.courses(scope))
 }))
 
-learningRouter.post('/courses', safe(async (req, res) => {
-  const scope = await requireCompany(req)
-  await permissionService.assertCan({ actorUserId: scope.userId, action: 'course:create', companyId: scope.companyId })
-  const input = parse(createCourseRequestSchema.safeParse(req.body ?? {}))
-  res.status(201).json(await respond(() => learningApplication.createCourse(scope, input)))
-}))
 
-learningRouter.post('/institutional-courses', safe(async (req, res) => {
-  const scope = await requireCompany(req)
-  await permissionService.assertCan({ actorUserId: scope.userId, action: 'course:create', companyId: scope.companyId })
-  const input = parse(createCourseRequestSchema.safeParse(req.body ?? {}))
-  res.status(201).json(await respond(() => learningApplication.createInstitutionalCourse(scope, input)))
-}))
 
 learningRouter.get('/courses/:id', safe(async (req, res) => {
   const courseId = String(req.params.id)
@@ -62,12 +45,6 @@ learningRouter.get('/courses/:id', safe(async (req, res) => {
   res.json(await respond(() => learningApplication.course(scope, courseId)))
 }))
 
-learningRouter.patch('/courses/:id', safe(async (req, res) => {
-  const courseId = String(req.params.id)
-  const { userId } = await requireCoursePermission(req, courseId, 'course:update')
-  const input = parse(updateCourseRequestSchema.safeParse(req.body ?? {}))
-  res.json(await respond(() => learningApplication.updateCourse(userId, courseId, input)))
-}))
 
 learningRouter.get('/courses/:id/members', safe(async (req, res) => {
   const courseId = String(req.params.id)
@@ -130,4 +107,9 @@ learningRouter.get('/project-invitations/:token', safe(async (req, res) => {
 learningRouter.post('/project-invitations/:token/accept', safe(async (req, res) => {
   const userId = requireAuth(req)
   res.json(await respond(() => learningApplication.acceptInvitation(userId, String(req.params.token))))
+}))
+
+learningRouter.get('/learning/spaces', safe(async (req,res) => {
+ const input=parse(learningSpacesQuerySchema.safeParse(req.query))
+ res.json(await respond(() => learningApplication.spaces(requireAuth(req),input)))
 }))

@@ -4,8 +4,6 @@ import { NoEffectError, type WorkItem } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { routineInputSchema, type RoutineRow, type RoutineRunRow } from './contracts.js'
 import { authorizeRoutine, nextRoutineRun, routineIdentity, type RoutineControl } from './application.js'
-import { nextTeacherDigestRun, resolveTeacherScope } from '../learning/teacher-agent-application.js'
-import { teacherAgentSchemas } from '../learning/agent-contracts.js'
 
 export async function assertRoutineRun(db: Queryable, work: Omit<WorkItem, 'leaseToken'>) {
   const { rows } = await db.query<RoutineRow>(`SELECT routine.* FROM agent_routines routine JOIN agent_routine_runs run ON run.routine_id=routine.id
@@ -18,18 +16,7 @@ export async function assertRoutineRun(db: Queryable, work: Omit<WorkItem, 'leas
   return row
 }
 async function prepare(db: Queryable, row: RoutineRow, now: Date) {
-  if (row.kind === 'teacher_project_digest') {
-    const scope = await resolveTeacherScope({ companyId: row.company_id, agentId: row.agent_id, channelId: row.channel_id,
-      authorizationUserId: row.created_by, reason: 'routine' }, db)
-    if (row.project_id !== scope.projectId) throw new NoEffectError('teacher routine project changed', 'forbidden')
-    const checked = teacherAgentSchemas.configure_digest.safeParse({ ...row.schedule, timezone: row.timezone })
-    if (!checked.success || checked.data.frequency === 'off' || !checked.data.localTime
-      || checked.data.frequency === 'weekly' && !checked.data.weekday) {
-      throw new NoEffectError('invalid teacher digest schedule', 'invalid_schedule')
-    }
-    return nextTeacherDigestRun({ frequency: checked.data.frequency, localTime: checked.data.localTime,
-      ...(checked.data.weekday ? { weekday: checked.data.weekday } : {}) }, row.timezone, now, db)
-  }
+  if (row.kind === 'teacher_project_digest') throw new NoEffectError('teacher digests are retired','forbidden')
   const projectId = await authorizeRoutine(db, { companyId: row.company_id, channelId: row.channel_id, agentId: row.agent_id, principalId: row.created_by })
   if (projectId !== row.project_id) throw new NoEffectError('routine project changed', 'forbidden')
   const checked = routineInputSchema.safeParse({ kind: row.kind, title: row.title, instructions: row.instructions, schedule: row.schedule, timezone: row.timezone })
@@ -72,7 +59,7 @@ export async function scheduleRoutines(transaction: <T>(run: (db: Queryable) => 
         const scheduledAt = new Date(row.next_run_at!).toISOString()
         const id = 'routine-run-' + createHash('sha256').update(JSON.stringify([row.id,row.version,scheduledAt])).digest('hex')
         await api.enqueueJob({ id, tenantId: row.company_id, agentId: row.agent_id, sessionId: id, principalId: row.created_by,
-          ...(row.thread_id ? { threadId: row.thread_id } : {}), kind: row.kind === 'teacher_project_digest' ? 'teacher_digest' : 'routine',
+          ...(row.thread_id ? { threadId: row.thread_id } : {}), kind: 'routine',
           lane: 'background', sourceRef: id, text: row.instructions, authorName: row.title,
           meta: { conversationId: row.channel_id, routineId: row.id, routineVersion: row.version, scheduledAt } }, db)
         await db.query(`INSERT INTO agent_routine_runs(id,routine_id,routine_version,scheduled_at,work_id,company_id,agent_id,channel_id,principal_id,thread_id)

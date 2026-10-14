@@ -76,7 +76,6 @@ const initial: ThreadMessage[] = [
   ]),
   assistant('calendar', [tool('calendar', { toolName: 'calendar.list', result: { status: 'completed', value: { events: [{ id: 'event', title: '证据评审', startAt: now, allDay: false }], truncated: false } } })]),
   assistant('search', [tool('search', { toolName: 'research.search', result: { status: 'completed', sources: [{ title: '可核对的搜索结果', url: 'https://example.com/evidence', snippet: '这是用于验证的来源摘要。' }] } })]),
-  assistant('score', [tool('score', { toolName: 'learning.propose_evaluation', result: { status: 'completed', value: { status: 'ACCEPTED', display: { demonstratedLevel: 3, rubricResults: [{ label: '证据充分', score: 3, weight: 1 }] } } } })]),
   assistant('invalid', [data('questionnaire', { items: [] }), { type: 'text', text: '异常卡片后的正文仍可阅读。' }]),
 ]
 

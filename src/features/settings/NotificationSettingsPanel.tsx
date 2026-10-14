@@ -4,23 +4,12 @@ import { useLayoutEffect, useState } from 'react'
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { learningApi } from '@/features/learning/api'
 import type { LearningNotificationPreferences } from '@/features/learning/contracts'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { toastAction } from '@/lib/actionToast'
 import { SettingsGroup, SettingsPanelSkeleton, SettingsRow } from './SettingsComponents'
-
-const WEEKDAYS = [
-  [1, '周一'],
-  [2, '周二'],
-  [3, '周三'],
-  [4, '周四'],
-  [5, '周五'],
-  [6, '周六'],
-  [7, '周日'],
-] as const
 
 type LoadState = 'loading' | 'ready' | 'error' | 'unavailable'
 
@@ -132,7 +121,7 @@ export function NotificationSettingsPanel() {
         title={selectedWorkspace.name}
         description="这些偏好只适用于当前学习区。切换学习区后可分别设置。"
       >
-        <SettingsRow title="应用内通知" description="在 LingxiLoop 内接收学习提醒与摘要。">
+        <SettingsRow title="应用内通知" description="在 LingxiLoop 内接收协作会话通知。">
           <Switch
             aria-label="应用内通知"
             checked={preferences.in_app_enabled}
@@ -141,7 +130,7 @@ export function NotificationSettingsPanel() {
         </SettingsRow>
       </SettingsGroup>
 
-      <SettingsGroup title="摘要时间" description="设置每日与每周摘要的本地发送时间。">
+      <SettingsGroup title="通知时间" description="通知遵循当前时区和安静时段。">
         <SettingsRow title="时区">
           <Input
             className="w-48"
@@ -150,26 +139,6 @@ export function NotificationSettingsPanel() {
             onChange={(event) => updatePreference('timezone', event.target.value)}
             placeholder="例如 Asia/Shanghai"
           />
-        </SettingsRow>
-        <SettingsRow title="发送时间">
-          <Input
-            className="w-32"
-            type="time"
-            aria-label="每日和每周摘要发送时间"
-            value={shortTime(preferences.daily_time)}
-            onChange={(event) => updatePreference('daily_time', event.target.value)}
-          />
-        </SettingsRow>
-        <SettingsRow title="每周发送日">
-          <Select
-            value={String(preferences.weekly_day)}
-            onValueChange={(value) => updatePreference('weekly_day', Number(value))}
-          >
-            <SelectTrigger size="sm" aria-label="每周摘要发送日"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {WEEKDAYS.map(([value, label]) => <SelectItem key={value} value={String(value)}>{label}</SelectItem>)}
-            </SelectContent>
-          </Select>
         </SettingsRow>
       </SettingsGroup>
 

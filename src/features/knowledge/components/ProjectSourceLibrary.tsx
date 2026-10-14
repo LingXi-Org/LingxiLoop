@@ -60,14 +60,12 @@ export function ProjectSourceLibrary({
   visibilityScope,
   ownerUserId,
   readOnly = false,
-  reviewMode = false,
 }: {
   projectId: string
   canManage: boolean
   visibilityScope?: KnowledgeSource['visibilityScope']
   ownerUserId?: string
   readOnly?: boolean
-  reviewMode?: boolean
 }) {
   const requests = useRef({ list: 0, detail: 0 })
   useEffect(() => () => { requests.current.list++; requests.current.detail++ }, [])
@@ -88,15 +86,13 @@ export function ProjectSourceLibrary({
     setLoading(true)
     setError('')
     try {
-      const rows = await (reviewMode
-        ? knowledgeApi.listCourseReviewSources(projectId)
-        : knowledgeApi.listProjectSources(projectId))
+      const rows = await knowledgeApi.listProjectSources(projectId)
       if (epoch !== requests.current.list) return
       setSources(rows); setLoaded(true)
     }
     catch (reason) { if (epoch === requests.current.list) setError(userFacingError(reason, '资料库暂时无法加载，请稍后重试。')) }
     finally { if (epoch === requests.current.list) setLoading(false) }
-  }, [projectId, reviewMode])
+  }, [projectId])
 
   useEffect(() => {
     setSources([]); setLoaded(false)
@@ -135,9 +131,7 @@ export function ProjectSourceLibrary({
     setDetailLoading(true)
     setDetailError('')
     try {
-      const detail = await (reviewMode
-        ? knowledgeApi.getCourseReviewSource(projectId, source.id)
-        : knowledgeApi.getProjectSource(projectId, source.id))
+      const detail = await knowledgeApi.getProjectSource(projectId, source.id)
       if (epoch === requests.current.detail) setSelected(detail)
     }
     catch (reason) { if (epoch === requests.current.detail) setDetailError(userFacingError(reason, '资料预览暂时无法加载。')) }

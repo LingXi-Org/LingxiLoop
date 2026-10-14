@@ -22,10 +22,6 @@ import { useDocuments } from '@/features/documents/state'
 import { PresentationSkeleton } from '@/features/presentations/components/PresentationSkeleton'
 import { PresentationDrawerContent } from '@/features/presentations/components/PresentationDrawerContent'
 import { usePresentations } from '@/features/presentations/state'
-import { LearningDashboardPanel } from '@/features/learning/dashboard/LearningDashboardPanel'
-import { CourseSettingsSection } from '@/features/learning/dashboard/CourseSettingsSection'
-import { installResourceFixtures, teacherSpace } from './ui-experience-resource-fixtures'
-import { OverviewSkeleton, CourseSettingsSkeleton } from '@/features/learning/dashboard/LearningSkeletons'
 import { SourceCardsSkeleton, SourceFoldersSkeleton } from '@/features/knowledge/components/SourceSkeletons'
 import { ProjectSourceLibrary } from '@/features/knowledge/components/ProjectSourceLibrary'
 import { adminFixtures } from './ui-experience-admin-fixtures'
@@ -53,9 +49,7 @@ async function data<T>(value: T, empty: T): Promise<T> {
   if (mode === 'error') throw new Error('本地模拟加载失败')
   return mode === 'empty' ? empty : value
 }
-installResourceFixtures(data)
 knowledgeApi.listProjectSources = () => data(processingSource ? sources.map((source, index) => index === 0 ? {...source,status:'processing' as const} : source) : sources, [])
-knowledgeApi.listCourseReviewSources = () => data(sources, [])
 
 knowledgeApi.getProjectSource = async (_project, id) => data(sources.find(source => source.id === id)!, sources[0])
 adminQueryClient.setDefaultOptions({ queries: { retry: false, refetchOnWindowFocus: false } })
@@ -97,10 +91,8 @@ window.fetch = async (input, init) => {
 const gallery: Record<string, ReactNode> = {
   '启动外壳': <WorkspaceSkeleton />, '会话与回复串': <ConversationSkeleton />,
   'Agent': <AgentsSkeleton />,
-  '学生概览': <OverviewSkeleton />, '教师概览': <OverviewSkeleton perspective="teacher" />,
   '资料文件夹': <SourceFoldersSkeleton />, '资料卡片': <SourceCardsSkeleton />,
   '文档': <DocumentSkeleton />, '画布': <CanvasSkeleton />, '演示文稿': <PresentationSkeleton />,
-  '课程设置': <CourseSettingsSkeleton section="profile" />, '课程成员': <CourseSettingsSkeleton section="members" />,
   '后台启动': <AdminShellSkeleton />, '后台概览': <AdminDashboardSkeleton />,
   '后台监控': <AdminTabSkeleton tab="status" />, '后台认证': <AdminTabSkeleton tab="authentication" />,
   '后台分析': <AdminTabSkeleton tab="analytics" />, '后台详情': <AdminRecordSkeleton />,
@@ -224,7 +216,7 @@ function App() {
       const waitFor = async (condition: () => boolean) => {
         for (let attempt = 0; attempt < 100 && !condition(); attempt++) await pause(50)
       }
-      for (const name of ['学生概览','教师概览','课程资料','课程设置','课程内容','课程成员','课程状态','文档编辑','演示文稿']) {
+      for (const name of ['文档编辑','演示文稿']) {
         useDocuments.getState().reset(); usePresentations.getState().reset()
         mode = 'slow'; setSurface(name); setRevision(value => value + 1); await next(); await next()
         assert(Boolean(document.querySelector('#check-stage [role=status]')), `${name}：真实首次请求显示加载状态`)
@@ -270,7 +262,7 @@ function App() {
   }
   return <div className="flex h-dvh min-w-0 flex-col bg-background text-foreground">
     <header className={`${new URLSearchParams(location.search).get('capture') === '1' ? 'hidden' : 'flex'} shrink-0 flex-wrap items-center gap-2 border-b p-2 text-xs`}>
-      <label>界面 <select aria-label="验收界面" value={surface} onChange={event => setSurface(event.target.value)}>{['骨架总览','主应用','Agent','画布','资料','动效与焦点','学生概览','教师概览','课程资料','课程设置','课程内容','课程成员','课程状态','文档编辑','演示文稿','登录'].map(name => <option key={name}>{name}</option>)}</select></label>
+      <label>界面 <select aria-label="验收界面" value={surface} onChange={event => setSurface(event.target.value)}>{['骨架总览','主应用','Agent','画布','资料','动效与焦点','文档编辑','演示文稿','登录'].map(name => <option key={name}>{name}</option>)}</select></label>
       {surface === '骨架总览' && <select aria-label="骨架页面" value={selected} onChange={event => setSelected(event.target.value)}>{Object.keys(gallery).map(name => <option key={name}>{name}</option>)}</select>}
       <Button size="sm" variant="outline" onClick={() => document.documentElement.classList.toggle('dark')}>切换主题</Button>
       <Button size="sm" variant="outline" onClick={() => openSettingsDialog()}>设置弹窗</Button>
@@ -288,10 +280,6 @@ function App() {
 
       {surface === '画布' && <CanvasView canvasId={canvas.id} />}
       {surface === '资料' && <div className="p-4"><ProjectSourceLibrary key={revision} projectId="workspace-personal" canManage /></div>}
-      {surface === '学生概览' && <LearningDashboardPanel key={revision} space={learningSpace} section="overview" />}
-      {surface === '教师概览' && <LearningDashboardPanel key={revision} space={teacherSpace} section="overview" />}
-      {surface === '课程资料' && <LearningDashboardPanel key={revision} space={teacherSpace} section="resources" />}
-      {(['课程设置','课程内容','课程成员','课程状态'].includes(surface)) && <CourseSettingsSection key={`${surface}:${revision}`} space={teacherSpace} section={({'课程设置':'profile','课程内容':'content','课程成员':'members','课程状态':'status'} as const)[surface as '课程设置']} />}
       {surface === '文档编辑' && <DocumentsView key={revision} />}
       {surface === '演示文稿' && <PresentationDrawerContent key={revision} presentationId="presentation-local" />}
       {surface === '动效与焦点' && <div className="p-4"><StableSurface identity={identity} text={text} /><Dialog><DialogTrigger asChild><Button className="mt-4">打开焦点检查</Button></DialogTrigger><DialogContent><DialogTitle>弹层焦点检查</DialogTitle><DialogDescription>Tab 不离开弹层，Escape 关闭后回到触发按钮。</DialogDescription><Input aria-label="弹层输入" /></DialogContent></Dialog></div>}

@@ -31,13 +31,11 @@ export const useApp = create<AppState>((set, get) => ({
   autoSelectConversation: true,
   canManageWorkspace: false,
   setView: (view) => {
-    const denied = get().navigationReady && !get().canManageWorkspace && ['courses', 'course-content', 'course-members', 'course-status'].includes(view)
-    if (denied) view = 'learning'
     if (view !== 'conversations') useSurface.getState().closeSurface()
     beginWebNavigation()
     set({ view, mobileConversationOpen: view === 'conversations' && Boolean(get().selectedConversationId), navigationPending: false,
-      navigationError: denied ? '你没有此页面的访问权限，已打开学习概览。' : null, autoSelectConversation: false })
-    if (get().navigationReady) writeWebDestination({ projectId: getWorkspaceSession()?.projectId ?? null, view, conversationId: get().selectedConversationId }, denied ? 'replace' : 'push')
+      navigationError: null, autoSelectConversation: false })
+    if (get().navigationReady) writeWebDestination({ projectId: getWorkspaceSession()?.projectId ?? null, view, conversationId: get().selectedConversationId }, 'push')
   },
   selectConversation: (id) => {
     chatLatency.opened(id)

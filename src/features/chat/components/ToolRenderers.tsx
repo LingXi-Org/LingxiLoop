@@ -1,9 +1,8 @@
 import { RecommendationCard } from '@/components/assistant-ui/elements/recommendation-card'
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { useState } from 'react'
-import { Plan } from '@/components/tool-ui/plan'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
-import { canvasProgress, handoffProgress, missionPlan } from '../runtime/task-progress'
+import { canvasProgress, handoffProgress } from '../runtime/task-progress'
 import { PollCard } from '@/components/assistant-ui/elements/poll-card'
 import { CanvasArtifactCard } from '@/features/canvas/components/CanvasArtifactCard'
 import {
@@ -12,10 +11,6 @@ import {
   type ElicitationValue,
 } from '@/components/assistant-ui/elements/elicitation-form'
 import { ApprovalCard } from '@/components/assistant-ui/elements/approval-card'
-import { ScoreBreakdown, type ScoreCriterion } from '@/components/assistant-ui/elements/score-breakdown'
-import { conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
-import { StatsDisplay } from '@/components/tool-ui/stats-display'
-import { parseSerializableStatsDisplay } from '@/components/tool-ui/stats-display/schema'
 import { useParticipants } from '@/features/agents/state'
 import {
   PresentationArtifactCard,
@@ -152,11 +147,6 @@ export function ElicitationFormTool({ args, result, addResult }: CardProps) {
   )
 }
 
-export function AgentPlanTool({ args }: Pick<CardProps, 'args'>) {
-  const names = useParticipants(state => state.byId)
-  return <Plan {...missionPlan(args, names)} />
-}
-
 export function AgentHandoffTool({ args }: Pick<CardProps, 'args'>) {
   const names = useParticipants(state => state.byId)
   return <ProgressTracker {...handoffProgress(args, names)} />
@@ -167,36 +157,9 @@ export function CanvasProgressTool({ args }: Pick<CardProps, 'args'>) {
   return <ProgressTracker {...canvasProgress(args, names)} />
 }
 
-export function TeacherBriefingStatsTool({ args }: Pick<CardProps, 'args'>) {
-  const value = parseSerializableStatsDisplay(args)
-  return <StatsDisplay {...value} locale="zh-CN" className={`${conversationCardSize.wide} min-w-0`} />
-}
-
-export function ScoreBreakdownTool({ result, isError }: ToolCallMessagePartProps) {
-  const response = result as { status?: string; value?: { status: 'ACCEPTED' | 'PENDING' | 'REJECTED'; display?: { demonstratedLevel: number; rubricResults: ScoreCriterion[] } } } | undefined
-  const value = response?.value?.display
-  if (!value) return <p role="status">{response?.status === 'cancelled' ? '评价已取消。' : isError ? '评价失败，请查看任务状态。' : result ? '评价数据暂不可用。' : '正在评价…'}</p>
-  const verdict = result === undefined
-    ? '评估中'
-    : isError
-      ? '评估失败'
-      : response!.value!.status === 'ACCEPTED' ? '已判定' : response!.value!.status === 'REJECTED' ? '已退回' : '待教师复核'
-  return <ScoreBreakdown
-    verdict={verdict}
-    total={value.demonstratedLevel}
-    outOf={4}
-    criteria={value.rubricResults}
-    visibleCount={value.rubricResults.length}
-  />
-}
-
 export function PresentationArtifactTool({ args }: Pick<CardProps, 'args'>) {
   const openPresentation = useSurface((state) => state.openPresentationPeek)
   const artifact = parsePresentationArtifact(args)
   if (!artifact) throw new Error('演示文稿产物协议不完整')
   return <PresentationArtifactCard artifact={artifact} onOpen={openPresentation} />
-}
-
-export const TOOL_DETAILS = {
-  'learning.propose_evaluation': ScoreBreakdownTool,
 }

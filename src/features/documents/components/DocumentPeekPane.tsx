@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { DocumentSkeleton } from './DocumentSkeleton'
 import { userFacingError } from '@/lib/userFacingError'
-import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import { useDocuments } from '../state'
 import { DocumentEditor } from './DocumentEditor'
@@ -13,11 +12,9 @@ import { DocumentEditor } from './DocumentEditor'
 export function DocumentPeekPane() {
   const documentId = useSurface((s) => s.surface?.kind === 'document' ? s.surface.documentId : null)
   const closeDocumentPeek = useSurface((s) => s.closeDocumentPeek)
-  const setView = useApp((s) => s.setView)
   const list = useDocuments((s) => s.list)
   const loaded = useDocuments((s) => s.loaded)
   const load = useDocuments((s) => s.load)
-  const selectDocument = useDocuments((s) => s.select)
   const doc = documentId ? list.find((d) => d.id === documentId) : null
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
@@ -30,12 +27,6 @@ export function DocumentPeekPane() {
   }, [load, loaded, revision])
 
   if (!documentId) return null
-
-  const openFullWorkspace = () => {
-    selectDocument(documentId)
-    closeDocumentPeek()
-    setView('library')
-  }
 
   if (!loaded) {
     return error ? <div role="alert" className="ui-enter grid gap-4 p-6 text-sm"><p>{error}</p><Button variant="outline" onClick={() => setRevision(value => value + 1)}>重试</Button></div> : <DocumentSkeleton />
@@ -55,7 +46,6 @@ export function DocumentPeekPane() {
         documentId={documentId}
         variant="peek"
         onClose={closeDocumentPeek}
-        onOpenFull={openFullWorkspace}
       />
     </aside>
   )

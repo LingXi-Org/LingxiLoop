@@ -2,10 +2,9 @@ import { createNativeMessage } from '@/lib/nativeMessage'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { Plan } from '@/components/tool-ui/plan'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
 import type { ImEnvelope } from '@/lib/im/wukong'
-import { canvasProgress, handoffProgress, knowledgeProgress, missionPlan } from './task-progress'
+import { canvasProgress, handoffProgress, knowledgeProgress } from './task-progress'
 import { convertEnvelope, convertEnvelopeBatch } from './converter'
 import { mergeCanonicalMessages } from './store'
 import { getLingxiMessageMetadata } from './model'
@@ -15,12 +14,7 @@ import { harnessToolParts } from '../../../../server/src/agent-runtime/message-p
 const names = { nova: { name: '司南' }, sage: { name: '明理' }, trace: { name: '溯源' } }
 const at = '2026-09-21T08:00:00.000Z'
 
-test('official ToolUI renders persisted Mission steps and actual handoff outcomes', () => {
-  const plan = missionPlan({ id: 'mission', goal: '完成实践', coordinatorAgentId: 'nova', status: 'ACTIVE',
-    steps: [{ id: 'check', description: '检查产出', successCriteria: '可复现', status: 'IN_PROGRESS' },
-      { id: 'reflect', description: '反思', status: 'OPEN' }] }, names)
-  assert.deepEqual(plan.todos.map(todo => todo.status), ['in_progress','pending'])
-  assert.match(renderToStaticMarkup(<Plan {...plan} />), /data-tool-ui-id="mission"/)
+test('official ToolUI renders actual handoff outcomes', () => {
   const handoff = { id: 'handoff', fromAgentId: 'nova', toAgentId: 'sage', title: '验证概念', updatedAt: at }
   const accepted = handoffProgress({ ...handoff,status: 'accepted' }, names)
   assert.equal(accepted.steps[0].status, 'pending')

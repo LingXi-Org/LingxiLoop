@@ -71,7 +71,7 @@ test('context bounds automatic search and persists Agent receipts before asynchr
     const independentReads = new Set<string>(), query = pool.query
     const observer = t.mock.method(pool, 'query', ((sql: unknown, ...args: unknown[]) => {
       if (typeof sql === 'string') {
-        if (sql.includes('project.kind AS project_kind')) independentReads.add('learning')
+        if (sql.includes('FROM course_forum_posts p')) independentReads.add('learning')
         if (sql === 'SELECT id FROM canvases WHERE company_id=$1 AND conversation_id=$2 LIMIT 1') independentReads.add('canvas')
         if (sql.startsWith('SELECT agent.id,agent.name,agent.role,agent.capabilities,agent.preset_key')) {
           startedRoster()
@@ -85,6 +85,9 @@ test('context bounds automatic search and persists Agent receipts before asynchr
     let deep!: Awaited<typeof loading>
     try {
       await rosterStarted
+      // Forum reads first resolve the current PostgreSQL course grant independently of the held roster.
+      const readDeadline = Date.now() + 2000
+      while (!independentReads.has('learning') && Date.now() < readDeadline) await new Promise(resolve => setTimeout(resolve, 10))
       assert.deepEqual([...independentReads].sort(), ['canvas', 'learning'], 'authorized independent reads start while roster is held')
       assert.equal(searches, 0, 'independent reads do not wait for automatic RAG')
     } finally {

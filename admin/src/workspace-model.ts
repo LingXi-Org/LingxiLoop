@@ -9,7 +9,7 @@ export const WORKSPACES = [
   { path: '/system', label: '系统管理', description: '服务健康、安全与审计' },
 ] as const
 
-export const LEARNING = ['courses', 'knowledge-units', 'learning-activities', 'learning-missions', 'learning-attempts', 'learning-cases', 'learning-evaluations', 'evidence-records', 'trust-snapshots']
+export const LEARNING = ['courses', 'evidence-records', 'trust-snapshots']
 export const CONTENT = ['conversations', 'documents', 'canvases', 'presentations', 'calendar-events']
 export const AI = ['participants', 'agent-routines', 'agent-runs', 'agent-deliveries', 'llm-calls']
 export const SYSTEM = ['audit-events', 'webhook-receipts', 'notification-deliveries']
@@ -41,19 +41,17 @@ export function relationGroups(resource: string): Record<string, string[]> {
     '学习': LEARNING, '协作内容': CONTENT, '知识处理': ['knowledge-sources', 'knowledge-jobs'],
   }
   if (resource === 'knowledge-sources') return { '处理任务': ['knowledge-jobs'] }
-  if (resource === 'learning-activities') return { '学习尝试': ['learning-attempts'] }
-  if (resource === 'learning-attempts') return { '评估': ['learning-evaluations'] }
   return {}
 }
 
 export function relationFilter(resource: string, id: string): Record<string, string> {
-  const key = ({ users: 'userId', companies: 'companyId', projects: 'projectId', 'knowledge-sources': 'sourceId', 'learning-activities': 'activityId', 'learning-attempts': 'attemptId' } as Record<string, string>)[resource]
+  const key = ({ users: 'userId', companies: 'companyId', projects: 'projectId', 'knowledge-sources': 'sourceId' } as Record<string, string>)[resource]
   return key ? { [key]: id } : {}
 }
 
 export function listParameters(parameters: URLSearchParams, scope: Record<string, string> = {}) {
   const result = new URLSearchParams()
-  for (const key of ['search', 'status', 'companyId', 'projectId', 'userId', 'sourceId', 'activityId', 'attemptId', 'sort', 'limit', 'cursor', 'period']) {
+  for (const key of ['search', 'status', 'companyId', 'projectId', 'userId', 'sourceId', 'sort', 'limit', 'cursor', 'period']) {
     const value = parameters.get(key)
     if (value) result.set(key, value)
   }

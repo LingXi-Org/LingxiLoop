@@ -2,8 +2,6 @@ import { closeDatabasePools } from './db/pool.js'
 import { startDbGcWorker } from './db-gc.js'
 import { env } from './env.js'
 import { reconcileImChannels, startImChannelReconciliation } from './im/reconcile.js'
-import { startAttentionProjectionWorker } from './modules/attention/public.js'
-import { startTeacherBriefingWorker } from './modules/briefings/public.js'
 import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.js'
 import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
 import { startEducationContractExpiryWorker } from './modules/education/public.js'
@@ -28,8 +26,6 @@ import { startNativeEventWorker } from './agents/native-event-worker.js'
  */
 export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'agent-native-events', concurrency: 'queue-claim', start: startNativeEventWorker },
-  { name: 'attention-projection', concurrency: 'database-lock', start: () => startAttentionProjectionWorker() },
-  { name: 'teacher-briefings', concurrency: 'queue-claim', start: () => startTeacherBriefingWorker() },
   { name: 'notifications', concurrency: 'queue-claim', start: () => startNotificationScheduler() },
   { name: 'learning-effects', concurrency: 'queue-claim', start: () => startLearningEffectWorker() },
   { name: 'company-onboarding-effects', concurrency: 'queue-claim', start: () => startCompanyOnboardingEffectWorker() },

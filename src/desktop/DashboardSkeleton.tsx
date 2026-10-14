@@ -1,13 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { SourceFoldersSkeleton } from '@/features/knowledge/components/SourceSkeletons'
-import { CourseSettingsSkeleton, OverviewSkeleton } from '@/features/learning/dashboard/LearningSkeletons'
 import type { ViewKey } from '@/types'
-
-export function DashboardSkeleton({ view, perspective }: { view: ViewKey['view']; perspective?: 'teacher' | 'learner' }) {
-  return <div className=" flex h-full min-h-0 flex-col overflow-hidden">
-    <div aria-hidden="true" className="flex h-14 shrink-0 items-center gap-4 border-b px-5"><Skeleton className="h-5 w-32" /><Skeleton className="ms-auto h-8 w-24" /></div>
-    <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
-      {view === 'library' ? <SourceFoldersSkeleton /> : view === 'learning' ? <OverviewSkeleton perspective={perspective} /> : <CourseSettingsSkeleton section={view} />}
-    </div>
-  </div>
+export function DashboardSkeleton(_props: { view: ViewKey['view']; perspective?: 'teacher' | 'learner' }) {
+  return <div role="status" className="space-y-4 p-6"><span className="sr-only">正在加载学习论坛…</span>{[0,1,2].map(id => <Skeleton key={id} className="h-36 w-full motion-reduce:animate-none" />)}</div>
 }

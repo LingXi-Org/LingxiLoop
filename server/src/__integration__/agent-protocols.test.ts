@@ -39,7 +39,7 @@ test('native capability registry executes cards and artifacts, gates approval, a
     const callIndex = counter++
     return host.executeAction(work,{ runId:work.id, cellId:'protocol', callIndex, action,args,idempotencyKey:JSON.stringify([work.id,'protocol',callIndex]) })
   }
-  for (const action of ['documents.list','canvas.current','handoffs.list','routines.list','knowledge.list_sources','learning.get_learner_state','directory.statuses','chat.metadata']) {
+  for (const action of ['documents.list','canvas.current','handoffs.list','routines.list','knowledge.list_sources','directory.statuses','chat.metadata']) {
     const result = await call(action,{})
     assert.equal(result.ok,true,`${action}: ${JSON.stringify(result)}`)
   }
@@ -49,9 +49,6 @@ test('native capability registry executes cards and artifacts, gates approval, a
   assert.equal((await call('files.list',{})).ok,true)
   assert.equal((await call('files.read',{id:'missing'})).ok,false)
   assert.equal((await call('files.create',{name:'../escape.txt',text:'no'})).ok,false)
-  const stats=await call('presentation.render',{type:'learning-stats',reference:conversationId})
-  assert.equal(stats.ok,true,JSON.stringify(stats))
-  assert.equal((await call('presentation.render',{type:'learning-stats',reference:'other-room'})).ok,false)
   const card = await call('chat.recommend',{title:'下一步学习',explanation:'先区分接入方式与传输协议。',nextStep:'画出传感器到手机的数据路径。'})
   assert.equal(card.ok,true,JSON.stringify(card))
   assert.equal(im.messages.filter(message=>nativeData(message.payload,'recommendation') !== undefined).length,1)
