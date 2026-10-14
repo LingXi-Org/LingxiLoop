@@ -206,6 +206,7 @@ export function DesktopApp() {
   }
   const drawerOwnsHeader = Boolean(drawerCanvasId)
   const fullBleedDrawer = Boolean(presentationId || drawerCanvasId)
+  const mobileForumOpen = isMobile && view === 'forum' && Boolean(learningSpaces.activeSpace?.courseId) && !navigationPending
   const mobileChatOpen = !dashboardOpen && !learningSpaces.pending && isMobile && mobileConversationOpen && Boolean(selectedConversation)
   const drawerWidth = isMobile
     ? ' data-[vaul-drawer-direction=right]:w-screen data-[vaul-drawer-direction=right]:max-w-none'
@@ -213,7 +214,7 @@ export function DesktopApp() {
 
   return (
     <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
-      {!mobileChatOpen && <WorkspaceRail
+      {!mobileChatOpen && !mobileForumOpen && <WorkspaceRail
           {...learningSpaces}
           onSelect={(space) => void learningSpaces.select(space)}
           onReload={() => void learningSpaces.reload()}
@@ -229,7 +230,7 @@ export function DesktopApp() {
           <span className="max-w-80 truncate text-xs font-medium leading-none">{activeProjectName}</span>
         </div>}
         {navigationError && <Alert variant="destructive" className="mb-2 me-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
-        <div ref={pageRef} data-ui-page={view} aria-busy={navigationPending || undefined} className="me-2 mb-2 min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-border bg-background text-foreground">
+        <div ref={pageRef} data-ui-page={view} aria-busy={navigationPending || undefined} className={`${mobileForumOpen ? '' : 'me-2 mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
           {navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" /> : !selectedWorkspaceId || dashboardOpen ? (
             <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
               <PersonalDashboard
