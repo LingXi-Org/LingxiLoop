@@ -9,6 +9,20 @@ import { updateImageTags } from './update-deployment-images.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
+// Failure: an old worker acknowledges an unknown homework effect during a rolling release.
+test('production stops both old workers before an application can enqueue new effect kinds', () => {
+  const resources = read('deploy/komodo/resources.toml')
+  const stages = [...resources.matchAll(/\[\[procedure\.config\.stage\]\]\s*name = "([^"]+)"([\s\S]*?)(?=\[\[procedure\.config\.stage\]\]|$)/g)]
+  const stopIndex = stages.findIndex(([, name]) => name === 'Stop old workers')
+  assert.ok(stopIndex >= 0)
+  for (const stack of ['lingxiloop-app-a', 'lingxiloop-app-b']) {
+    assert.match(stages[stopIndex][2], new RegExp(`execution\\.type = "StopStack", execution\\.params\\.stack = "${stack}", execution\\.params\\.services = \\["worker"\\]`))
+  }
+  for (const name of ['Application A', 'Application B']) {
+    assert.ok(stopIndex < stages.findIndex(([, stage]) => stage === name))
+  }
+})
+
 // Failure: development resolves shared imports that the production image never copies.
 test('server image includes the complete shared runtime import graph', () => {
   const root = fileURLToPath(new URL('../', import.meta.url))

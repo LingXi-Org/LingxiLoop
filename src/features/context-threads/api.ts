@@ -3,7 +3,7 @@ import { http } from '@/api/core/http'
 export interface ContextThreadResult {
   id: string
   channelId: string
-  contextType: 'LEARNING' | 'TEACHER_TAKEOVER' | 'INTERVENTION'
+  contextType: 'LEARNING' | 'TEACHER_TAKEOVER' | 'INTERVENTION' | 'HOMEWORK'
   contextId: string
   participantIds: string[]
   created: boolean

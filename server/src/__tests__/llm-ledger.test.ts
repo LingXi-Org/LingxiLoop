@@ -3,6 +3,37 @@ import test from 'node:test'
 import { __setLlmClientOverrideForTesting, createChatCompletion } from '../llm.js'
 import { __setLlmLedgerOverrideForTesting, recordLlmCall } from '../llm-ledger.js'
 import { siliconFlowCost, siliconFlowPricing } from '../agent-runtime/pricing.js'
+import { env } from '../env.js'
+
+// Failure modes: wrong micro-USD conversion, charging a different model at the primary
+// rate, invalid prices reaching the provider, and treating absent usage as measured cost.
+test('host judgments price measured primary-model tokens with the configured runtime rates', async () => {
+  const records: Array<Record<string, unknown>> = []
+  const names = ['AGENT_OS_INPUT_COST_MICROS_PER_MILLION', 'AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION'] as const
+  const original = names.map(name => process.env[name])
+  process.env[names[0]] = '2000000'
+  process.env[names[1]] = '8000000'
+  let calls = 0
+  __setLlmLedgerOverrideForTesting(async record => { records.push(record as unknown as Record<string, unknown>) })
+  __setLlmClientOverrideForTesting(() => ({ chat: { completions: { create: async () => {
+    calls++
+    return { choices: [{ message: { content: '{}' } }], usage: { prompt_tokens: 1000, completion_tokens: 500 } }
+  } } } }) as never)
+  try {
+    const request = { model: env.OPENAI_MODEL, messages: [{ role: 'user' as const, content: 'synthetic assessment' }] }
+    await createChatCompletion({ purpose: 'homework.assess', companyId: 'company-1' }, request)
+    assert.deepEqual({ costUsd: records[0]?.costUsd, estimated: records[0]?.costEstimated }, { costUsd: 0.006, estimated: true })
+    await createChatCompletion({ purpose: 'different-model', companyId: 'company-1' }, { ...request, model: 'unpriced-other-model' })
+    assert.equal(records[1]?.costUsd, undefined)
+    process.env[names[0]] = 'NaN'
+    await assert.rejects(createChatCompletion({ purpose: 'invalid-price', companyId: 'company-1' }, request), /AGENT_OS_INPUT_COST_MICROS_PER_MILLION/)
+    assert.equal(calls, 2)
+  } finally {
+    names.forEach((name, index) => { if (original[index] === undefined) delete process.env[name]; else process.env[name] = original[index] })
+    __setLlmClientOverrideForTesting(null)
+    __setLlmLedgerOverrideForTesting(null)
+  }
+})
 
 test('SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rates',()=>{
   const pricing=siliconFlowPricing(7)

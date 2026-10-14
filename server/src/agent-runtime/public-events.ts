@@ -1,11 +1,13 @@
 import type { RunEvent, RunStreamEvent } from '@lyyzka/lingxios/ui'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { publicActivitySchema } from '../../../src/lib/runActivity.js'
+import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { memoryActivity } from '../../../src/lib/memoryActivity.js'
 
 /** User transport allowlist; full results remain private to the native runtime. */
 export function publicToolValue(action: string, value: unknown): unknown {
+  if (action === 'teacher.draft_homework') return toolCardResult(action, value)
   if (action.startsWith('memory.')) return memoryActivity(action, value)
   if (action === 'chat.report_progress') {
     const parsed = publicActivitySchema.safeParse(value)

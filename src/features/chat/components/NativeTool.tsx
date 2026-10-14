@@ -11,16 +11,18 @@ import { chatTransport } from '../runtime/transport'
 import { knowledgeProgress } from '../runtime/task-progress'
 import { ApprovalRequestCard } from './ApprovalRequestCard'
 import { MessagePartBoundary } from './MessagePartBoundary'
+import { TOOL_DETAILS } from './ToolRenderers'
 import { ResearchSources } from './ResearchSources'
 import { MemoryTool } from './MemoryTool'
 import { memoryActivitySchema } from '@/lib/memoryActivity'
 
-export const hasRichTool = (name: string) => /^(email|calendar)\./.test(name) || name === 'research.search'
+export const hasRichTool = (name: string) => Object.hasOwn(TOOL_DETAILS,name) || /^(email|calendar)\./.test(name) || name === 'research.search'
   || /^memory(?:\.|__)/.test(name)
   || ['knowledge.search', 'knowledge.read_source', 'knowledge.list_sources'].includes(name)
 
 export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean; children?: ReactNode }) {
   const { toolCallId, toolName, result, isError, approval, interrupt, status, readOnly, children } = props
+  const Detail = TOOL_DETAILS[toolName as keyof typeof TOOL_DETAILS]
   const aui = useAui()
   const message = useAuiState(state => state.message)
   const custom = message.metadata.custom
@@ -90,6 +92,7 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
         {props.timing?.completedAt !== undefined && <p>耗时 {((props.timing.completedAt - props.timing.startedAt) / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 秒</p>}
       </div>}
       {hasRichTool(toolName) && (result !== undefined || displayStatus.type === 'running') && <MessagePartBoundary resetKey={result} running={displayStatus.type === 'running'}>
+        {Detail && <Detail {...props} readOnly={readOnly} />}
         {/^memory(?:\.|__)/.test(toolName) && resultStatus === 'completed' && !isError && memory.success && <MemoryTool memory={memory.data} readOnly={readOnly} />}
         {toolName === 'research.search' && <ResearchSources calls={[props]} lifecycle={lifecycle} />}
         {retrieval && <ProgressTracker {...retrieval} />}

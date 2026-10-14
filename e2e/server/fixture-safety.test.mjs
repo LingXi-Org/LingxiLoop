@@ -34,12 +34,24 @@ test('explicit live evaluation configuration rejects missing credentials, shared
     [{ EVAL_CANDIDATE_API_KEY: '' }, /Missing EVAL_CANDIDATE_API_KEY/],
     [{ EVAL_JUDGE_MODEL: 'candidate' }, /independent judge model/],
     [{ EVAL_JUDGE_INPUT_CNY_PER_MILLION: 'NaN' }, /Invalid EVAL_JUDGE_INPUT_CNY_PER_MILLION/],
+    [{ E2E_HOMEWORK_PUBLIC_URL: 'not a URL' }, /Invalid E2E_HOMEWORK_PUBLIC_URL/],
+    [{ E2E_HOMEWORK_PUBLIC_URL: 'file:///private.txt' }, /Invalid E2E_HOMEWORK_PUBLIC_URL/],
+    [{ E2E_HOMEWORK_PUBLIC_URL: 'https://user:fixture-sentinel@example.com/triangle' }, /Invalid E2E_HOMEWORK_PUBLIC_URL/],
   ]) {
-    const result = spawnSync(process.execPath, ['e2e/server/interactive-ui-live.mjs', '--live-generative-ui'], {
+    const result = spawnSync(process.execPath, ['e2e/server/homework.mjs', '--live-homework', '--check-config'], {
       encoding: 'utf8', timeout: 15_000, windowsHide: true, env: { ...system, ...config, ...overrides },
     })
     assert.notEqual(result.status, 0)
     assert.match(result.stderr, expected)
     assert.doesNotMatch(`${result.stdout}${result.stderr}`, /fixture-sentinel|Container .*Starting|ECONNREFUSED/)
   }
+})
+
+test('the retired interactive lesson runner remains disabled independently of live homework credentials', () => {
+  const result = spawnSync(process.execPath, ['e2e/server/interactive-ui-live.mjs', '--live-generative-ui'], {
+    encoding: 'utf8', timeout: 15_000, windowsHide: true,
+  })
+  assert.notEqual(result.status, 0)
+  assert.match(result.stderr, /Interactive lessons are disabled/)
+  assert.doesNotMatch(`${result.stdout}${result.stderr}`, /Container .*Starting/)
 })

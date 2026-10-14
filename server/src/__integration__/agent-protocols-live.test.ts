@@ -13,6 +13,8 @@ import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembers
 import { installRecordingWukong } from './_recording-wukong.js'
 
 // Explicit opt-in: synthetic fixtures, isolated test DB, real metered provider calls.
+// Practice failure inventory: missing file; unreadable, empty or non-Markdown bytes;
+// wrong temperature threshold or duration; chat prose alone cannot prove saved content.
 test('live provider delivers full learning help and native cards with measured first text and total time', {skip:process.env.LINGXIOS_LIVE_PROTOCOL !== '1',timeout:1200000}, async ()=>{
   await ensureSchemaOnce(); await resetAllTables()
   const im=await installRecordingWukong()
@@ -34,7 +36,7 @@ test('live provider delivers full learning help and native cards with measured f
       {id:'concept',text:'TCP 可靠传输是不是就意味着数据安全？结合传感器上传温度解释可靠性和保密性的区别，并说明手机和传感器在同一局域网时是否必须经过互联网。',terms:[/可靠/,/加密|保密/,/局域网/]},
       {id:'derivation',text:'请详细推导一个一阶 RC 低通滤波器的截止频率，解释每个变量和推导步骤，并用 R=1kΩ、C=1μF 算一个结果。我刚开始学电路。',terms:[/159/,/阻抗|微分|传递函数/,/截止/]},
       {id:'course',text:'请按我这门课的讲义解释大棚告警系统的网络分层，先检查可用课程资料；没有资料时请明确说明，再给出通用解释。',terms:[/资料|讲义/,/没有|未|无法|暂/]},
-      {id:'practice',text:'请把“大棚温度超过 35℃ 持续 2 分钟才告警”的实践检查清单保存成 greenhouse.md 文件，再用建议卡给我一个可以选择的下一步学习建议。',terms:[/35|温度/]},
+      {id:'practice',text:'请把“大棚温度超过 35℃ 持续 2 分钟才告警”的实践检查清单保存成 greenhouse.md 文件，再用建议卡给我一个可以选择的下一步学习建议。',terms:[/\b35\s*(?:℃|°\s*C|摄氏度)/i,/(?:持续|连续)[^\n。；]{0,40}(?:(?:\b2|两|二)\s*(?:分钟|min(?:ute)?s?)|\b120\s*(?:秒|s\b))/i]},
       {id:'brief',text:'只用一句话回答：Wi-Fi 是否等于互联网？',terms:[/不/]},
     ]
     const repeats=Number(process.env.LINGXIOS_LIVE_REPEATS ?? 1)
@@ -97,9 +99,25 @@ test('live provider delivers full learning help and native cards with measured f
       const gaps=outcome?.gaps??[]
       const expectedPartial=scenario.id==='course' && outcome?.status==='partial' && gaps.length>0
         && gaps.every(gap=>/讲义|course|资料/i.test(gap) && !/unavailable or returned invalid findings|exceeds the model context budget/i.test(gap))
-      const checks={streamValid,nonthinking:calls.rows[0].reasoning_tokens===0,delivered:state?.delivery==='delivered',accepted:outcome?.status==='satisfied'||expectedPartial,bodyValid:validBody(body),coverage:scenario.terms.every(term=>term.test(body)),encoding:!body.includes('\\n\\n'),brief:scenario.id!=='brief'||body.length<180,cards:scenario.id!=='practice'||actions.includes('chat.recommend')&&actions.includes('files.create'),course:scenario.id!=='course'||actions.some(action=>action.startsWith('knowledge.'))}
+      let coverageText=body,artifactRead=scenario.id!=='practice',artifactValid=scenario.id!=='practice'
+      let artifactEvidence:{sha256:string;bytes:number;mime:string}|undefined
+      if(scenario.id==='practice'){
+        coverageText=''
+        const manifest=state?.message?.envelope.artifacts.find(item=>item.path==='files/greenhouse.md')
+        if(manifest)try{
+          const saved=await api.readArtifact(run,manifest.path)
+          if(saved){
+            artifactRead=true
+            artifactEvidence={sha256:saved.artifact.sha256,bytes:saved.bytes.length,mime:saved.artifact.mime}
+            coverageText=new TextDecoder('utf-8',{fatal:true}).decode(saved.bytes)
+            artifactValid=saved.artifact.sha256===manifest.sha256 && saved.bytes.length===manifest.size
+              && saved.artifact.mime.split(';')[0].trim()==='text/markdown' && coverageText.trim().length>0
+          }
+        }catch{artifactRead=false} // Public reads reject missing, corrupt or inaccessible bytes; never persist their content.
+      }
+      const checks={streamValid,nonthinking:calls.rows[0].reasoning_tokens===0,delivered:state?.delivery==='delivered',accepted:outcome?.status==='satisfied'||expectedPartial,bodyValid:validBody(body),coverage:scenario.terms.every(term=>term.test(coverageText)),artifactRead,artifactValid,encoding:!body.includes('\\n\\n'),brief:scenario.id!=='brief'||body.length<180,cards:scenario.id!=='practice'||actions.includes('chat.recommend')&&actions.includes('files.create'),course:scenario.id!=='course'||actions.some(action=>action.startsWith('knowledge.'))}
       const modelCalls=await pool.query("SELECT purpose,latency_ms,input_tokens,cached_input_tokens,output_tokens,extras->>'firstContentMs' AS first_content_ms FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at",[companyId,run.runId])
-      console.info(JSON.stringify({scenario:scenario.id,repeat,firstTextMs,totalMs:Date.now()-started,calls:calls.rows[0].n,modelCalls:modelCalls.rows,characters:body.length,actions,checks,status:state?.run.status}))
+      console.info(JSON.stringify({scenario:scenario.id,repeat,firstTextMs,totalMs:Date.now()-started,calls:calls.rows[0].n,modelCalls:modelCalls.rows,characters:body.length,actions,checks,...(artifactEvidence?{artifact:artifactEvidence}:{}),status:state?.run.status}))
       if(Object.values(checks).some(value=>!value))failures.push(scenario.id)
     }
     assert.deepEqual(failures,[],'real provider regressions must not be reported as passed')

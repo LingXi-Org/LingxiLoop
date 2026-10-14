@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
+import { releaseVersions } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { createServer } from 'node:http'
 import { pool } from '../db/pool.js'
@@ -89,6 +90,6 @@ test('published worker persists authorized public activity and measured tool bou
     const legacy = (await readRunProjection(api, identity, true)).snapshot.message.content.find(part => part.type === 'tool-call')
     assert.ok(legacy?.type === 'tool-call' && legacy.timing === undefined)
     await mkdir('artifacts/run-activity', { recursive: true })
-    await writeFile('artifacts/run-activity/runtime.json', JSON.stringify({ passed: true, runtime: '3.3.6', checks: ['published worker', 'explicit public explanation', 'public plan', 'replay', 'measured boundaries', 'cross-tenant denial', 'cross-principal denial', 'historical missing timing'] }, null, 2))
+    await writeFile('artifacts/run-activity/runtime.json', JSON.stringify({ passed: true, runtime: releaseVersions.runtime, checks: ['published worker', 'explicit public explanation', 'public plan', 'replay', 'measured boundaries', 'cross-tenant denial', 'cross-principal denial', 'historical missing timing'] }, null, 2))
   } finally { await worker.stop() }
 })

@@ -63,11 +63,11 @@ export class ForumApplication {
       const project = await this.scope(db, scope, courseId, 'write')
       const item = await this.item(db, scope.companyId, project.projectId, type, id)
       if (flags.pinned !== undefined || item.authorId !== scope.userId) await this.scope(db,scope,courseId,'manage')
-      if (flags.archived !== undefined) await db.query('UPDATE course_forum_posts SET archived=$4,updated_at=NOW() WHERE company_id=$1 AND project_id=$2 AND id=$3', [scope.companyId,project.projectId,id,flags.archived])
-      if (flags.pinned !== undefined) await db.query(`INSERT INTO course_forum_flags(company_id,project_id,target_type,target_id,pinned,updated_by)
-        VALUES ($1,$2,'post',$3,$4,$5) ON CONFLICT(company_id,project_id,target_type,target_id)
-        DO UPDATE SET pinned=EXCLUDED.pinned,updated_by=EXCLUDED.updated_by,updated_at=NOW()`,
-        [scope.companyId,project.projectId,id,flags.pinned,scope.userId])
+      if (type === 'post' && flags.archived !== undefined) await db.query('UPDATE course_forum_posts SET archived=$4,updated_at=NOW() WHERE company_id=$1 AND project_id=$2 AND id=$3', [scope.companyId,project.projectId,id,flags.archived])
+      await db.query(`INSERT INTO course_forum_flags(company_id,project_id,target_type,target_id,pinned,archived,updated_by)
+        VALUES ($1,$2,$3,$4,COALESCE($5,FALSE),COALESCE($6,FALSE),$7) ON CONFLICT(company_id,project_id,target_type,target_id)
+        DO UPDATE SET pinned=COALESCE($5,course_forum_flags.pinned),archived=COALESCE($6,course_forum_flags.archived),updated_by=EXCLUDED.updated_by,updated_at=NOW()`,
+        [scope.companyId,project.projectId,type,id,flags.pinned ?? null,type === 'homework' ? flags.archived ?? null : null,scope.userId])
     })
     return this.detail(scope, courseId, type, id)
   }
@@ -211,7 +211,7 @@ export class ForumApplication {
     return this.transaction(async db => {
       const project = await this.scope(db,scope,courseId,'write')
       await this.item(db,scope.companyId,project.projectId,'post',postId)
-      const result = await db.query<{author_user_id:string}>('SELECT author_user_id FROM course_forum_comments WHERE company_id=$1 AND project_id=$2 AND target_id=$3 AND id=$4 AND deleted_at IS NULL FOR UPDATE',[scope.companyId,project.projectId,postId,commentId])
+      const result = await db.query<{author_user_id:string}>("SELECT author_user_id FROM course_forum_comments WHERE company_id=$1 AND project_id=$2 AND target_type='post' AND target_id=$3 AND id=$4 AND deleted_at IS NULL FOR UPDATE",[scope.companyId,project.projectId,postId,commentId])
       if (!result.rows[0]) throw new LearningApplicationError('not_found','comment not found')
       if (result.rows[0].author_user_id !== scope.userId) {
         if (data) throw new LearningApplicationError('forbidden','only the author can edit a comment')

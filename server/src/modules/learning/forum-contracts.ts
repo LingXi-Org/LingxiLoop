@@ -4,7 +4,7 @@ export const learningLinkSchema = z.string().trim().url().max(2048)
   .refine(value => ['http:', 'https:'].includes(new URL(value).protocol), 'HTTP or HTTPS link required')
 export const learningAttachmentSchema = z.object({ key: z.string().min(1).max(1024), name: z.string().trim().min(1).max(255) }).strict()
 export const learningContentFields = { links: z.array(learningLinkSchema).max(20).default([]), attachments: z.array(learningAttachmentSchema).max(20).default([]) }
-export const forumTargetSchema = z.literal('post')
+export const forumTargetSchema = z.enum(['post','homework'])
 export const forumQuerySchema = z.object({
   kind: z.enum(['all', 'assignment', 'share']).default('all'), search: z.string().trim().max(200).default(''),
   tag: z.string().trim().max(40).default(''), archived: z.enum(['true','false']).default('false'),

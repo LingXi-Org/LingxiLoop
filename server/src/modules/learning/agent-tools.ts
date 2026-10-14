@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { homeworkLearnerTools } from './homework-tools.js'
 import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import { productConversationId } from '../../agent-runtime/identity.js'
 import type { Queryable } from '../../db/queryable.js'
@@ -22,6 +23,7 @@ async function scope(context: ActionContext, action: 'learning:read' | 'learning
 }
 const id=z.string().min(1).max(200)
 export const learningTools: ToolDefinition[] = [
+  ...homeworkLearnerTools,
   nativeTool('learning.list_assignments',z.object({}).strict(),{description:'Read teacher assignments in the current course forum.',effect:'read',approval:false,
     authorize:async context=>{await scope(context)},async execute(context) {
       const s=await scope(context)

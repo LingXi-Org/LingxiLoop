@@ -2,6 +2,7 @@ import { test } from '@e2e-dev/web'
 import { credentials, expect } from 'e2e'
 import { ADMIN_RESOURCES } from '../../admin/src/resources'
 import { recordPath } from '../../admin/src/workspace-model'
+import { submitSignIn } from '../web/accounts'
 
 const hasAccount = (name: string) => Boolean(process.env[`E2E_USER_${name.toUpperCase()}_USERNAME`] && process.env[`E2E_USER_${name.toUpperCase()}_PASSWORD`])
 const platform = hasAccount('admin') ? { session: 'platform-admin' } : { skip: 'Set E2E_USER_ADMIN_USERNAME/PASSWORD for a real platform administrator.' }
@@ -9,12 +10,12 @@ const company = hasAccount('member') ? { session: 'company-admin' } : { skip: 'S
 const mutations = process.env.E2E_MUTATIONS === '1'
 
 for (const [account, sessionName, heading] of [['admin', 'platform-admin', '平台总览'], ['member', 'company-admin', /本公司概览/]] as const) {
-  if (hasAccount(account)) test.setup(`authenticate ${sessionName} through the real control plane`, { sessions: [sessionName] }, async ({ app, screen, session }) => {
+  if (hasAccount(account)) test.setup(`authenticate ${sessionName} through the real control plane`, { sessions: [sessionName] }, async ({ app, screen, browser, session }) => {
     await app.open('/login')
     await screen.getByLabel('邮箱').fill(credentials.user(account).username)
     await screen.getByLabel('密码').fill(credentials.user(account).password)
     await expect(screen.getByRole('button', '登录')).toBeEnabled({ timeout: 60_000 })
-    await screen.getByRole('button', '登录').tap()
+    await submitSignIn({ screen, browser })
     await expect(screen.getByRole('heading', heading)).toBeVisible({ timeout: 60_000 })
     await session.save(sessionName)
   })

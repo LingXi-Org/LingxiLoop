@@ -209,6 +209,13 @@ executions = [
 ]
 
 [[procedure.config.stage]]
+name = "Stop old workers"
+executions = [
+  { execution.type = "StopStack", execution.params.stack = "lingxiloop-app-a", execution.params.services = ["worker"] },
+  { execution.type = "StopStack", execution.params.stack = "lingxiloop-app-b", execution.params.services = ["worker"] },
+]
+
+[[procedure.config.stage]]
 name = "Application A"
 executions = [{ execution.type = "DeployStack", execution.params.stack = "lingxiloop-app-a" }]
 

@@ -5,3 +5,5 @@ export { type LearningPersonaKey, STARTER_ROOMS, STARTER_TEAM } from './preset.j
 export { projectLifecycleProjection } from './project-lifecycle-projection.js'
 export { loadLearningTurnContext, loadTeacherTurnContext } from './runtime.js'
 export { assertNotManagedPulse, assertPulseVisible, assertTeacherRoomAccessible, isTeacherRoom } from './visibility.js'
+
+export { homeworkTeacherTools as teacherTools, loadHomeworkTurnContext } from './homework-tools.js'

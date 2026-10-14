@@ -10,6 +10,9 @@ export const LEARNING_EFFECT_KINDS = [
   'course_archive.sync',
   'member_access.revoke',
   'member_onboarding.seed',
+  'homework.validate',
+  'homework.assess',
+  'homework.report',
 ] as const
 
 export type LearningEffectKind = typeof LEARNING_EFFECT_KINDS[number]

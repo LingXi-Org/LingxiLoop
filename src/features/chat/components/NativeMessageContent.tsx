@@ -121,7 +121,7 @@ function ActivityParts({ Text, footer, mediaFooter, attention }: { Text: TextMes
   const labels = { running: '正在处理', 'requires-action': '需要你确认', complete: '已完成', cancelled: '已停止', incomplete: '尚未完成', error: '任务未完成' }
   const parts = message.parts.map((part, index) => {
     const entry = activityAnnotation(part)
-    const attention = entry?.kind === 'attention' || part.type === 'tool-call' && Boolean(part.approval || part.interrupt || part.isError || part.status.type === 'requires-action' || part.status.type === 'incomplete')
+    const attention = entry?.kind === 'attention' || part.type === 'tool-call' && (part.toolName === 'teacher.draft_homework' || Boolean(part.approval || part.interrupt || part.isError || part.status.type === 'requires-action' || part.status.type === 'incomplete'))
     return { id: entry?.id ?? `part:${index}`, kind: entry?.kind, label: entry?.label ?? '其他内容', attention, running: part.status.type === 'running',
       content: <PartByIndexProvider key={entry?.id ?? index} index={index}><NativePart Text={Text} footer={footer} mediaFooter={mediaFooter} /></PartByIndexProvider> }
   })

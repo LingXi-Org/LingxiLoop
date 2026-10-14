@@ -6,7 +6,7 @@ const itemPath = (courseId: string, item: ForumItem) => `${base(courseId)}/forum
 export const forumApi = {
   list: (courseId: string, query: { kind: ForumFilter; search: string; tag: string; offset: number; archived?: string; from?: string; until?: string; property?: string; order?: string; timeBasis?: string }, signal?: AbortSignal) =>
     http<ForumPage<ForumItem>>(`${base(courseId)}/forum?${new URLSearchParams({ ...query,offset: String(query.offset) })}`, { signal }),
-  detail: (courseId: string, id: string) => http<ForumItem>(`${base(courseId)}/forum/post/${encodeURIComponent(id)}`),
+  detail: (courseId: string, id: string, type: ForumItem['targetType'] = 'post') => http<ForumItem>(`${base(courseId)}/forum/${type}/${encodeURIComponent(id)}`),
   create: (courseId: string, input: { kind: 'share' | 'assignment'; title: string; body: string; tags: string[]; links: string[]; attachments: ForumAttachment[]; sourceId?: string | null; dueAt?: string | null }) =>
     http<ForumItem>(`${base(courseId)}/forum`, { method: 'POST',body: JSON.stringify(input) }),
   flags: (courseId: string, item: ForumItem, flags: Partial<Pick<ForumItem, 'pinned' | 'archived'>>) =>

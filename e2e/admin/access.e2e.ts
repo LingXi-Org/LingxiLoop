@@ -1,5 +1,6 @@
 import { test } from '@e2e-dev/web'
 import { credentials, expect } from 'e2e'
+import { submitSignIn } from '../web/accounts'
 
 test('an authenticated student cannot enter the management workspace', {
   tags: ['admin', 'auth', 'security'],
@@ -11,7 +12,7 @@ test('an authenticated student cannot enter the management workspace', {
   await screen.getByLabel('邮箱').fill(credentials.user('student').username)
   await screen.getByLabel('密码').fill(credentials.user('student').password)
   await expect(screen.getByRole('button', '登录')).toBeEnabled({ timeout: 60_000 })
-  await screen.getByRole('button', '登录').tap()
+  await submitSignIn({ screen, browser })
   await expect(browser).toHaveURL('/forbidden')
   await expect(screen.getByText('需要管理员权限')).toBeVisible()
   await app.open('/users')

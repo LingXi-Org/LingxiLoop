@@ -1,0 +1,1 @@
+Two congruent triangles form a rectangle, so one triangle has area base times perpendicular height divided by two. For base 8 and height 5, the area is 20 square units. For base 10 and height 3, the area is 15 square units. Doubling the height doubles the area.

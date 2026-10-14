@@ -84,7 +84,7 @@ test('product correction commits frozen excerpts and preserves them in IM delive
     const native = JSON.parse(Buffer.from(sent.payload, 'base64').toString())
     assert.equal(native.type,1001)
     assert.deepEqual(nativeData<{ claims: { evidence: unknown }[] }>(native,'citation-claims')?.claims.map(claim=>claim.evidence),[ [expectedEvidence[0]], [expectedEvidence[0]], [expectedEvidence[1]], [expectedEvidence[0],expectedEvidence[2]], [expectedEvidence[3]] ])
-    response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ message_id: 'im-result', message_seq: 1 }))
+    response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ message_id: 'im-result', message_seq: 1, reason: 1 }))
   })
   try {
     await new Promise<void>(resolve => im.listen(0, '127.0.0.1', resolve))

@@ -8,8 +8,9 @@ import { hashPassword } from 'better-auth/crypto'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const environmentFile = path.join(root, '.env.e2e.local')
 if (existsSync(environmentFile)) process.loadEnvFile(environmentFile)
-const config = fileURLToPath(new URL('./wrangler.e2e.jsonc', import.meta.url))
-const state = path.join(root, '.e2e/control-state')
+const homework = process.argv.includes('--homework')
+const config = fileURLToPath(new URL(homework ? '../homework/wrangler.jsonc' : './wrangler.e2e.jsonc', import.meta.url))
+const state = path.join(root, homework ? '.e2e/homework-control-state' : '.e2e/control-state')
 const wrangler = path.join(root, 'node_modules/wrangler/bin/wrangler.js')
 const env = { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' }
 const run = (args) => new Promise((resolve, reject) => {
@@ -49,5 +50,5 @@ try {
 }
 console.log('[e2e] Local control D1 seeded for browser actors and the sacrificial lifecycle account.')
 if (!process.argv.includes('--seed-only')) {
-  await run(['dev', '--local', '--config', config, '--persist-to', state, '--ip', '127.0.0.1', '--port', '8797'])
+  await run(['dev', '--local', '--config', config, '--persist-to', state, '--ip', '127.0.0.1', '--port', homework ? '8798' : '8797'])
 }

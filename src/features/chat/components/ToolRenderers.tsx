@@ -17,6 +17,7 @@ import {
   parsePresentationArtifact,
 } from '@/features/presentations'
 import { useSurface } from '@/stores/surface'
+import { HomeworkDraftTool } from '@/features/learning/homework/HomeworkDraftCard'
 
 interface CardProps {
   args: Record<string, unknown>
@@ -158,3 +159,5 @@ export function PresentationArtifactTool({ args }: Pick<CardProps, 'args'>) {
   if (!artifact) throw new Error('演示文稿产物协议不完整')
   return <PresentationArtifactCard artifact={artifact} onOpen={openPresentation} />
 }
+
+export const TOOL_DETAILS = { 'teacher.draft_homework': HomeworkDraftTool }

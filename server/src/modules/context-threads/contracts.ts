@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const contextTypeSchema = z.enum([
   'LEARNING',
+  'HOMEWORK',
   'TEACHER_TAKEOVER',
   'TEACHER_OPERATIONS',
 ])

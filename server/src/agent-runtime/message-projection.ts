@@ -1,5 +1,6 @@
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { responseSegments, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
+import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
 import { assertLessonCitationSpans, projectLessonText } from './interactive-ui-projection.js'
@@ -32,6 +33,7 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
       const result = event.data.result, value = Reflect.get(result,'value')
       // Retain status and bounded search cards, never complete source text or prompts.
       calls.set(id,{ ...previous,eventSeq: event.seq,result: { status: Reflect.get(result,'status'),
+        ...(toolCardResult(previous.toolName, value) ? { value: toolCardResult(previous.toolName, value) } : {}),
         ...(previous.toolName === 'research.search' ? { sources: researchSources(value) } : {}),
         ...(previous.toolName.startsWith('knowledge.') && value && typeof value === 'object' ? { sourceStatus: Reflect.get(value,'status') } : {}),
         ...(previous.toolName.startsWith('memory.') && Reflect.get(result, 'status') === 'completed' && memoryActivitySchema.safeParse(value).success ? { memory: memoryActivitySchema.parse(value) } : {}),

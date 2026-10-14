@@ -5,6 +5,7 @@ import { resolve } from 'node:path'
 import { parse } from 'dotenv'
 import pg from 'pg'
 import { tsImport } from 'tsx/esm/api'
+import { releaseVersions } from '@lyyzka/lingxios'
 
 // Fail closed: no ambient product DB, model credentials or outbound services are inherited.
 assert.equal(process.argv[2], '--live-generative-ui', 'Explicit --live-generative-ui is required (metered synthetic evaluation).')
@@ -73,7 +74,7 @@ try {
   passed = true
 } finally {
   await writeFile(resolve(output, 'run-metadata.json'), JSON.stringify({ startedAt, finishedAt: new Date().toISOString(), passed,
-    reproduce: `node e2e/server/interactive-ui-live.mjs --live-generative-ui${transportOnly ? ' --transport-only' : ''}`, runtime: '3.3.6', candidate: transportOnly ? null : credentials.EVAL_CANDIDATE_MODEL,
+    reproduce: `node e2e/server/interactive-ui-live.mjs --live-generative-ui${transportOnly ? ' --transport-only' : ''}`, runtime: releaseVersions.runtime, candidate: transportOnly ? null : credentials.EVAL_CANDIDATE_MODEL,
     judge: credentials.EVAL_JUDGE_MODEL, maxModelCalls: 16, maxModelTokens: 200000, maxRunCostUSD: 0.5, maxTotalCostUSD: 5, modelConcurrency: 1,
     database: 'lingxiloop_ui_model_test', identity: 'synthetic test-owner', realWuKong: true, realModel: !transportOnly, authentication: 'isolated test middleware',
   }, null, 2))

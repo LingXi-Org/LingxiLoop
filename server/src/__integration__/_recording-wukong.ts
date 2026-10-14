@@ -15,7 +15,7 @@ export async function installRecordingWukong() {
       const messageSeq = messages.length + 1, messageId = `recorded-${messageSeq}`
       messages.push({ channelId: input.channel_id,channelType: input.channel_type,fromUid: input.from_uid,
         payload,messageId,messageSeq,clientMsgNo: input.client_msg_no,timestamp: Date.now() / 1000 })
-      response.end(JSON.stringify({ message_id: messageId,message_seq: messageSeq }))
+      response.end(JSON.stringify({ message_id: messageId,message_seq: messageSeq,reason: 1 }))
     } else if (request.url === '/channel/messagesync') {
       response.end(JSON.stringify({ messages: messages.filter(message => message.channelId === input.channel_id
         && (!input.start_message_seq || message.messageSeq <= input.start_message_seq)).slice(-(input.limit || 80))

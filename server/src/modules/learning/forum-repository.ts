@@ -7,19 +7,26 @@ export interface ForumItem {
 }
 export async function listForumItems(db: Queryable, companyId: string, projectId: string, query: ForumQuery,
   target?: { type: ForumTarget; id: string }): Promise<ForumItem[]> {
-  const { rows } = await db.query<ForumItem>(`SELECT p.id,'post' AS "targetType",p.kind,p.title,p.body,p.author_user_id AS "authorId",
+  const { rows } = await db.query<ForumItem>(`WITH items AS (
+    SELECT p.id,p.company_id,p.project_id,p.author_user_id,p.kind,p.title,p.body,p.tags,p.links,p.attachments,p.source_id,p.created_at,p.updated_at,p.due_at,p.status,p.archived,p.deleted_at,'post'::text AS target_type FROM course_forum_posts p
+    UNION ALL
+    SELECT h.id,h.company_id,h.project_id,h.created_by,'assignment',h.title,h.instructions,'{}'::text[],
+      h.links,h.attachments,NULL,h.published_at,h.updated_at
+      ,h.due_at,h.status,FALSE,NULL,'homework'
+    FROM homeworks h WHERE h.company_id=$1 AND h.project_id=$2
+  ) SELECT p.id,p.target_type AS "targetType",p.kind,p.title,p.body,p.author_user_id AS "authorId",
     COALESCE(u.display_name,'课程成员') AS "authorName",p.created_at AS "createdAt",p.updated_at AS "updatedAt",p.tags,p.links,p.attachments,
-    p.source_id AS "sourceId",p.due_at AS "dueAt",p.status,COALESCE(f.pinned,FALSE) AS pinned,p.archived,
-    (SELECT COUNT(*)::int FROM course_forum_comments c WHERE c.company_id=p.company_id AND c.project_id=p.project_id AND c.target_id=p.id AND c.deleted_at IS NULL) AS "commentCount",
+    p.source_id AS "sourceId",p.due_at AS "dueAt",p.status,COALESCE(f.pinned,FALSE) AS pinned,CASE WHEN p.target_type='homework' THEN COALESCE(f.archived,FALSE) ELSE p.archived END AS archived,
+    (SELECT COUNT(*)::int FROM course_forum_comments c WHERE c.company_id=p.company_id AND c.project_id=p.project_id AND c.target_type=p.target_type AND c.target_id=p.id AND c.deleted_at IS NULL) AS "commentCount",
     COALESCE((SELECT jsonb_agg(jsonb_build_object('emoji',r.emoji,'userIds',r.users)) FROM
       (SELECT emoji,jsonb_agg(user_id ORDER BY user_id) AS users FROM course_forum_reactions
-       WHERE company_id=p.company_id AND project_id=p.project_id AND post_id=p.id GROUP BY emoji) r),'[]') AS reactions
-    FROM course_forum_posts p LEFT JOIN users u ON u.id=p.author_user_id
-    LEFT JOIN course_forum_flags f ON f.company_id=p.company_id AND f.project_id=p.project_id AND f.target_type='post' AND f.target_id=p.id
+       WHERE p.target_type='post' AND company_id=p.company_id AND project_id=p.project_id AND post_id=p.id GROUP BY emoji) r),'[]') AS reactions
+    FROM items p LEFT JOIN users u ON u.id=p.author_user_id
+    LEFT JOIN course_forum_flags f ON f.company_id=p.company_id AND f.project_id=p.project_id AND f.target_type=p.target_type AND f.target_id=p.id
     WHERE p.company_id=$1 AND p.project_id=$2 AND p.deleted_at IS NULL AND p.status IN ('PUBLISHED','CLOSED')
       AND ($3='all' OR p.kind=$3) AND ($4='' OR POSITION(LOWER($4) IN LOWER(p.title||' '||p.body))>0)
-      AND ($5='' OR $5=ANY(p.tags)) AND ($6::text IS NULL OR p.id=$6)
-      AND ($6::text IS NOT NULL OR p.archived=$7)
+      AND ($5='' OR $5=ANY(p.tags)) AND ($6::text IS NULL OR (p.id=$6 AND p.target_type=$12))
+      AND ($6::text IS NOT NULL OR (CASE WHEN p.target_type='homework' THEN COALESCE(f.archived,FALSE) ELSE p.archived END)=$7)
       AND (p.source_id IS NULL OR EXISTS(SELECT 1 FROM knowledge_sources s WHERE s.id=p.source_id AND s.company_id=p.company_id
         AND s.project_id=p.project_id AND s.visibility_scope='PROJECT' AND s.deleted_at IS NULL))
       AND ($9::timestamptz IS NULL OR p.created_at >= $9) AND ($10::timestamptz IS NULL OR p.created_at < $10)
@@ -27,7 +34,7 @@ export async function listForumItems(db: Queryable, companyId: string, projectId
         OR ($11='links' AND (jsonb_array_length(p.links)>0 OR p.body ~ 'https?://'))
         OR ($11='tasks' AND p.body ~ '(^|\n) *[-*+] \\[([ xX])\\]') OR ($11='code' AND POSITION(repeat(chr(96),3) IN p.body)>0))
     ORDER BY COALESCE(f.pinned,FALSE) DESC,${query.timeBasis === 'updated' ? 'p.updated_at' : 'p.created_at'} ${query.order === 'asc' ? 'ASC' : 'DESC'},p.id ${query.order === 'asc' ? 'ASC' : 'DESC'} LIMIT 51 OFFSET $8`,
-  [companyId,projectId,query.kind ?? 'all',query.search ?? '',query.tag ?? '',target?.id ?? null,query.archived === 'true',query.offset ?? 0,query.from ?? null,query.until ?? null,query.property ?? 'all'])
+  [companyId,projectId,query.kind ?? 'all',query.search ?? '',query.tag ?? '',target?.id ?? null,query.archived === 'true',query.offset ?? 0,query.from ?? null,query.until ?? null,query.property ?? 'all',target?.type ?? null])
   return rows
 }
 export async function listSubmissionVersions(db: Queryable, companyId: string, projectId: string, assignmentId: string, learnerId: string | null, offset: number) {

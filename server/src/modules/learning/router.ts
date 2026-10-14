@@ -4,6 +4,7 @@ import { requireAuth, requireCompany, requireWorkspace } from '../../http/reques
 import type { PermissionAction } from '../access/public.js'
 import { permissionService } from '../access/public.js'
 import { forumRouter } from './forum-router.js'
+import { homeworkRouter } from './homework-router.js'
 import {
   addInstitutionalCourseMemberRequestSchema,
   createProjectInvitationRequestSchema,
@@ -31,6 +32,7 @@ async function requireCoursePermission(
 }
 
 learningRouter.use(forumRouter)
+learningRouter.use(homeworkRouter)
 
 learningRouter.get('/courses', safe(async (req, res) => {
   const scope = await requireCompany(req)
