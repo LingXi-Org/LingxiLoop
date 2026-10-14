@@ -64,7 +64,9 @@ stored configuration differs from the reviewed source; the pending sync has
 parse/deploy errors. Verify these before stopping writers. GitHub Actions sends
 the checked-out `deploy/komodo/resources.toml` through Komodo's configuration API;
 GitHub remains the source of truth, and Core does not fetch the repository for
-this sync. Repeated release attempts must retain separate verified backups.
+this sync. The source must not declare that same unmanaged ResourceSync: Komodo
+otherwise tries to create a duplicate and marks an otherwise successful stack
+deployment as failed. Repeated release attempts must retain separate verified backups.
 
 ## Delivered deletion and retention inventory
 
