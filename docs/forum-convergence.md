@@ -59,6 +59,13 @@ services only if preflight fails before migration. Never automatically start old
 binaries after a successful schema change. A cancelled CI job must not interrupt
 production maintenance; main releases therefore queue instead of cancelling.
 
+Configuration-transfer failure cases: Core cannot reach the Git mirror; the
+stored configuration differs from the reviewed source; the pending sync has
+parse/deploy errors. Verify these before stopping writers. GitHub Actions sends
+the checked-out `deploy/komodo/resources.toml` through Komodo's configuration API;
+GitHub remains the source of truth, and Core does not fetch the repository for
+this sync. Repeated release attempts must retain separate verified backups.
+
 ## Delivered deletion and retention inventory
 
 | Area | Final disposition |
@@ -103,7 +110,7 @@ restore it into a scratch database, compare retained-business counts and record
 the SHA-256. Dump/restore failures restart the stopped old services before any
 migration. A completed schema 40 skips maintenance on later rollouts. The
 production dump is under the PostgreSQL volume's
-`forum-upgrade-backups/<release SHA>/product.dump`, with restore list and hash.
+`forum-upgrade-backups/<release SHA>/<run ID>-<attempt>/product.dump`, with restore list and hash.
 After migration, recovery is a new release or an explicit matched DB/image
 restore; the script never automatically starts old writers against schema 40.
 After Komodo reports a successful update, the release verifies schema 40, confirms

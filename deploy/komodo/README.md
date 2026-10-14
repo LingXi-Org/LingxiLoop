@@ -6,8 +6,13 @@ runs as a systemd service on all three hosts and connects outbound to Core.
 
 `resources.toml` owns the LingxiLoop stacks. Runtime variables and secrets are
 stored in Komodo after being supplied from Sigillo; no `.env` file is committed.
-The release workflow pins immutable images, syncs this resource file, and runs
-the ordered `lingxiloop-production-rollout` procedure.
+The release workflow pins immutable images, sends the checked-out resource file
+through Komodo’s authenticated configuration API, verifies the pending sync, and
+runs the ordered `lingxiloop-production-rollout` procedure. GitHub is the source of
+truth; Core does not need to clone the repository to synchronize configuration.
+Do not edit the ResourceSync file contents manually: the next release replaces
+them with the reviewed repository version. Stack source files still use their
+configured repositories on Periphery.
 
 Before applying `0027_learning_collaboration`, drain affected interactive,
 handoff, Mission and Canvas runs before changing the default rooms' members.

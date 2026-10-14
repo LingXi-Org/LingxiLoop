@@ -47,9 +47,13 @@ psql -X -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -v ON_ERROR_STOP=1
     }
     const sha=process.env.GITHUB_SHA
     if(!/^[a-f0-9]{40}$/.test(sha??'')) throw new Error('A concrete release SHA is required for the backup')
+    const attempt = process.env.GITHUB_RUN_ID
+      ? `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT ?? '1'}`
+      : `local-${Date.now()}`
+    if (!/^(?:[0-9]+-[0-9]+|local-[0-9]+)$/.test(attempt)) throw new Error('Invalid backup attempt identifier')
     const backup=await run(`export PGPASSWORD="$POSTGRES_PASSWORD"
 umask 077
-backup_dir="/var/lib/postgresql/data/forum-upgrade-backups/${sha}"
+backup_dir="/var/lib/postgresql/data/forum-upgrade-backups/${sha}/${attempt}"
 mkdir -p "$backup_dir"
 pg_dump -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc -f "$backup_dir/product.dump"
 pg_restore --list "$backup_dir/product.dump" > "$backup_dir/restore-list.txt"

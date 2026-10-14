@@ -174,9 +174,13 @@ jobs:
               - 'scripts/update-deployment-images.mjs'
               - 'scripts/trigger-komodo-rollout.mjs'
               - 'scripts/prepare-forum-rollout.mjs'
+              - 'scripts/sync-komodo-config.mjs'
               - 'scripts/test-distributed-realtime.mjs'
               - 'scripts/test-native-agent-*.mjs'
             deployment:
+              - 'scripts/trigger-komodo-rollout.mjs'
+              - 'scripts/prepare-forum-rollout.mjs'
+              - 'scripts/sync-komodo-config.mjs'
               - 'deploy/**'
               - '!deploy/**/*.md'
             control_migrations:
