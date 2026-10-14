@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-10-14T15:34:44.331Z",
+  "reproduce": "node e2e/server/run.mjs --file dependency-readiness.test.ts",
+  "status": "passed",
+  "counts": {
+    "tests": 2,
+    "pass": 2,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "results": [
+    {
+      "command": "docker compose -f e2e/server/compose.yaml up -d --wait",
+      "startedAt": "2026-10-14T15:34:35.128Z",
+      "finishedAt": "2026-10-14T15:34:35.746Z",
+      "exitCode": 0
+    },
+    {
+      "command": "/workspace/.tools/node-v22.23.3-linux-x64/bin/node --import tsx server/src/migrate-bin.ts",
+      "startedAt": "2026-10-14T15:34:35.746Z",
+      "finishedAt": "2026-10-14T15:34:36.867Z",
+      "exitCode": 0
+    },
+    {
+      "command": "/workspace/.tools/node-v22.23.3-linux-x64/bin/node server/run-integration-tests.mjs --file dependency-readiness.test.ts",
+      "startedAt": "2026-10-14T15:34:36.867Z",
+      "finishedAt": "2026-10-14T15:34:44.331Z",
+      "exitCode": 0
+    }
+  ],
+  "log": "artifacts/forum/verified/dependency-readiness.log",
+  "selectedFiles": [
+    "dependency-readiness.test.ts"
+  ],
+  "limitations": [
+    "Open Notebook is a controlled HTTP fixture; PostgreSQL and Redis are real disposable local services.",
+    "No live model, external R2 or production credential is used by this integration test."
+  ],
+  "regressionBeforeFix": {
+    "baseCommit": "4deaa9a44670375f353b078eff447cc66409efb0",
+    "status": "failed-as-expected",
+    "healthyUpstreamDelayMs": 3500,
+    "actualHttpStatus": 503,
+    "expectedHttpStatus": 200
+  }
+}
