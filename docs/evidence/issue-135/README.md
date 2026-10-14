@@ -61,7 +61,9 @@ assistant's default context and tool catalog for absent capability mentions.
   uploads this file as `available-capabilities-<commit>`.
 - `artifacts/e2e/server-targeted-validation.json`: repeatable integration command,
   selected files, counts and linked log.
-- `.e2e/issue-135/report.json` and screenshot artifacts: official browser results.
+- `.e2e/issue-135/report.json`, `summary.md` and `run-metadata.json`: official
+  browser assertions and reproduction details. Credential-backed sessions prohibit
+  screenshots; this gate retains the assertion report without bypassing that rule.
 
 No prompt payloads, credentials, or production conversations are retained.
 Unavailable actions must remain unsatisfied; a truthful explanation is not an

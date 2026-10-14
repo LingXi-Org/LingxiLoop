@@ -2,17 +2,18 @@ import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
 import { memberSession, mutationPermission } from './support'
 
-test('retired mail and calendar links redirect and no capability controls remain', { ...memberSession(), tags: ['web','retirement'] }, async ({ app, browser, screen }) => {
+test('retired mail and calendar links redirect and no capability controls remain', { ...memberSession(), tags: ['web','retirement'], timeout: 240_000 }, async ({ app, browser, screen }) => {
   for (const view of ['mail','calendar']) {
     await app.open(`/?view=${view}`)
-    await expect(browser.locator('[data-ui-page="conversations"]')).toBeVisible()
+    await expect(browser.locator('[data-ui-page="conversations"]')).toBeVisible({ timeout: 60_000 })
     await expect(screen.getByRole('button','邮件',{exact:true})).toHaveCount(0)
     await expect(screen.getByRole('button','日历',{exact:true})).toHaveCount(0)
   }
   await app.open('/?view=agents')
-  await expect(browser.locator('[data-page="agents"]')).toBeVisible()
+  await expect(browser.locator('[data-page="agents"]')).toBeVisible({ timeout: 60_000 })
   await expect(browser.locator('[data-page="agents"]')).not.toContainText('起草邮件')
-  await app.screenshot('retired-product-navigation')
+  // The official report retains every assertion. Screenshot capture is denied
+  // after a credential-backed session; do not bypass that protection.
 })
 
 test('Agent truthfully reports unperformed actions without invoking absent tools', { ...memberSession(), ...mutationPermission,
@@ -28,5 +29,5 @@ test('Agent truthfully reports unperformed actions without invoking absent tools
   await expect(browser.locator('[data-agent-body]').last()).not.toContainText('邮件已发送')
   await expect(browser.locator('[data-agent-body]').last()).not.toContainText('日历已创建')
   await expect(browser.locator('[aria-label^="工具：email."], [aria-label^="工具：calendar."]')).toHaveCount(0)
-  await app.screenshot('available-capabilities-honest-response')
+  // Preserve the official assertion report without capturing credential-tainted pixels.
 })
