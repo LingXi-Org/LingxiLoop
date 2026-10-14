@@ -182,9 +182,10 @@ test('[live] homework normal authentication, real production worker, measured mo
     await phase('shared-ledger-reconciliation')
     const ledger = (await pool.query<{ purpose: string; source: string; model: string; input: number; output: number; measured: boolean; status: string }>(
       `SELECT purpose,source,model,input_tokens AS input,output_tokens AS output,measured,status FROM llm_calls WHERE company_id=$1 ORDER BY created_at`, [companyId])).rows
-    assert.ok(ledger.length > 0 && ledger.every(call => call.measured && call.status === 'succeeded'), 'Every product model call must have measured successful shared-ledger usage')
+    assert.ok(ledger.length > 0 && ledger.every(call => call.measured && ['succeeded', 'failed'].includes(call.status)), 'Every paid provider attempt, including rejected protocol output, must retain measured shared-ledger usage')
     for (const purpose of ['homework.validate', 'homework.report']) assert.ok(ledger.some(call => call.purpose === purpose), `Missing host ledger purpose ${purpose}`)
     const candidateReceipts = meter.snapshot().receipts.filter(receipt => receipt.role === 'CANDIDATE')
+    assert.equal(ledger.length, candidateReceipts.length, 'Every measured provider attempt must have exactly one shared-ledger entry')
     assert.equal(ledger.reduce((sum, call) => sum + call.input, 0), candidateReceipts.reduce((sum, receipt) => sum + receipt.inputTokens, 0), 'Ledger input tokens must reconcile to all provider calls')
     assert.equal(ledger.reduce((sum, call) => sum + call.output, 0), candidateReceipts.reduce((sum, receipt) => sum + receipt.outputTokens, 0), 'Ledger output tokens must reconcile to all provider calls')
     assert.equal(meter.snapshot().failed, false)
