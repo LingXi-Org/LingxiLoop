@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const publicText = z.string().trim().min(1).max(8000).refine(value =>
+export const publicText = z.string().trim().min(1).max(8000).refine(value =>
   !/<\/?(?:think|analysis|system|scratchpad)>|<\|(?:im_start|im_end|channel|analysis)|\b(?:sk-[a-zA-Z0-9]{16,}|Bearer\s+[a-zA-Z0-9._-]{16,})/i.test(value),
 '公开说明不能包含内部推理、协议或凭据')
 
@@ -45,6 +45,15 @@ export const toolDisplaySchema = z.object({
 export type ToolDisplay = z.infer<typeof toolDisplaySchema>
 
 const labels: Record<string, readonly [string, string]> = {
+  'memory.list': ['查看记忆', '查看当前对话可用的记忆。'],
+  'memory.read': ['读取记忆', '阅读与当前任务有关的记忆。'],
+  'memory.search': ['搜索记忆', '查找与当前问题相关的记忆。'],
+  'memory.apply': ['保存记忆', '保存本次请求中的记忆变更。'],
+  'memory.history': ['查看记忆历史', '查看这条记忆的历史版本。'],
+  'memory.restore': ['恢复记忆', '恢复指定版本的记忆。'],
+  'memory.forget': ['忘记记忆', '清除指定范围内的记忆。'],
+  'memory.reflect': ['整理记忆', '安排整理已有记忆。'],
+  'memory.doctor': ['检查记忆', '检查记忆的冲突和可用状态。'],
   'research.search': ['查找资料', '搜索与当前问题相关的公开资料。'],
   'research.read': ['阅读网页', '核对已找到的网页内容。'],
   'knowledge.search': ['检索课程资料', '在你有权访问的课程资料中查找依据。'],
@@ -80,6 +89,7 @@ const groups: Record<string, readonly [string, string]> = {
 
 /** Closed copy catalog: never use raw action identifiers or provider errors as labels. */
 export function toolDisplay(action: string, status?: unknown): ToolDisplay {
+  action = action.replace(/^memory__/, 'memory.')
   const [title, purpose] = labels[action] ?? groups[action.split('.')[0]] ?? ['处理任务', '执行当前任务中已授权的操作。']
   const summaries: Record<string, string> = {
     completed: '这一步已完成。', failed: '这一步未完成，请检查相关信息后重试。',

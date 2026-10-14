@@ -102,12 +102,12 @@ export const homeworkTeacherTools:ToolDefinition[]=[
       const detail=homeworkId?await application(db).updateDraft(scope,binding.courseId,homeworkId,{...draft,expectedRevision:expectedRevision!})
         :await application(db).draft(scope,binding.courseId,draft)
       return {ok:true,executionState:'succeeded',value:{result:{homeworkId:detail.homework.id,courseId:binding.courseId,revision:detail.homework.revision},
-        state:{revision:detail.homework.revision,visibleHash:detail.homework.visibleHash}}}
+        state:{revision:detail.homework.revision,visibleHash:detail.homework.visibleHash,title:detail.homework.title}}}
     },
     async verify(context,_input,value) {
-      const {db,binding,scope}=await teacher(context),stored=value as {result:{homeworkId:string};state:{revision:number;visibleHash:string}}
+      const {db,binding,scope}=await teacher(context),stored=value as {result:{homeworkId:string};state:{revision:number;visibleHash:string;title:string}}
       const hw=await homeworkRow(db,scope,binding.courseId,stored.result.homeworkId)
-      return compareResource(`homework:${hw.id}`,stored.state,{revision:hw.revision,visibleHash:hw.visible_hash})
+      return compareResource(`homework:${hw.id}`,stored.state,{revision:hw.revision,visibleHash:hw.visible_hash,title:hw.title})
     },
   }),
   nativeTool('teacher.homework_overview',z.object({homeworkId:id.optional(),learnerId:id.optional(),

@@ -1144,11 +1144,18 @@ test('[integration] native teacher revisions update the same draft and require f
           audience: { visibility: 'conversation', participantIds: [teacher.userId, colleague.userId, binding.agentId] } } },
       action: { runId: 'homework-teacher-tool', cellId: 'draft', callIndex: 0, action: tool.action, args: data, idempotencyKey: 'native-draft-edit' },
     } as unknown as import('@lyyzka/lingxios').ActionContext
-    return transaction(async db => { const action = { ...context, database: db }; await tool.authorize(action, data); return tool.execute(action, data) })
+    return transaction(async db => {
+      const action = { ...context, database: db }; await tool.authorize(action, data)
+      const result = await tool.execute(action, data)
+      if (result.ok) assert.equal((await tool.verify!(action, data, result.value)).status, 'passed')
+      return result
+    })
   }
   const edit = { ...visible, title: 'Agent-revised exact title', homeworkId: draft.homework.id, expectedRevision: draft.homework.revision }
   await assert.rejects(invoke(colleague, edit))
-  await invoke(teacher, edit)
+  const receipt = await invoke(teacher, edit)
+  assert.ok(receipt.ok)
+  assert.equal((receipt.value as { state: { title: string } }).state.title, edit.title)
   const updated = await homework.detail(teacher, courseId, draft.homework.id)
   assert.deepEqual({ id: updated.homework.id, title: updated.homework.title, revision: updated.homework.revision, validation: updated.homework.validation.status },
     { id: draft.homework.id, title: edit.title, revision: draft.homework.revision + 1, validation: 'PENDING' })

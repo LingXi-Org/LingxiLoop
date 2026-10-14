@@ -13,7 +13,7 @@ const participants: Record<string, Participant> = {
 
 // Failure cases: legacy metadata/tool names leaking from IM, cached JSON or nested messages;
 // removing ordinary text or unrelated tools, or mutating the persisted input.
-test('memory is removed on history and cache normalization, including nested tool messages', () => {
+test('memory steps survive history and cache normalization without legacy private payloads', () => {
   const memory = { chips: [{ id: 'm', text: 'PRIVATE SUMMARY' }], calls: {}, revision: 1 }
   const calls = ['memory.apply', 'memory__read'].map(toolName => ({ type: 'tool-call' as const,
     toolCallId: toolName, toolName, args: { note: 'PRIVATE ARGUMENT' }, argsText: '{}', result: 'PRIVATE RESULT' }))
@@ -24,9 +24,11 @@ test('memory is removed on history and cache normalization, including nested too
       { type: 'tool-call', toolCallId: 'other', toolName: 'documents.read', args: {}, argsText: '{}', messages: [child] }] })
   const original = JSON.stringify(payload)
   const result = convertEnvelope({ ...envelope('text'), fromUid: 'agent', payload }, { participants, meId: 'me' })
-  assert.deepEqual(result.content.map(part => part.type), ['text', 'tool-call'])
+  assert.deepEqual(result.content.map(part => part.type), ['tool-call', 'tool-call', 'text', 'tool-call'])
   assert.equal(result.metadata.custom.sourceRef, 'source')
-  assert.doesNotMatch(JSON.stringify(result), /PRIVATE|memory[._]|"memory"/)
+  assert.doesNotMatch(JSON.stringify(result), /PRIVATE/)
+  assert.equal(result.metadata.custom.memory, undefined)
+  assert.match(JSON.stringify(result), /memory.apply|memory__read/)
   assert.match(JSON.stringify(result), /ordinary reply|child reply|documents.read/)
   assert.deepEqual(deserializeMessage(serializeMessage(result)), result)
   assert.equal(JSON.stringify(payload), original)

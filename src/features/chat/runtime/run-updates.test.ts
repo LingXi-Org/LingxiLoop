@@ -233,13 +233,13 @@ test('snapshots preserve IM order after reload and older history does not move t
   assert.equal(state.messages[3]!.createdAt.getTime(), epoch + 2000)
 })
 
-test('memory stays absent from run replies, HTTP replay and IM merging', () => {
+test('memory activity survives run replies, HTTP replay and IM merging', () => {
   const events = [
     { runId: 'run', seq: 1, kind: 'tool.started', stage: 'started' as const, visibility: 'user' as const,
       data: { toolCallId: 'host:memory', name: 'memory.apply' } },
     { runId: 'run', seq: 2, kind: 'tool.completed', stage: 'completed' as const, visibility: 'user' as const,
       data: { toolCallId: 'host:memory', result: { status: 'completed', value: {
-        documents: [{ id: 'memory', description: '喜欢中文', status: 'active', body: 'private' }], deleted: [],
+        documents: [{ id: 'memory', title: '偏好', description: '喜欢中文', version: 1, status: 'active', body: 'private' }], deleted: [],
       } } } },
   ]
   const response = { ...snapshot(), events, nextSeq: 2, diagnostics: null, canControl: true }
@@ -249,15 +249,20 @@ test('memory stays absent from run replies, HTTP replay and IM merging', () => {
   assert.equal(metadata(state.messages[0]).memory, undefined)
   const main = state.messages[1], memory = metadata(main).memory
   assert.equal(memory, undefined)
-  assert.doesNotMatch(JSON.stringify(main), /喜欢中文|memory[._]/)
+  const call = main.content.find(part => part.type === 'tool-call' && part.toolName === 'memory.apply')
+  assert.ok(call?.type === 'tool-call')
+  assert.deepEqual((call.result as { memory: unknown }).memory, { chips: [{ id: 'memory', text: '喜欢中文', version: 1, change: 'added' }] })
+  assert.doesNotMatch(JSON.stringify(main), /private/)
   const committed = { ...main, metadata: { ...main.metadata,
     custom: { ...metadata(main), sequence: 2, clientMessageId: 'canonical' } } } as ThreadMessage
   const merged = mergeCanonicalMessages(state.messages, [committed])
+  assert.deepEqual(merged[1].content, main.content)
   assert.deepEqual(metadata(merged[1]).memory, memory)
   assert.deepEqual(applyRunUpdate({ ...state, messages: merged }, target, { type: 'state', state: response }, participants.agent, response)
     .messages.map(message => metadata(message).memory), [undefined, memory])
   const stale = { ...response, memory: { chips: [{ id: 'memory', text: 'stale' }], calls: {}, revision: 1 } }
   assert.deepEqual(metadata(applyRunUpdate(state, target, { type: 'state', state: stale }, participants.agent, stale).messages[1]).memory, memory)
+  assert.deepEqual(applyRunUpdate(state, target, { type: 'state', state: stale }, participants.agent, stale).messages[1].content, main.content)
 })
 
 test('reload keeps interleaved user clusters when run start times disagree with committed message order', () => {

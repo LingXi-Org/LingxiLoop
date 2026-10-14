@@ -3,10 +3,12 @@ import { researchSources } from '../../../src/lib/researchSources.js'
 import { publicActivitySchema } from '../../../src/lib/runActivity.js'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
+import { memoryActivity } from '../../../src/lib/memoryActivity.js'
 
 /** User transport allowlist; full results remain private to the native runtime. */
 export function publicToolValue(action: string, value: unknown): unknown {
   if (action === 'teacher.draft_homework') return toolCardResult(action, value)
+  if (action.startsWith('memory.')) return memoryActivity(action, value)
   if (action === 'chat.report_progress') {
     const parsed = publicActivitySchema.safeParse(value)
     return parsed.success ? parsed.data : undefined
@@ -27,7 +29,7 @@ export function publicRunEvent(event: RunEvent, action = ''): RunEvent {
   if (event.kind === 'tool.started') return { ...event, data: { toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, name: event.data.name } }
   if (event.kind !== 'tool.completed') return event
   const raw = event.data.result && typeof event.data.result === 'object' ? event.data.result : {}
-  const value = publicToolValue(action, Reflect.get(raw, 'value'))
+  const value = action.startsWith('memory.') && Reflect.get(raw, 'status') !== 'completed' ? undefined : publicToolValue(action, Reflect.get(raw, 'value'))
   return { ...event, data: { toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, isError: event.data.isError === true,
     result: { status: Reflect.get(raw, 'status'), ...(value === undefined ? {} : { value }),
       ...(typeof Reflect.get(raw, 'approvalId') === 'string' ? { approvalId: Reflect.get(raw, 'approvalId') } : {}) } } }
