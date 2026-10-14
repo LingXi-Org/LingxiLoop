@@ -13,7 +13,7 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 import { installRecordingWukong } from './_recording-wukong.js'
 
 // Failure cases: missing native methods, lost recall, unreviewed protected changes,
-// stale writes, leaked summaries/tool names in HTTP replay, and incomplete forgetting.
+// stale writes, missing steps in HTTP/SSE/IM replay, private payload leaks and incomplete forgetting.
 let server: Server, baseUrl: string, worker: ReturnType<typeof createWorker> | undefined
 let recording: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async()=>{
@@ -24,7 +24,7 @@ before(async()=>{
 })
 after(async()=>{ await worker?.stop();await teardownAll(server);await recording?.close() })
 
-test('native memory writes remain Agent-only and preserve reviewed versioned writes',async()=>{
+test('native memory steps reach Run Activity and preserve reviewed versioned writes',async()=>{
   const { companyId,projectId,agentId }=await seedCompanyWithAgent()
   await seedUserMembership('test-owner',companyId)
   const conversationId='memory-room',members=['test-owner',agentId]
@@ -91,14 +91,15 @@ test('native memory writes remain Agent-only and preserve reviewed versioned wri
     assert.ok(completion,`${name} must execute`)
     const result=completion.data.result as {status:string;value?:unknown}
     const projection=await readRunProjection(app,actionRun,true)
-    assert.doesNotMatch(JSON.stringify(projection.snapshot),/memory[._]|Checked learning note|"memory"/)
+    assert.ok(projection.snapshot.message.content.some(part=>part.type==='tool-call' && part.toolName===`memory.${name}`))
+    assert.doesNotMatch(JSON.stringify(projection.snapshot),/im-memory:|Fencing rejects stale workers|Explicitly checked and updated fencing/)
     const response=await fetch(`${baseUrl}/channels/${conversationId}/agents/${agentId}/runs/${actionRun.runId}`,{headers:{'x-company-id':companyId}})
     assert.equal(response.status,200)
-    assert.doesNotMatch(await response.text(),/memory[._]|Checked learning note|"memory"/)
+    assert.match(await response.text(),new RegExp(`memory\\.${name}`))
     const stream=await fetch(`${baseUrl}/companies/${companyId}/channels/${conversationId}/agents/${agentId}/runs/${actionRun.runId}/stream`,
       {headers:{'x-company-id':companyId},signal:AbortSignal.timeout(15000)})
     assert.equal(stream.status,200)
-    assert.doesNotMatch(await stream.text(),/memory[._]|Checked learning note|"memory"/)
+    assert.match(await stream.text(),new RegExp(`memory\\.${name}`))
     return {result,identity:{...identity,sessionId:actionRun.sessionId,workId:actionRun.runId}}
   }
   let index=0
@@ -130,5 +131,7 @@ test('native memory writes remain Agent-only and preserve reviewed versioned wri
     assert.ok(Date.now()<deadline,'all completed runs must reach durable IM delivery')
     await delay(50)
   }
-  for(const message of recording.messages) assert.doesNotMatch(JSON.stringify(message.payload),/memory[._]|Checked learning note|"memory"/)
+  const delivered=JSON.stringify(recording.messages.map(message=>message.payload))
+  for(const name of methods) assert.ok(delivered.includes(`memory.${name}`),`${name} reaches durable history`)
+  assert.doesNotMatch(delivered,/im-memory:|Fencing rejects stale workers|Explicitly checked and updated fencing/)
 })

@@ -12,8 +12,11 @@ import { knowledgeProgress } from '../runtime/task-progress'
 import { ApprovalRequestCard } from './ApprovalRequestCard'
 import { MessagePartBoundary } from './MessagePartBoundary'
 import { ResearchSources } from './ResearchSources'
+import { MemoryTool } from './MemoryTool'
+import { memoryActivitySchema } from '@/lib/memoryActivity'
 
 export const hasRichTool = (name: string) => /^(email|calendar)\./.test(name) || name === 'research.search'
+  || /^memory(?:\.|__)/.test(name)
   || ['knowledge.search', 'knowledge.read_source', 'knowledge.list_sources'].includes(name)
 
 export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean; children?: ReactNode }) {
@@ -29,6 +32,7 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
   const [error, setError] = useState<string | null>(null)
   const inFlight = useRef(false)
   const resultStatus = result && typeof result === 'object' && 'status' in result ? result.status : undefined
+  const memory = memoryActivitySchema.safeParse(result && typeof result === 'object' ? Reflect.get(result, 'memory') : undefined)
   const ended = message.status?.type === 'complete' || message.status?.type === 'incomplete'
   const pending = approval && approval.approved === undefined && !approval.resolution && !ended
   const permitted = !readOnly && custom.harnessControl === true && typeof custom.runId === 'string'
@@ -86,6 +90,7 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
         {props.timing?.completedAt !== undefined && <p>耗时 {((props.timing.completedAt - props.timing.startedAt) / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 秒</p>}
       </div>}
       {hasRichTool(toolName) && (result !== undefined || displayStatus.type === 'running') && <MessagePartBoundary resetKey={result} running={displayStatus.type === 'running'}>
+        {/^memory(?:\.|__)/.test(toolName) && resultStatus === 'completed' && !isError && memory.success && <MemoryTool memory={memory.data} readOnly={readOnly} />}
         {toolName === 'research.search' && <ResearchSources calls={[props]} lifecycle={lifecycle} />}
         {retrieval && <ProgressTracker {...retrieval} />}
       </MessagePartBoundary>}

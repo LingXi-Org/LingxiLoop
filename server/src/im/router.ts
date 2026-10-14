@@ -1,4 +1,7 @@
 import { assistantRunResponse, readRunProjection } from '../agent-runtime/assistant-transport.js'
+import { NoEffectError } from '@lyyzka/lingxios'
+import { memoryIdSchema } from '../../../src/lib/memoryActivity.js'
+import { readMemoryChips, forgetMemoryChip } from '../modules/memory/public.js'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { pool } from '../db/pool.js'
@@ -189,6 +192,37 @@ imRouter.post('/channels/:id/agents/:agentId/runs/:runId/reconcile', safe(async 
   const { actionKey, threadId } = requestInput(lingxiOSReconcileSchema,req.body)
   res.json(await (await lingxiOSControl()).reconcileAction({ ...await productRunIdentity({ companyId, conversationId: sessionId, principalId: userId,
     agentId: String(req.params.agentId), runId: String(req.params.runId), ...threadId ? { threadId } : {} }), actionKey }))
+}))
+
+async function memoryForCaller(req: Request & AuthedRequest, action: 'agent_memory:read' | 'agent_memory:write', threadId?: string) {
+  const { userId, companyId } = await identity(req), conversationId = String(req.params.id)
+  const access = await requireConversationMember(req, conversationId, action)
+  const projectId = requestedProjectId(req)
+  if (projectId && projectId !== access.projectId) throw new HttpError(403, 'conversation belongs to another workspace')
+  await assertTeacherRoomAccessible(conversationId, companyId, userId)
+  const run = await productRunIdentity({ companyId, conversationId, principalId: userId, agentId: String(req.params.agentId),
+    runId: String(req.params.runId), ...(threadId ? { threadId } : {}) })
+  const memory = (await lingxiOSControl()).memory
+  if (!memory) throw new HttpError(503, '记忆暂时不可用。')
+  return { memory, identity: { ...run, workId: run.runId } }
+}
+
+imRouter.get('/channels/:id/agents/:agentId/runs/:runId/memory', safe(async (req, res) => {
+  const { ids, threadId } = requestInput(lingxiOSRunQuerySchema.extend({
+    ids: z.string().max(20100).transform(value => value.split(',')).pipe(z.array(memoryIdSchema).min(1).max(100)),
+  }), req.query)
+  const { memory, identity } = await memoryForCaller(req, 'agent_memory:read', threadId)
+  res.setHeader('Cache-Control', 'no-store')
+  try { res.json(await readMemoryChips(memory, identity, ids)) }
+  catch (error) { if (error instanceof NoEffectError && error.code === 'forbidden') throw new HttpError(403, '这条记忆已不可访问。'); throw error }
+}))
+
+imRouter.delete('/channels/:id/agents/:agentId/runs/:runId/memory/:memoryId', safe(async (req, res) => {
+  const id = requestInput(memoryIdSchema, req.params.memoryId)
+  const { expectedVersion, threadId } = requestInput(lingxiOSRunCancelSchema.extend({ expectedVersion: z.number().int().positive().safe() }), req.body)
+  const { memory, identity } = await memoryForCaller(req, 'agent_memory:write', threadId)
+  try { await forgetMemoryChip(memory, identity, id, expectedVersion); res.json({ ok: true }) }
+  catch (error) { if (error instanceof NoEffectError && error.code === 'forbidden') throw new HttpError(403, '这条记忆已不可访问。'); throw error }
 }))
 
 imRouter.get('/channels/:id/agents/:agentId/runs/:runId/artifact', safe(async (req, res) => {
