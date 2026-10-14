@@ -17,7 +17,7 @@ import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembers
 test('live model uses the product collaboration rules and ends a public specialist chain', {
   skip: process.env.LINGXIOS_LIVE_GROUP_MENTIONS !== '1', timeout: 360000,
 }, async () => {
-  assert.equal(new URL(process.env.DATABASE_URL!).pathname, '/lingxiloop_mentions_model_test')
+  assert.equal(new URL(process.env.DATABASE_URL!).pathname, '/lingxiloop_release_mentions_model_test')
   const output = 'artifacts/group-mentions/live'
   await mkdir(output, { recursive: true })
   await writeFile(`${output}/results.json`, JSON.stringify({ passed: false }))
