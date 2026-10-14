@@ -1,0 +1,8 @@
+{
+  "runId": "01a138cb-066c-72e8-b1ab-e193d37a3021",
+  "passed": true,
+  "checks": ["forum browser journey: 1 passed", "web typecheck", "E2E typecheck", "scoped Biome lint"],
+  "reproduce": "node e2e/server/forum.mjs --browser-only",
+  "localEnvironment": "Used the existing isolated forum-layout launcher on PostgreSQL port 55433; same guarded lingxiloop_forum_test database. See ../memos-layout/validation.json for launcher setup.",
+  "limitations": ["Synthetic identities; no production-account writes.", "Removal is limited to the forum sidebar entry; existing resource content remains accessible in the feed."]
+}

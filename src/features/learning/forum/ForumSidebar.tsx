@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeftIcon, BookOpenIcon, ClipboardListIcon, MenuIcon, MessageCircleIcon, SparklesIcon } from 'lucide-react'
+import { ArrowLeftIcon, ClipboardListIcon, MenuIcon, MessageCircleIcon, SparklesIcon } from 'lucide-react'
 import { zhCN } from 'react-day-picker/locale'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -11,7 +11,6 @@ import type { ForumFilter } from './contracts'
 export const forumSections = [
   { kind: 'all', label: '自由论坛', icon: MessageCircleIcon },
   { kind: 'assignment', label: '作业', icon: ClipboardListIcon },
-  { kind: 'resource', label: '资料', icon: BookOpenIcon },
   { kind: 'case', label: '作品案例', icon: SparklesIcon },
 ] satisfies Array<{ kind: ForumFilter; label: string; icon: typeof MessageCircleIcon }>
 
