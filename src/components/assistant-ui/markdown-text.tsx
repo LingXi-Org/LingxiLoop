@@ -134,7 +134,7 @@ function CitationBlock(props: BlockProps) {
 
 // New tail offsets must not reparse every already completed citation block.
 const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, ...props }: BlockProps & {
-  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly MentionTarget[]
+  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]
 }) {
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
@@ -186,7 +186,6 @@ const MarkdownTextImpl = ({
           rehypePlugins={rehypePlugins}
           components={confidenceComponents}
           controls
-          components={confidenceComponents}
           parseIncompleteMarkdown
           {...hasCitations ? { BlockComponent: CitationBlock } : {}}
           className={`im-markdown${agent ? ' im-markdown-agent' : ''}`}
