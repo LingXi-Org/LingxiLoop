@@ -309,7 +309,7 @@ for (const [version, pending] of [['3.3.0', 25], ['3.3.1', 26], ['3.3.2', 28], [
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query('SELECT runtime_version,schema_version,protocol_version,schema_sha256 FROM lingxios_installation')).rows,
-      [{ runtime_version: '3.3.7', schema_version: 11, protocol_version: 11, schema_sha256: installation[0].schema_sha256 }])
+      [{ runtime_version: releaseVersions.runtime, schema_version: 11, protocol_version: 11, schema_sha256: installation[0].schema_sha256 }])
     assert.deepEqual((await database.query(`SELECT table_name,column_name,data_type FROM information_schema.columns
       WHERE table_schema='lingxios' ORDER BY table_name,ordinal_position`)).rows, schemaBefore)
     assert.deepEqual((await database.query("SELECT id FROM users WHERE id='patch-user'")).rows, [{ id: 'patch-user' }])

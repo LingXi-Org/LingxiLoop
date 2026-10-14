@@ -41,7 +41,7 @@ test('real learning records allow honest report pairs, closed return without new
     const channelId = (await detail(id)).student.channelId
     await expect.poll(async () => {
       const runs = await api(`/api/im/channels/${channelId}/runs`) as { status: string }[]
-      return runs.length > 0 && runs.every(run => ['succeeded', 'failed', 'cancelled'].includes(run.status))
+      return runs.length > 0 && runs.every(run => ['succeeded', 'partial', 'blocked', 'failed', 'cancelled'].includes(run.status))
     }, { timeout: 300_000 }).toBe(true)
   }
   const publish = async (name: string, materials: boolean) => {
@@ -73,7 +73,7 @@ test('real learning records allow honest report pairs, closed return without new
     }
     await expect.poll(async () => {
       const runs = await currentRuns()
-      return runs.length > 0 && runs.every(run => ['succeeded', 'failed', 'cancelled'].includes(run.status))
+      return runs.length > 0 && runs.every(run => ['succeeded', 'partial', 'blocked', 'failed', 'cancelled'].includes(run.status))
     }, { timeout: 300_000 }).toBe(true)
     const completedRuns = await currentRuns()
     evidence[materials ? 'teacherDraftRun' : 'quickDraftRun'] = { runs: completedRuns, lockedWhileRunningObserved }
