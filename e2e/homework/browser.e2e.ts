@@ -32,7 +32,7 @@ test('real learning records allow honest report pairs, closed return without new
     await expect(screen.getByRole('dialog', name, { exact: true })).toBeVisible()
   }
   const say = async (text: string) => {
-    const composer = browser.locator('[contenteditable="true"]').first()
+    const composer = browser.locator('[data-composer-column] [contenteditable="true"]')
     await expect(composer).toBeVisible(); await composer.fill(text); await screen.getByRole('button', '发送', { exact: true }).tap()
     await expect(browser.locator('[data-msg-id]').filter({ hasText: text })).toBeVisible()
   }
@@ -48,7 +48,7 @@ test('real learning records allow honest report pairs, closed return without new
     await checkpoint(materials ? 'teacher-draft-native-card' : 'quick-check-draft-native-card')
     await forum(); await screen.getByRole('button', '发布作业', { exact: true }).tap()
     await expect.poll(() => browser.evaluate(() => Boolean(new URL(location.href).searchParams.get('conversation'))), { timeout: 60_000 }).toBe(true)
-    await expect(browser.locator('[contenteditable="true"]').first()).toBeVisible()
+    await expect(browser.locator('[data-composer-column] [contenteditable="true"]')).toBeVisible()
     teacherChannelId = await browser.evaluate(() => new URL(location.href).searchParams.get('conversation') ?? '')
     expect(Boolean(teacherChannelId)).toBe(true)
     const teacherRuns = async () => await api(`/api/im/channels/${teacherChannelId}/runs`) as { runId: string; status: string }[]
@@ -162,7 +162,7 @@ test('real learning records allow honest report pairs, closed return without new
   await expect(screen.getByRole('button', '预览并提交')).toBeDisabled()
   expect((await detail(id)).student.hasLearningRecord).toBe(false)
   await screen.getByRole('button', '开始学习', { exact: true }).tap()
-  await expect(browser.locator('[contenteditable="true"]').first()).toBeVisible()
+  await expect(browser.locator('[data-composer-column] [contenteditable="true"]')).toBeVisible()
   await openTask(title)
   expect(Boolean((await detail(id)).student.channelId)).toBe(true)
   expect((await detail(id)).student.hasLearningRecord).toBe(false)
@@ -241,7 +241,7 @@ test('real learning records allow honest report pairs, closed return without new
   await capture('teacher-accepted-pair'); await browser.keyboard.press('Escape')
   await checkpoint('teacher-agent-summarizes-submitted-report')
   await app.open(`/?project=${projectId}&view=conversations&conversation=${teacherChannelId}`)
-  await expect(browser.locator('[contenteditable="true"]').first()).toBeVisible()
+  await expect(browser.locator('[data-composer-column] [contenteditable="true"]')).toBeVisible()
   const completedBeforeSummary = await screen.getByRole('button', '已完成', { exact: true }).count()
   await say(`请汇总已提交的“${title}”作答和学习报告，说明学生当前的验收状态、先前薄弱点、报告中能支持判断的学习证据，以及是否还需要跟进。请先读取本作业的真实汇总和该学生已提交报告，再给出简短建议，不要改变教师已经作出的验收决定。`)
   await expect.poll(() => screen.getByRole('button', '已完成', { exact: true }).count(), { timeout: 300_000 }).toBeGreaterThan(completedBeforeSummary)
