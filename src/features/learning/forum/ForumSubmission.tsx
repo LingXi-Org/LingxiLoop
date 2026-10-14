@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { userFacingError } from '@/lib/userFacingError'
@@ -18,7 +19,8 @@ function Version({ submission }: { submission: SubmissionVersion }) {
     <div className="flex flex-wrap items-center gap-2"><Badge variant="secondary">{sourceLabels[submission.source]}</Badge>{submission.late && <Badge variant="outline">迟交</Badge>}</div>
     <MemoContent content={submission.answer} />
     <ForumFiles links={submission.links} attachments={submission.attachments} />
-    {submission.source === 'AGENT_GENERATED' && <p className="text-xs text-muted-foreground">此版本由 Agent 生成，不计为独立完成的学习证据。</p>}
+    {submission.source === 'AGENT_GENERATED' && <p className="text-xs text-muted-foreground">此版本由 Agent 生成，已保留来源标记。</p>}
+    {submission.feedback?.map(feedback => <div key={feedback.id} className="w-full rounded border p-3"><p className="mb-2 text-xs text-muted-foreground">{feedback.kind === 'TEACHER' ? '教师反馈' : '历史 Agent 评价'}{feedback.status !== 'ACCEPTED' ? ` · ${feedback.status === 'PENDING' ? '待审核' : '未采纳'}` : ''} · {new Date(feedback.createdAt).toLocaleString()}</p><MemoContent content={feedback.body} /></div>)}
   </MemoCard>
 }
 
@@ -70,7 +72,10 @@ export function ForumSubmission({ space, item, onClose }: { space: LearningSpace
     {error && <p role="alert" className="text-sm text-destructive">{error}<Button variant="link" disabled={disabled} onClick={() => void load()}>重新加载记录</Button></p>}
     <section aria-label="提交记录" className="space-y-4 border-t pt-4"><h3 className="text-sm font-medium">提交记录</h3>
       {!versions.length && !busy && <p className="text-sm text-muted-foreground">还没有提交记录。</p>}
-      {[...groups.values()].map(group => <div key={group[0].learnerId} className="space-y-2">{space.canReview && <h4 className="text-sm font-medium">{group[0].learnerName}</h4>}<Version submission={group[0]} />{group.length > 1 && <details><summary className="cursor-pointer rounded-sm text-sm text-muted-foreground focus-visible:outline-2">历史版本（{group.length - 1}）</summary><div className="mt-2 space-y-2">{group.slice(1).map(version => <Version key={version.id} submission={version} />)}</div></details>}</div>)}
+      {[...groups.values()].map(group => <div key={group[0].learnerId} className="space-y-2">{space.canReview && <h4 className="text-sm font-medium">{group[0].learnerName}</h4>}<Version submission={group[0]} />{space.canReview && <form className="flex gap-2" onSubmit={async event => {
+        event.preventDefault(); const form=event.currentTarget; const body=String(new FormData(form).get('feedback') ?? '').trim(); if(!body) return
+        setBusy(true);setError('');try {await forumApi.feedback(space.courseId!,item,group[0].id,body);form.reset();await load()} catch(reason){setError(userFacingError(reason,'反馈保存失败，请重试。'))} finally{setBusy(false)}
+      }}><Input name="feedback" aria-label={`反馈：${group[0].learnerName}`} required maxLength={10000} placeholder="给这次提交留下反馈" disabled={disabled}/><Button type="submit" disabled={disabled}>保存反馈</Button></form>}{group.length > 1 && <details><summary className="cursor-pointer rounded-sm text-sm text-muted-foreground focus-visible:outline-2">历史版本（{group.length - 1}）</summary><div className="mt-2 space-y-2">{group.slice(1).map(version => <Version key={version.id} submission={version} />)}</div></details>}</div>)}
       {nextOffset !== null && <Button variant="outline" disabled={busy} onClick={() => void load(nextOffset)}>更多提交记录</Button>}
     </section>
   </DialogContent></Dialog>

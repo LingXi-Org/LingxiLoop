@@ -11,10 +11,7 @@ const companyReads: Record<string, PermissionAction> = {
 }
 const projectReads: Record<string, PermissionAction> = {
   projects: 'project:read', 'project-memberships': 'project_member:list', 'project-invitations': 'project_invitation:list',
-  'project-transfers': 'project:read', courses: 'course:read', 'knowledge-units': 'learning:read',
-  'learning-activities': 'learning:read', 'learning-attempts': 'learning:review', 'learning-missions': 'learning:read',
-  'learning-cases': 'learning:review', 'learning-evaluations': 'learning:review', 'evidence-records': 'learning:review',
-  'trust-snapshots': 'trust:read_l2',
+  'project-transfers': 'project:read', courses: 'course:read', 'evidence-records': 'learning:review', 'trust-snapshots': 'trust:read_l2',
 }
 const resourceReads: Record<string, [PermissionAction, PermissionResource['type']]> = {
   conversations: ['conversation:read', 'conversation'], documents: ['document:read', 'document'],

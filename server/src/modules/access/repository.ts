@@ -187,15 +187,15 @@ export class AccessRepository {
   ): Promise<ActorProjectScopeRecord[]> {
     const { rows } = await this.db.query<ActorProjectScopeRecord>(
       `SELECT project.company_id AS "companyId",project.id AS "projectId",
-              visit.meaningful_visited_at AS "lastVisitedAt",COALESCE(visit.meaningful_visited_at,project.updated_at) AS "sortAt"
+              visit.visited_at AS "lastVisitedAt",COALESCE(visit.visited_at,project.updated_at) AS "sortAt"
          FROM projects project
          JOIN company_memberships cm ON cm.company_id=project.company_id AND cm.user_id=$1 AND cm.ended_at IS NULL AND cm.status='ACTIVE'
          LEFT JOIN project_memberships member ON member.project_id=project.id AND member.user_id=$1
            AND member.company_period_id=cm.period_id AND member.status='ACTIVE'
          LEFT JOIN project_visits visit ON visit.company_id=project.company_id AND visit.project_id=project.id AND visit.user_id=$1
         WHERE (cm.is_admin OR member.user_id IS NOT NULL)
-          AND ($2::timestamptz IS NULL OR (COALESCE(visit.meaningful_visited_at,project.updated_at),project.id)<($2::timestamptz,$3::text))
-        ORDER BY COALESCE(visit.meaningful_visited_at,project.updated_at) DESC,project.id DESC LIMIT $4`,
+          AND ($2::timestamptz IS NULL OR (COALESCE(visit.visited_at,project.updated_at),project.id)<($2::timestamptz,$3::text))
+        ORDER BY COALESCE(visit.visited_at,project.updated_at) DESC,project.id DESC LIMIT $4`,
       [actorUserId, afterSortAt, afterProjectId, limit],
     )
     return rows

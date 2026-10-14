@@ -1,4 +1,3 @@
-import { productCards } from './presentation-cards.js'
 import type { HarnessProfile, SkillDefinition, ToolDefinition } from '@lyyzka/lingxios'
 import { presentationCard } from '../modules/presentations/agent-tools.js'
 import { activityTool } from './activity-tool.js'
@@ -14,8 +13,8 @@ export const productSkills: SkillDefinition[] = [
     actions: ['research.search','research.read'], body: 'Use research.search for Chinese web search and prefer relevant domestic primary sources. Read the sources before treating snippets as evidence, and distinguish supported findings from uncertainty. Cite only evidence actually returned by the tools; do not invent source contents. Search sources are displayed as cards: avoid repeating a link list in the answer, but preserve necessary inline citations. Do not comment on a short or empty result list or fill it using foreign search engines. If the search tool fails, state the failure honestly without claiming that no sources exist.' },
   { name: 'canvas-cooperation', version: '3', description: 'Build a shared deliverable through public specialist contributions and independent review.',
     actions: ['canvas.current','canvas.start_workspace','canvas.submit_report'], body: 'Read the current Canvas and actual room roster. Create or reuse the shared workspace, then divide substantial work through explicit @id assignments in the native final reply. Each specialist contributes their part and persists canvas.submit_report with observed evidence. An independent verifier checks the actual artifact and records disconfirming evidence. Creation and assignment are not completion; no tool dispatches hidden work or resumes a reporter. ' + GROUP_COLLABORATION_RULES },
-  { name: 'task-coordination', version: '2', description: 'Prefer role-based group collaboration for substantial tasks and maintain a sustained learning Mission when needed.',
-    actions: ['learning.current','learning.start_mission'], body: 'For a sustained learning goal in an authorized project conversation, reuse the relevant active Mission or start one from the committed original human message. Maintain planning, checking, reflection and completion evidence. Split research, teaching, practice, building and verification according to the actual roster rather than doing all roles yourself. ' + GROUP_COLLABORATION_RULES },
+  { name:'forum-assignments',version:'1',description:'Assist with teacher assignments while preserving student authorship.',
+    actions:['learning.list_assignments','learning.get_assignment','learning.list_submissions','learning.submit_assignment'],body:'Read the current teacher assignment before helping. Submit only when the original student asks. Preserve the exact committed human text for AGENT_RELAY; label generated work AGENT_GENERATED. Never claim generated work is independent student evidence. Verify submission IDs and keep private history in an authorized audience.' },
   { name: 'course-evidence', version: '1', description: 'Ground course-dependent answers in authorized knowledge and resolve missing or conflicting evidence.',
     actions: ['knowledge.search','knowledge.read_source','knowledge.list_sources'], body: 'Use automatic retrieval when sufficient. When the user asks for course-source grounding and that evidence is missing or conflicting, search and read the relevant source before answering. General conceptual explanations do not depend on course materials. Cite only returned markers and distinguish inference. State no matches, processing sources or service unavailability when observed; do not invent citations. An empty source listing is a completed check, not a reason to list again. When the user permits a general explanation if sources are absent, give it immediately and clearly disclose the missing course grounding. At most two retrieval calls for the same question without new evidence; then explain the gap or ask for the missing material.' },
 ]
@@ -39,6 +38,6 @@ export function createProductHarness(productTools: ToolDefinition[]): HarnessPro
     capabilities: [...new Set(tools.map(tool => tool.action.split('.')[0]))].map(id => ({ id,
       tools: tools.filter(tool => tool.action.startsWith(`${id}.`)),
       skills: productSkills.filter(skill => skill.actions[0].startsWith(`${id}.`)),
-      presentations: [...(id === 'presentations' ? [presentationCard] : []), ...productCards(tools).filter(card => card.actions[0].startsWith(id + '.'))],
+      presentations: id === 'presentations' ? [presentationCard] : [],
     })) }
 }

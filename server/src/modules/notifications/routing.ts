@@ -63,25 +63,7 @@ export function intentPresentation(event: NotificationSourceEvent): {
   summary: string
   linkPath: string
 } | null {
-  const learningLink = `/learning?projectId=${encodeURIComponent(event.project_id)}`
   switch (event.event_type) {
-    case 'ASSESSMENT.ATTEMPT_SUBMITTED':
-      return { category: 'ASSESSMENT', policy: 'DAILY', summary: '学习提交已记录', linkPath: learningLink }
-    case 'LEARNING_CASE.DETECTED':
-      return { category: 'ATTENTION', policy: 'IMMEDIATE', summary: '有新的学习事项需要关注', linkPath: learningLink }
-    case 'LEARNING_CASE.ACTION_APPLIED': {
-      const kind = event.payload.kind
-      if (kind === 'INTERVENE') {
-        return { category: 'INTERVENTION', policy: 'IMMEDIATE', summary: '学习支持方案已更新', linkPath: learningLink }
-      }
-      if (kind === 'REASSESS') {
-        return { category: 'REASSESSMENT', policy: 'IMMEDIATE', summary: '复评安排已更新', linkPath: learningLink }
-      }
-      if (kind === 'ESCALATE' || kind === 'OVERRIDE') {
-        return { category: 'LEARNING', policy: 'FORMAL', summary: '学习事项有正式更新', linkPath: learningLink }
-      }
-      return { category: 'LEARNING', policy: 'DAILY', summary: '学习事项已更新', linkPath: learningLink }
-    }
     case 'ContextThreadCreated':
       return event.context_channel_id
         ? { category: 'COMMUNICATION', policy: 'IMMEDIATE', summary: '新的协作会话已创建',

@@ -37,7 +37,6 @@ const testsByScope = {
     'src/lib/interactive-ui/kernels/kernels.test.ts',
     'src/components/assistant-ui/markdown-text.test.tsx',
     'src/features/chat/runtime/converter.test.ts',
-    'src/features/chat/runtime/tool-card-results.test.ts',
     'src/features/chat/runtime/store.test.ts',
     'src/features/chat/runtime/harness.test.ts',
     'src/features/chat/components/ResearchSources.test.tsx',
@@ -49,7 +48,6 @@ const testsByScope = {
     'src/features/presentations/presentationFeature.test.ts',
     'src/features/settings/settingsDialog.test.ts',
     'src/features/learning/courseAvatar.test.ts',
-    'src/features/learning/dashboard/learningVineModel.test.ts',
   ],
 }
 

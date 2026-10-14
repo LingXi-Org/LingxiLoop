@@ -6,7 +6,7 @@ export interface WebDestination {
   conversationId: string | null
 }
 
-const views: ViewKey['view'][] = ['conversations', 'agents', 'library', 'learning', 'forum', 'courses', 'course-content', 'course-members', 'course-status']
+const views: ViewKey['view'][] = ['conversations', 'agents', 'forum']
 let navigationEpoch = 0
 
 export const beginWebNavigation = () => ++navigationEpoch
@@ -36,6 +36,7 @@ export function writeWebDestination(destination: WebDestination, mode: 'push' | 
   if (destination.projectId) parameters.set('project', destination.projectId)
   parameters.set('view', destination.view)
   if (destination.view === 'conversations' && destination.conversationId) parameters.set('conversation', destination.conversationId)
+  if (destination.view === 'forum' && current.searchParams.get('project') === destination.projectId && current.searchParams.has('post')) parameters.set('post',current.searchParams.get('post')!)
   const path = `/?${parameters}`
   if (`${current.pathname}${current.search}${current.hash}` === path) return
   window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', path)
@@ -55,5 +56,6 @@ export function safeAuthReturnPath(parameters: URLSearchParams): string {
   if (destination.projectId) next.set('project', destination.projectId)
   next.set('view', destination.view)
   if (destination.conversationId) next.set('conversation', destination.conversationId)
+  if(destination.view === 'forum' && parameters.has('post')) next.set('post',parameters.get('post')!)
   return `/?${next}`
 }

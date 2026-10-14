@@ -1,5 +1,6 @@
 import type { Queryable } from '../../db/queryable.js'
 
+
 export interface TeacherScopeBindingRow {
   company_id: string
   project_id: string
@@ -14,19 +15,6 @@ export interface TeacherScopeBindingRow {
   has_teacher: boolean
 }
 
-export interface TeacherDigestScheduleRow {
-  schedule: Record<string, unknown>
-  timezone: string
-  status: string
-  next_run_at: string | null
-}
-
-export interface TeacherTurnCountsRow {
-  learners: number
-  objectives: number
-  activities: number
-  pending_reviews: number
-}
 
 export async function findTeacherScopeBinding(
   db: Queryable,
@@ -62,61 +50,4 @@ export async function findTeacherScopeBinding(
     [companyId, agentId, channelId],
   )
   return rows[0]
-}
-
-export async function pauseTeacherDigestForMissingTeacher(
-  db: Queryable,
-  companyId: string,
-  agentId: string,
-  channelId: string,
-): Promise<void> {
-  await db.query(
-    `UPDATE agent_routines
-        SET status='paused',next_run_at=NULL,version=version+1,updated_at=NOW()
-      WHERE company_id=$1 AND agent_id=$2 AND channel_id=$3
-        AND kind='teacher_project_digest'`,
-    [companyId, agentId, channelId],
-  )
-}
-
-export async function findTeacherDigestSchedule(
-  db: Queryable,
-  companyId: string,
-  agentId: string,
-  channelId: string,
-): Promise<TeacherDigestScheduleRow | undefined> {
-  const { rows } = await db.query<TeacherDigestScheduleRow>(
-    `SELECT schedule,timezone,status,next_run_at
-       FROM agent_routines
-      WHERE company_id=$1 AND agent_id=$2 AND channel_id=$3
-        AND kind='teacher_project_digest'
-      LIMIT 1`,
-    [companyId, agentId, channelId],
-  )
-  return rows[0]
-}
-
-export async function findTeacherTurnCounts(
-  db: Queryable,
-  companyId: string,
-  projectId: string,
-): Promise<TeacherTurnCountsRow> {
-  const { rows } = await db.query<TeacherTurnCountsRow>(
-    `SELECT
-      (SELECT COUNT(*)::int FROM project_memberships member
-        WHERE member.company_id=$1 AND member.project_id=$2 AND member.status='ACTIVE'
-          AND member.role = 'STUDENT') AS learners,
-      (SELECT COUNT(*)::int FROM learning_knowledge_units objective
-        WHERE objective.company_id=$1 AND objective.project_id=$2 AND objective.status<>'ARCHIVED') AS objectives,
-      (SELECT COUNT(*)::int FROM learning_activities activity
-        WHERE activity.company_id=$1 AND activity.project_id=$2 AND activity.status<>'CLOSED') AS activities,
-      (SELECT COUNT(*)::int
-         FROM learning_evaluations evaluation
-         JOIN learning_attempts attempt
-           ON attempt.company_id=evaluation.company_id AND attempt.project_id=evaluation.project_id
-          AND attempt.id=evaluation.attempt_id
-        WHERE attempt.company_id=$1 AND attempt.project_id=$2 AND evaluation.status='PENDING') AS pending_reviews`,
-    [companyId, projectId],
-  )
-  return rows[0] ?? { learners: 0, objectives: 0, activities: 0, pending_reviews: 0 }
 }

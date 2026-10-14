@@ -43,10 +43,9 @@ export async function loadRuntimeBinding(work: Pick<Work, 'tenantId' | 'principa
   return { ...row, capabilities: row.capabilities.filter(capability => capability !== 'email' && capability !== 'calendar') }
 }
 
-const verifierActions = new Set(['canvas.current','canvas.set_status','canvas.submit_report','learning.current','learning.get_learner_state',
-  'learning.list_knowledge_units','learning.list_due','learning.get_mission','learning.get_activity','learning.get_attempt','learning.propose_evaluation',
+const verifierActions = new Set(['canvas.current','canvas.set_status','canvas.submit_report','learning.list_assignments','learning.get_assignment','learning.list_submissions',
   'knowledge.list_sources','knowledge.search','knowledge.read_source','presentations.get','research.search','research.read'])
-const digestActions = new Set(['teacher.current','teacher.overview','teacher.list_learners','teacher.list_objectives','teacher.list_activities','teacher.get_digest_schedule'])
+
 
 export function createProductContext(tools: readonly ToolDefinition[]) {
   async function scoped(work: Work) {
@@ -64,7 +63,8 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
       ? (await pool.query<{ source_client_msg_no: string | null }>('SELECT source_client_msg_no FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2 AND principal_id=$3', [rootId,work.tenantId,work.principalId])).rows[0]?.source_client_msg_no
       : work.conversation?.source.messageId ?? work.triggerRef
     await bindProductRun(pool, { runId: work.id, tenantId: work.tenantId, agentId: work.agentId, principalId: work.principalId!, sessionId: work.sessionId, ...(work.threadId ? { threadId: work.threadId } : {}) }, productConversationId(work), work.conversation?.internal ?? false, source ?? undefined)
-    if (work.kind === 'routine' || work.kind === 'teacher_digest') await assertRoutineRun(pool, work)
+    if (work.kind === 'routine') await assertRoutineRun(pool, work)
+    if (['mission_coordinator','teacher_digest'].includes(work.kind)) throw new NoEffectError('retired learning job','forbidden')
     const canvasRun = await loadCanvasRunContext(pool, work)
     const teacherContext = profile.teacher_managed ? await loadTeacherTurnContext(nativeContext({ work })) : undefined
     if (teacherContext) await authorizeAudienceRead({ work,database: pool },{ projectId: teacherContext.course.projectId,action: 'learning:manage',
@@ -79,8 +79,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
       const namespace = tool.action.split('.')[0]
       if (namespace === 'learning' && !learningAudienceSafe) return false
       if (work.conversation?.internal && ['chat.send','chat.ask','chat.recommend','chat.report_progress'].includes(tool.action)) return false
-      if (profile.teacher_managed) return namespace === 'teacher' && (work.kind !== 'teacher_digest' || digestActions.has(tool.action))
-        || ['chat.send', 'chat.report_progress'].includes(tool.action) && work.kind === 'turn' && work.lane === 'interactive' && !!teacherContext
+      if (profile.teacher_managed) return ['chat.send', 'chat.report_progress'].includes(tool.action) && work.kind === 'turn' && work.lane === 'interactive' && !!teacherContext
         || TEACHER_KNOWLEDGE_ACTIONS.has(tool.action) && profile.capabilities.includes('knowledge')
           && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal && !!teacherContext
       if (namespace === 'teacher') return false
@@ -177,7 +176,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
         + (interactiveLearning ? lessonInstructions() : '')
         + (!profile.teacher_managed && profile.channel_type === 2 ? GROUP_COLLABORATION_RULES : '')
         + (capabilities.includes('knowledge') ? 'Use supplied evidence when sufficient. When the answer depends on specific course sources and supplied evidence is insufficient or conflicting, call knowledge.search and knowledge.read_source. General conceptual questions do not require course retrieval. State observed no-matches, processing or unavailability; never invent citations or repeat the same search indefinitely. Stop after two searches without new evidence. ' : '')
-        + (teacherContext ? 'Teacher operations stay in the registered teacher room. Treat the supplied teacher counts as current authoritative facts and answer from them without tools when they are sufficient. Aggregate before individual drilldown; scheduled summaries are read-only for business records and may maintain authorized internal memory. ' : '')
+        + (teacherContext ? 'Teacher operations stay in the registered teacher room. Treat the supplied teacher counts as current authoritative facts and answer from them without tools when they are sufficient. Aggregate before individual drilldown; forum assignment references remain course-scoped. Authorized internal memory never overrides current course facts. ' : '')
         + (canvasRun ? `Canvas execution role: ${canvasRun.execution_role}. Persist canvas.submit_report for your contribution with current observed evidence before completing. Verifiers record disconfirming checks and preserve unresolved disagreements. ` : ''),
       dynamic: { teacherContext, learningContext, canvas, canvasRun, memoryScopes,
         interactiveLessons: [...currentLessons.values()].slice(-4).map(lesson => ({ revisionOf: lesson.uiId, baseRevision: lesson.revision, source: lesson.source })),

@@ -1,6 +1,5 @@
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { responseSegments, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
-import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { assertLessonCitationSpans, projectLessonText } from './interactive-ui-projection.js'
 import { publicActivitySchema, toolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
@@ -30,10 +29,9 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
     }
     const previous = calls.get(id)
     if (event.kind === 'tool.completed' && previous && event.seq > (previous.eventSeq ?? 0) && event.data.result && typeof event.data.result === 'object') {
-      const result = event.data.result, value = Reflect.get(result,'value'), cardValue = toolCardResult(previous.toolName, value)
+      const result = event.data.result, value = Reflect.get(result,'value')
       // Retain status and bounded search cards, never complete source text or prompts.
       calls.set(id,{ ...previous,eventSeq: event.seq,result: { status: Reflect.get(result,'status'),
-        ...(cardValue === undefined ? {} : { value: cardValue }),
         ...(previous.toolName === 'research.search' ? { sources: researchSources(value) } : {}),
         ...(previous.toolName.startsWith('knowledge.') && value && typeof value === 'object' ? { sourceStatus: Reflect.get(value,'status') } : {}),
         ...(previous.toolName === 'chat.report_progress' && publicActivitySchema.safeParse(value).success ? { activity: publicActivitySchema.parse(value) } : {}),

@@ -1,29 +1,25 @@
 import type { Queryable } from '../../db/queryable.js'
-import type { ProjectKind, ProjectRole } from '../../domain/public.js'
+
+
 import {
   createPermissionService,
   listActiveActorProjectScopes,
   type PermissionAction,
 } from '../access/public.js'
-import type { LearningScope } from './contracts.js'
+
+
 import {
   type AuthorizedLearningSpaceScope,
-  findLearningAttemptDetail,
   type LearningLifecycleAction,
   type LearningSpaceRow,
   learningLifecycleAction,
-  learningPerspective,
   listLearningSpaceRows,
-  loadLearnerOverviewRows,
-  loadLearningLearnerDetailRows,
 } from './dashboard-repository.js'
+
 import { LearningApplicationError } from './errors.js'
-import { loadLearningGrowthRows } from './growth-repository.js'
-import {
-  findLearningDashboardLearner,
-  listLearningDashboardLearnerRows,
-  loadLearningDashboardTeacherOverviewRows,
-} from './teacher-reporting-repository.js'
+
+
+
 
 interface SpacesCursor {
   type: 'spaces'
@@ -31,16 +27,14 @@ interface SpacesCursor {
   projectId: string
 }
 
-interface LearnersCursor {
-  type: 'learners'
-  learnerId: string
-}
 
-type DashboardCursor = SpacesCursor | LearnersCursor
+type DashboardCursor = SpacesCursor
+
 
 function encodeCursor(cursor: DashboardCursor): string {
   return Buffer.from(JSON.stringify({ version: 1, ...cursor }), 'utf8').toString('base64url')
 }
+
 
 function decodeCursor(cursor: string): Record<string, unknown> {
   if (!/^[A-Za-z0-9_-]+$/.test(cursor)) {
@@ -56,6 +50,7 @@ function decodeCursor(cursor: string): Record<string, unknown> {
     throw new LearningApplicationError('invalid', 'invalid cursor')
   }
 }
+
 
 function decodeSpacesCursor(cursor: string | undefined): SpacesCursor | null {
   if (!cursor) return null
@@ -73,19 +68,6 @@ function decodeSpacesCursor(cursor: string | undefined): SpacesCursor | null {
   return { type: 'spaces', sortAt: decoded.sortAt, projectId: decoded.projectId }
 }
 
-function decodeLearnersCursor(cursor: string | undefined): LearnersCursor | null {
-  if (!cursor) return null
-  const decoded = decodeCursor(cursor)
-  if (
-    decoded.type !== 'learners'
-    || typeof decoded.learnerId !== 'string'
-    || decoded.learnerId.length === 0
-    || decoded.learnerId.length > 200
-  ) {
-    throw new LearningApplicationError('invalid', 'invalid learners cursor')
-  }
-  return { type: 'learners', learnerId: decoded.learnerId }
-}
 
 function iso(value: unknown): string | null {
   if (value === null || value === undefined) return null
@@ -94,13 +76,6 @@ function iso(value: unknown): string | null {
   return date.toISOString()
 }
 
-function normalizeDates<T extends Record<string, unknown>>(row: T, keys: readonly string[]): T {
-  const result = { ...row }
-  for (const key of keys) {
-    if (Object.hasOwn(result, key)) result[key as keyof T] = iso(result[key]) as T[keyof T]
-  }
-  return result
-}
 
 interface LearningSpaceCapabilities {
   canEditContent: boolean
@@ -114,12 +89,14 @@ interface LearningSpaceCapabilities {
   lifecycleAction: LearningLifecycleAction | null
 }
 
+
 const LIFECYCLE_PERMISSION_ACTIONS: Record<LearningLifecycleAction, PermissionAction> = {
   END: 'project:end',
   ENTER_READ_ONLY: 'project:enter_read_only',
   ENTER_RETENTION: 'project:enter_retention',
   ARCHIVE: 'project:archive',
 }
+
 
 function learningSpace(row: LearningSpaceRow, capabilities: LearningSpaceCapabilities) {
   return {
@@ -141,6 +118,7 @@ function learningSpace(row: LearningSpaceRow, capabilities: LearningSpaceCapabil
     lastVisitedAt: iso(row.lastVisitedAt),
   }
 }
+
 
 export async function listLearningSpaces(
   db: Queryable,
@@ -245,151 +223,4 @@ export async function listLearningSpaces(
         })
       : null,
   }
-}
-
-async function resolveProjectAccess(
-  db: Queryable,
-  scope: LearningScope,
-  projectId: string,
-  action: PermissionAction,
-): Promise<{ projectKind: ProjectKind; projectRole: ProjectRole }> {
-  const context = await createPermissionService(db).assertCan({
-    actorUserId: scope.userId,
-    action,
-    companyId: scope.companyId,
-    projectId,
-  })
-  if (!context.project || !context.projectMembership) {
-    throw new LearningApplicationError('not_found', 'learning space not found')
-  }
-  return { projectKind: context.project.kind, projectRole: context.projectMembership.role }
-}
-
-async function resolveTeacherAccess(
-  db: Queryable,
-  scope: LearningScope,
-  projectId: string,
-): Promise<void> {
-  await resolveProjectAccess(db, scope, projectId, 'learning:review')
-}
-
-export async function learningOverview(
-  db: Queryable,
-  scope: LearningScope,
-  projectId: string,
-  windowDays: number,
-) {
-  const access = await resolveProjectAccess(db, scope, projectId, 'learning:read')
-  const perspective = learningPerspective(access.projectKind, access.projectRole)
-  if (perspective === 'learner') {
-    const rows = await loadLearnerOverviewRows(db, {
-      companyId: scope.companyId,
-      projectId,
-      learnerId: scope.userId,
-      windowDays,
-    })
-    return {
-      perspective,
-      windowDays,
-      summary: rows.summary,
-      masteryDistribution: rows.masteryDistribution,
-      attemptTrend: rows.attemptTrend,
-      assistanceDistribution: rows.assistanceDistribution,
-      dueReviews: rows.dueReviews.map((row) => normalizeDates(row, ['nextReviewAt'])),
-      missionProgress: rows.missionProgress.map((row) => normalizeDates(row, ['updatedAt'])),
-    }
-  }
-  const rows = await loadLearningDashboardTeacherOverviewRows(db, {
-    companyId: scope.companyId,
-    projectId,
-    teacherId: scope.userId,
-    windowDays,
-  })
-  return {
-    perspective,
-    windowDays,
-    summary: rows.summary,
-    masteryDistribution: rows.masteryDistribution,
-    missionDistribution: rows.missionDistribution,
-    evaluationDistribution: rows.evaluationDistribution,
-    attention: rows.attention.map((row) => ({
-      learnerId: row.learnerId,
-      displayName: row.displayName,
-      reasons: row.reasons,
-    })),
-  }
-}
-
-export async function learningGrowth(
-  db: Queryable,
-  scope: LearningScope,
-  projectId: string,
-  input: { cursor?: string; limit: number },
-) {
-  await resolveProjectAccess(db, scope, projectId, 'learning:read')
-  const rows = await loadLearningGrowthRows(db, {
-    companyId: scope.companyId, projectId,
-    cursor: input.cursor, limit: input.limit + 1,
-  })
-  const data = rows.slice(0, input.limit)
-  return { data, nextCursor: rows.length > input.limit ? data.at(-1)?.learnerId ?? null : null }
-}
-
-export async function listLearningLearners(
-  db: Queryable,
-  scope: LearningScope,
-  projectId: string,
-  input: { cursor?: string; limit: number; attentionOnly: boolean; search?: string },
-) {
-  await resolveTeacherAccess(db, scope, projectId)
-  const cursor = decodeLearnersCursor(input.cursor)
-  const rows = await listLearningDashboardLearnerRows(db, {
-    companyId: scope.companyId,
-    projectId,
-    reviewerId: scope.userId,
-    attentionOnly: input.attentionOnly,
-    afterLearnerId: cursor?.learnerId ?? null,
-    search: input.search ?? null,
-    limit: input.limit + 1,
-  })
-  const page = rows.slice(0, input.limit)
-  const last = page.at(-1)
-  return {
-    data: page.map((row) => normalizeDates(row, ['lastAttemptAt'])),
-    nextCursor: rows.length > input.limit && last
-      ? encodeCursor({ type: 'learners', learnerId: last.learnerId })
-      : null,
-  }
-}
-
-export async function learningLearnerDetail(
-  db: Queryable,
-  scope: LearningScope,
-  projectId: string,
-  learnerId: string,
-) {
-  await resolveTeacherAccess(db, scope, projectId)
-  const learner = await findLearningDashboardLearner(db, { companyId: scope.companyId, projectId, learnerId })
-  if (!learner) throw new LearningApplicationError('not_found', 'learner not found')
-  const rows = await loadLearningLearnerDetailRows(db, { companyId: scope.companyId, projectId, learnerId })
-  return {
-    learner: normalizeDates(learner, ['joinedAt']),
-    summary: rows.summary,
-    masteryDistribution: rows.masteryDistribution,
-    states: rows.states.map((row) => normalizeDates(row, ['nextReviewAt', 'lastEvidenceAt'])),
-    missions: rows.missions.map((row) => normalizeDates(row, ['updatedAt'])),
-    attempts: rows.attempts.map((row) => normalizeDates(row, ['submittedAt'])),
-  }
-}
-
-export async function learningAttemptDetail(
-  db: Queryable,
-  scope: LearningScope,
-  projectId: string,
-  attemptId: string,
-) {
-  await resolveTeacherAccess(db, scope, projectId)
-  const attempt = await findLearningAttemptDetail(db, { companyId: scope.companyId, projectId, attemptId })
-  if (!attempt) throw new LearningApplicationError('not_found', 'attempt not found')
-  return normalizeDates(attempt, ['submittedAt'])
 }

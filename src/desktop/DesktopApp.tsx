@@ -97,9 +97,7 @@ export function DesktopApp() {
   const mobileConversationOpen = useApp((state) => state.mobileConversationOpen)
   const navigationPending = useApp((state) => state.navigationPending)
   const navigationError = useApp((state) => state.navigationError)
-  const canCreateCourse = useAuth((state) => state.companies.find((company) => company.id === state.activeCompanyId)?.role === 'teacher')
   const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false)
-  const [createCourseOpen, setCreateCourseOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
   const pageRef = useEntrance(`${selectedWorkspaceId}:${view}`)
@@ -118,9 +116,9 @@ export function DesktopApp() {
     const target = learningSpaces.spaces.find((space) => space.companyId === activeCompanyId
       && space.projectId === agent.projectId && space.canManage && space.perspective === 'teacher')
     if (!target || learningSpaces.pending) return false
-    await learningSpaces.select(target, 'learning')
+    await learningSpaces.select(target, 'forum')
     return useAuth.getState().user?.id === user?.id && useAuth.getState().activeCompanyId === activeCompanyId
-      && useWorkspace.getState().selectedId === target.projectId && useApp.getState().view === 'learning'
+      && useWorkspace.getState().selectedId === target.projectId && useApp.getState().view === 'forum'
   }
 
   useEffect(() => {
@@ -221,8 +219,6 @@ export function DesktopApp() {
           onNavigate={(next) => useApp.getState().setView(next)}
           workspacePickerOpen={workspacePickerOpen}
           onWorkspacePickerOpenChange={setWorkspacePickerOpen}
-          createCourseOpen={createCourseOpen}
-          onCreateCourseOpenChange={setCreateCourseOpen}
         />}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)]">
         {!isMobile && <div className="omb-drag flex h-7 shrink-0 items-center justify-center gap-1.5 px-2 text-accent-foreground" data-workspace-titlebar>
@@ -240,9 +236,7 @@ export function DesktopApp() {
                 error={learningSpaces.error}
                 onRetry={() => void learningSpaces.reload()}
                 hasSpaces={learningSpaces.spaces.length > 0}
-                canCreateCourse={canCreateCourse}
                 onChooseWorkspace={chooseWorkspace}
-                onCreateCourse={() => setCreateCourseOpen(true)}
               />
             </Suspense>
           ) : view === 'agents' ? <AgentsPage key={selectedWorkspaceId} onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> : isMobile ? (

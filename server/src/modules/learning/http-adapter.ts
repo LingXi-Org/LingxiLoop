@@ -1,3 +1,4 @@
+import { ZodError } from 'zod'
 import { HttpError } from '../../http/errors.js'
 import { LearningApplicationError } from './errors.js'
 
@@ -11,6 +12,7 @@ export function parseLearningRequest<T>(result: ParseResult<T>): T {
 }
 
 function mapLearningError(error: unknown): never {
+  if (error instanceof ZodError) throw new HttpError(400, error.issues[0]?.message ?? 'invalid request')
   if (!(error instanceof LearningApplicationError)) throw error
   const status = {
     invalid: 400,

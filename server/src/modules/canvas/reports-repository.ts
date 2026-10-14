@@ -20,7 +20,7 @@ export async function missingEvidenceRefs(db: Queryable, args: {
        UNION ALL SELECT 'source',source.id FROM knowledge_sources source
          JOIN canvases canvas ON canvas.project_id=source.project_id
          WHERE canvas.id=$1 AND source.company_id=$2 AND source.deleted_at IS NULL
-       UNION ALL SELECT 'attempt',attempt.id FROM learning_attempts attempt
+       UNION ALL SELECT 'attempt',attempt.id FROM course_forum_submissions attempt
          JOIN canvases canvas
            ON canvas.id=$1 AND canvas.company_id=$2 AND canvas.project_id=attempt.project_id
          WHERE attempt.company_id=$2

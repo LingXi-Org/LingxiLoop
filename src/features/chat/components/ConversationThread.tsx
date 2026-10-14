@@ -3,7 +3,6 @@ import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useCallback, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { useConversationUi } from '@/stores/conversationUi'
 import { useConversations } from '@/features/conversations/store'
 import { userFacingError } from '@/lib/userFacingError'
@@ -40,7 +39,6 @@ export function ConversationThread({
   compact?: boolean
   readOnly?: boolean
 }) {
-  const isMobile = useIsMobile()
   const snapshot = useConversationThreadSnapshot(conversationId, threadRootId)
   const readReceiptKey = useAuiState(state => JSON.stringify(state.thread.messages.flatMap(message => {
     const metadata = message.metadata.custom
@@ -177,7 +175,7 @@ export function ConversationThread({
   return (
     <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread>
       <ThreadPrimitive.Viewport ref={viewportRef} data-chat-viewport className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
-        <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col">
+        <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col pb-12">
           {!threadRootId && (
             <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
               {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
@@ -198,7 +196,15 @@ export function ConversationThread({
           <ConversationMessages />
         </div>
       </ThreadPrimitive.Viewport>
-      {!readOnly && <div className={`relative z-20 shrink-0 ${isMobile ? 'bg-background pt-2' : 'bg-gradient-to-t from-background via-background to-transparent pt-4'}`} data-chat-composer-bar>
+      {!readOnly && <div className="relative z-20 shrink-0 bg-background pt-2 md:pt-4" data-chat-composer-bar>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-full h-12 select-none" data-chat-composer-transition>
+          {[1, 2, 4, 8].map((blur, index) => <div key={blur} className="absolute inset-0" style={{
+            backdropFilter: `blur(${blur}px)`, WebkitBackdropFilter: `blur(${blur}px)`,
+            maskImage: `linear-gradient(to bottom, transparent ${index * 20}%, black 100%)`,
+            WebkitMaskImage: `linear-gradient(to bottom, transparent ${index * 20}%, black 100%)`,
+          }} />)}
+          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+        </div>
         <ConversationComposer
           conversationId={conversationId}
           compact={compact}

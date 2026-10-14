@@ -5,7 +5,5 @@ export type {
   EducationIdentityBrokerPort,
   ExternalIntegrationConfigurationStatus,
   ExternalIntegrationProbe,
-  LmsConnectorCapability,
-  LmsConnectorPort,
 } from './integration-ports.js'
 export { startEducationContractExpiryWorker } from './worker.js'

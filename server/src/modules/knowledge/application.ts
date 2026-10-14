@@ -1,7 +1,6 @@
 import { createHash, } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService, knowledgeSourceVisibilityScope } from '../access/public.js'
-import { recordProjectVisit } from '../briefings/public.js'
 import type {
   CreateSourceInput,
   KnowledgeScope,
@@ -11,10 +10,8 @@ import type {
 } from './contracts.js'
 import {
   enqueueSourceJob,
-  findCourseReviewSource,
   findSource,
   insertSource,
-  listCourseReviewSources,
   listConversationSources,
   listProjects,
   listSources,
@@ -109,13 +106,8 @@ export class KnowledgeApplication {
       actorUserId: userId, action: 'project:read', companyId, projectId,
     })
     if (!context.project) throw new KnowledgeApplicationError('not_found', 'Project not found')
-    const management = await access.can({
-      actorUserId: userId, action: 'learning:manage', companyId, projectId,
-    })
-    await recordProjectVisit(this.db, {
-      companyId, projectId, userId,
-      briefingEligible: context.project.kind === 'TEACHING' && management.allowed,
-    })
+    await this.db.query(`INSERT INTO project_visits(company_id,project_id,user_id,visited_at)
+      VALUES($1,$2,$3,NOW()) ON CONFLICT(company_id,project_id,user_id) DO UPDATE SET visited_at=NOW()`, [companyId,projectId,userId])
     return { ok: true as const }
   }
 
@@ -124,13 +116,6 @@ export class KnowledgeApplication {
       actorUserId: scope.userId, action: 'knowledge:read', companyId: scope.companyId, projectId: scope.projectId,
     })
     return listSources(this.db, scope.companyId, scope.projectId, scope.userId)
-  }
-
-  async courseReviewSources(scope: KnowledgeScope) {
-    await createPermissionService(this.db).assertCan({
-      actorUserId: scope.userId, action: 'learning:review', companyId: scope.companyId, projectId: scope.projectId,
-    })
-    return listCourseReviewSources(this.db, scope.companyId, scope.projectId)
   }
 
   async conversationSources(scope: KnowledgeScope, conversationId: string) {
@@ -146,22 +131,6 @@ export class KnowledgeApplication {
       actorUserId: scope.userId, action: 'knowledge:read', companyId: scope.companyId, projectId: scope.projectId,
     })
     const source = await findSource(this.db, scope.companyId, scope.projectId, scope.userId, sourceId)
-    if (!source) throw new KnowledgeApplicationError('not_found', 'source not found')
-    const { storageKey, ...payload } = source
-    const extractedText = source.status === 'ready'
-      ? await this.infrastructure.sourceText(sourceId, scope.companyId, scope.projectId, scope.userId)
-      : null
-    const originalFileUrl = source.kind === 'file' && storageKey
-      ? await this.infrastructure.publicUrl(storageKey)
-      : null
-    return { ...payload, extractedText, originalFileUrl }
-  }
-
-  async courseReviewSource(scope: KnowledgeScope, sourceId: string) {
-    await createPermissionService(this.db).assertCan({
-      actorUserId: scope.userId, action: 'learning:review', companyId: scope.companyId, projectId: scope.projectId,
-    })
-    const source = await findCourseReviewSource(this.db, scope.companyId, scope.projectId, sourceId)
     if (!source) throw new KnowledgeApplicationError('not_found', 'source not found')
     const { storageKey, ...payload } = source
     const extractedText = source.status === 'ready'

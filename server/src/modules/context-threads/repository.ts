@@ -35,18 +35,6 @@ export async function findScopedParticipant(
   return rows[0] ?? null
 }
 
-export async function learningCaseBelongsToStudent(
-  db: Queryable,
-  args: { companyId: string; projectId: string; caseId: string; studentId: string },
-): Promise<boolean> {
-  const { rows } = await db.query(
-    `SELECT 1 FROM learning_cases
-      WHERE company_id=$1 AND project_id=$2 AND id=$3 AND user_id=$4`,
-    [args.companyId, args.projectId, args.caseId, args.studentId],
-  )
-  return Boolean(rows[0])
-}
-
 export async function isManagedTeacherAgent(db: Queryable, companyId: string, agentId: string): Promise<boolean> {
   const { rows } = await db.query(
     `SELECT 1 FROM learning_project_teacher_agents WHERE company_id=$1 AND agent_id=$2`,

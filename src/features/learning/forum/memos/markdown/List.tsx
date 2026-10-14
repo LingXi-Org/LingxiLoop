@@ -1,5 +1,6 @@
 // Adapted from usememos/memos (MIT), 8120a6cee03003ee7968b49b2109f816fa4d96a4. See README.md and LICENSE.
-import { Children, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
+import { TaskEditContext } from "../TaskEditContext";
+import { useContext, Children, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { markdownStyles } from "../markdownStyles";
 
@@ -92,14 +93,17 @@ interface ListItemProps extends React.LiHTMLAttributes<HTMLLIElement>, ReactMark
  * List item component for both regular and task list items
  * Detects task items via the "task-list-item" class added by remark-gfm
  */
-export const ListItem = ({ children, className, node: _node, ...domProps }: ListItemProps) => {
+export const ListItem = ({ children, className, node, ...domProps }: ListItemProps) => {
+  const edit = useContext(TaskEditContext);
   const isTaskListItem = className?.includes(TASK_LIST_ITEM_CLASS);
 
   if (isTaskListItem) {
     const { checkbox, content } = splitTaskListItemChildren(children);
 
     return (
-      <li className={cn(markdownStyles.taskListItem, className)} {...domProps}>
+      <li className={cn(markdownStyles.taskListItem, className)} {...domProps} onClick={event=>{
+        if (edit && node?.position && (event.target as HTMLElement).closest('[role="checkbox"]') && event.currentTarget === (event.target as HTMLElement).closest('li')) edit(node.position.start.line)
+      }}>
 
           {checkbox}
           <div className={markdownStyles.taskItemContent}>{content}</div>

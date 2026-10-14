@@ -29,9 +29,6 @@ function intent(policy: 'IMMEDIATE' | 'DAILY' | 'WEEKLY' | 'FORMAL') {
 test('event projection emits fixed summaries and Context links without copying business facts', () => {
   const secret = 'SECRET_ANSWER_9384'
   for (const source of [
-    event('ASSESSMENT.ATTEMPT_SUBMITTED', { answer: secret, score: 99 }),
-    event('LEARNING_CASE.DETECTED', { diagnosis: secret }),
-    event('LEARNING_CASE.ACTION_APPLIED', { kind: 'INTERVENE', result: secret }),
     event('ContextThreadCreated', { privateMessage: secret }),
   ]) {
     const projected = intentPresentation(source)

@@ -17,7 +17,6 @@ import { bindTeacherOperationsContextThread, seedMemberLearningContextThreads } 
 import { CH_DOC_ACCESS_REVOKED, publish } from '../../redis.js'
 import { LearningApplication } from './application.js'
 import { inc } from '../../metrics.js'
-import { LearningCasesApplication } from './cases-application.js'
 
 function teacherTransaction(db: Queryable) {
   return <T>(work: (client: Queryable) => Promise<T>): Promise<T> => db === pool
@@ -56,14 +55,5 @@ export const learningApplication = new LearningApplication(pool, {
     return `${base}/invite/project/${encodeURIComponent(token)}`
   },
   avatarForEmail: gravatarUrlForEmail,
-  teacherAgentSummary: async (companyId, courseId, userId) => {
-    const { getTeacherAgentSummary } = await import('./teacher-agent-application.js')
-    return getTeacherAgentSummary(companyId, courseId, userId, pool)
-  },
   metric: inc,
-})
-
-export const learningCasesApplication = new LearningCasesApplication(pool, {
-  transaction: (work) => withTransaction(pool, work),
-  auditInTransaction: async (db, event) => { await auditInTransaction(db, event) },
 })

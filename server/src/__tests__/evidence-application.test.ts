@@ -67,14 +67,14 @@ test('Evidence links reject a target outside the current Project', async () => {
       statements.push(text)
       if (text.includes('SELECT * FROM evidence_records')) return { rows: [], rowCount: 0 } as never
       if (text.includes('INSERT INTO evidence_records')) return { rows: [recordRow()], rowCount: 1 } as never
-      if (text.includes('FROM learning_attempts')) return { rows: [], rowCount: 0 } as never
+      if (text.includes('FROM course_forum_submissions')) return { rows: [], rowCount: 0 } as never
       throw new Error(`unexpected query: ${text}`)
     },
   }
 
   await assert.rejects(
     () => createEvidenceRecord((work) => work(db), input, [{
-      relation: 'SOURCE', targetLevel: 'L1', targetKind: 'LEARNING_ATTEMPT', targetId: 'other-attempt',
+      relation: 'SOURCE', targetLevel: 'L1', targetKind: 'FORUM_SUBMISSION', targetId: 'other-attempt',
     }]),
     /outside the current Project/,
   )
@@ -86,7 +86,10 @@ test('Inferred Claims require a same-tenant model run and scoped Evidence IDs', 
   const db: Queryable = {
     query: async (text) => {
       statements.push(text)
-      if (text.includes('SELECT 1 FROM agent_runs')) return { rows: [{ '?column?': 1 }], rowCount: 1 } as never
+      if (text.includes('FROM lingxios.agent_work_items')) return { rows: [{
+        agent_id: 'agent-1', session_id: 'session-1', principal_id: 'learner-1',
+      }], rowCount: 1 } as never
+      if (text.includes('FROM agent_run_bindings')) return { rows: [{ '?column?': 1 }], rowCount: 1 } as never
       if (text.includes('COUNT(*)::int')) return { rows: [{ count: 1 }], rowCount: 1 } as never
       if (text.includes('INSERT INTO evidence_claims')) return { rows: [], rowCount: 1 } as never
       if (text.includes('INSERT INTO evidence_claim_evidence')) return { rows: [], rowCount: 1 } as never
@@ -122,7 +125,7 @@ test('Product Evidence queries cap records and links by layer and fail closed fo
       return { rows: [{
         ...recordRow(),
         links: [{
-          relation: 'SOURCE', targetLevel: 'L2', targetKind: 'LEARNING_ATTEMPT', targetId: 'attempt-1',
+          relation: 'SOURCE', targetLevel: 'L2', targetKind: 'FORUM_SUBMISSION', targetId: 'attempt-1',
         }],
       }], rowCount: 1 } as never
     },

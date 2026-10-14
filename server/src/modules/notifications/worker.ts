@@ -25,13 +25,10 @@ interface DeliveryClaim {
 async function projectEvents(db: Queryable): Promise<NotificationSourceEvent[]> {
   const { rows } = await db.query<NotificationSourceEvent>(
     `SELECT event.sequence,event.company_id,event.project_id,event.event_type,event.aggregate_id,event.payload,event.occurred_at,
-            COALESCE(event.payload->>'learnerId',learning_case.user_id,
+            COALESCE(event.payload->>'learnerId',
                      event.payload->>'subjectParticipantId') AS recipient_user_id,
             context_thread.channel_id AS context_channel_id
        FROM domain_events event
-       LEFT JOIN learning_cases learning_case
-         ON learning_case.company_id=event.company_id AND learning_case.project_id=event.project_id
-        AND learning_case.id=event.aggregate_id
        LEFT JOIN context_threads context_thread
          ON context_thread.company_id=event.company_id AND context_thread.project_id=event.project_id
         AND context_thread.id=event.aggregate_id
@@ -40,11 +37,10 @@ async function projectEvents(db: Queryable): Promise<NotificationSourceEvent[]> 
         AND NOT EXISTS (
           SELECT 1 FROM notification_intents intent
            WHERE intent.source_event_sequence=event.sequence
-             AND intent.recipient_user_id=COALESCE(event.payload->>'learnerId',learning_case.user_id,
+             AND intent.recipient_user_id=COALESCE(event.payload->>'learnerId',
                                                     event.payload->>'subjectParticipantId'))
       ORDER BY event.sequence LIMIT 200`,
-    [['ASSESSMENT.ATTEMPT_SUBMITTED', 'LEARNING_CASE.DETECTED',
-      'LEARNING_CASE.ACTION_APPLIED', 'ContextThreadCreated']],
+    [['ContextThreadCreated']],
   )
   return rows
 }

@@ -27,7 +27,7 @@ export async function observeCanvasEvidence(db: Queryable, scope: {
       observed = (await db.query('SELECT id,updated_at FROM knowledge_sources WHERE id=$1 AND company_id=$2 AND project_id=$3 AND deleted_at IS NULL', [ref.id,scope.companyId,scope.projectId])).rows[0]; break
     case 'attempt':
       await permit('learning:read', 'project', scope.projectId)
-      observed = (await db.query('SELECT id,created_at FROM learning_attempts WHERE id=$1 AND company_id=$2 AND project_id=$3 AND learner_id=$4', [ref.id,scope.companyId,scope.projectId,scope.principalId])).rows[0]; break
+      observed = (await db.query('SELECT id,submitted_at AS created_at FROM course_forum_submissions WHERE id=$1 AND company_id=$2 AND project_id=$3 AND learner_id=$4', [ref.id,scope.companyId,scope.projectId,scope.principalId])).rows[0]; break
     case 'message': {
       const messages = await readAgentChannelMessages({ companyId: scope.companyId, agentId: scope.principalId,
         channelId: scope.conversationId, messageIds: [ref.id], ...(scope.signal ? { signal: scope.signal } : {}) })

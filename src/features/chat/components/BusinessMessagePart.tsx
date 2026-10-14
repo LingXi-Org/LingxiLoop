@@ -7,8 +7,8 @@ import { MessageFooterContents, MessageFooterContext } from '@/components/assist
 import { userFacingError } from '@/lib/userFacingError'
 import { getMeId } from '@/stores/auth'
 import { chatTransport } from '../runtime/transport'
-import { AgentPlanTool, CanvasArtifactTool, CanvasProgressTool, ElicitationFormTool,
-  PollFormTool, PresentationArtifactTool, RecommendationTool, TeacherBriefingStatsTool } from './ToolRenderers'
+import { CanvasArtifactTool, CanvasProgressTool, ElicitationFormTool,
+  PollFormTool, PresentationArtifactTool, RecommendationTool } from './ToolRenderers'
 
 const record = (value: unknown) => z.record(z.string(), z.unknown()).parse(value)
 const emailSchema = z.object({ from: z.string(), to: z.array(z.string()), cc: z.array(z.string()).default([]),
@@ -73,12 +73,10 @@ export function BusinessMessagePart({ name, data, readOnly }: DataMessagePartPro
     case 'questionnaire': content = <ElicitationFormTool args={{ ...value, id: message.id }} result={result} addResult={submit} />; break
     case 'recommendation': content = <MessageFooterContents inset={false}><RecommendationTool args={value} result={result} addResult={submit} /></MessageFooterContents>; break
     case 'handoff': content = <p className="whitespace-pre-wrap break-words text-sm">{[value.title, value.task, value.context, value.result, value.error].filter((part): part is string => typeof part === 'string' && Boolean(part)).join('\n') || '历史协作记录'}</p>; break
-    case 'learning-mission': content = <MessageFooterContents inset={false}><AgentPlanTool args={{ ...value, id: value.missionId }} /></MessageFooterContents>; break
     case 'canvas': content = <>
       <MessageFooterContext.Provider value={null}><CanvasProgressTool args={{ ...value, id: value.canvasId }} /></MessageFooterContext.Provider>
       <CanvasArtifactTool args={{ id: value.canvasId, title: value.title, description: value.goal, href: `lingxiloop://canvas/${encodeURIComponent(String(value.canvasId))}` }} />
     </>; break
-    case 'teacher-briefing': content = <MessageFooterContents inset={false}><TeacherBriefingStatsTool args={record(value.dashboard)} /></MessageFooterContents>; break
     case 'presentation-artifact': content = <PresentationArtifactTool args={value} />; break
     case 'citation-claims': return null
     case 'document-reference': content = <MessageFooterContents inset={false}><DocumentReference {...documentSchema.parse(value)} activePage={-1} /></MessageFooterContents>; break
@@ -95,6 +93,7 @@ export function BusinessMessagePart({ name, data, readOnly }: DataMessagePartPro
         status: activityStatus[step.status] ?? 'pending', detail: step.description }))} />
       break
     }
+    case 'learning-mission': case 'teacher-briefing': return <p className="text-sm text-muted-foreground">历史学习记录已归档。</p>
     default: throw new Error('不支持的数据组件')
   }
   return <fieldset disabled={readOnly || busy} aria-busy={busy} className="grid min-w-0 gap-2">

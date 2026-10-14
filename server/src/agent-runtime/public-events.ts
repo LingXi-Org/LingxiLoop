@@ -1,5 +1,4 @@
 import type { RunEvent, RunStreamEvent } from '@lyyzka/lingxios/ui'
-import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { publicActivitySchema } from '../../../src/lib/runActivity.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
@@ -10,8 +9,6 @@ export function publicToolValue(action: string, value: unknown): unknown {
     const parsed = publicActivitySchema.safeParse(value)
     return parsed.success ? parsed.data : undefined
   }
-  const card = toolCardResult(action, value)
-  if (card !== undefined) return action === 'learning.propose_evaluation' ? { result: card } : card
   if (action === 'research.search') { const results = researchSources(value); return results === null ? undefined : { results } }
   if (action.startsWith('knowledge.') && value && typeof value === 'object') {
     const status = Reflect.get(value, 'status')
