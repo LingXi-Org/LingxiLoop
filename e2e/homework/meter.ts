@@ -21,7 +21,11 @@ assert.ok(cost(1000, 2000, 2, 4) > cost(1000, 1000, 2, 4))
   const valid = { missing: [{ quote: 'explain the area', reason: 'PRIVATE_REASON_SENTINEL' }],
     limitations: [{ quote: 'cannot inspect the source', requestQuote: 'explain the area', reason: 'Source is unavailable' }] }
   const response = (value: unknown) => ({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(value) } }] })
-  const inspect = (value: unknown) => contentReviewDiagnostics(request, response(value))!
+  const inspect = (value: unknown) => {
+    const result = contentReviewDiagnostics(request, response(value))!
+    assert.ok(result.contract === 'lingxios-3.3.6-content-review')
+    return result
+  }
   assert.equal(inspect(valid).matchesInstalledContract, true)
   const minimal = { workId: input.workId, originalText: input.originalText, body: input.body, revisions: [] }
   const minimalRequest = { ...request, messages: [{ role: 'user', content: JSON.stringify(minimal) }] }
@@ -38,6 +42,65 @@ assert.ok(cost(1000, 2000, 2, 4) > cost(1000, 1000, 2, 4))
   const rawBefore = structuredClone(raw), observed = contentReviewDiagnostics(request, raw)!
   assert.equal(observed.unknownKeyCount, 1)
   assert.doesNotMatch(JSON.stringify(observed), /PRIVATE_\w+_SENTINEL|explain the area|cannot inspect the source/)
+  assert.deepEqual(request, before)
+  assert.deepEqual(raw, rawBefore)
+}
+
+// Failure inventory: deferral is confused with the first review; unknown/duplicate IDs pass;
+// agent, body-only or invented quotes pass as human instructions; wrong shapes, empty/oversized
+// fields, extra keys or more than 32 entries pass; quote matching normalizes text;
+// diagnostics leak private text/IDs or mutate wire data.
+{
+  const input = { workId: 'PRIVATE_WORK_ID_SENTINEL', originalText: 'PRIVATE_REQUEST_SENTINEL defer publication',
+    revisions: [{ text: 'PRIVATE_HUMAN_SENTINEL wait for review', author: { kind: 'human' } },
+      { text: 'PRIVATE_AGENT_SENTINEL wait for permission', author: { kind: 'agent' } }],
+    body: 'PRIVATE_BODY_SENTINEL draft is ready', findings: [
+      { id: 'missing:0', quote: 'PRIVATE_FINDING_SENTINEL', reason: 'PRIVATE_FINDING_REASON_SENTINEL' },
+      { id: 'limitation:0', quote: 'draft is ready', reason: 'PRIVATE_LIMITATION_REASON_SENTINEL', requestQuote: null },
+    ] }
+  const requestFor = (value: unknown) => ({ response_format: { type: 'json_object' }, messages: [{ role: 'user', content: JSON.stringify(value) }] })
+  const request = requestFor(input)
+  const response = (value: unknown) => ({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(value) } }] })
+  const valid = { deferred: [{ id: 'missing:0', quote: 'defer publication', reason: 'PRIVATE_REASON_SENTINEL' },
+    { id: 'limitation:0', quote: 'wait for review', reason: 'PRIVATE_SECOND_REASON_SENTINEL' }] }
+  const inspect = (value: unknown, source = request) => {
+    const result = contentReviewDiagnostics(source, response(value))!
+    assert.ok(result.contract === 'lingxios-3.3.11-content-review-deferral', 'Deferral must have its own diagnostic contract')
+    return result
+  }
+  const accepted = inspect(valid)
+  assert.equal(accepted.matchesInstalledContract, true)
+  assert.equal('missing' in accepted || 'limitations' in accepted, false)
+  assert.equal(inspect({ deferred: [] }).matchesInstalledContract, true)
+  const shape = structuredRequestShape(request)!
+  assert.deepEqual(shape.messages[0].fields.findings, { present: true, type: 'array', count: 2 })
+  for (const deferred of [undefined, null, {}, 'PRIVATE_WRONG_SHAPE_SENTINEL', [null],
+    [{ ...valid.deferred[0], id: 'PRIVATE_UNKNOWN_ID_SENTINEL' }], [valid.deferred[0], valid.deferred[0]],
+    [{ ...valid.deferred[0], id: null }], [{ ...valid.deferred[0], quote: 'PRIVATE_AGENT_SENTINEL' }],
+    [{ ...valid.deferred[0], quote: 'PRIVATE_BODY_SENTINEL' }], [{ ...valid.deferred[0], quote: 'PRIVATE_FORGED_QUOTE_SENTINEL' }],
+    [{ ...valid.deferred[0], quote: ' defer publication ' }],
+    [{ ...valid.deferred[0], quote: '' }], [{ ...valid.deferred[0], quote: null }],
+    [{ ...valid.deferred[0], reason: ' ' }], [{ ...valid.deferred[0], reason: null }],
+    [{ ...valid.deferred[0], reason: 'x'.repeat(2001) }]]) {
+    assert.equal(inspect({ deferred }).matchesInstalledContract, false)
+  }
+  const boundInput = { ...input, originalText: 'x'.repeat(2001), findings: Array.from({ length: 33 }, (_, index) => ({ id: `missing:${index}` })) }
+  const boundRequest = requestFor(boundInput)
+  const boundItems = boundInput.findings.map(item => ({ id: item.id, quote: 'x'.repeat(2000), reason: 'x'.repeat(2000) }))
+  assert.equal(inspect({ deferred: boundItems.slice(0, 32) }, boundRequest).matchesInstalledContract, true)
+  assert.equal(inspect({ deferred: boundItems }, boundRequest).matchesInstalledContract, false)
+  assert.equal(inspect({ deferred: [{ ...boundItems[0], quote: boundInput.originalText }] }, boundRequest).matchesInstalledContract, false)
+  assert.equal(inspect({ deferred: [{ ...valid.deferred[0], quote: ' ' }] }, requestFor({ ...input, originalText: ' ' })).matchesInstalledContract, false)
+  assert.equal(inspect(valid, requestFor({ ...input, revisions: [{ text: input.revisions[0].text }] })).matchesInstalledContract, true)
+  assert.equal(inspect({ ...valid, PRIVATE_UNKNOWN_KEY_SENTINEL: 'PRIVATE_UNKNOWN_VALUE_SENTINEL' }).matchesInstalledContract, false)
+  assert.equal(inspect({ deferred: [{ ...valid.deferred[0], PRIVATE_NESTED_KEY_SENTINEL: 'PRIVATE_NESTED_VALUE_SENTINEL' }] }).matchesInstalledContract, false)
+  const raw = response({ ...valid, PRIVATE_UNKNOWN_KEY_SENTINEL: 'PRIVATE_UNKNOWN_VALUE_SENTINEL',
+    deferred: [{ ...valid.deferred[0], PRIVATE_NESTED_KEY_SENTINEL: 'PRIVATE_NESTED_VALUE_SENTINEL' }] })
+  const before = structuredClone(request), rawBefore = structuredClone(raw), observed = contentReviewDiagnostics(request, raw)!
+  const malformed = contentReviewDiagnostics(request, { choices: [{ message: { content: 'PRIVATE_INVALID_JSON_SENTINEL' } }] })!
+  assert.equal(malformed.matchesInstalledContract, false)
+  assert.doesNotMatch(JSON.stringify([accepted, observed, malformed, shape, inspect({ deferred: [{ ...valid.deferred[0], id: 'PRIVATE_UNKNOWN_ID_SENTINEL' }] })]),
+    /PRIVATE_\w+_SENTINEL|defer publication|wait for review|missing:0|limitation:0/)
   assert.deepEqual(request, before)
   assert.deepEqual(raw, rawBefore)
 }

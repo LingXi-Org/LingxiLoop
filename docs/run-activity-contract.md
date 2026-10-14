@@ -1,6 +1,6 @@
 # Public run activity contract — issue #120
 
-The pinned runtime is `@lyyzka/lingxios@3.3.10`. Its public `RunView` owns lifecycle,
+The pinned runtime is `@lyyzka/lingxios@3.3.11`. Its public `RunView` owns lifecycle,
 fences, draft retractions and committed answer selection. Its public tool events
 own tool identity and order. Provider reasoning, model diagnostics, system prompts,
 and internal events are never a source of user-visible explanation.

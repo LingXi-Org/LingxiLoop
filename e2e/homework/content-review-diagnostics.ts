@@ -31,7 +31,7 @@ export function structuredRequestShape(request: Record<string, unknown>) {
         contentType: type(content), contentChars: typeof content === 'string' ? content.length : null,
         contentParts: Array.isArray(content) ? content.length : null, jsonParsed, parsedType: type(parsed),
         fields: Object.fromEntries(['workId', 'requestVersion', 'originalText', 'body', 'revisions', 'checklist', 'resourceChecks',
-          'fileObservations', 'observations', 'input', 'request', 'data'].map(key => [key,
+          'fileObservations', 'observations', 'findings', 'input', 'request', 'data'].map(key => [key,
           { present: Boolean(input && Object.hasOwn(input, key)), type: type(input?.[key]), count: Array.isArray(input?.[key]) ? input[key].length : null }])) }
     }) }
 }
@@ -55,6 +55,30 @@ export function contentReviewDiagnostics(request: Record<string, unknown>, respo
     try { parsed = JSON.parse(content); responseJson = true } catch { /* Record only the malformed shape. */ }
   }
   const value = object(parsed)
+  if (Object.hasOwn(input, 'findings')) {
+    const findings = Array.isArray(input.findings) ? input.findings : []
+    const knownIds = new Set(findings.map(raw => object(raw)?.id).filter(id => typeof id === 'string'))
+    const deferredValue = value?.deferred, entries = Array.isArray(deferredValue) ? deferredValue : []
+    const ids = entries.slice(0, 32).map(raw => object(raw)?.id)
+    const items = entries.slice(0, 32).map((raw, index) => {
+      const item = object(raw), id = { ...textField(item?.id), known: typeof item?.id === 'string' && knownIds.has(item.id),
+        unique: typeof item?.id === 'string' && ids.indexOf(item.id) === index && ids.lastIndexOf(item.id) === index }
+      const quote = textField(item?.quote, humanTexts), reason = textField(item?.reason)
+      const unknownKeyCount = unknownKeys(item, ['id', 'quote', 'reason'])
+      return { type: type(raw), unknownKeyCount, id, quote, reason,
+        accepted: unknownKeyCount === 0 && id.known && id.unique && id.nonempty && id.withinLimit
+          && quote.nonempty && quote.withinLimit && quote.grounded === true && reason.nonempty && reason.withinLimit }
+    })
+    const accepted = Array.isArray(deferredValue) && entries.length <= 32 && items.every(item => item.accepted)
+    const unknownKeyCount = unknownKeys(value, ['deferred'])
+    return { contract: 'lingxios-3.3.11-content-review-deferral' as const,
+      workIdSha256: hash(input.workId), inputSha256: hash(message.content), bodySha256: hash(input.body),
+      requestVersion: Number.isSafeInteger(input.requestVersion) ? input.requestVersion as number : null,
+      revisionCount: input.revisions.length, findingCount: findings.length, responseJson, finishedNormally: choice?.finish_reason === 'stop',
+      responseSha256: typeof content === 'string' ? hash(content) : null, valueType: type(parsed), unknownKeyCount,
+      deferred: { type: type(deferredValue), count: Array.isArray(deferredValue) ? entries.length : null, items, accepted },
+      matchesInstalledContract: responseJson && unknownKeyCount === 0 && accepted }
+  }
   const missingValue = value?.missing, limitationsValue = value?.limitations
   const missingEntries = Array.isArray(missingValue) ? missingValue : []
   const limitationEntries = Array.isArray(limitationsValue) ? limitationsValue : []
@@ -73,7 +97,7 @@ export function contentReviewDiagnostics(request: Record<string, unknown>, respo
   const missingAccepted = Array.isArray(missingValue) && missingEntries.length <= 16 && missingItems.every(item => item.accepted)
   const limitationsAccepted = (limitationsValue === undefined || limitationsValue === null || Array.isArray(limitationsValue))
     && limitationEntries.length <= 16 && limitationItems.every(item => item.accepted)
-  return { contract: 'lingxios-3.3.6-content-review', workIdSha256: hash(input.workId), inputSha256: hash(message.content), bodySha256: hash(input.body),
+  return { contract: 'lingxios-3.3.6-content-review' as const, workIdSha256: hash(input.workId), inputSha256: hash(message.content), bodySha256: hash(input.body),
     requestVersion: Number.isSafeInteger(input.requestVersion) ? input.requestVersion as number : null,
     revisionCount: input.revisions.length, responseJson, finishedNormally: choice?.finish_reason === 'stop',
     responseSha256: typeof content === 'string' ? hash(content) : null, valueType: type(parsed), unknownKeyCount: unknownKeys(value, ['missing', 'limitations']),
