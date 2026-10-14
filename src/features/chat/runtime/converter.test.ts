@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ImEnvelope } from '@/lib/im/wukong'
-import { createNativeMessage, serializeMessage, DATA_NAMES } from '@/lib/nativeMessage'
+import { createNativeMessage, deserializeMessage, serializeMessage, DATA_NAMES } from '@/lib/nativeMessage'
 import type { Participant } from '@/types'
 import { convertEnvelope, convertEnvelopeBatch, projectMessageGroups } from './converter'
 import { getLingxiMessageMetadata } from './model'
@@ -10,6 +10,27 @@ const participants: Record<string, Participant> = {
   me: { id: 'me', kind: 'human', name: 'Me', initial: 'M', avatarBg: '#fff', status: 'avail' },
   agent: { id: 'agent', kind: 'agent', name: 'Scout', initial: 'S', avatarBg: '#fff', status: 'avail' },
 }
+
+// Failure cases: legacy metadata/tool names leaking from IM, cached JSON or nested messages;
+// removing ordinary text or unrelated tools, or mutating the persisted input.
+test('memory is removed on history and cache normalization, including nested tool messages', () => {
+  const memory = { chips: [{ id: 'm', text: 'PRIVATE SUMMARY' }], calls: {}, revision: 1 }
+  const calls = ['memory.apply', 'memory__read'].map(toolName => ({ type: 'tool-call' as const,
+    toolCallId: toolName, toolName, args: { note: 'PRIVATE ARGUMENT' }, argsText: '{}', result: 'PRIVATE RESULT' }))
+  const child = createNativeMessage({ id: 'child', role: 'assistant', custom: { memory },
+    content: [...calls, { type: 'text', text: 'child reply' }] })
+  const payload = createNativeMessage({ id: 'historical', role: 'assistant', custom: { memory, sourceRef: 'source' },
+    content: [...calls, { type: 'text', text: 'ordinary reply' },
+      { type: 'tool-call', toolCallId: 'other', toolName: 'documents.read', args: {}, argsText: '{}', messages: [child] }] })
+  const original = JSON.stringify(payload)
+  const result = convertEnvelope({ ...envelope('text'), fromUid: 'agent', payload }, { participants, meId: 'me' })
+  assert.deepEqual(result.content.map(part => part.type), ['text', 'tool-call'])
+  assert.equal(result.metadata.custom.sourceRef, 'source')
+  assert.doesNotMatch(JSON.stringify(result), /PRIVATE|memory[._]|"memory"/)
+  assert.match(JSON.stringify(result), /ordinary reply|child reply|documents.read/)
+  assert.deepEqual(deserializeMessage(serializeMessage(result)), result)
+  assert.equal(JSON.stringify(payload), original)
+})
 function envelope(kind: 'text' | 'attachment' | 'poll', data: Record<string, unknown> = {}, patch: Partial<ImEnvelope> = {}): ImEnvelope {
   return { messageId: `${kind}-server`, messageSeq: 7, clientMsgNo: `${kind}-client`, channelId: 'room', channelType: 2,
     fromUid: kind === 'text' ? 'me' : 'agent', timestamp: 1_767_225_600,

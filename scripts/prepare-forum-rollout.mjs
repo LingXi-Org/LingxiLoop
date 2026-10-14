@@ -1,4 +1,4 @@
-// One-time maintenance for migration 0039 through Komodo v2.3.3 public execute/read APIs.
+// One-time maintenance for migration 0040 through Komodo v2.3.3 public execute/read APIs.
 // Secrets remain in Komodo's service environment; only update IDs and backup metadata are logged.
 export async function prepareForumRollout({ url, headers }) {
   async function request(path, body) {
@@ -27,7 +27,7 @@ psql -X -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -v ON_ERROR_STOP=1
   const output=check.logs.map(log=>log.stdout).join('\n')
   const version=Number(/^FORUM_SCHEMA=(\d+)\s*$/m.exec(output)?.[1])
   if(!Number.isInteger(version)||version<38) throw new Error('Forum preflight requires a verified schema 38 or newer')
-  if(version>=39) {console.log(`[forum-preflight] schema ${version} already includes forum convergence`);return}
+  if(version>=40) {console.log(`[forum-preflight] schema ${version} already includes forum convergence`);return}
   const stopped=[]
   try {
     // Stop admission on both instances first. Worker SIGTERM gets its configured drain grace.

@@ -3,7 +3,6 @@ import { startDbGcWorker } from './db-gc.js'
 import { env } from './env.js'
 import { reconcileImChannels, startImChannelReconciliation } from './im/reconcile.js'
 import { startCompanyOnboardingEffectWorker } from './modules/companies/worker.js'
-import { startDocumentMentionDeliveryWorker } from './modules/documents/worker.js'
 import { startEducationContractExpiryWorker } from './modules/education/public.js'
 import { startKnowledgeStorageGc, startKnowledgeWorker } from './modules/knowledge/worker.js'
 import { startLearningEffectWorker } from './modules/learning/worker.js'
@@ -30,7 +29,6 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'learning-effects', concurrency: 'queue-claim', start: () => startLearningEffectWorker() },
   { name: 'company-onboarding-effects', concurrency: 'queue-claim', start: () => startCompanyOnboardingEffectWorker() },
   { name: 'im-channel-reconciliation', concurrency: 'idempotent', start: () => startImChannelReconciliation() },
-  { name: 'document-mention-delivery', concurrency: 'queue-claim', start: () => startDocumentMentionDeliveryWorker() },
   { name: 'education-contract-expiry', concurrency: 'queue-claim', start: () => startEducationContractExpiryWorker() },
   { name: 'database-gc', concurrency: 'idempotent', start: () => startDbGcWorker() },
   { name: 'knowledge-ingestion', concurrency: 'queue-claim', start: () => startKnowledgeWorker() },

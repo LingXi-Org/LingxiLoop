@@ -19,7 +19,7 @@ function project(item: RunStreamEvent, runId = 'run', canControl = true) {
   return projection.apply(item)
 }
 function applyRunUpdate(state: typeof EMPTY_CONVERSATION_CHAT_STATE, target: { conversationId: string; agentId: string; runId: string; threadId?: string },
-  item: RunStreamEvent, participant?: (typeof participants)['agent'], response?: { events: import('@lyyzka/lingxios/ui').RunEvent[]; canControl: boolean; memory?: import('@/lib/agentRunSnapshot').RunMemory }) {
+  item: RunStreamEvent, participant?: (typeof participants)['agent'], response?: { events: import('@lyyzka/lingxios/ui').RunEvent[]; canControl: boolean }) {
   if (response) {
     if (!projections.has(target.runId)) { const projection = new RunStreamProjection(target.runId, response.canControl); projection.apply(item); projections.set(target.runId, projection) }
     for (const event of response.events) project({ type: 'event', event }, target.runId)
@@ -233,7 +233,7 @@ test('snapshots preserve IM order after reload and older history does not move t
   assert.equal(state.messages[3]!.createdAt.getTime(), epoch + 2000)
 })
 
-test('committed memory summaries belong to the main run reply and survive HTTP replay and IM merging', () => {
+test('memory stays absent from run replies, HTTP replay and IM merging', () => {
   const events = [
     { runId: 'run', seq: 1, kind: 'tool.started', stage: 'started' as const, visibility: 'user' as const,
       data: { toolCallId: 'host:memory', name: 'memory.apply' } },
@@ -248,7 +248,8 @@ test('committed memory summaries belong to the main run reply and survive HTTP r
   { type: 'state', state: response }, participants.agent, response)
   assert.equal(metadata(state.messages[0]).memory, undefined)
   const main = state.messages[1], memory = metadata(main).memory
-  assert.deepEqual(memory?.chips, [{ id: 'memory', text: '喜欢中文' }])
+  assert.equal(memory, undefined)
+  assert.doesNotMatch(JSON.stringify(main), /喜欢中文|memory[._]/)
   const committed = { ...main, metadata: { ...main.metadata,
     custom: { ...metadata(main), sequence: 2, clientMessageId: 'canonical' } } } as ThreadMessage
   const merged = mergeCanonicalMessages(state.messages, [committed])

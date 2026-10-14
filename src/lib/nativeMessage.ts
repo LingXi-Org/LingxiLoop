@@ -125,7 +125,10 @@ export function serializeMessage(message: ThreadMessage): NativeMessage {
 }
 export function deserializeMessage(value: unknown): ThreadMessage {
   const parsed = nativeMessageSchema.parse(value)
-  return { ...parsed, createdAt: new Date(parsed.createdAt), content: parsed.content.map(part => part.type === 'tool-call' && part.messages
+  // Old IM records and browser caches may still contain private memory projections.
+  const { memory: _memory, ...custom } = parsed.metadata.custom
+  return { ...parsed, metadata: { ...parsed.metadata, custom }, createdAt: new Date(parsed.createdAt),
+    content: parsed.content.filter(part => part.type !== 'tool-call' || !/^memory(?:\.|__)/.test(part.toolName)).map(part => part.type === 'tool-call' && part.messages
     ? { ...part, messages: part.messages.map(deserializeMessage) } : part) } as ThreadMessage
 }
 export function createNativeMessage(input: { id: string; role: ThreadMessage['role']; content: ThreadMessage['content'] | NativeMessage['content'];

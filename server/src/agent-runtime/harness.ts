@@ -2,6 +2,7 @@ import type { HarnessProfile, SkillDefinition, ToolDefinition } from '@lyyzka/li
 import { presentationCard } from '../modules/presentations/agent-tools.js'
 import { activityTool } from './activity-tool.js'
 import { beginPublicToolActivity, finishPublicToolActivity } from './tool-activity.js'
+import { GROUP_COLLABORATION_RULES } from './conversation-style.js'
 
 export const productSkills: SkillDefinition[] = [
   { name: 'public-task-progress', version: '1', description: 'Keep the user informed during multi-step tasks with public explanations and a real plan.',
@@ -10,8 +11,8 @@ export const productSkills: SkillDefinition[] = [
     actions: ['documents.read','documents.edit'], body: 'Read the current document and revision. Apply the requested minimal edits against that revision. On conflict, reread and preserve peer content. Read back the committed document before reporting completion.' },
   { name: 'research-evidence', version: '2', description: 'Research a question using Chinese web search and readable primary evidence.',
     actions: ['research.search','research.read'], body: 'Use research.search for Chinese web search and prefer relevant domestic primary sources. Read the sources before treating snippets as evidence, and distinguish supported findings from uncertainty. Cite only evidence actually returned by the tools; do not invent source contents. Search sources are displayed as cards: avoid repeating a link list in the answer, but preserve necessary inline citations. Do not comment on a short or empty result list or fill it using foreign search engines. If the search tool fails, state the failure honestly without claiming that no sources exist.' },
-  { name: 'canvas-cooperation', version: '2', description: 'Use for a shared deliverable or independent evidence verification.',
-    actions: ['canvas.current','canvas.start_workspace','canvas.assign','canvas.submit_report'], body: 'Use canvas.available_agents for actual room members. Create the business workspace with canvas.start_workspace and assign specialist and independent verifier tasks through canvas.assign. These tools dispatch real child work and wait for its results; never bypass them with graph.start. Persist canvas.submit_report, consume all current reports and preserve unresolved disagreements. Creation or acceptance is not completion.' },
+  { name: 'canvas-cooperation', version: '3', description: 'Build a shared deliverable through public specialist contributions and independent review.',
+    actions: ['canvas.current','canvas.start_workspace','canvas.submit_report'], body: 'Read the current Canvas and actual room roster. Create or reuse the shared workspace, then divide substantial work through explicit @id assignments in the native final reply. Each specialist contributes their part and persists canvas.submit_report with observed evidence. An independent verifier checks the actual artifact and records disconfirming evidence. Creation and assignment are not completion; no tool dispatches hidden work or resumes a reporter. ' + GROUP_COLLABORATION_RULES },
   { name:'forum-assignments',version:'1',description:'Assist with teacher assignments while preserving student authorship.',
     actions:['learning.list_assignments','learning.get_assignment','learning.list_submissions','learning.submit_assignment'],body:'Read the current teacher assignment before helping. Submit only when the original student asks. Preserve the exact committed human text for AGENT_RELAY; label generated work AGENT_GENERATED. Never claim generated work is independent student evidence. Verify submission IDs and keep private history in an authorized audience.' },
   { name: 'course-evidence', version: '1', description: 'Ground course-dependent answers in authorized knowledge and resolve missing or conflicting evidence.',
@@ -33,7 +34,7 @@ export function createProductHarness(productTools: ToolDefinition[]): HarnessPro
       }
     },
   }))
-  return { id: 'lingxiloop', version: '3.3.6-public-activity-1', mode: 'execute',
+  return { id: 'lingxiloop', version: '3.4.1-group-mentions-activity-1', mode: 'execute',
     capabilities: [...new Set(tools.map(tool => tool.action.split('.')[0]))].map(id => ({ id,
       tools: tools.filter(tool => tool.action.startsWith(`${id}.`)),
       skills: productSkills.filter(skill => skill.actions[0].startsWith(`${id}.`)),

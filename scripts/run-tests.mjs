@@ -42,8 +42,6 @@ const testsByScope = {
     'src/features/chat/runtime/harness.test.ts',
     'src/features/chat/components/ResearchSources.test.tsx',
     'src/features/chat/runtime/harness-api.test.ts',
-    'src/features/chat/runtime/memory.test.ts',
-    'src/components/assistant-ui/elements/memory-chips.test.tsx',
     'src/features/chat/runtime/run-updates.test.ts',
     'src/features/chat/runtime/attachment-messages.test.ts',
     'src/api/transport.test.ts',

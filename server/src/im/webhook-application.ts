@@ -1,7 +1,7 @@
 import { attachmentMetadata, assertOwnedMessageAttachments } from './attachments.js'
 import { createHash } from 'node:crypto'
 import { assertUiInteractionAdmission } from './interactive-ui-admission.js'
-import { nativeText, nativeData, nativeAttachments, userMessageSchema, type NativeMessage } from './message-types.js'
+import { nativeText, nativeAttachments, userMessageSchema, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import { parseMentions } from '../mentions.js'
 import { resolveLearningAgentRecipients } from './routing.js'
@@ -50,10 +50,6 @@ export interface WukongCommittedEvent {
   clientMsgNo: string
   fromUid: string
   payload: NativeMessage
-}
-
-function record(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 
 export class WukongWebhookApplication {
@@ -121,14 +117,11 @@ export class WukongWebhookApplication {
           throw new Error('only the registered 望远 Agent may write as an Agent in this room')
         }
       }
-      const refs = record(custom.refs)
       if (input.payload.role === 'user') await assertOwnedMessageAttachments(db, { companyId: binding.company_id, userId: input.fromUid, payload: input.payload })
       const parsedMentions = custom.uiInteraction ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(input.payload), members)
-      const mentionedIds = [...new Set([
-        ...(Array.isArray(custom.mentionedIds) ? custom.mentionedIds.map(String) : []),
-        ...parsedMentions.mentionedIds,
-      ])]
-      const mentionAll = !custom.uiInteraction && (custom.mentionAll === true || parsedMentions.mentionAll)
+      const mentionedIds = custom.uiInteraction && Array.isArray(custom.mentionedIds)
+        ? custom.mentionedIds.map(String) : parsedMentions.mentionedIds
+      const mentionAll = parsedMentions.mentionAll
       const recipients = resolveLearningAgentRecipients({
         authorId: input.fromUid,
         channelType: Number(binding.profile.channelType ?? 2),
@@ -138,8 +131,6 @@ export class WukongWebhookApplication {
         replyAuthorId: typeof custom.replyAuthorId === 'string'
           ? custom.replyAuthorId : undefined,
         leaderAgentId: binding.leader_agent_id ?? undefined,
-        handoffTargetId: nativeData(input.payload,'handoff') !== undefined && typeof refs.toAgentId === 'string'
-          ? refs.toAgentId : undefined,
       })
       if (teacherRoom && recipients.some((agentId) => agentId !== teacherRoom.agent_id)) {
         throw new Error('teacher room can wake only its registered 望远 Agent')

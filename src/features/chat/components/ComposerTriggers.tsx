@@ -13,25 +13,24 @@ import { useParticipants } from '@/features/agents/state'
 import { useConversations } from '@/features/conversations/store'
 import { useMe } from '@/stores/auth'
 import { participantRoleZh } from '@/lib/participantRole'
+import { scanMentions, type MentionTarget } from '@/lib/mentions'
+import { MentionBadge } from '@/components/MentionBadge'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 
-const mentionFormatter: Unstable_DirectiveFormatter = {
+function mentionFormatter(targets: readonly MentionTarget[]): Unstable_DirectiveFormatter { return {
   serialize: (item) => `@${item.id}`,
   parse(text) {
     const segments: Unstable_DirectiveSegment[] = []
-    const pattern = /(^|\s)@([\p{L}\p{N}_-]+)/gu
     let cursor = 0
-    for (const match of text.matchAll(pattern)) {
-      const prefixLength = match[1]?.length ?? 0
-      const start = (match.index ?? 0) + prefixLength
+    for (const { id, start, end } of scanMentions(text, targets)) {
       if (start > cursor) segments.push({ kind: 'text', text: text.slice(cursor, start) })
-      const id = match[2] ?? ''
-      segments.push({ kind: 'mention', type: id === 'all' ? 'broadcast' : 'participant', label: id, id })
-      cursor = start + id.length + 1
+      segments.push({ kind: 'mention', type: id === 'all' ? 'broadcast' : 'participant', label: targets.find(target => target.id === id)?.name ?? '所有人', id })
+      cursor = end
     }
     if (cursor < text.length) segments.push({ kind: 'text', text: text.slice(cursor) })
     return segments
   },
-}
+} }
 
 function TriggerIcon({ item }: { item: Unstable_TriggerItem }) {
   const participant = useParticipants((state) => state.byId[item.id])
@@ -77,22 +76,9 @@ export function ComposerDirectiveChip({
   label: string
 }) {
   const participant = useParticipants((state) => state.byId[directiveId])
-  return (
-    <span
-      className="mx-0.5 inline-flex h-6 select-none items-center gap-1 rounded-full bg-primary/10 pe-2 ps-1 align-middle text-xs font-medium text-primary"
-      data-directive-type={directiveType}
-      data-directive-id={directiveId}
-    >
-      {participant ? (
-        <Avatar p={participant} size={18} ringColor="transparent" animated={false} mode="chat" />
-      ) : (
-        <span className="grid size-[18px] place-items-center rounded-full bg-primary/15">
-          <UsersRoundIcon className="size-3" aria-hidden />
-        </span>
-      )}
-      <span>@{label}</span>
-    </span>
-  )
+  return <span data-directive-type={directiveType} data-directive-id={directiveId}>
+    {participant || directiveId === 'all' ? <MentionBadge participant={participant ?? EVERYONE_BLOUB_PARTICIPANT} id={directiveId} /> : <span>@{label}</span>}
+  </span>
 }
 
 export function ComposerTriggers({
@@ -124,7 +110,7 @@ export function ComposerTriggers({
   const mention = unstable_useMentionAdapter({
     items: mentionItems,
     includeModelContextTools: false,
-    formatter: mentionFormatter,
+    formatter: useMemo(() => mentionFormatter((conversation?.members ?? []).flatMap(id => participants[id] ? [participants[id]] : [])), [conversation?.members, participants]),
   })
   const commands = useMemo(() => [{
     id: 'poll',

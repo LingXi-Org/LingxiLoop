@@ -156,8 +156,10 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
   const message = useAuiState(state => state.message)
   const attachments = message.role === 'user' ? message.attachments : []
   const last = message.content.reduce((last, part, index) => part.type !== 'data' || part.name !== 'citation-claims' ? index : last, -1)
+  const hasActivity = Boolean(message.metadata.custom.activityHistory) || message.parts.some(part =>
+    part.type === 'tool-call' || ['commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
   return <GroupOwnsFooter.Provider value={false}><div className="native-message-content grid min-w-0 gap-2" data-aui-theme="elements">
-    {message.role === 'assistant' && message.metadata.custom.activityPresentation ? <ActivityParts Text={Text} footer={footer} mediaFooter={mediaFooter} attention={attention} /> : <MessagePrimitive.GroupedParts groupBy={groupParts} indicator="never">
+    {message.role === 'assistant' && message.metadata.custom.activityPresentation && hasActivity ? <ActivityParts Text={Text} footer={footer} mediaFooter={mediaFooter} attention={attention} /> : <MessagePrimitive.GroupedParts groupBy={groupParts} indicator="never">
       {({ part, children }) => {
         if (part.type === 'indicator') return null
         if (part.type === 'group-reasoning' || part.type === 'group-tools') {

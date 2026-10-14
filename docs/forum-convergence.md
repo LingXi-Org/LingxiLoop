@@ -65,7 +65,7 @@ production maintenance; main releases therefore queue instead of cancelling.
 | --- | --- |
 | Course creation/editing/content dashboards, objectives, activities, missions, growth, cases, independent resources | Removed their screens, navigation values, clients, routes, applications/repositories and exclusive contracts. Old navigation values normalize to the supported workspace default. |
 | Learning Agent tools and automatic teacher operations | Removed objective/activity/mission/evaluation/case tools, mission coordinator, digest generation, attention projections and course-room auto creation. Only forum assignment list/read/private-history/submit tools remain, with frozen-audience checks and relay/generated provenance. |
-| Database retirement | `0039` drops knowledge units/dependencies, activities/links, missions/steps, attempts/evaluations/states/cases/actions, course rooms, attention/briefing tables and exclusive visit-watermark fields. Historical migrations remain immutable. |
+| Database retirement | `0040` drops knowledge units/dependencies, activities/links, missions/steps, attempts/evaluations/states/cases/actions, course rooms, attention/briefing tables and exclusive visit-watermark fields. Historical migrations remain immutable. |
 | Forum authoritative model | Existing `course_forum_posts` becomes the assignment/share authority; submissions, feedback and reactions belong to it. Teacher publication, deadlines, closure and feedback use current course grants. |
 | Minimum course context | Course IDs, project memberships/invitations, teacher/student role and lifecycle authorization remain necessary to isolate forum access; they do not restore course-management UI or APIs. |
 | Shared infrastructure | Knowledge storage and authenticated files support assignment references; IM/documents/Canvas, evidence/trust audit, notification transport/preferences and private teacher conversations remain shared services. Retired learning notification producers and pending deliveries are removed/cancelled. |
@@ -101,8 +101,12 @@ procedure: inspect schema through `RunStackService`, stop both API writers then
 both workers with 150-second drain allowance, create a private custom-format dump,
 restore it into a scratch database, compare retained-business counts and record
 the SHA-256. Dump/restore failures restart the stopped old services before any
-migration. A completed schema 39 skips maintenance on later rollouts. The
+migration. A completed schema 40 skips maintenance on later rollouts. The
 production dump is under the PostgreSQL volume's
 `forum-upgrade-backups/<release SHA>/product.dump`, with restore list and hash.
 After migration, recovery is a new release or an explicit matched DB/image
-restore; the script never automatically starts old writers against schema 39.
+restore; the script never automatically starts old writers against schema 40.
+
+The release includes upstream native memory/group collaboration migration `0039`
+and LingxiOS `3.4.1`; forum convergence is the next migration `0040`. Both
+schema 38 and 39 require the verified maintenance backup before this release.

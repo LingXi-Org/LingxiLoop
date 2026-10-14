@@ -2,9 +2,9 @@ import { AssistantStream, AssistantTransportEncoder, type AssistantStreamChunk, 
 import type { ReadonlyJSONValue } from 'assistant-stream/utils'
 import { consumeAssistantMessage, consumeRunStreamEvent, createRunView, type AssistantMessage, type RunStreamEvent } from '@lyyzka/lingxios/ui'
 import type { createLingxiOS, RunIdentity } from '@lyyzka/lingxios'
-import type { AgentRunSnapshot, RunDisplayState, RunMemory } from '../../../src/lib/agentRunSnapshot.js'
+import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { createNativeMessage } from '../im/message-types.js'
-import { runMessageParts, runMessageStatus, harnessToolParts, projectRunMemory, type HarnessToolPart } from './message-projection.js'
+import { runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
 import { nativeRunEvents, publicRunEvent } from './public-events.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { readPublicToolActivity } from './tool-activity.js'
@@ -16,9 +16,9 @@ export class RunStreamProjection {
   private view: ReturnType<typeof createRunView>
   private createdAt: string | null = null
   private tools: HarnessToolPart[] = []
-  private memory: RunMemory | null = null
   private error: string | null = null
   private sourceRef: string | null = null
+  private durableDraft = ''
   needsResync = false
 
   constructor(runId: string, private readonly canControl: boolean,
@@ -32,6 +32,11 @@ export class RunStreamProjection {
     if (id !== this.view.runId) throw new Error('运行身份不一致')
     const before = this.view
     this.view = consumeRunStreamEvent(before, item)
+    if (this.view.lifecycle !== 'leased' || this.view.fence !== before.fence
+      || this.view.requestVersion !== before.requestVersion || this.view.messageFence === this.view.fence) this.durableDraft = ''
+    if (item.type === 'event' && this.view !== before && item.event.visibility === 'user'
+      && item.event.kind === 'model.delta' && item.event.data.partType === 'text'
+      && this.view.lifecycle === 'leased' && this.view.preview === null && this.view.draft) this.durableDraft = this.view.draft
     this.needsResync = item.type === 'preview' && item.preview.kind === 'delta'
       && this.view !== before && this.view.preview === null
     if (item.type === 'state' && this.view !== before) {
@@ -42,7 +47,6 @@ export class RunStreamProjection {
       const action = this.tools.find(tool => tool.toolCallId === item.event.data.toolCallId)?.toolName
       const event = publicRunEvent(item.event, action)
       this.tools = harnessToolParts(this.view.runId, [event], this.tools)
-      this.memory = projectRunMemory(this.view.runId, [event], this.memory ?? undefined) ?? null
       if (this.view !== before && event.kind === 'run.failed' && typeof event.data.error === 'string') this.error = event.data.error
       if (event.kind === 'run.started' && typeof event.data.sourceRef === 'string') this.sourceRef = event.data.sourceRef
     }
@@ -104,7 +108,8 @@ export class RunStreamProjection {
       goalOutcome: control.goalOutcome ? outcome as NonNullable<RunDisplayState['goalOutcome']> : null,
       artifacts: message?.envelope.artifacts ?? [] }
     const agentId = this.identity?.agentId ?? message?.agentId
-    const parts = runMessageParts(this.view, this.tools)
+    // Ephemeral cleanup must not retract validated model.delta text before its committed state arrives.
+    const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, this.tools)
     const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
     const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
     const activitySet = new Set(activity)
@@ -115,7 +120,7 @@ export class RunStreamProjection {
         ...(agentId ? { refs: { runId: this.view.runId, agentId } } : {}),
         ...(this.identity?.principalId ? { controlPrincipalId: this.identity.principalId } : {}),
         ...(this.identity?.threadId ? { replyToClientMsgNo: this.identity.threadId } : {}),
-        ...(this.memory ? { memory: this.memory } : {}), ...(this.error ? { harnessError: this.error } : {}),
+        ...(this.error ? { harnessError: this.error } : {}),
         ...(this.sourceRef ? { sourceRef: this.sourceRef } : {}), suppressAgentWake: true } }
     // Try the complete message first for ordinary histories; the wire protocol
     // stays unchanged. Overflow becomes an authorized, bounded activity page.

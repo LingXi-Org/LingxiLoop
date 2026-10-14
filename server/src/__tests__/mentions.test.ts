@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { parseMentions } from '../mentions.js'
+import { canonicalizeMentions, parseMentions, scanMentions } from '../mentions.js'
 
 const targets = [
   { id: 'ann', name: 'Ann' },
@@ -50,4 +50,41 @@ test('Chinese prose may immediately follow a unique longest roster name', () => 
   })
   assert.deepEqual(parseMentions('@明理请解释', [...roster, { id: 'custom', name: '明理' }]).mentionedIds, [])
   assert.deepEqual(parseMentions('`@明理请解释` https://test/@寻知查资料 a@明理.cn', roster).mentionedIds, [])
+})
+
+// Failure cases: normalization shifts UTF-16 offsets, whitespace splits a name,
+// adjacent mentions disappear, ambiguous names dispatch, or quoted examples wake agents.
+test('shared mention ranges preserve original text across Unicode and whitespace', () => {
+  const text = '🙂请＠　ＡＮＮ、@\u00a0Anna   Smith一起处理@iris-01@所有人'
+  const mentions = scanMentions(text, targets)
+  assert.deepEqual(mentions.map(({ id, start, end }) => [id, text.slice(start, end)]), [
+    ['ann', '＠　ＡＮＮ'], ['anna', '@\u00a0Anna   Smith'], ['iris-01', '@iris-01'], ['all', '@所有人'],
+  ])
+  assert.deepEqual(parseMentions(text, targets), { mentionedIds: ['ann', 'anna', 'iris-01'], mentionAll: true })
+})
+
+test('normalizes composed graphemes while preserving their full source ranges', () => {
+  const source = '🙂 @Cafe\u0301、＠Ｃａｆé'
+  const roster = [{ id: 'cafe', name: 'Café' }]
+  assert.deepEqual(scanMentions(source, roster).map(({ id, start, end }) => [id, source.slice(start, end)]), [
+    ['cafe', '@Cafe\u0301'], ['cafe', '＠Ｃａｆé'],
+  ])
+  assert.equal(canonicalizeMentions(source, roster), '🙂 @cafe、@cafe')
+})
+
+test('only ordinary message prose can mention a member', () => {
+  const text = '> 引用 @ann\n> @iris-01\n\n[@anna](https://example.com) ![@ann](/image.png)\n'
+    + '~~~text\n@iris-01\n~~~\n`@ann` mail@ann.cn https://example.com/@anna\n真实 @iris-01'
+  assert.deepEqual(parseMentions(text, targets), { mentionedIds: ['iris-01'], mentionAll: false })
+  assert.deepEqual(scanMentions('@annex @missing @\nann', targets), [])
+  assert.deepEqual(scanMentions('@同 名', [{ id: 'one', name: '同 名' }, { id: 'two', name: '同　名' }]), [])
+})
+
+test('canonical storage preserves prose and examples while surviving a member rename', () => {
+  const source = '请＠　小灵检查 [@Ann](/example)，再找@Anna   Smith。'
+  const canonical = canonicalizeMentions(source, targets)
+  assert.equal(canonical, '请@iris-01检查 [@Ann](/example)，再找@anna。')
+  assert.deepEqual(parseMentions(canonical, targets.map(target => ({ ...target, name: '改名' }))), {
+    mentionedIds: ['iris-01', 'anna'], mentionAll: false,
+  })
 })

@@ -1,4 +1,4 @@
-import type { NativeMessage } from './message-types.js'
+import { nativeMessageSchema, type NativeMessage } from './message-types.js'
 import type { ImMessageEnvelope } from './messages-application.js'
 import { createImMessagesApplication, imMessagesApplication } from './messages-facade.js'
 export { createMessageTools } from './agent-tools.js'
@@ -50,7 +50,7 @@ export async function sendAgentChannelMessage(input: {
   | { kind: 'channel_not_found' }
   | { kind: 'nonce_conflict' }
   | { kind: 'verbatim_peer'; peer: ImMessageEnvelope }
-  | { kind: 'accepted'; duplicate: boolean; messageId: string; sequence: number }
+  | { kind: 'accepted'; duplicate: boolean; messageId: string; sequence: number; payload: NativeMessage }
 > {
   const result = await createImMessagesApplication(input.signal).acceptAgentMessage({
     companyId: input.companyId,
@@ -68,7 +68,7 @@ export async function sendAgentChannelMessage(input: {
   if (!messageId || !Number.isSafeInteger(sequence) || sequence <= 0) {
     throw new Error('WuKong send acceptance returned an invalid echo')
   }
-  return { kind: 'accepted', duplicate: result.duplicate, messageId, sequence }
+  return { kind: 'accepted', duplicate: result.duplicate, messageId, sequence, payload: nativeMessageSchema.parse(result.echo.payload) }
 }
 
 export async function sendSystemChannelMessage(input: {

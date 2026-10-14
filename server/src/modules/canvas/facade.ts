@@ -37,9 +37,7 @@ const canvasApplication = createCanvasApplication({
 
 export const {
   addCanvasComment,
-  addCanvasWorkspaceAgents,
   appendCanvasFrameContent,
-  assertCanvasWorkReportReady,
   assignCanvasWorkspaceWork,
   completeCanvasWork,
   createCanvasFrame,
@@ -47,12 +45,10 @@ export const {
   ensureConversationCanvas,
   getCanvasSnapshot,
   getConversationCanvas,
-  handoffCanvasWork,
   listCanvasAvailableAgents,
   listCanvasWorkspaces,
   setCanvasStatus,
   startCanvasWorkspace,
-  steerCanvasAssignment,
   stopCanvasAssignment,
   stopCanvasWorkspace,
   submitCanvasReport,

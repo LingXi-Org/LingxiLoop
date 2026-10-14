@@ -77,6 +77,48 @@ test('adjacent ordinary tools group in place while retired records stay visible'
   assert.match($('[data-agent-body]').last().text(), /最后正文/)
 })
 
+// Failure cases: a run's tools appear twice or in multiple disclosures; answers or
+// decisions get hidden; failed/cancelled runs are presented as successful.
+test('run activity folds ordinary tool history once while answers and decisions stay visible', () => {
+  const tool = (id: string) => ({ type: 'tool-call' as const, toolCallId: id, toolName: `fixture.${id}`, args: {}, argsText: '{}', result: { ok: true }, providerMetadata: { lingxiloop: { activity: { version: 1,id,kind: 'tool',label: '处理任务' } } } })
+  const reply = { ...message('1'), status: { type: 'requires-action', reason: 'tool-calls' }, content: [
+    tool('one'), { type: 'text', text: '公开答复' },
+    { ...tool('approval'), result: undefined, approval: { id: 'gate' } }, tool('two'),
+    { ...tool('error'), isError: true },
+  ], metadata: { custom: { ...getLingxiMessageMetadata(message('1')), activityPresentation: { version: 1 },runId: 'run',
+    harness: { ...createRunView('run'), lifecycle: 'waiting', artifacts: [] } } },
+  } as ThreadMessage
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  assert.equal($('[data-slot="run-activity"]').length, 1)
+  assert.equal($('[data-slot="run-activity"]').attr('data-status'), 'requires-action')
+  assert.equal($('[data-slot="tool-group-root"]').length, 0)
+  assert.equal($.text().split('公开答复').length - 1, 1)
+  for (const label of ['等待有权限的成员审批。', '这一步未完成，请重试。']) assert.ok($.text().includes(label), label)
+  assert.equal($('section[aria-label="工具：fixture.one"]').length, 0)
+  assert.equal($('section[aria-label="工具：fixture.two"]').length, 0)
+})
+
+test('run activity retains cancelled, error and incomplete outcomes', () => {
+  for (const [status, expected] of [
+    [{ type: 'running' }, 'running'],
+    [{ type: 'complete', reason: 'stop' }, 'complete'],
+    [{ type: 'incomplete', reason: 'cancelled' }, 'cancelled'],
+    [{ type: 'incomplete', reason: 'error' }, 'error'],
+    [{ type: 'incomplete', reason: 'other' }, 'incomplete'],
+  ] as const) {
+    const reply = { ...message('1'), status, content: [
+      { type: 'tool-call', toolCallId: 'call', toolName: 'fixture.tool', args: {}, argsText: '{}', result: { ok: true } },
+      { type: 'text', text: '保留的答复' },
+    ], metadata: { custom: { ...getLingxiMessageMetadata(message('1')), activityPresentation: { version: 1 },runId: 'run',
+      harness: { ...createRunView('run'), artifacts: [] } } },
+    } as ThreadMessage
+    const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+    assert.equal($('[data-slot="run-activity"]').attr('data-status'), expected)
+    assert.equal($.text().split('保留的答复').length - 1, 1)
+    assert.equal($('time').length, 0)
+  }
+})
+
 test('existing data names render descriptive cards without dumping JSON', () => {
   const reply = { ...message('1'), content: [
     { type: 'data', name: 'document-reference', data: { title: '证据文档', pages: 3, anchors: [{ page: 2, quote: '可核对的证据' }], activePage: 2 } },

@@ -4,7 +4,7 @@ import test from 'node:test'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
 import type { ImEnvelope } from '@/lib/im/wukong'
-import { canvasProgress, handoffProgress, knowledgeProgress } from './task-progress'
+import { canvasProgress, knowledgeProgress } from './task-progress'
 import { convertEnvelope, convertEnvelopeBatch } from './converter'
 import { mergeCanonicalMessages } from './store'
 import { getLingxiMessageMetadata } from './model'
@@ -14,16 +14,7 @@ import { harnessToolParts } from '../../../../server/src/agent-runtime/message-p
 const names = { nova: { name: '司南' }, sage: { name: '明理' }, trace: { name: '溯源' } }
 const at = '2026-09-21T08:00:00.000Z'
 
-test('official ToolUI renders actual handoff outcomes', () => {
-  const handoff = { id: 'handoff', fromAgentId: 'nova', toAgentId: 'sage', title: '验证概念', updatedAt: at }
-  const accepted = handoffProgress({ ...handoff,status: 'accepted' }, names)
-  assert.equal(accepted.steps[0].status, 'pending')
-  assert.equal(accepted.choice, undefined)
-  for (const [status,outcome] of [['completed','success'],['failed','failed'],['cancelled','cancelled']] as const) {
-    const progress = handoffProgress({ ...handoff,status }, names)
-    assert.equal(progress.choice?.outcome,outcome)
-    assert.match(renderToStaticMarkup(<ProgressTracker {...progress} />), /data-receipt="true"/)
-  }
+test('official ToolUI renders persisted Canvas outcomes', () => {
   const canvas = canvasProgress({ id: 'canvas', status: 'summarizing', coordinatorAgentId: 'nova',
     assignments: [{ id: 'builder',agentId: 'sage',task: '验证概念',status: 'completed' },
       { id: 'verifier',agentId: 'trace',task: '复核',status: 'failed',executionRole: 'verifier' }] }, names)

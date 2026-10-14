@@ -1,5 +1,4 @@
 import { assistantRunResponse, readRunProjection } from '../agent-runtime/assistant-transport.js'
-import { NoEffectError } from '@lyyzka/lingxios'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { pool } from '../db/pool.js'
@@ -34,7 +33,6 @@ import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { receiveAgentRequest } from '../agent-runtime/receive.js'
 import { approvalView } from '../agent-runtime/delivery.js'
 import { loadRuntimeBinding } from '../agent-runtime/context.js'
-import { listMemorySummaries, memorySummariesQuery } from '../modules/memory/summaries.js'
 import { requestedProjectId } from '../http/request-context.js'
 import { HttpError } from '../http/errors.js'
 import { requireConversationMember } from '../http/authorization.js'
@@ -119,24 +117,6 @@ imRouter.post('/approvals/:id/resolve', safe(async (req, res) => {
 imRouter.post('/approvals/:id/reconcile', safe(async (req, res) => {
   const approval = await approvalForCaller(req, true)
   res.json(await (await lingxiOSControl()).reconcileAction(approval))
-}))
-
-imRouter.get('/channels/:id/memories', safe(async (req, res) => {
-  const conversationId = String(req.params.id)
-  const access = await requireConversationMember(req, conversationId, 'agent_memory:read')
-  const { userId, companyId } = access
-  // Workspace-readable groups are not sufficient authority for a member's private memory.
-  if (!access.members.includes(userId)) throw new HttpError(403, 'conversation membership required')
-  const projectId = requestedProjectId(req)
-  if (projectId && access.projectId !== projectId) throw new HttpError(403, 'conversation belongs to another workspace')
-  const query = requestInput(memorySummariesQuery, req.query)
-  res.setHeader('Cache-Control', 'no-store')
-  try {
-    res.json(await listMemorySummaries(pool, (await lingxiOSControl()).memory, { companyId, userId, conversationId, ...query }))
-  } catch (error) {
-    if (error instanceof NoEffectError && error.code === 'forbidden') throw new HttpError(403, 'memory access denied')
-    throw error
-  }
 }))
 
 imRouter.get('/channels/:id/runs', safe(async (req, res) => {

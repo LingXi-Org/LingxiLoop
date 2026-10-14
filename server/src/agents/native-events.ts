@@ -15,6 +15,8 @@ export type NativeEvent = DocumentChangedEvent | DocumentUpdateEvent | Conversat
   | { type: 'im.clear_hold'; agentId: string; conversationId: string }
   | { type: 'im.read_receipt'; advance: ReadReceiptAdvance }
   | { type: 'im.system'; companyId: string; actorId: string; channelId: string; clientNonce: string; payload: NativeMessage }
+  | { type: 'im.user'; companyId: string; userId: string; channelId: string; clientNonce: string; payload: NativeMessage;
+      canvasId: string; assignmentId: string; authorization: string }
 
 export async function queueNativeEvents(context: ActionContext, events: NativeEvent[]): Promise<void> {
   await persistNativeEvents(context.database as Queryable, { key: context.action.idempotencyKey, companyId: context.work.tenantId, workId: context.work.id }, events)

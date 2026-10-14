@@ -174,8 +174,8 @@ export function createCanvasWorkspacesApplication(context: CanvasWorkspacesAppli
       })
       if (!canvas) throw new Error('canvas requires a conversation')
       const existing = await listAssignments(transactionDb, canvas.id)
-      if (existing.length) throw new Error('Canvas already has assignments; revise or recruit through its assignment tools')
-      await insertCanvasMembers(transactionDb, { canvas, members: input.members, existing }, execution)
+      if (existing.length) throw new Error('Canvas already has assignments; continue its work through group mentions')
+      await insertCanvasMembers(transactionDb, { canvas, members: input.members, existing })
       const activityId = `activity-${createHash('sha256').update(`${input.idempotencyKey}:workspace_started`).digest('hex').slice(0, 32)}`
       const row = await insertActivity(transactionDb, {
         id: activityId,

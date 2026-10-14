@@ -2,7 +2,7 @@
 -- Stop old writers and retain a verified backup before production execution.
 SET LOCAL lock_timeout = '5s';
 CREATE TABLE course_forum_retirement_archive (
-  migration text NOT NULL DEFAULT '0039',
+  migration text NOT NULL DEFAULT '0040',
   source_table text NOT NULL,
   company_id text,
   project_id text,
@@ -169,18 +169,15 @@ CREATE TABLE course_forum_reactions (
 );
 
 -- Remove retired workflow instructions while preserving custom prompts and capability revocations.
-UPDATE participants SET system_prompt=replace(replace(replace(system_prompt,
- 'maintain the Mission task board; ',''),
- 'Delegate Canvas hosting to an independent child through handoffs.create so you can resume Mission coordination after its report. ',''),
- 'For a sustained goal, reuse a relevant active Mission or create one. ',''),
+UPDATE participants SET system_prompt=replace(replace(replace(replace(replace(system_prompt,'maintain the Mission task board; ',''),'Delegate Canvas hosting to an independent child through handoffs.create so you can resume Mission coordination after its report. ',''),'For a sustained goal, reuse a relevant active Mission or create one. ',''),'keep the Mission task board current, and ',''),'Reuse or create a Mission for sustained goals and Canvas for shared artifacts;','Use Canvas for shared artifacts;'),
  role=CASE WHEN preset_key='nova' AND role='学习规划与协调' THEN '作业辅导与协调' ELSE role END,
  bio=CASE WHEN preset_key='nova' AND bio='接住学习目标，维护学习任务板，协调专业角色并汇总经过复核的结论。' THEN '围绕老师发布的作业，协调专业角色并汇总经过复核的结论。' ELSE bio END
  WHERE kind='agent' AND preset_key IN ('nova','sage','milo','trace','scout','forge');
 UPDATE participants SET role='作业反馈与资料检索',bio='教师作业反馈与引用资料助手',
- system_prompt='You assist teachers with course forum assignments, referenced materials and submission feedback. Preserve teacher-room privacy. Use authorized knowledge reads for references. Do not create or manage courses, objectives, learning activities, missions or independent cases. Never contact students or expose private submissions.'
+ system_prompt='You assist teachers with course forum assignments, referenced materials and submission feedback. Preserve teacher-room privacy. Use authorized knowledge reads for references. Do not create or manage courses, objectives, learning activities, missions or independent cases. Never contact students or expose private submissions. Use authorized internal memory for durable preferences; current course facts remain authoritative.'
  FROM learning_project_teacher_agents managed WHERE participants.kind='agent' AND participants.id=managed.agent_id AND participants.company_id=managed.company_id
  AND participants.system_prompt LIKE 'You are 望远, the product-managed Project teacher operations Agent.%';
-UPDATE learning_project_teacher_agents SET preset_version=4,updated_at=NOW();
+UPDATE learning_project_teacher_agents SET preset_version=5,updated_at=NOW();
 UPDATE evidence_links SET target_kind='FORUM_SUBMISSION' WHERE target_kind='LEARNING_ATTEMPT';
 UPDATE evidence_links SET target_kind='FORUM_FEEDBACK' WHERE target_kind='LEARNING_EVALUATION';
 

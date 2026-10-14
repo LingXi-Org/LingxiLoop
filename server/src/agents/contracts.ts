@@ -9,7 +9,7 @@ export interface AgentActionContext {
   channelId: string
   threadRootClientMsgNo?: string
   triggerClientMsgNo: string
-  reason: 'message' | 'mention' | 'handoff' | 'routine' | 'resume' | 'canvas_worker' | 'canvas_summary'
+  reason: 'message' | 'mention' | 'routine' | 'resume'
 }
 
 export interface AgentAction {

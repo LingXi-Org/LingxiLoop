@@ -1,8 +1,7 @@
 
 import { http } from '@/api/core/http'
-import type { SharedStateSnapshot, SharedStateResult, SharedStateUpdate, createLingxiOS } from '@lyyzka/lingxios'
+import type { SharedStateSnapshot, SharedStateResult, SharedStateUpdate } from '@lyyzka/lingxios'
 export type CanvasCollaboration = {
-  graphs: NonNullable<Awaited<ReturnType<Awaited<ReturnType<typeof createLingxiOS>>['graphs']['read']>>>[]
   state: SharedStateSnapshot | null
   history: { items: Record<string, unknown>[]; nextSeq: number }
 }

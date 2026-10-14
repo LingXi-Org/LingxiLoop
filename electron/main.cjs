@@ -61,8 +61,7 @@ if (!gotSingleInstance) {
 // the visible "main window shadow flickers many times on open" bug
 // (~15 calls inside the first 3s of boot). We now mark the policy known-
 // regular and skip the AppKit call entirely until something explicitly
-// invalidates it (i.e. the notification panel is about to show, which is
-// the only known trigger for AppKit to silently demote us to accessory).
+// invalidates it during startup repair.
 let activationPolicyKnownRegular = false
 
 function ensureRegularDock() {
@@ -77,10 +76,7 @@ function ensureRegularDock() {
   } catch { /* swallow */ }
 }
 
-/** Mark the cached "we're regular" flag stale ahead of an event we know
- *  can cause AppKit to silently demote us — currently just the
- *  notification panel showing. Forces the next `ensureRegularDock()` /
- *  staggered repair to actually re-apply the activation policy. */
+/** Allow a startup repair to re-apply the activation policy. */
 function invalidateActivationPolicyCache() {
   activationPolicyKnownRegular = false
 }
@@ -88,7 +84,7 @@ function invalidateActivationPolicyCache() {
 function scheduleRegularDockRepair() {
   // Only do work when the cache wasn't already regular at entry — that's
   // the only case where we need to defend against AppKit demoting us
-  // asynchronously after this event (notification panel show). When we
+  // asynchronously during startup. When we
   // were already known-regular, this call is a no-op and we skip the
   // staggered timers entirely; that's what fixes the on-open shadow
   // flicker (previously: 5 staggered setActivationPolicy calls per
@@ -97,7 +93,7 @@ function scheduleRegularDockRepair() {
   ensureRegularDock()
   if (!needsApply) return
   // Defense against silent demotion: AppKit may recompute activation
-  // policy a few hundred ms after a panel show. Re-invalidate the cache
+  // policy a few hundred ms after startup. Re-invalidate the cache
   // inside each timer so the repair actually re-applies (idempotent at
   // worst, repaired-in-time at best).
   for (const delay of [50, 250, 1000, 3000]) {
@@ -112,19 +108,12 @@ function scheduleRegularDockRepair() {
 // Pin the activation policy to `regular` at the earliest possible moment
 // — BEFORE any BrowserWindow is constructed. On macOS, Electron's default
 // is already `regular`, but pinning it explicitly here is the cheapest
-// guard against any later code path (notification panel, accessory-style
-// auxiliary windows, etc.) that might cause AppKit to recompute and
+// guard against later window setup causing AppKit to recompute and
 // demote the app to `accessory`. Calling this before `whenReady()` is
 // supported and lands during the NSApp setup, well before any window
 // exists to influence the decision.
 if (process.platform === 'darwin') {
   ensureRegularDock()
-  // Previously: attached show/hide/closed listeners to EVERY window via
-  // `browser-window-created`, so the main window's first `show` event
-  // alone triggered 5 staggered `setActivationPolicy` calls — visible
-  // as a series of shadow flickers. The notification panel is the only
-  // window that can actually cause AppKit to demote us, and its own
-  // create-path handles repair locally (see createNotificationWindow).
 }
 
 // Resolve once — used for `BrowserWindow.icon` (Win/Linux taskbar) and for
@@ -147,38 +136,6 @@ let appIsQuitting = false
 
 /** The "real" app window. */
 let mainWindow = null
-/** Frameless transparent always-on-top window pinned to the top-right
- *  of the primary display. Renders the same React bundle with the
- *  `#notifications` hash so it shows only the toast stack. Hidden when
- *  there are no live toasts, shown (without stealing focus) on push. */
-let notificationWindow = null
-
-const NOTIF_WIDTH = 360
-const NOTIF_HEIGHT_MAX = 480
-const NOTIF_MARGIN_RIGHT = 16
-const NOTIF_MARGIN_TOP = 24
-
-function notificationUrl() {
-  if (isDev) return `${DEV_URL}/#notifications`
-  return 'app://lingxiloop/index.html#notifications'
-}
-
-function positionNotificationWindow() {
-  if (!notificationWindow) return
-  const display = screen.getPrimaryDisplay()
-  const { x, y, width } = display.workArea
-  notificationWindow.setBounds({
-    x: x + width - NOTIF_WIDTH - NOTIF_MARGIN_RIGHT,
-    y: y + NOTIF_MARGIN_TOP,
-    width: NOTIF_WIDTH,
-    height: NOTIF_HEIGHT_MAX,
-  })
-}
-
-/** Queue of pushes that arrived before the notification renderer
- *  signalled `notification:ready`. Flushed once the renderer mounts. */
-let pendingPushes = []
-let notificationReady = false
 let dockUnreadDotVisible = false
 let dockCleanIcon = null
 let dockUnreadIcon = null
@@ -315,7 +272,7 @@ function buildTrayMenu() {
     { type: 'separator' },
     { label: 'Quit LingxiLoop', click: () => {
       // before-quit will set appIsQuitting=true and tear down the
-      // notification window + auth loopback server; this is the only
+      // auth loopback server; this is the only
       // legitimate exit path that bypasses the close-to-hide trap.
       app.quit()
     } },
@@ -347,149 +304,6 @@ function createTray() {
   // Restore unread state in case set-unread-dot was called before tray
   // existed (dock was, but tray wasn't — keep the two in lockstep).
   setTrayUnreadDot(dockUnreadDotVisible)
-}
-
-function createNotificationWindow() {
-  notificationWindow = new BrowserWindow({
-    width: NOTIF_WIDTH,
-    // Start small — renderer will report exact content height once
-    // the toast paints, and we resize then. Without dynamic sizing the
-    // vibrant material below would fill a 360×480 rectangle of frosted
-    // glass with a tiny toast at the top — ugly.
-    height: 120,
-    show: false,
-    frame: false,
-    // alma's recipe: `transparent: true` everywhere + NO vibrancy. The
-    // window's empty pixels stay genuinely transparent — the desktop is
-    // visible directly underneath, NOT covered by an NSVisualEffectView
-    // material rectangle. The toast card brings its own desktop blur via
-    // CSS `backdrop-filter` (see NotificationWindow.tsx). Without this,
-    // vibrancy 'under-window' paints frosted material across the entire
-    // 360×N window bounds, producing the gray slab below the toast.
-    transparent: true,
-    backgroundColor: '#00000000',
-    hasShadow: false,
-    // Disable Electron's automatic macOS window-edge rounding. The toast
-    // card draws its own border-radius (CSS, 14px); leaving the system
-    // rounding on would clip the card's bottom-right corner. wails-gui
-    // and alma both omit any window-level rounding for the same reason.
-    roundedCorners: false,
-    resizable: false,
-    movable: false,
-    minimizable: false,
-    maximizable: false,
-    closable: false,
-    // IMPORTANT: must be `true`, NOT `false`. `focusable: false` sets the
-    // underlying NSWindow's `canBecomeKeyWindow = NO`, and AppKit reacts
-    // to a non-key-capable panel becoming visible by recomputing the
-    // app's activation policy: if no currently visible window can become
-    // key (very common at boot — main window is still `show: false`
-    // until `ready-to-show`), the app gets demoted to `accessory` and
-    // the Dock icon vanishes. We don't want that.
-    //
-    // Click-through is enforced by `setIgnoreMouseEvents(true)` below;
-    // showInactive() keeps the panel from stealing focus at show time;
-    // `type: 'panel'` (NSNonactivatingPanel) ensures even a focused
-    // click doesn't activate the whole app. So `focusable: true` is
-    // safe — the panel never actually becomes key in practice, AppKit
-    // just stops worrying about the app's foreground status.
-    //
-    // This matches Alma's quickChatWin (also `focusable: true` +
-    // `type: 'panel'`), which is why Alma never had to call
-    // `setActivationPolicy` to keep its dock icon.
-    focusable: true,
-    skipTaskbar: true,
-    alwaysOnTop: true,
-    // macOS NSPanel-style window. Critical because it:
-    //  - never activates the app on click (background clicks no longer
-    //    pull the main LingxiLoop window forward)
-    //  - doesn't appear in Mission Control / window-tab cycles
-    //  - combined with `focusable: true` above, doesn't trigger the
-    //    accessory-policy demotion that hides the Dock icon
-    type: process.platform === 'darwin' ? 'panel' : undefined,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-      // Panel is shown via `showInactive()` and is click-through by
-      // default, so it never receives a real user-gesture activation
-      // even though `focusable: true`. Without this, Web Audio's
-      // autoplay policy keeps the AudioContext suspended and the chime
-      // can never play from this renderer.
-      autoplayPolicy: 'no-user-gesture-required',
-    },
-  })
-
-  // Transparent page surface is established via the constructor
-  // option `backgroundColor: '#00000000'` above — that's the supported
-  // path in modern Electron. Earlier versions also exposed
-  // `webContents.setBackgroundColor(...)` for this, but it was removed
-  // and calling it now throws "setBackgroundColor is not a function".
-  //
-  // `pop-up-menu` rather than `screen-saver` — the screen-saver level
-  // (kCGScreenSaverWindowLevel) floats so high it sits over menus; the
-  // pop-up-menu level floats well above the main window without that.
-  notificationWindow.setAlwaysOnTop(true, 'pop-up-menu')
-  // THE Dock-icon-vanishing fix. On macOS, `setVisibleOnAllWorkspaces`
-  // DEFAULTS to transforming NSApp's process type between
-  // `ForegroundApplication` and `UIElementApplication` (the latter is
-  // the accessory/agent type — no Dock icon). So the moment the first
-  // toast painted and we called this, LingxiLoop flipped to UIElement and
-  // the Dock icon disappeared. `skipTransformProcessType: true` tells
-  // Electron to set the cross-Space collection behavior WITHOUT touching
-  // the process type, so the panel still shows on every Space / over
-  // fullscreen apps while the Dock icon stays put. This is the root-cause
-  // fix; the `scheduleRegularDockRepair()` machinery below is now just a
-  // belt-and-suspenders backstop, not the thing holding the icon on.
-  notificationWindow.setVisibleOnAllWorkspaces(true, {
-    visibleOnFullScreen: true,
-    skipTransformProcessType: true,
-  })
-  // Default to click-through; renderer flips it off while a toast is on
-  // screen via `notification:set-interactive`. With `type: 'panel'`
-  // alone, clicks on the empty area would still hit-test on this
-  // window — even though they no longer activate LingxiLoop, they'd still
-  // block clicks reaching whatever's underneath.
-  notificationWindow.setIgnoreMouseEvents(true, { forward: true })
-
-  positionNotificationWindow()
-  void notificationWindow.loadURL(notificationUrl())
-
-  notificationWindow.webContents.on('did-fail-load', (_e, code, desc, url) => {
-    console.error('[NOTIFY:main] notification window load FAILED', { code, desc, url })
-  })
-  notificationWindow.webContents.on('render-process-gone', (_e, details) => {
-    console.error('[NOTIFY:main] notification renderer GONE', details)
-  })
-
-  // Belt-and-suspenders for the Dock-icon-vanishing bug. The primary
-  // fix is `focusable: true` above — that's what stops AppKit from
-  // demoting the app when the panel is shown. But the demotion (when
-  // it happens at all) is triggered AT SHOW TIME, not at construction,
-  // so the right place to re-assert `regular` is the `show` event, not
-  // synchronously after `new BrowserWindow`. Also calling `dock.show()`
-  // explicitly because some Electron/macOS combinations don't refresh
-  // the Dock visibility from `setActivationPolicy` alone.
-  if (process.platform === 'darwin') {
-    notificationWindow.on('show', scheduleRegularDockRepair)
-    notificationWindow.on('closed', scheduleRegularDockRepair)
-  }
-
-  notificationWindow.on('closed', () => {
-    notificationWindow = null
-    notificationReady = false
-    pendingPushes = []
-  })
-}
-
-// Re-position whenever displays change. We attach once at app start
-// instead of inside createNotificationWindow so we don't double-attach
-// the listener every time the window is recreated.
-function attachDisplayListeners() {
-  screen.on('display-metrics-changed', positionNotificationWindow)
-  screen.on('display-added', positionNotificationWindow)
-  screen.on('display-removed', positionNotificationWindow)
 }
 
 function createWindow() {
@@ -540,16 +354,14 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: true,
       // Chromium throttles timers + some idle work when the window is
-      // hidden. We rely on the WS subscriber firing promptly to surface
-      // background notifications, so opt out.
+      // hidden. Keep incoming messages and unread state current.
       backgroundThrottling: false,
     },
   })
 
   // Forward native OS-level focus state to the renderer. We can't rely on
   // `document.hasFocus()` from inside the renderer — in Electron on macOS
-  // it returns stale `true` values when the window is unfocused, which
-  // suppresses the screen-corner notification.
+  // it returns stale `true` values when the window is unfocused.
   //
   // We also can't rely on `BrowserWindow.on('blur'/'focus')` alone — on
   // some macOS versions with `titleBarStyle: 'hidden'` those events skip
@@ -600,7 +412,7 @@ function createWindow() {
   mainWindow.on('close', (event) => {
     // Close-to-hide: clicking the window's X (or otherwise asking it to
     // close) just hides it to the tray, keeping the WS connection alive
-    // so notifications keep arriving. True quit only happens when
+    // so incoming messages remain current. True quit only happens when
     // `appIsQuitting` is set — which the tray menu's Quit, Cmd-Q, and
     // window-all-closed (Win/Linux) all flow through via `before-quit`.
     // Persist state first either way so the geometry is fresh on next
@@ -655,56 +467,9 @@ function createWindow() {
   mainWindow.on('closed', () => {
     clearInterval(focusPollTimer)
     mainWindow = null
-    // In dev, closing the main window should also tear down the
-    // notification window + the whole app so `concurrently -k` propagates
-    // the kill to vite (port 5180) + the API server (port 5181).
-    //
-    // Without this:
-    //  - macOS convention keeps the Electron process alive after window
-    //    close (mac apps stay in the dock with no windows).
-    //  - The notification window is `closable: false`, so `app.quit()`
-    //    alone won't end the process — we destroy() it ourselves first.
-    //    destroy() bypasses the closable flag and any close handlers.
-    // Both together mean `pnpm electron:dev`'s child processes leak and
-    // the next launch hits "port 5180 already in use".
-    if (isDev) {
-      if (notificationWindow && !notificationWindow.isDestroyed()) {
-        notificationWindow.destroy()
-      }
-      app.quit()
-    }
+    if (isDev) app.quit()
   })
 }
-
-/* ============== Notification IPC ============== */
-
-// MAIN window pushes a toast — forward to the notification window and
-// show it (without stealing focus) so the user sees it at screen top-right.
-// Shared push routine. Same logic the IPC handler runs — extracted so
-// dev shortcuts (and any future programmatic trigger) can fire a
-// notification without rebuilding the create-on-demand state machine.
-function pushNotification(payload) {
-  scheduleRegularDockRepair()
-  if (!notificationWindow || notificationWindow.isDestroyed()) {
-    pendingPushes.push(payload)
-    notificationReady = false
-    createNotificationWindow()
-    return
-  }
-  if (!notificationReady) {
-    pendingPushes.push(payload)
-    return
-  }
-  notificationWindow.webContents.send('notification:push', payload)
-  scheduleRegularDockRepair()
-  // Don't show here — renderer will signal `painted` after the toast
-  // actually renders. Showing here risked flashing an empty 360-wide
-  // rectangle before the React tree caught up.
-}
-
-ipcMain.on('notification:push', (_event, payload) => {
-  pushNotification(payload)
-})
 
 ipcMain.on('dock:set-unread-dot', (_event, visible) => {
   setDockUnreadDot(!!visible)
@@ -720,103 +485,10 @@ ipcMain.on('window-chrome:set-theme', (_event, theme) => {
   })
 })
 
-// Renderer mounted + subscribed to onPush. Flush queued pushes, but
-// LEAVE THE WINDOW HIDDEN — it'll be shown on the `painted` signal
-// after the first toast actually renders.
-ipcMain.on('notification:ready', () => {
-  if (!notificationWindow || notificationWindow.isDestroyed()) return
-  notificationReady = true
-  for (const p of pendingPushes) {
-    notificationWindow.webContents.send('notification:push', p)
-  }
-  pendingPushes = []
-})
-
-// Renderer has painted its first toast. Safe to show the window now.
-// Position lazily here so any display change between create and paint
-// (multi-monitor unplug) lands in the right spot.
-ipcMain.on('notification:painted', () => {
-  if (!notificationWindow || notificationWindow.isDestroyed()) return
-  if (!notificationWindow.isVisible()) {
-    positionNotificationWindow()
-    // Showing the panel is the one event we know can demote us to
-    // accessory — invalidate the cached policy state so the repair
-    // actually re-applies, instead of no-opping.
-    invalidateActivationPolicyCache()
-    notificationWindow.showInactive()
-    scheduleRegularDockRepair()
-  }
-  // Tell the MAIN window that a fresh toast is on screen. The main
-  // window owns the chime — it's always loaded, so playing it from
-  // there has zero boot delay. The small `setTimeout` ensures the
-  // panel has committed to the screen BEFORE the audio starts; firing
-  // synchronously made the bell beat the visible toast by ~30-50ms.
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    setTimeout(() => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('notification:visible')
-      }
-    }, 120)
-  }
-})
-
-// Renderer reports the exact content height. Resize the panel so the
-// vibrant material (real macOS Gaussian blur) only fills the area
-// occupied by the toast(s), not a full 360×480 rectangle.
-ipcMain.on('notification:set-height', (_event, h) => {
-  if (!notificationWindow || notificationWindow.isDestroyed()) return
-  const height = Math.max(60, Math.min(NOTIF_HEIGHT_MAX, Math.ceil(Number(h) || 0)))
-  const display = screen.getPrimaryDisplay()
-  const wa = display.workArea
-  notificationWindow.setBounds({
-    x: wa.x + wa.width - NOTIF_WIDTH - NOTIF_MARGIN_RIGHT,
-    y: wa.y + NOTIF_MARGIN_TOP,
-    width: NOTIF_WIDTH,
-    height,
-  })
-})
-
-// Renderer toggles whether the notification window accepts clicks.
-//  - `true`  → a toast is on screen; user must be able to click it.
-//  - `false` → no toasts; destroy the window entirely so nothing sits
-//              invisibly on top of the user's desktop. Cleaner than
-//              hiding (the window literally doesn't exist) and matches
-//              what Alma/wails-gui do with their NSPanel toasts.
-ipcMain.on('notification:set-interactive', (_event, interactive) => {
-  if (!notificationWindow || notificationWindow.isDestroyed()) return
-  if (interactive) {
-    notificationWindow.setIgnoreMouseEvents(false)
-    scheduleRegularDockRepair()
-  } else {
-    // Destroy() bypasses `closable: false` and any close-prevent
-    // handlers. `closed` resets pendingPushes + notificationReady.
-    notificationWindow.destroy()
-    scheduleRegularDockRepair()
-  }
-})
-
-// MAIN window asks to clear a specific toast (e.g. after auto-dismiss).
-ipcMain.on('notification:dismiss', (_event, id) => {
-  if (!notificationWindow || notificationWindow.isDestroyed()) return
-  notificationWindow.webContents.send('notification:dismiss', id)
-})
-
 // Renderer asks for the main window's current focus state synchronously
 // (e.g. at boot, before the first focus/blur event has fired).
 ipcMain.handle('app:is-focused', () => {
   return !!(mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused())
-})
-
-// NOTIFICATION window asks main to focus a conversation when user clicks
-// a toast. Bring the main window forward + forward the id over to its
-// renderer so the React app selects the conversation.
-ipcMain.on('notification:focus-convo', (_event, conversationId) => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.show()
-    mainWindow.focus()
-    mainWindow.webContents.send('notification:focus-convo', conversationId)
-  }
 })
 
 app.whenReady().then(() => {
@@ -841,19 +513,13 @@ app.whenReady().then(() => {
   })
 
   createWindow()
-  // Notification window is no longer created at boot — it spawns on the
-  // first `notification:push` IPC and self-destroys when the last toast
-  // dismisses. See `notification:push` / `notification:set-interactive`.
-  attachDisplayListeners()
   // System tray (menu bar item on macOS, system tray on Win/Linux).
   // Created after the main window so the `close → hide` interception
   // in createWindow already has its `tray` guard satisfied — no chance
   // of hiding to a non-existent tray.
   createTray()
   if (process.platform === 'darwin') {
-    // Belt-and-suspenders: with `type: 'panel'` on the notification
-    // BrowserWindow we should never lose the regular activation policy,
-    // but the call is cheap so we keep it as a defensive measure.
+    // Keep the local development app available from the Dock.
     scheduleRegularDockRepair()
     try {
       const img = nativeImage.createFromPath(ICON_PATH)
@@ -891,27 +557,13 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-// Pre-quit cleanup. Without this Cmd-Q on macOS could hang and force
-// users to Activity-Monitor-kill the process, because:
-//  1. `notificationWindow` is `closable: false`; Electron's quit
-//     sequence calls `close()` on every window — which is a no-op for a
-//     non-closable window, leaving it alive and blocking `will-quit`.
-//     `destroy()` bypasses the flag and the close handlers, so the
-//     window goes away regardless.
-//  2. The auth loopback HTTP server keeps a listening TCP socket open
-//     on 127.0.0.1:47823 indefinitely. The Node event loop won't exit
-//     while a server is listening, so even after all windows are gone
-//     the process can sit forever.
+// Release the tray when the app quits.
 app.on('before-quit', () => {
   // Flip the close-to-hide guard so the main window's `close` handler
   // lets the close actually happen during real quit (Cmd-Q, tray menu
   // Quit, window-all-closed on Win/Linux). Without this, every quit
   // path would just hide the window forever.
   appIsQuitting = true
-  if (notificationWindow && !notificationWindow.isDestroyed()) {
-    try { notificationWindow.destroy() } catch { /* swallow */ }
-    notificationWindow = null
-  }
   if (tray && !tray.isDestroyed?.()) {
     try { tray.destroy() } catch { /* swallow */ }
     tray = null

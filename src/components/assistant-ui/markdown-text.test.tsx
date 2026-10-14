@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import test, { mock } from 'node:test'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, MessagePrimitive, type ThreadMessage } from '@assistant-ui/react'
-import { confidenceCopyText, MarkdownText, type MarkdownConfidenceClaim } from './markdown-text'
+import type { MarkdownConfidenceClaim } from './markdown-text'
 import { ConfidenceMarker } from './elements/confidence-marker'
+import { create } from 'zustand'
 
-// Markdown assertions ignore the decorative word wrappers; browser tests check their animation.
-const renderMarkdown: typeof renderToStaticMarkup = element => renderToStaticMarkup(element)
-  .replace(/<span data-streaming-word="">([^<]*)<\/span>/g, '$1')
+mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })) } })
+const { confidenceCopyText, MarkdownText } = await import('./markdown-text')
+
+const renderMarkdown = renderToStaticMarkup
 
 function Text() { return <MarkdownText agent /> }
 function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
@@ -78,12 +80,12 @@ test('unfinished structural blocks remain visible during streaming and interrupt
 test('only live agent text enables the streaming tail; settled and interrupted text is static', () => {
   for (const running of [false, true]) {
     const html = renderMarkdown(<Preview text="完整消息" running={running} />)
-    assert.equal(html.includes('data-streaming="true"'), running)
+    assert.equal(html.includes('data-status="running"'), running)
     assert.doesNotMatch(html, /motion-safe:shimmer/)
     assert.doesNotMatch(html, /data-bubble-enter|im-markdown-bubble/)
   }
   const interrupted = renderMarkdown(<Preview text="中断正文" running={false} interrupted />)
-  assert.doesNotMatch(interrupted, /data-streaming="true"|motion-safe:shimmer/)
+  assert.doesNotMatch(interrupted, /data-status="running"|motion-safe:shimmer/)
 })
 
 test('committed citations preserve Markdown and normal links, with one shared basis slot', () => {

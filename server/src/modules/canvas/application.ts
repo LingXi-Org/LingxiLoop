@@ -178,9 +178,7 @@ export function createCanvasApplication(infrastructure: CanvasInfrastructure) {
 
   return {
     addCanvasComment: collaborationApplication.addCanvasComment,
-    addCanvasWorkspaceAgents: assignmentApplication.addCanvasWorkspaceAgents,
     appendCanvasFrameContent: frameApplication.appendCanvasFrameContent,
-    assertCanvasWorkReportReady: reportApplication.assertCanvasWorkReportReady,
     assignCanvasWorkspaceWork: assignmentApplication.assignCanvasWorkspaceWork,
     completeCanvasWork: reportApplication.completeCanvasWork,
     createCanvasFrame: frameApplication.createCanvasFrame,
@@ -188,12 +186,10 @@ export function createCanvasApplication(infrastructure: CanvasInfrastructure) {
     ensureConversationCanvas: workspaceApplication.ensureConversationCanvas,
     getCanvasSnapshot: workspaceApplication.getCanvasSnapshot,
     getConversationCanvas: workspaceApplication.getConversationCanvas,
-    handoffCanvasWork: assignmentApplication.handoffCanvasWork,
     listCanvasAvailableAgents: collaborationApplication.listCanvasAvailableAgents,
     listCanvasWorkspaces: workspaceApplication.listCanvasWorkspaces,
     setCanvasStatus: collaborationApplication.setCanvasStatus,
     startCanvasWorkspace: workspaceApplication.startCanvasWorkspace,
-    steerCanvasAssignment: assignmentApplication.steerCanvasAssignment,
     stopCanvasAssignment: assignmentApplication.stopCanvasAssignment,
     stopCanvasWorkspace: workspaceApplication.stopCanvasWorkspace,
     submitCanvasReport: reportApplication.submitCanvasReport,

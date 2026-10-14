@@ -56,7 +56,7 @@ test('published worker persists authorized public activity and measured tool bou
     const projected = (await readRunProjection(api, identity, true)).snapshot.message
     const history = (await readRunProjection(api, identity, true)).snapshot.message
     assert.deepEqual(projected.content, history.content)
-    assert.deepEqual(projected.content.map(part => part.type), ['reasoning', 'tool-call', 'generative-ui', 'text', 'text'])
+    assert.deepEqual(projected.content.map(part => part.type), ['text', 'reasoning', 'tool-call', 'generative-ui', 'text'])
     assert.equal(nativeText(projected), '最终答复。')
     const httpServer = createServer(await buildApiTestApp('test-owner'))
     await new Promise<void>(resolve => httpServer.listen(0, '127.0.0.1', resolve))
@@ -75,7 +75,7 @@ test('published worker persists authorized public activity and measured tool bou
       assert.notEqual((await request('activityOffset=0', companyId, 'other-project')).status, 200)
       assert.equal((await request('activityOffset=-1')).status, 400)
     } finally { await new Promise<void>((resolve, reject) => httpServer.close(error => error ? reject(error) : resolve())) }
-    assert.equal(activityAnnotation(projected.content.at(-1))?.kind, 'answer')
+    assert.equal(activityAnnotation(projected.content[0])?.kind, 'answer')
     const call = projected.content.find(part => part.type === 'tool-call')
     assert.ok(call?.type === 'tool-call' && call.timing && call.timing.completedAt! >= call.timing.startedAt)
     assert.equal(Reflect.get(call.result as object, 'status'), 'completed')

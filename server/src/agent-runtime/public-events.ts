@@ -1,10 +1,8 @@
-import { z } from 'zod'
 import type { RunEvent, RunStreamEvent } from '@lyyzka/lingxios/ui'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { publicActivitySchema } from '../../../src/lib/runActivity.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 
-const memories = z.object({ documents: z.array(z.object({ id: z.string().max(500), description: z.string().max(500), status: z.enum(['active','candidate','retired','expired']) })).max(256), deleted: z.array(z.string().max(500)).max(256) })
 /** User transport allowlist; full results remain private to the native runtime. */
 export function publicToolValue(action: string, value: unknown): unknown {
   if (action === 'chat.report_progress') {
@@ -12,10 +10,6 @@ export function publicToolValue(action: string, value: unknown): unknown {
     return parsed.success ? parsed.data : undefined
   }
   if (action === 'research.search') { const results = researchSources(value); return results === null ? undefined : { results } }
-  if (['memory.apply','memory.restore'].includes(action)) {
-    const parsed = memories.safeParse(value)
-    return parsed.success ? parsed.data : undefined
-  }
   if (action.startsWith('knowledge.') && value && typeof value === 'object') {
     const status = Reflect.get(value, 'status')
     if (typeof status === 'string' && status.length <= 80) return { status }

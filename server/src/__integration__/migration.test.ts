@@ -9,24 +9,33 @@ import test from 'node:test'
 import { releaseVersions } from '@lyyzka/lingxios'
 import { assertMigrationsCurrent, migrateDatabase } from '../db/migrate.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
-import { TEACHER_PROMPT } from '../modules/learning/teacher-preset.js'
+import { TEACHER_PROMPT, TEACHER_PRESET_VERSION } from '../modules/learning/teacher-preset.js'
 
 const baselineUrl = new URL('../db/migrations/0001_v1_baseline.sql', import.meta.url)
 const legacyCleanupUrl = new URL('../db/migrations/0002_remove_legacy_identity.sql', import.meta.url)
 const affinityUrl = new URL('../db/migrations/0003_agent_os_session_affinity.sql', import.meta.url)
 const personalOwnerUrl = new URL('../db/migrations/0004_backfill_personal_owner_participants.sql', import.meta.url)
 
-async function migrateThrough38(database: Pool) {
-  const directory = await mkdtemp(join(tmpdir(), 'lingxiloop-schema38-'))
+async function migrateThrough39(database: Pool) {
+  const directory = await mkdtemp(join(tmpdir(), 'lingxiloop-schema39-'))
   const source = new URL('../db/migrations/', import.meta.url)
   try {
-    for (const file of await readdir(source)) if (Number(file.slice(0,4)) <= 38) await copyFile(new URL(file,source),join(directory,file))
+    for (const file of await readdir(source)) if (Number(file.slice(0,4)) <= 39) await copyFile(new URL(file,source),join(directory,file))
     return await migrateDatabase(database,pathToFileURL(`${directory}${sep}`))
   } finally { await rm(directory,{ recursive:true,force:true }) }
 }
 
 // These upgrade fixtures rewind an already-current database to historical schemas.
+async function restoreSchema38(database: Pool): Promise<void> {
+  await database.query(`ALTER TABLE agent_run_bindings DROP COLUMN source_client_msg_no;
+    ALTER TABLE canvas_agent_assignments DROP COLUMN request_client_msg_no;
+    DROP INDEX agent_native_canvas_request;
+    DELETE FROM schema_migrations WHERE version>=39;
+    UPDATE lingxios_installation SET runtime_version='3.3.8'`)
+}
+
 async function restoreSchema31(database: Pool): Promise<void> {
+  await restoreSchema38(database)
   await database.query(`DROP TABLE agent_public_tool_activity, course_forum_flags, course_forum_comments, course_forum_posts,
       im_ui_user_states, im_ui_revisions;
     DROP INDEX learning_evidence_submission_files;
@@ -82,7 +91,7 @@ async function withMigrations(run: (url: URL, directory: string) => Promise<void
 
 test('an empty database reaches the latest schema once and repeated migration is a no-op', async () => {
   await withDatabase(async (database) => {
-    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_forum_assignment_convergence'])
+    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     const { rows } = await database.query('SELECT version,name FROM schema_migrations ORDER BY version')
@@ -125,7 +134,8 @@ test('an empty database reaches the latest schema once and repeated migration is
       { version: 36, name: 'public_run_activity' },
       { version: 37, name: 'forum_comment_attachments' },
       { version: 38, name: 'learning_submission_sequence' },
-      { version: 39, name: 'forum_assignment_convergence' },
+      { version: 39, name: 'native_memory_collaboration' },
+      { version: 40, name: 'forum_assignment_convergence' },
     ])
     const { rows: evalSchema } = await database.query(`SELECT
       to_regclass('public.eval_jobs') AS jobs,
@@ -146,9 +156,24 @@ test('an empty database reaches the latest schema once and repeated migration is
   })
 })
 
+test('group mention upgrade preserves customized preset profiles and retires only handoff grants', async () => {
+  await withDatabase(async database => {
+    await migrateThrough39(database)
+    await restoreSchema38(database)
+    await database.query(`INSERT INTO companies(id,name,slug,type,plan_id) VALUES('mentions-upgrade','Upgrade','mentions-upgrade','EDUCATION','plan-education');
+      INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,preset_key,capabilities,system_prompt,status)
+        VALUES('custom-preset','mentions-upgrade','agent','My name','M','#123456','nova','["canvas","handoffs","documents"]','My custom instructions','avail')`)
+    assert.deepEqual(await migrateDatabase(database), ['0039_native_memory_collaboration','0040_forum_assignment_convergence'])
+    assert.deepEqual((await database.query(`SELECT name,initial,avatar_bg,system_prompt,capabilities FROM participants WHERE id='custom-preset'`)).rows,
+      [{ name: 'My name', initial: 'M', avatar_bg: '#123456', system_prompt: 'My custom instructions', capabilities: ['canvas','documents'] }])
+    assert.deepEqual(await migrateDatabase(database), [])
+    await assertMigrationsCurrent(database)
+  })
+})
+
 test('interactive UI upgrade preserves product rows and adds empty scoped state once', async () => {
   await withDatabase(async database => {
-    await migrateThrough38(database)
+    await migrateThrough39(database)
     await database.query(`DROP TABLE agent_public_tool_activity, course_forum_flags, course_forum_comments, course_forum_posts,
       im_ui_user_states, im_ui_revisions;
     DROP INDEX learning_evidence_submission_files;
@@ -156,7 +181,7 @@ test('interactive UI upgrade preserves product rows and adds empty scoped state 
       DROP COLUMN agent_work_id, DROP COLUMN late, DROP COLUMN submission_sequence;
       DELETE FROM schema_migrations WHERE version>=33;
       INSERT INTO users(id,email,display_name) VALUES('ui-upgrade','ui-upgrade@example.test','Preserved')`)
-    assert.deepEqual(await migrateDatabase(database), ['0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_forum_assignment_convergence'])
+    assert.deepEqual(await migrateDatabase(database), ['0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence'])
     assert.deepEqual((await database.query("SELECT id FROM users WHERE id='ui-upgrade'")).rows, [{ id: 'ui-upgrade' }])
     assert.deepEqual((await database.query(`SELECT
       (SELECT COUNT(*)::int FROM im_ui_revisions) AS revisions,
@@ -168,7 +193,7 @@ test('interactive UI upgrade preserves product rows and adds empty scoped state 
 
 test('collaboration upgrade preserves managed IDs, custom rooms and leaders while expanding default teams', async () => {
   await withDatabase(async database => {
-    await migrateThrough38(database)
+    await migrateThrough39(database)
     const { ensureEducationPlan } = await import('../modules/entitlements/public.js')
     await ensureEducationPlan(database)
     await restoreSchema31(database)
@@ -194,18 +219,20 @@ test('collaboration upgrade preserves managed IDs, custom rooms and leaders whil
         VALUES('upgrade-course','collab-upgrade','upgrade-project','upgrade-owner','course-study');
       INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id)
         SELECT id,company_id,jsonb_build_object('members',members,'channelType',2),leader_id FROM conversations WHERE company_id='collab-upgrade'`)
-    assert.deepEqual(await migrateDatabase(database),['0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_forum_assignment_convergence'])
+    assert.deepEqual(await migrateDatabase(database),['0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence'])
     for (const preset of STARTER_TEAM) {
       const agent = (await database.query('SELECT name,initial,role,system_prompt,capabilities FROM participants WHERE id=$1',[`old-${preset.presetKey}`])).rows[0]
-      // Migration 0027 owns its historical persona version; 0031 must not rewrite it to today's preset.
+      // 0039 updates only exact historical presets to public-message collaboration.
       assert.ok(agent.system_prompt.startsWith(`You are ${preset.name},`))
-      assert.ok(agent.system_prompt.includes('Answer simple questions directly.'))
+      assert.ok(agent.system_prompt.includes('Publish concrete @id assignments in your native final reply'))
       const {system_prompt: _prompt,...identityAndGrants}=agent
       assert.deepEqual(identityAndGrants,{ name: preset.name,initial: preset.initial,role: preset.role,capabilities: [...preset.capabilities].sort() })
     }
     assert.deepEqual((await database.query("SELECT name,system_prompt FROM participants WHERE id='custom-nova'")).rows,[{ name: 'Nova',system_prompt: 'custom prompt' }])
     assert.deepEqual((await database.query("SELECT name,initial,system_prompt FROM participants WHERE id='old-pulse'")).rows,
       [{ name: '望远',initial: '望',system_prompt: TEACHER_PROMPT }])
+    assert.deepEqual((await database.query("SELECT preset_version FROM learning_project_teacher_agents WHERE agent_id='old-pulse'")).rows,
+      [{ preset_version: TEACHER_PRESET_VERSION }])
     for (const room of (await database.query(`SELECT room.id,room.members,room.leader_id,channel.profile->'members' AS im_members
       FROM conversations room JOIN im_channel_bindings channel ON channel.channel_id=room.id WHERE room.company_id='collab-upgrade'`)).rows) {
       assert.deepEqual(room.im_members,room.members)
@@ -219,7 +246,7 @@ test('collaboration upgrade preserves managed IDs, custom rooms and leaders whil
 
 test('earlier 3.2 versions upgrade only runtime registration and preserve existing data', async () => {
   for (const version of ['3.2.4','3.2.6','3.2.8','3.2.9','3.2.10','3.2.11','3.2.12']) await withDatabase(async database => {
-    await migrateThrough38(database)
+    await migrateThrough39(database)
     await restoreSchema31(database)
     await database.query('DELETE FROM schema_migrations WHERE version>=$1',[version === '3.2.4' ? 15 : version === '3.2.6' ? 16 : version === '3.2.8' ? 18 : version === '3.2.9' ? 20 : version === '3.2.10' ? 21 : version === '3.2.11' ? 22 : 23])
     await restoreSchema10(database, version)
@@ -229,7 +256,7 @@ test('earlier 3.2 versions upgrade only runtime registration and preserve existi
       ...!['3.2.9','3.2.10','3.2.11','3.2.12'].includes(version) ? ['0018_lingxios_3_2_9','0019_agent_read_receipts'] : [],
       ...!['3.2.10','3.2.11','3.2.12'].includes(version) ? ['0020_lingxios_3_2_10'] : [],
       ...!['3.2.11','3.2.12'].includes(version) ? ['0021_lingxios_3_2_11'] : [],
-      ...version !== '3.2.12' ? ['0022_lingxios_3_2_12'] : [],'0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_forum_assignment_convergence'])
+      ...version !== '3.2.12' ? ['0022_lingxios_3_2_12'] : [],'0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence'])
     assert.deepEqual(await migrateDatabase(database),[])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query('SELECT schema_version,protocol_version FROM lingxios_installation')).rows,
@@ -240,7 +267,7 @@ test('earlier 3.2 versions upgrade only runtime registration and preserve existi
 
 test('read receipt upgrade preserves human receipts and accepts only same-tenant participants', async () => {
   await withDatabase(async database => {
-    await migrateThrough38(database)
+    await migrateThrough39(database)
     const { ensureEducationPlan } = await import('../modules/entitlements/public.js')
     await ensureEducationPlan(database)
     await restoreSchema31(database)
@@ -260,7 +287,7 @@ test('read receipt upgrade preserves human receipts and accepts only same-tenant
         VALUES('receipt-room','receipt-tenant','group','Receipts','["reader","agent-reader"]');
       INSERT INTO im_read_receipt_advances(company_id,channel_id,reader_id,previous_read_seq,read_through_seq)
         VALUES('receipt-tenant','receipt-room','reader',0,1)`)
-    assert.deepEqual(await migrateDatabase(database), ['0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_forum_assignment_convergence'])
+    assert.deepEqual(await migrateDatabase(database), ['0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence'])
     const { appendReadReceiptAdvance } = await import('../im/read-receipts-repository.js')
     await appendReadReceiptAdvance(database, { companyId: 'receipt-tenant', channelId: 'receipt-room', readerId: 'agent-reader', readThroughSeq: 2 })
     assert.deepEqual((await database.query('SELECT reader_id,read_through_seq::int FROM im_read_receipt_advances ORDER BY reader_id')).rows,
@@ -273,13 +300,13 @@ test('read receipt upgrade preserves human receipts and accepts only same-tenant
 
 test('3.2.13 upgrades the workspace schema transactionally and repeats without changing product data', async () => {
   await withDatabase(async database => {
-    await migrateThrough38(database)
+    await migrateThrough39(database)
     await restoreSchema31(database)
     await database.query('DELETE FROM schema_migrations WHERE version>=24')
     await restoreSchema10(database, '3.2.13')
     await database.query("INSERT INTO users(id,email,display_name) VALUES('upgrade-user','upgrade@example.test','Preserved')")
     await assert.rejects(assertMigrationsCurrent(database), /run `npm run db:migrate`/)
-    assert.deepEqual(await migrateDatabase(database), ['0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_forum_assignment_convergence'])
+    assert.deepEqual(await migrateDatabase(database), ['0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query(`SELECT to_regclass('lingxios.agent_workspace_checkpoints') AS checkpoints,
@@ -292,7 +319,7 @@ test('3.2.13 upgrades the workspace schema transactionally and repeats without c
 
 for (const [version, pending] of [['3.3.0', 25], ['3.3.1', 26], ['3.3.2', 28], ['3.3.4', 29], ['3.3.5', 30]] as const) test(`${version} registers the runtime fixes without altering sessions or accepting an unverified schema`, async () => {
   await withDatabase(async database => {
-    await migrateThrough38(database)
+    await migrateThrough39(database)
     await restoreSchema31(database)
     await database.query('DELETE FROM schema_migrations WHERE version >= $1', [pending])
     await database.query('UPDATE lingxios_installation SET runtime_version=$1', [version])
@@ -310,7 +337,7 @@ for (const [version, pending] of [['3.3.0', 25], ['3.3.1', 26], ['3.3.2', 28], [
     const schemaBefore = (await database.query(`SELECT table_name,column_name,data_type FROM information_schema.columns
       WHERE table_schema='lingxios' ORDER BY table_name,ordinal_position`)).rows
     await assert.rejects(assertMigrationsCurrent(database), /run `npm run db:migrate`/)
-    assert.deepEqual(await migrateDatabase(database), [...pending === 25 ? ['0025_lingxios_3_3_1'] : [], ...pending <= 26 ? ['0026_lingxios_3_3_2','0027_learning_collaboration'] : [], ...pending <= 28 ? ['0028_lingxios_3_3_4'] : [], ...pending <= 29 ? ['0029_lingxios_3_3_5'] : [],'0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_forum_assignment_convergence'])
+    assert.deepEqual(await migrateDatabase(database), [...pending === 25 ? ['0025_lingxios_3_3_1'] : [], ...pending <= 26 ? ['0026_lingxios_3_3_2','0027_learning_collaboration'] : [], ...pending <= 28 ? ['0028_lingxios_3_3_4'] : [], ...pending <= 29 ? ['0029_lingxios_3_3_5'] : [],'0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query('SELECT runtime_version,schema_version,protocol_version,schema_sha256 FROM lingxios_installation')).rows,
@@ -422,11 +449,11 @@ test('concurrent migrators serialize and apply each migration once', async () =>
     try {
       const results = await Promise.all([migrateDatabase(database), migrateDatabase(second)])
       assert.deepEqual(results.map((result) => [...result]).sort((a, b) => b.length - a.length), [
-        ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_forum_assignment_convergence'],
+        ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence'],
         [],
       ])
       const { rows } = await database.query('SELECT COUNT(*)::int AS count FROM schema_migrations')
-    assert.deepEqual(rows, [{ count: 39 }])
+    assert.deepEqual(rows, [{ count: 40 }])
     } finally {
       await second.end()
     }
@@ -454,7 +481,7 @@ test('runtime readiness rejects a missing native collaboration table', async () 
 
 test('capability backfill preserves teacher grants, custom prompts and later revocations', async () => {
   await withDatabase(async database => {
-    await migrateThrough38(database)
+    await migrateThrough39(database)
     await restoreSchema31(database)
     await database.query(`DELETE FROM schema_migrations WHERE version=31;
       INSERT INTO companies(id,name,slug,type,plan_id) VALUES('grants','Grants','grants','EDUCATION','plan-education');
@@ -463,12 +490,12 @@ test('capability backfill preserves teacher grants, custom prompts and later rev
       VALUES('ordinary','grants','agent','Ordinary','O','#000','avail','["documents"]','custom persona'),
         ('teacher','grants','agent','Teacher','T','#000','avail','["teacher_admin","knowledge"]','teacher persona');
       INSERT INTO learning_project_teacher_agents(project_id,company_id,agent_id) VALUES('grant-project','grants','teacher');`)
-    assert.deepEqual(await migrateDatabase(database), ['0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_forum_assignment_convergence'])
+    assert.deepEqual(await migrateDatabase(database), ['0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence'])
     const read = async () => (await database.query('SELECT id,capabilities,system_prompt FROM participants WHERE company_id=$1 ORDER BY id', ['grants'])).rows
     const rows = await read()
     assert.equal(rows[0].system_prompt, 'custom persona')
     assert.deepEqual(rows[0].capabilities, [...STARTER_TEAM[0].capabilities].sort())
-    assert.deepEqual(rows[1], { id: 'teacher', capabilities: ['teacher_admin','knowledge'], system_prompt: 'teacher persona' })
+    assert.deepEqual(rows[1], { id: 'teacher', capabilities: ['teacher_admin','knowledge'], system_prompt: TEACHER_PROMPT })
     await database.query(`UPDATE participants SET capabilities='["documents"]' WHERE id='ordinary'`)
     assert.deepEqual(await migrateDatabase(database), [])
     assert.deepEqual((await read())[0].capabilities, ['documents'])
@@ -478,7 +505,7 @@ test('capability backfill preserves teacher grants, custom prompts and later rev
 // Populated upgrade exercises author/sequence/content preservation and restricted unmapped files.
 test('forum convergence preserves complete submission history and rolls back ambiguous assignments', async () => {
   await withDatabase(async database => {
-    await migrateThrough38(database)
+    await migrateThrough39(database)
     await database.query(`INSERT INTO users(id,email,display_name) VALUES ('teacher','teacher@migration.test','Teacher'),('student','student@migration.test','Student');
       INSERT INTO companies(id,name,slug,type,status,plan_id) VALUES('forum-migrate','Forum migration','forum-migrate','EDUCATION','ACTIVE','plan-education');
       INSERT INTO company_memberships(company_id,user_id,role) VALUES('forum-migrate','teacher','TEACHER'),('forum-migrate','student','STUDENT');
@@ -505,11 +532,11 @@ test('forum convergence preserves complete submission history and rolls back amb
       INSERT INTO course_forum_comments(id,company_id,project_id,target_type,target_id,author_user_id,body)
         VALUES ('comment','forum-migrate','forum-project','activity','assignment','student','Existing discussion')`)
     const original = (await database.query('SELECT id,submission_sequence,submitted_at FROM learning_attempts WHERE activity_id=\'assignment\' ORDER BY submission_sequence')).rows
-    await assert.rejects(migrateDatabase(database), /migration 39_forum_assignment_convergence failed/)
+    await assert.rejects(migrateDatabase(database), /migration 40_forum_assignment_convergence failed/)
     assert.equal((await database.query("SELECT to_regclass('course_forum_retirement_archive') AS archive")).rows[0].archive,null)
     assert.equal((await database.query('SELECT COUNT(*)::int AS count FROM learning_attempts')).rows[0].count,3)
     await database.query("UPDATE learning_activities SET published_by='teacher' WHERE id='ambiguous'")
-    assert.deepEqual(await migrateDatabase(database),['0039_forum_assignment_convergence'])
+    assert.deepEqual(await migrateDatabase(database),['0040_forum_assignment_convergence'])
     assert.deepEqual(await migrateDatabase(database),[])
     assert.deepEqual((await database.query('SELECT id,submission_sequence,submitted_at FROM course_forum_submissions ORDER BY submission_sequence')).rows,original)
     const posts = (await database.query("SELECT author_user_id,body,due_at::text FROM course_forum_posts WHERE id='assignment'")).rows[0]

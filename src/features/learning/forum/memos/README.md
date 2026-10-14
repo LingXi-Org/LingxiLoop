@@ -61,6 +61,6 @@ Paths below are relative to upstream `web/src/components/` unless stated otherwi
 
 Corrections to the earlier integration notes: task checkboxes are editable only
 by their author; draft dismissal is automatic; the calendar is a real date
-filter; migration `0039` moves attempts and evaluations into forum submission
+filter; migration `0040` moves attempts and evaluations into forum submission
 and feedback tables and removes the old learning schema. The older `0037/0038`
 notes and verified artifacts describe their historical releases only.

@@ -16,7 +16,6 @@ import {
   broadcastAwareness as docBroadcastAwareness,
   subscribe as docSubscribe,
   unsubscribe as docUnsubscribe,
-  notifyDocumentMention,
   projectDocumentIds,
 } from './modules/documents/public.js'
 import { consumeWsTicket } from './modules/identity/public.js'
@@ -27,7 +26,6 @@ import {
   CH_CONVENE,
   CH_CONVO_UPDATED,
   CH_DOC_ACCESS_REVOKED,
-  CH_DOC_MENTION,
   CH_DOCS,
   CH_GROUP_PULLED,
   CH_IM_READ_RECEIPTS,
@@ -230,18 +228,6 @@ async function handleDocFrame(c: AuthedSocket, msg: Record<string, unknown>): Pr
     return
   }
 
-  if (type === 'doc.mention.notify') {
-    const rawIds = msg.mentionedIds
-    if (!Array.isArray(rawIds) || rawIds.length === 0) return
-    const requestedIds = rawIds.filter((x): x is string => typeof x === 'string')
-    if (requestedIds.length === 0) return
-    const companyId = await docCompanyFor(documentId, c.userId)
-    if (!companyId) return
-    await notifyDocumentMention({
-      documentId, companyId, mentionerId: c.userId, requestedIds,
-    })
-    return
-  }
 }
 
 export function attachWebSocket(httpServer: Server) {
@@ -357,7 +343,7 @@ export function attachWebSocket(httpServer: Server) {
     COMPANY_ACCESS_REVOKED,
     CH_STATUS,
     CH_GROUP_PULLED, CH_CONVO_UPDATED, CH_CONVENE,
-    CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_DOC_MENTION, CH_AGENT_ACTIVITY,
+    CH_DOCS, CH_DOC_ACCESS_REVOKED, CH_CANVAS, CH_AGENT_ACTIVITY,
     CH_IM_READ_RECEIPTS, CH_AGENT_RUN_AVAILABLE,
   ).then((count) => {
     console.log(`[ws] subscribed to ${count} redis channels`)

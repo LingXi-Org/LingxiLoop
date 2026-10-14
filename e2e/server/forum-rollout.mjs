@@ -40,7 +40,7 @@ const server=createServer(async(req,res)=>{
 })
 try {
   const source=new URL('../../server/src/db/migrations/',import.meta.url)
-  for(const file of await readdir(source))if(Number(file.slice(0,4))<=38)await copyFile(new URL(file,source),join(directory,file))
+  for(const file of await readdir(source))if(Number(file.slice(0,4))<=39)await copyFile(new URL(file,source),join(directory,file))
   await migrateDatabase(db,pathToFileURL(directory+sep))
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
   const url=new URL(`http://127.0.0.1:${server.address().port}`),headers={'content-type':'application/json'}
@@ -56,8 +56,8 @@ try {
   await prepareForumRollout({url,headers})
   assert.deepEqual(calls.map(c=>c.operation),['RunStackService'])
   await mkdir('artifacts/forum',{recursive:true})
-  await writeFile('artifacts/forum/rollout-rehearsal.json',JSON.stringify({passed:true,successfulCalls,recoveryCalls,schema39SkipsMaintenance:true,realPgDumpRestore:true,limitations:['Komodo stop/start is recorded by a local HTTP fixture; production update state is verified separately.']},null,2))
-  console.log('Forum rollout rehearsal passed: real backup/restore, ordered drain, failure recovery and schema-39 no-op')
+  await writeFile('artifacts/forum/rollout-rehearsal.json',JSON.stringify({passed:true,successfulCalls,recoveryCalls,schema40SkipsMaintenance:true,realPgDumpRestore:true,limitations:['Komodo stop/start is recorded by a local HTTP fixture; production update state is verified separately.']},null,2))
+  console.log('Forum rollout rehearsal passed: real backup/restore, ordered drain, failure recovery and schema-40 no-op')
 }finally{
   server.close();await db.end();await pool.end();await admin.query(`DROP DATABASE ${dbName} WITH (FORCE)`);await admin.end();await rm(directory,{recursive:true,force:true})
 }

@@ -24,7 +24,7 @@ test('native capability registry executes cards and artifacts, gates approval, a
   assert.ok(work)
   const context = await host.loadContext(work)
   assert.equal(context.responseProfile,'deep')
-  for (const name of ['documents','files','canvas','learning','handoffs','research','chat','polls','knowledge','routines']) assert.ok(context.grants?.some(grant=>grant.name===name), name)
+  for (const name of ['documents','files','canvas','learning','memory','research','chat','polls','knowledge','routines']) assert.ok(context.grants?.some(grant=>grant.name===name), name)
   assert.ok(!context.grants?.some(grant => ['email','calendar'].includes(grant.name)))
   assert.match(context.productRules ?? '', /does not support email or calendar/)
   assert.ok(!context.grants?.some(grant=>grant.name==='teacher'))
@@ -39,7 +39,7 @@ test('native capability registry executes cards and artifacts, gates approval, a
     const callIndex = counter++
     return host.executeAction(work,{ runId:work.id, cellId:'protocol', callIndex, action,args,idempotencyKey:JSON.stringify([work.id,'protocol',callIndex]) })
   }
-  for (const action of ['documents.list','canvas.current','handoffs.list','routines.list','knowledge.list_sources','directory.statuses','chat.metadata']) {
+  for (const action of ['documents.list','canvas.current','routines.list','knowledge.list_sources','directory.statuses','chat.metadata']) {
     const result = await call(action,{})
     assert.equal(result.ok,true,`${action}: ${JSON.stringify(result)}`)
   }

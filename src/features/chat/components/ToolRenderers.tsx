@@ -2,7 +2,7 @@ import { RecommendationCard } from '@/components/assistant-ui/elements/recommend
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { useState } from 'react'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
-import { canvasProgress, handoffProgress } from '../runtime/task-progress'
+import { canvasProgress } from '../runtime/task-progress'
 import { PollCard } from '@/components/assistant-ui/elements/poll-card'
 import { CanvasArtifactCard } from '@/features/canvas/components/CanvasArtifactCard'
 import {
@@ -145,11 +145,6 @@ export function ElicitationFormTool({ args, result, addResult }: CardProps) {
       data-assistant-ui-id={value.id}
     />
   )
-}
-
-export function AgentHandoffTool({ args }: Pick<CardProps, 'args'>) {
-  const names = useParticipants(state => state.byId)
-  return <ProgressTracker {...handoffProgress(args, names)} />
 }
 
 export function CanvasProgressTool({ args }: Pick<CardProps, 'args'>) {

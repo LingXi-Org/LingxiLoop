@@ -67,7 +67,7 @@ export function AssistantMessageActions() {
     inFlight.current = true
     setPending('regenerate')
     try {
-      const id = `temp-${crypto.randomUUID()}`, text = regenerateOf ? '请重新生成这条回复。' : '请重试这条消息。'
+      const id = `temp-${crypto.randomUUID()}`, text = `@${metadata.senderId} ${regenerateOf ? '请重新生成这条回复。' : '请重试这条消息。'}`
       const payload = createNativeMessage({ id, role: 'user', content: [{ type: 'text', text }],
         custom: { replyToClientMsgNo: replyTo, mentionedIds: [metadata.senderId],
           ...(regenerateOf ? { regenerateOfClientMsgNo: regenerateOf } : {}) } })
