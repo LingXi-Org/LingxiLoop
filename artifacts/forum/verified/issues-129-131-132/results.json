@@ -10,8 +10,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-14T13:37:18.822Z",
-      "finishedAt": "2026-10-14T13:37:20.587Z",
+      "startedAt": "2026-10-14T13:46:54.386Z",
+      "finishedAt": "2026-10-14T13:46:57.323Z",
       "exitCode": 0
     },
     {
@@ -21,8 +21,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-14T13:37:20.587Z",
-      "finishedAt": "2026-10-14T13:37:20.967Z",
+      "startedAt": "2026-10-14T13:46:57.323Z",
+      "finishedAt": "2026-10-14T13:46:58.134Z",
       "exitCode": 0
     },
     {
@@ -32,8 +32,8 @@
         "--file",
         "course-forum.test.ts"
       ],
-      "startedAt": "2026-10-14T13:37:20.967Z",
-      "finishedAt": "2026-10-14T13:37:33.225Z",
+      "startedAt": "2026-10-14T13:46:58.134Z",
+      "finishedAt": "2026-10-14T13:47:12.705Z",
       "exitCode": 0
     },
     {
@@ -44,8 +44,8 @@
         "--config",
         "e2e.forum.config.ts"
       ],
-      "startedAt": "2026-10-14T13:37:37.480Z",
-      "finishedAt": "2026-10-14T13:38:36.680Z",
+      "startedAt": "2026-10-14T13:47:18.045Z",
+      "finishedAt": "2026-10-14T13:48:57.882Z",
       "exitCode": 0
     }
   ],

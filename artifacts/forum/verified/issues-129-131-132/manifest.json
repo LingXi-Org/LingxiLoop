@@ -1,53 +1,64 @@
 {
   "scope": "Issues 129, 131, 132",
-  "browserRun": "01a13aa3-e86a-7cfb-ac1d-f2d1ebe1b069",
+  "sourceCommit": "830fec38",
+  "runtime": "@lyyzka/lingxios@3.4.1",
+  "schema": 40,
+  "browserRun": "01a13aaa-ddb5-7922-a1a4-e94a8629c1d8",
   "browserTests": 4,
   "engine": "tester-army/e2e official @e2e-dev/web",
   "databaseIntegrationTests": 8,
+  "webTests": 87,
+  "serverTests": 97,
+  "adminTests": 8,
+  "rolloutRehearsal": "real PostgreSQL dump/restore; recorded Komodo stop/start; schema-40 no-op",
+  "limitations": [
+    "Browser identities, IM transport and object storage use controlled fixtures.",
+    "Production deployment/update state is recorded in GitHub Actions, separately from local rehearsal."
+  ],
   "files": [
     {
       "name": "001-composer-streaming-light-1440.png",
-      "sha256": "4aea8aba76c5319ee6eb6a38316f63ba70ff3a7d3effbad093f593be2f3a0904"
+      "sha256": "0c0bb0e70127f031b80663fae38749714c3f2ea595b457d27fa76b8ebf39f3a6"
     },
     {
       "name": "001-composer-streaming-light-390.png",
-      "sha256": "be82f1e206471e6f3c8cdfbf3438877b2e5835a9401da980c31ff56603627bcf"
+      "sha256": "c1960448b3f3802de6f52db5c0ceed5fcb94c3825a24ca67e2b0cb7f6c4a469b"
     },
     {
       "name": "001-retired-navigation-normalized.png",
-      "sha256": "95f23d6016abb8eb2813df1c284240eff30953d4ecd16d61737b231d980e8da2"
+      "sha256": "e03ac4524dbcc944e9c6339c840ad6e2544d0f9af3ed0296be9366950ed2b017"
     },
     {
       "name": "001-student-inline-light.png",
-      "sha256": "bca47e6fd2a75b944adc624c5de0570e84a66c914e8eedf9aa8bc8aa21de028d"
+      "sha256": "b1ad1d52cd119aeecb2c9172e9e592c15f84f413cb10f9bcf1bfda6848cec78e"
     },
     {
       "name": "002-composer-complete-dark-1440.png",
-      "sha256": "69a3c138e6c7fe6f9d95b281770fee3e7d07054f69b0e532db30a64a58c186ee"
+      "sha256": "06709cd9f8dcff3760fc7792f1b445cba636721c90b386f395a8327b7c156f83"
     },
     {
       "name": "002-composer-complete-dark-390.png",
-      "sha256": "f6fb49fb8d0bb1743747ff01debf474114a95292055101927d3f2766ac8b94e8"
+      "sha256": "38d9d914f336a9deae1d9b5cc3bc0fa11ac1e71bdcbc41fb8d9d33ef623a6f3a"
     },
     {
       "name": "002-native-editor-preview.png",
-      "sha256": "be06ea5c2c0e582a2d8fbaa50ce0922d6df7a62a1323496f4b848d17d4a8035c"
+      "sha256": "eda36faf7f767695528174b1490540908a3e8e95e04f38699efb186ed15cddd6"
     },
     {
       "name": "003-discussion-edited.png",
-      "sha256": "2a4d037d728246d32bdab244da1cc9778aa69e26ecfaa4c13cd41c2b9996b090"
+      "sha256": "15d3ac8b92d24474ed2c570f03847938f75a972bf5fca438ce2bc469a4d0d9de"
     },
     {
       "name": "004-student-private-versions.png",
-      "sha256": "d6f84787f8c4ec894766c184a78b4fe83435791b2fffce09e2438e9f2f45facf"
+      "sha256": "5ccf8c6cbf9003a22957ea25ade77b38ea4c16683525a190ee581ea9dd1ecb67"
     },
     {
       "name": "005-teacher-inline-homework.png",
-      "sha256": "2e9d4ac36a6efa3ddba8d5868474ed05a87f740f12bf8beb432b5623c8bf36df"
+      "sha256": "e4d452abdec94d7c424872a9a4bf7a6fe65ebab15765fd3fad577e3f46cc145d"
     },
     {
       "name": "006-forum-mobile-navigation.png",
-      "sha256": "32f22fa3c89c0c5a028a25deaf60265e06733b3bb6294c33020562b5634a637c"
+      "sha256": "c28e01255d9ce0150ae4a3a7585317ca863c1d4c31d368344f1fc402237e9d91"
     },
     {
       "name": "007-forum-mobile-dark.png",
@@ -55,7 +66,7 @@
     },
     {
       "name": "008-forum-desktop-complete.png",
-      "sha256": "c7fad82ad3d5cf21937f26f37c09e1bde4ba72200cc8c58821d0cab3464285ab"
+      "sha256": "0bf18de79acb32dc819b27305037216ff79a406f7f32a2f90d9b90752f4c6a00"
     }
   ]
 }
