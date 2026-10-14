@@ -340,7 +340,7 @@ export async function completeLearningMissionRecord(db: Queryable, scope: Missio
 
 export async function findEligibleLearningMissionCoordinator(
   db: Queryable,
-  args: { companyId: string; projectId: string; channelId: string; preferredPreset: string; currentAgentId: string },
+  args: { companyId: string; projectId: string; channelId: string; currentAgentId: string },
 ): Promise<string | null> {
   const { rows } = await db.query<{ id: string }>(
     `SELECT participant.id FROM participants participant
@@ -349,9 +349,8 @@ export async function findEligibleLearningMissionCoordinator(
       WHERE participant.company_id=$1 AND participant.kind='agent' AND participant.departed_at IS NULL
         AND participant.capabilities @> '["canvas","learning"]'::jsonb
         AND conversation.members ? participant.id
-      ORDER BY CASE WHEN participant.preset_key=$4 THEN 0 WHEN participant.preset_key='nova' THEN 1
-        WHEN participant.id=$5 THEN 2 ELSE 3 END,participant.id LIMIT 1`,
-    [args.companyId,args.projectId,args.channelId,args.preferredPreset,args.currentAgentId],
+        AND participant.id=$4 LIMIT 1`,
+    [args.companyId,args.projectId,args.channelId,args.currentAgentId],
   )
   return rows[0]?.id ?? null
 }

@@ -3,15 +3,13 @@ import assert from 'node:assert/strict'
 import { after, afterEach, before, beforeEach, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { createWorker } from '@lyyzka/lingxios/worker'
-import { readRunReference, type ActionContext, type WorkItem } from '@lyyzka/lingxios'
+import type { ActionContext, WorkItem } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { lingxiOSControl, stopLingxiOSControl } from '../agent-runtime/runtime.js'
 import { createProductTools } from '../agent-runtime/tools.js'
 import { createProductContext } from '../agent-runtime/context.js'
-import { flushNativeEvents } from '../agents/native-events.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
-import { reconcileHandoffs } from '../modules/agents/handoff-progress.js'
 import { createCanvasRuntime } from '../modules/canvas/runtime.js'
 import { completeCanvasWork } from '../modules/canvas/facade.js'
 import { onboardCompanyStarterWorkspace } from '../modules/companies/public.js'
@@ -92,7 +90,7 @@ test('six real roster grants, source retrieval and Canvas candidates retain memb
     assert.ok(context.dynamic)
     assert.equal((context.dynamic.roster as unknown[]).length,6)
     const grants = await product.capabilityResolver.resolve(work)
-    for (const capability of ['learning','canvas','knowledge','handoffs','research','documents']) assert.ok(grants.some(grant => grant.name === capability),capability)
+    for (const capability of ['learning','canvas','knowledge','research','documents','memory']) assert.ok(grants.some(grant => grant.name === capability),capability)
     const action = { work,database: pool,signal: AbortSignal.timeout(10000),requestVersion: 1,
       action: { runId: work.id,cellId: 'read',callIndex: 0,action: 'canvas.available_agents',args: {},idempotencyKey: work.id } } as unknown as ActionContext
     const candidates = tools.find(tool => tool.action === 'canvas.available_agents')!
@@ -118,7 +116,7 @@ test('six real roster grants, source retrieval and Canvas candidates retain memb
   const missing = await product.contextProvider.loadContext(work)
   assert.ok(missing.dynamic)
   assert.ok((missing.dynamic.missingSpecialists as Array<{ name: string }>).some(agent => agent.name === '寻知'))
-  assert.match(missing.productRules ?? '',/ask the user to add/)
+  assert.match(missing.productRules ?? '',/ask the human to add/)
   // Selection changes and upstream failures return explicit state, without fabricated evidence.
   const invokeRead = async (name = 'knowledge.search', args: object = { query: '实际记录值' }) => {
     const tool = tools.find(tool => tool.action === name)!, input = tool.parse(args)
@@ -204,142 +202,98 @@ test('changing a Mission coordinator publishes the current owner in the same tra
     [f.ids.forge,f.ids.forge,1])
 })
 
-test('scripted native execution persists Mission → independent Canvas host → specialist and verifier reports → coordinator return', { timeout: 120000 }, async () => {
-  const f = await fixture(), stages = new Map<string,number>(), usage = { available: true,inputTokens: 100,outputTokens: 30 }
+
+// Failure cases: business creation silently starts a coordinator/DAG, evidence is
+// self-certified, public turns lack business bindings, or completion resumes a sender.
+test('Mission and Canvas finish through public mentions, evidence and independent review', { timeout: 120000 }, async () => {
+  const f = await fixture(), stages = new Map<string, number>(), usage = { available: true, inputTokens: 100, outputTokens: 30 }
   let work: WorkItem | undefined
   const toolsSeen = new Set<string>()
   const worker = createWorker({ controlPlane: { connectWorker(input) {
     const host = f.api.connectWorker(input)
-    return { ...host,async claimWork(...args) { const claimed = await host.claimWork(...args); if (claimed) work = claimed; return claimed } }
-  } },worker: { id: 'learning-collaboration',concurrency: 1,shutdownGraceMs: 1000 },
-  processors: { handoff: 'conversation', canvas_worker: 'conversation', canvas_summary: 'conversation', mission_coordinator: 'conversation' },model: {
-    modelId: 'collaboration-fixture',contextWindowTokens: 200000,
+    return { ...host, async claimWork(...args) { const claimed = await host.claimWork(...args); if (claimed) work = claimed; return claimed } }
+  } }, worker: { id: 'public-learning-collaboration', concurrency: 1, shutdownGraceMs: 1000 }, model: {
+    modelId: 'collaboration-fixture', contextWindowTokens: 200000,
     async run(request) {
       assert.ok(work)
       const current = work, stage = stages.get(current.id) ?? 0
-      stages.set(current.id,stage+1)
+      stages.set(current.id, stage + 1)
+      assert.ok(!request.tools?.some(tool => /^(handoffs__|graph__|canvas__(assign|handoff)$)/.test(tool.name)))
       const call = (name: string, args: unknown) => {
-        assert.ok(request.tools?.some(tool => tool.name === name),`${current.agentId} lacks ${name}`)
+        assert.ok(request.tools?.some(tool => tool.name === name), name)
         toolsSeen.add(name)
-        return { output: [{ type: 'function_call' as const,callId: `${current.id}:${stage}`,name,arguments: JSON.stringify(args) }],text: '',model: 'collaboration-fixture',usage }
+        return { output: [{ type: 'function_call' as const, callId: current.id + ':' + stage, name, arguments: JSON.stringify(args) }], text: '', model: 'collaboration-fixture', usage }
       }
-      if (current.agentId === f.ids.nova) {
-        if (stage === 0) return call('learning__start_mission',{ goal: '完成课程练习并独立复核',successCriteria: '有可核验报告和反思',missionKind: 'STUDY' })
-        const mission = (await pool.query('SELECT id FROM learning_missions WHERE company_id=$1',[f.companyId])).rows[0]
-        assert.ok(mission)
-        if (stage === 1) return call('learning__add_steps',{ missionId: mission.id,steps: [
-          { kind: 'CHECK',description: '验证练习',successCriteria: '独立报告支持结论' },
-          { kind: 'REFLECT',description: '记录反思',successCriteria: '指出证据与局限' },
+      const reply = (text: string) => ({ output: [{ role: 'assistant' as const, content: text }], text, model: 'collaboration-fixture', usage })
+      if (current.agentId === f.ids.nova && current.id === f.run.runId) {
+        if (stage === 0) return call('learning__start_mission', { goal: '完成课程练习并独立复核', successCriteria: '有可核验报告和反思', missionKind: 'STUDY' })
+        const mission = (await pool.query('SELECT id FROM learning_missions WHERE company_id=$1', [f.companyId])).rows[0]
+        if (stage === 1) return call('learning__add_steps', { missionId: mission.id, steps: [
+          { kind: 'CHECK', description: '验证练习', successCriteria: '独立报告支持结论' },
+          { kind: 'REFLECT', description: '记录反思', successCriteria: '指出证据与局限' },
         ] })
-        if (stage === 2) return call('learning__finish_planning',{ missionId: mission.id })
-        if (stage === 3) return call('handoffs__create',{ toAgentId: f.ids.forge,title: '主持练习与独立复核',note: '建立 Canvas，等待报告后回传。' })
-        if (stage === 4 || stage === 5) {
-          assert.equal((await pool.query('SELECT 1 FROM canvas_agent_runs WHERE work_id=$1',[current.id])).rowCount,0,'Mission coordinator must remain free of the Canvas reporter role')
-          const report = (await pool.query("SELECT evidence_id FROM canvas_assignment_reports WHERE company_id=$1 AND execution_role='reporter'",[f.companyId])).rows[0]
-          assert.ok(report)
-          const steps = (await pool.query('SELECT id FROM learning_mission_steps WHERE mission_id=$1 ORDER BY position',[mission.id])).rows
-          return call('learning__update_step',{ missionId: mission.id,stepId: steps[stage-4].id,status: 'COMPLETED',outcome: '依据已保存并独立复核的报告完成',sourceEvidenceId: report.evidence_id })
-        }
-        if (stage === 6) return call('learning__complete_mission',{ missionId: mission.id })
-      } else if (current.agentId === f.ids.forge) {
-        if (stage === 0) return call('canvas__start_workspace',{ title: '练习证据',goal: '产出可独立复核的结论',members: [
-          { agentId: f.ids.sage,assignment: '读取已提交目标并提供概念证据',executionRole: 'specialist' },
-          { agentId: f.ids.trace,assignment: '独立检查报告',executionRole: 'verifier',verifiesAgentId: f.ids.sage,dependsOnAgentIds: [f.ids.sage] },
-        ] })
-        if (stage === 1) {
-          const reports = (await pool.query('SELECT id FROM canvas_assignment_reports WHERE company_id=$1 AND assignment_id IS NOT NULL',[f.companyId])).rows
-          assert.equal(reports.length,2)
-          return call('canvas__submit_report',{ finding: '已消费专业报告和独立复核',evidenceRefs: [],confidence: 0.9,consumedReportIds: reports.map(row => row.id) })
-        }
-      } else if (current.agentId === f.ids.sage) {
-        if (stage === 0) return call('knowledge__list_sources',{})
-        if (stage === 1) return call('canvas__submit_report',{ finding: '已读原始学习目标',evidenceRefs: [{ kind: 'message',id: f.source.messageId }],confidence: 0.9 })
-      } else if (current.agentId === f.ids.trace && stage === 0) {
-        const builder = (await pool.query("SELECT id FROM canvas_assignment_reports WHERE company_id=$1 AND execution_role='specialist'",[f.companyId])).rows[0]
-        assert.ok(builder)
-        return call('canvas__submit_report',{ finding: '独立复核支持所述目标',evidenceRefs: [{ kind: 'message',id: f.source.messageId },{ kind: 'report',id: builder.id }],
-          confidence: 0.9,verifiesReportId: builder.id,verdict: 'supported',disconfirmingChecks: ['已对照原始提交检查目标是否被改写'] })
+        if (stage === 2) return call('learning__finish_planning', { missionId: mission.id })
+        assert.equal((await f.api.listRuns({ tenantId: f.companyId, limit: 100 })).items.length, 1, 'creating a Mission must not enqueue work')
+        return reply('@' + f.ids.forge + ' 请建立练习画布，并安排明理提供证据、溯源独立复核。')
       }
-      return { output: [{ role: 'assistant' as const,content: '已完成并保存报告。' }],text: '已完成并保存报告。',model: 'collaboration-fixture',usage }
+      if (current.agentId === f.ids.forge) {
+        if (stage === 0) return call('canvas__start_workspace', { title: '练习证据', goal: '产出可独立复核的结论', members: [
+          { agentId: f.ids.sage, assignment: '读取已提交目标并提供概念证据', executionRole: 'specialist' },
+          { agentId: f.ids.trace, assignment: '独立检查报告', executionRole: 'verifier', verifiesAgentId: f.ids.sage },
+        ] })
+        assert.equal((await f.api.listRuns({ tenantId: f.companyId, limit: 100 })).items.length, 2, 'creating a Canvas must not enqueue work')
+        return reply('@' + f.ids.sage + ' 请读取目标并提交有证据的报告，再明确提及溯源复核。')
+      }
+      if (current.agentId === f.ids.sage) {
+        if (stage === 0) return call('knowledge__list_sources', {})
+        if (stage === 1) return call('canvas__submit_report', { finding: '已读原始学习目标', evidenceRefs: [{ kind: 'message', id: f.source.messageId }], confidence: 0.9 })
+        return reply('@' + f.ids.trace + ' 请独立复核画布中的报告，核对原始提交的目标。')
+      }
+      if (current.agentId === f.ids.trace) {
+        if (stage === 0) {
+          const builder = (await pool.query("SELECT id FROM canvas_assignment_reports WHERE company_id=$1 AND execution_role='specialist'", [f.companyId])).rows[0]
+          assert.ok(builder)
+          return call('canvas__submit_report', { finding: '独立复核支持所述目标', evidenceRefs: [{ kind: 'message', id: f.source.messageId }, { kind: 'report', id: builder.id }],
+            confidence: 0.9, verifiesReportId: builder.id, verdict: 'supported', disconfirmingChecks: ['已对照原始提交检查目标是否被改写'] })
+        }
+        return reply('@' + f.ids.nova + ' 独立复核已保存，请更新学习任务的检查与反思证据。')
+      }
+      assert.equal(current.agentId, f.ids.nova)
+      const mission = (await pool.query('SELECT id FROM learning_missions WHERE company_id=$1', [f.companyId])).rows[0]
+      if (stage < 2) {
+        const report = (await pool.query("SELECT evidence_id FROM canvas_assignment_reports WHERE company_id=$1 AND execution_role='verifier'", [f.companyId])).rows[0]
+        const steps = (await pool.query('SELECT id FROM learning_mission_steps WHERE mission_id=$1 ORDER BY position', [mission.id])).rows
+        return call('learning__update_step', { missionId: mission.id, stepId: steps[stage].id, status: 'COMPLETED', outcome: '依据独立复核的证据完成', sourceEvidenceId: report.evidence_id })
+      }
+      if (stage === 2) return call('learning__complete_mission', { missionId: mission.id })
+      return reply('学习任务的检查与反思已保存完成。')
     },
-    async structured() { return { value: { missing: [] },model: 'collaboration-fixture',usage } },
+    async structured() { return { value: { missing: [] }, model: 'collaboration-fixture', usage } },
     async compact() { throw new Error('bounded integration must not compact') },
   } })
   try {
     const canvas = createCanvasRuntime(lingxiOSControl), signal = AbortSignal.timeout(110000)
-    for (let attempt=0;attempt<40;attempt++) {
+    const deadline = Date.now() + 100000
+    while ((await pool.query("SELECT 1 FROM learning_missions WHERE company_id=$1 AND status='COMPLETED'", [f.companyId])).rows.length === 0) {
+      assert.ok(Date.now() < deadline, 'public learning collaboration timed out')
       await worker.runNext()
-      await canvas.reconcile(pool,completeCanvasWork,signal)
-      await reconcileHandoffs(pool,transaction,lingxiOSControl,signal)
-      const run = await f.api.readRun(f.run)
-      if (run && !['queued','leased','waiting'].includes(run.status)) { assert.equal(run.status,'succeeded',run.error ?? JSON.stringify(run.goalOutcome)); break }
-      await delay(30)
+      await canvas.reconcile(pool, completeCanvasWork, signal)
+      await delay(50)
     }
-    const outcomes = await Promise.all([...stages.keys()].map(async id => {
-      const identity = await readRunReference(pool,f.companyId,id), run = identity && await f.api.readRun(identity)
-      return { agentId: identity?.agentId, stage: stages.get(id), status: run?.status, error: run?.error, goal: run?.goalOutcome }
-    }))
-    assert.equal((await f.api.readRun(f.run))?.status,'succeeded',JSON.stringify(outcomes))
-    for (let attempt=0;attempt<100 && (await f.api.readRunState(f.run))?.delivery !== 'delivered';attempt++) await delay(50)
-    assert.equal((await f.api.readRunState(f.run))?.delivery,'delivered')
-    assert.deepEqual((await pool.query('SELECT status FROM learning_missions WHERE company_id=$1',[f.companyId])).rows,[{ status: 'COMPLETED' }])
-    assert.deepEqual((await pool.query('SELECT status,run_settled FROM agent_handoffs WHERE company_id=$1',[f.companyId])).rows,[{ status: 'completed',run_settled: true }])
-    assert.deepEqual((await pool.query('SELECT execution_role FROM canvas_assignment_reports WHERE company_id=$1 ORDER BY execution_role',[f.companyId])).rows,
-      [{ execution_role: 'reporter' },{ execution_role: 'specialist' },{ execution_role: 'verifier' }])
+    await canvas.reconcile(pool, completeCanvasWork, signal)
+    const runs = (await f.api.listRuns({ tenantId: f.companyId, limit: 100 })).items
+    assert.equal(runs.length, 5)
+    assert.equal((await pool.query('SELECT 1 FROM agent_handoffs')).rows.length, 0)
+    assert.equal((await pool.query('SELECT 1 FROM lingxios.agent_work_waits')).rows.length, 0)
+    assert.equal((await pool.query('SELECT 1 FROM canvas_agent_runs WHERE parent_work_id IS NOT NULL OR graph_id IS NOT NULL')).rows.length, 0)
+    assert.deepEqual((await pool.query('SELECT execution_role FROM canvas_assignment_reports WHERE company_id=$1 ORDER BY execution_role', [f.companyId])).rows,
+      [{ execution_role: 'specialist' }, { execution_role: 'verifier' }])
+    assert.deepEqual((await pool.query('SELECT status FROM canvases WHERE company_id=$1', [f.companyId])).rows, [{ status: 'completed' }])
     assert.ok(toolsSeen.has('knowledge__list_sources'))
-    const events = (await pool.query("SELECT event FROM agent_native_event_outbox WHERE company_id=$1 AND event->>'type'='im.system'",[f.companyId])).rows.map(row => row.event)
-    const plans = events.filter(event => nativeData(event.payload,'learning-mission')).sort((a,b) => a.payload.metadata.custom.progressVersion-b.payload.metadata.custom.progressVersion)
-    const finalPlan = nativeData<{ status: string; steps: unknown[] }>(plans.at(-1).payload,'learning-mission')
-    assert.ok(finalPlan)
-    assert.equal(finalPlan.status,'COMPLETED')
-    assert.equal(finalPlan.steps.length,2)
-    assert.ok(events.some(event => nativeData(event.payload,'canvas')?.status === 'completed'))
-    const before = events.length
-    await canvas.reconcile(pool,completeCanvasWork,signal); await reconcileHandoffs(pool,transaction,lingxiOSControl,signal)
-    assert.equal((await pool.query("SELECT 1 FROM agent_native_event_outbox WHERE company_id=$1 AND event->>'type'='im.system'",[f.companyId])).rowCount,before)
-  } finally { await worker.stop() }
-})
-
-for (const outcome of ['failed','cancelled'] as const) test(`handoff ${outcome} follows the native child and durable progress delivery recovers after failure`, { timeout: 90000 }, async () => {
-  const f = await fixture(), usage = { available: true,inputTokens: 10,outputTokens: 10 }
-  let called = false
-  const worker = createWorker({ controlPlane: f.api,worker: { id: `handoff-${outcome}`,concurrency: 1,shutdownGraceMs: 1000 },
-    processors: { handoff: 'conversation' },model: { modelId: 'failure-fixture',contextWindowTokens: 200000,
-      async run() {
-        if (called) throw new Error('fixture model unavailable')
-        called = true
-        return { output: [{ type: 'function_call' as const,callId: 'delegate',name: 'handoffs__create',
-          arguments: JSON.stringify({ toAgentId: f.ids.scout,title: '读取课程证据' }) }],text: '',model: 'failure-fixture',usage }
-      },async structured() { return { value: { missing: [] },model: 'failure-fixture',usage } },
-      async compact() { throw new Error('unexpected compaction') },
-    } })
-  try {
-    await worker.runNext()
-    const handoff = (await pool.query('SELECT id,child_work_id FROM agent_handoffs WHERE company_id=$1',[f.companyId])).rows[0]
-    assert.ok(handoff)
-    const identity = await readRunReference(pool,f.companyId,handoff.child_work_id)
-    assert.ok(identity)
-    if (outcome === 'cancelled') assert.equal(await f.api.cancel(identity),true)
-    else await worker.runNext()
-    assert.equal((await f.api.readRun(identity))?.status,outcome)
-    const signal = AbortSignal.timeout(20000)
-    const brokenTransaction: typeof transaction = run => withTransaction(pool,async client => {
-      await run(client)
-      throw new Error('fixture progress commit failure')
-    })
-    await assert.rejects(reconcileHandoffs(pool,brokenTransaction,lingxiOSControl,signal),/progress commit failure/)
-    assert.deepEqual((await pool.query('SELECT status,run_settled FROM agent_handoffs WHERE id=$1',[handoff.id])).rows,[{ status: 'queued',run_settled: false }])
-    await reconcileHandoffs(pool,transaction,lingxiOSControl,signal)
-    assert.deepEqual((await pool.query('SELECT status,run_settled FROM agent_handoffs WHERE id=$1',[handoff.id])).rows,[{ status: outcome,run_settled: true }])
-    const count = (await pool.query('SELECT id FROM agent_native_event_outbox WHERE company_id=$1',[f.companyId])).rowCount
-    await reconcileHandoffs(pool,transaction,lingxiOSControl,signal)
-    assert.equal((await pool.query('SELECT id FROM agent_native_event_outbox WHERE company_id=$1',[f.companyId])).rowCount,count)
-    await flushNativeEvents(pool,async () => { throw new Error('fixture transport unavailable') },signal)
-    assert.equal((await pool.query('SELECT id FROM agent_native_event_outbox WHERE company_id=$1 AND attempts>0 AND delivered_at IS NULL',[f.companyId])).rowCount,count)
-    await pool.query('UPDATE agent_native_event_outbox SET available_at=NOW() WHERE company_id=$1',[f.companyId])
-    const delivered: string[] = []
-    await flushNativeEvents(pool,async event => { if (event.type === 'im.system' && nativeData(event.payload,'handoff') !== undefined) delivered.push(String((nativeData(event.payload,'handoff') as { status?: string })?.status)) },signal)
-    assert.ok(delivered.includes(outcome))
-    assert.equal((await pool.query('SELECT id FROM agent_native_event_outbox WHERE company_id=$1 AND delivered_at IS NULL',[f.companyId])).rowCount,0)
+    assert.equal((await pool.query('SELECT 1 FROM agent_run_bindings WHERE internal')).rows.length, 0)
+    const { mkdir, writeFile } = await import('node:fs/promises')
+    await mkdir('artifacts/group-mentions', { recursive: true })
+    await writeFile('artifacts/group-mentions/learning.json', JSON.stringify({ passed: true, tools: [...toolsSeen], runs: runs.map(run => run.identity),
+      checks: ['mission-without-child', 'canvas-without-DAG', 'public-mentions', 'persisted-evidence', 'independent-verifier', 'no-auto-return'] }, null, 2))
   } finally { await worker.stop() }
 })

@@ -19,7 +19,6 @@ const CAPABILITY_DETAILS: Record<(typeof DEFAULT_AGENT_CAPABILITIES)[number], { 
   'documents': { label: '协作文档', description: '创建、读取和编辑协作文档' },
   'knowledge': { label: '知识库', description: '检索并使用当前学习区的知识资料' },
   'learning': { label: '教学', description: '规划课程任务，跟进学习成果并提供反馈' },
-  'handoffs': { label: '协作交接', description: '与同一会话中的其他智能助教分工并查看进展' },
   'routines': { label: '定时任务', description: '安排定时任务并查看执行记录' },
 }
 const CAPABILITY_OPTIONS = DEFAULT_AGENT_CAPABILITIES.map(id => ({ id, ...CAPABILITY_DETAILS[id] }))

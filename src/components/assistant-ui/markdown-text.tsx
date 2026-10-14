@@ -7,15 +7,18 @@ import { createMermaidPlugin } from '@streamdown/mermaid'
 import { Block, type BlockProps, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'
 import { createContext, memo, useContext, useMemo, useState } from 'react'
-import type { Root } from 'hast'
+import type { Root, ElementContent } from 'hast'
 import { SKIP, visit } from 'unist-util-visit'
 import {
   ConfidenceMarker, ConfidenceMarkerInline,
 } from '@/components/assistant-ui/elements/confidence-marker'
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
-import type { MentionTarget } from '@/lib/mentions'
 import { activityAnnotation } from '@/lib/runActivity'
+import { scanMentions } from '@/lib/mentions'
+import type { Participant } from '@/types'
+import { MentionBadge } from '@/components/MentionBadge'
+import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 export type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 
 const plugins = { code, math: createMathPlugin({ singleDollarTextMath: true }), mermaid: createMermaidPlugin({ config: { securityLevel: 'strict', startOnLoad: false } }) }
@@ -36,7 +39,7 @@ const mermaidOptions = { config: { securityLevel: 'strict', startOnLoad: false }
 </div> }
 
 declare module 'hast' {
-  interface ElementData { confidenceClaim?: MarkdownConfidenceClaim }
+  interface ElementData { confidenceClaim?: MarkdownConfidenceClaim; mentionId?: string }
 }
 
 export function confidenceCopyText(text: string, claims: readonly Pick<MarkdownConfidenceClaim, 'start' | 'end' | 'text'>[] = []): string {
@@ -49,24 +52,39 @@ export function confidenceCopyText(text: string, claims: readonly Pick<MarkdownC
   return result + text.slice(offset)
 }
 
+const MentionTargets = createContext<readonly Participant[]>([])
+
 const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['span'] = ({ node, children, ...props }) => {
+  const targets = useContext(MentionTargets)
+  const id = node?.data?.mentionId
+  const target = id === 'all' ? EVERYONE_BLOUB_PARTICIPANT : targets.find(target => target.id === id)
+  if (id && target) return <MentionBadge participant={target} id={id} />
   const claim = node?.data?.confidenceClaim
   const marker = claim ? <ConfidenceMarkerInline claim={claim}>{children}</ConfidenceMarkerInline> : children
   return claim && node?.properties['data-citation-start'] === undefined ? marker : <span {...props}>{marker}</span>
 }
 const confidenceComponents = { span: ConfidenceSpan }
 const emptyClaims: readonly MarkdownConfidenceClaim[] = []
-const emptyMentionTargets: readonly MentionTarget[] = []
+const emptyMentionTargets: readonly Participant[] = []
 
-function rehypeMentionNames({ targets }: { targets: readonly MentionTarget[] }) {
-  const names = new Map(targets.map(target => [target.id, target.name]))
-  names.set('all', '所有人')
+function rehypeMentionNames({ targets }: { targets: readonly Participant[] }) {
   return (tree: Root) => {
-    visit(tree, node => {
-      if (node.type === 'element' && ['a', 'code', 'pre'].includes(node.tagName)) return SKIP
-      if (node.type !== 'text') return
-      node.value = node.value.replace(/(^|[^A-Za-z0-9_@])@([\p{L}\p{N}_-]+)(?![\p{L}\p{N}_-]|\.[\p{L}\p{N}])/gu,
-        (match, prefix: string, id: string) => names.has(id) ? `${prefix}@${names.get(id)}` : match)
+    visit(tree, (node, index, parent) => {
+      if (node.type === 'element' && ['a', 'code', 'pre', 'blockquote'].includes(node.tagName)) return SKIP
+      if (node.type !== 'text' || !parent || index === undefined) return
+      const mentions = scanMentions(node.value, targets)
+      if (!mentions.length) return
+      const parts: ElementContent[] = []
+      let cursor = 0
+      for (const mention of mentions) {
+        if (mention.start > cursor) parts.push({ type: 'text', value: node.value.slice(cursor, mention.start) })
+        parts.push({ type: 'element', tagName: 'span', properties: {}, data: { mentionId: mention.id },
+          children: [{ type: 'text', value: node.value.slice(mention.start, mention.end) }] })
+        cursor = mention.end
+      }
+      if (cursor < node.value.length) parts.push({ type: 'text', value: node.value.slice(cursor) })
+      parent.children.splice(index, 1, ...parts)
+      return index + parts.length
     })
   }
 }
@@ -106,7 +124,7 @@ function rehypeConfidence({ claims, offset, inlineCitations }: {
 }
 
 const CitationBlocks = createContext<{
-  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly MentionTarget[]
+  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]
 }>({ offsets: [], claims: [], inlineCitations: false, mentionTargets: [] })
 
 function CitationBlock(props: BlockProps) {
@@ -116,7 +134,7 @@ function CitationBlock(props: BlockProps) {
 
 // New tail offsets must not reparse every already completed citation block.
 const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, ...props }: BlockProps & {
-  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly MentionTarget[]
+  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]
 }) {
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
@@ -134,7 +152,7 @@ const MarkdownTextImpl = ({
   agent?: boolean
   confidenceClaims?: readonly MarkdownConfidenceClaim[]
   inlineCitations?: boolean
-  mentionTargets?: readonly MentionTarget[]
+  mentionTargets?: readonly Participant[]
 }) => {
   const [hoveredId, setHoveredId] = useState('')
   const part = useMessagePartText()
@@ -155,7 +173,7 @@ const MarkdownTextImpl = ({
     [rehypeMentionNames, { targets: mentionTargets }],
   ], [mentionTargets])
   return <ConfidenceMarker claims={confidenceClaims} hoveredId={hoveredId} onHover={setHoveredId} floatingBasis={inlineCitations}>
-    <CitationBlocks.Provider value={citationBlocks}>
+    <MentionTargets.Provider value={mentionTargets}><CitationBlocks.Provider value={citationBlocks}>
       <div data-find-content>
         <StreamdownTextPrimitive
           smooth={agent && typeof window !== 'undefined' && part.status.type !== 'incomplete' ? smooth : false}
@@ -166,13 +184,14 @@ const MarkdownTextImpl = ({
           translations={translations}
           mermaid={mermaidOptions}
           rehypePlugins={rehypePlugins}
+          components={confidenceComponents}
           controls
           parseIncompleteMarkdown
-          {...hasCitations ? { BlockComponent: CitationBlock, components: confidenceComponents } : {}}
+          {...hasCitations ? { BlockComponent: CitationBlock } : {}}
           className={`im-markdown${agent ? ' im-markdown-agent' : ''}`}
         />
       </div>
-    </CitationBlocks.Provider>
+    </CitationBlocks.Provider></MentionTargets.Provider>
   </ConfidenceMarker>
 }
 

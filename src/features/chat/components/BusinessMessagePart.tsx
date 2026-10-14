@@ -7,7 +7,7 @@ import { MessageFooterContents, MessageFooterContext } from '@/components/assist
 import { userFacingError } from '@/lib/userFacingError'
 import { getMeId } from '@/stores/auth'
 import { chatTransport } from '../runtime/transport'
-import { AgentHandoffTool, AgentPlanTool, CanvasArtifactTool, CanvasProgressTool, ElicitationFormTool,
+import { AgentPlanTool, CanvasArtifactTool, CanvasProgressTool, ElicitationFormTool,
   PollFormTool, PresentationArtifactTool, RecommendationTool, TeacherBriefingStatsTool } from './ToolRenderers'
 
 const record = (value: unknown) => z.record(z.string(), z.unknown()).parse(value)
@@ -72,7 +72,7 @@ export function BusinessMessagePart({ name, data, readOnly }: DataMessagePartPro
     }
     case 'questionnaire': content = <ElicitationFormTool args={{ ...value, id: message.id }} result={result} addResult={submit} />; break
     case 'recommendation': content = <MessageFooterContents inset={false}><RecommendationTool args={value} result={result} addResult={submit} /></MessageFooterContents>; break
-    case 'handoff': content = <AgentHandoffTool args={value} />; break
+    case 'handoff': content = <p className="whitespace-pre-wrap break-words text-sm">{[value.title, value.task, value.context, value.result, value.error].filter((part): part is string => typeof part === 'string' && Boolean(part)).join('\n') || '历史协作记录'}</p>; break
     case 'learning-mission': content = <MessageFooterContents inset={false}><AgentPlanTool args={{ ...value, id: value.missionId }} /></MessageFooterContents>; break
     case 'canvas': content = <>
       <MessageFooterContext.Provider value={null}><CanvasProgressTool args={{ ...value, id: value.canvasId }} /></MessageFooterContext.Provider>

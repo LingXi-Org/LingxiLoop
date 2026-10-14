@@ -3,11 +3,13 @@ import { toggleWukongReaction, wukongReactions } from '../modules/messages/publi
 import { ImMessagesApplication } from './messages-application.js'
 import { publishReadReceiptAdvance, recordReadReceiptAdvance } from './read-receipts.js'
 import { wukongClient } from './wukong.js'
+import type { Queryable } from '../db/queryable.js'
 
-export function createImMessagesApplication(signal?: AbortSignal) {
+export function createImMessagesApplication(signal?: AbortSignal, database?: Queryable) {
   return new ImMessagesApplication({
-  db: pool,
+  db: database ?? pool,
   withConnection: async (work) => {
+    if (database) return work(database)
     const client = await pool.connect()
     try {
       return await work(client)

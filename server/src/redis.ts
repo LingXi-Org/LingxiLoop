@@ -56,7 +56,6 @@ export const CH_DOC_ACCESS_REVOKED = 'lingxiloop:doc.access.revoked'
  *  generic tenant-scoped WS bridge (NOT the per-doc subscription
  *  bridge) — recipients listen by their participant id, regardless of
  *  whether they currently have the doc open. */
-export const CH_DOC_MENTION = 'lingxiloop:doc.mention'
 /** Safe, user-visible Agent lifecycle facts. This is bridged through the same
  * tenant-scoped WebSocket path as messages; raw reasoning/tool payloads never
  * enter this channel. */
@@ -304,21 +303,6 @@ export interface DocAwarenessEvent extends TenantTagged {
   originId: string
 }
 
-/** One or more participants were @-mentioned in a doc. Carries enough
- *  metadata that the renderer can paint a toast WITHOUT a round trip:
- *  doc title, mentioner display name, the list of mentioned ids. The
- *  receiving client filters by checking whether the active user's id is
- *  in `mentionedIds`. */
-export interface DocMentionEvent extends TenantTagged {
-  type: 'doc.mention'
-  deliveryId: string
-  documentId: string
-  documentTitle: string
-  mentionerId: string
-  mentionerName: string
-  mentionedIds: string[]
-  workspaceId?: string
-}
 
 /** Poll state changed — a new vote was cast, an existing vote was changed,
  *  or the poll was closed (manually or by the expiration sweeper). Carries
@@ -398,7 +382,7 @@ export interface DocAccessRevokedEvent extends TenantTagged {
 export type BroadcastEvent = MessageNewEvent | TypingEvent
   | StatusEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
-  | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent | DocMentionEvent
+  | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent
   | PollUpdatedEvent
   | DocAccessRevokedEvent
   | AgentActivityEvent

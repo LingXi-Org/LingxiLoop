@@ -1,19 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { assertCanvasDependencyDAG, canvasAgentColor, canvasWorkArea } from '../canvas/orchestration.js'
+import { canvasAgentColor, canvasWorkArea } from '../canvas/orchestration.js'
 
-test('Canvas dependency validation accepts mixed parallel/sequential work and rejects cycles', () => {
-  assert.doesNotThrow(() => assertCanvasDependencyDAG([
-    { agentId: 'research', assignment: 'research' },
-    { agentId: 'examples', assignment: 'examples' },
-    { agentId: 'editor', assignment: 'synthesize', dependsOnAgentIds: ['research', 'examples'] },
-  ]))
-  assert.throws(() => assertCanvasDependencyDAG([
-    { agentId: 'a', assignment: 'a', dependsOnAgentIds: ['b'] },
-    { agentId: 'b', assignment: 'b', dependsOnAgentIds: ['a'] },
-  ]), /DAG/)
-  assert.throws(() => assertCanvasDependencyDAG([{ agentId: 'a', assignment: 'a', dependsOnAgentIds: ['missing'] }]), /unknown dependency/)
-})
 
 test('Canvas agent colors are stable and collision-free while palette capacity remains', () => {
   assert.equal(canvasAgentColor('agent-a', new Set()), canvasAgentColor('agent-a', new Set()))

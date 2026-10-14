@@ -78,7 +78,7 @@ test('preset and custom Agents receive IM rules and deliver distinct messages to
         `SELECT input,outcome FROM lingxios.agent_im_messages WHERE tenant_id=$1 AND conversation_id=$2
           AND input->'author'->>'kind'='agent' ORDER BY recorded_at,message_id`,[companyId,conversationId])
       assert.deepEqual(history.rows.map(row => [row.input.text,row.outcome.runs,row.outcome.reason]),
-        [...leadIns.map(body => [body,[],'agent_message']),[final,[],'outbox_echo']])
+        [...leadIns.map(body => [body,[],'agent_message']),[final,[],'no_speaker']])
 
       assert.ok(claimed)
       const input = { body: '已发送后恢复历史同步。' }

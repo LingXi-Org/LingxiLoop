@@ -6,8 +6,7 @@ import type { Queryable } from '../../db/queryable.js'
 export const resolveMemoryScopes: MemoryOptions['resolveScopes'] = async (identity, database, signal) => {
   signal?.throwIfAborted()
   const db = database as Queryable
-  const room = (await db.query<{ conversation_id: string; teacher_managed: boolean }>(`SELECT r.conversation_id,
-    EXISTS(SELECT 1 FROM learning_project_teacher_agents t WHERE t.company_id=agent.company_id AND t.agent_id=agent.id) AS teacher_managed
+  const room = (await db.query<{ conversation_id: string }>(`SELECT r.conversation_id
     FROM agent_run_bindings r
     JOIN participants human ON human.company_id=r.company_id AND human.id=r.principal_id AND human.kind='human' AND human.departed_at IS NULL
     JOIN participants agent ON agent.company_id=r.company_id AND agent.id=r.agent_id AND agent.kind='agent' AND agent.departed_at IS NULL
@@ -23,8 +22,6 @@ export const resolveMemoryScopes: MemoryOptions['resolveScopes'] = async (identi
       throw error
     })
   signal?.throwIfAborted()
-  // Teachers use live course facts; no memory scopes is a valid context, not a revoked identity.
-  if (room.teacher_managed) return []
   return [{ tenantId: identity.tenantId, scopeType: 'learner', scopeId: identity.principalId },
     { tenantId: identity.tenantId, scopeType: 'course', scopeId: room.conversation_id },
     { tenantId: identity.tenantId, scopeType: 'agent_role', scopeId: identity.agentId }]

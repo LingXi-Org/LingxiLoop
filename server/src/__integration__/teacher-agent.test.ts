@@ -60,6 +60,7 @@ test('[integration] Pulse can send conversational messages only in its active au
       audience: { visibility: 'conversation',participantIds: policy.participants.map(member => member.id) } } }
   const { tools } = assembleHarness(createProductHarness(createProductTools(lingxiOSControl))), product = createProductContext(tools)
   const loaded = await product.contextProvider.loadContext(work)
+  assert.deepEqual(loaded.dynamic?.memoryScopes,await api.memory!.scopes({ ...run,workId: run.runId }))
   assert.match(loaded.productRules ?? '',/User-facing IM conversation/)
   assert.match(loaded.productRules ?? '',/answer from them without tools when they are sufficient/)
   assert.match(JSON.stringify(loaded.dynamic?.teacherContext),/"learners":1/)
@@ -119,19 +120,21 @@ test('[integration] Pulse can send conversational messages only in its active au
   await stopLingxiOSControl()
 })
 
-test('[integration] Pulse replies over the control plane without memory and rejects revoked membership', async () => {
+test('[integration] Pulse receives memory over the control plane and rejects revoked membership', async () => {
   const fixture = await seedTeacherCourse()
   const pulse = await ensureTeacherAgentForCourse(fixture.companyId,fixture.courseId,pool,teacherTransaction)
   const app = await lingxiOSControl()
   const policy = await syncConversationPolicy(app,fixture.companyId,pulse.roomId)
   const accepted = await app.conversations.ingest({ tenantId: fixture.companyId,conversationId: pulse.roomId,
     policyVersion: policy.version,messageId: 'teacher-memory-regression',version: 1,
-    author: { id: fixture.teacherId,kind: 'human' },text: 'Reply Ready.',mentions: [pulse.agentId] },
-  { mode: 'chat',executionClass: 'conversation',codeExecution: 'disabled' })
+    author: { id: fixture.teacherId,kind: 'human' },text: 'Explicitly remember that the review meeting is every Monday. Then reply Ready.',mentions: [pulse.agentId] },
+  { mode: 'execute',executionClass: 'conversation',codeExecution: 'disabled' })
   const run = accepted.runs[0]; assert.ok(run)
   await bindProductRun(pool,run,pulse.roomId)
   const identity = { tenantId: fixture.companyId,principalId: fixture.teacherId,agentId: pulse.agentId,sessionId: run.sessionId,workId: run.runId }
-  assert.deepEqual(await app.memory!.scopes(identity),[])
+  const scopes = await app.memory!.scopes(identity)
+  assert.deepEqual(scopes.map(scope => scope.scopeType), ['learner','course','agent_role'])
+  assert.ok(scopes.every(scope => scope.scopeId.startsWith('im-memory:')))
   const serviceToken = 'teacher-memory-regression-service-token'
   const port = await app.listenControlPlane({ serviceToken,port: 0,host: '127.0.0.1' })
   const usage = { available: true,inputTokens: 100,outputTokens: 10 }
@@ -139,14 +142,21 @@ test('[integration] Pulse replies over the control plane without memory and reje
   const worker = createWorker({ controlPlane: { url: `http://127.0.0.1:${port}`,serviceToken },
     worker: { id: 'teacher-memory-regression' },model: {
       modelId: 'teacher-memory-fixture',contextWindowTokens: 200000,
-      async run() { calls++; return { output: [{ role: 'assistant',content: 'Ready.' }],text: 'Ready.',model: 'teacher-memory-fixture',usage } },
-      async structured() { return { value: { missing: [] },model: 'teacher-memory-fixture',usage } },
+      async run(input) {
+        assert.deepEqual(input.tools!.filter(tool=>tool.name.startsWith('memory__')).map(tool=>tool.name).sort(),
+          ['apply','doctor','forget','history','list','read','reflect','restore','search'].map(method=>`memory__${method}`))
+        if(++calls===1) return {output:[{type:'function_call',callId:'teacher-memory',name:'memory__apply',arguments:JSON.stringify({
+          scopeType:scopes[0].scopeType,scopeId:scopes[0].scopeId,changes:[{action:'create',content:{path:'notes/meeting.md',title:'Meeting',
+            description:'PRIVATE TEACHER SUMMARY',body:'The review meeting is every Monday.',layer:'core'}}]})}],text:'',model:'teacher-memory-fixture',usage}
+        return { output: [{ role: 'assistant',content: 'Ready.' }],text: 'Ready.',model: 'teacher-memory-fixture',usage } },
+      async structured(input) { return { value: input.instructions.includes('"approved":boolean') ? {approved:true,explicit:true,confidence:1} : { missing: [] },model: 'teacher-memory-fixture',usage } },
       async compact() { throw new Error('bounded fixture must not compact') },
     } })
   try {
     assert.equal(await worker.runNext(),true)
-    assert.ok(calls > 0,'teacher context must reach the model over HTTP')
+    assert.ok(calls >= 2,'teacher context must reach the model over HTTP')
     assert.ok(await app.readMessage(run),'teacher execution must produce a reply')
+    assert.equal((await app.memory!.list(identity,scopes[0])).items.length,1)
     await pool.query("UPDATE participants SET departed_at=NOW() WHERE company_id=$1 AND id=$2",[fixture.companyId,fixture.teacherId])
     await assert.rejects(app.memory!.scopes(identity),/memory source identity or membership was revoked/)
   } finally { await worker.stop(); await stopLingxiOSControl() }

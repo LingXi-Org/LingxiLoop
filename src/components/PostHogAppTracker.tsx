@@ -3,7 +3,7 @@ import { usePostHog } from 'posthog-js/react'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { getAnalyticsSurface, isPostHogConfigured } from '@/lib/observability'
-import { isElectron, isNotificationWindow } from '@/lib/runtime'
+import { isElectron } from '@/lib/runtime'
 
 function currentUrlForAnalytics(view: string): string {
   if (isElectron) return `lingxiloop://${view}`
@@ -19,7 +19,7 @@ export function PostHogAppTracker() {
   const view = useApp((s) => s.view)
 
   const surface = useMemo(() => getAnalyticsSurface(), [])
-  const enabled = isPostHogConfigured() && !isNotificationWindow
+  const enabled = isPostHogConfigured()
 
   useEffect(() => {
     if (!enabled || !posthog) return

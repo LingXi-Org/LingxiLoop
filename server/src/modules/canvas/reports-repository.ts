@@ -47,7 +47,7 @@ export async function lockReportWork(db: Queryable, args: {
        FROM canvas_agent_runs work JOIN canvases canvas ON canvas.id=work.canvas_id AND canvas.company_id=work.company_id
        LEFT JOIN canvas_agent_assignments assignment ON assignment.id=work.assignment_id
       WHERE work.work_id=$1 AND work.company_id=$2 AND work.agent_id=$3 AND work.canvas_id=$4
-        AND (work.execution_role='reporter' OR assignment.work_id=work.work_id) FOR UPDATE OF work,canvas`,
+        AND assignment.work_id=work.work_id FOR UPDATE OF work,canvas`,
     [args.workId, args.companyId, args.agentId, args.canvasId],
   )
   return rows[0] ?? null
@@ -55,8 +55,10 @@ export async function lockReportWork(db: Queryable, args: {
 
 export async function reportIdentity(db: Queryable, companyId: string, canvasId: string, reportId: string) {
   const { rows } = await db.query<{ author_agent_id: string; assignment_id: string | null; execution_role: string }>(
-    `SELECT author_agent_id,assignment_id,execution_role FROM canvas_assignment_reports
-      WHERE id=$1 AND canvas_id=$2 AND company_id=$3`,
+    `SELECT report.author_agent_id,report.assignment_id,report.execution_role FROM canvas_assignment_reports report
+      JOIN canvas_agent_assignments assignment ON assignment.id=report.assignment_id AND assignment.work_id=report.work_id
+      JOIN canvas_agent_runs run ON run.work_id=report.work_id AND run.canvas_id=report.canvas_id AND run.request_version=report.request_version
+      WHERE report.id=$1 AND report.canvas_id=$2 AND report.company_id=$3`,
     [reportId, canvasId, companyId],
   )
   return rows[0] ?? null
@@ -71,13 +73,6 @@ export async function assignmentVerifierId(db: Queryable, canvasId: string, assi
   return rows[0]?.verifies_assignment_id ?? null
 }
 
-export async function existingReportIds(db: Queryable, companyId: string, canvasId: string, ids: string[]) {
-  const { rows } = await db.query<{ id: string }>(
-    `SELECT id FROM canvas_assignment_reports WHERE canvas_id=$1 AND company_id=$2 AND id=ANY($3::text[])`,
-    [canvasId, companyId, ids],
-  )
-  return rows.map((row) => row.id)
-}
 
 export async function insertReport(db: Queryable, args: {
   id: string; companyId: string; canvasId: string; assignmentId: string | null; agentId: string
@@ -101,45 +96,37 @@ export async function insertReport(db: Queryable, args: {
   return rows[0]
 }
 
-export async function workReportContext(db: Queryable, workId: string, companyId: string) {
-  const { rows } = await db.query<{
-    reason: string; canvas_id: string | null; canvas_assignment_id: string | null
-    execution_role: 'specialist' | 'verifier' | 'reporter'
-  }>(
-    `SELECT CASE WHEN execution_role='reporter' THEN 'canvas_summary' ELSE 'canvas_worker' END AS reason,
-       canvas_id,assignment_id AS canvas_assignment_id,execution_role FROM canvas_agent_runs WHERE work_id=$1 AND company_id=$2`,
-    [workId, companyId],
-  )
-  return rows[0] ?? null
-}
 
-export async function reportExists(db: Queryable, args: { canvasId?: string; assignmentId?: string; reporter?: boolean }) {
-  const result = args.canvasId
-    ? await db.query(`SELECT 1 FROM canvas_assignment_reports WHERE canvas_id=$1${args.reporter ? " AND execution_role='reporter'" : ''} LIMIT 1`, [args.canvasId])
-    : await db.query(`SELECT 1 FROM canvas_assignment_reports WHERE assignment_id=$1 LIMIT 1`, [args.assignmentId])
-  return Boolean(result.rows[0])
-}
 
 export async function completeCanvasWorkState(db: Queryable, input: {
   workId: string; companyId: string; status: 'completed' | 'failed' | 'cancelled'; resultText?: string; error?: string
-}) {
+}): Promise<{ canvasId: string | null; completion: { agentId: string; frameId: string | null; status: CanvasAssignmentStatus } | null;
+  workspace: { status: CanvasWorkspaceStatus; conversation_id: string | null; title: string; goal: string } | null }> {
   const { rows } = await db.query<{ canvas_id: string; assignment_id: string | null; agent_id: string; execution_role: string }>(
     `SELECT run.* FROM canvas_agent_runs run LEFT JOIN canvas_agent_assignments assignment ON assignment.id=run.assignment_id
-      WHERE run.work_id=$1 AND run.company_id=$2 AND (run.execution_role='reporter' OR assignment.work_id=run.work_id)`,
+      WHERE run.work_id=$1 AND run.company_id=$2 AND assignment.work_id=run.work_id`,
     [input.workId,input.companyId])
   const run = rows[0]
   if (!run) return { canvasId: null, completion: null, workspace: null }
-  if (run.execution_role === 'reporter') {
-    const { rows } = await db.query<{ status: CanvasWorkspaceStatus; conversation_id: string | null; title: string; goal: string }>(
-      `UPDATE canvases SET status=$2,summary=$3,completed_at=NOW(),updated_at=NOW() WHERE id=$1 AND status IN ('active','summarizing')
-        RETURNING status,conversation_id,title,goal`,
-      [run.canvas_id,input.status === 'completed' ? 'completed' : input.status === 'cancelled' ? 'stopped' : 'failed',input.resultText ?? input.error ?? null])
-    return { canvasId: run.canvas_id, completion: null, workspace: rows[0] ?? null }
-  }
   const { rows: completed } = await db.query<{ active_frame_id: string | null }>(
     `UPDATE canvas_agent_assignments SET status=$2,result=$3,error=$4,completed_at=NOW(),updated_at=NOW()
       WHERE id=$1 AND work_id=$5 AND status NOT IN ('completed','failed','cancelled') RETURNING active_frame_id`,
     [run.assignment_id,input.status,input.resultText ?? null,input.error ?? null,input.workId])
-  return { canvasId: run.canvas_id, workspace: null, completion: completed[0]
+  // Completion follows current specialist evidence and independent verification; it never schedules a summary.
+  const { rows: workspace } = await db.query<{ status: CanvasWorkspaceStatus; conversation_id: string | null; title: string; goal: string }>(
+    `UPDATE canvases canvas SET status='completed',completed_at=NOW(),updated_at=NOW()
+      WHERE canvas.id=$1 AND canvas.status='active'
+        AND EXISTS(SELECT 1 FROM canvas_agent_assignments WHERE canvas_id=canvas.id)
+        AND NOT EXISTS(SELECT 1 FROM canvas_agent_assignments WHERE canvas_id=canvas.id AND status<>'completed')
+        AND NOT EXISTS(SELECT 1 FROM canvas_agent_assignments builder WHERE builder.canvas_id=canvas.id AND builder.execution_role='specialist'
+          AND NOT EXISTS(SELECT 1 FROM canvas_assignment_reports source
+            JOIN canvas_assignment_reports review ON review.verifies_report_id=source.id AND review.verdict='supported'
+            JOIN canvas_agent_assignments verifier ON verifier.id=review.assignment_id AND verifier.work_id=review.work_id
+            JOIN canvas_agent_runs verified_run ON verified_run.work_id=review.work_id AND verified_run.canvas_id=canvas.id AND verified_run.request_version=review.request_version
+            JOIN canvas_agent_runs source_run ON source_run.work_id=source.work_id AND source_run.canvas_id=canvas.id AND source_run.request_version=source.request_version
+            WHERE source.assignment_id=builder.id AND source.work_id=builder.work_id
+              AND verifier.verifies_assignment_id=builder.id AND review.author_agent_id<>source.author_agent_id))
+      RETURNING status,conversation_id,title,goal`, [run.canvas_id])
+  return { canvasId: run.canvas_id, workspace: workspace[0] ?? null, completion: completed[0]
     ? { agentId: run.agent_id, frameId: completed[0].active_frame_id, status: input.status as CanvasAssignmentStatus } : null }
 }

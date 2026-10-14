@@ -951,14 +951,6 @@ body {
   50% { transform: translate(60px, 30px); }
 }
 
-/* Toast auto-dismiss progress bar — drains right-to-left over the toast's
- * lifetime. Used by NotificationToasts; the toast pauses the animation on
- * hover so the user gets time to read longer messages. */
-@keyframes lingxiloop-toast-drain {
-  from { transform: scaleX(1); }
-  to   { transform: scaleX(0); }
-}
-
 /* Click-on-quote → scroll + brief flash on the jumped-to bubble. The
  * LingxiImMessage carries `id="m-<id>"`; QuoteCard adds this class for
  * ~1.4s after a jump so the user can spot which message was quoted. */
