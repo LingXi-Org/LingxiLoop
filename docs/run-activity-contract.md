@@ -20,7 +20,9 @@ runtime envelope is the authoritative final answer; a draft from the published
 answer-preview channel retains that classification while it is streaming.
 Unclassified historical content remains visible outside the disclosure.
 
-Tool history precedes the final answer, in native event order. Explicit public
+The UI shows tool history before the final answer, in native event order. The
+wire keeps answer parts first so adding activity cannot change the native text
+part index and restart its streaming animation. Explicit public
 explanations appear at their event position. Pending or previously requested
 approvals, interruptions, errors and incomplete tool results remain visible.
 Unknown duration stays absent: mounting time and event receipt time are not

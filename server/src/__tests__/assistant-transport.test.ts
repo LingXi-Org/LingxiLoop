@@ -97,3 +97,29 @@ test('truncated native frames and old browser wire format fail instead of fallin
     for await (const _ of AssistantStream.fromResponse(new Response('event: preview\ndata: {}\n\n'), new AssistantTransportDecoder())) { /* consume */ }
   }, /Unknown SSE event type/)
 })
+
+// Failure cases: the ephemeral preview resets after a durable model.delta;
+// a rejected delta promotes a stale preview; tool activity restarts the animator.
+test('commit handoff and tool activity preserve the live answer part', () => {
+  const stale = new RunStreamProjection('run', true)
+  stale.apply({ type: 'state', state: runState() })
+  stale.apply(draft('未确认的草稿'))
+  stale.apply({ type: 'event', event: { runId: 'run', seq: 1, kind: 'model.delta', stage: 'delta', visibility: 'user',
+    data: { partType: 'text', delta: '已过期', requestVersion: 0 } } })
+  assert.deepEqual(stale.apply({ type: 'reset', runId: 'run', reason: 'superseded' }).message.content, [])
+  const projection = new RunStreamProjection('run', true)
+  projection.apply({ type: 'state', state: runState() })
+  projection.apply(draft('最终正'))
+  const tool = projection.apply({ type: 'event', event: { runId: 'run', seq: 1, kind: 'tool.started', stage: 'started', visibility: 'user',
+    data: { toolCallId: 'host:search', name: 'research.search' } } })
+  assert.equal(tool.message.content[0]?.type, 'text')
+  const durable = projection.apply({ type: 'event', event: { runId: 'run', seq: 2, kind: 'model.delta', stage: 'delta', visibility: 'user',
+    data: { partType: 'text', delta: '最终正文', requestVersion: 1 } } })
+  const reset = projection.apply({ type: 'reset', runId: 'run', reason: 'superseded' })
+  assert.deepEqual(reset.message.content[0], durable.message.content[0])
+  const committed = projection.apply({ type: 'event', event: { runId: 'run', seq: 3, kind: 'response.committed', stage: 'completed', visibility: 'user', data: {} } })
+  assert.deepEqual(committed.message.content[0], durable.message.content[0])
+  const final = projection.apply({ type: 'state', state: runState('succeeded') })
+  assert.equal(final.message.content[0]?.type === 'text' && final.message.content[0].text, '最终正文')
+  assert.equal(final.message.status?.type, 'complete')
+})

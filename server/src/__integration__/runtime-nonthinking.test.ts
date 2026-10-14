@@ -145,6 +145,11 @@ test('production workers always expose full tools and disable thinking even with
         streamedBeforeCompletion: true, deliveredOnce: true, reconnectMatchesSnapshot: true,
         content: final.message.content, status: final.message.status, tenantAndThreadIsolation: true,
       }, null, 2))
+      await mkdir('artifacts/native-streaming/protocol', { recursive: true })
+      await writeFile(`artifacts/native-streaming/protocol/${mode}.json`, JSON.stringify({
+        protocol: 'assistant-transport', runtime: 'published worker', snapshots, final,
+        streamedBeforeCompletion: true, deliveredOnce: true, tenantAndThreadIsolation: true,
+      }, null, 2))
       let calls = await pool.query('SELECT status FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, run.runId])
       while (calls.rows.length < requests.length) {
         timeout.throwIfAborted(); await delay(20)
