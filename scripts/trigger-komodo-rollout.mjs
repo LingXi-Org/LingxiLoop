@@ -39,6 +39,7 @@ for (let attempt = 0; attempt < 180; attempt += 1) {
   const current = await result.json()
   if (current.status === 'Complete') {
     if (!current.success) throw new Error('Komodo rollout failed')
+    await prepareForumRollout({url,headers,verifyOnly:true})
     console.log(`[komodo-rollout] update ${id}: Complete; success=true`)
     process.exit(0)
   }

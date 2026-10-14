@@ -1,6 +1,6 @@
 // One-time maintenance for migration 0040 through Komodo v2.3.3 public execute/read APIs.
 // Secrets remain in Komodo's service environment; only update IDs and backup metadata are logged.
-export async function prepareForumRollout({ url, headers }) {
+export async function prepareForumRollout({ url, headers, verifyOnly = false }) {
   async function request(path, body) {
     const response = await fetch(new URL(path,url),{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(60_000)})
     if (!response.ok) throw new Error(`Komodo ${path} returned ${response.status}`)
@@ -27,6 +27,16 @@ psql -X -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -v ON_ERROR_STOP=1
   const output=check.logs.map(log=>log.stdout).join('\n')
   const version=Number(/^FORUM_SCHEMA=(\d+)\s*$/m.exec(output)?.[1])
   if(!Number.isInteger(version)||version<38) throw new Error('Forum preflight requires a verified schema 38 or newer')
+  if (verifyOnly) {
+    if (version < 40) throw new Error('Forum rollout completed without applying migration 0040')
+    const verification = await run(`export PGPASSWORD="$POSTGRES_PASSWORD"
+psql -X -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -v ON_ERROR_STOP=1 -c "SELECT 'FORUM_VERIFY='||jsonb_build_object('schema',${version},'assignments',(SELECT COUNT(*) FROM course_forum_posts WHERE kind='assignment'),'submissions',(SELECT COUNT(*) FROM course_forum_submissions),'feedback',(SELECT COUNT(*) FROM course_forum_feedback),'archived_records',(SELECT COUNT(*) FROM course_forum_retirement_archive),'unmapped_assignments',(SELECT COUNT(*) FROM course_forum_retirement_archive a WHERE source_table='learning_activities' AND NOT EXISTS(SELECT 1 FROM course_forum_posts p WHERE p.id=a.record->>'id' AND p.kind='assignment')),'unmapped_submissions',(SELECT COUNT(*) FROM course_forum_retirement_archive a WHERE source_table='learning_attempts' AND NOT EXISTS(SELECT 1 FROM course_forum_submissions s WHERE s.id=a.record->>'id')),'retired_tables',(SELECT COUNT(*) FROM pg_tables WHERE schemaname='public' AND tablename IN ('learning_activities','learning_attempts','learning_evaluations','learning_missions','learning_knowledge_units','learning_states','learning_cases','attention_items','teacher_briefings')))::text"`)
+    const marker = /^FORUM_VERIFY=(.+)$/m.exec(verification.logs.map(log=>log.stdout).join('\n'))?.[1]
+    const result = marker ? JSON.parse(marker) : null
+    if (!result || result.retired_tables !== 0) throw new Error('Forum migration verification failed')
+    console.log(`[forum-postflight] ${JSON.stringify(result)}`)
+    return
+  }
   if(version>=40) {console.log(`[forum-preflight] schema ${version} already includes forum convergence`);return}
   const stopped=[]
   try {

@@ -4,6 +4,7 @@
   "recoveryCalls": 10,
   "schema40SkipsMaintenance": true,
   "realPgDumpRestore": true,
+  "postMigrationCountsVerified": true,
   "limitations": [
     "Komodo stop/start is recorded by a local HTTP fixture; production update state is verified separately."
   ]

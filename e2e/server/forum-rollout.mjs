@@ -32,7 +32,7 @@ const server=createServer(async(req,res)=>{
       if(failBackup&&command.includes('pg_dump')) {success=false;stdout='fixture backup failure'}
       else {
         try {({stdout}=await execute('docker',['exec','-u','postgres','-e',`POSTGRES_DB=${dbName}`,'-e','POSTGRES_USER=postgres','lingxiloop-e2e-postgres-1','sh','-ec',command],{maxBuffer:10_000_000}))}
-        catch {success=false}
+        catch(error) {success=false;console.error('Local PostgreSQL command failed:', error.stderr)}
       }
     } else assert.ok(['StopStack','StartStack'].includes(operation))
     res.setHeader('content-type','application/json');res.end(JSON.stringify({_id:{$oid:String(calls.length)},status:'Complete',success,logs:[{stdout}]}))
@@ -44,6 +44,8 @@ try {
   await migrateDatabase(db,pathToFileURL(directory+sep))
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
   const url=new URL(`http://127.0.0.1:${server.address().port}`),headers={'content-type':'application/json'}
+  await assert.rejects(prepareForumRollout({url,headers,verifyOnly:true}),/without applying migration 0040/)
+  calls.length=0
   await prepareForumRollout({url,headers})
   assert.deepEqual(calls.filter(c=>c.operation==='StopStack').map(c=>[c.stack,c.services]),[
     ['lingxiloop-app-b',['lingxiloop']],['lingxiloop-app-a',['lingxiloop']],['lingxiloop-app-b',['worker']],['lingxiloop-app-a',['worker']]])
@@ -55,8 +57,9 @@ try {
   await migrateDatabase(db)
   await prepareForumRollout({url,headers})
   assert.deepEqual(calls.map(c=>c.operation),['RunStackService'])
+  await prepareForumRollout({url,headers,verifyOnly:true})
   await mkdir('artifacts/forum',{recursive:true})
-  await writeFile('artifacts/forum/rollout-rehearsal.json',JSON.stringify({passed:true,successfulCalls,recoveryCalls,schema40SkipsMaintenance:true,realPgDumpRestore:true,limitations:['Komodo stop/start is recorded by a local HTTP fixture; production update state is verified separately.']},null,2))
+  await writeFile('artifacts/forum/rollout-rehearsal.json',JSON.stringify({passed:true,successfulCalls,recoveryCalls,schema40SkipsMaintenance:true,realPgDumpRestore:true,postMigrationCountsVerified:true,limitations:['Komodo stop/start is recorded by a local HTTP fixture; production update state is verified separately.']},null,2))
   console.log('Forum rollout rehearsal passed: real backup/restore, ordered drain, failure recovery and schema-40 no-op')
 }finally{
   server.close();await db.end();await pool.end();await admin.query(`DROP DATABASE ${dbName} WITH (FORCE)`);await admin.end();await rm(directory,{recursive:true,force:true})

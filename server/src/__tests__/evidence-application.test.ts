@@ -86,7 +86,10 @@ test('Inferred Claims require a same-tenant model run and scoped Evidence IDs', 
   const db: Queryable = {
     query: async (text) => {
       statements.push(text)
-      if (text.includes('SELECT 1 FROM agent_runs')) return { rows: [{ '?column?': 1 }], rowCount: 1 } as never
+      if (text.includes('FROM lingxios.agent_work_items')) return { rows: [{
+        agent_id: 'agent-1', session_id: 'session-1', principal_id: 'learner-1',
+      }], rowCount: 1 } as never
+      if (text.includes('FROM agent_run_bindings')) return { rows: [{ '?column?': 1 }], rowCount: 1 } as never
       if (text.includes('COUNT(*)::int')) return { rows: [{ count: 1 }], rowCount: 1 } as never
       if (text.includes('INSERT INTO evidence_claims')) return { rows: [], rowCount: 1 } as never
       if (text.includes('INSERT INTO evidence_claim_evidence')) return { rows: [], rowCount: 1 } as never

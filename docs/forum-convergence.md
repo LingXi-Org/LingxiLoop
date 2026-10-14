@@ -106,6 +106,9 @@ production dump is under the PostgreSQL volume's
 `forum-upgrade-backups/<release SHA>/product.dump`, with restore list and hash.
 After migration, recovery is a new release or an explicit matched DB/image
 restore; the script never automatically starts old writers against schema 40.
+After Komodo reports a successful update, the release verifies schema 40, confirms
+the retired tables are absent, and records assignment, submission, feedback and
+restricted-archive counts without logging record content or identities.
 
 The release includes upstream native memory/group collaboration migration `0039`
 and LingxiOS `3.4.1`; forum convergence is the next migration `0040`. Both

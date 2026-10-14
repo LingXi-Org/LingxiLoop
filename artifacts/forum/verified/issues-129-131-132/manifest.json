@@ -10,7 +10,7 @@
   "webTests": 87,
   "serverTests": 97,
   "adminTests": 8,
-  "rolloutRehearsal": "real PostgreSQL dump/restore; recorded Komodo stop/start; schema-40 no-op",
+  "rolloutRehearsal": "real PostgreSQL dump/restore; recorded Komodo stop/start; schema-40 no-op and post-migration counts",
   "limitations": [
     "Browser identities, IM transport and object storage use controlled fixtures.",
     "Production deployment/update state is recorded in GitHub Actions, separately from local rehearsal."
@@ -68,5 +68,6 @@
       "name": "008-forum-desktop-complete.png",
       "sha256": "0bf18de79acb32dc819b27305037216ff79a406f7f32a2f90d9b90752f4c6a00"
     }
-  ]
+  ],
+  "serverTestsIncludingChangedFiles": 108
 }
