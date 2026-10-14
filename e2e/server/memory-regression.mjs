@@ -7,7 +7,8 @@ import pg from 'pg'
 
 // Fail closed on unknown flags, non-test DBs and missing live-model opt-in/credentials.
 const defaultFiles = ['native-memory.test.ts','memory-summaries.test.ts','teacher-agent.test.ts','migration.test.ts','group-mentions.test.ts',
-  'learning-collaboration.test.ts','runtime-context-latency.test.ts','attachment-answers.test.ts','confidence-citations.test.ts']
+  'learning-collaboration.test.ts','runtime-context-latency.test.ts','attachment-answers.test.ts','confidence-citations.test.ts',
+  'agent-protocols.test.ts','im-conversation-style.test.ts']
 assert.ok(process.argv.slice(2).every(arg => arg === '--live-memory' || defaultFiles.includes(arg)))
 const live = process.argv.includes('--live-memory')
 const selected = process.argv.slice(2).filter(arg => arg !== '--live-memory')
