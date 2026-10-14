@@ -1,0 +1,71 @@
+name: Available capability live acceptance
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  model-acceptance:
+    if: github.event_name == 'workflow_dispatch' || (github.event.label.name == 'run-capability-acceptance' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres, POSTGRES_DB: lingxiloop_test }
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U postgres -d lingxiloop_test" --health-interval 5s --health-timeout 5s --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      NODE_ENV: test
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      OPENUI_TELEMETRY_DISABLED: '1'
+      INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
+      REDIS_URL: redis://127.0.0.1:6379/6
+      LINGXIOS_TEST_REDIS_URL: redis://127.0.0.1:6379/6
+      LINGXILOOP_DISABLE_EMBEDDINGS: '1'
+      OPEN_NOTEBOOK_ENABLED: 'false'
+      OPENAI_EMBEDDING_MODEL: disabled
+      OPENAI_BASE_URL: https://api.siliconflow.cn/v1
+      OPENAI_MODEL: zai-org/GLM-5.2
+      LINGXIOS_LIVE_AVAILABLE_CAPABILITIES: '1'
+      AGENT_OS_MODEL_CONCURRENCY: '1'
+      AGENT_OS_MAX_MODEL_CALLS: '10'
+      AGENT_OS_MAX_MODEL_TOKENS: '200000'
+      AGENT_OS_MAX_MODEL_COST_MICROS: '250000'
+      AGENT_OS_MAX_WORK_MS: '280000'
+      AGENT_OS_INPUT_COST_MICROS_PER_MILLION: '1142858'
+      AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: '4000000'
+      AGENT_OS_HOMES_ROOT: artifacts/available-capabilities/runtime-homes
+      LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
+      LINGXILOOP_GATEWAY_HMAC_SECRET: isolated-capability-gateway-secret
+      WUKONG_USER_TOKEN_SECRET: isolated-capability-wukong-secret
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - run: npm run db:migrate
+        env:
+          OPENAI_API_KEY: isolated-migration-placeholder
+      - name: Check actual provider context and three representative conversations
+        run: node server/run-integration-tests.mjs --file available-capabilities.test.ts
+        env:
+          OPENAI_API_KEY: ${{ secrets.EVAL_CANDIDATE_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: available-capabilities-${{ github.sha }}
+          path: artifacts/available-capabilities/live/results.json
+          if-no-files-found: error

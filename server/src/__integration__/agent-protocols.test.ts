@@ -26,7 +26,7 @@ test('native capability registry executes cards and artifacts, gates approval, a
   assert.equal(context.responseProfile,'deep')
   for (const name of ['documents','files','canvas','learning','memory','research','chat','polls','knowledge','routines']) assert.ok(context.grants?.some(grant=>grant.name===name), name)
   assert.ok(!context.grants?.some(grant => ['email','calendar'].includes(grant.name)))
-  assert.match(context.productRules ?? '', /does not support email or calendar/)
+  assert.doesNotMatch(context.productRules ?? '', /email|calendar|日历|邮件/i)
   assert.ok(!context.grants?.some(grant=>grant.name==='teacher'))
   await host.saveSession(work, {
     key: JSON.stringify([work.tenantId,work.agentId,work.sessionId,work.threadId ?? null]),

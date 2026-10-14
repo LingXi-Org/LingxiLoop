@@ -62,7 +62,8 @@ jobs:
         run: |
           case "$EVAL_SUITE" in
             ci-smoke) version=1 ;;
-            tool-initiative|tool-boundaries|tool-recovery) version=2 ;;
+            tool-initiative) version=5 ;;
+            tool-boundaries|tool-recovery) version=2 ;;
             education-autonomy) version=3 ;;
             *) echo 'Unknown evaluation suite'; exit 2 ;;
           esac
