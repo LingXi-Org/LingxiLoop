@@ -47,10 +47,42 @@ test('real learning records allow honest report pairs, closed return without new
   const publish = async (name: string, materials: boolean) => {
     await checkpoint(materials ? 'teacher-draft-native-card' : 'quick-check-draft-native-card')
     await forum(); await screen.getByRole('button', '发布作业', { exact: true }).tap()
-    await say(`请为本课程创建一份个人作业草稿，标题“${name}”。要求学生独立说明三角形面积为什么等于底乘高除以2，并计算底8高5、底10高3的面积，注明平方单位。验收标准为独立解释原理和正确迁移计算。请用作业草稿卡让我检查，等我点击确认后发布。`)
+    await expect(browser.locator('[contenteditable="true"]').first()).toBeVisible()
     teacherChannelId = await browser.evaluate(() => new URL(location.href).searchParams.get('conversation') ?? '')
-    const card = browser.locator('[aria-label="作业草稿"]').last()
-    await expect(card).toBeVisible({ timeout: 300_000 })
+    expect(Boolean(teacherChannelId)).toBe(true)
+    const teacherRuns = async () => await api(`/api/im/channels/${teacherChannelId}/runs`) as { runId: string; status: string }[]
+    const previousRuns = new Set((await teacherRuns()).map(run => run.runId))
+    const currentRuns = async () => (await teacherRuns()).filter(run => !previousRuns.has(run.runId))
+    await say(`请为本课程创建一份个人作业草稿，标题“${name}”。要求学生独立说明三角形面积为什么等于底乘高除以2，并计算底8高5、底10高3的面积，注明平方单位。验收标准为独立解释原理和正确迁移计算。请用作业草稿卡让我检查，等我点击确认后发布。`)
+    const latestCard = browser.locator('[aria-label="作业草稿"]').last()
+    await expect(latestCard.getByLabel('作业标题')).toBeVisible({ timeout: 300_000 })
+    const activeBefore = (await currentRuns()).filter(run => ['queued', 'leased', 'waiting'].includes(run.status))
+    let lockedWhileRunningObserved = false
+    if (activeBefore.length) {
+      const enabledMutations = await browser.evaluate(() => {
+        const card = [...document.querySelectorAll('[aria-label="作业草稿"]')].at(-1)!
+        return [...card.querySelectorAll('input,textarea,button,[contenteditable]')]
+          .filter(control => control.hasAttribute('contenteditable') ? control.getAttribute('contenteditable') !== 'false' : !control.matches(':disabled'))
+          .map(control => control.getAttribute('aria-label') ?? control.tagName)
+      })
+      const activeAfter = (await currentRuns()).filter(run => ['queued', 'leased', 'waiting'].includes(run.status))
+      if (activeBefore.some(before => activeAfter.some(after => after.runId === before.runId))) {
+        lockedWhileRunningObserved = true
+        expect(enabledMutations).toEqual([])
+      }
+    }
+    await expect.poll(async () => {
+      const runs = await currentRuns()
+      return runs.length > 0 && runs.every(run => ['succeeded', 'failed', 'cancelled'].includes(run.status))
+    }, { timeout: 300_000 }).toBe(true)
+    const completedRuns = await currentRuns()
+    evidence[materials ? 'teacherDraftRun' : 'quickDraftRun'] = { runs: completedRuns, lockedWhileRunningObserved }
+    await record()
+    expect(completedRuns.every(run => run.status === 'succeeded')).toBe(true)
+    const homeworkId = await latestCard.getAttribute('data-homework-id')
+    expect(Boolean(homeworkId)).toBe(true)
+    const card = browser.locator(`[aria-label="作业草稿"][data-homework-id=${JSON.stringify(homeworkId)}]`).last()
+    await expect(card).toHaveCount(1)
     await expect(card.getByLabel('作业标题')).toBeEnabled({ timeout: 300_000 })
     await checkpoint(materials ? 'teacher-edit-and-material-validation' : 'quick-check-edit-and-validation')
     await card.getByLabel('作业标题').fill(name)
@@ -65,13 +97,15 @@ test('real learning records allow honest report pairs, closed return without new
       }
     }
     await expect(card.getByRole('button', '确认发布')).toBeDisabled()
-    if (materials) await browser.evaluate(() => {
+    if (materials) await browser.evaluate(detailPath => {
       const original = window.fetch.bind(window)
       const state = window as unknown as { homeworkPollWaiting?: boolean; releaseHomeworkPoll?: () => void }
       let held = false
       window.fetch = async (...args) => {
         const response = await original(...args)
-        if (!held && /\/api\/courses\/[^/]+\/homeworks\/[^/?]+$/.test(String(args[0])) && (!args[1]?.method || args[1].method === 'GET')) {
+        const request = args[0], url = request instanceof Request ? request.url : String(request)
+        const method = args[1]?.method ?? (request instanceof Request ? request.method : 'GET')
+        if (!held && new URL(url, location.href).pathname === detailPath && method === 'GET') {
           held = true; state.homeworkPollWaiting = true
           await new Promise<void>(resolve => { state.releaseHomeworkPoll = resolve })
           state.homeworkPollWaiting = false; window.fetch = original
@@ -79,7 +113,7 @@ test('real learning records allow honest report pairs, closed return without new
         return response
       }
       return true
-    })
+    }, `/api/courses/${encodeURIComponent(courseId)}/homeworks/${encodeURIComponent(homeworkId!)}`)
     await card.getByRole('button', '保存修改').tap()
     if (materials) {
       await expect.poll(() => browser.evaluate(() => Boolean((window as unknown as { homeworkPollWaiting?: boolean }).homeworkPollWaiting)), { timeout: 60_000 }).toBe(true)
@@ -92,8 +126,11 @@ test('real learning records allow honest report pairs, closed return without new
       })
       await expect(card.getByLabel('作业标题')).toHaveValue(editedTitle)
       await expect(card.getByRole('button', '确认发布')).toBeDisabled()
+      await expect(card.getByRole('button', '保存修改')).toBeEnabled()
       evidence.pendingPollPreservedEdit = true
       await card.getByLabel('作业标题').fill(name)
+      await expect(card.getByLabel('作业标题')).toHaveValue(name)
+      await expect(card.getByRole('button', '保存修改')).toBeEnabled()
       await card.getByRole('button', '保存修改').tap()
     }
     await expect(card.getByRole('button', '确认发布')).toBeEnabled({ timeout: 240_000 })
@@ -102,9 +139,8 @@ test('real learning records allow honest report pairs, closed return without new
     await expect(card.getByText('已发布', { exact: true })).toBeVisible()
     await card.getByRole('button', '在论坛查看作业').tap()
     const feed = await api(`/api/courses/${courseId}/forum`) as { items: { id: string; title: string }[] }
-    const id = feed.items.find(item => item.title === name)?.id
-    expect(Boolean(id)).toBe(true)
-    return id!
+    expect(feed.items.find(item => item.id === homeworkId)?.title).toBe(name)
+    return homeworkId!
   }
   await checkpoint('normal-teacher-authentication')
   await signIn(fixtures, 'member'); await selectWorkspace(fixtures, 'Homework Live Classroom')

@@ -1,4 +1,4 @@
-import type { ToolCallMessagePartProps } from '@assistant-ui/react'
+import { type ToolCallMessagePartProps, useAuiState } from '@assistant-ui/react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { z } from 'zod'
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
 import { contentLinks, ForumContentFields, ForumFiles } from '../forum/ForumContentFields'
@@ -17,12 +18,16 @@ import { localDeadline, type Homework } from './contracts'
 const resultSchema = z.object({ value: z.object({ result: z.object({ homeworkId: z.string().min(1), courseId: z.string().min(1) }) }) })
 
 export function HomeworkDraftTool({ result, status, isError, readOnly = false }: ToolCallMessagePartProps & { readOnly?: boolean }) {
+  const preparing = useAuiState(state => {
+    const run = state.message.metadata.custom.harness as RunDisplayState | undefined
+    return state.thread.isRunning || run?.lifecycle === 'queued' || run?.lifecycle === 'leased' || run?.lifecycle === 'waiting'
+  })
   const parsed = resultSchema.safeParse(result)
   if (!parsed.success) return <p role="status" className="text-sm text-muted-foreground">{isError || status.type === 'incomplete' ? '作业草稿未能准备好，请让助手重试。' : status.type === 'running' ? '正在整理作业草稿…' : '作业草稿暂时无法查看。'}</p>
-  return <HomeworkDraftCard key={parsed.data.value.result.homeworkId} {...parsed.data.value.result} readOnly={readOnly} />
+  return <HomeworkDraftCard key={parsed.data.value.result.homeworkId} {...parsed.data.value.result} readOnly={readOnly} preparing={preparing} />
 }
 
-function HomeworkDraftCard({ courseId, homeworkId, readOnly }: { courseId: string; homeworkId: string; readOnly: boolean }) {
+function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing }: { courseId: string; homeworkId: string; readOnly: boolean; preparing: boolean }) {
   const id = useId()
   const [homework, setHomework] = useState<Homework | null>(null)
   const [title, setTitle] = useState(''), [instructions, setInstructions] = useState(''), [criteria, setCriteria] = useState(''), [dueAt, setDueAt] = useState('')
@@ -49,9 +54,9 @@ function HomeworkDraftCard({ courseId, homeworkId, readOnly }: { courseId: strin
     const timer = setInterval(() => { void load() }, 3000)
     return () => clearInterval(timer)
   }, [dirty, busy, homework?.validation.status, load])
-  const disabled = busy || uploading || readOnly || !homework?.canEditDraft
+  const disabled = busy || uploading || preparing || readOnly || !homework?.canEditDraft
   const edited = (change: () => void) => { epoch.current++; dirtyRef.current = true; change(); setDirty(true) }
-  return <Card aria-label="作业草稿" className="w-full min-w-0 max-w-2xl [overflow-wrap:anywhere]">
+  return <Card aria-label="作业草稿" data-homework-id={homeworkId} className="w-full min-w-0 max-w-2xl [overflow-wrap:anywhere]">
     <CardHeader><CardTitle>作业草稿</CardTitle><CardDescription>确认下面的内容后，作业才会发布到课程论坛。</CardDescription></CardHeader>
     <CardContent className="space-y-4">
       {!homework && !error && <p role="status">正在加载草稿…</p>}
@@ -68,6 +73,7 @@ function HomeworkDraftCard({ courseId, homeworkId, readOnly }: { courseId: strin
         catch (reason) { setError(userFacingError(reason, '修改未能保存，请检查内容后重试。')) }
         finally { setBusy(false) }
       }}>
+        {preparing && <p role="status" className="text-sm text-muted-foreground">助手正在整理草稿，回复结束后可以编辑并确认发布。</p>}
         <div className="space-y-2"><Label htmlFor={`${id}-title`}>作业标题</Label><Input id={`${id}-title`} value={title} maxLength={200} required disabled={disabled} onChange={event => edited(() => setTitle(event.target.value))} /></div>
         <ForumContentFields label="作业要求" body={instructions} setBody={value => edited(() => setInstructions(value))} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} />
         <div className="space-y-2"><Label htmlFor={`${id}-criteria`}>验收标准</Label><Textarea id={`${id}-criteria`} value={criteria} maxLength={10000} required disabled={disabled} rows={4} placeholder="每行一条清晰的验收标准" onChange={event => edited(() => setCriteria(event.target.value))} /></div>
