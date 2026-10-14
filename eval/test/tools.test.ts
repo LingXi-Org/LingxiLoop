@@ -10,7 +10,7 @@ import { datasetSchema, suiteSchema, manifestSchema, hash, zeroUsage, type EvalT
 import { deterministicGrade, summarizeGrades } from '../src/graders.js'
 import { candidateTarget, semanticJudge, type ModelConfig } from '../src/models.js'
 import { exportBaseline, importBaseline } from '../src/baseline.js'
-import { executeFixture, validateScenario } from '../src/tool-sandbox.js'
+import { executeFixture, validateScenario, sandboxInstruction, toolDefinitions, toolCatalog } from '../src/tool-sandbox.js'
 import { Store } from '../src/store.js'
 import { runJob } from '../src/runner.js'
 import { buildReport, comparisonKey, type Report } from '../src/report.js'
@@ -25,6 +25,14 @@ const manifest = (overrides: Partial<Manifest> = {}): Manifest => ({ schemaVersi
   suite, dataset, target: identity, judge: null, seed: 1, provenance: { revision: 'offline-test' }, baseline: null, ...overrides })
 const request = { input: checklist.input, requestId: 'offline-test', seed: 1, signal: new AbortController().signal,
   scenario: checklist.scenario!, toolBudget: suite.toolBudget! }
+
+// Failure modes: eval reintroduces product-specific negative instructions or
+// exposes removed tools, making model acceptance depend on a refusal template.
+test('evaluation context describes only available capabilities with generic evidence rules', () => {
+  assert.doesNotMatch(sandboxInstruction, /email|calendar|日历|邮件/i)
+  assert.match(sandboxInstruction, /Report only observed outcomes/)
+  assert.ok(toolDefinitions(Object.keys(toolCatalog)).every(tool => !/^(email|calendar)__/.test(tool.function.name)))
+})
 
 test('all bundled tool datasets validate before paid execution and keep independent evaluation conditions', () => {
   for (const name of ['tool-initiative', 'tool-boundaries', 'tool-recovery']) {
