@@ -82,7 +82,8 @@ file_paths = ["compose.yml"]
 
 [[stack]]
 name = "lingxiloop-app-a"
-deploy = true
+# Only the ordered procedure may deploy applications, after stopping both old workers.
+deploy = false
 after = ["lingxiloop-knowledge-agent", "lingxilit"]
 [stack.config]
 server = "shanghai-a"
@@ -127,7 +128,7 @@ OPEN_NOTEBOOK_PASSWORD = [[OPEN_NOTEBOOK_PASSWORD]]
 
 [[stack]]
 name = "lingxiloop-app-b"
-deploy = true
+deploy = false
 after = ["lingxiloop-app-a"]
 [stack.config]
 server = "shanghai-b"
