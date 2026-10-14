@@ -1,8 +1,8 @@
-import { createNativeMessage, nativeText } from '../../../src/lib/nativeMessage'
 import assert from 'node:assert/strict'
 import { createHmac } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { afterEach, test } from 'node:test'
+import { createNativeMessage, nativeText } from '../../../src/lib/nativeMessage'
 import { parseWukongWebhook } from '../im/webhook-contracts.js'
 import { WukongClient } from '../im/wukong.js'
 
@@ -51,7 +51,7 @@ test('WuKong adapter uses v3 message endpoints and preserves client_msg_no', asy
   const calls: Array<{ url: string; init?: RequestInit }> = []
   globalThis.fetch = async (input, init) => {
     calls.push({ url: String(input), init })
-    return new Response(JSON.stringify({ message_id: 'wk-1', message_seq: 9 }), { status: 200 })
+    return new Response(JSON.stringify({ message_id: 'wk-1', message_seq: 9, reason: 1 }), { status: 200 })
   }
   const client = new WukongClient({ apiUrl: 'http://wk:5001', wsUrl: 'ws://wk:5200', apiToken: 'token', webhookSecret: 'secret' })
   const sent = await client.sendMessage('study', 2, 'nova', createNativeMessage({ id: 'client-1', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'hello' }] }))
@@ -62,6 +62,49 @@ test('WuKong adapter uses v3 message endpoints and preserves client_msg_no', asy
   assert.deepEqual(JSON.parse(Buffer.from(String(body.payload), 'base64').toString('utf8')), { type: 1001, ...createNativeMessage({ id: 'client-1', role: 'user', createdAt: new Date(0).toISOString(), content: [{ type: 'text', text: 'hello' }] }) })
   const headers = calls[0]?.init?.headers as Record<string, string> | undefined
   assert.equal(headers?.token, 'token')
+})
+
+// Failure cases: HTTP 200 hides a rejected send; membership reset races lose messages;
+// retries change identity, outlive cancellation, or turn permanent denial into success.
+test('WuKong sends retry only transient missing membership with the same message identity', async () => {
+  const bodies: string[] = []
+  globalThis.fetch = async (_input, init) => {
+    bodies.push(String(init?.body))
+    return Response.json(bodies.length < 3 ? { message_id: 0, message_seq: 0, reason: 3 }
+      : { message_id: 'durable-id', message_seq: 7, reason: 1 })
+  }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  const payload = createNativeMessage({ id: 'retry-id', role: 'user', content: [{ type: 'text', text: 'hello' }] })
+  assert.deepEqual(await client.sendMessage('study', 2, 'student', payload), { messageId: 'durable-id', messageSeq: 7 })
+  assert.equal(bodies.length, 3)
+  assert.equal(new Set(bodies).size, 1)
+})
+
+test('WuKong rejects permanent denial, exhausted membership retries and invalid durable receipts', async () => {
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' })
+  const payload = createNativeMessage({ id: 'rejected-id', role: 'user', content: [{ type: 'text', text: 'hello' }] })
+  for (const [receipt, expectedCalls] of [
+    [{ message_id: 0, message_seq: 0, reason: 3 }, 3],
+    [{ message_id: 0, message_seq: 0, reason: 4 }, 1],
+    [{ message_id: 0, message_seq: 0, reason: 1 }, 1],
+    [{ message_id: 'id', message_seq: 0, reason: 1 }, 1],
+    [{ message_id: 'id', message_seq: 1 }, 1],
+  ] as const) {
+    let calls = 0
+    globalThis.fetch = async () => { calls++; return Response.json(receipt) }
+    await assert.rejects(client.sendMessage('study', 2, 'student', payload), /WuKongIM message send was not accepted/)
+    assert.equal(calls, expectedCalls)
+  }
+})
+
+test('WuKong membership retries respect cancellation', async () => {
+  const controller = new AbortController()
+  let calls = 0
+  globalThis.fetch = async () => { calls++; controller.abort(); return Response.json({ message_id: 0, message_seq: 0, reason: 3 }) }
+  const client = new WukongClient({ apiUrl: 'http://wk', wsUrl: 'ws://wk', apiToken: 'token', webhookSecret: 'secret' }, controller.signal)
+  const payload = createNativeMessage({ id: 'cancelled-id', role: 'user', content: [{ type: 'text', text: 'hello' }] })
+  await assert.rejects(client.sendMessage('study', 2, 'student', payload), { name: 'AbortError' })
+  assert.equal(calls, 1)
 })
 
 test('WuKong adapter syncs channel history and decodes Lingxi payloads', async () => {

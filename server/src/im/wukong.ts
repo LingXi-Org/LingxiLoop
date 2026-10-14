@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { nativeMessageSchema, NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage } from './message-types.js'
+import { setTimeout as delay } from 'node:timers/promises'
+import { NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage, nativeMessageSchema } from './message-types.js'
 import type { ImBootstrap, ImChannelProfile, ImMessage } from './types.js'
 
 export interface WukongConfig {
@@ -82,19 +83,26 @@ export class WukongClient {
   }
 
   async sendMessage(channelId: string, channelType: number, fromUid: string, payload: NativeMessage, clientNonce = payload.id): Promise<{ messageId: string; messageSeq: number }> {
-    const value = await this.request<Record<string, unknown>>('/message/send', {
-      method: 'POST',
-      body: JSON.stringify({
-        from_uid: fromUid,
-        channel_id: channelId,
-        channel_type: channelType,
-        client_msg_no: clientNonce,
-        payload: Buffer.from(JSON.stringify({ type: NATIVE_MESSAGE_CONTENT_TYPE, ...nativeMessageSchema.parse(payload) }), 'utf8').toString('base64'),
-      }),
+    const body = JSON.stringify({
+      from_uid: fromUid,
+      channel_id: channelId,
+      channel_type: channelType,
+      client_msg_no: clientNonce,
+      payload: Buffer.from(JSON.stringify({ type: NATIVE_MESSAGE_CONTENT_TYPE, ...nativeMessageSchema.parse(payload) }), 'utf8').toString('base64'),
     })
-    return {
-      messageId: String(value.message_id ?? value.messageId ?? ''),
-      messageSeq: Number(value.message_seq ?? value.messageSeq ?? 0),
+    for (let attempt = 0; ; attempt++) {
+      const value = await this.request<Record<string, unknown>>('/message/send', { method: 'POST', body })
+      // WuKong's member reset briefly removes existing members; reuse the nonce while it converges.
+      if (value.reason === 3 && attempt < 2) {
+        await delay(100 * (attempt + 1), undefined, { signal: this.signal })
+        continue
+      }
+      const messageId = String(value.message_id ?? value.messageId ?? '')
+      const messageSeq = Number(value.message_seq ?? value.messageSeq ?? 0)
+      if (value.reason !== 1 || !messageId || messageId === '0' || !Number.isSafeInteger(messageSeq) || messageSeq <= 0) {
+        throw new Error(`WuKongIM message send was not accepted (reason ${typeof value.reason === 'number' ? value.reason : 'invalid'})`)
+      }
+      return { messageId, messageSeq }
     }
   }
 
