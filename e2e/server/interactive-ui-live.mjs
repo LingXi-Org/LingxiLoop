@@ -73,7 +73,7 @@ try {
   passed = true
 } finally {
   await writeFile(resolve(output, 'run-metadata.json'), JSON.stringify({ startedAt, finishedAt: new Date().toISOString(), passed,
-    reproduce: `node e2e/server/interactive-ui-live.mjs --live-generative-ui${transportOnly ? ' --transport-only' : ''}`, runtime: '3.3.6', candidate: transportOnly ? null : credentials.EVAL_CANDIDATE_MODEL,
+    reproduce: `node e2e/server/interactive-ui-live.mjs --live-generative-ui${transportOnly ? ' --transport-only' : ''}`, runtime: '3.3.7', candidate: transportOnly ? null : credentials.EVAL_CANDIDATE_MODEL,
     judge: credentials.EVAL_JUDGE_MODEL, maxModelCalls: 16, maxModelTokens: 200000, maxRunCostUSD: 0.5, maxTotalCostUSD: 5, modelConcurrency: 1,
     database: 'lingxiloop_ui_model_test', identity: 'synthetic test-owner', realWuKong: true, realModel: !transportOnly, authentication: 'isolated test middleware',
   }, null, 2))

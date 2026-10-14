@@ -62,7 +62,7 @@ test('real provider publishes public explanations and a plan through the product
     assert.ok(ledger.calls > 0 && ledger.measured, 'real model usage must be measured')
     assert.ok(Number(ledger.cost) <= 0.25, 'run exceeded the real-model budget')
     passed = true
-    await writeFile(`${output}/results.json`, JSON.stringify({ passed, realModel: true, model: process.env.OPENAI_MODEL, runtime: '3.3.6',
+    await writeFile(`${output}/results.json`, JSON.stringify({ passed, realModel: true, model: process.env.OPENAI_MODEL, runtime: '3.3.7',
       measuredCalls: ledger.calls, costUSD: Number(ledger.cost), observations: observed, finalKinds: message.content.map(part => part.type),
       checks: ['public explanation', 'public plan', 'real files.list', 'measured tool duration', 'authoritative answer', 'replay', 'measured model ledger'],
     }, null, 2))
