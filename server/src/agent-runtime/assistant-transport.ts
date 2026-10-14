@@ -18,6 +18,7 @@ export class RunStreamProjection {
   private tools: HarnessToolPart[] = []
   private error: string | null = null
   private sourceRef: string | null = null
+  private durableDraft = ''
   needsResync = false
 
   constructor(runId: string, private readonly canControl: boolean,
@@ -31,6 +32,11 @@ export class RunStreamProjection {
     if (id !== this.view.runId) throw new Error('运行身份不一致')
     const before = this.view
     this.view = consumeRunStreamEvent(before, item)
+    if (this.view.lifecycle !== 'leased' || this.view.fence !== before.fence
+      || this.view.requestVersion !== before.requestVersion || this.view.messageFence === this.view.fence) this.durableDraft = ''
+    if (item.type === 'event' && this.view !== before && item.event.visibility === 'user'
+      && item.event.kind === 'model.delta' && item.event.data.partType === 'text'
+      && this.view.lifecycle === 'leased' && this.view.preview === null && this.view.draft) this.durableDraft = this.view.draft
     this.needsResync = item.type === 'preview' && item.preview.kind === 'delta'
       && this.view !== before && this.view.preview === null
     if (item.type === 'state' && this.view !== before) {
@@ -102,7 +108,8 @@ export class RunStreamProjection {
       goalOutcome: control.goalOutcome ? outcome as NonNullable<RunDisplayState['goalOutcome']> : null,
       artifacts: message?.envelope.artifacts ?? [] }
     const agentId = this.identity?.agentId ?? message?.agentId
-    const parts = runMessageParts(this.view, this.tools)
+    // Ephemeral cleanup must not retract validated model.delta text before its committed state arrives.
+    const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, this.tools)
     const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
     const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
     const activitySet = new Set(activity)

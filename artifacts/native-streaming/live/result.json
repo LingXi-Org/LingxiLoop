@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "realModel": true,
+  "model": "deepseek-ai/DeepSeek-V4-Flash",
+  "previewFrames": 148,
+  "retractions": 6,
+  "finalRetractions": 0,
+  "measuredCalls": 10,
+  "costUSD": 0.02043061,
+  "finalLength": 963
+}

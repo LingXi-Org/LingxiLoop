@@ -61,7 +61,8 @@ test('production workers always expose full tools and disable thinking even with
     env.OPENAI_BASE_URL = `http://127.0.0.1:${address.port}/v1`
     process.env.AGENT_OS_RESPONSE_POLICY = mode === 'deep' ? 'deep' : 'auto'
     process.env.LINGXIOS_SERVICE_TOKEN = 'nonthinking-integration-service-token'
-    process.env.AGENT_OS_WORKER_PORT = '52993'
+    // Keep health listeners outside the ephemeral ports used by the fixture servers.
+    process.env.AGENT_OS_WORKER_PORT = '29093'
     const api = await lingxiOSControl()
     const port = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN, port: 0 })
     process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${port}`
@@ -145,6 +146,11 @@ test('production workers always expose full tools and disable thinking even with
         streamedBeforeCompletion: true, deliveredOnce: true, reconnectMatchesSnapshot: true,
         content: final.message.content, status: final.message.status, tenantAndThreadIsolation: true,
       }, null, 2))
+      await mkdir('artifacts/native-streaming/protocol', { recursive: true })
+      await writeFile(`artifacts/native-streaming/protocol/${mode}.json`, JSON.stringify({
+        protocol: 'assistant-transport', runtime: 'published worker', snapshots, final,
+        streamedBeforeCompletion: true, deliveredOnce: true, tenantAndThreadIsolation: true,
+      }, null, 2))
       let calls = await pool.query('SELECT status FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, run.runId])
       while (calls.rows.length < requests.length) {
         timeout.throwIfAborted(); await delay(20)
@@ -195,7 +201,7 @@ test('disabled lessons are corrected into plain text before durable delivery', {
   const address = provider.address(); assert.ok(address && typeof address !== 'string')
   env.OPENAI_BASE_URL = `http://127.0.0.1:${address.port}/v1`
   process.env.LINGXIOS_SERVICE_TOKEN = 'interactive-repair-integration-service-token'
-  process.env.AGENT_OS_WORKER_PORT = '52994'
+  process.env.AGENT_OS_WORKER_PORT = '29094'
   let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
   try {
     const api = await lingxiOSControl()

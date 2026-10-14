@@ -88,7 +88,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
   const cards = activityParts(view, tools)
   if (view.lifecycle === 'queued') return cards
   // Native drafts expose content deltas only; provider reasoning fields are excluded upstream.
-  if (view.lifecycle === 'leased' && view.draft) return [...cards, ...answerParts(view, projectLessonText(view.draft, view.runId, true))]
+  if (view.lifecycle === 'leased' && view.draft) return [...answerParts(view, projectLessonText(view.draft, view.runId, true)), ...cards]
   if (!view.message) return cards
   assertLessonCitationSpans(view.message.envelope.body, view.message.envelope.citations)
   const segments = responseSegments(view.message.envelope)
@@ -128,7 +128,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
       title: evidence?.find(item => citation.markers.includes(item.marker))?.title ?? source.sourceId, mediaType: 'text/plain',
       providerMetadata: { lingxiloop: { sourceVersion: source.sourceVersion, chunkIds: source.chunkIds } } })
   }
-  return [...cards, ...answerParts(view, parts.flatMap(part => part.type === 'text' ? projectLessonText(part.text, view.runId, view.delivery !== 'delivered') : [part])), ...sources.values()]
+  return [...answerParts(view, parts.flatMap(part => part.type === 'text' ? projectLessonText(part.text, view.runId, view.delivery !== 'delivered') : [part])), ...cards, ...sources.values()]
 
 }
 

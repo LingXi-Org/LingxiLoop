@@ -9,9 +9,7 @@ import { create } from 'zustand'
 mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })) } })
 const { confidenceCopyText, MarkdownText } = await import('./markdown-text')
 
-// Markdown assertions ignore the decorative word wrappers; browser tests check their animation.
-const renderMarkdown: typeof renderToStaticMarkup = element => renderToStaticMarkup(element)
-  .replace(/<span data-streaming-word="">([^<]*)<\/span>/g, '$1')
+const renderMarkdown = renderToStaticMarkup
 
 function Text() { return <MarkdownText agent /> }
 function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
@@ -82,12 +80,12 @@ test('unfinished structural blocks remain visible during streaming and interrupt
 test('only live agent text enables the streaming tail; settled and interrupted text is static', () => {
   for (const running of [false, true]) {
     const html = renderMarkdown(<Preview text="完整消息" running={running} />)
-    assert.equal(html.includes('data-streaming="true"'), running)
+    assert.equal(html.includes('data-status="running"'), running)
     assert.doesNotMatch(html, /motion-safe:shimmer/)
     assert.doesNotMatch(html, /data-bubble-enter|im-markdown-bubble/)
   }
   const interrupted = renderMarkdown(<Preview text="中断正文" running={false} interrupted />)
-  assert.doesNotMatch(interrupted, /data-streaming="true"|motion-safe:shimmer/)
+  assert.doesNotMatch(interrupted, /data-status="running"|motion-safe:shimmer/)
 })
 
 test('committed citations preserve Markdown and normal links, with one shared basis slot', () => {
