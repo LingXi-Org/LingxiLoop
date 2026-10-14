@@ -37,7 +37,7 @@ export class RunStreamProjection {
       || this.view.requestVersion !== before.requestVersion || this.view.messageFence === this.view.fence) this.durableDraft = ''
     if (item.type === 'event' && this.view !== before && item.event.visibility === 'user'
       && item.event.kind === 'model.delta' && item.event.data.partType === 'text'
-      && this.view.lifecycle === 'leased' && this.view.preview === null) this.durableDraft = this.view.draft
+      && this.view.lifecycle === 'leased' && this.view.preview === null && this.view.draft) this.durableDraft = this.view.draft
     this.needsResync = item.type === 'preview' && item.preview.kind === 'delta'
       && this.view !== before && this.view.preview === null
     if (item.type === 'state' && this.view !== before) {

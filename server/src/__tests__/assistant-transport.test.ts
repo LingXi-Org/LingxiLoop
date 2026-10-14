@@ -117,7 +117,10 @@ test('commit handoff and tool activity preserve the live answer part', () => {
     data: { partType: 'text', delta: '最终正文', requestVersion: 1 } } })
   const reset = projection.apply({ type: 'reset', runId: 'run', reason: 'superseded' })
   assert.deepEqual(reset.message.content[0], durable.message.content[0])
-  const committed = projection.apply({ type: 'event', event: { runId: 'run', seq: 3, kind: 'response.committed', stage: 'completed', visibility: 'user', data: {} } })
+  const rejected = projection.apply({ type: 'event', event: { runId: 'run', seq: 3, kind: 'model.delta', stage: 'delta', visibility: 'user',
+    data: { partType: 'text', delta: '已过期', requestVersion: 0 } } })
+  assert.deepEqual(rejected.message.content[0], durable.message.content[0])
+  const committed = projection.apply({ type: 'event', event: { runId: 'run', seq: 4, kind: 'response.committed', stage: 'completed', visibility: 'user', data: {} } })
   assert.deepEqual(committed.message.content[0], durable.message.content[0])
   const final = projection.apply({ type: 'state', state: runState('succeeded') })
   assert.equal(final.message.content[0]?.type === 'text' && final.message.content[0].text, '最终正文')
