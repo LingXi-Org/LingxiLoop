@@ -22,17 +22,32 @@ export function useStreamingTail(text: string, streaming: boolean) {
   useLayoutEffect(() => {
     const root = ref.current
     if (!root) return
-    root.querySelectorAll('[data-streaming-fresh], [data-streaming-cursor]').forEach(word => {
-      word.removeAttribute('data-streaming-fresh')
-      word.removeAttribute('data-streaming-cursor')
-    })
-    if (!streaming || !text.trim()) return
-    // Rendered order lets block boundaries, inline formatting and citations share one tail.
-    const words = [...root.querySelectorAll('[data-streaming-word], pre code')]
-    for (const word of words.slice(-2)) {
-      if (word.hasAttribute('data-streaming-word')) word.setAttribute('data-streaming-fresh', '')
+    let fade: ReturnType<typeof setTimeout> | undefined
+    const clear = () => {
+      root.querySelectorAll('[data-streaming-fresh], [data-streaming-cursor]').forEach(word => {
+        word.removeAttribute('data-streaming-fresh')
+        word.removeAttribute('data-streaming-cursor')
+      })
     }
-    words.at(-1)?.setAttribute('data-streaming-cursor', '')
+    const update = () => {
+      clearTimeout(fade)
+      clear()
+      if (!streaming || !text.trim()) return
+      // Rendered order lets block boundaries, inline formatting and citations share one tail.
+      const words = [...root.querySelectorAll('[data-streaming-word], pre code')]
+      for (const word of words.slice(-2)) {
+        if (word.hasAttribute('data-streaming-word')) word.setAttribute('data-streaming-fresh', '')
+      }
+      words.at(-1)?.setAttribute('data-streaming-cursor', '')
+      fade = setTimeout(() => {
+        root.querySelectorAll('[data-streaming-fresh]').forEach(word => { word.removeAttribute('data-streaming-fresh') })
+      }, 450)
+    }
+    update()
+    // Streamdown can commit blocks after this parent's layout effect has run.
+    const observer = new MutationObserver(update)
+    observer.observe(root, { childList: true, characterData: true, subtree: true })
+    return () => { observer.disconnect(); clearTimeout(fade); clear() }
   }, [text, streaming])
   return ref
 }

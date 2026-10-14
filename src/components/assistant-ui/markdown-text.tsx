@@ -5,8 +5,8 @@ import { code } from '@streamdown/code'
 import { createMathPlugin } from '@streamdown/math'
 import { createMermaidPlugin } from '@streamdown/mermaid'
 import { Block, type BlockProps, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
-import { useAuiState, useMessagePartText } from '@assistant-ui/react'
-import { createContext, memo, useContext, useMemo, useState } from 'react'
+import { useAuiState, useMessagePartText, useSmooth } from '@assistant-ui/react'
+import { createContext, memo, useCallback, useContext, useMemo, useState } from 'react'
 import type { Root } from 'hast'
 import { SKIP, visit } from 'unist-util-visit'
 import { rehypeStreamingWords, useStreamingTail } from './streaming-text'
@@ -54,6 +54,8 @@ const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['s
   return claim && node?.properties['data-citation-start'] === undefined ? marker : <span {...props}>{marker}</span>
 }
 const confidenceComponents = { span: ConfidenceSpan }
+const emptyClaims: readonly MarkdownConfidenceClaim[] = []
+const emptyMentionTargets: readonly MentionTarget[] = []
 
 function rehypeMentionNames({ targets }: { targets: readonly MentionTarget[] }) {
   const names = new Map(targets.map(target => [target.id, target.name]))
@@ -113,15 +115,16 @@ function CitationBlock(props: BlockProps) {
     ...Object.values(defaultRehypePlugins), [rehypeConfidence, { claims, offset, inlineCitations }],
     [rehypeMentionNames, { targets: mentionTargets }],
     ...agent ? [rehypeStreamingWords] : [],
+    plugins.math.rehypePlugin,
   ], [claims, offset, inlineCitations, agent, mentionTargets])
-  return <Block {...props} rehypePlugins={[...rehypePlugins ?? [], plugins.math.rehypePlugin]} />
+  return <Block {...props} rehypePlugins={rehypePlugins} />
 }
 
 const MarkdownTextImpl = ({
   agent = false,
-  confidenceClaims = [],
+  confidenceClaims = emptyClaims,
   inlineCitations = false,
-  mentionTargets = [],
+  mentionTargets = emptyMentionTargets,
 }: {
   agent?: boolean
   confidenceClaims?: readonly MarkdownConfidenceClaim[]
@@ -129,7 +132,10 @@ const MarkdownTextImpl = ({
   mentionTargets?: readonly MentionTarget[]
 }) => {
   const [hoveredId, setHoveredId] = useState('')
-  const { text, status } = useMessagePartText()
+  const part = useMessagePartText()
+  const { text, status } = useSmooth(part, agent && typeof window !== 'undefined' && part.status.type !== 'incomplete')
+  // Markdown, citation offsets and the tail must share the same revealed prefix.
+  const revealedText = useCallback(() => text, [text])
   // Citation spans use nativeText's joined-message coordinates, including between cards.
   const textOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
     .reduce((offset, part) => offset + (part.type === 'text' && activityAnnotation(part)?.kind !== 'commentary' ? part.text.length + 1 : 0), 0))
@@ -152,6 +158,8 @@ const MarkdownTextImpl = ({
     <CitationBlocks.Provider value={citationBlocks}>
       <div ref={streamingRef} className="im-markdown-host" data-find-content data-streaming={streaming || undefined}>
         <StreamdownTextPrimitive
+          preprocess={revealedText}
+          isAnimating={streaming}
           plugins={plugins}
           translations={translations}
           mermaid={mermaidOptions}
