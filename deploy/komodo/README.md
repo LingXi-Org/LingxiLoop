@@ -12,7 +12,9 @@ runs the ordered `lingxiloop-production-rollout` procedure. GitHub is the source
 truth; Core does not need to clone the repository to synchronize configuration.
 Do not edit the ResourceSync file contents manually: the next release replaces
 them with the reviewed repository version. Stack source files still use their
-configured repositories on Periphery.
+configured repositories on Periphery. The existing ResourceSync is owned by the
+release script, so this file declares only its managed resources; declaring the
+sync itself attempts to create a duplicate and can overwrite its API source.
 
 Before applying `0027_learning_collaboration`, drain affected interactive,
 handoff, Mission and Canvas runs before changing the default rooms' members.

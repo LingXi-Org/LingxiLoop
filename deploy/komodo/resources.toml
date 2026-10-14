@@ -1,12 +1,5 @@
-[[resource_sync]]
-name = "lingxiloop-production"
-description = "Declarative production resources"
-[resource_sync.config]
-repo = "LingXi-Org/LingxiLoop"
-branch = "main"
-git_provider = "accel.way2api.fun/github.com"
-git_account = "lyyzka"
-resource_path = ["deploy/komodo/resources.toml"]
+# The existing ResourceSync is configured by scripts/sync-komodo-config.mjs.
+# Do not declare it here: Komodo must not create or overwrite its own source.
 
 [[stack]]
 name = "server-b-ingress"
