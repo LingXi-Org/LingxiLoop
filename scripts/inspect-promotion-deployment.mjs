@@ -17,10 +17,10 @@ for(const summary of (list.updates??[]).slice(0,15)) {
  const id=summary.id??summary._id?.$oid
  const update=await read('GetUpdate',{id})
  console.log(JSON.stringify({id,operation:update.operation,status:update.status,success:update.success,start_ts:update.start_ts}))
- for(const log of update.logs??[]) if(log.stage==='Compose Pull'&&!log.success) {
+ for(const log of update.logs??[]) if(!log.success && !/Environment|Secrets|Config/.test(log.stage)) {
   let detail=String(log.stderr??'')+'\n'+String(log.stdout??'')
   detail=detail.replace(/https?:\/\/[^\s"']+/g,'[URL]').replace(/[A-Za-z0-9+/_=-]{40,}/g,'[opaque value]')
   for(const key of ['KOMODO_WEBHOOK_URL','KOMODO_API_KEY','KOMODO_API_SECRET']) if(process.env[key]) detail=detail.split(process.env[key]).join('[secret]')
-  console.log(JSON.stringify({id,pullFailure:detail.slice(-500)}))
+  console.log(JSON.stringify({id,stage:log.stage,failure:detail.slice(-1800)}))
  }
 }
