@@ -36,6 +36,17 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
     { view: 'agents' as const, label: 'Agent', icon: RoboticIcon, management: false },
     ...(activeSpace ? getLearningDashboardMenu(activeSpace).map((item) => ({ ...item, view: viewForLearningSection(item.section) })) : []),
   ]
+  const renderMenuItem = (item: typeof menu[number]) => {
+    const selected = view === item.view || (item.view === 'courses' && (view === 'course-members' || view === 'course-status'))
+    return <Tooltip key={item.view}>
+      <TooltipTrigger asChild>
+        <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={item.label} data-workspace-view={item.view} aria-current={selected ? 'page' : undefined} onClick={() => onNavigate(item.view)} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', selected && 'bg-sidebar-accent text-sidebar-primary')}>
+          <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-6" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{item.label}</TooltipContent>
+    </Tooltip>
+  }
   return <nav aria-label="工作区与功能" className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-[var(--workspace-chrome-surface)] pb-2 pt-[var(--im-navigation-top)] text-foreground">
     <div className="im-navigation-row flex w-full items-center justify-center">
       <DropdownMenu open={workspacePickerOpen} onOpenChange={onWorkspacePickerOpenChange}>
@@ -66,14 +77,10 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
       </DropdownMenu>
     </div>
     <div className="server-rail-scroll flex min-h-0 w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-2 py-2">
-      {menu.map((item) => <Tooltip key={item.view}>
-        <TooltipTrigger asChild>
-          <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={item.label} data-workspace-view={item.view} aria-current={view === item.view ? 'page' : undefined} onClick={() => onNavigate(item.view)} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', view === item.view && 'bg-sidebar-accent text-sidebar-primary')}>
-            <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-6" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="right">{item.label}</TooltipContent>
-      </Tooltip>)}
+      {menu.filter(item => item.view !== 'learning').map(renderMenuItem)}
+    </div>
+    <div className="flex shrink-0 flex-col items-center px-2" data-testid="workspace-bottom-navigation">
+      {menu.filter(item => item.view === 'learning').map(renderMenuItem)}
     </div>
     {user ? <div className="shrink-0 px-2 pt-2"><NavUser compact user={{ id: user.id, name: user.name, email: user.email, avatar: user.avatarUrl ?? participantAvatar }} /></div> : null}
   </nav>

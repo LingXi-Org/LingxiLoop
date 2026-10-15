@@ -1,9 +1,7 @@
 import {
-  Archive02Icon,
-  BubbleChatIcon,
   ChartHistogramIcon,
+  MessageMultiple01Icon,
   Settings02Icon,
-  UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 import type { ViewKey } from '@/types'
 import type { LearningSpace } from '../contracts'
@@ -24,13 +22,11 @@ export interface LearningDashboardMenuItem {
 
 const LEARNER_MENU: LearningDashboardMenuItem[] = [
   { section: 'overview', label: '学习概览', icon: ChartHistogramIcon },
-  { section: 'forum', label: '论坛', icon: BubbleChatIcon },
+  { section: 'forum', label: '论坛', icon: MessageMultiple01Icon },
 ]
 
 const MANAGEMENT_MENU: LearningDashboardMenuItem[] = [
   { section: 'settings', label: '课程设置', icon: Settings02Icon, management: true },
-  { section: 'members', label: '成员与邀请', icon: UserGroupIcon, management: true },
-  { section: 'status', label: '课程状态', icon: Archive02Icon, management: true },
 ]
 
 type NavigationContext = Pick<LearningSpace, 'perspective' | 'canManage' | 'courseId'>
@@ -50,6 +46,9 @@ export function isLearningDashboardSectionAvailable(
   section: LearningDashboardSection,
   input: NavigationContext,
 ): boolean {
+  if (section === 'members' || section === 'status') {
+    return input.perspective === 'teacher' && input.canManage && Boolean(input.courseId)
+  }
   return getLearningDashboardMenu(input).some((item) => item.section === section)
 }
 

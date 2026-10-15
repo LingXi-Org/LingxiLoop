@@ -6,10 +6,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { projectLifecycleApi } from '@/features/projects/api'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
+import { useApp } from '@/stores/app'
 import { learningApi } from '../api'
 import { statusLabel } from '../components/learningDisplay'
 import type { ApiCourse, LearningSpace } from '../contracts'
@@ -54,7 +56,7 @@ const LIFECYCLE_ACTIONS = {
 export function CourseSettingsSection({ space, section }: { space: LearningSpace; section: 'profile' | 'members' | 'status' }) {
   const canView = space.perspective === 'teacher' && space.canManage && Boolean(space.courseId)
   const canEdit = canView && space.canUpdateCourse
-  const frameSection = section === 'profile' ? 'settings' : section
+  const setView = useApp(state => state.setView)
   const [course, setCourse] = useState<ApiCourse | null>(null)
   const [loading, setLoading] = useState(canView)
   const [busy, setBusy] = useState(false)
@@ -82,11 +84,11 @@ export function CourseSettingsSection({ space, section }: { space: LearningSpace
     }
   }, [canView, space.courseId, revision])
   if (!canView) {
-    return <DashboardSectionFrame space={space} section={frameSection}><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
+    return <DashboardSectionFrame space={space} section="settings"><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
   }
-  if (loading && !course) return <DashboardSectionFrame space={space} section={frameSection}><CourseSettingsSkeleton section={section} /></DashboardSectionFrame>
+  if (loading && !course) return <DashboardSectionFrame space={space} section="settings"><CourseSettingsSkeleton section={section} /></DashboardSectionFrame>
   if (!course) {
-    return <DashboardSectionFrame space={space} section={frameSection}><Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error || '课程设置暂不可用。'}<Button variant="outline" size="sm" disabled={loading} onClick={() => setRevision(value => value + 1)}>重试</Button></AlertDescription></Alert></DashboardSectionFrame>
+    return <DashboardSectionFrame space={space} section="settings"><Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error || '课程设置暂不可用。'}<Button variant="outline" size="sm" disabled={loading} onClick={() => setRevision(value => value + 1)}>重试</Button></AlertDescription></Alert></DashboardSectionFrame>
   }
 
   const lifecycleAction = course.status === space.status ? space.lifecycleAction : null
@@ -119,36 +121,43 @@ export function CourseSettingsSection({ space, section }: { space: LearningSpace
   return (
     <DashboardSectionFrame
       space={space}
-      section={frameSection}
+      section="settings"
     >
         {error && <Alert variant="destructive" className="mb-4"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button size="sm" variant="outline" disabled={loading} onClick={() => setRevision(value => value + 1)}>重试</Button></AlertDescription></Alert>}
-        {section === 'profile' && <div className="min-w-0">
-          <CourseProfileSettings course={course} canEdit={canEdit} onUpdated={setCourse} />
-        </div>}
-        {section === 'members' && <div className="min-w-0">
-          <CourseMembersSection space={space} />
-        </div>}
-        {section === 'status' && <div className="min-w-0">
-          <Card>
-            <CardContent className="space-y-4">
-              <Badge variant="secondary">{statusLabel(course.status)}</Badge>
-              {lifecycle ? (
-                <div>
-                  <p className="mb-3 text-sm text-muted-foreground">{lifecycle.description}</p>
-                  <Button
-                    type="button"
-                    variant={lifecycle.destructive ? 'destructive' : 'outline'}
-                    disabled={busy}
-                    onClick={() => void advanceLifecycle()}
-                  >
-                    <HugeiconsIcon icon={Archive02Icon} strokeWidth={2} data-icon="inline-start" />
-                    {lifecycle.label}
-                  </Button>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </div>}
+        <Tabs value={section} onValueChange={value => setView(value === 'members' ? 'course-members' : value === 'status' ? 'course-status' : 'courses')} className="gap-4" data-testid="course-settings-tabs">
+          <TabsList aria-label="课程设置" className="max-w-full [&_[data-state=active]]:bg-background [&_[data-state=active]]:text-foreground">
+            <TabsTrigger value="profile">基本资料</TabsTrigger>
+            <TabsTrigger value="members">成员与邀请</TabsTrigger>
+            <TabsTrigger value="status">课程状态</TabsTrigger>
+          </TabsList>
+          <TabsContent value="profile" className="min-w-0">
+            <CourseProfileSettings course={course} canEdit={canEdit} onUpdated={setCourse} />
+          </TabsContent>
+          <TabsContent value="members" className="min-w-0">
+            <CourseMembersSection space={space} />
+          </TabsContent>
+          <TabsContent value="status" className="min-w-0">
+            <Card>
+              <CardContent className="space-y-4">
+                <Badge variant="secondary">{statusLabel(course.status)}</Badge>
+                {lifecycle ? (
+                  <div>
+                    <p className="mb-3 text-sm text-muted-foreground">{lifecycle.description}</p>
+                    <Button
+                      type="button"
+                      variant={lifecycle.destructive ? 'destructive' : 'outline'}
+                      disabled={busy}
+                      onClick={() => void advanceLifecycle()}
+                    >
+                      <HugeiconsIcon icon={Archive02Icon} strokeWidth={2} data-icon="inline-start" />
+                      {lifecycle.label}
+                    </Button>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </DashboardSectionFrame>
 
   )

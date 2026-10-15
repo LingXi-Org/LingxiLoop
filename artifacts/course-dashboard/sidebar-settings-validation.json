@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-15",
+  "base_commit": "122679326e05eea47310a71bc438b5af02b2de24",
+  "scope": "Pin learning overview to the bottom of workspace navigation, distinguish forum icon, integrate members and lifecycle into course settings tabs",
+  "checks": {
+    "lint": "passed (existing unrelated warnings)",
+    "typecheck": "passed",
+    "web_tests": {
+      "passed": 87,
+      "failed": 0
+    },
+    "e2e_typecheck": "passed",
+    "browser": {
+      "passed": 5,
+      "failed": 0,
+      "run_id": "01a13f28-bd47-7b73-9252-4efd3937d4dc",
+      "command": "E2E_CDP_URL=http://127.0.0.1:9227 npm run test:e2e:web -- --tag course-dashboard",
+      "report_sha256": "cd80d452e02b3513a64a38daa5f9784c72dba110719415640a2efaeacd71160c",
+      "coverage": [
+        "teacher and student overview dashboards",
+        "overview pinned below forum and distinct SVG icons",
+        "no standalone members/status sidebar entries",
+        "course settings tabs and active sidebar indicator",
+        "390px and 1440px layouts",
+        "student permission fallback",
+        "course profile persistence through real API"
+      ]
+    },
+    "production_build": "passed"
+  },
+  "environment": {
+    "browser": "official @e2e-dev/web engine with Chromium CDP",
+    "services": "local real API, PostgreSQL, Redis, WuKongIM, MinIO, control Worker/D1; outbound control requests use session HTTP proxy"
+  }
+}
