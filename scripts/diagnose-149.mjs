@@ -19,12 +19,19 @@ const signals={
  disk:/no space left|disk quota/i,
  alreadyRunning:/already running|already in progress/i,
 }
+function safeError(text) {
+ let value = text.replace(/\u001b\[[0-9;]*m/g, '')
+ for(const key of ['KOMODO_API_KEY','KOMODO_API_SECRET']) value=value.split(process.env[key]).join('[redacted]')
+ value=value.replace(/https?:\/\/[^\s"<>]+/g, raw=>{try {const u=new URL(raw);return `${u.protocol}//${u.host}${u.pathname}`}catch{return '[url]'}})
+ return value.slice(0,1500)
+}
 const recent=await read('ListUpdates',{})
 for(const item of (recent.updates??[]).slice(0,35)) {
  if(item.start_ts<Date.parse('2026-10-15T17:20:00Z')) continue
  const u=await read('GetUpdate',{id:item.id})
  console.log(JSON.stringify({id:item.id,operation:u.operation,target:u.target,status:u.status,success:u.success,start_ts:u.start_ts,
  logs:(u.logs??[]).map(l=>({stage:l.stage,success:l.success,stdoutBytes:(l.stdout??'').length,stderrBytes:(l.stderr??'').length,
+ failureDetails:l.stage==='Compose Pull' && !l.success ? (l.stderr??'').split('\n').filter(line=>/error|failed|denied|timeout|unexpected status/i.test(line)).map(safeError):[],
  signals:Object.entries(signals).filter(([,p])=>p.test(`${l.stdout??''}\n${l.stderr??''}`)).map(([name])=>name),
  childUpdates:[...new Set((`${l.stdout??''}\n${l.stderr??''}`).match(/\b[0-9a-f]{24}\b/g)??[])],
  }))}))
