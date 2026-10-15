@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "reproduce": "node e2e/server/forum.mjs --browser-only",
+  "database": "lingxiloop_forum_test",
+  "results": [
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-15T10:24:54.601Z",
+      "finishedAt": "2026-10-15T10:24:54.990Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-15T10:24:54.990Z",
+      "finishedAt": "2026-10-15T10:24:55.320Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "/workspace/LingxiLoop/node_modules/e2e/dist/cli/bin.js",
+        "run",
+        "--config",
+        "e2e.forum.config.ts"
+      ],
+      "startedAt": "2026-10-15T10:24:59.500Z",
+      "finishedAt": "2026-10-15T10:26:55.391Z",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Synthetic identities, recorded WuKong messages and in-memory object storage; browser validation is reported separately."
+  ]
+}
