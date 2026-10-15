@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
 import { createWorker } from '@lyyzka/lingxios/worker'
+import { releaseVersions } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
@@ -78,6 +79,6 @@ test('live model uses the product collaboration rules and ends a public speciali
     await writeFile(`${output}/results.json`, JSON.stringify({ passed: true, model: process.env.OPENAI_MODEL,
       reproduce: 'node e2e/server/group-mentions-live.mjs --live-group-mentions', usage, runs,
       messages: messages.map(message => ({ author: message.fromUid, text: nativeText(message.payload) })),
-      transport: 'recording WuKong fixture', realModel: true, runtime: '3.4.1', maxChainCostUSD: 0.25 }, null, 2))
+      transport: 'recording WuKong fixture', realModel: true, runtime: releaseVersions.runtime, maxChainCostUSD: 0.25 }, null, 2))
   } finally { await worker?.stop(); await recording.close(); await teardownAll() }
 })
