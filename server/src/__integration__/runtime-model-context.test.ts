@@ -4,18 +4,19 @@ import { test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { releaseVersions } from '@lyyzka/lingxios'
 import { DEFAULT_AGENT_CAPABILITIES } from '../../../src/lib/agentCapabilities.js'
+import { syncConversationPolicy } from '../agent-runtime/conversations.js'
+import { bindProductRun } from '../agent-runtime/identity.js'
+import { lingxiOSControl, startLingxiOSWorker } from '../agent-runtime/runtime.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
-import { bindProductRun } from '../agent-runtime/identity.js'
-import { syncConversationPolicy } from '../agent-runtime/conversations.js'
-import { lingxiOSControl, startLingxiOSWorker } from '../agent-runtime/runtime.js'
 import { nativeText } from '../im/message-types.js'
-import { installRecordingWukong } from './_recording-wukong.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { installRecordingWukong } from './_recording-wukong.js'
 
 // Failures: fixed product context alone exceeds the old 128K window; retained
-// multilingual history cannot fit; delivery duplicates; calls escape the shared ledger.
-test('production GLM worker admits full product context and long-history followups', { timeout: 240000 }, async () => {
+// multilingual history cannot fit; repeated compaction loses a prior fact; delivery
+// duplicates; completed summaries disappear; calls escape the shared ledger.
+test('production GLM worker preserves conversation continuity across repeated compaction', { timeout: 480000 }, async () => {
   const live = process.env.LINGXIOS_LIVE_CONTEXT === '1'
   if (live) {
     assert.equal(env.OPENAI_MODEL, 'zai-org/GLM-5.2')
@@ -27,6 +28,8 @@ test('production GLM worker admits full product context and long-history followu
   env.OPENAI_MODEL = 'zai-org/GLM-5.2'; env.OPENAI_BASE_URL = 'https://api.siliconflow.cn/v1'
   let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
   const requests: { bytes: number; stream: boolean }[] = [], results: { status: string; delivered: boolean }[] = []
+  const checkpoints: { epoch: number; historyBytes: number }[] = []
+  const turnIds = ['initial', 'followup', ...Array.from({ length: live ? 6 : 24 }, (_, index) => `soak-${index}`)]
   globalThis.fetch = async (input, init) => {
     const url = input instanceof Request ? input.url : String(input)
     if (url !== 'https://api.siliconflow.cn/v1/chat/completions') return originalFetch(input, init)
@@ -36,12 +39,16 @@ test('production GLM worker admits full product context and long-history followu
     requests.push({ bytes: Buffer.byteLength(body), stream: request.stream === true })
     if (live) return originalFetch(input, init)
     const usage = { prompt_tokens: 30000, completion_tokens: 20 }
-    if (request.stream) return new Response(`data: ${JSON.stringify({ choices: [{ index: 0,
-      delta: { role: 'assistant', content: '已收到。' }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`,
-    { headers: { 'content-type': 'text/event-stream' } })
-    const compacting = JSON.stringify(request.messages).includes('observedResults')
+    if (request.stream) {
+      assert.match(JSON.stringify(request.messages), /蓝宝石47/, 'prior fact must reach every generation')
+      return new Response(`data: ${JSON.stringify({ choices: [{ index: 0,
+        delta: { role: 'assistant', content: '已收到，蓝宝石47。' }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`,
+      { headers: { 'content-type': 'text/event-stream' } })
+    }
+    const compacting = String(request.messages[0]?.content).includes('observedResults')
+    if (compacting) assert.match(JSON.stringify(request.messages), /蓝宝石47/, 'summary must be grounded in the preceding context')
     return Response.json({ choices: [{ message: { role: 'assistant', content: JSON.stringify(compacting
-      ? { observedResults: 'Historical context retained.', decisions: '', remainingWork: '', uncertainties: '' } : { missing: [] }) }, finish_reason: 'stop' }], usage })
+      ? { observedResults: '用户的项目名称是蓝宝石47。', decisions: '', remainingWork: '', uncertainties: '' } : { missing: [] }) }, finish_reason: 'stop' }], usage })
   }
   try {
     const { companyId, projectId, agentId } = await seedCompanyWithAgent()
@@ -59,9 +66,11 @@ test('production GLM worker admits full product context and long-history followu
     const port = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN, port: 0 })
     process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${port}`
     worker = await startLingxiOSWorker()
-    for (const messageId of ['initial', 'followup']) {
+    for (const messageId of turnIds) {
+      const text = messageId === 'initial' ? '请记住我们的项目名称是「蓝宝石47」。这一轮只回复：已收到。'
+        : messageId === 'followup' ? '请只回复：已收到。' : '我之前说的项目名称是什么？只回复该项目名称。'
       const accepted = await api.conversations.ingest({ tenantId: companyId, conversationId, policyVersion: policy.version,
-        messageId, version: 1, author: { id: 'test-owner', kind: 'human' }, text: '请只回复：已收到。', mentions: [agentId] },
+        messageId, version: 1, author: { id: 'test-owner', kind: 'human' }, text, mentions: [agentId] },
       { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation', codeExecution: 'disabled' })
       const run = accepted.runs[0]; assert.ok(run); await bindProductRun(pool, run, conversationId)
       const timeout = AbortSignal.timeout(live ? 100000 : 15000)
@@ -72,7 +81,12 @@ test('production GLM worker admits full product context and long-history followu
       assert.equal(state?.run.status, 'succeeded', state?.run.error ?? undefined)
       assert.equal(state.delivery, 'delivered')
       results.push({ status: state.run.status, delivered: true })
-      if (messageId === 'initial') {
+      const persisted = (await pool.query(`SELECT compaction_epoch,history FROM lingxios.agent_os_sessions
+        WHERE tenant_id=$1 AND agent_id=$2 AND session_id=$3`, [companyId, agentId, run.sessionId])).rows[0]
+      assert.ok(persisted)
+      checkpoints.push({ epoch: persisted.compaction_epoch, historyBytes: Buffer.byteLength(JSON.stringify(persisted.history)) })
+      if (!live && messageId === 'followup') assert.ok(persisted.compaction_epoch > 0, 'short histories must compact before exhaustion')
+      if (messageId !== turnIds.at(-1)) {
         const history = [{ role: 'user', content: '历史讨论：可靠传输与保密性是不同概念。\n'.repeat(3500) }]
         const updated = await pool.query(`UPDATE lingxios.agent_os_sessions SET history=history || $1::jsonb,revision=revision+1
           WHERE tenant_id=$2 AND agent_id=$3 AND session_id=$4`, [JSON.stringify(history), companyId, agentId, run.sessionId])
@@ -81,18 +95,31 @@ test('production GLM worker admits full product context and long-history followu
     }
     await worker.stop(); worker = undefined
     const messages = im.messages.filter(message => message.channelId === conversationId && message.fromUid === agentId)
-    assert.equal(messages.length, 2)
-    assert.ok(messages.every(message => /已收到/.test(nativeText(message.payload))))
+    assert.equal(messages.length, turnIds.length)
+    assert.ok(messages.slice(0, 2).every(message => /已收到/.test(nativeText(message.payload))))
+    assert.ok(messages.slice(2).every(message => /蓝宝石47/.test(nativeText(message.payload))))
     assert.ok(requests.some(request => request.stream && request.bytes > 128000), 'must exercise the former hard context limit')
-    const calls = (await pool.query(`SELECT purpose,status,measured,input_tokens FROM llm_calls WHERE company_id=$1 ORDER BY created_at`, [companyId])).rows
+    const calls = (await pool.query(`SELECT purpose,status,measured,input_tokens,error FROM llm_calls WHERE company_id=$1 ORDER BY created_at`, [companyId])).rows
     assert.equal(calls.length, requests.length)
-    assert.ok(calls.every(call => call.status === 'succeeded' && call.measured))
-    assert.equal(calls.filter(call => call.purpose === 'lingxios.compaction').length, 0)
+    assert.ok(calls.every(call => call.status === 'succeeded' && call.measured
+      || call.purpose === 'lingxios.compaction' && call.status === 'failed' && call.error === 'compaction candidate no longer needed'))
+    assert.ok(calls.filter(call => call.purpose === 'lingxios.compaction' && call.status === 'succeeded').length >= 2)
+    assert.ok(checkpoints.at(-1)!.epoch >= 2)
+    assert.ok(checkpoints.every(checkpoint => checkpoint.historyBytes < 900000))
     await mkdir('artifacts/reply-generation', { recursive: true })
     await writeFile(`artifacts/reply-generation/${live ? 'live' : 'scripted'}.json`, JSON.stringify({ passed: true,
-      runtime: releaseVersions.runtime, model: env.OPENAI_MODEL, realProvider: live, results, requests, calls,
-      deliveredOncePerTurn: true, reasoningDisabled: true, transport: 'recording WuKong fixture',
+      runtime: releaseVersions.runtime, model: env.OPENAI_MODEL, realProvider: live, results, requests, calls, checkpoints,
+      continuityFactPreserved: true, deliveredOncePerTurn: true, reasoningDisabled: true, transport: 'recording WuKong fixture',
       reproduce: `node e2e/server/model-context.mjs${live ? ' --live-model-context' : ''}` }, null, 2))
+  } catch (error) {
+    await mkdir('artifacts/reply-generation', { recursive: true })
+    await writeFile(`artifacts/reply-generation/${live ? 'live' : 'scripted'}.json`, JSON.stringify({ passed: false,
+      runtime: releaseVersions.runtime, model: env.OPENAI_MODEL, realProvider: live, results, requests, checkpoints,
+      error: error instanceof Error ? error.message : String(error),
+      replies: im.messages.filter(message => message.channelId === 'model-context-room' && message.payload.role === 'assistant')
+        .map(message => nativeText(message.payload)),
+      reproduce: `node e2e/server/model-context.mjs${live ? ' --live-model-context' : ''}` }, null, 2))
+    throw error
   } finally {
     await worker?.stop(); await teardownAll(); await im.close()
     globalThis.fetch = originalFetch; env.OPENAI_MODEL = originalModel; env.OPENAI_BASE_URL = originalBaseUrl

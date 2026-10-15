@@ -1,26 +1,29 @@
 import assert from 'node:assert/strict'
-import { after, before, test } from 'node:test'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
-import { createWorker } from '@lyyzka/lingxios/worker'
 import type { WorkItem } from '@lyyzka/lingxios'
-import { pool } from '../db/pool.js'
-import { lingxiOSControl } from '../agent-runtime/runtime.js'
+import { createWorker } from '@lyyzka/lingxios/worker'
 import { createProductDelivery } from '../agent-runtime/delivery.js'
 import { receiveAgentRequest } from '../agent-runtime/receive.js'
+import { lingxiOSControl } from '../agent-runtime/runtime.js'
+import { pool } from '../db/pool.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
 import { imMessagesApplication } from '../im/messages-facade.js'
-import { installRecordingWukong } from './_recording-wukong.js'
+import { storage } from '../storage.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { installRecordingWukong } from './_recording-wukong.js'
 
 // Failure cases: dispatch before commit, metadata-only targets, wrong principal,
-// duplicate ACK/reconnect work, hidden children, automatic return, or lost bindings.
+// duplicate ACK/reconnect work, hidden children, automatic return, lost bindings,
+// or inherited attachment evidence rejected as an unrecorded child read.
 let recording: Awaited<ReturnType<typeof installRecordingWukong>>
 let worker: ReturnType<typeof createWorker> | undefined
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong() })
 after(async () => { await worker?.stop(); await recording?.close(); await teardownAll() })
 
-test('committed formatted mentions drive A → B → C → A and a plain reply ends the chain', { timeout: 60000 }, async () => {
+test('committed formatted mentions drive A → B → C → A and a plain reply ends the chain', { timeout: 60000 }, async t => {
+  t.after(async () => { await worker?.stop(); worker = undefined })
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   const second = 'mention-second', third = 'mention-third', channelId = 'mention-room'
@@ -31,15 +34,23 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
     [channelId, companyId, projectId, JSON.stringify(members)])
   await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id) VALUES($1,$2,$3::jsonb,$4)`,
     [channelId, companyId, JSON.stringify({ channelType: 2, members }), agentId])
+  const attachmentId = `attachments/${companyId}/mention-facts.txt`
+  await storage.put(attachmentId, Buffer.from('Unique recorded value: 7391.'), 'text/plain')
+  await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
+    SELECT $1,$2,'test-owner',period_id FROM company_memberships WHERE company_id=$2 AND user_id='test-owner' AND ended_at IS NULL`, [attachmentId, companyId])
   const payload = createNativeMessage({ id: 'mention-source', role: 'user', content: [{ type: 'text', text: `@${agentId} Split and verify this task.` }],
-    custom: { mentionedIds: [third], mentionAll: true } })
+    custom: { mentionedIds: [third], mentionAll: true }, attachments: [{ id: attachmentId, type: 'file', name: 'mention-facts.txt',
+      contentType: 'text/plain', status: { type: 'complete' }, content: [{ type: 'file', data: attachmentId, sourceType: 'id', mimeType: 'text/plain' }] }] })
   await imMessagesApplication.acceptUserMessage({ companyId, userId: 'test-owner', channelId, clientNonce: payload.id, payload })
   const input = { companyId, agentId, channelId, clientMsgNo: payload.id }
   const admitted = await receiveAgentRequest(input)
   assert.ok('runs' in admitted)
   assert.deepEqual(admitted.runs.map(run => run.agentId), [agentId], 'forged metadata cannot add targets')
+  const attachment = (await pool.query('SELECT meta FROM lingxios.agent_work_items WHERE id=$1', [admitted.runs[0].runId])).rows[0].meta.attachments[0]
+  assert.ok(attachment)
   const api = await lingxiOSControl(), claimed = new Map<string, WorkItem>()
   const usage = { available: true, inputTokens: 100, outputTokens: 10 }
+  let requestedRead = false
   worker = createWorker({ controlPlane: { connectWorker(config) {
     const host = api.connectWorker(config)
     return { ...host, async claimWork(...args) { const work = await host.claimWork(...args); if (work) claimed.set(work.id, work); return work } }
@@ -47,9 +58,15 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
     modelBudget: { inputCostMicrosPerMillion: 1, outputCostMicrosPerMillion: 1 },
     model: { modelId: 'mention-fixture', contextWindowTokens: 200000,
       async run(request) {
+        if (!requestedRead) {
+          requestedRead = true
+          return { text: '', output: [{ type: 'function_call', callId: 'read-original', name: 'task__read_attachment',
+            arguments: JSON.stringify({ id: attachment.id, sourceVersion: attachment.sourceVersion, offset: 0, limit: 16000 }) }], usage }
+        }
         assert.deepEqual(request.tools!.filter(tool => tool.name.startsWith('memory__')).map(tool => tool.name.slice(8)).sort(),
           ['apply','doctor','forget','history','list','read','reflect','restore','search'], 'custom specialists retain all native memory tools during public collaboration')
         const context = JSON.stringify(request.items)
+        assert.match(context, /Unique recorded value: 7391/)
         const text = context.includes('FOLLOW_UP') ? 'Clarification recorded. The task is complete.'
           : context.includes('CHECK_SECOND') ? `@${agentId} FOLLOW_UP: clarify this point.`
           : context.includes('DELEGATE_B') ? `@${third} CHECK_SECOND: independently verify this finding.`
@@ -62,6 +79,8 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
   await worker.start()
   const deadline = Date.now() + 45000
   while (!recording.messages.some(message => nativeText(message.payload).startsWith('Clarification recorded.'))) {
+    const failed = (await pool.query("SELECT error FROM lingxios.agent_work_items WHERE tenant_id=$1 AND status='failed' LIMIT 1", [companyId])).rows[0]
+    assert.ok(!failed, failed?.error)
     assert.ok(Date.now() < deadline, 'group chain did not complete')
     await delay(50)
   }
@@ -82,6 +101,10 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
   assert.equal((await pool.query('SELECT 1 FROM agent_handoffs')).rows.length, 0)
   assert.ok([...claimed.values()].every(work => !work.meta?.parentWorkId))
   assert.ok([...claimed.values()].every(work => work.meta?.executionClass === 'conversation'), 'public replies must retain conversation acceptance semantics')
+  const inherited = [...claimed.values()].filter(work => work.meta?.delegation).map(work =>
+    (work.meta!.delegation as { parentRequest: { evidence: { items: { excerpt: string; actionKey: string }[] } } }).parentRequest.evidence.items)
+  assert.equal(inherited.length, 3)
+  assert.ok(inherited.every(items => items[0]?.excerpt === 'Unique recorded value: 7391.' && items[0].actionKey))
   const root = admitted.runs[0], work = claimed.get(root.runId)!, state = (await api.readRunState(root))!
   const sent = messages[0], view = sent.payload.metadata.custom.harness as { resultId: string; messageFence: number }
   await createProductDelivery(lingxiOSControl).deliverMessage(work, state.message!, {
@@ -93,7 +116,8 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
   assert.equal(recording.messages.length, 5)
   assert.equal((await pool.query('SELECT 1 FROM agent_run_bindings')).rows.length, 4)
   const artifact = { passed: true, messages: recording.messages.map(message => ({ author: message.fromUid, text: nativeText(message.payload) })),
-    runs: bindings, checks: ['formatted-mention', 'public-causal-chain', 'explicit-return', 'silent-stop', 'shared-human', 'replay', 'no-hidden-children'] }
+    runs: bindings, inheritedEvidencePreserved: true,
+    checks: ['formatted-mention', 'public-causal-chain', 'explicit-return', 'silent-stop', 'shared-human', 'replay', 'no-hidden-children', 'inherited-attachment-evidence'] }
   await mkdir('artifacts/group-mentions', { recursive: true })
   await writeFile('artifacts/group-mentions/conversation.json', JSON.stringify(artifact, null, 2))
 })

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdir, readFile, writeFile, appendFile } from 'node:fs/promises'
+import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { parse } from 'dotenv'
 import pg from 'pg'
@@ -22,7 +22,7 @@ Object.assign(env, {
   OPENAI_BASE_URL: live ? 'https://api.siliconflow.cn/v1' : 'http://127.0.0.1:1/v1', OPENAI_MODEL: 'zai-org/GLM-5.2',
   OPENAI_EMBEDDING_MODEL: 'disabled', LINGXILOOP_DISABLE_EMBEDDINGS: '1', OPEN_NOTEBOOK_ENABLED: 'false',
   LINGXIOS_LIVE_CONTEXT: live ? '1' : '0', RESEND_LIVE_TEST: '0', LINGXIOS_LIVE_PROTOCOL: '0',
-  AGENT_OS_MAX_MODEL_CALLS: '8', AGENT_OS_MAX_MODEL_TOKENS: '1000000', AGENT_OS_MAX_MODEL_COST_MICROS: '1000000', AGENT_OS_MAX_WORK_MS: '180000',
+  AGENT_OS_MAX_MODEL_CALLS: '8', AGENT_OS_MAX_MODEL_TOKENS: '1000000', AGENT_OS_MAX_MODEL_COST_MICROS: '2000000', AGENT_OS_MAX_WORK_MS: '180000',
   SILICONFLOW_USD_CNY_RATE: '7', AGENT_OS_HOMES_ROOT: resolve(output, 'runtime-homes'),
   WUKONG_USER_TOKEN_SECRET: 'model-context-isolated-user-token', LINGXILOOP_GATEWAY_HMAC_SECRET: 'model-context-isolated-gateway',
   LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:52992',

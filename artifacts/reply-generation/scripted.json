@@ -1,9 +1,105 @@
 {
   "passed": true,
-  "runtime": "3.4.4",
+  "runtime": "3.4.7",
   "model": "zai-org/GLM-5.2",
   "realProvider": false,
   "results": [
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
     {
       "status": "succeeded",
       "delivered": true
@@ -15,19 +111,323 @@
   ],
   "requests": [
     {
-      "bytes": 226360,
+      "bytes": 226947,
       "stream": true
     },
     {
-      "bytes": 9238,
+      "bytes": 181686,
       "stream": false
     },
     {
-      "bytes": 433225,
+      "bytes": 433826,
       "stream": true
     },
     {
-      "bytes": 9239,
+      "bytes": 211166,
+      "stream": false
+    },
+    {
+      "bytes": 392091,
+      "stream": false
+    },
+    {
+      "bytes": 434517,
+      "stream": true
+    },
+    {
+      "bytes": 212000,
+      "stream": false
+    },
+    {
+      "bytes": 392940,
+      "stream": false
+    },
+    {
+      "bytes": 434497,
+      "stream": true
+    },
+    {
+      "bytes": 211941,
+      "stream": false
+    },
+    {
+      "bytes": 392920,
+      "stream": false
+    },
+    {
+      "bytes": 434536,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392959,
+      "stream": false
+    },
+    {
+      "bytes": 434536,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392959,
+      "stream": false
+    },
+    {
+      "bytes": 5817,
+      "stream": false
+    },
+    {
+      "bytes": 5813,
+      "stream": false
+    },
+    {
+      "bytes": 434536,
+      "stream": true
+    },
+    {
+      "bytes": 5814,
+      "stream": false
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392959,
+      "stream": false
+    },
+    {
+      "bytes": 434536,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392959,
+      "stream": false
+    },
+    {
+      "bytes": 434536,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392959,
+      "stream": false
+    },
+    {
+      "bytes": 434536,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392959,
+      "stream": false
+    },
+    {
+      "bytes": 434536,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392959,
+      "stream": false
+    },
+    {
+      "bytes": 434536,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392959,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
+      "stream": false
+    },
+    {
+      "bytes": 434537,
+      "stream": true
+    },
+    {
+      "bytes": 211980,
+      "stream": false
+    },
+    {
+      "bytes": 392961,
       "stream": false
     }
   ],
@@ -36,27 +436,670 @@
       "purpose": "lingxios.agent-turn",
       "status": "succeeded",
       "measured": true,
-      "input_tokens": 30000
+      "input_tokens": 30000,
+      "error": null
     },
     {
       "purpose": "lingxios.structured",
       "status": "succeeded",
       "measured": true,
-      "input_tokens": 30000
+      "input_tokens": 30000,
+      "error": null
     },
     {
       "purpose": "lingxios.agent-turn",
       "status": "succeeded",
       "measured": true,
-      "input_tokens": 30000
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
     },
     {
       "purpose": "lingxios.structured",
       "status": "succeeded",
       "measured": true,
-      "input_tokens": 30000
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
     }
   ],
+  "checkpoints": [
+    {
+      "epoch": 0,
+      "historyBytes": 61
+    },
+    {
+      "epoch": 1,
+      "historyBytes": 774
+    },
+    {
+      "epoch": 2,
+      "historyBytes": 715
+    },
+    {
+      "epoch": 3,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 4,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 5,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 6,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 7,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 8,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 9,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 10,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 11,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 12,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 13,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 14,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 15,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 16,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 17,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 18,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 19,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 20,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 21,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 22,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 23,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 24,
+      "historyBytes": 754
+    },
+    {
+      "epoch": 25,
+      "historyBytes": 754
+    }
+  ],
+  "continuityFactPreserved": true,
   "deliveredOncePerTurn": true,
   "reasoningDisabled": true,
   "transport": "recording WuKong fixture",
