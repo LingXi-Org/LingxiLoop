@@ -1,3 +1,4 @@
+import { ProjectSourceLibrary } from '@/features/knowledge/components/ProjectSourceLibrary'
 import { MemoDisplaySettings, useForumDisplay } from './memos/MemoDisplaySettings'
 import { checkAllTasks, uncheckAllTasks, toggleTaskAtLine } from './memos/markdown-task-actions'
 import { toast } from 'sonner'
@@ -27,13 +28,18 @@ import { ForumComposer } from './ForumComposer'
 import { ForumFiles } from './ForumContentFields'
 import { ForumDiscussion } from './ForumDiscussion'
 import { ForumSubmission } from './ForumSubmission'
-import { ForumSidebar, forumSections } from './ForumSidebar'
+import { ForumSidebar, forumSections, type ForumSection } from './ForumSidebar'
 import { MemoCard } from './memos/MemoCard'
 import { MemoContent } from './memos/MemoContent'
 
 const kindLabels = { share: '自由讨论',assignment: '作业' }
 
 export function CourseForum({ space }: { space: LearningSpace }) {
+  const [resources, setResources] = useState(false)
+  const selectSection = (section: ForumSection) => {
+    setResources(section === 'resources')
+    if (section !== 'resources') setKind(section)
+  }
   const [display,setDisplay]=useForumDisplay()
   const isMobile = useIsMobile()
   const userId = useAuth(state => state.user?.id)
@@ -50,7 +56,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   const canWrite = space.canSubmit || space.canEditContent
   useEffect(() => { setEditing(null); setReference(null); setDiscussion(null); setSubmission(null); setClosing(null); setTag(''); setSearch(''); setKind('all'); setArchived(false); setDate(undefined); setProperty('all') }, [space.courseId])
   const load = useCallback(async (offset = 0) => {
-    if (!space.courseId) return
+    if (!space.courseId || resources) return
     const request = ++epoch.current
     setLoading(true); setError('')
     try {
@@ -62,7 +68,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
       setNextOffset(result.nextOffset)
     } catch (reason) { if (request === epoch.current) setError(userFacingError(reason, '学习论坛暂时无法加载，请重试。')) }
     finally { if (request === epoch.current) setLoading(false) }
-  }, [space.courseId,kind,search,tag,archived,date,property,display.order,display.timeBasis])
+  }, [resources,space.courseId,kind,search,tag,archived,date,property,display.order,display.timeBasis])
   useEffect(() => {
     setItems([]); setNextOffset(null)
     const timer = setTimeout(() => { void load() }, 200)
@@ -93,7 +99,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
     if (useConversations.getState().projectId !== space.projectId || !useConversations.getState().list.some(item => item.id === agent.roomId)) throw new Error('404')
     useApp.getState().selectConversation(agent.roomId)
   })
-  const content = <div className="min-w-0 space-y-5">
+  const content = resources ? <ProjectSourceLibrary key={space.projectId} projectId={space.projectId} canManage={space.canEditContent} readOnly={!canWrite} uploadVisibility={space.perspective === 'teacher' ? 'PROJECT' : 'PRIVATE'} /> : <div className="min-w-0 space-y-5">
       {space.canEditContent && <div className="flex justify-end"><Button variant="outline" disabled={busy} onClick={openHomework}>发布作业</Button></div>}
         {canWrite && <ForumComposer key={`${space.companyId}:${userId}:${courseId}`} space={space} onCreated={() => { setKind('all'); setSearch(''); setTag(''); void load() }} />}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -151,14 +157,14 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   </div>
   if (isMobile) return <section className="flex h-full min-h-0 flex-col bg-background">
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
-      <ForumSidebar kind={kind} onSelect={setKind} date={date} onDate={setDate} />
+      <ForumSidebar kind={resources ? 'resources' : kind} onSelect={selectSection} date={date} onDate={setDate} />
       <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">{space.title} · 学习论坛</h1>
     </header>
     <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-3"><div data-ui-page="forum">{content}</div></div>
   </section>
   return <DashboardSectionFrame space={space} section="forum">
     <div data-ui-page="forum" className="mx-auto grid w-full max-w-6xl grid-cols-[16rem_minmax(0,1fr)] gap-6 @min-[56rem]/learning-grid:gap-10">
-      <ForumSidebar kind={kind} onSelect={setKind} date={date} onDate={setDate} />
+      <ForumSidebar kind={resources ? 'resources' : kind} onSelect={selectSection} date={date} onDate={setDate} />
       {content}
     </div>
   </DashboardSectionFrame>

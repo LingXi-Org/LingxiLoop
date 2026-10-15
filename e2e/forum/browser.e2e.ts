@@ -17,7 +17,7 @@ test('inline Memos lifecycle, drafts, moderation, assignments and private histor
   await expect(screen.getByRole('button','正式作业',{exact:true})).toBeHidden()
   const sections=screen.getByRole('navigation','学习论坛版块',{exact:true})
   await expect(sections.getByRole('button','自由讨论',{exact:true})).toBeVisible()
-  await expect(sections.getByRole('button','资料',{exact:true})).toBeHidden()
+  await expect(sections.getByRole('button','资料',{exact:true})).toBeVisible()
   expect(await browser.evaluate(()=>parseFloat(getComputedStyle(document.querySelector('[aria-label="搜索学习论坛"]')!).paddingInlineStart))).toBeGreaterThanOrEqual(36)
   await app.screenshot('student-inline-light')
   await screen.getByRole('button','内容流显示设置',{exact:true}).tap()

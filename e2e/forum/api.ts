@@ -9,6 +9,8 @@ import { storage } from '../../server/src/storage'
 
 assert.equal(new URL(process.env.DATABASE_URL!).pathname, '/lingxiloop_forum_test')
 assert.equal(process.env.NODE_ENV, 'test')
+// Enable source HTTP operations; no external ingestion worker runs in this fixture.
+process.env.OPEN_NOTEBOOK_ENABLED = 'true'
 await ensureSchemaOnce()
 await resetAllTables()
 await ensureEducationPlan(pool)
@@ -32,6 +34,14 @@ app.get('/api/fixture-role/:role', (req,res) => {
   res.setHeader('Set-Cookie', `forum-role=${req.params.role}; Path=/; SameSite=Strict; HttpOnly`)
   res.json({ role: req.params.role })
 })
+let failSourceUpload = false
+app.post('/api/fixture-fail-source-upload', (_req, res) => { failSourceUpload = true; res.sendStatus(200) })
+app.use((req, res, next) => {
+  if (failSourceUpload && req.method === 'POST' && req.path.endsWith('/sources/upload/presign')) {
+    failSourceUpload = false; res.status(503).json({ error: 'Temporary upload failure' }); return
+  }
+  next()
+})
 let failPost=false
 app.post('/api/fixture-fail-next-post',(_req,res)=>{failPost=true;res.sendStatus(200)})
 app.use((req,res,next)=>{if(failPost&&req.method==='POST'&&/^\/api\/courses\/[^/]+\/forum$/.test(req.path)){failPost=false;res.status(503).json({error:'Temporary fixture failure'});return}next()})
@@ -43,6 +53,10 @@ const actors = new Map(await Promise.all(['teacher','student','peer'].map(async 
 app.use((req,res,next) => {
   const role = /forum-role=(teacher|student|peer)/.exec(req.headers.cookie ?? '')?.[1] ?? 'teacher'
   if (req.url === '/api/session') req.url = '/api/auth/me'
+  if (req.path.endsWith('/sources/upload/presign')) {
+    const json = res.json.bind(res)
+    res.json = value => json(value?.uploadUrl ? { ...value, uploadUrl: `/api/fixture-object?key=${encodeURIComponent(decodeURIComponent(new URL(value.uploadUrl).pathname.slice('/upload/'.length)))}` } : value)
+  }
   if (req.path === '/api/uploads/presign') {
     const json = res.json.bind(res)
     res.json = value => json(value?.key ? { ...value, uploadUrl: `/api/fixture-object?key=${encodeURIComponent(value.key)}` } : value)

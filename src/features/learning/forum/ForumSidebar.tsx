@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeftIcon, ClipboardListIcon, MenuIcon, MessageCircleIcon } from 'lucide-react'
+import { ArrowLeftIcon, FolderOpenIcon, ClipboardListIcon, MenuIcon, MessageCircleIcon } from 'lucide-react'
 import { zhCN } from 'react-day-picker/locale'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -8,13 +8,16 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { useApp } from '@/stores/app'
 import type { ForumFilter } from './contracts'
 
+export type ForumSection = ForumFilter | 'resources'
+
 export const forumSections = [
   { kind: 'all', label: '全部内容', icon: MessageCircleIcon },
   { kind: 'assignment', label: '作业', icon: ClipboardListIcon },
+  { kind: 'resources', label: '资料', icon: FolderOpenIcon },
   { kind: 'share', label: '自由讨论', icon: MessageCircleIcon },
-] satisfies Array<{ kind: ForumFilter; label: string; icon: typeof MessageCircleIcon }>
+] satisfies Array<{ kind: ForumSection; label: string; icon: typeof MessageCircleIcon }>
 
-export function ForumSidebar({ kind, onSelect, date, onDate }: { kind: ForumFilter; onSelect(kind: ForumFilter): void; date?: Date; onDate(date: Date | undefined): void }) {
+export function ForumSidebar({ kind, onSelect, date, onDate }: { kind: ForumSection; onSelect(kind: ForumSection): void; date?: Date; onDate(date: Date | undefined): void }) {
   const isMobile = useIsMobile()
   const [open, setOpen] = useState(false)
   const content = <div className="space-y-5">
@@ -24,10 +27,10 @@ export function ForumSidebar({ kind, onSelect, date, onDate }: { kind: ForumFilt
         {forumSections.map(({ kind: value, label, icon: Icon }) => <Button key={value} variant={kind === value ? 'secondary' : 'ghost'} aria-pressed={kind === value} className="h-11 w-full justify-start gap-2.5" onClick={() => { onSelect(value); setOpen(false) }}><Icon aria-hidden="true" />{label}</Button>)}
       </div>
     </nav>
-    <section aria-label="日历">
+    {kind !== 'resources' && <section aria-label="日历">
       <Calendar mode="single" selected={date} onSelect={onDate} locale={zhCN} className="rounded-lg border" labels={{ labelNext: () => '下个月', labelPrevious: () => '上个月' }} />
       {date && <Button variant="ghost" size="sm" onClick={() => onDate(undefined)}>清除日期筛选</Button>}
-    </section>
+    </section>}
   </div>
   if (isMobile) return <Sheet open={open} onOpenChange={setOpen}>
     <SheetTrigger asChild><Button variant="ghost" size="icon" className="size-11" aria-label="打开学习论坛导航"><MenuIcon aria-hidden="true" /></Button></SheetTrigger>
