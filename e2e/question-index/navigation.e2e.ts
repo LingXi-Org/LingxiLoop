@@ -108,6 +108,31 @@ test('the latest question stays put as its short answer starts streaming', async
   await app.screenshot('question-index-resume-following')
 })
 
+test('imported Codex waveform is centered, magnifies neighbours and navigates by pointer', async ({ app, browser, screen }) => {
+  await app.open('/e2e/question-index/index.html?theme=dark')
+  await expect(browser.locator('[data-question-id]')).toHaveCount(40)
+  await expect(browser.locator('[data-question-index]')).toHaveAttribute('data-source', 'dsh-turn-scrubber')
+  const geometry = await browser.evaluate(() => {
+    const markers = [...document.querySelectorAll('[data-question-id]')]
+    const first = markers[0].getBoundingClientRect(), last = markers.at(-1)!.getBoundingClientRect()
+    const rail = markers[0].parentElement!.parentElement!.getBoundingClientRect()
+    return { centered: Math.abs((first.top + last.bottom) / 2 - (rail.top + rail.bottom) / 2), height: last.bottom - first.top }
+  })
+  expect(geometry.centered).toBeLessThan(2)
+  expect(geometry.height).toBe(240)
+  const target = browser.locator('[data-question-id="q-40"]')
+  await target.hover()
+  await expect(screen.getByRole('tooltip')).toContainText('第40次提问')
+  await expect.poll(() => browser.evaluate(() => {
+    const widths = [40, 39, 38, 30].map(id => document.querySelector(`[data-question-id="q-${id}"] span`)!.getBoundingClientRect().width)
+    return widths[0] > widths[1] && widths[1] > widths[2] && widths[2] > widths[3] && widths[0] > 14
+  })).toBe(true)
+  await app.screenshot('question-index-upstream-waveform')
+  await target.tap()
+  await expect(target).toHaveAttribute('aria-current', 'location')
+  await expect.poll(() => browser.evaluate(() => Math.abs(document.querySelector('[data-msg-id="q-40"]')!.getBoundingClientRect().top - document.querySelector('[data-chat-viewport]')!.getBoundingClientRect().top - 16))).toBeLessThan(2)
+})
+
 if (process.env.E2E_REDUCED_MOTION === '1') {
   test('reduced motion jumps without animation and retains a visible keyboard focus', async ({ app, browser }) => {
     const caseId = crypto.randomUUID()
@@ -122,6 +147,7 @@ if (process.env.E2E_REDUCED_MOTION === '1') {
     expect(await browser.evaluate(() => Math.abs(document.querySelector('[data-msg-id="q-30"]')!.getBoundingClientRect().top - document.querySelector('[data-chat-viewport]')!.getBoundingClientRect().top - 16))).toBeLessThan(2)
     await expect(target).toHaveAttribute('aria-current', 'location')
     expect(await browser.evaluate(() => getComputedStyle(document.activeElement!).outlineStyle)).toBe('solid')
+    expect(await browser.evaluate(() => [...document.querySelectorAll('[data-question-id], [data-question-id] span')].every(element => getComputedStyle(element).transitionDuration === '0s'))).toBe(true)
     await app.screenshot('question-index-reduced-motion-keyboard')
     } finally { resetMedia() }
   })

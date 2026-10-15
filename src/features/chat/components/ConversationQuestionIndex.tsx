@@ -1,6 +1,7 @@
 import { type ThreadMessage, useAuiState } from '@assistant-ui/react'
-import { type RefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { type RefObject, useEffect, useMemo, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { TurnRail } from '@/components/vendor/dsh-turn-scrubber/TurnRail'
 
 function questionPreview(message: ThreadMessage) {
   const text = message.content.flatMap(part => part.type === 'text' ? [part.text] : []).join(' ').replace(/\s+/g, ' ').trim()
@@ -27,7 +28,6 @@ export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoading
   const questions = useMemo(() => JSON.parse(questionKey) as { id: string; preview: string }[], [questionKey])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
-  const railRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const viewport = viewportRef.current
@@ -55,20 +55,9 @@ export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoading
     return () => { cancelAnimationFrame(frame); observer.disconnect(); viewport.removeEventListener('scroll', schedule) }
   }, [questions, viewportRef])
 
-  useEffect(() => {
-    const rail = railRef.current
-    // Keep the current marker in view without moving the document, stealing
-    // focus, or fighting someone who is browsing the rail with the keyboard.
-    if (!rail || rail.contains(document.activeElement)) return
-    const marker = rail.querySelector<HTMLElement>('[aria-current="location"]')
-    if (!marker) return
-    const bounds = marker.getBoundingClientRect(), container = rail.getBoundingClientRect()
-    if (bounds.top < container.top) rail.scrollTop -= container.top - bounds.top
-    else if (bounds.bottom > container.bottom) rail.scrollTop += bounds.bottom - container.bottom
-  }, [activeId])
-
   if (!questions.length && !hasMoreOlder) return null
-  return <nav aria-label="提问索引" className="chat-question-index" data-question-index>
+  return <TurnRail lines={questions.map(question => ({ id: question.id, text: question.preview }))}
+    activeId={activeId} onNavigate={onNavigate} before={<>
     {hasMoreOlder && <Tooltip>
       <TooltipTrigger asChild>
         <button type="button" className="chat-question-index-button shrink-0" aria-label={loadFailed ? '加载失败，重试更早的提问' : '加载更早的提问'}
@@ -78,27 +67,6 @@ export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoading
       </TooltipTrigger>
       <TooltipContent side="right" sideOffset={8} className="motion-reduce:animate-none">{isLoadingOlder ? '正在加载…' : loadFailed ? '加载失败，请重试' : '加载更早的提问'}</TooltipContent>
     </Tooltip>}
-    <div ref={railRef} className="chat-question-index-list" onKeyDown={event => {
-      if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return
-      const buttons = [...event.currentTarget.querySelectorAll<HTMLButtonElement>('button')]
-      const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
-      const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : Math.max(0, Math.min(buttons.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))
-      event.preventDefault()
-      buttons[next]?.focus()
-    }}>
-      {questions.map((question, index) => <Tooltip key={question.id}>
-        <TooltipTrigger asChild>
-          <button type="button" className="chat-question-index-button" data-question-id={question.id}
-            aria-label={`提问 ${index + 1}：${question.preview}`} aria-current={question.id === activeId ? 'location' : undefined}
-            onClick={() => onNavigate(question.id)}>
-            <span className="chat-question-index-dash" aria-hidden="true" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} collisionPadding={12} className="max-w-[min(18rem,70vw)] break-words motion-reduce:animate-none">
-          {question.preview}
-        </TooltipContent>
-      </Tooltip>)}
-    </div>
     <span className="sr-only" role="status">{isLoadingOlder ? '正在加载更早的提问' : loadFailed ? '加载失败，请重试' : ''}</span>
-  </nav>
+    </>} />
 }

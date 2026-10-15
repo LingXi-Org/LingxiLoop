@@ -1,7 +1,7 @@
 {
   "schemaVersion": "report-1",
   "run": {
-    "id": "01a13f3b-a9bc-71e4-bfd7-31a6a0cf67bb",
+    "id": "01a1408a-f6f4-7d80-83f5-593ba7f2ddca",
     "specVersion": "0.1",
     "runner": {
       "name": "e2e",
@@ -9,8 +9,8 @@
     },
     "status": "passed",
     "exitCode": 0,
-    "startedAt": "2026-10-15T11:03:57.880Z",
-    "finishedAt": "2026-10-15T11:04:45.060Z",
+    "startedAt": "2026-10-15T17:10:11.959Z",
+    "finishedAt": "2026-10-15T17:11:06.579Z",
     "project": {
       "id": "lingxiloop-workbench-visual",
       "configDigest": "9d24fe6711c29a9107541e333f52a5b4a7d5d61dea02fa7c649206a901794e01"
@@ -23,8 +23,8 @@
       "runtime": "node v24.19.0"
     },
     "vcs": {
-      "commit": "24ca801c1088465006dd07a20cabc6a1f93ed36a",
-      "branch": "feat/145-question-index",
+      "commit": "d17b014c98f5930a8dcf9df5c719dd9a5e71e08e",
+      "branch": "feat/145-upstream-chat-minimap",
       "dirty": true
     },
     "targets": [
@@ -514,53 +514,53 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2",
+            "id": "01a1408b-9afc-7a93-aef4-fa471ff33809",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-15T11:04:32.297Z",
-            "durationMs": 6620,
+            "startedAt": "2026-10-15T17:10:53.436Z",
+            "durationMs": 6744,
             "artifacts": [
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:0",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:7"
+                  "stepId": "01a1408b-9afc-7a93-aef4-fa471ff33809:7"
                 },
                 "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-5a1d02c6/default/attempt-0/screenshots/001-chat-pending-1440.png",
-                "size": 180774,
-                "sha256": "8ccf288f12d11e2010f79d498bada974afcadd343fcb007c26a3b1e90f39f928"
+                "size": 180658,
+                "sha256": "84af84a6c7acb19c81c3821d903f852e1da9f0bf22154c88882cbcdb937682ef"
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:1",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:artifact:1",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:21"
+                  "stepId": "01a1408b-9afc-7a93-aef4-fa471ff33809:21"
                 },
                 "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-5a1d02c6/default/attempt-0/screenshots/002-chat-canvas-scrollbar-1440.png",
-                "size": 159133,
-                "sha256": "b5efa36dbb759c91fcde4ffe9de0f1df74118f6294b2920b5dea8e54f7a61084"
+                "size": 158985,
+                "sha256": "50295a3ed3ce6fecb1f701877dcddebe9248a1dbb0a7a72ee133b7fd5c8e0691"
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:2",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:artifact:2",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:31"
+                  "stepId": "01a1408b-9afc-7a93-aef4-fa471ff33809:31"
                 },
                 "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-5a1d02c6/default/attempt-0/screenshots/003-chat-timeout-preserved-1440.png",
-                "size": 163811,
-                "sha256": "0516a777f569e1c5e302eae0fd6e1981a1b0aeb821004d1ed6ee75e1667330a7"
+                "size": 164557,
+                "sha256": "6571f614949f1d1c5b18e82c4f39e3dafb6e1ed90a7250c69ba2df351b232221"
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:3",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:artifact:3",
                 "kind": "trace",
                 "mediaType": "application/zip",
                 "redaction": "not-required",
@@ -568,21 +568,21 @@
                   "kind": "attempt"
                 },
                 "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-5a1d02c6/default/attempt-0/trace/trace.zip",
-                "size": 8538053,
-                "sha256": "e5aec6688fc4a620b7fdc0e45a57612b3ad2b67ecfd6bb72990fb1715d12ed2e"
+                "size": 8407842,
+                "sha256": "c3d522e31f8454faca997e492377fea04f40821dd9e186d537f0ce6cb06ee8e5"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:0",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:0",
                 "index": 0,
                 "kind": "resource",
                 "api": "browser.setViewport",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:32.369Z",
+                "startedAt": "2026-10-15T17:10:53.515Z",
                 "durationMs": 1,
                 "events": [],
                 "artifacts": [],
@@ -598,14 +598,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:1",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:1",
                 "index": 1,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-regressions",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:32.370Z",
-                "durationMs": 2413,
+                "startedAt": "2026-10-15T17:10:53.516Z",
+                "durationMs": 2442,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -615,14 +615,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:2",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:2",
                 "index": 2,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:34.784Z",
-                "durationMs": 130,
+                "startedAt": "2026-10-15T17:10:55.960Z",
+                "durationMs": 118,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -632,14 +632,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:3",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [role=\\\"status\\\"][aria-label=\\\"发送中\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:34.915Z",
-                "durationMs": 27,
+                "startedAt": "2026-10-15T17:10:56.079Z",
+                "durationMs": 20,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -649,14 +649,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:4",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:4",
                 "index": 4,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [data-message-footer] svg\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:34.942Z",
-                "durationMs": 34,
+                "startedAt": "2026-10-15T17:10:56.100Z",
+                "durationMs": 35,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -666,14 +666,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:5",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:5",
                 "index": 5,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:34.977Z",
-                "durationMs": 12,
+                "startedAt": "2026-10-15T17:10:56.136Z",
+                "durationMs": 22,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -683,14 +683,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:6",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:6",
                 "index": 6,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-msg-id] time\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:34.990Z",
-                "durationMs": 29,
+                "startedAt": "2026-10-15T17:10:56.159Z",
+                "durationMs": 27,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -700,17 +700,17 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:7",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:7",
                 "index": 7,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "chat-pending-1440",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.020Z",
+                "startedAt": "2026-10-15T17:10:56.186Z",
                 "durationMs": 283,
                 "events": [],
                 "artifacts": [
-                  "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:0"
+                  "01a1408b-9afc-7a93-aef4-fa471ff33809:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/visual/chat-regressions.e2e.ts",
@@ -719,14 +719,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:8",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:8",
                 "index": 8,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.303Z",
-                "durationMs": 60,
+                "startedAt": "2026-10-15T17:10:56.469Z",
+                "durationMs": 49,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -736,14 +736,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:9",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:9",
                 "index": 9,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [role=\\\"status\\\"][aria-label=\\\"已送达\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.364Z",
-                "durationMs": 45,
+                "startedAt": "2026-10-15T17:10:56.518Z",
+                "durationMs": 81,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -753,14 +753,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:10",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:10",
                 "index": 10,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] svg.lucide-check-check\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.409Z",
-                "durationMs": 21,
+                "startedAt": "2026-10-15T17:10:56.600Z",
+                "durationMs": 39,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -770,14 +770,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:11",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:11",
                 "index": 11,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.431Z",
-                "durationMs": 21,
+                "startedAt": "2026-10-15T17:10:56.640Z",
+                "durationMs": 29,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -787,14 +787,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:12",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:12",
                 "index": 12,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.452Z",
-                "durationMs": 19,
+                "startedAt": "2026-10-15T17:10:56.669Z",
+                "durationMs": 64,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -804,14 +804,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:13",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:13",
                 "index": 13,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.472Z",
-                "durationMs": 227,
+                "startedAt": "2026-10-15T17:10:56.734Z",
+                "durationMs": 138,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -821,14 +821,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:14",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:14",
                 "index": 14,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.699Z",
-                "durationMs": 24,
+                "startedAt": "2026-10-15T17:10:56.872Z",
+                "durationMs": 34,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -838,14 +838,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:15",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:15",
                 "index": 15,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.724Z",
-                "durationMs": 15,
+                "startedAt": "2026-10-15T17:10:56.906Z",
+                "durationMs": 24,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -855,14 +855,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:16",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:16",
                 "index": 16,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "getByRole(\"button\", name: \"打开画布预览\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.740Z",
-                "durationMs": 247,
+                "startedAt": "2026-10-15T17:10:56.931Z",
+                "durationMs": 242,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -872,14 +872,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:17",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:17",
                 "index": 17,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByRole(\"button\", name: \"收起画布预览\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:35.987Z",
-                "durationMs": 40,
+                "startedAt": "2026-10-15T17:10:57.174Z",
+                "durationMs": 57,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -889,14 +889,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:18",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:18",
                 "index": 18,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.029Z",
-                "durationMs": 21,
+                "startedAt": "2026-10-15T17:10:57.232Z",
+                "durationMs": 16,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -906,14 +906,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:19",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:19",
                 "index": 19,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.051Z",
-                "durationMs": 15,
+                "startedAt": "2026-10-15T17:10:57.249Z",
+                "durationMs": 17,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -923,14 +923,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:20",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:20",
                 "index": 20,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.067Z",
-                "durationMs": 27,
+                "startedAt": "2026-10-15T17:10:57.266Z",
+                "durationMs": 15,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -940,17 +940,17 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:21",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:21",
                 "index": 21,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "chat-canvas-scrollbar-1440",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.094Z",
-                "durationMs": 299,
+                "startedAt": "2026-10-15T17:10:57.283Z",
+                "durationMs": 309,
                 "events": [],
                 "artifacts": [
-                  "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:1"
+                  "01a1408b-9afc-7a93-aef4-fa471ff33809:artifact:1"
                 ],
                 "source": {
                   "file": "e2e/visual/chat-regressions.e2e.ts",
@@ -959,14 +959,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:22",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:22",
                 "index": 22,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "getByRole(\"button\", name: \"收起画布预览\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.394Z",
-                "durationMs": 225,
+                "startedAt": "2026-10-15T17:10:57.593Z",
+                "durationMs": 287,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -976,14 +976,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:23",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:23",
                 "index": 23,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.619Z",
-                "durationMs": 101,
+                "startedAt": "2026-10-15T17:10:57.880Z",
+                "durationMs": 141,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -993,14 +993,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:24",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:24",
                 "index": 24,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.720Z",
-                "durationMs": 39,
+                "startedAt": "2026-10-15T17:10:58.023Z",
+                "durationMs": 44,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1010,14 +1010,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:25",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:25",
                 "index": 25,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.761Z",
-                "durationMs": 24,
+                "startedAt": "2026-10-15T17:10:58.067Z",
+                "durationMs": 33,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1027,14 +1027,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:26",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:26",
                 "index": 26,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"] [role=\\\"alert\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.786Z",
-                "durationMs": 26,
+                "startedAt": "2026-10-15T17:10:58.100Z",
+                "durationMs": 18,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1044,14 +1044,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:27",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:27",
                 "index": 27,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.812Z",
-                "durationMs": 35,
+                "startedAt": "2026-10-15T17:10:58.119Z",
+                "durationMs": 41,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1061,14 +1061,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:28",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:28",
                 "index": 28,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.848Z",
-                "durationMs": 27,
+                "startedAt": "2026-10-15T17:10:58.160Z",
+                "durationMs": 49,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1078,14 +1078,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:29",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:29",
                 "index": 29,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.876Z",
-                "durationMs": 23,
+                "startedAt": "2026-10-15T17:10:58.209Z",
+                "durationMs": 33,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1095,14 +1095,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:30",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:30",
                 "index": 30,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.899Z",
-                "durationMs": 16,
+                "startedAt": "2026-10-15T17:10:58.242Z",
+                "durationMs": 23,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1112,17 +1112,17 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:31",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:31",
                 "index": 31,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "chat-timeout-preserved-1440",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:36.915Z",
-                "durationMs": 235,
+                "startedAt": "2026-10-15T17:10:58.265Z",
+                "durationMs": 223,
                 "events": [],
                 "artifacts": [
-                  "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:2"
+                  "01a1408b-9afc-7a93-aef4-fa471ff33809:artifact:2"
                 ],
                 "source": {
                   "file": "e2e/visual/chat-regressions.e2e.ts",
@@ -1131,14 +1131,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:32",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:32",
                 "index": 32,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:37.151Z",
-                "durationMs": 81,
+                "startedAt": "2026-10-15T17:10:58.488Z",
+                "durationMs": 96,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1148,14 +1148,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:33",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:33",
                 "index": 33,
                 "kind": "assertion",
                 "api": "expect.not.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:37.235Z",
-                "durationMs": 1094,
+                "startedAt": "2026-10-15T17:10:58.585Z",
+                "durationMs": 1089,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1165,14 +1165,14 @@
                 }
               },
               {
-                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:34",
+                "id": "01a1408b-9afc-7a93-aef4-fa471ff33809:34",
                 "index": 34,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"] [role=\\\"alert\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:38.329Z",
-                "durationMs": 23,
+                "startedAt": "2026-10-15T17:10:59.674Z",
+                "durationMs": 27,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1208,53 +1208,53 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae",
+            "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-15T11:04:38.918Z",
-            "durationMs": 6081,
+            "startedAt": "2026-10-15T17:11:00.181Z",
+            "durationMs": 6338,
             "artifacts": [
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:0",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:8"
+                  "stepId": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:8"
                 },
                 "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-f4e2923a/default/attempt-0/screenshots/001-chat-pending-390.png",
-                "size": 60566,
-                "sha256": "b5d0555f3fdd806c56fe2bbafcfd238aebb2bdf76ee27227a572bc19045cbe53"
+                "size": 60439,
+                "sha256": "a9df831afe481f0b5e002da93a38b5af2084695c524bd13a1713979fd0dabe44"
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:1",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:artifact:1",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:22"
+                  "stepId": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:22"
                 },
                 "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-f4e2923a/default/attempt-0/screenshots/002-chat-canvas-scrollbar-390.png",
-                "size": 46464,
-                "sha256": "5b344c53845e7d6712aef3d367edb79d7f8b9105a98a0251b4b3ef80b05cc960"
+                "size": 46315,
+                "sha256": "be2eac0bacb561006dd8f9820333d5ae109df0a6b9dccb3de1b6b8c43480a7db"
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:2",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:artifact:2",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:32"
+                  "stepId": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:32"
                 },
                 "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-f4e2923a/default/attempt-0/screenshots/003-chat-timeout-preserved-390.png",
-                "size": 59236,
-                "sha256": "3d21258ab3691cab431e315c35b003a8c70d3518946e11a476e99bb8c5bae3de"
+                "size": 59024,
+                "sha256": "94a2a4f82d257b4fc0ce78e9cfdd9c8416f2064e744865885d877a628d1ed214"
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:3",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:artifact:3",
                 "kind": "trace",
                 "mediaType": "application/zip",
                 "redaction": "not-required",
@@ -1262,21 +1262,21 @@
                   "kind": "attempt"
                 },
                 "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-f4e2923a/default/attempt-0/trace/trace.zip",
-                "size": 4526853,
-                "sha256": "02da2958979f91a7d81033c3d87110a185dc55c3e54f1931175f510bdd6057f2"
+                "size": 4447242,
+                "sha256": "ab4682d09722ee1080500ab096be50570ff25fd4f3426c379e24a8ff47bfbbaf"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:0",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:0",
                 "index": 0,
                 "kind": "resource",
                 "api": "browser.setViewport",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:38.934Z",
+                "startedAt": "2026-10-15T17:11:00.202Z",
                 "durationMs": 0,
                 "events": [],
                 "artifacts": [],
@@ -1292,14 +1292,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:1",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:1",
                 "index": 1,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-regressions",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:38.934Z",
-                "durationMs": 2176,
+                "startedAt": "2026-10-15T17:11:00.202Z",
+                "durationMs": 2339,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1309,14 +1309,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:2",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:2",
                 "index": 2,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:41.110Z",
-                "durationMs": 815,
+                "startedAt": "2026-10-15T17:11:02.542Z",
+                "durationMs": 924,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1326,14 +1326,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:3",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:41.927Z",
-                "durationMs": 19,
+                "startedAt": "2026-10-15T17:11:03.466Z",
+                "durationMs": 43,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1343,14 +1343,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:4",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:4",
                 "index": 4,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [role=\\\"status\\\"][aria-label=\\\"发送中\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:41.946Z",
-                "durationMs": 23,
+                "startedAt": "2026-10-15T17:11:03.512Z",
+                "durationMs": 15,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1360,13 +1360,13 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:5",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:5",
                 "index": 5,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [data-message-footer] svg\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:41.971Z",
+                "startedAt": "2026-10-15T17:11:03.527Z",
                 "durationMs": 16,
                 "events": [],
                 "artifacts": [],
@@ -1377,14 +1377,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:6",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:6",
                 "index": 6,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:41.988Z",
-                "durationMs": 18,
+                "startedAt": "2026-10-15T17:11:03.543Z",
+                "durationMs": 13,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1394,13 +1394,13 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:7",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:7",
                 "index": 7,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-msg-id] time\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.007Z",
+                "startedAt": "2026-10-15T17:11:03.556Z",
                 "durationMs": 19,
                 "events": [],
                 "artifacts": [],
@@ -1411,17 +1411,17 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:8",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:8",
                 "index": 8,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "chat-pending-390",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.026Z",
-                "durationMs": 131,
+                "startedAt": "2026-10-15T17:11:03.576Z",
+                "durationMs": 134,
                 "events": [],
                 "artifacts": [
-                  "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:0"
+                  "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/visual/chat-regressions.e2e.ts",
@@ -1430,14 +1430,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:9",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:9",
                 "index": 9,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.159Z",
-                "durationMs": 60,
+                "startedAt": "2026-10-15T17:11:03.710Z",
+                "durationMs": 46,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1447,14 +1447,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:10",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:10",
                 "index": 10,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [role=\\\"status\\\"][aria-label=\\\"已送达\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.219Z",
-                "durationMs": 21,
+                "startedAt": "2026-10-15T17:11:03.756Z",
+                "durationMs": 20,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1464,14 +1464,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:11",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:11",
                 "index": 11,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] svg.lucide-check-check\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.240Z",
-                "durationMs": 13,
+                "startedAt": "2026-10-15T17:11:03.776Z",
+                "durationMs": 14,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1481,14 +1481,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:12",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:12",
                 "index": 12,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.253Z",
-                "durationMs": 16,
+                "startedAt": "2026-10-15T17:11:03.790Z",
+                "durationMs": 14,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1498,14 +1498,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:13",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:13",
                 "index": 13,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.269Z",
-                "durationMs": 47,
+                "startedAt": "2026-10-15T17:11:03.805Z",
+                "durationMs": 48,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1515,14 +1515,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:14",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:14",
                 "index": 14,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.317Z",
-                "durationMs": 63,
+                "startedAt": "2026-10-15T17:11:03.853Z",
+                "durationMs": 68,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1532,14 +1532,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:15",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:15",
                 "index": 15,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.380Z",
-                "durationMs": 184,
+                "startedAt": "2026-10-15T17:11:03.921Z",
+                "durationMs": 71,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1549,14 +1549,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:16",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:16",
                 "index": 16,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.564Z",
-                "durationMs": 11,
+                "startedAt": "2026-10-15T17:11:03.992Z",
+                "durationMs": 27,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1566,14 +1566,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:17",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:17",
                 "index": 17,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "getByRole(\"button\", name: \"打开画布预览\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.576Z",
-                "durationMs": 191,
+                "startedAt": "2026-10-15T17:11:04.020Z",
+                "durationMs": 198,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1583,14 +1583,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:18",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:18",
                 "index": 18,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByRole(\"button\", name: \"收起画布预览\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.768Z",
-                "durationMs": 22,
+                "startedAt": "2026-10-15T17:11:04.218Z",
+                "durationMs": 30,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1600,14 +1600,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:19",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:19",
                 "index": 19,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.791Z",
-                "durationMs": 12,
+                "startedAt": "2026-10-15T17:11:04.248Z",
+                "durationMs": 11,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1617,14 +1617,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:20",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:20",
                 "index": 20,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.803Z",
-                "durationMs": 17,
+                "startedAt": "2026-10-15T17:11:04.259Z",
+                "durationMs": 11,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1634,14 +1634,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:21",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:21",
                 "index": 21,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.820Z",
-                "durationMs": 16,
+                "startedAt": "2026-10-15T17:11:04.271Z",
+                "durationMs": 19,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1651,17 +1651,17 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:22",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:22",
                 "index": 22,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "chat-canvas-scrollbar-390",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.836Z",
-                "durationMs": 114,
+                "startedAt": "2026-10-15T17:11:04.290Z",
+                "durationMs": 138,
                 "events": [],
                 "artifacts": [
-                  "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:1"
+                  "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:artifact:1"
                 ],
                 "source": {
                   "file": "e2e/visual/chat-regressions.e2e.ts",
@@ -1670,14 +1670,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:23",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:23",
                 "index": 23,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "getByRole(\"button\", name: \"收起画布预览\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:42.951Z",
-                "durationMs": 261,
+                "startedAt": "2026-10-15T17:11:04.428Z",
+                "durationMs": 272,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1687,14 +1687,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:24",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:24",
                 "index": 24,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.212Z",
-                "durationMs": 103,
+                "startedAt": "2026-10-15T17:11:04.700Z",
+                "durationMs": 104,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1704,14 +1704,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:25",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:25",
                 "index": 25,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.315Z",
-                "durationMs": 30,
+                "startedAt": "2026-10-15T17:11:04.805Z",
+                "durationMs": 26,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1721,14 +1721,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:26",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:26",
                 "index": 26,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.345Z",
-                "durationMs": 18,
+                "startedAt": "2026-10-15T17:11:04.831Z",
+                "durationMs": 13,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1738,14 +1738,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:27",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:27",
                 "index": 27,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"] [role=\\\"alert\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.364Z",
-                "durationMs": 11,
+                "startedAt": "2026-10-15T17:11:04.845Z",
+                "durationMs": 20,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1755,14 +1755,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:28",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:28",
                 "index": 28,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.375Z",
-                "durationMs": 41,
+                "startedAt": "2026-10-15T17:11:04.865Z",
+                "durationMs": 23,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1772,14 +1772,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:29",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:29",
                 "index": 29,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.417Z",
-                "durationMs": 13,
+                "startedAt": "2026-10-15T17:11:04.888Z",
+                "durationMs": 23,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1789,14 +1789,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:30",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:30",
                 "index": 30,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.430Z",
-                "durationMs": 10,
+                "startedAt": "2026-10-15T17:11:04.912Z",
+                "durationMs": 14,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1806,14 +1806,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:31",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:31",
                 "index": 31,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.440Z",
-                "durationMs": 12,
+                "startedAt": "2026-10-15T17:11:04.926Z",
+                "durationMs": 9,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1823,17 +1823,17 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:32",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:32",
                 "index": 32,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "chat-timeout-preserved-390",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.453Z",
-                "durationMs": 112,
+                "startedAt": "2026-10-15T17:11:04.935Z",
+                "durationMs": 150,
                 "events": [],
                 "artifacts": [
-                  "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:2"
+                  "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:artifact:2"
                 ],
                 "source": {
                   "file": "e2e/visual/chat-regressions.e2e.ts",
@@ -1842,14 +1842,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:33",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:33",
                 "index": 33,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.565Z",
-                "durationMs": 70,
+                "startedAt": "2026-10-15T17:11:05.086Z",
+                "durationMs": 86,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1859,14 +1859,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:34",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:34",
                 "index": 34,
                 "kind": "assertion",
                 "api": "expect.not.toContainText",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:43.636Z",
-                "durationMs": 1083,
+                "startedAt": "2026-10-15T17:11:05.172Z",
+                "durationMs": 1038,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1876,14 +1876,14 @@
                 }
               },
               {
-                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:35",
+                "id": "01a1408b-b555-7fca-9d90-15f8e3c0d3f1:35",
                 "index": 35,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-msg-id=\\\"run-regression\\\"] [role=\\\"alert\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:04:44.719Z",
-                "durationMs": 16,
+                "startedAt": "2026-10-15T17:11:06.210Z",
+                "durationMs": 14,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -2595,7 +2595,7 @@
       "maxAgentContextBytes": 0,
       "maxLedgerBytes": 0,
       "maxObservationBytes": 0,
-      "artifactBytes": 13734890,
+      "artifactBytes": 13525062,
       "downloads": 0,
       "events": 0,
       "modelTokens": 0,

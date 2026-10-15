@@ -2,13 +2,13 @@
   "issue": 145,
   "reports": {
     "browser-report.json": {
-      "runId": "01a13f39-c7df-7654-91f7-7771d8c54da2",
+      "runId": "01a14089-52a8-7494-a629-cf9b2af6d530",
       "status": "passed",
       "summary": {
-        "discovered": 6,
-        "selected": 6,
-        "executed": 6,
-        "passed": 6,
+        "discovered": 7,
+        "selected": 7,
+        "executed": 7,
+        "passed": 7,
         "failed": 0,
         "interrupted": 0,
         "flaky": 0,
@@ -16,10 +16,10 @@
       }
     },
     "reduced-motion-report.json": {
-      "runId": "01a13f3f-a30e-7d73-b792-08b528cba7c8",
+      "runId": "01a1408c-b95d-7c64-9c2a-cb90bc8b3eed",
       "status": "passed",
       "summary": {
-        "discovered": 7,
+        "discovered": 8,
         "selected": 1,
         "executed": 1,
         "passed": 1,
@@ -30,7 +30,7 @@
       }
     },
     "shell-report.json": {
-      "runId": "01a13f3b-a9bc-71e4-bfd7-31a6a0cf67bb",
+      "runId": "01a1408a-f6f4-7d80-83f5-593ba7f2ddca",
       "status": "passed",
       "summary": {
         "discovered": 43,
@@ -54,7 +54,14 @@
   },
   "sourceSha256": {
     "src/features/chat/components/ConversationThread.tsx": "a26779befd95347a0545b1dd85d0306eeade18060bef62bb1af7221fe9cf150d",
-    "src/features/chat/components/ConversationQuestionIndex.tsx": "7bba0e855556f7960294a3b75556eed167b51c1622c2464c6031a6b3f73e343b",
-    "src/styles/chat.css": "18436075bc8c1dfda4168a50b9324d8d24d8664d3a9a8190d8f5bba4c2cf1d02"
+    "src/features/chat/components/ConversationQuestionIndex.tsx": "0883ea5ae69da392c0794e8022c4aa7f5df7cb7e3560b8c45a5db0594b180bcd",
+    "src/styles/chat.css": "75fd78b1ea51e5ec7643f32cd4440a6d53fe8c87d0dfafce728890eca84a90c9",
+    "src/components/vendor/dsh-turn-scrubber/TurnRail.tsx": "3024132d5083904bf031f892925baeee3fc5c611a9356585b888d2ed9144ce5b",
+    "src/components/vendor/dsh-turn-scrubber/rail.module.css": "bd2d60b48b2c825f38e7ca84bdf5391de318e4b7909369e518af5ef3a54dfacf"
+  },
+  "upstream": {
+    "repository": "https://github.com/wsxwj123/dsh-plugins",
+    "commit": "c92ff6b61461de988cbf152bd2c6273ceb7406cc",
+    "license": "MIT"
   }
 }
