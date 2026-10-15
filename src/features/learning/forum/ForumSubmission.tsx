@@ -115,29 +115,31 @@ function StudentRow({student,space,item}:{student:SubmissionStudent;space:Learni
   const collapse=()=>{setOpen(false);requestAnimationFrame(()=>{const container=trigger.current?.closest('[data-forum-scroll]');if(container)container.scrollTop=scroll.current;trigger.current?.focus({preventScroll:true})})}
   const [open,setOpen]=useState(false),[versions,setVersions]=useState<SubmissionVersion[]>([]),[next,setNext]=useState<number|null>(null)
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[reference,setReference]=useState<number|null>(null)
+  const latest=versions[0]?.id===student.id?versions[0]:null
+  const assessment=latest?.assessment?.status==='READY'?latest.assessment:student.assessment
   const load=useCallback(async(offset=0)=>{
     setBusy(true)
     try{const page=await forumApi.studentVersions(space.courseId!,item.id,student.learnerId,offset);setVersions(old=>offset?[...old,...page.items]:page.items);setNext(page.nextOffset);setError('')}
     catch(reason){setError(userFacingError(reason,'作答加载失败。'))}finally{setBusy(false)}
   },[space.courseId,item.id,student.learnerId])
   useEffect(()=>{if(open)void load()},[open,load,student.id])
-  useEffect(()=>{if(reference!==null&&versions.length){openReference(student.id,reference);setReference(null)}},[reference,versions,student.id])
+  useEffect(()=>{if(open&&reference!==null&&versions[0]?.id===student.id){openReference(student.id,reference);setReference(null)}},[open,reference,versions,student.id])
   return <MemoCard label={`${student.learnerName}的作答`} author={student.learnerName} authorDetail={student.learnerId} createdAt={student.submittedAt}
     disclosure={{ref:trigger,expanded:open,controls:`submission-${student.id}`,onToggle:()=>open?collapse():expand()}} actions={<span className="text-xs text-muted-foreground">第 {student.version} 版</span>}>
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-      <span>{assessmentLabel(versions[0]?.assessment ?? student.assessment)}</span>
+      <span>{assessmentLabel(assessment)}</span>
       {student.conversationReferences.length?student.conversationReferences.map((ref,index)=><a key={index} title={ref.title} className="underline focus-visible:outline-2" href={`#${student.id}-reference-${index}`} onClick={event=>{event.preventDefault();expand();setReference(index)}}>对话 {index+1}</a>):<span>未关联对话</span>}
     </div>
     {open&&<div id={`submission-${student.id}`} className="w-full space-y-3 pt-2">
-      {busy&&!versions.length&&<p role="status">正在加载作答…</p>}
+      {busy&&!latest&&<p role="status">正在加载作答…</p>}
       {error&&<p role="alert">{error}<Button onClick={()=>void load()}>重试</Button></p>}
-      {versions[0]&&<Version submission={versions[0]} framed={false}/>}
-      {versions[0]&&<form className="flex gap-2" onSubmit={async event=>{
+      {latest&&<Version submission={{...latest,assessment}} framed={false}/>}
+      {latest&&<form className="flex gap-2" onSubmit={async event=>{
         event.preventDefault();const form=event.currentTarget,body=String(new FormData(form).get('feedback')??'').trim();if(!body||busy)return
-        setBusy(true);try{await forumApi.feedback(space.courseId!,item,versions[0].id,body);form.reset();await load()}catch(reason){setError(userFacingError(reason,'反馈保存失败。'))}finally{setBusy(false)}
+        setBusy(true);try{await forumApi.feedback(space.courseId!,item,latest.id,body);form.reset();await load()}catch(reason){setError(userFacingError(reason,'反馈保存失败。'))}finally{setBusy(false)}
       }}><Input name="feedback" aria-label={`反馈：${student.learnerName}`} placeholder="给这次提交留下反馈" required maxLength={10000}/><Button disabled={busy}>保存反馈</Button></form>}
-      {versions.slice(1).map(version=><details key={version.id}><summary className="cursor-pointer text-sm focus-visible:outline-2">历史版本 · 第 {version.version} 版 · {new Date(version.submittedAt).toLocaleString()}</summary><Version submission={version} framed={false}/></details>)}
-      {next!==null&&<Button variant="outline" disabled={busy} onClick={()=>void load(next)}>更多历史版本</Button>}
+      {latest&&versions.slice(1).map(version=><details key={version.id}><summary className="cursor-pointer text-sm focus-visible:outline-2">历史版本 · 第 {version.version} 版 · {new Date(version.submittedAt).toLocaleString()}</summary><Version submission={version} framed={false}/></details>)}
+      {latest&&next!==null&&<Button variant="outline" disabled={busy} onClick={()=>void load(next)}>更多历史版本</Button>}
       <Button variant="ghost" size="sm" onClick={collapse}>收起作答</Button>
     </div>}
   </MemoCard>
