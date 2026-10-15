@@ -1,7 +1,8 @@
 import { ThreadPrimitive, useAuiState } from '@assistant-ui/react'
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { useConversationUi } from '@/stores/conversationUi'
 import { useConversations } from '@/features/conversations/store'
@@ -13,7 +14,8 @@ import { ConversationComposer } from './ConversationComposer'
 import { ConversationMessage } from './ConversationMessage'
 import { ConversationStart } from './ConversationStart'
 import { ConversationSkeleton } from './ConversationSkeleton'
-import { messageKey } from '../runtime/store'
+import { messageKey, useChatThreadStore } from '../runtime/store'
+import { ConversationQuestionIndex } from './ConversationQuestionIndex'
 import { chatLatency } from '../runtime/latency'
 import type { LingxiMessageMetadata } from '../runtime/model'
 
@@ -45,6 +47,11 @@ export function ConversationThread({
     return typeof metadata.sequence === 'number' ? [[metadata.clientMessageId, metadata.sequence]] : []
   })))
   const viewportRef = useRef<HTMLDivElement>(null)
+  const [readingHistory, setReadingHistory] = useState(false)
+  const scope = `${conversationId}:${threadRootId ?? ''}`
+  const scopeRef = useRef(scope)
+  scopeRef.current = scope
+  useEffect(() => { setReadingHistory(false) }, [scope])
   const runtimeMessages = useAuiState(state => state.thread.messages)
   const entranceTail = useRef<{ scope: string; id: string | null } | null>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -81,20 +88,36 @@ export function ConversationThread({
 
   const loadOlder = useCallback(async () => {
     const viewport = viewportRef.current
-    if (!viewport || loadingOlderRef.current || !snapshot.hasMoreOlder) return
+    if (!viewport || loadingOlderRef.current || !snapshot.hasMoreOlder) return true
     loadingOlderRef.current = true
+    const requestedScope = scopeRef.current
+    const before = useChatThreadStore.getState().conversations[conversationId]?.messages
     const anchor = viewport.querySelector<HTMLElement>('[data-msg-id]')
     const anchorId = anchor?.dataset.msgId
     const anchorTop = anchor?.getBoundingClientRect().top ?? 0
     await chatTransport.loadOlder(conversationId)
-    window.requestAnimationFrame(() => {
-      if (anchorId) {
+    await new Promise<void>(resolve => window.requestAnimationFrame(() => {
+      if (anchorId && scopeRef.current === requestedScope) {
         const restored = viewport.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(anchorId)}"]`)
         if (restored) viewport.scrollTop += restored.getBoundingClientRect().top - anchorTop
       }
       loadingOlderRef.current = false
-    })
+      resolve()
+    }))
+    const after = useChatThreadStore.getState().conversations[conversationId]
+    return !after?.hasMoreOlder || (after.messages[0] && messageKey(after.messages[0])) !== (before?.[0] && messageKey(before[0]))
   }, [conversationId, snapshot.hasMoreOlder])
+
+  const navigateToQuestion = useCallback((id: string) => {
+    const viewport = viewportRef.current
+    const element = viewport?.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(id)}"]`)
+    if (!viewport || !element) return
+    // Disable following before the first scroll frame, including when the last
+    // question is too close to the bottom to move the viewport yet.
+    flushSync(() => setReadingHistory(true))
+    viewport.scrollTo({ top: viewport.scrollTop + element.getBoundingClientRect().top - viewport.getBoundingClientRect().top - 16,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
+  }, [])
 
   useEffect(() => {
     const viewport = viewportRef.current
@@ -174,28 +197,32 @@ export function ConversationThread({
 
   return (
     <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread>
-      <ThreadPrimitive.Viewport ref={viewportRef} data-chat-viewport className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
-        <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col pb-12">
-          {!threadRootId && (
-            <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
-              {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
-                <ConversationStart createdAt={snapshot.messages[0]?.createdAt} timestampMissing={snapshot.messages[0]?.metadata.custom.timestampMissing === true} />
-              )}
-            </div>
-          )}
-          <ThreadPrimitive.Empty>
-            {snapshot.isLoading && !snapshot.error ? <ConversationSkeleton /> : <div className="ui-enter grid flex-1 place-items-center px-8 py-20 text-center text-sm text-muted-foreground">
-              {snapshot.error ? (
-                <div role="alert" className="grid gap-3">
-                  <span>{userFacingError(snapshot.error, '消息加载失败，请稍后重试。')}</span>
-                  <Button size="sm" onClick={() => void chatTransport.reloadConversation(conversationId)}>重试</Button>
-                </div>
-              ) : threadRootId ? '尚无回复' : '开始一段新对话'}
-            </div>}
-          </ThreadPrimitive.Empty>
-          <ConversationMessages />
-        </div>
-      </ThreadPrimitive.Viewport>
+      <div className="relative flex min-h-0 flex-1" data-chat-reading-area>
+        <ConversationQuestionIndex key={scope} viewportRef={viewportRef} hasMoreOlder={!threadRootId && snapshot.hasMoreOlder}
+          isLoadingOlder={snapshot.isLoadingOlder} onLoadOlder={async () => { flushSync(() => setReadingHistory(true)); return loadOlder() }} onNavigate={navigateToQuestion} />
+        <ThreadPrimitive.Viewport ref={viewportRef} autoScroll={!readingHistory} scrollToBottomOnRunStart={false} data-chat-viewport className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
+          <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col pb-12">
+            {!threadRootId && (
+              <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
+                {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
+                  <ConversationStart createdAt={snapshot.messages[0]?.createdAt} timestampMissing={snapshot.messages[0]?.metadata.custom.timestampMissing === true} />
+                )}
+              </div>
+            )}
+            <ThreadPrimitive.Empty>
+              {snapshot.isLoading && !snapshot.error ? <ConversationSkeleton /> : <div className="ui-enter grid flex-1 place-items-center px-8 py-20 text-center text-sm text-muted-foreground">
+                {snapshot.error ? (
+                  <div role="alert" className="grid gap-3">
+                    <span>{userFacingError(snapshot.error, '消息加载失败，请稍后重试。')}</span>
+                    <Button size="sm" onClick={() => void chatTransport.reloadConversation(conversationId)}>重试</Button>
+                  </div>
+                ) : threadRootId ? '尚无回复' : '开始一段新对话'}
+              </div>}
+            </ThreadPrimitive.Empty>
+            <ConversationMessages />
+          </div>
+        </ThreadPrimitive.Viewport>
+      </div>
       {!readOnly && <div className="relative z-20 shrink-0 bg-background pt-2 md:pt-4" data-chat-composer-bar>
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-full h-12 select-none" data-chat-composer-transition>
           {[1, 2, 4, 8].map((blur, index) => <div key={blur} className="absolute inset-0" style={{
@@ -211,7 +238,15 @@ export function ConversationThread({
           placeholder={threadRootId ? '在帖子中回复…' : undefined}
         />
       </div>}
-      <ThreadPrimitive.ScrollToBottom asChild>
+      {readingHistory ? <Button type="button" variant="outline" size="icon"
+        className="absolute bottom-24 end-5 z-10 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground md:size-9"
+        aria-label="滚动到底部" data-chat-scroll-bottom onClick={() => {
+          flushSync(() => setReadingHistory(false))
+          viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'instant' })
+          // An already-bottom viewport emits no scroll event; notify the
+          // primitive so its bottom-following intent is restored as well.
+          viewportRef.current?.dispatchEvent(new Event('scroll'))
+        }}><HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} /></Button> : <ThreadPrimitive.ScrollToBottom asChild>
         <Button
           type="button"
           variant="outline"
@@ -222,7 +257,7 @@ export function ConversationThread({
         >
           <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
         </Button>
-      </ThreadPrimitive.ScrollToBottom>
+      </ThreadPrimitive.ScrollToBottom>}
     </ThreadPrimitive.Root>
   )
 }

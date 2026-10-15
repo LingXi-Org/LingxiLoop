@@ -1,0 +1,4177 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a13f39-c7df-7654-91f7-7771d8c54da2",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-15T11:01:54.233Z",
+    "finishedAt": "2026-10-15T11:03:38.166Z",
+    "project": {
+      "id": "lingxiloop-question-index",
+      "configDigest": "1881a0a9a6a764cc33b508f2a692764c44e13f88bdfd9c431a2fdfe51f7c0be6"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.44",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "24ca801c1088465006dd07a20cabc6a1f93ed36a",
+      "branch": "feat/145-question-index",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5189",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "8ad41ee7dcaba2099c937f2819c7f323c7f7bdf49fd9609607ab7dd774c7003d",
+        "testId": "e2e/question-index/navigation.e2e.ts::question%20previews%2C%20navigation%2C%20streaming%20and%20conversation%20scope%20%281440%2C%20light%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "question previews, navigation, streaming and conversation scope (1440, light)"
+        ],
+        "file": "e2e/question-index/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "line": 5,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-15T11:01:55.679Z",
+            "durationMs": 29164,
+            "artifacts": [
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:11"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-5aa8a295/default/attempt-0/screenshots/001-question-index-preview-1440-light.png",
+                "size": 238240,
+                "sha256": "9cf2aff4b5df96adab02f2f1ef00f5ef3cfcb1e23d4fed1d1f4ccb9efc1f0708"
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:33"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-5aa8a295/default/attempt-0/screenshots/002-question-index-history-1440-light.png",
+                "size": 237495,
+                "sha256": "93f3b5f90c351de599347905e15c952eee6081f3e89bcdefc0804047bd201570"
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-5aa8a295/default/attempt-0/trace/trace.zip",
+                "size": 30804264,
+                "sha256": "8c61b2760fb356ef3ba6225f41ad8c91208fe3525a9acae05fc64806fb995cf7"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:01:55.802Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 6,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/question-index/index.html?theme=light",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:01:55.803Z",
+                "durationMs": 6061,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 7,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:01.875Z",
+                "durationMs": 574,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 10,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:02.451Z",
+                "durationMs": 62,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 11,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:02.519Z",
+                "durationMs": 133,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 12,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.hover",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:02.653Z",
+                "durationMs": 748,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 13,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"tooltip\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:03.402Z",
+                "durationMs": 270,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 14,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:03.672Z",
+                "durationMs": 608,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 15,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:04.280Z",
+                "durationMs": 604,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 16,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeFocused",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:04.884Z",
+                "durationMs": 163,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 17,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"tooltip\", name: /第22次提问/)",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:05.047Z",
+                "durationMs": 251,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 18,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-preview-1440-light",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:05.299Z",
+                "durationMs": 496,
+                "events": [],
+                "artifacts": [
+                  "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 19,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:05.797Z",
+                "durationMs": 794,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 20,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:06.592Z",
+                "durationMs": 248,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:06.941Z",
+                "durationMs": 260,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:07.311Z",
+                "durationMs": 168,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:07.580Z",
+                "durationMs": 202,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:07.882Z",
+                "durationMs": 102,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:08.085Z",
+                "durationMs": 154,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:08.239Z",
+                "durationMs": 148,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 25,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:20",
+                "index": 20,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:08.388Z",
+                "durationMs": 383,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 26,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:08.772Z",
+                "durationMs": 111,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 27,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:22",
+                "index": 22,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-35\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:08.884Z",
+                "durationMs": 187,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 32,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:09.072Z",
+                "durationMs": 137,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 33,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:09.211Z",
+                "durationMs": 250,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 34,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"a-60\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:09.464Z",
+                "durationMs": 844,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 35,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:26",
+                "index": 26,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:10.308Z",
+                "durationMs": 204,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 36,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:10.512Z",
+                "durationMs": 227,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 37,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:10.740Z",
+                "durationMs": 331,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 38,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:11.081Z",
+                "durationMs": 489,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 39,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:11.570Z",
+                "durationMs": 208,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 40,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:31",
+                "index": 31,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:11.778Z",
+                "durationMs": 223,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:12.001Z",
+                "durationMs": 209,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 42,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:33",
+                "index": 33,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-history-1440-light",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:12.214Z",
+                "durationMs": 1177,
+                "events": [],
+                "artifacts": [
+                  "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 49,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:34",
+                "index": 34,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"滚动到底部\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:13.417Z",
+                "durationMs": 1107,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 50,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:35",
+                "index": 35,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:14.524Z",
+                "durationMs": 188,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 51,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"另一段对话\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:14.712Z",
+                "durationMs": 1095,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 55,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:37",
+                "index": 37,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:15.808Z",
+                "durationMs": 42,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 56,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:38",
+                "index": 38,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-question-id=\\\"q-101\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:15.850Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 57,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:39",
+                "index": 39,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"历史提问\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:15.874Z",
+                "durationMs": 2274,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 58,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:40",
+                "index": 40,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:18.149Z",
+                "durationMs": 161,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 59,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:41",
+                "index": 41,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:18.310Z",
+                "durationMs": 3369,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 60,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f39-cf5f-7bbc-8ca6-1b230a53669c:42",
+                "index": 42,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:21.679Z",
+                "durationMs": 614,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 61,
+                  "column": 27
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "f718ae5818aa4ecab856be0e5234120f094f45d96c3f63fe5b7fccdc670378e9",
+        "testId": "e2e/question-index/navigation.e2e.ts::question%20previews%2C%20navigation%2C%20streaming%20and%20conversation%20scope%20%281440%2C%20dark%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "question previews, navigation, streaming and conversation scope (1440, dark)"
+        ],
+        "file": "e2e/question-index/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "line": 5,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-15T11:02:24.844Z",
+            "durationMs": 20928,
+            "artifacts": [
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3a-414c-7909-8558-f11e9a50d4e8:11"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-bbd3a04f/default/attempt-0/screenshots/001-question-index-preview-1440-dark.png",
+                "size": 239942,
+                "sha256": "a4644bcf0a747fb4401a7e8a78a87b5e42d73e80d7c751b71b750969e2a88978"
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3a-414c-7909-8558-f11e9a50d4e8:33"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-bbd3a04f/default/attempt-0/screenshots/002-question-index-history-1440-dark.png",
+                "size": 241051,
+                "sha256": "56e0511cff3b2c8180b59baf0b05b220b4ce75ad180c7f5d6c2c121e3e4061ea"
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-bbd3a04f/default/attempt-0/trace/trace.zip",
+                "size": 30296661,
+                "sha256": "56166080b605402386124ca95f806e677fba67bd81ad7300eba7fa0771c2e6fa"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:24.885Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 6,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/question-index/index.html?theme=dark",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:24.886Z",
+                "durationMs": 3599,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 7,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:28.486Z",
+                "durationMs": 490,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 10,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:28.983Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 11,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:29.090Z",
+                "durationMs": 129,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 12,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.hover",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:29.239Z",
+                "durationMs": 708,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 13,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"tooltip\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:29.949Z",
+                "durationMs": 209,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 14,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:30.158Z",
+                "durationMs": 294,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 15,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:30.453Z",
+                "durationMs": 396,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 16,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeFocused",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:30.850Z",
+                "durationMs": 197,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 17,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"tooltip\", name: /第22次提问/)",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:31.047Z",
+                "durationMs": 146,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 18,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-preview-1440-dark",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:31.193Z",
+                "durationMs": 1066,
+                "events": [],
+                "artifacts": [
+                  "01a13f3a-414c-7909-8558-f11e9a50d4e8:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 19,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:32.260Z",
+                "durationMs": 539,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 20,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:32.800Z",
+                "durationMs": 326,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:33.227Z",
+                "durationMs": 215,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:33.545Z",
+                "durationMs": 217,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:33.862Z",
+                "durationMs": 142,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:34.106Z",
+                "durationMs": 107,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:34.314Z",
+                "durationMs": 128,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:34.442Z",
+                "durationMs": 176,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 25,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:20",
+                "index": 20,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:34.619Z",
+                "durationMs": 446,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 26,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:35.066Z",
+                "durationMs": 189,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 27,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:22",
+                "index": 22,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-35\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:35.259Z",
+                "durationMs": 183,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 32,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:35.443Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 33,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:35.549Z",
+                "durationMs": 442,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 34,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"a-60\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:35.991Z",
+                "durationMs": 465,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 35,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:26",
+                "index": 26,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:36.456Z",
+                "durationMs": 155,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 36,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:36.611Z",
+                "durationMs": 282,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 37,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:36.894Z",
+                "durationMs": 691,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 38,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:37.586Z",
+                "durationMs": 213,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 39,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:37.800Z",
+                "durationMs": 261,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 40,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:31",
+                "index": 31,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:38.061Z",
+                "durationMs": 116,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:38.177Z",
+                "durationMs": 104,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 42,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:33",
+                "index": 33,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-history-1440-dark",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:38.281Z",
+                "durationMs": 430,
+                "events": [],
+                "artifacts": [
+                  "01a13f3a-414c-7909-8558-f11e9a50d4e8:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 49,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:34",
+                "index": 34,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"滚动到底部\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:38.713Z",
+                "durationMs": 586,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 50,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:35",
+                "index": 35,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:39.300Z",
+                "durationMs": 88,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 51,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"另一段对话\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:39.388Z",
+                "durationMs": 469,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 55,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:37",
+                "index": 37,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:39.858Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 56,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:38",
+                "index": 38,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-question-id=\\\"q-101\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:39.875Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 57,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:39",
+                "index": 39,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"历史提问\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:39.894Z",
+                "durationMs": 1274,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 58,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:40",
+                "index": 40,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:41.169Z",
+                "durationMs": 199,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 59,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:41",
+                "index": 41,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:41.369Z",
+                "durationMs": 2292,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 60,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-414c-7909-8558-f11e9a50d4e8:42",
+                "index": 42,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:43.662Z",
+                "durationMs": 437,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 61,
+                  "column": 27
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "197ed0aade6534e47a91a9df1e7155b684cbf6ff6e9cb32613da22020b3b10ed",
+        "testId": "e2e/question-index/navigation.e2e.ts::question%20previews%2C%20navigation%2C%20streaming%20and%20conversation%20scope%20%28390%2C%20light%29",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "question previews, navigation, streaming and conversation scope (390, light)"
+        ],
+        "file": "e2e/question-index/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "line": 5,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-15T11:02:45.773Z",
+            "durationMs": 20936,
+            "artifacts": [
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:11"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-d5e6dfa5/default/attempt-0/screenshots/001-question-index-preview-390-light.png",
+                "size": 66209,
+                "sha256": "c9c72a2e870b6f483019b616bec52708064d33c59c3e3193409c698557f993f6"
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:35"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-d5e6dfa5/default/attempt-0/screenshots/002-question-index-history-390-light.png",
+                "size": 77925,
+                "sha256": "02164cb533d433715833a6b382be830ca4d5c3879991f8e03f4e597dd34901ea"
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-d5e6dfa5/default/attempt-0/trace/trace.zip",
+                "size": 19958155,
+                "sha256": "ccfc674780d6512f329e8a41866b135dfa7c593023f60485564bc93708b72002"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:45.816Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 6,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/question-index/index.html?theme=light",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:45.817Z",
+                "durationMs": 2827,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 7,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:48.644Z",
+                "durationMs": 332,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 10,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:48.978Z",
+                "durationMs": 91,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 11,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:49.069Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 12,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.hover",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:49.121Z",
+                "durationMs": 275,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 13,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"tooltip\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:49.397Z",
+                "durationMs": 87,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 14,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:49.484Z",
+                "durationMs": 132,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 15,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:49.616Z",
+                "durationMs": 173,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 16,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeFocused",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:49.789Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 17,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"tooltip\", name: /第22次提问/)",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:49.869Z",
+                "durationMs": 49,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 18,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-preview-390-light",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:49.920Z",
+                "durationMs": 186,
+                "events": [],
+                "artifacts": [
+                  "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 19,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:50.107Z",
+                "durationMs": 230,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 20,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:50.338Z",
+                "durationMs": 84,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:50.524Z",
+                "durationMs": 161,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:50.785Z",
+                "durationMs": 182,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:51.069Z",
+                "durationMs": 132,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:51.302Z",
+                "durationMs": 91,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:51.494Z",
+                "durationMs": 71,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:51.665Z",
+                "durationMs": 75,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:51.841Z",
+                "durationMs": 73,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:51.915Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 25,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:22",
+                "index": 22,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:51.958Z",
+                "durationMs": 156,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 26,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:52.114Z",
+                "durationMs": 88,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 27,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-35\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:52.203Z",
+                "durationMs": 115,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 32,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:52.318Z",
+                "durationMs": 128,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 33,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:26",
+                "index": 26,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:52.448Z",
+                "durationMs": 232,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 34,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"a-60\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:52.680Z",
+                "durationMs": 1256,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 35,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:53.936Z",
+                "durationMs": 118,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 36,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:54.054Z",
+                "durationMs": 198,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 37,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:54.252Z",
+                "durationMs": 451,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 38,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:31",
+                "index": 31,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:54.703Z",
+                "durationMs": 237,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 39,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:54.940Z",
+                "durationMs": 341,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 40,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:33",
+                "index": 33,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:55.281Z",
+                "durationMs": 163,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:34",
+                "index": 34,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:55.445Z",
+                "durationMs": 150,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 42,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:35",
+                "index": 35,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-history-390-light",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:55.597Z",
+                "durationMs": 508,
+                "events": [],
+                "artifacts": [
+                  "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 49,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"滚动到底部\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:56.117Z",
+                "durationMs": 1649,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 50,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:37",
+                "index": 37,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:57.766Z",
+                "durationMs": 226,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 51,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:38",
+                "index": 38,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"另一段对话\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:57.993Z",
+                "durationMs": 1460,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 55,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:59.453Z",
+                "durationMs": 37,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 56,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:40",
+                "index": 40,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-question-id=\\\"q-101\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:59.491Z",
+                "durationMs": 53,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 57,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:41",
+                "index": 41,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"历史提问\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:02:59.544Z",
+                "durationMs": 3052,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 58,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:42",
+                "index": 42,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:02.597Z",
+                "durationMs": 270,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 59,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:02.867Z",
+                "durationMs": 2667,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 60,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-930d-7c81-9eee-bcbbbe601bc9:44",
+                "index": 44,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:05.535Z",
+                "durationMs": 249,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 61,
+                  "column": 27
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ee8a03b286057bc4e3fd920fe0135ba44cf58107279ab5cb9c9d6b71cb2c5275",
+        "testId": "e2e/question-index/navigation.e2e.ts::question%20previews%2C%20navigation%2C%20streaming%20and%20conversation%20scope%20%28390%2C%20dark%29",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "question previews, navigation, streaming and conversation scope (390, dark)"
+        ],
+        "file": "e2e/question-index/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "line": 5,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-15T11:03:06.710Z",
+            "durationMs": 12412,
+            "artifacts": [
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:11"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-dcde4fa1/default/attempt-0/screenshots/001-question-index-preview-390-dark.png",
+                "size": 64894,
+                "sha256": "a2cebb8a283828557650b18b2db3a7e594c191784d8d0988a81c28f5545e534e"
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:35"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-dcde4fa1/default/attempt-0/screenshots/002-question-index-history-390-dark.png",
+                "size": 78771,
+                "sha256": "eee67782ec6a39ed7416276ebe5c3f33d884be022c1c50beb9b828d8f44608d0"
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__question_20previews_2C_20navigation_2C_20streaming_20and_20conversation_2-dcde4fa1/default/attempt-0/trace/trace.zip",
+                "size": 13579515,
+                "sha256": "aadf358f56d928dd7b360863640f0e72517c9553eee21d16163360438ce3ccb8"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:06.748Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 6,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/question-index/index.html?theme=dark",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:06.749Z",
+                "durationMs": 2491,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 7,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:09.240Z",
+                "durationMs": 313,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 10,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:09.554Z",
+                "durationMs": 48,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 11,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:09.602Z",
+                "durationMs": 42,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 12,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.hover",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:09.646Z",
+                "durationMs": 319,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 13,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"tooltip\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:09.965Z",
+                "durationMs": 74,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 14,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:10.040Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 15,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-23\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:10.132Z",
+                "durationMs": 152,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 16,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeFocused",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:10.285Z",
+                "durationMs": 44,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 17,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"tooltip\", name: /第22次提问/)",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:10.329Z",
+                "durationMs": 74,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 18,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-preview-390-dark",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:10.403Z",
+                "durationMs": 181,
+                "events": [],
+                "artifacts": [
+                  "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 19,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:10.585Z",
+                "durationMs": 185,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 20,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:10.771Z",
+                "durationMs": 89,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:10.960Z",
+                "durationMs": 150,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:11.211Z",
+                "durationMs": 182,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:11.495Z",
+                "durationMs": 155,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:11.751Z",
+                "durationMs": 118,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:11.969Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:12.148Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:12.291Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:12.325Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 25,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:22",
+                "index": 22,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-question-id=\\\"q-22\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:12.345Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 26,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:12.422Z",
+                "durationMs": 56,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 27,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-35\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:12.478Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 32,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:12.538Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 33,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:26",
+                "index": 26,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:12.559Z",
+                "durationMs": 125,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 34,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"a-60\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:12.684Z",
+                "durationMs": 292,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 35,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:13.026Z",
+                "durationMs": 136,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 36,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:13.163Z",
+                "durationMs": 140,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 37,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:13.303Z",
+                "durationMs": 369,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 38,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:31",
+                "index": 31,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:13.672Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 39,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:13.771Z",
+                "durationMs": 165,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 40,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:33",
+                "index": 33,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:13.936Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:34",
+                "index": 34,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:13.964Z",
+                "durationMs": 39,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 42,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:35",
+                "index": 35,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-history-390-dark",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:14.004Z",
+                "durationMs": 181,
+                "events": [],
+                "artifacts": [
+                  "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 49,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"滚动到底部\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:14.185Z",
+                "durationMs": 375,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 50,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:37",
+                "index": 37,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:14.561Z",
+                "durationMs": 89,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 51,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:38",
+                "index": 38,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"另一段对话\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:14.650Z",
+                "durationMs": 330,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 55,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:14.980Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 56,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:40",
+                "index": 40,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-question-id=\\\"q-101\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:14.990Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 57,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:41",
+                "index": 41,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"历史提问\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:15.001Z",
+                "durationMs": 1058,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 58,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:42",
+                "index": 42,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:16.059Z",
+                "durationMs": 174,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 59,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:16.234Z",
+                "durationMs": 1872,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 60,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3a-e4d5-7bfa-a67f-e95c530f8818:44",
+                "index": 44,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:18.107Z",
+                "durationMs": 330,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 61,
+                  "column": 27
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9c886b331f5ba55559126f18cf8efef8adac6e33ad61fc2e56e5fbec7e70108b",
+        "testId": "e2e/question-index/navigation.e2e.ts::older%20history%20retries%2C%20preserves%20position%20and%20remains%20reachable%20with%20the%20keyboard",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "older history retries, preserves position and remains reachable with the keyboard"
+        ],
+        "file": "e2e/question-index/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "line": 65,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13f3b-1552-7988-850a-08215f9ce642",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-15T11:03:19.123Z",
+            "durationMs": 13522,
+            "artifacts": [
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3b-1552-7988-850a-08215f9ce642:20"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__older_20history_20retries_2C_20preserves_20position_20and_20remains_20rea-1169f2e0/default/attempt-0/screenshots/001-question-index-oldest-history.png",
+                "size": 237425,
+                "sha256": "82387ff400d8aaf90ce37159994ff5779bca97942f437429d4995154af13fd0b"
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3b-1552-7988-850a-08215f9ce642:25"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__older_20history_20retries_2C_20preserves_20position_20and_20remains_20rea-1169f2e0/default/attempt-0/screenshots/002-question-index-latest-keyboard.png",
+                "size": 226521,
+                "sha256": "6f136e1e95f906e2d3ddcd32f9d1daee159abae7763c11d7d3626deaca787cf2"
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__older_20history_20retries_2C_20preserves_20position_20and_20remains_20rea-1169f2e0/default/attempt-0/trace/trace.zip",
+                "size": 29869107,
+                "sha256": "cfcd7102baf79a3e5b815d31072f0a58bfbe1e274abda32c59a20ca07c6d5d34"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/question-index/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:19.159Z",
+                "durationMs": 2476,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 66,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:21.635Z",
+                "durationMs": 308,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 68,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-question-id=\\\"q-30\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:21.944Z",
+                "durationMs": 361,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 69,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-30\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:22.305Z",
+                "durationMs": 1163,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 70,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:23.469Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 71,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:23.646Z",
+                "durationMs": 69,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 71,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:23.817Z",
+                "durationMs": 40,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 71,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:23.858Z",
+                "durationMs": 44,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 72,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:23.902Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 73,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"加载更早的提问\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:23.947Z",
+                "durationMs": 451,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 74,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"加载失败，重试更早的提问\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:24.398Z",
+                "durationMs": 335,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 75,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:11",
+                "index": 11,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"加载失败，重试更早的提问\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:24.733Z",
+                "durationMs": 379,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 76,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-question-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:25.113Z",
+                "durationMs": 945,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 77,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:26.058Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 78,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:14",
+                "index": 14,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"加载更早的提问\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:26.156Z",
+                "durationMs": 143,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 79,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:15",
+                "index": 15,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-question-id=\\\"q-30\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:26.300Z",
+                "durationMs": 248,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 80,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Home",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:26.548Z",
+                "durationMs": 113,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 81,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:17",
+                "index": 17,
+                "kind": "assertion",
+                "api": "expect.toBeFocused",
+                "label": "locator(\"[data-question-id=\\\"q-1\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:26.662Z",
+                "durationMs": 127,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 82,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:26.789Z",
+                "durationMs": 61,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 83,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-1\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:26.851Z",
+                "durationMs": 1402,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 84,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:20",
+                "index": 20,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-oldest-history",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:28.253Z",
+                "durationMs": 351,
+                "events": [],
+                "artifacts": [
+                  "01a13f3b-1552-7988-850a-08215f9ce642:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 85,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "End",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:28.604Z",
+                "durationMs": 129,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 86,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:22",
+                "index": 22,
+                "kind": "assertion",
+                "api": "expect.toBeFocused",
+                "label": "locator(\"[data-question-id=\\\"q-60\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:28.733Z",
+                "durationMs": 140,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 87,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Space",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:28.874Z",
+                "durationMs": 153,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 88,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-60\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:29.028Z",
+                "durationMs": 1864,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 89,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a13f3b-1552-7988-850a-08215f9ce642:25",
+                "index": 25,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-latest-keyboard",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:30.893Z",
+                "durationMs": 327,
+                "events": [],
+                "artifacts": [
+                  "01a13f3b-1552-7988-850a-08215f9ce642:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 90,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "480be08554bbfdcef0ffd1962389d8113fa6e47ffb5ac52bcb718fdc3632865d",
+        "testId": "e2e/question-index/navigation.e2e.ts::the%20latest%20question%20stays%20put%20as%20its%20short%20answer%20starts%20streaming",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "the latest question stays put as its short answer starts streaming"
+        ],
+        "file": "e2e/question-index/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "line": 93,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-15T11:03:32.646Z",
+            "durationMs": 5391,
+            "artifacts": [
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:9"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__the_20latest_20question_20stays_20put_20as_20its_20short_20answer_20start-2dfc48fb/default/attempt-0/screenshots/001-question-index-resume-following.png",
+                "size": 86440,
+                "sha256": "e551b871728d22e5f1d036e01a79c84790e5ee8bd7047cbc819259c5a5306cd6"
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_question-index_navigation.e2e.ts__the_20latest_20question_20stays_20put_20as_20its_20short_20answer_20start-2dfc48fb/default/attempt-0/trace/trace.zip",
+                "size": 7338520,
+                "sha256": "189a5c37fd71a140d8b4d6ceb92a3b976ff8b86fca5ba14d9e37ff59fd1d69ea"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/question-index/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:32.686Z",
+                "durationMs": 2423,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 94,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-question-id=\\\"q-60\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:35.109Z",
+                "durationMs": 282,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 96,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-question-id=\\\"q-60\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:35.392Z",
+                "durationMs": 352,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 97,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:35.745Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 98,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:35.822Z",
+                "durationMs": 104,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 99,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"a-60\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:35.926Z",
+                "durationMs": 453,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 100,
+                  "column": 57
+                }
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:36.380Z",
+                "durationMs": 194,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 101,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"滚动到底部\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:36.574Z",
+                "durationMs": 843,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 102,
+                  "column": 45
+                }
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:37.417Z",
+                "durationMs": 37,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 103,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:9",
+                "index": 9,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "question-index-resume-following",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:03:37.455Z",
+                "durationMs": 186,
+                "events": [],
+                "artifacts": [
+                  "01a13f3b-4a26-7eef-836a-a3e6a7f3832e:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 107,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 6,
+      "selected": 6,
+      "executed": 6,
+      "passed": 6,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 6,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 133641135,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
