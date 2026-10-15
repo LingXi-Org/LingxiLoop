@@ -1,3 +1,4 @@
+import type { UpdateCourseInput } from './contracts.js'
 import { LEARNING_PERSONA_KEYS } from './preset.js'
 
 import { HttpError } from '../../http/errors.js'
@@ -189,6 +190,45 @@ export async function courseManager(
   } : null
 }
 
+
+export async function updateCourseMetadata(db: Queryable, args: {
+  courseId: string; companyId: string; projectId: string; patch: UpdateCourseInput
+  avatar?: { avatarSeed: string | null; avatarUrl: string }
+}): Promise<void> {
+  const values: unknown[] = []
+  const sets: string[] = []
+  for (const [field, column] of Object.entries({ name: 'name', description: 'description', color: 'color' }) as Array<[keyof UpdateCourseInput, string]>) {
+    if (!Object.hasOwn(args.patch, field)) continue
+    values.push(args.patch[field]); sets.push(`${column}=$${values.length}`)
+  }
+  if (args.avatar) {
+    values.push(args.avatar.avatarSeed); sets.push(`avatar_seed=$${values.length}`)
+    values.push(args.avatar.avatarUrl); sets.push(`avatar_url=$${values.length}`)
+  }
+  values.push(args.projectId, args.companyId)
+  await db.query(
+    `UPDATE projects SET ${sets.join(',')},updated_at=NOW()
+      WHERE id=$${values.length - 1} AND company_id=$${values.length}`,
+    values,
+  )
+  if (args.patch.name !== undefined) {
+    await db.query(
+      `UPDATE conversations conversation SET title=$3,updated_at=NOW()
+        FROM courses course
+       WHERE course.id=$1 AND course.company_id=$2
+         AND conversation.id=course.study_room_conversation_id AND conversation.company_id=course.company_id`,
+      [args.courseId, args.companyId, `${args.patch.name} · Study Room`],
+    )
+    await db.query(
+      `UPDATE participants participant SET name=$3,updated_at=NOW()
+       FROM courses course JOIN learning_project_teacher_agents pulse
+         ON pulse.project_id=course.project_id AND pulse.company_id=course.company_id
+      WHERE course.id=$1 AND course.company_id=$2
+        AND participant.id=pulse.agent_id AND participant.company_id=pulse.company_id`,
+      [args.courseId, args.companyId, '望远'],
+    )
+  }
+}
 
 export async function listCourseMembers(db: Queryable, courseId: string, companyId: string) {
   const { rows } = await db.query(

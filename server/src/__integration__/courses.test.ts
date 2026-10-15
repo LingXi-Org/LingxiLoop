@@ -321,3 +321,29 @@ test('[integration] removing a course member revokes an existing document WebSoc
   assert.equal(receivedUpdates.length, 0)
   socket.close()
 })
+test('[integration] course settings persist metadata and reject learner or cross-tenant edits', async () => {
+  await seedCompany()
+  const course = await createCourse('Before settings restore')
+  await inviteAndAccept(course.projectId)
+  const headers = { 'content-type': 'application/json', 'x-company-id': 'co-courses', 'x-project-id': course.projectId }
+  const updated = await fetch(`${ownerUrl}/api/courses/${course.id}`, {
+    method: 'PATCH', headers, body: JSON.stringify({ name: 'Restored course', description: 'Updated description' }),
+  })
+  assert.equal(updated.status, 200, await updated.text())
+  const detail = await fetch(`${ownerUrl}/api/courses/${course.id}`, { headers })
+  const saved = await detail.json() as { name: string; description: string }
+  assert.equal(saved.name, 'Restored course')
+  assert.equal(saved.description, 'Updated description')
+  const denied = await fetch(`${learnerUrl}/api/courses/${course.id}`, {
+    method: 'PATCH', headers, body: JSON.stringify({ name: 'Unauthorized edit' }),
+  })
+  assert.equal(denied.status, 403)
+  const invalid = await fetch(`${ownerUrl}/api/courses/${course.id}`, {
+    method: 'PATCH', headers, body: JSON.stringify({ name: '' }),
+  })
+  assert.equal(invalid.status, 400)
+  const crossTenant = await fetch(`${ownerUrl}/api/courses/${course.id}`, {
+    method: 'PATCH', headers: { ...headers, 'x-company-id': 'co-other-settings' }, body: JSON.stringify({ name: 'Cross tenant edit' }),
+  })
+  assert.ok([403, 404].includes(crossTenant.status))
+})

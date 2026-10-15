@@ -9,6 +9,7 @@ import {
   addInstitutionalCourseMemberRequestSchema,
   createProjectInvitationRequestSchema,
   updateCourseMemberRequestSchema,
+  updateCourseRequestSchema,
 } from './contracts.js'
 import { learningSpacesQuerySchema } from './contracts.js'
 import { learningApplication } from './facade.js'
@@ -47,6 +48,13 @@ learningRouter.get('/courses/:id', safe(async (req, res) => {
   res.json(await respond(() => learningApplication.course(scope, courseId)))
 }))
 
+
+learningRouter.patch('/courses/:id', safe(async (req, res) => {
+  const courseId = String(req.params.id)
+  const { userId } = await requireCoursePermission(req, courseId, 'course:update')
+  const input = parse(updateCourseRequestSchema.safeParse(req.body ?? {}))
+  res.json(await respond(() => learningApplication.updateCourse(userId, courseId, input)))
+}))
 
 learningRouter.get('/courses/:id/members', safe(async (req, res) => {
   const courseId = String(req.params.id)

@@ -78,7 +78,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
     const id = new URLSearchParams(window.location.search).get('post')
     if (!id || !space.courseId) return
     let current = true
-    void forumApi.detail(space.courseId,id,new URLSearchParams(window.location.search).get('type') === 'homework' ? 'homework' : 'post').then(item => {if(current) setDiscussion(item)}).catch(reason => {if(current) setError(userFacingError(reason,'内容不可访问。'))})
+    void forumApi.detail(space.courseId,id,new URLSearchParams(window.location.search).get('type') === 'homework' ? 'homework' : 'post').then(item => {if(current) { if (item.kind === 'assignment') setSubmission(item); else setDiscussion(item) }}).catch(reason => {if(current) setError(userFacingError(reason,'内容不可访问。'))})
     return () => {current=false}
   },[space.courseId])
   const copy = async (text: string) => {

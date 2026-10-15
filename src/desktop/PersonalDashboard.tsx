@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import type { LearningSpace } from '@/features/learning/contracts'
 import { LearningDashboardPanel } from '@/features/learning/dashboard/LearningDashboardPanel'
+import { learningSectionForView } from '@/features/learning/dashboard/navigation'
 import type { ViewKey } from '@/types'
 
 export function PersonalDashboard({ view, space, loading, error, onRetry, hasSpaces = false, onChooseWorkspace }: {
@@ -28,5 +29,5 @@ export function PersonalDashboard({ view, space, loading, error, onRetry, hasSpa
       </div>
     </div></div>
   )
-  return <LearningDashboardPanel key={`${space.companyId}:${space.projectId}`} space={space} section="forum" />
+  return <LearningDashboardPanel key={`${space.companyId}:${space.projectId}`} space={space} section={learningSectionForView(view)} />
 }

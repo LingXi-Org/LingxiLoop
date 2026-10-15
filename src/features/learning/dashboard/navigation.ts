@@ -1,17 +1,74 @@
-import { UserGroupIcon } from '@hugeicons/core-free-icons'
+import {
+  Archive02Icon,
+  BubbleChatIcon,
+  ChartHistogramIcon,
+  Settings02Icon,
+  UserGroupIcon,
+} from '@hugeicons/core-free-icons'
 import type { ViewKey } from '@/types'
 import type { LearningSpace } from '../contracts'
-export type LearningDashboardSection = 'forum'
+
+export type LearningDashboardSection =
+  | 'overview'
+  | 'members'
+  | 'forum'
+  | 'settings'
+  | 'status'
+
+export interface LearningDashboardMenuItem {
+  section: LearningDashboardSection
+  label: string
+  icon: typeof ChartHistogramIcon
+  management?: boolean
+}
+
+const LEARNER_MENU: LearningDashboardMenuItem[] = [
+  { section: 'overview', label: '学习概览', icon: ChartHistogramIcon },
+  { section: 'forum', label: '论坛', icon: BubbleChatIcon },
+]
+
+const MANAGEMENT_MENU: LearningDashboardMenuItem[] = [
+  { section: 'settings', label: '课程设置', icon: Settings02Icon, management: true },
+  { section: 'members', label: '成员与邀请', icon: UserGroupIcon, management: true },
+  { section: 'status', label: '课程状态', icon: Archive02Icon, management: true },
+]
+
 type NavigationContext = Pick<LearningSpace, 'perspective' | 'canManage' | 'courseId'>
-export function getLearningDashboardMenu(input: NavigationContext) {
-  return input.courseId ? [{ section: 'forum' as const, label: '学习论坛', icon: UserGroupIcon, management: false }] : []
+
+export function getLearningDashboardMenu(input: NavigationContext): LearningDashboardMenuItem[] {
+  const menu = LEARNER_MENU.filter(item => item.section !== 'forum' || input.courseId)
+  return input.perspective === 'teacher' && input.canManage && input.courseId
+    ? [...menu, ...MANAGEMENT_MENU]
+    : menu
 }
-export function getLearningDashboardDefaultSection(): LearningDashboardSection { return 'forum' }
-export function isLearningDashboardSectionAvailable(section: LearningDashboardSection, input: NavigationContext) {
-  return section === 'forum' && Boolean(input.courseId)
+
+export function getLearningDashboardDefaultSection(input: NavigationContext): LearningDashboardSection {
+  return getLearningDashboardMenu(input)[0].section
 }
-export function viewForLearningSection(_section: LearningDashboardSection): ViewKey['view'] { return 'forum' }
-export function learningSectionForView(_view: ViewKey['view']): LearningDashboardSection { return 'forum' }
+
+export function isLearningDashboardSectionAvailable(
+  section: LearningDashboardSection,
+  input: NavigationContext,
+): boolean {
+  return getLearningDashboardMenu(input).some((item) => item.section === section)
+}
+
+const SECTION_VIEWS = {
+  overview: 'learning', forum: 'forum', settings: 'courses',
+  members: 'course-members', status: 'course-status',
+} as const satisfies Partial<Record<LearningDashboardSection, ViewKey['view']>>
+
+export function viewForLearningSection(section: LearningDashboardSection): ViewKey['view'] {
+  return SECTION_VIEWS[section as keyof typeof SECTION_VIEWS] ?? 'learning'
+}
+
+export function learningSectionForView(view: ViewKey['view']): LearningDashboardSection {
+  return (Object.keys(SECTION_VIEWS) as Array<keyof typeof SECTION_VIEWS>)
+    .find((section) => SECTION_VIEWS[section] === view) ?? 'overview'
+}
+
 export function viewForWorkspace(view: ViewKey['view'], space: NavigationContext): ViewKey['view'] {
-  return view === 'conversations' || view === 'agents' ? view : space.courseId ? 'forum' : 'conversations'
+  if (view === 'conversations' || view === 'agents') return view
+  const section = learningSectionForView(view)
+  return isLearningDashboardSectionAvailable(section, space) ? viewForLearningSection(section) : 'learning'
 }

@@ -1,3 +1,6 @@
+import { prepareAvatar } from '../identity/public.js'
+import type { UpdateCourseInput } from './contracts.js'
+import { updateCourseMetadata } from './courses-repository.js'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService, type PermissionAction } from '../access/public.js'
 import { appendDomainEventInTransaction } from '../events/public.js'
@@ -95,6 +98,26 @@ export class LearningApplication {
     return course
   }
 
+
+  async updateCourse(userId: string, courseId: string, patch: UpdateCourseInput) {
+    const avatar = await this.infrastructure.transaction(async (db) => {
+      const manager = await this.manager(userId, courseId, 'course:update', db, true)
+      const avatar = patch.avatar ? await prepareAvatar(db, { companyId: manager.companyId, userId }, patch.avatar, 'course') : undefined
+      await updateCourseMetadata(db, { courseId, companyId: manager.companyId, projectId: manager.projectId, patch, avatar })
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'course_update', userId, companyId: manager.companyId,
+        detail: { courseId, ...patch },
+      })
+      await enqueueLearningEffect(db, {
+        companyId: manager.companyId,
+        courseId,
+        kind: 'course_metadata.sync',
+        payload: { projectId: manager.projectId, studyRoom: patch.name !== undefined },
+      })
+      return avatar
+    })
+    return { ok: true as const, ...avatar }
+  }
 
   async members(userId: string, courseId: string) {
     const manager = await this.manager(userId, courseId, 'project_member:list')

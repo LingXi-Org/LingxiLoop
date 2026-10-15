@@ -1,6 +1,23 @@
+import type { ApiCourse, ApiCourseMember, ApiProjectInvitation, ApiProjectInvitationWithToken } from './contracts'
 import { http } from '@/api/core/http'
 import type { ApiProjectInvitationPreview, ApiProjectInvitationAccept, LearningSpace, CursorPage, LearningNotificationPreferences, LearningDelivery } from './contracts'
 export const learningApi = {
+  getCourse: (courseId: string) => http<ApiCourse>(`/courses/${encodeURIComponent(courseId)}`),
+  updateCourse: (courseId: string, input: { name?: string; description?: string; color?: string; avatar?: { seed: string } | { key: string } }) =>
+    http<{ ok: true; avatarUrl?: string; avatarSeed?: string | null }>(`/courses/${encodeURIComponent(courseId)}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  listCourseMembers: (courseId: string) =>
+    http<ApiCourseMember[]>(`/courses/${encodeURIComponent(courseId)}/members`),
+  updateCourseMember: (courseId: string, userId: string, role: 'teacher' | 'learner') =>
+    http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(userId)}`, { method: 'PATCH', body: JSON.stringify({ role }) }),
+  removeCourseMember: (courseId: string, userId: string) =>
+    http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(userId)}`, { method: 'DELETE' }),
+  listProjectInvitations: (projectId: string) =>
+    http<ApiProjectInvitation[]>(`/projects/${encodeURIComponent(projectId)}/invitations`),
+  createProjectInvitation: (projectId: string, input: { email?: string | null; note?: string | null; expiresInDays?: number; maxUses?: number }) =>
+    http<ApiProjectInvitationWithToken>(`/projects/${encodeURIComponent(projectId)}/invitations`, { method: 'POST', body: JSON.stringify(input) }),
+  revokeProjectInvitation: (projectId: string, invitationId: string) =>
+    http<{ ok: true; revoked: boolean }>(`/projects/${encodeURIComponent(projectId)}/invitations/${encodeURIComponent(invitationId)}`, { method: 'DELETE' }),
+
   previewProjectInvitation: (token: string) => http<ApiProjectInvitationPreview>(`/project-invitations/${encodeURIComponent(token)}`),
   acceptProjectInvitation: (token: string) => http<ApiProjectInvitationAccept>(`/project-invitations/${encodeURIComponent(token)}/accept`, { method: 'POST', body: '{}' }),
   listSpaces: (input: { cursor?: string; limit?: number } = {}) => {
