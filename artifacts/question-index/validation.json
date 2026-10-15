@@ -1,0 +1,60 @@
+{
+  "issue": 145,
+  "reports": {
+    "browser-report.json": {
+      "runId": "01a13f39-c7df-7654-91f7-7771d8c54da2",
+      "status": "passed",
+      "summary": {
+        "discovered": 6,
+        "selected": 6,
+        "executed": 6,
+        "passed": 6,
+        "failed": 0,
+        "interrupted": 0,
+        "flaky": 0,
+        "skipped": 0
+      }
+    },
+    "reduced-motion-report.json": {
+      "runId": "01a13f3f-a30e-7d73-b792-08b528cba7c8",
+      "status": "passed",
+      "summary": {
+        "discovered": 7,
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "interrupted": 0,
+        "flaky": 0,
+        "skipped": 0
+      }
+    },
+    "shell-report.json": {
+      "runId": "01a13f3b-a9bc-71e4-bfd7-31a6a0cf67bb",
+      "status": "passed",
+      "summary": {
+        "discovered": 43,
+        "selected": 2,
+        "executed": 2,
+        "passed": 2,
+        "failed": 0,
+        "interrupted": 0,
+        "flaky": 0,
+        "skipped": 0
+      }
+    }
+  },
+  "checks": {
+    "lint": "passed (existing warnings only)",
+    "typecheck": "passed",
+    "web_tests": "87 passed, 0 failed, 0 skipped",
+    "build": "passed",
+    "e2e_typecheck": "passed",
+    "fixture_typecheck": "passed"
+  },
+  "sourceSha256": {
+    "src/features/chat/components/ConversationThread.tsx": "a26779befd95347a0545b1dd85d0306eeade18060bef62bb1af7221fe9cf150d",
+    "src/features/chat/components/ConversationQuestionIndex.tsx": "7bba0e855556f7960294a3b75556eed167b51c1622c2464c6031a6b3f73e343b",
+    "src/styles/chat.css": "18436075bc8c1dfda4168a50b9324d8d24d8664d3a9a8190d8f5bba4c2cf1d02"
+  }
+}

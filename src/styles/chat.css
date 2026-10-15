@@ -550,3 +550,34 @@ input:focus, textarea:focus, button:focus { outline: none; }
     display: none;
   }
 }
+/* A reserved gutter keeps the question rail clear of messages and the composer. */
+.chat-question-index {
+  display: flex;
+  flex: 0 0 28px;
+  flex-direction: column;
+  min-height: 0;
+  padding-block: 12px;
+}
+.chat-question-index-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.chat-question-index-list::-webkit-scrollbar { display: none; }
+.chat-question-index-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  min-height: 28px;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+.chat-question-index-button:hover { background: var(--accent); color: var(--foreground); }
+.chat-question-index-button:focus-visible { outline: 2px solid var(--ring); outline-offset: -3px; }
+.chat-question-index-button:disabled { opacity: .5; cursor: wait; }
+.chat-question-index-dash { width: 10px; height: 2px; border-radius: 2px; background: currentColor; }
+.chat-question-index-button[aria-current='location'] { color: var(--primary); background: var(--accent); }
+.chat-question-index-button[aria-current='location'] .chat-question-index-dash { width: 18px; height: 3px; }

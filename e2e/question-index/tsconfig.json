@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "types": ["node", "vite/client"] },
+  "include": ["./fixture.tsx", "./*.e2e.ts", "../../e2e.question-index.config.ts"]
+}

@@ -1,0 +1,2606 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a13f3b-a9bc-71e4-bfd7-31a6a0cf67bb",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-15T11:03:57.880Z",
+    "finishedAt": "2026-10-15T11:04:45.060Z",
+    "project": {
+      "id": "lingxiloop-workbench-visual",
+      "configDigest": "9d24fe6711c29a9107541e333f52a5b4a7d5d61dea02fa7c649206a901794e01"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.44",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "24ca801c1088465006dd07a20cabc6a1f93ed36a",
+      "branch": "feat/145-question-index",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5187",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "cbcb1826e537c7376b73488334764d05f68115f6bea7e37bd6b38fe3927df2cb",
+        "testId": "e2e/visual/accessibility.e2e.ts::workbench%20text%20contrast%20and%20keyboard%20action%20%28light%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "workbench text contrast and keyboard action (light)"
+        ],
+        "file": "e2e/visual/accessibility.e2e.ts",
+        "source": {
+          "file": "e2e/visual/accessibility.e2e.ts",
+          "line": 5,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "93c893ddcdb281c8059229930203b4b736ece1ebfcf987d1abf0ddfbeb804b86",
+        "testId": "e2e/visual/accessibility.e2e.ts::workbench%20text%20contrast%20and%20keyboard%20action%20%28dark%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "workbench text contrast and keyboard action (dark)"
+        ],
+        "file": "e2e/visual/accessibility.e2e.ts",
+        "source": {
+          "file": "e2e/visual/accessibility.e2e.ts",
+          "line": 5,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "7b4d7bc9d9bd643c5fe3916b5600085661f458b001d24399d215fc4c660d6508",
+        "testId": "e2e/visual/accessibility.e2e.ts::admin%20shared%20components%20retain%20a%20readable%20usable%20shell",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "admin shared components retain a readable usable shell"
+        ],
+        "file": "e2e/visual/accessibility.e2e.ts",
+        "source": {
+          "file": "e2e/visual/accessibility.e2e.ts",
+          "line": 32,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "a3d1f123b598bfef77402b937fe12472d0276e9c83cba34767083a8e2bfbcdc3",
+        "testId": "e2e/visual/chat-bubble-colors.e2e.ts::conversation%20bubble%20colors%20%28light%2C%201440%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "conversation bubble colors (light, 1440)"
+        ],
+        "file": "e2e/visual/chat-bubble-colors.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-bubble-colors.e2e.ts",
+          "line": 8,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "aae153f58f7f8db5a84ab3b576fe4d325b9e743e6711f7cf87a8966e1c4ddd2e",
+        "testId": "e2e/visual/chat-bubble-colors.e2e.ts::conversation%20bubble%20colors%20%28light%2C%20390%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "conversation bubble colors (light, 390)"
+        ],
+        "file": "e2e/visual/chat-bubble-colors.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-bubble-colors.e2e.ts",
+          "line": 8,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "6b684ead18ce1f04279228d84d17f561260a1b7a77159f66982eecb027dbf9c5",
+        "testId": "e2e/visual/chat-bubble-colors.e2e.ts::conversation%20bubble%20colors%20%28dark%2C%201440%29",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "conversation bubble colors (dark, 1440)"
+        ],
+        "file": "e2e/visual/chat-bubble-colors.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-bubble-colors.e2e.ts",
+          "line": 8,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "abb6763d870415c33da3ece26567b4977855151ae7ac0acc08f33479f838dc37",
+        "testId": "e2e/visual/chat-bubble-colors.e2e.ts::conversation%20bubble%20colors%20%28dark%2C%20390%29",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "conversation bubble colors (dark, 390)"
+        ],
+        "file": "e2e/visual/chat-bubble-colors.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-bubble-colors.e2e.ts",
+          "line": 8,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "40ee3d9a64a3ff5a7ddae689733ff2da9ee4fd6a865d16507d901e3d56226a30",
+        "testId": "e2e/visual/chat-feedback.e2e.ts::conversation%20items%20and%20mention%20keyboard%20selection%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "conversation items and mention keyboard selection (1440)"
+        ],
+        "file": "e2e/visual/chat-feedback.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-feedback.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "fc47cbed95522aaf1add2038f4de5448aa0e39c5ed7ed82f29c4b05f1246c77b",
+        "testId": "e2e/visual/chat-feedback.e2e.ts::conversation%20items%20and%20mention%20keyboard%20selection%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "conversation items and mention keyboard selection (390)"
+        ],
+        "file": "e2e/visual/chat-feedback.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-feedback.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "274844f642a407742aa56ccf6b24fe7c442e40744d72220a82c356f9976e2dc8",
+        "testId": "e2e/visual/chat-feedback.e2e.ts::chat%20feedback%20keeps%20actionable%20state%20without%20internal%20task%20diagnostics%20%28partial%29",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "chat feedback keeps actionable state without internal task diagnostics (partial)"
+        ],
+        "file": "e2e/visual/chat-feedback.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-feedback.e2e.ts",
+          "line": 61,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "37c164173f03849e76302fc1b5785a6708ff29ff1e222850aeb9eed2be9aa1f2",
+        "testId": "e2e/visual/chat-feedback.e2e.ts::chat%20feedback%20keeps%20actionable%20state%20without%20internal%20task%20diagnostics%20%28blocked%29",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "chat feedback keeps actionable state without internal task diagnostics (blocked)"
+        ],
+        "file": "e2e/visual/chat-feedback.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-feedback.e2e.ts",
+          "line": 61,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "09cf6680edad1a2ee98c770c0a9336bab000d2d9b7507bed69ada6f3356c1397",
+        "testId": "e2e/visual/chat-feedback.e2e.ts::chat%20feedback%20keeps%20actionable%20state%20without%20internal%20task%20diagnostics%20%28failed%29",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "chat feedback keeps actionable state without internal task diagnostics (failed)"
+        ],
+        "file": "e2e/visual/chat-feedback.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-feedback.e2e.ts",
+          "line": 61,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d906c271c379b7c693e01795d84a375d0da55009b673f3872e7357ef3d4f1fed",
+        "testId": "e2e/visual/chat-feedback.e2e.ts::chat%20feedback%20keeps%20actionable%20state%20without%20internal%20task%20diagnostics%20%28delivery%29",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "chat feedback keeps actionable state without internal task diagnostics (delivery)"
+        ],
+        "file": "e2e/visual/chat-feedback.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-feedback.e2e.ts",
+          "line": 61,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d3f9408dad1a25ff3c6c2a89ad81f5b86e4b8c0a8032918f97dbf1c42bb1e609",
+        "testId": "e2e/visual/chat-feedback.e2e.ts::chat%20feedback%20keeps%20actionable%20state%20without%20internal%20task%20diagnostics%20%28cancelled%29",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "chat feedback keeps actionable state without internal task diagnostics (cancelled)"
+        ],
+        "file": "e2e/visual/chat-feedback.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-feedback.e2e.ts",
+          "line": 61,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "28fd762a1df43b83bb148fb42c1b1476e181b7dc4aea7efa3a5e92aa6a13b9c8",
+        "testId": "e2e/visual/chat-feedback.e2e.ts::chat%20feedback%20keeps%20actionable%20state%20without%20internal%20task%20diagnostics%20%28approval%29",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "chat feedback keeps actionable state without internal task diagnostics (approval)"
+        ],
+        "file": "e2e/visual/chat-feedback.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-feedback.e2e.ts",
+          "line": 61,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "096c6c8c2b99bd5b5c1f6f77b52cbb6e767047ab2ad16a0f51843300532589cc",
+        "testId": "e2e/visual/chat-feedback.e2e.ts::chat%20feedback%20keeps%20actionable%20state%20without%20internal%20task%20diagnostics%20%28empty-blocked%29",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "chat feedback keeps actionable state without internal task diagnostics (empty-blocked)"
+        ],
+        "file": "e2e/visual/chat-feedback.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-feedback.e2e.ts",
+          "line": 61,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9c7ecfc41f04e77d5840bc101400c03d183fc550844dedd7a933cdcd2d605bc2",
+        "testId": "e2e/visual/chat-regressions.e2e.ts::chat%20order%2C%20delivery%2C%20timeout%20recovery%20and%20canvas%20scrollbar%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "chat order, delivery, timeout recovery and canvas scrollbar (1440)"
+        ],
+        "file": "e2e/visual/chat-regressions.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-regressions.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-15T11:04:32.297Z",
+            "durationMs": 6620,
+            "artifacts": [
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:7"
+                },
+                "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-5a1d02c6/default/attempt-0/screenshots/001-chat-pending-1440.png",
+                "size": 180774,
+                "sha256": "8ccf288f12d11e2010f79d498bada974afcadd343fcb007c26a3b1e90f39f928"
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:21"
+                },
+                "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-5a1d02c6/default/attempt-0/screenshots/002-chat-canvas-scrollbar-1440.png",
+                "size": 159133,
+                "sha256": "b5efa36dbb759c91fcde4ffe9de0f1df74118f6294b2920b5dea8e54f7a61084"
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:31"
+                },
+                "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-5a1d02c6/default/attempt-0/screenshots/003-chat-timeout-preserved-1440.png",
+                "size": 163811,
+                "sha256": "0516a777f569e1c5e302eae0fd6e1981a1b0aeb821004d1ed6ee75e1667330a7"
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:3",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-5a1d02c6/default/attempt-0/trace/trace.zip",
+                "size": 8538053,
+                "sha256": "e5aec6688fc4a620b7fdc0e45a57612b3ad2b67ecfd6bb72990fb1715d12ed2e"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:32.369Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 8,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-regressions",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:32.370Z",
+                "durationMs": 2413,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:34.784Z",
+                "durationMs": 130,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 13,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [role=\\\"status\\\"][aria-label=\\\"发送中\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:34.915Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 14,
+                  "column": 104
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [data-message-footer] svg\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:34.942Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 15,
+                  "column": 96
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:34.977Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 16,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id] time\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:34.990Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 18,
+                  "column": 57
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:7",
+                "index": 7,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "chat-pending-1440",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.020Z",
+                "durationMs": 283,
+                "events": [],
+                "artifacts": [
+                  "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 19,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.303Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 20,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [role=\\\"status\\\"][aria-label=\\\"已送达\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.364Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 21,
+                  "column": 104
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] svg.lucide-check-check\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.409Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 22,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.431Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 16,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.452Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 24,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.472Z",
+                "durationMs": 227,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 25,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:14",
+                "index": 14,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.699Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 26,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.724Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 27,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:16",
+                "index": 16,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"打开画布预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.740Z",
+                "durationMs": 247,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 28,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:17",
+                "index": 17,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"收起画布预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:35.987Z",
+                "durationMs": 40,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 29,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.029Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 30,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.051Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 34,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.067Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 35,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "chat-canvas-scrollbar-1440",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.094Z",
+                "durationMs": 299,
+                "events": [],
+                "artifacts": [
+                  "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 47,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:22",
+                "index": 22,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"收起画布预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.394Z",
+                "durationMs": 225,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 48,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.619Z",
+                "durationMs": 101,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 49,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.720Z",
+                "durationMs": 39,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 50,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.761Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 51,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:26",
+                "index": 26,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"] [role=\\\"alert\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.786Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 52,
+                  "column": 84
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.812Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 53,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.848Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 54,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:29",
+                "index": 29,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.876Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 55,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.899Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 16,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:31",
+                "index": 31,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "chat-timeout-preserved-1440",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:36.915Z",
+                "durationMs": 235,
+                "events": [],
+                "artifacts": [
+                  "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 57,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:37.151Z",
+                "durationMs": 81,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 58,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:33",
+                "index": 33,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:37.235Z",
+                "durationMs": 1094,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 59,
+                  "column": 29
+                }
+              },
+              {
+                "id": "01a13f3c-3329-709c-9c6d-b7e32c6e1dc2:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"] [role=\\\"alert\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:38.329Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 60,
+                  "column": 84
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "5e2ac2547d64ecbd54d11a6dbb9ee20899885ba11f07c46703a5ee6859d3bbe6",
+        "testId": "e2e/visual/chat-regressions.e2e.ts::chat%20order%2C%20delivery%2C%20timeout%20recovery%20and%20canvas%20scrollbar%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "chat order, delivery, timeout recovery and canvas scrollbar (390)"
+        ],
+        "file": "e2e/visual/chat-regressions.e2e.ts",
+        "source": {
+          "file": "e2e/visual/chat-regressions.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-15T11:04:38.918Z",
+            "durationMs": 6081,
+            "artifacts": [
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:8"
+                },
+                "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-f4e2923a/default/attempt-0/screenshots/001-chat-pending-390.png",
+                "size": 60566,
+                "sha256": "b5d0555f3fdd806c56fe2bbafcfd238aebb2bdf76ee27227a572bc19045cbe53"
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:22"
+                },
+                "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-f4e2923a/default/attempt-0/screenshots/002-chat-canvas-scrollbar-390.png",
+                "size": 46464,
+                "sha256": "5b344c53845e7d6712aef3d367edb79d7f8b9105a98a0251b4b3ef80b05cc960"
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:32"
+                },
+                "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-f4e2923a/default/attempt-0/screenshots/003-chat-timeout-preserved-390.png",
+                "size": 59236,
+                "sha256": "3d21258ab3691cab431e315c35b003a8c70d3518946e11a476e99bb8c5bae3de"
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:3",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visual_chat-regressions.e2e.ts__chat_20order_2C_20delivery_2C_20timeout_20recovery_20and_20canvas_20scrollb-f4e2923a/default/attempt-0/trace/trace.zip",
+                "size": 4526853,
+                "sha256": "02da2958979f91a7d81033c3d87110a185dc55c3e54f1931175f510bdd6057f2"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:38.934Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 8,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=chat-regressions",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:38.934Z",
+                "durationMs": 2176,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"sidebar\\\"] [role=\\\"button\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:41.110Z",
+                "durationMs": 815,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 10,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:41.927Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 13,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [role=\\\"status\\\"][aria-label=\\\"发送中\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:41.946Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 14,
+                  "column": 104
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [data-message-footer] svg\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:41.971Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 15,
+                  "column": 96
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:41.988Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 16,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id] time\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.007Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 18,
+                  "column": 57
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "chat-pending-390",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.026Z",
+                "durationMs": 131,
+                "events": [],
+                "artifacts": [
+                  "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 19,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.159Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 20,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] [role=\\\"status\\\"][aria-label=\\\"已送达\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.219Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 21,
+                  "column": 104
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"regression-user\\\"] svg.lucide-check-check\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.240Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 22,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.253Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 16,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.269Z",
+                "durationMs": 47,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 24,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:14",
+                "index": 14,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.317Z",
+                "durationMs": 63,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 25,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:15",
+                "index": 15,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.380Z",
+                "durationMs": 184,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 26,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.564Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 27,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:17",
+                "index": 17,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"打开画布预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.576Z",
+                "durationMs": 191,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 28,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:18",
+                "index": 18,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"收起画布预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.768Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 29,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.791Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 30,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.803Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 34,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.820Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 35,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:22",
+                "index": 22,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "chat-canvas-scrollbar-390",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.836Z",
+                "durationMs": 114,
+                "events": [],
+                "artifacts": [
+                  "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 47,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:23",
+                "index": 23,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"收起画布预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:42.951Z",
+                "durationMs": 261,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 48,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.212Z",
+                "durationMs": 103,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 49,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.315Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 50,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:26",
+                "index": 26,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.345Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 51,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"] [role=\\\"alert\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.364Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 52,
+                  "column": 84
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.375Z",
+                "durationMs": 41,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 53,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:29",
+                "index": 29,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.417Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 54,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.430Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 55,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:31",
+                "index": 31,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.440Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 16,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:32",
+                "index": 32,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "chat-timeout-preserved-390",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.453Z",
+                "durationMs": 112,
+                "events": [],
+                "artifacts": [
+                  "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 57,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:33",
+                "index": 33,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.565Z",
+                "durationMs": 70,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 58,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:43.636Z",
+                "durationMs": 1083,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 59,
+                  "column": 29
+                }
+              },
+              {
+                "id": "01a13f3c-4d06-72ae-9eeb-b30bffad02ae:35",
+                "index": 35,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"run-regression\\\"] [role=\\\"alert\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-15T11:04:44.719Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visual/chat-regressions.e2e.ts",
+                  "line": 60,
+                  "column": 84
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "35697058bb84dae7e81f9385dc50da211f30bf7fccd7965f997aac49d21f4e7f",
+        "testId": "e2e/visual/empty-states.e2e.ts::empty%20conversation%20fixture%20offers%20the%20existing%20creation%20dialog",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "empty conversation fixture offers the existing creation dialog"
+        ],
+        "file": "e2e/visual/empty-states.e2e.ts",
+        "source": {
+          "file": "e2e/visual/empty-states.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2adc0133d7c6361bbe6abd3de120de42dde6785b71910ba64a90e9a8c805db58",
+        "testId": "e2e/visual/empty-states.e2e.ts::empty%20learning%20fixture%20provides%20the%20teacher%20next%20step",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "empty learning fixture provides the teacher next step"
+        ],
+        "file": "e2e/visual/empty-states.e2e.ts",
+        "source": {
+          "file": "e2e/visual/empty-states.e2e.ts",
+          "line": 13,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "73bc0c0e6b0e4bd689dce4a77d8fe097f5b5ed772179244d71d2469a704803bd",
+        "testId": "e2e/visual/empty-states.e2e.ts::empty%20learning%20fixture%20provides%20the%20student%20next%20step",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "empty learning fixture provides the student next step"
+        ],
+        "file": "e2e/visual/empty-states.e2e.ts",
+        "source": {
+          "file": "e2e/visual/empty-states.e2e.ts",
+          "line": 13,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "4ea393710df7b757d7c3ae1e00ad3857464a5c264ef6c4387f030296ec88a3e1",
+        "testId": "e2e/visual/empty-states.e2e.ts::empty%20read-only%20course%20offers%20workspace%20selection",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "empty read-only course offers workspace selection"
+        ],
+        "file": "e2e/visual/empty-states.e2e.ts",
+        "source": {
+          "file": "e2e/visual/empty-states.e2e.ts",
+          "line": 27,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f74427b876c53e13f2383725dd4a50b0cb7b36fea19a30bba879abfed9b1fc69",
+        "testId": "e2e/visual/mention-names.e2e.ts::sent%20mentions%20show%20member%20names%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "sent mentions show member names (1440)"
+        ],
+        "file": "e2e/visual/mention-names.e2e.ts",
+        "source": {
+          "file": "e2e/visual/mention-names.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f44675c0f9cadd1e197a8b0099b90fb2d74178a44d39b561b47dd4a09bad2524",
+        "testId": "e2e/visual/mention-names.e2e.ts::sent%20mentions%20show%20member%20names%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "sent mentions show member names (390)"
+        ],
+        "file": "e2e/visual/mention-names.e2e.ts",
+        "source": {
+          "file": "e2e/visual/mention-names.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e1da1c83f16ac1959624eaa6469d9ea448f6f37247da7c22381e439c49318925",
+        "testId": "e2e/visual/message-actions.e2e.ts::complete%20assistant%20actions%20copy%2C%20rate%2C%20regenerate%20and%20export%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "complete assistant actions copy, rate, regenerate and export (1440)"
+        ],
+        "file": "e2e/visual/message-actions.e2e.ts",
+        "source": {
+          "file": "e2e/visual/message-actions.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "59cefc7ce574882cce32373fa1a96b0b1d35110c6a64ada6b1e2cd0979e60516",
+        "testId": "e2e/visual/message-actions.e2e.ts::complete%20assistant%20actions%20copy%2C%20rate%2C%20regenerate%20and%20export%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "complete assistant actions copy, rate, regenerate and export (390)"
+        ],
+        "file": "e2e/visual/message-actions.e2e.ts",
+        "source": {
+          "file": "e2e/visual/message-actions.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "6e6551a6bbfc08c91e7768d3d9cdb9f214665cb036e7ac25923c5dd356551e6c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::disabled%20interactive%20history%20preserves%20other%20cards%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "disabled interactive history preserves other cards (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 10,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b6fa43d740305be454993ff5003f6eaac3fcb9238e25fe1925fdb2b75abb7388",
+        "testId": "e2e/visual/retire-layout.e2e.ts::disabled%20interactive%20history%20preserves%20other%20cards%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "disabled interactive history preserves other cards (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 10,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9a9aca532a2d85205bc4a89fa820549c6c3b7b4d0d1fb2d3789a1c624deb832c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281920%29",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "conversation edges and readable bodies (1920)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ee3b970565a71fbe19e8605fca68354f4dfe2e52a443c2205c7449841aeb5098",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "conversation edges and readable bodies (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b14d155c87e2ae459b589b6542aecbf9e07830629cdcf2f1a416324c3d2ebd1c",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%281024%29",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "conversation edges and readable bodies (1024)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9fddbfe7db736eecc1644f9fbe47fde87fcb3ec4336740710dcca4a2db7d4c00",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%28767%29",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "conversation edges and readable bodies (767)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9cfcb9943c68c2902c41a01fbed7d570a2c16a84f66a1a1814828d44d3f55e36",
+        "testId": "e2e/visual/retire-layout.e2e.ts::conversation%20edges%20and%20readable%20bodies%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "conversation edges and readable bodies (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 30,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c8315007c41446bf3cdabaafe288786fa776718d77c207ce1e0a4ad72a605676",
+        "testId": "e2e/visual/retire-layout.e2e.ts::retired%20history%20stays%20readable%20without%20actions%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "retired history stays readable without actions (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 66,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "6421c621af13449cba6d622052810fdc91f8e54af557a8fd92716525c36e3b3a",
+        "testId": "e2e/visual/retire-layout.e2e.ts::retired%20history%20stays%20readable%20without%20actions%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "retired history stays readable without actions (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 66,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b777d05ba4f5caea382f538d133ddc01d952c210e047b4ff7892412e354e8508",
+        "testId": "e2e/visual/retire-layout.e2e.ts::rich%20message%20and%20detail%20drawer%20fit%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 9,
+        "titlePath": [
+          "rich message and detail drawer fit (1440)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 82,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "4efc184ae2c518be8956fceb3ce3413259f365de256de0765eb5b257d44fa869",
+        "testId": "e2e/visual/retire-layout.e2e.ts::rich%20message%20and%20detail%20drawer%20fit%20%28767%29",
+        "kind": "test",
+        "declarationIndex": 10,
+        "titlePath": [
+          "rich message and detail drawer fit (767)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 82,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c289269c2f394ad0d771d11f795d7d19cc16e627c7d3d7681dbfb0e0ba642b45",
+        "testId": "e2e/visual/retire-layout.e2e.ts::rich%20message%20and%20detail%20drawer%20fit%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 11,
+        "titlePath": [
+          "rich message and detail drawer fit (390)"
+        ],
+        "file": "e2e/visual/retire-layout.e2e.ts",
+        "source": {
+          "file": "e2e/visual/retire-layout.e2e.ts",
+          "line": 82,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "fcd3b49f2a40db7045b2f0ea5c0cbf294bee9d9818062d55732afa9cfa5d77c8",
+        "testId": "e2e/visual/streaming-text.e2e.ts::streaming%20tail%20follows%20the%20latest%20text%20%28light%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "streaming tail follows the latest text (light)"
+        ],
+        "file": "e2e/visual/streaming-text.e2e.ts",
+        "source": {
+          "file": "e2e/visual/streaming-text.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ed2106c113cd01eaca5b862df9fec60aaf1510b5641bf6370b864e5d8166abd3",
+        "testId": "e2e/visual/streaming-text.e2e.ts::streaming%20tail%20follows%20the%20latest%20text%20%28dark%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "streaming tail follows the latest text (dark)"
+        ],
+        "file": "e2e/visual/streaming-text.e2e.ts",
+        "source": {
+          "file": "e2e/visual/streaming-text.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "65277ae44a147aebaa8f0bf54bc61856d663229d1499823dcedc0ea4d937d39d",
+        "testId": "e2e/visual/workbench.e2e.ts::workbench%20surfaces%20and%20readable%20conversation%20column%20%28dark%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "workbench surfaces and readable conversation column (dark)"
+        ],
+        "file": "e2e/visual/workbench.e2e.ts",
+        "source": {
+          "file": "e2e/visual/workbench.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d40365f73f65966aa1b85e92ecd9dcdc4cec9705cc83f29a4b62573de3a4ed92",
+        "testId": "e2e/visual/workbench.e2e.ts::workbench%20surfaces%20and%20readable%20conversation%20column%20%28light%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "workbench surfaces and readable conversation column (light)"
+        ],
+        "file": "e2e/visual/workbench.e2e.ts",
+        "source": {
+          "file": "e2e/visual/workbench.e2e.ts",
+          "line": 7,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "0159034241b357cc07efb2180e5e24eb1948cf7484d91c483906ae7bd8f6216b",
+        "testId": "e2e/visual/workbench.e2e.ts::wide%20chat%2C%20narrow%20desktop%20and%20mobile%20preserve%20layout%20and%20actions",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "wide chat, narrow desktop and mobile preserve layout and actions"
+        ],
+        "file": "e2e/visual/workbench.e2e.ts",
+        "source": {
+          "file": "e2e/visual/workbench.e2e.ts",
+          "line": 48,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 43,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 43,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 13734890,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
