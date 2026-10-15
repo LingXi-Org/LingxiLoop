@@ -31,7 +31,7 @@ for(const item of (recent.updates??[]).slice(0,35)) {
  const u=await read('GetUpdate',{id:item.id})
  console.log(JSON.stringify({id:item.id,operation:u.operation,target:u.target,status:u.status,success:u.success,start_ts:u.start_ts,
  logs:(u.logs??[]).map(l=>({stage:l.stage,success:l.success,stdoutBytes:(l.stdout??'').length,stderrBytes:(l.stderr??'').length,
- failureDetails:l.stage==='Compose Pull' && !l.success ? (l.stderr??'').split('\n').filter(line=>/error|failed|denied|timeout|unexpected status/i.test(line)).map(safeError):[],
+ failureDetails:['Compose Pull','Compose Up'].includes(l.stage) && !l.success ? (l.stderr??'').split('\n').filter(line=>/error|failed|denied|timeout|unexpected status/i.test(line)).map(safeError):[],
  signals:Object.entries(signals).filter(([,p])=>p.test(`${l.stdout??''}\n${l.stderr??''}`)).map(([name])=>name),
  childUpdates:[...new Set((`${l.stdout??''}\n${l.stderr??''}`).match(/\b[0-9a-f]{24}\b/g)??[])],
  }))}))
