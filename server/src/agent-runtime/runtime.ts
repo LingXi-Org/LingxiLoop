@@ -178,7 +178,7 @@ export async function startLingxiOSWorker() {
     model: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL,
       requestTimeoutMs: positiveInteger('AGENT_OS_MODEL_REQUEST_TIMEOUT_MS', 90_000),
       maxThinkingTokens: 0, capabilities: { parallelTools: false },
-      ...(env.OPENAI_MODEL === 'deepseek-ai/DeepSeek-V4-Flash' && new URL(env.OPENAI_BASE_URL).hostname === 'api.siliconflow.cn'
+      ...(['deepseek-ai/DeepSeek-V4-Flash', 'zai-org/GLM-5.2'].includes(env.OPENAI_MODEL) && new URL(env.OPENAI_BASE_URL).hostname === 'api.siliconflow.cn'
         ? { contextWindowTokens: 1_000_000 } : {}) },
     worker: { id: `lingxiloop-${env.INSTANCE_ID}`, concurrency,
       reservedInteractiveRuns: modelRate('AGENT_OS_RESERVED_INTERACTIVE_RUNS', concurrency > 1 ? 1 : 0),

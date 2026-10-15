@@ -1,0 +1,64 @@
+{
+  "passed": true,
+  "runtime": "3.4.4",
+  "model": "zai-org/GLM-5.2",
+  "realProvider": true,
+  "results": [
+    {
+      "status": "succeeded",
+      "delivered": true
+    },
+    {
+      "status": "succeeded",
+      "delivered": true
+    }
+  ],
+  "requests": [
+    {
+      "bytes": 226360,
+      "stream": true
+    },
+    {
+      "bytes": 9238,
+      "stream": false
+    },
+    {
+      "bytes": 433225,
+      "stream": true
+    },
+    {
+      "bytes": 9239,
+      "stream": false
+    }
+  ],
+  "calls": [
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 51008
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 1728
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 93104
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 1721
+    }
+  ],
+  "deliveredOncePerTurn": true,
+  "reasoningDisabled": true,
+  "transport": "recording WuKong fixture",
+  "reproduce": "node e2e/server/model-context.mjs --live-model-context"
+}
