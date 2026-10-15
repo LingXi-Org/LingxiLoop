@@ -10,7 +10,7 @@ import { HomeworkSubmissionView } from './HomeworkReport'
 import { HomeworkStudent } from './HomeworkStudent'
 import { HomeworkTeacher } from './HomeworkTeacher'
 
-export function HomeworkDetail({ space, item, onClose, onChanged }: { space: LearningSpace; item: ForumItem; onClose(): void; onChanged(): void }) {
+export function HomeworkDetail({ space, item, onChanged }: { space: LearningSpace; item: ForumItem; onChanged(): void }) {
   const [detail, setDetail] = useState<Detail | null>(null), [error, setError] = useState('')
   const epoch = useRef(0)
   const load = useCallback(async () => {
@@ -37,7 +37,7 @@ export function HomeworkDetail({ space, item, onClose, onChanged }: { space: Lea
         {homework.status === 'CLOSED' && <Badge variant="outline">已关闭</Badge>}
       </section>
       {detail.teacher ? <HomeworkTeacher homework={homework} canReview={space.canReview} canEdit={space.canEditContent} onUpdated={next => { epoch.current++; setDetail(next); onChanged() }} />
-        : detail.student && <HomeworkStudent key={homework.id} homework={homework} student={detail.student} space={space} onUpdated={student => { epoch.current++; setDetail(previous => previous ? { ...previous, student } : previous) }} onSubmitted={async () => { await load(); onChanged() }} onNavigate={onClose} onUploading={() => {}} onRefresh={load} />}
+        : detail.student && <HomeworkStudent key={homework.id} homework={homework} student={detail.student} space={space} onUpdated={student => { epoch.current++; setDetail(previous => previous ? { ...previous, student } : previous) }} onSubmitted={async () => { await load(); onChanged() }} onUploading={() => {}} onRefresh={load} />}
       {!detail.teacher && <History key={detail.student?.latestSubmission?.id} courseId={homework.courseId} homeworkId={homework.id} teacher={detail.teacher} />}
     </>}
   </div>

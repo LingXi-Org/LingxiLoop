@@ -1,6 +1,6 @@
 import { openReference } from '../forum/ConversationReferences'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
+import { MemoCard } from '../forum/memos/MemoCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,9 +28,8 @@ export function HomeworkTeacher({ homework, canReview, canEdit, onUpdated }: { h
   }, [homework.courseId, homework.id,search])
   useEffect(() => {setLearners([]);setNextOffset(null);const timer=setTimeout(()=>void load(),200);return ()=>{clearTimeout(timer);epoch.current++}}, [load])
   return <div className="space-y-6">
-    {canEdit && <section aria-label="作业安排" className="space-y-3 rounded-lg border p-4">
-      <h3 className="font-semibold">作业安排</h3>
-      <p className="text-sm text-muted-foreground">已发布的要求保持不变。需要调整要求时，请关闭这份作业，再与助手拟定新作业。</p>
+    {canEdit && <details className="space-y-3 text-sm">
+      <summary className="cursor-pointer text-muted-foreground focus-visible:outline-2">作业安排</summary>
       {homework.dueAt && <form className="flex flex-wrap items-end gap-2" onSubmit={async event => {
         event.preventDefault(); if (busy || !dueAt) return
         setBusy(true); setError('')
@@ -50,12 +49,11 @@ export function HomeworkTeacher({ homework, canReview, canEdit, onUpdated }: { h
           finally { setBusy(false) }
         }}>确认关闭</Button></div>
       </div>)}
-    </section>}
+    </details>}
     <section aria-label="学生进度与验收" className="space-y-4" aria-busy={busy}>
-      <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">学生进度与验收</h3><Button variant="ghost" size="sm" disabled={busy} onClick={() => void load()}>刷新进度</Button></div>
-      <div className="flex gap-2"><Input type="search" aria-label="按学生姓名检索" placeholder="检索全部学生的姓名或身份编号" value={search} maxLength={200} onChange={event=>setSearch(event.target.value)}/>{search&&<Button variant="ghost" onClick={()=>setSearch('')}>清空检索</Button>}</div>
-      <p className="text-sm text-muted-foreground">提交前可查看进度和待核实要求。作答、报告在学生正式提交后显示，报告会保留尚未掌握、需要帮助和待核实的情况。</p>
-      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      <h3 className="text-sm font-medium">学生作答</h3>
+      <div className="flex gap-2"><Input type="search" aria-label="按学生姓名检索" placeholder="搜索学生姓名或身份编号" value={search} maxLength={200} onChange={event=>setSearch(event.target.value)}/>{search&&<Button variant="ghost" onClick={()=>setSearch('')}>清空检索</Button>}</div>
+      {error && <p role="alert" className="text-sm text-destructive">{error}<Button variant="link" onClick={()=>void load()}>重试</Button></p>}
       {!learners.length && !busy && !error && <p className="text-sm text-muted-foreground">{search?'没有符合检索条件的学生。':'还没有学生进度。'}</p>}
       {learners.map(learner => <Learner key={learner.learnerId} learner={learner} homework={homework} canReview={canReview} onChanged={load} />)}
       {nextOffset !== null && <Button variant="outline" disabled={busy} onClick={() => void load(nextOffset)}>更多学生</Button>}
@@ -67,6 +65,9 @@ function Learner({ learner, homework, canReview, onChanged }: { learner: Homewor
   const id = useId()
   const [reason, setReason] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('')
   const trigger=useRef<HTMLButtonElement>(null)
+  const scroll=useRef(0)
+  const expand=()=>{if(!open)scroll.current=trigger.current?.closest('[data-forum-scroll]')?.scrollTop??0;setOpen(true)}
+  const collapse=()=>{setOpen(false);requestAnimationFrame(()=>{const container=trigger.current?.closest('[data-forum-scroll]');if(container)container.scrollTop=scroll.current;trigger.current?.focus({preventScroll:true})})}
   const [open,setOpen]=useState(false),[reference,setReference]=useState(false)
   const submission = learner.latestSubmission
   useEffect(()=>{if(open&&reference&&submission){openReference(submission.id);setReference(false)}},[open,reference,submission])
@@ -77,13 +78,14 @@ function Learner({ learner, homework, canReview, onChanged }: { learner: Homewor
     catch (cause) { setError(userFacingError(cause, '验收未能保存，请刷新进度后重试。')) }
     finally { setBusy(false) }
   }
-  return <article aria-label={learner.learnerName} className="space-y-3 rounded-lg border p-4">
-    <div className="flex flex-wrap items-center justify-between gap-2"><button ref={trigger} type="button" aria-expanded={open} aria-controls={`${id}-answer`} onClick={()=>setOpen(!open)} className="min-w-0 flex-1 rounded-sm text-start focus-visible:outline-2"><span className="block truncate text-sm font-medium">{open?'▾':'▸'} {learner.learnerName}</span><span className="block truncate text-xs text-muted-foreground" title={learner.learnerId}>{learner.learnerId}</span><span className="block text-xs text-muted-foreground">{submission?new Date(submission.submittedAt).toLocaleString():'尚未提交'}</span></button>
-    <Badge variant="secondary">{submission?(submission.report.verification==='unverified'?'证据不足 / 无法判断':submission.report.criteria.every(c=>c.met&&c.independent)?'已掌握':'尚需巩固'):homeworkStatus[learner.status]}</Badge>
-    {submission?.conversationReferences?.length?<a className="text-xs underline focus-visible:outline-2" href={`#${submission.id}-reference-0`} onClick={event=>{event.preventDefault();setOpen(true);setReference(true)}}>引用对话</a>:<span className="text-xs text-muted-foreground">未关联对话</span>}</div>
-    {open&&<div id={`${id}-answer`} className="space-y-3">
+  return <MemoCard label={learner.learnerName} author={learner.learnerName} authorDetail={learner.learnerId} createdAt={submission?.submittedAt}
+    disclosure={{ref:trigger,expanded:open,controls:`${id}-answer`,onToggle:()=>open?collapse():expand()}} actions={<span className="text-xs text-muted-foreground">{submission?`第 ${submission.version} 版`:'尚未提交'}</span>}>
+    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+    <span>{submission?(submission.report.verification==='unverified'?'证据不足 / 无法判断':submission.report.criteria.length>0&&submission.report.criteria.every(c=>c.met&&c.independent)?'已掌握':'尚需巩固'):homeworkStatus[learner.status]}</span>
+    {submission?.conversationReferences?.length?<a className="underline focus-visible:outline-2" href={`#${submission.id}-reference-0`} onClick={event=>{event.preventDefault();expand();setReference(true)}}>引用对话</a>:<span>未关联对话</span>}</div>
+    {open&&<div id={`${id}-answer`} className="w-full space-y-3 pt-2">
     {learner.missingCriteria.length > 0 && <div className="space-y-1 text-sm"><p className="font-medium">待核实或待巩固</p><ul className="list-disc space-y-1 ps-5 text-muted-foreground">{learner.missingCriteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul></div>}
-    {submission && <HomeworkSubmissionView submission={submission} />}
+    {submission && <HomeworkSubmissionView submission={submission} framed={false} />}
     {submission && canReview && <form className="space-y-3" onSubmit={event => event.preventDefault()}>
       <div className="space-y-2"><Label htmlFor={`${id}-reason`}>验收意见</Label><Textarea id={`${id}-reason`} value={reason} required maxLength={4000} disabled={busy} placeholder="说明通过的依据，或需要改进的内容" onChange={event => setReason(event.target.value)} /></div>
       <div className="flex flex-wrap gap-2">
@@ -97,12 +99,12 @@ function Learner({ learner, homework, canReview, onChanged }: { learner: Homewor
     </details>}
     {submission && <LearnerHistory homework={homework} learnerId={learner.learnerId} latestId={submission.id}/>}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-    <Button variant="ghost" size="sm" onClick={()=>{setOpen(false);requestAnimationFrame(()=>trigger.current?.focus({preventScroll:true}))}}>收起作答</Button></div>}
-  </article>
+    <Button variant="ghost" size="sm" onClick={collapse}>收起作答</Button></div>}
+  </MemoCard>
 }
 
 function LearnerHistory({homework,learnerId,latestId}:{homework:Homework;learnerId:string;latestId:string}) {
   const [items,setItems]=useState<import('./contracts').HomeworkSubmission[]>([]),[next,setNext]=useState<number|null>(0),[error,setError]=useState('')
   const load=async()=>{try{const page=await homeworkApi.submissions(homework.courseId,homework.id,next??0,learnerId);setItems(old=>[...old,...page.items.filter(s=>s.id!==latestId)]);setNext(page.nextOffset)}catch(reason){setError(userFacingError(reason,'历史版本加载失败。'))}}
-  return <div className="space-y-3">{items.map(s=><details key={s.id}><summary className="cursor-pointer text-sm focus-visible:outline-2">历史版本 · 第 {s.version} 次提交</summary><HomeworkSubmissionView submission={s}/></details>)}{next!==null&&<Button variant="outline" onClick={()=>void load()}>查看历史版本</Button>}{error&&<p role="alert">{error}</p>}</div>
+  return <div className="space-y-3">{items.map(s=><details key={s.id}><summary className="cursor-pointer text-sm focus-visible:outline-2">历史版本 · 第 {s.version} 次提交 · {new Date(s.submittedAt).toLocaleString()}</summary><HomeworkSubmissionView submission={s} framed={false}/></details>)}{next!==null&&<Button variant="ghost" size="sm" onClick={()=>void load()}>查看历史版本</Button>}{error&&<p role="alert">{error}</p>}</div>
 }

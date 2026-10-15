@@ -72,6 +72,7 @@ test('inline Memos lifecycle, drafts, moderation, assignments and private histor
   await browser.keyboard.press('Escape')
   await expect(card.getByRole('button','回应 👍',{exact:true})).toHaveAttribute('aria-pressed','true')
   await card.getByRole('button','评论',{exact:true}).tap()
+  await screen.getByRole('button','写评论',{exact:true}).tap()
   await browser.locator('[data-memo-detail]').getByLabel('发表评论').fill('Persisted discussion')
   await screen.getByRole('button','发送评论').tap()
   await expect(screen.getByText('Persisted discussion',{exact:true})).toBeVisible()
@@ -93,10 +94,14 @@ test('inline Memos lifecycle, drafts, moderation, assignments and private histor
   await homework.getByRole('button','提交作业',{exact:true}).tap()
   const dialog=browser.locator('[data-memo-detail]')
   const selectReference=async()=>{
-    await screen.getByLabel('选择学习对话').tap();await screen.getByRole('option','我的作业学习对话',{exact:true}).tap()
-    const summary=browser.locator('fieldset summary').filter({hasText:'我用两个全等三角形'})
+    if(!await browser.evaluate(()=>Boolean(document.querySelector('[aria-label="选择学习对话"]')?.textContent?.includes('我的作业学习对话')))) {
+      await screen.getByLabel('选择学习对话').tap();await screen.getByRole('option','我的作业学习对话',{exact:true}).tap()
+    }
+    const reference=browser.locator('fieldset details').filter({hasText:'我用两个全等三角形'})
+    await expect(reference).toBeVisible()
     const checked=screen.getByRole('checkbox','引用这段对话')
-    if(!await checked.isVisible())await summary.tap()
+    if(await reference.getAttribute('open')===null)await reference.getByText('我用两个全等三角形拼成长方形，所以面积是底乘高的一半。',{exact:true}).first().tap()
+    await expect(checked).toBeVisible()
     await checked.check()
   }
   await dialog.getByLabel('作业内容').fill('Original student answer')

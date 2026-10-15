@@ -81,3 +81,10 @@ collapsed student rows, whole-roster server search, per-student history, frozen
 selected conversation excerpts and genuine assessment states. These use existing
 host controls; no replacement forum design or Memos backend is introduced.
 `docs/issue-146-validation.md` records validation and source provenance.
+
+The comment composer follows upstream `MemoCommentSection`'s `showEditor` state:
+only “写评论” is shown initially, the editor opens in the comment stack, and
+successful creation or cancellation closes it. Student rows reuse `MemoCard`'s
+MemoView classes, avatar, author and relative time. The course-specific disclosure
+button expands content within that same card. Statuses and reference links use
+plain metadata text; there are no nested submission cards or extra status panels.

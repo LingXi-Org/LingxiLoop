@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { ConversationReferencePicker, ConversationReferences, openReference } from './ConversationReferences'
 import { userFacingError } from '@/lib/userFacingError'
 import type { LearningSpace } from '../contracts'
@@ -13,10 +12,9 @@ import { MemoContent } from './memos/MemoContent'
 import { contentDraftSchema, emptyContent, useForumDraft } from './useForumDraft'
 
 const sourceLabels = { STUDENT_ORIGINAL: '学生原创',AGENT_RELAY: 'Agent 代交',AGENT_GENERATED: 'Agent 生成' }
-export function Version({ submission }: { submission: SubmissionVersion }) {
-  return <MemoCard label={`第 ${submission.version} 版提交`} author={submission.learnerName} createdAt={submission.submittedAt}
-    actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>
-    <div className="flex flex-wrap items-center gap-2"><Badge variant="secondary">{sourceLabels[submission.source]}</Badge>{submission.late && <Badge variant="outline">迟交</Badge>}</div>
+export function Version({ submission, framed = true }: { submission: SubmissionVersion; framed?: boolean }) {
+  const content = <div className="w-full space-y-3">
+    <p className="text-xs text-muted-foreground">{sourceLabels[submission.source]}{submission.late && ' · 迟交'}</p>
     <MemoContent content={submission.answer} />
     <p className="text-sm">学习评价：{assessmentLabel(submission.assessment)}</p>
     {submission.assessment?.reason && <MemoContent content={submission.assessment.reason}/>}
@@ -24,9 +22,9 @@ export function Version({ submission }: { submission: SubmissionVersion }) {
     <ConversationReferences references={submission.conversationReferences} id={submission.id}/>
     <p className="text-xs text-muted-foreground">学习评价供教师参考，不等同于正式成绩。</p>
     <ForumFiles links={submission.links} attachments={submission.attachments} />
-    {submission.source === 'AGENT_GENERATED' && <p className="text-xs text-muted-foreground">此版本由 Agent 生成，已保留来源标记。</p>}
-    {submission.feedback?.map(feedback => <div key={feedback.id} className="w-full rounded border p-3"><p className="mb-2 text-xs text-muted-foreground">{feedback.kind === 'TEACHER' ? '教师反馈' : '历史 Agent 评价'}{feedback.status !== 'ACCEPTED' ? ` · ${feedback.status === 'PENDING' ? '待审核' : '未采纳'}` : ''} · {new Date(feedback.createdAt).toLocaleString()}</p><MemoContent content={feedback.body} /></div>)}
-  </MemoCard>
+    {submission.feedback?.map(feedback => <div key={feedback.id} className="border-s-2 ps-3"><p className="mb-2 text-xs text-muted-foreground">{feedback.kind === 'TEACHER' ? '教师反馈' : '历史 Agent 评价'}{feedback.status !== 'ACCEPTED' ? ` · ${feedback.status === 'PENDING' ? '待审核' : '未采纳'}` : ''} · {new Date(feedback.createdAt).toLocaleString()}</p><MemoContent content={feedback.body} /></div>)}
+  </div>
+  return framed ? <MemoCard label={`第 ${submission.version} 版提交`} author={submission.learnerName} createdAt={submission.submittedAt} actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>{content}</MemoCard> : content
 }
 
 export function assessmentLabel(assessment:SubmissionAssessment|null) {
@@ -90,10 +88,20 @@ function SubmissionStudents({space,item}:{space:LearningSpace;item:ForumItem}) {
     catch(reason){if(request===epoch.current)setError(userFacingError(reason,'学生列表加载失败。'))}finally{if(request===epoch.current)setBusy(false)}
   },[space.courseId,item.id,search])
   useEffect(()=>{setStudents([]);setNext(null);const timer=setTimeout(()=>void load(),200);return ()=>{clearTimeout(timer);epoch.current++}},[load])
+  useEffect(()=>{
+    if(!students.some(student=>student.assessment?.status==='PENDING'||student.assessment?.status==='FAILED'))return
+    // Refresh the already loaded pages without discarding pagination or open rows.
+    const timer=setInterval(()=>{
+      const request=epoch.current
+      void Promise.all(Array.from({length:Math.ceil(students.length/50)},(_,index)=>forumApi.students(space.courseId!,item.id,index*50,search)))
+        .then(pages=>{if(request===epoch.current){setStudents(pages.flatMap(page=>page.items));setNext(pages.at(-1)?.nextOffset??null)}})
+        .catch(()=>{})
+    },5000);return ()=>clearInterval(timer)
+  },[students,space.courseId,item.id,search])
   return <section aria-label="提交学生列表" className="space-y-3" aria-busy={busy}>
     <h3 className="text-sm font-medium">学生作答</h3>
-    <div className="flex gap-2"><Input type="search" aria-label="按学生姓名检索" placeholder="检索全部提交学生的姓名或身份编号" value={search} onChange={event=>setSearch(event.target.value)} maxLength={200}/>{search&&<Button variant="ghost" onClick={()=>setSearch('')}>清空检索</Button>}<Button variant="ghost" disabled={busy} onClick={()=>void load()}>刷新</Button></div>
-    {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}
+    <div className="flex gap-2"><Input type="search" aria-label="按学生姓名检索" placeholder="搜索学生姓名或身份编号" value={search} onChange={event=>setSearch(event.target.value)} maxLength={200}/>{search&&<Button variant="ghost" onClick={()=>setSearch('')}>清空检索</Button>}</div>
+    {error&&<p role="alert" className="text-sm text-destructive">{error}<Button variant="link" onClick={()=>void load()}>重试</Button></p>}
     {!students.length&&!busy&&!error&&<p role="status" className="text-sm text-muted-foreground">{search?'没有符合检索条件的学生。':'还没有提交记录。'}</p>}
     {students.map(student=><StudentRow key={student.learnerId} student={student} space={space} item={item}/>)}
     {next!==null&&<Button variant="outline" disabled={busy} onClick={()=>void load(next)}>更多学生</Button>}
@@ -102,7 +110,9 @@ function SubmissionStudents({space,item}:{space:LearningSpace;item:ForumItem}) {
 
 function StudentRow({student,space,item}:{student:SubmissionStudent;space:LearningSpace;item:ForumItem}) {
   const trigger=useRef<HTMLButtonElement>(null)
-  const collapse=()=>{setOpen(false);requestAnimationFrame(()=>trigger.current?.focus({preventScroll:true}))}
+  const scroll=useRef(0)
+  const expand=()=>{if(!open)scroll.current=trigger.current?.closest('[data-forum-scroll]')?.scrollTop??0;setOpen(true)}
+  const collapse=()=>{setOpen(false);requestAnimationFrame(()=>{const container=trigger.current?.closest('[data-forum-scroll]');if(container)container.scrollTop=scroll.current;trigger.current?.focus({preventScroll:true})})}
   const [open,setOpen]=useState(false),[versions,setVersions]=useState<SubmissionVersion[]>([]),[next,setNext]=useState<number|null>(null)
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[reference,setReference]=useState<number|null>(null)
   const load=useCallback(async(offset=0)=>{
@@ -112,27 +122,23 @@ function StudentRow({student,space,item}:{student:SubmissionStudent;space:Learni
   },[space.courseId,item.id,student.learnerId])
   useEffect(()=>{if(open)void load()},[open,load,student.id])
   useEffect(()=>{if(reference!==null&&versions.length){openReference(student.id,reference);setReference(null)}},[reference,versions,student.id])
-  return <div className="w-full rounded-lg border border-border bg-card text-card-foreground">
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
-      <button ref={trigger} type="button" aria-expanded={open} aria-controls={`submission-${student.id}`} onClick={()=>setOpen(!open)} className="min-w-0 flex-1 rounded-sm text-start focus-visible:outline-2 focus-visible:outline-ring">
-        <span className="block truncate text-sm font-medium">{open?'▾':'▸'} {student.learnerName}</span>
-        <span className="block truncate text-xs text-muted-foreground" title={student.learnerId}>{student.learnerId}</span>
-        <span className="block text-xs text-muted-foreground">{new Date(student.submittedAt).toLocaleString()} · 第 {student.version} 版</span>
-      </button>
-      <Badge variant="secondary">{assessmentLabel(student.assessment)}</Badge>
-      <div className="flex flex-wrap gap-2 text-xs">{student.conversationReferences.length?student.conversationReferences.map((ref,index)=><a key={index} title={ref.title} className="underline focus-visible:outline-2" href={`#${student.id}-reference-${index}`} onClick={event=>{event.preventDefault();setOpen(true);setReference(index)}}>对话 {index+1}</a>):<span className="text-muted-foreground">未关联对话</span>}</div>
+  return <MemoCard label={`${student.learnerName}的作答`} author={student.learnerName} authorDetail={student.learnerId} createdAt={student.submittedAt}
+    disclosure={{ref:trigger,expanded:open,controls:`submission-${student.id}`,onToggle:()=>open?collapse():expand()}} actions={<span className="text-xs text-muted-foreground">第 {student.version} 版</span>}>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+      <span>{assessmentLabel(versions[0]?.assessment ?? student.assessment)}</span>
+      {student.conversationReferences.length?student.conversationReferences.map((ref,index)=><a key={index} title={ref.title} className="underline focus-visible:outline-2" href={`#${student.id}-reference-${index}`} onClick={event=>{event.preventDefault();expand();setReference(index)}}>对话 {index+1}</a>):<span>未关联对话</span>}
     </div>
-    {open&&<div id={`submission-${student.id}`} className="space-y-3 border-t p-3">
+    {open&&<div id={`submission-${student.id}`} className="w-full space-y-3 pt-2">
       {busy&&!versions.length&&<p role="status">正在加载作答…</p>}
       {error&&<p role="alert">{error}<Button onClick={()=>void load()}>重试</Button></p>}
-      {versions[0]&&<Version submission={versions[0]}/>}
+      {versions[0]&&<Version submission={versions[0]} framed={false}/>}
       {versions[0]&&<form className="flex gap-2" onSubmit={async event=>{
         event.preventDefault();const form=event.currentTarget,body=String(new FormData(form).get('feedback')??'').trim();if(!body||busy)return
         setBusy(true);try{await forumApi.feedback(space.courseId!,item,versions[0].id,body);form.reset();await load()}catch(reason){setError(userFacingError(reason,'反馈保存失败。'))}finally{setBusy(false)}
       }}><Input name="feedback" aria-label={`反馈：${student.learnerName}`} placeholder="给这次提交留下反馈" required maxLength={10000}/><Button disabled={busy}>保存反馈</Button></form>}
-      {versions.slice(1).map(version=><details key={version.id}><summary className="cursor-pointer text-sm focus-visible:outline-2">历史版本 · 第 {version.version} 版</summary><Version submission={version}/></details>)}
+      {versions.slice(1).map(version=><details key={version.id}><summary className="cursor-pointer text-sm focus-visible:outline-2">历史版本 · 第 {version.version} 版 · {new Date(version.submittedAt).toLocaleString()}</summary><Version submission={version} framed={false}/></details>)}
       {next!==null&&<Button variant="outline" disabled={busy} onClick={()=>void load(next)}>更多历史版本</Button>}
       <Button variant="ghost" size="sm" onClick={collapse}>收起作答</Button>
     </div>}
-  </div>
+  </MemoCard>
 }

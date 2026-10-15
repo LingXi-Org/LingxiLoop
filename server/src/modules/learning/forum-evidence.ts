@@ -8,7 +8,7 @@ import { LearningApplicationError } from './errors.js'
 
 const id = z.string().trim().min(1).max(200)
 export const conversationReferenceSchema = z.object({ channelId: id, messageIds: z.array(id).min(2).max(80) }).strict()
-export const conversationReferencesSchema = z.array(conversationReferenceSchema).min(1, '请关联至少一段有本人作答和助手回复的对话').max(3)
+export const conversationReferencesSchema = z.array(conversationReferenceSchema).min(1, '请关联至少一段有本人作答和助手回复的对话').max(20)
 export type ConversationReference = z.infer<typeof conversationReferenceSchema>
 export interface EvidenceMessage { id: string; role: 'user' | 'assistant'; text: string; sequence: number }
 export interface ConversationEvidence extends ConversationReference { title: string; capturedAt: string; messages: EvidenceMessage[] }
@@ -48,11 +48,11 @@ export async function evidenceMessages(db: Queryable, scope: LearningScope, proj
 
 export async function captureConversationEvidence(db: Queryable, scope: LearningScope, projectId: string, input: ConversationReference[]): Promise<ConversationEvidence[]> {
   const references = conversationReferencesSchema.parse(input), result: ConversationEvidence[] = []
+  const deadline = Date.now()+30_000
   for (const reference of references) {
     let before = 0
     const collected: EvidenceMessage[] = []
     let title = ''
-    const deadline = Date.now()+30_000
     // Read canonical history, not client-supplied text. Bounded ranges include
     // intervening assistant help; later/unselected messages are never shared.
     while (true) {

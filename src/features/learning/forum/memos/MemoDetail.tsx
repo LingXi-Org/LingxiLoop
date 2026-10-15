@@ -28,7 +28,7 @@ export function MemoDetail({space,item,from,onBack,onChanged}:{space:LearningSpa
           <MemoContent content={item.body}/><ForumFiles links={item.links} attachments={item.attachments}/>
         </MemoCard>
         {item.kind==='assignment' && (item.targetType==='homework'
-          ? <HomeworkDetail space={space} item={item} onClose={onBack} onChanged={onChanged}/>
+          ? <HomeworkDetail space={space} item={item} onChanged={onChanged}/>
           : <ForumSubmission space={space} item={item}/>)}
         <ForumDiscussion courseId={space.courseId!} item={item} canWrite={(space.canSubmit||space.canEditContent)&&!item.archived} canManage={space.canEditContent} onComment={onChanged}/>
       </div>

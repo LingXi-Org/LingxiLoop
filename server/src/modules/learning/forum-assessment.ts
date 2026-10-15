@@ -9,7 +9,7 @@ import type { ConversationEvidence } from './forum-evidence.js'
 
 const judgmentSchema = z.object({
   mastery:z.enum(['MASTERED','DEVELOPING','INSUFFICIENT']),reason:z.string().trim().min(1).max(2000),
-  evidence:z.array(z.object({reference:z.number().int().min(0).max(2),messageId:z.string(),excerpt:z.string().trim().min(1).max(500)}).strict()).max(10),
+  evidence:z.array(z.object({reference:z.number().int().min(0).max(19),messageId:z.string(),excerpt:z.string().trim().min(1).max(500)}).strict()).max(10),
 }).strict()
 
 export async function runForumAssessment(effect: LearningEffect): Promise<void> {

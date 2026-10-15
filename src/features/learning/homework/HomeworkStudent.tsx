@@ -1,7 +1,6 @@
 import { ConversationReferencePicker } from '../forum/ConversationReferences'
 import type { ConversationReference } from '../forum/contracts'
 import { useRef, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useConversations } from '@/features/conversations/store'
 import { userFacingError } from '@/lib/userFacingError'
@@ -14,9 +13,9 @@ import { homeworkApi } from './api'
 import { type Homework, homeworkStatus, type HomeworkStudent as StudentState } from './contracts'
 import { HomeworkCriteria, HomeworkReport, HomeworkSubmissionView } from './HomeworkReport'
 
-export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitted, onNavigate, onUploading, onRefresh }: {
+export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitted, onUploading, onRefresh }: {
   homework: Homework; student: StudentState; space: LearningSpace
-  onUpdated(value: StudentState): void; onSubmitted(): Promise<void>; onNavigate(): void; onUploading(value: boolean): void; onRefresh(): Promise<void>
+  onUpdated(value: StudentState): void; onSubmitted(): Promise<void>; onUploading(value: boolean): void; onRefresh(): Promise<void>
 }) {
   const { draft, setDraft, storageError, discard } = useForumDraft(`homework:${homework.courseId}:${homework.id}`, contentDraftSchema,
     { body: student.answer.text, links: student.answer.links.join('\n'), attachments: student.answer.attachments }, space.canSubmit && student.status !== 'PASSED')
@@ -40,11 +39,11 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
   }
   return <div className="space-y-6">
     <section aria-label="我的学习进度" className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">我的学习进度</h3><div className="flex flex-wrap items-center gap-2"><Badge variant="secondary">{homeworkStatus[student.status]}</Badge><Button variant="ghost" size="sm" disabled={disabled} onClick={() => void act(onRefresh)}>刷新进度</Button></div></div>
-      {student.feedback && <p role="status" className="whitespace-pre-wrap rounded-lg bg-muted p-3 text-sm">教师意见：{student.feedback}</p>}
+      <div className="flex items-center gap-3 text-sm"><h3 className="font-medium">我的学习进度</h3><span className="text-muted-foreground">{homeworkStatus[student.status]}</span></div>
+      {student.feedback && <p role="status" className="whitespace-pre-wrap border-s-2 ps-3 text-sm">教师意见：{student.feedback}</p>}
       {homework.status === 'CLOSED' && <p role="status" className="text-sm text-muted-foreground">{student.status === 'RETURNED' ? '作业已关闭。你可以根据退回意见修订作答，更新报告后补交一次。已有学习记录仍然有效。' : '作业已关闭，仍可继续学习和查看记录，暂不接收提交。'}</p>}
-      {student.status === 'PASSED' ? <p className="text-sm text-muted-foreground">作业已通过。教师退回后，你可以修改并重新提交。</p> : <p className="text-sm text-muted-foreground">{student.hasLearningRecord ? '已有学习记录。报告会如实记录完成情况、获得的帮助和尚待核实的内容。保存作答并更新报告后，可以预览提交内容。' : '先和自己的助手聊一聊这份作业，留下学习记录，再保存作答并更新报告。现在也可以先保存草稿。'}</p>}
-      <HomeworkCriteria criteria={student.criteria} />
+      {student.status === 'PASSED' ? <p className="text-sm text-muted-foreground">作业已通过。</p> : <p className="text-sm text-muted-foreground">{student.hasLearningRecord ? '保存作答后自动生成学习报告。' : '先与助手讨论作业，再保存作答生成报告。'}</p>}
+      {student.criteria.length>0 && <details><summary className="cursor-pointer text-sm text-muted-foreground focus-visible:outline-2">查看学习进度</summary><HomeworkCriteria criteria={student.criteria} /></details>}
       <Button variant="outline" disabled={disabled} onClick={() => void act(async () => {
         if (dirty && editable) {
           const next = await homeworkApi.saveAnswer(homework.courseId, homework.id, { ...answer, expectedRevision: student.answerRevision })
@@ -53,10 +52,10 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
         const thread = await homeworkApi.thread(homework.courseId, homework.id)
         await useConversations.getState().reload()
         if (useConversations.getState().projectId !== space.projectId || !useConversations.getState().list.some(item => item.id === thread.channelId)) throw new Error('404')
-        onNavigate(); useApp.getState().selectConversation(thread.channelId)
+        useApp.getState().selectConversation(thread.channelId)
       })}>{student.channelId ? '继续学习' : '开始学习'}</Button>
     </section>
-    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    {error && <p role="alert" className="text-sm text-destructive">{error}<Button variant="link" disabled={disabled} onClick={() => void act(onRefresh)}>刷新进度</Button></p>}
     {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
     {editable && <p className="text-xs text-muted-foreground">提交时请引用学习报告中作为依据的对话片段，便于教师核对。</p>}
     {editable && <ConversationReferencePicker courseId={homework.courseId} channelId={student.channelId} value={references} onChange={setReferences} disabled={disabled}/>}
@@ -96,6 +95,6 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
       {student.manualReview.evidence.map((text, index) => <blockquote key={index} className="whitespace-pre-wrap border-s-2 ps-3 text-sm text-muted-foreground">{text}</blockquote>)}
       <p className="text-sm text-muted-foreground">已于 {new Date(student.manualReview.sharedAt).toLocaleString('zh-CN')} 分享给教师。</p>
     </section>}
-    {student.latestSubmission && <section aria-label="最近一次提交" className="space-y-3"><h3 className="font-semibold">最近一次提交</h3><HomeworkSubmissionView submission={student.latestSubmission} /></section>}
+    {student.latestSubmission && <details className="space-y-3"><summary className="cursor-pointer text-sm focus-visible:outline-2">最近一次提交</summary><HomeworkSubmissionView submission={student.latestSubmission} /></details>}
   </div>
 }
