@@ -13,15 +13,19 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { notifyAction, toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
+import { useAuth } from '@/stores/auth'
+import { companiesApi } from '@/features/companies/api'
 import { learningApi } from '../api'
 import type { ApiCourseMember, ApiProjectInvitation, LearningSpace } from '../contracts'
 
 export function CourseMembersSection({ space }: { space: LearningSpace }) {
+  const isCompanyAdmin = useAuth(state => state.companies.some(company => company.id === space.companyId && company.isAdmin))
   const canView = space.perspective === 'teacher' && space.canManage && Boolean(space.courseId)
   const canInvite = canView && space.canInviteMembers
   const canRevoke = canView && space.canRevokeInvitations
   const canRemove = canView && space.canRemoveMembers
-  const canWrite = canInvite || canRevoke || canRemove
+  const canPromote = canView && isCompanyAdmin && space.status === 'ACTIVE'
+  const canWrite = canInvite || canRevoke || canRemove || canPromote
   const [members, setMembers] = useState<ApiCourseMember[]>([])
   const [invitations, setInvitations] = useState<ApiProjectInvitation[]>([])
   const [createdLink, setCreatedLink] = useState('')
@@ -92,6 +96,23 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
     finally { setBusy(false) }
   }
 
+  const promoteStudent = async (member: ApiCourseMember) => {
+    if (busy || !canPromote) return
+    if (!await confirmSensitiveAction({
+      title: `将 ${member.name} 转为教师？`,
+      description: '将退出当前及其他已加入的课程，保留历史学习记录，成为可创建课程、邀请学生的普通教师。对方需要重新登录。',
+      confirmLabel: '转为教师', tone: 'warning',
+    })) return
+    setBusy(true)
+    try {
+      await toastAction(companiesApi.promoteStudent(space.companyId, member.id, space.projectId), {
+        loading: '正在转换教师身份', success: '已转为教师并退出原课程', error: '身份转换失败，请刷新后重试',
+      })
+      await load()
+    } catch { /* Toast owns the visible error state. */ }
+    finally { setBusy(false) }
+  }
+
   const removeMember = async (member: ApiCourseMember) => {
     if (!space.courseId || busy || !canRemove) return
     const confirmed = await confirmSensitiveAction({
@@ -147,7 +168,7 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
           {loading && !loaded ? <ResourceSkeleton variant="table" columns={4} count={5} label="正在加载课程成员" /> : (
             <Table>
               <TableHeader><TableRow><TableHead>成员</TableHead><TableHead>课程角色</TableHead><TableHead>加入时间</TableHead><TableHead><span className="sr-only">操作</span></TableHead></TableRow></TableHeader>
-              <TableBody>{members.map((member) => <TableRow key={member.id}><TableCell><p className="font-medium">{member.name}</p><p className="text-xs text-muted-foreground">{member.email}</p></TableCell><TableCell><Badge variant="secondary">{member.role === 'teacher' ? '课程管理者' : '学习者'}</Badge></TableCell><TableCell>{new Date(member.joinedAt).toLocaleString('zh-CN')}</TableCell><TableCell>{canRemove && member.role === 'learner' && <Button type="button" variant="destructive" size="icon-sm" aria-label={`移除 ${member.name}`} disabled={busy} onClick={() => void removeMember(member)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} /></Button>}</TableCell></TableRow>)}</TableBody>
+              <TableBody>{members.map((member) => <TableRow key={member.id}><TableCell><p className="font-medium">{member.name}</p><p className="text-xs text-muted-foreground">{member.email}</p></TableCell><TableCell><Badge variant="secondary">{member.role === 'teacher' ? '课程管理者' : '学习者'}</Badge></TableCell><TableCell>{new Date(member.joinedAt).toLocaleString('zh-CN')}</TableCell><TableCell>{canPromote && member.role === 'learner' && <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => void promoteStudent(member)}>转为教师</Button>}{canRemove && member.role === 'learner' && <Button type="button" variant="destructive" size="icon-sm" aria-label={`移除 ${member.name}`} disabled={busy} onClick={() => void removeMember(member)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} /></Button>}</TableCell></TableRow>)}</TableBody>
             </Table>
           )}
           {loaded && members.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">暂无课程成员。</p>}

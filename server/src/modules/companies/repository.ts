@@ -117,14 +117,14 @@ export async function assertAdministratorCanDepart(db: Queryable, companyId: str
   if (rows.length === 1 && rows[0]?.user_id === userId) throw new HttpError(409, 'assign another teacher administrator first')
 }
 
-export async function removeMemberState(db: Queryable, companyId: string, userId: string): Promise<void> {
+export async function removeMemberState(db: Queryable, companyId: string, userId: string, preserveSeat = false): Promise<void> {
   await db.query(`SELECT 1 FROM users WHERE id=$1 FOR UPDATE`, [userId])
   await db.query(`UPDATE company_membership_periods SET ended_at=NOW() WHERE id IN
     (SELECT period_id FROM company_memberships WHERE company_id=$1 AND user_id=$2) AND ended_at IS NULL`, [companyId,userId])
   await db.query(`UPDATE company_memberships SET status='SUSPENDED',is_admin=FALSE,ended_at=NOW(),updated_at=NOW()
     WHERE company_id=$1 AND user_id=$2 AND ended_at IS NULL`, [companyId,userId])
   await db.query(`UPDATE project_memberships SET status='SUSPENDED',updated_at=NOW() WHERE company_id=$1 AND user_id=$2`, [companyId,userId])
-  await db.query(`UPDATE organization_seats SET status='REVOKED',revoked_at=NOW() WHERE company_id=$1 AND user_id=$2`, [companyId,userId])
+  if (!preserveSeat) await db.query(`UPDATE organization_seats SET status='REVOKED',revoked_at=NOW() WHERE company_id=$1 AND user_id=$2`, [companyId,userId])
   await db.query(`UPDATE users SET departed_at=NOW(),access_revoked_at=NOW() WHERE id=$1`, [userId])
   await db.query(`DELETE FROM ws_tickets WHERE user_id=$1`, [userId])
   await db.query(`UPDATE agent_routines SET status='paused',next_run_at=NULL,version=version+1,pause_reason='principal_departed',updated_at=NOW()
@@ -322,4 +322,16 @@ export async function companyMembershipSummary(db: Queryable, companyId: string,
 
 export async function lockEducationAdmissions(db: Queryable): Promise<void> {
   await db.query(`SELECT pg_advisory_xact_lock(1282006535)`)
+}
+
+/** Caller holds the education admission lock and has authorized both members. */
+export async function promoteStudentState(db: Queryable, companyId: string, userId: string): Promise<void> {
+  await removeMemberState(db, companyId, userId, true)
+  // End the previous identity before changing role; retain the same company seat.
+  const { rows } = await db.query<{ id: string }>(`INSERT INTO company_membership_periods(membership_id,role)
+    SELECT id,'TEACHER' FROM company_memberships WHERE company_id=$1 AND user_id=$2 RETURNING id`, [companyId,userId])
+  await db.query(`UPDATE company_memberships SET role='TEACHER',is_admin=FALSE,status='ACTIVE',ended_at=NULL,
+    period_id=$3,updated_at=NOW() WHERE company_id=$1 AND user_id=$2`, [companyId,userId,rows[0]!.id])
+  await db.query(`UPDATE users SET departed_at=NULL WHERE id=$1`, [userId])
+  await db.query(`UPDATE participants SET departed_at=NULL,status='avail' WHERE company_id=$1 AND id=$2 AND kind='human'`, [companyId,userId])
 }

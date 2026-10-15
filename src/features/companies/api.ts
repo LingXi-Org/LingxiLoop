@@ -10,6 +10,8 @@ import type {
 } from './contracts'
 
 export const companiesApi = {
+  promoteStudent: (companyId: string, userId: string, projectId: string) =>
+    http<{ ok: true; userId: string; role: 'teacher' }>(`/companies/${encodeURIComponent(companyId)}/members/${encodeURIComponent(userId)}/promote-teacher`, { method: 'POST', body: JSON.stringify({ projectId }) }),
   leaveCompany: (companyId: string) => http<{ ok: true }>(`/companies/${encodeURIComponent(companyId)}/leave`, { method: 'POST' }),
   listCompanies: () =>
     http<CompanySummary[]>('/companies'),

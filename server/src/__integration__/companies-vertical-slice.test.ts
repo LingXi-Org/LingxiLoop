@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { after, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
+import { createPermissionService } from '../modules/access/public.js'
 import { withTransaction } from '../db/transaction.js'
 import { CompanyApplication, CompanyApplicationError } from '../modules/companies/application.js'
 import { seedMembershipPeriod, ensureSchemaOnce, resetAllTables, teardownAll } from './_helpers.js'
@@ -187,4 +188,58 @@ test('[integration] invitation acceptance atomically enqueues one durable member
     [hash(invitation.token)],
   )
   assert.equal(state.rows[0]?.use_count, 1)
+})
+
+// Failure cases: non-admin/foreign actor, wrong course, stale student identity,
+// duplicate/concurrent requests, old course grants surviving, seat loss, and
+// partial revocation. Exercise the real transaction and education triggers.
+async function seedPromotionStudent() {
+  await pool.query(`INSERT INTO company_memberships(company_id,user_id,role) VALUES($1,$2,'STUDENT')`, [COMPANY,SECOND])
+  await seedMembershipPeriod(pool, COMPANY, SECOND)
+  await pool.query(`INSERT INTO organization_seats(id,company_id,contract_id,user_id,status)
+    VALUES('promotion-seat',$1,'contract-company-slice',$2,'ACTIVE')`, [COMPANY,SECOND])
+  await pool.query(`INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status)
+    VALUES($1,$2,'human','Student','S','#667085','avail')`, [SECOND,COMPANY])
+  await pool.query(`INSERT INTO projects(id,company_id,name,kind,status) VALUES('promotion-course',$1,'Course','TEACHING','ACTIVE')`, [COMPANY])
+  await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role,company_period_id)
+    SELECT 'promotion-course',company_id,user_id,role,period_id FROM company_memberships
+    WHERE company_id=$1 AND user_id IN ($2,$3)`, [COMPANY,OWNER,SECOND])
+  await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members)
+    VALUES('promotion-room',$1,'promotion-course','group','Course',$2::jsonb)`, [COMPANY,JSON.stringify([OWNER,SECOND])])
+}
+const promotion = () => ({ companyId: COMPANY, userId: OWNER, targetId: SECOND, projectId: 'promotion-course', audit: { ip: null, userAgent: null } })
+
+test('[integration] promotion isolates the old student period and retains the teacher seat', async () => {
+  await seedPromotionStudent()
+  const old = (await pool.query(`SELECT period_id FROM company_memberships WHERE user_id=$1`, [SECOND])).rows[0].period_id
+  await application.promoteStudent(promotion())
+  const member = (await pool.query(`SELECT role,is_admin,status,period_id,ended_at FROM company_memberships WHERE user_id=$1`, [SECOND])).rows[0]
+  assert.equal(member.role, 'TEACHER'); assert.equal(member.is_admin, false); assert.equal(member.status, 'ACTIVE')
+  assert.equal(member.ended_at, null); assert.notEqual(member.period_id, old)
+  assert.ok((await pool.query(`SELECT ended_at FROM company_membership_periods WHERE id=$1`, [old])).rows[0].ended_at)
+  assert.equal((await pool.query(`SELECT COUNT(*)::int AS n FROM project_memberships WHERE user_id=$1 AND status='ACTIVE'`, [SECOND])).rows[0].n, 0)
+  assert.equal((await pool.query(`SELECT status FROM organization_seats WHERE id='promotion-seat'`)).rows[0].status, 'ACTIVE')
+  assert.deepEqual((await pool.query(`SELECT members FROM conversations WHERE id='promotion-room'`)).rows[0].members, [OWNER])
+  assert.ok((await pool.query(`SELECT access_revoked_at FROM users WHERE id=$1`, [SECOND])).rows[0].access_revoked_at)
+  assert.equal((await pool.query(`SELECT kind FROM company_onboarding_effects WHERE member_id=$1 AND kind='access.revoke'`, [SECOND])).rowCount, 1)
+  assert.deepEqual(disconnected, [{ userId: SECOND, companyId: COMPANY }])
+  const permissions = createPermissionService(pool)
+  assert.equal((await permissions.can({ actorUserId: SECOND, companyId: COMPANY, action: 'course:create' })).allowed, true)
+  assert.equal((await permissions.can({ actorUserId: SECOND, companyId: COMPANY, projectId: 'promotion-course', action: 'project:read' })).allowed, false)
+  await assert.rejects(application.promoteStudent(promotion()))
+})
+
+test('[integration] promotion rejects non-admin, foreign and unrelated-course requests without changing identity', async () => {
+  await seedPromotionStudent()
+  for (const args of [{ ...promotion(), userId: MEMBER }, { ...promotion(), userId: FOREIGN_MEMBER }, { ...promotion(), projectId: 'unrelated' }]) {
+    await assert.rejects(application.promoteStudent(args))
+  }
+  assert.equal((await pool.query(`SELECT role FROM company_memberships WHERE user_id=$1`, [SECOND])).rows[0].role, 'STUDENT')
+})
+
+test('[integration] simultaneous promotion requests only create one teacher period', async () => {
+  await seedPromotionStudent()
+  const results = await Promise.allSettled([application.promoteStudent(promotion()), application.promoteStudent(promotion())])
+  assert.equal(results.filter(result => result.status === 'fulfilled').length, 1)
+  assert.equal((await pool.query(`SELECT COUNT(*)::int AS n FROM company_membership_periods p JOIN company_memberships m ON m.id=p.membership_id WHERE m.user_id=$1 AND p.role='TEACHER'`, [SECOND])).rows[0].n, 1)
 })

@@ -93,6 +93,17 @@ companiesRouter.patch('/companies/:id/members/:userId', safe(async (req, res) =>
   } catch (error) { mapCompanyError(error) }
 }))
 
+companiesRouter.post('/companies/:id/members/:userId/promote-teacher', safe(async (req, res) => {
+  const projectId = req.body?.projectId
+  if (typeof projectId !== 'string' || !projectId.trim() || projectId.length > 200) throw new HttpError(400, 'projectId required')
+  try {
+    res.json(await companyApplication.promoteStudent({
+      companyId: String(req.params.id), userId: requireAuth(req), targetId: String(req.params.userId),
+      projectId, audit: auditContext(req),
+    }))
+  } catch (error) { mapCompanyError(error) }
+}))
+
 companiesRouter.delete('/companies/:id/members/:userId', safe(async (req, res) => {
   try {
     res.json(await companyApplication.removeMember({
