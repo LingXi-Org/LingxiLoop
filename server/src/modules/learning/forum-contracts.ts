@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { conversationReferencesSchema } from './forum-evidence.js'
 const id = z.string().trim().min(1).max(200)
 export const learningLinkSchema = z.string().trim().url().max(2048)
   .refine(value => ['http:', 'https:'].includes(new URL(value).protocol), 'HTTP or HTTPS link required')
@@ -13,6 +14,7 @@ export const forumQuerySchema = z.object({
   property: z.enum(['all','pinned','attachments','links','tasks','code']).default('all'),
   offset: z.coerce.number().int().min(0).max(100000).default(0),
 }).strict()
+export const forumStudentsSchema = z.object({ offset:z.coerce.number().int().min(0).max(100000).default(0), search:z.string().trim().max(200).default('') }).strict()
 export const forumPageSchema = z.object({ offset: z.coerce.number().int().min(0).max(100000).default(0) }).strict()
 export const forumPostSchema = z.object({
   kind: z.enum(['share', 'assignment']), title: z.string().trim().min(1).max(200), body: z.string().trim().max(20000).default(''),
@@ -24,7 +26,7 @@ export const forumCommentSchema = z.object({ body: z.string().trim().max(10000).
 export const forumFlagsSchema = z.object({ pinned: z.boolean().optional(), archived: z.boolean().optional() }).strict()
   .refine(value => Object.keys(value).length > 0, 'a flag is required')
 export const forumSubmissionSchema = z.object({
-  answer: z.string().trim().max(20000).default(''), ...learningContentFields, idempotencyKey: id,
+  answer: z.string().trim().max(20000).default(''), ...learningContentFields, idempotencyKey: id, conversationReferences: conversationReferencesSchema,
 }).strict().refine(value => Boolean(value.answer || value.links.length || value.attachments.length), 'submission content is required')
 export const forumFeedbackSchema = z.object({ body: z.string().trim().min(1).max(10000) }).strict()
 export type ForumTarget = z.infer<typeof forumTargetSchema>

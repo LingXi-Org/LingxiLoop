@@ -25,6 +25,8 @@ export interface ForumItem {
 export interface ForumComment { id: string; authorId: string; authorName: string; body: string; links: string[]; attachments: ForumAttachment[]; createdAt: string }
 export interface ForumPage<T> { items: T[]; nextOffset: number | null }
 export interface SubmissionVersion {
+  conversationReferences:ConversationEvidence[]
+  assessment:SubmissionAssessment|null
   feedback: Array<{id: string; body: string; authorId: string; createdAt: string; kind: string; status: string}>
   id: string
   learnerId: string
@@ -38,4 +40,16 @@ export interface SubmissionVersion {
   answer: string
   links: string[]
   attachments: ForumAttachment[]
+}
+
+export interface ConversationReference { channelId: string; messageIds: string[] }
+export interface EvidenceMessage { id: string; role: 'user' | 'assistant'; text: string; sequence: number }
+export interface ConversationEvidence extends ConversationReference { title: string; capturedAt: string; messages: EvidenceMessage[] }
+export interface SubmissionAssessment {
+  status: 'PENDING' | 'FAILED' | 'READY'; mastery?: 'MASTERED' | 'DEVELOPING' | 'INSUFFICIENT'; reason?: string
+  evidence?: {reference:number;messageId:string;excerpt:string}[]
+}
+export interface SubmissionStudent {
+  id:string;learnerId:string;learnerName:string;submittedAt:string;version:number;assessment:SubmissionAssessment|null
+  conversationReferences:{title:string;index:number}[]
 }

@@ -1,3 +1,4 @@
+import { captureConversationEvidence } from './forum-evidence.js'
 import { randomUUID } from 'node:crypto'
 import type { z } from 'zod'
 import type { Queryable } from '../../db/queryable.js'
@@ -133,6 +134,10 @@ export class HomeworkApplication {
       await assertOwnedLearningAttachments(db,scope,answer.attachments)
       await db.query(`UPDATE homework_learner_state SET answer=$4::jsonb,answer_revision=answer_revision+1,report=NULL,report_status='NONE',report_feedback='',updated_at=NOW()
         WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3`,[scope.companyId,id,scope.userId,JSON.stringify(answer)])
+      if(view.hasLearningRecord && view.canSubmit && (answer.text.trim() || answer.links.length || answer.attachments.length)) {
+        await db.query("UPDATE homework_learner_state SET report_status='PENDING' WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3",[scope.companyId,id,scope.userId])
+        await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.report',effectKey:`${id}:${scope.userId}`,payload:{homeworkId:id,userId:scope.userId,answerRevision:state.answer_revision+1,returnEpoch:state.return_epoch}})
+      }
     })
     return (await this.detail(scope,courseId,id)).student!
   }
@@ -251,11 +256,16 @@ export class HomeworkApplication {
         ||Math.max(0,...latest.map(message=>message.messageSeq))!==report.conversationSequence) {
         throw new LearningApplicationError('conflict','学习对话已更新，请先重新生成并确认学习报告')
       }
+      if(data.conversationReferences.some(ref=>ref.channelId!==state.channel_id)) throw new LearningApplicationError('invalid','请引用本作业的学习对话')
+      const references=await captureConversationEvidence(db,scope,hw.project_id,data.conversationReferences)
+      if(report.evidenceSources.some(quote=>!references.some(ref=>ref.messages.some(message=>message.role==='user'&&message.id===quote.messageId&&message.text.includes(quote.excerpt))))) {
+        throw new LearningApplicationError('conflict','请选择包含学习报告证据的对话片段，再预览提交')
+      }
       const submission=randomUUID(),version=(view.latestSubmission?.version??0)+1
-      await db.query(`INSERT INTO homework_submissions(id,company_id,project_id,homework_id,learner_id,version,idempotency_key,content_hash,answer,report,answer_revision,return_epoch,late,submitted_at)
-        SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,($13::timestamptz<submission_clock.submitted_at) IS TRUE,submission_clock.submitted_at
+      await db.query(`INSERT INTO homework_submissions(id,company_id,project_id,homework_id,learner_id,version,idempotency_key,content_hash,answer,report,answer_revision,return_epoch,late,submitted_at,conversation_references)
+        SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,($13::timestamptz<submission_clock.submitted_at) IS TRUE,submission_clock.submitted_at,$14::jsonb
         FROM (SELECT clock_timestamp() AS submitted_at) submission_clock`,
-      [submission,scope.companyId,hw.project_id,id,scope.userId,version,data.idempotencyKey,contentHash,JSON.stringify(state.answer),JSON.stringify(report),state.answer_revision,state.return_epoch,hw.due_at])
+      [submission,scope.companyId,hw.project_id,id,scope.userId,version,data.idempotencyKey,contentHash,JSON.stringify(state.answer),JSON.stringify(report),state.answer_revision,state.return_epoch,hw.due_at,JSON.stringify(references)])
       await db.query(`UPDATE homework_learner_state SET latest_submission_id=$4,updated_at=NOW() WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3`,[scope.companyId,id,scope.userId,submission])
       return submission
     })
@@ -263,20 +273,21 @@ export class HomeworkApplication {
     return (await homeworkSubmissions(this.db,hw,scope.userId,0,submissionId))[0]!
   }
 
-  async submissions(scope:LearningScope,courseId:string,id:string,offset=0) {
+  async submissions(scope:LearningScope,courseId:string,id:string,offset=0,learnerId='') {
     await homeworkScope(this.db,scope,courseId)
     const hw=await homeworkRow(this.db,scope,courseId,id);assertHomeworkPublished(hw)
     const teacher=(await createPermissionService(this.db).can({actorUserId:scope.userId,companyId:scope.companyId,action:'learning:review',resource:{type:'course',id:courseId}})).allowed
-    const rows=await homeworkSubmissions(this.db,hw,teacher?null:scope.userId,offset)
+    const rows=await homeworkSubmissions(this.db,hw,teacher?learnerId||null:scope.userId,offset)
     return {items:rows.slice(0,50),nextOffset:rows.length>50?offset+50:null}
   }
 
-  async learners(scope:LearningScope,courseId:string,id:string,offset=0) {
+  async learners(scope:LearningScope,courseId:string,id:string,offset=0,search='') {
     await homeworkScope(this.db,scope,courseId,'review')
     const hw=await homeworkRow(this.db,scope,courseId,id);assertHomeworkPublished(hw)
     const {rows}=await this.db.query<{learnerId:string;learnerName:string}>(`SELECT m.user_id AS "learnerId",u.display_name AS "learnerName"
       FROM project_memberships m JOIN users u ON u.id=m.user_id WHERE m.company_id=$1 AND m.project_id=$2 AND m.role='STUDENT' AND m.status='ACTIVE'
-      ORDER BY m.user_id LIMIT 51 OFFSET $3`,[scope.companyId,hw.project_id,offset])
+      AND ($4='' OR POSITION(LOWER($4) IN LOWER(u.display_name||' '||u.id))>0)
+      ORDER BY m.user_id LIMIT 51 OFFSET $3`,[scope.companyId,hw.project_id,offset,search])
     const items=await Promise.all(rows.slice(0,50).map(async learner=>{
       const state=await homeworkState(this.db,hw,learner.learnerId),view=await studentHomeworkView(this.db,hw,state,{readLearningRecord:false})
       return {...learner,status:view.status,missingCriteria:view.criteria.filter(item=>!item.met||!item.independent).map(item=>item.criterion),

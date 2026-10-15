@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { z } from 'zod'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
 import { safe } from '../../http/async-handler.js'
@@ -9,7 +10,7 @@ import { LearningApplicationError } from './errors.js'
 import { HomeworkApplication } from './homework-application.js'
 import { homeworkDeadlineSchema, homeworkEditSchema, homeworkPublishSchema, homeworkReportSchema, homeworkReviewSchema,
   homeworkRevisionSchema, homeworkSaveAnswerSchema, homeworkShareSchema, homeworkSubmitSchema, homeworkUnlockSchema } from './homework-contracts.js'
-import { forumPageSchema } from './forum-contracts.js'
+import { forumPageSchema, forumStudentsSchema } from './forum-contracts.js'
 import { parseLearningRequest as parse, respondWithLearning as respond } from './http-adapter.js'
 
 export const homeworkRouter=Router()
@@ -73,10 +74,10 @@ homeworkRouter.post(`${path}/review`,safe(async(req,res)=>{
   res.json(await respond(()=>homework.review(scope,String(req.params.courseId),String(req.params.homeworkId),input)))
 }))
 homeworkRouter.get(`${path}/learners`,safe(async(req,res)=>{
-  const scope=await requireCompany(req),query=parse(forumPageSchema.safeParse(req.query))
-  res.json(await respond(()=>homework.learners(scope,String(req.params.courseId),String(req.params.homeworkId),query.offset)))
+  const scope=await requireCompany(req),query=parse(forumStudentsSchema.safeParse(req.query))
+  res.json(await respond(()=>homework.learners(scope,String(req.params.courseId),String(req.params.homeworkId),query.offset,query.search)))
 }))
 homeworkRouter.get(`${path}/submissions`,safe(async(req,res)=>{
-  const scope=await requireCompany(req),query=parse(forumPageSchema.safeParse(req.query))
-  res.json(await respond(()=>homework.submissions(scope,String(req.params.courseId),String(req.params.homeworkId),query.offset)))
+  const scope=await requireCompany(req),query=parse(forumPageSchema.extend({learnerId:z.string().max(200).default('')}).safeParse(req.query))
+  res.json(await respond(()=>homework.submissions(scope,String(req.params.courseId),String(req.params.homeworkId),query.offset,query.learnerId)))
 }))

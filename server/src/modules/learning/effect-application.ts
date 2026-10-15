@@ -28,6 +28,11 @@ export async function runLearningEffect(
 ): Promise<void> {
   const payload = effect.payload
   switch (effect.kind) {
+    case 'forum.assess': {
+      const { runForumAssessment } = await import('./forum-assessment.js')
+      await runForumAssessment(effect)
+      return
+    }
     case 'homework.validate':
     case 'homework.assess':
     case 'homework.report': {

@@ -64,3 +64,27 @@ by their author; draft dismissal is automatic; the calendar is a real date
 filter; migration `0040` moves attempts and evaluations into forum submission
 and feedback tables and removes the old learning schema. The older `0037/0038`
 notes and verified artifacts describe their historical releases only.
+
+## Issue 146: source-based detail page
+
+`MemoDetail.tsx` directly adapts the fixed upstream
+[`web/src/pages/MemoDetail.tsx`](https://github.com/usememos/memos/blob/8120a6cee03003ee7968b49b2109f816fa4d96a4/web/src/pages/MemoDetail.tsx):
+its full-page section, `max-w-2xl` content column, parent navigation, non-compact
+MemoView, and following MemoCommentSection are retained. `navigation.ts` adapts
+upstream `components/MemoView/navigation.ts` origin state. Host URL parameters
+(`project`, `view`, `post`, `type`) replace the Memos router/protobuf identifiers.
+No post or homework detail Dialog remains. Existing ported MemoCard, MemoContent,
+MemoEditor, comment stack and theme tokens continue to render the content.
+
+The course-only addition between the memo and comments is the submission list:
+collapsed student rows, whole-roster server search, per-student history, frozen
+selected conversation excerpts and genuine assessment states. These use existing
+host controls; no replacement forum design or Memos backend is introduced.
+`docs/issue-146-validation.md` records validation and source provenance.
+
+The comment composer follows upstream `MemoCommentSection`'s `showEditor` state:
+only “写评论” is shown initially, the editor opens in the comment stack, and
+successful creation or cancellation closes it. Student rows reuse `MemoCard`'s
+MemoView classes, avatar, author and relative time. The course-specific disclosure
+button expands content within that same card. Statuses and reference links use
+plain metadata text; there are no nested submission cards or extra status panels.

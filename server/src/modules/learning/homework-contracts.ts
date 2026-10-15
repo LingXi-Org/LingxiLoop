@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { conversationReferencesSchema } from './forum-evidence.js'
 import { learningContentFields } from './forum-contracts.js'
 
 const revision = z.number().int().min(0)
@@ -15,7 +16,7 @@ export const homeworkDeadlineSchema = homeworkRevisionSchema.extend({ dueAt: z.s
 export const homeworkAnswerSchema = z.object({ text: z.string().max(20000).default(''), ...learningContentFields }).strict()
 export const homeworkSaveAnswerSchema = homeworkAnswerSchema.extend({ expectedRevision: revision })
 export const homeworkReportSchema = z.object({ expectedAnswerRevision: revision }).strict()
-export const homeworkSubmitSchema = homeworkReportSchema.extend({ reportId: id, idempotencyKey: id.min(8) })
+export const homeworkSubmitSchema = homeworkReportSchema.extend({ reportId: id, idempotencyKey: id.min(8), conversationReferences: conversationReferencesSchema })
 export const homeworkShareSchema = z.object({ expectedEvidenceRevision: revision }).strict()
 export const homeworkUnlockSchema = homeworkShareSchema.extend({ learnerId: id, reason: z.string().trim().min(1).max(4000) })
 export const homeworkReviewSchema = z.object({ learnerId: id, expectedSubmissionId: id, decision: z.enum(['PASSED','RETURNED']), reason: z.string().trim().min(1).max(4000) }).strict()

@@ -4,10 +4,13 @@ import { createPermissionService } from '../access/public.js'
 import type { LearningScope } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
 import { forumCommentSchema, forumFlagsSchema, forumPostSchema, forumQuerySchema, forumSubmissionSchema, forumFeedbackSchema, forumReactionSchema, type ForumCommentInput, type ForumFlags, type ForumPostInput, type ForumQuery, type ForumTarget, type LearningAttachment } from './forum-contracts.js'
-import { listForumItems, listSubmissionVersions } from './forum-repository.js'
+import { listForumItems, listSubmissionVersions, listSubmissionStudents } from './forum-repository.js'
 import { requireLearningCourseProjectScope } from './project-scope-repository.js'
 import { assertOwnedLearningAttachments } from './submission-attachments.js'
 export { canReadLearningFile } from './submission-attachments.js'
+
+import { captureConversationEvidence, evidenceConversations, evidenceMessages } from './forum-evidence.js'
+import { enqueueLearningEffect } from './effects-repository.js'
 
 type Transaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
 const page = <T>(rows: T[], offset: number) => ({ items: rows.slice(0, 50), nextOffset: rows.length > 50 ? offset + 50 : null })
@@ -97,13 +100,30 @@ export class ForumApplication {
     })
   }
 
-  async submissions(scope: LearningScope, courseId: string, activityId: string, offset: number) {
+  async submissions(scope: LearningScope, courseId: string, activityId: string, offset: number, learnerId?: string) {
     const project = await this.scope(this.db, scope, courseId)
     await this.item(this.db, scope.companyId, project.projectId, 'post', activityId)
     const teacher = (await createPermissionService(this.db).can({ actorUserId: scope.userId,companyId: scope.companyId,
       action: 'learning:review',resource: { type: 'course',id: courseId } })).allowed
     return page(await listSubmissionVersions(this.db, scope.companyId, project.projectId, activityId,
-      teacher ? null : scope.userId, offset), offset)
+      teacher ? learnerId ?? null : scope.userId, offset), offset)
+  }
+
+  async students(scope: LearningScope, courseId: string, assignmentId: string, offset: number, search: string) {
+    const project = await this.scope(this.db,scope,courseId)
+    await createPermissionService(this.db).assertCan({actorUserId:scope.userId,companyId:scope.companyId,action:'learning:review',resource:{type:'course',id:courseId}})
+    await this.item(this.db,scope.companyId,project.projectId,'post',assignmentId)
+    return page(await listSubmissionStudents(this.db,scope.companyId,project.projectId,assignmentId,offset,search),offset)
+  }
+
+  async conversations(scope: LearningScope, courseId: string, offset = 0) {
+    const project = await this.scope(this.db,scope,courseId,'write')
+    return page(await evidenceConversations(this.db,scope,project.projectId,undefined,offset),offset)
+  }
+
+  async conversation(scope: LearningScope, courseId: string, channelId: string, before = 0) {
+    const project = await this.scope(this.db,scope,courseId,'write')
+    return evidenceMessages(this.db,scope,project.projectId,channelId,before)
   }
 
   private async reference(db: Queryable, companyId: string, projectId: string, sourceId?: string | null) {
@@ -171,25 +191,29 @@ export class ForumApplication {
         WHERE company_id=$1 AND project_id=$2 AND id=$3 AND kind='assignment' AND deleted_at IS NULL FOR UPDATE`, [scope.companyId,project.projectId,id])
       const assignment = locked.rows[0]
       if (!assignment) throw new LearningApplicationError('not_found','assignment not found')
-      const prior = await db.query<{ id: string; answer: string; links: unknown; attachments: unknown; source: string; submitted_by_agent: string | null }>(`SELECT id,answer,links,attachments,source,submitted_by_agent FROM course_forum_submissions
+      const prior = await db.query<{ id: string; answer: string; links: unknown; attachments: unknown; source: string; submitted_by_agent: string | null; conversation_references: import('./forum-evidence.js').ConversationEvidence[] }>(`SELECT id,answer,links,attachments,source,submitted_by_agent,conversation_references FROM course_forum_submissions
         WHERE company_id=$1 AND project_id=$2 AND assignment_id=$3 AND learner_id=$4 AND client_submission_id=$5`,
         [scope.companyId,project.projectId,id,scope.userId,data.idempotencyKey])
       if (prior.rows[0]) {
         const previous = prior.rows[0]
         if (previous.answer !== data.answer || JSON.stringify(previous.links) !== JSON.stringify(data.links)
           || JSON.stringify(previous.attachments) !== JSON.stringify(data.attachments) || previous.source !== (agent?.source ?? 'STUDENT_ORIGINAL')
-          || previous.submitted_by_agent !== (agent?.id ?? null)) throw new LearningApplicationError('conflict','submission key already used for different content')
+          || previous.submitted_by_agent !== (agent?.id ?? null)
+          || JSON.stringify(previous.conversation_references.map(({channelId,messageIds})=>({channelId,messageIds}))) !== JSON.stringify(data.conversationReferences)) throw new LearningApplicationError('conflict','submission key already used for different content')
         return { attemptId: previous.id }
       }
       if (assignment.status !== 'PUBLISHED') throw new LearningApplicationError('conflict','assignment is closed')
-      await this.item(db,scope.companyId,project.projectId,'post',id)
+      const assignmentContent = await this.item(db,scope.companyId,project.projectId,'post',id)
       await assertOwnedLearningAttachments(db,scope,data.attachments)
+      const references = await captureConversationEvidence(db,scope,project.projectId,data.conversationReferences)
       const submissionId = randomUUID()
       await db.query(`INSERT INTO course_forum_submissions(id,company_id,project_id,assignment_id,learner_id,answer,links,attachments,
-        source,submitted_by_agent,agent_work_id,assistance,late,client_submission_id)
-        VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9,$10,$11,$12,$13::timestamptz IS NOT NULL AND NOW()>$13,$14)`,
+        source,submitted_by_agent,agent_work_id,assistance,late,client_submission_id,conversation_references)
+        VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9,$10,$11,$12,$13::timestamptz IS NOT NULL AND NOW()>$13,$14,$15::jsonb)`,
         [submissionId,scope.companyId,project.projectId,id,scope.userId,data.answer,JSON.stringify(data.links),JSON.stringify(data.attachments),
-          agent?.source ?? 'STUDENT_ORIGINAL',agent?.id ?? null,agent?.workId ?? null,agent?.source === 'AGENT_GENERATED' ? 'GUIDED' : 'NONE',assignment.due_at,data.idempotencyKey])
+          agent?.source ?? 'STUDENT_ORIGINAL',agent?.id ?? null,agent?.workId ?? null,agent?.source === 'AGENT_GENERATED' ? 'GUIDED' : 'NONE',assignment.due_at,data.idempotencyKey,JSON.stringify(references)])
+      await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'forum.assess',effectKey:submissionId,
+        payload:{submissionId,userId:scope.userId,projectId:project.projectId,requirements:{title:assignmentContent.title,body:assignmentContent.body,links:assignmentContent.links,attachments:assignmentContent.attachments}}})
       return { attemptId: submissionId }
     })
   }

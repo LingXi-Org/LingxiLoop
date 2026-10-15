@@ -65,7 +65,15 @@ export async function retryWebNavigation(): Promise<void> {
 }
 
 export function startWebNavigation(): () => void {
-  const restore = () => { void retryWebNavigation() }
+  const restore = () => {
+    const destination=readWebDestination(),app=useApp.getState()
+    // Memos detail/list history stays within the already-authorized course shell.
+    // Its own page fetch rechecks permissions; keep the feed mounted to retain
+    // its filters, pagination, scroll and keyboard focus.
+    if(!destination.invalidView && destination.view==='forum' && app.view==='forum' && app.navigationReady && !app.navigationPending
+      && destination.projectId===useWorkspace.getState().selectedId) return
+    void retryWebNavigation()
+  }
   window.addEventListener('popstate', restore)
   restore()
   return () => {

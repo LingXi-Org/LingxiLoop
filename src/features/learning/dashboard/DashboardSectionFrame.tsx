@@ -88,7 +88,7 @@ export function DashboardSectionFrame({
 
   if (isMobile) return (
     <div className="@container/learning-grid flex h-full min-h-0 flex-col bg-muted/20 text-card-foreground">
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div data-forum-scroll={section === 'forum' ? '' : undefined} className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="mx-auto max-w-[1200px]">
           <header className="mb-4 flex min-h-11 flex-wrap items-center gap-3">
             <CourseAvatar avatarUrl={space.avatarUrl} courseId={space.courseId ?? space.projectId} title={space.title} size="sm" />
@@ -122,7 +122,7 @@ export function DashboardSectionFrame({
           {spaceKindLabel}
         </Badge>
       </header>
-      <div className={`min-h-0 flex-1 overflow-y-auto p-6 ${section === 'overview' ? 'bg-muted/25' : ''}`}>
+      <div data-forum-scroll={section === 'forum' ? '' : undefined} className={`min-h-0 flex-1 overflow-y-auto p-6 ${section === 'overview' ? 'bg-muted/25' : ''}`}>
         <div className="mx-auto max-w-[1200px]">{content}</div>
       </div>
     </div>

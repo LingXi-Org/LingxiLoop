@@ -21,6 +21,7 @@ async function scope(context: ActionContext, action: 'learning:read' | 'learning
   if (!course.rows[0]) throw new NoEffectError('course forum is required','forbidden')
   return { db, companyId, userId, projectId, courseId:course.rows[0].id, forum:new ForumApplication(db,run=>run(db)) }
 }
+import { conversationReferencesSchema } from './forum-evidence.js'
 const id=z.string().min(1).max(200)
 export const learningTools: ToolDefinition[] = [
   ...homeworkLearnerTools,
@@ -41,8 +42,8 @@ export const learningTools: ToolDefinition[] = [
       return {ok:true,executionState:'succeeded',value:await s.forum.submissions(s,s.courseId,input.assignmentId,0)}
     }}),
   nativeTool('learning.submit_assignment',z.object({assignmentId:id,answer:z.string().min(1).max(20000),
-    source:z.enum(['AGENT_RELAY','AGENT_GENERATED']),messageIds:z.array(id).max(20).default([]),idempotencyKey:id}).strict(),{
-    description:'Submit to a teacher forum assignment for the original student, preserving relay/generated attribution. Relay must exactly match committed human messages.',
+    conversationReferences:conversationReferencesSchema,source:z.enum(['AGENT_RELAY','AGENT_GENERATED']),messageIds:z.array(id).max(20).default([]),idempotencyKey:id}).strict(),{
+    description:'Submit to a teacher forum assignment for the original student, preserving relay/generated attribution. Relay must exactly match committed human messages. Require at least one student-selected real conversation reference containing their own message followed by an assistant reply; the quoted range will be shared with the course teacher. The server automatically queues a learning assessment.',
     effect:'transaction',approval:false,authorize:async context=>{await scope(context,'learning:submit')},async execute(context,input) {
       const s=await scope(context,'learning:submit')
       if(input.source==='AGENT_RELAY') {
@@ -54,7 +55,7 @@ export const learningTools: ToolDefinition[] = [
           throw new NoEffectError('relay must exactly preserve committed human text','forbidden')
         }
       }
-      const result=await s.forum.submit(s,s.courseId,input.assignmentId,{answer:input.answer,idempotencyKey:input.idempotencyKey},
+      const result=await s.forum.submit(s,s.courseId,input.assignmentId,{answer:input.answer,idempotencyKey:input.idempotencyKey,conversationReferences:input.conversationReferences},
         {id:context.work.agentId,workId:context.work.id,source:input.source})
       return {ok:true,executionState:'succeeded',value:result}
     },async verify(context,input,value) {

@@ -1,6 +1,6 @@
 import { http } from '@/api/core/http'
 import type { ContextThreadResult } from '@/features/context-threads/api'
-import type { ForumPage } from '../forum/contracts'
+import type { ConversationReference, ForumPage } from '../forum/contracts'
 import type { HomeworkAnswer, HomeworkDetail, HomeworkFields, HomeworkLearner, HomeworkStudent, HomeworkSubmission } from './contracts'
 
 const base = (courseId: string, homeworkId: string) => `/courses/${encodeURIComponent(courseId)}/homeworks/${encodeURIComponent(homeworkId)}`
@@ -21,10 +21,10 @@ export const homeworkApi = {
     http<HomeworkStudent>(`${base(courseId, id)}/answer`, { method: 'PATCH', body: JSON.stringify(input) }),
   report: (courseId: string, id: string, expectedAnswerRevision: number) =>
     http<HomeworkStudent>(`${base(courseId, id)}/report`, { method: 'POST', body: JSON.stringify({ expectedAnswerRevision }) }),
-  submit: (courseId: string, id: string, input: { expectedAnswerRevision: number; reportId: string; idempotencyKey: string }) =>
+  submit: (courseId: string, id: string, input: { expectedAnswerRevision: number; reportId: string; idempotencyKey: string; conversationReferences:ConversationReference[] }) =>
     http<HomeworkSubmission>(`${base(courseId, id)}/submit`, { method: 'POST', body: JSON.stringify(input) }),
-  learners: (courseId: string, id: string, offset = 0) => http<ForumPage<HomeworkLearner>>(`${base(courseId, id)}/learners?offset=${offset}`),
-  submissions: (courseId: string, id: string, offset = 0) => http<ForumPage<HomeworkSubmission>>(`${base(courseId, id)}/submissions?offset=${offset}`),
+  learners: (courseId: string, id: string, offset = 0, search = '') => http<ForumPage<HomeworkLearner>>(`${base(courseId, id)}/learners?${new URLSearchParams({offset:String(offset),search})}`),
+  submissions: (courseId: string, id: string, offset = 0, learnerId = '') => http<ForumPage<HomeworkSubmission>>(`${base(courseId, id)}/submissions?${new URLSearchParams({offset:String(offset),learnerId})}`),
   review: (courseId: string, id: string, input: { learnerId: string; expectedSubmissionId: string; decision: 'PASSED' | 'RETURNED'; reason: string }) =>
     http<{ ok: true }>(`${base(courseId, id)}/review`, { method: 'POST', body: JSON.stringify(input) }),
 }

@@ -1,4 +1,5 @@
 import { ProjectSourceLibrary } from '@/features/knowledge/components/ProjectSourceLibrary'
+import { createMemoNavigationState, resolveMemoDetailOrigin } from './memos/navigation'
 import { MemoDisplaySettings, useForumDisplay } from './memos/MemoDisplaySettings'
 import { checkAllTasks, uncheckAllTasks, toggleTaskAtLine } from './memos/markdown-task-actions'
 import { toast } from 'sonner'
@@ -18,7 +19,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { useApp } from '@/stores/app'
 import { useConversations } from '@/features/conversations/store'
 import { homeworkApi } from '../homework/api'
-import { HomeworkDetail } from '../homework/HomeworkDetail'
+import { MemoDetail } from './memos/MemoDetail'
 import { useAuth } from '@/stores/auth'
 import type { LearningSpace } from '../contracts'
 import { DashboardSectionFrame } from '../dashboard/DashboardSectionFrame'
@@ -26,8 +27,6 @@ import { forumApi } from './api'
 import type { ForumFilter, ForumItem } from './contracts'
 import { ForumComposer } from './ForumComposer'
 import { ForumFiles } from './ForumContentFields'
-import { ForumDiscussion } from './ForumDiscussion'
-import { ForumSubmission } from './ForumSubmission'
 import { ForumSidebar, forumSections, type ForumSection } from './ForumSidebar'
 import { MemoCard } from './memos/MemoCard'
 import { MemoContent } from './memos/MemoContent'
@@ -38,6 +37,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   const [resources, setResources] = useState(false)
   const selectSection = (section: ForumSection) => {
     setResources(section === 'resources')
+    if (detailId) closeDetail()
     if (section !== 'resources') setKind(section)
   }
   const [display,setDisplay]=useForumDisplay()
@@ -46,7 +46,27 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   const [editing, setEditing] = useState<ForumItem | null>(null), [archived, setArchived] = useState(false)
   const [items, setItems] = useState<ForumItem[]>([]), [nextOffset, setNextOffset] = useState<number | null>(null)
   const [kind, setKind] = useState<ForumFilter>('all'), [search, setSearch] = useState(''), [tag, setTag] = useState('')
-  const [discussion, setDiscussion] = useState<ForumItem | null>(null), [submission, setSubmission] = useState<ForumItem | null>(null)
+  const [discussion, setDiscussion] = useState<ForumItem | null>(null)
+  const [detailId,setDetailId]=useState(()=>new URLSearchParams(location.search).get('post'))
+  const [detailError,setDetailError]=useState('')
+  const returnFocus=useRef<HTMLElement | null>(null)
+  const feed=useRef<HTMLDivElement>(null)
+  const scroll=useRef(0)
+  const origin=useRef('')
+  const openDetail=(item:ForumItem)=>{
+    returnFocus.current=document.activeElement as HTMLElement
+    const container=feed.current?.closest('[data-forum-scroll]') ?? feed.current?.parentElement?.parentElement
+    scroll.current=container?.scrollTop ?? 0
+    origin.current=location.pathname+location.search
+    const url=new URL(location.href);url.searchParams.set('post',item.id);url.searchParams.set('type',item.targetType)
+    history.pushState({...history.state,...createMemoNavigationState(origin.current)},'',url);setDiscussion(item);setDetailId(item.id);setDetailError('')
+    if(container) container.scrollTop=0
+  }
+  const closeDetail=()=>{
+    const url=new URL(location.href);url.searchParams.delete('post');url.searchParams.delete('type')
+    if(history.state?.from) history.back()
+    else {history.replaceState(history.state,'',url);setDetailId(null);setDiscussion(null)}
+  }
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState('')
   const [reference,setReference]=useState<string | null>(null)
   const [date, setDate] = useState<Date>(), [property, setProperty] = useState('all')
@@ -54,7 +74,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   const [closing, setClosing] = useState<ForumItem | null>(null)
   const epoch = useRef(0)
   const canWrite = space.canSubmit || space.canEditContent
-  useEffect(() => { setEditing(null); setReference(null); setDiscussion(null); setSubmission(null); setClosing(null); setTag(''); setSearch(''); setKind('all'); setArchived(false); setDate(undefined); setProperty('all') }, [space.courseId])
+  useEffect(() => { setEditing(null); setReference(null); setDiscussion(null); setClosing(null); setTag(''); setSearch(''); setKind('all'); setArchived(false); setDate(undefined); setProperty('all') }, [space.courseId])
   const load = useCallback(async (offset = 0) => {
     if (!space.courseId || resources) return
     const request = ++epoch.current
@@ -74,13 +94,28 @@ export function CourseForum({ space }: { space: LearningSpace }) {
     const timer = setTimeout(() => { void load() }, 200)
     return () => { clearTimeout(timer); epoch.current++ }
   }, [load])
+  useEffect(()=>{
+    const restore=()=>{setDetailId(new URLSearchParams(location.search).get('post'));setDetailError('')}
+    window.addEventListener('popstate',restore)
+    return ()=>window.removeEventListener('popstate',restore)
+  },[])
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get('post')
-    if (!id || !space.courseId) return
+    if (!detailId || !space.courseId) { setDiscussion(null); return }
     let current = true
-    void forumApi.detail(space.courseId,id,new URLSearchParams(window.location.search).get('type') === 'homework' ? 'homework' : 'post').then(item => {if(current) { if (item.kind === 'assignment') setSubmission(item); else setDiscussion(item) }}).catch(reason => {if(current) setError(userFacingError(reason,'内容不可访问。'))})
-    return () => {current=false}
-  },[space.courseId])
+    setDetailError('')
+    void forumApi.detail(space.courseId,detailId,new URLSearchParams(location.search).get('type')==='homework'?'homework':'post')
+      .then(item=>{if(current)setDiscussion(item)}).catch(reason=>{if(current)setDetailError(userFacingError(reason,'内容不可访问。'))})
+    return ()=>{current=false}
+  },[space.courseId,detailId])
+  useEffect(()=>{
+    if(detailId) return
+    const frame=requestAnimationFrame(()=>{
+      const container=feed.current?.closest('[data-forum-scroll]') ?? feed.current?.parentElement?.parentElement
+      if(container) container.scrollTop=scroll.current
+      returnFocus.current?.focus({preventScroll:true})
+    })
+    return ()=>cancelAnimationFrame(frame)
+  },[detailId])
   const copy = async (text: string) => {
     try {await navigator.clipboard.writeText(text); toast.success('已复制')}
     catch {setError('复制失败，请检查浏览器剪贴板权限。')}
@@ -99,7 +134,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
     if (useConversations.getState().projectId !== space.projectId || !useConversations.getState().list.some(item => item.id === agent.roomId)) throw new Error('404')
     useApp.getState().selectConversation(agent.roomId)
   })
-  const content = resources ? <ProjectSourceLibrary key={space.projectId} projectId={space.projectId} canManage={space.canEditContent} readOnly={!canWrite} uploadVisibility={space.perspective === 'teacher' ? 'PROJECT' : 'PRIVATE'} /> : <div className="min-w-0 space-y-5">
+  const feedContent = <div ref={feed} hidden={Boolean(detailId)} className="min-w-0 space-y-5">
       {space.canEditContent && <div className="flex justify-end"><Button variant="outline" disabled={busy} onClick={openHomework}>发布作业</Button></div>}
         {canWrite && <ForumComposer key={`${space.companyId}:${userId}:${courseId}`} space={space} onCreated={() => { setKind('all'); setSearch(''); setTag(''); void load() }} />}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -122,19 +157,19 @@ export function CourseForum({ space }: { space: LearningSpace }) {
             {item.targetType === 'post' && item.authorId === userId && uncheckAllTasks(item.body) !== checkAllTasks(item.body) && <DropdownMenuItem onSelect={() => void mutate(() => forumApi.update(courseId,item,{...item,body:checkAllTasks(item.body) === item.body ? uncheckAllTasks(item.body) : checkAllTasks(item.body)}))}>{checkAllTasks(item.body) === item.body ? '重置任务清单' : '完成全部任务'}</DropdownMenuItem>}
             {space.canEditContent && <DropdownMenuItem onSelect={() => void mutate(() => forumApi.flags(courseId,item,{ pinned: !item.pinned }))}>{item.pinned ? '取消置顶' : '置顶'}</DropdownMenuItem>}
             {(space.canEditContent || item.authorId === userId) && <DropdownMenuItem onSelect={() => void mutate(() => forumApi.flags(courseId,item,{ archived: !item.archived }))}>{item.archived ? '取消归档' : '归档'}</DropdownMenuItem>}
-            <DropdownMenuItem onSelect={() => setDiscussion(item)}>打开内容</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => openDetail(item)}>打开内容</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => void copy(`${location.origin}/?${new URLSearchParams({project:space.projectId,view:'forum',post:item.id,type:item.targetType})}`)}>复制链接</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => void copy(item.body)}>复制内容</DropdownMenuItem>
             {item.targetType === 'post' && (space.canEditContent || item.authorId === userId) && <DropdownMenuItem onSelect={() => setDeleting(item)}>删除内容</DropdownMenuItem>}
             {item.targetType === 'post' && space.canEditContent && item.kind === 'assignment' && item.status === 'PUBLISHED' && <DropdownMenuItem onSelect={() => setClosing(item)}>关闭作业</DropdownMenuItem>}
           </DropdownMenuContent></DropdownMenu></>}>
           {editing?.id === item.id ? <ForumComposer key={`edit:${item.id}`} space={space} item={item} onCreated={() => { setEditing(null); void load() }} onCancel={() => setEditing(null)} /> : <>
-          <h3 className="text-base font-semibold leading-6">{item.title}</h3>
+          <h3 className="text-base font-semibold leading-6"><a href={`/?${new URLSearchParams({project:space.projectId,view:'forum',post:item.id,type:item.targetType})}`} onClick={event=>{if(!event.metaKey&&!event.ctrlKey&&!event.shiftKey&&event.button===0){event.preventDefault();openDetail(item)}}} className="rounded-sm focus-visible:outline-2 focus-visible:outline-ring">{item.title}</a></h3>
           <div data-slot="memo-body" className={`relative w-full min-w-0 flex flex-col items-start gap-2 ${display.compact || display.columns!=='1' ? 'max-h-72 overflow-hidden [mask-image:linear-gradient(black_80%,transparent)]' : ''}`}>
             {item.body && <MemoContent content={item.body} onTaskToggle={item.targetType === 'post' && item.authorId === userId && canWrite && !busy && !item.archived ? line=>void mutate(()=>forumApi.update(courseId,item,{...item,body:toggleTaskAtLine(item.body,line)})) : undefined} />}
             <ForumFiles links={item.links} attachments={item.attachments} />
           </div>
-          {(display.compact || display.columns!=='1') && <Button variant="link" size="sm" onClick={()=>setDiscussion(item)}>展开内容</Button>}
+          {(display.compact || display.columns!=='1') && <Button variant="link" size="sm" onClick={()=>openDetail(item)}>展开内容</Button>}
           {item.tags.length > 0 && <div className="flex flex-wrap gap-1">{item.tags.map(value => <Button key={value} variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground" onClick={() => setTag(value)}>#{value}</Button>)}</div>}
           {item.sourceId && <Button variant="link" size="sm" onClick={() => setReference(item.sourceId)}>查看引用资料</Button>}
           {item.dueAt && <p className="text-xs text-muted-foreground">截止：{new Date(item.dueAt).toLocaleString()}</p>}
@@ -142,29 +177,30 @@ export function CourseForum({ space }: { space: LearningSpace }) {
           <div className="flex w-full flex-wrap items-center gap-1 pt-1 text-[13px]">
             {(item.reactions ?? []).map(reaction => <button key={reaction.emoji} type="button" className="inline-flex h-7 items-center gap-1.5 rounded-full bg-muted/40 px-2.5 text-[13px] text-muted-foreground hover:bg-muted/70 aria-pressed:bg-accent aria-pressed:text-accent-foreground focus-visible:outline-2" aria-label={`回应 ${reaction.emoji}`} aria-pressed={reaction.userIds.includes(userId ?? '')} disabled={!canWrite || item.archived || busy} onClick={() => void mutate(() => forumApi.react(courseId,item,reaction.emoji,!reaction.userIds.includes(userId ?? '')))}>{reaction.emoji} {reaction.userIds.length}</button>)}
             {item.targetType === 'post' && canWrite && !item.archived && <Popover><PopoverTrigger asChild><Button variant="ghost" size="sm" aria-label={`添加回应：${item.title}`}>☺</Button></PopoverTrigger><PopoverContent className="w-auto flex gap-1">{['👍','❤️','🎉','🤔','👀','✅'].map(emoji => <Button key={emoji} variant="ghost" size="icon-sm" aria-label={`回应 ${emoji}`} disabled={busy} onClick={() => void mutate(() => forumApi.react(courseId,item,emoji,!(item.reactions ?? []).some(r => r.emoji===emoji && r.userIds.includes(userId ?? ''))))}>{emoji}</Button>)}</PopoverContent></Popover>}
-            <Button variant="ghost" size="sm" onClick={() => setDiscussion(item)}>评论{item.commentCount > 0 ? `（${item.commentCount}）` : ''}</Button>
-            {item.kind === 'assignment' && <Button variant="outline" size="sm" onClick={() => setSubmission(item)}>{item.targetType === 'homework' ? space.canReview ? '查看进度与验收' : '查看作业' : space.canReview ? '查看提交' : item.status === 'CLOSED' ? '查看提交记录' : '提交作业'}</Button>}
+            <Button variant="ghost" size="sm" onClick={() => openDetail(item)}>评论{item.commentCount > 0 ? `（${item.commentCount}）` : ''}</Button>
+            {item.kind === 'assignment' && <Button variant="outline" size="sm" onClick={() => openDetail(item)}>{item.targetType === 'homework' ? space.canReview ? '查看进度与验收' : '查看作业' : space.canReview ? '查看提交' : item.status === 'CLOSED' ? '查看提交记录' : '提交作业'}</Button>}
           </div>
           </>}
         </MemoCard>)}
         {nextOffset !== null && <Button variant="outline" className="w-full" disabled={loading} onClick={() => void load(nextOffset)}>加载更多</Button>}
       </div>
       {reference && <ForumReference key={reference} projectId={space.projectId} sourceId={reference} onClose={()=>setReference(null)}/>}
-      {discussion && <ForumDiscussion key={`${discussion.targetType}:${discussion.id}`} courseId={courseId} item={discussion} canWrite={canWrite} canManage={space.canEditContent} onClose={() => setDiscussion(null)} onComment={() => void load()} />}
-      {submission && (submission.targetType === 'homework' ? <HomeworkDetail key={submission.id} space={space} item={submission} onClose={() => setSubmission(null)} onChanged={() => void load()} /> : <ForumSubmission key={submission.id} space={space} item={submission} onClose={() => setSubmission(null)} />)}
       <AlertDialog open={Boolean(deleting)} onOpenChange={open => {if(!open) setDeleting(null)}}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>删除这条内容？</AlertDialogTitle><AlertDialogDescription>删除后不再显示。已有提交的作业须关闭或归档，提交历史将保留。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction onClick={() => {if(deleting) void mutate(() => forumApi.remove(courseId,deleting)); setDeleting(null)}}>确认删除</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <AlertDialog open={Boolean(closing)} onOpenChange={open => { if (!open) setClosing(null) }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>关闭这份作业？</AlertDialogTitle><AlertDialogDescription>关闭后不再接收新的提交，已有提交与历史版本会保留。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>暂不关闭</AlertDialogCancel><AlertDialogAction onClick={() => { if (closing) void mutate(() => forumApi.close(courseId, closing)); setClosing(null) }}>确认关闭</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>
+  const content=resources ? <ProjectSourceLibrary key={space.projectId} projectId={space.projectId} canManage={space.canEditContent} readOnly={!canWrite} uploadVisibility={space.perspective === 'teacher' ? 'PROJECT' : 'PRIVATE'} /> : <>{feedContent}{detailId && (detailError ? <div role="alert">{detailError}<Button variant="link" onClick={closeDetail}>返回学习论坛</Button></div> : discussion?.id===detailId
+    ? <MemoDetail key={`${discussion.targetType}:${discussion.id}`} space={space} item={discussion} from={resolveMemoDetailOrigin(history.state,`/?${new URLSearchParams({project:space.projectId,view:'forum'})}`)} onBack={closeDetail} onChanged={()=>void load()}/>
+    : <p role="status">正在加载内容…</p>)}</>
   if (isMobile) return <section className="flex h-full min-h-0 flex-col bg-background">
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
-      <ForumSidebar kind={resources ? 'resources' : kind} onSelect={selectSection} date={date} onDate={setDate} />
+      <ForumSidebar kind={resources ? 'resources' : kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}} />
       <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">{space.title} · 学习论坛</h1>
     </header>
-    <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-3"><div data-ui-page="forum">{content}</div></div>
+    <div data-forum-scroll className="min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-3"><div data-ui-page="forum">{content}</div></div>
   </section>
   return <DashboardSectionFrame space={space} section="forum">
     <div data-ui-page="forum" className="mx-auto grid w-full max-w-6xl grid-cols-[16rem_minmax(0,1fr)] gap-6 @min-[56rem]/learning-grid:gap-10">
-      <ForumSidebar kind={resources ? 'resources' : kind} onSelect={selectSection} date={date} onDate={setDate} />
+      <ForumSidebar kind={resources ? 'resources' : kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}} />
       {content}
     </div>
   </DashboardSectionFrame>

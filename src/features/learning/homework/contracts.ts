@@ -1,4 +1,4 @@
-import type { ForumAttachment } from '../forum/contracts'
+import type { ConversationEvidence, ForumAttachment } from '../forum/contracts'
 
 export interface HomeworkAnswer { text: string; links: string[]; attachments: ForumAttachment[] }
 export interface HomeworkCriterion { criterion: string; met: boolean; independent: boolean; feedback: string }
@@ -33,6 +33,7 @@ export interface HomeworkReport {
   manualReview: { reason: string; remainingDoubts: string[] } | null
 }
 export interface HomeworkSubmission {
+  conversationReferences:ConversationEvidence[]
   id: string
   learnerId: string
   learnerName: string

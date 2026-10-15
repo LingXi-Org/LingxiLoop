@@ -29,7 +29,17 @@ test('real learning records allow honest report pairs, closed return without new
   const forum = async () => { await app.open(`/?project=${projectId}&view=forum`); await expect(screen.getByLabel('搜索学习论坛')).toBeVisible() }
   const openTask = async (name: string, teacher = false) => {
     await forum(); await browser.locator('article').filter({ hasText: name }).getByRole('button', teacher ? '查看进度与验收' : '查看作业', { exact: true }).tap()
-    await expect(screen.getByRole('dialog', name, { exact: true })).toBeVisible()
+    await expect(browser.locator('[data-memo-detail]')).toBeVisible()
+    await expect(screen.getByRole('dialog')).toBeHidden()
+  }
+  const selectReferences = async () => {
+    const ranges = browser.locator('[data-conversation-reference]')
+    await expect(ranges.first()).toBeVisible()
+    for (let index = 0; index < await ranges.count(); index++) {
+      const range = ranges.nth(index)
+      if (await range.getAttribute('open') === null) await browser.locator('[data-conversation-reference] > summary').nth(index).tap()
+      await range.getByRole('checkbox', '引用这段对话', { exact: true }).check()
+    }
   }
   const say = async (text: string) => {
     const composer = browser.locator('[data-composer-column] [contenteditable="true"]')
@@ -151,13 +161,13 @@ test('real learning records allow honest report pairs, closed return without new
   await signOut(fixtures); await signIn(fixtures, 'student'); await selectWorkspace(fixtures, 'Homework Live Classroom')
   await openTask(title)
   await screen.getByLabel('我的作答', { exact: true }).fill(partialAnswer)
-  await screen.getByRole('dialog').getByLabel('附件', { exact: true }).setInputFiles([
+  await browser.locator('[data-memo-detail]').getByLabel('附件', { exact: true }).setInputFiles([
     fileURLToPath(new URL('./triangle-answer.docx', import.meta.url)), fileURLToPath(new URL('./triangle-notes.txt', import.meta.url)),
   ])
   await expect(screen.getByRole('button', '移除附件：triangle-answer.docx')).toBeVisible()
   await expect(screen.getByRole('button', '移除附件：triangle-notes.txt')).toBeVisible()
   await screen.getByRole('button', '保存草稿', { exact: true }).tap()
-  await expect(screen.getByText('草稿已保存。', { exact: true })).toBeVisible()
+  await expect(screen.getByText('草稿已保存，请先完成与助手的对话。', { exact: true })).toBeVisible()
   await expect(screen.getByRole('button', '更新报告', { exact: true })).toBeDisabled()
   await expect(screen.getByRole('button', '预览并提交')).toBeDisabled()
   expect((await detail(id)).student.hasLearningRecord).toBe(false)
@@ -194,12 +204,13 @@ test('real learning records allow honest report pairs, closed return without new
   expect((await detail(id)).student.channelId).toBe(channelId)
   await openTask(title); await expect(screen.getByRole('button', '更新报告', { exact: true })).toBeEnabled()
   await screen.getByRole('button', '更新报告', { exact: true }).tap()
+  await selectReferences()
   await expect(screen.getByRole('button', '预览并提交')).toBeEnabled({ timeout: 240_000 })
   const partialReport = (await detail(id)).student.report
   expect(partialReport.criteria.some((item: { met: boolean; independent: boolean }) => !item.met || !item.independent)).toBe(true)
   expect(Boolean(partialReport.assistance && partialReport.independence)).toBe(true)
   expect(partialReport.weaknesses.length).toBeGreaterThan(0)
-  if (partialReport.verification === 'unverified') await expect(screen.getByText('本次未能核实学习情况。报告保留了真实学习记录，掌握程度和独立完成情况仍待核实。', { exact: true })).toBeVisible()
+  if (partialReport.verification === 'unverified') await expect(screen.getByText('本次未能核实学习情况，掌握程度和独立完成情况仍待核实。', { exact: true })).toBeVisible()
   evidence.partialReport = { verification: partialReport.verification ?? 'verified', criteria: partialReport.criteria.map((item: { met: boolean; independent: boolean }) => ({ met: item.met, independent: item.independent })), weaknessCount: partialReport.weaknesses.length }
   await screen.getByRole('button', '预览并提交').tap(); await capture('answer-report-human-confirmation')
   await screen.getByRole('button', '提交作业', { exact: true }).tap()
@@ -210,9 +221,10 @@ test('real learning records allow honest report pairs, closed return without new
   await browser.keyboard.press('Escape'); await signOut(fixtures); await signIn(fixtures, 'member'); await selectWorkspace(fixtures, 'Homework Live Classroom')
   await openTask(title, true)
   const learner = screen.getByRole('article', 'E2E student', { exact: true })
-  await learner.getByText('查看作答和报告', { exact: true }).tap(); await expect(learner).toContainText(partialAnswer)
-  if (partialReport.verification === 'unverified') await expect(learner).toContainText('本次未能核实学习情况。报告保留了真实学习记录，掌握程度和独立完成情况仍待核实。')
+  await learner.getByRole('button', /E2E student/).tap(); await expect(learner).toContainText(partialAnswer)
+  if (partialReport.verification === 'unverified') await expect(learner).toContainText('本次未能核实学习情况，掌握程度和独立完成情况仍待核实。')
   await expect(learner.getByRole('button', '人工解锁', { exact: true })).toHaveCount(0)
+  await screen.getByText('作业安排', { exact: true }).tap()
   await screen.getByRole('button', '关闭作业', { exact: true }).tap(); await screen.getByRole('button', '确认关闭', { exact: true }).tap()
   await learner.getByLabel('验收意见').fill('报告如实显示目前仍有不足。请修订公式解释和两个计算，再更新报告补交。')
   await learner.getByRole('button', '退回', { exact: true }).tap()
@@ -224,8 +236,8 @@ test('real learning records allow honest report pairs, closed return without new
   expect(returned.hasLearningRecord && returned.canSubmit).toBe(true)
   await expect(screen.getByRole('button', '更新报告', { exact: true })).toBeEnabled()
   await screen.getByLabel('我的作答', { exact: true }).fill(answer)
-  await screen.getByRole('button', '保存草稿', { exact: true }).tap(); await expect(screen.getByText('草稿已保存。', { exact: true })).toBeVisible()
-  await screen.getByRole('button', '更新报告', { exact: true }).tap(); await expect(screen.getByRole('button', '预览并提交')).toBeEnabled({ timeout: 240_000 })
+  await screen.getByRole('button', '保存草稿', { exact: true }).tap(); await expect(screen.getByText('作答已保存，正在自动生成学习报告。', { exact: true })).toBeVisible()
+  await selectReferences(); await expect(screen.getByRole('button', '预览并提交')).toBeEnabled({ timeout: 240_000 })
   const refreshed = (await detail(id)).student
   expect(refreshed.evidenceRevision).toBe(returned.evidenceRevision)
   expect(refreshed.report.id === first.report.id).toBe(false)
@@ -236,7 +248,7 @@ test('real learning records allow honest report pairs, closed return without new
   evidence.closedExceptionConsumed = true
   await checkpoint('teacher-accepts-pair')
   await browser.keyboard.press('Escape'); await signOut(fixtures); await signIn(fixtures, 'member'); await selectWorkspace(fixtures, 'Homework Live Classroom')
-  await openTask(title, true); await learner.getByLabel('验收意见').fill('修订作答已解释原理并完成两个计算。已查看报告中关于帮助和独立程度的说明，本次验收通过。')
+  await openTask(title, true); await learner.getByRole('button', /E2E student/).tap(); await learner.getByLabel('验收意见').fill('修订作答已解释原理并完成两个计算。已查看报告中关于帮助和独立程度的说明，本次验收通过。')
   await learner.getByRole('button', '通过', { exact: true }).tap(); await expect(learner).toContainText('已通过')
   await capture('teacher-accepted-pair'); await browser.keyboard.press('Escape')
   await checkpoint('teacher-agent-summarizes-submitted-report')
@@ -267,8 +279,8 @@ test('real learning records allow honest report pairs, closed return without new
   await checkpoint('brief-proficient-answer-report-pair')
   await screen.getByLabel('我的作答', { exact: true }).fill(answer)
   await screen.getByRole('button', '保存草稿', { exact: true }).tap()
-  await expect(screen.getByText('草稿已保存。', { exact: true })).toBeVisible()
-  await screen.getByRole('button', '更新报告', { exact: true }).tap()
+  await expect(screen.getByText('作答已保存，正在自动生成学习报告。', { exact: true })).toBeVisible()
+  await selectReferences()
   await expect(screen.getByRole('button', '预览并提交')).toBeEnabled({ timeout: 240_000 })
   const quickReport = (await detail(quickId)).student.report
   evidence.quickReport = { verification: quickReport.verification ?? 'verified', criteria: quickReport.criteria.map((item: { met: boolean; independent: boolean }) => ({ met: item.met, independent: item.independent })), assistance: quickReport.assistance, independence: quickReport.independence }

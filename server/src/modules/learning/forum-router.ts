@@ -4,7 +4,7 @@ import { withTransaction } from '../../db/transaction.js'
 import { safe } from '../../http/async-handler.js'
 import { requireCompany } from '../../http/request-context.js'
 import { ForumApplication } from './forum-application.js'
-import { forumCommentSchema, forumFlagsSchema, forumPageSchema, forumPostSchema, forumQuerySchema, forumTargetSchema } from './forum-contracts.js'
+import { forumCommentSchema, forumFlagsSchema, forumPageSchema, forumStudentsSchema, forumPostSchema, forumQuerySchema, forumTargetSchema } from './forum-contracts.js'
 import { parseLearningRequest as parse, respondWithLearning as respond } from './http-adapter.js'
 
 export const forumRouter = Router()
@@ -71,4 +71,21 @@ forumRouter.put('/courses/:courseId/forum/post/:id/comments/:commentId', safe(as
 forumRouter.delete('/courses/:courseId/forum/post/:id/comments/:commentId', safe(async (req,res) => {
   const scope = await requireCompany(req)
   res.json(await respond(() => forum.editComment(scope,String(req.params.courseId),String(req.params.id),String(req.params.commentId),null)))
+}))
+
+forumRouter.get('/courses/:courseId/forum/post/:id/students',safe(async(req,res)=>{
+  const scope=await requireCompany(req),query=parse(forumStudentsSchema.safeParse(req.query))
+  res.json(await respond(()=>forum.students(scope,String(req.params.courseId),String(req.params.id),query.offset,query.search)))
+}))
+forumRouter.get('/courses/:courseId/forum/post/:id/students/:learnerId/submissions',safe(async(req,res)=>{
+  const scope=await requireCompany(req),query=parse(forumPageSchema.safeParse(req.query))
+  res.json(await respond(()=>forum.submissions(scope,String(req.params.courseId),String(req.params.id),query.offset,String(req.params.learnerId))))
+}))
+forumRouter.get('/courses/:courseId/submission-conversations',safe(async(req,res)=>{
+  const scope=await requireCompany(req),query=parse(forumPageSchema.safeParse(req.query))
+  res.json(await respond(()=>forum.conversations(scope,String(req.params.courseId),query.offset)))
+}))
+forumRouter.get('/courses/:courseId/submission-conversations/:channelId',safe(async(req,res)=>{
+  const scope=await requireCompany(req),query=parse(forumPageSchema.safeParse(req.query))
+  res.json(await respond(()=>forum.conversation(scope,String(req.params.courseId),String(req.params.channelId),query.offset)))
 }))

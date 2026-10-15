@@ -13,6 +13,7 @@ export const LEARNING_EFFECT_KINDS = [
   'homework.validate',
   'homework.assess',
   'homework.report',
+  'forum.assess',
 ] as const
 
 export type LearningEffectKind = typeof LEARNING_EFFECT_KINDS[number]

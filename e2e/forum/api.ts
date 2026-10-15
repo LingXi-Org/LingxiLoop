@@ -26,7 +26,28 @@ await insertCourse(pool, { companyId: 'e2e-school',userId: 'forum-teacher',proje
 for (const name of ['student','peer']) await pool.query("INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES ('e2e-school','e2e-classroom',$1,'STUDENT')", [`forum-${name}`])
 await pool.query("INSERT INTO course_forum_posts(id,company_id,project_id,title,body,kind,status,author_user_id,created_at,due_at) VALUES ('forum-homework','e2e-school','e2e-classroom','Forum homework','Explain your result','assignment','PUBLISHED','forum-teacher',NOW()-INTERVAL '2 days',NOW()-INTERVAL '1 day')")
 await pool.query("INSERT INTO knowledge_sources(id,company_id,project_id,kind,title,visibility_scope,owner_user_id,created_by_user_id,created_via) VALUES ('forum-resource','e2e-school','e2e-classroom','text','Historical public resource','PROJECT','forum-teacher','forum-teacher','USER')")
-await installRecordingWukong()
+const im=await installRecordingWukong()
+const {createNativeMessage}=await import('../../server/src/im/message-types')
+await pool.query(`INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status,capabilities) VALUES('forum-evidence-agent','e2e-school','agent','学习助手','assistant','E','#abcdef','avail','["learning"]')`)
+await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES('forum-evidence-room','e2e-school','e2e-classroom','group','我的作业学习对话','["forum-student","forum-evidence-agent"]')`)
+await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES('forum-evidence-room','e2e-school','{"channelType":2,"members":["forum-student","forum-evidence-agent"]}')`)
+for(const [index,role] of (['user','assistant'] as const).entries())im.messages.push({channelId:'forum-evidence-room',channelType:2,messageId:`forum-evidence-${role}`,clientMsgNo:`forum-evidence-${role}`,messageSeq:index+1,fromUid:role==='user'?'forum-student':'forum-evidence-agent',timestamp:Date.now()/1000,payload:createNativeMessage({id:`forum-evidence-${role}`,role,content:[{type:'text',text:role==='user'?'我用两个全等三角形拼成长方形，所以面积是底乘高的一半。':'请用新的底和高说明你的计算过程。'}]})})
+await pool.query(`INSERT INTO course_forum_posts(id,company_id,project_id,title,body,kind,status,author_user_id) VALUES('issue146-assignment','e2e-school','e2e-classroom','Memos 详情与作答验收','说明三角形面积公式，并引用自己的学习过程。','assignment','PUBLISHED','forum-teacher')`)
+for(let i=0;i<55;i++){
+  const id=`forum-search-${String(i).padStart(2,'0')}`
+  await seedUserMembership(id,'e2e-school',{role:'STUDENT',displayName:i===0?'跨页学生':i<3?'同名学生':`参考学生 ${i}`})
+  await pool.query(`INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES('e2e-school','e2e-classroom',$1,'STUDENT')`,[id])
+  await pool.query(`INSERT INTO course_forum_submissions(id,company_id,project_id,assignment_id,learner_id,answer,source) VALUES($1,'e2e-school','e2e-classroom','issue146-assignment',$2,$3,'STUDENT_ORIGINAL')`,[`historical-${i}`,id,'历史长作答。'.repeat(1000)])
+}
+// New homework rendering uses the same real API, with explicitly synthetic historical report data.
+await pool.query(`INSERT INTO homeworks(id,company_id,project_id,course_id,created_by,status,title,instructions,criteria,visible_hash,published_at)
+  VALUES('issue146-homework','e2e-school','e2e-classroom','e2e-course','forum-teacher','PUBLISHED','Memos 学习报告详情','说明三角形面积公式。','["独立说明面积计算"]','fixture',NOW())`)
+const fixtureAnswer={text:'新作业提交正文，仅点击学生后显示。',links:[],attachments:[]}
+const fixtureReport={id:'fixture-report',answerRevision:1,verification:'unverified',criteria:[{criterion:'独立说明面积计算',met:false,independent:false,feedback:'证据尚未核实'}],completion:'合成验收报告，未作掌握结论。',assistance:'尚待核实',independence:'尚待核实',weaknesses:['需要独立说明'],evidence:[],manualReview:null}
+const fixtureReferences=[{channelId:'forum-evidence-room',messageIds:['forum-evidence-user','forum-evidence-assistant'],title:'我的作业学习对话',capturedAt:new Date().toISOString(),messages:im.messages.map(m=>({id:m.clientMsgNo,role:m.payload.role,text:m.payload.content.filter(p=>p.type==='text').map(p=>'text' in p?p.text:'').join(''),sequence:m.messageSeq}))}]
+await pool.query(`INSERT INTO homework_learner_state(company_id,project_id,homework_id,learner_id,latest_submission_id) VALUES('e2e-school','e2e-classroom','issue146-homework','forum-student','fixture-homework-submission')`)
+await pool.query(`INSERT INTO homework_submissions(id,company_id,project_id,homework_id,learner_id,version,idempotency_key,content_hash,answer,report,answer_revision,return_epoch,late,conversation_references)
+  VALUES('fixture-homework-submission','e2e-school','e2e-classroom','issue146-homework','forum-student',1,'fixture-key','fixture',$1::jsonb,$2::jsonb,1,0,false,$3::jsonb)`,[JSON.stringify(fixtureAnswer),JSON.stringify(fixtureReport),JSON.stringify(fixtureReferences)])
 // Synthetic auth and in-memory objects are confined to this loopback-only test server.
 const app = express()
 app.get('/api/fixture-role/:role', (req,res) => {

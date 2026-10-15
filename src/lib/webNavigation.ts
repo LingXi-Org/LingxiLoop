@@ -36,10 +36,11 @@ export function writeWebDestination(destination: WebDestination, mode: 'push' | 
   if (destination.projectId) parameters.set('project', destination.projectId)
   parameters.set('view', destination.view)
   if (destination.view === 'conversations' && destination.conversationId) parameters.set('conversation', destination.conversationId)
-  if (destination.view === 'forum' && current.searchParams.get('project') === destination.projectId && current.searchParams.has('post')) { parameters.set('post',current.searchParams.get('post')!); if (current.searchParams.get('type') === 'homework') parameters.set('type', 'homework') }
+  if (destination.view === 'forum' && current.searchParams.get('project') === destination.projectId && current.searchParams.has('post')) {parameters.set('post',current.searchParams.get('post')!);if(current.searchParams.has('type'))parameters.set('type',current.searchParams.get('type')!)}
   const path = `/?${parameters}`
   if (`${current.pathname}${current.search}${current.hash}` === path) return
-  window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', path)
+  const state=destination.view==='forum' && current.searchParams.get('view')==='forum' && current.searchParams.get('project')===destination.projectId ? window.history.state : null
+  window.history[mode === 'push' ? 'pushState' : 'replaceState'](state, '', path)
 }
 
 export function safeAuthReturnPath(parameters: URLSearchParams): string {
@@ -56,6 +57,6 @@ export function safeAuthReturnPath(parameters: URLSearchParams): string {
   if (destination.projectId) next.set('project', destination.projectId)
   next.set('view', destination.view)
   if (destination.conversationId) next.set('conversation', destination.conversationId)
-  if(destination.view === 'forum' && parameters.has('post')) { next.set('post',parameters.get('post')!); if (parameters.get('type') === 'homework') next.set('type', 'homework') }
+  if(destination.view === 'forum' && parameters.has('post')) {next.set('post',parameters.get('post')!);if(parameters.has('type'))next.set('type',parameters.get('type')!)}
   return `/?${next}`
 }
