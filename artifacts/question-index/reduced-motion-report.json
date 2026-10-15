@@ -1,7 +1,7 @@
 {
   "schemaVersion": "report-1",
   "run": {
-    "id": "01a13f3f-a30e-7d73-b792-08b528cba7c8",
+    "id": "01a1408c-b95d-7c64-9c2a-cb90bc8b3eed",
     "specVersion": "0.1",
     "runner": {
       "name": "e2e",
@@ -9,8 +9,8 @@
     },
     "status": "passed",
     "exitCode": 0,
-    "startedAt": "2026-10-15T11:08:17.988Z",
-    "finishedAt": "2026-10-15T11:08:24.437Z",
+    "startedAt": "2026-10-15T17:12:07.173Z",
+    "finishedAt": "2026-10-15T17:12:16.153Z",
     "project": {
       "id": "lingxiloop-question-index",
       "configDigest": "1881a0a9a6a764cc33b508f2a692764c44e13f88bdfd9c431a2fdfe51f7c0be6"
@@ -23,8 +23,8 @@
       "runtime": "node v24.19.0"
     },
     "vcs": {
-      "commit": "24ca801c1088465006dd07a20cabc6a1f93ed36a",
-      "branch": "feat/145-question-index",
+      "commit": "d17b014c98f5930a8dcf9df5c719dd9a5e71e08e",
+      "branch": "feat/145-upstream-chat-minimap",
       "dirty": true
     },
     "targets": [
@@ -222,17 +222,44 @@
         "attempts": []
       },
       {
+        "id": "28843bf8393cbe5a024fa1387058cf4116c9ac956ffc29b7752f8f3d09ee69dd",
+        "testId": "e2e/question-index/navigation.e2e.ts::imported%20Codex%20waveform%20is%20centered%2C%20magnifies%20neighbours%20and%20navigates%20by%20pointer",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "imported Codex waveform is centered, magnifies neighbours and navigates by pointer"
+        ],
+        "file": "e2e/question-index/navigation.e2e.ts",
+        "source": {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "line": 111,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
         "id": "2eb3528b4fdbeba4ce8b60cc58b7ea6026eeb4d5746798b3852dc7074919902c",
         "testId": "e2e/question-index/navigation.e2e.ts::reduced%20motion%20jumps%20without%20animation%20and%20retains%20a%20visible%20keyboard%20focus",
         "kind": "test",
-        "declarationIndex": 6,
+        "declarationIndex": 7,
         "titlePath": [
           "reduced motion jumps without animation and retains a visible keyboard focus"
         ],
         "file": "e2e/question-index/navigation.e2e.ts",
         "source": {
           "file": "e2e/question-index/navigation.e2e.ts",
-          "line": 112,
+          "line": 137,
           "column": 3
         },
         "targetId": "web",
@@ -244,27 +271,27 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139",
+            "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-15T11:08:18.852Z",
-            "durationMs": 5502,
+            "startedAt": "2026-10-15T17:12:08.581Z",
+            "durationMs": 7456,
             "artifacts": [
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:artifact:0",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:8"
+                  "stepId": "01a1408c-c085-7131-bbf3-83c1bc2508d1:9"
                 },
                 "path": "web/e2e_question-index_navigation.e2e.ts__reduced_20motion_20jumps_20without_20animation_20and_20retains_20a_20visi-37359e95/default/attempt-0/screenshots/001-question-index-reduced-motion-keyboard.png",
-                "size": 241664,
-                "sha256": "7cafe36842ba3a5f0c4d6df4c702731b47f0bc889c948c2895eec83f2f1c1963"
+                "size": 245595,
+                "sha256": "7e1948f358c4023669bd51545bf85963df6d442859459c6dd1caea0677f9a380"
               },
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:artifact:1",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:artifact:1",
                 "kind": "trace",
                 "mediaType": "application/zip",
                 "redaction": "not-required",
@@ -272,165 +299,182 @@
                   "kind": "attempt"
                 },
                 "path": "web/e2e_question-index_navigation.e2e.ts__reduced_20motion_20jumps_20without_20animation_20and_20retains_20a_20visi-37359e95/default/attempt-0/trace/trace.zip",
-                "size": 2746663,
-                "sha256": "63a216636fb0ae4578e4c57b30ad79c7e043e74293665845b57d03ee7bf511f4"
+                "size": 3496740,
+                "sha256": "dc3d3b8ffc2d869cdd9d798d8637bc79796e2e96ad583d2bac190d2c97b751c5"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:0",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
-                "label": "/e2e/question-index/index.html?theme=dark&media-case=45ee25a1-91a9-4581-84cd-4dc7edd53607",
+                "label": "/e2e/question-index/index.html?theme=dark&media-case=c93beb00-d0f1-400a-80e6-e470a7350922",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:08:18.968Z",
-                "durationMs": 3880,
+                "startedAt": "2026-10-15T17:12:08.718Z",
+                "durationMs": 5341,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/question-index/navigation.e2e.ts",
-                  "line": 114,
+                  "line": 139,
                   "column": 15
                 }
               },
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:1",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:1",
                 "index": 1,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-question-id]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:08:22.850Z",
-                "durationMs": 315,
+                "startedAt": "2026-10-15T17:12:14.060Z",
+                "durationMs": 405,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/question-index/navigation.e2e.ts",
-                  "line": 115,
+                  "line": 140,
                   "column": 57
                 }
               },
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:2",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:2",
                 "index": 2,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:08:23.191Z",
-                "durationMs": 263,
+                "startedAt": "2026-10-15T17:12:14.494Z",
+                "durationMs": 333,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/question-index/navigation.e2e.ts",
-                  "line": 118,
+                  "line": 143,
                   "column": 26
                 }
               },
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:3",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:3",
                 "index": 3,
                 "kind": "locator",
                 "api": "locator.focus",
                 "label": "locator(\"[data-question-id=\\\"q-30\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:08:23.454Z",
-                "durationMs": 196,
+                "startedAt": "2026-10-15T17:12:14.827Z",
+                "durationMs": 277,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/question-index/navigation.e2e.ts",
-                  "line": 120,
+                  "line": 145,
                   "column": 18
                 }
               },
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:4",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:4",
                 "index": 4,
                 "kind": "locator",
                 "api": "locator.press",
                 "label": "locator(\"[data-question-id=\\\"q-30\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:08:23.650Z",
-                "durationMs": 189,
+                "startedAt": "2026-10-15T17:12:15.106Z",
+                "durationMs": 262,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/question-index/navigation.e2e.ts",
-                  "line": 121,
+                  "line": 146,
                   "column": 18
                 }
               },
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:5",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:5",
                 "index": 5,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:08:23.840Z",
-                "durationMs": 24,
+                "startedAt": "2026-10-15T17:12:15.368Z",
+                "durationMs": 25,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/question-index/navigation.e2e.ts",
-                  "line": 122,
+                  "line": 147,
                   "column": 26
                 }
               },
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:6",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:6",
                 "index": 6,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-question-id=\\\"q-30\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:08:23.866Z",
-                "durationMs": 36,
+                "startedAt": "2026-10-15T17:12:15.394Z",
+                "durationMs": 32,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/question-index/navigation.e2e.ts",
-                  "line": 123,
+                  "line": 148,
                   "column": 26
                 }
               },
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:7",
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:7",
                 "index": 7,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:08:23.902Z",
+                "startedAt": "2026-10-15T17:12:15.426Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/question-index/navigation.e2e.ts",
+                  "line": 149,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-15T17:12:15.452Z",
                 "durationMs": 22,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/question-index/navigation.e2e.ts",
-                  "line": 124,
+                  "line": 150,
                   "column": 26
                 }
               },
               {
-                "id": "01a13f3f-a823-7f8d-be62-3c7a88ed5139:8",
-                "index": 8,
+                "id": "01a1408c-c085-7131-bbf3-83c1bc2508d1:9",
+                "index": 9,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "question-index-reduced-motion-keyboard",
                 "status": "passed",
-                "startedAt": "2026-10-15T11:08:23.924Z",
-                "durationMs": 160,
+                "startedAt": "2026-10-15T17:12:15.474Z",
+                "durationMs": 203,
                 "events": [],
                 "artifacts": [
-                  "01a13f3f-a823-7f8d-be62-3c7a88ed5139:artifact:0"
+                  "01a1408c-c085-7131-bbf3-83c1bc2508d1:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/question-index/navigation.e2e.ts",
-                  "line": 125,
+                  "line": 151,
                   "column": 15
                 }
               }
@@ -441,7 +485,7 @@
     ],
     "errors": [],
     "summary": {
-      "discovered": 7,
+      "discovered": 8,
       "selected": 1,
       "executed": 1,
       "passed": 1,
@@ -458,11 +502,11 @@
       "maxModelTokensPerCall": 64000
     },
     "usage": {
-      "discoveredResults": 7,
+      "discoveredResults": 8,
       "maxAgentContextBytes": 0,
       "maxLedgerBytes": 0,
       "maxObservationBytes": 0,
-      "artifactBytes": 2988327,
+      "artifactBytes": 3742335,
       "downloads": 0,
       "events": 0,
       "modelTokens": 0,
