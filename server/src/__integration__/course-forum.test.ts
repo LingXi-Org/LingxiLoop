@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { after, before, beforeEach, test } from 'node:test'
+import { after, afterEach, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { ForumApplication, canReadLearningFile } from '../modules/learning/forum-application.js'
@@ -17,15 +17,18 @@ const outsider = { companyId, userId: 'forum-outsider' }
 const transaction = <T>(work: Parameters<typeof withTransaction<T>>[1]) => withTransaction(pool, work)
 const forum = new ForumApplication(pool, transaction)
 
+const conversationReferences=[{channelId:'evidence-room',messageIds:['evidence-user','evidence-assistant']}]
+let evidenceIm:Awaited<ReturnType<typeof import('./_recording-wukong.js').installRecordingWukong>>
 before(ensureSchemaOnce)
 beforeEach(async () => {
   await resetAllTables()
+  evidenceIm=await (await import('./_recording-wukong.js')).installRecordingWukong()
   await ensureEducationPlan(pool)
   await pool.query(`INSERT INTO companies(id,name,slug,type,status,plan_id)
     VALUES ($1,'Forum School',$1,'EDUCATION','ACTIVE','plan-education')`, [companyId])
   for (const scope of [teacher, student, peer, outsider]) {
     await pool.query(`INSERT INTO users(id,email,display_name) VALUES ($1,$1||'@test.local',$1)`, [scope.userId])
-    await seedUserMembership(scope.userId, companyId, { role: scope === teacher ? 'TEACHER' : 'STUDENT' })
+    await seedUserMembership(scope.userId, companyId, { role: scope === teacher ? 'TEACHER' : 'STUDENT',isAdmin:false })
   }
   for (const projectId of ['forum-project', 'forum-other']) {
     await pool.query(`INSERT INTO projects(id,company_id,kind,plan_id,name,status,created_by)
@@ -44,7 +47,14 @@ beforeEach(async () => {
   await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
     SELECT 'attachments/forum-school/student.txt',$1,$2,period_id FROM company_memberships
     WHERE company_id=$1 AND user_id=$2 AND ended_at IS NULL`, [companyId,student.userId])
+  await pool.query(`INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status,capabilities)
+    VALUES('evidence-agent',$1,'agent','Evidence Agent','assistant','E','#abcdef','avail','["learning"]')`,[companyId])
+  await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES('evidence-room',$1,'forum-project','group','Learning evidence',$2::jsonb)`,[companyId,JSON.stringify([student.userId,'evidence-agent'])])
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES('evidence-room',$1,$2::jsonb)`,[companyId,JSON.stringify({channelType:2,members:[student.userId,'evidence-agent']})])
+  const {createNativeMessage}=await import('../im/message-types.js')
+  for(const [index,role] of (['user','assistant'] as const).entries()) evidenceIm.messages.push({channelId:'evidence-room',channelType:2,messageId:`evidence-${role}`,clientMsgNo:`evidence-${role}`,messageSeq:index+1,fromUid:role==='user'?student.userId:'evidence-agent',timestamp:Date.now()/1000,payload:createNativeMessage({id:`evidence-${role}`,role,content:[{type:'text',text:role==='user'?'My explanation: two congruent triangles form a rectangle.':'Explain how you would apply that to a new triangle.'}]})})
 })
+afterEach(async()=>{await evidenceIm.close()})
 after(() => teardownAll())
 const course = 'course-forum-project'
 
@@ -53,7 +63,7 @@ const post = { kind: 'share' as const, title: 'My project', body: 'Student work'
 async function submit(input: { companyId: string; projectId: string; activityId: string; learnerId: string; answer: string; idempotencyKey: string;
   links?: string[]; attachments?: { key: string; name: string }[]; source?: 'AGENT_RELAY' | 'AGENT_GENERATED'; agentId?: string; agentWorkId?: string }) {
   return forum.submit({ companyId: input.companyId, userId: input.learnerId }, `course-${input.projectId}`, input.activityId,
-    { answer: input.answer, idempotencyKey: input.idempotencyKey, links: input.links, attachments: input.attachments },
+    { conversationReferences, answer: input.answer, idempotencyKey: input.idempotencyKey, links: input.links, attachments: input.attachments },
     input.source ? { source: input.source, id: input.agentId!, workId: input.agentWorkId! } : undefined)
 }
 
@@ -161,10 +171,11 @@ test('[integration] native submission tools bind principal, frozen audience, ori
     const original = 'My independently written answer. https://example.com/original'
     im.messages.push({ channelId: 'forum-room',channelType: 2,messageId: 'forum-message',clientMsgNo: 'forum-message',messageSeq: 1,
       fromUid: student.userId,timestamp: Date.now()/1000,payload: createNativeMessage({ id: 'forum-message',role: 'user',createdAt: new Date().toISOString(),content: [{ type: 'text',text: original }] }) })
+    im.messages.push({channelId:'forum-room',channelType:2,messageId:'forum-reply',clientMsgNo:'forum-reply',messageSeq:2,fromUid:'forum-agent',timestamp:Date.now()/1000,payload:createNativeMessage({id:'forum-reply',role:'assistant',content:[{type:'text',text:'Explain your reasoning in a new example.'}]})})
     const tool = learningTools.find(tool => tool.action === 'learning.submit_assignment')!
     assert.ok(tool)
     const invoke = async (input: object, audience = [student.userId,'forum-agent']) => {
-      const data = tool.parse(input)
+      const data = tool.parse({...input,conversationReferences:[{channelId:'forum-room',messageIds:['forum-message','forum-reply']}]})
       const context = { database: pool,signal: AbortSignal.timeout(10000),requestVersion: 1,
         work: { id: 'forum-work',tenantId: companyId,agentId: 'forum-agent',principalId: student.userId,
           sessionId: 'forum-session',kind: 'turn',lane: 'interactive',triggerRef: 'forum-message',fence: 1,homeEpoch: 1,createdAt: new Date().toISOString(),
@@ -214,7 +225,7 @@ test('[integration] HTTP forum and private download routes reject cross-course a
     })
     const submit = `/courses/${course}/forum/post/forum-homework/submit`
     assert.equal((await call(student, submit, 'POST', { answer: 'Cannot forge Agent provenance',idempotencyKey: 'forged-http-source',source: 'AGENT_GENERATED' })).status,400)
-    assert.equal((await call(student, submit, 'POST', { answer: 'Browser submission',links: ['https://example.com/browser'],attachments: [{ key,name: 'student.txt' }],idempotencyKey: 'http-submission-1' })).status,201)
+    assert.equal((await call(student, submit, 'POST', { conversationReferences, answer: 'Browser submission',links: ['https://example.com/browser'],attachments: [{ key,name: 'student.txt' }],idempotencyKey: 'http-submission-1' })).status,201)
     for (const scope of [student,teacher]) {
       const response = await call(scope,`/files?key=${encodeURIComponent(key)}`)
       assert.equal(response.status,200)
@@ -244,7 +255,7 @@ test('[integration] HTTP forum and private download routes reject cross-course a
     assert.equal((await call(outsider,`/files?key=${encodeURIComponent(commentKey)}`)).status,404)
     assert.equal((await call(student,`/courses/${course}/activities`,'POST',{ title: 'Unauthorized assignment',instructions: 'No',type: 'PRACTICE' })).status,404)
     await call(teacher,`/courses/${course}/forum/post/forum-homework/close`,'POST')
-    assert.equal((await call(student,submit,'POST',{ answer: 'After close',idempotencyKey: 'after-http-close' })).status,409)
+    assert.equal((await call(student,submit,'POST',{ conversationReferences, answer: 'After close',idempotencyKey: 'after-http-close' })).status,409)
   } finally {
     for (const server of servers) await new Promise<void>((resolve,reject) => server.close(error => error ? reject(error) : resolve()))
   }
@@ -278,7 +289,7 @@ test('[integration] inline edits, comments, reactions, archive and filters obey 
 })
 
 test('[integration] concurrent retries preserve one version and teacher feedback survives closure and revocation', async () => {
-  const input={answer:'One accepted submission',idempotencyKey:'concurrent-key'}
+  const input={conversationReferences,answer:'One accepted submission',idempotencyKey:'concurrent-key'}
   const results=await Promise.all(Array.from({length:8},()=>forum.submit(student,course,'forum-homework',input)))
   assert.equal(new Set(results.map(row=>row.attemptId)).size,1)
   assert.equal((await forum.submissions(student,course,'forum-homework',0)).items.length,1)
@@ -291,4 +302,50 @@ test('[integration] concurrent retries preserve one version and teacher feedback
   assert.equal((await forum.submissions(peer,course,'forum-homework',0)).items.length,0)
   await pool.query("UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id='forum-project' AND user_id=$2",[companyId,student.userId])
   await assert.rejects(forum.submissions(student,course,'forum-homework',0))
+})
+
+// Issue 146 failures were enumerated in docs/issue-146-validation.md before implementation.
+test('[integration] references are mandatory, private and frozen; each accepted version has a durable assessment',async()=>{
+  const input={answer:'My own explanation',idempotencyKey:'evidence-contract',conversationReferences}
+  for(const refs of [[],[{channelId:'evidence-room',messageIds:['evidence-user','invented']}],[{channelId:'evidence-room',messageIds:['evidence-assistant','evidence-assistant']}]])
+    await assert.rejects(forum.submit(student,course,'forum-homework',{...input,conversationReferences:refs}))
+  await assert.rejects(forum.submit(peer,course,'forum-homework',input))
+  await assert.rejects(forum.conversation(teacher,course,'evidence-room'))
+  const accepted=await forum.submit(student,course,'forum-homework',input)
+  await forum.submit(student,course,'forum-homework',input)
+  assert.equal((await pool.query("SELECT count(*)::int AS n FROM learning_effects WHERE kind='forum.assess' AND effect_key=$1",[accepted.attemptId])).rows[0].n,1)
+  const frozen=(await forum.submissions(teacher,course,'forum-homework',0)).items[0]
+  assert.equal(frozen.assessment.status,'PENDING')
+  assert.equal(frozen.conversationReferences[0].messages.length,2)
+  evidenceIm.messages.push({...evidenceIm.messages[0],messageId:'later',clientMsgNo:'later',messageSeq:3})
+  assert.equal((await forum.submissions(teacher,course,'forum-homework',0)).items[0].conversationReferences[0].messages.length,2)
+  await forum.submit(student,course,'forum-homework',{...input,answer:'New answer',idempotencyKey:'second-version'})
+  const students=await forum.students(teacher,course,'forum-homework',0,student.userId)
+  assert.equal(students.items.length,1);assert.equal(students.items[0].version,2)
+  assert.equal('answer' in students.items[0],false)
+  assert.equal((await forum.students(teacher,course,'forum-homework',0,'no matching name')).items.length,0)
+  await assert.rejects(forum.students(peer,course,'forum-homework',0,''))
+  await pool.query("UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND user_id=$2",[companyId,teacher.userId])
+  await assert.rejects(forum.submissions(teacher,course,'forum-homework',0))
+})
+
+test('[integration] assessment retries fail honestly and persist only grounded student evidence',async()=>{
+  const {__setLlmClientOverrideForTesting}=await import('../llm.js')
+  const {runLearningEffects}=await import('../modules/learning/worker.js')
+  let result:unknown={mastery:'MASTERED',reason:'Invented assessment',evidence:[{reference:0,messageId:'evidence-assistant',excerpt:'Explain'}]}
+  __setLlmClientOverrideForTesting(()=>({chat:{completions:{create:async()=>({id:'forum-fixture-model',model:'integration-test',choices:[{index:0,finish_reason:'stop',message:{role:'assistant',content:JSON.stringify(result)}}],usage:{prompt_tokens:40,completion_tokens:20,total_tokens:60}})}}}) as unknown as import('openai').default)
+  try {
+    const accepted=await forum.submit(student,course,'forum-homework',{answer:'Two triangles form a rectangle',idempotencyKey:'assessment-retry',conversationReferences})
+    await runLearningEffects()
+    let version=(await forum.submissions(teacher,course,'forum-homework',0)).items[0]
+    assert.equal(version.assessment.status,'FAILED')
+    assert.equal(version.assessment.mastery,undefined)
+    result={mastery:'DEVELOPING',reason:'能解释拼接，但还需要独立完成新的例题。',evidence:[{reference:0,messageId:'evidence-user',excerpt:'two congruent triangles form a rectangle'}]}
+    await pool.query("UPDATE learning_effects SET available_at=NOW() WHERE kind='forum.assess' AND effect_key=$1",[accepted.attemptId])
+    await runLearningEffects()
+    version=(await forum.submissions(teacher,course,'forum-homework',0)).items[0]
+    assert.equal(version.assessment.status,'READY');assert.equal(version.assessment.mastery,'DEVELOPING')
+    assert.equal(version.assessment.evidence[0].messageId,'evidence-user')
+    assert.equal((await pool.query("SELECT status FROM learning_effects WHERE kind='forum.assess' AND effect_key=$1",[accepted.attemptId])).rows[0].status,'completed')
+  } finally {__setLlmClientOverrideForTesting(null)}
 })

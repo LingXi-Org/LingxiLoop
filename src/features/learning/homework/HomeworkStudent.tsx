@@ -1,3 +1,5 @@
+import { ConversationReferencePicker } from '../forum/ConversationReferences'
+import type { ConversationReference } from '../forum/contracts'
 import { useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +21,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
   const { draft, setDraft, storageError, discard } = useForumDraft(`homework:${homework.courseId}:${homework.id}`, contentDraftSchema,
     { body: student.answer.text, links: student.answer.links.join('\n'), attachments: student.answer.attachments }, space.canSubmit && student.status !== 'PASSED')
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')
+  const [references,setReferences]=useState<ConversationReference[]>([])
   const [preview, setPreview] = useState(false)
   const pending = useRef<{ reportId: string; key: string } | null>(null)
   const inFlight = useRef(false)
@@ -27,7 +30,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
   const disabled = busy || uploading || !space.canSubmit
   const report = !dirty && student.reportStatus === 'READY' && student.report?.answerRevision === student.answerRevision ? student.report : null
   const editable = student.status !== 'PASSED'
-  const canSubmit = student.canSubmit && Boolean(report) && !dirty && editable
+  const canSubmit = student.canSubmit && Boolean(report) && !dirty && editable && references.length>0
   const act = async (work: () => Promise<void>) => {
     if (inFlight.current || disabled) return
     inFlight.current = true; setBusy(true); setError(''); setNotice('')
@@ -55,6 +58,8 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
     </section>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
+    {editable && <p className="text-xs text-muted-foreground">提交时请引用学习报告中作为依据的对话片段，便于教师核对。</p>}
+    {editable && <ConversationReferencePicker courseId={homework.courseId} channelId={student.channelId} value={references} onChange={setReferences} disabled={disabled}/>}
     {editable && (preview && report ? <section aria-label="提交预览" className="space-y-5 rounded-xl border p-4">
       <h3 className="font-semibold">提交预览</h3><p className="text-sm text-muted-foreground">以下作答和学习报告将一起提交，仅你和本课程教师可见。</p>
       <MemoContent content={answer.text} /><ForumFiles links={answer.links} attachments={answer.attachments} /><HomeworkReport report={report} />
@@ -63,7 +68,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
         <Button disabled={disabled || !canSubmit} onClick={() => void act(async () => {
           if (!report || !canSubmit) return
           if (pending.current?.reportId !== report.id) pending.current = { reportId: report.id, key: crypto.randomUUID() }
-          await homeworkApi.submit(homework.courseId, homework.id, { expectedAnswerRevision: student.answerRevision, reportId: report.id, idempotencyKey: pending.current.key })
+          await homeworkApi.submit(homework.courseId, homework.id, { expectedAnswerRevision: student.answerRevision, reportId: report.id, idempotencyKey: pending.current.key, conversationReferences:references })
           setPreview(false); discard(); setNotice('作答和报告已一起提交，等待教师验收。'); await onSubmitted()
         })}>{busy ? '提交中…' : '提交作业'}</Button>
       </div>
@@ -75,7 +80,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" disabled={disabled || !dirty} onClick={() => void act(async () => {
           const next = await homeworkApi.saveAnswer(homework.courseId, homework.id, { ...answer, expectedRevision: student.answerRevision })
-          discard(); onUpdated(next); setNotice('草稿已保存。')
+          discard(); onUpdated(next); setNotice(next.reportStatus==='PENDING'?'作答已保存，正在自动生成学习报告。':'草稿已保存，请先完成与助手的对话。')
         })}>保存草稿</Button>
         <Button variant="outline" disabled={disabled || dirty || !student.hasLearningRecord || !student.canSubmit || student.reportStatus === 'PENDING' || !answer.text.trim() && !answer.links.length && !answer.attachments.length} onClick={() => void act(async () => {
           onUpdated(await homeworkApi.report(homework.courseId, homework.id, student.answerRevision)); setNotice('正在更新学习报告。')

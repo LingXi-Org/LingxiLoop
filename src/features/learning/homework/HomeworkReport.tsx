@@ -1,3 +1,4 @@
+import { ConversationReferences } from '../forum/ConversationReferences'
 import { Badge } from '@/components/ui/badge'
 import { ForumFiles } from '../forum/ForumContentFields'
 import { MemoContent } from '../forum/memos/MemoContent'
@@ -29,6 +30,7 @@ export function HomeworkSubmissionView({ submission }: { submission: HomeworkSub
     <div className="flex flex-wrap items-center gap-2"><span className="text-sm font-medium">第 {submission.version} 次提交</span><Badge variant="secondary">{homeworkStatus[submission.reviewStatus]}</Badge>{submission.late && <Badge variant="outline">迟交</Badge>}<time className="text-xs text-muted-foreground" dateTime={submission.submittedAt}>{new Date(submission.submittedAt).toLocaleString('zh-CN')}</time></div>
     <section aria-label="提交的作答" className="space-y-3"><h3 className="font-medium">作答</h3><MemoContent content={submission.answer.text} /><ForumFiles links={submission.answer.links} attachments={submission.answer.attachments} /></section>
     <HomeworkReport report={submission.report} />
+    <ConversationReferences references={submission.conversationReferences} id={submission.id}/><p className="text-xs text-muted-foreground">学习评价供教师参考，不等同于正式成绩。</p>
     {submission.feedback && <p className="whitespace-pre-wrap rounded-lg bg-muted p-3 text-sm">教师意见：{submission.feedback}</p>}
   </article>
 }

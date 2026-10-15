@@ -40,11 +40,29 @@ export async function listForumItems(db: Queryable, companyId: string, projectId
 export async function listSubmissionVersions(db: Queryable, companyId: string, projectId: string, assignmentId: string, learnerId: string | null, offset: number) {
   const { rows } = await db.query(`SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",s.submitted_at AS "submittedAt",
     (ROW_NUMBER() OVER (PARTITION BY s.learner_id ORDER BY s.submission_sequence))::int AS version,
-    s.source,s.submitted_by_agent AS "agentId",s.agent_work_id AS "agentWorkId",s.late,s.answer,s.links,s.attachments,
+    s.source,s.submitted_by_agent AS "agentId",s.agent_work_id AS "agentWorkId",s.late,s.answer,s.links,s.attachments,s.conversation_references AS "conversationReferences",
+    COALESCE(s.assessment,(SELECT jsonb_build_object('status',CASE e.status WHEN 'failed' THEN 'FAILED' ELSE 'PENDING' END) FROM learning_effects e
+      WHERE e.company_id=s.company_id AND e.kind='forum.assess' AND e.effect_key=s.id)) AS assessment,
     COALESCE((SELECT jsonb_agg(jsonb_build_object('id',f.id,'body',f.body,'authorId',f.author_id,'kind',COALESCE(f.legacy_record->>'evaluator_kind','TEACHER'),'status',COALESCE(f.legacy_record->>'status','ACCEPTED'),'createdAt',f.created_at) ORDER BY f.created_at,f.id)
       FROM course_forum_feedback f WHERE f.company_id=s.company_id AND f.project_id=s.project_id AND f.submission_id=s.id),'[]') AS feedback
     FROM course_forum_submissions s JOIN users u ON u.id=s.learner_id
     WHERE s.company_id=$1 AND s.project_id=$2 AND s.assignment_id=$3 AND ($4::text IS NULL OR s.learner_id=$4)
     ORDER BY s.submission_sequence DESC LIMIT 51 OFFSET $5`, [companyId,projectId,assignmentId,learnerId,offset])
+  return rows
+}
+
+export async function listSubmissionStudents(db: Queryable, companyId: string, projectId: string, assignmentId: string, offset: number, search: string) {
+  const {rows}=await db.query(`WITH versions AS (
+    SELECT s.*,ROW_NUMBER() OVER(PARTITION BY learner_id ORDER BY submission_sequence DESC) AS latest,
+      COUNT(*) OVER(PARTITION BY learner_id)::int AS version
+    FROM course_forum_submissions s WHERE company_id=$1 AND project_id=$2 AND assignment_id=$3
+  ) SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",s.submitted_at AS "submittedAt",s.version,
+    COALESCE(s.assessment,(SELECT jsonb_build_object('status',CASE e.status WHEN 'failed' THEN 'FAILED' ELSE 'PENDING' END)
+      FROM learning_effects e WHERE e.company_id=s.company_id AND e.kind='forum.assess' AND e.effect_key=s.id)) AS assessment,
+    (SELECT COALESCE(jsonb_agg(jsonb_build_object('title',r->>'title','index',n-1)),'[]')
+      FROM jsonb_array_elements(s.conversation_references) WITH ORDINALITY AS refs(r,n)) AS "conversationReferences"
+    FROM versions s JOIN users u ON u.id=s.learner_id WHERE latest=1
+      AND ($5='' OR POSITION(LOWER($5) IN LOWER(u.display_name||' '||u.id))>0)
+    ORDER BY s.submission_sequence DESC LIMIT 51 OFFSET $4`,[companyId,projectId,assignmentId,offset,search])
   return rows
 }

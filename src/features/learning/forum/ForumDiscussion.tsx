@@ -2,9 +2,8 @@ import { useAuth } from '@/stores/auth'
 import { ForumCommentEditor } from './ForumCommentEditor'
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog'
 import { MessageCircleIcon } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { userFacingError } from '@/lib/userFacingError'
 import { forumApi } from './api'
 import type { ForumComment, ForumItem } from './contracts'
@@ -14,8 +13,8 @@ import { MemoContent } from './memos/MemoContent'
 import { contentDraftSchema, emptyContent, useForumDraft } from './useForumDraft'
 
 // The content/comment stack and load-more row adapt Memos MemoCommentSection; see memos/README.md.
-export function ForumDiscussion({ courseId, item, canWrite, canManage, onClose, onComment }: {
-  courseId: string; item: ForumItem; canWrite: boolean; canManage: boolean; onClose(): void; onComment(): void
+export function ForumDiscussion({ courseId, item, canWrite, canManage, onComment }: {
+  courseId: string; item: ForumItem; canWrite: boolean; canManage: boolean; onComment(): void
 }) {
   const userId=useAuth(state=>state.user?.id)
   const [editing,setEditing]=useState<string | null>(null),[deleting,setDeleting]=useState<string | null>(null)
@@ -23,8 +22,6 @@ export function ForumDiscussion({ courseId, item, canWrite, canManage, onClose, 
   const { draft, setDraft, discard, storageError } = useForumDraft(`comment:${courseId}:${item.targetType}:${item.id}`, contentDraftSchema, emptyContent, canWrite)
   const { body, links, attachments } = draft
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState('')
-  const returnFocus = useRef(document.activeElement)
-  const titleFocus = useRef<HTMLHeadingElement>(null)
   const load = useCallback(async (offset = 0) => {
     setBusy(true); setError('')
     try {
@@ -36,13 +33,7 @@ export function ForumDiscussion({ courseId, item, canWrite, canManage, onClose, 
   }, [courseId,item])
   useEffect(() => { void load() }, [load])
   const disabled = busy || uploading
-  return <Dialog open onOpenChange={open => { if (!open && !uploading) onClose() }}><DialogContent className="sm:max-w-3xl" onOpenAutoFocus={event => { event.preventDefault(); titleFocus.current?.focus() }} onCloseAutoFocus={event => { event.preventDefault(); if (returnFocus.current instanceof HTMLElement) returnFocus.current.focus() }}>
-    <DialogHeader><DialogTitle ref={titleFocus} tabIndex={-1} className="outline-none">{item.title}</DialogTitle><DialogDescription>本课程讨论</DialogDescription></DialogHeader>
-    <MemoCard label={item.title} author={item.authorName} createdAt={item.createdAt} pinned={item.pinned}>
-      <MemoContent content={item.body} />
-      <ForumFiles links={item.links} attachments={item.attachments} />
-    </MemoCard>
-    <section data-memo-comments-section aria-label="评论" className="pt-8 pb-4 w-full">
+  return <section data-memo-comments-section aria-label="评论" className="pt-8 pb-4 w-full">
       <div className="flex items-center gap-1 px-3 mb-3 text-sm text-muted-foreground"><MessageCircleIcon className="size-4" /><h3>评论</h3><span>（{Math.max(item.commentCount, comments.length)}）</span></div>
       <div className="relative mx-auto w-full flex flex-col items-start gap-y-1">
       {comments.length === 0 && !busy && <p className="text-sm text-muted-foreground">还没有评论。</p>}
@@ -67,5 +58,4 @@ export function ForumDiscussion({ courseId, item, canWrite, canManage, onClose, 
       {error && <p role="alert" className="text-sm text-destructive">{error}<Button variant="link" onClick={() => void load()} disabled={busy}>重试</Button></p>}
       </div>
     </section>
-  </DialogContent></Dialog>
 }
