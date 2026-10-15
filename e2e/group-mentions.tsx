@@ -42,6 +42,7 @@ function Preview() {
       content: [{ type: 'text', text: '资料已就绪，@sage 请检查出处。@sage@long-member@all' }] },
     { id: 'stream', role: 'assistant', status: complete ? { type: 'complete', reason: 'stop' } : { type: 'running' },
       content: [{ type: 'text', text: complete ? '下一步请@sage 复核。' : '下一步请@sag' }] },
+    { id: 'formatted-mentions', role: 'assistant', content: [{ type: 'text', text: '- 明理 `@sage` 请介绍自己。\n- 同学 ``＠　long-member`` 请介绍自己。\n\n`call("@sage")`\n\n> `@sage` 引用示例\n\n```text\n@sage\n```' }] },
     { id: 'legacy', role: 'assistant', content: [{ type: 'data', name: 'handoff', data: { title: '历史协作记录', task: '查证出处', result: '已查证并保留证据。' } }] },
   ]
   const runtime = useExternalStoreRuntime({ messages: messages.map(message => fromThreadMessageLike(message, message.id!, { type: 'complete', reason: 'stop' })), isRunning: !complete,

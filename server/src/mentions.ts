@@ -5,7 +5,7 @@ import { nativeMessageSchema, nativeText, type NativeMessage } from './im/messag
 
 /** Resolve once at send admission so a retry or rename cannot change the addressed members. */
 export function canonicalMessageMentions(message: NativeMessage, targets: readonly MentionTarget[]): NativeMessage {
-  const mentions = scanMentions(nativeText(message), targets)
+  const mentions = scanMentions(nativeText(message), targets, { allowInlineCodeMentions: message.role === 'assistant' })
   if (!mentions.length) return message
   const shift = (offset: number) => offset + mentions.filter(mention => mention.end <= offset)
     .reduce((delta, mention) => delta + mention.id.length + 1 - (mention.end - mention.start), 0)

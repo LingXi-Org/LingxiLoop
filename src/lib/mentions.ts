@@ -16,6 +16,11 @@ export interface ParsedMentions {
   mentionAll: boolean
 }
 
+export interface MentionOptions {
+  /** Assistants often format roster handles as inline code. Human examples stay inert. */
+  allowInlineCodeMentions?: boolean
+}
+
 const WORD = /[\p{L}\p{N}_-]/u
 const HAN = /\p{Script=Han}/u
 const HORIZONTAL = /[\p{Zs}\t]/u
@@ -23,11 +28,20 @@ const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 const NON_PROSE = new Set(['code', 'inlineCode', 'link', 'image', 'linkReference', 'imageReference', 'definition', 'blockquote', 'html'])
 
 /** Mask Markdown examples and addresses without changing UTF-16 source offsets. */
-export function maskNonMentionText(input: string): string {
+export function maskNonMentionText(input: string, inlineCodeTargets?: readonly MentionTarget[]): string {
   const chars = input.split('')
   const mask = (start: number, end: number) => chars.fill(' ', start, end)
   const visit = (node: ReturnType<typeof fromMarkdown> | ReturnType<typeof fromMarkdown>['children'][number]): void => {
     if (NON_PROSE.has(node.type)) {
+      if (node.type === 'inlineCode' && inlineCodeTargets && node.position) {
+        const start = node.position.start.offset!, end = node.position.end.offset!
+        const source = input.slice(start, end), delimiter = source.match(/^`+/)![0].length
+        if (standaloneMention(source.slice(delimiter, -delimiter), inlineCodeTargets)) {
+          mask(start, start + delimiter)
+          mask(end - delimiter, end)
+          return
+        }
+      }
       if (node.position) mask(node.position.start.offset!, node.position.end.offset!)
     } else if ('children' in node) {
       for (const child of node.children) visit(child as typeof node)
@@ -61,9 +75,8 @@ function normalized(input: string): { text: string; starts: number[]; ends: numb
   return { text, starts, ends }
 }
 
-/** IDs and unique names resolve against the current roster; ranges refer to the original text. */
-export function scanMentions(input: string, targets: readonly MentionTarget[]): MentionRange[] {
-  const { text, starts, ends } = normalized(maskNonMentionText(input))
+function scanProseMentions(input: string, targets: readonly MentionTarget[]): MentionRange[] {
+  const { text, starts, ends } = normalized(input)
   const names = targets.map(target => normalized(target.name).text.trim())
   const counts = new Map<string, number>()
   for (const name of names) counts.set(name, (counts.get(name) ?? 0) + 1)
@@ -90,8 +103,22 @@ export function scanMentions(input: string, targets: readonly MentionTarget[]): 
   return result
 }
 
-export function parseMentions(input: string, targets: readonly MentionTarget[]): ParsedMentions {
-  const mentions = scanMentions(input, targets)
+/** Only a complete handle is formatting; snippets and multiline examples remain code. */
+export function standaloneMention(input: string, targets: readonly MentionTarget[]): MentionRange | undefined {
+  if (/[\r\n]/.test(input)) return
+  const mentions = scanProseMentions(input, targets)
+  if (mentions.length !== 1) return
+  const mention = mentions[0]!
+  if (!input.slice(0, mention.start).trim() && !input.slice(mention.end).trim()) return mention
+}
+
+/** IDs and unique names resolve against the current roster; ranges refer to the original text. */
+export function scanMentions(input: string, targets: readonly MentionTarget[], options: MentionOptions = {}): MentionRange[] {
+  return scanProseMentions(maskNonMentionText(input, options.allowInlineCodeMentions ? targets : undefined), targets)
+}
+
+export function parseMentions(input: string, targets: readonly MentionTarget[], options: MentionOptions = {}): ParsedMentions {
+  const mentions = scanMentions(input, targets, options)
   return { mentionedIds: [...new Set(mentions.filter(mention => mention.id !== 'all').map(mention => mention.id))],
     mentionAll: mentions.some(mention => mention.id === 'all') }
 }

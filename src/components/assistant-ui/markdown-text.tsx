@@ -15,7 +15,7 @@ import {
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 import { activityAnnotation } from '@/lib/runActivity'
-import { scanMentions } from '@/lib/mentions'
+import { scanMentions, standaloneMention } from '@/lib/mentions'
 import type { Participant } from '@/types'
 import { MentionBadge } from '@/components/MentionBadge'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
@@ -67,9 +67,19 @@ const confidenceComponents = { span: ConfidenceSpan }
 const emptyClaims: readonly MarkdownConfidenceClaim[] = []
 const emptyMentionTargets: readonly Participant[] = []
 
-function rehypeMentionNames({ targets }: { targets: readonly Participant[] }) {
+function rehypeMentionNames({ targets, allowInlineCodeMentions = false }: { targets: readonly Participant[]; allowInlineCodeMentions?: boolean }) {
   return (tree: Root) => {
     visit(tree, (node, index, parent) => {
+      if (allowInlineCodeMentions && node.type === 'element' && node.tagName === 'code'
+        && node.position?.start.line === node.position?.end.line
+        && node.children.length === 1 && node.children[0].type === 'text') {
+        const mention = standaloneMention(node.children[0].value, targets)
+        if (mention) {
+          node.tagName = 'span'
+          node.data = { ...node.data, mentionId: mention.id }
+          return SKIP
+        }
+      }
       if (node.type === 'element' && ['a', 'code', 'pre', 'blockquote'].includes(node.tagName)) return SKIP
       if (node.type !== 'text' || !parent || index === undefined) return
       const mentions = scanMentions(node.value, targets)
@@ -124,8 +134,8 @@ function rehypeConfidence({ claims, offset, inlineCitations }: {
 }
 
 const CitationBlocks = createContext<{
-  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]
-}>({ offsets: [], claims: [], inlineCitations: false, mentionTargets: [] })
+  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean
+}>({ offsets: [], claims: [], inlineCitations: false, mentionTargets: [], agent: false })
 
 function CitationBlock(props: BlockProps) {
   const { offsets, ...context } = useContext(CitationBlocks)
@@ -133,13 +143,13 @@ function CitationBlock(props: BlockProps) {
 }
 
 // New tail offsets must not reparse every already completed citation block.
-const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, ...props }: BlockProps & {
-  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]
+const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, agent, ...props }: BlockProps & {
+  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean
 }) {
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
-    [rehypeMentionNames, { targets: mentionTargets }],
-  ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets])
+    [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
+  ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets, agent])
   return <Block {...props} rehypePlugins={rehypePlugins} />
 })
 
@@ -167,11 +177,11 @@ const MarkdownTextImpl = ({
     let offset = textOffset
     return blocks.map(block => { const start = offset; offset += block.length; return start })
   }, [blocks, textOffset])
-  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, mentionTargets }), [offsets, confidenceClaims, inlineCitations, mentionTargets])
+  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, mentionTargets, agent }), [offsets, confidenceClaims, inlineCitations, mentionTargets, agent])
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...Object.values(defaultRehypePlugins),
-    [rehypeMentionNames, { targets: mentionTargets }],
-  ], [mentionTargets])
+    [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
+  ], [mentionTargets, agent])
   return <ConfidenceMarker claims={confidenceClaims} hoveredId={hoveredId} onHover={setHoveredId} floatingBasis={inlineCitations}>
     <MentionTargets.Provider value={mentionTargets}><CitationBlocks.Provider value={citationBlocks}>
       <div data-find-content>

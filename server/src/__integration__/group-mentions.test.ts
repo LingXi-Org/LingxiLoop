@@ -20,7 +20,7 @@ let worker: ReturnType<typeof createWorker> | undefined
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong() })
 after(async () => { await worker?.stop(); await recording?.close(); await teardownAll() })
 
-test('committed group prose drives A → B → C → A and a plain reply ends the chain', { timeout: 60000 }, async () => {
+test('committed formatted mentions drive A → B → C → A and a plain reply ends the chain', { timeout: 60000 }, async () => {
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   const second = 'mention-second', third = 'mention-third', channelId = 'mention-room'
@@ -53,7 +53,7 @@ test('committed group prose drives A → B → C → A and a plain reply ends th
         const text = context.includes('FOLLOW_UP') ? 'Clarification recorded. The task is complete.'
           : context.includes('CHECK_SECOND') ? `@${agentId} FOLLOW_UP: clarify this point.`
           : context.includes('DELEGATE_B') ? `@${third} CHECK_SECOND: independently verify this finding.`
-          : `@${second} DELEGATE_B: investigate the assigned part.`
+          : `- Specialist \`@${second}\` DELEGATE_B: investigate the assigned part.`
         return { output: [{ role: 'assistant', content: text }], text, model: 'mention-fixture', usage }
       },
       async structured() { return { value: { missing: [] }, model: 'mention-fixture', usage } },
@@ -93,7 +93,7 @@ test('committed group prose drives A → B → C → A and a plain reply ends th
   assert.equal(recording.messages.length, 5)
   assert.equal((await pool.query('SELECT 1 FROM agent_run_bindings')).rows.length, 4)
   const artifact = { passed: true, messages: recording.messages.map(message => ({ author: message.fromUid, text: nativeText(message.payload) })),
-    runs: bindings, checks: ['public-causal-chain', 'explicit-return', 'silent-stop', 'shared-human', 'replay', 'no-hidden-children'] }
+    runs: bindings, checks: ['formatted-mention', 'public-causal-chain', 'explicit-return', 'silent-stop', 'shared-human', 'replay', 'no-hidden-children'] }
   await mkdir('artifacts/group-mentions', { recursive: true })
   await writeFile('artifacts/group-mentions/conversation.json', JSON.stringify(artifact, null, 2))
 })
@@ -117,7 +117,7 @@ test('message admission freezes canonical mentions across renames and preserves 
   assert.equal(accepted.kind, 'accepted')
   if (accepted.kind !== 'accepted') throw new Error('message admission failed')
   const saved = accepted.echo.payload as typeof payload
-  assert.equal(nativeText(saved), `请@${agentId}核对：[这条结论](#cite-S1)。\`@明理\``)
+  assert.equal(nativeText(saved), `请@${agentId}核对：[这条结论](#cite-S1)。\`@${agentId}\``)
   const citations = saved.content.find(part => part.type === 'data' && part.name === 'citation-claims')!
   assert.ok(citations.type === 'data')
   const persistedClaim = (citations.data as { claims: typeof claim[] }).claims[0]
@@ -126,4 +126,57 @@ test('message admission freezes canonical mentions across renames and preserves 
   const replay = await imMessagesApplication.acceptAgentMessage(input)
   assert.equal(replay.kind, 'accepted')
   if (replay.kind === 'accepted') assert.deepEqual(replay.echo, accepted.echo)
+})
+
+// Screenshot regression: all five formatted roster mentions must create public
+// replies after the leader commits, without waking an unmentioned room member.
+test('a leader introduction wakes all five inline-code mentioned specialists once', { timeout: 60000 }, async () => {
+  await resetAllTables()
+  const { companyId, projectId, agentId } = await seedCompanyWithAgent()
+  await seedUserMembership('test-owner', companyId)
+  const specialists = ['sage', 'milo', 'trace', 'scout', 'forge']
+  const channelId = 'introduction-room', excluded = 'example-only'
+  for (const id of [...specialists, excluded]) await pool.query(`INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status)
+    VALUES($1,$2,'agent',$1,'specialist','M','#abcdef','avail')`, [id, companyId])
+  const members = ['test-owner', agentId, ...specialists, excluded]
+  await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group',$1,$4::jsonb)`,
+    [channelId, companyId, projectId, JSON.stringify(members)])
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id) VALUES($1,$2,$3::jsonb,$4)`,
+    [channelId, companyId, JSON.stringify({ channelType: 2, members }), agentId])
+  const payload = createNativeMessage({ id: 'introduction-source', role: 'user', content: [{ type: 'text', text: '介绍一下自己，并且提及其他成员介绍自己。' }] })
+  await imMessagesApplication.acceptUserMessage({ companyId, userId: 'test-owner', channelId, clientNonce: payload.id, payload })
+  await receiveAgentRequest({ companyId, agentId, channelId, clientMsgNo: payload.id })
+  const api = await lingxiOSControl()
+  let speaker = ''
+  const usage = { available: true, inputTokens: 100, outputTokens: 30 }
+  worker = createWorker({ controlPlane: { connectWorker(config) {
+    const host = api.connectWorker(config)
+    return { ...host, async claimWork(...args) { const work = await host.claimWork(...args); if (work) speaker = work.agentId; return work } }
+  } }, worker: { id: 'introduction-mentions', concurrency: 1, shutdownGraceMs: 1000 },
+    modelBudget: { inputCostMicrosPerMillion: 1, outputCostMicrosPerMillion: 1 },
+    model: { modelId: 'introduction-fixture', contextWindowTokens: 200000,
+      async run() {
+        const text = speaker === agentId ? '我是协调者，请各位介绍自己：\n'
+          + specialists.map(id => `- \`@${id}\` 请用一句话介绍自己的职责。`).join('\n')
+          + `\n\n> \`@${excluded}\` 引用示例\n\n\`print("@${excluded}")\`\n\n\`\`\`text\n@${excluded}\n\`\`\``
+          : `我是 ${speaker}，负责团队中的专业工作。`
+        return { output: [{ role: 'assistant', content: text }], text, model: 'introduction-fixture', usage }
+      },
+      async structured() { return { value: { missing: [] }, model: 'introduction-fixture', usage } },
+      async compact() { throw new Error('bounded introduction must not compact') },
+    } })
+  await worker.start()
+  const replies = () => recording.messages.filter(message => message.channelId === channelId && message.payload.role === 'assistant')
+  const deadline = Date.now() + 45000
+  while (replies().length < 6) { assert.ok(Date.now() < deadline, 'five specialist introductions did not arrive'); await delay(50) }
+  await worker.stop()
+  assert.equal(replies()[0].fromUid, agentId, 'the assignment must be committed first')
+  assert.deepEqual(replies().slice(1).map(message => message.fromUid).sort(), [...specialists].sort())
+  const runs = (await pool.query('SELECT agent_id,principal_id,internal FROM agent_run_bindings')).rows
+  assert.equal(runs.length, 6)
+  assert.ok(runs.every(run => run.principal_id === 'test-owner' && !run.internal))
+  await mkdir('artifacts/group-mentions', { recursive: true })
+  await writeFile('artifacts/group-mentions/introduction.json', JSON.stringify({ passed: true,
+    authors: replies().map(message => message.fromUid), runs,
+    checks: ['five-specialists', 'commit-before-dispatch', 'one-reply-each', 'examples-inert', 'shared-human'] }, null, 2))
 })

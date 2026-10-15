@@ -9,6 +9,21 @@ const targets = [
   { id: 'human-1', name: 'Alice' },
 ]
 
+// Failure cases: assistant formatting swallows an assignment; code snippets,
+// quoted examples, unknown members or ambiguous names accidentally start work.
+test('assistant formatting permits only a complete standalone inline mention', () => {
+  const options = { allowInlineCodeMentions: true }
+  const text = '- 明理 `@ann` 请介绍自己。\n- 同学 ``＠　Anna   Smith`` 请接着介绍。'
+  assert.deepEqual(parseMentions(text, targets, options), { mentionedIds: ['ann', 'anna'], mentionAll: false })
+  assert.deepEqual(scanMentions(text, targets, options).map(({ start, end }) => text.slice(start, end)), ['@ann', '＠　Anna   Smith'])
+  assert.deepEqual(parseMentions(text, targets), { mentionedIds: [], mentionAll: false }, 'human code examples stay inert')
+  assert.equal(parseMentions('请 `@所有人` 回答', targets, options).mentionAll, true)
+  const examples = '> `@ann`\n\n[`@anna`](https://example.org)\n\n```text\n@iris-01\n```\n'
+    + '`call("@ann")` `@anna please reply` `@ann @anna` `@ann\n` `@missing` `@annex`'
+  assert.deepEqual(parseMentions(examples, targets, options), { mentionedIds: [], mentionAll: false })
+  assert.deepEqual(parseMentions('`@同名`', [{ id: 'a', name: '同名' }, { id: 'b', name: '同名' }], options).mentionedIds, [])
+})
+
 test('parses ids, unique names, unicode names, case and multiple mentions', () => {
   assert.deepEqual(parseMentions('@ANN @Anna Smith 请和@小灵、@iris-01处理', targets), {
     mentionedIds: ['ann', 'anna', 'iris-01'],

@@ -79,7 +79,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
       if (context.im && policy) {
         const members = (await pool.query<{ id: string; name: string }>('SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])',
           [work.tenantId, policy.participants.map(member => member.id)])).rows
-        const mentions = parseMentions(nativeText(result.payload), members)
+        const mentions = parseMentions(nativeText(result.payload), members, { allowInlineCodeMentions: true })
         const accepted = await api.conversations.ingest({ tenantId: work.tenantId, conversationId,
           ...(work.threadId ? { threadId: work.threadId } : {}), policyVersion: policy.version,
           messageId: result.messageId, version: 1, author: { id: work.agentId, kind: 'agent' }, text: message.body,
