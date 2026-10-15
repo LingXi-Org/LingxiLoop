@@ -1,4 +1,4 @@
-name: Read production deployment diagnostics
+name: Verify production deployment
 on:
   workflow_dispatch:
 permissions:

@@ -7,19 +7,20 @@ async function read(operation,body={}) {
  return r.json()
 }
 
-async function execute(operation,body) {
- const r=await fetch(new URL(`/execute/${operation}`,url),{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(30000)})
- if(!r.ok) throw new Error(`Execute ${operation}: HTTP ${r.status}`)
- let u=await r.json();const id=u._id?.$oid
- if(!id) throw new Error('Missing update id')
- for(let i=0;u.status!=='Complete'&&i<60;i++) {await new Promise(r=>setTimeout(r,2000));u=await read('GetUpdate',{id})}
- console.log(JSON.stringify({operation,id,status:u.status,success:u.success}))
- if(u.status!=='Complete'||!u.success) throw new Error('Worker recovery failed')
-}
+
 for(const stack of ['lingxiloop-app-a','lingxiloop-app-b']) {
  const services=await read('ListStackServices',{stack})
- const worker=services.find(s=>s.service==='worker')
- if(worker?.state==='Exited') await execute('StartStack',{stack,services:['worker']})
- const after=await read('ListStackServices',{stack})
- console.log(JSON.stringify({stack,services:after.map(s=>({service:s.service,state:s.state,image:s.image,status:s.container?.status}))}))
+ console.log(JSON.stringify({stack,services:services.map(s=>({service:s.service,state:s.state,image:s.image,status:s.container?.status}))}))
+}
+const list=await read('ListUpdates')
+for(const summary of (list.updates??[]).slice(0,15)) {
+ const id=summary.id??summary._id?.$oid
+ const update=await read('GetUpdate',{id})
+ console.log(JSON.stringify({id,operation:update.operation,status:update.status,success:update.success,start_ts:update.start_ts}))
+ for(const log of update.logs??[]) if(log.stage==='Compose Pull'&&!log.success) {
+  let detail=String(log.stderr??'')+'\n'+String(log.stdout??'')
+  detail=detail.replace(/https?:\/\/[^\s"']+/g,'[URL]').replace(/[A-Za-z0-9+/_=-]{40,}/g,'[opaque value]')
+  for(const key of ['KOMODO_WEBHOOK_URL','KOMODO_API_KEY','KOMODO_API_SECRET']) if(process.env[key]) detail=detail.split(process.env[key]).join('[secret]')
+  console.log(JSON.stringify({id,pullFailure:detail.slice(-500)}))
+ }
 }
