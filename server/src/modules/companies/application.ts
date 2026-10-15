@@ -170,6 +170,9 @@ export class CompanyApplication {
       await this.assertPermission(db, args.companyId, args.userId, 'company_member:update', true)
       const role = await memberRole(db, args.companyId, args.targetId, true)
       if (role !== 'STUDENT') throw new CompanyApplicationError('conflict', 'only an active student can become a teacher')
+      await createPermissionService(db, { lockDependencies: true }).assertCan({
+        actorUserId: args.userId, action: 'project_member:remove', companyId: args.companyId, projectId: args.projectId,
+      })
       const scope = await db.query(`SELECT 1 FROM project_memberships student
         JOIN projects project ON project.id=student.project_id AND project.company_id=student.company_id
         JOIN project_memberships teacher ON teacher.project_id=student.project_id AND teacher.company_id=student.company_id

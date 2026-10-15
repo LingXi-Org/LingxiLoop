@@ -16,12 +16,13 @@ const FOREIGN_COMPANY = 'co-company-foreign'
 
 const audits: Array<{ kind: string; companyId: string }> = []
 const disconnected: Array<{ userId: string; companyId: string }> = []
+let failAudit = false
 let syncFailuresRemaining = 0
 let nextToken = 0
 const hash = (token: string) => createHash('sha256').update(token).digest('hex')
 const application = new CompanyApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
-  auditInTransaction: async (_db, entry) => { audits.push({ kind: entry.kind, companyId: entry.companyId }) },
+  auditInTransaction: async (_db, entry) => { if (failAudit) throw new Error('audit unavailable'); audits.push({ kind: entry.kind, companyId: entry.companyId }) },
   syncChannel: async () => {
     if (syncFailuresRemaining > 0) {
       syncFailuresRemaining -= 1
@@ -38,6 +39,7 @@ const application = new CompanyApplication(pool, {
 before(async () => { await ensureSchemaOnce() })
 beforeEach(async () => {
   await resetAllTables()
+  failAudit = false
   audits.length = 0
   disconnected.length = 0
   syncFailuresRemaining = 0
@@ -200,10 +202,12 @@ async function seedPromotionStudent() {
     VALUES('promotion-seat',$1,'contract-company-slice',$2,'ACTIVE')`, [COMPANY,SECOND])
   await pool.query(`INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status)
     VALUES($1,$2,'human','Student','S','#667085','avail')`, [SECOND,COMPANY])
-  await pool.query(`INSERT INTO projects(id,company_id,name,kind,status) VALUES('promotion-course',$1,'Course','TEACHING','ACTIVE')`, [COMPANY])
+  await pool.query(`INSERT INTO projects(id,company_id,name,kind,status) VALUES('promotion-course',$1,'Course','TEACHING','ACTIVE'),('other-course',$1,'Other course','TEACHING','ACTIVE')`, [COMPANY])
   await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role,company_period_id)
     SELECT 'promotion-course',company_id,user_id,role,period_id FROM company_memberships
     WHERE company_id=$1 AND user_id IN ($2,$3)`, [COMPANY,OWNER,SECOND])
+  await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role,company_period_id)
+    SELECT 'other-course',company_id,user_id,role,period_id FROM company_memberships WHERE user_id=$1`, [SECOND])
   await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members)
     VALUES('promotion-room',$1,'promotion-course','group','Course',$2::jsonb)`, [COMPANY,JSON.stringify([OWNER,SECOND])])
 }
@@ -242,4 +246,16 @@ test('[integration] simultaneous promotion requests only create one teacher peri
   const results = await Promise.allSettled([application.promoteStudent(promotion()), application.promoteStudent(promotion())])
   assert.equal(results.filter(result => result.status === 'fulfilled').length, 1)
   assert.equal((await pool.query(`SELECT COUNT(*)::int AS n FROM company_membership_periods p JOIN company_memberships m ON m.id=p.membership_id WHERE m.user_id=$1 AND p.role='TEACHER'`, [SECOND])).rows[0].n, 1)
+})
+
+
+test('[integration] promotion rolls back identity, seat and access when audit fails', async () => {
+  await seedPromotionStudent()
+  failAudit = true
+  await assert.rejects(application.promoteStudent(promotion()), /audit unavailable/)
+  assert.equal((await pool.query(`SELECT role FROM company_memberships WHERE user_id=$1`, [SECOND])).rows[0].role, 'STUDENT')
+  assert.equal((await pool.query(`SELECT COUNT(*)::int AS n FROM project_memberships WHERE user_id=$1 AND status='ACTIVE'`, [SECOND])).rows[0].n, 2)
+  assert.equal((await pool.query(`SELECT status FROM organization_seats WHERE id='promotion-seat'`)).rows[0].status, 'ACTIVE')
+  assert.equal((await pool.query(`SELECT access_revoked_at FROM users WHERE id=$1`, [SECOND])).rows[0].access_revoked_at, null)
+  assert.equal(disconnected.length, 0)
 })
