@@ -6,7 +6,7 @@ import { resolve } from 'node:path'
 import pg from 'pg'
 
 const cwd = resolve(import.meta.dirname, '../..')
-assert.ok(process.argv.slice(2).every(arg => ['--browser','--browser-only'].includes(arg)), 'Unknown forum validation option')
+assert.ok(process.argv.slice(2).every(arg => ['--browser','--browser-only','--resources-only'].includes(arg)), 'Unknown forum validation option')
 const output = resolve(cwd, 'artifacts/forum')
 await mkdir(output, { recursive: true })
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
@@ -70,7 +70,7 @@ try {
     const web = start(['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','53098','--strictPort'],'web')
     await ready('http://127.0.0.1:53098',web)
     const metadata = JSON.parse(await readFile(resolve(cwd,'node_modules/e2e/package.json'),'utf8'))
-    await run([resolve(cwd,'node_modules/e2e',metadata.bin.e2e),'run','--config','e2e.forum.config.ts'])
+    await run([resolve(cwd,'node_modules/e2e',metadata.bin.e2e),'run','--config','e2e.forum.config.ts', ...(process.argv.includes('--resources-only') ? ['e2e/forum/resources.e2e.ts'] : [])])
   }
   passed = true
 } finally {

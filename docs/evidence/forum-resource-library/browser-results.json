@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "reproduce": "node e2e/server/forum.mjs --browser-only",
+  "reproduce": "node e2e/server/forum.mjs --browser-only --resources-only",
   "database": "lingxiloop_forum_test",
   "results": [
     {
@@ -10,8 +10,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-15T10:07:47.306Z",
-      "finishedAt": "2026-10-15T10:07:47.594Z",
+      "startedAt": "2026-10-15T10:17:02.544Z",
+      "finishedAt": "2026-10-15T10:17:02.802Z",
       "exitCode": 0
     },
     {
@@ -21,8 +21,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-15T10:07:47.594Z",
-      "finishedAt": "2026-10-15T10:07:47.910Z",
+      "startedAt": "2026-10-15T10:17:02.802Z",
+      "finishedAt": "2026-10-15T10:17:03.064Z",
       "exitCode": 0
     },
     {
@@ -31,10 +31,11 @@
         "/workspace/LingxiLoop/node_modules/e2e/dist/cli/bin.js",
         "run",
         "--config",
-        "e2e.forum.config.ts"
+        "e2e.forum.config.ts",
+        "e2e/forum/resources.e2e.ts"
       ],
-      "startedAt": "2026-10-15T10:07:51.010Z",
-      "finishedAt": "2026-10-15T10:08:59.559Z",
+      "startedAt": "2026-10-15T10:17:06.141Z",
+      "finishedAt": "2026-10-15T10:17:33.073Z",
       "exitCode": 0
     }
   ],

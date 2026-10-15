@@ -138,7 +138,7 @@ export function ProjectSourceLibrary({
 
   return <div className="min-w-0">
     <SourceLibraryBrowser sources={visibleSources} loading={loading} loaded={loaded} error={error} readOnly={readOnly}
-      uploadVisibility={uploadVisibility} creatorName={source => byId[source.createdBy]?.name ?? source.ownerName ?? (source.createdBy === me?.id ? '你' : '课程成员')}
+      creatorName={source => byId[source.createdBy]?.name ?? source.ownerName ?? (source.createdBy === me?.id ? '你' : '课程成员')}
       editable={editable} onUpload={() => setAdding(true)} onOpen={source => void open(source)} onRename={setRenaming}
       onRetry={source => void retry(source)} onRemove={source => void remove(source)} onReload={() => void load()} />
     {!readOnly && <KnowledgeSourceUploadDialog open={adding} onOpenChange={setAdding} onFiles={uploadFiles} onUrl={addUrl} onText={addText} visibilityScope={uploadVisibility} />}
