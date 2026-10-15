@@ -27,6 +27,7 @@ import {
   lockCompany,
   memberRole,
   removeMemberState,
+  promoteStudentState,
   assertAdministratorCanDepart,
   revokeActiveEmailInvitations,
   revokeInvitation,
@@ -159,6 +160,39 @@ export class CompanyApplication {
       })
     })
     return { ok: true as const, userId: args.targetId, isAdmin: args.isAdmin }
+  }
+
+  async promoteStudent(args: {
+    companyId: string; userId: string; targetId: string; projectId: string; audit: RequestAuditContext
+  }) {
+    await this.infrastructure.transaction(async (db) => {
+      await lockEducationAdmissions(db)
+      await this.assertPermission(db, args.companyId, args.userId, 'company_member:update', true)
+      const role = await memberRole(db, args.companyId, args.targetId, true)
+      if (role !== 'STUDENT') throw new CompanyApplicationError('conflict', 'only an active student can become a teacher')
+      await createPermissionService(db, { lockDependencies: true }).assertCan({
+        actorUserId: args.userId, action: 'project_member:remove', companyId: args.companyId, projectId: args.projectId,
+      })
+      const scope = await db.query(`SELECT 1 FROM project_memberships student
+        JOIN projects project ON project.id=student.project_id AND project.company_id=student.company_id
+        JOIN project_memberships teacher ON teacher.project_id=student.project_id AND teacher.company_id=student.company_id
+        JOIN company_memberships company_teacher ON company_teacher.company_id=teacher.company_id AND company_teacher.user_id=teacher.user_id
+        JOIN company_memberships company_student ON company_student.company_id=student.company_id AND company_student.user_id=student.user_id
+        WHERE student.company_id=$1 AND student.project_id=$2 AND student.user_id=$3
+          AND student.role='STUDENT' AND student.status='ACTIVE' AND student.company_period_id=company_student.period_id
+          AND teacher.user_id=$4 AND teacher.role='TEACHER' AND teacher.status='ACTIVE'
+          AND teacher.company_period_id=company_teacher.period_id AND project.status='ACTIVE'
+        FOR UPDATE OF student,teacher,project`, [args.companyId,args.projectId,args.targetId,args.userId])
+      if (!scope.rows[0]) throw new CompanyApplicationError('forbidden', 'student must belong to your active course')
+      await promoteStudentState(db, args.companyId, args.targetId)
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'company_student_promoted', userId: args.userId, companyId: args.companyId,
+        ...args.audit, detail: { targetId: args.targetId, projectId: args.projectId, role: 'TEACHER', isAdmin: false },
+      })
+    })
+    // The durable access.revoke effect retries external cleanup after provider failures.
+    await this.infrastructure.disconnectUser(args.targetId, args.companyId).catch(() => undefined)
+    return { ok: true as const, userId: args.targetId, role: 'teacher' as const }
   }
 
   async removeMember(args: {
