@@ -34,6 +34,7 @@ import {
   setTypingAgent,
   updateConversation,
   useChatThreadStore,
+  type ConversationChatState,
 } from './store'
 import { harnessApi, type AgentRunTarget } from './harness-api'
 import { applyRunSnapshot, needsRunStream } from './run-updates'
@@ -45,6 +46,15 @@ const TYPING_STALE_MS = 45_000
 
 type UploadedAttachment = ApiAttachment & { key?: string }
 type RequestContext = { signal: AbortSignal; identity: string; current: () => boolean }
+type RunTargets = Awaited<ReturnType<typeof harnessApi.list>>
+type RunRecovery = { targets: RunTargets; snapshots: { target: AgentRunTarget; snapshot: AgentRunSnapshot }[]; error: string | null }
+
+function restoreStoppedRuns(state: ConversationChatState, recovery: RunRecovery): ConversationChatState {
+  for (const { target, snapshot } of recovery.snapshots) {
+    state = applyRunSnapshot(state, target, snapshot, useParticipants.getState().byId[target.agentId])
+  }
+  return { ...state, error: recovery.error }
+}
 
 function conversionContext() {
   return { participants: useParticipants.getState().byId, meId: getMeId() }
@@ -195,20 +205,20 @@ export class ChatTransport {
     this.historyRequests.set(conversationId, request)
     updateConversation(conversationId, (state) => ({ ...state, isLoading: true, error: null }))
     try {
-      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE)
+      const [envelopes, recovery] = await Promise.all([
+        lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE), this.readRunRecovery(conversationId, request),
+      ])
       if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
-      updateConversation(conversationId, (state) => ({
+      updateConversation(conversationId, (state) => restoreStoppedRuns({
         ...state,
         messages: mergeCanonicalMessages(state.messages, messages),
         loaded: true,
         isLoading: false,
         hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE,
-      }))
+      }, recovery))
       this.syncRunStreams(conversationId)
-      void this.discoverConversationRuns(conversationId, request).catch(error => {
-        if (request.current()) updateConversation(conversationId,state => ({ ...state,error: userFacingError(error,'任务进度暂不可用，请刷新。') }))
-      })
+      this.subscribeDiscoveredRuns(conversationId, recovery.targets)
     } catch (error) {
       if (!request.current()) return
       console.error('[chat.transport] history conversion/load failed', error)
@@ -226,15 +236,15 @@ export class ChatTransport {
     if (!this.includesChannel(conversationId)) return
     const request = this.captureRequest()
     try {
-      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE)
+      const [envelopes, recovery] = await Promise.all([
+        lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE), this.readRunRecovery(conversationId, request),
+      ])
       if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
-      updateConversation(conversationId, state => ({ ...state,
-        messages: mergeCanonicalMessages(state.messages, messages), loaded: true, isLoading: false, error: null }))
+      updateConversation(conversationId, state => restoreStoppedRuns({ ...state,
+        messages: mergeCanonicalMessages(state.messages, messages), loaded: true, isLoading: false }, recovery))
       this.syncRunStreams(conversationId)
-      void this.discoverConversationRuns(conversationId, request).catch(error => {
-        if (request.current()) updateConversation(conversationId,state => ({ ...state,error: userFacingError(error,'任务进度暂不可用，请刷新。') }))
-      })
+      this.subscribeDiscoveredRuns(conversationId, recovery.targets)
     } catch (error) {
       if (!request.current()) return
       console.error('[chat.transport] reload failed', error)
@@ -254,20 +264,20 @@ export class ChatTransport {
     this.historyRequests.set(conversationId, request)
     updateConversation(conversationId, (state) => ({ ...state, isLoadingOlder: true }))
     try {
-      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE, before)
+      const [envelopes, recovery] = await Promise.all([
+        lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE, before), this.readRunRecovery(conversationId, request),
+      ])
       if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
         .filter((message) => (messageMetadata(message).sequence ?? Number.MAX_SAFE_INTEGER) < before)
-      updateConversation(conversationId, (state) => ({
+      updateConversation(conversationId, (state) => restoreStoppedRuns({
         ...state,
         messages: mergeCanonicalMessages(state.messages, messages),
         isLoadingOlder: false,
         hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE && messages.length > 0,
-      }))
+      }, recovery))
       this.syncRunStreams(conversationId)
-      void this.discoverConversationRuns(conversationId, request).catch(error => {
-        if (request.current()) updateConversation(conversationId,state => ({ ...state,error: userFacingError(error,'任务进度暂不可用，请刷新。') }))
-      })
+      this.subscribeDiscoveredRuns(conversationId, recovery.targets)
     } catch (error) {
       if (!request.current()) return
       console.error('[chat.transport] older history failed', error)
@@ -479,9 +489,32 @@ export class ChatTransport {
     }
   }
 
+  private async readRunRecovery(conversationId: string, request: RequestContext): Promise<RunRecovery> {
+    const recovery: RunRecovery = { targets: [], snapshots: [], error: null }
+    const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30_000)])
+    try {
+      recovery.targets = await harnessApi.list(conversationId, signal)
+      if (!request.current()) return recovery
+      // Stopped runs may have no committed IM message. Restore their durable
+      // snapshot before publishing history, so an old running bubble never paints.
+      const snapshots = await Promise.all(recovery.targets.map(async target => {
+        if (target.status !== 'failed' && target.status !== 'cancelled') return null
+        try { return { target, snapshot: await harnessApi.read(target, signal) } }
+        catch (error) { recovery.error = userFacingError(error, '任务进度暂不可用，请刷新。'); return null }
+      }))
+      recovery.snapshots = snapshots.filter((item): item is NonNullable<typeof item> => item !== null)
+    } catch (error) { recovery.error = userFacingError(error, '任务进度暂不可用，请刷新。') }
+    return recovery
+  }
+
   private async discoverConversationRuns(conversationId: string, request: RequestContext): Promise<void> {
-    const targets = await harnessApi.list(conversationId,request.signal)
+    const recovery = await this.readRunRecovery(conversationId, request)
     if (!request.current()) return
+    updateConversation(conversationId, state => restoreStoppedRuns(state, recovery))
+    this.subscribeDiscoveredRuns(conversationId, recovery.targets)
+  }
+
+  private subscribeDiscoveredRuns(conversationId: string, targets: RunTargets): void {
     const messages = useChatThreadStore.getState().conversations[conversationId]?.messages ?? []
     for (const target of targets) {
       const current = messages.map(messageMetadata).find(meta => meta.runId === target.runId && isRunMessage(meta))?.harness

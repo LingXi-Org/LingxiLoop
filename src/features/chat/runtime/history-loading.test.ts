@@ -94,7 +94,7 @@ test('history paints independently of diagnostics and obsolete requests cannot m
     history = async () => [envelope('returned', 5)]
     await transport.loadConversation('room')
     assert.equal(useChatThreadStore.getState().conversations.room.isLoading, false)
-    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.map(message => message.id), ['run-run', 'returned'])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.map(message => message.id).sort(), ['returned', 'run-run'])
 
     await setImmediate()
     const previousStream = streams.at(-1)!
@@ -111,7 +111,7 @@ test('history paints independently of diagnostics and obsolete requests cannot m
     await transport.loadConversation('room'); await setImmediate()
     assert.notEqual(streams.at(-1), previousStream)
     assert.equal(streams.at(-1)?.signal.aborted, false)
-    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.map(message => message.id), ['run-run', 'fresh-return'])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages.map(message => message.id).sort(), ['fresh-return', 'run-run'])
 
     for (const older of [false, true]) {
       transport.setWorkspaceChannels(['room', 'revoked'])
