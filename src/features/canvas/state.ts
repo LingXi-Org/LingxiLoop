@@ -28,7 +28,7 @@ interface CanvasState {
   selectedFrameId: string | null
   load: (canvasId?: string) => Promise<void>
   loadPreview: (canvasId: string) => Promise<void>
-  loadWorkspaces: (conversationId?: string) => Promise<void>
+  loadWorkspaces: (conversationId: string) => Promise<void>
   ensureForConversation: (conversationId: string) => Promise<CanvasSnapshot>
   reset: () => void
   selectFrame: (id: string | null) => void
@@ -411,7 +411,7 @@ ws.on((event) => {
     const activeConversationId = useApp.getState().selectedConversationId
     if (event.conversationId && event.conversationId !== activeConversationId) return
     useCanvas.getState().applyEvent(event)
-    if (event.kind === 'workspace.started') {
+    if (event.kind === 'workspace.started' && event.conversationId) {
       void useCanvas.getState().loadWorkspaces(event.conversationId)
     }
   }

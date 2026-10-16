@@ -40,14 +40,13 @@ type FrameMenu = { frameId: string }
 type GesturePoint = { x: number; y: number; pointerType: string }
 type PinchGesture = { distance: number; zoom: number; worldX: number; worldY: number }
 
-export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: () => void } = {}) {
-  const snapshot = useCanvas((state) => canvasId && state.snapshot?.id !== canvasId ? state.previews[canvasId] ?? null : state.snapshot)
+export function CanvasView({ canvasId, onBack }: { canvasId: string; onBack?: () => void }) {
+  const snapshot = useCanvas((state) => state.snapshot?.id !== canvasId ? state.previews[canvasId] ?? null : state.snapshot)
   const loading = useCanvas((state) => state.loading)
   const error = useCanvas((state) => state.error)
   const selectedId = useCanvas((state) => state.selectedFrameId)
   const activeCanvasId = useCanvas((state) => state.activeCanvasId)
   const load = useCanvas((state) => state.load)
-  const loadWorkspaces = useCanvas((state) => state.loadWorkspaces)
   const selectFrame = useCanvas((state) => state.selectFrame)
   const createFrame = useCanvas((state) => state.createFrame)
   const setStatus = useCanvas((state) => state.setStatus)
@@ -67,21 +66,9 @@ export function CanvasView({ canvasId, onBack }: { canvasId?: string; onBack?: (
   const visibleFrames = useMemo(() => snapshot?.frames.filter((frame) => frame.type !== 'artifact') ?? [], [snapshot?.frames])
 
   useLayoutEffect(() => {
-    let active = true
     void ws.connect()
-    if (canvasId) {
-      void load(canvasId)
-      void loadWorkspaces()
-      return
-    }
-    void (async () => {
-      await loadWorkspaces()
-      if (!active) return
-      const target = canvasId ?? useCanvas.getState().activeCanvasId ?? useCanvas.getState().workspaces[0]?.id
-      if (target) await load(target)
-    })()
-    return () => { active = false }
-  }, [canvasId, load, loadWorkspaces])
+    void load(canvasId)
+  }, [canvasId, load])
 
   useEffect(() => {
     if (!activeCanvasId) return

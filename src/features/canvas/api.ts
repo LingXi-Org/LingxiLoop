@@ -18,7 +18,7 @@ export const canvasApi = {
   getCollaboration: (id: string,afterSeq = 0) => http<CanvasCollaboration>(`/canvases/${encodeURIComponent(id)}/collaboration?afterSeq=${afterSeq}`),
   updateSharedState: (id: string, update: SharedStateUpdate) => http<SharedStateResult>(`/canvases/${encodeURIComponent(id)}/shared-state`,{ method: 'POST',body: JSON.stringify(update) }),
   getCanvas: (canvasId?: string) => http<CanvasSnapshot>(canvasId ? `/canvases/${encodeURIComponent(canvasId)}` : '/canvas'),
-  getCanvases: (conversationId?: string) => http<CanvasWorkspaceSummary[]>(`/canvases${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`),
+  getCanvases: (conversationId: string) => http<CanvasWorkspaceSummary[]>(`/canvases?conversationId=${encodeURIComponent(conversationId)}`),
   getConversationCanvas: (conversationId: string) => http<CanvasSnapshot | null>(`/conversations/${encodeURIComponent(conversationId)}/canvas`),
   ensureConversationCanvas: (conversationId: string) => http<CanvasSnapshot>(`/conversations/${encodeURIComponent(conversationId)}/canvas`, { method: 'POST' }),
   createCanvasFrame: (input: {
