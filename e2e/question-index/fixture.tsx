@@ -14,6 +14,10 @@ import { createNativeMessage } from '@/lib/nativeMessage'
 import { lingxiIm, type ImEnvelope } from '@/lib/im/wukong'
 import '@/styles/globals.css'
 
+const parameters = new URLSearchParams(location.search)
+const fullHistory = parameters.has('turns')
+const turnCount = Math.max(1, Math.min(500, Number(parameters.get('turns')) || 60))
+
 const participants = {
   me: { id: 'me', kind: 'human' as const, name: '测试用户', initial: '测', avatarBg: '#7257d9', status: 'avail' as const },
   agent: { id: 'agent', kind: 'agent' as const, name: '测试助手', initial: '助', avatarBg: '#0f766e', status: 'avail' as const },
@@ -26,15 +30,15 @@ const envelope = (index: number, role: 'user' | 'assistant', room = 'questions')
   return { channelId: room, channelType: 2, fromUid: role === 'user' ? 'me' : 'agent', clientMsgNo: id, messageId: id,
     messageSeq: index * 2 - (role === 'user' ? 1 : 0), timestamp: 1790899200 + index * 60,
     payload: createNativeMessage({ id, role, createdAt: new Date((1790899200 + index * 60) * 1000).toISOString(),
-      content: attachmentOnly ? [] : [{ type: 'text', text: role === 'user' ? `第${index}次提问：${index === 22 ? '这是需要截断的长问题。'.repeat(30) : '请解释这个概念。'}` : `第${index}次答复。\n\n${'这是一段用于验证阅读位置的回答。'.repeat(25)}` }],
+      content: attachmentOnly ? [] : [{ type: 'text', text: role === 'user' ? `第${index}次提问：${index === 22 ? '这是需要截断的长问题。'.repeat(30) : '请解释这个概念。'}` : `第${index}次答复。\n\n${'这是一段用于验证阅读位置的回答。'.repeat(fullHistory ? 2 : 25)}` }],
       ...(attachmentOnly ? { attachments: [{ id: 'notes', type: 'document', name: '研究笔记.pdf', contentType: 'application/pdf', status: { type: 'complete' }, content: [{ type: 'file', data: 'notes', sourceType: 'id', mimeType: 'application/pdf', filename: '研究笔记.pdf' }] }] } : {}),
       ...(role === 'assistant' ? { status: { type: 'complete', reason: 'stop' } } : {}),
     }) }
 }
-const history = Array.from({ length: 60 }, (_, i) => [envelope(i + 1, 'user'), envelope(i + 1, 'assistant')]).flat()
+const history = Array.from({ length: turnCount }, (_, i) => [envelope(i + 1, 'user'), envelope(i + 1, 'assistant')]).flat()
 const convert = (rows: ImEnvelope[]) => convertEnvelopeBatch(rows, { participants, meId: 'me' })
 useChatThreadStore.setState({ conversations: {
-  questions: { ...EMPTY_CONVERSATION_CHAT_STATE, loaded: true, hasMoreOlder: true, messages: convert(history.slice(40)) },
+  questions: { ...EMPTY_CONVERSATION_CHAT_STATE, loaded: true, hasMoreOlder: !fullHistory, messages: convert(fullHistory ? history : history.slice(40)) },
   other: { ...EMPTY_CONVERSATION_CHAT_STATE, loaded: true, hasMoreOlder: false, messages: convert([envelope(101, 'user', 'other'), envelope(101, 'assistant', 'other')]) },
 } })
 let failHistory = false

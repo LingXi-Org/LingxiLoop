@@ -1,0 +1,5 @@
+dadf9649e34772142842adcb189842f00dfb71688a52f5a9111cfc471a466f6f  src/components/vendor/assistant-ui/elements/conversation-map.aui.tsx
+805ea554059827847e6a6de4b09087037f11777235fc543208139e5e126b58cd  src/components/vendor/assistant-ui/elements/conversation-map.tsx
+5d81fbb669e67ae20026cd30ed57efc51a5e3ee0f4f5d265e1723de75359b8fa  src/components/vendor/assistant-ui/elements/surfaces.tsx
+3506d5f07865c042a4ef9b96904f687d19372a14e7dfccf946749860a3606182  src/components/vendor/assistant-ui/utils/range.ts
+8db117d730e640655e5099e086af4e00d545c283839d9ef5885ca93419d51893  src/components/vendor/assistant-ui/utils/useIsomorphicLayoutEffect.ts
