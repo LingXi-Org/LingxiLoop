@@ -82,3 +82,26 @@ it verifies status compatibility, concurrent recovery, tenant denial, unknown
 503 and a successful new human message. It is not production frontend recovery
 UI acceptance. Real model-provider execution, production data repair and a
 24-hour soak are not performed by this runner.
+
+## Joint check with #160
+
+The #154 branch was combined in a disposable detached worktree with PR #165
+head `e334dce544dc85a15045ca2416bdf5867525273c`, using frozen LingxiOS 3.4.7.
+Web and E2E typechecks passed. The two receipt-related official browser cases
+passed against the real PostgreSQL/WuKong fixture and production chat components:
+
+```sh
+node --import tsx e2e/connection-recovery-server.mjs
+# Separate terminal in that combined worktree:
+LINGXILOOP_DEV_API_TARGET=http://127.0.0.1:5199 LINGXILOOP_DEV_WS_TARGET=ws://127.0.0.1:5199 npx --no-install vite --host 127.0.0.1 --port 5196 --strictPort
+# Separate terminal:
+E2E_CONNECTION_RECOVERY=1 E2E_BASE_URL=http://127.0.0.1:5196 E2E_TELEMETRY_DISABLED=1 node e2e/web/run.mjs e2e/web/connection-recovery.e2e.ts --grep 'accepted (response loss|sequence zero)' --output .e2e/issue-154-160 --video on
+```
+
+These cases verify lost acceptance response recovery/new sending and retention
+of invalid sequence-zero echoes until reconciliation, with one message per
+original nonce. The other 11 cases in #160's suite were not run here. The #160
+proxy corrupts the response receipt; #154's separate real-WuKong/runtime checks
+also corrupt the persisted acceptance and verify original result acknowledgement.
+Reports, screenshots and videos remain in the disposable combined worktree's
+`.e2e/issue-154-160/`. No #160 source files are included in this PR.
