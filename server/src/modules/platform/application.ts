@@ -127,14 +127,16 @@ export class PlatformApplication {
   }
 
   async dependencyReadiness(): Promise<DependencyReadiness> {
-    const [required, notebook] = await Promise.all([
-      this.readiness(),
+    // Keep the existing diagnostic response and its budgets stable. Control is
+    // a required traffic gate on /readyz, not an added legacy diagnostic field.
+    const [database, redis, openNotebook] = await Promise.all([
+      this.probe('database', () => assertDatabaseReady(this.infrastructure.db), 2_000),
+      this.probe('redis', () => this.infrastructure.redisPing(), 2_000),
       this.infrastructure.openNotebookEnabled()
         ? this.probe('openNotebook', () => this.infrastructure.openNotebookHealth(), 30_000)
-          .then(() => true, () => false)
-        : Promise.resolve(true),
-    ])
-    return { ...required, openNotebook: notebook }
+        : Promise.resolve(),
+    ].map(async (probe) => { try { await probe; return true } catch { return false } }))
+    return { database, redis, openNotebook }
   }
 
   openGraph(url: string): Promise<unknown> {

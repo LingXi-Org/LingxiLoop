@@ -39,14 +39,14 @@ const control = createServer((req, res) => {
 })
 const controlUrl = await listen(control)
 let dbCalls = 0, redisCalls = 0, controlCalls = 0
-let dbFailure = false, redisFailure = false, controlFailure = false
+let dbFailure = false, redisFailure = false, controlFailure = false, notebookFailure = true
 let blockedRedis: Promise<void> | undefined
 const infra = {
   db: { query: async () => { dbCalls++; if (dbFailure) throw new Error('SECRET database URL'); return pool.query('SELECT 1') } },
   redisPing: async () => { redisCalls++; if (redisFailure) throw new Error('SECRET redis URL'); await redis.ping(); await blockedRedis },
   controlReady: async () => { controlCalls++; if (controlFailure) throw new Error('SECRET service token'); await probeControlReady(controlUrl) },
   openNotebookEnabled: () => true,
-  openNotebookHealth: async () => { throw new Error('optional offline') },
+  openNotebookHealth: async () => { if (notebookFailure) throw new Error('optional offline') },
 } as unknown as PlatformInfrastructure
 const application = new PlatformApplication(infra)
 const app = express(); registerHealthRoutes(app, application)
@@ -71,8 +71,14 @@ try {
     assert.equal((await get('/health')).status, 200)
     assert.equal((await get('/livez')).status, 200)
     const diagnostic = await get('/health/dependencies'); assert.equal(diagnostic.status, 503)
-    assert.equal((await diagnostic.json()).dependencies.openNotebook, false)
+    assert.deepEqual((await diagnostic.json()).dependencies, { database: true, redis: true, openNotebook: false })
     assert.equal((await get('/readyz')).status, 200)
+    notebookFailure = false; controlFailure = true
+    const legacyHealthy = await get('/health/dependencies')
+    assert.equal(legacyHealthy.status, 200)
+    assert.deepEqual((await legacyHealthy.json()).dependencies, { database: true, redis: true, openNotebook: true })
+    assert.equal((await get('/readyz')).status, 503)
+    notebookFailure = true; controlFailure = false
   })
   await check('each required failure removes readiness, errors are sanitized, legacy control independence', async () => {
     for (const dependency of ['database', 'redis', 'control']) {

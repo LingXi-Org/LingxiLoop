@@ -22,7 +22,6 @@ export interface UploadCapabilities {
 }
 
 export interface DependencyReadiness {
-  control: boolean
   database: boolean
   redis: boolean
   openNotebook: boolean
