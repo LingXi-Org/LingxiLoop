@@ -44,6 +44,8 @@ The frozen install resolves LingxiOS `3.4.7` exactly as committed. Preinstalled 
 
 The initial composer measures **60px** at both `1440 × 844` and `390 × 844`; the first content card starts at **419px** and **370px** respectively. The text remains **16px**, with no horizontal page overflow. The journey checks long-text internal scrolling, keyboard expansion/collapse and visible focus, preview-to-edit recovery, attachments across collapse/reload/type switching, teacher assignment publication, a real HTTP 503 and retry, account switches, post/comment avatar identity, avatar changes after reload, failed image fallback and the existing 60-second roster refresh without a page reload.
 
+Retained console logs have only trailing whitespace removed for Git review; native JSON reports and screenshots are unchanged. Screenshot hashes and tested source hashes are retained alongside the evidence.
+
 All retained screenshots and logs are under [artifacts/forum/verified/issue163](../artifacts/forum/verified/issue163):
 
 | Evidence | Screenshot |
