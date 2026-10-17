@@ -1,0 +1,115 @@
+{
+  "upstreamPr": {
+    "number": 26,
+    "head": "b95528cc5667e6d70a8ac33c98852ed52d97a363",
+    "merge": "de5dca9b04f7d84f604d206fc0486fc8e969c400",
+    "run": 39014122563,
+    "passed": 421,
+    "failed": 0,
+    "skipped": 0
+  },
+  "localUpstream": {
+    "initialPassed": 420,
+    "initialFailed": 1,
+    "failure": "package install fixture default npm cache outside writable roots; subsequent empty cache was not warmed",
+    "isolatedPackageRetryPassed": 1,
+    "retryCache": "/tmp/lingxios-recovery-cache"
+  },
+  "productRed": {
+    "package": "3.5.1",
+    "test": "runtime-deadline-recovery.test.ts",
+    "expected": "model_unavailable",
+    "actual": "execution_failed",
+    "localLogSha256": "af0973917bd56cccb27f453671fe836b357886d076df913a78b05d403c342828"
+  },
+  "deploymentContract": {
+    "beforePassed": 17,
+    "beforeFailed": 1,
+    "afterPassed": 18,
+    "afterFailed": 0,
+    "marker": "[skip deploy]",
+    "blocks": [
+      "update-manifests",
+      "deploy",
+      "rollout"
+    ],
+    "preserves": [
+      "CI",
+      "tests",
+      "immutable image publication"
+    ]
+  },
+  "e2eTypecheck": "passed",
+  "liveProviderCalls": 0,
+  "productionOperations": 0,
+  "deadlineOrderPr": {
+    "number": 27,
+    "head": "8aa44a22d83923630bc8fa7e5480e191a19ea8c9",
+    "merge": "e09fc03437804ec80bc2f6d6b3258dc3e2f35540",
+    "run": 39014744964,
+    "passed": 422,
+    "failed": 0,
+    "skipped": 0
+  },
+  "serverLint": "passed",
+  "upstreamMain": {
+    "head": "e09fc03437804ec80bc2f6d6b3258dc3e2f35540",
+    "run": 39015169232,
+    "passed": 422,
+    "failed": 0,
+    "skipped": 0,
+    "fullReleaseGates": "passed",
+    "logSha256": "5757db556460af7c828440ab9d1285cad62fa7de60eb7337326910f9a57e3a1f"
+  },
+  "publishedPackage": {
+    "version": "3.5.2",
+    "schema": 12,
+    "publishRun": 39015407648,
+    "integrity": "sha512-ho8+Xa4cIU9hrRHPiPRQ4hFg9VU5pU8A1XPOXNmgNV8bjw3Ztxe5lxwbaNlkhP3TP1hF9wC8G1WTQPk2a68P1A==",
+    "publicExportsVerified": true,
+    "rootAndIndependentServerLocks": "3.5.2"
+  },
+  "productQualification": {
+    "source": "f466f19ad9a1466349e4201218f2b02fcf3ca1d9",
+    "runtime": "3.5.2",
+    "serverTests": {
+      "passed": 106,
+      "failed": 0,
+      "skipped": 0
+    },
+    "integration": {
+      "tests": 18,
+      "pass": 17,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 1
+    },
+    "browser": {
+      "discovered": 131,
+      "selected": 11,
+      "executed": 11,
+      "passed": 11,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "serverTypecheck": "passed",
+    "serverLint": "passed",
+    "e2eTypecheck": "passed",
+    "realWuKong": {
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skipped": 0
+    },
+    "integrationSkip": "real-WuKong receipt recovery requires dedicated runner; subsequently passed with all 20 dedicated real-WuKong tests"
+  },
+  "logs": {
+    "server": "26bfada8edf0a2b9676a2a7316f05800840bfdd22fa026729c629701aeaf5f16",
+    "integration": "288f22c39f94aca8bda49619eedf4c96c72117ad4152d05cd666b347da97303b",
+    "realWuKong": "bfb93931aee7ded45a4e3a28efb569c6d29019e7d96abbc98058ded1c80da247",
+    "browser": "af270edf38edf471f56bd9627c5a822a3e26e5e7964c4629a577f26b830776f9",
+    "deployContract": "e9f503c91f3539fee2fe23d857bfb870658b3504e5ad1ae346d565dff69d074c"
+  }
+}

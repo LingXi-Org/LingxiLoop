@@ -217,3 +217,14 @@ Three external boundaries remain explicit:
 #153 remains open: the safe-GET comparison, shallow profile and partial Web/API
 observation do not satisfy its full Worker/dialogue/retained-heap/24-hour and
 production-update gates.
+
+## Development-only continuation (2026-10-17)
+
+The user subsequently confirmed that deployment services are intentionally
+offline and explicitly cancelled deployment work. Their offline state is no
+longer a development blocker. Do not probe Komodo or operate production.
+New development merges carry `[skip deploy]` in the merge commit message:
+CI/tests and immutable image publication still run, while manifest promotion,
+control-plane deployment and rollout are skipped. This marker does not skip
+tests or relax branch protection. Historical observations above remain facts
+about earlier runs; they are not requests to restore deployment now.
