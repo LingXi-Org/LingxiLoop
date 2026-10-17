@@ -1,0 +1,30 @@
+✖ workflow path filters route real changed paths to their owning checks (25.90811ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 293.145053
+
+✖ failing tests:
+
+test at scripts/production-rag-contract.test.mjs:371:1
+✖ workflow path filters route real changed paths to their owning checks (25.90811ms)
+  AssertionError [ERR_ASSERTION]: scripts/release-smoke.mjs
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/production-rag-contract.test.mjs:401:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

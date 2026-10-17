@@ -1,0 +1,89 @@
+✖ production smoke accepts the exact public runtime and reaches authenticated WebSocket (73.756022ms)
+✖ production smoke rejects retired or mismatched runtime before tenant access (75.602386ms)
+✖ production smoke still enforces the concrete release commit (68.32594ms)
+✖ production smoke HTTP failure never prints server body or session secrets (66.769597ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 430.742551
+
+✖ failing tests:
+
+test at scripts/release-smoke.test.mjs:63:1
+✖ production smoke accepts the exact public runtime and reaches authenticated WebSocket (73.756022ms)
+  AssertionError [ERR_ASSERTION]: ✓ /api/health → 200 (33ms)
+  ✓ /api/health/dependencies → 200 (0ms)
+  ✓ /api/meta → 200 (0ms)
+  Smoke failed: /api/meta did not report the LingxiLoop runtime-pending contract
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/release-smoke.test.mjs:65:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/release-smoke.test.mjs:69:1
+✖ production smoke rejects retired or mismatched runtime before tenant access (75.602386ms)
+  AssertionError [ERR_ASSERTION]: null
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/release-smoke.test.mjs:72:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/release-smoke.test.mjs:77:1
+✖ production smoke still enforces the concrete release commit (68.32594ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /commit mismatch/. Input:
+  
+  '✓ /api/health → 200 (33ms)\n' +
+    '✓ /api/health/dependencies → 200 (0ms)\n' +
+    '✓ /api/meta → 200 (1ms)\n' +
+    'Smoke failed: /api/meta did not report the LingxiLoop runtime-pending contract\n'
+  
+      at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/release-smoke.test.mjs:80:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '✓ /api/health → 200 (33ms)\n✓ /api/health/dependencies → 200 (0ms)\n✓ /api/meta → 200 (1ms)\nSmoke failed: /api/meta did not report the LingxiLoop runtime-pending contract\n',
+    expected: /commit mismatch/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at scripts/release-smoke.test.mjs:83:1
+✖ production smoke HTTP failure never prints server body or session secrets (66.769597ms)
+  AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /synthetic-secret/. Input:
+  
+  'Smoke failed: /api/health → 503: synthetic-secret-response-body\n'
+  
+      at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/release-smoke.test.mjs:87:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Smoke failed: /api/health → 503: synthetic-secret-response-body\n',
+    expected: /synthetic-secret/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
