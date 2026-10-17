@@ -1,0 +1,15 @@
+{
+  "os": "Linux cloud executor",
+  "dockerStorageDriver": "vfs",
+  "dockerReportedCpuCount": 5,
+  "dockerReportedMemoryBytes": 18882674688,
+  "executorCpuQuota": "400000 100000",
+  "executorMemoryLimitBytes": 17179869184,
+  "measuredContainerLimits": {
+    "cpus": 0.75,
+    "memoryBytes": 671088640,
+    "oldSpaceMiB": 320,
+    "poolMax": 8
+  },
+  "note": "Both images used the original issue baseline limits; host reported capacity is not dedicated capacity."
+}

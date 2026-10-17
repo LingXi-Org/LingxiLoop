@@ -122,6 +122,16 @@ those earlier component tests as full-SPA tests.
 | #161 | Durable independent terminal outbox, failed/cancelled preserved, dedup/fencing/revocation, five terminal browser cases with next turn | Controlled real provider and full deployment fault matrix remain unqualified |
 | #163 | PR164 compact forum/real avatar acceptance already retained and merged | No new blocker identified |
 
+This table records the PR172 acceptance boundary at the time of this batch.
+The [subsequent runtime measurements and browser matrix](../runtime-measurements/README.md)
+adds real product mention/fanout rejection, bounded invalid-tool correction,
+optional-memory outage, immutable image migrations, paired Web/API metrics and
+durable soak handoff. PR172 subsequently merged at
+`c3abc92640cf96feb42dd2b8b307df9c73b9d2e3`; its PR checks passed. Its automatic
+main rollout still failed during the initial Komodo connection. #160's repair
+is merged and its issue-specific acceptance is complete; captcha login was not
+part of that repair and remains unqualified.
+
 No usable existing model-provider credentials or approved pricing configuration
 were injected into this executor. No provider/credentials/permissions were
 created. Production-image Worker sandbox preflight fails because this cloud

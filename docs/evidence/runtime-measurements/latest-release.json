@@ -1,0 +1,18 @@
+{
+  "mergeCommit": "c3abc92640cf96feb42dd2b8b307df9c73b9d2e3",
+  "imageDigest": "sha256:652b52235cbc8c39ef53344ba547ae176ec464dfadaffa2585f9ee188c949f7e",
+  "releaseVersions": {
+    "runtime": "3.5.1",
+    "controlPlane": 11,
+    "kernel": 2,
+    "schema": 12,
+    "assistantMessage": 2
+  },
+  "mainCi": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39010558109",
+  "mainCiConclusion": "failure",
+  "checks": "web/admin/server passed; integration scope skipped",
+  "publication": "success",
+  "manifestUpdate": "success",
+  "rollout": "initial API read TCP timeout, no update ID or deployment trigger",
+  "measuredImageNote": "Performance and running soak use earlier PR171 image digest 0c295e66...; PR172 changes browser auth, not the measured server backend."
+}

@@ -1,0 +1,1299 @@
+{
+  "startedAt": "2026-10-17T06:28:31.503Z",
+  "scope": "Production Web/API idle and safe GET /api/health load only; NOT model dialogue or Worker throughput.",
+  "setup": {
+    "startedAt": "2026-10-17T06:25:20.435Z",
+    "source": "4ae8ada370fc414096065145219ee9e82118af09",
+    "scope": "Immutable production Web/API images only. Worker blocked by kernel user-namespace restriction. No model-dialogue qualification.",
+    "limits": {
+      "cpus": 0.75,
+      "memoryBytes": 671088640,
+      "oldSpaceMiB": 320,
+      "poolMax": 8
+    },
+    "images": {
+      "baseline": {
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:e6fb36579d98b8039f6f6146f7b4986daa5c308c7e87097125482c282570e11a",
+        "name": "lingxiloop-acceptance-baseline",
+        "port": 5281,
+        "database": "lingxiloop_acceptance_baseline_test",
+        "release": {
+          "runtime": "3.4.7",
+          "controlPlane": 11,
+          "kernel": 2,
+          "schema": 11,
+          "assistantMessage": 2
+        },
+        "info": "sha256:b2002002778ad31d0fc9cef396c9e2b6058ec245f4ee729c1226da1dbab3a8fe"
+      },
+      "candidate": {
+        "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:0c295e66c29dcceab609c3d1715348bab6a90c6585d1280095cc0a61c33b3f29",
+        "name": "lingxiloop-acceptance-candidate",
+        "port": 5283,
+        "database": "lingxiloop_acceptance_candidate_test",
+        "release": {
+          "runtime": "3.5.1",
+          "controlPlane": 11,
+          "kernel": 2,
+          "schema": 12,
+          "assistantMessage": 2
+        },
+        "info": "sha256:63b8d8f56114fa589c236b191c6bdd1c16fd2546a1b3817d1c1589b15d781782"
+      }
+    }
+  },
+  "phaseSeconds": 30,
+  "observer": "Same pg.Client.query and pg.Pool.connect counters, 64KiB allocation sampling and 5s process/GC sampling on both images.",
+  "phases": [
+    {
+      "round": 0,
+      "variant": "baseline",
+      "workload": "idle",
+      "startedAt": "2026-10-17T06:28:30.742Z",
+      "finishedAt": "2026-10-17T06:29:00.744Z",
+      "seconds": 30.001970638,
+      "requests": 0,
+      "statuses": {},
+      "latencyMs": {
+        "p50": null,
+        "p95": null,
+        "p99": null
+      },
+      "sqlPerSecond": 39.464074353181495,
+      "cpuCoreFraction": 0.034597460697641524,
+      "heapUsedBefore": 106041512,
+      "heapUsedAfter": 104275400,
+      "rssAfter": 203423744,
+      "gcCount": 127,
+      "gcMs": 650.0151049867272,
+      "poolsAfter": [
+        {
+          "total": 8,
+          "idle": 7,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 1065,
+      "acquireFailed": 0,
+      "acquireTotalMs": 4049.8332769999406,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        329,
+        108,
+        501,
+        101,
+        6,
+        8,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20357692.828241684,
+        "maxNs": 101777407,
+        "p99Ns": 22364159
+      }
+    },
+    {
+      "round": 0,
+      "variant": "candidate",
+      "workload": "idle",
+      "startedAt": "2026-10-17T06:29:00.765Z",
+      "finishedAt": "2026-10-17T06:29:30.765Z",
+      "seconds": 29.99978787199999,
+      "requests": 0,
+      "statuses": {},
+      "latencyMs": {
+        "p50": null,
+        "p95": null,
+        "p99": null
+      },
+      "sqlPerSecond": 1.533344175507776,
+      "cpuCoreFraction": 0.0035107914912392495,
+      "heapUsedBefore": 101587432,
+      "heapUsedAfter": 102045568,
+      "rssAfter": 201408512,
+      "gcCount": 3,
+      "gcMs": 3.116890996694565,
+      "poolsAfter": [
+        {
+          "total": 3,
+          "idle": 2,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 42,
+      "acquireFailed": 0,
+      "acquireTotalMs": 3.0094180000087363,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        42,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20193478.527095255,
+        "maxNs": 79888383,
+        "p99Ns": 21495807
+      }
+    },
+    {
+      "round": 0,
+      "variant": "baseline",
+      "workload": "normal-read",
+      "startedAt": "2026-10-17T06:29:30.745Z",
+      "finishedAt": "2026-10-17T06:30:00.745Z",
+      "seconds": 30.000518178,
+      "requests": 151,
+      "statuses": {
+        "200": 151
+      },
+      "latencyMs": {
+        "p50": 3.0818290000024717,
+        "p95": 8.808218999998644,
+        "p99": 11.725982000003569
+      },
+      "sqlPerSecond": 42.96592453343857,
+      "cpuCoreFraction": 0.028006582920162518,
+      "heapUsedBefore": 110577048,
+      "heapUsedAfter": 111495512,
+      "rssAfter": 215670784,
+      "gcCount": 17,
+      "gcMs": 30.219792004674673,
+      "poolsAfter": [
+        {
+          "total": 8,
+          "idle": 7,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 1169,
+      "acquireFailed": 0,
+      "acquireTotalMs": 2041.6778859999313,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        415,
+        280,
+        453,
+        21,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20215717.836477987,
+        "maxNs": 101777407,
+        "p99Ns": 21381119
+      }
+    },
+    {
+      "round": 0,
+      "variant": "candidate",
+      "workload": "normal-read",
+      "startedAt": "2026-10-17T06:30:00.765Z",
+      "finishedAt": "2026-10-17T06:30:30.766Z",
+      "seconds": 30.000642819,
+      "requests": 151,
+      "statuses": {
+        "200": 151
+      },
+      "latencyMs": {
+        "p50": 3.147318000002997,
+        "p95": 4.742243000000599,
+        "p99": 7.319333000006736
+      },
+      "sqlPerSecond": 6.399862868218364,
+      "cpuCoreFraction": 0.01395783425463141,
+      "heapUsedBefore": 103462504,
+      "heapUsedAfter": 107516816,
+      "rssAfter": 205996032,
+      "gcCount": 21,
+      "gcMs": 20.43377599492669,
+      "poolsAfter": [
+        {
+          "total": 3,
+          "idle": 2,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 188,
+      "acquireFailed": 0,
+      "acquireTotalMs": 31.552910999875166,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        188,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20155990.093062323,
+        "maxNs": 79888383,
+        "p99Ns": 20905983
+      }
+    },
+    {
+      "round": 0,
+      "variant": "baseline",
+      "workload": "burst-read",
+      "startedAt": "2026-10-17T06:30:30.746Z",
+      "finishedAt": "2026-10-17T06:31:00.745Z",
+      "seconds": 29.999623250999996,
+      "requests": 1208,
+      "statuses": {
+        "200": 1208
+      },
+      "latencyMs": {
+        "p50": 3.5143589999934193,
+        "p95": 7.553948000015225,
+        "p99": 12.989614999998594
+      },
+      "sqlPerSecond": 76.73429698565518,
+      "cpuCoreFraction": 0.06874783002254045,
+      "heapUsedBefore": 106497504,
+      "heapUsedAfter": 107238696,
+      "rssAfter": 218001408,
+      "gcCount": 51,
+      "gcMs": 112.39061799272895,
+      "poolsAfter": [
+        {
+          "total": 8,
+          "idle": 7,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 2182,
+      "acquireFailed": 0,
+      "acquireTotalMs": 2114.4190419991646,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        1464,
+        272,
+        403,
+        43,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20208809.70088925,
+        "maxNs": 101777407,
+        "p99Ns": 21282815
+      }
+    },
+    {
+      "round": 0,
+      "variant": "candidate",
+      "workload": "burst-read",
+      "startedAt": "2026-10-17T06:31:00.766Z",
+      "finishedAt": "2026-10-17T06:31:30.766Z",
+      "seconds": 29.999853875,
+      "requests": 1208,
+      "statuses": {
+        "200": 1208
+      },
+      "latencyMs": {
+        "p50": 2.8781139999919105,
+        "p95": 5.820803000009619,
+        "p99": 10.043030000000726
+      },
+      "sqlPerSecond": 17.1000832916557,
+      "cpuCoreFraction": 0.04900053867345712,
+      "heapUsedBefore": 108125968,
+      "heapUsedAfter": 106804824,
+      "rssAfter": 216580096,
+      "gcCount": 43,
+      "gcMs": 70.08523699454963,
+      "poolsAfter": [
+        {
+          "total": 3,
+          "idle": 2,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 509,
+      "acquireFailed": 0,
+      "acquireTotalMs": 71.37335700023687,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        507,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20148637.130639203,
+        "maxNs": 79888383,
+        "p99Ns": 20905983
+      }
+    },
+    {
+      "round": 1,
+      "variant": "candidate",
+      "workload": "idle",
+      "startedAt": "2026-10-17T06:31:30.766Z",
+      "finishedAt": "2026-10-17T06:32:00.766Z",
+      "seconds": 29.99982874300002,
+      "requests": 0,
+      "statuses": {},
+      "latencyMs": {
+        "p50": null,
+        "p95": null,
+        "p99": null
+      },
+      "sqlPerSecond": 2.4000137006382096,
+      "cpuCoreFraction": 0.004576992794735165,
+      "heapUsedBefore": 106804824,
+      "heapUsedAfter": 109275960,
+      "rssAfter": 216580096,
+      "gcCount": 2,
+      "gcMs": 4.039749000221491,
+      "poolsAfter": [
+        {
+          "total": 4,
+          "idle": 3,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 68,
+      "acquireFailed": 0,
+      "acquireTotalMs": 17.44260700009181,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        67,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20142610.613717027,
+        "maxNs": 79888383,
+        "p99Ns": 20873215
+      }
+    },
+    {
+      "round": 1,
+      "variant": "baseline",
+      "workload": "idle",
+      "startedAt": "2026-10-17T06:32:00.747Z",
+      "finishedAt": "2026-10-17T06:32:30.746Z",
+      "seconds": 29.999689134999993,
+      "requests": 0,
+      "statuses": {},
+      "latencyMs": {
+        "p50": null,
+        "p95": null,
+        "p99": null
+      },
+      "sqlPerSecond": 38.000393766413616,
+      "cpuCoreFraction": 0.008527055025432018,
+      "heapUsedBefore": 106375552,
+      "heapUsedAfter": 110587656,
+      "rssAfter": 218263552,
+      "gcCount": 10,
+      "gcMs": 15.331706000491977,
+      "poolsAfter": [
+        {
+          "total": 8,
+          "idle": 7,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 1020,
+      "acquireFailed": 0,
+      "acquireTotalMs": 1626.23829600084,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        316,
+        347,
+        357,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20177336.111652933,
+        "maxNs": 101777407,
+        "p99Ns": 21037055
+      }
+    },
+    {
+      "round": 1,
+      "variant": "candidate",
+      "workload": "normal-read",
+      "startedAt": "2026-10-17T06:32:30.766Z",
+      "finishedAt": "2026-10-17T06:33:00.767Z",
+      "seconds": 30.00142630699999,
+      "requests": 151,
+      "statuses": {
+        "200": 151
+      },
+      "latencyMs": {
+        "p50": 2.8680089999979828,
+        "p95": 4.840962000016589,
+        "p99": 6.468338000006042
+      },
+      "sqlPerSecond": 6.366363987016028,
+      "cpuCoreFraction": 0.012435042127078966,
+      "heapUsedBefore": 109248704,
+      "heapUsedAfter": 113351640,
+      "rssAfter": 216973312,
+      "gcCount": 18,
+      "gcMs": 17.775094993412495,
+      "poolsAfter": [
+        {
+          "total": 3,
+          "idle": 2,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 187,
+      "acquireFailed": 0,
+      "acquireTotalMs": 28.903904000064358,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        187,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20134240.787472036,
+        "maxNs": 79888383,
+        "p99Ns": 20824063
+      }
+    },
+    {
+      "round": 1,
+      "variant": "baseline",
+      "workload": "normal-read",
+      "startedAt": "2026-10-17T06:33:00.748Z",
+      "finishedAt": "2026-10-17T06:33:30.748Z",
+      "seconds": 29.99971805799997,
+      "requests": 151,
+      "statuses": {
+        "200": 151
+      },
+      "latencyMs": {
+        "p50": 2.656360999972094,
+        "p95": 4.583752000005916,
+        "p99": 6.796090000018012
+      },
+      "sqlPerSecond": 42.73373494782333,
+      "cpuCoreFraction": 0.02163473665803078,
+      "heapUsedBefore": 112354328,
+      "heapUsedAfter": 110398360,
+      "rssAfter": 218525696,
+      "gcCount": 16,
+      "gcMs": 28.42641799710691,
+      "poolsAfter": [
+        {
+          "total": 8,
+          "idle": 7,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 1162,
+      "acquireFailed": 0,
+      "acquireTotalMs": 1738.6160559985437,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        456,
+        295,
+        402,
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20164394.362683155,
+        "maxNs": 101777407,
+        "p99Ns": 21020671
+      }
+    },
+    {
+      "round": 1,
+      "variant": "candidate",
+      "workload": "burst-read",
+      "startedAt": "2026-10-17T06:33:30.768Z",
+      "finishedAt": "2026-10-17T06:34:00.769Z",
+      "seconds": 30.000467657,
+      "requests": 1208,
+      "statuses": {
+        "200": 1208
+      },
+      "latencyMs": {
+        "p50": 3.1873389999964274,
+        "p95": 6.355157999962103,
+        "p99": 9.871785999974236
+      },
+      "sqlPerSecond": 13.866450508578483,
+      "cpuCoreFraction": 0.053855727133073863,
+      "heapUsedBefore": 113791744,
+      "heapUsedAfter": 102842368,
+      "rssAfter": 211595264,
+      "gcCount": 50,
+      "gcMs": 232.55513299815357,
+      "poolsAfter": [
+        {
+          "total": 3,
+          "idle": 2,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 412,
+      "acquireFailed": 0,
+      "acquireTotalMs": 52.686314999940805,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        412,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20140653,
+        "maxNs": 95289343,
+        "p99Ns": 20824063
+      }
+    },
+    {
+      "round": 1,
+      "variant": "baseline",
+      "workload": "burst-read",
+      "startedAt": "2026-10-17T06:34:00.751Z",
+      "finishedAt": "2026-10-17T06:34:30.751Z",
+      "seconds": 29.999884198999965,
+      "requests": 1208,
+      "statuses": {
+        "200": 1208
+      },
+      "latencyMs": {
+        "p50": 3.0601669999887235,
+        "p95": 6.963302000018302,
+        "p99": 12.237275000021327
+      },
+      "sqlPerSecond": 75.33362412363365,
+      "cpuCoreFraction": 0.07098997402366614,
+      "heapUsedBefore": 113289056,
+      "heapUsedAfter": 106581176,
+      "rssAfter": 218263552,
+      "gcCount": 51,
+      "gcMs": 111.43567499518394,
+      "poolsAfter": [
+        {
+          "total": 8,
+          "idle": 7,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 2140,
+      "acquireFailed": 0,
+      "acquireTotalMs": 2555.4428909991984,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        1411,
+        250,
+        438,
+        28,
+        7,
+        0,
+        6,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20169480.103535213,
+        "maxNs": 101777407,
+        "p99Ns": 21020671
+      }
+    },
+    {
+      "round": 2,
+      "variant": "baseline",
+      "workload": "idle",
+      "startedAt": "2026-10-17T06:34:30.751Z",
+      "finishedAt": "2026-10-17T06:35:00.753Z",
+      "seconds": 30.001984533000037,
+      "requests": 0,
+      "statuses": {},
+      "latencyMs": {
+        "p50": null,
+        "p95": null,
+        "p99": null
+      },
+      "sqlPerSecond": 40.99728798430277,
+      "cpuCoreFraction": 0.013775288749496385,
+      "heapUsedBefore": 106581176,
+      "heapUsedAfter": 112396664,
+      "rssAfter": 219049984,
+      "gcCount": 13,
+      "gcMs": 19.93827999383211,
+      "poolsAfter": [
+        {
+          "total": 8,
+          "idle": 7,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 1110,
+      "acquireFailed": 0,
+      "acquireTotalMs": 1855.6087679986376,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        373,
+        313,
+        423,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20165299.27942089,
+        "maxNs": 101777407,
+        "p99Ns": 20987903
+      }
+    },
+    {
+      "round": 2,
+      "variant": "candidate",
+      "workload": "idle",
+      "startedAt": "2026-10-17T06:35:00.771Z",
+      "finishedAt": "2026-10-17T06:35:30.771Z",
+      "seconds": 30.00051194300002,
+      "requests": 0,
+      "statuses": {},
+      "latencyMs": {
+        "p50": null,
+        "p95": null,
+        "p99": null
+      },
+      "sqlPerSecond": 1.5333071678042853,
+      "cpuCoreFraction": 0.0031045136888649505,
+      "heapUsedBefore": 104744832,
+      "heapUsedAfter": 105249016,
+      "rssAfter": 211726336,
+      "gcCount": 2,
+      "gcMs": 1.3193030003458261,
+      "poolsAfter": [
+        {
+          "total": 3,
+          "idle": 2,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 42,
+      "acquireFailed": 0,
+      "acquireTotalMs": 1.1512029998702928,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        42,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20134410.70143816,
+        "maxNs": 95289343,
+        "p99Ns": 20791295
+      }
+    },
+    {
+      "round": 2,
+      "variant": "baseline",
+      "workload": "normal-read",
+      "startedAt": "2026-10-17T06:35:30.754Z",
+      "finishedAt": "2026-10-17T06:36:00.755Z",
+      "seconds": 30.000947539000016,
+      "requests": 151,
+      "statuses": {
+        "200": 151
+      },
+      "latencyMs": {
+        "p50": 2.5099800000316463,
+        "p95": 4.1220179999945685,
+        "p99": 6.4619990000501275
+      },
+      "sqlPerSecond": 42.69865137875235,
+      "cpuCoreFraction": 0.022116068138763715,
+      "heapUsedBefore": 113331872,
+      "heapUsedAfter": 113020480,
+      "rssAfter": 219181056,
+      "gcCount": 15,
+      "gcMs": 28.034306997433305,
+      "poolsAfter": [
+        {
+          "total": 8,
+          "idle": 7,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 1161,
+      "acquireFailed": 0,
+      "acquireTotalMs": 1515.480533999158,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        483,
+        401,
+        265,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20160160.772725236,
+        "maxNs": 101777407,
+        "p99Ns": 20955135
+      }
+    },
+    {
+      "round": 2,
+      "variant": "candidate",
+      "workload": "normal-read",
+      "startedAt": "2026-10-17T06:36:00.772Z",
+      "finishedAt": "2026-10-17T06:36:30.772Z",
+      "seconds": 30.00083663199999,
+      "requests": 151,
+      "statuses": {
+        "200": 151
+      },
+      "latencyMs": {
+        "p50": 2.577992999984417,
+        "p95": 4.056355000007898,
+        "p99": 5.468266999989282
+      },
+      "sqlPerSecond": 6.133162293338809,
+      "cpuCoreFraction": 0.01200939841843275,
+      "heapUsedBefore": 105590808,
+      "heapUsedAfter": 109230352,
+      "rssAfter": 212381696,
+      "gcCount": 18,
+      "gcMs": 15.91890200227499,
+      "poolsAfter": [
+        {
+          "total": 3,
+          "idle": 2,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 180,
+      "acquireFailed": 0,
+      "acquireTotalMs": 28.13142100069672,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        180,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20131795.506270185,
+        "maxNs": 95289343,
+        "p99Ns": 20791295
+      }
+    },
+    {
+      "round": 2,
+      "variant": "baseline",
+      "workload": "burst-read",
+      "startedAt": "2026-10-17T06:36:30.754Z",
+      "finishedAt": "2026-10-17T06:37:00.755Z",
+      "seconds": 30.001152492000024,
+      "requests": 1208,
+      "statuses": {
+        "200": 1208
+      },
+      "latencyMs": {
+        "p50": 2.0110120000317693,
+        "p95": 5.502171000000089,
+        "p99": 13.16726399998879
+      },
+      "sqlPerSecond": 74.59713424665186,
+      "cpuCoreFraction": 0.0669823934442471,
+      "heapUsedBefore": 115441184,
+      "heapUsedAfter": 114363544,
+      "rssAfter": 217329664,
+      "gcCount": 49,
+      "gcMs": 158.60746699757874,
+      "poolsAfter": [
+        {
+          "total": 8,
+          "idle": 7,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 2118,
+      "acquireFailed": 0,
+      "acquireTotalMs": 1859.0255379999871,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        1393,
+        335,
+        371,
+        19,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20160972.490334824,
+        "maxNs": 101777407,
+        "p99Ns": 20938751
+      }
+    },
+    {
+      "round": 2,
+      "variant": "candidate",
+      "workload": "burst-read",
+      "startedAt": "2026-10-17T06:37:00.772Z",
+      "finishedAt": "2026-10-17T06:37:30.775Z",
+      "seconds": 30.002369641000055,
+      "requests": 1208,
+      "statuses": {
+        "200": 1208
+      },
+      "latencyMs": {
+        "p50": 2.324101999984123,
+        "p95": 6.025002000038512,
+        "p99": 9.080013999948278
+      },
+      "sqlPerSecond": 16.765342405241885,
+      "cpuCoreFraction": 0.038817300564435706,
+      "heapUsedBefore": 109991920,
+      "heapUsedAfter": 112938936,
+      "rssAfter": 216838144,
+      "gcCount": 38,
+      "gcMs": 50.19674500450492,
+      "poolsAfter": [
+        {
+          "total": 3,
+          "idle": 2,
+          "waiting": 0
+        }
+      ],
+      "acquireCompleted": 499,
+      "acquireFailed": 0,
+      "acquireTotalMs": 62.26554299914278,
+      "acquireBoundsMs": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000
+      ],
+      "acquireBuckets": [
+        497,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventLoopAfter": {
+        "meanNs": 20130880.13361169,
+        "maxNs": 95289343,
+        "p99Ns": 20791295
+      }
+    }
+  ],
+  "finishedAt": "2026-10-17T06:37:33.738Z",
+  "complete": true
+}
