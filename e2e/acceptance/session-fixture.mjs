@@ -44,3 +44,7 @@ export function pauseTestDatabase(paused) {
   const result=spawnSync('docker',[paused?'pause':'unpause','lingxiloop-e2e-postgres-1'],{encoding:'utf8'})
   assert.equal(result.status,0,'Named disposable database pause/restore must succeed')
 }
+export async function setTestWebRunning(running) {
+  const response=await fetch(`http://127.0.0.1:5185/${running?'start':'stop'}`,{method:'POST',headers:{'x-acceptance-fixture':'local-web-only'},signal:AbortSignal.timeout(45000)})
+  assert.equal(response.status,200,'Only the isolated Web supervisor may stop/start the test API')
+}

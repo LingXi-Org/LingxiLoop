@@ -33,9 +33,9 @@ test('full SPA restores a synthetic D1 session, expires it and accepts a fresh s
 
 // Full React shell, actual Worker session validation and signed product API.
 // Only transport failure is injected; no successful server response is mocked.
-for (const fault of ['network-before-accept','database-pause','expired-session'] as const) {
+for (const fault of ['network-before-accept','database-pause','web-restart','expired-session','expired-session-login-race'] as const) {
   test(`full SPA ${fault} preserves recovery and never duplicates a durable human send`,{timeout:150000},async ({app,screen,browser})=>{
-    const {messageFacts,pauseTestDatabase}=await import('./session-fixture.mjs')
+    const {messageFacts,pauseTestDatabase,setTestWebRunning}=await import('./session-fixture.mjs')
     const session=await mintSession()
     await browser.setCookies([session.cookie])
     await app.open('/?project=e2e-classroom')
@@ -49,14 +49,28 @@ for (const fault of ['network-before-accept','database-pause','expired-session']
     const text=`SPA acceptance ${crypto.randomUUID()}`
     const conversationUrl=await browser.evaluate(()=>location.href)
     let expiredUiPath:string|undefined
+    const expiredSession=fault.startsWith('expired-session')
     const send='**/api/im/channels/*/messages/accept'
+    const typing='**/api/conversations/*/typing'
+    let releaseTyping!:()=>void
+    const sendStarted=new Promise<void>(resolve=>{releaseTyping=resolve})
     if(fault==='network-before-accept') await browser.route(send,route=>route.abort())
     if(fault==='database-pause') pauseTestDatabase(true)
-    if(fault==='expired-session') await browser.route(send,async route=>{expireSession(session.id);await route.continue()})
+    if(fault==='web-restart') await setTestWebRunning(false)
+    if(fault==='expired-session') await browser.route(typing,route=>route.abort())
+    if(fault==='expired-session-login-race') await browser.route(typing,async route=>{await sendStarted;await route.continue()})
+    if(expiredSession) await browser.route(send,async route=>{
+      expireSession(session.id)
+      releaseTyping()
+      if(fault==='expired-session-login-race') {
+        await expect(screen.getByLabel('邮箱')).toBeVisible({timeout:30000})
+        await route.abort()
+      } else await route.continue()
+    })
     try {
       await browser.locator('[contenteditable="true"]').fill(text)
       await screen.getByRole('button','发送').tap()
-      if(fault==='expired-session') {
+      if(expiredSession) {
         // Both requests use the real session: typing can receive 401 first and
         // return the shell to login; the send client can instead block its outbox.
         await expect.poll(async()=>
@@ -72,9 +86,12 @@ for (const fault of ['network-before-accept','database-pause','expired-session']
       }
     } finally {
       if(fault==='database-pause') pauseTestDatabase(false)
-      if(fault==='network-before-accept'||fault==='expired-session') await browser.unroute(send)
+      if(fault==='web-restart') await setTestWebRunning(true)
+      releaseTyping()
+      if(fault==='network-before-accept'||expiredSession) await browser.unroute(send)
+      if(expiredSession) await browser.unroute(typing)
     }
-    if(fault==='expired-session') {
+    if(expiredSession) {
       expect((await messageFacts(text)).acceptances).toBe(0)
       const fresh=await mintSession()
       await browser.setCookies([fresh.cookie])
@@ -92,7 +109,7 @@ for (const fault of ['network-before-accept','database-pause','expired-session']
     await browser.locator('[contenteditable="true"]').fill(`${text} next`)
     await screen.getByRole('button','发送').tap()
     await expect.poll(()=>messageFacts(`${text} next`),{timeout:45000}).toEqual({acceptances:1,accepted:1,imMessages:1})
-    if(fault==='expired-session') expect((await messageFacts(text)).acceptances).toBe(0)
+    if(expiredSession) expect((await messageFacts(text)).acceptances).toBe(0)
     await app.screenshot(`full-spa-${fault}-recovered`)
     await mkdir('.e2e/full-spa-acceptance/counts',{recursive:true})
     await writeFile(`.e2e/full-spa-acceptance/counts/${fault}.json`,JSON.stringify({fault,expiredUiPath,original:await messageFacts(text),next:await messageFacts(`${text} next`),fullSPA:true,loginCaptchaQualified:false},null,2))

@@ -8,11 +8,15 @@ export const getServerOrigin = () => ''
 export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { 'content-type': 'application/json' }
   const company = getActiveCompanyId()
+  const user = useAuth.getState().user
   if (company) headers['x-company-id'] = company
   const workspace = getWorkspaceSession()
   if (workspace && workspace.companyId === company) headers['x-project-id'] = workspace.projectId
   const response = await lingxiApiFetch(`${API}${path}`, { ...init, credentials: 'include', headers: mergeRequestHeaders(headers, init?.headers) })
-  if (response.status === 401 && !path.startsWith('/auth/')) useAuth.getState().clear()
+  if (response.status === 401 && !path.startsWith('/auth/')
+    && useAuth.getState().user === user && getActiveCompanyId() === company) {
+    useAuth.getState().clear('session-rejected')
+  }
   if (!response.ok) {
     let detail: string | null = null
     try {

@@ -4,7 +4,7 @@ export type { AuthCompany, AuthUser } from '@/auth/contracts'
  * Browser authentication is held only by Better Auth's host-only cookie.
  */
 import { create } from 'zustand'
-import { runAuthTeardown } from './authTeardown'
+import { runAuthTeardown, type AuthTeardownReason } from './authTeardown'
 interface AuthState {
   authenticated: boolean
   user: AuthUser | null
@@ -19,7 +19,7 @@ interface AuthState {
   setMe: (user: AuthUser, companies: AuthCompany[], activeCompanyId: string) => void
   setServerCapabilities: (caps: ServerCapabilities) => void
   setActiveCompany: (id: string) => void
-  clear: () => void
+  clear: (reason?: AuthTeardownReason) => void
   markReady: () => void
 }
 
@@ -54,8 +54,8 @@ export const useAuth = create<AuthState>((set) => ({
     if (useAuth.getState().companies[0]?.id !== id) throw new Error('仅可使用当前公司')
     set({ activeCompanyId: id })
   },
-  clear() {
-    runAuthTeardown()
+  clear(reason) {
+    runAuthTeardown(reason)
     localStorage.removeItem(COMPANY_KEY)
     set({
       authenticated: false,
