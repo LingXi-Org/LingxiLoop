@@ -15,4 +15,8 @@ Validation:
 
 Local raw logs: `/tmp/product-159-red.log`, `/tmp/product-159-fixed.log`, `/tmp/product-159-server.log`.
 
-This is one checkpoint toward #159. Upstream sanitized diagnostic propagation, complete category/retry matrix, Canvas role-specific contracts, browser verification and full combined release acceptance remain separate pending work. No real-provider, deployment, or soak claim is made.
+Canvas checkpoint: ordinary `canvas.submit_report` now exposes only ordinary report fields. `canvas.submit_verification` requires the referenced specialist report, nonempty disconfirming checks and a verdict. Both schemas reject unknown fields. Current durable assignments control grants and repeat role checks during native authorization; report transactions lock the assignment and reject cancelled or inconsistent role bindings. Existing evidence/version checks remain in the report application.
+
+The two contract tests failed before this change. The PostgreSQL assignment regression checks both roles and stale cross-role grants, then assignment replacement/stop and principal revocation. `node e2e/server/run.mjs --file canvas-public-assignment.test.ts --file native-authorization-faults.test.ts` passed 4/4 without skips. The contract tests are included in the permanent server smoke list.
+
+This is one checkpoint toward #159. Upstream sanitized diagnostic propagation, the remaining complete category/retry matrix, browser verification and full combined release acceptance remain pending. No real-provider, deployment, or soak claim is made.
