@@ -1,0 +1,569 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a147d1-1e62-7482-a345-c59fd601a35f",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-17T03:04:10.126Z",
+    "finishedAt": "2026-10-17T03:04:24.745Z",
+    "project": {
+      "id": "lingxiloop-directory-audience",
+      "configDigest": "c9ab2f0f25dc963e98e4e57d1a70183c9c2fe8fe2501e053acecf8cde4b66ca1"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "2db5bbcddc8f14ac62500e36594dc49793c9e096",
+      "branch": "fix/158-directory-audience",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "directory-audience",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53158",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "a87859282ee4612f4e21bba435fd54a244f1c0c0fd5b212a594445231d8d923a",
+        "testId": "browser.e2e.ts::two%20frozen%20audiences%20receive%20only%20readable%20rooms%20and%20can%20continue%20the%20conversation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "two frozen audiences receive only readable rooms and can continue the conversation"
+        ],
+        "file": "browser.e2e.ts",
+        "source": {
+          "file": "browser.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "directory-audience",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-17T03:04:10.887Z",
+            "durationMs": 13811,
+            "artifacts": [
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147d1-2387-79ca-bdff-9394ded2ea5c:11"
+                },
+                "path": "directory-audience/browser.e2e.ts__two_20frozen_20audiences_20receive_20only_20readable_20rooms_20and_20can_20continue_20the_20con-5c76274c/default/attempt-0/screenshots/001-audience-a-continued.png",
+                "size": 51782,
+                "sha256": "18262f552df93f234fa82e1cd7d8786419bbd3f484e919fbf51b40bc6c4a4e4f"
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147d1-2387-79ca-bdff-9394ded2ea5c:23"
+                },
+                "path": "directory-audience/browser.e2e.ts__two_20frozen_20audiences_20receive_20only_20readable_20rooms_20and_20can_20continue_20the_20con-5c76274c/default/attempt-0/screenshots/002-audience-b-continued.png",
+                "size": 65821,
+                "sha256": "85ea070118256265217bb3f8b2e2b9a85035659b127caa0fb8212913a2df5096"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:11.032Z",
+                "durationMs": 112,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 7,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:1",
+                "index": 1,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"Run A turn 1\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:11.148Z",
+                "durationMs": 164,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 10,
+                  "column": 81
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience A result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:11.316Z",
+                "durationMs": 1423,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 11,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience A result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:12.743Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 12,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience A result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:12.752Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience A result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:12.763Z",
+                "durationMs": 1036,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 14,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience A result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:13.800Z",
+                "durationMs": 1026,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 15,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience A result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:14.826Z",
+                "durationMs": 1040,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 16,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"Run A turn 2\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:15.867Z",
+                "durationMs": 75,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 18,
+                  "column": 81
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience A result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:15.942Z",
+                "durationMs": 1370,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 19,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience A result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:17.313Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 20,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "audience-a-continued",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:17.324Z",
+                "durationMs": 67,
+                "events": [],
+                "artifacts": [
+                  "01a147d1-2387-79ca-bdff-9394ded2ea5c:artifact:0"
+                ],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 21,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"Run B turn 1\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:17.391Z",
+                "durationMs": 82,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 10,
+                  "column": 81
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience B result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:17.473Z",
+                "durationMs": 1341,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 11,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:14",
+                "index": 14,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience B result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:18.815Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 12,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:15",
+                "index": 15,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience B result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:18.833Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience B result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:18.844Z",
+                "durationMs": 1091,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 14,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:17",
+                "index": 17,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience B result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:19.935Z",
+                "durationMs": 1052,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 15,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:18",
+                "index": 18,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience B result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:20.987Z",
+                "durationMs": 1005,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 16,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience B result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:21.992Z",
+                "durationMs": 1024,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 17,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:20",
+                "index": 20,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"Run B turn 2\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:23.017Z",
+                "durationMs": 53,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 18,
+                  "column": 81
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience B result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:23.071Z",
+                "durationMs": 1433,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 19,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:22",
+                "index": 22,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\", name: \"Audience B result\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:24.504Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 20,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147d1-2387-79ca-bdff-9394ded2ea5c:23",
+                "index": 23,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "audience-b-continued",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:04:24.513Z",
+                "durationMs": 63,
+                "events": [],
+                "artifacts": [
+                  "01a147d1-2387-79ca-bdff-9394ded2ea5c:artifact:1"
+                ],
+                "source": {
+                  "file": "browser.e2e.ts",
+                  "line": 21,
+                  "column": 15
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 1,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 117603,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
