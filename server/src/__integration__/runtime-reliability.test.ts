@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { createServer } from 'node:http'
 import { NoEffectError, type WorkItem } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { pool } from '../db/pool.js'
@@ -22,8 +23,8 @@ after(async () => { await worker?.stop(); await teardownAll(); await recording?.
 async function fixture(room: string) {
   const { companyId,projectId,agentId } = await seedCompanyWithAgent()
   const principalId = `human-${room}`
-  await seedUserMembership(principalId,companyId)
-  await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')",[projectId,companyId,principalId])
+  await seedUserMembership(principalId,companyId,{ role: 'STUDENT',isAdmin: false })
+  await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'STUDENT')",[projectId,companyId,principalId])
   const members = [principalId,agentId]
   await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Reliability',$4::jsonb)",[room,companyId,projectId,JSON.stringify(members)])
   await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',[room,companyId,JSON.stringify({ channelType: 2,members })])
@@ -78,21 +79,34 @@ test('revoking the project before terminal delivery prevents a protected notific
   assert.deepEqual((await pool.query('SELECT attempts FROM lingxios.agent_terminal_outbox WHERE root_work_id=$1',[run.runId])).rows,before)
 })
 
-test('failed and cancelled turns persist one system feedback, preserve work state and allow the next message', { timeout: 30000 }, async () => {
+test('failed and cancelled turns persist one system feedback, preserve work state and allow the next message', { timeout: 30000 }, async (testContext) => {
   const { api,enqueue,companyId,room } = await fixture('terminal-product')
   let fail = true, modelCalls = 0
-  const claimed = new Map<string,WorkItem>(), usage = { available: true,inputTokens: 10,outputTokens: 2 }
+  const claimed = new Map<string,WorkItem>()
+  const provider = createServer(async (request,response) => {
+    let raw = ''; for await (const chunk of request) raw += chunk
+    const input = JSON.parse(raw); modelCalls++
+    if (fail) {
+      response.writeHead(402,{ 'content-type': 'application/json','x-request-id': 'safe-terminal-request' })
+      response.end(JSON.stringify({ error: { message: 'PRIVATE_PROVIDER_BODY',code: 'insufficient_quota' } })); return
+    }
+    const usage = { prompt_tokens: 10,completion_tokens: 2 }
+    if (input.stream) {
+      response.writeHead(200,{ 'content-type': 'text/event-stream' })
+      response.end(`data: ${JSON.stringify({ choices: [{ index: 0,delta: { role: 'assistant',content: 'Ready.' },finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [],usage })}\n\ndata: [DONE]\n\n`)
+    } else {
+      response.writeHead(200,{ 'content-type': 'application/json' })
+      response.end(JSON.stringify({ choices: [{ message: { role: 'assistant',content: '{"missing":[]}' },finish_reason: 'stop' }],usage }))
+    }
+  })
+  await new Promise<void>(resolve => provider.listen(0,'127.0.0.1',resolve))
+  testContext.after(async () => { provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve())) })
+  const address = provider.address(); assert.ok(address && typeof address !== 'string')
   worker = createWorker({ controlPlane: { connectWorker(input) {
     const host = api.connectWorker(input)
     return { ...host,async claimWork(...args) { const work = await host.claimWork(...args); if (work) claimed.set(work.id,work); return work } }
-  } },model: { modelId: 'terminal-fixture',contextWindowTokens: 200000,
-    async run() {
-      modelCalls++
-      if (fail) throw Object.assign(new Error('PRIVATE_PROVIDER_BODY'),{ status: 402,request_id: 'safe-terminal-request' })
-      return { text: 'Ready.',output: [{ role: 'assistant',content: 'Ready.' }],model: 'terminal-fixture',usage }
-    },async structured() { return { value: { missing: [] },model: 'terminal-fixture',usage } },
-    async compact() { throw new Error('fixture must not compact') },
-  },worker: { id: 'terminal-product',concurrency: 1 } })
+  } },model: { id: 'terminal-fixture',contextWindowTokens: 200000,baseUrl: `http://127.0.0.1:${address.port}/v1`,
+    apiKey: 'synthetic-terminal-fixture',circuitResetMs: 50 },worker: { id: 'terminal-product',concurrency: 1 } })
   const until = async (check: () => Promise<boolean>) => {
     for (let i = 0; i < 200; i++) { if (await check()) return; await delay(25) }
     assert.fail('durable terminal delivery did not converge')
@@ -115,7 +129,7 @@ test('failed and cancelled turns persist one system feedback, preserve work stat
   await deliver(claimed.get(failed.runId)!,terminal.feedback,context)
   assert.equal(messages().length,1,'same terminal identity must not dispatch twice')
   assert.equal((await pool.query('SELECT COUNT(*)::int AS n FROM lingxios.agent_work_items WHERE tenant_id=$1',[companyId])).rows[0].n,1,'system feedback cannot enqueue an agent turn')
-  fail = false
+  fail = false; await delay(60)
   const next = await enqueue('terminal-next'); await worker.runNext()
   assert.equal((await api.readRun(next))?.status,'succeeded')
   await until(async () => (await api.readRunState(next))?.delivery === 'delivered')

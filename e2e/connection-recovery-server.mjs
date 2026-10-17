@@ -36,7 +36,23 @@ const { storage } = await import('../server/src/storage.ts')
 const { wukongClient: wukong } = await import('../server/src/im/wukong.ts')
 const { createNativeMessage } = await import('../src/lib/nativeMessage.ts')
 const { createWorker } = await import('@lyyzka/lingxios/worker')
-const provider = createServer(request => request.resume())
+const provider = createServer(async (request,response) => {
+  if (!current?.mode?.startsWith('runtime-')) { request.resume(); return }
+  let raw = ''; for await (const chunk of request) raw += chunk
+  const input = JSON.parse(raw); current.fixtureModelCalls = (current.fixtureModelCalls ?? 0)+1
+  if (!current.fixtureHealthy && current.mode === 'runtime-402') {
+    response.writeHead(402,{ 'content-type': 'application/json' })
+    response.end(JSON.stringify({ error: { code: 'insufficient_quota',message: 'Synthetic private provider body' } })); return
+  }
+  const usage = { prompt_tokens: 10,completion_tokens: 5 }
+  if (input.stream) {
+    response.writeHead(200,{ 'content-type': 'text/event-stream' })
+    response.end(`data: ${JSON.stringify({ choices: [{ index: 0,delta: { role: 'assistant',content: '新请求已正常完成。' },finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [],usage })}\n\ndata: [DONE]\n\n`)
+  } else {
+    response.writeHead(200,{ 'content-type': 'application/json' })
+    response.end(JSON.stringify({ choices: [{ message: { role: 'assistant',content: '{"missing":[]}' },finish_reason: 'stop' }],usage }))
+  }
+})
 await new Promise(resolve => provider.listen(0, '127.0.0.1', resolve))
 env.OPENAI_BASE_URL = `http://127.0.0.1:${provider.address().port}/v1`
 process.env.OPENAI_BASE_URL = env.OPENAI_BASE_URL
@@ -101,16 +117,11 @@ proxy.post('/api/__recovery/start', async (req, res) => {
 async function runFixtureTurn(run, healthy) {
   if (!healthy && current.mode === 'runtime-cancel') await api.cancel(run)
   else {
-    const usage = { available: true,inputTokens: 10,outputTokens: 5 }
+    current.fixtureHealthy = healthy
+    if (healthy) await delay(60)
     const worker = createWorker({ controlPlane: api,model: {
-      modelId: `reliability-${current.room}`,contextWindowTokens: !healthy && current.mode === 'runtime-context' ? 1024 : 200000,
-      async run() {
-        current.fixtureModelCalls = (current.fixtureModelCalls ?? 0)+1
-        if (!healthy && current.mode === 'runtime-402') throw Object.assign(new Error('Synthetic private provider body'),{ status: 402 })
-        return { text: '新请求已正常完成。',output: [{ role: 'assistant',content: '新请求已正常完成。' }],model: 'reliability-fixture',usage }
-      },
-      async structured() { return { value: { missing: [] },model: 'reliability-fixture',usage } },
-      async compact() { throw new Error('Unexpected fixture compaction') },
+      id: `reliability-${current.room}`,contextWindowTokens: !healthy && current.mode === 'runtime-context' ? 1024 : 200000,
+      baseUrl: env.OPENAI_BASE_URL,apiKey: 'synthetic-reliability-fixture',circuitResetMs: 50,
     },worker: { id: `reliability-${current.room}`,concurrency: 1 } })
     try { await worker.runNext() } finally { await worker.stop() }
   }
