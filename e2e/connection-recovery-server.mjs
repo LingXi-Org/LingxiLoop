@@ -10,7 +10,7 @@ import { WebSocketServer } from 'ws'
 
 const fixtureEnvironment = {
   DOTENV_CONFIG_PATH: '/tmp/lingxiloop-no-dotenv', NODE_ENV: 'test',
-  DATABASE_URL: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_integration_test',
+  DATABASE_URL: `postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/${process.env.E2E_RUNTIME_RELIABILITY === '1' ? 'lingxiloop_browser_reliability_test' : 'lingxiloop_integration_test'}`,
   REDIS_URL: 'redis://127.0.0.1:56379/0',
   OPENAI_API_KEY: 'integration-test-key', OPENAI_BASE_URL: 'http://127.0.0.1:1/v1',
   OPENAI_EMBEDDING_MODEL: 'text-embedding-3-small',
@@ -121,6 +121,7 @@ async function runFixtureTurn(run, healthy) {
     if (healthy) await delay(60)
     const worker = createWorker({ controlPlane: api,model: {
       id: `reliability-${current.room}`,contextWindowTokens: !healthy && current.mode === 'runtime-context' ? 1024 : 200000,
+      maxOutputTokens: !healthy && current.mode === 'runtime-context' ? 128 : 8192,
       baseUrl: env.OPENAI_BASE_URL,apiKey: 'synthetic-reliability-fixture',circuitResetMs: 50,
     },worker: { id: `reliability-${current.room}`,concurrency: 1 } })
     try { await worker.runNext() } finally { await worker.stop() }
@@ -190,7 +191,7 @@ proxy.get('/api/__recovery/facts', async (_req, res) => {
     nonceDigest: createHash('sha256').update(current.payload.id).digest('hex').slice(0, 12), crossIdentity: current.crossIdentity,
     remoteLifecycle: current.run ? (await api.readRunState(current.run))?.run.status : null,
     ...(current.mode?.startsWith('runtime-') ? { terminalReason: terminal?.feedback.reason ?? null,terminalDelivery: terminal?.delivery ?? null,
-      terminalMessages: messages.filter(message => message.payload?.metadata?.custom?.terminalFeedbackId === terminal?.feedback.id).length,
+      terminalMessages: terminal ? messages.filter(message => message.payload?.metadata?.custom?.terminalFeedbackId === terminal.feedback.id).length : 0,
       fixtureModelCalls: current.fixtureModelCalls ?? 0,nextLifecycle: current.nextRun ? (await api.readRun(current.nextRun))?.status : null } : {}),
     workItems: current.run ? (await pool.query(`SELECT count(*)::int AS n FROM lingxios.agent_work_items
       WHERE tenant_id=$1 AND trigger_ref=$2 AND agent_id=$3`, [current.identity.companyId, current.payload.id, current.identity.agentId])).rows[0].n : 0 })
@@ -219,7 +220,7 @@ proxy.use((req, res) => {
   if (stream && scenario.streamFault && scenario.mode !== 'sse-silent') return res.status(503).json({ error: 'injected stream outage' })
   const forward = () => {
     if (res.destroyed) return
-    const upstream = httpRequest({ hostname: '127.0.0.1', port: product.address().port, path: req.url,
+    const upstream = httpRequest({ hostname: '127.0.0.1', port: product.address().port, path: req.url,agent: false,
       method: req.method, headers: { ...req.headers, host: '127.0.0.1' } }, incoming => {
       if (send && scenario.mode === 'lost-reply' && !scenario.lost && incoming.statusCode < 300) {
         scenario.lost = true; incoming.resume(); res.destroy(); return
@@ -243,7 +244,7 @@ proxy.use((req, res) => {
       } else incoming.pipe(res)
     })
     upstream.on('error', () => { if (!res.headersSent) res.status(502).end(); else res.destroy() })
-    res.once('close', () => upstream.destroy())
+    res.once('close', () => { if (!res.writableFinished) upstream.destroy() })
     if (stream) { streams.add(res); res.once('close', () => streams.delete(res)) }
     req.pipe(upstream)
   }

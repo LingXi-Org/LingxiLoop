@@ -38,6 +38,7 @@ test('product native admission, cancellation, revision, independent delivery and
   const slowDelivery = new Promise<void>(resolve => { releaseDelivery = resolve })
   type DeliveryContext = NonNullable<Parameters<DeliveryPort['deliverMessage']>[2]>
   const deliveries: Record<string, { payload: NativeMessage; clientNonce: string; messageId: string; calls: number }> = {}
+  const terminalDeliveries: typeof deliveries = {}
   const requests = new Map<string, NativeMessage>()
   const durableMessages: ImMessage[] = [], recoveredHistory: ImMessage[] = []
   let lostAcknowledgements = 0
@@ -61,7 +62,9 @@ test('product native admission, cancellation, revision, independent delivery and
     }
     if (req.url !== '/message/send') { res.end(JSON.stringify({ messages: [] })); return }
     const payload = decodeNativePayload(input.payload)
-    const record = deliveries[input.channel_id] ??= { payload, clientNonce: input.client_msg_no, messageId: `receipt-${input.channel_id}`, calls: 0 }
+    const record = payload.role === 'system'
+      ? terminalDeliveries[input.client_msg_no] ??= { payload,clientNonce: input.client_msg_no,messageId: `receipt-${input.client_msg_no}`,calls: 0 }
+      : deliveries[input.channel_id] ??= { payload, clientNonce: input.client_msg_no, messageId: `receipt-${input.channel_id}`, calls: 0 }
     assert.equal(input.client_msg_no, record.clientNonce, 'delivery retries must preserve the WuKong idempotency key')
     assert.deepEqual(payload, record.payload, 'delivery retries must preserve the committed payload')
     record.calls++
