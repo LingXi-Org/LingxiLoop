@@ -1,0 +1,15 @@
+{
+  "fault": "database-pause",
+  "original": {
+    "acceptances": 1,
+    "accepted": 1,
+    "imMessages": 1
+  },
+  "next": {
+    "acceptances": 1,
+    "accepted": 1,
+    "imMessages": 1
+  },
+  "fullSPA": true,
+  "loginCaptchaQualified": false
+}

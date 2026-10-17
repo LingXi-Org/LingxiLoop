@@ -1,0 +1,16 @@
+{
+  "fault": "expired-session-login-race",
+  "expiredUiPath": "login",
+  "original": {
+    "acceptances": 0,
+    "accepted": 0,
+    "imMessages": 0
+  },
+  "next": {
+    "acceptances": 1,
+    "accepted": 1,
+    "imMessages": 1
+  },
+  "fullSPA": true,
+  "loginCaptchaQualified": false
+}

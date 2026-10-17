@@ -1,0 +1,72 @@
+[
+  {
+    "name": "/lingxiloop-spa352-postgres-1",
+    "id": "26aa9b133a56a7dff7eb77512008a5744cac41a75d87fd5ceff060dc07c8eda2",
+    "image": "sha256:f1447071e6c8449dcf4056aa0994c81d3566ce5ee232de36b04dc25696a116dd",
+    "paused": false,
+    "startedAt": "2026-10-17T08:30:05.612550469Z",
+    "ports": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "55433"
+        }
+      ]
+    },
+    "project": "lingxiloop-spa352"
+  },
+  {
+    "name": "/lingxiloop-spa352-redis-1",
+    "id": "755aeadadfb7d49214ce8a9a4b1854c232a850780e94b4c68c2c4e049b978500",
+    "image": "sha256:f84b0c4678011602b9b98c227a4dcd5468bf8b088b02fdd4165cb7758bad8058",
+    "paused": false,
+    "startedAt": "2026-10-17T08:30:05.611903427Z",
+    "ports": {
+      "6379/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "56380"
+        }
+      ]
+    },
+    "project": "lingxiloop-spa352"
+  },
+  {
+    "name": "/lingxiloop-spa352-wukongim-1",
+    "id": "6b932b7c4c2727cd2dc69a7a992ea14bcaff1d0970478bc2d885eb477c776888",
+    "image": "sha256:383f2d440277db4791562284088cbb144c6e28c858a599cb325d1c2db1263518",
+    "paused": false,
+    "startedAt": "2026-10-17T08:30:05.623988292Z",
+    "ports": {
+      "5001/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "55002"
+        }
+      ],
+      "5200/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "55201"
+        }
+      ]
+    },
+    "project": "lingxiloop-spa352"
+  },
+  {
+    "name": "/lingxiloop-spa352-storage-1",
+    "id": "debb515e4e7b9d68867e50776c945db3b547c474592078e99db2494a645d86c0",
+    "image": "sha256:1b5b55f01e260ac2e5e3d688d6d878530fea4dbce10de1c2a4188a440a3a0364",
+    "paused": false,
+    "startedAt": "2026-10-17T08:30:05.609976962Z",
+    "ports": {
+      "9000/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "59001"
+        }
+      ]
+    },
+    "project": "lingxiloop-spa352"
+  }
+]

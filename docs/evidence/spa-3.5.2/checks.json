@@ -1,0 +1,45 @@
+{
+  "productSource": "ba9014958f7ab0dc0636a18edd1339d9e9e76e60",
+  "harnessSource": "ac7f9d4b2e5179de6c438ac8c5db9ae9b5d3fb15",
+  "runtime": "3.5.2",
+  "fullSPA": {
+    "discovered": 6,
+    "selected": 6,
+    "executed": 6,
+    "passed": 6,
+    "failed": 0,
+    "interrupted": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "isolationSafety": {
+    "red": {
+      "pass": 0,
+      "fail": 2
+    },
+    "green": {
+      "pass": 2,
+      "fail": 0
+    }
+  },
+  "existingFixtureSafety": {
+    "pass": 3,
+    "fail": 0
+  },
+  "e2eTypecheck": "passed",
+  "freshReactBuild": "passed",
+  "screenshots": 13,
+  "videos": 6,
+  "workerIsolation": "blocked on host uid-map filesystem and standalone default-security container namespace creation",
+  "liveProviderCalls": 0,
+  "productionOperations": 0,
+  "newAutomationsCreated": 0,
+  "logSha256": {
+    "spa352-full-spa.log": "551d81cb9ab95497d37c37ff08a9ccc63ff527f134abdd906365ab4163524d97",
+    "spa352-isolation-red.log": "11c0ade97a4012fc545c84bd0c94104dbde5e96b71117b969cc0806ee646c293",
+    "spa352-isolation-green.log": "6bb8a85928130d4d1367a07e30113b7accd39e91710a3b4db5ba9e580cdf9c67",
+    "spa352-fixture-safety.log": "586b6964c91f95d9754542e3c6c23d1b87ee64bfd5d06fc973fd76042c00ce4f",
+    "spa352-typecheck.log": "5586c7d8b0c711384c49477e67938b51cda20485d8d6b105bafb4c85f9df1d7a",
+    "spa352-build.log": "b6b9845d369503fc5c3ec983fd1e33cb722aff6e21b7d1b27f8c1621024323c4"
+  }
+}

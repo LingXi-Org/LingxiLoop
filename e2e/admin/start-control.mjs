@@ -4,13 +4,15 @@ import { mkdir, mkdtemp, rm, rmdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { hashPassword } from 'better-auth/crypto'
+import { isolatedSpa } from '../acceptance/profile.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const environmentFile = path.join(root, '.env.e2e.local')
 if (existsSync(environmentFile)) process.loadEnvFile(environmentFile)
 const homework = process.argv.includes('--homework')
-const config = fileURLToPath(new URL(homework ? '../homework/wrangler.jsonc' : './wrangler.e2e.jsonc', import.meta.url))
-const state = path.join(root, homework ? '.e2e/homework-control-state' : '.e2e/control-state')
+if (homework && isolatedSpa) throw new Error('The isolated SPA profile cannot select homework fixtures')
+const config = isolatedSpa ? path.join(root, isolatedSpa.controlConfig) : fileURLToPath(new URL(homework ? '../homework/wrangler.jsonc' : './wrangler.e2e.jsonc', import.meta.url))
+const state = path.join(root, isolatedSpa?.controlState ?? (homework ? '.e2e/homework-control-state' : '.e2e/control-state'))
 const wrangler = path.join(root, 'node_modules/wrangler/bin/wrangler.js')
 const env = { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' }
 const run = (args) => new Promise((resolve, reject) => {
@@ -50,5 +52,5 @@ try {
 }
 console.log('[e2e] Local control D1 seeded for browser actors and the sacrificial lifecycle account.')
 if (!process.argv.includes('--seed-only')) {
-  await run(['dev', '--local', '--config', config, '--persist-to', state, '--ip', '127.0.0.1', '--port', homework ? '8798' : '8797'])
+  await run(['dev', '--local', '--config', config, '--persist-to', state, '--ip', '127.0.0.1', '--port', String(isolatedSpa?.controlPort ?? (homework ? 8798 : 8797))])
 }

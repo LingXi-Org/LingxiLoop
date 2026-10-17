@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
 import { openSync, appendFileSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { isolatedSpa } from '../../e2e/acceptance/profile.mjs'
 const root=resolve(process.env.ACCEPTANCE_FIXTURE_ROOT??'.')
 assert.ok(root.startsWith('/workspace/'))
 const output=resolve(root,'.e2e/spa-web-restart')
@@ -22,11 +23,11 @@ async function stop() {
 async function start() {
   if(child) return
   child=spawn(process.execPath,['e2e/local-api.mjs','--api-only'],{cwd:root,detached:true,stdio:['ignore',log,log],
-    env:{PATH:process.env.PATH,HOME:process.env.HOME}})
+    env:{PATH:process.env.PATH,HOME:process.env.HOME,...(isolatedSpa ? {E2E_SPA_ISOLATED:'1'} : {})}})
   record('starting')
   for(let attempt=0;attempt<120;attempt++) {
     assert.equal(child.exitCode,null,'Test Web exited during startup')
-    if(await fetch('http://127.0.0.1:5181/api/readyz',{signal:AbortSignal.timeout(1000)}).then(r=>r.ok).catch(()=>false)) {record('ready');return}
+    if(await fetch(`http://127.0.0.1:${isolatedSpa?.apiPort ?? 5181}/api/readyz`,{signal:AbortSignal.timeout(1000)}).then(r=>r.ok).catch(()=>false)) {record('ready');return}
     await new Promise(resolve=>setTimeout(resolve,250))
   }
   throw new Error('Test Web readiness timed out')
@@ -37,5 +38,5 @@ const server=createServer(async(req,res)=>{
   try {await (req.url==='/stop'?stop():start());res.writeHead(200).end('ok')}
   catch {res.writeHead(500).end('fixture lifecycle failed')}
 })
-server.listen(5185,'127.0.0.1',()=>record('supervisor-ready'))
+server.listen(isolatedSpa?.supervisorPort ?? 5185,'127.0.0.1',()=>record('supervisor-ready'))
 for(const signal of ['SIGTERM','SIGINT']) process.on(signal,async()=>{if(stopping)return;stopping=true;server.close();await stop();process.exit(0)})
