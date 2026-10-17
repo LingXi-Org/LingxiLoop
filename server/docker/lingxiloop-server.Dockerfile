@@ -31,8 +31,11 @@ ENV OPENUI_TELEMETRY_DISABLED=1
 ARG NPM_REGISTRY
 WORKDIR /app
 COPY server/package.json server/package-lock.json server/.npmrc ./
+COPY package.json /tmp/qualified-package.json
+RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; const expected=JSON.parse(fs.readFileSync("/tmp/qualified-package.json")).dependencies["@lyyzka/lingxios"]; assert.match(expected,/^\d+\.\d+\.\d+$/); assert.equal(JSON.parse(fs.readFileSync("package.json")).dependencies["@lyyzka/lingxios"],expected,"server runtime must match root qualification");'
 RUN --mount=type=secret,id=npm_token \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer-offline
+RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; import {releaseVersions} from "@lyyzka/lingxios"; assert.equal(releaseVersions.runtime,JSON.parse(fs.readFileSync("/tmp/qualified-package.json")).dependencies["@lyyzka/lingxios"],"installed image runtime must match root qualification");'
 
 # ─── stage 2: build the web SPA bundle ──────────────────────────────
 # Separate stage with FULL devDeps installed so vite + tsc + tailwind +
