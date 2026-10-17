@@ -12,7 +12,7 @@ import { startPresentationStorageGc, startPresentationWorker } from './modules/p
 import { redis, sub } from './redis.js'
 import { Lifecycle, type ServiceHandle, startWorkerTasks, type WorkerTaskDefinition, type WorkerTaskHandle } from './runtime/lifecycle.js'
 import { initializeNativeStorage } from './storage.js'
-import { startLingxiOSWorker } from './agent-runtime/runtime.js'
+import { prepareLingxiOSWorkerContext, startLingxiOSWorker } from './agent-runtime/runtime.js'
 import { startAgentIngressRetry } from './agent-runtime/ingress.js'
 import { startNativeEventWorker } from './agents/native-event-worker.js'
 
@@ -61,6 +61,7 @@ export async function startWorkerProcess(options: WorkerProcessOptions = {}): Pr
   lifecycle.addDisposer('redis', options.closeRedis ?? (() => { sub.disconnect(); redis.disconnect() }))
 
   try {
+    prepareLingxiOSWorkerContext()
     const initializeStorage = options.initializeStorage ?? initializeNativeStorage
     initializeStorage()
     await prepare()
