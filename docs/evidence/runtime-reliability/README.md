@@ -15,12 +15,11 @@ A schema-12 deployment is a forward upgrade. Do not start a 3.4.7 worker against
 ## Repeatable cloud checks
 
 ```sh
-npm ci
+ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci
 npm run server:lint
 npm run server:typecheck
 npm run server:test
-node e2e/server/run.mjs --file migration.test.ts --file runtime-reliability.test.ts
-node e2e/server/run.mjs --file native-authorization-faults.test.ts --file canvas-public-assignment.test.ts --file group-mentions.test.ts --file native-admission.test.ts
+node e2e/server/run.mjs --file agent-protocols.test.ts --file available-capabilities.test.ts --file migration.test.ts --file runtime-reliability.test.ts --file native-authorization-faults.test.ts --file canvas-public-assignment.test.ts --file group-mentions.test.ts --file native-admission.test.ts --file runtime-model-context.test.ts --file runtime-nonthinking.test.ts --file runtime-provider-timeout.test.ts
 node scripts/test-im-send-reconciliation.mjs --regression
 node scripts/test-im-send-reconciliation.mjs --real-wukong
 ```
@@ -28,9 +27,9 @@ node scripts/test-im-send-reconciliation.mjs --real-wukong
 Use only the disposable PostgreSQL/Redis/WuKongIM harness. Database suites share the fixed integration database and must run sequentially. Browser checks use the existing Vite recovery fixture, `node --import tsx e2e/connection-recovery-server.mjs`, and the official runner:
 
 ```sh
-E2E_RUNTIME_RELIABILITY=1 E2E_BASE_URL=http://127.0.0.1:5196 \
-E2E_RECOVERY_EVIDENCE_DIR=.e2e/runtime-reliability/counts \
-npm run test:e2e:web -- e2e/web/runtime-reliability.e2e.ts --output .e2e/runtime-reliability --video on
+E2E_RUNTIME_RELIABILITY=1 E2E_CONNECTION_RECOVERY=1 E2E_BASE_URL=http://127.0.0.1:5196 \
+E2E_RECOVERY_EVIDENCE_DIR=.e2e/runtime-351-final/counts \
+npm run test:e2e:web -- e2e/web/runtime-reliability.e2e.ts e2e/web/connection-recovery.e2e.ts --output .e2e/runtime-351-final --video on
 ```
 
 Database suites share the fixed integration database. Each reliability browser server creates a separate disposable test database, because a global worker claim could otherwise consume an abandoned run from a previous invocation. The browser fixture supplies login and a deterministic HTTP provider, then uses the ordinary product API, chat transport/components, published runtime and real local WuKongIM. New-turn setup explicitly uses the public ingest API after the product accepts the human message; automatic ingress is covered separately by owning integration.
@@ -45,12 +44,14 @@ Database suites share the fixed integration database. Each reliability browser s
 
 Each browser case rereads history, verifies the notification count remains one, and sends a new human message that succeeds with no active run or pending chat outbox. Counts record the terminal phase separately from the successful next turn. The child-fanout/atomic reservation matrix is covered by upstream PostgreSQL tests and the product five-specialist group-mention regression; the browser budget case exercises root reservation rejection, not a simulated multi-agent fanout.
 
-Initial 3.5.0 qualification: server 106/106, migration 26/26, optional-context/terminal authorization 3/3, native admission and lost-ACK replay 1/1, browser matrix 5/5. Final 3.5.1 results must be recorded below before product merge. Deterministic providers, component routes and local WuKongIM do not qualify a real provider, full SPA/session expiration, production traffic, retained-heap baseline or 24-hour soak.
+Final 3.5.1 qualification is recorded in [validation.json](final-3.5.1/validation.json): lint/typecheck passed, server 106/106, 11 owning integration files 43/43 (including 26 migration checks), send reconciliation regression 27/27, real WuKong 20/20, and official browser run `01a1484c-4335-797d-96eb-57e90f11974e` 20/20. All these local checks had zero failures/skips. [HTTP provider timeout](final-3.5.1/provider-timeout.json) settled after 1,416 ms, three calls and three disconnected requests, with all ledger rows settled. The five-specialist introduction, input correction classification and cancellation-separated legacy receipt counts passed.
+
+[Browser counts](final-3.5.1/counts), [26 screenshots](final-3.5.1/screenshots) and [20 videos](final-3.5.1/video) include the terminal phase and successful next turn; the validation manifest records SHA-256 for every retained artifact. A clean Web install added 1,458 packages using the same Electron-download skip as CI. The first plain install failed downloading the unused Electron development binary from GitHub; that download is not claimed as verified. Deterministic providers, component routes and local WuKongIM do not qualify a real provider, full SPA/session expiration, production traffic, retained-heap baseline or 24-hour soak.
 
 ## Deployment observation
 
-Merged product PR164 automatic CD `38999121399` and PR169 CD `39002997223` passed checks, image publication and manifest update, then failed connecting to Komodo `ops.christmas1314.xyz:443` (`UND_ERR_CONNECT_TIMEOUT`, 10 seconds). Failure occurred during the initial read before configuration synchronization or the rollout trigger. No deployment update ID was returned. No manual deployment, security change or protection bypass was performed.
+Merged product PR164 automatic CD `38999121399`, PR169 CD `39002997223` and the final independent-package batch CD `39003344262` passed checks, image publication and manifest update, then failed connecting to Komodo `ops.christmas1314.xyz:443` (`UND_ERR_CONNECT_TIMEOUT`, 10 seconds). Failure occurred during the initial read before configuration synchronization or the rollout trigger. No deployment update ID was returned. No manual deployment, security change or protection bypass was performed. PR170's final CI and subsequent automatic CD are separate checks; only a successful Komodo update can establish production deployment.
 
 ## Remaining qualification
 
-Final 3.5.1 registry install, repeated product integration/browser results and final product PR CI remain pending here. No fallback provider is enabled without an existing approved route and price/data-boundary authorization. Real provider credentials and production operational access must use existing authorized infrastructure; this work creates neither. #153 still requires paired same-production-image dialogue/load/retained-heap measurements, 24-hour soak and production update-state access; the merged foundation sampler alone does not satisfy those gates.
+No fallback provider is enabled without an existing approved route and price/data-boundary authorization. Real provider credentials and production operational access must use existing authorized infrastructure; this work creates neither. #153 still requires paired same-production-image dialogue/load/retained-heap measurements, 24-hour soak and production update-state access; the merged foundation sampler alone does not satisfy those gates. Controlled real-provider validation for #155/#161 and complete SPA/fault-deployment acceptance remain open. Passing deterministic code gates does not close these issues or establish production acceptance.

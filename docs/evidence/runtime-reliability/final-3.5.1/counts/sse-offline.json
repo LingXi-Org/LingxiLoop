@@ -1,0 +1,23 @@
+{
+  "scenario": "sse-offline",
+  "facts": {
+    "accepts": 1,
+    "statusReads": 0,
+    "streamRequests": 7,
+    "snapshotReads": 5,
+    "maxConcurrent": 1,
+    "uniqueMessages": 1,
+    "messageCount": 1,
+    "originalNonceMessages": 0,
+    "nonceDigest": "a70459b3228a",
+    "crossIdentity": 0,
+    "remoteLifecycle": "failed",
+    "workItems": 1,
+    "outbox": 0,
+    "blocked": 0,
+    "outboxAttachments": 0,
+    "attachmentCount": 0,
+    "activeRuns": 0,
+    "localLifecycle": "failed"
+  }
+}

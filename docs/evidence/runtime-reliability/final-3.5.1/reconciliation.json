@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "command": "node scripts/test-im-send-reconciliation.mjs --regression",
+  "runtimeDependency": "3.5.1",
+  "realWuKong": false,
+  "officialBrowser": false,
+  "counts": {
+    "tests": 27,
+    "pass": 27,
+    "fail": 0,
+    "skipped": 0
+  },
+  "limitations": [
+    "no 24h soak",
+    "no real model provider",
+    "browser uses isolated authentication and tests HTTP contract; #160 owns production recovery UI"
+  ]
+}
