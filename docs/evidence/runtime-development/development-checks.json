@@ -1,0 +1,45 @@
+{
+  "upstreamPr": {
+    "number": 26,
+    "head": "b95528cc5667e6d70a8ac33c98852ed52d97a363",
+    "merge": "de5dca9b04f7d84f604d206fc0486fc8e969c400",
+    "run": 39014122563,
+    "passed": 421,
+    "failed": 0,
+    "skipped": 0
+  },
+  "localUpstream": {
+    "initialPassed": 420,
+    "initialFailed": 1,
+    "failure": "package install fixture default npm cache outside writable roots; subsequent empty cache was not warmed",
+    "isolatedPackageRetryPassed": 1,
+    "retryCache": "/tmp/lingxios-recovery-cache"
+  },
+  "productRed": {
+    "package": "3.5.1",
+    "test": "runtime-deadline-recovery.test.ts",
+    "expected": "model_unavailable",
+    "actual": "execution_failed",
+    "localLogSha256": "af0973917bd56cccb27f453671fe836b357886d076df913a78b05d403c342828"
+  },
+  "deploymentContract": {
+    "beforePassed": 17,
+    "beforeFailed": 1,
+    "afterPassed": 18,
+    "afterFailed": 0,
+    "marker": "[skip deploy]",
+    "blocks": [
+      "update-manifests",
+      "deploy",
+      "rollout"
+    ],
+    "preserves": [
+      "CI",
+      "tests",
+      "immutable image publication"
+    ]
+  },
+  "e2eTypecheck": "passed",
+  "liveProviderCalls": 0,
+  "productionOperations": 0
+}
