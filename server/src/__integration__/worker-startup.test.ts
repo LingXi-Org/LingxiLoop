@@ -21,7 +21,6 @@ test('production Worker reconciliation uses passive local context before runner 
   const originalMode = env.NODE_ENV
   const originalPort = process.env.LINGXIOS_CONTROL_PORT
   const originalToken = process.env.LINGXIOS_SERVICE_TOKEN
-  env.NODE_ENV = 'production'
   process.env.LINGXIOS_CONTROL_PORT = '53971'
   process.env.LINGXIOS_SERVICE_TOKEN = 'isolated-worker-startup-service-token'
   let started = false
@@ -29,6 +28,8 @@ test('production Worker reconciliation uses passive local context before runner 
     const service = await startWorkerProcess({
       initializeStorage: () => undefined,
       startAgentRuntime: async () => {
+        // Exercise production ownership after real reconciliation, using isolated test stores.
+        env.NODE_ENV = 'production'
         await assert.rejects(async () => {
           const listener = await listenLingxiOSControl()
           await listener.stop()
