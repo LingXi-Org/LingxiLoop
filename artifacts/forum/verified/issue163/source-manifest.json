@@ -9,7 +9,7 @@
     "e2e.forum.config.ts": "d60100fce0ad5921c4f9f804eca2e3e9c1c879c8b2e41fe7140526efc2500bce",
     "e2e/forum/api.ts": "bfa6f43c5638a03dce389c25ae18c26fa23fbb47c43d2787f59d82e48c6e6a7a",
     "e2e/forum/browser.e2e.ts": "a872864b7730db0a7baad033a88724179f10e02ab3ced4778378039f6950b053",
-    "e2e/forum/issue163.e2e.ts": "320c99ceac0720d439a9962271352c9c444dc4016e46beb0641f6d15b1099f4f",
+    "e2e/forum/issue163.e2e.ts": "f376f7325fa690e8b33cbf740ec156dde991c74c988657245bf8925caeb5a772",
     "e2e/server/forum.mjs": "49d48be228ad2a09c7726c4f94ae6b14f3c5a8d54dbd98b51a96b04a596fb277",
     "server/src/modules/learning/forum-application.ts": "b2e9a721d25aac840fa0f452b5d6b5854268e6a3d913e0f17f965f03d1b5d45a",
     "server/src/modules/learning/forum-repository.ts": "3d7396bbfc300768bac3a932eea36f79b6c0fe3e149435188da87a6d5bcba1f2",
@@ -29,5 +29,7 @@
     "src/features/learning/homework/HomeworkReport.tsx": "226ae8f1e7af39688011db70e812af31d5342aca6f85c8ceac1cc8f805641ab4",
     "src/features/learning/homework/HomeworkTeacher.tsx": "cb4d3cd88c04810b42aeb1db49a784f43111f83c19a3db8731aeacaf81fb79c6",
     "src/features/learning/homework/contracts.ts": "d7f04d40c4b9544bcf9e53aacacc5fc7e0a57b4b4d5ceac96d51cce9624a01ee"
-  }
+  },
+  "regressionSourceCommit": "a0ff7ee403f429ac7ef1fdc8ac3377a0c9de7f39",
+  "darkThemeEvidence": "theme-state.json"
 }

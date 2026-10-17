@@ -27,6 +27,7 @@ npm test
 npm run server:test
 npm run build
 node e2e/server/forum.mjs --browser --issue163
+node e2e/server/forum.mjs --browser-only --issue163
 node e2e/server/run.mjs --file homework.test.ts
 node e2e/server/forum.mjs --browser-only
 git diff --check
@@ -39,12 +40,14 @@ The frozen install resolves LingxiOS `3.4.7` exactly as committed. Preinstalled 
 - Web and Server lint, Web/Server/E2E typechecks, Web build and diff whitespace check: passed. Web lint retains two existing warnings and two informational findings in unrelated files; build retains the existing CSS/chunk-size warnings.
 - Web tests: **87 passed, 0 failed, 0 skipped**. Server tests: **102 passed, 0 failed, 0 skipped**.
 - Forum integration: **10 passed, 0 failed, 0 skipped**. Native homework integration: **37 passed, 0 failed, 0 skipped**.
-- Focused official `e2e 0.17.0` / `@e2e-dev/web 0.12.0` browser journey: **1 passed, 0 failed, 0 skipped**. [Native report](../artifacts/forum/verified/issue163/report.json), [summary](../artifacts/forum/verified/issue163/summary.md), [driver log](../artifacts/forum/verified/issue163/forum-driver.log), [integration results](../artifacts/forum/verified/issue163/forum-results.json).
-- Full existing forum browser regression (including #163): **7 passed in 6 files, 0 failed, 0 skipped**. [Native report](../artifacts/forum/verified/issue163/regression-report.json), [summary](../artifacts/forum/verified/issue163/regression-summary.md), [driver log](../artifacts/forum/verified/issue163/regression-driver.log).
+- Focused official `e2e 0.17.0` / `@e2e-dev/web 0.12.0` browser journey after correcting theme capture: **1 passed, 0 failed, 0 skipped**. [Native report](../artifacts/forum/verified/issue163/report.json), [summary](../artifacts/forum/verified/issue163/summary.md), [current driver log](../artifacts/forum/verified/issue163/theme-rerun-driver.log), [current runner results](../artifacts/forum/verified/issue163/theme-rerun-results.json), [original integration results](../artifacts/forum/verified/issue163/forum-results.json).
+- Full existing forum browser regression (including #163), retained from `a0ff7ee403f429ac7ef1fdc8ac3377a0c9de7f39`: **7 passed in 6 files, 0 failed, 0 skipped**. The subsequent revision changes only the E2E theme verification and evidence; product code is unchanged. [Native report](../artifacts/forum/verified/issue163/regression-report.json), [summary](../artifacts/forum/verified/issue163/regression-summary.md), [driver log](../artifacts/forum/verified/issue163/regression-driver.log).
 
 The initial composer measures **60px** at both `1440 × 844` and `390 × 844`; the first content card starts at **419px** and **370px** respectively. The text remains **16px**, with no horizontal page overflow. The journey checks long-text internal scrolling, keyboard expansion/collapse and visible focus, preview-to-edit recovery, attachments across collapse/reload/type switching, teacher assignment publication, a real HTTP 503 and retry, account switches, post/comment avatar identity, avatar changes after reload, failed image fallback and the existing 60-second roster refresh without a page reload.
 
 Retained console logs have only trailing whitespace removed for Git review; native JSON reports and screenshots are unchanged. Screenshot hashes and tested source hashes are retained alongside the evidence.
+
+Review found that the original 009 screenshot captured mixed colors during a class-only theme change. The corrected test restores the persisted dark preference through the actual ThemeProvider and verifies `class`, `data-theme`, stored preference and `color-scheme`. It waits for computed composer/card backgrounds and toolbar text to equal the theme tokens, zero running CSS transitions, and two paint frames before capturing 009 and 010. The fresh run records both states in [theme-state.json](../artifacts/forum/verified/issue163/theme-state.json): background `oklch(0.21 0.006 285.885)`, toolbar foreground `oklch(0.985 0 0)`, transitions **0**, readiness **true**. All ten screenshots and the focused native report were refreshed from that same run.
 
 All retained screenshots and logs are under [artifacts/forum/verified/issue163](../artifacts/forum/verified/issue163):
 

@@ -5,8 +5,8 @@
 
 |  | Test | Time |
 | --- | --- | --- |
-| 🟢 | **e2e/forum/issue163.e2e.ts** · 1 passed | 2m 0s |
-| 🟢 | compact inline editor preserves drafts and binds every avatar to its account | 2m 0s |
+| 🟢 | **e2e/forum/issue163.e2e.ts** · 1 passed | 1m 34s |
+| 🟢 | compact inline editor preserves drafts and binds every avatar to its account | 1m 34s |
 </details>
 
-<sub>e2e 0.17.0 · 2m 1s · forum</sub>
+<sub>e2e 0.17.0 · 1m 35s · forum</sub>

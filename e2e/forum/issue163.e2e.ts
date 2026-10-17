@@ -155,7 +155,48 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
   await browser.setViewport({ width: 390, height: 844 })
   await editor().focus()
   await expect(composer().getByRole('button', '收起发布框', { exact: true })).toBeVisible()
-  await browser.evaluate(() => { document.documentElement.classList.remove('light'); document.documentElement.classList.add('dark'); return true })
+  // Let the actual ThemeProvider restore both class/data-theme and color-scheme.
+  // Changing only the class can capture mixed light/dark styles mid-transition.
+  await browser.evaluate(() => { localStorage.setItem('lingxiloop-theme', 'dark'); return true })
+  await browser.reload()
+  await editor().focus()
+  await expect(composer().getByRole('button', '收起发布框', { exact: true })).toBeVisible()
+  await expect(editor()).toContainText('窄屏键盘草稿')
+  await expect(browser.locator('[data-memo-card]').first()).toBeVisible()
+  const darkThemeSnapshot = () => browser.evaluate(() => {
+    const root=document.documentElement
+    const section=document.querySelector('[aria-label="发布学习论坛内容"]')!
+    const card=document.querySelector('[data-memo-card]')!
+    const toolbar=document.querySelector('[aria-label="预览正文"]')!
+    const probe=document.createElement('span')
+    probe.style.backgroundColor='var(--card)';probe.style.color='var(--card-foreground)'
+    document.body.append(probe)
+    const expected=getComputedStyle(probe)
+    const state={
+      theme:root.dataset.theme ?? '',darkClass:root.classList.contains('dark'),lightClass:root.classList.contains('light'),
+      storedTheme:localStorage.getItem('lingxiloop-theme'),colorScheme:getComputedStyle(root).colorScheme,
+      expanded:section.getAttribute('data-forum-composer-expanded'),
+      composerBackground:getComputedStyle(section).backgroundColor,cardBackground:getComputedStyle(card).backgroundColor,
+      toolbarColor:getComputedStyle(toolbar).color,expectedBackground:expected.backgroundColor,expectedForeground:expected.color,
+      transitions:document.getAnimations().filter(animation=>animation instanceof CSSTransition&&animation.playState==='running').length,
+    }
+    probe.remove()
+    return {...state,ready:state.theme==='dark'&&state.darkClass&&!state.lightClass&&state.storedTheme==='dark'&&state.colorScheme==='dark'
+      &&state.composerBackground===state.expectedBackground&&state.cardBackground===state.expectedBackground
+      &&state.toolbarColor===state.expectedForeground&&state.transitions===0}
+  })
+  const verifyDarkTheme = async (phase: 'expanded'|'compact') => {
+    await expect.poll(async () => (await darkThemeSnapshot()).ready).toBe(true)
+    await browser.evaluate(async () => {
+      await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())))
+      return true
+    })
+    const state=await darkThemeSnapshot()
+    expect(state.ready).toBe(true)
+    expect(state.expanded).toBe(String(phase==='expanded'))
+    console.info('issue163 dark theme '+JSON.stringify({phase,...state}))
+  }
+  await verifyDarkTheme('expanded')
   await app.screenshot('issue163-expanded-dark-mobile')
   await composer().getByRole('button', '收起发布框', { exact: true }).tap()
   await composer().getByRole('button', '展开发布框', { exact: true }).focus()
@@ -165,6 +206,7 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
     return style.boxShadow !== 'none' || style.outlineStyle !== 'none'
   })).toBe(true)
   expect((await geometry()).overflow).toBe(false)
+  await verifyDarkTheme('compact')
   await app.screenshot('issue163-compact-dark-keyboard')
   await browser.keyboard.press('Enter')
   await expect(editor()).toContainText('窄屏键盘草稿')
