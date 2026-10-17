@@ -1,9 +1,11 @@
+import { monitorEventLoopDelay, PerformanceObserver, performance } from 'node:perf_hooks'
+import { getHeapStatistics } from 'node:v8'
+
 /**
- * Minimal in-process metrics counter store + Prometheus text exposition.
+ * Minimal in-process metrics store + Prometheus text exposition.
  *
  * Why home-rolled instead of pulling in `prom-client`:
- *   - Surface area is tiny (counters only — no histograms / summaries
- *     yet) so the dep saves <100 lines.
+ *   - Surface area is small (typed counters and bounded infrastructure metrics) so the dep saves <100 lines.
  *   - Prom-client's reset semantics + global registry don't compose
  *     cleanly with the rest of lingxiloop's module-level singletons.
  *   - We can keep all metric names + labels strictly typed in one file,
@@ -174,10 +176,85 @@ export function renderProm(): string {
       lines.push(`${name.replace(/\./g, '_')}${labelPart} ${value}`)
     }
   }
+  lines.push(...renderInfrastructureMetrics())
   return lines.join('\n') + '\n'
 }
 
 /** Test-only: zero every counter. Production code never calls this. */
 export function resetForTesting(): void {
   STORE.clear()
+  acquireCounts.ok = acquireCounts.error = sqlSubmitted = acquireSum = 0
+  acquireBuckets.fill(0)
+}
+
+// Bounded infrastructure series: no SQL text, URLs, IDs or error labels.
+const acquireBounds = [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5]
+const acquireBuckets = acquireBounds.map(() => 0)
+const acquireCounts = { ok: 0, error: 0 }
+let acquireSum = 0
+let sqlSubmitted = 0
+let poolSnapshot: (() => { total: number; idle: number; waiting: number; max: number }) | undefined
+let gcCount = 0
+let gcSeconds = 0
+const gcObserver = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) { gcCount++; gcSeconds += entry.duration / 1_000 }
+})
+gcObserver.observe({ entryTypes: ['gc'] })
+const eventLoopDelay = monitorEventLoopDelay({ resolution: 20 })
+eventLoopDelay.enable() // Node's delay monitor does not keep the process alive.
+
+export function registerPoolMetrics(snapshot: NonNullable<typeof poolSnapshot>): void {
+  poolSnapshot = snapshot
+}
+
+export function observePoolAcquire(milliseconds: number, status: 'ok' | 'error'): void {
+  const seconds = Math.max(0, milliseconds / 1_000)
+  acquireCounts[status]++
+  acquireSum += seconds
+  acquireBounds.forEach((bound, index) => { if (seconds <= bound) acquireBuckets[index]++ })
+}
+
+/** Count client.query submissions once, including failed queries and BEGIN/COMMIT. */
+export function observeSqlSubmission(): void { sqlSubmitted++ }
+
+function renderInfrastructureMetrics(): string[] {
+  const lines: string[] = []
+  const sample = (name: string, help: string, value: number, type = 'gauge') => {
+    lines.push(`# HELP ${name} ${help}`, `# TYPE ${name} ${type}`, `${name} ${Number.isFinite(value) ? value : 0}`)
+  }
+  sample('db_sql_submitted_total', 'SQL submissions on application pool clients, including failed SQL and transactions.', sqlSubmitted, 'counter')
+  lines.push('# HELP db_pool_acquire_total Application pool acquisition attempts by outcome.', '# TYPE db_pool_acquire_total counter')
+  for (const status of ['ok', 'error'] as const) lines.push(`db_pool_acquire_total{status="${status}"} ${acquireCounts[status]}`)
+  lines.push('# HELP db_pool_acquire_duration_seconds Pool acquisition latency including connection creation and failed attempts.',
+    '# TYPE db_pool_acquire_duration_seconds histogram')
+  acquireBounds.forEach((bound, index) => { lines.push(`db_pool_acquire_duration_seconds_bucket{le="${bound}"} ${acquireBuckets[index]}`) })
+  const count = acquireCounts.ok + acquireCounts.error
+  lines.push(`db_pool_acquire_duration_seconds_bucket{le="+Inf"} ${count}`,
+    `db_pool_acquire_duration_seconds_sum ${acquireSum}`, `db_pool_acquire_duration_seconds_count ${count}`)
+  if (poolSnapshot) {
+    const pool = poolSnapshot()
+    sample('db_pool_total', 'Connected application pool clients.', pool.total)
+    sample('db_pool_idle', 'Idle application pool clients.', pool.idle)
+    sample('db_pool_active', 'Checked-out application pool clients, including listeners.', pool.total - pool.idle)
+    sample('db_pool_waiting', 'Queued application pool acquisitions.', pool.waiting)
+    sample('db_pool_max', 'Configured application pool maximum.', pool.max)
+  }
+  const memory = process.memoryUsage()
+  const heap = getHeapStatistics()
+  sample('process_heap_used_bytes', 'V8 heap used bytes.', memory.heapUsed)
+  sample('process_heap_total_bytes', 'V8 committed heap bytes.', memory.heapTotal)
+  sample('process_heap_limit_bytes', 'V8 heap size limit bytes.', heap.heap_size_limit)
+  sample('process_rss_bytes', 'Process resident set bytes.', memory.rss)
+  sample('process_external_bytes', 'External memory bytes including ArrayBuffers.', memory.external)
+  sample('process_array_buffers_bytes', 'ArrayBuffer bytes, a subset of external memory.', memory.arrayBuffers)
+  sample('process_gc_total', 'Observed garbage collection cycles since process start.', gcCount, 'counter')
+  sample('process_gc_duration_seconds_total', 'Observed garbage collection duration in seconds since process start.', gcSeconds, 'counter')
+  sample('process_event_loop_utilization', 'Event-loop utilization since process start.', performance.eventLoopUtilization().utilization)
+  sample('process_uptime_seconds', 'Process uptime in seconds.', process.uptime())
+  const cpu = process.cpuUsage()
+  sample('process_cpu_user_seconds_total', 'Cumulative process user CPU seconds.', cpu.user / 1e6, 'counter')
+  sample('process_cpu_system_seconds_total', 'Cumulative process system CPU seconds.', cpu.system / 1e6, 'counter')
+  sample('process_event_loop_delay_mean_seconds', 'Mean event-loop delay since process start.', eventLoopDelay.mean / 1e9)
+  sample('process_event_loop_delay_max_seconds', 'Maximum event-loop delay since process start.', eventLoopDelay.max / 1e9)
+  return lines
 }

@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "results": [
+    {
+      "name": "published public control readiness contract rejects unready and malformed payloads",
+      "milliseconds": 2529.7575580000002
+    },
+    {
+      "name": "healthy HTTP readiness, legacy health, liveness and optional diagnostics",
+      "milliseconds": 37.782590999999684
+    },
+    {
+      "name": "each required failure removes readiness, errors are sanitized, legacy control independence",
+      "milliseconds": 18.16068600000017
+    },
+    {
+      "name": "concurrent and repeated timed-out HTTP probes reuse actual pending IO then recover",
+      "milliseconds": 2023.3210070000005
+    },
+    {
+      "name": "real Redis disconnect and real PG saturation remove traffic while liveness survives",
+      "milliseconds": 1041.1722930000005
+    },
+    {
+      "name": "pg Promise/callback acquire, reused transaction SQL, failed SQL and timed-out acquire metrics",
+      "milliseconds": 10018.546585
+    },
+    {
+      "name": "repeatable idle / normal SQL HTTP / burst sampler artifacts",
+      "milliseconds": 9199.003173
+    }
+  ],
+  "node": "v22.23.3",
+  "frozenDependencies": false,
+  "boundary": "Foundation-only HTTP harness; real PG/Redis; scripted control and unavailable optional Notebook. Frozen full-product dependency gate recorded separately."
+}

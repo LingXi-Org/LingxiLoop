@@ -96,7 +96,7 @@ services:
     ports:
       - "127.0.0.1:5183:5181"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/readyz',{signal:AbortSignal.timeout(4000)}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -121,7 +121,7 @@ services:
     pids_limit: 128
     stop_grace_period: 150s
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:5190/readyz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5190/readyz',{signal:AbortSignal.timeout(4000)}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 12
