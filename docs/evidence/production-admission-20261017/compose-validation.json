@@ -1,0 +1,32 @@
+[
+  {
+    "file": "deploy/komodo/lingxiloop-app-a/compose.yml",
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "file": "deploy/komodo/lingxiloop-app-b/compose.yml",
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "file": "deploy/komodo/lingxiloop-core-state/compose.yml",
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "file": "deploy/komodo/lingxiloop-knowledge-agent/compose.yml",
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "file": "deploy/komodo/server-b-ingress/compose.yml",
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "file": "deploy/komodo/uptime/compose.yml",
+    "exitCode": 0,
+    "output": ""
+  }
+]
