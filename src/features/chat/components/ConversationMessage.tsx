@@ -28,6 +28,23 @@ import { chatLatency } from '../runtime/latency'
 import { copyMessageText, MessageActions, useMessageCopyText } from './MessageActions'
 import { AssistantMessageActions } from './AssistantMessageActions'
 
+function FailedSendActions({ metadata }: { metadata: LingxiMessageMetadata }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  return <div className="grid gap-1 text-xs text-muted-foreground" role="group" aria-label="未确认消息操作">
+    <p role="status">{error ?? metadata.sendError ?? '发送状态待确认，消息和附件已保留。'}</p>
+    <div className="flex justify-end gap-2">
+      <Button type="button" variant="link" size="sm" disabled={busy} onClick={async () => {
+        setBusy(true); setError(null)
+        try { await chatTransport.retry(metadata.conversationId, metadata.clientMessageId) }
+        catch { setError('暂时无法确认发送，请检查连接和权限后重试。') }
+        finally { setBusy(false) }
+      }}>核对并重试发送</Button>
+      <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => chatTransport.discard(metadata.conversationId, metadata.clientMessageId)}>移除待发消息</Button>
+    </div>
+  </div>
+}
+
 function QuotePart({ text, messageId }: { text: string; messageId: string }) {
   const jumpToMessage = useConversationUi((state) => state.jumpToMessage)
   return (
@@ -242,7 +259,8 @@ export function ConversationMessage() {
   // The external runtime adds an empty assistant placeholder after a mid-run user turn.
   // Real replies come from the transport and already carry their own typing state.
   if (custom.schema !== 'lingxiloop.thread-message.v2') return null
-  const deliveryLabel = custom.delivery === 'sending' ? '发送中' : custom.delivery === 'sent' ? '已送达' : '发送失败'
+  const deliveryLabel = custom.delivery === 'sending' ? '发送中' : custom.delivery === 'sent' ? '已送达'
+    : custom.sendError?.startsWith('自动发送已停止') ? '自动发送已停止' : custom.sendError ? '发送状态待确认' : '发送失败'
   const footer = custom.isMine ? (
     <div data-message-footer data-align="end" className="flex items-center justify-end gap-2 whitespace-nowrap text-xs leading-4 tabular-nums text-muted-foreground">
       <span role="status" aria-label={deliveryLabel}>
@@ -294,6 +312,7 @@ export function ConversationMessage() {
           {custom.quote && <QuotePart text={custom.quote.text} messageId={custom.quote.messageId} />}
           <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={footer}
             attention={custom.senderKind === 'agent' && custom.harness && custom.runId ? <HarnessDetails metadata={custom} /> : null} />
+          {custom.isMine && custom.delivery === 'failed' && <FailedSendActions metadata={custom} />}
           {custom.senderKind === 'agent' && <AssistantMessageActions />}
         </div>
         <Reactions metadata={custom} messageId={messageId} />
