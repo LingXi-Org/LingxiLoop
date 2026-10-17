@@ -1,8 +1,27 @@
 # Komodo production
 
-Komodo v2.3.3 is the only production deployment control plane. `aly` runs
-Core and MongoDB; `txy2` is `shanghai-a`, and `txy` is `shanghai-b`. Periphery
-runs as a systemd service on all three hosts and connects outbound to Core.
+**Control-plane migration accepted (2026-10-17):** Public HTTPS/API, all three
+active agents, all eight running stacks and a successful database-backup
+procedure have been verified on txy3. DNS points to `49.232.41.248`. Evidence
+is in `artifacts/control-plane-migration-20261016/` from the repository root.
+The independent wegolibrary application remains on aly and is outside this
+deployment-control-plane migration.
+
+Komodo v2.3.3 is the only production deployment control plane. `txy3`
+(`49.232.41.248`, Komodo `manager`) runs Core, MongoDB and control ingress;
+`txy2` is `shanghai-a`, and `txy` is `shanghai-b`. The legacy `aly` Server
+record and its Periphery service are disabled; its existing wegolibrary is
+independent. Periphery runs as a systemd service on the three active hosts
+and connects outbound to Core. Releases do not depend on aly staying online.
+
+The stable origin is `https://ops.christmas1314.xyz`; its DNS is managed in
+Alibaba Cloud DNS. `core/` and `control-ingress/` are bootstrap infrastructure
+on txy3 at `/opt/komodo/bootstrap/`, outside the product resource sync.
+`aly-ingress/` preserves wegolibrary on aly, including the historical Compose
+project name `control-ingress` and certificate volume `aly-ingress_traefik-acme`.
+Do not apply the txy3 ingress manifest to aly. See the
+[control-plane maintenance skill](../../.agents/skills/operate-komodo-production/references/control-plane.md)
+for bootstrap, backups, cutover and rollback.
 
 `resources.toml` owns the LingxiLoop stacks. Runtime variables and secrets are
 stored in Komodo after being supplied from Sigillo; no `.env` file is committed.
