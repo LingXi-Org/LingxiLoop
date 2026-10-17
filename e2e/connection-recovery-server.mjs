@@ -58,7 +58,11 @@ const provider = createServer(async (request,response) => {
   const usage = { prompt_tokens: 10,completion_tokens: 5 }
   if (input.stream) {
     response.writeHead(200,{ 'content-type': 'text/event-stream' })
-    response.end(`data: ${JSON.stringify({ choices: [{ index: 0,delta: { role: 'assistant',content: '新请求已正常完成。' },finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [],usage })}\n\ndata: [DONE]\n\n`)
+    const invalidTool=!current.fixtureHealthy&&current.mode==='runtime-invalid-tool'
+    const content=!current.fixtureHealthy&&current.mode==='runtime-fanout-budget'
+      ? `已有结论已保存。 @${current.additionalAgents[0]} 请继续第一部分。 @${current.additionalAgents[1]} 请继续第二部分。` : '新请求已正常完成。'
+    const delta=invalidTool?{role:'assistant',tool_calls:[{index:0,id:`invalid-${current.fixtureModelCalls}`,type:'function',function:{name:'directory__self',arguments:'{"invented":true}'}}]}:{role:'assistant',content}
+    response.end(`data: ${JSON.stringify({ choices: [{ index: 0,delta,finish_reason: invalidTool?'tool_calls':'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [],usage })}\n\ndata: [DONE]\n\n`)
   } else {
     response.writeHead(200,{ 'content-type': 'application/json' })
     response.end(JSON.stringify({ choices: [{ message: { role: 'assistant',content: '{"missing":[]}' },finish_reason: 'stop' }],usage }))
@@ -68,6 +72,11 @@ await new Promise(resolve => provider.listen(0, '127.0.0.1', resolve))
 env.OPENAI_BASE_URL = `http://127.0.0.1:${provider.address().port}/v1`
 process.env.OPENAI_BASE_URL = env.OPENAI_BASE_URL
 const api = await lingxiOSControl()
+const memoryScopes=api.memory.scopes
+api.memory.scopes=async(...args)=>{
+  if(current?.mode==='runtime-memory-outage'&&!current.fixtureHealthy){current.fixtureScopeFaults=(current.fixtureScopeFaults??0)+1;throw Object.assign(new Error('Synthetic scope timeout'),{code:'57014'})}
+  return memoryScopes(...args)
+}
 const controlPort = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN, port: 0 })
 process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${controlPort}`
 const backend = express()
@@ -96,6 +105,11 @@ proxy.use('/api/__recovery', express.json())
 proxy.post('/api/__recovery/start', async (req, res) => {
   const id = randomUUID().slice(0, 8), room = `recovery-${id}`
   const identity = identities[0], members = [identity.userId, identity.agentId]
+  const additionalAgents=[]
+  if(req.body.mode==='runtime-fanout-budget') for(const suffix of ['first','second']) {
+    const agent=`budget-${id}-${suffix}`;additionalAgents.push(agent);members.push(agent)
+    await pool.query("INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status) VALUES($1,$2,'agent',$1,'specialist','B','#abcdef','avail')",[agent,identity.companyId])
+  }
   await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','断线恢复验收',$4::jsonb)",
     [room, identity.companyId, identity.projectId, JSON.stringify(members)])
   await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',
@@ -109,7 +123,7 @@ proxy.post('/api/__recovery/start', async (req, res) => {
   const payload = createNativeMessage({ id: `recovery-${id}`, role: 'user', content: [{ type: 'text', text: '保留这条测试消息和附件。' }],
     attachments: [{ id: fileId, type: 'document', name: '恢复附件.txt', contentType: 'text/plain', status: { type: 'complete' },
       content: [{ type: 'file', sourceType: 'id', data: fileId, mimeType: 'text/plain', filename: '恢复附件.txt' }] }] })
-  current = { ...req.body, identity, room, payload, invalid: req.body.mode === 'invalid-receipt',
+  current = { ...req.body, identity, room, payload, additionalAgents, invalid: req.body.mode === 'invalid-receipt',
     unavailable: !['lost-reply', 'denied', 'invalid-receipt', 'identity', 'manual'].includes(req.body.mode)
       && !req.body.mode?.startsWith('sse-') && !req.body.mode?.startsWith('runtime-'),
     accepts: 0, statusReads: 0, streamRequests: 0, snapshotReads: 0, concurrent: 0, maxConcurrent: 0, crossIdentity: 0, lost: false, run: null, streamFault: false }
@@ -131,7 +145,8 @@ async function runFixtureTurn(run, healthy) {
     current.fixtureHealthy = healthy
     if (healthy) await delay(60)
     const worker = createWorker({ controlPlane: api,
-      ...(!healthy && current.mode === 'runtime-budget' ? { modelBudget: { maxTokens: 1 } } : {}),model: {
+      ...(!healthy && current.mode === 'runtime-budget' ? { modelBudget: { maxTokens: 1 } } : {}),
+      ...(!healthy && current.mode === 'runtime-fanout-budget' ? { modelBudget: { maxModelCalls: 3 } } : {}),model: {
       id: `reliability-${current.room}`,contextWindowTokens: !healthy && current.mode === 'runtime-context' ? 1024 : 200000,
       maxOutputTokens: !healthy && current.mode === 'runtime-context' ? 128 : 8192,
       baseUrl: env.OPENAI_BASE_URL,apiKey: 'synthetic-reliability-fixture',circuitResetMs: 50,
@@ -140,7 +155,7 @@ async function runFixtureTurn(run, healthy) {
     try { await worker.runNext() } finally { await worker.stop() }
   }
   const deadline = AbortSignal.timeout(15000)
-  while (healthy ? (await api.readRunState(run))?.delivery !== 'delivered' : (await api.readTerminal(run))?.delivery !== 'delivered') {
+  while (healthy || current.mode==='runtime-memory-outage' ? (await api.readRunState(run))?.delivery !== 'delivered' : (await api.readTerminal(run))?.delivery !== 'delivered') {
     deadline.throwIfAborted(); await delay(50)
   }
 }
@@ -205,7 +220,14 @@ proxy.get('/api/__recovery/facts', async (_req, res) => {
     remoteLifecycle: current.run ? (await api.readRunState(current.run))?.run.status : null,
     ...(current.mode?.startsWith('runtime-') ? { terminalReason: terminal?.feedback.reason ?? null,terminalDelivery: terminal?.delivery ?? null,
       terminalMessages: terminal ? messages.filter(message => message.payload?.metadata?.custom?.terminalFeedbackId === terminal.feedback.id).length : 0,
-      fixtureModelCalls: current.fixtureModelCalls ?? 0,nextLifecycle: current.nextRun ? (await api.readRun(current.nextRun))?.status : null } : {}),
+      fixtureModelCalls: current.fixtureModelCalls ?? 0,fixtureScopeFaults:current.fixtureScopeFaults??0,
+      committedActions:current.mode==='runtime-invalid-tool'?(await pool.query("SELECT count(*)::int AS n FROM lingxios.agent_action_ledger ledger JOIN lingxios.agent_action_intents intents USING(idempotency_key) WHERE intents.intent->>'workId'=$1 AND ledger.result->>'ok'='true'",[current.run.runId])).rows[0].n:undefined,
+      ...(current.mode==='runtime-fanout-budget'?{
+        notStarted:terminal?.feedback.notStartedCount??0,
+        childWorkItems:(await pool.query("SELECT count(*)::int AS n FROM lingxios.agent_work_items WHERE meta->>'rootWorkId'=$1 AND id<>$1",[current.run.runId])).rows[0].n,
+        rootResultPreserved:Boolean((await api.readRun(current.run))?.resultId),
+        rootFeedbacks:(await pool.query('SELECT count(*)::int AS n FROM lingxios.agent_terminal_outbox WHERE root_work_id=$1',[current.run.runId])).rows[0].n,
+      }:{}),nextLifecycle: current.nextRun ? (await api.readRun(current.nextRun))?.status : null } : {}),
     workItems: current.run ? (await pool.query(`SELECT count(*)::int AS n FROM lingxios.agent_work_items
       WHERE tenant_id=$1 AND trigger_ref=$2 AND agent_id=$3`, [current.identity.companyId, current.payload.id, current.identity.agentId])).rows[0].n : 0 })
 })
