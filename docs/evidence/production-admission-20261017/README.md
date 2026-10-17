@@ -76,3 +76,6 @@ independent24h review were left untouched. None qualifies3.5.2 durability.
 See [admission receipt](admission.json), [public observation](public-preflight.json),
 [Compose checks](compose-validation.json), [red tests](smoke-red.log),
 [red CI selection](selector-red.log) and [green22-case result](contracts-green.log).
+
+Only trailing whitespace is normalized in the retained test logs. Raw command
+logs remain under `/tmp/lingxiloop-release-*` in this executor.

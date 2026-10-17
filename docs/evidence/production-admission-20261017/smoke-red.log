@@ -19,10 +19,10 @@ test at scripts/release-smoke.test.mjs:63:1
   ✓ /api/health/dependencies → 200 (0ms)
   ✓ /api/meta → 200 (0ms)
   Smoke failed: /api/meta did not report the LingxiLoop runtime-pending contract
-  
-  
+
+
   1 !== 0
-  
+
       at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/release-smoke.test.mjs:65:10)
       at async Test.run (node:internal/test_runner/test:1389:7)
       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
@@ -37,9 +37,9 @@ test at scripts/release-smoke.test.mjs:63:1
 test at scripts/release-smoke.test.mjs:69:1
 ✖ production smoke rejects retired or mismatched runtime before tenant access (75.602386ms)
   AssertionError [ERR_ASSERTION]: null
-  
+
   0 !== 1
-  
+
       at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/release-smoke.test.mjs:72:12)
       at async Test.run (node:internal/test_runner/test:1389:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
@@ -54,12 +54,12 @@ test at scripts/release-smoke.test.mjs:69:1
 test at scripts/release-smoke.test.mjs:77:1
 ✖ production smoke still enforces the concrete release commit (68.32594ms)
   AssertionError [ERR_ASSERTION]: The input did not match the regular expression /commit mismatch/. Input:
-  
+
   '✓ /api/health → 200 (33ms)\n' +
     '✓ /api/health/dependencies → 200 (0ms)\n' +
     '✓ /api/meta → 200 (1ms)\n' +
     'Smoke failed: /api/meta did not report the LingxiLoop runtime-pending contract\n'
-  
+
       at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/release-smoke.test.mjs:80:10)
       at async Test.run (node:internal/test_runner/test:1389:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
@@ -74,9 +74,9 @@ test at scripts/release-smoke.test.mjs:77:1
 test at scripts/release-smoke.test.mjs:83:1
 ✖ production smoke HTTP failure never prints server body or session secrets (66.769597ms)
   AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /synthetic-secret/. Input:
-  
+
   'Smoke failed: /api/health → 503: synthetic-secret-response-body\n'
-  
+
       at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/release-smoke.test.mjs:87:10)
       at async Test.run (node:internal/test_runner/test:1389:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {

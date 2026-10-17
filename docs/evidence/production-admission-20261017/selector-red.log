@@ -13,9 +13,9 @@
 test at scripts/production-rag-contract.test.mjs:371:1
 ✖ workflow path filters route real changed paths to their owning checks (25.90811ms)
   AssertionError [ERR_ASSERTION]: scripts/release-smoke.mjs
-  
+
   false !== true
-  
+
       at TestContext.<anonymous> (file:///workspace/LingxiLoop-development/scripts/production-rag-contract.test.mjs:401:12)
       at Test.runInAsyncScope (node:async_hooks:227:14)
       at Test.run (node:internal/test_runner/test:1382:25)
