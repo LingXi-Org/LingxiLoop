@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { isDeepStrictEqual } from 'node:util'
 import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
 import type { Queryable } from '../db/queryable.js'
-import { createPermissionService, type PermissionRequest } from '../modules/access/public.js'
+import { createPermissionService, ForbiddenError, type PermissionRequest } from '../modules/access/public.js'
 import type { AgentActionContext } from './contracts.js'
 import { resolveTeacherScope } from '../modules/learning/teacher-agent-application.js'
 import { TEACHER_KNOWLEDGE_ACTIONS } from '../modules/learning/teacher-preset.js'
@@ -84,7 +84,7 @@ export function nativeTool<S extends z.ZodObject>(action: string, schema: S,
         await authorizeAgent(context)
         await definition.authorize(context, input)
       }
-      catch (error) { if (error instanceof Error && 'reason' in error) throw new NoEffectError(error.message, 'forbidden'); throw error }
+      catch (error) { if (error instanceof ForbiddenError) throw new NoEffectError(error.message, 'forbidden'); throw error }
     },
     ...(definition.verify ? { async verify(context: ActionContext, input: z.output<S>, value: unknown) {
       await authorizeAgent(context)
