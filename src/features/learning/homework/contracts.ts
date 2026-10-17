@@ -36,7 +36,7 @@ export interface HomeworkSubmission {
   conversationReferences:ConversationEvidence[]
   id: string
   learnerId: string
-  learnerName: string
+  learnerName: string; learnerAvatarUrl?: string | null
   version: number
   answer: HomeworkAnswer
   report: HomeworkReport
@@ -66,7 +66,7 @@ export interface HomeworkStudent {
 export interface HomeworkDetail { homework: Homework; student: HomeworkStudent | null; teacher: boolean }
 export interface HomeworkLearner {
   learnerId: string
-  learnerName: string
+  learnerName: string; learnerAvatarUrl?: string | null
   status: HomeworkLearnerStatus
   missingCriteria: string[]
   evidenceRevision: number

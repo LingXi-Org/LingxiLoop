@@ -55,7 +55,7 @@ export function ForumDiscussion({ courseId, item, canWrite, canManage, onComment
         disabled={disabled} onUploading={setUploading} />
         {storageError && <p role="status" className="text-sm text-destructive">无法保存本地草稿，请先复制内容再关闭。</p>}
         <div className="flex justify-end gap-2"><Button variant="ghost" type="button" disabled={disabled} onClick={()=>setShowEditor(false)}>取消</Button><Button type="submit" disabled={disabled || !body.trim() && !links.trim() && !attachments.length}>{uploading ? '上传中…' : '发送评论'}</Button></div></form>}
-      {comments.map(comment => <MemoCard key={comment.id} label={`${comment.authorName}的评论`} author={comment.authorName} createdAt={comment.createdAt}
+      {comments.map(comment => <MemoCard key={comment.id} label={`${comment.authorName}的评论`} author={comment.authorName} authorId={comment.authorId} authorAvatarUrl={comment.authorAvatarUrl} createdAt={comment.createdAt}
         actions={<>{item.targetType==='post'&&canWrite&&comment.authorId===userId&&<Button variant="ghost" size="sm" onClick={()=>setEditing(comment.id)}>编辑评论</Button>}{item.targetType==='post'&&canWrite&&(canManage||comment.authorId===userId)&&<Button variant="ghost" size="sm" onClick={()=>setDeleting(comment.id)}>删除评论</Button>}</>}>
         {editing===comment.id ? <ForumCommentEditor courseId={courseId} item={item} comment={comment} onSaved={()=>{setEditing(null);void load();onComment()}} onClose={()=>setEditing(null)}/> : <><MemoContent content={comment.body}/><ForumFiles links={comment.links} attachments={comment.attachments}/></>}
       </MemoCard>)}

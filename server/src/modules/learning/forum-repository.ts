@@ -2,7 +2,7 @@ import type { Queryable } from '../../db/queryable.js'
 import type { ForumQuery, ForumTarget, LearningAttachment } from './forum-contracts.js'
 export interface ForumItem {
   id: string; targetType: ForumTarget; kind: 'share' | 'assignment'; title: string; body: string
-  authorId: string; authorName: string; createdAt: string; updatedAt: string; tags: string[]; links: string[]; attachments: LearningAttachment[]
+  authorId: string; authorName: string; authorAvatarUrl: string | null; createdAt: string; updatedAt: string; tags: string[]; links: string[]; attachments: LearningAttachment[]
   sourceId: string | null; dueAt: string | null; status: string; pinned: boolean; archived: boolean; commentCount: number; reactions: { emoji: string; userIds: string[] }[]
 }
 export async function listForumItems(db: Queryable, companyId: string, projectId: string, query: ForumQuery,
@@ -15,7 +15,7 @@ export async function listForumItems(db: Queryable, companyId: string, projectId
       ,h.due_at,h.status,FALSE,NULL,'homework'
     FROM homeworks h WHERE h.company_id=$1 AND h.project_id=$2
   ) SELECT p.id,p.target_type AS "targetType",p.kind,p.title,p.body,p.author_user_id AS "authorId",
-    COALESCE(u.display_name,'课程成员') AS "authorName",p.created_at AS "createdAt",p.updated_at AS "updatedAt",p.tags,p.links,p.attachments,
+    COALESCE(u.display_name,'课程成员') AS "authorName",u.avatar_url AS "authorAvatarUrl",p.created_at AS "createdAt",p.updated_at AS "updatedAt",p.tags,p.links,p.attachments,
     p.source_id AS "sourceId",p.due_at AS "dueAt",p.status,COALESCE(f.pinned,FALSE) AS pinned,CASE WHEN p.target_type='homework' THEN COALESCE(f.archived,FALSE) ELSE p.archived END AS archived,
     (SELECT COUNT(*)::int FROM course_forum_comments c WHERE c.company_id=p.company_id AND c.project_id=p.project_id AND c.target_type=p.target_type AND c.target_id=p.id AND c.deleted_at IS NULL) AS "commentCount",
     COALESCE((SELECT jsonb_agg(jsonb_build_object('emoji',r.emoji,'userIds',r.users)) FROM
@@ -38,7 +38,7 @@ export async function listForumItems(db: Queryable, companyId: string, projectId
   return rows
 }
 export async function listSubmissionVersions(db: Queryable, companyId: string, projectId: string, assignmentId: string, learnerId: string | null, offset: number) {
-  const { rows } = await db.query(`SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",s.submitted_at AS "submittedAt",
+  const { rows } = await db.query(`SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",u.avatar_url AS "learnerAvatarUrl",s.submitted_at AS "submittedAt",
     (ROW_NUMBER() OVER (PARTITION BY s.learner_id ORDER BY s.submission_sequence))::int AS version,
     s.source,s.submitted_by_agent AS "agentId",s.agent_work_id AS "agentWorkId",s.late,s.answer,s.links,s.attachments,s.conversation_references AS "conversationReferences",
     COALESCE(s.assessment,(SELECT jsonb_build_object('status',CASE e.status WHEN 'failed' THEN 'FAILED' ELSE 'PENDING' END) FROM learning_effects e
@@ -56,7 +56,7 @@ export async function listSubmissionStudents(db: Queryable, companyId: string, p
     SELECT s.*,ROW_NUMBER() OVER(PARTITION BY learner_id ORDER BY submission_sequence DESC) AS latest,
       COUNT(*) OVER(PARTITION BY learner_id)::int AS version
     FROM course_forum_submissions s WHERE company_id=$1 AND project_id=$2 AND assignment_id=$3
-  ) SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",s.submitted_at AS "submittedAt",s.version,
+  ) SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",u.avatar_url AS "learnerAvatarUrl",s.submitted_at AS "submittedAt",s.version,
     COALESCE(s.assessment,(SELECT jsonb_build_object('status',CASE e.status WHEN 'failed' THEN 'FAILED' ELSE 'PENDING' END)
       FROM learning_effects e WHERE e.company_id=s.company_id AND e.kind='forum.assess' AND e.effect_key=s.id)) AS assessment,
     (SELECT COALESCE(jsonb_agg(jsonb_build_object('title',r->>'title','index',n-1)),'[]')

@@ -16,10 +16,10 @@ import { MemoEditor } from './memos/MemoEditor'
 
 const imageMarkdown = (file: ForumAttachment) => `![${file.name.replace(/[\\[\]]/g, '\\$&')}](${forumFileUrl(file)})`
 
-export function ForumContentFields({ body, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, tags }: {
+export function ForumContentFields({ body, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, tags, compact = false, onFocus }: {
   body: string; setBody(value: string): void; links: string; setLinks(value: string): void
   attachments: ForumAttachment[]; setAttachments(value: ForumAttachment[]): void
-  disabled: boolean; onUploading(value: boolean): void; label?: string; maxLength?: number; tags?: string[]
+  disabled: boolean; onUploading(value: boolean): void; label?: string; maxLength?: number; tags?: string[]; compact?: boolean; onFocus?(): void
 }) {
   const id = useId(), editor = useRef<EditorController>(null), picker = useRef<HTMLInputElement>(null)
   const [error, setError] = useState(''), [uploadName, setUploadName] = useState('')
@@ -57,8 +57,9 @@ export function ForumContentFields({ body, setBody, links, setLinks, attachments
     ;[next[index], next[target]] = [next[target], next[index]]
     setAttachments(next)
   }
-  return <div className="min-w-0 space-y-3">
-    <MemoEditor ref={editor} value={body} onChange={setBody} label={label} maxLength={maxLength} tags={tags} disabled={disabled} onFiles={(files, origin) => void upload(files, origin)} />
+  return <div className={compact?'min-w-0':'min-w-0 space-y-2'}>
+    <MemoEditor ref={editor} compact={compact} onFocus={onFocus} value={body} onChange={setBody} label={label} maxLength={maxLength} tags={tags} disabled={disabled} onFiles={(files, origin) => void upload(files, origin)} />
+    <div hidden={compact} className="space-y-2">
     <div className="flex flex-wrap items-center gap-2">
       <Input ref={picker} id={`${id}-files`} aria-label="附件" className="sr-only" type="file" multiple disabled={disabled || attachments.length >= 20} onChange={event => {
         const files = Array.from(event.target.files ?? []); event.target.value = ''; void upload(files)
@@ -77,6 +78,7 @@ export function ForumContentFields({ body, setBody, links, setLinks, attachments
     </li>)}</ul>}
     <details className="rounded-lg border border-border/60 px-3 py-2"><summary className="cursor-pointer text-sm text-muted-foreground focus-visible:outline-2">附加链接</summary><div className="space-y-2 pt-2"><Label htmlFor={`${id}-links`}>链接（每行一个）</Label><Textarea id={`${id}-links`} value={links} onChange={event => setLinks(event.target.value)} rows={2} disabled={disabled} placeholder="https://" /></div></details>
     {error && <p role="alert" className="text-sm text-destructive">{error}{failed.length > 0 && <Button type="button" variant="link" disabled={disabled} onClick={() => void upload(failed)}>重试上传</Button>}</p>}
+    </div>
   </div>
 }
 

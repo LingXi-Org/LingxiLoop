@@ -1,0 +1,2550 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a147cc-7ee8-7ce5-a019-3cc822f30052",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-17T02:59:07.666Z",
+    "finishedAt": "2026-10-17T03:01:08.727Z",
+    "project": {
+      "id": "lingxiloop-forum",
+      "configDigest": "b40ba2d876bcd83be3d9d7cad67e4783ee164953020bd002d82818f82ebf84d9"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "2db5bbcddc8f14ac62500e36594dc49793c9e096",
+      "branch": "codex/issue-163-compact-forum",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "forum",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53098",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "6effff7cf24001659ddf0ad1582fe9aa4453903837299d2ec1f8e998a03f9485",
+        "testId": "e2e/forum/issue163.e2e.ts::compact%20inline%20editor%20preserves%20drafts%20and%20binds%20every%20avatar%20to%20its%20account",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "compact inline editor preserves drafts and binds every avatar to its account"
+        ],
+        "file": "e2e/forum/issue163.e2e.ts",
+        "source": {
+          "file": "e2e/forum/issue163.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "forum",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a147cc-87a4-739d-aa03-c021da256ab1",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-17T02:59:08.837Z",
+            "durationMs": 119683,
+            "artifacts": [
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:12"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/001-issue163-compact-light-1440.png",
+                "size": 96281,
+                "sha256": "a30fa8e0b3b5a4ea6cbc4e3481606e41499d624f0429b941532a59fe6d4eed1f"
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:17"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/002-issue163-compact-light-390.png",
+                "size": 56900,
+                "sha256": "77e4b921cdfc7371690a49c065700fef9fc2d37666acc6777e09c86261acd9a1"
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:25"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/003-issue163-expanded-long-text-and-attachment.png",
+                "size": 126097,
+                "sha256": "01c33fedd885d4a00ce1ae1118501ceeafb8b6854edb063256f866b59ae3c5f7"
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:3",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:74"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/004-issue163-multiple-account-avatars.png",
+                "size": 97690,
+                "sha256": "22b17f1087808b7967feabd2e5021fb26d3150c403d91114cffb2c205826fd67"
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:4",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:80"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/005-issue163-post-and-comment-avatars.png",
+                "size": 69190,
+                "sha256": "512f9ded9db2c5ceb1b23a4bc3917bf498a4f1e9f09c543c5dbb6e25fe49d346"
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:5",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:84"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/006-issue163-updated-account-avatar.png",
+                "size": 66131,
+                "sha256": "4762f980d5930d34a36bba8dc2a4c95d65fe839bd9aa6839a59475977c055e80"
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:6",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:91"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/007-issue163-failed-avatar-placeholder.png",
+                "size": 94395,
+                "sha256": "e1a376b6bc521caa950b416222e08dffb9d36a8acc345549ef9adf0d48bd56bc"
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:7",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:105"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/008-issue163-account-avatar-roster-refresh.png",
+                "size": 78504,
+                "sha256": "96f6152faf0d348a9522507fb22055413ca18ea830c757571bfc44027761aada"
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:8",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:122"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/009-issue163-expanded-dark-mobile.png",
+                "size": 51843,
+                "sha256": "c63432e2afa37abd4766d1f812166aa0e5ec6988193ac8c64b3f6880d6bd8456"
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:9",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a147cc-87a4-739d-aa03-c021da256ab1:129"
+                },
+                "path": "forum/e2e_forum_issue163.e2e.ts__compact_20inline_20editor_20preserves_20drafts_20and_20binds_20every_20avatar_20to_2-4f281c30/default/attempt-0/screenshots/010-issue163-compact-dark-keyboard.png",
+                "size": 54767,
+                "sha256": "54b1761f54f773f46abe37f2713fed4bccba4cdedbb673c76f145378c44fa0c2"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:09.127Z",
+                "durationMs": 8290,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 11,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:17.419Z",
+                "durationMs": 376,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 12,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:2",
+                "index": 2,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=e2e-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:17.796Z",
+                "durationMs": 469,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 16,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:18.268Z",
+                "durationMs": 6728,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 17,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"article[aria-label=\\\"Forum homework\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:24.997Z",
+                "durationMs": 489,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 18,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:25.486Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 20,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:25.566Z",
+                "durationMs": 251,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 47,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"image\", name: \"Forum teacher的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:25.818Z",
+                "durationMs": 4120,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 48,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:29.939Z",
+                "durationMs": 205,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 844,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 50,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-memo-card]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.144Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 37,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.177Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 38,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toBeHidden",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"添加附件\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.195Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 55,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:12",
+                "index": 12,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-compact-light-1440",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.213Z",
+                "durationMs": 176,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 56,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.390Z",
+                "durationMs": 435,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 844,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 50,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:14",
+                "index": 14,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-memo-card]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.825Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 37,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.847Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 38,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.toBeHidden",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"添加附件\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.866Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 55,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:17",
+                "index": 17,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-compact-light-390",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.881Z",
+                "durationMs": 66,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 56,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:30.947Z",
+                "durationMs": 300,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 58,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:19",
+                "index": 19,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:31.247Z",
+                "durationMs": 184,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 59,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"添加附件\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:31.432Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 60,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:21",
+                "index": 21,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:31.466Z",
+                "durationMs": 523,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 61,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:31.990Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 62,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:23",
+                "index": 23,
+                "kind": "locator",
+                "api": "locator.setInputFiles",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"附件\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:32.015Z",
+                "durationMs": 294,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 66,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"移除附件：diagram.png\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:32.311Z",
+                "durationMs": 330,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 67,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:25",
+                "index": 25,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-expanded-long-text-and-attachment",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:32.642Z",
+                "durationMs": 142,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 68,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"收起发布框\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:32.784Z",
+                "durationMs": 169,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 69,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-memo-card]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:32.954Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 37,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:32.975Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 38,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:29",
+                "index": 29,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"展开发布框\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:32.994Z",
+                "durationMs": 58,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 71,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:33.052Z",
+                "durationMs": 128,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 72,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:31",
+                "index": 31,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:33.180Z",
+                "durationMs": 102,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 73,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+Home",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:33.282Z",
+                "durationMs": 64,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 74,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:33",
+                "index": 33,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:33.347Z",
+                "durationMs": 67,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 75,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"移除附件：diagram.png\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:33.414Z",
+                "durationMs": 55,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 76,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:35",
+                "index": 35,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"正式作业\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:33.470Z",
+                "durationMs": 233,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 77,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"作业标题\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:33.703Z",
+                "durationMs": 173,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 78,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:37",
+                "index": 37,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:33.877Z",
+                "durationMs": 108,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 79,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:38",
+                "index": 38,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"自由讨论\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:33.987Z",
+                "durationMs": 318,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 80,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:34.305Z",
+                "durationMs": 65,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 81,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:40",
+                "index": 40,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"移除附件：diagram.png\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:34.371Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 82,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:41",
+                "index": 41,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:34.402Z",
+                "durationMs": 289,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 83,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:42",
+                "index": 42,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:34.692Z",
+                "durationMs": 3955,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 84,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:43",
+                "index": 43,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:38.647Z",
+                "durationMs": 171,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 85,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:44",
+                "index": 44,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"移除附件：diagram.png\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:38.818Z",
+                "durationMs": 67,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 86,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:45",
+                "index": 45,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:38.885Z",
+                "durationMs": 38,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 87,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:46",
+                "index": 46,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:38.923Z",
+                "durationMs": 390,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 88,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:47",
+                "index": 47,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:39.313Z",
+                "durationMs": 108,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 89,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:48",
+                "index": 48,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:39.425Z",
+                "durationMs": 39,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 90,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:49",
+                "index": 49,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"收起发布框\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:39.465Z",
+                "durationMs": 192,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 91,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:50",
+                "index": 50,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"展开发布框\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:39.657Z",
+                "durationMs": 191,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 92,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:51",
+                "index": 51,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"移除附件：diagram.png\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:39.849Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 93,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:52",
+                "index": 52,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:39.880Z",
+                "durationMs": 128,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 94,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:53",
+                "index": 53,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:40.008Z",
+                "durationMs": 203,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 95,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:54",
+                "index": 54,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"article[aria-label=\\\"Issue163 教师讨论\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:40.211Z",
+                "durationMs": 559,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 97,
+                  "column": 29
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:55",
+                "index": 55,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"article[aria-label=\\\"Issue163 教师讨论\\\"]\") >> getByRole(\"image\", name: \"Forum teacher的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:40.772Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 98,
+                  "column": 83
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:56",
+                "index": 56,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"展开发布框\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:40.800Z",
+                "durationMs": 215,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 99,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:57",
+                "index": 57,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"正式作业\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:41.015Z",
+                "durationMs": 197,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 100,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:58",
+                "index": 58,
+                "kind": "assertion",
+                "api": "expect.toHaveValue",
+                "label": "getByLabel(\"作业标题\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:41.212Z",
+                "durationMs": 88,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 101,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:59",
+                "index": 59,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"发布作业\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:41.301Z",
+                "durationMs": 232,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 102,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:60",
+                "index": 60,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"article[aria-label=\\\"Issue163 教师作业\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:41.534Z",
+                "durationMs": 574,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 103,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:61",
+                "index": 61,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:42.110Z",
+                "durationMs": 231,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 11,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:62",
+                "index": 62,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:42.341Z",
+                "durationMs": 249,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 12,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:63",
+                "index": 63,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=e2e-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:42.592Z",
+                "durationMs": 157,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 16,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:64",
+                "index": 64,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:42.749Z",
+                "durationMs": 3527,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 17,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:65",
+                "index": 65,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"article[aria-label=\\\"Forum homework\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:46.276Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 18,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:66",
+                "index": 66,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:46.299Z",
+                "durationMs": 81,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 20,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:67",
+                "index": 67,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:46.380Z",
+                "durationMs": 290,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 107,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:68",
+                "index": 68,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"image\", name: \"Forum student的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:46.671Z",
+                "durationMs": 3344,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 108,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:69",
+                "index": 69,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:50.016Z",
+                "durationMs": 179,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 109,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:70",
+                "index": 70,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:50.195Z",
+                "durationMs": 389,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 110,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:71",
+                "index": 71,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"article[aria-label=\\\"Issue163 学生讨论\\\"]\") >> getByRole(\"image\", name: \"Forum student的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:50.584Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 112,
+                  "column": 83
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:72",
+                "index": 72,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"article[aria-label=\\\"Issue163 教师讨论\\\"]\") >> getByRole(\"image\", name: \"Forum teacher的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:50.678Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 113,
+                  "column": 83
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:73",
+                "index": 73,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:50.705Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 114,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:74",
+                "index": 74,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-multiple-account-avatars",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:50.728Z",
+                "durationMs": 125,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:3"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 115,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:75",
+                "index": 75,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"article[aria-label=\\\"Issue163 教师讨论\\\"]\") >> getByRole(\"button\", name: \"评论\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:50.854Z",
+                "durationMs": 290,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 116,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:76",
+                "index": 76,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"写评论\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:51.145Z",
+                "durationMs": 282,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 117,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:77",
+                "index": 77,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"发表评论\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:51.427Z",
+                "durationMs": 143,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 118,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:78",
+                "index": 78,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"发送评论\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:51.572Z",
+                "durationMs": 249,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 119,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:79",
+                "index": 79,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"article[aria-label=\\\"Forum student的评论\\\"]\") >> getByRole(\"image\", name: \"Forum student的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:51.822Z",
+                "durationMs": 436,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 121,
+                  "column": 79
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:80",
+                "index": 80,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-post-and-comment-avatars",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:52.258Z",
+                "durationMs": 85,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:4"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 122,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:81",
+                "index": 81,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:52.344Z",
+                "durationMs": 63,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 20,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:82",
+                "index": 82,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:52.408Z",
+                "durationMs": 183,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 124,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:83",
+                "index": 83,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"article[aria-label=\\\"Forum student的评论\\\"]\") >> getByRole(\"image\", name: \"Forum student的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:52.591Z",
+                "durationMs": 3342,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 125,
+                  "column": 79
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:84",
+                "index": 84,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-updated-account-avatar",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:55.933Z",
+                "durationMs": 120,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:5"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 126,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:85",
+                "index": 85,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"link\", name: \"返回学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:56.054Z",
+                "durationMs": 440,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 127,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:86",
+                "index": 86,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"image\", name: \"Forum student的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:56.495Z",
+                "durationMs": 100,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 128,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:87",
+                "index": 87,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"article[aria-label=\\\"Issue163 学生讨论\\\"]\") >> getByRole(\"image\", name: \"Forum student的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:56.595Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 129,
+                  "column": 83
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:88",
+                "index": 88,
+                "kind": "resource",
+                "api": "browser.route",
+                "label": "**/api/fixture-avatar?key=avatars%2Fe2e-school%2F7faa49fc-530c-4c40-9042-4b7020c0fb31.png",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:56.702Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 130,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:89",
+                "index": 89,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:56.745Z",
+                "durationMs": 469,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 131,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:90",
+                "index": 90,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"image\", name: \"Forum student未设置头像或头像加载失败\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T02:59:57.214Z",
+                "durationMs": 3914,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 132,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:91",
+                "index": 91,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-failed-avatar-placeholder",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:01.128Z",
+                "durationMs": 362,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:6"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 133,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:92",
+                "index": 92,
+                "kind": "resource",
+                "api": "browser.unroute",
+                "label": "**/api/fixture-avatar?key=avatars%2Fe2e-school%2F7faa49fc-530c-4c40-9042-4b7020c0fb31.png",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:01.490Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 134,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:93",
+                "index": 93,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:01.496Z",
+                "durationMs": 185,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 11,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:94",
+                "index": 94,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:01.682Z",
+                "durationMs": 241,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 12,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:95",
+                "index": 95,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=e2e-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:01.923Z",
+                "durationMs": 185,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 16,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:96",
+                "index": 96,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:02.108Z",
+                "durationMs": 2772,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 17,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:97",
+                "index": 97,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"article[aria-label=\\\"Forum homework\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:04.882Z",
+                "durationMs": 249,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 18,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:98",
+                "index": 98,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"link\", name: \"Memos 学习报告详情\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:05.133Z",
+                "durationMs": 272,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 136,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:99",
+                "index": 99,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"按学生姓名检索\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:05.405Z",
+                "durationMs": 323,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 137,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:100",
+                "index": 100,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-memo-detail] article[aria-label=\\\"Forum student\\\"]\") >> getByRole(\"image\", name: \"Forum student的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:05.728Z",
+                "durationMs": 266,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 139,
+                  "column": 31
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:101",
+                "index": 101,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:05.996Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 140,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:102",
+                "index": 102,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:06.020Z",
+                "durationMs": 81,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 20,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:103",
+                "index": 103,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:06.102Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 142,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:104",
+                "index": 104,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-memo-detail] article[aria-label=\\\"Forum student\\\"]\") >> getByRole(\"image\", name: \"Forum student的头像\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:00:06.136Z",
+                "durationMs": 57210,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 145,
+                  "column": 31
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:105",
+                "index": 105,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-account-avatar-roster-refresh",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:03.346Z",
+                "durationMs": 72,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:7"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 146,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:106",
+                "index": 106,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:03.418Z",
+                "durationMs": 130,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 11,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:107",
+                "index": 107,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:03.548Z",
+                "durationMs": 169,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 12,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:108",
+                "index": 108,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=e2e-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:03.717Z",
+                "durationMs": 137,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 16,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:109",
+                "index": 109,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:03.854Z",
+                "durationMs": 1684,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 17,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:110",
+                "index": 110,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"article[aria-label=\\\"Forum homework\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:05.539Z",
+                "durationMs": 157,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 18,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:111",
+                "index": 111,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"image\", name: \"Forum peer未设置头像或头像加载失败\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:05.696Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 148,
+                  "column": 88
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:112",
+                "index": 112,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:05.715Z",
+                "durationMs": 85,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 149,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:113",
+                "index": 113,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:05.800Z",
+                "durationMs": 81,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 150,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:114",
+                "index": 114,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"预览正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:05.882Z",
+                "durationMs": 119,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 151,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:115",
+                "index": 115,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"收起发布框\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.002Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 152,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:116",
+                "index": 116,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.108Z",
+                "durationMs": 73,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 153,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:117",
+                "index": 117,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.182Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 154,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:118",
+                "index": 118,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.211Z",
+                "durationMs": 295,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 844,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 155,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:119",
+                "index": 119,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.506Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 156,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:120",
+                "index": 120,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"收起发布框\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.553Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 157,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:121",
+                "index": 121,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.564Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 158,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:122",
+                "index": 122,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-expanded-dark-mobile",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.592Z",
+                "durationMs": 66,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:8"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 159,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:123",
+                "index": 123,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"收起发布框\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.659Z",
+                "durationMs": 132,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 160,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:124",
+                "index": 124,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByRole(\"button\", name: \"展开发布框\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.793Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 161,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:125",
+                "index": 125,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "ArrowRight",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.817Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 162,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:126",
+                "index": 126,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.828Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 163,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:127",
+                "index": 127,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-memo-card]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.834Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 37,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:128",
+                "index": 128,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.842Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 38,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:129",
+                "index": 129,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "issue163-compact-dark-keyboard",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.852Z",
+                "durationMs": 57,
+                "events": [],
+                "artifacts": [
+                  "01a147cc-87a4-739d-aa03-c021da256ab1:artifact:9"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 168,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:130",
+                "index": 130,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.909Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 169,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a147cc-87a4-739d-aa03-c021da256ab1:131",
+                "index": 131,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"region\", name: \"发布学习论坛内容\") >> getByLabel(\"内容正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-17T03:01:06.937Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue163.e2e.ts",
+                  "line": 170,
+                  "column": 26
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 1,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 791798,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

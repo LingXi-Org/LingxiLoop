@@ -50,6 +50,23 @@ await pool.query(`INSERT INTO homework_submissions(id,company_id,project_id,home
   VALUES('fixture-homework-submission','e2e-school','e2e-classroom','issue146-homework','forum-student',1,'fixture-key','fixture',$1::jsonb,$2::jsonb,1,0,false,$3::jsonb)`,[JSON.stringify(fixtureAnswer),JSON.stringify(fixtureReport),JSON.stringify(fixtureReferences)])
 // Synthetic auth and in-memory objects are confined to this loopback-only test server.
 const app = express()
+// Mirror the public avatar prefix only; private attachment reads still use the
+// ordinary authorized file API. The object bytes live in integration storage.
+const originalPublicUrl = storage.publicUrl.bind(storage)
+storage.publicUrl = async key => key.startsWith('avatars/') ? `/api/fixture-avatar?key=${encodeURIComponent(key)}` : originalPublicUrl(key)
+const originalPut = storage.put.bind(storage)
+storage.put = async (key,body,mime) => {
+  const url=await originalPut(key,body,mime)
+  return key.startsWith('avatars/') ? storage.publicUrl(key) : url
+}
+app.get('/api/fixture-avatar', async (req,res) => {
+  const key=String(req.query.key)
+  if (!key.startsWith('avatars/e2e-school/')) { res.sendStatus(404); return }
+  try {
+    const meta=await storage.statObject(key)
+    res.type(meta.contentType ?? 'application/octet-stream').send(await storage.readObjectBounded(key,5*1024*1024))
+  } catch { res.sendStatus(404) }
+})
 app.get('/api/fixture-role/:role', (req,res) => {
   if (!['teacher','student','peer'].includes(req.params.role)) { res.sendStatus(400); return }
   res.setHeader('Set-Cookie', `forum-role=${req.params.role}; Path=/; SameSite=Strict; HttpOnly`)

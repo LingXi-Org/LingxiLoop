@@ -78,8 +78,8 @@ export class ForumApplication {
   async comments(scope: LearningScope, courseId: string, type: ForumTarget, id: string, offset: number) {
     const project = await this.scope(this.db, scope, courseId)
     await this.item(this.db, scope.companyId, project.projectId, type, id)
-    const { rows } = await this.db.query<{ id: string; authorId: string; authorName: string; body: string; links: string[]; attachments: LearningAttachment[]; createdAt: string }>(`
-      SELECT c.id,c.author_user_id AS "authorId",u.display_name AS "authorName",c.body,c.links,c.attachments,c.created_at AS "createdAt"
+    const { rows } = await this.db.query<{ id: string; authorId: string; authorName: string; authorAvatarUrl: string | null; body: string; links: string[]; attachments: LearningAttachment[]; createdAt: string }>(`
+      SELECT c.id,c.author_user_id AS "authorId",u.display_name AS "authorName",u.avatar_url AS "authorAvatarUrl",c.body,c.links,c.attachments,c.created_at AS "createdAt"
       FROM course_forum_comments c JOIN users u ON u.id=c.author_user_id
       WHERE c.company_id=$1 AND c.project_id=$2 AND c.target_type=$3 AND c.target_id=$4 AND c.deleted_at IS NULL
       ORDER BY c.created_at,c.id LIMIT 51 OFFSET $5`, [scope.companyId,project.projectId,type,id,offset])

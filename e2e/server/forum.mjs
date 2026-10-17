@@ -6,8 +6,8 @@ import { resolve } from 'node:path'
 import pg from 'pg'
 
 const cwd = resolve(import.meta.dirname, '../..')
-assert.ok(process.argv.slice(2).every(arg => ['--browser','--browser-only','--resources-only','--issue146'].includes(arg)), 'Unknown forum validation option')
-const output = resolve(cwd, process.argv.includes('--issue146')?'artifacts/forum/issue146':'artifacts/forum')
+assert.ok(process.argv.slice(2).every(arg => ['--browser','--browser-only','--resources-only','--issue146','--issue163'].includes(arg)), 'Unknown forum validation option')
+const output = resolve(cwd, process.argv.includes('--issue163')?'artifacts/forum/issue163':process.argv.includes('--issue146')?'artifacts/forum/issue146':'artifacts/forum')
 await mkdir(output, { recursive: true })
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
   /^(XDG_CACHE_HOME|PATH|PATHEXT|SYSTEMROOT|WINDIR|TEMP|TMP|HOME|HOMEDRIVE|HOMEPATH|USERPROFILE|APPDATA|LOCALAPPDATA|COMSPEC|PROGRAMFILES(?:\(X86\))?|PROGRAMDATA|PROGRAMW6432|ALLUSERSPROFILE)$/i.test(name)))
@@ -23,6 +23,7 @@ Object.assign(env, {
 })
 assert.equal(new URL(env.DATABASE_URL).pathname, '/lingxiloop_forum_test')
 if(process.argv.includes('--issue146')) env.FORUM_ISSUE146='1'
+if(process.argv.includes('--issue163')) env.FORUM_ISSUE163='1'
 const log = resolve(output, process.argv.includes('--browser-only') ? 'browser-driver.log' : 'integration.log')
 await writeFile(log, '')
 const results = []
