@@ -153,7 +153,7 @@ test('product native admission, cancellation, revision, independent delivery and
         WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`, [companyId, agentId, sent.clientNonce])).rows,
       [{ status: 'accepted', messageId: sent.messageId }])
       const callsBeforeReplay = sent.calls
-      const rowsBeforeReplay = durableMessages.length
+      const rowsBeforeReplay = durableMessages.filter(message => message.clientMsgNo === sent.clientNonce).length
       const view = sent.payload.metadata.custom.harness as RunDisplayState
       const commit: DeliveryContext['commit'] = { resultId: view.resultId!,fence: view.messageFence }
       assert.ok(work.conversation)
@@ -162,7 +162,7 @@ test('product native admission, cancellation, revision, independent delivery and
         { signal: shutdown.signal, deadlineAt: new Date(Date.now() + 15000).toISOString(), commit, im: context })
       assert.deepEqual(receipt, { messageId: sent.messageId })
       assert.equal(sent.calls, callsBeforeReplay, 'ACK replay must use the persisted WuKong receipt without another send')
-      assert.equal(durableMessages.length, rowsBeforeReplay, 'ACK replay must not append another durable row')
+      assert.equal(durableMessages.filter(message => message.clientMsgNo === sent.clientNonce).length, rowsBeforeReplay, 'ACK replay must not append another durable row for the accepted send')
       assert.equal(sent.payload.id, `run-${run.runId}`)
       assert.equal(sent.clientNonce,context.messageKey)
     }

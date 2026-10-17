@@ -6,11 +6,21 @@ import { createHash, randomUUID } from 'node:crypto'
 import { createServer, request as httpRequest } from 'node:http'
 import { setTimeout as delay } from 'node:timers/promises'
 import express from 'express'
+import pg from 'pg'
 import { WebSocketServer } from 'ws'
 
+// A worker claims globally. A fresh reliability database prevents an abandoned
+// run from a previous browser invocation from taking this scenario's claim.
+const reliabilityDatabase = process.env.E2E_RUNTIME_RELIABILITY === '1'
+  ? `lingxiloop_browser_test_${randomUUID().replaceAll('-', '')}` : null
+if (reliabilityDatabase) {
+  const admin = new pg.Client({ connectionString: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/postgres' })
+  await admin.connect()
+  try { await admin.query(`CREATE DATABASE "${reliabilityDatabase}"`) } finally { await admin.end() }
+}
 const fixtureEnvironment = {
   DOTENV_CONFIG_PATH: '/tmp/lingxiloop-no-dotenv', NODE_ENV: 'test',
-  DATABASE_URL: `postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/${process.env.E2E_RUNTIME_RELIABILITY === '1' ? 'lingxiloop_browser_reliability_test' : 'lingxiloop_integration_test'}`,
+  DATABASE_URL: `postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/${reliabilityDatabase ?? 'lingxiloop_integration_test'}`,
   REDIS_URL: 'redis://127.0.0.1:56379/0',
   OPENAI_API_KEY: 'integration-test-key', OPENAI_BASE_URL: 'http://127.0.0.1:1/v1',
   OPENAI_EMBEDDING_MODEL: 'text-embedding-3-small',
