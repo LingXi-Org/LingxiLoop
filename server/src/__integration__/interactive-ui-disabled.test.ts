@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { createHash, createHmac } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import { after, before, test } from 'node:test'
+import { setTimeout as delay } from 'node:timers/promises'
 import type { AssistantMessage, DeliveryPort } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
@@ -182,6 +183,14 @@ test('old accepted and unknown delivery receipts retain their immutable payload 
       }
       assert.equal(receiptMessages().length, writes + (state === 'new' ? 1 : 0), 'legacy receipt recovery never sends its accepted nonce again')
       if (state === 'absent') assert.deepEqual(await counts(), before)
-    } finally { await host.completeWork(work, { status: 'cancelled' }) }
+    } finally {
+      await host.completeWork(work, { status: 'cancelled' })
+      // Settle this scenario's independent notice before the next scenario
+      // measures all acceptances; its arrival is not a replay of this receipt.
+      const deadline = AbortSignal.timeout(10000)
+      while ((await api.readTerminal(identity))?.delivery !== 'delivered') {
+        deadline.throwIfAborted(); await delay(25)
+      }
+    }
   }
 })
