@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { releaseVersions } from '@lyyzka/lingxios'
+
 /** Authenticated production smoke.
  *
  * Required:
@@ -42,7 +44,7 @@ async function request(path, { authenticated = true, method = 'GET' } = {}) {
   const raw = await response.text()
   let body = null
   try { body = raw ? JSON.parse(raw) : null } catch { body = raw }
-  if (!response.ok) throw new Error(`${path} → ${response.status}: ${String(raw).slice(0, 300)}`)
+  if (!response.ok) throw new Error(`${path} → ${response.status}`)
   console.log(`✓ ${path} → ${response.status} (${Date.now() - started}ms)`)
   return body
 }
@@ -57,8 +59,10 @@ try {
   }
 
   const meta = await request('/api/meta', { authenticated: false })
-  if (meta?.product !== 'LingxiLoop' || meta?.reasoningRuntime !== null) {
-    throw new Error('/api/meta did not report the LingxiLoop runtime-pending contract')
+  const runtime = meta?.reasoningRuntime
+  if (meta?.product !== 'LingxiLoop' || runtime?.name !== '@lyyzka/lingxios'
+    || Object.entries(releaseVersions).some(([key, value]) => runtime[key] !== value)) {
+    throw new Error('/api/meta did not report the expected published LingxiOS runtime/schema/protocol')
   }
   if (expectedSha && meta.commitSha !== expectedSha) {
     throw new Error(`/api/meta commit mismatch: expected ${expectedSha}, got ${meta.commitSha}`)

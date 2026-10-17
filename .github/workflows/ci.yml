@@ -171,6 +171,7 @@ jobs:
               - '.github/workflows/ci.yml'
               - 'scripts/ci-scope.mjs'
               - 'scripts/production-rag-contract.test.mjs'
+              - 'scripts/release-smoke*.mjs'
               - 'scripts/update-deployment-images.mjs'
               - 'scripts/trigger-komodo-rollout.mjs'
               - 'scripts/prepare-forum-rollout.mjs'
@@ -286,7 +287,7 @@ jobs:
         working-directory: third_party/open-notebook
         run: uv run --frozen --python 3.12 pytest -q
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/production-rag-contract.test.mjs
+        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs
       - if: matrix.component == 'release'
         run: npm run version:check
 

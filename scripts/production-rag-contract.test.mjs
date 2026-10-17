@@ -392,6 +392,8 @@ test('workflow path filters route real changed paths to their owning checks', ()
     ['src/lib/canvasLayout.ts', 'integration', 'server'],
     ['package-lock.json', 'integration', 'server'],
     ['.github/workflows/ci.yml', 'deploy_contract', ''],
+    ['scripts/release-smoke.mjs', 'deploy_contract', ''],
+    ['scripts/release-smoke.test.mjs', 'deploy_contract', ''],
     ['deploy/komodo/lingxiloop-app-a/compose.yml', 'deploy_contract', ''],
     ['third_party/open-notebook/tests/test_rag_contract.py', 'open_notebook', ''],
   ]) {

@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-10-17T08:50:45.544883+00:00",
+  "results": [
+    {
+      "path": "/api/meta",
+      "httpStatus": "200",
+      "curlExit": 0,
+      "metadata": {
+        "product": "LingxiLoop",
+        "version": "0.1.0-beta",
+        "commitSha": "9332947e099d27b7716236a99604fc548059f6ad",
+        "reasoningRuntime": {
+          "name": "@lyyzka/lingxios",
+          "runtime": "3.4.7",
+          "controlPlane": 11,
+          "kernel": 2,
+          "schema": 11,
+          "assistantMessage": 2
+        }
+      }
+    },
+    {
+      "path": "/api/health",
+      "httpStatus": "200",
+      "curlExit": 0,
+      "health": {
+        "ok": true
+      }
+    },
+    {
+      "path": "/api/readyz",
+      "httpStatus": "401",
+      "curlExit": 0,
+      "health": {}
+    },
+    {
+      "path": "/api/health/dependencies",
+      "httpStatus": "200",
+      "curlExit": 0,
+      "health": {
+        "ok": true,
+        "dependencies": {
+          "database": true,
+          "redis": true,
+          "openNotebook": true
+        }
+      }
+    }
+  ]
+}

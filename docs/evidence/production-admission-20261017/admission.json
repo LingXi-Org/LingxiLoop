@@ -1,0 +1,38 @@
+{
+  "recordedAt": "2026-10-17T08:52:01.711881+00:00",
+  "sourceMain": "06ba56169ae8796bf6e067f4eecca0064145a816",
+  "runtime": "3.5.2",
+  "schema": 12,
+  "controlPlane": 11,
+  "migration": "0043_lingxios_3_5_0.sql",
+  "komodoPublicHttps": 200,
+  "komodoIdentityVerified": false,
+  "productionMutationStarted": false,
+  "credentialsPresence": {
+    "KOMODO_API_KEY": false,
+    "KOMODO_API_SECRET": false,
+    "KOMODO_WEBHOOK_URL": false,
+    "KOMODO_WEBHOOK_SECRET": false,
+    "CLOUDFLARE_API_TOKEN": false,
+    "LINGXILOOP_SMOKE_COOKIE": false
+  },
+  "tooling": {
+    "sigillo": false,
+    "km": false,
+    "wrangler": "4.127.1",
+    "gh": "2.46.0",
+    "git": "2.52.0",
+    "docker": "28.4.0"
+  },
+  "checks": {
+    "composeFilesPassed": 6,
+    "deploymentAndSmokeContractPassed": 22,
+    "spaPassed": 6
+  },
+  "rollout": {
+    "updateId": null,
+    "complete": false,
+    "success": null
+  },
+  "scope": "Production admission only. No production write or deployment was attempted."
+}
