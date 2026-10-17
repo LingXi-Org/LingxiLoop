@@ -276,7 +276,7 @@ test('all deployable LingxiLoop images use CI-managed unique tags', () => {
     'deploy/komodo/lingxiloop-knowledge-agent/compose.yml',
   ].map(read).join('\n')
   const references = [...manifests.matchAll(/image:\s+\S*lingxiloop-[^:\s]+:([^\s]+)/g)]
-  assert.equal(references.length, 5)
+  assert.equal(references.length, 7)
   assert.ok(references.every((match) => /^[0-9a-f]{40}$/.test(match[1])))
   assert.equal(
     updateImageTags(`image: registry/lingxiloop-server:${'a'.repeat(40)}`, 'b'.repeat(40), ['server']),
