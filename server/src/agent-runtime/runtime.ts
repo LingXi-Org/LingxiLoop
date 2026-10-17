@@ -177,8 +177,10 @@ export async function listenLingxiOSControl() {
 /** Worker ownership: the sole in-process agent runner; PostgreSQL leases fence replicas. */
 export async function startLingxiOSWorker() {
   if (worker) throw new Error('LingxiOS worker already started in this process')
-  if (control) throw new Error('Start the Worker in its own process before creating local context services')
-  backgroundRole = 'passive'
+  if (control && env.NODE_ENV !== 'test') throw new Error('Start the Worker in its own process before creating local context services')
+  // Existing isolated model fixtures share their explicit API instance. A real
+  // Worker process always constructs its local context services as passive.
+  if (!control) backgroundRole = 'passive'
   const concurrency = positiveInteger('AGENT_OS_MAX_CONCURRENT_RUNS', 2)
   const options = {
     modelBudget: common().modelBudget,

@@ -10,6 +10,7 @@ import { createProductDelivery } from '../agent-runtime/delivery.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { nativeText } from '../im/message-types.js'
+import { readRunProjection } from '../agent-runtime/assistant-transport.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
@@ -87,6 +88,9 @@ test('failed and cancelled turns persist one system feedback, preserve work stat
   assert.equal((await api.readRun(failed))?.resultId,null)
   await until(async () => (await api.readTerminal(failed))?.delivery === 'delivered')
   const terminal = (await api.readTerminal(failed))!
+  const projected = (await readRunProjection(api,failed,true)).snapshot.message.metadata.custom
+  assert.deepEqual(projected.terminalFeedback,{ id: terminal.feedback.id,requestVersion: terminal.feedback.requestVersion,
+    reason: 'model_unavailable',status: 'failed',delivery: 'delivered' })
   assert.equal(terminal.feedback.reason,'model_unavailable'); assert.equal(modelCalls,1)
   const messages = () => recording.messages.filter(message => message.channelId === room)
   assert.equal(messages().length,1); assert.equal(messages()[0]!.payload.role,'system')

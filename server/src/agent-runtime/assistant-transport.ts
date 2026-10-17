@@ -19,6 +19,7 @@ export class RunStreamProjection {
   private error: string | null = null
   private sourceRef: string | null = null
   private durableDraft = ''
+  private terminalFeedback: { id: string; requestVersion: number; reason: string; status: string; delivery: string } | null = null
   needsResync = false
 
   constructor(runId: string, private readonly canControl: boolean,
@@ -76,6 +77,13 @@ export class RunStreamProjection {
     })
   }
 
+  async syncTerminal(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readTerminal'>, identity: RunIdentity): Promise<void> {
+    const terminal = await api.readTerminal(identity)
+    this.terminalFeedback = terminal && terminal.feedback.requestVersion === this.view.requestVersion
+      ? { id: terminal.feedback.id,requestVersion: terminal.feedback.requestVersion,reason: terminal.feedback.reason,
+          status: terminal.feedback.status,delivery: terminal.delivery } : null
+  }
+
   committed(message: AssistantMessage, commit: { resultId: string; fence: number }): AgentRunSnapshot {
     if (this.view.requestVersion > message.envelope.requestVersion || this.view.messageFence > commit.fence) throw new Error('stale committed delivery')
     this.view = { ...consumeAssistantMessage(this.view,message,commit), delivery: 'delivered' }
@@ -121,6 +129,7 @@ export class RunStreamProjection {
         ...(this.identity?.principalId ? { controlPrincipalId: this.identity.principalId } : {}),
         ...(this.identity?.threadId ? { replyToClientMsgNo: this.identity.threadId } : {}),
         ...(this.error ? { harnessError: this.error } : {}),
+        ...(this.terminalFeedback?.requestVersion === this.view.requestVersion ? { terminalFeedback: this.terminalFeedback } : {}),
         ...(this.sourceRef ? { sourceRef: this.sourceRef } : {}), suppressAgentWake: true } }
     // Try the complete message first for ordinary histories; the wire protocol
     // stays unchanged. Overflow becomes an authorized, bounded activity page.
@@ -159,6 +168,7 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   projection.apply({ type: 'state',state: current })
   await projection.syncApprovals(api,identity)
   await projection.syncPresentation(identity)
+  await projection.syncTerminal(api,identity)
   return projection
 }
 
@@ -178,7 +188,7 @@ function changes(previous: AgentRunSnapshot | undefined, next: AgentRunSnapshot)
   return operations
 }
 
-export function assistantRunResponse(body: ReadableStream<Uint8Array>, projection: RunStreamProjection, approvals?: { api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval'>; identity: RunIdentity }): Response {
+export function assistantRunResponse(body: ReadableStream<Uint8Array>, projection: RunStreamProjection, approvals?: { api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval' | 'readTerminal'>; identity: RunIdentity }): Response {
   async function* chunks(): AsyncGenerator<AssistantStreamChunk> {
     let previous: AgentRunSnapshot | undefined
     for await (const item of nativeRunEvents(body)) {
@@ -189,6 +199,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
       projection.apply(item)
       if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'tool.completed')) await projection.syncApprovals(approvals.api,approvals.identity)
       if (approvals && (item.type === 'state' || item.type === 'event' && ['tool.started', 'tool.completed'].includes(item.event.kind))) await projection.syncPresentation(approvals.identity)
+      if (approvals && (item.type === 'state' || item.type === 'event' && ['run.failed','run.cancelled'].includes(item.event.kind))) await projection.syncTerminal(approvals.api,approvals.identity)
       const next = projection.snapshot
       const operations = changes(previous, next)
       if (operations.length) yield { type: 'update-state', path: [], operations }
