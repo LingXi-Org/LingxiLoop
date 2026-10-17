@@ -64,7 +64,10 @@ test('product LLM completions disable thinking and record the authoritative call
       model: 'test-model', messages: [{ role: 'user', content: 'hello' }], reasoning_effort: 'high',
     })
     assert.equal(records.length, 1)
-    assert.deepEqual(records[0]?.context, { purpose: 'test', companyId: 'company-1', agentId: 'agent-1' })
+    const { extras,...identity } = records[0]?.context as Record<string, unknown>
+    assert.deepEqual(identity, { purpose: 'test', companyId: 'company-1', agentId: 'agent-1' })
+    assert.equal((extras as { attempt: number }).attempt,1)
+    assert.ok(typeof (extras as { callId: string }).callId === 'string')
     assert.equal(records[0]?.status, 'succeeded')
     assert.deepEqual(records[0]?.usage, { prompt_tokens: 7, completion_tokens: 3 })
     assert.equal(providerRequest?.reasoning_effort, undefined)

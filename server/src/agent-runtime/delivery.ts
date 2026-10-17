@@ -1,7 +1,7 @@
 import { readRunProjection } from './assistant-transport.js'
 import { assistantTextViolation } from './assistant-text.js'
 import { createHash } from 'node:crypto'
-import type { createLingxiOS, ApprovalSnapshot, DeliveryPort } from '@lyyzka/lingxios'
+import { NoEffectError, type createLingxiOS, type ApprovalSnapshot, type DeliveryPort } from '@lyyzka/lingxios'
 import { sendAgentChannelMessage, sendSystemChannelMessage } from '../im/public.js'
 import { loadRuntimeBinding } from './context.js'
 import { productConversationId, assertFrozenAudience, bindProductRun } from './identity.js'
@@ -29,6 +29,55 @@ export function approvalView(approval: ApprovalSnapshot) {
 export function createProductDelivery(control: () => ReturnType<typeof createLingxiOS>): DeliveryPort {
   return {
     async onEvent() { /* Native SSE owns replay and preview delivery. */ },
+    async deliverTerminal(work, feedback, context) {
+      if (work.conversation?.internal || !work.principalId) throw new NoEffectError('Terminal audience is unavailable','forbidden')
+      const conversationId = productConversationId(work)
+      await loadRuntimeBinding({ ...work,conversationId })
+      await assertCanvasRequestCurrent(pool,work)
+      await assertFrozenAudience(pool,work)
+      const api = await control(), identity = { tenantId: work.tenantId,agentId: work.agentId,sessionId: work.sessionId,
+        runId: work.id,principalId: work.principalId,...(work.threadId ? { threadId: work.threadId } : {}) }
+      const current = await api.readTerminal(identity)
+      if (!current || current.feedback.id !== feedback.id || current.feedback.requestVersion !== feedback.requestVersion) return
+      const clientNonce = `terminal-${feedback.id}`
+      const existing = await getSendAcceptance(pool,{ companyId: work.tenantId,userId: work.agentId,clientNonce })
+      let payload = existing ? nativeMessageSchema.parse(existing.payload) : undefined
+      if (payload && (payload.id !== clientNonce || payload.role !== 'system'
+        || payload.metadata.custom.runId !== work.id || payload.metadata.custom.requestVersion !== feedback.requestVersion)) {
+        throw new Error('Terminal notification identity conflicts with a recorded acceptance')
+      }
+      if (!payload) {
+        const reasons = {
+          context_limit: '这次请求超出了当前可处理的上下文范围，任务未能完成。可以缩小材料范围后继续。',
+          budget_limit: '本轮预算已达上限，部分工作未能继续。',
+          model_unavailable: '模型服务暂时不可用，这次任务未能完成。',
+          permission_denied: '当前权限不足，这次任务已停止。',
+          dependency_unavailable: '所需服务暂时不可用，这次任务未能完成。',
+          cancelled: '这次任务已取消。',
+          interrupted: '这次任务在恢复过程中中断，未能完成。',
+          execution_failed: '这次任务未能完成。',
+        } as const
+        const recipients = new Set(work.conversation?.audience.participantIds ?? [])
+        const visible = feedback.notStartedAgentIds.filter(id => recipients.has(id))
+        const names = visible.length ? (await pool.query<{ name: string }>(`SELECT name FROM participants
+          WHERE company_id=$1 AND id=ANY($2::text[]) AND kind='agent' AND departed_at IS NULL ORDER BY id LIMIT 8`,
+        [work.tenantId,visible])).rows.map(row => row.name.slice(0,80)) : []
+        const detail = feedback.notStartedCount ? ` 本轮有 ${feedback.notStartedCount} 项协作未启动${names.length ? `（${names.join('、')}）` : ''}。` : ''
+        payload = createNativeMessage({ id: clientNonce,role: 'system',createdAt: feedback.createdAt,
+          content: [{ type: 'text',text: `${reasons[feedback.reason]}${detail} 已完成的操作会保留，你可以发送新消息继续。` }],
+          custom: { runId: work.id,requestVersion: feedback.requestVersion,controlPrincipalId: work.principalId,
+            terminalFeedbackId: feedback.id,terminalStatus: feedback.status,terminalReason: feedback.reason,suppressAgentWake: true,
+            ...(work.threadId ? { replyToClientMsgNo: work.threadId } : {}) } })
+      }
+      context.signal.throwIfAborted()
+      // Recheck after receipt/name reads and immediately before crossing the messaging boundary.
+      await loadRuntimeBinding({ ...work,conversationId })
+      await assertFrozenAudience(pool,work)
+      if ((await api.readRun(identity))?.requestVersion !== feedback.requestVersion) return
+      const result = await sendSystemChannelMessage({ companyId: work.tenantId,actorId: work.agentId,channelId: conversationId,
+        clientNonce,payload,signal: context.signal })
+      if (result.kind !== 'accepted') throw new Error(`terminal delivery ${result.kind}`)
+    },
     async deliverMessage(work, message, context) {
       const violation = assistantTextViolation(message.body)
       if (violation) throw new Error(violation)

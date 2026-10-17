@@ -1,8 +1,9 @@
 import OpenAI from 'openai'
 import { instrumentOpenAIClient, lingxiLitObservabilityFetch } from './lingxilit-observability.js'
 
-const SDK_MAX_RETRIES = 5
-const SDK_TIMEOUT_MS = 5 * 60_000
+const SDK_MAX_RETRIES = 0
+// Shared product calls are non-streaming; bound the complete response, including its first byte.
+const SDK_TIMEOUT_MS = 30_000
 
 export type OpenAIClientOptions = {
   apiKey: string
