@@ -3,6 +3,8 @@
 Base: `2db5bbcddc8f14ac62500e36594dc49793c9e096` (`origin/main`, 2026-10-17).
 Branch: `fix/issue-160-client-recovery`. No existing open PR or PR matching #160 was found before implementation.
 
+Final verified implementation: `9e0dd3f2cf3638fc09d88010679aa69e4edcc3cc`, clean worktree at browser-run start. Frozen LingxiOS **3.4.7**; **90/90** Web/owning tests and **15/15** official browser cases pass. [Machine-readable validation](validation.json) and [hashed-nonce counts](counts.json) retain the commands, real results, media hashes and coverage limits.
+
 ## Implemented boundaries
 
 - Boot, realtime WS hello, IM connected, browser online and delayed retries enter one outbox drain per transport/scope generation. A cycle has at most 5 passes of 20 entries, one concurrent recovery send, 3 attempts per nonce, a 60-second total deadline and 10-second request deadlines. Backoff includes jitter. Network wake-ups coalesce with the current cycle without extending its deadline.
@@ -20,7 +22,7 @@ The 15 cases cover boot failure with backoff/online/WS hello/IM wake-ups, accept
 
 The isolated fixture supplies test login identity and a realtime hello socket. API and model worker run in separate processes, and the child receives only fixed synthetic fixture configuration. Ordinary product HTTP routes, tenant/project permissions, PostgreSQL, real pinned WuKongIM, and LingxiOS own the tested state. Faults are injected in a loopback HTTP proxy. Attachment bytes use the established integration storage provider; this does **not** validate browser upload/S3 behavior. The model provider deliberately does not answer, so the remote run ends through a real persisted failure; live successful LLM completion/result delivery is **not** covered.
 
-## Actual validation and blocker
+## Actual validation
 
 The initial frozen installation returned E401. On the next authorized environment turn, the **same existing npm configuration** read official 3.4.7 registry metadata successfully, with the exact locked tarball URL and SHA-512. A normal frozen retry succeeded: **1458 packages installed, exit 0**, and installed LingxiOS reports **3.4.7**. No manifests, lockfile, migrations, credentials, registry, authorization rules or integrity checks were changed. No source-built dependency was installed.
 
@@ -33,7 +35,9 @@ Validation so far on the corrected implementation:
 - The first frozen browser run exposed three fixture statistics failures (`run_id` is not the work-table key). Fixed the query to count all work for the original tenant/trigger/agent and assert actual IM rows rather than only distinct nonces. Explicit EOF and swallowed-frame faults are separate. Worker shutdown no longer stops the API control plane.
 - Corrected targeted SSE run: **3/3 passed**, including a 60-second outage where local occupancy was released while the authoritative lifecycle remained `queued`, then recovered to the real persisted `failed` terminal state. The silent stream opened once and recovered via the snapshot endpoint.
 - Additional regression run: **2/2 passed** (pre-acceptance network abort and rapid logout/sign-in). Before removing the deferred logout disconnect, the latter failed with an outbox count of 1 after service restoration.
-- Final complete 15-case browser run on the updated source is pending; no final browser acceptance is claimed yet.
+- Final complete browser run **01a147e4-8d80-76fc-a1dd-daf46364592b** on clean `9e0dd3f2`: **15 selected / 15 executed / 15 passed / 0 failed / 0 skipped**, exit 0, 179.71 seconds, 2026-10-17 03:25:23–03:28:23 UTC. The original 13 scenarios and both added regressions passed in this single run.
+- Scoped Web CI for that exact implementation commit passed: [Actions run 38998703635](https://github.com/LingXi-Org/LingxiLoop/actions/runs/38998703635). Integration/publish/deploy/rollout were skipped by scope; no deployment was performed.
+- Retained reviewed evidence: **17 screenshots**, **2 recordings**, **16 sanitized count records** (the outage has before/after phases), with SHA-256 hashes in `validation.json`. No raw browser trace or credential-bearing network dump is committed.
 
 A separate optional static-render component test is blocked by the repository's bare Node CSS loader (`ERR_UNKNOWN_FILE_EXTENSION` for the existing forum editor CSS). The exact same failure was reproduced in an isolated worktree at the unchanged main baseline with the same frozen dependency install. It is not counted as passing; actual chat UI is exercised in the browser cases above.
 
@@ -48,6 +52,7 @@ node -p "require('./node_modules/@lyyzka/lingxios/package.json').version"
 npm run lint
 npm run typecheck
 npm test
+CI_TEST_FILES='["src/features/chat/runtime/error-recovery.test.ts","src/features/chat/runtime/history-loading.test.ts","src/features/chat/runtime/transport.test.ts"]' npm test
 npm run build
 npm run test:e2e:typecheck
 
@@ -63,9 +68,19 @@ In the selected cloud image, add `/workspace/.lingxi-setup/browser-local-images.
 
 Retain `.e2e/issue160-final/report.json`, `junit.xml`, `summary.md`, `run-metadata.json`, screenshots and video. Raw browser traces may contain synthetic authentication material and must remain ignored. Publish only reviewed screenshots and counts with nonce values omitted or hashed.
 
-## Not accepted yet
+## Evidence
 
-- Complete single-run verification of all 15 browser cases on the final source, reviewed screenshots/recordings, and updated CI.
+- [All count assertions, with hashed nonce](counts.json); [commands, results and media hashes](validation.json).
+- [Recovered boot message, attachment and untouched draft](screenshots/recovery-boot-online.png).
+- [Two retained messages during pre-acceptance network loss](screenshots/recovery-before-acceptance-offline.png).
+- [Local wait released while remote lifecycle is still queued](screenshots/recovery-local-wait-released.png).
+- [Authoritative terminal merge and a successful later send](screenshots/recovery-sse-offline-terminal.png).
+- [Lost-response recording](recordings/lost-reply.webm) (3.92 s, VP8, 1440×960).
+- [Full bounded-wait/recovery recording](recordings/sse-offline.webm) (78.60 s, VP8, 1440×960).
+
+The identity-race count has `maxConcurrent: 2` because an aborted old status HTTP request can remain in the reverse proxy while the new generation starts. It is read-only: `crossIdentity: 0`, one acceptance and one actual original-nonce IM row. Ordinary single-generation drains have `maxConcurrent: 1`. No test uses distinct nonce counts as a substitute for actual message/work row counts.
+
+## Not accepted yet
 - Joint validation with #154's server receipt reconciliation, including historical invalid cached receipts and real successful result/delivery recovery.
 - Real authentication/session expiry, upload/S3 recovery, browser-generated offline/online transitions, separate project-only revocation flows, multi-tab recovery and live model completion.
 - Astra review/integration. This change must remain a draft; no merge or deployment was performed.
