@@ -1,0 +1,80 @@
+{
+  "id": "01a1488a-c8be-7402-b980-aee7f5f3ed05",
+  "runner": {
+    "name": "e2e",
+    "version": "0.17.0"
+  },
+  "status": "passed",
+  "exitCode": 0,
+  "startedAt": "2026-10-17T06:26:57.874Z",
+  "finishedAt": "2026-10-17T06:27:35.217Z",
+  "summary": {
+    "discovered": 6,
+    "selected": 6,
+    "executed": 6,
+    "passed": 6,
+    "failed": 0,
+    "interrupted": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "results": [
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20restores%20a%20synthetic%20D1%20session%2C%20expires%20it%20and%20accepts%20a%20fresh%20session",
+      "titlePath": [
+        "full SPA restores a synthetic D1 session, expires it and accepts a fresh session"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20network-before-accept%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA network-before-accept preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20database-pause%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA database-pause preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20web-restart%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA web-restart preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20expired-session%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA expired-session preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20expired-session-login-race%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA expired-session-login-race preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    }
+  ],
+  "redacted": "Only result metadata retained; request events, cookies, traces, environment and response bodies omitted.",
+  "appSource": "6f43045435cd6d81bb8ee2555e64244d518093af",
+  "harnessSource": "6f43045435cd6d81bb8ee2555e64244d518093af"
+}

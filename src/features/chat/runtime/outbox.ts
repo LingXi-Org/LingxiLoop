@@ -1,6 +1,7 @@
 import { nativeMessageSchema, type NativeMessage } from '@/lib/nativeMessage'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
+import { registerAuthTeardown } from '@/stores/authTeardown'
 
 export interface ChatOutboxEntry {
   conversationId: string
@@ -66,3 +67,12 @@ export function rememberChatOutbox(entry: ChatOutboxEntry): void {
 export function forgetChatOutbox(clientMessageId: string): void {
   write(readAll().filter((row) => row.clientMessageId !== clientMessageId))
 }
+
+// A concurrent 401 may abort an in-flight send before its own rejection is
+// observed. Persist the stop while the original identity still owns storage;
+// a new sign-in can then reconcile only after an explicit manual action.
+registerAuthTeardown(reason => {
+  if (reason === 'session-rejected') write(readAll().map(entry => ({ ...entry,
+    blockedReason: entry.blockedReason ?? '自动发送已停止：登录已失效。请确认后手动重试或移除。',
+  })))
+})

@@ -7,7 +7,7 @@ import pg from 'pg'
 // No developer dotenv or real provider credentials enter the disposable acceptance stack.
 const output = resolve('.e2e/directory-audience')
 await mkdir(output, { recursive: true })
-const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => /^(PATH|HOME|TMP|TEMP|XDG_CACHE_HOME|E2E_CDP_URL)$/.test(name)))
+const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => /^(PATH|HOME|TMP|TEMP|XDG_CACHE_HOME|PLAYWRIGHT_BROWSERS_PATH|E2E_CDP_URL)$/.test(name)))
 Object.assign(env, { NODE_ENV: 'test', DOTENV_CONFIG_PATH: resolve(output, '__no_dotenv__'),
   DATABASE_URL: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_directory_test',
   REDIS_URL: 'redis://127.0.0.1:56379/8', OPENAI_API_KEY: 'directory-scripted-fixture', OPENAI_BASE_URL: 'http://127.0.0.1:1/v1',
