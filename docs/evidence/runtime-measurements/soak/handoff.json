@@ -1,0 +1,21 @@
+{
+  "capturedAt": "2026-10-17T06:52:51.854Z",
+  "source": "/workspace/LingxiLoop-acceptance/.e2e/image-acceptance/soak",
+  "monitorPid": 285092,
+  "watcherPid": 298179,
+  "monitorLog": "/tmp/acceptance-soak.log",
+  "watcherLog": "/tmp/acceptance-soak-watch.log",
+  "branch": "codex/runtime-soak-evidence",
+  "checkpointCadence": "Initial, hourly and terminal; no CI/main merge/deploy is triggered.",
+  "staleHeartbeat": false,
+  "completionRule": "Require terminal-receipt.json, elapsedSeconds >= 86400, intact heartbeat continuity and zero violations. Scope is Web/API only.",
+  "inspectCommand": "cat /workspace/LingxiLoop-acceptance/.e2e/image-acceptance/soak/state.json",
+  "heartbeatCommand": "tail -n 3 /workspace/LingxiLoop-acceptance/.e2e/image-acceptance/soak/heartbeats.jsonl",
+  "processCommand": "ps -p 285092 -o pid,etime,args",
+  "containerCommand": "docker inspect lingxiloop-acceptance-candidate --format \"{{json .State}} {{.RestartCount}}\"",
+  "limitations": [
+    "No production Worker: bubblewrap cannot create user namespace in this executor.",
+    "No live provider or production rollout qualification.",
+    "A disappeared executor or stale evidence does not become a pass."
+  ]
+}
