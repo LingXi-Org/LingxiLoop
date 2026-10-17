@@ -406,7 +406,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
 
 test('actual workflow conditions block publishing and deployment after a failed or cancelled gate', () => {
   const workflow = read('.github/workflows/ci.yml')
-  const allows = (job, scope, results = {}, event = 'push', publishOnly = false) => {
+  const allows = (job, scope, results = {}, event = 'push', publishOnly = false, message = '') => {
     const block = workflow.match(new RegExp(`^  ${job}:\\r?\\n([\\s\\S]*?)(?=^  [a-z]|$(?![\\s\\S]))`, 'm'))?.[1]
     const expression = block?.match(/if: >-\r?\n([\s\S]*?)\r?\n    needs:/)?.[1]
     assert.ok(expression, job)
@@ -414,11 +414,15 @@ test('actual workflow conditions block publishing and deployment after a failed 
     for (const name of ['checks', 'integration', 'publish', 'update-manifests', 'deploy']) {
       needs[name] = { result: results[name] ?? 'success' }
     }
-    return Function('github', 'needs', 'always', 'inputs', `return (${expression.replaceAll('needs.update-manifests', "needs['update-manifests']")})`)(
-      { ref: 'refs/heads/main', event_name: event }, needs, () => true, { publish_only: publishOnly },
+    return Function('github', 'needs', 'always', 'inputs', 'contains', `return (${expression.replaceAll('needs.update-manifests', "needs['update-manifests']")})`)(
+      { ref: 'refs/heads/main', event_name: event, event: { head_commit: { message } } }, needs, () => true, { publish_only: publishOnly }, (value, marker) => String(value ?? '').toLowerCase().includes(marker.toLowerCase()),
     )
   }
   const release = computeScope({}, 'release')
+  for (const job of ['update-manifests', 'deploy', 'rollout']) {
+    assert.equal(allows(job, { ...release, control_deploy: true }, {}, 'push', false, 'Merge development [skip deploy]'), false, job)
+  }
+  assert.equal(allows('publish', release, {}, 'push', false, 'Merge development [skip deploy]'), true, 'immutable publication and checks remain allowed')
   assert.equal(allows('publish', release), true)
   assert.equal(allows('publish', computeScope({}, 'server'), {}, 'workflow_dispatch', true), true)
   assert.equal(allows('update-manifests', release, {}, 'workflow_dispatch', true), false)

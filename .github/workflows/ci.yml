@@ -400,7 +400,8 @@ jobs:
 
   update-manifests:
     if: >-
-      always() && !inputs.publish_only && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
+      always() && !inputs.publish_only && !contains(github.event.head_commit.message, '[skip deploy]') &&
+      github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped') &&
       (needs.publish.result == 'success' ||
@@ -442,7 +443,7 @@ jobs:
 
   deploy:
     if: >-
-      always() &&
+      always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
       github.event_name == 'push' && github.ref == 'refs/heads/main' &&
       needs.changes.outputs.control_deploy == 'true' && needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped')
@@ -492,7 +493,8 @@ jobs:
 
   rollout:
     if: >-
-      always() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
+      always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
+      github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.update-manifests.result == 'success' &&
       (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
     needs: [changes, update-manifests, deploy]
