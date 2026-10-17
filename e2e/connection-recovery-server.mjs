@@ -1,14 +1,14 @@
 // Disposable fault-injection proxy over the ordinary product API, PostgreSQL,
 // real pinned WuKongIM, and LingxiOS. No product/developer environment is loaded.
 import assert from 'node:assert/strict'
-import { spawnSync } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { spawn, spawnSync } from 'node:child_process'
+import { createHash, randomUUID } from 'node:crypto'
 import { createServer, request as httpRequest } from 'node:http'
 import { setTimeout as delay } from 'node:timers/promises'
 import express from 'express'
 import { WebSocketServer } from 'ws'
 
-Object.assign(process.env, {
+const fixtureEnvironment = {
   DOTENV_CONFIG_PATH: '/tmp/lingxiloop-no-dotenv', NODE_ENV: 'test',
   DATABASE_URL: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_integration_test',
   REDIS_URL: 'redis://127.0.0.1:56379/0',
@@ -22,11 +22,12 @@ Object.assign(process.env, {
   AGENT_OS_INPUT_COST_MICROS_PER_MILLION: '1', AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: '1',
   AGENT_OS_MODEL_REQUEST_TIMEOUT_MS: '200', AGENT_OS_WORKER_PORT: '52995',
   LINGXIOS_SERVICE_TOKEN: 'connection-recovery-fixture-service-token', LINGXILOOP_DISABLE_EMBEDDINGS: '1',
-})
+}
+Object.assign(process.env, fixtureEnvironment)
 assert.equal(spawnSync(process.execPath, ['--import', 'tsx', 'server/src/migrate-bin.ts'], { stdio: 'inherit' }).status, 0)
 const { pool } = await import('../server/src/db/pool.ts')
 const { env } = await import('../server/src/env.ts')
-const { lingxiOSControl, startLingxiOSWorker } = await import('../server/src/agent-runtime/runtime.ts')
+const { lingxiOSControl } = await import('../server/src/agent-runtime/runtime.ts')
 const { syncConversationPolicy } = await import('../server/src/agent-runtime/conversations.ts')
 const { bindProductRun } = await import('../server/src/agent-runtime/identity.ts')
 const { readRunProjection } = await import('../server/src/agent-runtime/assistant-transport.ts')
@@ -37,6 +38,7 @@ const { createNativeMessage } = await import('../src/lib/nativeMessage.ts')
 const provider = createServer(request => request.resume())
 await new Promise(resolve => provider.listen(0, '127.0.0.1', resolve))
 env.OPENAI_BASE_URL = `http://127.0.0.1:${provider.address().port}/v1`
+process.env.OPENAI_BASE_URL = env.OPENAI_BASE_URL
 const api = await lingxiOSControl()
 const controlPort = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN, port: 0 })
 process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${controlPort}`
@@ -60,6 +62,7 @@ const product = createServer(backend)
 await new Promise(resolve => product.listen(0, '127.0.0.1', resolve))
 let current
 const streams = new Set()
+const workers = new Map()
 const proxy = express()
 proxy.use('/api/__recovery', express.json())
 proxy.post('/api/__recovery/start', async (req, res) => {
@@ -79,8 +82,8 @@ proxy.post('/api/__recovery/start', async (req, res) => {
     attachments: [{ id: fileId, type: 'document', name: '恢复附件.txt', contentType: 'text/plain', status: { type: 'complete' },
       content: [{ type: 'file', sourceType: 'id', data: fileId, mimeType: 'text/plain', filename: '恢复附件.txt' }] }] })
   current = { ...req.body, identity, room, payload, invalid: req.body.mode === 'invalid-receipt',
-    unavailable: !['lost-reply', 'denied', 'invalid-receipt', 'identity'].includes(req.body.mode) && !req.body.mode?.startsWith('sse-'),
-    accepts: 0, statusReads: 0, concurrent: 0, maxConcurrent: 0, crossIdentity: 0, lost: false, run: null, streamFault: false }
+    unavailable: !['lost-reply', 'denied', 'invalid-receipt', 'identity', 'manual'].includes(req.body.mode) && !req.body.mode?.startsWith('sse-'),
+    accepts: 0, statusReads: 0, streamRequests: 0, snapshotReads: 0, concurrent: 0, maxConcurrent: 0, crossIdentity: 0, lost: false, run: null, streamFault: false }
   if (req.body.mode?.startsWith('sse-')) {
     const policy = await syncConversationPolicy(api, identity.companyId, room)
     const accepted = await api.conversations.ingest({ tenantId: identity.companyId, conversationId: room, policyVersion: policy.version,
@@ -97,16 +100,31 @@ proxy.post('/api/__recovery/control', async (req, res) => {
   if (req.body.action === 'interrupt') {
     current.streamFault = true
     current.unavailable = current.mode === 'sse-offline'
-    for (const stream of streams) stream.destroy()
+    // A clean HTTP EOF reaches the browser through Vite's proxy. Destroying
+    // only the upstream socket can leave Vite's downstream response open.
+    if (current.mode !== 'sse-silent') for (const stream of streams) stream.end()
   } else {
     current.unavailable = false
     current.invalid = false
     current.status = 0
     if (req.body.action === 'finish' && current.run) {
-      const worker = await startLingxiOSWorker()
-      const deadline = AbortSignal.timeout(20_000)
-      while ((await api.readRunState(current.run))?.run.status !== 'failed') { deadline.throwIfAborted(); await delay(50) }
-      await worker.stop()
+      // Keep worker shutdown from stopping this API process's control plane.
+      // Both processes use the ordinary public product runtime and leases.
+      const worker = spawn(process.execPath, ['--import', 'tsx', 'e2e/connection-recovery-worker.mjs'], {
+        env: { PATH: process.env.PATH, ...fixtureEnvironment, OPENAI_BASE_URL: env.OPENAI_BASE_URL,
+          LINGXIOS_CONTROL_URL: process.env.LINGXIOS_CONTROL_URL, AGENT_OS_SHUTDOWN_GRACE_MS: '5000' },
+        stdio: ['ignore', 'inherit', 'inherit'],
+      })
+      const stopped = new Promise(resolve => worker.once('exit', resolve))
+      workers.set(worker, stopped)
+      try {
+        const deadline = AbortSignal.timeout(30_000)
+        while ((await api.readRunState(current.run))?.run.status !== 'failed') {
+          deadline.throwIfAborted()
+          if (worker.exitCode !== null) throw new Error(`Fixture worker exited ${worker.exitCode}`)
+          await delay(50)
+        }
+      } finally { worker.kill('SIGTERM'); await stopped; workers.delete(worker) }
     }
     if (current.wake === 'hello') for (const socket of sockets.clients) socket.send(JSON.stringify({ type: 'hello' }))
   }
@@ -116,10 +134,14 @@ proxy.get('/api/__recovery/facts', async (_req, res) => {
   if (!current) return res.json({})
   const messages = await wukong().syncMessages(current.room, 2, 200, current.identity.userId)
   const own = messages.filter(message => message.fromUid === current.identity.userId)
-  res.json({ accepts: current.accepts, statusReads: current.statusReads, maxConcurrent: current.maxConcurrent,
-    uniqueMessages: new Set(own.map(message => message.clientMsgNo)).size, crossIdentity: current.crossIdentity,
+  res.json({ accepts: current.accepts, statusReads: current.statusReads, streamRequests: current.streamRequests,
+    snapshotReads: current.snapshotReads, maxConcurrent: current.maxConcurrent,
+    uniqueMessages: new Set(own.map(message => message.clientMsgNo)).size, messageCount: own.length,
+    originalNonceMessages: own.filter(message => message.clientMsgNo === current.payload.id).length,
+    nonceDigest: createHash('sha256').update(current.payload.id).digest('hex').slice(0, 12), crossIdentity: current.crossIdentity,
     remoteLifecycle: current.run ? (await api.readRunState(current.run))?.run.status : null,
-    workItems: current.run ? (await pool.query('SELECT count(*)::int AS n FROM lingxios.agent_work_items WHERE run_id=$1', [current.run.runId])).rows[0].n : 0 })
+    workItems: current.run ? (await pool.query(`SELECT count(*)::int AS n FROM lingxios.agent_work_items
+      WHERE tenant_id=$1 AND trigger_ref=$2 AND agent_id=$3`, [current.identity.companyId, current.payload.id, current.identity.agentId])).rows[0].n : 0 })
 })
 // A local realtime fixture emits actual WS hello frames. It carries no user
 // data and deliberately replaces only ticket/session setup, not product HTTP.
@@ -128,6 +150,8 @@ proxy.use((req, res) => {
   const scenario = current
   const send = /\/messages\/accept$/.test(req.url), status = /\/im\/sends\//.test(req.url)
   const stream = /\/runs\/[^/]+\/stream/.test(req.url), runRead = /\/runs\/[^/?]+\?/.test(req.url)
+  if (stream) scenario.streamRequests++
+  if (runRead) scenario.snapshotReads++
   if (send) scenario.accepts++
   if (status) scenario.statusReads++
   if ((send || status) && req.headers['x-company-id'] !== scenario.identity.companyId) scenario.crossIdentity++
@@ -159,10 +183,11 @@ proxy.use((req, res) => {
         return
       }
       res.writeHead(incoming.statusCode, incoming.headers)
-      if (stream && scenario.mode === 'sse-silent' && scenario.streamFault) {
-        // Preserve the TCP connection but swallow every frame. Only the real
-        // snapshot endpoint can reveal the eventual terminal state.
-        incoming.resume()
+      if (stream) {
+        // In silent mode, keep the original TCP response open while swallowing
+        // subsequent data and EOF. No reconnect can reveal the terminal frame.
+        incoming.on('data', chunk => { if (!(scenario.mode === 'sse-silent' && scenario.streamFault)) res.write(chunk) })
+        incoming.on('end', () => { if (!(scenario.mode === 'sse-silent' && scenario.streamFault)) res.end() })
       } else incoming.pipe(res)
     })
     upstream.on('error', () => { if (!res.headersSent) res.status(502).end(); else res.destroy() })
@@ -177,6 +202,8 @@ const server = createServer(proxy), sockets = new WebSocketServer({ server, path
 await new Promise(resolve => server.listen(5199, '127.0.0.1', resolve))
 console.log('Recovery fault proxy ready at http://127.0.0.1:5199; real PostgreSQL/WuKongIM; fixture login only.')
 const stop = async () => {
+  for (const worker of workers.keys()) worker.kill('SIGTERM')
+  await Promise.all(workers.values())
   for (const stream of streams) stream.destroy()
   for (const socket of sockets.clients) socket.close()
   provider.closeAllConnections(); product.closeAllConnections()
