@@ -50,6 +50,7 @@ const provider = createServer(async (request,response) => {
   if (!current?.mode?.startsWith('runtime-')) { request.resume(); return }
   let raw = ''; for await (const chunk of request) raw += chunk
   const input = JSON.parse(raw); current.fixtureModelCalls = (current.fixtureModelCalls ?? 0)+1
+  if (!current.fixtureHealthy && current.mode === 'runtime-timeout') return
   if (!current.fixtureHealthy && current.mode === 'runtime-402') {
     response.writeHead(402,{ 'content-type': 'application/json' })
     response.end(JSON.stringify({ error: { code: 'insufficient_quota',message: 'Synthetic private provider body' } })); return
@@ -129,10 +130,12 @@ async function runFixtureTurn(run, healthy) {
   else {
     current.fixtureHealthy = healthy
     if (healthy) await delay(60)
-    const worker = createWorker({ controlPlane: api,model: {
+    const worker = createWorker({ controlPlane: api,
+      ...(!healthy && current.mode === 'runtime-budget' ? { modelBudget: { maxTokens: 1 } } : {}),model: {
       id: `reliability-${current.room}`,contextWindowTokens: !healthy && current.mode === 'runtime-context' ? 1024 : 200000,
       maxOutputTokens: !healthy && current.mode === 'runtime-context' ? 128 : 8192,
       baseUrl: env.OPENAI_BASE_URL,apiKey: 'synthetic-reliability-fixture',circuitResetMs: 50,
+      ...(!healthy && current.mode === 'runtime-timeout' ? { requestTimeoutMs: 200,recovery: { maxAttempts: 3,totalTimeoutMs: 5000 } } : {}),
     },worker: { id: `reliability-${current.room}`,concurrency: 1 } })
     try { await worker.runNext() } finally { await worker.stop() }
   }

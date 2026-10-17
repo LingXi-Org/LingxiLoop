@@ -9,7 +9,9 @@ test.describe('Durable runtime failure recovery', { timeout: 90_000,
 }, () => {
   for (const [mode,reason,text,calls] of [
     ['runtime-402','model_unavailable','模型服务暂时不可用',1],
+    ['runtime-timeout','model_unavailable','模型服务暂时不可用',3],
     ['runtime-context','context_limit','超出了当前可处理的上下文范围',0],
+    ['runtime-budget','budget_limit','本轮预算已达上限',0],
     ['runtime-cancel','cancelled','这次任务已取消',0],
   ] as const) test(`${mode} persists one notice and permits a new successful turn`, async ({ app,browser,screen }) => {
     await app.open(`/e2e/connection-recovery.html?mode=${mode}`)
@@ -19,6 +21,7 @@ test.describe('Durable runtime failure recovery', { timeout: 90_000,
     await expect(browser.locator('#facts')).toContainText('"terminalDelivery":"delivered"')
     await expect(browser.locator('#facts')).toContainText('"terminalMessages":1')
     await expect(browser.locator('#facts')).toContainText(`"fixtureModelCalls":${calls}`)
+    const terminalFacts = await browser.evaluate(() => JSON.parse(document.getElementById('facts')!.textContent!))
     await app.screenshot(`${mode}-persisted-terminal`)
     await screen.getByRole('button','重新读取会话').tap()
     await expect(browser.locator('#facts')).toContainText('"terminalMessages":1')
@@ -31,6 +34,6 @@ test.describe('Durable runtime failure recovery', { timeout: 90_000,
     const facts = await browser.evaluate(() => JSON.parse(document.getElementById('facts')!.textContent!))
     const directory = process.env.E2E_RECOVERY_EVIDENCE_DIR ?? '.e2e/runtime-reliability/counts'
     await mkdir(directory,{ recursive: true })
-    await writeFile(`${directory}/${mode}.json`,JSON.stringify({ mode,reason,facts },null,2)+'\n')
+    await writeFile(`${directory}/${mode}.json`,JSON.stringify({ mode,reason,terminalFacts,facts },null,2)+'\n')
   })
 })
