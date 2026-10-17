@@ -9,6 +9,8 @@ import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { WukongClient, wukongClient, _setWukongClientForTests } from '../im/wukong.js'
+import { imMessagesApplication } from '../im/messages-facade.js'
+import { authorizeAcceptanceRepair } from '../../../scripts/reconcile-im-send-acceptances.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 // Failure inventory before execution: stale acceptance permanently blocking original
@@ -66,11 +68,19 @@ test('the published result outbox acknowledges the original result after receipt
       ledger: (await pool.query(`SELECT (SELECT count(*)::int FROM lingxios.agent_action_ledger) AS actions,
         (SELECT count(*)::int FROM lingxios.agent_model_budget_calls) AS budget_calls`)).rows[0] })
     const before = await snapshot()
+    // Simulate the historical incident's exhausted delivery on this NEW fixture run.
+    // Maintenance repairs only the acceptance; the existing public retry API owns
+    // re-enabling a failed result outbox without resetting or executing its work.
+    assert.equal((await pool.query(`UPDATE lingxios.agent_delivery_outbox SET attempts=12,failed_at=NOW()
+      WHERE result_id=$1 AND delivered_at IS NULL`, [run.resultId])).rowCount, 1)
+    assert.equal(await api.readDelivery(identity), 'failed')
     await pool.query(`UPDATE im_send_acceptances SET status='accepted',echo=$4::jsonb,error=NULL
       WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`,
     [companyId, agentId, messageKey, JSON.stringify({ ...original, messageSeq: 0 })])
-    // The ordinary outbox retry keeps the same result and message key. Do not reset
-    // its attempts or invoke the manual retry API (which is for terminal failures).
+    const repairIdentity = { companyId, userId: agentId, clientNonce: messageKey }
+    assert.equal((await imMessagesApplication.reconcileSendAcceptance({ ...repairIdentity, apply: true,
+      authorize: (db, row) => authorizeAcceptanceRepair(db, repairIdentity, row) })).classification, 'confirmed')
+    assert.equal(await api.retryDelivery(identity, 'message'), true)
     await until(async () => await api.readDelivery(identity) === 'delivered')
     const after = await snapshot()
     assert.equal(after.modelCalls, before.modelCalls)
@@ -82,7 +92,9 @@ test('the published result outbox acknowledges the original result after receipt
     assert.equal((await client.syncMessages(channelId, 2, 100, agentId)).length, 1); assert.equal(sendCalls, 1)
     await mkdir('.e2e/issue-154', { recursive: true })
     await writeFile('.e2e/issue-154/runtime-recovery.json', JSON.stringify({ passed: true, realWuKong: true,
-      scriptedModel: true, realProvider: false, newSyntheticRunOnly: true, states: ['saved result / ACK lost', 'accepted invalid receipt', 'same result delivered'],
+      scriptedModel: true, realProvider: false, newSyntheticRunOnly: true,
+      states: ['saved result / ACK lost', '12 attempts / terminal outbox', 'accepted invalid receipt', 'guarded acceptance repair', 'existing authorized retry / same result delivered'],
+      exhaustedOutboxRecovery: true,
       sameResultId: true, sameMessageKey: true, durableMessages: 1, sends: sendCalls,
       modelCallsBefore: before.modelCalls, modelCallsAfter: after.modelCalls, actionAndBudgetLedgerUnchanged: true }, null, 2))
   } finally { await worker?.stop(); await teardownAll() }

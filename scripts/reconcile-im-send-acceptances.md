@@ -75,8 +75,11 @@ starting Compose. Official browser cache/CDP configuration may be supplied via
 Evidence is written to `.e2e/issue-154/`: `validation.json`, `integration.log`,
 `real-wukong.json`, `runtime-recovery.json` and official browser
 `browser/report.json`, `browser/junit.xml`, screenshots and `run-metadata.json`.
-The runtime check verifies the original resultId/messageKey, one WuKong send and
-message, and unchanged model/action/budget counts after recovery. The browser
+The runtime check simulates 12 failed outbox attempts on a new synthetic run,
+repairs its original acceptance with the maintenance authorization guard, and
+uses the existing authorized terminal-delivery retry API. It verifies the
+original resultId/messageKey, one WuKong send/message, and unchanged
+model/action/budget counts after recovery. The browser
 uses real PostgreSQL/WuKong and existing HTTP endpoints with isolated test auth;
 it verifies status compatibility, concurrent recovery, tenant denial, unknown
 503 and a successful new human message. It is not production frontend recovery

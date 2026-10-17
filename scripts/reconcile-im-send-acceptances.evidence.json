@@ -24,9 +24,12 @@
     "newSyntheticRunOnly": true,
     "states": [
       "saved result / ACK lost",
+      "12 attempts / terminal outbox",
       "accepted invalid receipt",
-      "same result delivered"
+      "guarded acceptance repair",
+      "existing authorized retry / same result delivered"
     ],
+    "exhaustedOutboxRecovery": true,
     "sameResultId": true,
     "sameMessageKey": true,
     "durableMessages": 1,
