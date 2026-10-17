@@ -10,6 +10,7 @@ test.describe('Durable runtime failure recovery', { timeout: 90_000,
   for (const [mode,reason,text,calls] of [
     ['runtime-402','model_unavailable','模型服务暂时不可用',1],
     ['runtime-timeout','model_unavailable','模型服务暂时不可用',3],
+    ['runtime-total-timeout','model_unavailable','模型服务暂时不可用',1],
     ['runtime-context','context_limit','超出了当前可处理的上下文范围',0],
     ['runtime-budget','budget_limit','本轮预算已达上限',0],
     ['runtime-cancel','cancelled','这次任务已取消',0],
