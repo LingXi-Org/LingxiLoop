@@ -49,7 +49,7 @@ const communication = {
   async execute(context: ActionContext, input: Record<string, unknown>) {
     const outgoing = payload(context, input)
     const violation = assistantTextViolation(context.action.action === 'chat.send' ? nativeText(outgoing) : String(input.title))
-    if (violation) throw new NoEffectError(violation, 'invalid_answer')
+    if (violation) throw new NoEffectError(violation, 'invalid_input')
     const result = await application(context).acceptAgentMessage({ ...identity(context), clientNonce: outgoing.id, payload: outgoing,
       ...(context.action.action === 'chat.send' ? { rejectVerbatimPeerBody: nativeText(outgoing) } : {}) })
     if (result.kind !== 'accepted') throw new NoEffectError(`message rejected: ${result.kind}`, result.kind)
@@ -95,7 +95,7 @@ export function createMessageTools(control: () => ReturnType<typeof createLingxi
     semanticVersion: '2',
     description: 'Send one settled conversational message now. Use distinct messages for useful lead-in thoughts, then finish with the native final response without repeating them. Keep reviewed conclusions, citations and complete deliverables in the final result. Interactive lessons belong only in the native final response; never send lesson source here.',
     async execute(context, input) {
-      if (extractLessonBlocks(input.body).length) throw new NoEffectError('Deliver interactive lessons in the native final response, not chat.send, so their source can be verified and rendered.', 'invalid_answer')
+      if (extractLessonBlocks(input.body).length) throw new NoEffectError('Deliver interactive lessons in the native final response, not chat.send, so their source can be verified and rendered.', 'invalid_input')
       const result = await communication.execute(context,input)
       await recordSentMessage(context,result.value.messageId,input.body)
       return result

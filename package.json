@@ -92,7 +92,7 @@
     "@hugeicons/react": "^1.1.10",
     "@lezer/highlight": "1.2.3",
     "@lezer/markdown": "1.6.4",
-    "@lyyzka/lingxios": "3.5.0",
+    "@lyyzka/lingxios": "3.5.1",
     "@modelcontextprotocol/sdk": "1.30.0",
     "@openplait/core": "^1.0.0",
     "@opentelemetry/api": "1.9.0",
