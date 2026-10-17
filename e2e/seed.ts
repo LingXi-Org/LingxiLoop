@@ -6,10 +6,11 @@ import { syncStudyRoomMembers } from '../server/src/modules/learning/reporting-r
 import { seedAdminFixtures } from './admin/seed'
 import { seedLearningFixtures } from './learning-seed'
 import { seedNavigationFixtures } from './navigation-seed'
+import { isolatedSpa } from './acceptance/profile.mjs'
 
 const url = new URL(process.env.DATABASE_URL ?? '')
 if (!['postgres:', 'postgresql:'].includes(url.protocol) || url.search || url.hash
-  || url.hostname !== '127.0.0.1' || url.port !== '55432' || url.pathname !== '/lingxiloop_browser_test') {
+  || url.hostname !== '127.0.0.1' || url.port !== (isolatedSpa?.databasePort ?? '55432') || url.pathname !== '/lingxiloop_browser_test') {
   throw new Error('Browser fixtures require the dedicated local lingxiloop_browser_test database')
 }
 const db = new pg.Client({ connectionString: url.href })

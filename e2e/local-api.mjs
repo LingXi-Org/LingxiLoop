@@ -4,6 +4,7 @@ import { mkdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 import { S3Client, CreateBucketCommand, PutBucketPolicyCommand } from '@aws-sdk/client-s3'
+import { isolatedSpa } from './acceptance/profile.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const fixtureEnv = new URL('../.env.e2e.local', import.meta.url)
@@ -36,6 +37,7 @@ const env = {
   LINGXIOS_SERVICE_TOKEN: 'lingxiloop-e2e-runtime-service-token',
   LINGXIOS_R2_BUCKET: '', LINGXIOS_REALTIME_REDIS_URL: '',
   AGENT_OS_HOMES_ROOT: '.e2e/runtime-homes',
+  ...isolatedSpa?.env,
 }
 const run = (args) => new Promise((resolve, reject) => {
   const child = spawn(process.execPath, args, { cwd: root, env, stdio: 'inherit', windowsHide: true })
