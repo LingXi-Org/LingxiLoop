@@ -18,7 +18,6 @@
     "flaky": 0,
     "skipped": 0
   },
-  "source": "6f43045435cd6d81bb8ee2555e64244d518093af",
   "results": [
     {
       "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20expired-session-login-race%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
@@ -30,5 +29,7 @@
       "status": "failed"
     }
   ],
-  "redacted": "Only result metadata retained; request events, cookies, traces, environment and response bodies omitted."
+  "redacted": "Only result metadata retained; request events, cookies, traces, environment and response bodies omitted.",
+  "appSource": "1dcfe010ec9ff4cfbf64d074d769dea1be9e3030",
+  "harnessSource": "6f43045435cd6d81bb8ee2555e64244d518093af"
 }

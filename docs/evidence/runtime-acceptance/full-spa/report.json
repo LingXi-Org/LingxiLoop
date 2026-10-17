@@ -18,7 +18,6 @@
     "flaky": 0,
     "skipped": 0
   },
-  "source": "6f43045435cd6d81bb8ee2555e64244d518093af",
   "results": [
     {
       "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20restores%20a%20synthetic%20D1%20session%2C%20expires%20it%20and%20accepts%20a%20fresh%20session",
@@ -75,5 +74,7 @@
       "status": "passed"
     }
   ],
-  "redacted": "Only result metadata retained; request events, cookies, traces, environment and response bodies omitted."
+  "redacted": "Only result metadata retained; request events, cookies, traces, environment and response bodies omitted.",
+  "appSource": "6f43045435cd6d81bb8ee2555e64244d518093af",
+  "harnessSource": "6f43045435cd6d81bb8ee2555e64244d518093af"
 }

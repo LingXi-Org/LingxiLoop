@@ -18,7 +18,6 @@
     "flaky": 0,
     "skipped": 0
   },
-  "source": "6f43045435cd6d81bb8ee2555e64244d518093af",
   "results": [
     {
       "testId": "browser.e2e.ts::two%20frozen%20audiences%20receive%20only%20readable%20rooms%20and%20can%20continue%20the%20conversation",
@@ -30,5 +29,7 @@
       "status": "passed"
     }
   ],
-  "redacted": "Only result metadata retained; request events, cookies, traces, environment and response bodies omitted."
+  "redacted": "Only result metadata retained; request events, cookies, traces, environment and response bodies omitted.",
+  "appSource": "1dcfe010ec9ff4cfbf64d074d769dea1be9e3030",
+  "harnessSource": "4ae8ada370fc414096065145219ee9e82118af09"
 }
