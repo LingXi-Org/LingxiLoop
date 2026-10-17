@@ -28,7 +28,7 @@ export async function messageFacts(text) {
   const db=new Client({connectionString:'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_browser_test'})
   await db.connect()
   try {
-    const {rows}=await db.query("SELECT client_nonce,channel_id,channel_type,user_id,status FROM im_send_acceptances WHERE company_id='e2e-school' AND payload::text LIKE '%' || $1 || '%'",[text])
+    const {rows}=await db.query("SELECT client_nonce,channel_id,channel_type,user_id,status FROM im_send_acceptances WHERE company_id='e2e-school' AND payload->'content' @> jsonb_build_array(jsonb_build_object('type','text','text',$1::text))",[text])
     let imMessages=0
     for (const row of rows) {
       const response=await fetch('http://127.0.0.1:55001/channel/messagesync',{method:'POST',headers:{'content-type':'application/json',token:'e2e-local-token'},
