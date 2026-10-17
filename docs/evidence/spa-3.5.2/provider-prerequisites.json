@@ -1,0 +1,13 @@
+{
+  "inspection": "Presence only; no credential values read into evidence. Presence alone would not prove provider/data-boundary authorization.",
+  "requiredEnvironmentPresent": {
+    "OPENAI_BASE_URL": false,
+    "OPENAI_MODEL": false,
+    "OPENAI_API_KEY": false,
+    "AGENT_OS_INPUT_COST_MICROS_PER_MILLION": false,
+    "AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION": false
+  },
+  "liveProviderCalls": 0,
+  "newCredentials": 0,
+  "permissionChanges": 0
+}

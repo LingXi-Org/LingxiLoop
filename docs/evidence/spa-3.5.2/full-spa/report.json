@@ -1,0 +1,87 @@
+{
+  "id": "01a148fd-1e6c-7baa-a7ca-48bd43a458b4",
+  "runner": {
+    "name": "e2e",
+    "version": "0.17.0"
+  },
+  "status": "passed",
+  "exitCode": 0,
+  "startedAt": "2026-10-17T08:31:50.976Z",
+  "finishedAt": "2026-10-17T08:32:27.200Z",
+  "summary": {
+    "discovered": 6,
+    "selected": 6,
+    "executed": 6,
+    "passed": 6,
+    "failed": 0,
+    "interrupted": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "vcs": {
+    "commit": "ba9014958f7ab0dc0636a18edd1339d9e9e76e60",
+    "branch": "codex/spa-352-acceptance",
+    "dirty": true
+  },
+  "productSource": "ba9014958f7ab0dc0636a18edd1339d9e9e76e60",
+  "harnessSource": "ac7f9d4b2e5179de6c438ac8c5db9ae9b5d3fb15",
+  "runtime": "3.5.2",
+  "scope": "Full built React SPA, real isolated D1/control gateway, PostgreSQL, Redis and WuKongIM. Post-login session and human-message recovery; no provider/full sandboxed Worker/captcha qualification.",
+  "redacted": "Request events, cookies, traces and response bodies omitted",
+  "results": [
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20restores%20a%20synthetic%20D1%20session%2C%20expires%20it%20and%20accepts%20a%20fresh%20session",
+      "titlePath": [
+        "full SPA restores a synthetic D1 session, expires it and accepts a fresh session"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20network-before-accept%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA network-before-accept preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20database-pause%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA database-pause preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20web-restart%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA web-restart preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20expired-session%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA expired-session preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/acceptance/full-spa.e2e.ts::full%20SPA%20expired-session-login-race%20preserves%20recovery%20and%20never%20duplicates%20a%20durable%20human%20send",
+      "titlePath": [
+        "full SPA expired-session-login-race preserves recovery and never duplicates a durable human send"
+      ],
+      "file": "e2e/acceptance/full-spa.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    }
+  ]
+}

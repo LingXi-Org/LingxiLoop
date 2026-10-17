@@ -1,0 +1,29 @@
+{
+  "observation": {
+    "status": "running",
+    "scope": "Isolated immutable production Web/API only; no Worker, model dialogue, live provider or production deployment qualification.",
+    "startedAt": "2026-10-17T06:42:47.900Z",
+    "earliestCompletionAt": "2026-10-18T06:42:47.901Z",
+    "targetSeconds": 86400,
+    "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:0c295e66c29dcceab609c3d1715348bab6a90c6585d1280095cc0a61c33b3f29",
+    "limits": {
+      "cpus": 0.75,
+      "memoryBytes": 671088640,
+      "oldSpaceMiB": 320,
+      "poolMax": 8
+    },
+    "initialStartedAt": "2026-10-17T06:42:41.588503935Z",
+    "initialRestartCount": 0,
+    "samples": 115,
+    "elapsedSeconds": 6850.0987918910005,
+    "lastHeartbeatAt": "2026-10-17T08:36:57.954Z",
+    "violations": []
+  },
+  "originalCandidateStartedAt": "2026-10-17T06:42:41.588503935Z",
+  "originalCandidateRestartCount": 0,
+  "originalCandidatePaused": false,
+  "originalMonitorPid": 285092,
+  "originalEvidenceWatcherPid": 363050,
+  "newSpaServices": "lingxiloop-spa352 (stopped/removed after successful tests)",
+  "newVersionDurabilityQualified": false
+}

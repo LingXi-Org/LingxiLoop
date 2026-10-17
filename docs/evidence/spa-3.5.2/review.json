@@ -1,0 +1,32 @@
+{
+  "productSource": "ba9014958f7ab0dc0636a18edd1339d9e9e76e60",
+  "upstreamSource": "e09fc03437804ec80bc2f6d6b3258dc3e2f35540",
+  "runtime": "3.5.2",
+  "reviewScope": [
+    153,
+    155,
+    157,
+    161
+  ],
+  "additionalProductCodeFindings": [],
+  "changedProductFiles": [],
+  "changes": "Test isolation and retained acceptance evidence only",
+  "remaining": {
+    "153": [
+      "qualified full Worker and model-dialogue/retained-heap measurements",
+      "complete duration evidence; no3.5.2 endurance qualification"
+    ],
+    "155": [
+      "authorized live provider/pricing and approved fallback route if required"
+    ],
+    "157": [
+      "controlled live-priced/actual usage cost-near-cap validation"
+    ],
+    "161": [
+      "qualified full Worker crash/action and controlled live-provider joint validation"
+    ]
+  },
+  "deployment": "explicitly excluded by user; not a blocker",
+  "spaPostLogin": "6/6 passed, zero skipped",
+  "newAutomationCount": 0
+}
