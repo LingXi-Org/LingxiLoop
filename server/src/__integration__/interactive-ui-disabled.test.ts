@@ -107,7 +107,8 @@ test('old admitted UI receipts cannot replay through generic acceptance or signe
   const input = { companyId, channelId, userId: 'test-owner', clientNonce: payload.id, payload }
   const historicalEcho = await wukongClient().sendMessage(channelId, 2, 'test-owner', payload)
   await ensureSendAcceptance(pool, { ...input, channelType: 2, inputDigest: messageAcceptanceDigest({ channelId, channelType: 2, payload }) })
-  await acceptSend(pool, { ...input, echo: { ...historicalEcho, clientMsgNo: payload.id } })
+  await acceptSend(pool, { ...input, echo: { ...historicalEcho, clientMsgNo: payload.id,
+    channelId, channelType: 2, fromUid: 'test-owner', timestamp: Math.floor(Date.now() / 1000), payload } })
   const before = await counts(), writes = recording.messages.length
   await assert.rejects(assertUiInteractionAdmission(input), { status: 410 })
   assert.equal((await fetch(`${origin}/api/im/channels/${channelId}/messages/accept`, { method: 'POST', headers: headers(), body: JSON.stringify({ clientNonce: payload.id, payload }) })).status, 410)

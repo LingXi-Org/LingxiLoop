@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
 import { NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage, nativeMessageSchema } from './message-types.js'
 import type { ImBootstrap, ImChannelProfile, ImMessage } from './types.js'
+import { validSendReceipt } from './messages-repository.js'
 
 export interface WukongConfig {
   apiUrl: string
@@ -54,7 +55,15 @@ export class WukongClient {
       throw new Error(`WuKongIM ${path} returned ${response.status}: ${detail.slice(0, 500)}`)
     }
     const text = await response.text()
-    return (text ? JSON.parse(text) : {}) as T
+    return (text ? JSON.parse(text, (key: string, value: unknown, context?: { source?: string }) => {
+      // Node >=22 supplies the original numeric token. WuKong send ACKs use int64
+      // IDs, while history also supplies message_idstr; preserve their exact identity.
+      if ((key === 'message_id' || key === 'messageId') && typeof value === 'number' && !Number.isSafeInteger(value)) {
+        if (!context?.source || !/^[1-9][0-9]*$/.test(context.source)) throw new Error('WuKongIM returned an unsafe message ID')
+        return context.source
+      }
+      return value
+    }) : {}) as T
   }
 
   async revokeUser(uid: string): Promise<void> {
@@ -97,9 +106,12 @@ export class WukongClient {
         await delay(100 * (attempt + 1), undefined, { signal: this.signal })
         continue
       }
-      const messageId = String(value.message_id ?? value.messageId ?? '')
-      const messageSeq = Number(value.message_seq ?? value.messageSeq ?? 0)
-      if (value.reason !== 1 || !messageId || messageId === '0' || !Number.isSafeInteger(messageSeq) || messageSeq <= 0) {
+      const rawId = value.message_idstr ?? value.message_id ?? value.messageId
+      const messageId = typeof rawId === 'string' ? rawId
+        : typeof rawId === 'number' && Number.isSafeInteger(rawId) && rawId > 0 ? String(rawId) : ''
+      const rawSequence = value.message_seq ?? value.messageSeq
+      const messageSeq = typeof rawSequence === 'number' ? rawSequence : 0
+      if (value.reason !== 1 || !validSendReceipt({ messageId, messageSeq })) {
         throw new Error(`WuKongIM message send was not accepted (reason ${typeof value.reason === 'number' ? value.reason : 'invalid'})`)
       }
       return { messageId, messageSeq }

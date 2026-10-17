@@ -1,6 +1,7 @@
 import { nativeMessageSchema, type NativeMessage } from './message-types.js'
 import type { ImMessageEnvelope } from './messages-application.js'
 import { createImMessagesApplication, imMessagesApplication } from './messages-facade.js'
+import { validSendReceipt } from './messages-repository.js'
 export { createMessageTools } from './agent-tools.js'
 
 export function getAgentChannelHistory(input: {
@@ -63,11 +64,10 @@ export async function sendAgentChannelMessage(input: {
     return { kind: 'verbatim_peer' as const, peer: result.peer }
   }
   if (result.kind !== 'accepted') return result
-  const messageId = String(result.echo.messageId ?? '')
-  const sequence = Number(result.echo.messageSeq)
-  if (!messageId || !Number.isSafeInteger(sequence) || sequence <= 0) {
+  if (!validSendReceipt(result.echo)) {
     throw new Error('WuKong send acceptance returned an invalid echo')
   }
+  const { messageId, messageSeq: sequence } = result.echo
   return { kind: 'accepted', duplicate: result.duplicate, messageId, sequence, payload: nativeMessageSchema.parse(result.echo.payload) }
 }
 
@@ -85,11 +85,10 @@ export async function sendSystemChannelMessage(input: {
 > {
   const result = await createImMessagesApplication(input.signal).acceptSystemMessage(input)
   if (result.kind !== 'accepted') return result
-  const messageId = String(result.echo.messageId ?? '')
-  const sequence = Number(result.echo.messageSeq)
-  if (!messageId || !Number.isSafeInteger(sequence) || sequence <= 0) {
+  if (!validSendReceipt(result.echo)) {
     throw new Error('WuKong system send acceptance returned an invalid echo')
   }
+  const { messageId, messageSeq: sequence } = result.echo
   return { kind: 'accepted', duplicate: result.duplicate, messageId, sequence }
 }
 

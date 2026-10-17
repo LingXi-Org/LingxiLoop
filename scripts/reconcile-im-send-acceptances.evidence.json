@@ -1,0 +1,86 @@
+{
+  "passed": true,
+  "command": "node scripts/test-im-send-reconciliation.mjs --browser --regression",
+  "runtimeDependency": "3.4.7",
+  "realWuKong": true,
+  "officialBrowser": true,
+  "counts": {
+    "tests": 25,
+    "pass": 25,
+    "fail": 0,
+    "skipped": 0
+  },
+  "limitations": [
+    "no 24h soak",
+    "no real model provider",
+    "browser uses isolated authentication and tests HTTP contract; #160 owns production recovery UI"
+  ],
+  "baseline": "2db5bbcddc8f14ac62500e36594dc49793c9e096",
+  "runtimeRecovery": {
+    "passed": true,
+    "realWuKong": true,
+    "scriptedModel": true,
+    "realProvider": false,
+    "newSyntheticRunOnly": true,
+    "states": [
+      "saved result / ACK lost",
+      "accepted invalid receipt",
+      "same result delivered"
+    ],
+    "sameResultId": true,
+    "sameMessageKey": true,
+    "durableMessages": 1,
+    "sends": 1,
+    "modelCallsBefore": 2,
+    "modelCallsAfter": 2,
+    "actionAndBudgetLedgerUnchanged": true
+  },
+  "transport": {
+    "passed": true,
+    "pinnedWuKongCommit": "c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47",
+    "checks": [
+      "real ACK loss",
+      "6 concurrent retries",
+      "accepted sequence 0",
+      "accepted missing sequence",
+      "same message ID",
+      "one message for the original nonce"
+    ],
+    "originalSendCalls": 1,
+    "messagesForOriginalNonce": 1,
+    "models": 0,
+    "actions": 0,
+    "states": [
+      "pending/unknown",
+      "accepted/reconciled",
+      "accepted/invalid sequence → pending projection",
+      "accepted/repaired"
+    ],
+    "browser": "official API boundary verification passed",
+    "limitations": [
+      "isolated test authentication",
+      "production recovery UI joint verification belongs to #160",
+      "no real model provider",
+      "no 24h soak"
+    ]
+  },
+  "checks": {
+    "serverLint": "passed",
+    "serverTypecheck": "passed",
+    "scriptAndBrowserLint": "passed",
+    "e2eTypecheck": "passed",
+    "serverTests": {
+      "passed": 102,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "dependencies": {
+    "manifestLingxiOS": "3.4.7",
+    "installedLingxiOS": "3.4.7",
+    "lockSha256": "499b8325aa908d48776c1363e4f57c31ed2e5c76de04da858a946e060c0f4ef9",
+    "lockUnchanged": true,
+    "install": "ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci --cache /tmp/lingxiloop-154-npm-cache --no-audit --no-fund"
+  },
+  "artifacts": ".e2e/issue-154/ (local disposable test evidence)"
+}
