@@ -3,7 +3,7 @@ name: control-ingress
 services:
   traefik:
     image: accel.way2api.fun/docker.io/library/traefik:v3.7.1
-    container_name: aly-traefik
+    container_name: komodo-traefik
     command:
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
@@ -19,23 +19,18 @@ services:
     ports:
       - 80:80
       - 443:443
-    extra_hosts:
-      - host.docker.internal:host-gateway
     volumes:
       - ./dynamic.yml:/etc/traefik/dynamic/routes.yml:ro
       - traefik-acme:/letsencrypt
-    networks: [default, komodo, wegolibrary]
+    networks: [komodo]
     restart: unless-stopped
 
 volumes:
   traefik-acme:
     external: true
-    name: aly-ingress_traefik-acme
+    name: control-ingress_traefik-acme
 
 networks:
   komodo:
     external: true
     name: komodo_default
-  wegolibrary:
-    external: true
-    name: wegolibrary_default

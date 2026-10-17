@@ -233,14 +233,15 @@ test('live chat streams balance independently across both nodes through unbuffer
 
 test('Komodo control plane and ingress keep management sockets private', () => {
   const manager = read('deploy/komodo/core/compose.yml')
-  const alyIngress = read('deploy/komodo/control-ingress/compose.yml')
+  const controlIngress = read('deploy/komodo/control-ingress/compose.yml')
+  const alyIngress = read('deploy/komodo/aly-ingress/compose.yml')
   const appIngress = read('deploy/komodo/server-b-ingress/compose.yml')
   const appRoutes = read('deploy/komodo/server-b-ingress/dynamic.yml')
 
   assert.match(manager, /komodo-core:2\.3\.3/)
   assert.match(manager, /127\.0\.0\.1:9120:9120/)
   assert.doesNotMatch(manager, /docker\.sock/)
-  assert.doesNotMatch(`${alyIngress}\n${appIngress}`, /docker\.sock|providers\.docker/)
+  assert.doesNotMatch(`${controlIngress}\n${alyIngress}\n${appIngress}`, /docker\.sock|providers\.docker/)
   assert.match(appIngress, /80:80[\s\S]*443:443/)
   for (const host of ['lingxilearn.cn', 'www.lingxilearn.cn', 'loop.lingxilearn.cn', 'im.lingxilearn.cn', 'openlit.lingxilearn.cn', 'uptime.lingxilearn.cn']) {
     assert.match(appRoutes, new RegExp(host.replaceAll('.', '\\.')))

@@ -2,7 +2,7 @@ name: komodo
 
 services:
   mongo:
-    image: mongo:8.0
+    image: accel.way2api.fun/docker.io/library/mongo:8.0.32@sha256:6c108efd306c66a7eb58e0b4042c2fcffb4a4980dac111039c59fd714db6a69b
     command: --quiet --wiredTigerCacheSizeGB 0.25
     restart: unless-stopped
     environment:
@@ -15,7 +15,7 @@ services:
       komodo.skip: ""
 
   core:
-    image: ghcr.io/moghtech/komodo-core:2.3.3
+    image: accel.way2api.fun/ghcr.io/moghtech/komodo-core:2.3.3@sha256:bca73d0eee143066228fb9b80c38a5a2726e573ad2758f7aa92b5c91a8aef1c7
     init: true
     restart: unless-stopped
     depends_on: [mongo]

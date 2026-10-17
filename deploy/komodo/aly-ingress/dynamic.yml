@@ -1,0 +1,11 @@
+http:
+  routers:
+    wegolibrary:
+      rule: Host(`golib.christmas1314.xyz`)
+      entryPoints: [websecure]
+      service: wegolibrary
+      tls: { certResolver: letsencrypt }
+  services:
+    wegolibrary:
+      loadBalancer:
+        servers: [{ url: http://frontend:80 }]
