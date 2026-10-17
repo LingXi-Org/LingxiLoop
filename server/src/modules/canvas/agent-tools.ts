@@ -11,6 +11,8 @@ import { createCanvasExecution, type CanvasRunRow } from './execution.js'
 import { publishCanvasProgress } from './progress.js'
 import { canvasById, conversationCanvasId, findFrame, lockReportWork, type CanvasRow } from './repository.js'
 
+const reportRoles = { 'canvas.submit_report': 'specialist', 'canvas.submit_verification': 'verifier' } as const
+
 export function createCanvasTools(control: Parameters<typeof createCanvasExecution>[0]): ToolDefinition[] {
   async function scope(context: ActionContext, write = false) {
     const { work } = context, db = context.database as Queryable
@@ -23,6 +25,13 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
     if (assigned.rows.length) {
       const binding = canvas && await lockReportWork(db, { workId: work.id, companyId: work.tenantId, agentId: work.agentId, canvasId: canvas.id })
       if (!binding || binding.principal_id !== work.principalId) throw new NoEffectError('Canvas assignment was replaced or revoked', 'forbidden')
+    }
+    const reportRole = reportRoles[context.action.action as keyof typeof reportRoles]
+    if (reportRole) {
+      const binding = canvas && await lockReportWork(db, { workId: work.id, companyId: work.tenantId, agentId: work.agentId, canvasId: canvas.id })
+      if (!binding || binding.principal_id !== work.principalId || binding.execution_role !== reportRole) {
+        throw new NoEffectError('report tool requires the current assigned role', 'forbidden')
+      }
     }
     return canvas
   }
@@ -59,15 +68,27 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
       const expected = method === 'delete_frame' ? { exists: false } : { exists: true, revision: receipt.result.revision, content: receipt.result.content }
       return compareResource(`canvas_frame:${id}`, expected, { exists: Boolean(frame), revision: Number(frame?.revision), content: frame?.content })
     }
-    if (method === 'submit_report' || method === 'add_comment') {
-      const table = method === 'submit_report' ? 'canvas_assignment_reports' : 'canvas_comments'
-      const field = method === 'submit_report' ? 'finding' : 'body'
+    if (method === 'submit_report' || method === 'submit_verification' || method === 'add_comment') {
+      const table = method === 'add_comment' ? 'canvas_comments' : 'canvas_assignment_reports'
+      const field = method === 'add_comment' ? 'body' : 'finding'
       const row = (await db.query(`SELECT ${field} FROM ${table} WHERE id=$1 AND canvas_id=$2`, [receipt.result.id,canvas.id])).rows[0]
       return compareResource(`canvas:${receipt.result.id}`, { [field]: receipt.result[field] }, row ?? {})
     }
     const snapshot = await application(context).api.getCanvasSnapshot(context.work.tenantId, context.work.agentId, canvas.id)
     const expected = method === 'stop_workspace' ? { status: 'stopped' } : { id: canvas.id }
     return compareResource(`canvas:${canvas.id}`, expected, snapshot)
+  }
+  async function submitReport(context: ActionContext, input: Omit<Parameters<ReturnType<typeof application>['api']['submitCanvasReport']>[0],
+    'companyId' | 'canvasId' | 'workId' | 'agentId' | 'principalId' | 'requestVersion' | 'actionId' | 'executionRole' | 'signal'>) {
+    const canvas = await requiredCanvas(context), native = application(context), db = context.database as Queryable
+    const role = reportRoles[context.action.action as keyof typeof reportRoles]
+    const { rows } = await db.query<CanvasRunRow>(`UPDATE canvas_agent_runs SET request_version=$3
+      WHERE work_id=$1 AND canvas_id=$2 AND principal_id=$4 AND execution_role=$5 RETURNING *`,
+      [context.work.id,canvas.id,context.requestVersion,context.work.principalId,role])
+    if (!rows[0]) throw new NoEffectError('report tool requires the current assigned role', 'forbidden')
+    return result(context, native, await native.api.submitCanvasReport({ ...input, companyId: context.work.tenantId,
+      canvasId: canvas.id, workId: context.work.id, agentId: context.work.agentId, principalId: context.work.principalId!,
+      requestVersion: context.requestVersion!, actionId: context.action.idempotencyKey, executionRole: rows[0].execution_role, signal: context.signal }), canvas)
   }
   return [
     nativeTool('canvas.current', agentCanvasSchemas.current, { description: 'Read the current Canvas, assignments and reports.', effect: 'read', approval: false, authorize,
@@ -98,14 +119,8 @@ export function createCanvasTools(control: Parameters<typeof createCanvasExecuti
       async execute(context, input) { const canvas = await requiredCanvas(context), native = application(context); await native.api.stopCanvasAssignment({ ...input, companyId: context.work.tenantId, canvasId: canvas.id }); return result(context, native, { agentId: input.agentId, status: 'cancelled' }, canvas) } }),
     nativeTool('canvas.stop_workspace', agentCanvasSchemas.stop_workspace, { description: 'Stop the current Canvas and its execution.', effect: 'transaction', approval: false, authorize, verify,
       async execute(context) { const canvas = await requiredCanvas(context), native = application(context); await native.api.stopCanvasWorkspace({ companyId: context.work.tenantId, canvasId: canvas.id }); return result(context, native, { status: 'stopped' }, canvas) } }),
-    nativeTool('canvas.submit_report', agentCanvasSchemas.submit_report, { description: 'Persist a finding backed by observed evidence versions. Independent verifiers reference the specialist report they checked.', effect: 'transaction', approval: false, authorize, verify,
-      async execute(context, input) { const canvas = await requiredCanvas(context), native = application(context), db = context.database as Queryable
-        const { rows } = await db.query<CanvasRunRow>('UPDATE canvas_agent_runs SET request_version=$3 WHERE work_id=$1 AND canvas_id=$2 AND principal_id=$4 RETURNING *',
-          [context.work.id,canvas.id,context.requestVersion,context.work.principalId])
-        if (!rows[0]) throw new NoEffectError('report requires an assigned specialist or verifier', 'forbidden')
-        return result(context, native, await native.api.submitCanvasReport({ ...input, companyId: context.work.tenantId,
-          canvasId: canvas.id, workId: context.work.id, agentId: context.work.agentId, principalId: context.work.principalId!,
-          requestVersion: context.requestVersion!, actionId: context.action.idempotencyKey, executionRole: rows[0].execution_role, signal: context.signal }), canvas) } }),
+    nativeTool('canvas.submit_report', agentCanvasSchemas.submit_report, { description: 'Persist your assigned specialist finding backed by observed evidence versions.', effect: 'transaction', approval: false, authorize, verify, execute: submitReport }),
+    nativeTool('canvas.submit_verification', agentCanvasSchemas.submit_verification, { description: 'Persist an independent verification of the assigned specialist report, including disconfirming checks and a verdict.', effect: 'transaction', approval: false, authorize, verify, execute: submitReport }),
   ]
 }
 async function requireFrameScope(context: ActionContext, canvas: CanvasRow, frameId: string) {

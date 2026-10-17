@@ -15,6 +15,7 @@ const testsByScope = {
     'server/src/__tests__/entitlement-resolver.test.ts',
     'server/src/__tests__/llm-ledger.test.ts',
     'server/src/__tests__/agent-tool-registry.test.ts',
+    'server/src/__tests__/canvas-tool-contracts.test.ts',
     'server/src/__tests__/assistant-text.test.ts',
     'server/src/__tests__/assistant-transport.test.ts',
     'server/src/__tests__/run-activity-projection.test.ts',

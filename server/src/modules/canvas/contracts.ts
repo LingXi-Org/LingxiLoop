@@ -215,6 +215,11 @@ const canvasMemberSchema = z.object({ agentId: identifierSchema, assignment: z.s
   executionRole: z.enum(['specialist','verifier']).optional(),
   verifiesAgentId: identifierSchema.optional() }).strict()
 const reportStrings = z.array(z.string().trim().min(1).max(4_000)).max(32)
+const canvasReportSchema = z.object({ finding: z.string().trim().min(1).max(16_000),
+  evidenceRefs: z.array(z.object({ kind: z.enum(['frame','message','document','source','attempt','report']), id: identifierSchema }).strict()).max(64),
+  confidence: z.number().min(0).max(1), unresolved: reportStrings.optional(), nextStep: z.string().trim().min(1).max(4_000).optional(),
+}).strict()
+const reportFits = (value: unknown) => Buffer.byteLength(JSON.stringify(value)) <= 32_768
 export const agentCanvasSchemas = {
   current: z.object({}).strict(),
   available_agents: z.object({}).strict(),
@@ -228,12 +233,10 @@ export const agentCanvasSchemas = {
     members: z.array(canvasMemberSchema).min(1).max(32) }).strict(),
   stop_workspace: z.object({}).strict(),
   stop_assignment: z.object({ agentId: identifierSchema }).strict(),
-  submit_report: z.object({ finding: z.string().trim().min(1).max(16_000),
-    evidenceRefs: z.array(z.object({ kind: z.enum(['frame','message','document','source','attempt','report']), id: identifierSchema }).strict()).max(64),
-    confidence: z.number().min(0).max(1), unresolved: reportStrings.optional(), nextStep: z.string().trim().min(1).max(4_000).optional(),
-    verifiesReportId: identifierSchema.optional(), disconfirmingChecks: reportStrings.optional(),
-    verdict: z.enum(['supported','rejected','inconclusive']).optional(),
-  }).strict().refine(value => Buffer.byteLength(JSON.stringify(value)) <= 32_768, 'report exceeds 32768 bytes'),
+  submit_report: canvasReportSchema.refine(reportFits, 'report exceeds 32768 bytes'),
+  submit_verification: canvasReportSchema.extend({ verifiesReportId: identifierSchema,
+    disconfirmingChecks: reportStrings.min(1), verdict: z.enum(['supported','rejected','inconclusive']),
+  }).strict().refine(reportFits, 'report exceeds 32768 bytes'),
 }
 
 export const canvasStateUpdateSchema = z.object({ operationId: z.string().min(1).max(200),changes: z.array(z.union([

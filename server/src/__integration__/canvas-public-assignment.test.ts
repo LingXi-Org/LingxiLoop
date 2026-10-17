@@ -8,6 +8,9 @@ import { nativeText } from '../im/message-types.js'
 import { receiveAgentRequest } from '../agent-runtime/receive.js'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { loadCanvasRunContext } from '../modules/canvas/runtime.js'
+import { createCanvasTools } from '../modules/canvas/agent-tools.js'
+import { createProductContext } from '../agent-runtime/context.js'
+import { NoEffectError, type ActionContext } from '@lyyzka/lingxios'
 import { installRecordingWukong } from './_recording-wukong.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
@@ -53,6 +56,24 @@ test('human Canvas assignments publish only the current authorized ordinary grou
   const control = await lingxiOSControl()
   const work = await control.connectWorker({ workerId: 'canvas-delayed-claim', workKinds: ['turn'] }).claimWork()
   assert.ok(work)
+  const tools = createCanvasTools(lingxiOSControl), context = createProductContext(tools)
+  const methods = async () => (await context.capabilityResolver.resolve(work)).find(grant => grant.name === 'canvas')?.methods ?? []
+  assert.ok((await methods()).includes('submit_report'))
+  assert.ok(!(await methods()).includes('submit_verification'))
+  const actionContext = (action: string) => ({ work,database: pool,signal: AbortSignal.timeout(10000),
+    deadlineAt: new Date(Date.now()+10000).toISOString(),requestVersion: 1,
+    action: { runId: work.id,cellId: 'role-preflight',callIndex: 0,idempotencyKey: 'role-preflight',action,args: {} } }) as unknown as ActionContext
+  const ordinary = tools.find(tool => tool.action === 'canvas.submit_report')!
+  const verification = tools.find(tool => tool.action === 'canvas.submit_verification')!
+  const denied = (error: unknown) => error instanceof NoEffectError && error.code === 'forbidden'
+  await ordinary.authorize(actionContext(ordinary.action),{})
+  await assert.rejects(verification.authorize(actionContext(verification.action),{}),denied)
+  await pool.query("UPDATE canvas_agent_assignments SET execution_role='verifier' WHERE work_id=$1",[work.id])
+  await pool.query("UPDATE canvas_agent_runs SET execution_role='verifier' WHERE work_id=$1",[work.id])
+  assert.ok(!(await methods()).includes('submit_report'))
+  assert.ok((await methods()).includes('submit_verification'))
+  await verification.authorize(actionContext(verification.action),{})
+  await assert.rejects(ordinary.authorize(actionContext(ordinary.action),{}),denied)
   // Replacement and stop must also fence an already admitted, not yet bound turn.
   await assign('cancelled')
   await assert.rejects(loadCanvasRunContext(pool, work), /cancelled or replaced/)

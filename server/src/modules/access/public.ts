@@ -22,7 +22,7 @@ export type {
   ResourceAccessMode,
 } from './contracts.js'
 export { ENTITLEMENT_CODES, PERMISSION_ACTIONS } from './contracts.js'
-export { ForbiddenError } from './errors.js'
+export { ForbiddenError, PermissionResolutionError } from './errors.js'
 export { knowledgeSourceVisibilityScope } from './policy.js'
 
 export function createPermissionService(
