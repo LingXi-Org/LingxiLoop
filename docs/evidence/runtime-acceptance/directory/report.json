@@ -1,0 +1,34 @@
+{
+  "id": "01a14884-0380-7df9-99ea-8a0e46702ed2",
+  "runner": {
+    "name": "e2e",
+    "version": "0.17.0"
+  },
+  "status": "passed",
+  "exitCode": 0,
+  "startedAt": "2026-10-17T06:19:34.207Z",
+  "finishedAt": "2026-10-17T06:19:46.108Z",
+  "summary": {
+    "discovered": 1,
+    "selected": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "interrupted": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "source": "6f43045435cd6d81bb8ee2555e64244d518093af",
+  "results": [
+    {
+      "testId": "browser.e2e.ts::two%20frozen%20audiences%20receive%20only%20readable%20rooms%20and%20can%20continue%20the%20conversation",
+      "titlePath": [
+        "two frozen audiences receive only readable rooms and can continue the conversation"
+      ],
+      "file": "browser.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    }
+  ],
+  "redacted": "Only result metadata retained; request events, cookies, traces, environment and response bodies omitted."
+}

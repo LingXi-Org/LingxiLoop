@@ -14,8 +14,9 @@ const docker = (...args) => {
 }
 const images = {
   baseline: 'accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:e6fb36579d98b8039f6f6146f7b4986daa5c308c7e87097125482c282570e11a',
-  candidate: 'accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:7ef70169feeec2801fda81a27acaa11161e532daa25967acc96fe3178f6c7a11',
+  candidate: process.env.ACCEPTANCE_CANDIDATE_IMAGE,
 }
+assert.match(images.candidate??'',/^accel\.way2api\.fun\/ghcr\.io\/lingxi-org\/lingxiloop-server@sha256:[a-f0-9]{64}$/,'Supply the verified published candidate digest')
 const network = 'lingxiloop-acceptance'
 if (spawnSync('docker',['network','inspect',network],{stdio:'ignore'}).status !== 0) docker('network','create',network)
 for (const name of ['lingxiloop-e2e-postgres-1','lingxiloop-e2e-redis-1','lingxiloop-e2e-wukongim-1','lingxiloop-acceptance-storage']) {
@@ -37,6 +38,8 @@ const receipt = {startedAt:new Date().toISOString(),source:spawnSync('git',['rev
   limits:{cpus:0.75,memoryBytes:640*1024*1024,oldSpaceMiB:320,poolMax:8},images:{}}
 try {
 for (const [variant,image] of Object.entries(images)) {
+  const release=JSON.parse(docker('run','--rm','--network','none','--entrypoint','node',image,'--input-type=module','-e',"import {releaseVersions} from '@lyyzka/lingxios';console.log(JSON.stringify(releaseVersions))"))
+  assert.equal(release.runtime,variant==='baseline'?'3.4.7':'3.5.1','Installed image runtime must match qualification')
   const database = `lingxiloop_acceptance_${variant}_test`
   if (!(await admin.query('SELECT 1 FROM pg_database WHERE datname=$1',[database])).rowCount) await admin.query(`CREATE DATABASE "${database}"`)
   const environment = {
@@ -65,7 +68,7 @@ for (const [variant,image] of Object.entries(images)) {
     '-p',`127.0.0.1:${port}:5181`,'--mount',`type=bind,src=${resolve(root,'scripts/runtime-acceptance')},dst=/acceptance-harness,readonly`,
     '--mount',`type=bind,src=${output},dst=/acceptance-output`,...envArgs,image,
     'node','--max-old-space-size=320','--expose-gc','--import','/acceptance-harness/observe.mjs','--import','tsx','server/src/bin/web.ts')
-  receipt.images[variant]={image,name,port,database,info:JSON.parse(docker('inspect',name))[0].Image}
+  receipt.images[variant]={image,name,port,database,release,info:JSON.parse(docker('inspect',name))[0].Image}
 }
 } finally { await admin.end(); writeFileSync(`${output}/setup.json`,JSON.stringify(receipt,null,2)) }
 console.log(JSON.stringify(receipt,null,2))
