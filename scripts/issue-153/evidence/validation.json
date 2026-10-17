@@ -1,5 +1,5 @@
 {
-  "testedImplementationCommit": "e01e80ec7c6714e61eb072f4e39d080c0adb6096",
+  "testedImplementationCommit": "38ae426276748d2e26ea55fa7204d768d988ab70",
   "base": "2db5bbcddc8f14ac62500e36594dc49793c9e096",
   "environment": {
     "finalFoundationNode": "22.23.3",
@@ -80,5 +80,33 @@
     "browser failover and no duplicate durable writes",
     "Komodo CLI/API update state",
     "production canary/deployment"
-  ]
+  ],
+  "followup": {
+    "priorCiRun": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/38998672305",
+    "priorCiHead": "ef2e1ce31ab5ce8c9a1e0635e71b2a93cf79c607",
+    "observedPriorCi": {
+      "server": "success including npm ci, lint, typecheck, tests, selectors",
+      "deploy-contract": "success",
+      "integration": "in progress at fix push"
+    },
+    "localVsCi": "The 3.4.7 401 is a local installation blocker. CI npm ci succeeds with the workflow existing authorization; do not attribute later CI failures to the local 401.",
+    "rawCiLogs": "Download returned Forbidden; no alternate download route, permission change or credential workaround attempted. CI observations use authorized run/job/step metadata.",
+    "codeCorrection": {
+      "commit": "38ae426276748d2e26ea55fa7204d768d988ab70",
+      "problem": "Legacy /health/dependencies gained a control field and required-control status, violating dependency-readiness.test.ts contract",
+      "reproduction": "foundation HTTP exact-body assertion failed before fix; see diagnostic-contract-red.log",
+      "fix": "Preserve original database/redis/openNotebook diagnostic fields and budgets; control remains required only for new readyz",
+      "regression": "Healthy legacy diagnostics stays 200 when control fails; readyz returns 503; unhealthy optional Notebook retains original 503 and shape."
+    },
+    "additionalLocalChecks": {
+      "metricsExistingTests": "8/8 passed",
+      "deploymentContract": "18/18 passed",
+      "selectors": "2/2 passed",
+      "foundationRegression": "7/7 passed with expanded legacy assertions",
+      "foundationTypecheck": "passed",
+      "serverAndScriptLint": "passed",
+      "compose": "passed"
+    },
+    "remaining": "New CI rerun pending; full product/browser/soak/provider/Komodo acceptance unchanged."
+  }
 }

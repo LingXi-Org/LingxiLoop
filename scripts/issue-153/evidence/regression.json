@@ -3,31 +3,31 @@
   "results": [
     {
       "name": "published public control readiness contract rejects unready and malformed payloads",
-      "milliseconds": 2656.5407450000002
+      "milliseconds": 2529.7575580000002
     },
     {
       "name": "healthy HTTP readiness, legacy health, liveness and optional diagnostics",
-      "milliseconds": 57.65436
+      "milliseconds": 37.782590999999684
     },
     {
       "name": "each required failure removes readiness, errors are sanitized, legacy control independence",
-      "milliseconds": 58.34963299999981
+      "milliseconds": 18.16068600000017
     },
     {
       "name": "concurrent and repeated timed-out HTTP probes reuse actual pending IO then recover",
-      "milliseconds": 2103.7900069999996
+      "milliseconds": 2023.3210070000005
     },
     {
       "name": "real Redis disconnect and real PG saturation remove traffic while liveness survives",
-      "milliseconds": 1058.8215129999999
+      "milliseconds": 1041.1722930000005
     },
     {
       "name": "pg Promise/callback acquire, reused transaction SQL, failed SQL and timed-out acquire metrics",
-      "milliseconds": 10018.131308000002
+      "milliseconds": 10018.546585
     },
     {
       "name": "repeatable idle / normal SQL HTTP / burst sampler artifacts",
-      "milliseconds": 9287.623147999999
+      "milliseconds": 9199.003173
     }
   ],
   "node": "v22.23.3",
