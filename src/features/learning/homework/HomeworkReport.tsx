@@ -33,5 +33,5 @@ export function HomeworkSubmissionView({ submission, framed = true }: { submissi
     <ConversationReferences references={submission.conversationReferences} id={submission.id}/><p className="text-xs text-muted-foreground">学习评价供教师参考，不等同于正式成绩。</p>
     {submission.feedback && <p className="whitespace-pre-wrap border-s-2 ps-3 text-sm">教师意见：{submission.feedback}</p>}
   </div>
-  return framed ? <MemoCard label={`${submission.learnerName}第 ${submission.version} 次提交`} author={submission.learnerName} createdAt={submission.submittedAt} actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>{content}</MemoCard> : content
+  return framed ? <MemoCard label={`${submission.learnerName}第 ${submission.version} 次提交`} author={submission.learnerName} authorId={submission.learnerId} authorAvatarUrl={submission.learnerAvatarUrl} createdAt={submission.submittedAt} actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>{content}</MemoCard> : content
 }

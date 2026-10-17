@@ -78,7 +78,7 @@ function Learner({ learner, homework, canReview, onChanged }: { learner: Homewor
     catch (cause) { setError(userFacingError(cause, '验收未能保存，请刷新进度后重试。')) }
     finally { setBusy(false) }
   }
-  return <MemoCard label={learner.learnerName} author={learner.learnerName} authorDetail={learner.learnerId} createdAt={submission?.submittedAt}
+  return <MemoCard label={learner.learnerName} author={learner.learnerName} authorId={learner.learnerId} authorAvatarUrl={learner.learnerAvatarUrl} authorDetail={learner.learnerId} createdAt={submission?.submittedAt}
     disclosure={{ref:trigger,expanded:open,controls:`${id}-answer`,onToggle:()=>open?collapse():expand()}} actions={<span className="text-xs text-muted-foreground">{submission?`第 ${submission.version} 版`:'尚未提交'}</span>}>
     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
     <span>{submission?(submission.report.verification==='unverified'?'证据不足 / 无法判断':submission.report.criteria.length>0&&submission.report.criteria.every(c=>c.met&&c.independent)?'已掌握':'尚需巩固'):homeworkStatus[learner.status]}</span>

@@ -11,7 +11,7 @@
   & .cm-editor {
     background: transparent;
     font-size: 1rem;
-    max-height: 50vh;
+    max-height: min(30vh, 18rem);
   }
   &[data-focus-mode] .cm-editor {
     height: 100%;
@@ -116,6 +116,12 @@
     font-weight: 600;
     color: inherit;
   }
+}
+.memo-editor-compact .cm-editor {
+  max-height: 1.5rem;
+}
+.memo-editor-compact .cm-scroller {
+  scrollbar-width: none;
 }
 .cm-upload-anchor {
   position: relative;

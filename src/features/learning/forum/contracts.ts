@@ -8,7 +8,7 @@ export interface ForumItem {
   title: string
   body: string
   authorId: string
-  authorName: string
+  authorName: string; authorAvatarUrl?: string | null
   createdAt: string
   updatedAt: string
   tags: string[]
@@ -22,7 +22,7 @@ export interface ForumItem {
   commentCount: number
   reactions: { emoji: string; userIds: string[] }[]
 }
-export interface ForumComment { id: string; authorId: string; authorName: string; body: string; links: string[]; attachments: ForumAttachment[]; createdAt: string }
+export interface ForumComment { id: string; authorId: string; authorName: string; authorAvatarUrl?: string | null; body: string; links: string[]; attachments: ForumAttachment[]; createdAt: string }
 export interface ForumPage<T> { items: T[]; nextOffset: number | null }
 export interface SubmissionVersion {
   conversationReferences:ConversationEvidence[]
@@ -30,7 +30,7 @@ export interface SubmissionVersion {
   feedback: Array<{id: string; body: string; authorId: string; createdAt: string; kind: string; status: string}>
   id: string
   learnerId: string
-  learnerName: string
+  learnerName: string; learnerAvatarUrl?: string | null
   submittedAt: string
   version: number
   source: 'STUDENT_ORIGINAL' | 'AGENT_RELAY' | 'AGENT_GENERATED'
@@ -50,6 +50,6 @@ export interface SubmissionAssessment {
   evidence?: {reference:number;messageId:string;excerpt:string}[]
 }
 export interface SubmissionStudent {
-  id:string;learnerId:string;learnerName:string;submittedAt:string;version:number;assessment:SubmissionAssessment|null
+  id:string;learnerId:string;learnerName:string;learnerAvatarUrl?:string|null;submittedAt:string;version:number;assessment:SubmissionAssessment|null
   conversationReferences:{title:string;index:number}[]
 }
