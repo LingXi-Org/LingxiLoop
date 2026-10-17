@@ -2,11 +2,11 @@ import { assertOwnedMessageAttachments } from './attachments.js'
 import { messageAcceptanceDigest } from './messages-digest.js'
 import { canonicalMessageMentions } from '../mentions.js'
 import { assertUiInteractionAdmission } from './interactive-ui-admission.js'
-import { OPENUI_COMPONENT } from '../../../src/lib/interactive-ui/catalog.js'
 import { nativeMessageSchema, nativeText, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import type { ReadReceiptAdvance } from './read-receipts-contracts.js'
 import type { ImChannelProfile } from './types.js'
+import { ForbiddenError } from '../modules/access/public.js'
 import {
   acceptSend,
   channelProfileForCompany,
@@ -20,6 +20,12 @@ import {
   sendAcceptanceStatus,
   unlockSendAcceptance,
   unlockAgentReplyChannel,
+  validSendEcho,
+  validSendReceipt,
+  SEND_NOT_DISPATCHED,
+  SEND_DISPATCH_STARTED,
+  SEND_RECONCILIATION_REQUIRED,
+  type ImSendAcceptanceRow,
 } from './messages-repository.js'
 
 export interface ImReactionAggregate {
@@ -28,11 +34,22 @@ export interface ImReactionAggregate {
   users: string[]
 }
 
+/** Fixed public diagnostic; the original failure stays in non-enumerable cause. */
+export class ImSendReconciliationError extends Error {
+  readonly code = 'im_reconciliation_unavailable'
+
+  constructor(cause: unknown) {
+    super('IM send acceptance reconciliation is unavailable', { cause })
+    this.name = 'ImSendReconciliationError'
+  }
+}
+
 export interface ImMessageEnvelope {
   messageId: string
   messageSeq: number
   clientMsgNo: string
   channelId: string
+  channelType?: number
   fromUid: string
   timestamp: number
   payload: NativeMessage
@@ -388,26 +405,28 @@ export class ImMessagesApplication {
         acceptance = await getSendAcceptance(db, identity)
       }
       if (!acceptance || acceptance.input_digest !== inputDigest) return { kind: 'nonce_conflict' }
-      if (acceptance.status === 'accepted' && acceptance.echo) {
+      const expected = { ...input, channelType, payload: acceptance.payload }
+      if (acceptance.channel_id !== input.channelId || acceptance.channel_type !== channelType) return { kind: 'nonce_conflict' }
+      if (acceptance.status === 'accepted' && validSendEcho(acceptance.echo, expected)) {
         return { kind: 'accepted', duplicate: true, echo: acceptance.echo }
       }
       const payload = nativeMessageSchema.parse(acceptance.payload)
-      const requiresReconciliation = payload.metadata.custom.uiInteraction !== undefined || payload.content.some(part =>
-        part.type === 'generative-ui' && !Array.isArray(part.spec.root) && typeof part.spec.root === 'object'
-        && part.spec.root.component === OPENUI_COMPONENT)
-      if (requiresReconciliation && acceptance.error) {
-        const found = (await this.readMessages({ ...input, messageIds: [input.clientNonce] }, db))?.find(message => message.clientMsgNo === input.clientNonce)
-        if (!found) throw new Error('interactive message acceptance is unknown; reconciliation is required')
-        if (found.fromUid !== input.userId || messageAcceptanceDigest({ ...input, payload: found.payload, channelType: found.channelType })
-          !== messageAcceptanceDigest({ ...input, payload, channelType })) {
-          return { kind: 'nonce_conflict' }
+      if (acceptance.status === 'accepted' || acceptance.error !== SEND_NOT_DISPATCHED) {
+        // Persisted wall time bounds retries across processes; a missing/empty history
+        // cannot prove a send never happened. Never reuse that uncertainty to dispatch.
+        if (acceptance.error === SEND_RECONCILIATION_REQUIRED
+          && Date.now() - new Date(acceptance.updated_at).getTime() < 5_000) throw this.reconciliationRequired()
+        const echo = await this.findAcceptanceEcho(db, { ...identity, channelId: input.channelId }, acceptance)
+        if (echo) {
+          await acceptSend(db, { ...identity, echo })
+          return { kind: 'accepted', duplicate: true, echo }
         }
-        const echo = { ...found }
-        await acceptSend(db, { ...identity, echo })
-        return { kind: 'accepted', duplicate: true, echo }
+        await deferSend(db, { ...identity, error: SEND_RECONCILIATION_REQUIRED })
+        throw this.reconciliationRequired()
       }
       try {
-        if (requiresReconciliation) await deferSend(db, { ...identity, error: 'interactive-dispatch-started' })
+        // This marker must commit before the HTTP effect (including on process death).
+        await deferSend(db, { ...identity, error: SEND_DISPATCH_STARTED })
         const sent = await this.infrastructure.sendMessage(
           input.channelId,
           channelType,
@@ -430,13 +449,94 @@ export class ImMessagesApplication {
       } catch (error) {
         await deferSend(db, {
           ...identity,
-          error: error instanceof Error ? error.message : String(error),
+          // First recovery can look up a lost ACK immediately. Only an unsuccessful
+          // history reconciliation starts the cross-process retry backoff.
+          error: SEND_DISPATCH_STARTED,
         })
         throw error
       }
     } finally {
       await unlockSendAcceptance(db, identity).catch(() => undefined)
     }
+  }
+
+  private reconciliationRequired() {
+    return Object.assign(new Error('结果已保存，投递待恢复；send acceptance is unknown; reconciliation is required'), { status: 503 })
+  }
+
+  private async findAcceptanceEcho(db: Queryable, input: {
+    companyId: string; userId: string; clientNonce: string; channelId: string
+  }, acceptance: ImSendAcceptanceRow, failOnHistoryError = false): Promise<Record<string, unknown> | null> {
+    const profile = await channelProfileForMember(db, input)
+    if (!profile || Number(profile.channelType ?? 2) !== acceptance.channel_type) return null
+    const expected = { ...input, channelType: acceptance.channel_type, payload: acceptance.payload }
+    const knownId = acceptance.echo?.messageId
+    const hasKnownId = typeof knownId === 'string' && knownId.trim() === knownId && knownId !== '' && knownId !== '0'
+    const signal = AbortSignal.timeout(15_000)
+    let cursor = 0, found: Record<string, unknown> | null = null
+    try {
+      for (let pageIndex = 0; pageIndex < 100; pageIndex++) {
+        signal.throwIfAborted()
+        // Never repair upstream membership while reconciling a historical send.
+        const page = await this.infrastructure.syncMessages(input.channelId, acceptance.channel_type, 200, input.userId, cursor, undefined, signal)
+        if (!page.length) return found
+        for (const message of page) {
+          if (message.channelId !== input.channelId || message.channelType !== acceptance.channel_type
+            || !validSendReceipt(message)) return null
+          if (message.clientMsgNo !== input.clientNonce) continue
+          if (!validSendEcho(message, expected) || hasKnownId && message.messageId !== knownId) return null
+          if (found && (found.messageId !== message.messageId || found.messageSeq !== message.messageSeq)) return null
+          found = { ...message }
+        }
+        const next = Math.min(...page.map(message => message.messageSeq))
+        if (next === 1) return found
+        if (cursor && next >= cursor) return null
+        cursor = next
+      }
+    } catch (cause) {
+      // Product retries retain unknown delivery state. Maintenance must expose a
+      // safe failure diagnostic instead of writing a misleading classification.
+      if (failOnHistoryError) throw cause
+    }
+    return null
+  }
+
+  /** Trusted maintenance entry: caller repeats product/project/frozen-audience authorization.
+   * Inspection is read-only; applying only repairs the receipt and never dispatches a message.
+   */
+  async reconcileSendAcceptance(input: {
+    companyId: string; userId: string; clientNonce: string; apply?: boolean
+    authorize?: (db: Queryable, acceptance: ImSendAcceptanceRow) => Promise<void>
+  }): Promise<{ classification: 'confirmed' | 'not_executed' | 'unknown' | 'forbidden' | 'not_found' }> {
+    try { return await this.infrastructure.withConnection(async db => {
+      await lockSendAcceptance(db, input)
+      try {
+        const acceptance = await getSendAcceptance(db, input)
+        if (!acceptance) return { classification: 'not_found' }
+        const authorized = async () => {
+          try { await input.authorize?.(db, acceptance); return true }
+          catch (cause) {
+            // Match the shared native authorization contract: only an actual
+            // policy denial is forbidden, never a reason/status-shaped error.
+            if (cause instanceof ForbiddenError) return false
+            throw cause
+          }
+        }
+        if (!await authorized()) return { classification: 'forbidden' }
+        const scoped = { ...input, channelId: acceptance.channel_id }
+        if (!await channelProfileForMember(db, scoped)) return { classification: 'forbidden' }
+        const expected = { ...scoped, channelType: acceptance.channel_type, payload: acceptance.payload }
+        if (acceptance.status === 'accepted' && validSendEcho(acceptance.echo, expected)) return { classification: 'confirmed' }
+        if (acceptance.status === 'pending' && acceptance.error === SEND_NOT_DISPATCHED && !acceptance.echo) return { classification: 'not_executed' }
+        const echo = await this.findAcceptanceEcho(db, scoped, acceptance, true)
+        if (input.apply) {
+          if (!await authorized()) return { classification: 'forbidden' }
+          if (echo) await acceptSend(db, { ...input, echo })
+          else await deferSend(db, { ...input, error: SEND_RECONCILIATION_REQUIRED })
+        }
+        return { classification: echo ? 'confirmed' : 'unknown' }
+      } finally { await unlockSendAcceptance(db, input).catch(() => undefined) }
+    }) } catch (cause) { throw new ImSendReconciliationError(cause) }
   }
 
   async acceptUserMessage(input: {
@@ -500,7 +600,7 @@ export class ImMessagesApplication {
       await lockAgentReplyChannel(db, lockIdentity)
       try {
         const prior = await getSendAcceptance(db, input)
-        if (prior?.status === 'accepted') {
+        if (prior) {
           return this.acceptMessage(db, channelType, input)
         }
         const draft = input.rejectVerbatimPeerBody?.trim()
