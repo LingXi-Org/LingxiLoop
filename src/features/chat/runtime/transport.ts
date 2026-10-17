@@ -1,4 +1,4 @@
-import { createNativeMessage, nativeText, nativeAttachments, nativeMessageSchema } from '@/lib/nativeMessage'
+import { createNativeMessage, nativeText, nativeAttachments } from '@/lib/nativeMessage'
 import type { AppendMessage, ThreadMessage } from '@assistant-ui/react'
 import type { AgentRunSnapshot, RunDisplayState } from '@/lib/agentRunSnapshot'
 import type { ApiAttachment, WsEvent } from '@/api/contracts'
@@ -20,7 +20,7 @@ import { getActiveCompanyId, getMeId } from '@/stores/auth'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { convertEnvelope, convertEnvelopeBatch, projectMessageGroups } from './converter'
 import type { LingxiMessageMetadata } from './model'
-import { forgetChatOutbox, readChatOutbox, rememberChatOutbox } from './outbox'
+import { forgetChatOutbox, readChatOutbox, rememberChatOutbox, type ChatOutboxEntry } from './outbox'
 import {
   CHAT_HISTORY_PAGE_SIZE,
     markDelivery,
@@ -38,9 +38,11 @@ import {
 } from './store'
 import { harnessApi, type AgentRunTarget } from './harness-api'
 import { applyRunSnapshot, needsRunStream } from './run-updates'
-import { canCancelRun, isRunMessage } from './harness'
+import { canCancelRun, isOlderRun, isRunMessage } from './harness'
 import { attachmentMessage, uploadedAttachment } from './attachment-messages'
 import { chatLatency } from './latency'
+import { OUTBOX_RECOVERY, RUN_RECOVERY, permanentRecoveryError, retryDelay, waitForRecovery } from './recovery'
+import { registerAuthTeardown } from '@/stores/authTeardown'
 
 const TYPING_STALE_MS = 45_000
 
@@ -48,6 +50,8 @@ type UploadedAttachment = ApiAttachment & { key?: string }
 type RequestContext = { signal: AbortSignal; identity: string; current: () => boolean }
 type RunTargets = Awaited<ReturnType<typeof harnessApi.list>>
 type RunRecovery = { targets: RunTargets; snapshots: { target: AgentRunTarget; snapshot: AgentRunSnapshot }[]; error: string | null }
+type OutboxRecovery = { request: RequestContext; deadline: number; passes: number; attempts: Map<string, number>;
+  cursor: number; running: boolean; timer?: number }
 
 function restoreStoppedRuns(state: ConversationChatState, recovery: RunRecovery): ConversationChatState {
   for (const { target, snapshot } of recovery.snapshots) {
@@ -117,15 +121,22 @@ export class ChatTransport {
   private workspaceIdentity: string | null = null
   private workspaceChannels: Set<string> | null = null
   private readonly historyRequests = new Map<string, RequestContext>()
+  private outboxRecovery: OutboxRecovery | undefined
+  private readonly sends = new Map<string, { request: RequestContext; promise: Promise<boolean> }>()
+  private readonly blockedRuns = new Set<string>()
 
   boot(): void {
     if (this.connection.signal.aborted) this.connection = new AbortController()
-    resetChatThreadStore()
     if (this.booted) return
+    resetChatThreadStore()
     this.booted = true
     this.subscriptions.push(lingxiIm.subscribe((envelope) => this.commitEnvelope(envelope)))
     void lingxiIm.connect().catch((error) => console.warn('[chat.transport] IM connect failed', error))
-    void this.recoverOutbox()
+    this.subscriptions.push(lingxiIm.onConnected(() => this.recoverConnection()))
+    const online = () => this.recoverConnection()
+    window.addEventListener('online', online)
+    this.subscriptions.push(() => window.removeEventListener('online', online))
+    this.wakeOutbox()
     void ws.connect()
     this.subscriptions.push(ws.on((event) => this.applyWorkspaceEvent(event)))
     void this.discoverRuns()
@@ -136,6 +147,7 @@ export class ChatTransport {
     for (const unsubscribe of this.subscriptions) unsubscribe()
     this.subscriptions = []
     this.connection.abort()
+    this.cancelRecovery()
     this.workspaceIdentity = null; this.workspaceChannels = null
     chatLatency.clear()
     this.historyRequests.clear()
@@ -156,6 +168,7 @@ export class ChatTransport {
     if (changed || revoked) {
       // A fresh signal is the scope generation: A → B → A cannot revive an A request.
       this.connection.abort(); this.connection = new AbortController()
+      this.cancelRecovery()
       this.historyRequests.clear()
       for (const stream of this.runStreams.values()) stream.abort()
       this.runStreams.clear()
@@ -170,6 +183,10 @@ export class ChatTransport {
     }
     this.workspaceIdentity = identity; this.workspaceChannels = channels
     lingxiIm.setWorkspaceChannels(channels)
+    if (this.booted) {
+      this.wakeOutbox()
+      if (changed) void lingxiIm.connect().catch(() => {})
+    }
     if (changed || revoked) for (const id of Object.keys(useChatThreadStore.getState().conversations)) this.syncRunStreams(id)
     // The mounted runtime only loads on conversation changes, so resume work canceled by scope revocation here.
     for (const [id, state] of interrupted) {
@@ -326,48 +343,50 @@ export class ChatTransport {
     clientMessageId = `temp-${crypto.randomUUID()}`,
     replayPayload?: NativeMessage,
   ): Promise<boolean> {
+    if (!getMeId() || !getActiveCompanyId() || !this.includesChannel(conversationId)) return false
+    const existing = readChatOutbox().find(row => row.clientMessageId === clientMessageId)
+    if (existing) {
+      if (existing.conversationId !== conversationId || existing.blockedReason) return false
+      const sent = await this.deliverOutbox(existing, this.captureRequest(), true)
+      if (!sent) this.wakeOutbox()
+      return sent
+    }
     const text = canonicalizeMentions(body.trim(), mentionRoster(conversationId))
     const payload = replayPayload ?? createNativeMessage({ id: clientMessageId, role: 'user',
       content: text ? [{ type: 'text', text }] : [], attachments: attachment ? [uploadedAttachment(attachment)] : [],
       custom: { ...(quotedMessageId ? { replyToClientMsgNo: quotedMessageId } : {}),
         mentionedIds: mentionedAgentIds(text,conversationId), mentionAll: hasBroadcastMention(text) } })
     if (!nativeText(payload) && !nativeAttachments(payload).length) return false
+    if (payload.id !== clientMessageId) throw new Error('消息身份不一致')
     chatLatency.send(clientMessageId)
     setConversationMessages(conversationId, [optimisticMessage(conversationId,payload)])
-    rememberChatOutbox({
+    const entry: ChatOutboxEntry = {
       conversationId,
       clientMessageId,
       payload,
       createdAt: new Date().toISOString(),
-    })
-    try {
-      this.commitEnvelope(await lingxiIm.send(conversationId, payload))
-      chatLatency.submitted(clientMessageId)
-      if (nativeAttachments(payload).length) {
-        window.setTimeout(() => {
-          void import('@/features/knowledge/state')
-            .then(({ useKnowledgeSources }) => useKnowledgeSources.getState().load())
-            .catch((error) => console.warn('[chat.transport] attachment refresh failed', error))
-        }, 750)
-      }
-      return true
-    } catch (error) {
-      console.warn('[chat.transport] send failed', error)
-      markDelivery(conversationId, clientMessageId, 'failed')
-      return false
     }
+    rememberChatOutbox(entry)
+    const sent = await this.deliverOutbox(entry, this.captureRequest(), false)
+    if (!sent) this.wakeOutbox()
+    return sent
   }
 
   async retry(conversationId: string, messageId: string): Promise<void> {
     const entry = readChatOutbox().find((row) => row.clientMessageId === messageId)
-    if (!entry) throw new Error('Failed message is no longer present in the outbox')
-    const payload = nativeMessageSchema.parse(entry.payload)
-    const reply = payload.metadata.custom.replyToClientMsgNo
-    const sent = await this.send(conversationId,nativeText(payload),null,typeof reply === 'string' ? reply : null,messageId,payload)
+    if (!entry || entry.conversationId !== conversationId || !this.includesChannel(conversationId)) throw new Error('消息暂不可重试。')
+    const retry = { ...entry, blockedReason: undefined }
+    rememberChatOutbox(retry)
+    markDelivery(conversationId, messageId, 'sending')
+    const sent = await this.deliverOutbox(retry, this.captureRequest(), true)
+    if (!sent) this.wakeOutbox()
     if (!sent) throw new Error('消息尚未发送，请重试。')
   }
 
   discard(conversationId: string, messageId: string): void {
+    // A send already in flight can still be accepted. Keep it visible until it
+    // settles instead of pretending that deleting local state cancels the send.
+    if (this.sends.get(messageId)?.request.current()) return
     forgetChatOutbox(messageId)
     removeConversationMessage(conversationId, messageId)
   }
@@ -439,6 +458,7 @@ export class ChatTransport {
     if (!this.includesChannel(target.conversationId)) return
     this.runStreams.get(target.runId)?.abort()
     this.runStreams.delete(target.runId)
+    this.blockedRuns.delete(target.runId)
     this.subscribeRun(target)
   }
 
@@ -447,7 +467,7 @@ export class ChatTransport {
     try {
       const message = convertEnvelope(envelope, conversionContext())
       const metadata = messageMetadata(message)
-      forgetChatOutbox(envelope.clientMsgNo || metadata.clientMessageId)
+      if (metadata.isMine && envelope.messageSeq > 0) forgetChatOutbox(envelope.clientMsgNo || metadata.clientMessageId)
       let accepted = true
       updateConversation(envelope.channelId, (state) => {
         const messages = mergeCanonicalMessages(state.messages, [message])
@@ -548,7 +568,7 @@ export class ChatTransport {
   }
 
   private subscribeRun(target: AgentRunTarget): void {
-    if (!this.includesChannel(target.conversationId) || this.connection.signal.aborted || this.runStreams.has(target.runId)) return
+    if (!this.includesChannel(target.conversationId) || this.connection.signal.aborted || this.runStreams.has(target.runId) || this.blockedRuns.has(target.runId)) return
     if (this.runStreams.size >= 128) {
       const oldest = this.runStreams.keys().next().value!
       this.runStreams.get(oldest)?.abort(); this.runStreams.delete(oldest)
@@ -556,50 +576,83 @@ export class ChatTransport {
     const request = this.captureRequest(), controller = new AbortController()
     const signal = AbortSignal.any([controller.signal, request.signal])
     this.runStreams.set(target.runId, controller)
-    void (async () => {
+    let confirmedAt = Date.now(), released = false, waitTimer: number | undefined
+    const clearWait = () => { if (waitTimer !== undefined) window.clearTimeout(waitTimer); waitTimer = undefined }
+    signal.addEventListener('abort', clearWait, { once: true })
+    const uncertain = (inaccessible = false) => {
+      released ||= inaccessible || Date.now() - confirmedAt >= RUN_RECOVERY.waitMs
+      updateConversation(target.conversationId, state => ({ ...state,
+        activeRuns: released ? Object.fromEntries(Object.entries(state.activeRuns).filter(([, run]) => run.id !== target.runId)) : state.activeRuns,
+        messages: state.messages.map(message => {
+          const meta = messageMetadata(message)
+          if (meta.runId !== target.runId || !isRunMessage(meta)) return message
+          return { ...message, status: message.role === 'assistant' && message.status?.type === 'running'
+            ? { type: 'requires-action', reason: 'interrupt' } : message.status,
+            metadata: { ...message.metadata, custom: { ...meta,
+              ...(inaccessible ? { harnessControl: false } : {}),
+              runConnection: inaccessible ? 'inaccessible' : released ? 'released' : 'checking',
+            } } } as ThreadMessage
+        }),
+      }))
+      if (!released && waitTimer === undefined) waitTimer = window.setTimeout(() => {
+        waitTimer = undefined
+        if (!signal.aborted && request.current()) uncertain()
+      }, Math.max(1, RUN_RECOVERY.waitMs - (Date.now() - confirmedAt)))
+    }
+    const receive = (snapshot: AgentRunSnapshot) => {
+      if (!request.current() || signal.aborted) return
+      const view = snapshot.message.metadata.custom.harness as RunDisplayState
+      const previous = useChatThreadStore.getState().conversations[target.conversationId]?.messages
+        .map(messageMetadata).find(meta => meta.runId === target.runId && isRunMessage(meta))?.harness
+      if (previous && isOlderRun(previous, view)) return
+      updateConversation(target.conversationId, state => applyRunSnapshot(state, target, snapshot, useParticipants.getState().byId[target.agentId]))
+      clearWait()
+      confirmedAt = Date.now(); released = false
+      if (!needsRunStream(view.lifecycle, view.delivery)) controller.abort()
+    }
+    const failed = (error: unknown) => {
+      if (signal.aborted || !request.current()) return
+      chatLatency.disconnected(target.runId)
+      const inaccessible = permanentRecoveryError(error)
+      uncertain(inaccessible)
+      if (inaccessible) { this.blockedRuns.add(target.runId); controller.abort() }
+    }
+    // Poll durable work/result/delivery even while SSE is open: a proxy can
+    // silently swallow the terminal frame without closing the connection.
+    const polling = (async () => {
+      while (!signal.aborted && request.current()) {
+        await waitForRecovery(released ? RUN_RECOVERY.backgroundMs : RUN_RECOVERY.pollMs, signal)
+        if (signal.aborted || !request.current()) return
+        try {
+          receive(await harnessApi.read(target, AbortSignal.any([signal, AbortSignal.timeout(RUN_RECOVERY.requestMs)])))
+        } catch (error) { failed(error) }
+      }
+    })()
+    const streaming = (async () => {
       let failures = 0
       while (!signal.aborted && request.current()) {
         let latest: AgentRunSnapshot | undefined
         try {
           await harnessApi.subscribe(target, snapshot => {
             if (!request.current() || signal.aborted) return
-            failures = 0
             const custom = snapshot.message.metadata.custom, view = custom.harness as RunDisplayState
             const previous = latest?.message.metadata.custom.harness as RunDisplayState | undefined
-            if (typeof custom.sourceRef === 'string' && custom.sourceRef !== latest?.message.metadata.custom.sourceRef) chatLatency.bind(target.runId,custom.sourceRef)
+            if (typeof custom.sourceRef === 'string' && custom.sourceRef !== latest?.message.metadata.custom.sourceRef) chatLatency.bind(target.runId, custom.sourceRef)
             const text = nativeText(snapshot.message)
-            if (snapshot.message.status?.type === 'running' && text) chatLatency.preview(target.runId,view.lastSeq,text.length)
-            if (latest?.message.content.length && !snapshot.message.content.length) chatLatency.reset(target.runId,'retracted')
+            if (snapshot.message.status?.type === 'running' && text) chatLatency.preview(target.runId, view.lastSeq, text.length)
+            if (latest?.message.content.length && !snapshot.message.content.length) chatLatency.reset(target.runId, 'retracted')
             if (view.resultId && !previous?.resultId) chatLatency.completed(target.runId)
             latest = snapshot
-            updateConversation(target.conversationId, state => applyRunSnapshot(state, target, snapshot, useParticipants.getState().byId[target.agentId]))
+            receive(snapshot)
           }, signal)
-          const view = latest?.message.metadata.custom.harness as RunDisplayState | undefined
-          if (!view || needsRunStream(view.lifecycle,view.delivery)) throw new Error('运行流提前结束')
-          return
-        } catch (error) {
-          if (signal.aborted || !request.current()) return
-          chatLatency.disconnected(target.runId)
-          const inaccessible = /[（(]40[134][）)]/.test(String(error))
-          updateConversation(target.conversationId, state => ({ ...state, messages: state.messages.map(message => {
-            const meta = messageMetadata(message)
-            if (meta.runId !== target.runId || !isRunMessage(meta)) return message
-            return { ...message, metadata: { ...message.metadata, custom: { ...meta,
-              ...(inaccessible ? { harnessControl: false } : {}),
-              harnessError: inaccessible ? '无权读取任务进度。' : '连接已中断，正在重新连接…',
-            } } } as ThreadMessage
-          }) }))
-          if (inaccessible) return
-        }
-        // Retry this protocol only. Abort also releases the pending backoff timer.
-        await new Promise<void>(resolve => {
-          const done = () => { window.clearTimeout(timer); signal.removeEventListener('abort', done); resolve() }
-          const timer = window.setTimeout(done, Math.min(30_000, 1000 * 2 ** Math.min(failures++, 5)))
-          signal.addEventListener('abort', done, { once: true })
-          if (signal.aborted) done()
-        })
+          if (!signal.aborted) throw new Error('运行流提前结束')
+        } catch (error) { failed(error) }
+        await waitForRecovery(released ? RUN_RECOVERY.backgroundMs : retryDelay(failures++, 30_000), signal)
       }
-    })().finally(() => {
+    })()
+    void Promise.all([polling, streaming]).finally(() => {
+      controller.abort()
+      signal.removeEventListener('abort', clearWait)
       if (this.runStreams.get(target.runId) === controller) this.runStreams.delete(target.runId)
     })
   }
@@ -615,6 +668,7 @@ export class ChatTransport {
       return
     }
     if (event.type === 'hello') {
+      this.recoverConnection()
       for (const [conversationId, state] of Object.entries(useChatThreadStore.getState().conversations)) {
         if (state.loaded) void this.reloadConversation(conversationId)
       }
@@ -645,23 +699,145 @@ export class ChatTransport {
     }
   }
 
-  private async recoverOutbox(): Promise<void> {
-    for (const entry of readChatOutbox()) {
-      try {
-        const status = await lingxiIm.sendStatus(entry.clientMessageId)
-        if (status.status === 'accepted' && status.echo) {
-          this.commitEnvelope(status.echo)
-          continue
-        }
-        await this.retry(entry.conversationId, entry.clientMessageId)
-      } catch (error) {
-        console.warn('[chat.transport] outbox recovery deferred', error)
+  private cancelRecovery(): void {
+    if (this.outboxRecovery?.timer !== undefined) window.clearTimeout(this.outboxRecovery.timer)
+    this.outboxRecovery = undefined
+    this.sends.clear()
+    this.blockedRuns.clear()
+  }
+
+  private recoverConnection(): void {
+    if (!this.booted) return
+    this.wakeOutbox()
+    void lingxiIm.connect().catch(() => {})
+    void this.discoverRuns()
+    for (const id of Object.keys(useChatThreadStore.getState().conversations)) this.syncRunStreams(id)
+  }
+
+  private wakeOutbox(): void {
+    if (!this.booted || this.connection.signal.aborted || !this.workspaceChannels || !getMeId()) return
+    let cycle = this.outboxRecovery
+    if (!cycle?.request.current()) {
+      cycle = { request: this.captureRequest(), deadline: Date.now() + OUTBOX_RECOVERY.deadlineMs,
+        passes: 0, attempts: new Map(), cursor: 0, running: false }
+      this.outboxRecovery = cycle
+    }
+    if (cycle.running) return
+    if (cycle.timer !== undefined) window.clearTimeout(cycle.timer)
+    cycle.timer = undefined
+    void this.recoverOutbox(cycle)
+  }
+
+  private async recoverOutbox(cycle: OutboxRecovery): Promise<void> {
+    cycle.running = true
+    try {
+      const entries = readChatOutbox().filter(entry => this.workspaceChannels?.has(entry.conversationId))
+      for (const entry of entries) this.restoreOutbox(entry)
+      const eligible = entries.filter(entry => !entry.blockedReason
+        && (cycle.attempts.get(entry.clientMessageId) ?? 0) < OUTBOX_RECOVERY.attempts)
+      // Rotate failed entries behind untouched ones, so a bad first batch
+      // cannot starve the rest of the bounded persisted outbox.
+      const offset = eligible.length ? cycle.cursor % eligible.length : 0
+      const batch = [...eligible.slice(offset), ...eligible.slice(0, offset)].slice(0, OUTBOX_RECOVERY.batch)
+      cycle.cursor += batch.length
+      for (const entry of batch) {
+        if (!cycle.request.current() || Date.now() >= cycle.deadline || cycle.passes >= OUTBOX_RECOVERY.passes) return
+        cycle.attempts.set(entry.clientMessageId, (cycle.attempts.get(entry.clientMessageId) ?? 0) + 1)
+        await this.deliverOutbox(entry, cycle.request, true, cycle.deadline)
       }
+      cycle.passes++
+    } finally {
+      cycle.running = false
+      if (this.outboxRecovery === cycle) {
+        const pending = readChatOutbox().some(entry => this.workspaceChannels?.has(entry.conversationId)
+          && !entry.blockedReason && (cycle.attempts.get(entry.clientMessageId) ?? 0) < OUTBOX_RECOVERY.attempts)
+        if (cycle.request.current() && pending && cycle.passes < OUTBOX_RECOVERY.passes && Date.now() < cycle.deadline) {
+          cycle.timer = window.setTimeout(() => { cycle.timer = undefined; void this.recoverOutbox(cycle) },
+            Math.min(retryDelay(cycle.passes - 1), cycle.deadline - Date.now()))
+        } else this.outboxRecovery = undefined
+      }
+    }
+  }
+
+  private restoreOutbox(entry: ChatOutboxEntry): void {
+    const current = useChatThreadStore.getState().conversations[entry.conversationId]
+    if (!current?.messages.some(message => messageMetadata(message).clientMessageId === entry.clientMessageId)) {
+      setConversationMessages(entry.conversationId, [optimisticMessage(entry.conversationId, entry.payload)])
+      this.failOutbox(entry, entry.blockedReason)
+    }
+  }
+
+  private failOutbox(entry: ChatOutboxEntry, blockedReason?: string): void {
+    if (blockedReason) rememberChatOutbox({ ...entry, blockedReason })
+    markDelivery(entry.conversationId, entry.clientMessageId, 'failed')
+    updateConversation(entry.conversationId, state => ({ ...state, messages: state.messages.map(message =>
+      messageMetadata(message).clientMessageId === entry.clientMessageId ? { ...message,
+        metadata: { ...message.metadata, custom: { ...message.metadata.custom,
+          sendError: blockedReason ?? '发送状态待确认，将在连接恢复后核对。' } } } as ThreadMessage : message) }))
+  }
+
+  private deliverOutbox(entry: ChatOutboxEntry, request: RequestContext, checkStatus: boolean, deadline?: number): Promise<boolean> {
+    const pending = this.sends.get(entry.clientMessageId)
+    if (pending?.request.current()) return pending.promise
+    const operation = (async () => {
+      try {
+        if (!request.current() || !this.includesChannel(entry.conversationId)) return false
+        const signal = AbortSignal.any([request.signal, AbortSignal.timeout(Math.max(1,
+          Math.min(OUTBOX_RECOVERY.requestMs, (deadline ?? Infinity) - Date.now())))])
+        if (checkStatus) {
+          const status = await lingxiIm.sendStatus(entry.clientMessageId, signal)
+          if (!request.current()) return false
+          signal.throwIfAborted()
+          if (status.status === 'accepted') {
+            this.acceptOutboxEcho(entry, status.echo)
+            return true
+          }
+          // Missing/pending are the existing server's idempotent accept
+          // protocol. Unknown/new states require reconciliation, never a new ID.
+          if (status.status !== 'missing' && status.status !== 'pending') throw new Error('发送状态待确认')
+        }
+        if (!request.current() || !readChatOutbox().some(row => row.clientMessageId === entry.clientMessageId)) return false
+        signal.throwIfAborted()
+        const echo = await lingxiIm.send(entry.conversationId, entry.payload, signal)
+        if (!request.current()) return false
+        signal.throwIfAborted()
+        this.acceptOutboxEcho(entry, echo)
+        chatLatency.submitted(entry.clientMessageId)
+        return true
+      } catch (error) {
+        // A direct IM echo can win the race against a lost HTTP response.
+        // Once canonical delivery is known, a network failure cannot undo it.
+        if (request.current() && useChatThreadStore.getState().conversations[entry.conversationId]?.messages.some(message => {
+          const meta = messageMetadata(message)
+          return meta.clientMessageId === entry.clientMessageId && meta.sequence !== null && meta.sequence > 0
+        })) return true
+        if (request.current()) this.failOutbox(entry, permanentRecoveryError(error)
+          ? '自动发送已停止：登录、权限或消息状态已变化。请确认后手动重试或移除。' : undefined)
+        return false
+      }
+    })().finally(() => { if (this.sends.get(entry.clientMessageId)?.promise === operation) this.sends.delete(entry.clientMessageId) })
+    this.sends.set(entry.clientMessageId, { request, promise: operation })
+    return operation
+  }
+
+  private acceptOutboxEcho(entry: ChatOutboxEntry, echo?: ImEnvelope): void {
+    if (!echo || echo.clientMsgNo !== entry.clientMessageId || echo.payload.id !== entry.clientMessageId
+      || echo.channelId !== entry.conversationId || echo.fromUid !== getMeId() || !echo.messageId || echo.messageId === '0'
+      || !Number.isSafeInteger(echo.messageSeq) || echo.messageSeq <= 0) throw new Error('发送回执待核对')
+    this.commitEnvelope(echo)
+    if (nativeAttachments(entry.payload).length) {
+      const request = this.captureRequest()
+      window.setTimeout(() => {
+        if (request.current()) void import('@/features/knowledge/state')
+          .then(({ useKnowledgeSources }) => { if (request.current()) return useKnowledgeSources.getState().load() })
+          .catch(() => {})
+      }, 750)
     }
   }
 }
 
 export const chatTransport = new ChatTransport()
+registerAuthTeardown(() => chatTransport.disconnect())
 
 export function filterThreadMessages(
   messages: readonly ThreadMessage[],

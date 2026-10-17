@@ -39,7 +39,10 @@ test('history restores stopped runs before publishing messages, without replayin
   mock.module('./outbox', { namedExports: { readChatOutbox: () => [], forgetChatOutbox() {}, rememberChatOutbox() {} } })
   mock.module('./harness-api', { namedExports: { harnessApi: {
     list: async () => [target], read: async () => { reads++; return read() },
-    subscribe: async () => { streams++ },
+    subscribe: (_target: unknown, _receive: unknown, signal: AbortSignal) => {
+      streams++
+      return new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), { once: true }))
+    },
   } } })
   Object.defineProperty(globalThis, 'window', { configurable: true, value: { clearTimeout() {}, setTimeout: () => 1 } })
   const { ChatTransport } = await import('./transport')

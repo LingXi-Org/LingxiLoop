@@ -371,6 +371,7 @@ test('initial history is ready before slow run snapshots, which merge without du
   mock.module('@/features/chat/api', { namedExports: { messagesApi: {} } })
   mock.module('@/stores/auth', { namedExports: { getMeId: () => 'human', getActiveCompanyId: () => null } })
   mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: { history: async () => imHistory,
+    onConnected: () => () => {},
     connect: async () => {},disconnect: () => {},subscribe: (receive: typeof receiveIm) => { receiveIm = receive; return () => {} } } } })
   mock.module('./harness-api', { namedExports: { harnessApi: {
     cancel: async ({ runId }: typeof target) => {
@@ -387,7 +388,8 @@ test('initial history is ready before slow run snapshots, which merge without du
     },
   } } })
   const originalWindow = globalThis.window
-  globalThis.window = { setInterval: () => 0,clearInterval: () => {},clearTimeout: () => {} } as unknown as Window & typeof globalThis
+  globalThis.window = { setInterval: () => 0, setTimeout: () => 0, clearInterval: () => {}, clearTimeout: () => {},
+    addEventListener: () => {}, removeEventListener: () => {} } as unknown as Window & typeof globalThis
   const { ChatTransport, filterThreadMessages } = await import('./transport')
   const transport = new ChatTransport()
   transport.boot()

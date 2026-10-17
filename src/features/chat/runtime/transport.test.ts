@@ -12,6 +12,9 @@ test('run notifications and discovery subscribe before blocked history, deduplic
   const listed: Array<{ conversationId: string; agentId: string; runId: string; status: string }> = []
   let reads = 0
   const retries: Array<() => void> = []
+  const answer = (text: string) => [{ type: 'text', text, providerMetadata: { lingxiloop: {
+    activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' },
+  } } }]
   mock.module('@/api/core/realtime', { namedExports: { ws: { connect: async () => {},
     on: (listener: typeof receive) => { receive = listener; return () => {} } } } })
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
@@ -19,7 +22,7 @@ test('run notifications and discovery subscribe before blocked history, deduplic
   mock.module('@/features/chat/api', { namedExports: { messagesApi: {} } })
   mock.module('@/features/conversations/store', { namedExports: { useConversations: { getState: () => ({ byId: {} }) } } })
   mock.module('@/lib/actionToast', { namedExports: { toastAction: () => {} } })
-  mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: { connect: async () => {}, disconnect: () => {}, subscribe: () => () => {}, history: async () => [] } } })
+  mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: { connect: async () => {}, disconnect: () => {}, subscribe: () => () => {}, onConnected: () => () => {}, history: async () => [] } } })
   mock.module('@/stores/auth', { namedExports: { getMeId: () => 'human', getActiveCompanyId: () => 'company' } })
   mock.module('./outbox', { namedExports: { readChatOutbox: () => [], forgetChatOutbox: () => {}, rememberChatOutbox: () => {} } })
   mock.module('./converter', { namedExports: { convertEnvelope: () => {}, convertEnvelopeBatch: () => [],
@@ -38,6 +41,7 @@ test('run notifications and discovery subscribe before blocked history, deduplic
   } } })
   Object.defineProperty(globalThis, 'window', { configurable: true, value: {
     setTimeout: (callback: () => void) => { retries.push(callback); return retries.length }, clearTimeout: () => {},
+    addEventListener() {}, removeEventListener() {},
   } })
   const { ChatTransport } = await import('./transport')
   const { updateConversation, useChatThreadStore } = await import('./store')
@@ -56,11 +60,11 @@ test('run notifications and discovery subscribe before blocked history, deduplic
       requestVersion: 1, createdAt: new Date(0).toISOString() }, message: null, delivery: null } as RunState })
     opened[0].receive({ type: 'preview', preview: { runId: 'run', fence: 1, requestVersion: 1,
       attemptId: 'attempt', seq: 1, kind: 'snapshot', draft: '你好' } })
-    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, [{ type: 'text', text: '你好' }])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, answer('你好'))
     const delta = { runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', kind: 'delta' as const }
     opened[0].receive({ type: 'preview', preview: { ...delta, seq: 2, fromSeq: 1, delta: '，' } })
     opened[0].receive({ type: 'preview', preview: { ...delta, seq: 3, fromSeq: 2, delta: '世界' } })
-    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, [{ type: 'text', text: '你好，世界' }])
+    assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, answer('你好，世界'))
     opened[0].receive({ type: 'preview', preview: { ...delta, seq: 4, fromSeq: 3, delta: '已撤回' } })
     opened[0].receive({ type: 'reset', runId: 'run', reason: 'superseded' })
     assert.equal(useChatThreadStore.getState().conversations.room.messages[0].content.some(part => part.type === 'text' && part.text.includes('已撤回')), false)

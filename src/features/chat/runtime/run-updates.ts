@@ -41,6 +41,7 @@ export function applyRunSnapshot(state: ConversationChatState, target: AgentRunT
     positionAfter: before?.sequence != null ? undefined : lastSent ? messageKey(lastSent)
       : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
     harnessError: typeof native.metadata.custom.harnessError === 'string' ? native.metadata.custom.harnessError : undefined,
+    runConnection: undefined,
     runId: target.runId, harness: before?.harness?.delivery === 'delivered' && sameResult
       ? { ...view, delivery: 'delivered' } : view,
   }

@@ -142,7 +142,7 @@ function ActivityParts({ Text, footer, mediaFooter, attention }: { Text: TextMes
     steps={tools.map(tool => ({ id: tool.id, verb: tool.label, chip: tool.running ? '处理中' : '查看记录', icon: WrenchIcon }))}
     visibleSteps={Math.min(visible, tools.length)} streaming={tools.some(tool => tool.running)} open={timelineOpen} onOpenChange={setTimelineOpen}
     restingLabel={`工具执行记录 · ${tools.length} 项`} activeLabel="工具正在处理" stats={[]} /> })
-  return <div ref={root}><RunActivity status={status} statusLabel={labels[status]} open={open} onOpenChange={next => { lockScroll(); setOpen(next) }}
+  return <div ref={root}><RunActivity status={status} statusLabel={message.metadata.custom.runConnection ? '状态待确认' : labels[status]} open={open} onOpenChange={next => { lockScroll(); setOpen(next) }}
     entries={entries}
     attention={<>{parts.filter(part => part.attention).map(part => <div key={part.id} role="group" aria-label={part.label}>{part.content}</div>)}<RunActivityHistory message={message} />{attention}</>}>
     {parts.filter(part => !part.attention && part.kind !== 'tool' && part.kind !== 'commentary').map(part => part.content)}
@@ -180,7 +180,7 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
         return <NativePart Text={Text} footer={footer} mediaFooter={mediaFooter} />
       }}
     </MessagePrimitive.GroupedParts>}
-    {!message.metadata.custom.activityPresentation && attention}
+    {!(message.role === 'assistant' && message.metadata.custom.activityPresentation && hasActivity) && attention}
     {attachments.map(attachment => <div key={attachment.id} data-native-attachment={attachment.id} className="grid min-w-0 gap-1">
       {attachment.content.map((part, index) => <MessageFooterContext.Provider key={index} value={!message.content.length && attachment === attachments.at(-1) && index === attachment.content.length - 1 ? mediaFooter : null}>
         <MessagePartBoundary resetKey={part}>

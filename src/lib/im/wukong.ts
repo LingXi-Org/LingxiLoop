@@ -1,7 +1,8 @@
-import WKSDK, { MessageContent, type Message as WKMessage } from 'wukongimjssdk'
+import WKSDK, { ConnectStatus, MessageContent, type Message as WKMessage } from 'wukongimjssdk'
 import { getServerOrigin } from '@/api/core/http'
 import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
+import { getWorkspaceSession } from '@/lib/workspaceSession'
 
 import { nativeMessageSchema, NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage } from '../nativeMessage'
 export type { NativeMessage } from '../nativeMessage'
@@ -37,9 +38,11 @@ class LingxiContent extends MessageContent {
 
 function authHeaders(): Record<string, string> {
   const companyId = getActiveCompanyId()
+  const workspace = getWorkspaceSession()
   return {
     'content-type': 'application/json',
     ...(companyId ? { 'x-company-id': companyId } : {}),
+    ...(workspace?.companyId === companyId ? { 'x-project-id': workspace.projectId } : {}),
   }
 }
 
@@ -131,6 +134,15 @@ export class LingxiImClient {
     return () => this.listeners.delete(listener)
   }
 
+  onConnected(listener: () => void): () => void {
+    const receive = (status: ConnectStatus) => {
+      if (status === ConnectStatus.Connected && this.started
+        && this.boundUid === getMeId() && this.boundCompanyId === getActiveCompanyId()) listener()
+    }
+    this.sdk.connectManager.addConnectStatusListener(receive)
+    return () => this.sdk.connectManager.removeConnectStatusListener(receive)
+  }
+
   async history(channelId: string, limit = 80, beforeMessageSeq = 0): Promise<ImEnvelope[]> {
     const query = new URLSearchParams({ limit: String(limit) })
     if (beforeMessageSeq > 0) query.set('beforeSeq', String(beforeMessageSeq))
@@ -139,20 +151,20 @@ export class LingxiImClient {
     return response.json() as Promise<ImEnvelope[]>
   }
 
-  async send(channelId: string, payload: NativeMessage): Promise<ImEnvelope> {
+  async send(channelId: string, payload: NativeMessage, signal?: AbortSignal): Promise<ImEnvelope> {
     const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages/accept`, {
       method: 'POST', headers: authHeaders(), body: JSON.stringify({ clientNonce: payload.id, payload }),
+      signal,
     })
     if (!response.ok) {
-      const detail = await response.text().catch(() => '')
-      throw new Error(`IM send acceptance failed: ${response.status} ${detail.slice(0, 300)}`)
+      throw new Error(`IM send acceptance failed: ${response.status}`)
     }
     const value = await response.json() as { echo: ImEnvelope }
     return value.echo
   }
 
-  async sendStatus(clientNonce: string): Promise<{ status: string; echo?: ImEnvelope; error?: string }> {
-    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/sends/${encodeURIComponent(clientNonce)}`, { headers: authHeaders() })
+  async sendStatus(clientNonce: string, signal?: AbortSignal): Promise<{ status: string; echo?: ImEnvelope; error?: string }> {
+    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/sends/${encodeURIComponent(clientNonce)}`, { headers: authHeaders(), signal })
     if (response.status === 404) return { status: 'missing' }
     if (!response.ok) throw new Error(`IM send recovery failed: ${response.status}`)
     return await response.json() as { status: string; echo?: ImEnvelope; error?: string }
