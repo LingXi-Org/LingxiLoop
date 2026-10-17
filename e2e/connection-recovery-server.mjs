@@ -35,6 +35,7 @@ const { seedCompanyWithAgent, seedUserMembership, buildApiTestApp, teardownAll }
 const { storage } = await import('../server/src/storage.ts')
 const { wukongClient: wukong } = await import('../server/src/im/wukong.ts')
 const { createNativeMessage } = await import('../src/lib/nativeMessage.ts')
+const { createWorker } = await import('@lyyzka/lingxios/worker')
 const provider = createServer(request => request.resume())
 await new Promise(resolve => provider.listen(0, '127.0.0.1', resolve))
 env.OPENAI_BASE_URL = `http://127.0.0.1:${provider.address().port}/v1`
@@ -82,9 +83,10 @@ proxy.post('/api/__recovery/start', async (req, res) => {
     attachments: [{ id: fileId, type: 'document', name: '恢复附件.txt', contentType: 'text/plain', status: { type: 'complete' },
       content: [{ type: 'file', sourceType: 'id', data: fileId, mimeType: 'text/plain', filename: '恢复附件.txt' }] }] })
   current = { ...req.body, identity, room, payload, invalid: req.body.mode === 'invalid-receipt',
-    unavailable: !['lost-reply', 'denied', 'invalid-receipt', 'identity', 'manual'].includes(req.body.mode) && !req.body.mode?.startsWith('sse-'),
+    unavailable: !['lost-reply', 'denied', 'invalid-receipt', 'identity', 'manual'].includes(req.body.mode)
+      && !req.body.mode?.startsWith('sse-') && !req.body.mode?.startsWith('runtime-'),
     accepts: 0, statusReads: 0, streamRequests: 0, snapshotReads: 0, concurrent: 0, maxConcurrent: 0, crossIdentity: 0, lost: false, run: null, streamFault: false }
-  if (req.body.mode?.startsWith('sse-')) {
+  if (req.body.mode?.startsWith('sse-') || req.body.mode?.startsWith('runtime-')) {
     const policy = await syncConversationPolicy(api, identity.companyId, room)
     const accepted = await api.conversations.ingest({ tenantId: identity.companyId, conversationId: room, policyVersion: policy.version,
       messageId: payload.id, version: 1, author: { id: identity.userId, kind: 'human' }, text: '请回答这个问题。', mentions: [identity.agentId] },
@@ -96,7 +98,42 @@ proxy.post('/api/__recovery/start', async (req, res) => {
   }
   res.json({ identity: { ...identity, app: undefined }, other: { ...identities[1], app: undefined }, room, payload, runId: current.run?.runId })
 })
+async function runFixtureTurn(run, healthy) {
+  if (!healthy && current.mode === 'runtime-cancel') await api.cancel(run)
+  else {
+    const usage = { available: true,inputTokens: 10,outputTokens: 5 }
+    const worker = createWorker({ controlPlane: api,model: {
+      modelId: `reliability-${current.room}`,contextWindowTokens: !healthy && current.mode === 'runtime-context' ? 1024 : 200000,
+      async run() {
+        current.fixtureModelCalls = (current.fixtureModelCalls ?? 0)+1
+        if (!healthy && current.mode === 'runtime-402') throw Object.assign(new Error('Synthetic private provider body'),{ status: 402 })
+        return { text: '新请求已正常完成。',output: [{ role: 'assistant',content: '新请求已正常完成。' }],model: 'reliability-fixture',usage }
+      },
+      async structured() { return { value: { missing: [] },model: 'reliability-fixture',usage } },
+      async compact() { throw new Error('Unexpected fixture compaction') },
+    },worker: { id: `reliability-${current.room}`,concurrency: 1 } })
+    try { await worker.runNext() } finally { await worker.stop() }
+  }
+  const deadline = AbortSignal.timeout(15000)
+  while (healthy ? (await api.readRunState(run))?.delivery !== 'delivered' : (await api.readTerminal(run))?.delivery !== 'delivered') {
+    deadline.throwIfAborted(); await delay(50)
+  }
+}
 proxy.post('/api/__recovery/control', async (req, res) => {
+  if (current.mode?.startsWith('runtime-')) {
+    if (req.body.action === 'finish') await runFixtureTurn(current.run,false)
+    else if (req.body.action === 'continue-runtime') {
+      const policy = await syncConversationPolicy(api,current.identity.companyId,current.room)
+      const accepted = await api.conversations.ingest({ tenantId: current.identity.companyId,conversationId: current.room,
+        policyVersion: policy.version,messageId: req.body.messageId,version: 1,
+        author: { id: current.identity.userId,kind: 'human' },text: '失败后的新消息。',mentions: [current.identity.agentId] },
+      { mode: 'execute',deliveryMode: 'auto',executionClass: 'conversation',codeExecution: 'disabled' })
+      current.nextRun = accepted.runs[0]; assert.ok(current.nextRun)
+      await bindProductRun(pool,current.nextRun,current.room,false,req.body.messageId)
+      await runFixtureTurn(current.nextRun,true)
+    }
+    return res.json({ ok: true })
+  }
   if (req.body.action === 'interrupt') {
     current.streamFault = true
     current.unavailable = current.mode === 'sse-offline'
@@ -134,12 +171,16 @@ proxy.get('/api/__recovery/facts', async (_req, res) => {
   if (!current) return res.json({})
   const messages = await wukong().syncMessages(current.room, 2, 200, current.identity.userId)
   const own = messages.filter(message => message.fromUid === current.identity.userId)
+  const terminal = current.mode?.startsWith('runtime-') ? await api.readTerminal(current.run) : null
   res.json({ accepts: current.accepts, statusReads: current.statusReads, streamRequests: current.streamRequests,
     snapshotReads: current.snapshotReads, maxConcurrent: current.maxConcurrent,
     uniqueMessages: new Set(own.map(message => message.clientMsgNo)).size, messageCount: own.length,
     originalNonceMessages: own.filter(message => message.clientMsgNo === current.payload.id).length,
     nonceDigest: createHash('sha256').update(current.payload.id).digest('hex').slice(0, 12), crossIdentity: current.crossIdentity,
     remoteLifecycle: current.run ? (await api.readRunState(current.run))?.run.status : null,
+    ...(current.mode?.startsWith('runtime-') ? { terminalReason: terminal?.feedback.reason ?? null,terminalDelivery: terminal?.delivery ?? null,
+      terminalMessages: messages.filter(message => message.payload?.metadata?.custom?.terminalFeedbackId === terminal?.feedback.id).length,
+      fixtureModelCalls: current.fixtureModelCalls ?? 0,nextLifecycle: current.nextRun ? (await api.readRun(current.nextRun))?.status : null } : {}),
     workItems: current.run ? (await pool.query(`SELECT count(*)::int AS n FROM lingxios.agent_work_items
       WHERE tenant_id=$1 AND trigger_ref=$2 AND agent_id=$3`, [current.identity.companyId, current.payload.id, current.identity.agentId])).rows[0].n : 0 })
 })
