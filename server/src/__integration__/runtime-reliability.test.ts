@@ -20,22 +20,24 @@ after(async () => { await worker?.stop(); await teardownAll(); await recording?.
 
 async function fixture(room: string) {
   const { companyId,projectId,agentId } = await seedCompanyWithAgent()
-  await seedUserMembership('test-owner',companyId)
-  const members = ['test-owner',agentId]
+  const principalId = `human-${room}`
+  await seedUserMembership(principalId,companyId)
+  await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')",[projectId,companyId,principalId])
+  const members = [principalId,agentId]
   await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Reliability',$4::jsonb)",[room,companyId,projectId,JSON.stringify(members)])
   await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',[room,companyId,JSON.stringify({ channelType: 2,members })])
   const api = await lingxiOSControl(), policy = await syncConversationPolicy(api,companyId,room)
   const enqueue = async (id: string) => {
     const accepted = await api.conversations.ingest({ tenantId: companyId,conversationId: room,policyVersion: policy.version,
-      messageId: id,version: 1,author: { id: 'test-owner',kind: 'human' },text: 'Explain this general concept.',mentions: [agentId] },
+      messageId: id,version: 1,author: { id: principalId,kind: 'human' },text: 'Explain this general concept.',mentions: [agentId] },
     { mode: 'chat',codeExecution: 'disabled',executionClass: 'conversation' })
     const run = accepted.runs[0]; assert.ok(run); await bindProductRun(pool,run,room); return run
   }
-  return { api,enqueue,companyId,agentId,room }
+  return { api,enqueue,companyId,agentId,room,principalId }
 }
 
 test('optional scope outages omit memory while mandatory authorization and implementation errors stay strict', async () => {
-  const { api,enqueue } = await fixture('optional-memory-product')
+  const { api,enqueue,principalId } = await fixture('optional-memory-product')
   const run = await enqueue('optional-memory-source')
   const host = api.connectWorker({ workerId: 'optional-memory',workKinds: ['turn'] }), work = (await host.claimWork())!
   const memory = api.memory!, original = memory.scopes
@@ -52,11 +54,11 @@ test('optional scope outages omit memory while mandatory authorization and imple
     memory.scopes = async () => { throw implementation }
     await assert.rejects(host.loadContext(work),error => error === implementation)
     memory.scopes = async () => []
-    await pool.query("UPDATE users SET suspended_at=NOW() WHERE id='test-owner'")
+    await pool.query("UPDATE users SET suspended_at=NOW() WHERE id=$1",[principalId])
     await assert.rejects(host.loadContext(work))
   } finally {
     memory.scopes = original
-    await pool.query("UPDATE users SET suspended_at=NULL WHERE id='test-owner'")
+    await pool.query("UPDATE users SET suspended_at=NULL WHERE id=$1",[principalId])
     await api.cancel(run)
   }
 })
