@@ -11,7 +11,7 @@ import type { WorkConversation } from '@lyyzka/lingxios'
 import type { Queryable } from '../server/src/db/queryable.js'
 import type { ImSendAcceptanceRow } from '../server/src/im/messages-repository.js'
 import { nativeMessageSchema } from '../server/src/im/message-types.js'
-import { createPermissionService } from '../server/src/modules/access/public.js'
+import { createPermissionService, ForbiddenError } from '../server/src/modules/access/public.js'
 
 export async function authorizeAcceptanceRepair(db: Queryable, input: {
   companyId: string; userId: string
@@ -22,7 +22,7 @@ export async function authorizeAcceptanceRepair(db: Queryable, input: {
     const custom = payload.metadata.custom
     const harness = custom.harness as Record<string, unknown> | undefined
     const runId = harness?.runId ?? custom.runId
-    if (typeof runId !== 'string') throw new Error('original run identity unavailable')
+    if (typeof runId !== 'string') throw new ForbiddenError('RESOURCE_NOT_FOUND')
     // Read the persisted frozen audience; do not reconstruct it from current recipients.
     const work = (await db.query<{ principal_id: string; conversation: WorkConversation; created_at: Date }>(
       `SELECT work.principal_id,work.conversation,work.created_at FROM lingxios.agent_work_items work
@@ -32,18 +32,18 @@ export async function authorizeAcceptanceRepair(db: Queryable, input: {
          AND NOT binding.internal AND binding.message_protocol=2`,
       [input.companyId, input.userId, runId, acceptance.channel_id])).rows[0]
     if (!work?.principal_id || work.conversation?.conversationId !== acceptance.channel_id
-      || work.conversation.internal || !Array.isArray(work.conversation.audience?.participantIds)) throw new Error('original frozen audience unavailable')
+      || work.conversation.internal || !Array.isArray(work.conversation.audience?.participantIds)) throw new ForbiddenError('RESOURCE_NOT_FOUND')
     const profile = (await db.query<{ members: string[] }>(`SELECT profile->'members' AS members
       FROM im_channel_bindings WHERE company_id=$1 AND channel_id=$2`, [input.companyId, acceptance.channel_id])).rows[0]
     if (!Array.isArray(profile?.members) || JSON.stringify([...profile.members].sort())
-      !== JSON.stringify([...work.conversation.audience.participantIds].sort())) throw new Error('frozen audience revoked')
+      !== JSON.stringify([...work.conversation.audience.participantIds].sort())) throw new ForbiddenError('RESOURCE_MEMBERSHIP_REQUIRED')
     const active = await db.query(`SELECT 1 FROM participants agent JOIN participants human ON human.company_id=agent.company_id
       JOIN users principal ON principal.id=human.id AND principal.deleted_at IS NULL AND principal.suspended_at IS NULL
         AND principal.departed_at IS NULL AND (principal.access_revoked_at IS NULL OR principal.access_revoked_at<$4)
       WHERE agent.company_id=$1 AND agent.id=$2 AND agent.kind='agent' AND agent.departed_at IS NULL
         AND human.id=$3 AND human.kind='human' AND human.departed_at IS NULL`,
     [input.companyId, input.userId, work.principal_id, work.created_at])
-    if (!active.rowCount) throw new Error('original principal or agent revoked')
+    if (!active.rowCount) throw new ForbiddenError('COMPANY_MEMBERSHIP_REQUIRED')
     principalId = work.principal_id
   }
   await createPermissionService(db).assertCan({ actorUserId: principalId, companyId: input.companyId,

@@ -5,8 +5,8 @@
   "realWuKong": true,
   "officialBrowser": true,
   "counts": {
-    "tests": 25,
-    "pass": 25,
+    "tests": 29,
+    "pass": 29,
     "fail": 0,
     "skipped": 0
   },
@@ -102,5 +102,37 @@
     "command": "E2E_CONNECTION_RECOVERY=1 E2E_BASE_URL=http://127.0.0.1:5196 E2E_TELEMETRY_DISABLED=1 node e2e/web/run.mjs e2e/web/connection-recovery.e2e.ts --grep 'accepted (response loss|sequence zero)' --output .e2e/issue-154-160 --video on",
     "artifacts": "/workspace/LingxiLoop-154-160-integration/.e2e/issue-154-160/",
     "sourceChangesIncludedInThisBranch": false
+  },
+  "reviewFixes": {
+    "nativeAdmission": {
+      "scenario": "lost-ack-authoritative-history",
+      "actualSendCalls": 1,
+      "durableMessageRows": 1,
+      "recoveredHistoryRows": 1,
+      "replayAdditionalSends": 0
+    },
+    "maintenanceFaults": {
+      "realPostgreSQLTimeoutCode": "57014",
+      "authorizationChecksTested": [
+        1,
+        2
+      ],
+      "unexpectedFailures": [
+        "TypeError",
+        "ECONNRESET",
+        "forged reason/status",
+        "history TypeError"
+      ],
+      "actualForbiddenErrorOnly": true,
+      "safeMessageAndNonEnumerableCause": true,
+      "acceptanceUnchangedOnFailure": true
+    },
+    "cliFixture": "All four WuKong settings are supplied explicitly to the child, independent of CI ambient configuration.",
+    "sharedAuthorizationContract": "Only ForbiddenError maps to denial; shared resolver propagation belongs to #159.",
+    "redTests": {
+      "passed": 15,
+      "failed": 3
+    },
+    "localFinalLog": "/tmp/lingxiloop-154-review-final.log"
   }
 }

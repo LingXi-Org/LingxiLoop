@@ -3,6 +3,7 @@ import { after, before, beforeEach, test } from 'node:test'
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { pool } from '../db/pool.js'
+import { ForbiddenError } from '../modules/access/public.js'
 import { createNativeMessage } from '../im/message-types.js'
 import { imMessagesApplication as app } from '../im/messages-facade.js'
 import { getSendAcceptance, acceptSend, ensureSendAcceptance } from '../im/messages-repository.js'
@@ -17,6 +18,9 @@ import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembers
 // conflicting payload under one nonce, revoked recipients, old paginated history, unknown
 // transport outcome mistaken for non-execution, repair dry-run writing, raw errors leaking,
 // and IM recovery unexpectedly executing actions or models.
+// Maintenance fault inventory: SQL timeout/connection loss/TypeError or a forged
+// reason/status mistaken for a policy denial; failed reauthorization writing a
+// receipt; unavailable history hiding a code error; private diagnostic leakage.
 let recording: Awaited<ReturnType<typeof installRecordingWukong>>
 let input: Parameters<typeof app.acceptAgentMessage>[0]
 before(async () => { await ensureSchemaOnce(); recording = await installRecordingWukong() })
@@ -232,7 +236,8 @@ test('the maintenance CLI defaults to read-only, exits cleanly and applies only 
   const run = (args: string[]) => new Promise<{ code: number | null; stdout: string }>((resolve, reject) => {
     const child = spawn(process.execPath, ['--import', 'tsx', 'scripts/reconcile-im-send-acceptances.ts',
       '--company', input.companyId, '--sender', input.userId, ...args], { timeout: 10_000,
-      env: { ...process.env, WUKONG_API_URL: client.config.apiUrl, WUKONG_API_TOKEN: client.config.apiToken } })
+      env: { ...process.env, WUKONG_API_URL: client.config.apiUrl, WUKONG_API_TOKEN: client.config.apiToken,
+        WUKONG_WS_URL: client.config.wsUrl, WUKONG_WEBHOOK_SECRET: client.config.webhookSecret } })
     let stdout = ''; child.stdout.on('data', chunk => { stdout += chunk.toString() })
     child.once('error', reject); child.once('exit', code => resolve({ code, stdout }))
   })
@@ -246,6 +251,84 @@ test('the maintenance CLI defaults to read-only, exits cleanly and applies only 
   assert.equal((await run(['--nonce', input.clientNonce, '--apply', '--database', new URL(process.env.DATABASE_URL!).pathname.slice(1)])).code, 0)
   assert.equal((await app.sendStatus(input))?.status, 'accepted')
   assert.equal(recording.messages.length, 1)
+})
+
+test('maintenance distinguishes actual policy denials from unexpected authorization errors at both checks', async () => {
+  const first = await app.acceptAgentMessage(input); assert.equal(first.kind, 'accepted')
+  if (first.kind !== 'accepted') return
+  await corrupt({ ...first.echo, messageSeq: 0 })
+  const before = await getSendAcceptance(pool, input)
+  for (const failAt of [1, 2]) {
+    for (const fault of [new TypeError('PRIVATE_IMPLEMENTATION_DETAIL'),
+      Object.assign(new Error('PRIVATE_CONNECTION_DETAIL'), { code: 'ECONNRESET' }),
+      Object.assign(new Error('PRIVATE_FORGED_DENIAL'), { reason: 'forbidden', status: 403 })]) {
+      let checks = 0
+      await assert.rejects(app.reconcileSendAcceptance({ ...input, apply: true, authorize: async () => {
+        if (++checks === failAt) throw fault
+      } }), error => {
+        assert.ok(error instanceof Error && !(error instanceof ForbiddenError))
+        assert.equal(error.message, 'IM send acceptance reconciliation is unavailable')
+        assert.equal(error.cause, fault)
+        assert.doesNotMatch(JSON.stringify(error), /PRIVATE_/)
+        return true
+      })
+      assert.equal(checks, failAt)
+      assert.deepEqual(await getSendAcceptance(pool, input), before)
+    }
+    let checks = 0
+    const result = await app.reconcileSendAcceptance({ ...input, apply: true, authorize: async () => {
+      if (++checks === failAt) throw new ForbiddenError('RESOURCE_MEMBERSHIP_REQUIRED')
+    } })
+    assert.equal(result.classification, 'forbidden')
+    assert.deepEqual(await getSendAcceptance(pool, input), before)
+  }
+  assert.equal(recording.messages.length, 1)
+  assert.deepEqual(await ledgers(), { models: 0, actions: 0 })
+})
+
+test('maintenance preserves a real PostgreSQL timeout cause without relabelling it forbidden', async () => {
+  const first = await app.acceptAgentMessage(input); assert.equal(first.kind, 'accepted')
+  if (first.kind !== 'accepted') return
+  await corrupt({ ...first.echo, messageSeq: 0 })
+  const before = await getSendAcceptance(pool, input)
+  for (const failAt of [1, 2]) {
+    const client = await pool.connect()
+    let checks = 0, databaseCause: unknown
+    try {
+      await client.query('BEGIN'); await client.query("SET LOCAL statement_timeout='20ms'")
+      await assert.rejects(app.reconcileSendAcceptance({ ...input, apply: true, authorize: async () => {
+        if (++checks === failAt) {
+          try { await client.query('SELECT pg_sleep(0.2)') }
+          catch (cause) { databaseCause = cause; throw cause }
+        }
+      } }), error => {
+        assert.ok(error instanceof Error && !(error instanceof ForbiddenError))
+        assert.equal(error.message, 'IM send acceptance reconciliation is unavailable')
+        assert.equal(error.cause, databaseCause)
+        assert.equal((error.cause as { code: string }).code, '57014')
+        assert.doesNotMatch(JSON.stringify(error), /pg_sleep|statement timeout/)
+        return true
+      })
+    } finally { await client.query('ROLLBACK'); client.release() }
+    assert.equal(checks, failAt)
+    assert.deepEqual(await getSendAcceptance(pool, input), before)
+  }
+})
+
+test('maintenance history failures retain a safe cause and cannot change the acceptance', async t => {
+  const first = await app.acceptAgentMessage(input); assert.equal(first.kind, 'accepted')
+  if (first.kind !== 'accepted') return
+  await corrupt({ ...first.echo, messageSeq: 0 })
+  const before = await getSendAcceptance(pool, input), fault = new TypeError('PRIVATE_HISTORY_DETAIL')
+  t.mock.method(wukongClient(), 'syncMessages', async () => { throw fault })
+  await assert.rejects(app.reconcileSendAcceptance({ ...input, apply: true }), error => {
+    assert.ok(error instanceof Error)
+    assert.equal(error.message, 'IM send acceptance reconciliation is unavailable')
+    assert.equal(error.cause, fault)
+    assert.doesNotMatch(JSON.stringify(error), /PRIVATE_HISTORY_DETAIL/)
+    return true
+  })
+  assert.deepEqual(await getSendAcceptance(pool, input), before)
 })
 
 test('maintenance repeats original principal, project and frozen audience authorization, including before commit', async t => {

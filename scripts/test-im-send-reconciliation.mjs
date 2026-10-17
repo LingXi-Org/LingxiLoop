@@ -43,7 +43,8 @@ try {
   await run(['server/run-integration-tests.mjs', '--file', 'im-send-reconciliation.test.ts',
     ...(real ? ['--file', 'im-send-wukong.test.ts', '--file', 'im-send-runtime-recovery.test.ts'] : []),
     ...(args.includes('--regression') ? ['--file', 'native-message-flow.test.ts', '--file', 'messages-vertical-slice.test.ts',
-      '--file', 'interactive-ui-disabled.test.ts', '--file', 'native-collaboration.test.ts', '--file', 'im-conversation-style.test.ts'] : [])])
+      '--file', 'interactive-ui-disabled.test.ts', '--file', 'native-collaboration.test.ts', '--file', 'native-admission.test.ts',
+      '--file', 'im-conversation-style.test.ts'] : [])])
   passed = true
 } finally {
   const content = await readFile(log, 'utf8')

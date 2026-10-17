@@ -29,9 +29,19 @@ separately authorized retry flow. This script does not initiate it.
 | --- | --- |
 | `confirmed` | Valid stored receipt, or exactly one authoritative nonce match with the original sender/channel/type/payload digest, positive safe sequence, and matching known message ID. `--apply` repairs the same acceptance. |
 | `not_executed` | A new-version `send-not-dispatched-v1` marker with no receipt proves dispatch has not started. Inspection/apply do not dispatch it. |
-| `unknown` | Legacy pending state, absent/invalid/unavailable/ambiguous history, mismatched known ID or immutable payload, or an incomplete scan. Keep pending; never resend on absence alone. |
-| `forbidden` | Current membership, original principal/project access, persisted run identity, or frozen audience cannot be verified. No history read or repair. |
+| `unknown` | Legacy pending state, absent/invalid/ambiguous history, mismatched known ID or immutable payload, or an incomplete scan. Keep pending; never resend on absence alone. |
+| `forbidden` | Current membership, original principal/project access, persisted run identity, or frozen audience is denied. No repair or redispatch. |
 | `not_found` | No acceptance exists for the exact scoped key. |
+
+Only an actual shared `ForbiddenError` is classified as a permission denial.
+Known missing run/principal/audience facts raise that type explicitly. SQL,
+connection, TypeError, and other unexpected callback/history failures instead
+raise `ImSendReconciliationError` (`im_reconciliation_unavailable`) with a fixed
+safe message and the original non-enumerable `cause`. They do not change the
+acceptance or print private diagnostics. The CLI exits unsuccessfully; rerun
+after the dependency/code failure is resolved. Shared permission resolution
+must preserve its own infrastructure exceptions, as required by #159; this PR
+does not change that resolver or `nativeTool.authorize`.
 
 Assistant/system maintenance requires a stored protocol-v2 run binding and its
 original persisted frozen audience. Missing legacy authority evidence stays

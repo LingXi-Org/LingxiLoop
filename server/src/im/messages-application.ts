@@ -6,6 +6,7 @@ import { nativeMessageSchema, nativeText, type NativeMessage } from './message-t
 import type { Queryable } from '../db/queryable.js'
 import type { ReadReceiptAdvance } from './read-receipts-contracts.js'
 import type { ImChannelProfile } from './types.js'
+import { ForbiddenError } from '../modules/access/public.js'
 import {
   acceptSend,
   channelProfileForCompany,
@@ -31,6 +32,16 @@ export interface ImReactionAggregate {
   emoji: string
   count: number
   users: string[]
+}
+
+/** Fixed public diagnostic; the original failure stays in non-enumerable cause. */
+export class ImSendReconciliationError extends Error {
+  readonly code = 'im_reconciliation_unavailable'
+
+  constructor(cause: unknown) {
+    super('IM send acceptance reconciliation is unavailable', { cause })
+    this.name = 'ImSendReconciliationError'
+  }
 }
 
 export interface ImMessageEnvelope {
@@ -455,7 +466,7 @@ export class ImMessagesApplication {
 
   private async findAcceptanceEcho(db: Queryable, input: {
     companyId: string; userId: string; clientNonce: string; channelId: string
-  }, acceptance: ImSendAcceptanceRow): Promise<Record<string, unknown> | null> {
+  }, acceptance: ImSendAcceptanceRow, failOnHistoryError = false): Promise<Record<string, unknown> | null> {
     const profile = await channelProfileForMember(db, input)
     if (!profile || Number(profile.channelType ?? 2) !== acceptance.channel_type) return null
     const expected = { ...input, channelType: acceptance.channel_type, payload: acceptance.payload }
@@ -482,7 +493,11 @@ export class ImMessagesApplication {
         if (cursor && next >= cursor) return null
         cursor = next
       }
-    } catch { /* Unavailable, truncated or invalid history leaves the outcome unknown. */ }
+    } catch (cause) {
+      // Product retries retain unknown delivery state. Maintenance must expose a
+      // safe failure diagnostic instead of writing a misleading classification.
+      if (failOnHistoryError) throw cause
+    }
     return null
   }
 
@@ -493,30 +508,35 @@ export class ImMessagesApplication {
     companyId: string; userId: string; clientNonce: string; apply?: boolean
     authorize?: (db: Queryable, acceptance: ImSendAcceptanceRow) => Promise<void>
   }): Promise<{ classification: 'confirmed' | 'not_executed' | 'unknown' | 'forbidden' | 'not_found' }> {
-    return this.infrastructure.withConnection(async db => {
+    try { return await this.infrastructure.withConnection(async db => {
       await lockSendAcceptance(db, input)
       try {
         const acceptance = await getSendAcceptance(db, input)
         if (!acceptance) return { classification: 'not_found' }
-        if (input.authorize) {
-          try { await input.authorize(db, acceptance) } catch { return { classification: 'forbidden' } }
+        const authorized = async () => {
+          try { await input.authorize?.(db, acceptance); return true }
+          catch (cause) {
+            // Match the shared native authorization contract: only an actual
+            // policy denial is forbidden, never a reason/status-shaped error.
+            if (cause instanceof ForbiddenError) return false
+            throw cause
+          }
         }
+        if (!await authorized()) return { classification: 'forbidden' }
         const scoped = { ...input, channelId: acceptance.channel_id }
         if (!await channelProfileForMember(db, scoped)) return { classification: 'forbidden' }
         const expected = { ...scoped, channelType: acceptance.channel_type, payload: acceptance.payload }
         if (acceptance.status === 'accepted' && validSendEcho(acceptance.echo, expected)) return { classification: 'confirmed' }
         if (acceptance.status === 'pending' && acceptance.error === SEND_NOT_DISPATCHED && !acceptance.echo) return { classification: 'not_executed' }
-        const echo = await this.findAcceptanceEcho(db, scoped, acceptance)
+        const echo = await this.findAcceptanceEcho(db, scoped, acceptance, true)
         if (input.apply) {
-          if (input.authorize) {
-            try { await input.authorize(db, acceptance) } catch { return { classification: 'forbidden' } }
-          }
+          if (!await authorized()) return { classification: 'forbidden' }
           if (echo) await acceptSend(db, { ...input, echo })
           else await deferSend(db, { ...input, error: SEND_RECONCILIATION_REQUIRED })
         }
         return { classification: echo ? 'confirmed' : 'unknown' }
       } finally { await unlockSendAcceptance(db, input).catch(() => undefined) }
-    })
+    }) } catch (cause) { throw new ImSendReconciliationError(cause) }
   }
 
   async acceptUserMessage(input: {
