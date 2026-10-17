@@ -10,6 +10,7 @@ import { OgError } from '../../og.js'
 import { PlatformApplicationError } from './application.js'
 import { presignUploadRequestSchema, refreshUploadUrlRequestSchema } from './contracts.js'
 import { platformApplication } from './facade.js'
+import { registerHealthRoutes } from './health.js'
 
 export const platformRouter = Router()
 
@@ -51,7 +52,7 @@ platformRouter.post('/uploads/refresh-url', safe(async (req, res) => {
   }
 }))
 
-platformRouter.get('/livez', (_req, res) => { res.json({ ok: true, ts: Date.now() }) })
+registerHealthRoutes(platformRouter, platformApplication)
 
 platformRouter.get('/meta', (_req, res) => {
   res.json({
@@ -60,21 +61,6 @@ platformRouter.get('/meta', (_req, res) => {
     commitSha: env.COMMIT_SHA,
     reasoningRuntime: { name: '@lyyzka/lingxios', ...releaseVersions },
   })
-})
-
-platformRouter.get('/health', async (_req, res) => {
-  try {
-    await platformApplication.assertReady()
-    res.json({ ok: true, ts: Date.now() })
-  } catch (error) {
-    res.status(503).json({ ok: false, error: String(error) })
-  }
-})
-
-platformRouter.get('/health/dependencies', async (_req, res) => {
-  const dependencies = await platformApplication.dependencyReadiness()
-  const ok = Object.values(dependencies).every(Boolean)
-  res.status(ok ? 200 : 503).json({ ok, dependencies, ts: Date.now() })
 })
 
 platformRouter.get('/og', async (req, res) => {

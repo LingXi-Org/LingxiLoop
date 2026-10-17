@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { Pool } from 'pg'
+import { observePoolAcquire, observeSqlSubmission, registerPoolMetrics } from '../metrics.js'
 
 const databaseUrl = process.env.DATABASE_URL?.trim()
 if (!databaseUrl) throw new Error('[env] Missing required environment variable: DATABASE_URL')
@@ -24,6 +25,36 @@ export const pool = new Pool({
   statement_timeout: 60_000,
   idle_in_transaction_session_timeout: 30_000,
 })
+
+// Instrument the public pg instance without changing overload/callback semantics.
+// Pool.query calls connect internally; count acquisition there once. Instrument
+// each physical client's query once so transaction and listener SQL also count.
+pool.on('connect', (client) => {
+  client.query = new Proxy(client.query, {
+    apply(target, receiver, args) {
+      observeSqlSubmission()
+      return Reflect.apply(target, receiver, args)
+    },
+  })
+})
+pool.connect = new Proxy(pool.connect, {
+  apply(target, receiver, args: unknown[]) {
+    const started = performance.now()
+    const record = (error?: unknown) => observePoolAcquire(performance.now() - started, error ? 'error' : 'ok')
+    const callback = args[0]
+    if (typeof callback === 'function') {
+      return Reflect.apply(target, receiver, [(...result: unknown[]) => {
+        record(result[0])
+        return Reflect.apply(callback, undefined, result)
+      }])
+    }
+    return (Reflect.apply(target, receiver, args) as Promise<unknown>).then(
+      (client) => { record(); return client },
+      (error: unknown) => { record(error); throw error },
+    )
+  },
+})
+registerPoolMetrics(() => ({ total: pool.totalCount, idle: pool.idleCount, waiting: pool.waitingCount, max: databasePoolMax }))
 
 pool.on('error', (err) => {
   console.error('[pg] idle client error', err)
