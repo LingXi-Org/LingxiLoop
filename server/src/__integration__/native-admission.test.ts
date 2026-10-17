@@ -38,6 +38,7 @@ test('product native admission, cancellation, revision, independent delivery and
   const slowDelivery = new Promise<void>(resolve => { releaseDelivery = resolve })
   type DeliveryContext = NonNullable<Parameters<DeliveryPort['deliverMessage']>[2]>
   const deliveries: Record<string, { payload: NativeMessage; clientNonce: string; messageId: string; calls: number }> = {}
+  const terminalDeliveries: typeof deliveries = {}
   const requests = new Map<string, NativeMessage>()
   const durableMessages: ImMessage[] = [], recoveredHistory: ImMessage[] = []
   let lostAcknowledgements = 0
@@ -61,7 +62,9 @@ test('product native admission, cancellation, revision, independent delivery and
     }
     if (req.url !== '/message/send') { res.end(JSON.stringify({ messages: [] })); return }
     const payload = decodeNativePayload(input.payload)
-    const record = deliveries[input.channel_id] ??= { payload, clientNonce: input.client_msg_no, messageId: `receipt-${input.channel_id}`, calls: 0 }
+    const record = payload.role === 'system'
+      ? terminalDeliveries[input.client_msg_no] ??= { payload,clientNonce: input.client_msg_no,messageId: `receipt-${input.client_msg_no}`,calls: 0 }
+      : deliveries[input.channel_id] ??= { payload, clientNonce: input.client_msg_no, messageId: `receipt-${input.channel_id}`, calls: 0 }
     assert.equal(input.client_msg_no, record.clientNonce, 'delivery retries must preserve the WuKong idempotency key')
     assert.deepEqual(payload, record.payload, 'delivery retries must preserve the committed payload')
     record.calls++
@@ -150,7 +153,7 @@ test('product native admission, cancellation, revision, independent delivery and
         WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3`, [companyId, agentId, sent.clientNonce])).rows,
       [{ status: 'accepted', messageId: sent.messageId }])
       const callsBeforeReplay = sent.calls
-      const rowsBeforeReplay = durableMessages.length
+      const rowsBeforeReplay = durableMessages.filter(message => message.clientMsgNo === sent.clientNonce).length
       const view = sent.payload.metadata.custom.harness as RunDisplayState
       const commit: DeliveryContext['commit'] = { resultId: view.resultId!,fence: view.messageFence }
       assert.ok(work.conversation)
@@ -159,7 +162,7 @@ test('product native admission, cancellation, revision, independent delivery and
         { signal: shutdown.signal, deadlineAt: new Date(Date.now() + 15000).toISOString(), commit, im: context })
       assert.deepEqual(receipt, { messageId: sent.messageId })
       assert.equal(sent.calls, callsBeforeReplay, 'ACK replay must use the persisted WuKong receipt without another send')
-      assert.equal(durableMessages.length, rowsBeforeReplay, 'ACK replay must not append another durable row')
+      assert.equal(durableMessages.filter(message => message.clientMsgNo === sent.clientNonce).length, rowsBeforeReplay, 'ACK replay must not append another durable row for the accepted send')
       assert.equal(sent.payload.id, `run-${run.runId}`)
       assert.equal(sent.clientNonce,context.messageKey)
     }

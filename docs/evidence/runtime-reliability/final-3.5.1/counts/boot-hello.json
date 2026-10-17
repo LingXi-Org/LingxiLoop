@@ -1,0 +1,23 @@
+{
+  "scenario": "boot-hello",
+  "facts": {
+    "accepts": 1,
+    "statusReads": 4,
+    "streamRequests": 0,
+    "snapshotReads": 0,
+    "maxConcurrent": 1,
+    "uniqueMessages": 1,
+    "messageCount": 1,
+    "originalNonceMessages": 1,
+    "nonceDigest": "be8123f5fc32",
+    "crossIdentity": 0,
+    "remoteLifecycle": null,
+    "workItems": 0,
+    "outbox": 0,
+    "blocked": 0,
+    "outboxAttachments": 0,
+    "attachmentCount": 1,
+    "activeRuns": 0,
+    "localLifecycle": null
+  }
+}

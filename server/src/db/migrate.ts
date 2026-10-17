@@ -11,6 +11,9 @@ const LOCK_KEY = 1_282_006_534
 const NATIVE_INSTALL_VERSION = 10
 const RUNTIME_UPGRADE_VERSION = 12
 const RUNTIME_SCHEMA_RELEASE = '3.3.0'
+const RELIABILITY_UPGRADE_VERSION = 43
+const LEGACY_RUNTIME_SCHEMA = 11
+const LEGACY_RUNTIME_RELEASE = '3.4.7'
 // Historical schema gates precede the explicit runtime-only patch migrations.
 const retiredTables = ['approvals','agent_events','agent_runs','agent_host_actions','agent_os_session_leases',
   'agent_os_session_routes','agent_os_workers','agent_os_sessions','agent_work_items','agent_workspace',
@@ -30,44 +33,57 @@ async function assertRetiredRuntimeEmpty(client: PoolClient): Promise<void> {
   }
 }
 
-async function runtimeSchema() {
-  const sql = await readFile(packageResources().schema, 'utf8')
+async function runtimeSchema(version: number = releaseVersions.schema) {
+  const resources = packageResources()
+  const sql = await readFile(version === LEGACY_RUNTIME_SCHEMA ? resources.schema011 : resources.schema, 'utf8')
   return { sql, hash: createHash('sha256').update(sql).digest('hex') }
 }
 
-async function applyRuntimeUpgrade(client: PoolClient, runtimeVersion = RUNTIME_SCHEMA_RELEASE): Promise<void> {
+function packagedTransactionBody(sql: string): string {
+  const body = /^(?:--[^\n]*\n|\s)*BEGIN;[ \t]*\n([\s\S]*?)\nCOMMIT;\s*$/.exec(sql)?.[1]
+  if (!body) throw new Error('invalid packaged LingxiOS transaction')
+  return body
+}
+
+async function applyRuntimeUpgrade(client: PoolClient, runtimeVersion = RUNTIME_SCHEMA_RELEASE, targetSchema: number = LEGACY_RUNTIME_SCHEMA): Promise<void> {
   const { rows } = await client.query<{ version: number }>(
     'SELECT version FROM lingxios.schema_version WHERE singleton',
   )
   let current = rows[0]?.version
-  while (current !== releaseVersions.schema) {
+  if (current !== targetSchema && targetSchema >= 12) {
+    await client.query("SET LOCAL lock_timeout='5s'")
+    await client.query('LOCK TABLE lingxios.agent_work_items IN SHARE ROW EXCLUSIVE MODE')
+    const active = await client.query("SELECT 1 FROM lingxios.agent_work_items WHERE status='leased' AND lease_expires_at>NOW() LIMIT 1")
+    if (active.rows.length) throw new Error('LingxiOS 3.5.0 requires drained workers before migration')
+  }
+  while (current !== targetSchema) {
     const resources = packageResources()
     const migrations = current === 9 ? [resources.migration010]
-      : current === 10 ? [resources.migration011, resources.migration012, resources.migration013] : []
-    if (!migrations.length || current! > releaseVersions.schema) {
-      throw new Error(`unsupported LingxiOS schema upgrade from ${current} to ${releaseVersions.schema}`)
+      : current === 10 ? [resources.migration011, resources.migration012, resources.migration013]
+      : current === 11 ? [resources.migration014] : []
+    if (!migrations.length || current! > targetSchema) {
+      throw new Error(`unsupported LingxiOS schema upgrade from ${current} to ${targetSchema}`)
     }
     for (const migration of migrations) {
       const packaged = await readFile(migration, 'utf8')
-      const body = /^(?:--[^\n]*\n)+BEGIN;\s*\n([\s\S]*?)\nCOMMIT;\s*$/.exec(packaged)?.[1]
-      if (!body) throw new Error('invalid packaged LingxiOS migration')
-      await client.query(body)
+      await client.query(packagedTransactionBody(packaged))
     }
     current = (await client.query<{ version: number }>('SELECT version FROM lingxios.schema_version WHERE singleton')).rows[0]?.version
   }
-  const schema = await runtimeSchema()
+  const schema = await runtimeSchema(targetSchema)
   await client.query(`UPDATE public.lingxios_installation
     SET runtime_version=$1,schema_version=$2,protocol_version=$3,schema_sha256=$4,installed_at=NOW()
-    WHERE singleton`, [runtimeVersion,releaseVersions.schema,releaseVersions.controlPlane,schema.hash])
+    WHERE singleton`, [runtimeVersion,targetSchema,releaseVersions.controlPlane,schema.hash])
 }
 
-async function assertRuntimeCurrent(client: PoolClient): Promise<void> {
-  const schema = await runtimeSchema()
+async function assertRuntimeCurrent(client: PoolClient, targetSchema: number = releaseVersions.schema,
+  runtimeVersion: string = releaseVersions.runtime): Promise<void> {
+  const schema = await runtimeSchema(targetSchema)
   const { rows } = await client.query(`SELECT runtime_version,schema_version,protocol_version,schema_sha256,
     (SELECT version FROM lingxios.schema_version WHERE singleton) AS actual_schema FROM public.lingxios_installation WHERE singleton`)
   const row = rows[0]
-  if (!row || row.runtime_version !== releaseVersions.runtime || row.schema_version !== releaseVersions.schema
-    || row.actual_schema !== releaseVersions.schema || row.protocol_version !== releaseVersions.controlPlane
+  if (!row || row.runtime_version !== runtimeVersion || row.schema_version !== targetSchema
+    || row.actual_schema !== targetSchema || row.protocol_version !== releaseVersions.controlPlane
     || row.schema_sha256 !== schema.hash) throw new Error('installed LingxiOS package/schema mismatch; install a matching package and run the explicit database installation')
   const tables = [...schema.sql.matchAll(/^CREATE TABLE (lingxios\.[a-z_]+)\s*\(/gm)].map(match => match[1])
   if (!tables.length) throw new Error('published LingxiOS schema contains no tables')
@@ -190,6 +206,9 @@ export async function migrateDatabase(
     const applied = await appliedMigrations(client)
     validateApplied(migrations, applied)
     const installsRuntime = migrations.some(migration => migration.version === NATIVE_INSTALL_VERSION && migration.name === 'lingxios_native_runtime')
+    const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
+    const targetSchema = hasReliabilityUpgrade ? releaseVersions.schema : LEGACY_RUNTIME_SCHEMA
+    const targetRuntime = hasReliabilityUpgrade ? releaseVersions.runtime : LEGACY_RUNTIME_RELEASE
     const cutover = installsRuntime && applied.length < NATIVE_INSTALL_VERSION
     if (cutover) {
       await client.query('BEGIN')
@@ -203,14 +222,17 @@ export async function migrateDatabase(
       try {
         await client.query(migration.sql)
         if (installsRuntime && migration.version === NATIVE_INSTALL_VERSION) {
-          const schema = await runtimeSchema()
-          await client.query(schema.sql)
+          const schema = await runtimeSchema(LEGACY_RUNTIME_SCHEMA)
+          await client.query(packagedTransactionBody(schema.sql))
           await client.query(`INSERT INTO public.lingxios_installation(runtime_version,schema_version,protocol_version,schema_sha256)
-            VALUES($1,$2,$3,$4)`, [RUNTIME_SCHEMA_RELEASE,releaseVersions.schema,releaseVersions.controlPlane,schema.hash])
+            VALUES($1,$2,$3,$4)`, [RUNTIME_SCHEMA_RELEASE,LEGACY_RUNTIME_SCHEMA,releaseVersions.controlPlane,schema.hash])
         }
         if (migration.version === RUNTIME_UPGRADE_VERSION && migration.name === 'lingxios_3_2'
           || migration.version === 24 && migration.name === 'lingxios_3_3_0') {
           await applyRuntimeUpgrade(client)
+        }
+        if (migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0') {
+          await applyRuntimeUpgrade(client,releaseVersions.runtime,releaseVersions.schema)
         }
         await client.query('SET search_path TO public')
         await client.query(
@@ -227,8 +249,8 @@ export async function migrateDatabase(
     if (cutover) await client.query('COMMIT')
     if (installsRuntime) {
       await client.query('BEGIN')
-      try { await applyRuntimeUpgrade(client, releaseVersions.runtime); await client.query('COMMIT') } catch (error) { await client.query('ROLLBACK'); throw error }
-      await assertRuntimeCurrent(client)
+      try { await applyRuntimeUpgrade(client,targetRuntime,targetSchema); await client.query('COMMIT') } catch (error) { await client.query('ROLLBACK'); throw error }
+      await assertRuntimeCurrent(client,targetSchema,targetRuntime)
     }
     await client.query('BEGIN')
     try {

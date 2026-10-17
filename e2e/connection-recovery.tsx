@@ -25,10 +25,11 @@ function select(value: typeof identity, channels: string[]) {
   chatTransport.setWorkspaceChannels(channels)
 }
 select(identity, [room])
-if (!['lost-reply', 'denied', 'manual'].includes(query.mode) && !query.mode?.startsWith('sse-')) rememberChatOutbox({ conversationId: room, clientMessageId: payload.id, payload, createdAt: payload.createdAt })
+if (!['lost-reply', 'denied', 'manual'].includes(query.mode) && !query.mode?.startsWith('sse-') && !query.mode?.startsWith('runtime-')) rememberChatOutbox({ conversationId: room, clientMessageId: payload.id, payload, createdAt: payload.createdAt })
 chatTransport.boot()
-async function control(action: string) {
-  await fetch('/api/__recovery/control', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action }) })
+async function control(action: string,extra: Record<string,string> = {}) {
+  const response = await fetch('/api/__recovery/control', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action,...extra }) })
+  if (!response.ok) throw new Error('Fixture control failed')
 }
 function App() {
   const [facts, setFacts] = useState({})
@@ -68,7 +69,15 @@ function App() {
         select(identity, [room]); chatTransport.boot()
       }}>快速退出并登录</button>
       <button onClick={() => act(() => control('interrupt'))}>中断运行连接</button>
-      <button onClick={() => act(() => control('finish'))}>结束远端任务并恢复服务</button>
+      <button onClick={() => act(async () => { await control('finish'); await chatTransport.reloadConversation(room) })}>结束远端任务并恢复服务</button>
+      {query.mode?.startsWith('runtime-') && <>
+        <button onClick={() => act(() => chatTransport.reloadConversation(room))}>重新读取会话</button>
+        <button onClick={() => act(async () => {
+          const next = createNativeMessage({ id: `new-${crypto.randomUUID()}`,role: 'user',content: [{ type: 'text',text: '失败后的新消息。' }] })
+          await chatTransport.send(room,'失败后的新消息。',null,null,next.id,next)
+          await control('continue-runtime',{ messageId: next.id }); await chatTransport.reloadConversation(room)
+        })}>发送新消息并完成任务</button>
+      </>}
     </div>
     <pre id="facts" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: 12, lineHeight: 1.4 }}>{JSON.stringify(facts)}</pre>
     {error && <p role="alert">{error}</p>}

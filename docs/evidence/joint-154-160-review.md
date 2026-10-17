@@ -15,3 +15,20 @@ Raw independent evidence is under `/workspace/LingxiLoop-client-im-review/.e2e/j
 Review blockers on the reviewed PR167 head: its CI `native-admission` fixture omits an accepted assistant message from history and expects another send after lost acknowledgement; this conflicts with the safe unknown-outcome contract. Maintenance receipt repair also catches arbitrary authorization callback errors as forbidden. Both must be corrected and CI rerun before merge.
 
 These are product recovery fixture tests using scripted authentication/model behavior, not full SPA, live model provider, real session expiration, project-only revocation, multi-tab, production rollout or a 24-hour soak. No such acceptance is claimed.
+
+
+## Final review and merge qualification
+
+The two original PR167 blockers were resolved at `72daa61e13371430620541704752bcef9fff1b35`:
+lost acknowledgement now reconciles the accepted assistant history with one dispatch, and infrastructure/implementation authorization errors remain classified failures rather than permission denials. Only an actual `ForbiddenError` is permanent forbidden.
+
+Independent cloud reruns include that exact head, PR165 `3c9e0f2d9cf386b9840d75f56183d5a172fd6ae9`, and shared authorization PR169 `e94f9d92776d5b74d4ab5417c802eeb81c93cf36` with the published 3.4.7 lock:
+
+- `node scripts/test-im-send-reconciliation.mjs --regression`: 27 passed, zero failures/skips.
+- `node scripts/test-im-send-reconciliation.mjs --real-wukong`: 20 passed, zero failures/skips; actual pinned local WuKongIM accepted one send and retained one message across recovery.
+- `node e2e/server/run.mjs --file native-authorization-faults.test.ts`: 3 passed.
+- The official browser run above remains the evidence for PR165; it predates PR167's final two server fixture/error-classification corrections and is not relabelled as a later full SPA run.
+
+Final PR167 CI run `39002376682`, PR165 `38999100183`, and PR169 `39000766274` passed their required scoped checks. Ordinary merges: PR169 `1e87c8e3`, PR167 `ec0b4df7`, PR165 `d7ce5e42`. No branch protection override or production command was used. Logs: `/tmp/pr154-159-160-latest-regression.log`, `/tmp/pr154-159-160-latest-real-wukong.log`, `/tmp/pr154-159-latest-authorization.log`.
+
+Directory/foundation joint review combined PR166 `a0c7ec9c`, PR168 `b07aec69`, and PR169: directory audience, native authorization, readiness, metrics and lifecycle integration passed 21/21. PR166 and PR168 scoped CI also passed; ordinary merges are `688e07b6` and `67b1e8b5`. This qualifies their scoped changes, not the remaining production performance/soak/Komodo acceptance in #153.

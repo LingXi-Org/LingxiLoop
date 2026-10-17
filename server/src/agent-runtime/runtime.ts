@@ -68,6 +68,7 @@ const common = () => {
 } }
 
 let control: ReturnType<typeof createLingxiOS> | undefined
+let backgroundRole: 'active' | 'passive' = 'active'
 let previewStore: ReturnType<typeof createRealtimeStore> | undefined
 let objectStore: ReturnType<typeof createRuntimeObjectStore> | undefined
 
@@ -83,6 +84,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
     const harness = createProductHarness(createProductTools(lingxiOSControl))
     const { tools } = assembleHarness(harness)
     control = createLingxiOS({ ...common(), harness, responsePolicy: 'deep', ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
+      background: { role: backgroundRole },
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
       ...(objectStore ? { objects: objectStore, workspace: {} } : {}),
       realtime: { ...(previewStore ? { store: previewStore } : {}), async allowDraft(work) {
@@ -123,6 +125,10 @@ async function recordModelCall(observation: ModelCallObservation): Promise<void>
       ...(binding ? { conversationId: binding.conversation_id } : {}),
       source: 'agent-os' as const,
       extras: { callId: observation.callId, pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
+        ...(observation.logicalCallId ? { logicalCallId: observation.logicalCallId } : {}),
+        ...(observation.attempt !== undefined ? { attempt: observation.attempt } : {}),
+        ...(observation.elapsedMs !== undefined ? { elapsedMs: observation.elapsedMs } : {}),
+        ...(observation.failure ? { failure: observation.failure } : {}),
         ...(observation.firstContentMs !== undefined ? { firstContentMs: observation.firstContentMs } : {}),
         ...(observation.configurationFingerprint ? { configurationFingerprint: observation.configurationFingerprint } : {}),
         ...(usage?.reasoningTokens !== undefined ? { reasoningTokens: usage.reasoningTokens } : {}),
@@ -163,6 +169,7 @@ export function lingxiOSServiceToken(): string {
 }
 
 export async function listenLingxiOSControl() {
+  if (backgroundRole !== 'active') throw new Error('Worker-local control cannot own the API control plane')
   return (await lingxiOSControl()).listenControlPlane({ serviceToken: lingxiOSServiceToken(),
     port: positiveInteger('LINGXIOS_CONTROL_PORT',5182), host: process.env.LINGXIOS_CONTROL_HOST?.trim() || '127.0.0.1' })
 }
@@ -170,13 +177,19 @@ export async function listenLingxiOSControl() {
 /** Worker ownership: the sole in-process agent runner; PostgreSQL leases fence replicas. */
 export async function startLingxiOSWorker() {
   if (worker) throw new Error('LingxiOS worker already started in this process')
+  if (control && env.NODE_ENV !== 'test') throw new Error('Start the Worker in its own process before creating local context services')
+  // Existing isolated model fixtures share their explicit API instance. A real
+  // Worker process always constructs its local context services as passive.
+  if (!control) backgroundRole = 'passive'
   const concurrency = positiveInteger('AGENT_OS_MAX_CONCURRENT_RUNS', 2)
   const options = {
     modelBudget: common().modelBudget,
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),
     model: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL,
+      recovery: { maxAttempts: 3,totalTimeoutMs: 120_000 },
       requestTimeoutMs: positiveInteger('AGENT_OS_MODEL_REQUEST_TIMEOUT_MS', 90_000),
+      firstByteTimeoutMs: 30_000,streamIdleTimeoutMs: 30_000,
       maxThinkingTokens: 0, capabilities: { parallelTools: false },
       ...(['deepseek-ai/DeepSeek-V4-Flash', 'zai-org/GLM-5.2'].includes(env.OPENAI_MODEL) && new URL(env.OPENAI_BASE_URL).hostname === 'api.siliconflow.cn'
         ? { contextWindowTokens: 1_000_000 } : {}) },

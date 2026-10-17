@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { createHash, createHmac } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import { after, before, test } from 'node:test'
+import { setTimeout as delay } from 'node:timers/promises'
 import type { AssistantMessage, DeliveryPort } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
@@ -162,7 +163,8 @@ test('old accepted and unknown delivery receipts retain their immutable payload 
       const instructions = await createProductContext([]).contextProvider.loadContext(work)
       assert.equal(/installed interactive lesson renderer|Declare a literal default/.test(instructions.productRules ?? ''), false, 'disabled controls must not be advertised')
       assert.deepEqual(instructions.dynamic?.interactiveLessons, [])
-      const before = await counts(), writes = recording.messages.length
+      const receiptMessages = () => recording.messages.filter(message => message.clientMsgNo === value.identity.clientNonce)
+      const before = await counts(), writes = receiptMessages().length
       if (state === 'absent') await assert.rejects(createProductDelivery(lingxiOSControl).deliverMessage(work, message, context), /unknown.*reconciliation/)
       else {
         const delivered = await createProductDelivery(lingxiOSControl).deliverMessage(work, message, context)
@@ -179,8 +181,16 @@ test('old accepted and unknown delivery receipts retain their immutable payload 
           assert.equal((await counts())[0].revisions, before[0].revisions)
         }
       }
-      assert.equal(recording.messages.length, writes + (state === 'new' ? 1 : 0), 'legacy receipt recovery never sends again')
+      assert.equal(receiptMessages().length, writes + (state === 'new' ? 1 : 0), 'legacy receipt recovery never sends its accepted nonce again')
       if (state === 'absent') assert.deepEqual(await counts(), before)
-    } finally { await host.completeWork(work, { status: 'cancelled' }) }
+    } finally {
+      await host.completeWork(work, { status: 'cancelled' })
+      // Settle this scenario's independent notice before the next scenario
+      // measures all acceptances; its arrival is not a replay of this receipt.
+      const deadline = AbortSignal.timeout(10000)
+      while ((await api.readTerminal(identity))?.delivery !== 'delivered') {
+        deadline.throwIfAborted(); await delay(25)
+      }
+    }
   }
 })

@@ -98,6 +98,7 @@ export async function observabilityDashboard(runtime: Pick<Awaited<ReturnType<ty
         { name: 'queued', type: 'number', values: [summary.queued] },
         { name: 'waiting', type: 'number', values: [summary.waiting] },
         { name: 'failed_deliveries', type: 'number', values: [summary.failedDeliveries] },
+        { name: 'failed_terminal_deliveries', type: 'number', values: [summary.failedTerminalDeliveries] },
         { name: 'failed_usage_deliveries', type: 'number', values: [summary.failedUsageDeliveries] },
         { name: 'failed_memory_captures', type: 'number', values: [summary.failedMemoryCaptures] },
       ], 1),

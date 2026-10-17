@@ -1,7 +1,7 @@
 import { nativeText } from '../im/message-types.js'
 import { assistantTextViolation } from './assistant-text.js'
 import { productConversationId, bindProductRun, assertFrozenAudience } from './identity.js'
-import { NoEffectError, DefaultRuntimePolicy, type CapabilityGrant, type ContextMessage, type ContextProvider,
+import { NoEffectError, DefaultRuntimePolicy, classifyToolFailure, modelFailure, type CapabilityGrant, type ContextMessage, type ContextProvider,
   type ToolDefinition, type TurnContext, type WorkItem } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { nativeContext, audienceHumanIds, authorizeAudienceRead } from '../agents/tools.js'
@@ -119,7 +119,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const text = work.meta?.text
     if (typeof text !== 'string') throw new Error('persisted request text is missing')
     const capabilities = grants.map(grant => grant.name)
-    const [channelHistory, roster, learningContext, canvas, memoryScopes] = await Promise.all([
+    const [channelHistory, roster, learningContext, canvas, memorySnapshot] = await Promise.all([
       getAgentChannelHistory({ companyId: work.tenantId, agentId: work.agentId, channelId: productConversationId(work), limit: work.conversation ? 8 : 80 }),
       pool.query<{ id: string; name: string; role: string; capabilities: string[]; preset_key: string | null }>(
         `SELECT agent.id,agent.name,agent.role,agent.capabilities,agent.preset_key FROM participants agent
@@ -130,7 +130,13 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
       capabilities.includes('canvas') ? getConversationCanvas(work.tenantId, productConversationId(work), work.principalId!) : undefined,
       // Empty native snapshots contain no scope identifiers for the model's first write.
       (await lingxiOSControl()).memory!.scopes({ tenantId: work.tenantId,principalId: work.principalId!,agentId: work.agentId,
-        sessionId: work.sessionId,workId: work.id,...(work.threadId ? { threadId: work.threadId } : {}) }),
+        sessionId: work.sessionId,workId: work.id,...(work.threadId ? { threadId: work.threadId } : {}) })
+        .then(scopes => ({ scopes,status: 'available' as const })).catch(error => {
+          signal?.throwIfAborted()
+          const failure = classifyToolFailure(error,'authorization').diagnostics
+          if (failure.category !== 'authorization' && !(failure.category === 'dependency' && failure.retryable)) throw error
+          return { scopes: [],status: 'unavailable' as const }
+        }),
     ])
     signal?.throwIfAborted()
     const recentHistory = channelHistory ?? [], history = work.conversation ? [] : recentHistory
@@ -160,7 +166,9 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
       query: text, contextQuery: [...recentHistory.map(message => nativeText(message.payload)),text].join('\n').slice(-8000), limit: 8,
       signal, searchTimeoutMs: 5_000 }).catch(error => {
         signal?.throwIfAborted()
-        if (!(error instanceof OpenNotebookError)) throw error
+        const failure = classifyToolFailure(error,'execution').diagnostics
+        if (!(error instanceof OpenNotebookError) && !(failure.category === 'dependency' && failure.retryable)
+          && !['quota','network','timeout','unavailable','rate_limit','circuit_open'].includes(modelFailure(error).category)) throw error
         return { status: 'unavailable' as const, citations: [] }
       }) : undefined
     const retrieval = knowledgeRetrieval?.citations ?? []
@@ -184,7 +192,8 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
         + (capabilities.includes('knowledge') ? 'Use supplied evidence when sufficient. When the answer depends on specific course sources and supplied evidence is insufficient or conflicting, call knowledge.search and knowledge.read_source. General conceptual questions do not require course retrieval. State observed no-matches, processing or unavailability; never invent citations or repeat the same search indefinitely. Stop after two searches without new evidence. ' : '')
         + (teacherContext ? 'Teacher operations stay in the registered teacher room. Treat the supplied teacher counts as current authoritative facts and answer from them without tools when they are sufficient. Aggregate before individual drilldown; forum assignment references remain course-scoped. Authorized internal memory never overrides current course facts. ' : '')
         + (canvasRun ? `Canvas execution role: ${canvasRun.execution_role}. Persist ${canvasRun.execution_role === 'verifier' ? 'canvas.submit_verification' : 'canvas.submit_report'} for your contribution with current observed evidence before completing. Verifiers record disconfirming checks and preserve unresolved disagreements. ` : ''),
-      dynamic: { teacherContext, homeworkContext, learningContext, canvas, canvasRun, memoryScopes,
+      dynamic: { teacherContext, homeworkContext, learningContext, canvas, canvasRun,
+        memoryScopes: memorySnapshot.scopes,memoryScopesStatus: memorySnapshot.status,
         interactiveLessons: [...currentLessons.values()].slice(-4).map(lesson => ({ revisionOf: lesson.uiId, baseRevision: lesson.revision, source: lesson.source })),
         roster: roster.rows.map(({ preset_key: _preset, ...member }) => ({ ...member, capabilities: member.capabilities.filter(capability => capability !== 'email' && capability !== 'calendar') })),
         missingSpecialists: STARTER_TEAM.filter(agent => !roster.rows.some(member => member.preset_key === agent.presetKey)).map(({ name, role }) => ({ name, role })),

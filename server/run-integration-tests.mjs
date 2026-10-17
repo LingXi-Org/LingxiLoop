@@ -116,6 +116,9 @@ if (!integrationTarget || !['postgres:', 'postgresql:'].includes(integrationTarg
 // Swap DATABASE_URL so the env module (server/src/env.ts) picks up the
 // test target when it's imported by the test harness.
 process.env.DATABASE_URL = INTEGRATION_URL
+// Co-located API/Worker fixtures are permitted only in the explicit test mode.
+// Set this at the shared entrypoint so CI and local owning runs agree.
+process.env.NODE_ENV = 'test'
 
 // integration tests must never contact a real model endpoint by accident.
 // Integration specs provide explicit embedding overrides where vector values

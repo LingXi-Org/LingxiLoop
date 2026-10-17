@@ -17,6 +17,7 @@ const env = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
   /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|TEMP|TMP|HOME|HOMEDRIVE|HOMEPATH|USERPROFILE|APPDATA|LOCALAPPDATA|COMSPEC|PROGRAMFILES(?:\(X86\))?|PROGRAMDATA|PROGRAMW6432|ALLUSERSPROFILE)$/i.test(name)))
 Object.assign(env, {
   DOTENV_CONFIG_PATH: resolve(artifacts, '__no_dotenv__'),
+  NODE_ENV: 'test',
   DATABASE_URL: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_integration_test',
   INTEGRATION_DATABASE_URL: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_integration_test',
   REDIS_URL: 'redis://127.0.0.1:56379/0',

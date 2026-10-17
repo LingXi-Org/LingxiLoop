@@ -6,11 +6,21 @@ import { createHash, randomUUID } from 'node:crypto'
 import { createServer, request as httpRequest } from 'node:http'
 import { setTimeout as delay } from 'node:timers/promises'
 import express from 'express'
+import pg from 'pg'
 import { WebSocketServer } from 'ws'
 
+// A worker claims globally. A fresh reliability database prevents an abandoned
+// run from a previous browser invocation from taking this scenario's claim.
+const reliabilityDatabase = process.env.E2E_RUNTIME_RELIABILITY === '1'
+  ? `lingxiloop_browser_test_${randomUUID().replaceAll('-', '')}` : null
+if (reliabilityDatabase) {
+  const admin = new pg.Client({ connectionString: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/postgres' })
+  await admin.connect()
+  try { await admin.query(`CREATE DATABASE "${reliabilityDatabase}"`) } finally { await admin.end() }
+}
 const fixtureEnvironment = {
   DOTENV_CONFIG_PATH: '/tmp/lingxiloop-no-dotenv', NODE_ENV: 'test',
-  DATABASE_URL: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_integration_test',
+  DATABASE_URL: `postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/${reliabilityDatabase ?? 'lingxiloop_integration_test'}`,
   REDIS_URL: 'redis://127.0.0.1:56379/0',
   OPENAI_API_KEY: 'integration-test-key', OPENAI_BASE_URL: 'http://127.0.0.1:1/v1',
   OPENAI_EMBEDDING_MODEL: 'text-embedding-3-small',
@@ -35,7 +45,25 @@ const { seedCompanyWithAgent, seedUserMembership, buildApiTestApp, teardownAll }
 const { storage } = await import('../server/src/storage.ts')
 const { wukongClient: wukong } = await import('../server/src/im/wukong.ts')
 const { createNativeMessage } = await import('../src/lib/nativeMessage.ts')
-const provider = createServer(request => request.resume())
+const { createWorker } = await import('@lyyzka/lingxios/worker')
+const provider = createServer(async (request,response) => {
+  if (!current?.mode?.startsWith('runtime-')) { request.resume(); return }
+  let raw = ''; for await (const chunk of request) raw += chunk
+  const input = JSON.parse(raw); current.fixtureModelCalls = (current.fixtureModelCalls ?? 0)+1
+  if (!current.fixtureHealthy && current.mode === 'runtime-timeout') return
+  if (!current.fixtureHealthy && current.mode === 'runtime-402') {
+    response.writeHead(402,{ 'content-type': 'application/json' })
+    response.end(JSON.stringify({ error: { code: 'insufficient_quota',message: 'Synthetic private provider body' } })); return
+  }
+  const usage = { prompt_tokens: 10,completion_tokens: 5 }
+  if (input.stream) {
+    response.writeHead(200,{ 'content-type': 'text/event-stream' })
+    response.end(`data: ${JSON.stringify({ choices: [{ index: 0,delta: { role: 'assistant',content: '新请求已正常完成。' },finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [],usage })}\n\ndata: [DONE]\n\n`)
+  } else {
+    response.writeHead(200,{ 'content-type': 'application/json' })
+    response.end(JSON.stringify({ choices: [{ message: { role: 'assistant',content: '{"missing":[]}' },finish_reason: 'stop' }],usage }))
+  }
+})
 await new Promise(resolve => provider.listen(0, '127.0.0.1', resolve))
 env.OPENAI_BASE_URL = `http://127.0.0.1:${provider.address().port}/v1`
 process.env.OPENAI_BASE_URL = env.OPENAI_BASE_URL
@@ -82,9 +110,10 @@ proxy.post('/api/__recovery/start', async (req, res) => {
     attachments: [{ id: fileId, type: 'document', name: '恢复附件.txt', contentType: 'text/plain', status: { type: 'complete' },
       content: [{ type: 'file', sourceType: 'id', data: fileId, mimeType: 'text/plain', filename: '恢复附件.txt' }] }] })
   current = { ...req.body, identity, room, payload, invalid: req.body.mode === 'invalid-receipt',
-    unavailable: !['lost-reply', 'denied', 'invalid-receipt', 'identity', 'manual'].includes(req.body.mode) && !req.body.mode?.startsWith('sse-'),
+    unavailable: !['lost-reply', 'denied', 'invalid-receipt', 'identity', 'manual'].includes(req.body.mode)
+      && !req.body.mode?.startsWith('sse-') && !req.body.mode?.startsWith('runtime-'),
     accepts: 0, statusReads: 0, streamRequests: 0, snapshotReads: 0, concurrent: 0, maxConcurrent: 0, crossIdentity: 0, lost: false, run: null, streamFault: false }
-  if (req.body.mode?.startsWith('sse-')) {
+  if (req.body.mode?.startsWith('sse-') || req.body.mode?.startsWith('runtime-')) {
     const policy = await syncConversationPolicy(api, identity.companyId, room)
     const accepted = await api.conversations.ingest({ tenantId: identity.companyId, conversationId: room, policyVersion: policy.version,
       messageId: payload.id, version: 1, author: { id: identity.userId, kind: 'human' }, text: '请回答这个问题。', mentions: [identity.agentId] },
@@ -96,7 +125,40 @@ proxy.post('/api/__recovery/start', async (req, res) => {
   }
   res.json({ identity: { ...identity, app: undefined }, other: { ...identities[1], app: undefined }, room, payload, runId: current.run?.runId })
 })
+async function runFixtureTurn(run, healthy) {
+  if (!healthy && current.mode === 'runtime-cancel') await api.cancel(run)
+  else {
+    current.fixtureHealthy = healthy
+    if (healthy) await delay(60)
+    const worker = createWorker({ controlPlane: api,
+      ...(!healthy && current.mode === 'runtime-budget' ? { modelBudget: { maxTokens: 1 } } : {}),model: {
+      id: `reliability-${current.room}`,contextWindowTokens: !healthy && current.mode === 'runtime-context' ? 1024 : 200000,
+      maxOutputTokens: !healthy && current.mode === 'runtime-context' ? 128 : 8192,
+      baseUrl: env.OPENAI_BASE_URL,apiKey: 'synthetic-reliability-fixture',circuitResetMs: 50,
+      ...(!healthy && current.mode === 'runtime-timeout' ? { requestTimeoutMs: 200,recovery: { maxAttempts: 3,totalTimeoutMs: 5000 } } : {}),
+    },worker: { id: `reliability-${current.room}`,concurrency: 1 } })
+    try { await worker.runNext() } finally { await worker.stop() }
+  }
+  const deadline = AbortSignal.timeout(15000)
+  while (healthy ? (await api.readRunState(run))?.delivery !== 'delivered' : (await api.readTerminal(run))?.delivery !== 'delivered') {
+    deadline.throwIfAborted(); await delay(50)
+  }
+}
 proxy.post('/api/__recovery/control', async (req, res) => {
+  if (current.mode?.startsWith('runtime-')) {
+    if (req.body.action === 'finish') await runFixtureTurn(current.run,false)
+    else if (req.body.action === 'continue-runtime') {
+      const policy = await syncConversationPolicy(api,current.identity.companyId,current.room)
+      const accepted = await api.conversations.ingest({ tenantId: current.identity.companyId,conversationId: current.room,
+        policyVersion: policy.version,messageId: req.body.messageId,version: 1,
+        author: { id: current.identity.userId,kind: 'human' },text: '失败后的新消息。',mentions: [current.identity.agentId] },
+      { mode: 'execute',deliveryMode: 'auto',executionClass: 'conversation',codeExecution: 'disabled' })
+      current.nextRun = accepted.runs[0]; assert.ok(current.nextRun)
+      await bindProductRun(pool,current.nextRun,current.room,false,req.body.messageId)
+      await runFixtureTurn(current.nextRun,true)
+    }
+    return res.json({ ok: true })
+  }
   if (req.body.action === 'interrupt') {
     current.streamFault = true
     current.unavailable = current.mode === 'sse-offline'
@@ -134,12 +196,16 @@ proxy.get('/api/__recovery/facts', async (_req, res) => {
   if (!current) return res.json({})
   const messages = await wukong().syncMessages(current.room, 2, 200, current.identity.userId)
   const own = messages.filter(message => message.fromUid === current.identity.userId)
+  const terminal = current.mode?.startsWith('runtime-') ? await api.readTerminal(current.run) : null
   res.json({ accepts: current.accepts, statusReads: current.statusReads, streamRequests: current.streamRequests,
     snapshotReads: current.snapshotReads, maxConcurrent: current.maxConcurrent,
     uniqueMessages: new Set(own.map(message => message.clientMsgNo)).size, messageCount: own.length,
     originalNonceMessages: own.filter(message => message.clientMsgNo === current.payload.id).length,
     nonceDigest: createHash('sha256').update(current.payload.id).digest('hex').slice(0, 12), crossIdentity: current.crossIdentity,
     remoteLifecycle: current.run ? (await api.readRunState(current.run))?.run.status : null,
+    ...(current.mode?.startsWith('runtime-') ? { terminalReason: terminal?.feedback.reason ?? null,terminalDelivery: terminal?.delivery ?? null,
+      terminalMessages: terminal ? messages.filter(message => message.payload?.metadata?.custom?.terminalFeedbackId === terminal.feedback.id).length : 0,
+      fixtureModelCalls: current.fixtureModelCalls ?? 0,nextLifecycle: current.nextRun ? (await api.readRun(current.nextRun))?.status : null } : {}),
     workItems: current.run ? (await pool.query(`SELECT count(*)::int AS n FROM lingxios.agent_work_items
       WHERE tenant_id=$1 AND trigger_ref=$2 AND agent_id=$3`, [current.identity.companyId, current.payload.id, current.identity.agentId])).rows[0].n : 0 })
 })
@@ -167,7 +233,7 @@ proxy.use((req, res) => {
   if (stream && scenario.streamFault && scenario.mode !== 'sse-silent') return res.status(503).json({ error: 'injected stream outage' })
   const forward = () => {
     if (res.destroyed) return
-    const upstream = httpRequest({ hostname: '127.0.0.1', port: product.address().port, path: req.url,
+    const upstream = httpRequest({ hostname: '127.0.0.1', port: product.address().port, path: req.url,agent: false,
       method: req.method, headers: { ...req.headers, host: '127.0.0.1' } }, incoming => {
       if (send && scenario.mode === 'lost-reply' && !scenario.lost && incoming.statusCode < 300) {
         scenario.lost = true; incoming.resume(); res.destroy(); return
@@ -191,7 +257,7 @@ proxy.use((req, res) => {
       } else incoming.pipe(res)
     })
     upstream.on('error', () => { if (!res.headersSent) res.status(502).end(); else res.destroy() })
-    res.once('close', () => upstream.destroy())
+    res.once('close', () => { if (!res.writableFinished) upstream.destroy() })
     if (stream) { streams.add(res); res.once('close', () => streams.delete(res)) }
     req.pipe(upstream)
   }

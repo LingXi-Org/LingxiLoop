@@ -55,7 +55,12 @@ test('a nonresponsive provider stops after bounded attempts and settles failed c
     let calls = await pool.query('SELECT status FROM llm_calls WHERE run_id=$1', [run.runId])
     while (calls.rows.length < attempts) { deadline.throwIfAborted(); await delay(20); calls = await pool.query('SELECT status FROM llm_calls WHERE run_id=$1', [run.runId]) }
     assert.deepEqual(calls.rows.map(row => row.status), ['failed', 'failed', 'failed'])
-    assert.equal(im.messages.filter(message => message.channelId === conversationId).length, 0)
+    while ((await api.readTerminal(run))?.delivery !== 'delivered') { deadline.throwIfAborted(); await delay(20) }
+    assert.equal((await api.readTerminal(run))?.feedback.reason,'model_unavailable')
+    const notices = im.messages.filter(message => message.channelId === conversationId)
+    assert.equal(notices.length,1)
+    assert.equal(notices[0]?.payload.role,'system')
+    assert.equal(notices[0]?.payload.metadata.custom.suppressAgentWake,true)
     await mkdir('.codex-tmp/harness-recovery', { recursive: true })
     await writeFile('.codex-tmp/harness-recovery/provider-timeout.json', JSON.stringify({ elapsedMs, attempts, disconnected, status: state.run.status, ledgerSettled: true }))
   } finally {
