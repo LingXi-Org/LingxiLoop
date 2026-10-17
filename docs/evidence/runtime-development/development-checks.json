@@ -68,5 +68,48 @@
     "integrity": "sha512-ho8+Xa4cIU9hrRHPiPRQ4hFg9VU5pU8A1XPOXNmgNV8bjw3Ztxe5lxwbaNlkhP3TP1hF9wC8G1WTQPk2a68P1A==",
     "publicExportsVerified": true,
     "rootAndIndependentServerLocks": "3.5.2"
+  },
+  "productQualification": {
+    "source": "f466f19ad9a1466349e4201218f2b02fcf3ca1d9",
+    "runtime": "3.5.2",
+    "serverTests": {
+      "passed": 106,
+      "failed": 0,
+      "skipped": 0
+    },
+    "integration": {
+      "tests": 18,
+      "pass": 17,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 1
+    },
+    "browser": {
+      "discovered": 131,
+      "selected": 11,
+      "executed": 11,
+      "passed": 11,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "serverTypecheck": "passed",
+    "serverLint": "passed",
+    "e2eTypecheck": "passed",
+    "realWuKong": {
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skipped": 0
+    },
+    "integrationSkip": "real-WuKong receipt recovery requires dedicated runner; subsequently passed with all 20 dedicated real-WuKong tests"
+  },
+  "logs": {
+    "server": "26bfada8edf0a2b9676a2a7316f05800840bfdd22fa026729c629701aeaf5f16",
+    "integration": "288f22c39f94aca8bda49619eedf4c96c72117ad4152d05cd666b347da97303b",
+    "realWuKong": "bfb93931aee7ded45a4e3a28efb569c6d29019e7d96abbc98058ded1c80da247",
+    "browser": "af270edf38edf471f56bd9627c5a822a3e26e5e7964c4629a577f26b830776f9",
+    "deployContract": "e9f503c91f3539fee2fe23d857bfb870658b3504e5ad1ae346d565dff69d074c"
   }
 }

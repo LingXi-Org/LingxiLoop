@@ -1,0 +1,137 @@
+{
+  "id": "01a148df-a114-7cf9-ac0b-b48b3423c962",
+  "runner": {
+    "name": "e2e",
+    "version": "0.17.0"
+  },
+  "status": "passed",
+  "exitCode": 0,
+  "startedAt": "2026-10-17T07:59:38.902Z",
+  "finishedAt": "2026-10-17T08:01:04.983Z",
+  "summary": {
+    "discovered": 131,
+    "selected": 11,
+    "executed": 11,
+    "passed": 11,
+    "failed": 0,
+    "interrupted": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "productSource": "f466f19ad9a1466349e4201218f2b02fcf3ca1d9",
+  "runtime": "3.5.2",
+  "scope": "Product API/public Worker, real PostgreSQL/WuKongIM, synthetic provider and fixture login; not full SPA or live provider",
+  "redacted": "Request events, cookies, traces and response bodies omitted",
+  "results": [
+    {
+      "testId": "e2e/web/connection-recovery.e2e.ts::Connection%20recovery::rapid%20identity%20A%20%E2%86%92%20B%20%E2%86%92%20A%20cancels%20old%20drains%20and%20never%20replays%20in%20B",
+      "titlePath": [
+        "Connection recovery",
+        "rapid identity A → B → A cancels old drains and never replays in B"
+      ],
+      "file": "e2e/web/connection-recovery.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/connection-recovery.e2e.ts::Connection%20recovery::rapid%20logout%20and%20sign-in%20cannot%20let%20an%20old%20asynchronous%20teardown%20cancel%20the%20new%20session",
+      "titlePath": [
+        "Connection recovery",
+        "rapid logout and sign-in cannot let an old asynchronous teardown cancel the new session"
+      ],
+      "file": "e2e/web/connection-recovery.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/runtime-reliability.e2e.ts::Durable%20runtime%20failure%20recovery::runtime-402%20persists%20one%20notice%20and%20permits%20a%20new%20successful%20turn",
+      "titlePath": [
+        "Durable runtime failure recovery",
+        "runtime-402 persists one notice and permits a new successful turn"
+      ],
+      "file": "e2e/web/runtime-reliability.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/runtime-reliability.e2e.ts::Durable%20runtime%20failure%20recovery::runtime-timeout%20persists%20one%20notice%20and%20permits%20a%20new%20successful%20turn",
+      "titlePath": [
+        "Durable runtime failure recovery",
+        "runtime-timeout persists one notice and permits a new successful turn"
+      ],
+      "file": "e2e/web/runtime-reliability.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/runtime-reliability.e2e.ts::Durable%20runtime%20failure%20recovery::runtime-total-timeout%20persists%20one%20notice%20and%20permits%20a%20new%20successful%20turn",
+      "titlePath": [
+        "Durable runtime failure recovery",
+        "runtime-total-timeout persists one notice and permits a new successful turn"
+      ],
+      "file": "e2e/web/runtime-reliability.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/runtime-reliability.e2e.ts::Durable%20runtime%20failure%20recovery::runtime-context%20persists%20one%20notice%20and%20permits%20a%20new%20successful%20turn",
+      "titlePath": [
+        "Durable runtime failure recovery",
+        "runtime-context persists one notice and permits a new successful turn"
+      ],
+      "file": "e2e/web/runtime-reliability.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/runtime-reliability.e2e.ts::Durable%20runtime%20failure%20recovery::runtime-budget%20persists%20one%20notice%20and%20permits%20a%20new%20successful%20turn",
+      "titlePath": [
+        "Durable runtime failure recovery",
+        "runtime-budget persists one notice and permits a new successful turn"
+      ],
+      "file": "e2e/web/runtime-reliability.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/runtime-reliability.e2e.ts::Durable%20runtime%20failure%20recovery::runtime-cancel%20persists%20one%20notice%20and%20permits%20a%20new%20successful%20turn",
+      "titlePath": [
+        "Durable runtime failure recovery",
+        "runtime-cancel persists one notice and permits a new successful turn"
+      ],
+      "file": "e2e/web/runtime-reliability.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/runtime-reliability.e2e.ts::Durable%20runtime%20failure%20recovery::runtime-invalid-tool%20persists%20one%20notice%20and%20permits%20a%20new%20successful%20turn",
+      "titlePath": [
+        "Durable runtime failure recovery",
+        "runtime-invalid-tool persists one notice and permits a new successful turn"
+      ],
+      "file": "e2e/web/runtime-reliability.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/runtime-reliability.e2e.ts::Durable%20runtime%20failure%20recovery::runtime-fanout-budget%20persists%20one%20notice%20and%20permits%20a%20new%20successful%20turn",
+      "titlePath": [
+        "Durable runtime failure recovery",
+        "runtime-fanout-budget persists one notice and permits a new successful turn"
+      ],
+      "file": "e2e/web/runtime-reliability.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    },
+    {
+      "testId": "e2e/web/runtime-reliability.e2e.ts::Durable%20runtime%20failure%20recovery::optional%20memory%20scope%20outage%20preserves%20an%20ordinary%20answer%20and%20the%20next%20turn",
+      "titlePath": [
+        "Durable runtime failure recovery",
+        "optional memory scope outage preserves an ordinary answer and the next turn"
+      ],
+      "file": "e2e/web/runtime-reliability.e2e.ts",
+      "selected": true,
+      "status": "passed"
+    }
+  ]
+}
