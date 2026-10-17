@@ -30,10 +30,7 @@ test('production Worker reconciliation uses passive local context before runner 
       startAgentRuntime: async () => {
         // Exercise production ownership after real reconciliation, using isolated test stores.
         env.NODE_ENV = 'production'
-        await assert.rejects(async () => {
-          const listener = await listenLingxiOSControl()
-          await listener.stop()
-        }, /Worker-local control cannot own the API control plane/)
+        await assert.rejects(listenLingxiOSControl, /Worker-local control cannot own the API control plane/)
         started = true
         return { stop: stopLingxiOSControl }
       },
