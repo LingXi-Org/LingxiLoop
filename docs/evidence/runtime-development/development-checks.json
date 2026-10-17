@@ -41,5 +41,32 @@
   },
   "e2eTypecheck": "passed",
   "liveProviderCalls": 0,
-  "productionOperations": 0
+  "productionOperations": 0,
+  "deadlineOrderPr": {
+    "number": 27,
+    "head": "8aa44a22d83923630bc8fa7e5480e191a19ea8c9",
+    "merge": "e09fc03437804ec80bc2f6d6b3258dc3e2f35540",
+    "run": 39014744964,
+    "passed": 422,
+    "failed": 0,
+    "skipped": 0
+  },
+  "serverLint": "passed",
+  "upstreamMain": {
+    "head": "e09fc03437804ec80bc2f6d6b3258dc3e2f35540",
+    "run": 39015169232,
+    "passed": 422,
+    "failed": 0,
+    "skipped": 0,
+    "fullReleaseGates": "passed",
+    "logSha256": "5757db556460af7c828440ab9d1285cad62fa7de60eb7337326910f9a57e3a1f"
+  },
+  "publishedPackage": {
+    "version": "3.5.2",
+    "schema": 12,
+    "publishRun": 39015407648,
+    "integrity": "sha512-ho8+Xa4cIU9hrRHPiPRQ4hFg9VU5pU8A1XPOXNmgNV8bjw3Ztxe5lxwbaNlkhP3TP1hF9wC8G1WTQPk2a68P1A==",
+    "publicExportsVerified": true,
+    "rootAndIndependentServerLocks": "3.5.2"
+  }
 }
