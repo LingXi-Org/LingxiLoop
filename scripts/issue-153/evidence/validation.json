@@ -1,0 +1,84 @@
+{
+  "testedImplementationCommit": "e01e80ec7c6714e61eb072f4e39d080c0adb6096",
+  "base": "2db5bbcddc8f14ac62500e36594dc49793c9e096",
+  "environment": {
+    "finalFoundationNode": "22.23.3",
+    "initialFullGateNode": "24.19.0",
+    "cpuMax": "400000 100000",
+    "memoryMaxBytes": 17179869184
+  },
+  "frozenDependencyGate": {
+    "status": "blocked",
+    "expectedLingxiOS": "3.4.7",
+    "preinstalledLingxiOS": "3.3.8",
+    "currentLingxiOS": null,
+    "npmCiExitCode": 1,
+    "npmCiError": "GitHub Packages 401 downloading locked @lyyzka/lingxios 3.4.7",
+    "offlineRetry": "ENOTCACHED; exact 3.4.7 unavailable",
+    "authorizedGithubDownload": "HTTP 401",
+    "credentialsOrRootLocksChanged": false
+  },
+  "checks": [
+    {
+      "command": "npm run server:lint",
+      "status": "passed",
+      "biome": "2.5.8"
+    },
+    {
+      "command": "biome lint server scripts/issue-153",
+      "status": "passed"
+    },
+    {
+      "command": "tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --strict --skipLibCheck --esModuleInterop scripts/issue-153/regression.ts",
+      "status": "passed",
+      "boundary": "foundation import graph only"
+    },
+    {
+      "command": "node scripts/issue-153/run.mjs --foundation-only",
+      "status": "passed",
+      "checks": 7,
+      "frozenDependencies": false
+    },
+    {
+      "command": "node scripts/issue-153/config-check.mjs",
+      "status": "passed"
+    },
+    {
+      "command": "nginx -t",
+      "status": "passed",
+      "imageDigest": "sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d",
+      "network": "none"
+    },
+    {
+      "command": "npm run server:typecheck",
+      "status": "failed",
+      "exitCode": 2,
+      "reason": "Missing LingxiOS exports and downstream type errors"
+    },
+    {
+      "command": "npm run server:test",
+      "status": "failed",
+      "exitCode": 1,
+      "passed": 70,
+      "failed": 8,
+      "skipped": 0,
+      "reason": "All eight failures involve missing LingxiOS imports; not acceptance evidence"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "toolingBoundary": "Root npm ci failed and removed stale node_modules. For foundation diagnostics only, public dependencies were installed under /tmp from a temporary copy of the exact root lock with only the unavailable LingxiOS removed; root node_modules points to it. No substitute LingxiOS was installed and no tracked manifest/lock was changed.",
+  "unverified": [
+    "frozen full product gates",
+    "same-production-image idle/dialogue/burst comparison",
+    "retained heap/allocation profiles",
+    "24h soak",
+    "real provider",
+    "real WuKong delivery",
+    "browser failover and no duplicate durable writes",
+    "Komodo CLI/API update state",
+    "production canary/deployment"
+  ]
+}

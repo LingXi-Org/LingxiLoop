@@ -19,6 +19,7 @@ npm ci --cache /tmp/s153p-npm-cache --prefer-offline --no-audit --no-fund
 node -p "require('./node_modules/@lyyzka/lingxios/package.json').version"
 docker compose -f e2e/server/compose.yaml up -d --wait
 node scripts/issue-153/run.mjs
+node scripts/issue-153/config-check.mjs
 npm run server:lint
 npm run server:typecheck
 npm run server:test
@@ -26,7 +27,7 @@ npm run server:test
 
 `run.mjs` constructs a synthetic environment, ignores dotenv and refuses the default run unless installed LingxiOS is 3.4.7. For explicitly limited diagnostic work, `--foundation-only` permits testing modules that do not import LingxiOS, and records `frozenDependencies:false` in the receipt. It is not a substitute for the frozen product gates. Real PG and Redis are required at the repository's disposable E2E ports. The test uses only SELECT and synthetic local control responses; it does not migrate/reset data or invoke a provider. All servers/connections close naturally without force-exit.
 
-Failure model was written before production edits in `FAILURE-MODEL.txt`. The HTTP suite covers PG starvation and recovery, Redis disconnect and recovery, required/optional separation, sanitized failures, concurrent/late probe reuse, Promise/callback pg behavior, failed SQL and both acquisition timeout APIs. It also exercises the bounded sampler in three phases. Artifacts: `evidence/regression.json` and `evidence/foundation-{idle,normal,burst}.json`.
+Failure model was written before production edits in `FAILURE-MODEL.txt`. The HTTP suite covers PG starvation and recovery, Redis disconnect and recovery, required/optional separation, sanitized failures, concurrent/late probe reuse, Promise/callback pg behavior, failed SQL and both acquisition timeout APIs. It also exercises the bounded sampler in three phases. Final results and dependency limitations: `VALIDATION.md`. Artifacts: `evidence/regression.json` and `evidence/foundation-{idle,normal,burst}.json`.
 
 ## Reproducible isolated image sampling
 

@@ -3,7 +3,7 @@ S153P failure model (written before implementation)
 - PG/Redis/control are required; optional Notebook failure is diagnostic only. Legacy health keeps PG/Redis behavior.
 - Repeated concurrent probes must share actual pending IO, including beyond a caller timeout; no queued retry storm.
 - All completed probes clear timeout handles, and timed-out underlying work cannot flip an already returned snapshot.
-- Control probes use published 3.4.7 authenticated /readyz contract, reject non-2xx/malformed/unready bodies and abort stalled IO.
+- Control probes use published 3.4.7 public /readyz contract (verified upstream; initial auth assumption corrected), reject non-2xx/malformed/unready bodies and abort stalled IO.
 - Pool Promise and callback acquisition success/failure retain pg semantics, release works on reused clients, SQL submission counts exactly once on pool and transaction clients, including failed SQL.
 - Process/pool metrics are finite, bounded, sensitive-data-free, token-protected by existing metrics boundary; gauges do not hide acquisition timeout.
 - Compose readiness deadlines fit Docker health timeout; gateway readiness reaches API while gateway liveness stays local; no POST retry expansion.
