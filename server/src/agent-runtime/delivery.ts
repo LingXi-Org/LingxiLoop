@@ -72,6 +72,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
       context.signal.throwIfAborted()
       // Recheck after receipt/name reads and immediately before crossing the messaging boundary.
       await loadRuntimeBinding({ ...work,conversationId })
+      await assertCanvasRequestCurrent(pool,work)
       await assertFrozenAudience(pool,work)
       if ((await api.readRun(identity))?.requestVersion !== feedback.requestVersion) return
       const result = await sendSystemChannelMessage({ companyId: work.tenantId,actorId: work.agentId,channelId: conversationId,

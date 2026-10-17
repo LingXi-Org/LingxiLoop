@@ -18,7 +18,7 @@ npm run server:lint
 npm run server:typecheck
 npm run server:test
 node e2e/server/run.mjs --file migration.test.ts --file runtime-reliability.test.ts
-node e2e/server/run.mjs --file native-authorization-faults.test.ts --file canvas.test.ts --file group-mention.test.ts --file runtime-budget.test.ts
+node e2e/server/run.mjs --file native-authorization-faults.test.ts --file canvas-public-assignment.test.ts --file group-mentions.test.ts --file native-admission.test.ts
 node scripts/test-im-send-reconciliation.mjs --regression
 node scripts/test-im-send-reconciliation.mjs --real-wukong
 ```

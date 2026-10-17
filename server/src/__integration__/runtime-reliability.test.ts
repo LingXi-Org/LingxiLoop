@@ -34,7 +34,7 @@ async function fixture(room: string) {
     { mode: 'chat',codeExecution: 'disabled',executionClass: 'conversation' })
     const run = accepted.runs[0]; assert.ok(run); await bindProductRun(pool,run,room); return run
   }
-  return { api,enqueue,companyId,agentId,room,principalId }
+  return { api,enqueue,companyId,agentId,room,principalId,projectId }
 }
 
 test('optional scope outages omit memory while mandatory authorization and implementation errors stay strict', async () => {
@@ -62,6 +62,20 @@ test('optional scope outages omit memory while mandatory authorization and imple
     await pool.query("UPDATE users SET suspended_at=NULL WHERE id=$1",[principalId])
     await api.cancel(run)
   }
+})
+
+test('revoking the project before terminal delivery prevents a protected notification and stops retries', async () => {
+  const { api,enqueue,projectId,principalId,room } = await fixture('terminal-revoked')
+  const run = await enqueue('terminal-revoked-source')
+  await pool.query('DELETE FROM project_memberships WHERE project_id=$1 AND user_id=$2',[projectId,principalId])
+  await api.cancel(run)
+  for (let index = 0; index < 200 && (await api.readTerminal(run))?.delivery !== 'failed'; index++) await delay(25)
+  assert.equal((await api.readTerminal(run))?.delivery,'failed')
+  assert.equal(recording.messages.filter(message => message.channelId === room).length,0)
+  const before = (await pool.query('SELECT attempts FROM lingxios.agent_terminal_outbox WHERE root_work_id=$1',[run.runId])).rows
+  assert.deepEqual(before,[{ attempts: 1 }])
+  await delay(1100)
+  assert.deepEqual((await pool.query('SELECT attempts FROM lingxios.agent_terminal_outbox WHERE root_work_id=$1',[run.runId])).rows,before)
 })
 
 test('failed and cancelled turns persist one system feedback, preserve work state and allow the next message', { timeout: 30000 }, async () => {
