@@ -45,19 +45,37 @@ export interface PlatformInfrastructure {
   db: Queryable
   storage: Storage
   redisPing(): Promise<void>
+  controlReady?(): Promise<void>
   openNotebookEnabled(): boolean
   openNotebookHealth(): Promise<void>
   loadOpenGraph(url: string): Promise<unknown>
 }
 
-function timeout<T>(promise: Promise<T>, milliseconds: number, label: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} timeout`)), milliseconds)),
-  ])
+async function timeout<T>(promise: Promise<T>, milliseconds: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(`${label} timeout`)), milliseconds) }),
+    ])
+  } finally { if (timer) clearTimeout(timer) }
 }
 
 export class PlatformApplication {
+  private readonly pending = new Map<string, Promise<void>>()
+  private readyProbe?: Promise<{ database: boolean; redis: boolean; control: boolean }>
+
+  // Retain the actual IO promise beyond a caller's deadline. A hung dependency
+  // therefore occupies one probe, rather than adding work on every health poll.
+  private probe(key: string, operation: () => Promise<void>, milliseconds: number): Promise<void> {
+    let pending = this.pending.get(key)
+    if (!pending) {
+      pending = Promise.resolve().then(operation).finally(() => { this.pending.delete(key) })
+      this.pending.set(key, pending)
+    }
+    return timeout(pending, milliseconds, key)
+  }
+
   constructor(private readonly infrastructure: PlatformInfrastructure) {}
 
   uploadCapabilities(): UploadCapabilities {
@@ -89,30 +107,36 @@ export class PlatformApplication {
 
   async assertReady(): Promise<void> {
     await Promise.all([
-      timeout(assertDatabaseReady(this.infrastructure.db), 1_000, 'health database check'),
-      timeout(this.infrastructure.redisPing(), 1_000, 'health redis check'),
+      this.probe('database', () => assertDatabaseReady(this.infrastructure.db), 1_000),
+      this.probe('redis', () => this.infrastructure.redisPing(), 1_000),
     ])
   }
 
+  readiness(): Promise<{ database: boolean; redis: boolean; control: boolean }> {
+    this.readyProbe ??= Promise.all([
+      this.probe('database', () => assertDatabaseReady(this.infrastructure.db), 1_000),
+      this.probe('redis', () => this.infrastructure.redisPing(), 1_000),
+      this.probe('control', async () => {
+        if (!this.infrastructure.controlReady) throw new Error('control probe not configured')
+        await this.infrastructure.controlReady()
+      }, 3_000),
+    ].map(async (probe) => { try { await probe; return true } catch { return false } }))
+      .then(([database, redis, control]) => ({ database, redis, control }))
+      .finally(() => { this.readyProbe = undefined })
+    return this.readyProbe
+  }
+
   async dependencyReadiness(): Promise<DependencyReadiness> {
-    const checks: DependencyReadiness = {
-      database: false,
-      redis: false,
-      openNotebook: !this.infrastructure.openNotebookEnabled(),
-    }
-    const probes: Array<Promise<void>> = [
-      timeout(assertDatabaseReady(this.infrastructure.db), 2_000, 'database').then(() => { checks.database = true }),
-      timeout(this.infrastructure.redisPing(), 2_000, 'redis').then(() => { checks.redis = true }),
-    ]
-    if (this.infrastructure.openNotebookEnabled()) {
-      // /readyz verifies search and an R2 write/read/delete round-trip. Match the
-      // provider's bounded request deadline; API liveness remains independent.
-      probes.push(timeout(this.infrastructure.openNotebookHealth(), 30_000, 'Open Notebook').then(() => {
-        checks.openNotebook = true
-      }))
-    }
-    await Promise.allSettled(probes)
-    return checks
+    // Keep the existing diagnostic response and its budgets stable. Control is
+    // a required traffic gate on /readyz, not an added legacy diagnostic field.
+    const [database, redis, openNotebook] = await Promise.all([
+      this.probe('database', () => assertDatabaseReady(this.infrastructure.db), 2_000),
+      this.probe('redis', () => this.infrastructure.redisPing(), 2_000),
+      this.infrastructure.openNotebookEnabled()
+        ? this.probe('openNotebook', () => this.infrastructure.openNotebookHealth(), 30_000)
+        : Promise.resolve(),
+    ].map(async (probe) => { try { await probe; return true } catch { return false } }))
+    return { database, redis, openNotebook }
   }
 
   openGraph(url: string): Promise<unknown> {

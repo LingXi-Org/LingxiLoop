@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="94.440">
+  <testsuite name="e2e/forum/issue163.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="94.440">
+    <testcase name="compact inline editor preserves drafts and binds every avatar to its account [forum]" classname="e2e/forum/issue163.e2e.ts" time="94.440"/>
+  </testsuite>
+</testsuites>

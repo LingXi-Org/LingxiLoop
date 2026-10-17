@@ -1,11 +1,14 @@
 import { nativeMessageSchema, type NativeMessage } from '@/lib/nativeMessage'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
+import { getWorkspaceSession } from '@/lib/workspaceSession'
 
 export interface ChatOutboxEntry {
   conversationId: string
   clientMessageId: string
   payload: NativeMessage
   createdAt: string
+  projectId?: string
+  blockedReason?: string
 }
 
 function storageKey(): string | null {
@@ -14,7 +17,7 @@ function storageKey(): string | null {
   return companyId && userId ? `lingxiloop.chat.outbox.v2:${companyId}:${userId}` : null
 }
 
-export function readChatOutbox(): ChatOutboxEntry[] {
+function readAll(): ChatOutboxEntry[] {
   const key = storageKey()
   if (!key || typeof window === 'undefined') return []
   try {
@@ -27,12 +30,22 @@ export function readChatOutbox(): ChatOutboxEntry[] {
         && typeof row.conversationId === 'string'
         && typeof row.clientMessageId === 'string'
         && typeof row.createdAt === 'string'
-        && nativeMessageSchema.safeParse(row.payload).success,
+        && (row.projectId === undefined || typeof row.projectId === 'string')
+        && (row.blockedReason === undefined || typeof row.blockedReason === 'string')
+        && nativeMessageSchema.safeParse(row.payload).success
+        && row.payload?.id === row.clientMessageId,
       )
     }).slice(-100)
   } catch {
     return []
   }
+}
+
+export function readChatOutbox(): ChatOutboxEntry[] {
+  const projectId = getWorkspaceSession()?.projectId
+  // Legacy entries stay recoverable, but the transport also requires the
+  // authoritative workspace channel allowlist before replaying any entry.
+  return readAll().filter(row => row.projectId === undefined || row.projectId === projectId)
 }
 
 function write(entries: readonly ChatOutboxEntry[]): void {
@@ -46,9 +59,10 @@ function write(entries: readonly ChatOutboxEntry[]): void {
 }
 
 export function rememberChatOutbox(entry: ChatOutboxEntry): void {
-  write([...readChatOutbox().filter((row) => row.clientMessageId !== entry.clientMessageId), entry])
+  write([...readAll().filter((row) => row.clientMessageId !== entry.clientMessageId),
+    { ...entry, projectId: entry.projectId ?? getWorkspaceSession()?.projectId }])
 }
 
 export function forgetChatOutbox(clientMessageId: string): void {
-  write(readChatOutbox().filter((row) => row.clientMessageId !== clientMessageId))
+  write(readAll().filter((row) => row.clientMessageId !== clientMessageId))
 }

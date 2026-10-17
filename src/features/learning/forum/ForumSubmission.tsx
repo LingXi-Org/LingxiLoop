@@ -24,7 +24,7 @@ export function Version({ submission, framed = true }: { submission: SubmissionV
     <ForumFiles links={submission.links} attachments={submission.attachments} />
     {submission.feedback?.map(feedback => <div key={feedback.id} className="border-s-2 ps-3"><p className="mb-2 text-xs text-muted-foreground">{feedback.kind === 'TEACHER' ? '教师反馈' : '历史 Agent 评价'}{feedback.status !== 'ACCEPTED' ? ` · ${feedback.status === 'PENDING' ? '待审核' : '未采纳'}` : ''} · {new Date(feedback.createdAt).toLocaleString()}</p><MemoContent content={feedback.body} /></div>)}
   </div>
-  return framed ? <MemoCard label={`第 ${submission.version} 版提交`} author={submission.learnerName} createdAt={submission.submittedAt} actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>{content}</MemoCard> : content
+  return framed ? <MemoCard label={`第 ${submission.version} 版提交`} author={submission.learnerName} authorId={submission.learnerId} authorAvatarUrl={submission.learnerAvatarUrl} createdAt={submission.submittedAt} actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>{content}</MemoCard> : content
 }
 
 export function assessmentLabel(assessment:SubmissionAssessment|null) {
@@ -124,7 +124,7 @@ function StudentRow({student,space,item}:{student:SubmissionStudent;space:Learni
   },[space.courseId,item.id,student.learnerId])
   useEffect(()=>{if(open)void load()},[open,load,student.id])
   useEffect(()=>{if(open&&reference!==null&&versions[0]?.id===student.id){openReference(student.id,reference);setReference(null)}},[open,reference,versions,student.id])
-  return <MemoCard label={`${student.learnerName}的作答`} author={student.learnerName} authorDetail={student.learnerId} createdAt={student.submittedAt}
+  return <MemoCard label={`${student.learnerName}的作答`} author={student.learnerName} authorId={student.learnerId} authorAvatarUrl={student.learnerAvatarUrl} authorDetail={student.learnerId} createdAt={student.submittedAt}
     disclosure={{ref:trigger,expanded:open,controls:`submission-${student.id}`,onToggle:()=>open?collapse():expand()}} actions={<span className="text-xs text-muted-foreground">第 {student.version} 版</span>}>
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
       <span>{assessmentLabel(assessment)}</span>

@@ -32,7 +32,7 @@ test('history paints independently of diagnostics and obsolete requests cannot m
   mock.module('@/lib/workspaceSession', { namedExports: { getWorkspaceSession: () => ({ companyId: 'company', projectId }) } })
   mock.module('@/stores/auth', { namedExports: { getMeId: () => 'human', getActiveCompanyId: () => 'company' } })
   mock.module('@/lib/im/wukong', { namedExports: { lingxiIm: {
-    connect: async () => {}, disconnect: () => {}, subscribe: () => () => {}, setWorkspaceChannels: () => {},
+    connect: async () => {}, disconnect: () => {}, subscribe: () => () => {}, onConnected: () => () => {}, setWorkspaceChannels: () => {},
     history: (id: string, _limit: number, before?: number) => { historyReads++; historyCalls.push([id, before]); return history() },
   } } })
   mock.module('./outbox', { namedExports: { readChatOutbox: () => [], forgetChatOutbox: () => {}, rememberChatOutbox: () => {} } })
@@ -44,7 +44,8 @@ test('history paints independently of diagnostics and obsolete requests cannot m
       return new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), { once: true }))
     },
   } } })
-  Object.defineProperty(globalThis, 'window', { configurable: true, value: { setInterval: () => 1, clearInterval() {}, clearTimeout() {} } })
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { setInterval: () => 1, setTimeout: () => 1,
+    clearInterval() {}, clearTimeout() {}, addEventListener() {}, removeEventListener() {} } })
   const { ChatTransport } = await import('./transport')
   const { setConversationMessages, updateConversation, useChatThreadStore } = await import('./store')
   const { convertEnvelope } = await import('./converter')

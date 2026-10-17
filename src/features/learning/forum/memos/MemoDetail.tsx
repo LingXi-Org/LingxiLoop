@@ -23,7 +23,7 @@ export function MemoDetail({space,item,from,onBack,onChanged}:{space:LearningSpa
           className="mb-2 inline-flex w-auto max-w-xs flex-row flex-nowrap items-center justify-start rounded-lg border border-border px-3 py-1 text-sm text-muted-foreground hover:opacity-80 hover:shadow focus-visible:outline-2 focus-visible:outline-ring">
           <ArrowUpLeftFromCircleIcon className="mr-2 h-auto w-4 shrink-0 opacity-60"/>返回学习论坛
         </a>
-        <MemoCard label={item.title} author={item.authorName} createdAt={item.createdAt} pinned={item.pinned}>
+        <MemoCard label={item.title} author={item.authorName} authorId={item.authorId} authorAvatarUrl={item.authorAvatarUrl} createdAt={item.createdAt} pinned={item.pinned}>
           <h2 ref={title} tabIndex={-1} className="text-base font-semibold leading-6 outline-none">{item.title}</h2>
           <MemoContent content={item.body}/><ForumFiles links={item.links} attachments={item.attachments}/>
         </MemoCard>

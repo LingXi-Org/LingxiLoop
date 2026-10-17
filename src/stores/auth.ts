@@ -69,7 +69,8 @@ export const useAuth = create<AuthState>((set) => ({
     // linger; clear them so the next sign-in doesn't briefly render a
     // dead URL.createObjectURL pointing at a freed blob.
     void import('@/lib/avatarCache').then(({ clearAvatarCache }) => clearAvatarCache())
-    void import('@/features/chat/runtime/transport').then(({ chatTransport }) => chatTransport.disconnect())
+    // ChatTransport cancels synchronously through runAuthTeardown above.
+    // A deferred disconnect could instead cancel a newer sign-in's transport.
     void import('@/api/core/realtime').then(({ ws }) => ws.close())
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([

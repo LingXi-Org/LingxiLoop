@@ -1,0 +1,38 @@
+{
+  "results": [
+    {
+      "command": [
+        "docker",
+        "compose",
+        "-f",
+        "e2e/server/compose.yaml",
+        "up",
+        "-d",
+        "--wait"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/workspace/.tools/node-v22.23.3-linux-x64/bin/node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/workspace/.tools/node-v22.23.3-linux-x64/bin/node",
+        "/workspace/LingxiLoop/node_modules/e2e/dist/cli/bin.js",
+        "run",
+        "--config",
+        "e2e/directory-audience/config.ts"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Synthetic identities and scripted model, recorded IM, contract browser harness. Real provider, real WuKong, full SPA journey and 24-hour soak unverified."
+  ]
+}

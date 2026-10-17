@@ -7,7 +7,7 @@ x-logging: &logging
     max-file: "3"
 
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:26dd3ebf8c661f32cb6ac63ea731ff5ecdbf4e32
+  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:8513e8f84707f976d5f58a9ca63683a97ffcc8cf
   pull_policy: always
   restart: unless-stopped
   environment: &runtime-environment
@@ -96,7 +96,7 @@ services:
     ports:
       - "10.20.0.2:5183:5181"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5181/api/readyz',{signal:AbortSignal.timeout(4000)}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -121,7 +121,7 @@ services:
     pids_limit: 128
     stop_grace_period: 150s
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:5190/readyz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5190/readyz',{signal:AbortSignal.timeout(4000)}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 12

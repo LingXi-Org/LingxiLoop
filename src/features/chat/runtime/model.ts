@@ -64,12 +64,14 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   senderAvatarUrl: string | null
   isMine: boolean
   delivery: LingxiDeliveryStatus
+  sendError?: string
   messageKind: string
   presentation: LingxiMessagePresentation
   runId: string | null
   harness?: RunDisplayState
   harnessControl?: boolean
   harnessError?: string
+  runConnection?: 'checking' | 'released' | 'inaccessible'
   regenerateOfClientMsgNo?: string
   replyBranches?: { key: string; rootId: string; threadRootId: string | null; ids: string[]; clientIds: string[]; index: number }
   unresolvedActions?: Array<{ actionKey: string; action: string }>

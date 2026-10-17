@@ -284,7 +284,7 @@ export class HomeworkApplication {
   async learners(scope:LearningScope,courseId:string,id:string,offset=0,search='') {
     await homeworkScope(this.db,scope,courseId,'review')
     const hw=await homeworkRow(this.db,scope,courseId,id);assertHomeworkPublished(hw)
-    const {rows}=await this.db.query<{learnerId:string;learnerName:string}>(`SELECT m.user_id AS "learnerId",u.display_name AS "learnerName"
+    const {rows}=await this.db.query<{learnerId:string;learnerName:string;learnerAvatarUrl:string|null}>(`SELECT m.user_id AS "learnerId",u.display_name AS "learnerName",u.avatar_url AS "learnerAvatarUrl"
       FROM project_memberships m JOIN users u ON u.id=m.user_id WHERE m.company_id=$1 AND m.project_id=$2 AND m.role='STUDENT' AND m.status='ACTIVE'
       AND ($4='' OR POSITION(LOWER($4) IN LOWER(u.display_name||' '||u.id))>0)
       ORDER BY m.user_id LIMIT 51 OFFSET $3`,[scope.companyId,hw.project_id,offset,search])

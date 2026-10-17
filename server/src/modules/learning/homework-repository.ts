@@ -26,7 +26,7 @@ export interface HomeworkStateRow {
 }
 export interface HomeworkSubmission {
   conversationReferences:import('./forum-evidence.js').ConversationEvidence[]
-  id: string; learnerId: string; learnerName: string; version: number; answer: HomeworkAnswer; report: HomeworkReport;
+  id: string; learnerId: string; learnerName: string; learnerAvatarUrl: string | null; version: number; answer: HomeworkAnswer; report: HomeworkReport;
   submittedAt: string; late: boolean; reviewStatus: 'PENDING'|'PASSED'|'RETURNED'; feedback: string
 }
 
@@ -64,7 +64,7 @@ export const manualMastery = (state: HomeworkStateRow) => Boolean(state.manual_u
   && state.manual_unlock.returnEpoch===state.return_epoch)
 
 export async function homeworkSubmissions(db: Queryable,hw: HomeworkRow,learnerId: string|null,offset=0,submissionId?:string) {
-  const {rows}=await db.query<HomeworkSubmission>(`SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",s.version,
+  const {rows}=await db.query<HomeworkSubmission>(`SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",u.avatar_url AS "learnerAvatarUrl",s.version,
     s.answer,s.report,s.conversation_references AS "conversationReferences",s.submitted_at AS "submittedAt",s.late,COALESCE(d.decision,'PENDING') AS "reviewStatus",COALESCE(d.reason,'') AS feedback
     FROM homework_submissions s JOIN users u ON u.id=s.learner_id LEFT JOIN LATERAL (
       SELECT decision,reason FROM homework_teacher_decisions WHERE company_id=s.company_id AND homework_id=s.homework_id

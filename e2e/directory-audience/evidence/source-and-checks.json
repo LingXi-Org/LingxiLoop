@@ -1,0 +1,68 @@
+{
+  "baseline": "2db5bbcddc8f14ac62500e36594dc49793c9e096",
+  "files": {
+    "e2e/directory-audience/.gitignore": "b8dcec9564b0475f817eb5ed903e7cc662dd23256bf2a1a926ca48563958ecf7",
+    "e2e/directory-audience/README.md": "bf4b764ef35dd00d38dd080921d03844422ea016816875838d895155aba4ab87",
+    "e2e/directory-audience/api.ts": "a4d7da10d0b2286a7f31c1b12ea2f57c709eb08fc8e45827e02910512c42c282",
+    "e2e/directory-audience/browser.e2e.ts": "4d4baf70a7e4896f487df00b5bfe8d5bd3769ca6b6380ab4943957773c162a17",
+    "e2e/directory-audience/config.ts": "7aab0bfbcdc2d61a92922999f050e20dae9dc8550f91f3fd2b3c05400b697142",
+    "e2e/directory-audience/run.mjs": "aad07bb73c992a26ce33da5d0bde6361cf7aa0f169e951cd6d9014949deebefd",
+    "e2e/directory-audience/tsconfig.json": "517a955984191224267668ac4057efd7b40c0aa1018bead301fb39e1d7fcd21a",
+    "package-lock.json": "499b8325aa908d48776c1363e4f57c31ed2e5c76de04da858a946e060c0f4ef9",
+    "package.json": "da727fc0662ee46917dd820f5be9f93874d195c9e2715304a79b40088cafe3ab",
+    "server/package-lock.json": "c100f14e83a1542cc2d040494cd2a3842a86bc2d2db7314b70bf186c70bf07a8",
+    "server/package.json": "1b8974014e1f3d5a0c63efcdc9a23a55ebfef1e437abd19b2fc0ecd6bd0f710e",
+    "server/src/__integration__/directory-audience-fixture.ts": "43dca49539832b3379d09e5d1b6bc9090d1862752cddfc66957f53933fc1449a",
+    "server/src/__integration__/directory-audience.test.ts": "b0abf0a1d5c1595915794d70fd463aa2246d947180a35a762a85dbbee2edd497",
+    "server/src/agents/tools.ts": "0667e036620a87143d15f8518eb2cb4d8974d469ce416322afc9aaa4152b28e4",
+    "server/src/modules/agents/agent-tools.ts": "7fe97e019f21f73de66552b270094c96c1cd97c11e4cbccb9fa41e86da35b412",
+    "server/src/modules/agents/directory-application.ts": "ee1f33812b3de2c914a3550ca09e50d6277b9f4bf52bd21f084c598b7f2a846c",
+    "server/src/modules/agents/directory-repository.ts": "2142e7ed987685846555df68670806359527688d2d277b23a76faa5d6229dbd4"
+  },
+  "dependency": {
+    "@lyyzka/lingxios": "3.4.7",
+    "e2e": "0.17.0",
+    "@e2e-dev/web": "0.12.0"
+  },
+  "checks": [
+    {
+      "command": "npm run server:lint",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run server:typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:e2e:typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "node_modules/.bin/tsc -p e2e/directory-audience/tsconfig.json",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run server:test",
+      "exitCode": 0
+    },
+    {
+      "command": "node_modules/.bin/biome lint e2e/directory-audience server/src/__integration__/directory-audience-fixture.ts server/src/__integration__/directory-audience.test.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "unitTests": {
+    "passed": 102,
+    "failed": 0,
+    "skipped": 0
+  },
+  "limitations": [
+    "Contract browser harness, not the full product SPA",
+    "Scripted model, recording IM transport",
+    "Real provider, real WuKong delivery and 24-hour soak unverified",
+    "No deployment or production changes"
+  ]
+}
