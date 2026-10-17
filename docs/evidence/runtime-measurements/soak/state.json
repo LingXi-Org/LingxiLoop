@@ -13,8 +13,8 @@
   },
   "initialStartedAt": "2026-10-17T06:42:41.588503935Z",
   "initialRestartCount": 0,
-  "samples": 11,
-  "elapsedSeconds": 601.0899723840001,
-  "lastHeartbeatAt": "2026-10-17T06:52:48.943Z",
+  "samples": 62,
+  "elapsedSeconds": 3665.653897184,
+  "lastHeartbeatAt": "2026-10-17T07:43:53.512Z",
   "violations": []
 }
