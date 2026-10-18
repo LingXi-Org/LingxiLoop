@@ -1,0 +1,49 @@
+{
+  "kind": "recovery-inspection-not-terminal-receipt",
+  "checkedAt": "2026-10-18T06:54:08.387318+00:00",
+  "qualification": "incomplete-unverified-24h",
+  "scope": "Original immutable 3.5.1 Web/API-only observation; no Worker, model dialogue, live provider or production deployment qualification.",
+  "previousRemoteCheckpoint": "5a053117175ea8501bff6e5f16b29c0c131e89e6",
+  "previousRemoteSamples": 782,
+  "recoveredSamples": 797,
+  "additionalOriginalSamples": 15,
+  "originalRecordsExtendRemoteByteForByte": true,
+  "source": "/workspace/LingxiLoop-acceptance/.e2e/image-acceptance/soak",
+  "originalFileSha256": {
+    "state.json": "12dfd8fb11c22a164919e89e2617024081a12e0fc90d614cbf41347fe1d30bd3",
+    "heartbeats.jsonl": "04b68d0fcf7b8d79483f993f50887901398218240459a767a099af2c94056cba"
+  },
+  "originalStartedAt": "2026-10-17T06:42:47.900Z",
+  "lastVerifiedHeartbeatAt": "2026-10-17T19:59:57.427Z",
+  "recordedElapsedSeconds": 47829.580654556994,
+  "requiredElapsedSeconds": 86400,
+  "unrecordedSecondsToTarget": 38570.419345443006,
+  "maximumRecordedHeartbeatGapSeconds": 60.276999950408936,
+  "originalRecordedViolations": [],
+  "monitorPid": 285092,
+  "monitorPidPresent": false,
+  "watcherPid": 363050,
+  "watcherPidPresent": false,
+  "monitorLogPresent": false,
+  "watcherLogPresent": false,
+  "terminalReceiptPresent": false,
+  "containerInspection": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "OOMKilled": false,
+    "ExitCode": 255,
+    "StartedAt": "2026-10-17T06:42:41.588503935Z",
+    "FinishedAt": "2026-10-18T03:06:44.342155652Z"
+  },
+  "cause": "Undetermined. Missing processes/logs and a later stopped container do not establish when or why observation ceased.",
+  "interpretation": "state.json is the unmodified historical file, not evidence of a currently running monitor. Observed healthy samples cannot qualify the unobserved remainder.",
+  "actions": {
+    "restartedMonitor": false,
+    "resetClock": false,
+    "restartedContainer": false,
+    "deployed": false,
+    "obtainedProductionCredentials": false,
+    "closedIssue": false
+  }
+}
