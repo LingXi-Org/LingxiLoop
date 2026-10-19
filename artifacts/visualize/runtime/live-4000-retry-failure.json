@@ -1,0 +1,128 @@
+{
+  "status": "failed-local-heartbeat-then-provider-deadline",
+  "requestTimeoutMs": 180000,
+  "completeSkill": false,
+  "work": [
+    {
+      "id": "im:eced01d8ffd3f534ce4871aeb9afcefc9a8a2647a66666537cf9136360beb3d6",
+      "status": "failed",
+      "attempts": 2,
+      "error": "Model provider request failed",
+      "created_at": "2026-10-19T13:16:16.300Z"
+    }
+  ],
+  "calls": [
+    {
+      "model": "zai-org/GLM-5.3-Flash",
+      "measured": true,
+      "status": "succeeded",
+      "error": null,
+      "latency_ms": 29668,
+      "cost_usd": "0.00095713",
+      "created_at": "2026-10-19T13:16:54.904Z",
+      "call_id": "im:eced01d8ffd3f534ce4871aeb9afcefc9a8a2647a66666537cf9136360beb3d6:1:model:1",
+      "failure": null,
+      "reasoning_tokens": "585",
+      "configuration_fingerprint": "999e591d74949b03884fcb2ec78a10a377fa144a2d62bdf674a59b99f869b694"
+    },
+    {
+      "model": "zai-org/GLM-5.3-Flash",
+      "measured": false,
+      "status": "failed",
+      "error": "Model request failed (cancelled)",
+      "latency_ms": 65419,
+      "cost_usd": "0.00943800",
+      "created_at": "2026-10-19T13:18:17.083Z",
+      "call_id": "im:eced01d8ffd3f534ce4871aeb9afcefc9a8a2647a66666537cf9136360beb3d6:1:model:2",
+      "failure": {
+        "category": "cancelled",
+        "retryable": false
+      },
+      "reasoning_tokens": null,
+      "configuration_fingerprint": "999e591d74949b03884fcb2ec78a10a377fa144a2d62bdf674a59b99f869b694"
+    },
+    {
+      "model": "zai-org/GLM-5.3-Flash",
+      "measured": false,
+      "status": "failed",
+      "error": "Model request failed (timeout)",
+      "latency_ms": 180623,
+      "cost_usd": "0.00943800",
+      "created_at": "2026-10-19T13:21:33.351Z",
+      "call_id": "im:eced01d8ffd3f534ce4871aeb9afcefc9a8a2647a66666537cf9136360beb3d6:2:model:1",
+      "failure": {
+        "category": "timeout",
+        "retryable": true
+      },
+      "reasoning_tokens": null,
+      "configuration_fingerprint": "999e591d74949b03884fcb2ec78a10a377fa144a2d62bdf674a59b99f869b694"
+    }
+  ],
+  "events": [
+    {
+      "seq": "4",
+      "kind": "model.request.started",
+      "recorded_at": "2026-10-19T13:16:24.908Z",
+      "error": null,
+      "instruction_bytes": 14640,
+      "prefix_bytes": 13890
+    },
+    {
+      "seq": "5",
+      "kind": "model.request.finished",
+      "recorded_at": "2026-10-19T13:16:54.726Z",
+      "error": null,
+      "instruction_bytes": 14640,
+      "prefix_bytes": 13890
+    },
+    {
+      "seq": "12",
+      "kind": "model.request.started",
+      "recorded_at": "2026-10-19T13:16:59.779Z",
+      "error": null,
+      "instruction_bytes": 14640,
+      "prefix_bytes": 13890
+    },
+    {
+      "seq": "100004",
+      "kind": "model.request.started",
+      "recorded_at": "2026-10-19T13:18:32.180Z",
+      "error": null,
+      "instruction_bytes": 14640,
+      "prefix_bytes": 13890
+    },
+    {
+      "seq": "100005",
+      "kind": "model.request.finished",
+      "recorded_at": "2026-10-19T13:21:32.994Z",
+      "error": "Model request failed (timeout)",
+      "instruction_bytes": 14640,
+      "prefix_bytes": 13890
+    },
+    {
+      "seq": "100007",
+      "kind": "run.failed",
+      "recorded_at": "2026-10-19T13:21:33.352Z",
+      "error": "Model provider request failed",
+      "instruction_bytes": null,
+      "prefix_bytes": null
+    }
+  ],
+  "localInterruption": {
+    "timestamp": "2026-10-19T13:17:34.388Z",
+    "operation": "control-plane work heartbeat",
+    "error": "Connection terminated due to connection timeout",
+    "cause": "undetermined; no PostgreSQL restart/recovery was observed"
+  },
+  "testCaseDurationMs": 361856.235964,
+  "testProcessDurationMs": 411184.675418,
+  "test": {
+    "status": "failed",
+    "provider": "zai-org/GLM-5.3-Flash",
+    "modelMock": false,
+    "browserMock": false,
+    "resumedDurableWork": false,
+    "preservedPriorHistory": true,
+    "error": "live run terminated: Model provider request failed"
+  }
+}

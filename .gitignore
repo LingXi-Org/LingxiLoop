@@ -69,6 +69,9 @@ electron-package/
 # Runtime-generated user content (AI portraits + image uploads)
 server/uploads/
 
+# Rebuilt from the pinned ZCode source during prebuild.
+/server/assets/visualize-runtime/
+
 # Backup files left by one-off scripts (e.g. icon regeneration)
 *.prev.png
 

@@ -4,25 +4,20 @@ import { mkdir,writeFile } from 'node:fs/promises'
 
 // Failure modes: centered rows retain wide gutters; body stretches; drawer or mobile
 // overflows; legacy mail/calendar cards still offer approval or navigation.
-// Disabled interactive lessons: preview/ready history must show fallback immediately,
-// with no lesson controls, while ordinary generated content, plans and questionnaires work.
+// Ordinary generated content, plans and questionnaires remain functional after the renderer replacement.
 for (const width of [1440,390]) {
-  test(`disabled interactive history preserves other cards (${width})`, async ({ app, browser, screen }) => {
+  test(`shared message cards retain plans and questionnaires (${width})`, async ({ app, browser, screen }) => {
     await browser.setViewport({ width, height: 960 })
-    await app.open('/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=disabled-interactive-history')
+    await app.open('/scripts/ui-experience-browser-check.html?surface=主应用&capture=1&theme=light&scenario=shared-message-cards')
     if (width < 768) await browser.locator('[data-slot="sidebar"] [role="button"]').first().tap()
-    const message = browser.locator('[data-msg-id="disabled-interactive-history"]')
+    const message = browser.locator('[data-msg-id="shared-message-cards"]')
     await expect(message).toContainText('普通生成内容仍可阅读。')
-    await expect(browser.locator('[data-msg-id="disabled-interactive-history"] [data-slot="agent-plan"]')).toContainText('保留的学习计划')
-    await expect(browser.locator('[data-msg-id="disabled-interactive-history"] [data-slot="agent-plan"]')).toContainText('完成练习')
+    await expect(browser.locator('[data-msg-id="shared-message-cards"] [data-slot="agent-plan"]')).toContainText('保留的学习计划')
+    await expect(browser.locator('[data-msg-id="shared-message-cards"] [data-slot="agent-plan"]')).toContainText('完成练习')
     await screen.getByPlaceholder('填写学习主题').fill('抛射运动')
     await expect(screen.getByPlaceholder('填写学习主题')).toHaveValue('抛射运动')
-    await expect(screen.getByText('历史预览的文字讲解。', { exact: true })).toBeVisible()
-    await expect(screen.getByText('历史完整版本的文字讲解。', { exact: true })).toBeVisible()
-    await expect(browser.locator('[data-msg-id="disabled-interactive-history"] [data-interactive-ui]')).toHaveCount(0)
-    await expect(browser.locator('[data-msg-id="disabled-interactive-history"] [data-native-part="generative-ui"] input, [data-msg-id="disabled-interactive-history"] [data-native-part="generative-ui"] button')).toHaveCount(0)
     expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    await app.screenshot(`disabled-interactive-history-${width}`)
+    await app.screenshot(`shared-message-cards-${width}`)
   })
 }
 

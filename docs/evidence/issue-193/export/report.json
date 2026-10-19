@@ -1,0 +1,544 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a1540f-cf4e-799a-ae0d-59120f10545f",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-19T12:08:07.053Z",
+    "finishedAt": "2026-10-19T12:08:29.890Z",
+    "project": {
+      "id": "lingxiloop-issue193-visualize",
+      "configDigest": "c58b65d1075ab6015f48587e6e7332aebdd3f9f75113e4b8928d3f00a4d1d562"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "b2013edc7685d86e131c5c7f011078fdf2d3e008",
+      "branch": "codex/issue193-zcode-visualize",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "9997a3fd53118719bfdd81fd4f96aa0b47abfa3f864e735ac2b412a07faf250a",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::variants%20retain%20local%20state%2C%20tabs%20load%20D3%2Fcalendar%20and%20mobile%20stays%20bounded",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "variants retain local state, tabs load D3/calendar and mobile stays bounded"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "5a478e9cdb1e34b4bd35d45682e933383323c1a8ca3744dc9432983235ec8f90",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::session%20switching%20retains%20each%20state%20and%20host%20theme%20synchronizes%20in%20place",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "session switching retains each state and host theme synchronizes in place"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 25,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "3711eeae516cc8b367a56544e43fc26ed0bdf8c338752f658a35a67f0964f772",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::failed%20acquisition%20retries%20explicitly%20and%20offline%20status%20is%20visible",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "failed acquisition retries explicitly and offline status is visible"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 40,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "33f3c1b6db46b0b01dc2afa7336c871b9dfbb49a42b8f1877635ae1a6bb486d6",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::copy-image%20button%20writes%20a%20real%20PNG%20through%20the%20host%20clipboard",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "copy-image button writes a real PNG through the host clipboard"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 48,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "645155e1e154184cfdb27642f629e94a035639957f90e2f4f10d2a50eb1796dc",
+        "testId": "e2e/visualize/parity.e2e.ts::upstream%3A%20complete%20card%20interaction%20%28light%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "upstream: complete card interaction (light)"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "8d93a98f8938a79fb28e775dcfa5dd3d5b4f014a0dc56fabc0027b2137ba7935",
+        "testId": "e2e/visualize/parity.e2e.ts::upstream%3A%20complete%20card%20interaction%20%28dark%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "upstream: complete card interaction (dark)"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "cc9afb261b8e3b1690a9ff31499eee1dd739879efc78b0a31001c65332777a85",
+        "testId": "e2e/visualize/parity.e2e.ts::product%3A%20complete%20card%20interaction%20%28light%29",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "product: complete card interaction (light)"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c3bea3b5e5b8221d0a02a292eca9c86daa808777f4e648c3329ae7115904e15f",
+        "testId": "e2e/visualize/parity.e2e.ts::product%3A%20complete%20card%20interaction%20%28dark%29",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "product: complete card interaction (dark)"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ff16d9ef664e4615ca6c0240a1e44d1ee04a304023938bfd737ff788276f04ca",
+        "testId": "e2e/visualize/parity.e2e.ts::standalone%20render.py%20export%20runs%20offline%20and%20retains%20independent%20widget%20state",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "standalone render.py export runs offline and retains independent widget state"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 74,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T12:08:12.539Z",
+            "durationMs": 17100,
+            "artifacts": [
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:9"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__standalone_20render.py_20export_20runs_20offline_20and_20retains_20independent_20w-2d86fd53/default/attempt-0/screenshots/001-standalone-export-offline.png",
+                "size": 18999,
+                "sha256": "ae355cf32fd43ac47ef405917317a00902ab1f158f9ae69f1e5cd27a9904d740"
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__standalone_20render.py_20export_20runs_20offline_20and_20retains_20independent_20w-2d86fd53/default/attempt-0/trace/trace.zip",
+                "size": 463506,
+                "sha256": "2fce13bee2f2dcbd40aee72c8fb64bd0329f23fb06aafd84527584b47f40c3ab"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.route",
+                "label": "/^https?:\\/\\/(?!127\\.0\\.0\\.1:5193(?:\\/|$))/",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:13.341Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 75,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/generated/export.html",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:13.352Z",
+                "durationMs": 11553,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 76,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"#zcode-visualization\") >> getByRole(\"button\", name: \"Count: 5\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:24.912Z",
+                "durationMs": 626,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 78,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"#zcode-visualization\") >> getByRole(\"button\", name: \"Count: 5\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:25.539Z",
+                "durationMs": 1236,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 79,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"#zcode-visualization\") >> getByRole(\"button\", name: \"Count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:26.775Z",
+                "durationMs": 190,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 80,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "frameLocator(\"#zcode-visualization\") >> locator(\"#export-chart rect\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:26.965Z",
+                "durationMs": 204,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 81,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"#zcode-visualization\") >> getByText(\"Offline meeting\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:27.170Z",
+                "durationMs": 304,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 82,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:27.474Z",
+                "durationMs": 1052,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 83,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"#zcode-visualization\") >> getByRole(\"button\", name: \"Count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:28.527Z",
+                "durationMs": 601,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 84,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a1540f-edfb-77e5-a23d-2ef506a31e8c:9",
+                "index": 9,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "standalone-export-offline",
+                "status": "passed",
+                "startedAt": "2026-10-19T12:08:29.129Z",
+                "durationMs": 246,
+                "events": [],
+                "artifacts": [
+                  "01a1540f-edfb-77e5-a23d-2ef506a31e8c:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 85,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 9,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 9,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 482505,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

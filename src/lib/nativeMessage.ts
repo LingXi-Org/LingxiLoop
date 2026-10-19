@@ -1,7 +1,5 @@
 import type { CompleteAttachment, ThreadMessage } from '@assistant-ui/react'
 import { z } from 'zod'
-import { openUiEnvelopeSchema, uiInteractionSchema } from './interactive-ui/protocol.js'
-import { OPENUI_COMPONENT } from './interactive-ui/catalog.js'
 import { activityAnnotation, toolDisplaySchema } from './runActivity.js'
 import { memoryActivitySchema } from './memoryActivity.js'
 
@@ -38,7 +36,6 @@ const textSize = z.enum(['sm', 'md', 'lg', 'xl', '2xl', '3xl']).optional()
 const gap = z.number().min(0).max(8).optional()
 const align = z.enum(['start', 'center', 'end']).optional()
 export const generativeComponentSchemas: Record<string, z.ZodType> = {
-  [OPENUI_COMPONENT]: openUiEnvelopeSchema,
   'agent-plan': z.object({ title: z.string().max(120), steps: z.array(z.object({ id, label: z.string().max(160), description: z.string().max(500).optional() }).strict()).min(1).max(50), activeIndex: z.number().int().nonnegative().max(50) }).strict(),
   Text: z.object({ value: z.string(), size: textSize, weight: z.enum(['normal', 'medium', 'semibold', 'bold']).optional(),
     color: z.enum(['emphasis', 'secondary', 'alpha-70', 'white', 'white-70', 'white-50']).optional() }).strict(),
@@ -107,7 +104,6 @@ const bounded = z.unknown().superRefine((value, ctx) => {
 })
 export const nativeMessageSchema = bounded.pipe(message) as z.ZodType<NativeMessage>
 const humanCustom = z.object({ replyToClientMsgNo: id.optional(), regenerateOfClientMsgNo: id.optional(), mentionedIds: z.array(id).max(100).optional(), mentionAll: z.boolean().optional(),
-  uiInteraction: uiInteractionSchema.optional(),
   agentContinuation: z.object({ agentId: id, runId: id, requestVersion: z.number().int().positive().safe() }).strict().optional(),
   questionnaireReply: z.object({ questionId: id, answers: z.record(z.string(), z.union([z.string().max(4000), z.array(z.string().max(4000)).max(12)])) }).strict().optional(),
   recommendationReply: z.object({ questionId: id, answers: z.record(z.string(), z.union([z.string().max(4000), z.array(z.string().max(4000)).max(12)])) }).strict().optional(),

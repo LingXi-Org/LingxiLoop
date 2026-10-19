@@ -233,7 +233,7 @@ export async function assertQuestionnaireAdmission(input: Omit<Caller, 'question
   const parsed = z.object({ questionId: z.string(), answers: z.unknown() }).strict().safeParse(reply)
   if (!parsed.success || input.payload.role !== 'user') throw new HttpError(403, '问卷提交无效。')
   const row = await read(db, { ...input, questionId: parsed.data.questionId })
-  if (!row && input.payload.metadata.custom.agentContinuation === undefined && input.payload.metadata.custom.uiInteraction === undefined
+  if (!row && input.payload.metadata.custom.agentContinuation === undefined && input.payload.metadata.custom.visualizeFollowUp === undefined
     && input.payload.metadata.custom.replyToClientMsgNo === parsed.data.questionId) {
     await authorize(db, { ...input, questionId: parsed.data.questionId }, 'conversation:write')
     const messages = await createImMessagesApplication().readMessages({ ...input, messageIds: [parsed.data.questionId] })

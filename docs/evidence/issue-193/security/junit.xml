@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="5" failures="0" errors="0" skipped="0" time="77.776">
+  <testsuite name="navigation.e2e.ts" tests="5" failures="0" errors="0" skipped="0" time="77.776">
+    <testcase name="baseline [web]" classname="navigation.e2e.ts" time="10.669"/>
+    <testcase name="parent-self [web]" classname="navigation.e2e.ts" time="10.079"/>
+    <testcase name="parent-none [web]" classname="navigation.e2e.ts" time="29.655"/>
+    <testcase name="outer-shell [web]" classname="navigation.e2e.ts" time="10.706"/>
+    <testcase name="product-shell [web]" classname="navigation.e2e.ts" time="16.667"/>
+  </testsuite>
+</testsuites>

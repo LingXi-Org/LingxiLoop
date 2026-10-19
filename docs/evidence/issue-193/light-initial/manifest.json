@@ -1,0 +1,40 @@
+{
+  "upstream": "0a1fc56d279fd1001f78387bd81aec1c26767411",
+  "viewport": {
+    "width": 1440,
+    "height": 960
+  },
+  "dpr": 1,
+  "locale": "zh-CN",
+  "timezone": "UTC",
+  "sharedAdaptation": [
+    "Web sandbox host",
+    "useGenUi hook",
+    "i18n host locale adapter",
+    "font environment"
+  ],
+  "styling": "upstream independently compiles original styles.css; product compiles globals.css + zcode.css; only outer test-shell geometry/fonts/motion conditions shared",
+  "sourceBoundary": "Upstream card, controls and primitives are imported from immutable third_party source; product imports src. No upstream source text is rewritten.",
+  "hashes": {
+    "e2e/visualize/fixtures/acceptance.html": "9f04fff672adfc3bfe621670d25545ab36147cc5845bdc0c5f2257594f98159f",
+    "e2e/visualize/fixtures/export.html": "40df804b9bbf05ff14740b9c75b8f117af8d664aa45d249a570247b9a4a6140f",
+    "e2e/visualize/generated/export.html": "c5a5fb0875d289435c094fc4f1f3f1250444645cd4fc84ee5d9b4f5175047570",
+    "third_party/zcode/skills/visualize/scripts/render.py": "745e04627aa949f2d6d980c0f276d836219e61c06617a511a87943580e389e10",
+    "package-lock.json": "696225ecfb299b5408340162095c7476a79a00b89fc32c2facd83e10bfd20c42",
+    "third_party/zcode/upstream/packages/ui/src/gen-ui/components/GenUiCard.tsx": "ac5b0339302f7e869153e2450b91079fba2d4ebdf15e99f5390e0d96b22cae4b",
+    "src/features/chat/visualize/zcode/gen-ui/components/GenUiCard.tsx": "80c5fcd1be09c0aaa86a023fa0979100ebdf454542f4e41800300f75e511ba0b",
+    "third_party/zcode/upstream/packages/ui/src/gen-ui/components/TweakPanel.tsx": "8ae2afed842f226abd650f6cb49fbf8fdb777920ce71a50b0764e0f91edfd34e",
+    "src/features/chat/visualize/zcode/gen-ui/components/TweakPanel.tsx": "4cf0b76a303f89ea3e27091d226e75c0a419ff0051125b3a10961d10902bd20d",
+    "third_party/zcode/upstream/packages/ui/src/components/ui/button.tsx": "3bf0b1573c940999f875a1dd5e67a32e7d9bcb3e320774fa8277f5c00748b32b",
+    "src/features/chat/visualize/zcode/components/ui/button.tsx": "e54f4b6329f35e46382d9bfe9c2e105209fef58bec11edb3bb5f6488bf773197",
+    "third_party/zcode/upstream/packages/ui/src/components/ui/dialog.tsx": "fb2decab75993205ec5670acbd5b8b7dfc9b1518d3acb457ddde7edd1984d44e",
+    "src/features/chat/visualize/zcode/components/ui/dialog.tsx": "707481c9c7f495aa0c6c13b65771c555ca1e291ba8f7a5d2315d3d98bd330f06",
+    "third_party/zcode/upstream/packages/ui/src/components/ui/textarea.tsx": "a839574ce1301fbaa9ba917fdb980900eb9118bffa7c6c4e469f3293b122ed30",
+    "src/features/chat/visualize/zcode/components/ui/textarea.tsx": "ba90d970e65c8f4fe3ef75b5ee4e2fc41abce368fd045b42e085e4ddcc083007",
+    "src/features/chat/visualize/web/host.ts": "d350279a89c351b7ba5b42c6a5ebab26ba209b2603c4e85688e9e2a67c5d56ac",
+    "src/features/chat/visualize/web/document.ts": "5b1bc3a5379527afa549a49e3df057cab5175922c78bd32dd4c423a2886329d6",
+    "src/features/chat/visualize/zcode.css": "84015675c67a3f0692c7b11df4a0a7827905042f7d89a631e8f68967645d1723",
+    "third_party/zcode/upstream/packages/ui/src/styles.css": "ae1c3575fa770258bba05afb5a0ebbeda59ecbd8b4cfa9d0355b5fbfd8dcbd8b",
+    "server/assets/visualize-runtime/gen-ui.js": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494"
+  }
+}

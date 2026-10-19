@@ -1,0 +1,2017 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/zai-org/ZCode",
+  "commit": "0a1fc56d279fd1001f78387bd81aec1c26767411",
+  "skillDirectory": "apps/zcode-cli/packages/visualize-plugin/skills/visualize",
+  "skillFileCount": 24,
+  "files": [
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/LICENSE.md",
+      "path": "skills/visualize/LICENSE.md",
+      "kind": "skill",
+      "bytes": 452,
+      "sha256": "b1733e816a7d5a8240f28e4633b37f7f6181734c9c0424836da3e768827239f4",
+      "gitBlobSha1": "9206147dca860fe35776706d46ea46513befe66c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/SKILL.md",
+      "path": "skills/visualize/SKILL.md",
+      "kind": "skill",
+      "bytes": 35734,
+      "sha256": "395662af568069f2ac2daf639037c70da2fde15cedb291b4b774f60abd1a7037",
+      "gitBlobSha1": "8b00538e8d36e621bfc7e1f860810027e337824c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/calendar.js",
+      "path": "skills/visualize/assets/calendar.js",
+      "kind": "skill",
+      "bytes": 13497,
+      "sha256": "19f40e0a15ae7a9b9a4e17bc53c5bb47c5b21e6d32317d80cf030f9e012c221b",
+      "gitBlobSha1": "8231d2073ff971d133ac49ed893b68ac93123ca2",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/runtime-manifest.json",
+      "path": "skills/visualize/assets/runtime-manifest.json",
+      "kind": "skill",
+      "bytes": 466,
+      "sha256": "2a4a205d747cf33d984cd05c2d8c9da44a83a19eb71e016a93a36d98aaac9026",
+      "gitBlobSha1": "4593b062ccd9299f424cb17fda2c6dc355b859c9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/standalone-host-bridge.js",
+      "path": "skills/visualize/assets/standalone-host-bridge.js",
+      "kind": "skill",
+      "bytes": 9421,
+      "sha256": "00085ebf81dfd7451e95836c7eb8e999e39c2a47a94b182e16113314482098cd",
+      "gitBlobSha1": "925dc064a0b2fb1c8b6368fe712e3f67ad601efa",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/standalone-shell.js",
+      "path": "skills/visualize/assets/standalone-shell.js",
+      "kind": "skill",
+      "bytes": 5678,
+      "sha256": "b48453b016bfa972c9cd6c9caf55df4a28fbc76713f78fcdb0c658293c61a353",
+      "gitBlobSha1": "15c745f98f6c2a3e35554f111f8384465d88a47b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/d3-7.9.0.min.js",
+      "path": "skills/visualize/assets/vendor/d3-7.9.0.min.js",
+      "kind": "skill",
+      "bytes": 279706,
+      "sha256": "f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539",
+      "gitBlobSha1": "33bb880268a5403d6aa21a12389470cebd66e512",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/d3-7.9.0.min.js.LICENSE",
+      "path": "skills/visualize/assets/vendor/d3-7.9.0.min.js.LICENSE",
+      "kind": "skill",
+      "bytes": 731,
+      "sha256": "3e6849627f74ff73c257a3ae1efb574015d94fc1035c05ec3c15805165efcbc4",
+      "gitBlobSha1": "3594fffaf63c7a0dddc35ff82b781e224230bea1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/floating-ui-core-1.7.3.min.js",
+      "path": "skills/visualize/assets/vendor/floating-ui-core-1.7.3.min.js",
+      "kind": "skill",
+      "bytes": 12529,
+      "sha256": "6985ce661153c01d97f6be9babb6a9566f923c716c2b7fbead48fbb09f419ba8",
+      "gitBlobSha1": "4d5eb469eaf73bc1dd3e52596ccceee434115f01",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/floating-ui-core-1.7.3.min.js.LICENSE",
+      "path": "skills/visualize/assets/vendor/floating-ui-core-1.7.3.min.js.LICENSE",
+      "kind": "skill",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+      "gitBlobSha1": "639cdc6c98cad0a67de011da403716f83550897f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/floating-ui-dom-1.7.4.min.js",
+      "path": "skills/visualize/assets/vendor/floating-ui-dom-1.7.4.min.js",
+      "kind": "skill",
+      "bytes": 10251,
+      "sha256": "b8199f76adccb9b17b3ab57124c42585dc19197127d1a5d19307d1983f80bd89",
+      "gitBlobSha1": "2628bacc9048158e5cbce0c1670bc407f0dbdeb1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/floating-ui-dom-1.7.4.min.js.LICENSE",
+      "path": "skills/visualize/assets/vendor/floating-ui-dom-1.7.4.min.js.LICENSE",
+      "kind": "skill",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+      "gitBlobSha1": "639cdc6c98cad0a67de011da403716f83550897f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/lucide-1.17.0.js",
+      "path": "skills/visualize/assets/vendor/lucide-1.17.0.js",
+      "kind": "skill",
+      "bytes": 601680,
+      "sha256": "fde878a4f7aebe548b071eaaf343d898f66d275e93970abe95d8ca5fda290b51",
+      "gitBlobSha1": "2f1a08c47e6574f1720b991512b3e1d40f69f3e4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/lucide-1.17.0.js.LICENSE",
+      "path": "skills/visualize/assets/vendor/lucide-1.17.0.js.LICENSE",
+      "kind": "skill",
+      "bytes": 3208,
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
+      "gitBlobSha1": "718bb3f0e44153809972abed31839375804bf652",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/manifest.json",
+      "path": "skills/visualize/assets/vendor/manifest.json",
+      "kind": "skill",
+      "bytes": 2758,
+      "sha256": "3ad48a2f0b4ef3d7cbb82cab35b169227dd2f812565ef60deb086b55125bb982",
+      "gitBlobSha1": "ef1019c93e08991bebbc554f9ce01bc1dc18668b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/visualize.css",
+      "path": "skills/visualize/assets/visualize.css",
+      "kind": "skill",
+      "bytes": 30609,
+      "sha256": "f75125ca6efcf855d8f354984f603f81a4cfc758b476698be1cc665630c00a41",
+      "gitBlobSha1": "006696ab9e9eda4e430259e980030f9c8df42f75",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/visualize.html",
+      "path": "skills/visualize/assets/visualize.html",
+      "kind": "skill",
+      "bytes": 17507,
+      "sha256": "42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf",
+      "gitBlobSha1": "fafda2140598cdbd1fdfe12313e25a69284e6fa7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/examples/calendar.html",
+      "path": "skills/visualize/examples/calendar.html",
+      "kind": "skill",
+      "bytes": 566,
+      "sha256": "9e5af21629162ed3a1b7612245968da09e3e9fbbc73eb976ca5e6bdc1aa980bc",
+      "gitBlobSha1": "df4e5d13d5972201adb1aaacf9520aa6f5203698",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/references/api.md",
+      "path": "skills/visualize/references/api.md",
+      "kind": "skill",
+      "bytes": 6391,
+      "sha256": "fa0994ac0557d0d2e5ac1a9680458c8cbff9addbdfda90ced5d350d66541ba6b",
+      "gitBlobSha1": "25349b2c80c893b25c6e340ecb1719580d3ea60c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/references/styles.md",
+      "path": "skills/visualize/references/styles.md",
+      "kind": "skill",
+      "bytes": 261,
+      "sha256": "08e37c32baeafa138e85780c7f07b4b9b4f7d5af78184cd4de25e7398fa88818",
+      "gitBlobSha1": "7ebc5c1b6364f6887c5cddc6f2d64658de612fc7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/scripts/render.py",
+      "path": "skills/visualize/scripts/render.py",
+      "kind": "skill",
+      "bytes": 8795,
+      "sha256": "745e04627aa949f2d6d980c0f276d836219e61c06617a511a87943580e389e10",
+      "gitBlobSha1": "a4dac6b6b3a60ad77f84fda7d042a2b7bd58992f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/scripts/vendor.py",
+      "path": "skills/visualize/scripts/vendor.py",
+      "kind": "skill",
+      "bytes": 2457,
+      "sha256": "6b18d791f80297ea2582b4fcd9c6fb041256d0183d6a97bc7ec31516657f5abf",
+      "gitBlobSha1": "3d25288c122516e5bfbc354612fb7ebf58118226",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/tweak.md",
+      "path": "skills/visualize/tweak.md",
+      "kind": "skill",
+      "bytes": 4944,
+      "sha256": "0ee56ea7ee3fe66b62fc1da67a3e1f83ef580ef822636cb7bc4a985dab06ec2d",
+      "gitBlobSha1": "0b61f8e43cae0460968ef38793223bcb6b66824d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "apps/zcode-cli/packages/visualize-plugin/skills/visualize/widgets/calendar.md",
+      "path": "skills/visualize/widgets/calendar.md",
+      "kind": "skill",
+      "bytes": 6390,
+      "sha256": "d6931a34166d04d4a946310674fac21809af7cfca424025885104ef032803f63",
+      "gitBlobSha1": "d039ab42b84deff315dfc3f03296c371174b65aa",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "DESIGN.md",
+      "path": "upstream/DESIGN.md",
+      "kind": "source",
+      "bytes": 40288,
+      "sha256": "23e42df42874e03e02dde9250643373d7b4e63acebaca1d42aa5f212929fcab3",
+      "gitBlobSha1": "36b452f6910ff49d638c0538d4118597604a9895",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "LICENSE",
+      "path": "upstream/LICENSE",
+      "kind": "source",
+      "bytes": 11344,
+      "sha256": "606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b",
+      "gitBlobSha1": "550d8df4cfc74878663a511caa97852f15fd9592",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "docs/specs/gen-ui-external-links.md",
+      "path": "upstream/docs/specs/gen-ui-external-links.md",
+      "kind": "source",
+      "bytes": 3516,
+      "sha256": "1d908a155f63cccf36a8b4ba674dbf4b431e4522161008b12d731061e9b1f8dc",
+      "gitBlobSha1": "48c328412c62d96b449ffbc9a07e09e8f9c32559",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "docs/specs/gen-ui-file-summary.md",
+      "path": "upstream/docs/specs/gen-ui-file-summary.md",
+      "kind": "source",
+      "bytes": 3410,
+      "sha256": "d50309b8437cc87458c74a4e261ac8569a5425e6ee41d3665df28604c9045e5a",
+      "gitBlobSha1": "0fee89b86318b53c4badcd3f230d5c7e7a25a4ae",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "docs/specs/gen-ui-inline-sizing.md",
+      "path": "upstream/docs/specs/gen-ui-inline-sizing.md",
+      "kind": "source",
+      "bytes": 3834,
+      "sha256": "8eda8ddf072d6e695bdbde5d3100c4bd7867bb863dd4277113aea9d0914628b2",
+      "gitBlobSha1": "57256f1bdab50e025ead1bbd88ef5a76d2978861",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "docs/specs/gen-ui-output-directory.md",
+      "path": "upstream/docs/specs/gen-ui-output-directory.md",
+      "kind": "source",
+      "bytes": 4428,
+      "sha256": "b00f04df8eeda7c59af954d11bcb1ad0ed4aae74365f5273f281443401ef3f6e",
+      "gitBlobSha1": "bc20f4ad3e966804af57f8e2708ab060003036a0",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "docs/specs/gen-ui-styles.md",
+      "path": "upstream/docs/specs/gen-ui-styles.md",
+      "kind": "source",
+      "bytes": 5435,
+      "sha256": "1c9fee9a6d0122b3ea4e7b441dd94e4269426f917c691cab56d40b8ea2d5444d",
+      "gitBlobSha1": "4bf658ad33c5bf86d1f5751c620a123725dad83e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/package.json",
+      "path": "upstream/packages/desktop/package.json",
+      "kind": "source",
+      "bytes": 6667,
+      "sha256": "1e63b8bd7bcb43da9e29bab8c073de1b6eb7dadeca7eb8aed3529565ea2ca422",
+      "gitBlobSha1": "f904b6d4a17a1a94667a20d0bd66509e9bb4d9a7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/CONTRACT.md",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/CONTRACT.md",
+      "kind": "source",
+      "bytes": 6268,
+      "sha256": "39384ba7d9b266d39c8cc391863e96b5a03dfdeb25faf3d9067cfc6e5bb8b9a9",
+      "gitBlobSha1": "71acae1f208e350309adc292e31afdff7e71e639",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/capture.test.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/capture.test.ts",
+      "kind": "source",
+      "bytes": 1120,
+      "sha256": "550364c12bbafb67dd031f97c86bfc85d4f2deea9cde9fcdc4c090bd1bada9a9",
+      "gitBlobSha1": "1d595f97ae0c43aef5294caf31c917cf2729e90a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/capture.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/capture.ts",
+      "kind": "source",
+      "bytes": 1525,
+      "sha256": "d0dcb20535cc5a4ded9b6b4f8dd17ff43d1c9250504179492b1983a35022d2bc",
+      "gitBlobSha1": "7d92a41d81300e69ffb97d485eb66e6b28b8eccd",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/clearOrder.test.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/clearOrder.test.ts",
+      "kind": "source",
+      "bytes": 6025,
+      "sha256": "77a9bc99096daae4294b9b852b2744597a653763fa24f1f0d4b6ee48c05a829e",
+      "gitBlobSha1": "af858ec6553cf39bc8b16374898f8283201faee7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/contract.example.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/contract.example.ts",
+      "kind": "source",
+      "bytes": 1217,
+      "sha256": "f0993d23820a88ca22aa55820b462cff0fb366df6cd4d11a03900f89e6451946",
+      "gitBlobSha1": "7d1a9f8b1fc29b9902c4c38dfb15dc83794a41a8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/contract.test.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/contract.test.ts",
+      "kind": "source",
+      "bytes": 1923,
+      "sha256": "8c1a334db02e3a83101816c9a2a76ab78206f4708ce45afa42ba5f40fea3e4fa",
+      "gitBlobSha1": "364ba9e78b5ba3e009fcac140e52bef10cbef80f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/contract.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/contract.ts",
+      "kind": "source",
+      "bytes": 3908,
+      "sha256": "d924bf4889ecc794e0f9020bbb5e82ae0fa3643cb8e2f017dfa962b0dc256db9",
+      "gitBlobSha1": "ce81519a9ea2065f5474362e2e0eb363525c3888",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/csp.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/csp.ts",
+      "kind": "source",
+      "bytes": 4833,
+      "sha256": "4de9f4496402cb89812e635b18b8c6748f77e63ce8dd45e237e8bc36402e29c0",
+      "gitBlobSha1": "0c4fbdbbeb50c0ae20bb0ceffd0d08e046f00679",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/execution.test.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/execution.test.ts",
+      "kind": "source",
+      "bytes": 2920,
+      "sha256": "0bd9cb4c1894b889f924dcc972184353b2b939dedc6e45dec5d11b1d7b262150",
+      "gitBlobSha1": "25ce7af54e5d64916443d99c793df9180fc14faf",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/genUiProtocol.test.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/genUiProtocol.test.ts",
+      "kind": "source",
+      "bytes": 5605,
+      "sha256": "b0cb2e8a82e8b9f25581788e69a4c47021075b2740c3fea685bd28a5a92c93ee",
+      "gitBlobSha1": "01a3404e6f520b3a4c7767562b2ede9487dc1e93",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/genUiVendor.test.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/genUiVendor.test.ts",
+      "kind": "source",
+      "bytes": 2624,
+      "sha256": "acb051106082265ecec8723ba015b06bed55d25cf9171b3160509c62816ad1b7",
+      "gitBlobSha1": "c35692e2b168cac8f440555a77a9ef432272c596",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/genUiVendor.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/genUiVendor.ts",
+      "kind": "source",
+      "bytes": 1875,
+      "sha256": "b0a306ebc66ea255c52f055e15b06b3a3582fb11fdb58952d3653778602a4e2a",
+      "gitBlobSha1": "852e5d12f11ff66a1c2731606e0ba4e4a787975b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/guestPolicy.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/guestPolicy.ts",
+      "kind": "source",
+      "bytes": 8740,
+      "sha256": "9fd00b797de186b06263e4abe75913b0b1baf7ffb2a96d28c71df84ad5030c94",
+      "gitBlobSha1": "1fb654be64f3181da9cd7ec34b8474e5bfe5dfdd",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/host.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/host.ts",
+      "kind": "source",
+      "bytes": 15475,
+      "sha256": "d6e80cb781d08265b62a7ef7583e7418487053e8db37357df2a8ec9015efff8a",
+      "gitBlobSha1": "7e718f2971b0a694cb04c708a3d1a3ce237ef9ce",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/hostLifecycle.test.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/hostLifecycle.test.ts",
+      "kind": "source",
+      "bytes": 5822,
+      "sha256": "e43f69b211dca98aa3f1fe27a143ea4596170eac4a599e56745325b4328b95f5",
+      "gitBlobSha1": "31a7cef2e990d22db9f167677bb225583b3cd82e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/index.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/index.ts",
+      "kind": "source",
+      "bytes": 595,
+      "sha256": "3711fab71624e8daf5303ac086264167e4446e7e734c1bcaf4c194a064d88cf4",
+      "gitBlobSha1": "da6dc8491a6d569013cd7a0244386d207a99cb4f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/module.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/module.ts",
+      "kind": "source",
+      "bytes": 642,
+      "sha256": "f030041ce9575ed1ded35b0ad842b40b71882f3b10577e751b571a451a26a796",
+      "gitBlobSha1": "17ee8519334626231cd864f90937c5e974c6288b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/permissionGate.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/permissionGate.ts",
+      "kind": "source",
+      "bytes": 5610,
+      "sha256": "ef9efe6ce74e681bcc075fe0fd61e516069ca0c1e07a2f1cc317dc93281eac2f",
+      "gitBlobSha1": "d44fc4d0083e94012d70912db7d3a49a0191fb2a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/permissions.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/permissions.ts",
+      "kind": "source",
+      "bytes": 5720,
+      "sha256": "0ec6563180158ada7affc2690784a1afe29c868e84ed23f1943fa45a9e18a7cf",
+      "gitBlobSha1": "21583fe8ec2cc1aa6fbc2f33c2e0b9fd1446230d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/protocol.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/protocol.ts",
+      "kind": "source",
+      "bytes": 12851,
+      "sha256": "df50f60bdef1361d2ca4956f5591329eda4d6d31c21288904c5f8dca4bbb6186",
+      "gitBlobSha1": "bd2d2d1083bc9a261f3a5f90b043cb86acf735d7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/registry.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/registry.ts",
+      "kind": "source",
+      "bytes": 8792,
+      "sha256": "b6b104a1cb4be1df0a938b754cc65a00a5e930b3a3f74d7931c13f5c9f59c6cd",
+      "gitBlobSha1": "c07750cab498f856b9eb7ca289ec04c192f0ea0a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/main/pluginSandbox/session.ts",
+      "path": "upstream/packages/desktop/src/main/pluginSandbox/session.ts",
+      "kind": "source",
+      "bytes": 5787,
+      "sha256": "86b623df65822eabc6b3b563db4366b4a42a6dbaa3fb18e1fbeab5b60ccf7512",
+      "gitBlobSha1": "b5ba617a9b0596431687d530f29953e7141138ed",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/alias.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/alias.ts",
+      "kind": "source",
+      "bytes": 2371,
+      "sha256": "5a06709d99a75f0e549f5dffe45b3477feec39c933c15a24a16b17274c5dbe1f",
+      "gitBlobSha1": "5d91c1112451b146eed042830f88b9df4d1c1741",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/aliasApi.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/aliasApi.ts",
+      "kind": "source",
+      "bytes": 4792,
+      "sha256": "f197dc12c07de41e9db56d9f85247aab678e62d8e9cd4cb818da734bec6494dc",
+      "gitBlobSha1": "61bf8b955f6ec06f416adcffef2b93b31b527b70",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/aliasRuntime.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/aliasRuntime.ts",
+      "kind": "source",
+      "bytes": 11779,
+      "sha256": "2611e08560f910c1c2c6acc8fe1363f1a781949f537223a442c4d6eb117d033f",
+      "gitBlobSha1": "c63f23a383ee3711a53156b9ddd85d698c70305d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/desktopPluginSandboxPlatform.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/desktopPluginSandboxPlatform.ts",
+      "kind": "source",
+      "bytes": 2347,
+      "sha256": "edea9156178a26eb6bedfd324ff267be3faee32305ad043b22c25c6da175d9b3",
+      "gitBlobSha1": "ec7cf70d1bc42737a8990b216652b3703025072d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/genUi.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUi.ts",
+      "kind": "source",
+      "bytes": 8247,
+      "sha256": "a75b04276744a37e8ba17e615c471c0b797415a026824bb391b5ef84eb218c6b",
+      "gitBlobSha1": "eb53a84cdeb90d6354dcb70f31ee07d6c1d8ab74",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.d.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.d.ts",
+      "kind": "source",
+      "bytes": 351,
+      "sha256": "b44e818248690fc01ef2ddfef0d86156946229bc895d9671609dae6697480248",
+      "gitBlobSha1": "362da05d05581a9c086131dd4ac4861b00093bfb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js",
+      "kind": "source",
+      "bytes": 14086,
+      "sha256": "669e78ea50dc7482bc3572b3d9db5070634d52b9c574ce9cdbef4a2a5a50a3e3",
+      "gitBlobSha1": "54d1fe24b0f51c21745538f45901f1240390ed78",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.test.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.test.ts",
+      "kind": "source",
+      "bytes": 3829,
+      "sha256": "1417f908dce7098a25c968581e88f9b7c77a5afb8f66d11543daecb90ff03049",
+      "gitBlobSha1": "6d9b6e342edd935597d3435e081fcc98fc16aaac",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/main.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/main.ts",
+      "kind": "source",
+      "bytes": 3063,
+      "sha256": "d52a741c7e1ae9633b8bc00f152b889966410671ad1a21e05032ee6315ce70b5",
+      "gitBlobSha1": "ca5da5f11cbbc6b1a4842277cb7f61dddf1d50af",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/openaiAlias.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/openaiAlias.ts",
+      "kind": "source",
+      "bytes": 1882,
+      "sha256": "e9c1c479e279e06d7f9299c5dc6ade813aa0f864a95061b538f5dba0cf60f891",
+      "gitBlobSha1": "58f1e1d81d3bfa17e19f5504c0e82ad36e932bf5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/relay.ts",
+      "path": "upstream/packages/desktop/src/renderer/src/plugin-sandbox/relay.ts",
+      "kind": "source",
+      "bytes": 4890,
+      "sha256": "31732f57f8baa528eda1f61be4894a069197fc6ceb0790c805104513dfedd7dd",
+      "gitBlobSha1": "24ec0d0002435dab6866f21115ac23021901c976",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/vite.config.ts",
+      "path": "upstream/packages/desktop/vite.config.ts",
+      "kind": "source",
+      "bytes": 10866,
+      "sha256": "b5e559d114466d6c5b85c7514dfaef9cbdbd62dbd4fcc3b864e720a7805cd2d3",
+      "gitBlobSha1": "e188b8990fe3bdcef0cc5c737d5acf8581fa0299",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/package.json",
+      "path": "upstream/packages/services/package.json",
+      "kind": "source",
+      "bytes": 1222,
+      "sha256": "08ea06b5adac4515f771daf5068eb33353c59979768eb1eb0c64fc066354a24a",
+      "gitBlobSha1": "2d7845d5a04e12a14ad67b40ebc4bff169de2b77",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/CONTRACT.md",
+      "path": "upstream/packages/services/src/gen-ui/CONTRACT.md",
+      "kind": "source",
+      "bytes": 1629,
+      "sha256": "bed937acd9feacbd5b69e99512804521b7be9efd2b6355cc89cd11950f18b0a0",
+      "gitBlobSha1": "fc45462e0ff4ecef38a470ffd3997db1c03d5277",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/adapters/files.test.ts",
+      "path": "upstream/packages/services/src/gen-ui/adapters/files.test.ts",
+      "kind": "source",
+      "bytes": 5000,
+      "sha256": "2e45c2462779a8539e183061890984bd64f7e9e5b4f1ae23c45afadca1974442",
+      "gitBlobSha1": "04305f0b5f893fbaa18040ae1419ff88ade6f5df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/adapters/files.ts",
+      "path": "upstream/packages/services/src/gen-ui/adapters/files.ts",
+      "kind": "source",
+      "bytes": 3152,
+      "sha256": "8e98f310525ac70c31e19f34e8fae195bc7482efad18b610226660f15910de07",
+      "gitBlobSha1": "cea449ed4b5b2972b638c76511543b19350aded2",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/adapters/service.test.ts",
+      "path": "upstream/packages/services/src/gen-ui/adapters/service.test.ts",
+      "kind": "source",
+      "bytes": 2002,
+      "sha256": "170151225ed888e6e5dd6c5033b36560410ecda3f13d99284f3817a932270f7c",
+      "gitBlobSha1": "4e01cd997989df52228951bbc9449c037ee640f2",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/adapters/service.ts",
+      "path": "upstream/packages/services/src/gen-ui/adapters/service.ts",
+      "kind": "source",
+      "bytes": 3203,
+      "sha256": "51cc91a5e2a72210f5d33d195198cff848089e369cab6ef12eb005d9a94a463b",
+      "gitBlobSha1": "c0a9c6906abb6aa82ec4be04eaa21adae1c53ee1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/adapters/stateStorage.test.ts",
+      "path": "upstream/packages/services/src/gen-ui/adapters/stateStorage.test.ts",
+      "kind": "source",
+      "bytes": 3251,
+      "sha256": "94030c77ea71c898e9b7d47071bf50448ca54320576d4ec81e4473e27d34580c",
+      "gitBlobSha1": "c41791e48a7558731d06e79254372edd59b796fe",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+      "path": "upstream/packages/services/src/gen-ui/adapters/stateStorage.ts",
+      "kind": "source",
+      "bytes": 6900,
+      "sha256": "4eecfedaa9be20183bca4581a036eab74ab2b79ca086923d5d5b952e7f0cfa11",
+      "gitBlobSha1": "069e43510644f018a3fdcec835623fb0f9f3112a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/adapters/stateStorageNotifications.test.ts",
+      "path": "upstream/packages/services/src/gen-ui/adapters/stateStorageNotifications.test.ts",
+      "kind": "source",
+      "bytes": 3580,
+      "sha256": "08ed8c9cf5d5ae5dc990d58071bdedea6bd4056b8ca6229e19167acaf73e149d",
+      "gitBlobSha1": "6c70a233f6d6a6f8f4ec01adea367d47abf1e790",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/app/ports.ts",
+      "path": "upstream/packages/services/src/gen-ui/app/ports.ts",
+      "kind": "source",
+      "bytes": 470,
+      "sha256": "188c132bf6ce304909037462e238066068b06b806e6ba1f8c175b30f5f422037",
+      "gitBlobSha1": "97afb8f19d3e42ca600023c0bef720c11a64900c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/contract.example.ts",
+      "path": "upstream/packages/services/src/gen-ui/contract.example.ts",
+      "kind": "source",
+      "bytes": 297,
+      "sha256": "0c8b22aaf50f66537ff64fb3440ff3286d1839cff8a6de1e9a722e74c1204a1d",
+      "gitBlobSha1": "7b2a21018c67fe7e08e89eb4cd9010cd2111e139",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/contract.ts",
+      "path": "upstream/packages/services/src/gen-ui/contract.ts",
+      "kind": "source",
+      "bytes": 1081,
+      "sha256": "d8954870f466824fa61ef60a648cbb7b160afbc0ff4762d1191d5f0feba9d0e0",
+      "gitBlobSha1": "e97867f9b55a5db298741d9a2bbd02f250a17aba",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/index.ts",
+      "path": "upstream/packages/services/src/gen-ui/index.ts",
+      "kind": "source",
+      "bytes": 104,
+      "sha256": "bd9bdeb19e9b1e5dec6f574758f24dae47b53cf43ee2f5e44e5298f0b431ec67",
+      "gitBlobSha1": "9b78d4d022eb4791a8c0d814ecdfa68b8e4e930a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/module.ts",
+      "path": "upstream/packages/services/src/gen-ui/module.ts",
+      "kind": "source",
+      "bytes": 248,
+      "sha256": "a8b844795cbd629c1036351a4768e98db1466251b61a55fd18530d4fff60fd9b",
+      "gitBlobSha1": "b64251769729cbf3e4ca3176199299e0ac3ec4bf",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/services/src/gen-ui/node.ts",
+      "path": "upstream/packages/services/src/gen-ui/node.ts",
+      "kind": "source",
+      "bytes": 60,
+      "sha256": "a6047379a2ad34185cd98f3d0ada603d376fd034744eb86b9184eb10547d48fd",
+      "gitBlobSha1": "e241c886524eb8cd0212a4e64df186e53f234060",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/package.json",
+      "path": "upstream/packages/shared/package.json",
+      "kind": "source",
+      "bytes": 1933,
+      "sha256": "75d61b530bda3441611d433007a86ae51283a0637247e179becc6947260430fd",
+      "gitBlobSha1": "a1f4550cd216a59adbcc54bbbb4230b41f4731fe",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/gen-ui/CONTRACT.md",
+      "path": "upstream/packages/shared/src/gen-ui/CONTRACT.md",
+      "kind": "source",
+      "bytes": 1066,
+      "sha256": "0ac966ee76e80c66d741d7982c550018636cbb66bc1d25ca2435a2493c966096",
+      "gitBlobSha1": "fc10463e8fca801aa977da622cd883fe32625b17",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/gen-ui/contract.example.ts",
+      "path": "upstream/packages/shared/src/gen-ui/contract.example.ts",
+      "kind": "source",
+      "bytes": 870,
+      "sha256": "41fbfd962f28bff286be97e59675634c99450fb2d8de7b54f81c10140e8cea48",
+      "gitBlobSha1": "defbb364282936b8fa9a568f80bb2d7628ef7edd",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/gen-ui/contract.test.ts",
+      "path": "upstream/packages/shared/src/gen-ui/contract.test.ts",
+      "kind": "source",
+      "bytes": 3825,
+      "sha256": "44f346a161022a3c5ab97b87e9203f5eaf00d82aa5e958575871fe29825ae927",
+      "gitBlobSha1": "1e761ecc3b86b990c407a160f0211c61b3897731",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/gen-ui/contract.ts",
+      "path": "upstream/packages/shared/src/gen-ui/contract.ts",
+      "kind": "source",
+      "bytes": 7606,
+      "sha256": "42b26cf4971b60236d2cf6da07eea1b629fef5d4d89881e8484f268987e8020b",
+      "gitBlobSha1": "be72ce6e93ff64efe2e2c9709e75d4ce852199b3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/gen-ui/index.ts",
+      "path": "upstream/packages/shared/src/gen-ui/index.ts",
+      "kind": "source",
+      "bytes": 31,
+      "sha256": "07480618432fe5c5ed124b5809b7ed36d3d40a284e3ccb71cbd7d16de6c44605",
+      "gitBlobSha1": "03247eb4f59b8ec9c3c0ec8274c0e95e68750e10",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/gen-ui/module.ts",
+      "path": "upstream/packages/shared/src/gen-ui/module.ts",
+      "kind": "source",
+      "bytes": 173,
+      "sha256": "e2ce94c157dee72a908d44e6c39e97fb8df62f0e7d88533e7f19a75a123f115f",
+      "gitBlobSha1": "183eb4bd850b522e7de7c112441ee5b5336bd022",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/gen-ui/tweakProtocol.ts",
+      "path": "upstream/packages/shared/src/gen-ui/tweakProtocol.ts",
+      "kind": "source",
+      "bytes": 4490,
+      "sha256": "474b7bc47a6c4d6fca8620834ac5c09b056c81e8cd938a585d8565200d1cd05a",
+      "gitBlobSha1": "176bec04aa548ac9da43c9831855dad1549bd4f3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/CONTRACT.md",
+      "path": "upstream/packages/shared/src/mcp-apps/CONTRACT.md",
+      "kind": "source",
+      "bytes": 3068,
+      "sha256": "8b850b5f86cf678e795871bcf657b21cd45ea506c4d0b136f21b5a0e9bfa9cf9",
+      "gitBlobSha1": "3e75b5ecb154eb950c420349d0229bd280edcbff",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/appTools.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/appTools.ts",
+      "kind": "source",
+      "bytes": 6881,
+      "sha256": "56e79ed990a404269084450bb4eec4297df07b43de5a5b0399123c56342483b4",
+      "gitBlobSha1": "98f53a3adbdcca1b8099f0d42d2bfafe7565bc3e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/content.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/content.ts",
+      "kind": "source",
+      "bytes": 393,
+      "sha256": "1675b0b89b82c70573b8e60ddd75b25e6a81c8620ce9d2e49d8363900b207056",
+      "gitBlobSha1": "a024597f954d8f82bd357aec5c774954f8c5c632",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/contract.example.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/contract.example.ts",
+      "kind": "source",
+      "bytes": 2071,
+      "sha256": "17189b1f889d1ad128cde9de4cf09b2990e598c61ed926bd641b35a63179c035",
+      "gitBlobSha1": "004cdaa5dd9c6d305221015958b03ff7b2e9f26e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/contract.test.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/contract.test.ts",
+      "kind": "source",
+      "bytes": 2952,
+      "sha256": "ca004c70a8304f5d4415537099f554affee11bd67a93d56a69c6dd9cbbae69dc",
+      "gitBlobSha1": "c0604f127023782006e009571ef740a2c8edca97",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/contract.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/contract.ts",
+      "kind": "source",
+      "bytes": 13647,
+      "sha256": "cff9fc58409e44847caca49b132405343293f37844e487c329ffb39c67d5da99",
+      "gitBlobSha1": "a432f8f73a09a7172a798caece7464eed26880b9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/hostContract.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/hostContract.ts",
+      "kind": "source",
+      "bytes": 1916,
+      "sha256": "de1e1e81ffbf4bf98a7d11bb8cf4bb52e6469a6955f6d7ef487a57aeabcc1f77",
+      "gitBlobSha1": "844ea86a884c58a4070284ee0e992212234e82c1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/index.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/index.ts",
+      "kind": "source",
+      "bytes": 250,
+      "sha256": "3f92432e5b7a7ebd939f6939f7fbc9c49aa2d2d19252889e0efa0036e5398663",
+      "gitBlobSha1": "577a6d5b03c24e69115b409591440e0ff374740a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/instance.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/instance.ts",
+      "kind": "source",
+      "bytes": 401,
+      "sha256": "3488a275435494df1bfd3e271086353712e11971f64aa74f54695aef02ea2612",
+      "gitBlobSha1": "02cebb046ea035499a2ef50b11961c5e71c1ac7a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/module.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/module.ts",
+      "kind": "source",
+      "bytes": 510,
+      "sha256": "3fe37ab7585e46e41857e7959b98e99865c8d3e9bb35ffe020cb19da1de65b4d",
+      "gitBlobSha1": "1b66018597c9da0d2201d7955aee21c10cc0aeca",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/resourceMime.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/resourceMime.ts",
+      "kind": "source",
+      "bytes": 2302,
+      "sha256": "b21b1ac738deb13ec89ce7ffd88cadb57101f4687ed20b044ff2d7ab2547ce5d",
+      "gitBlobSha1": "e8f2e0d610731db1ca7f3881b2fa33353537fc84",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/sampling.test.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/sampling.test.ts",
+      "kind": "source",
+      "bytes": 2606,
+      "sha256": "ae758d70765bcccb254a49f05c259f038387dfae3d936917b1e423c9af5dcc30",
+      "gitBlobSha1": "bc6a52bc6b12b7907a84ae92ddf5a306f9971ced",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/sampling.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/sampling.ts",
+      "kind": "source",
+      "bytes": 4382,
+      "sha256": "7e6f2c82155f21c7f121b411a53f0b68e574120d241854712e1b908cb0fc9f93",
+      "gitBlobSha1": "f203be647577a5e509d5f8341bb06a318cd11432",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/schemas.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/schemas.ts",
+      "kind": "source",
+      "bytes": 4053,
+      "sha256": "a74ee82c780a0ebab95f017e095edea48e9488808ad6ce04f98eeb2ab8a30a4f",
+      "gitBlobSha1": "7b4ae8167e2d53fe1a3b15a79250397c2330fc30",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/mcp-apps/toolMeta.ts",
+      "path": "upstream/packages/shared/src/mcp-apps/toolMeta.ts",
+      "kind": "source",
+      "bytes": 9367,
+      "sha256": "a15abcd4093d5f189b3b0683519685cef683006d983f9f833b5701b26ab05327",
+      "gitBlobSha1": "5cb425a85330fcc5b8abd5e7e5ccdb480e441a5f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/node/genUiPaths.test.ts",
+      "path": "upstream/packages/shared/src/node/genUiPaths.test.ts",
+      "kind": "source",
+      "bytes": 2069,
+      "sha256": "f5e7606ca555da38cd96746dfc48400903dda8db419ff94b968ce6ce632d5ff8",
+      "gitBlobSha1": "296fccf196c50fa78f46593c4f5359b6af9fa9a1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/shared/src/node/genUiPaths.ts",
+      "path": "upstream/packages/shared/src/node/genUiPaths.ts",
+      "kind": "source",
+      "bytes": 1012,
+      "sha256": "9fe594b8a77cc74114d09146ee2a2f55e9ac2730fad7bfcacdaea82be63b7675",
+      "gitBlobSha1": "44f2474cd2cd80f373893ed20ee73b18f0eba2db",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/package.json",
+      "path": "upstream/packages/ui/package.json",
+      "kind": "source",
+      "bytes": 3805,
+      "sha256": "06c26cbfcb4eb44a193c4e69eb9cfb8d14a7aee55d243a9c226c424ee1bdd24a",
+      "gitBlobSha1": "32a7f20cd1ce6a3e8bf9ddbac14ff877ceb465c5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/components/ai-elements/message.tsx",
+      "path": "upstream/packages/ui/src/components/ai-elements/message.tsx",
+      "kind": "source",
+      "bytes": 57334,
+      "sha256": "6c35829ed11321e850cd59e20c1c88fdd452e8e2d9b5da45f808371021aabf99",
+      "gitBlobSha1": "f8088feb77dea0e09854450e183d18d55db8db4b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/components/lib/utils.ts",
+      "path": "upstream/packages/ui/src/components/lib/utils.ts",
+      "kind": "source",
+      "bytes": 604,
+      "sha256": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "gitBlobSha1": "0f05a8e7a8462cf02b3c7aa29e3043783a4ef599",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/components/ui/button.tsx",
+      "path": "upstream/packages/ui/src/components/ui/button.tsx",
+      "kind": "source",
+      "bytes": 3607,
+      "sha256": "3bf0b1573c940999f875a1dd5e67a32e7d9bcb3e320774fa8277f5c00748b32b",
+      "gitBlobSha1": "89ca4a98780506f5e89a900bd7129d003921fd5b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/components/ui/dialog.tsx",
+      "path": "upstream/packages/ui/src/components/ui/dialog.tsx",
+      "kind": "source",
+      "bytes": 5186,
+      "sha256": "fb2decab75993205ec5670acbd5b8b7dfc9b1518d3acb457ddde7edd1984d44e",
+      "gitBlobSha1": "85bf4006f42070c53810bc4cae470716238e25fc",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/components/ui/textarea.tsx",
+      "path": "upstream/packages/ui/src/components/ui/textarea.tsx",
+      "kind": "source",
+      "bytes": 874,
+      "sha256": "a839574ce1301fbaa9ba917fdb980900eb9118bffa7c6c4e469f3293b122ed30",
+      "gitBlobSha1": "552ef92bba935019fd2c59403b5f8c22392a3153",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/CONTRACT.md",
+      "path": "upstream/packages/ui/src/gen-ui/CONTRACT.md",
+      "kind": "source",
+      "bytes": 2740,
+      "sha256": "e949899e125a5dc357c6d01daf05efe521c01c370a88df1d39e861660114fede",
+      "gitBlobSha1": "b3f886b58ed52b59b8b5f397c3e97490e2b87f52",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/adapters/page.ts",
+      "path": "upstream/packages/ui/src/gen-ui/adapters/page.ts",
+      "kind": "source",
+      "bytes": 12239,
+      "sha256": "282b9ab5bb8d5c5294bc0bf0d7459ed44a8ccbedb5bab79f981547e2342807d0",
+      "gitBlobSha1": "6f84c8835c06e59abe099c3b1d6118ae4350d465",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/adapters/retainedPage.ts",
+      "path": "upstream/packages/ui/src/gen-ui/adapters/retainedPage.ts",
+      "kind": "source",
+      "bytes": 6771,
+      "sha256": "087a50f086d6198442f86ed6e146ee35915b6010c74fb089932b2cf6b9cb72b6",
+      "gitBlobSha1": "11fc3f62fd59d2c0d529c0c35d120ff9c1ae628d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/adapters/theme.ts",
+      "path": "upstream/packages/ui/src/gen-ui/adapters/theme.ts",
+      "kind": "source",
+      "bytes": 1790,
+      "sha256": "9608dd443b8dbf0eef2d07fa1878260b70e0ab2e72c59c0a563d05eb60bef8cb",
+      "gitBlobSha1": "2b9fd20499de36144c6e432f54adb67d85eee701",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/app/tweaks.test.ts",
+      "path": "upstream/packages/ui/src/gen-ui/app/tweaks.test.ts",
+      "kind": "source",
+      "bytes": 3459,
+      "sha256": "ee15622e333c614fecdc2321bc8940da7e1d5a28458b87f13eded08e3681c1a1",
+      "gitBlobSha1": "908ab3d56e0df5d618f599e3bad4ea6d81720150",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/app/tweaks.ts",
+      "path": "upstream/packages/ui/src/gen-ui/app/tweaks.ts",
+      "kind": "source",
+      "bytes": 3829,
+      "sha256": "06ad14b7b24f43d316fecc9729d006a9aaed2fb6c20c7cf6e12e295a0989e125",
+      "gitBlobSha1": "c8ecffeebea78b4a2ec71e9e2df2aed1f15cad1d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+      "path": "upstream/packages/ui/src/gen-ui/components/GenUiCard.tsx",
+      "kind": "source",
+      "bytes": 9044,
+      "sha256": "ac5b0339302f7e869153e2450b91079fba2d4ebdf15e99f5390e0d96b22cae4b",
+      "gitBlobSha1": "8eb7bc66444d58430bcd72c24ddf3547178597ab",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/components/GenUiMessageResponse.tsx",
+      "path": "upstream/packages/ui/src/gen-ui/components/GenUiMessageResponse.tsx",
+      "kind": "source",
+      "bytes": 2134,
+      "sha256": "f20c74afa42cede4b4b500a003435b56a1db5144413c99c9990bc5193358386c",
+      "gitBlobSha1": "677b7dafd9db2b3b341a53fa0cb9a018a32b0ae8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/components/TweakPanel.tsx",
+      "path": "upstream/packages/ui/src/gen-ui/components/TweakPanel.tsx",
+      "kind": "source",
+      "bytes": 4568,
+      "sha256": "8ae2afed842f226abd650f6cb49fbf8fdb777920ce71a50b0764e0f91edfd34e",
+      "gitBlobSha1": "1c92db5520c387de9116f7740f3d19ee36c8488d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/contract.example.ts",
+      "path": "upstream/packages/ui/src/gen-ui/contract.example.ts",
+      "kind": "source",
+      "bytes": 442,
+      "sha256": "c27e1f9f387060dbb112100a06aa1c798b7e2094aafabbb4b8a777a1514e7643",
+      "gitBlobSha1": "1dffee0df10cbbd47ed220c6efdd30df753b475a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/contract.test.ts",
+      "path": "upstream/packages/ui/src/gen-ui/contract.test.ts",
+      "kind": "source",
+      "bytes": 1013,
+      "sha256": "2a5a1e64599f46b0fdd4011091d008f6b4ed183440730128aa11d806474a7d22",
+      "gitBlobSha1": "05cfc5470a97255e0c2801c2bf3c90062d44c5e8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/contract.ts",
+      "path": "upstream/packages/ui/src/gen-ui/contract.ts",
+      "kind": "source",
+      "bytes": 1242,
+      "sha256": "88c79e729897c03cdcc1307297d46d342fb12dbd42ff8d32f45d2b79691c0c1c",
+      "gitBlobSha1": "2ce7ec20ababbb80c40773a27bffbbd81d6afe99",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/domain/references.test.ts",
+      "path": "upstream/packages/ui/src/gen-ui/domain/references.test.ts",
+      "kind": "source",
+      "bytes": 6167,
+      "sha256": "b82749941367d23e5d2ab87565da150cdade918319f3c225f556f87bee3be697",
+      "gitBlobSha1": "efaa772d640460576e485bc3a607bcdfae511c1b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/domain/references.ts",
+      "path": "upstream/packages/ui/src/gen-ui/domain/references.ts",
+      "kind": "source",
+      "bytes": 3595,
+      "sha256": "9f6b76e49f09f997991f4a8511743f60828c180d41923812cb53998304f85c62",
+      "gitBlobSha1": "aad4255d2bf669fdf653b570fff80d39c33186bd",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/domain/sourceFiles.ts",
+      "path": "upstream/packages/ui/src/gen-ui/domain/sourceFiles.ts",
+      "kind": "source",
+      "bytes": 726,
+      "sha256": "e528c5986012aacd6fa62d49674c444d6ca7d3e954b9a2d3a5b1d0200600e702",
+      "gitBlobSha1": "ecde206033e2ee2a67c31c263f523ef36647d43d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/host.ts",
+      "path": "upstream/packages/ui/src/gen-ui/host.ts",
+      "kind": "source",
+      "bytes": 206,
+      "sha256": "f53bb1129f6d9c513c6ac3e2025dece2e1a9ef33395115b223a2c4c057409f77",
+      "gitBlobSha1": "d30afd576485e664aa008bd4802ecf45f854cbf6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/index.ts",
+      "path": "upstream/packages/ui/src/gen-ui/index.ts",
+      "kind": "source",
+      "bytes": 162,
+      "sha256": "3265bafde0606369b5923a08aa41cecd1ca086515ccf4fd39a716f1c6e4cb262",
+      "gitBlobSha1": "5f3f84a4416b5644d3ed4b0208e1f5a1146ba271",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/gen-ui/module.ts",
+      "path": "upstream/packages/ui/src/gen-ui/module.ts",
+      "kind": "source",
+      "bytes": 282,
+      "sha256": "01eb7b630fcd7e374c68c3eda2e32192a4d8779f41b4c8a39f32f7432d2cd334",
+      "gitBlobSha1": "f2e99f5ee7a8838c9409ebd6d2f027f6bb058dad",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/hooks/useGenUi.ts",
+      "path": "upstream/packages/ui/src/hooks/useGenUi.ts",
+      "kind": "source",
+      "bytes": 2767,
+      "sha256": "54db0282b47a374d09a29c5db0a6bad9239c392f1388bb114659b8e38d6fc6a1",
+      "gitBlobSha1": "3e9aab4536fc184da42f938ca246388af7593e5b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/hooks/usePlatform.tsx",
+      "path": "upstream/packages/ui/src/hooks/usePlatform.tsx",
+      "kind": "source",
+      "bytes": 1520,
+      "sha256": "e0b99d7e15b03f720cd1d5d07e6327008583b22fc29402abb11d9dfa3c318628",
+      "gitBlobSha1": "188b06065b81a4d05b3fd07070ef284c23583456",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+      "path": "upstream/packages/ui/src/hooks/useWorkspaceServices.tsx",
+      "kind": "source",
+      "bytes": 9419,
+      "sha256": "3b6367a4a7827d90ad2aa2328d55fbf54dae9039eed00463ad250103fa251535",
+      "gitBlobSha1": "91e5f241644099ee1db5646d77b7784572487e96",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/i18n/IntlProvider.tsx",
+      "path": "upstream/packages/ui/src/i18n/IntlProvider.tsx",
+      "kind": "source",
+      "bytes": 12753,
+      "sha256": "6ca4fe824355e6da70168dee59b086942bc6af70b07fc347caadda76406793e4",
+      "gitBlobSha1": "e495f70ab32c8c92079936e79a0b423b0b49bf7b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/i18n/locales/en-US.ts",
+      "path": "upstream/packages/ui/src/i18n/locales/en-US.ts",
+      "kind": "source",
+      "bytes": 504800,
+      "sha256": "12f3de4b2f3a46636f4f6eb679bdbd7e01c7f575aa810bca4f8018dbbdd1208e",
+      "gitBlobSha1": "2a750f1f7107974a939a7bf24d72d22d967ec1eb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/i18n/locales/zh-CN.ts",
+      "path": "upstream/packages/ui/src/i18n/locales/zh-CN.ts",
+      "kind": "source",
+      "bytes": 504134,
+      "sha256": "51e4a09f9c6079e2c17d7bd1d1f3520398c0bf0d2e3409d0dc7e55a21ec521a9",
+      "gitBlobSha1": "98c2c00e980e9f8edbf39c63a930a9ea89d2f176",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/lib/assistantDirectiveParser.ts",
+      "path": "upstream/packages/ui/src/lib/assistantDirectiveParser.ts",
+      "kind": "source",
+      "bytes": 12748,
+      "sha256": "c64b119e46f917e2d869658559cb1113cc40caae1a89d68328b256ee4d76e09f",
+      "gitBlobSha1": "81e539cff94882760cfd2db6a98c2a81048d80c4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/CONTRACT.md",
+      "path": "upstream/packages/ui/src/plugin-ui/CONTRACT.md",
+      "kind": "source",
+      "bytes": 6110,
+      "sha256": "2fef502aa61c707557022cf56dbc04e6a70f5b6c63fd13b329f08be07fc20e42",
+      "gitBlobSha1": "1a6c849cc12319bd0e7252609b492f6546cc3798",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/PluginUiSidePane.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/PluginUiSidePane.tsx",
+      "kind": "source",
+      "bytes": 1234,
+      "sha256": "2bbbd908c37687f7aea59d32747229b5db1eb5da96e7a8d368784cd080dfb32a",
+      "gitBlobSha1": "b2627b52a70c82e4b541ef96a7b89ee36a19e698",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/PluginUiToolCallBlock.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/PluginUiToolCallBlock.tsx",
+      "kind": "source",
+      "bytes": 1002,
+      "sha256": "3e644e3cbd92062e96b880705948c23155372c0b91ebbfbf607f34ccef0dce4b",
+      "gitBlobSha1": "cb9c7ef17c747c2c232cdead5c83001a748196ad",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/PluginUiBackgroundHost.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/PluginUiBackgroundHost.tsx",
+      "kind": "source",
+      "bytes": 848,
+      "sha256": "a8588e39c5fee5522d3850849b2b17b8ea5a82e219100b92bba7f9d5190e15dd",
+      "gitBlobSha1": "1f4d8b18d843117859ee20e90859a8a02cf78f46",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/PluginUiModelContextChip.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/PluginUiModelContextChip.tsx",
+      "kind": "source",
+      "bytes": 2743,
+      "sha256": "6cdecc390f4b977243cb893fe864db2ad23ef6d4a21608bdb5f022075d5d134c",
+      "gitBlobSha1": "0984b3ab1eb8df9d8c9fb0939fb6407921241efa",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/PluginUiProviders.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/PluginUiProviders.tsx",
+      "kind": "source",
+      "bytes": 3661,
+      "sha256": "fff861c74dd33341df4c9ffcff21c6f94cb63c0743e0887aad20e2f29d8df0dd",
+      "gitBlobSha1": "4716406c7d79dab8dd47ab297f83c243a04f9ce9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/messagePortTransport.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/messagePortTransport.ts",
+      "kind": "source",
+      "bytes": 1388,
+      "sha256": "5ea615fef0f67dfc61ef842c1c9d010476f0d758d34775a0e07f9c5867ae9914",
+      "gitBlobSha1": "06815059707b11cabf171cd07922670133e8e5b4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+      "kind": "source",
+      "bytes": 2723,
+      "sha256": "547e3ed9a56cb2518718806d027a9f1b6a034d3e9f958e9066413c075f56a263",
+      "gitBlobSha1": "2df5e56643677d33270795b145a5c5d3f55e770a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+      "kind": "source",
+      "bytes": 5775,
+      "sha256": "8bc3dd36f5d6f3f35653c3c168657af66c149c40dea3b7f7585dfb05b08e4e4f",
+      "gitBlobSha1": "3a30ee1ea1ab299614b53b2ae51e61ff16f32dc6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiHostTypes.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiHostTypes.ts",
+      "kind": "source",
+      "bytes": 2962,
+      "sha256": "6c6ff9efeb0617f6ea201c66a7f3aa1d860049f37e184aeb0418929459ac84c4",
+      "gitBlobSha1": "04050c1e298c7894b6d427cf474b6eb1a7de3f81",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+      "kind": "source",
+      "bytes": 5259,
+      "sha256": "e4861d3e6c6df2c74a6ed59d029d818d3955aa000526313e5486e04a53e6de09",
+      "gitBlobSha1": "37a2e4e7c9288a7a2dabd2f0c1831276f93ef8f9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+      "kind": "source",
+      "bytes": 19192,
+      "sha256": "19725794b4f433c66b5334d8d03cc05ad17091b7ea683f693637038338e064c8",
+      "gitBlobSha1": "533a97ac8988d903b131b29a09ccff1955e83141",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiModelContextEvents.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiModelContextEvents.ts",
+      "kind": "source",
+      "bytes": 2525,
+      "sha256": "f5deb7e0335b660b1813bce45085fd21ac62d6e39771079029888111638db730",
+      "gitBlobSha1": "73c2f991a58829b99329d032197246d97971cf08",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiPagePlane.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiPagePlane.ts",
+      "kind": "source",
+      "bytes": 9863,
+      "sha256": "65b5e865cf2d262b83163dd954ea573951b32ffe3b795614b04bcf001b679952",
+      "gitBlobSha1": "6cb1aa2a31179dc76f61c658044b8510ae09bf56",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiPageRegistry.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiPageRegistry.ts",
+      "kind": "source",
+      "bytes": 2755,
+      "sha256": "9526bdea8579aac25d80a0eef60cfd74d3b23a56a8062f61391f8fab5803d26e",
+      "gitBlobSha1": "467fac672c3adb683eaa53d3f3300e404559c7f5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiResourceDeltaFeed.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiResourceDeltaFeed.ts",
+      "kind": "source",
+      "bytes": 2025,
+      "sha256": "90184f8973f81a4ec4fffcfd1850e08b79b24bc8ff957f5bd94a24c43891d58d",
+      "gitBlobSha1": "1d2f6492554cd3e823bfce5bfa99779e22eebdce",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiSessionActions.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiSessionActions.ts",
+      "kind": "source",
+      "bytes": 745,
+      "sha256": "2813d87d149d2923f4f0bc920feab224d9cd60250d90f494ba9f1e1a4481cbcd",
+      "gitBlobSha1": "d95e1145140164c0fd92f0cd5b4b592992d2c206",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiSessionBinding.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiSessionBinding.ts",
+      "kind": "source",
+      "bytes": 1453,
+      "sha256": "4653f2c4cb0b534f0eb8a91935a2aef0c777e92506d5a606c2bc34b57645d23a",
+      "gitBlobSha1": "141c21dcbd6944f264a8f0514d21e0830bc860e8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/pluginUiStateKey.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/pluginUiStateKey.ts",
+      "kind": "source",
+      "bytes": 384,
+      "sha256": "60d4421d0f9228b026284a4f8afe4df92e7b3ace3d01b931cb71df78bd2dfc97",
+      "gitBlobSha1": "182c686b6afeb21813e42f0505c913619c95de6b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/readPluginUiStyleVariables.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/readPluginUiStyleVariables.ts",
+      "kind": "source",
+      "bytes": 680,
+      "sha256": "3e3fdfff63688d782d7546bdb96a23692c629db64fb78e72c484cbb08118c312",
+      "gitBlobSha1": "7f07c4fc62c3d92790939dc26b977269a8bc183d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/sandboxPageOwners.test.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/sandboxPageOwners.test.ts",
+      "kind": "source",
+      "bytes": 1854,
+      "sha256": "948c77ce6f4260a63227dd71b7013f8a9cffb76d579ae2d469d293e5595181f4",
+      "gitBlobSha1": "55b3018597ccfe62473c8b7f86a050b7a06c3dc6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/sandboxPageOwners.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/sandboxPageOwners.ts",
+      "kind": "source",
+      "bytes": 894,
+      "sha256": "e16980c4c884f0cd7442e3492c9946c5e35e2c43026b96b8bf3868837dcb168d",
+      "gitBlobSha1": "29bdc8be836c9839c1f61587fe44ec448243b64e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+      "kind": "source",
+      "bytes": 4222,
+      "sha256": "561c05bf64ab83d3f4077f9cb8a04bf1f352af9f6e8144746068111cd14bc991",
+      "gitBlobSha1": "93e2e0816f260249a082edf9c11f75b39e5757a7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/usePluginUiContextImages.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/usePluginUiContextImages.ts",
+      "kind": "source",
+      "bytes": 2462,
+      "sha256": "d62dfca4bd7d8f46bf90b6aaae2282149a20ac4432ec40a8b6ade5ba73fbd9dc",
+      "gitBlobSha1": "032d7cf2037cc260a9c9ce5504c979e451434cfe",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+      "kind": "source",
+      "bytes": 3120,
+      "sha256": "79ed05c3e880ee00e5575f73159545246e9ce5163e13411cc595fd3127d83bf6",
+      "gitBlobSha1": "1242aa856b1c64574489bb7485335a0326bdc664",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+      "kind": "source",
+      "bytes": 9839,
+      "sha256": "63449adf1379f323a49b55bce2b7f7303ddff69ec0908a31293cde7c4ae1ac56",
+      "gitBlobSha1": "d384ad31d05db5fc10448a79820d67298bcecf3f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/usePluginUiSurfaces.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/usePluginUiSurfaces.ts",
+      "kind": "source",
+      "bytes": 2944,
+      "sha256": "915c72504ec80b8a2860c24193cf810fafb20d7b57146c60c2a1472bb96ebd7b",
+      "gitBlobSha1": "2fcd00bed51800f9851c81de3be056341dc762da",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+      "kind": "source",
+      "bytes": 12089,
+      "sha256": "f1a462a57b428bc2cb6235a63435839c137ff0bd649897467555053aaa55a9f9",
+      "gitBlobSha1": "c62d178111992dee8692d51a923114782a436e78",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+      "kind": "source",
+      "bytes": 5583,
+      "sha256": "3d41df1cca39b31d2f92a60a689f9566924aad5d7f0ea33911c266c53798f3f9",
+      "gitBlobSha1": "75244d894a576b84e03bacfe4d435c3184bdda6e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/adapters/useUiPluginRecommendations.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/adapters/useUiPluginRecommendations.ts",
+      "kind": "source",
+      "bytes": 1521,
+      "sha256": "5345c311b9a6ba674b294ba8f7c55eaaf86cc7148195babce46240426b9a731d",
+      "gitBlobSha1": "4a2c326682c9e35ea14ece5ebb41aa1eac8380da",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiAppTools.test.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiAppTools.test.ts",
+      "kind": "source",
+      "bytes": 3189,
+      "sha256": "79fde5bbfffc3f48c9a86d4755d24cc6cfe8b7ee296c43f1ca8c6b07e1535b0b",
+      "gitBlobSha1": "3ca749c8417c42e2cd8a090ae94fb7da5f86a72b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiAppTools.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiAppTools.ts",
+      "kind": "source",
+      "bytes": 8914,
+      "sha256": "164d91715d7cf0f70d4e3fbb5f158fc42f59eb6b2c18cd2eb148c9e6b83f7a97",
+      "gitBlobSha1": "42024c7998d11b6ab3722e12b64ccaf1c73d3b6a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiDisclosureStore.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiDisclosureStore.ts",
+      "kind": "source",
+      "bytes": 1555,
+      "sha256": "7b16652280a8279e85849120b5dbfe3e8d101170fa9a89790b4f0a2f2d81d021",
+      "gitBlobSha1": "be205339a709aa1548be00a936e4fe1143b7b1b5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiFollowUpDialogStore.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiFollowUpDialogStore.ts",
+      "kind": "source",
+      "bytes": 1430,
+      "sha256": "b79b093bd62caaad9312be295b62a210d8b74862b008afa82ebf98b4c6384eb9",
+      "gitBlobSha1": "0537e42a5e91060f9fade5004d2d4675f0fa01cf",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiHostAppHandlers.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiHostAppHandlers.ts",
+      "kind": "source",
+      "bytes": 4297,
+      "sha256": "1f6fb7e7079ae941a28af3e20fde71e459e1d84f04fbb525c5f25fb9becdfab8",
+      "gitBlobSha1": "584dcdea04c58226f82e07d27686caf33f66138a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiHostBridge.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiHostBridge.ts",
+      "kind": "source",
+      "bytes": 4618,
+      "sha256": "24ce787f830c07a56d26288b27edfab5351858dff6e9a1d5856a6d1785e57555",
+      "gitBlobSha1": "79964b609307ff0e635184cb959bff858a93eebb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiHostController.test.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiHostController.test.ts",
+      "kind": "source",
+      "bytes": 4185,
+      "sha256": "bc60e3021b38cc4f443ec4e257fc77b6b80805ca12a1c970e23cf027d7672b6f",
+      "gitBlobSha1": "43c086ff3d6bc8c09571d8b13a5f8304b3bfbf45",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+      "kind": "source",
+      "bytes": 15035,
+      "sha256": "521e30b6378de0ed9a385e961d3938ea53e67dd1addaf3c77ec7490fb0bbd473",
+      "gitBlobSha1": "23a7d9a951bb2c7d69cedac347af983a45141275",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiHostControllerContract.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiHostControllerContract.ts",
+      "kind": "source",
+      "bytes": 5194,
+      "sha256": "c7d69ffe7ba7ef76389ac8a4262e46275962e72a18aa5ba9f6108a62e7f74887",
+      "gitBlobSha1": "b8f5788e483e39cd3bb32073274516ef6d62326d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiHostTeardown.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiHostTeardown.ts",
+      "kind": "source",
+      "bytes": 1893,
+      "sha256": "fb3a4f79e932d014fbef293df704c51e1d0368558690f18d02bbe6f7523e923d",
+      "gitBlobSha1": "0e2fe77a619a5965e8606c656836f74f19d7c39c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiInstanceStore.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiInstanceStore.ts",
+      "kind": "source",
+      "bytes": 1350,
+      "sha256": "23545b02344fdc50ab75c913f9581e95ac3c981169b3a88fb1f2a5fb641d9deb",
+      "gitBlobSha1": "c284b651519bc1aaa8c99f70b47fa10cff2b62bd",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiInteractionPorts.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiInteractionPorts.ts",
+      "kind": "source",
+      "bytes": 5666,
+      "sha256": "3fe9e34c666d6caca9f0473282d3bcd89097cbac18fabf2b23f2e6a7fb98d585",
+      "gitBlobSha1": "22f0d7124f281e072e0076f113decc1f9588bc29",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiPageManager.test.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiPageManager.test.ts",
+      "kind": "source",
+      "bytes": 6023,
+      "sha256": "c572f981897f77bae7cc1dc2033eeba5b3ee4836334a3501a650bbaee63c2a53",
+      "gitBlobSha1": "a3e507091be7f2fc0dc4c5632e31f05c89c624d2",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiPageManager.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiPageManager.ts",
+      "kind": "source",
+      "bytes": 5076,
+      "sha256": "6f9aab0391716225580b55358785751772faf72bd65e0b0f6d3e709cf2f7f1a7",
+      "gitBlobSha1": "01aa60d1668c8f979dc563d991fe5e71fd387c35",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiResourceNotificationBus.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiResourceNotificationBus.ts",
+      "kind": "source",
+      "bytes": 3178,
+      "sha256": "e02d0131ec782460b288c70e8f1017bd14b8b35819d07c7ddfc9d6db4f6d9b35",
+      "gitBlobSha1": "1de1291f2ed9e66001788dd56d53572966d37088",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiResourceSubscriptions.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiResourceSubscriptions.ts",
+      "kind": "source",
+      "bytes": 4825,
+      "sha256": "c45ef4b3db8a86d93a75686b5297fbba096fa6710ecaaae1dc79a092a0c546af",
+      "gitBlobSha1": "bf9ef0584640e2b3ce3c9e7e481d61d5e1dfc92d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiSampling.test.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiSampling.test.ts",
+      "kind": "source",
+      "bytes": 3290,
+      "sha256": "8d3d550c2ca4898a2538bb7cbd295ee4db36ec9e182d88a74ddfc901808fd9b2",
+      "gitBlobSha1": "c75d7b01168704caceab68147c7756f8492a2445",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiSampling.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiSampling.ts",
+      "kind": "source",
+      "bytes": 2786,
+      "sha256": "a7532fe31f5578d96d36538686cff0eed2a3f3586fb73324a8f48563bbe1e504",
+      "gitBlobSha1": "a954fb8616e2d1e35bfbbef603e1b1f02d3aa1a7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiSurfaceFeedStore.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiSurfaceFeedStore.ts",
+      "kind": "source",
+      "bytes": 1605,
+      "sha256": "a67d084dfb30ad748c2fc7aaf0f40c3016d05541bd68009f677db7928c0057c9",
+      "gitBlobSha1": "70efc89dba6b2c2a26ce67bfd0b33922e3aec604",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiSurfaceStore.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiSurfaceStore.ts",
+      "kind": "source",
+      "bytes": 1738,
+      "sha256": "a00a313a57fab7c188acedb198ea5d8cb61e8925cae551b2f1a19b6585a4516c",
+      "gitBlobSha1": "51788c4e6a31e28668e06e12867b582d7715341b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/app/pluginUiWidgetStateStore.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/app/pluginUiWidgetStateStore.ts",
+      "kind": "source",
+      "bytes": 1214,
+      "sha256": "fafdcfb132846ebfb9148a444618df67748c7ba059d2784d1743dd95d82f0085",
+      "gitBlobSha1": "edd7e4fa6d0c1318583591ad25a0fe67bab7d29d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/components/PluginUiCard.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/components/PluginUiCard.tsx",
+      "kind": "source",
+      "bytes": 3204,
+      "sha256": "f83f45d188e3859d0f1449ae7e050daaa5fb0706efa0ffbc465cfa1b88c22fe8",
+      "gitBlobSha1": "416d7b9accf65cb011a71d893e5a68b1c4d79eba",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/components/PluginUiFollowUpDialogHost.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/components/PluginUiFollowUpDialogHost.tsx",
+      "kind": "source",
+      "bytes": 3216,
+      "sha256": "375a6f4c66990532638830fe8e9165b928379a01bef8021391d7b907ceff9140",
+      "gitBlobSha1": "26be703dcf588b5929916c78e0d1ae55c6e1797f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+      "kind": "source",
+      "bytes": 10134,
+      "sha256": "a25389ebac7e50a9fb85836978d354029eac25b09b40d6dd0bb30e2bb9c833fe",
+      "gitBlobSha1": "b3369e7f93feab0e80f4b20dc8fb26dc7924df30",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/components/PluginUiSidePane.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/components/PluginUiSidePane.tsx",
+      "kind": "source",
+      "bytes": 1079,
+      "sha256": "a02026784ab23cb471a59f281be65d732ce8a68a58714d3bed56eb0028354438",
+      "gitBlobSha1": "54f3437d12066ab74d30fd6eaf8c790d9c53ca3e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/components/PluginUiToolCallBlock.tsx",
+      "path": "upstream/packages/ui/src/plugin-ui/components/PluginUiToolCallBlock.tsx",
+      "kind": "source",
+      "bytes": 3353,
+      "sha256": "0e383ae22db65417c06a764c0a2a754cccac65fa87d9ee7dddf59d29fb1a96ca",
+      "gitBlobSha1": "3ef0372fc9506be49d928a744c1a455afe0ba79f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/contract.example.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/contract.example.ts",
+      "kind": "source",
+      "bytes": 1362,
+      "sha256": "ad83a2f5ffa84aa23685da4b399eb5c711d355349c58bcb59349f7377e074226",
+      "gitBlobSha1": "17b650f02663b956b2d1a97756a1eea377bd80c9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/contract.test.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/contract.test.ts",
+      "kind": "source",
+      "bytes": 4333,
+      "sha256": "93f5f81d646109998906c8024f1c65b3044ab8021b23785a2b259b24291517fd",
+      "gitBlobSha1": "de93fea14342f12eacd62247ac3266a7fe8aea77",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/contract.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/contract.ts",
+      "kind": "source",
+      "bytes": 9250,
+      "sha256": "86909bc9401fa80321fe2aa220a61e7d0e84a949117386dc875967befe0f6f9d",
+      "gitBlobSha1": "e7a28219d89d86a87bd9b1e806ad70ec1ee62534",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/buildPluginUiHostCapabilities.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/buildPluginUiHostCapabilities.ts",
+      "kind": "source",
+      "bytes": 2561,
+      "sha256": "1da5c29c55a4d3d5e7008142ed20b4628889f21401fd960a76f5c9d532e922eb",
+      "gitBlobSha1": "f28363f0fd05607b1f0150a78acf70f6e9ac7a69",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/buildPluginUiHostContext.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/buildPluginUiHostContext.ts",
+      "kind": "source",
+      "bytes": 3456,
+      "sha256": "d227369d5382220fa65cdeaca935d4412ac39e60d5a9b2a1801d4757e3a5e202",
+      "gitBlobSha1": "b700f26a8f88528b528bb9641bbead2767df75df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginDisplayName.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginDisplayName.ts",
+      "kind": "source",
+      "bytes": 333,
+      "sha256": "a1ba030de27e53f19748d14434bf6f012f9f90c7628382363a9b88fe96d1c193",
+      "gitBlobSha1": "b259c5f95c6789fb1118d4767e5339c1665c2560",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiDownloadFile.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiDownloadFile.ts",
+      "kind": "source",
+      "bytes": 3471,
+      "sha256": "8015b198397c7cd128f8fb9d64a895478b45347b09f8bcdc2aa19d62fe171efd",
+      "gitBlobSha1": "c8395546223941269798713ff4042cff096f6e2d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiFollowUp.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiFollowUp.ts",
+      "kind": "source",
+      "bytes": 1507,
+      "sha256": "39509d5a04e5ccb50b8ab0dcf3b2ed78f4dbb643835b8be4293b38052a203cff",
+      "gitBlobSha1": "46a300e156e5d6607f6d4d1dc0abf98c5fc71ecf",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiImageBlocks.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiImageBlocks.ts",
+      "kind": "source",
+      "bytes": 2499,
+      "sha256": "6c670948ae5e34957fb4ed8e0d88f46a5983ee075507df9a71475c96cd6d3bdf",
+      "gitBlobSha1": "5f74754966d67536e327cde664d963177488e173",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiInstancePolicy.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiInstancePolicy.ts",
+      "kind": "source",
+      "bytes": 4230,
+      "sha256": "e072c840cea24febc6f8de0bf4af1790809ccdeed3e7ef1deb10f293236d5ec8",
+      "gitBlobSha1": "d6f5f8335aba39d1e05a03d6d0e711cc632e3cb0",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiLogicalScope.test.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiLogicalScope.test.ts",
+      "kind": "source",
+      "bytes": 1555,
+      "sha256": "903718322dc3d49a674c7037dfe859750bb6b31800a35783eda209b45c8d3fd8",
+      "gitBlobSha1": "ac69686fc35a4b50918d6fb85c752bbb8eb382a7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiLogicalScope.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiLogicalScope.ts",
+      "kind": "source",
+      "bytes": 1026,
+      "sha256": "7c8a4f60fea918b4bbb3e10669f01029cd9b9be80bacb790aeac2c5505aea7e1",
+      "gitBlobSha1": "509b3f03af47bc453fb558d88fe338b334dc220e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiModelContext.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiModelContext.ts",
+      "kind": "source",
+      "bytes": 3861,
+      "sha256": "c6962f94bea759f14eba7a5de1f82bd05f257c1480fc31def95669dcb4185a34",
+      "gitBlobSha1": "8b5b668b65a2bf5eae326ac88c4d5ab5c0c30777",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.test.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.test.ts",
+      "kind": "source",
+      "bytes": 2163,
+      "sha256": "9313a23ffb4b4024032c61c06b11904e3a46837c3ac4914ea9eb38c137cf2b89",
+      "gitBlobSha1": "ba4b8995897cfeed96812dee07aa13f4529f5530",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.ts",
+      "kind": "source",
+      "bytes": 1760,
+      "sha256": "b0600f53dae634bcc048d465a16127848053a0af2a0f86849b7ffc4dc7b1f60b",
+      "gitBlobSha1": "da1b733318c37bdd3b8aaacf4cdc252a78c3b8e7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiStyleVariables.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiStyleVariables.ts",
+      "kind": "source",
+      "bytes": 6791,
+      "sha256": "82d1c78e15baac44cbb8468ace00b8f680180cb3569f69d82c272cc6c5b66a1b",
+      "gitBlobSha1": "8e4a6e17048ea7dbf3d5d19219175e817173def3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/pluginUiToolFeed.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/pluginUiToolFeed.ts",
+      "kind": "source",
+      "bytes": 7870,
+      "sha256": "aa036ef17ee3c95fdc6aba16fede28ba93676ac6b072995561e52f31fb3681a9",
+      "gitBlobSha1": "3f8fc11ee962a4a30f7410afc290b2f3c0f7dc23",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/domain/readPluginUiPresentation.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/domain/readPluginUiPresentation.ts",
+      "kind": "source",
+      "bytes": 1290,
+      "sha256": "23b8aa8fee6eeb8421ea258c4f26466e7b271abdbaad21aa55ad3af7ad6cf635",
+      "gitBlobSha1": "c718016253b4eed49d69354a36abfceafb640907",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/hostPrimitives.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/hostPrimitives.ts",
+      "kind": "source",
+      "bytes": 571,
+      "sha256": "2835154273d70bed3e3c598b273cc12da4ac0d6b901ecd86a67fe906c1e9c730",
+      "gitBlobSha1": "f5bd8993975a483f9017ac378d89debc25cfd7dd",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/index.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/index.ts",
+      "kind": "source",
+      "bytes": 2341,
+      "sha256": "0e36bf88c26aa561c6cc1e793c5430464450e417f0c69826ca0864a73660d96e",
+      "gitBlobSha1": "09789833afae6f924f660d0f585285883a6cf4d7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/module.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/module.ts",
+      "kind": "source",
+      "bytes": 651,
+      "sha256": "6cd74bdc886d92d5113ba064e2fc931a68cd407bd15224cb7390e3143f099e1a",
+      "gitBlobSha1": "eca8f49c598bdcee0d4a44dbc98c0b39e945cd57",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/plugin-ui/sidePane/pluginUiSidePaneTab.ts",
+      "path": "upstream/packages/ui/src/plugin-ui/sidePane/pluginUiSidePaneTab.ts",
+      "kind": "source",
+      "bytes": 2201,
+      "sha256": "6e198c6c7c65f3f247df1e7fb573d0dc106a1a8e0e6b94e20928f8fa967bb7ab",
+      "gitBlobSha1": "32d74b43b62d39584b98bf5ab24ffd147f1ca26e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/styles.css",
+      "path": "upstream/packages/ui/src/styles.css",
+      "kind": "source",
+      "bytes": 82438,
+      "sha256": "ae1c3575fa770258bba05afb5a0ebbeda59ecbd8b4cfa9d0355b5fbfd8dcbd8b",
+      "gitBlobSha1": "96a1767a768fb64155881c86f5484d1b8331e280",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js",
+      "path": "runtime/tweak.js",
+      "kind": "runtime",
+      "bytes": 14086,
+      "sha256": "669e78ea50dc7482bc3572b3d9db5070634d52b9c574ce9cdbef4a2a5a50a3e3",
+      "gitBlobSha1": "54d1fe24b0f51c21745538f45901f1240390ed78",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "LICENSE",
+      "path": "LICENSE",
+      "kind": "license",
+      "bytes": 11344,
+      "sha256": "606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b",
+      "gitBlobSha1": "550d8df4cfc74878663a511caa97852f15fd9592",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/highspeed/highspeed-activation.css",
+      "path": "upstream/packages/ui/src/highspeed/highspeed-activation.css",
+      "kind": "source",
+      "bytes": 7190,
+      "sha256": "38767b75e39d914a7f470f64404a26e44469877764d0f571cab7d7ed966aead2",
+      "gitBlobSha1": "fafcd1f07f5f2b5799ec0fa63b2d9749a05b95f8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/highspeed/highspeed-share.css",
+      "path": "upstream/packages/ui/src/highspeed/highspeed-share.css",
+      "kind": "source",
+      "bytes": 18224,
+      "sha256": "c9eb9fbd74b442a6bef98d8303d9a51355fde05622c317defe75899d0477769a",
+      "gitBlobSha1": "c50b39691af94ffa5d56f874d0bdf58b3ede0879",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/lucide-colors.mjs",
+      "path": "upstream/packages/ui/lucide-colors.mjs",
+      "kind": "source",
+      "bytes": 2756,
+      "sha256": "dc670d64531f8f6387ce9cef31cf299e2d5ffc1765fae6188671110bd4f11f1d",
+      "gitBlobSha1": "9c899570f14f79d652f0b44235d29b4e995e03fe",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/ui/src/useTheme.ts",
+      "path": "upstream/packages/ui/src/useTheme.ts",
+      "kind": "source",
+      "bytes": 3616,
+      "sha256": "a286aa3596dd05140184d60318f014ff1cea6637d0fae104137701fc2dd1ce0e",
+      "gitBlobSha1": "b060ddd1dff9b97f78b9f0e5070584380726881d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "packages/web/index.html",
+      "path": "upstream/packages/web/index.html",
+      "kind": "source",
+      "bytes": 12575,
+      "sha256": "2ae1a2e32120583ebbc8e95d2bce417a2351e2c9a2489aa1cebcd88bd6f54068",
+      "gitBlobSha1": "50b1c3fd3e997bb43af23e7e573b05ec5f25092f",
+      "gitMode": "100644"
+    }
+  ],
+  "skillGitTree": "87f38506cdda363267e0a73bfb2f20b4632134e1"
+}

@@ -1,0 +1,169 @@
+{
+  "status": "passed-across-initial-and-isolated-retry",
+  "passed": true,
+  "recordedAt": "2026-10-19T13:11:21.607905+00:00",
+  "rollbackCommit": "414a8719bdd808f04b9d520fee7fabe260b11e93",
+  "baseCommit": "b2013edc7685d86e131c5c7f011078fdf2d3e008",
+  "changedFiles": [
+    "server/src/__integration__/migration.test.ts",
+    "server/src/db/migrations/0046_visualize.sql"
+  ],
+  "productCodeUnchangedFromBase": true,
+  "migration46Sha256": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b",
+  "testFileSha256": "8d7622b94dc815cc70d9184cdfee4ba14cab65ce9cb59a8386df513fbcf812e2",
+  "coverage": {
+    "distinctPassedCases": 32,
+    "singleFullRunPassed": false,
+    "initialPassed": 15,
+    "initialInfrastructureFailures": 17,
+    "isolatedRetryPassed": 17,
+    "isolatedRetryFailed": 0,
+    "filledCaseAlsoPassedIndependently": true
+  },
+  "initialRun": {
+    "command": [
+      "npm",
+      "run",
+      "test:integration",
+      "--",
+      "--file",
+      "migration.test.ts"
+    ],
+    "exitCode": 1,
+    "host": "127.0.0.1",
+    "port": 55432,
+    "configuredDatabase": "lingxiloop_issue193_rollback_test",
+    "passedCases": [
+      "0045 preserves existing sources and adds explicit organization-only case scope exactly once",
+      "0044 preserves product and runtime rows, starts empty and retains accepted answers on replay",
+      "0044 failure from 42 rolls back only its transaction and retains committed 0043",
+      "0044 failure from 43 rolls back only its transaction and retains committed 0043",
+      "0044 failure during fresh cutover rolls back all product and runtime installation",
+      "0043 preserves schema-11 work without backfilling notices and applies the published upgrade exactly once",
+      "0043 refuses an active worker and rolls back all upgrade metadata",
+      "a failed fresh cutover rolls back packaged schema installation and product history together",
+      "an empty database reaches the latest schema once and repeated migration is a no-op",
+      "group mention upgrade preserves customized preset profiles and retires only handoff grants",
+      "interactive UI upgrade preserves product rows and adds empty scoped state once",
+      "collaboration upgrade preserves managed IDs, custom rooms and leaders while expanding default teams",
+      "earlier 3.2 versions upgrade only runtime registration and preserve existing data",
+      "read receipt upgrade preserves human receipts and accepts only same-tenant participants",
+      "3.2.13 upgrades the workspace schema transactionally and repeats without changing product data"
+    ],
+    "log": {
+      "file": "docs/evidence/issue-193/rollback-local.log",
+      "sha256": "5bb7b6e68b84ccb6d5b9e96349bc991eb29a01e5441ff485fff57317da6ad1f5",
+      "durationMs": 631096.276433
+    }
+  },
+  "infrastructureFailure": {
+    "firstCaseNumber": 16,
+    "firstError": "Connection terminated unexpectedly",
+    "followingSqlState": "57P03",
+    "followingError": "the database system is in recovery mode",
+    "postgresLog": "2026-10-19 12:53:01 UTC server process PID 8795 exited with exit code 2; terminating other server processes and reinitializing. Root cause not established.",
+    "containerRestarted": false,
+    "containerOOMKilled": false,
+    "resolution": "PostgreSQL automatically recovered. No rerun used that shared instance."
+  },
+  "isolatedRetry": {
+    "command": [
+      "node",
+      "--import",
+      "tsx",
+      "--experimental-test-module-mocks",
+      "--test",
+      "--test-reporter=tap",
+      "--test-concurrency=1",
+      "--test-force-exit",
+      "--test-name-pattern=^(?:3\\.3\\.0\\ registers\\ the\\ runtime\\ fixes\\ without\\ altering\\ sessions\\ or\\ accepting\\ an\\ unverified\\ schema|3\\.3\\.1\\ registers\\ the\\ runtime\\ fixes\\ without\\ altering\\ sessions\\ or\\ accepting\\ an\\ unverified\\ schema|3\\.3\\.2\\ registers\\ the\\ runtime\\ fixes\\ without\\ altering\\ sessions\\ or\\ accepting\\ an\\ unverified\\ schema|3\\.3\\.4\\ registers\\ the\\ runtime\\ fixes\\ without\\ altering\\ sessions\\ or\\ accepting\\ an\\ unverified\\ schema|3\\.3\\.5\\ registers\\ the\\ runtime\\ fixes\\ without\\ altering\\ sessions\\ or\\ accepting\\ an\\ unverified\\ schema|a\\ recorded\\ runtime\\ patch\\ repairs\\ a\\ stale\\ LingxiOS\\ schema\\ before\\ serving|the\\ affinity\\ migration\\ backfills\\ the\\ most\\ recent\\ worker\\ without\\ changing\\ the\\ Home\\ epoch|native\\ installation\\ rejects\\ old\\ run\\ data\\ before\\ historical\\ reset\\ migrations\\ can\\ change\\ it|a\\ non\\-empty\\ database\\ without\\ migration\\ history\\ is\\ rejected\\ without\\ mutation|editing\\ an\\ applied\\ migration\\ is\\ rejected\\ by\\ checksum|a\\ failed\\ migration\\ rolls\\ back\\ its\\ DDL\\ and\\ history\\ row|concurrent\\ migrators\\ serialize\\ and\\ apply\\ each\\ migration\\ once|runtime\\ readiness\\ rejects\\ pending\\ migrations|runtime\\ readiness\\ rejects\\ a\\ missing\\ native\\ collaboration\\ table|capability\\ backfill\\ preserves\\ teacher\\ grants,\\ custom\\ prompts\\ and\\ later\\ revocations|forum\\ convergence\\ preserves\\ complete\\ submission\\ history\\ and\\ rolls\\ back\\ ambiguous\\ assignments|0046\\ compatibility\\ rollback\\ preserves\\ old\\ features\\ and\\ populated\\ Visualize\\ rows\\ while\\ accepting\\ schema\\ 46\\ at\\ startup)$",
+      "server/src/__integration__/migration.test.ts"
+    ],
+    "exitCode": 0,
+    "composeProject": "lingxiloop-issue193-rollback",
+    "container": "lingxiloop-issue193-rollback-postgres-1",
+    "host": "127.0.0.1",
+    "port": 55433,
+    "configuredDatabase": "lingxiloop_issue193_rollback_test",
+    "passedCases": [
+      "3.3.0 registers the runtime fixes without altering sessions or accepting an unverified schema",
+      "3.3.1 registers the runtime fixes without altering sessions or accepting an unverified schema",
+      "3.3.2 registers the runtime fixes without altering sessions or accepting an unverified schema",
+      "3.3.4 registers the runtime fixes without altering sessions or accepting an unverified schema",
+      "3.3.5 registers the runtime fixes without altering sessions or accepting an unverified schema",
+      "a recorded runtime patch repairs a stale LingxiOS schema before serving",
+      "the affinity migration backfills the most recent worker without changing the Home epoch",
+      "native installation rejects old run data before historical reset migrations can change it",
+      "a non-empty database without migration history is rejected without mutation",
+      "editing an applied migration is rejected by checksum",
+      "a failed migration rolls back its DDL and history row",
+      "concurrent migrators serialize and apply each migration once",
+      "runtime readiness rejects pending migrations",
+      "runtime readiness rejects a missing native collaboration table",
+      "capability backfill preserves teacher grants, custom prompts and later revocations",
+      "forum convergence preserves complete submission history and rolls back ambiguous assignments",
+      "0046 compatibility rollback preserves old features and populated Visualize rows while accepting schema 46 at startup"
+    ],
+    "log": {
+      "file": "docs/evidence/issue-193/rollback-local-retry-final.log",
+      "sha256": "4302ca3dad24f0168212f782ba654d73ead799684da8a6eb6754b546fb6be077",
+      "durationMs": 541587.262455
+    },
+    "isolation": "Same repository compose PostgreSQL image, fixture credentials and healthcheck; only host port overridden. No Redis service started. The suite creates and drops its own per-case databases."
+  },
+  "independentFilledCase": {
+    "exitCode": 0,
+    "log": {
+      "file": "docs/evidence/issue-193/rollback-local-filled.log",
+      "sha256": "399df18051cefb4d340930183b3ece1f76b53f3d8c5336a485a1b940a4e3c3f2",
+      "durationMs": 111151.118799
+    }
+  },
+  "interruptedDiagnosticRetry": {
+    "status": "intentionally-stopped-after-CI-identified-installed_at-only-fixture-difference",
+    "usedForCoverage": false,
+    "log": {
+      "file": "docs/evidence/issue-193/rollback-local-retry.log",
+      "sha256": "7c794ddd2814e3a24f4512dbaa57d2ed00a43ed4a29be61fe3a11146fba537ae",
+      "durationMs": null
+    }
+  },
+  "startupAndRetention": {
+    "readinessFunction": "baseline assertMigrationsCurrent",
+    "actualApiOrWorkerProcessStarted": false,
+    "schema46RejectedWhenMigration46AssetAbsent": true,
+    "schema46AcceptedWithExactMigration46Asset": true,
+    "twoNoOpReplaysPassed": true,
+    "schemaHistoryThrough45Unchanged": true,
+    "completeHistoryUnchangedAcrossNoOpReplays": true,
+    "filledLegacyTablesComparedInFull": [
+      "im_ui_revisions",
+      "im_ui_user_states",
+      "agent_run_bindings",
+      "im_questionnaires",
+      "organization_cases",
+      "canvases",
+      "lingxios.agent_os_sessions",
+      "lingxios.agent_memories"
+    ],
+    "additionalUnchangedEmptyTablesCompared": [
+      "im_send_acceptances",
+      "llm_calls",
+      "lingxios.agent_memory_versions"
+    ],
+    "visualizeTablesInitiallyEmptyThenPopulatedAndComparedInFull": [
+      "im_visualize_documents",
+      "im_visualize_states",
+      "im_visualize_pages",
+      "im_visualize_gestures"
+    ],
+    "installationMetadata": "All lingxios_installation fields compared except installed_at, which existing baseline applyRuntimeUpgrade intentionally refreshes; runtime/schema/protocol/hash remain strictly compared.",
+    "runtimeVersion": "3.5.3",
+    "runtimeSchemaVersion": 12,
+    "oldFeatureEndToEndBehaviorTested": false
+  },
+  "temporaryDependencySymlinkRemoved": true,
+  "sharedDependencyDirectoryPreserved": true,
+  "productionOperations": false,
+  "remainingBlockers": []
+}

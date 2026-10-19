@@ -8,7 +8,7 @@ import { syncConversationPolicy } from './conversations.js'
 import { bindProductRun, productRunIdentity, notifyRunAvailable } from './identity.js'
 import { parseMentions } from '../mentions.js'
 import { attachmentRefId, readRequestAttachments, selectRequestAttachments, unavailableAttachmentIds } from './attachments.js'
-import { assertUiInteractionAdmission } from '../im/interactive-ui-admission.js'
+import { assertInteractionAdmission } from '../im/interaction-admission.js'
 import { assertQuestionnaireContinuation, recordQuestionnaireContinuation } from '../im/questionnaires.js'
 
 export interface AgentRequest {
@@ -32,7 +32,7 @@ export async function receiveAgentRequest(input: AgentRequest) {
 
   if (message.payload.role !== 'user'
     || input.authenticatedUserId && input.authenticatedUserId !== message.fromUid) throw new Error('request must be committed by the authenticated human')
-  await assertUiInteractionAdmission({ companyId: input.companyId, channelId: input.channelId, userId: message.fromUid,
+  await assertInteractionAdmission({ companyId: input.companyId, channelId: input.channelId, userId: message.fromUid,
     clientNonce: input.clientMsgNo, payload: message.payload })
   const identity = { tenantId: input.companyId, agentId: input.agentId, sessionId: input.channelId, principalId: message.fromUid }
   await loadRuntimeBinding({ ...identity, conversationId: input.channelId, createdAt: new Date(message.timestamp * 1000).toISOString() })
@@ -79,10 +79,10 @@ export async function receiveAgentRequest(input: AgentRequest) {
   if (threadId) await api.conversations.registerThread({ tenantId: input.companyId, conversationId: input.channelId, threadId, policyVersion: policy.version })
   const members = (await pool.query<{ id: string; name: string; kind: 'human' | 'agent' }>(
     'SELECT id,name,kind FROM participants WHERE company_id=$1 AND id=ANY($2::text[])', [input.companyId,policy.participants.map(member => member.id)])).rows
-  const parsed = custom.uiInteraction || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(text,members)
+  const parsed = custom.visualizeFollowUp || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(text,members)
   const mentions = parsed.mentionAll
     ? policy.participants.filter(member => member.kind === 'agent').map(member => member.id)
-    : custom.uiInteraction && Array.isArray(custom.mentionedIds) ? custom.mentionedIds.map(String) : parsed.mentionedIds
+    : custom.visualizeFollowUp && Array.isArray(custom.mentionedIds) ? custom.mentionedIds.map(String) : parsed.mentionedIds
   const accepted = await api.conversations.ingest({ tenantId: input.companyId, conversationId: input.channelId,
     policyVersion: policy.version, messageId: input.clientMsgNo, version: 1, author: { id: message.fromUid, kind: 'human' },
     text, mentions, attachments: files, ...(threadId ? { threadId } : {}) }, { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation' })

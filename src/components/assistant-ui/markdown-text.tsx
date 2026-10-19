@@ -1,5 +1,7 @@
 "use client"
 
+import { TextOffsetContext } from '@/features/chat/visualize/TextOffsetContext'
+
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
 import { code } from '@streamdown/code'
 import { createMathPlugin } from '@streamdown/math'
@@ -168,8 +170,10 @@ const MarkdownTextImpl = ({
   const part = useMessagePartText()
   const { text } = part
   // Citation spans use nativeText's joined-message coordinates, including between cards.
-  const textOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
+  const splitTextOffset = useContext(TextOffsetContext)
+  const nativeTextOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
     .reduce((offset, part) => offset + (part.type === 'text' && activityAnnotation(part)?.kind !== 'commentary' ? part.text.length + 1 : 0), 0))
+  const textOffset = splitTextOffset ?? nativeTextOffset
   const hasCitations = Boolean(confidenceClaims.length) || inlineCitations && text.includes('#cite-')
   // Complete block starts are identical in the raw text and its revealed prefix.
   const blocks = useMemo(() => hasCitations ? parseMarkdownIntoBlocks(text) : [], [hasCitations, text])

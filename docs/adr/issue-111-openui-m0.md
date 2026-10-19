@@ -1,5 +1,7 @@
 # Issue #111: OpenUI integration decision and M0 evidence
 
+> Historical record, superseded by [issue #193](https://github.com/LingXi-Org/LingxiLoop/issues/193) on 2026-10-19. Current architecture and checks are in [Visualize in LingxiLoop Web](../visualize.md). The decisions, commands and results below describe the former OpenUI experiment; they are preserved with `artifacts/interactive-ui`, not current activation instructions or Visualize acceptance. Existing OpenUI rows and migration `0033_interactive_ui.sql` remain retained; additive migration 0046 does not delete them.
+
 Date: 2026-10-09. Decision: use the pinned `@openuidev/react-lang@0.3.2` public `Renderer` inside the existing native `generative-ui` message surface. Keep the product's external-store runtime, authorized state/action API, native replay and shared component catalog.
 
 ## Compared integrations

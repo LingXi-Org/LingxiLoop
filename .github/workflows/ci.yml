@@ -29,7 +29,6 @@ permissions:
 env:
   NODE_VERSION: "22"
   ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
-  OPENUI_TELEMETRY_DISABLED: "1"
 
 jobs:
   changes:
@@ -77,6 +76,9 @@ jobs:
               - 'scripts/run-tests.mjs'
               - 'scripts/test-selectors.test.mjs'
             web:
+              - 'third_party/zcode/**'
+              - 'scripts/verify-zcode-visualize.mjs'
+              - 'scripts/build-visualize-runtime.mjs'
               - 'src/**'
               - 'public/**'
               - 'index.html'
@@ -118,6 +120,9 @@ jobs:
               - 'server/src/**/*.test.ts'
               - '!server/src/__integration__/**'
             server_source:
+              - 'third_party/zcode/**'
+              - 'scripts/verify-zcode-visualize.mjs'
+              - 'scripts/build-visualize-runtime.mjs'
               - 'server/.npmrc'
               - 'server/src/**'
               - '!server/src/**/*.test.ts'
@@ -331,6 +336,7 @@ jobs:
       - run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - run: npm run verify:visualize && npm run build:visualize-runtime
       - run: npm run db:migrate
       - if: needs.changes.outputs.server != 'true'
         run: node --test scripts/test-selectors.test.mjs
