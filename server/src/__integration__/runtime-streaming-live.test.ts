@@ -4,6 +4,8 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import { pool } from '../db/pool.js'
+import { createChatCompletion } from '../llm.js'
+import { env } from '../env.js'
 import { lingxiOSControl, startLingxiOSWorker } from '../agent-runtime/runtime.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { assistantRunResponse, readRunProjection } from '../agent-runtime/assistant-transport.js'
@@ -14,7 +16,7 @@ import { ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAge
 // Failures: a real tool turn loses previews; commit clears text; the stream only
 // emits a final snapshot; final HTTP replay differs; usage is unmeasured.
 test('real provider tool turns stream through the product projection and replay', {
-  skip: process.env.LINGXIOS_LIVE_STREAMING !== '1', timeout: 300_000,
+  skip: process.env.LINGXIOS_LIVE_STREAMING !== '1', timeout: 540_000,
 }, async () => {
   assert.equal(new URL(process.env.DATABASE_URL!).pathname, '/lingxiloop_streaming_test')
   assert.equal(process.env.AGENT_OS_MAX_CONCURRENT_RUNS, '1')
@@ -28,12 +30,21 @@ test('real provider tool turns stream through the product projection and replay'
   const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, conversationId)
   const port = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN!, port: 0 })
   process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${port}`
-  const output = 'artifacts/native-streaming/live'
+  const output = process.env.LINGXIOS_STREAMING_OUTPUT || 'artifacts/native-streaming/live'
   await mkdir(output, { recursive: true })
   const frames: { elapsedMs: number; snapshot: AgentRunSnapshot }[] = []
-  const cancellation = new AbortController(), signal = AbortSignal.any([cancellation.signal, AbortSignal.timeout(250_000)])
+  const cancellation = new AbortController(), signal = AbortSignal.any([cancellation.signal, AbortSignal.timeout(480_000)])
   let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
   try {
+    const hostResponse = await createChatCompletion({ purpose: 'model-switch.acceptance', companyId }, {
+      model: env.OPENAI_MODEL, messages: [{ role: 'user', content: 'Reply as JSON with exactly one field: {"ok":true}.' }], response_format: { type: 'json_object' }, max_tokens: 512,
+    })
+    assert.equal(hostResponse.choices[0]?.finish_reason, 'stop')
+    assert.deepEqual(JSON.parse(hostResponse.choices[0]?.message.content || ''), { ok: true })
+    const hostCall = (await pool.query('SELECT model,measured,cost_usd FROM llm_calls WHERE company_id=$1 AND purpose=$2', [companyId, 'model-switch.acceptance'])).rows[0]
+    assert.equal(hostCall.model, env.OPENAI_MODEL)
+    assert.equal(hostCall.measured, true)
+    assert.ok(Number(hostCall.cost_usd) > 0)
     const accepted = await api.conversations.ingest({ tenantId: companyId, conversationId, policyVersion: policy.version, messageId: 'streaming-live-request',
       version: 1, author: { id: 'test-owner', kind: 'human' }, mentions: [agentId],
       text: '请先实际调用 files.list 核对本次请求是否有附件，简要报告检查结果，然后用六个简短段落（共约600字）向初学者解释 React 的状态更新、重新渲染和提交过程。不要创建文件，不要发送额外消息，不要展示内部思考或内部标识。',
@@ -61,15 +72,29 @@ test('real provider tool turns stream through the product projection and replay'
     const ledger = (await pool.query<{ calls: number; measured: boolean; cost: string }>(`SELECT count(*)::int AS calls,COALESCE(bool_and(measured),false) AS measured,
       COALESCE(sum(cost_usd),0)::text AS cost FROM llm_calls WHERE company_id=$1 AND run_id=$2`, [companyId, identity.runId])).rows[0]
     assert.ok(ledger.calls && ledger.measured)
-    assert.ok(Number(ledger.cost) <= 0.25)
+    assert.ok(Number(ledger.cost) > 0 && Number(ledger.cost) <= 0.25)
+    const models = (await pool.query('SELECT DISTINCT model FROM llm_calls WHERE company_id=$1', [companyId])).rows
+    assert.deepEqual(models.map(row => row.model), [env.OPENAI_MODEL])
+    // The API's auxiliary path must also use this model and record a real, paid call.
+    const billing = (await pool.query('SELECT purpose,model,input_tokens,cached_input_tokens,output_tokens,cost_usd,extras FROM llm_calls WHERE company_id=$1 ORDER BY created_at', [companyId])).rows
+    if (env.OPENAI_MODEL === 'zai-org/GLM-5.3-Flash') for (const call of billing) {
+      const expected = ((call.input_tokens - call.cached_input_tokens) * 0.8 + call.cached_input_tokens * 0.23 + call.output_tokens * 2.8) / 1_000_000 / Number(process.env.SILICONFLOW_USD_CNY_RATE)
+      assert.ok(Math.abs(Number(call.cost_usd) - expected) <= 5.1e-9, 'host and Agent ledger must use the Flash CN tariff')
+    }
     const retractions = frames.filter((frame, index) => index && nativeText(frames[index - 1].snapshot.message) && !nativeText(frame.snapshot.message)).length
     const finalRetractions = frames.filter((frame, index) => index && nativeText(frames[index - 1].snapshot.message) === nativeText(message) && !nativeText(frame.snapshot.message)).length
     assert.equal(finalRetractions, 0, 'a durable final answer must survive ephemeral preview cleanup')
-    await writeFile(`${output}/result.json`, JSON.stringify({ passed: true, realModel: true, model: process.env.OPENAI_MODEL,
-      previewFrames: previews.length, retractions, finalRetractions, measuredCalls: ledger.calls, costUSD: Number(ledger.cost), finalLength: nativeText(message).length }, null, 2))
+    await writeFile(`${output}/result.json`, JSON.stringify({ passed: true, realModel: true, timestamp: new Date().toISOString(), billing: billing.map(call => ({ purpose: call.purpose, model: call.model, inputTokens: call.input_tokens, cachedInputTokens: call.cached_input_tokens, outputTokens: call.output_tokens, costUSD: Number(call.cost_usd), reasoningTokens: call.extras.reasoningTokens })), model: process.env.OPENAI_MODEL,
+      previewFrames: previews.length, retractions, finalRetractions, measuredCalls: ledger.calls, costUSD: Number(ledger.cost), hostCall: { model: hostCall.model, measured: hostCall.measured, costUSD: Number(hostCall.cost_usd) }, finalLength: nativeText(message).length }, null, 2))
   } finally {
     cancellation.abort()
-    await writeFile(`${output}/replay.json.gz`, gzipSync(JSON.stringify(frames)))
-    await worker?.stop(); await teardownAll()
+    try {
+      await worker?.stop()
+      const diagnostics = await pool.query('SELECT purpose,model,status,measured,input_tokens,cached_input_tokens,output_tokens,cost_usd,extras FROM llm_calls WHERE company_id=$1 ORDER BY created_at', [companyId])
+      await writeFile(`${output}/diagnostics.json`, JSON.stringify({ timestamp: new Date().toISOString(), model: env.OPENAI_MODEL, frames: frames.length, finalStatus: frames.at(-1)?.snapshot.message.status, calls: diagnostics.rows.map(call => ({ purpose: call.purpose, model: call.model, status: call.status, measured: call.measured, inputTokens: call.input_tokens, cachedInputTokens: call.cached_input_tokens, outputTokens: call.output_tokens, costUSD: Number(call.cost_usd), reasoningTokens: call.extras.reasoningTokens, failure: call.extras.failure })) }, null, 2))
+    } finally {
+      try { await writeFile(`${output}/replay.json.gz`, gzipSync(JSON.stringify(frames))) }
+      finally { await teardownAll() }
+    }
   }
 })

@@ -19,7 +19,7 @@ Object.assign(env, {
   DATABASE_URL: `postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/${databaseName}`,
   INTEGRATION_DATABASE_URL: `postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/${databaseName}`,
   REDIS_URL: 'redis://127.0.0.1:56379/4', OPENAI_API_KEY: live ? credentials.EVAL_CANDIDATE_API_KEY : 'integration-test-key',
-  OPENAI_BASE_URL: live ? 'https://api.siliconflow.cn/v1' : 'http://127.0.0.1:1/v1', OPENAI_MODEL: 'zai-org/GLM-5.2',
+  OPENAI_BASE_URL: live ? 'https://api.siliconflow.cn/v1' : 'http://127.0.0.1:1/v1', OPENAI_MODEL: 'zai-org/GLM-5.3-Flash',
   OPENAI_EMBEDDING_MODEL: 'disabled', LINGXILOOP_DISABLE_EMBEDDINGS: '1', OPEN_NOTEBOOK_ENABLED: 'false',
   LINGXIOS_LIVE_CONTEXT: live ? '1' : '0', RESEND_LIVE_TEST: '0', LINGXIOS_LIVE_PROTOCOL: '0',
   AGENT_OS_MAX_MODEL_CALLS: '8', AGENT_OS_MAX_MODEL_TOKENS: '1000000', AGENT_OS_MAX_MODEL_COST_MICROS: '2000000', AGENT_OS_MAX_WORK_MS: '180000',

@@ -11,7 +11,7 @@ const output = retirement ? 'artifacts/retired-capabilities/live' : 'artifacts/r
 const credentials = parse(await readFile(process.env.EVAL_ENV_FILE ?? 'eval/.env.local'))
 for (const key of ['BASE_URL', 'MODEL', 'API_KEY', 'INPUT_CNY_PER_MILLION', 'OUTPUT_CNY_PER_MILLION']) assert.ok(credentials[`EVAL_CANDIDATE_${key}`]?.trim(), `Missing EVAL_CANDIDATE_${key}`)
 // Retirement acceptance uses the deployed production model and its configured rates.
-if (retirement) Object.assign(credentials, { EVAL_CANDIDATE_MODEL: 'zai-org/GLM-5.2', EVAL_CANDIDATE_INPUT_CNY_PER_MILLION: '8', EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION: '28' })
+if (retirement) Object.assign(credentials, { EVAL_CANDIDATE_MODEL: 'zai-org/GLM-5.3-Flash', EVAL_CANDIDATE_INPUT_CNY_PER_MILLION: '0.8', EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION: '2.8' })
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|TEMP|TMP|HOME|HOMEDRIVE|HOMEPATH|USERPROFILE|APPDATA|LOCALAPPDATA|COMSPEC|PROGRAMFILES(?:\(X86\))?|PROGRAMDATA|PROGRAMW6432|ALLUSERSPROFILE)$/i.test(name)))
 Object.assign(env, {
   NODE_ENV: 'test', DOTENV_CONFIG_PATH: resolve('artifacts/run-activity/live/__no_dotenv__'),

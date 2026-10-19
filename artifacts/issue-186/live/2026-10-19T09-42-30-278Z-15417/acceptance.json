@@ -1,0 +1,24 @@
+{
+  "startedAt": "2026-10-19T09:42:30.280Z",
+  "finishedAt": "2026-10-19T09:43:33.655Z",
+  "passed": true,
+  "model": "zai-org/GLM-5.3-Flash",
+  "baseUrl": "https://api.siliconflow.cn/v1",
+  "stages": [
+    {
+      "command": "docker compose -f e2e/server/compose.yaml up -d --wait",
+      "exitCode": 0
+    },
+    {
+      "command": "/workspace/.tools/node-v22.23.3-linux-x64/bin/node --import tsx server/src/migrate-bin.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "/workspace/.tools/node-v22.23.3-linux-x64/bin/node server/run-integration-tests.mjs --file runtime-streaming-live.test.ts",
+      "exitCode": 0
+    }
+  ],
+  "reproduce": "node --use-env-proxy e2e/server/model-switch.mjs --live",
+  "isolatedDatabase": "lingxiloop_streaming_test",
+  "productionChanged": false
+}
