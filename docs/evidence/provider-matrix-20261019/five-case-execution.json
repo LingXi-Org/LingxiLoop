@@ -1,0 +1,31 @@
+{
+  "database": "lingxiloop_provider_matrix_test_1792403602853",
+  "redisDatabase": 12,
+  "productionOperations": 0,
+  "paidCalls": 0,
+  "files": [
+    "runtime-provider-fault-matrix.test.ts"
+  ],
+  "results": [
+    {
+      "args": [
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-19T09:53:22.998Z",
+      "endedAt": "2026-10-19T09:53:25.240Z",
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "server/run-integration-tests.mjs",
+        "--file",
+        "runtime-provider-fault-matrix.test.ts"
+      ],
+      "startedAt": "2026-10-19T09:53:25.240Z",
+      "endedAt": "2026-10-19T09:53:42.216Z",
+      "exitCode": 0
+    }
+  ]
+}
