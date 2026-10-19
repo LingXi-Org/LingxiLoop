@@ -45,4 +45,16 @@ XDG_CACHE_HOME=/workspace/.cache node e2e/server/cases.mjs --browser-only
 XDG_CACHE_HOME=/workspace/.cache node e2e/server/forum.mjs --browser --issue187
 ```
 
-The first command's runner now recognizes both Node 22 TAP summaries and Node 24 `ℹ` summaries, so successful tests are not recorded as zero-pass failures. The browser runners migrate twice. Live Open Notebook/SurrealDB embedding service availability and production deployment have not been exercised by this branch. Worker ingestion and search isolation are covered with a recording provider and real PostgreSQL; final service qualification belongs to the release integrator.
+The first command's runner now recognizes both Node 22 TAP summaries and Node 24 `ℹ` summaries, so successful tests are not recorded as zero-pass failures. The browser runners migrate twice. At the initial handoff, live Open Notebook/SurrealDB service availability and production deployment had not been exercised. The original worker/search tests used a recording provider and real PostgreSQL; the supplemental live-service qualification below now covers the local service boundary. Final release qualification remains with the release integrator.
+
+## Agent evidence repair and live-service supplement
+
+Commit `f5c9a3034d21c42945fa21c39b0fe8de0cfacdb4` repairs the dedicated case
+source/version path in knowledge tools and context authorization, retaining the
+generic knowledge policy's case exclusion. [Reproducible live-service evidence](live-case-agent/README.md)
+now qualifies actual Notebook HTTP → SurrealDB → Agent ingestion, search and
+authorization with synthetic data. This supplements the earlier handoff's pending
+local-service check: 48 owning integration tests and one live case scenario passed,
+all with zero skips. It uses public LingxiOS 3.5.2 and synthetic embeddings; final
+3.5.3 acceptance and production deployment remain outside this evidence. The real
+0044 was used locally but is not included in the evidence commit.
