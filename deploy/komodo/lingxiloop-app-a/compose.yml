@@ -7,7 +7,7 @@ x-logging: &logging
     max-file: "3"
 
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:bc6dd87d203496580914069d4854f8958692a196
+  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:19b1fc37c7657274296693b2443d4cb4d9f09987
   pull_policy: always
   restart: unless-stopped
   environment: &runtime-environment
@@ -106,7 +106,7 @@ services:
 
   worker:
     <<: *runtime
-    image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:bc6dd87d203496580914069d4854f8958692a196
+    image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:19b1fc37c7657274296693b2443d4cb4d9f09987
     environment:
       <<: *runtime-environment
       NODE_OPTIONS: --max-old-space-size=640
