@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-19T09:54:58.343893+00:00",
+  "review": "independent Astra read-only review",
+  "findingsResolved": [
+    "Malformed provider usage must not lose a paid ledger row",
+    "Host JSON completion and exact model must be asserted",
+    "Acceptance output must be unique per attempt and fail when skipped or stale",
+    "Cancellation, Worker shutdown, replay writing and database teardown must survive assertion/diagnostic errors",
+    "Recovered failures must retain unmeasured estimates rather than fail an all-attempts-measured assertion",
+    "First SDK attempt uses callId as logical retry root",
+    "Host retry attempts must all be retained while selecting the successful response"
+  ],
+  "finalResult": "No further substantive findings; final live run recorded separately",
+  "productionMutation": false
+}

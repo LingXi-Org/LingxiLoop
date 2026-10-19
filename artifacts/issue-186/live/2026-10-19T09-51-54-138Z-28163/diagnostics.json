@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-10-19T09:53:09.111Z",
+  "model": "zai-org/GLM-5.3-Flash",
+  "frames": 53,
+  "finalStatus": {
+    "type": "complete",
+    "reason": "stop"
+  },
+  "calls": [
+    {
+      "purpose": "model-switch.acceptance",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 25,
+      "cachedInputTokens": 0,
+      "outputTokens": 38,
+      "costUSD": 0.00001806
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 10754,
+      "cachedInputTokens": 0,
+      "outputTokens": 97,
+      "costUSD": 0.00126783,
+      "reasoningTokens": 92
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 10913,
+      "cachedInputTokens": 0,
+      "outputTokens": 1728,
+      "costUSD": 0.0019384,
+      "reasoningTokens": 1723
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 11073,
+      "cachedInputTokens": 0,
+      "outputTokens": 2509,
+      "costUSD": 0.00226909,
+      "reasoningTokens": 2113
+    },
+    {
+      "purpose": "lingxios.structured",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 4228,
+      "cachedInputTokens": 0,
+      "outputTokens": 1816,
+      "costUSD": 0.0012096,
+      "reasoningTokens": 1809
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "passed": true,
+  "realModel": true,
+  "timestamp": "2026-10-19T09:43:33.558Z",
+  "billing": [
+    {
+      "purpose": "model-switch.acceptance",
+      "model": "zai-org/GLM-5.3-Flash",
+      "inputTokens": 25,
+      "cachedInputTokens": 0,
+      "outputTokens": 131,
+      "costUSD": 0.00005526
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "inputTokens": 10757,
+      "cachedInputTokens": 0,
+      "outputTokens": 157,
+      "costUSD": 0.00129217,
+      "reasoningTokens": 152
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "inputTokens": 10918,
+      "cachedInputTokens": 0,
+      "outputTokens": 1666,
+      "costUSD": 0.00191417,
+      "reasoningTokens": 1142
+    },
+    {
+      "purpose": "lingxios.structured",
+      "model": "zai-org/GLM-5.3-Flash",
+      "inputTokens": 3927,
+      "cachedInputTokens": 0,
+      "outputTokens": 995,
+      "costUSD": 0.0008468,
+      "reasoningTokens": 988
+    }
+  ],
+  "model": "zai-org/GLM-5.3-Flash",
+  "previewFrames": 96,
+  "retractions": 0,
+  "finalRetractions": 0,
+  "measuredCalls": 3,
+  "costUSD": 0.00405314,
+  "hostCall": {
+    "model": "zai-org/GLM-5.3-Flash",
+    "measured": true,
+    "costUSD": 0.00005526
+  },
+  "finalLength": 987
+}

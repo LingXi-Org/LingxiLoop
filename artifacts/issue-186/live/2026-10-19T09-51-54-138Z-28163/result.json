@@ -1,0 +1,87 @@
+{
+  "passed": true,
+  "realModel": true,
+  "timestamp": "2026-10-19T09:53:09.091Z",
+  "billing": [
+    {
+      "purpose": "model-switch.acceptance",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 25,
+      "cachedInputTokens": 0,
+      "outputTokens": 38,
+      "costUSD": 0.00001806,
+      "callId": "product-e14d8304-56a9-4973-a9ee-0a2b30ec66ae:1",
+      "logicalCallId": "product-e14d8304-56a9-4973-a9ee-0a2b30ec66ae"
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 10754,
+      "cachedInputTokens": 0,
+      "outputTokens": 97,
+      "costUSD": 0.00126783,
+      "reasoningTokens": 92,
+      "callId": "im:4f4c879c578dcac1645519e0412f737344744e1185feb1e5fed873d6339cd17f:1:model:1"
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 10913,
+      "cachedInputTokens": 0,
+      "outputTokens": 1728,
+      "costUSD": 0.0019384,
+      "reasoningTokens": 1723,
+      "callId": "im:4f4c879c578dcac1645519e0412f737344744e1185feb1e5fed873d6339cd17f:1:model:2"
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 11073,
+      "cachedInputTokens": 0,
+      "outputTokens": 2509,
+      "costUSD": 0.00226909,
+      "reasoningTokens": 2113,
+      "callId": "im:4f4c879c578dcac1645519e0412f737344744e1185feb1e5fed873d6339cd17f:1:model:3"
+    },
+    {
+      "purpose": "lingxios.structured",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 4228,
+      "cachedInputTokens": 0,
+      "outputTokens": 1816,
+      "costUSD": 0.0012096,
+      "reasoningTokens": 1809,
+      "callId": "im:4f4c879c578dcac1645519e0412f737344744e1185feb1e5fed873d6339cd17f:1:model:4"
+    }
+  ],
+  "model": "zai-org/GLM-5.3-Flash",
+  "previewFrames": 42,
+  "retractions": 0,
+  "finalRetractions": 0,
+  "measuredCalls": 4,
+  "recoveredFailedAttempts": 0,
+  "measuredUsageCostUSD": 0.006702980000000001,
+  "unmeasuredEstimatedCostUSD": 0,
+  "costUSD": 0.00668492,
+  "hostCall": {
+    "model": "zai-org/GLM-5.3-Flash",
+    "measured": true,
+    "costUSD": 0.00001806
+  },
+  "finalLength": 748
+}

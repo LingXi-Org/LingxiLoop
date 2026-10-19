@@ -22,6 +22,7 @@ interface SelectFieldProps<T extends string = string> {
   ariaLabel: string
   disabled?: boolean
   className?: string
+  contentClassName?: string
   triggerClassName?: string
   size?: 'compact' | 'default'
 }
@@ -41,6 +42,7 @@ export function SelectField<T extends string = string>({
   disabled = false,
   className,
   triggerClassName,
+  contentClassName,
   size = 'default',
 }: SelectFieldProps<T>) {
   const selected = options.find((option) => option.value === value)
@@ -67,7 +69,7 @@ export function SelectField<T extends string = string>({
         <span className="min-w-0 flex-1 truncate text-left">{selected?.label ?? options[0]?.label ?? ''}</span>
         {selected?.hint ? <span className="shrink-0 text-xs text-ink-400">{selected.hint}</span> : null}
       </SelectTrigger>
-      <SelectContent position="popper" className="border-ink-100 bg-panel text-ink-900">
+      <SelectContent position="popper" className={cn("border-ink-100 bg-panel text-ink-900", contentClassName)}>
         {options.map((option) => (
           <SelectItem
             key={encodeValue(option.value)}

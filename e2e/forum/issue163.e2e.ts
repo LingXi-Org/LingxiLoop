@@ -52,12 +52,12 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
     console.info('issue163 compact geometry', { width, ...bounds })
     expect(bounds.height).toBeLessThanOrEqual(110); expect(bounds.cardTop).toBeLessThan(700)
     expect(bounds.overflow).toBe(false); expect(bounds.font).toBeGreaterThanOrEqual(16)
-    await expect(composer().getByRole('button', '添加附件')).toBeHidden()
+    await expect(composer().getByRole('button', '添加材料')).toBeHidden()
     await app.screenshot(`issue163-compact-light-${width}`)
   }
   await browser.setViewport({ width: 1440, height: 1000 })
   await editor().focus()
-  await expect(composer().getByRole('button', '添加附件')).toBeVisible()
+  await expect(composer().getByRole('button', '添加材料')).toBeVisible()
   await editor().fill('教师讨论草稿\n' + '长文本保持内部滚动。\n'.repeat(180))
   expect(await browser.evaluate(() => {
     const el = document.querySelector('[aria-label="发布学习论坛内容"] .cm-scroller')!
@@ -79,10 +79,12 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
   await editor().fill('教师作业正文')
   await composer().getByRole('button', '自由讨论', { exact: true }).tap()
   await expect(editor()).toContainText('教师讨论草稿')
+  await composer().getByRole('button', '材料 1', { exact: true }).tap()
   await expect(composer().getByRole('button', '移除附件：diagram.png')).toBeVisible()
   await browser.reload()
   await expect(editor()).toContainText('教师讨论草稿')
   await editor().focus()
+  await composer().getByRole('button', '材料 1', { exact: true }).tap()
   await expect(composer().getByRole('button', '移除附件：diagram.png')).toBeVisible()
   await browser.evaluate(async () => (await fetch('/api/fixture-fail-next-post', { method: 'POST' })).ok)
   await composer().getByRole('button', '发布', { exact: true }).tap()
@@ -171,18 +173,20 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
     const probe=document.createElement('span')
     probe.style.backgroundColor='var(--card)';probe.style.color='var(--card-foreground)'
     document.body.append(probe)
+    const expectedBackground=getComputedStyle(probe).backgroundColor
+    section.append(probe)
     const expected=getComputedStyle(probe)
     const state={
       theme:root.dataset.theme ?? '',darkClass:root.classList.contains('dark'),lightClass:root.classList.contains('light'),
       storedTheme:localStorage.getItem('lingxiloop-theme'),colorScheme:getComputedStyle(root).colorScheme,
       expanded:section.getAttribute('data-forum-composer-expanded'),
       composerBackground:getComputedStyle(section).backgroundColor,cardBackground:getComputedStyle(card).backgroundColor,
-      toolbarColor:getComputedStyle(toolbar).color,expectedBackground:expected.backgroundColor,expectedForeground:expected.color,
+      toolbarColor:getComputedStyle(toolbar).color,expectedBackground,expectedComposerBackground:expected.backgroundColor,expectedForeground:expected.color,
       transitions:document.getAnimations().filter(animation=>animation instanceof CSSTransition&&animation.playState==='running').length,
     }
     probe.remove()
     return {...state,ready:state.theme==='dark'&&state.darkClass&&!state.lightClass&&state.storedTheme==='dark'&&state.colorScheme==='dark'
-      &&state.composerBackground===state.expectedBackground&&state.cardBackground===state.expectedBackground
+      &&state.composerBackground===state.expectedComposerBackground&&state.cardBackground===state.expectedBackground
       &&state.toolbarColor===state.expectedForeground&&state.transitions===0}
   })
   const verifyDarkTheme = async (phase: 'expanded'|'compact') => {

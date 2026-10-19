@@ -1,0 +1,75 @@
+{
+  "passed": true,
+  "realModel": true,
+  "timestamp": "2026-10-19T09:54:49.032Z",
+  "billing": [
+    {
+      "purpose": "model-switch.acceptance",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 25,
+      "cachedInputTokens": 0,
+      "outputTokens": 49,
+      "costUSD": 0.00002246,
+      "callId": "product-e6b92d39-d5d9-4345-bab1-e897994e383f:1",
+      "logicalCallId": "product-e6b92d39-d5d9-4345-bab1-e897994e383f"
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 10760,
+      "cachedInputTokens": 0,
+      "outputTokens": 513,
+      "costUSD": 0.00143491,
+      "reasoningTokens": 508,
+      "callId": "im:a66e26045496ba961fbbbd1a660a50d42aedf003f96466a8c76aa210ec07cb67:1:model:1"
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 10919,
+      "cachedInputTokens": 0,
+      "outputTokens": 2762,
+      "costUSD": 0.00235269,
+      "reasoningTokens": 2364,
+      "callId": "im:a66e26045496ba961fbbbd1a660a50d42aedf003f96466a8c76aa210ec07cb67:1:model:2"
+    },
+    {
+      "purpose": "lingxios.structured",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "measured": true,
+      "estimated": true,
+      "inputTokens": 3784,
+      "cachedInputTokens": 0,
+      "outputTokens": 1214,
+      "costUSD": 0.00091806,
+      "reasoningTokens": 1207,
+      "callId": "im:a66e26045496ba961fbbbd1a660a50d42aedf003f96466a8c76aa210ec07cb67:1:model:3"
+    }
+  ],
+  "model": "zai-org/GLM-5.3-Flash",
+  "previewFrames": 37,
+  "retractions": 0,
+  "finalRetractions": 0,
+  "measuredCalls": 3,
+  "recoveredFailedAttempts": 0,
+  "measuredUsageCostUSD": 0.00472812,
+  "unmeasuredEstimatedCostUSD": 0,
+  "costUSD": 0.00470566,
+  "hostAttemptCount": 1,
+  "hostCall": {
+    "model": "zai-org/GLM-5.3-Flash",
+    "measured": true,
+    "costUSD": 0.00002246
+  },
+  "finalLength": 763
+}

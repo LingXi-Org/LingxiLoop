@@ -1,0 +1,49 @@
+{
+  "variables": [
+    {
+      "name": "AGENT_OS_INPUT_COST_MICROS_PER_MILLION",
+      "value": "1142858"
+    },
+    {
+      "name": "AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION",
+      "value": "4000000"
+    },
+    {
+      "name": "OPENAI_BASE_URL",
+      "value": "https://api.siliconflow.cn/v1"
+    },
+    {
+      "name": "OPENAI_EMBEDDING_MODEL",
+      "value": "BAAI/bge-m3"
+    },
+    {
+      "name": "SILICONFLOW_USD_CNY_RATE",
+      "value": "7"
+    }
+  ],
+  "at": "2026-10-19T09:43:25.016Z",
+  "readOnly": true,
+  "sigillo": {},
+  "stacks": [
+    {
+      "name": "lingxiloop-app-a",
+      "config": {
+        "OPENAI_BASE_URL": "[[OPENAI_BASE_URL]]",
+        "AGENT_OS_INPUT_COST_MICROS_PER_MILLION": "[[AGENT_OS_INPUT_COST_MICROS_PER_MILLION]]",
+        "AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION": "[[AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION]]",
+        "SILICONFLOW_USD_CNY_RATE": "[[SILICONFLOW_USD_CNY_RATE]]",
+        "OPENAI_EMBEDDING_MODEL": "[[OPENAI_EMBEDDING_MODEL]]"
+      }
+    },
+    {
+      "name": "lingxiloop-app-b",
+      "config": {
+        "OPENAI_BASE_URL": "[[OPENAI_BASE_URL]]",
+        "AGENT_OS_INPUT_COST_MICROS_PER_MILLION": "[[AGENT_OS_INPUT_COST_MICROS_PER_MILLION]]",
+        "AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION": "[[AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION]]",
+        "SILICONFLOW_USD_CNY_RATE": "[[SILICONFLOW_USD_CNY_RATE]]",
+        "OPENAI_EMBEDDING_MODEL": "[[OPENAI_EMBEDDING_MODEL]]"
+      }
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+[db:migrate] applied 0001_v1_baseline, 0002_remove_legacy_identity, 0003_agent_os_session_affinity, 0004_backfill_personal_owner_participants, 0005_lingxios_v2_reset, 0006_observable_live_eval, 0007_install_lingxios, 0008_agent_os_execution, 0009_native_agent_tools, 0010_lingxios_native_runtime, 0011_closed_education, 0012_lingxios_3_2, 0013_native_collaboration, 0014_profile_avatars, 0015_lingxios_3_2_6, 0016_lingxios_3_2_7, 0017_lingxios_3_2_8, 0018_lingxios_3_2_9, 0019_agent_read_receipts, 0020_lingxios_3_2_10, 0021_lingxios_3_2_11, 0022_lingxios_3_2_12, 0023_lingxios_3_2_13, 0024_lingxios_3_3_0, 0025_lingxios_3_3_1, 0026_lingxios_3_3_2, 0027_learning_collaboration, 0028_lingxios_3_3_4, 0029_lingxios_3_3_5, 0030_lingxios_3_3_6, 0031_agent_capabilities, 0032_native_message_attachments, 0033_interactive_ui, 0034_retire_email_calendar, 0035_course_forum, 0036_public_run_activity, 0037_forum_comment_attachments, 0038_learning_submission_sequence, 0039_native_memory_collaboration, 0040_forum_assignment_convergence, 0041_homework_mastery, 0042_forum_submission_evidence, 0043_lingxios_3_5_0 · 1865ms
+[integration] selected 1/73 file(s): runtime-provider-fault-matrix.test.ts
+TAP version 13
+# {"ts":"2026-10-19T09:53:01.121Z","level":"info","msg":"worker stopped","workerId":"fault-matrix-429","timedOut":false}
+# Subtest: product HTTP 429: bounded attempts, settled ledger, durable result and next human turn
+not ok 1 - product HTTP 429: bounded attempts, settled ledger, durable result and next human turn
+  ---
+  duration_ms: 2044.477738
+  type: 'test'
+  location: '/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:1:1407'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    3 !== 4
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 4
+  actual: 3
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:97:16)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: product HTTP 503: bounded attempts, settled ledger, durable result and next human turn
+not ok 2 - product HTTP 503: bounded attempts, settled ledger, durable result and next human turn
+  ---
+  duration_ms: 40.770627
+  type: 'test'
+  location: '/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:1:1407'
+  failureType: 'testCodeFailure'
+  error: 'insert or update on table "organization_seats" violates foreign key constraint "organization_seats_membership_fkey"'
+  code: '23503'
+  name: 'error'
+  stack: |-
+    /workspace/LingxiLoop/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async seedActiveEducationSeat (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/_helpers.ts:365:3)
+    async seedUserMembership (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/_helpers.ts:345:3)
+    async TestContext.<anonymous> (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:63:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: product HTTP socket-reset: bounded attempts, settled ledger, durable result and next human turn
+not ok 3 - product HTTP socket-reset: bounded attempts, settled ledger, durable result and next human turn
+  ---
+  duration_ms: 40.515981
+  type: 'test'
+  location: '/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:1:1407'
+  failureType: 'testCodeFailure'
+  error: 'insert or update on table "organization_seats" violates foreign key constraint "organization_seats_membership_fkey"'
+  code: '23503'
+  name: 'error'
+  stack: |-
+    /workspace/LingxiLoop/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async seedActiveEducationSeat (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/_helpers.ts:365:3)
+    async seedUserMembership (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/_helpers.ts:345:3)
+    async TestContext.<anonymous> (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:63:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: product HTTP stream-cut: bounded attempts, settled ledger, durable result and next human turn
+not ok 4 - product HTTP stream-cut: bounded attempts, settled ledger, durable result and next human turn
+  ---
+  duration_ms: 53.533166
+  type: 'test'
+  location: '/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:1:1407'
+  failureType: 'testCodeFailure'
+  error: 'insert or update on table "organization_seats" violates foreign key constraint "organization_seats_membership_fkey"'
+  code: '23503'
+  name: 'error'
+  stack: |-
+    /workspace/LingxiLoop/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async seedActiveEducationSeat (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/_helpers.ts:365:3)
+    async seedUserMembership (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/_helpers.ts:345:3)
+    async TestContext.<anonymous> (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:63:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: product HTTP empty-output: bounded attempts, settled ledger, durable result and next human turn
+not ok 5 - product HTTP empty-output: bounded attempts, settled ledger, durable result and next human turn
+  ---
+  duration_ms: 65.64269
+  type: 'test'
+  location: '/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:1:1407'
+  failureType: 'testCodeFailure'
+  error: 'insert or update on table "organization_seats" violates foreign key constraint "organization_seats_membership_fkey"'
+  code: '23503'
+  name: 'error'
+  stack: |-
+    /workspace/LingxiLoop/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async seedActiveEducationSeat (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/_helpers.ts:365:3)
+    async seedUserMembership (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/_helpers.ts:345:3)
+    async TestContext.<anonymous> (/workspace/LingxiLoop-provider-matrix/server/src/__integration__/runtime-provider-fault-matrix.test.ts:63:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# {"ts":"2026-10-19T09:53:01.330Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+1..5
+# tests 5
+# suites 0
+# pass 0
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5673.1109

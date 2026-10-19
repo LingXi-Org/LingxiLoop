@@ -1,0 +1,37 @@
+[integration] selected 1/72 file(s): worker-startup-failure.test.ts
+TAP version 13
+# [worker] reconciled 1/1 IM channels
+# [lifecycle] stopping (startup-failure)
+# Subtest: failed Worker runner startup closes reconciled realtime context before database teardown
+not ok 1 - failed Worker runner startup closes reconciled realtime context before database teardown
+  ---
+  duration_ms: 4794.656473
+  type: 'test'
+  location: '/app/server/src/__integration__/worker-startup-failure.test.ts:1:502'
+  failureType: 'testCodeFailure'
+  error: |-
+    isolated preview connection count
+    
+    2 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    waitForConnections (/app/server/src/__integration__/worker-startup-failure.test.ts:41:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (/app/server/src/__integration__/worker-startup-failure.test.ts:62:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14349.466853
