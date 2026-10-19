@@ -3,6 +3,7 @@
 import { open } from 'node:fs/promises'
 import { isAbsolute, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { releaseVersions } from '@lyyzka/lingxios'
 
 const KOMODO = 'https://ops.christmas1314.xyz'
 const PUBLIC = 'https://loop.lingxilearn.cn'
@@ -12,7 +13,7 @@ const SERVICES = ['lingxiloop', 'worker']
 const ACTIONS = ['pulling', 'deploying', 'starting', 'restarting', 'pausing', 'unpausing', 'stopping', 'destroying']
 const READS = new Set(['ListServers', 'ListStacks', 'ListStackServices', 'GetStackActionState'])
 const PUBLIC_PATHS = new Set(['/api/meta', '/api/health/dependencies', '/readyz', '/api/readyz'])
-const RUNTIME = { name: '@lyyzka/lingxios', runtime: '3.5.3', schema: 12, controlPlane: 11, kernel: 2, assistantMessage: 2 }
+const RUNTIME = { name: '@lyyzka/lingxios', ...releaseVersions }
 const imagePattern = /^(?:accel\.way2api\.fun\/)?ghcr\.io\/lingxi-org\/lingxiloop-server:([a-f0-9]{40})$/
 const digestPattern = /^(?:accel\.way2api\.fun\/)?ghcr\.io\/lingxi-org\/lingxiloop-server(?::[a-f0-9]{40})?@sha256:[a-f0-9]{64}$/
 const safeMatch = (value, pattern) => typeof value === 'string' && pattern.test(value) ? value : null

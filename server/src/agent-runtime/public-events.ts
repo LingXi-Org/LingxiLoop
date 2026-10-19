@@ -36,12 +36,16 @@ export function publicRunEvent(event: RunEvent, action = ''): RunEvent {
 }
 
 /** Read the published runtime's private upstream transport; it is never forwarded. */
-export async function* nativeRunEvents(body: ReadableStream<Uint8Array>): AsyncGenerator<RunStreamEvent | null> {
+export async function* nativeRunEvents(body: ReadableStream<Uint8Array>, signal?: AbortSignal): AsyncGenerator<RunStreamEvent | null> {
   let pending = ''
   const reader = body.getReader(), decoder = new TextDecoder()
+  const abort = () => { void reader.cancel().catch(() => {}) }
+  signal?.addEventListener('abort', abort, { once: true })
   try {
+    if (signal?.aborted) return
     while (true) {
       const { value, done } = await reader.read()
+      if (signal?.aborted) return
       pending += decoder.decode(value, { stream: !done })
       if (pending.length > 2_000_000) throw new Error('runtime stream frame exceeds limit')
       let end: number
@@ -53,5 +57,5 @@ export async function* nativeRunEvents(body: ReadableStream<Uint8Array>): AsyncG
       if (done) break
     }
     if (pending.trim()) throw new Error('runtime stream ended inside a frame')
-  } finally { await reader.cancel(); reader.releaseLock() }
+  } finally { signal?.removeEventListener('abort', abort); await reader.cancel(); reader.releaseLock() }
 }

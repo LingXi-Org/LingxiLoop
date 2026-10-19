@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { setTimeout as delay } from 'node:timers/promises'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import type { RunState, RunStreamEvent } from '@lyyzka/lingxios/ui'
 import { RunStreamProjection, assistantRunResponse } from '../agent-runtime/assistant-transport.js'
@@ -104,6 +105,24 @@ test('truncated native frames and old browser wire format fail instead of fallin
   await assert.rejects(async () => {
     for await (const _ of AssistantStream.fromResponse(new Response('event: preview\ndata: {}\n\n'), new AssistantTransportDecoder())) { /* consume */ }
   }, /Unknown SSE event type/)
+})
+
+// Prefetching while the response is backpressured must retain errors until the
+// consumer resumes, without a process-level unhandled rejection.
+test('prefetched upstream failure survives downstream backpressure', async () => {
+  for (const previewCount of [0, 1, 2, 3]) {
+    const upstream = new ReadableStream<Uint8Array>({ start(controller) {
+      const events: RunStreamEvent[] = [{ type: 'state', state: runState() }]
+      for (let seq = 1; seq <= previewCount; seq++) events.push({ type: 'preview', preview: {
+        kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', seq, draft: `text-${seq}`,
+      } })
+      controller.enqueue(new TextEncoder().encode(events.map(event => `data: ${JSON.stringify(event)}\n\n`).join('')))
+      setTimeout(() => controller.error(new Error('upstream fixture disconnected')), 20)
+    } })
+    const response = assistantRunResponse(upstream, new RunStreamProjection('run', true))
+    await delay(60)
+    await assert.rejects(response.text(), /upstream fixture disconnected/)
+  }
 })
 
 // Failure cases: the ephemeral preview resets after a durable model.delta;

@@ -16,6 +16,7 @@ import { installRecordingWukong } from './_recording-wukong.js'
 // Failures: fixed product context alone exceeds the old 128K window; retained
 // multilingual history cannot fit; repeated compaction loses a prior fact; delivery
 // duplicates; completed summaries disappear; calls escape the shared ledger.
+// Auxiliary SSE must use JSON/compaction content, not the ordinary streamed-answer fixture.
 test('production GLM worker preserves conversation continuity across repeated compaction', { timeout: 480000 }, async () => {
   const live = process.env.LINGXIOS_LIVE_CONTEXT === '1'
   if (live) {
@@ -27,7 +28,7 @@ test('production GLM worker preserves conversation continuity across repeated co
   const originalModel = env.OPENAI_MODEL, originalBaseUrl = env.OPENAI_BASE_URL
   env.OPENAI_MODEL = 'zai-org/GLM-5.3-Flash'; env.OPENAI_BASE_URL = 'https://api.siliconflow.cn/v1'
   let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
-  const requests: { bytes: number; stream: boolean }[] = [], results: { status: string; delivered: boolean }[] = []
+  const requests: { bytes: number; stream: boolean; purpose: 'agent-turn' | 'structured' | 'compaction' }[] = [], results: { status: string; delivered: boolean }[] = []
   const checkpoints: { epoch: number; historyBytes: number }[] = []
   const turnIds = ['initial', 'followup', ...Array.from({ length: live ? 6 : 24 }, (_, index) => `soak-${index}`)]
   globalThis.fetch = async (input, init) => {
@@ -36,19 +37,24 @@ test('production GLM worker preserves conversation continuity across repeated co
     const body = String(init?.body), request = JSON.parse(body)
     assert.equal(request.model, 'zai-org/GLM-5.3-Flash')
     assert.equal(request.enable_thinking, false)
-    requests.push({ bytes: Buffer.byteLength(body), stream: request.stream === true })
+    assert.equal(request.reasoning_effort, 'low')
+    const auxiliary = request.response_format?.type === 'json_object'
+    const compacting = auxiliary && String(request.messages[0]?.content).includes('observedResults')
+    const purpose = compacting ? 'compaction' : auxiliary ? 'structured' : 'agent-turn'
+    requests.push({ bytes: Buffer.byteLength(body), stream: request.stream === true, purpose })
     if (live) return originalFetch(input, init)
     const usage = { prompt_tokens: 30000, completion_tokens: 20 }
+    if (!auxiliary) assert.match(JSON.stringify(request.messages), /蓝宝石47/, 'prior fact must reach every generation')
+    if (compacting) assert.match(JSON.stringify(request.messages), /蓝宝石47/, 'summary must be grounded in the preceding context')
+    const content = auxiliary ? JSON.stringify(compacting
+      ? { observedResults: '用户的项目名称是蓝宝石47。', decisions: '', remainingWork: '', uncertainties: '' } : { missing: [] })
+      : '已收到，蓝宝石47。'
     if (request.stream) {
-      assert.match(JSON.stringify(request.messages), /蓝宝石47/, 'prior fact must reach every generation')
       return new Response(`data: ${JSON.stringify({ choices: [{ index: 0,
-        delta: { role: 'assistant', content: '已收到，蓝宝石47。' }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`,
+        delta: { role: 'assistant', content }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`,
       { headers: { 'content-type': 'text/event-stream' } })
     }
-    const compacting = String(request.messages[0]?.content).includes('observedResults')
-    if (compacting) assert.match(JSON.stringify(request.messages), /蓝宝石47/, 'summary must be grounded in the preceding context')
-    return Response.json({ choices: [{ message: { role: 'assistant', content: JSON.stringify(compacting
-      ? { observedResults: '用户的项目名称是蓝宝石47。', decisions: '', remainingWork: '', uncertainties: '' } : { missing: [] }) }, finish_reason: 'stop' }], usage })
+    return Response.json({ choices: [{ message: { role: 'assistant', content }, finish_reason: 'stop' }], usage })
   }
   try {
     const { companyId, projectId, agentId } = await seedCompanyWithAgent()
@@ -98,7 +104,10 @@ test('production GLM worker preserves conversation continuity across repeated co
     assert.equal(messages.length, turnIds.length)
     assert.ok(messages.slice(0, 2).every(message => /已收到/.test(nativeText(message.payload))))
     assert.ok(messages.slice(2).every(message => /蓝宝石47/.test(nativeText(message.payload))))
-    assert.ok(requests.some(request => request.stream && request.bytes > 128000), 'must exercise the former hard context limit')
+    assert.ok(requests.some(request => request.purpose === 'agent-turn' && request.bytes > 128000), 'must exercise the former hard context limit')
+    assert.ok(requests.every(request => request.stream), 'ordinary, structured and compaction calls must use the configured streaming transport')
+    assert.ok(requests.some(request => request.purpose === 'structured'))
+    assert.ok(requests.filter(request => request.purpose === 'compaction').length >= 2)
     const calls = (await pool.query(`SELECT purpose,status,measured,input_tokens,error FROM llm_calls WHERE company_id=$1 ORDER BY created_at`, [companyId])).rows
     assert.equal(calls.length, requests.length)
     assert.ok(calls.every(call => call.status === 'succeeded' && call.measured
@@ -109,7 +118,7 @@ test('production GLM worker preserves conversation continuity across repeated co
     await mkdir('artifacts/reply-generation', { recursive: true })
     await writeFile(`artifacts/reply-generation/${live ? 'live' : 'scripted'}.json`, JSON.stringify({ passed: true,
       runtime: releaseVersions.runtime, model: env.OPENAI_MODEL, realProvider: live, results, requests, calls, checkpoints,
-      continuityFactPreserved: true, deliveredOncePerTurn: true, reasoningDisabled: true, transport: 'recording WuKong fixture',
+      continuityFactPreserved: true, deliveredOncePerTurn: true, thinkingDisabledRequested: true, transport: 'recording WuKong fixture',
       reproduce: `node e2e/server/model-context.mjs${live ? ' --live-model-context' : ''}` }, null, 2))
   } catch (error) {
     await mkdir('artifacts/reply-generation', { recursive: true })

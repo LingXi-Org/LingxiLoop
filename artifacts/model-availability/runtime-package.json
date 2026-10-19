@@ -1,0 +1,24 @@
+{
+  "package": "@lyyzka/lingxios",
+  "version": "3.5.4",
+  "gitHead": "b0d42467dfcb39f3069af658ef2547a8d1e5692b",
+  "integrity": "sha512-mtmUIrFHNnuLVFdfjeJix08HkIZqlUoG3aGlksftMfrENHcEIR7xtjs+vhZLXGHWL1hk9pHqs7kKUxBd/Gb9UA==",
+  "tag": "v3.5.4",
+  "sourcePR": "https://github.com/LingXi-Org/LingxiOS/pull/30",
+  "releaseGates": {
+    "url": "https://github.com/LingXi-Org/LingxiOS/actions/runs/39283815402",
+    "conclusion": "success"
+  },
+  "publish": {
+    "url": "https://github.com/LingXi-Org/LingxiOS/actions/runs/39286720432",
+    "conclusion": "success"
+  },
+  "productLocks": [
+    "package-lock.json",
+    "server/package-lock.json"
+  ],
+  "unrelatedPackageIdentityChanges": 0,
+  "runtimeSchema": 12,
+  "controlPlaneProtocol": 11,
+  "newProductMigration": false
+}

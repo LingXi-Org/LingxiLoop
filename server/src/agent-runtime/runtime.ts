@@ -50,6 +50,24 @@ function kernelOptions() {
 function providerPricing(model = env.OPENAI_MODEL) {
   return siliconFlowPricingForModel(env.OPENAI_BASE_URL, model, env.NODE_ENV === 'production')
 }
+
+/** Build the product Worker's bounded provider configuration. */
+export function runtimeModelConfiguration(model: { id: string; apiKey: string; baseUrl: string }, requestTimeoutMs: number) {
+  const siliconFlow = new URL(model.baseUrl).hostname === 'api.siliconflow.cn'
+  return {
+    ...model,
+    recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
+    requestTimeoutMs,
+    firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
+    maxThinkingTokens: 0, capabilities: { parallelTools: false },
+    // Flash uses a reasoning tier even when enable_thinking is false. Keep
+    // auxiliary progress flowing within the same first-byte/idle budgets.
+    ...(model.id === 'zai-org/GLM-5.3-Flash' && siliconFlow
+      ? { reasoningEffort: 'low' as const, compactionReasoningEffort: 'low' as const, auxiliaryStreaming: true } : {}),
+    ...(isSiliconFlowModel(model.id) && siliconFlow ? { contextWindowTokens: 1_000_000 } : {}),
+  } satisfies WorkerOptions['model']
+}
+
 const common = () => {
   const pricing=providerPricing()
   return { database: pool,
@@ -190,13 +208,7 @@ export async function startLingxiOSWorker() {
     modelBudget: common().modelBudget,
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),
-    model: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL,
-      recovery: { maxAttempts: 3,totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
-      requestTimeoutMs,
-      firstByteTimeoutMs: 30_000,streamIdleTimeoutMs: 30_000,
-      maxThinkingTokens: 0, capabilities: { parallelTools: false },
-      ...(isSiliconFlowModel(env.OPENAI_MODEL) && new URL(env.OPENAI_BASE_URL).hostname === 'api.siliconflow.cn'
-        ? { contextWindowTokens: 1_000_000 } : {}) },
+    model: runtimeModelConfiguration({ id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL }, requestTimeoutMs),
     worker: { id: `lingxiloop-${env.INSTANCE_ID}`, concurrency,
       reservedInteractiveRuns: modelRate('AGENT_OS_RESERVED_INTERACTIVE_RUNS', concurrency > 1 ? 1 : 0),
       healthPort: positiveInteger('AGENT_OS_WORKER_PORT', 5190), shutdownGraceMs: positiveInteger('AGENT_OS_SHUTDOWN_GRACE_MS', 120000) },
