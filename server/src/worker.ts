@@ -12,7 +12,7 @@ import { startPresentationStorageGc, startPresentationWorker } from './modules/p
 import { redis, sub } from './redis.js'
 import { Lifecycle, type ServiceHandle, startWorkerTasks, type WorkerTaskDefinition, type WorkerTaskHandle } from './runtime/lifecycle.js'
 import { initializeNativeStorage } from './storage.js'
-import { prepareLingxiOSWorkerContext, startLingxiOSWorker } from './agent-runtime/runtime.js'
+import { prepareLingxiOSWorkerContext, startLingxiOSWorker, stopLingxiOSControl } from './agent-runtime/runtime.js'
 import { startAgentIngressRetry } from './agent-runtime/ingress.js'
 import { startNativeEventWorker } from './agents/native-event-worker.js'
 
@@ -62,6 +62,8 @@ export async function startWorkerProcess(options: WorkerProcessOptions = {}): Pr
 
   try {
     prepareLingxiOSWorkerContext()
+    // Reconciliation can open local context before the runner owns a stop handle.
+    lifecycle.addDisposer('lingxios-control', stopLingxiOSControl)
     const initializeStorage = options.initializeStorage ?? initializeNativeStorage
     initializeStorage()
     await prepare()
