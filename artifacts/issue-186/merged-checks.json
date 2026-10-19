@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-19T09:55:42.458353+00:00",
+  "mergedCommit": "5ad1c34ba4d1bf96353232cf3a557b3843720441",
+  "upstreamCommit": "97441ba3648e3c2391608707c6f2f402e9f766f2",
+  "runtime": "@lyyzka/lingxios@3.5.2",
+  "typecheck": "passed after merge and acceptance-contract correction",
+  "lint": "passed after merge and acceptance-contract correction",
+  "tests": [
+    {
+      "name": "server:test",
+      "tests": 107,
+      "pass": 107,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "name": "process-lifecycle",
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "name": "production-compose-contracts",
+      "tests": 19,
+      "pass": 19,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "name": "owning-integration",
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    }
+  ],
+  "previousValidation": "checks.json",
+  "priorLiveFailure": {
+    "passed": false,
+    "artifact": "live/2026-10-19T09-47-28-128Z-22076/acceptance.json",
+    "reason": "Completed runtime with recovered structured-call timeout; original all-attempts-measured assertion failed. Original failure retained; acceptance contract corrected after independent review."
+  },
+  "liveAcceptance": {
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "artifact": "live/2026-10-19T09-53-51-118Z-30734/acceptance.json",
+    "result": "live/2026-10-19T09-53-51-118Z-30734/result.json",
+    "intermediatePass": "live/2026-10-19T09-51-54-138Z-28163/acceptance.json",
+    "totalRetainedLiveAttempts": 6,
+    "priorTerminalTimeouts": 2,
+    "priorAssertionFailures": 1
+  },
+  "review": "review.json",
+  "validatedSourceSha256": {
+    "server/src/agent-runtime/runtime.ts": "4f29715b94638f5c2e7227407bdc41f185ac646c22709993e0f142fb11949604",
+    "server/src/agent-runtime/pricing.ts": "143425d5361a6ffaf9c9d7d205d7027b24ac938dce79a72ea20f0ef5b36fc5e6",
+    "server/src/llm.ts": "9d5679b3896835047f00c9295222f182d4db492f12dd7552ca0e52b094acf661",
+    "server/src/__integration__/runtime-streaming-live.test.ts": "87601b35a575dcff583bf9e667b5f8ead8a0c7762b911515e7f2ef417b49e4d5",
+    "e2e/server/model-switch.mjs": "060c4c25c7171b80195063c9f13f6f6202d381fe708d3e39b3ae07234bd2f44e"
+  }
+}

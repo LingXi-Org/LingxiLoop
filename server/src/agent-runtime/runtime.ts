@@ -16,7 +16,7 @@ import { createProductHarness } from './harness.js'
 import { productConversationId, assertFrozenAudience } from './identity.js'
 import { authorizeAudienceRead } from '../agents/tools.js'
 import { loadRuntimeBinding } from './context.js'
-import { siliconFlowCost, siliconFlowPricing } from './pricing.js'
+import { isSiliconFlowModel, siliconFlowCost, siliconFlowPricingForModel } from './pricing.js'
 import { createRealtimeStore } from './realtime-store.js'
 import { createRuntimeObjectStore } from './object-store.js'
 import { verifyLessonCandidate } from './interactive-ui-projection.js'
@@ -48,10 +48,7 @@ function kernelOptions() {
 }
 
 function providerPricing(model = env.OPENAI_MODEL) {
-  if (model !== 'deepseek-ai/DeepSeek-V4-Flash' && model !== 'zai-org/GLM-5.2' || new URL(env.OPENAI_BASE_URL).hostname !== 'api.siliconflow.cn') return undefined
-  const rate = process.env.SILICONFLOW_USD_CNY_RATE?.trim()
-  if (!rate && env.NODE_ENV === 'production') throw new Error('SILICONFLOW_USD_CNY_RATE is required in production')
-  return siliconFlowPricing(Number(rate || 7),model)
+  return siliconFlowPricingForModel(env.OPENAI_BASE_URL, model, env.NODE_ENV === 'production')
 }
 const common = () => {
   const pricing=providerPricing()
@@ -186,16 +183,19 @@ export async function startLingxiOSWorker() {
   if (worker) throw new Error('LingxiOS worker already started in this process')
   prepareLingxiOSWorkerContext()
   const concurrency = positiveInteger('AGENT_OS_MAX_CONCURRENT_RUNS', 2)
+  // Flash can still emit metered reasoning despite enable_thinking=false. Real
+  // tool continuations exceed the former 90s limit; retain bounded attempts.
+  const requestTimeoutMs = positiveInteger('AGENT_OS_MODEL_REQUEST_TIMEOUT_MS', env.OPENAI_MODEL === 'zai-org/GLM-5.3-Flash' ? 180_000 : 90_000)
   const options = {
     modelBudget: common().modelBudget,
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),
     model: { id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL,
-      recovery: { maxAttempts: 3,totalTimeoutMs: 120_000 },
-      requestTimeoutMs: positiveInteger('AGENT_OS_MODEL_REQUEST_TIMEOUT_MS', 90_000),
+      recovery: { maxAttempts: 3,totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
+      requestTimeoutMs,
       firstByteTimeoutMs: 30_000,streamIdleTimeoutMs: 30_000,
       maxThinkingTokens: 0, capabilities: { parallelTools: false },
-      ...(['deepseek-ai/DeepSeek-V4-Flash', 'zai-org/GLM-5.2'].includes(env.OPENAI_MODEL) && new URL(env.OPENAI_BASE_URL).hostname === 'api.siliconflow.cn'
+      ...(isSiliconFlowModel(env.OPENAI_MODEL) && new URL(env.OPENAI_BASE_URL).hostname === 'api.siliconflow.cn'
         ? { contextWindowTokens: 1_000_000 } : {}) },
     worker: { id: `lingxiloop-${env.INSTANCE_ID}`, concurrency,
       reservedInteractiveRuns: modelRate('AGENT_OS_RESERVED_INTERACTIVE_RUNS', concurrency > 1 ? 1 : 0),

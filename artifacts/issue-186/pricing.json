@@ -1,0 +1,68 @@
+{
+  "model_id": "zai-org/GLM-5.3-Flash",
+  "provider": "SiliconFlow China",
+  "endpoint": "https://api.siliconflow.cn/v1",
+  "source": {
+    "url": "https://www.siliconflow.cn/pricing",
+    "final_url": "https://www.siliconflow.cn/pricing",
+    "fetched_at_utc": "2026-10-19T09:35:59.236497+00:00",
+    "html_sha256": "35290a44bc01f1398e5e9fb629d5c3dd7211bcb7ae25fecf964b4af4f771eaca"
+  },
+  "supporting_urls": [
+    "https://www.siliconflow.cn/models",
+    "https://docs.siliconflow.cn/docs/api/chat-completions-post"
+  ],
+  "currency": "CNY",
+  "prices_per_million_tokens": {
+    "input": 0.8,
+    "output": 2.8,
+    "cached_input": 0.23
+  },
+  "extraction": {
+    "method": "Read public HTML; unescape embedded JSON double quotes; match exact playgroundName; parse matching objects; retain pricing fields only.",
+    "table_headers": [
+      "输入价格（M Tokens）",
+      "输出价格（M Tokens）",
+      "缓存价格（M Tokens）"
+    ],
+    "records": [
+      {
+        "playgroundName": "zai-org/GLM-5.3-Flash",
+        "componentCode": "output-tokens",
+        "componentZhCnName": "输出 tokens",
+        "coordinateDesc": "",
+        "realTimePriceCnyUnit": "0.002800",
+        "unitZhCnName": "K tokens"
+      },
+      {
+        "playgroundName": "zai-org/GLM-5.3-Flash",
+        "componentCode": "cached-input-tokens",
+        "componentZhCnName": "缓存命中 tokens",
+        "coordinateDesc": "",
+        "realTimePriceCnyUnit": "0.000230",
+        "unitZhCnName": "K tokens"
+      },
+      {
+        "playgroundName": "zai-org/GLM-5.3-Flash",
+        "componentCode": "input-tokens",
+        "componentZhCnName": "输入 tokens",
+        "coordinateDesc": "",
+        "realTimePriceCnyUnit": "0.000800",
+        "unitZhCnName": "K tokens"
+      }
+    ],
+    "conversion": "Embedded CNY prices per K tokens multiplied by 1000 give CNY prices per million tokens.",
+    "checks": [
+      "Exactly three matching components",
+      "Exact model ID",
+      "K tokens units",
+      "No pricing-tier coordinates",
+      "Displayed table headers use M Tokens"
+    ]
+  },
+  "limitations": [
+    "Public list prices; account-specific discounts are not verified.",
+    "USD budget conversion requires the configured CNY-per-USD exchange rate.",
+    "This pricing evidence does not verify runtime compatibility."
+  ]
+}

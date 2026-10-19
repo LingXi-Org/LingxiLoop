@@ -13,6 +13,8 @@ test('host judgments price measured primary-model tokens with the configured run
   const original = names.map(name => process.env[name])
   process.env[names[0]] = '2000000'
   process.env[names[1]] = '8000000'
+  const originalBase = env.OPENAI_BASE_URL
+  env.OPENAI_BASE_URL = 'https://custom-provider.invalid/v1'
   let calls = 0
   __setLlmLedgerOverrideForTesting(async record => { records.push(record as unknown as Record<string, unknown>) })
   __setLlmClientOverrideForTesting(() => ({ chat: { completions: { create: async () => {
@@ -29,6 +31,7 @@ test('host judgments price measured primary-model tokens with the configured run
     await assert.rejects(createChatCompletion({ purpose: 'invalid-price', companyId: 'company-1' }, request), /AGENT_OS_INPUT_COST_MICROS_PER_MILLION/)
     assert.equal(calls, 2)
   } finally {
+    env.OPENAI_BASE_URL = originalBase
     names.forEach((name, index) => { if (original[index] === undefined) delete process.env[name]; else process.env[name] = original[index] })
     __setLlmClientOverrideForTesting(null)
     __setLlmLedgerOverrideForTesting(null)
@@ -46,6 +49,8 @@ test('SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rat
     {costCny:33,costUsd:33/7,cachedUsageAvailable:true})
   assert.throws(()=>siliconFlowCost({ available: true,inputTokens: 1,outputTokens: 0,cachedInputTokens: 2 },pricing))
   assert.throws(()=>siliconFlowCost({ available: false,inputTokens: 0,outputTokens: 0 },pricing))
+  assert.deepEqual(siliconFlowCost({available:true,inputTokens:1_000_000,outputTokens:1_000_000,cachedInputTokens:500_000},siliconFlowPricing(7,'zai-org/GLM-5.3-Flash')),
+    {costCny:3.315,costUsd:3.315/7,cachedUsageAvailable:true})
   assert.throws(()=>siliconFlowPricing(0))
 })
 
@@ -142,4 +147,39 @@ test('caller-supplied call identity makes uncertain ledger retries idempotent', 
   assert.deepEqual(writes.map(write => write.params[0]), ['stable-call', 'stable-call'])
   assert.deepEqual(writes.map(write => write.params[11]), [0.25, 0.25])
   assert.ok(writes.every(write => /ON CONFLICT \(id\) DO NOTHING/.test(write.sql)))
+})
+
+// Failure modes: the new model inherits legacy/zero costs, cache hits are charged
+// as fresh input, stale admission overrides change the ledger tariff, or pricing
+// leaks to another provider. Keep synthetic ledger overrides out of live tests.
+test('GLM Flash host calls use the same cache-aware CN tariff as Agent observations', async () => {
+  const names = ['SILICONFLOW_USD_CNY_RATE', 'AGENT_OS_INPUT_COST_MICROS_PER_MILLION', 'AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION'] as const
+  const original = names.map(name => process.env[name])
+  const model = env.OPENAI_MODEL, base = env.OPENAI_BASE_URL
+  const records: Array<Record<string, unknown>> = []
+  env.OPENAI_MODEL = 'zai-org/GLM-5.3-Flash'
+  env.OPENAI_BASE_URL = 'https://api.siliconflow.cn/v1'
+  process.env.SILICONFLOW_USD_CNY_RATE = '7'
+  __setLlmLedgerOverrideForTesting(async record => { records.push(record as unknown as Record<string, unknown>) })
+  __setLlmClientOverrideForTesting(() => ({ chat: { completions: { create: async () => ({
+    choices: [{ message: { content: 'ok' } }],
+    usage: { prompt_tokens: 1_000_000, completion_tokens: 1_000_000, prompt_tokens_details: { cached_tokens: 500_000 } },
+  }) } } }) as never)
+  try {
+    for (const override of [undefined, '9999999']) {
+      for (const name of names.slice(1)) {
+        if (override === undefined) delete process.env[name]
+        else process.env[name] = override
+      }
+      await createChatCompletion({ purpose: 'flash-cost', companyId: 'company-1' }, {
+        model: env.OPENAI_MODEL, messages: [{ role: 'user', content: 'synthetic' }],
+      })
+      assert.equal(records.at(-1)?.costUsd, 3.315 / 7)
+      assert.equal(records.at(-1)?.costEstimated, true)
+    }
+  } finally {
+    env.OPENAI_MODEL = model; env.OPENAI_BASE_URL = base
+    names.forEach((name, index) => { if (original[index] === undefined) delete process.env[name]; else process.env[name] = original[index] })
+    __setLlmClientOverrideForTesting(null); __setLlmLedgerOverrideForTesting(null)
+  }
 })
