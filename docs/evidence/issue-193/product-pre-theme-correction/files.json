@@ -1,0 +1,54 @@
+[
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/report.json",
+    "sha256": "3935c222fd3bb9a7a43231242e7f31811cb61a13c35f68812455fcc631fb5b68"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/summary.md",
+    "sha256": "5f0e4456c88dee16bce4c731ff79ed106a422886bea81df07eeaf5b33e31008e"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/junit.xml",
+    "sha256": "44add5512fa8c5ce33c69ac688058f75e68bf741cb2978b1695f80a21ce2f748"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/screenshots/web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28dark_29-4115f4cc/default/attempt-0/screenshots/001-product-dark-card.png",
+    "sha256": "fc42da9233ea83abbfbd3c8aee175bcd2b7f627d03ce5891719a2af58b422d06"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/screenshots/web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28dark_29-4115f4cc/default/attempt-0/screenshots/002-product-dark-controls.png",
+    "sha256": "7572db7ccbcb8267166d0cfb599c082375c20e00e080316fa85a5b9367dcd1b9"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/screenshots/web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28dark_29-4115f4cc/default/attempt-0/screenshots/003-product-dark-dialog.png",
+    "sha256": "8dec1e61d710dae3da5d22258a1bacb8369fdae04949d5c816a47ea151480e51"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/screenshots/web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28light_29-f00f593a/default/attempt-0/screenshots/001-product-light-card.png",
+    "sha256": "e672e9b2d95f8e5e00166c5abd7685ce1531aaa05622ceda8de58a08e8b7180f"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/screenshots/web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28light_29-f00f593a/default/attempt-0/screenshots/002-product-light-controls.png",
+    "sha256": "0e09ef88a0583e5f50f692dd23ee90b3460d2d98c0d35a3413e94260620afd15"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/screenshots/web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28light_29-f00f593a/default/attempt-0/screenshots/003-product-light-dialog.png",
+    "sha256": "8823fed20f9fa95e3917822c3613934f5ef95c2bd028a45676899ad4d09c5bb7"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/product-dark-interaction.json",
+    "sha256": "d7806fc3d3b2e7dac628037a00456bc5f436cced4ddfa8ecc6325228f80e83ba"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/product-light-interaction.json",
+    "sha256": "de8010817067b2e205845ec5487b73c568e69d1ac8ef42ef85aa25d10a4cd779"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/manifest.json",
+    "sha256": "f274884c131a5e94766f65eb7cd1c6c69748f9d7f672789a71c937aaf43bba99"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/product-pre-theme-correction/export.html",
+    "sha256": "c5a5fb0875d289435c094fc4f1f3f1250444645cd4fc84ee5d9b4f5175047570"
+  }
+]

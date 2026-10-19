@@ -1,0 +1,24 @@
+{
+  "before": {
+    "follows": [],
+    "external": [],
+    "denied": [],
+    "externalHits": 0,
+    "acceptedSaves": 1,
+    "activePages": 1,
+    "closedPages": 0
+  },
+  "after": {
+    "follows": [
+      "Explain this fictional bridge fixture"
+    ],
+    "external": [
+      "http://127.0.0.1:5193/__visualize_fixture/external"
+    ],
+    "denied": [],
+    "externalHits": 1,
+    "acceptedSaves": 1,
+    "activePages": 1,
+    "closedPages": 0
+  }
+}

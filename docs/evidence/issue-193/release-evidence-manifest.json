@@ -1,0 +1,96 @@
+{
+  "algorithm": "sha256",
+  "scope": "Final issue193 release/recovery evidence; excludes this manifest itself and unrelated earlier raw browser artifacts, which have their own manifests.",
+  "files": [
+    {
+      "path": "docs/evidence/issue-193/RELEASE.md",
+      "bytes": 16392,
+      "sha256": "e56f8add1b750f55514ab26cc75288ee4da065ceb8ab081f4367e8919f230e20"
+    },
+    {
+      "path": "docs/evidence/issue-193/ci-qualification.json",
+      "bytes": 3118,
+      "sha256": "3d65324caa3f9c372db91435f599dd404fdab9a49867b71140cb071b47dd617e"
+    },
+    {
+      "path": "docs/evidence/issue-193/deployment-receipt.json",
+      "bytes": 2306,
+      "sha256": "d68a35d580fd881cca09ef27a6bb0a1127dd6ae3d47fbfc137b9b37dce5c15c5"
+    },
+    {
+      "path": "docs/evidence/issue-193/product-image.json",
+      "bytes": 848,
+      "sha256": "17605eb92a15f6ced21cbd78e5e3ea5e3a7096db5e2d3f1d8986fceb92061044"
+    },
+    {
+      "path": "docs/evidence/issue-193/komodo-rollout.json",
+      "bytes": 471,
+      "sha256": "710e724932a3211f0533101a8a42ac8a08fe785a33df8a362f7862ab499f8de7"
+    },
+    {
+      "path": "docs/evidence/issue-193/komodo-b-initial-failure.json",
+      "bytes": 964,
+      "sha256": "56f79bbe7fe5df41ae4e3a47ca56771a004d33d546a7a0bd03faf6430ba09959"
+    },
+    {
+      "path": "docs/evidence/issue-193/komodo-b-recovery.json",
+      "bytes": 782,
+      "sha256": "4f7d34904b3dd1e1afc97193356acec80e75eae37fa5f609da1a10207b701118"
+    },
+    {
+      "path": "docs/evidence/issue-193/komodo-final-stages.json",
+      "bytes": 791,
+      "sha256": "78e0881396366b22d57438579d3257601d0f5f6087fc9f8f5b730a7846ae3c15"
+    },
+    {
+      "path": "docs/evidence/issue-193/production-database-46.json",
+      "bytes": 1447,
+      "sha256": "5028a98b69014455ecdd1d41c6b257146e9ef9af202fcb554830d6d104f1de82"
+    },
+    {
+      "path": "docs/evidence/issue-193/production-postflight-bc6dd87d.json",
+      "bytes": 14551,
+      "sha256": "a7d6b21a4078a8cd0f16cfdb05efcaae019bfad56ba867559b76a8bf86591c19"
+    },
+    {
+      "path": "docs/evidence/issue-193/rollout-container-progress.json",
+      "bytes": 3799,
+      "sha256": "87e1addf154e2eabebb36ae2fa254420a1f3ed5e9c211f6ca558b9faddc04c12"
+    },
+    {
+      "path": "docs/evidence/issue-193/rollout-failure-container-state.json",
+      "bytes": 3954,
+      "sha256": "1d733c171289f917a400a97a05811b3e6e638470b91228f2d8d76c5b01aa7777"
+    },
+    {
+      "path": "docs/evidence/issue-193/rollout-retry-container-progress.json",
+      "bytes": 3897,
+      "sha256": "0deaedc3d403cef62ba67cf1b68e0f5417ee2fc0c3c41d2a18eb5b9d0853d2d0"
+    },
+    {
+      "path": "docs/evidence/issue-193/rollout-final-container-state.json",
+      "bytes": 4750,
+      "sha256": "6dbf3c562945106f3d70e1c1dfaf240425162af7cb2154cdd6e626eb4b0a8f77"
+    },
+    {
+      "path": "docs/evidence/issue-193/postflight-database.mjs",
+      "bytes": 5039,
+      "sha256": "ca6ae5334bc910e70824a36f54cb05477c5c4709d2d5e218ef10ce1293f1a7de"
+    },
+    {
+      "path": "docs/evidence/issue-193/recover-b.mjs",
+      "bytes": 3070,
+      "sha256": "04ddb4ebe9555320ba86766061a32997110b9278534b709ce06be3a9c173f8cf"
+    },
+    {
+      "path": "docs/evidence/issue-193/finish-rollout.mjs",
+      "bytes": 2935,
+      "sha256": "149d9743afd07ca755e76be08b3ecd282ec63a5d3cf3c4f012bf7487eb7c7ee0"
+    },
+    {
+      "path": "docs/evidence/issue-193/PRODUCTION-POSTFLIGHT-FAILURE-MODEL.md",
+      "bytes": 10856,
+      "sha256": "c5944a5eeecc264cf1403563d4d4b3158f6cec4de12b37a8a086a493e7c7abe4"
+    }
+  ]
+}

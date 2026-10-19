@@ -1,0 +1,53 @@
+{
+  "upstream": "0a1fc56d279fd1001f78387bd81aec1c26767411",
+  "viewport": {
+    "width": 1440,
+    "height": 960
+  },
+  "dpr": 1,
+  "locale": "zh-CN",
+  "timezone": "UTC",
+  "sharedAdaptation": [
+    "Web sandbox host",
+    "useGenUi hook",
+    "i18n host locale adapter",
+    "font environment"
+  ],
+  "themeInput": "original upstream Web applyTheme(light/dark) normalizes to theme-zai-light/dark, Web body font/foreground, cold-start without snapshot; shared outer canvas is Zai #f8f8f8/#161616",
+  "styling": "upstream independently compiles original styles.css; product compiles globals.css + zcode.css; only outer test-shell geometry/fonts/motion conditions shared",
+  "sourceBoundary": "Upstream card, controls and primitives are imported from immutable third_party source; product imports src. No upstream source text is rewritten.",
+  "hashes": {
+    "third_party/zcode/upstream/packages/ui/src/useTheme.ts": "a286aa3596dd05140184d60318f014ff1cea6637d0fae104137701fc2dd1ce0e",
+    "third_party/zcode/upstream/packages/web/index.html": "2ae1a2e32120583ebbc8e95d2bce417a2351e2c9a2489aa1cebcd88bd6f54068",
+    "e2e/visualize/presentation.e2e.ts": "c63e71c1a63f39223455e5890df2c8e2e317658d822c245bcfcb1cc32b53a1ab",
+    "third_party/zcode/upstream/packages/ui/src/components/lib/utils.ts": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+    "src/features/chat/visualize/zcode/lib/utils.ts": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+    "e2e/visualize/fixtures/bridge.html": "7c7771ab108d68c28036440b626c6e14e7da74bf304dbd677a2c3d05067a0af4",
+    "e2e/visualize/bridge.e2e.ts": "cd59b82bbd25bb298dd53c095b6e7a664111d35958dfbbe36babad5f58b02db2",
+    "e2e/visualize/fixture-api.ts": "9b8527cd3d017ec12033690c827984443e5f42e18117e6a00ec10e1dd079f562",
+    "e2e/visualize/index.tsx": "21549881a65607beea9677bc9c85d628a2061fd943fdf3f338d7b53ffd486381",
+    "e2e/visualize/fixture.css": "ae79b62bedf377112784171bc818eca169d78e5f3b93b84241b8ef26182f606a",
+    "e2e/visualize/parity.e2e.ts": "757dec53d1310ebd3906b6ab368ab722d5ded5fafafc5ab448cbfbc6588fa164",
+    "e2e/visualize/lifecycle.e2e.ts": "d8e9456b8c78152db6d8eeb6a39690c7a0ac0c673d6c8cce8306f538f6e111fe",
+    "e2e/visualize/fixtures/acceptance.html": "9f04fff672adfc3bfe621670d25545ab36147cc5845bdc0c5f2257594f98159f",
+    "e2e/visualize/fixtures/export.html": "40df804b9bbf05ff14740b9c75b8f117af8d664aa45d249a570247b9a4a6140f",
+    "e2e/visualize/generated/export.html": "c5a5fb0875d289435c094fc4f1f3f1250444645cd4fc84ee5d9b4f5175047570",
+    "third_party/zcode/skills/visualize/scripts/render.py": "745e04627aa949f2d6d980c0f276d836219e61c06617a511a87943580e389e10",
+    "package-lock.json": "696225ecfb299b5408340162095c7476a79a00b89fc32c2facd83e10bfd20c42",
+    "third_party/zcode/upstream/packages/ui/src/gen-ui/components/GenUiCard.tsx": "ac5b0339302f7e869153e2450b91079fba2d4ebdf15e99f5390e0d96b22cae4b",
+    "src/features/chat/visualize/zcode/gen-ui/components/GenUiCard.tsx": "80c5fcd1be09c0aaa86a023fa0979100ebdf454542f4e41800300f75e511ba0b",
+    "third_party/zcode/upstream/packages/ui/src/gen-ui/components/TweakPanel.tsx": "8ae2afed842f226abd650f6cb49fbf8fdb777920ce71a50b0764e0f91edfd34e",
+    "src/features/chat/visualize/zcode/gen-ui/components/TweakPanel.tsx": "4cf0b76a303f89ea3e27091d226e75c0a419ff0051125b3a10961d10902bd20d",
+    "third_party/zcode/upstream/packages/ui/src/components/ui/button.tsx": "3bf0b1573c940999f875a1dd5e67a32e7d9bcb3e320774fa8277f5c00748b32b",
+    "src/features/chat/visualize/zcode/components/ui/button.tsx": "77feeafdb3736cbb4ed504ac3385fcbd39501e2c98225b71cf6e5b22262fc537",
+    "third_party/zcode/upstream/packages/ui/src/components/ui/dialog.tsx": "fb2decab75993205ec5670acbd5b8b7dfc9b1518d3acb457ddde7edd1984d44e",
+    "src/features/chat/visualize/zcode/components/ui/dialog.tsx": "a40c3a1cb317a75e25d8c8cf2e218d70074190a21ef5b572adb5cc373171f418",
+    "third_party/zcode/upstream/packages/ui/src/components/ui/textarea.tsx": "a839574ce1301fbaa9ba917fdb980900eb9118bffa7c6c4e469f3293b122ed30",
+    "src/features/chat/visualize/zcode/components/ui/textarea.tsx": "47cc53a6dc85a28c54a8aec31dc2cb4dd9e457de5d79b3736e146297d5f76a1f",
+    "src/features/chat/visualize/web/host.ts": "c8cd43dccaf2419d1056d43afe9340e4e17aa989940bbdc824faa3e4b9133be4",
+    "src/features/chat/visualize/web/document.ts": "5b1bc3a5379527afa549a49e3df057cab5175922c78bd32dd4c423a2886329d6",
+    "src/features/chat/visualize/zcode.css": "fe485a7da5e57a47bfe51607a6bc3ef329187ac9fa0a31be0b64d43b88791ba4",
+    "third_party/zcode/upstream/packages/ui/src/styles.css": "ae1c3575fa770258bba05afb5a0ebbeda59ecbd8b4cfa9d0355b5fbfd8dcbd8b",
+    "server/assets/visualize-runtime/gen-ui.js": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494"
+  }
+}

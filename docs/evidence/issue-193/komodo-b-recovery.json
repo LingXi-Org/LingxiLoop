@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "startedAt": "2026-10-19T14:30:45.667Z",
+  "operation": "DeployStack",
+  "stack": "lingxiloop-app-b",
+  "sourceCommit": "bc6dd87d203496580914069d4854f8958692a196",
+  "manifestCommit": "9b1bf3ac5f8acfe318b2444ea540d669269fb8c8",
+  "previousFailedUpdate": "6ad62712e06d5e1f79832a4d",
+  "previousFailure": "Existing configured mirror returned HTTP 522 while copying an image layer; no new B container was created.",
+  "schemaBeforeRecovery": 46,
+  "scope": "Retry only failed B stack through Komodo; no stop/restart/deploy of A, no config/provider/TLS changes.",
+  "updateId": "6ad62996e06d5e1f79832ad0",
+  "komodoStatus": "Complete",
+  "komodoSuccess": true,
+  "startTs": 1792420246107,
+  "endTs": 1792420738614,
+  "observedAt": "2026-10-19T14:39:09.624Z"
+}
