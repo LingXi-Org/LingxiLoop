@@ -7,7 +7,7 @@
   "runtime": "3.5.3",
   "schema": 12,
   "scope": "web-worker-idle",
-  "status": "prepared",
+  "status": "smoke-complete",
   "limits": {
     "web": {
       "cpus": 0.75,
@@ -27,11 +27,14 @@
   "completionRule": "Explicit terminal receipt, >=86400 monotonic seconds, continuous <=90s heartbeat gaps, unchanged containers/images and zero violations. Missing or stale evidence is incomplete.",
   "violations": [],
   "targetSeconds": 60,
-  "elapsedSeconds": 0,
-  "samples": 0,
-  "maxGapSeconds": 0,
+  "elapsedSeconds": 61.406451293,
+  "samples": 2,
+  "maxGapSeconds": 59.40924819,
   "createdAt": "2026-10-19T11:41:13.528Z",
-  "capturedAt": "2026-10-19T11:43:47.114Z",
+  "startedAt": "2026-10-19T11:43:49.218Z",
+  "lastHeartbeatAt": "2026-10-19T11:44:49.279Z",
+  "finishedAt": "2026-10-19T11:44:50.624Z",
+  "capturedAt": "2026-10-19T11:44:54.299Z",
   "workerProbe": "namespace-available",
   "nodeVersion": "v22.23.3",
   "imageId": "sha256:b76be4097d93f5c46f0eed497983fdd887e7bdc3205fc3f97eb205aed84318e1",
@@ -45,6 +48,60 @@
     "worker": {
       "livez": "/healthz",
       "readyz": "/readyz"
+    }
+  },
+  "lastSample": {
+    "at": "2026-10-19T11:44:49.279Z",
+    "elapsedSeconds": 60.061478108,
+    "roles": {
+      "web": {
+        "rss": 223428608,
+        "heapUsed": 107072832,
+        "heapTotal": 111226880,
+        "external": 10605178,
+        "arrayBuffers": 6577994,
+        "uptime": 104.288057776,
+        "sqlSubmitted": 1195,
+        "gcCount": 175,
+        "gcMs": 1098.6277289940044,
+        "poolFailed": 0,
+        "poolCompleted": 541,
+        "poolWaiting": 0,
+        "cpuUser": 6400298,
+        "cpuSystem": 1036517,
+        "livez": 200,
+        "readyz": 200,
+        "restartCount": 0,
+        "running": true,
+        "oomKilled": false
+      },
+      "worker": {
+        "rss": 216674304,
+        "heapUsed": 92976936,
+        "heapTotal": 96600064,
+        "external": 10646207,
+        "arrayBuffers": 6598573,
+        "uptime": 75.527096574,
+        "sqlSubmitted": 925,
+        "gcCount": 140,
+        "gcMs": 514.6867280025035,
+        "poolFailed": 0,
+        "poolCompleted": 632,
+        "poolWaiting": 0,
+        "cpuUser": 5266571,
+        "cpuSystem": 1064769,
+        "livez": 200,
+        "readyz": 200,
+        "restartCount": 0,
+        "running": true,
+        "oomKilled": false
+      }
+    },
+    "queues": {
+      "activeWork": 0,
+      "pendingResult": 0,
+      "pendingTerminal": 0,
+      "pendingDelivery": 0
     }
   }
 }
