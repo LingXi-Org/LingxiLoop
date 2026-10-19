@@ -30,6 +30,12 @@ export class RunStreamProjection {
   }
 
   apply(item: RunStreamEvent): AgentRunSnapshot {
+    this.advance(item)
+    return this.snapshot
+  }
+
+  /** Consume in order; callers must materialize and validate before emitting. */
+  advance(item: RunStreamEvent): void {
     const id = item.type === 'state' ? item.state.run.id : item.type === 'event' ? item.event.runId
       : item.type === 'preview' ? item.preview.runId : item.runId
     if (id !== this.view.runId) throw new Error('运行身份不一致')
@@ -53,7 +59,6 @@ export class RunStreamProjection {
       if (this.view !== before && event.kind === 'run.failed' && typeof event.data.error === 'string') this.error = event.data.error
       if (event.kind === 'run.started' && typeof event.data.sourceRef === 'string') this.sourceRef = event.data.sourceRef
     }
-    return this.snapshot
   }
 
   async syncApprovals(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval'>, identity: RunIdentity): Promise<void> {
@@ -211,7 +216,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
         yield { type: 'update-state', path: [], operations: [] }
         continue
       }
-      projection.apply(item)
+      projection.advance(item)
       if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'tool.completed')) await projection.syncApprovals(approvals.api,approvals.identity)
       if (approvals && (item.type === 'state' || item.type === 'event' && ['tool.started', 'tool.completed'].includes(item.event.kind))) await projection.syncPresentation(approvals.identity)
       if (approvals && (item.type === 'state' || item.type === 'event' && ['run.failed','run.cancelled'].includes(item.event.kind))) await projection.syncTerminal(approvals.api,approvals.identity)
