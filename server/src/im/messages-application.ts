@@ -1,7 +1,7 @@
 import { assertOwnedMessageAttachments } from './attachments.js'
 import { messageAcceptanceDigest } from './messages-digest.js'
 import { canonicalMessageMentions } from '../mentions.js'
-import { assertUiInteractionAdmission } from './interactive-ui-admission.js'
+import { assertInteractionAdmission } from './interaction-admission.js'
 import { nativeMessageSchema, nativeText, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import type { ReadReceiptAdvance } from './read-receipts-contracts.js'
@@ -553,7 +553,7 @@ export class ImMessagesApplication {
   > {
     const channelType = await this.channelType(input)
     if (channelType === null) return { kind: 'channel_not_found' }
-    await assertUiInteractionAdmission(input, this.infrastructure.db)
+    await assertInteractionAdmission(input, this.infrastructure.db)
     await assertOwnedMessageAttachments(this.infrastructure.db, input)
     return this.infrastructure.withConnection((db) => this.acceptMessage(db, channelType, input))
   }

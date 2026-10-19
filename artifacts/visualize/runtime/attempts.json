@@ -1,0 +1,10 @@
+{
+  "skillReferenceProjectionAndRender": "passed (3 tests, before bounded-state coverage was added)",
+  "actualRenderArtifact": "artifacts/visualize/runtime/export-check.html",
+  "generationInitialFailure": "skills.load omitted by explicit capability resolver; fixed by granting only native skills.load whose published implementation rechecks all skill actions",
+  "nativeReferenceRepair": "passed: unavailable visualization paths corrected before durable delivery",
+  "nonthinkingCore": "timed out during concurrent CPU/IO load; serial rerun required",
+  "owningBatch": "stopped on coordinator request to release CPU; generation/teacher/state pending serial rerun",
+  "liveDatabase": "dedicated lingxiloop_issue193_live_test initialized through migration 0046",
+  "liveProvider": "not started; coordinator requested waiting for resource contention to clear"
+}

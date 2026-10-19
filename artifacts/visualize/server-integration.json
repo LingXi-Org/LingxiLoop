@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "personal-state-resource-allowlist-and-revocation",
+    "stale-revision-and-revoked-membership",
+    "one-use-expiring-gestures-and-forged-ingress",
+    "concurrent-document-lock-and-capacity"
+  ],
+  "passed": false,
+  "command": "npm run test:integration -- --file visualize.test.ts",
+  "databaseIsolation": "dedicated issue193 backend test database"
+}

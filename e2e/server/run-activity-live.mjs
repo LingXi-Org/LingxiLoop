@@ -28,7 +28,7 @@ Object.assign(env, {
   AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: String(Math.ceil(Number(credentials.EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION) / 7 * 1e6)),
   AGENT_OS_HOMES_ROOT: resolve('artifacts/run-activity/live/runtime-homes'),
   WUKONG_USER_TOKEN_SECRET: 'integration-wukong-user-token-secret', LINGXILOOP_GATEWAY_HMAC_SECRET: 'integration-gateway-secret',
-  LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:53016', OPENUI_TELEMETRY_DISABLED: '1', E2E_TELEMETRY_DISABLED: '1', DO_NOT_TRACK: '1',
+  LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:53016', E2E_TELEMETRY_DISABLED: '1', DO_NOT_TRACK: '1',
 })
 const startedAt = new Date().toISOString()
 await mkdir(output, { recursive: true })

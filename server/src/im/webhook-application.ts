@@ -1,6 +1,6 @@
 import { attachmentMetadata, assertOwnedMessageAttachments } from './attachments.js'
 import { createHash } from 'node:crypto'
-import { assertUiInteractionAdmission } from './interactive-ui-admission.js'
+import { assertInteractionAdmission } from './interaction-admission.js'
 import { nativeText, nativeAttachments, userMessageSchema, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import { parseMentions } from '../mentions.js'
@@ -87,7 +87,7 @@ export class WukongWebhookApplication {
         throw new Error('message author is not a bound channel member')
       }
       const author = members.find(member => member.id === input.fromUid)
-      await assertUiInteractionAdmission({ companyId: binding.company_id, userId: input.fromUid, channelId: input.channelId,
+      await assertInteractionAdmission({ companyId: binding.company_id, userId: input.fromUid, channelId: input.channelId,
         clientNonce: input.clientMsgNo, payload: input.payload }, db)
       if (author?.kind === 'human' && !userMessageSchema.safeParse(input.payload).success) {
         // Human-labelled product notices must have passed the server's acceptance boundary.
@@ -118,8 +118,8 @@ export class WukongWebhookApplication {
         }
       }
       if (input.payload.role === 'user') await assertOwnedMessageAttachments(db, { companyId: binding.company_id, userId: input.fromUid, payload: input.payload })
-      const parsedMentions = custom.uiInteraction || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(input.payload), members)
-      const mentionedIds = (custom.uiInteraction || custom.questionnaireReply) && Array.isArray(custom.mentionedIds)
+      const parsedMentions = custom.visualizeFollowUp || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(input.payload), members)
+      const mentionedIds = (custom.visualizeFollowUp || custom.questionnaireReply) && Array.isArray(custom.mentionedIds)
         ? custom.mentionedIds.map(String) : parsedMentions.mentionedIds
       const mentionAll = parsedMentions.mentionAll
       const recipients = resolveLearningAgentRecipients({

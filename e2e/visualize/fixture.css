@@ -1,0 +1,6 @@
+html,body { margin:0; min-height:100%; }
+body { font-family:ui-sans-serif,system-ui,sans-serif; font-size:14px; }
+html,body { background:var(--color-background)!important; }
+.fixture-stage { width:min(960px,calc(100% - 48px)); margin:48px auto; }
+.fixture-controls { position:absolute;top:1100px;left:24px; }
+*,*::before,*::after { animation-duration:0s!important;transition-duration:0s!important;caret-color:transparent!important; }

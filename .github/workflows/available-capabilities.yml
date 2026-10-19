@@ -28,7 +28,6 @@ jobs:
     env:
       NODE_ENV: test
       ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
-      OPENUI_TELEMETRY_DISABLED: '1'
       INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
       REDIS_URL: redis://127.0.0.1:6379/6

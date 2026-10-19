@@ -1,0 +1,2962 @@
+[
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/capture.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/capture.test.ts",
+    "import": "./capture.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/capture.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/capture.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/clearOrder.test.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/clearOrder.test.ts",
+    "import": "node:events"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/clearOrder.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/contract.example.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/contract.example.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/contract.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/contract.test.ts",
+    "import": "./contract.example.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/contract.test.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/contract.test.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/contract.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/contract.ts",
+    "import": "node:crypto"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/contract.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/csp.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/csp.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/csp.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/execution.test.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/execution.test.ts",
+    "import": "node:events"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/execution.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiProtocol.test.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiProtocol.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiProtocol.test.ts",
+    "import": "./protocol.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiProtocol.test.ts",
+    "import": "./registry.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiVendor.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiVendor.test.ts",
+    "import": "./genUiVendor.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiVendor.test.ts",
+    "import": "./registry.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiVendor.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiVendor.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiVendor.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/genUiVendor.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/guestPolicy.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/guestPolicy.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/guestPolicy.ts",
+    "import": "electron"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/guestPolicy.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/guestPolicy.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/guestPolicy.ts",
+    "import": "./protocol.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "electron"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "./guestPolicy.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "./permissionGate.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "./permissions.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "./protocol.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "./registry.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "./session.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "./capture.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/host.ts",
+    "import": "@desktop/main/browserView/browserScreenshotActivityController.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/hostLifecycle.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/hostLifecycle.test.ts",
+    "import": "./permissionGate.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/hostLifecycle.test.ts",
+    "import": "./protocol.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/hostLifecycle.test.ts",
+    "import": "./registry.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/index.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/index.ts",
+    "import": "./csp.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/index.ts",
+    "import": "./registry.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/index.ts",
+    "import": "./protocol.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/index.ts",
+    "import": "./guestPolicy.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/index.ts",
+    "import": "./host.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/permissionGate.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/permissionGate.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/permissionGate.ts",
+    "import": "./permissions.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/permissions.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/permissions.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/permissions.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/protocol.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/protocol.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/protocol.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/protocol.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/protocol.ts",
+    "import": "./csp.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/protocol.ts",
+    "import": "./genUiVendor.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/registry.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/registry.ts",
+    "import": "node:crypto"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/registry.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/registry.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/registry.ts",
+    "import": "./csp.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/session.ts",
+    "import": "electron"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/session.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/session.ts",
+    "import": "./permissionGate.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/session.ts",
+    "import": "./genUiVendor.js"
+  },
+  {
+    "file": "packages/desktop/src/main/pluginSandbox/session.ts",
+    "import": "./protocol.js"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/alias.ts",
+    "import": "@modelcontextprotocol/ext-apps"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/alias.ts",
+    "import": "./aliasRuntime.js"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/alias.ts",
+    "import": "./openaiAlias.js"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasApi.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasApi.ts",
+    "import": "@modelcontextprotocol/ext-apps"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasApi.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasRuntime.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasRuntime.ts",
+    "import": "@modelcontextprotocol/core"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasRuntime.ts",
+    "import": "@modelcontextprotocol/ext-apps"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasRuntime.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasRuntime.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasRuntime.ts",
+    "import": "./aliasApi.js"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/aliasRuntime.ts",
+    "import": "./openaiAlias.js"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/desktopPluginSandboxPlatform.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/desktopPluginSandboxPlatform.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/genUi.ts",
+    "import": "@modelcontextprotocol/ext-apps"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/genUi.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/genUi.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/genUi.ts",
+    "import": "./genUiTweakRuntime.js"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.d.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.test.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.test.ts",
+    "import": "node:vm"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/main.ts",
+    "import": "./relay.js"
+  },
+  {
+    "file": "packages/desktop/src/renderer/src/plugin-sandbox/openaiAlias.ts",
+    "import": "./aliasApi.js"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "node:module"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "node:fs"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "node:url"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "vite"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "@vitejs/plugin-react"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "@tailwindcss/vite"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "@zcode/shared/zcodeEndpoint"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "../ui/vite/pdfJsCMapsPlugin.js"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "./scripts/build-metadata.mjs"
+  },
+  {
+    "file": "packages/desktop/vite.config.ts",
+    "import": "./scripts/desktop-product-identity.mjs"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.test.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.test.ts",
+    "import": "node:os"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.test.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.test.ts",
+    "import": "@zcode/shared/node"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.test.ts",
+    "import": "./files.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.ts",
+    "import": "node:fs"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/files.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.test.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.test.ts",
+    "import": "node:os"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.test.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.test.ts",
+    "import": "./service.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.test.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "node:crypto"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "@zcode/shared/node"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "../../paths.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "./files.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/service.ts",
+    "import": "./stateStorage.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.test.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.test.ts",
+    "import": "node:os"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.test.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.test.ts",
+    "import": "./stateStorage.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "node:crypto"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "node:fs"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "@zcode/rpc"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "@zcode/shared/node"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "../../fs/atomicFileUtils.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "../../logger/serviceLogger.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorage.ts",
+    "import": "../app/ports.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorageNotifications.test.ts",
+    "import": "node:events"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorageNotifications.test.ts",
+    "import": "node:fs"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorageNotifications.test.ts",
+    "import": "node:fs/promises"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorageNotifications.test.ts",
+    "import": "node:os"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorageNotifications.test.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorageNotifications.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/services/src/gen-ui/adapters/stateStorageNotifications.test.ts",
+    "import": "#src/gen-ui/adapters/stateStorage.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/app/ports.ts",
+    "import": "@zcode/rpc"
+  },
+  {
+    "file": "packages/services/src/gen-ui/app/ports.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/services/src/gen-ui/contract.example.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/contract.ts",
+    "import": "@zcode/rpc"
+  },
+  {
+    "file": "packages/services/src/gen-ui/contract.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/services/src/gen-ui/contract.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/services/src/gen-ui/contract.ts",
+    "import": "../descriptors.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/index.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/index.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/services/src/gen-ui/node.ts",
+    "import": "./adapters/service.js"
+  },
+  {
+    "file": "packages/shared/src/gen-ui/contract.example.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/gen-ui/contract.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/shared/src/gen-ui/contract.test.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/gen-ui/contract.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/shared/src/gen-ui/contract.ts",
+    "import": "./tweakProtocol.js"
+  },
+  {
+    "file": "packages/shared/src/gen-ui/index.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/gen-ui/tweakProtocol.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/appTools.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/content.ts",
+    "import": "./hostContract.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/contract.example.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/contract.example.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/contract.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/contract.test.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/contract.test.ts",
+    "import": "./toolMeta.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/contract.test.ts",
+    "import": "./contract.example.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/contract.ts",
+    "import": "./resourceMime.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/index.ts",
+    "import": "./appTools.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/index.ts",
+    "import": "./content.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/index.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/index.ts",
+    "import": "./hostContract.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/index.ts",
+    "import": "./instance.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/index.ts",
+    "import": "./schemas.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/index.ts",
+    "import": "./sampling.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/index.ts",
+    "import": "./toolMeta.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/instance.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/sampling.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/sampling.test.ts",
+    "import": "./sampling.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/sampling.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/sampling.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/schemas.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/schemas.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/toolMeta.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/mcp-apps/toolMeta.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/shared/src/node/genUiPaths.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/shared/src/node/genUiPaths.test.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/shared/src/node/genUiPaths.test.ts",
+    "import": "./genUiPaths.js"
+  },
+  {
+    "file": "packages/shared/src/node/genUiPaths.ts",
+    "import": "node:crypto"
+  },
+  {
+    "file": "packages/shared/src/node/genUiPaths.ts",
+    "import": "node:path"
+  },
+  {
+    "file": "packages/shared/src/node/genUiPaths.ts",
+    "import": "../gen-ui/index.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "../ui/button.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "../ui/button-group.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "../lib/utils.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@streamdown/cjk"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@streamdown/code"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@streamdown/math"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@streamdown/mermaid"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "ai"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "lucide-react"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "remark-cjk-friendly-gfm-strikethrough"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "shiki"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "streamdown"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "unified"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/components/ai-elements/code-block.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/components/ui/context-menu.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/components/ai-elements/markdown-blockquote.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/components/ai-elements/markdown-list.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/components/ai-elements/markdown-table.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/components/ai-elements/markdown-image.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/components/ai-elements/streamdown-controls.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/embeddedBrowserHelpers.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/codeViewer.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/editorPreference.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/fileDisplay.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/markdownFileLink.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/assistantPathQuotes.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/path.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/workspace-file-tree/model.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/workspaceEditorSelection.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/workspace-file-tree/helpers.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/codePreviewSettings.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/codePreviewSettings.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/store/StoreProvider.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/ControlHintTooltip.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/hooks/usePlatform.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/hooks/useFileContextActions.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/hooks/useWorkspaceOpenInEditorTarget.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/hooks/useServices.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/logger.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/useTheme.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/zcodeFileCitationRemarkPlugin.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/windowsFileLinkEscapeRemarkPlugin.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@/lib/zcodeFileCitation.js"
+  },
+  {
+    "file": "packages/ui/src/components/ai-elements/message.tsx",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/components/lib/utils.ts",
+    "import": "clsx"
+  },
+  {
+    "file": "packages/ui/src/components/lib/utils.ts",
+    "import": "tailwind-merge"
+  },
+  {
+    "file": "packages/ui/src/components/ui/button.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/components/ui/button.tsx",
+    "import": "class-variance-authority"
+  },
+  {
+    "file": "packages/ui/src/components/ui/button.tsx",
+    "import": "radix-ui"
+  },
+  {
+    "file": "packages/ui/src/components/ui/button.tsx",
+    "import": "../lib/utils.js"
+  },
+  {
+    "file": "packages/ui/src/components/ui/dialog.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/components/ui/dialog.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/components/ui/dialog.tsx",
+    "import": "radix-ui"
+  },
+  {
+    "file": "packages/ui/src/components/ui/dialog.tsx",
+    "import": "../lib/utils.js"
+  },
+  {
+    "file": "packages/ui/src/components/ui/dialog.tsx",
+    "import": "./button.js"
+  },
+  {
+    "file": "packages/ui/src/components/ui/dialog.tsx",
+    "import": "lucide-react"
+  },
+  {
+    "file": "packages/ui/src/components/ui/textarea.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/components/ui/textarea.tsx",
+    "import": "../lib/utils.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "@/plugin-ui/hostPrimitives.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "./theme.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/page.ts",
+    "import": "../app/tweaks.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/retainedPage.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/retainedPage.ts",
+    "import": "@/plugin-ui/hostPrimitives.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/retainedPage.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/retainedPage.ts",
+    "import": "./page.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/theme.ts",
+    "import": "@/plugin-ui/hostPrimitives.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/theme.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/adapters/theme.ts",
+    "import": "@modelcontextprotocol/ext-apps"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/app/tweaks.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/app/tweaks.test.ts",
+    "import": "./tweaks.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/app/tweaks.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "lucide-react"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "@/components/ui/button.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "@/components/ui/dialog.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "@/components/ui/textarea.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "@/hooks/useGenUi.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiCard.tsx",
+    "import": "./TweakPanel.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiMessageResponse.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiMessageResponse.tsx",
+    "import": "@/components/ai-elements/message.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiMessageResponse.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiMessageResponse.tsx",
+    "import": "../domain/references.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/GenUiMessageResponse.tsx",
+    "import": "./GenUiCard.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/TweakPanel.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/TweakPanel.tsx",
+    "import": "@/components/ui/button.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/TweakPanel.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/components/TweakPanel.tsx",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/contract.example.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/contract.example.ts",
+    "import": "@/gen-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/contract.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/contract.test.ts",
+    "import": "@/gen-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/contract.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/contract.ts",
+    "import": "@/gen-ui/domain/sourceFiles.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/domain/references.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/domain/references.test.ts",
+    "import": "./references.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/domain/references.ts",
+    "import": "@zcode/shared/gen-ui"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/domain/references.ts",
+    "import": "../../lib/assistantDirectiveParser.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/domain/sourceFiles.ts",
+    "import": "@/gen-ui/domain/references.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/host.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/host.ts",
+    "import": "./adapters/page.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/host.ts",
+    "import": "./adapters/retainedPage.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/index.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/index.ts",
+    "import": "./components/GenUiMessageResponse.js"
+  },
+  {
+    "file": "packages/ui/src/gen-ui/index.ts",
+    "import": "./adapters/page.js"
+  },
+  {
+    "file": "packages/ui/src/hooks/useGenUi.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/hooks/useGenUi.ts",
+    "import": "./usePlatform.js"
+  },
+  {
+    "file": "packages/ui/src/hooks/useGenUi.ts",
+    "import": "./useWorkspaceServices.js"
+  },
+  {
+    "file": "packages/ui/src/hooks/useGenUi.ts",
+    "import": "@/gen-ui/host.js"
+  },
+  {
+    "file": "packages/ui/src/hooks/usePlatform.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/hooks/usePlatform.tsx",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+    "import": "@zcode/rpc"
+  },
+  {
+    "file": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+    "import": "@/hooks/useServices.js"
+  },
+  {
+    "file": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+    "import": "@/store/remoteWorkspaceSessionStore.js"
+  },
+  {
+    "file": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+    "import": "@/hooks/useResolvedRemoteWorkspaceSessionId.js"
+  },
+  {
+    "file": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+    "import": "@/store/TabStoreProvider.js"
+  },
+  {
+    "file": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+    "import": "@/store/tabStore.js"
+  },
+  {
+    "file": "packages/ui/src/hooks/useWorkspaceServices.tsx",
+    "import": "@/lib/remoteWorkspaceServiceError.js"
+  },
+  {
+    "file": "packages/ui/src/i18n/IntlProvider.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/i18n/IntlProvider.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/i18n/IntlProvider.tsx",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/i18n/IntlProvider.tsx",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/i18n/IntlProvider.tsx",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/i18n/IntlProvider.tsx",
+    "import": "@/lib/browserEnvironment.js"
+  },
+  {
+    "file": "packages/ui/src/i18n/IntlProvider.tsx",
+    "import": "./locales/zh-CN.js"
+  },
+  {
+    "file": "packages/ui/src/i18n/IntlProvider.tsx",
+    "import": "./locales/en-US.js"
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/en-US.ts",
+    "import": "@/request-security-edition/messages.js"
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/en-US.ts",
+    "import": ": "
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/en-US.ts",
+    "import": ": "
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/en-US.ts",
+    "import": ",\n  "
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/en-US.ts",
+    "import": ": "
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/en-US.ts",
+    "import": ",\n  "
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/en-US.ts",
+    "import": ": "
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/zh-CN.ts",
+    "import": "@/request-security-edition/messages.js"
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/zh-CN.ts",
+    "import": ": "
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/zh-CN.ts",
+    "import": ": "
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/zh-CN.ts",
+    "import": ": "
+  },
+  {
+    "file": "packages/ui/src/i18n/locales/zh-CN.ts",
+    "import": ": "
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiSidePane.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiSidePane.tsx",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiSidePane.tsx",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiSidePane.tsx",
+    "import": "@/plugin-ui/adapters/usePluginUiSidePaneModel.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiSidePane.tsx",
+    "import": "@/plugin-ui/components/PluginUiSidePane.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiToolCallBlock.tsx",
+    "import": "@/ToolCallBlocks/fileSummaryTypes.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiToolCallBlock.tsx",
+    "import": "@/ToolCallBlocks/renderers/mcp.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiToolCallBlock.tsx",
+    "import": "@/plugin-ui/adapters/usePluginUiToolCallModel.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiToolCallBlock.tsx",
+    "import": "@/plugin-ui/components/PluginUiToolCallBlock.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/PluginUiToolCallBlock.tsx",
+    "import": "@/plugin-ui/domain/readPluginUiPresentation.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiBackgroundHost.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiBackgroundHost.tsx",
+    "import": "@/hooks/usePlatform.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiBackgroundHost.tsx",
+    "import": "@/hooks/useServices.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiBackgroundHost.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiBackgroundHost.tsx",
+    "import": "@/plugin-ui/adapters/pluginUiBackground.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiModelContextChip.tsx",
+    "import": "lucide-react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiModelContextChip.tsx",
+    "import": "@/components/ai-elements/attachments.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiModelContextChip.tsx",
+    "import": "@/components/ui/button.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiModelContextChip.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiModelContextChip.tsx",
+    "import": "@/v4/composer/ContextAttachmentPill.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiModelContextChip.tsx",
+    "import": "../domain/pluginUiModelContext.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiProviders.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiProviders.tsx",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiProviders.tsx",
+    "import": "@/plugin-ui/adapters/pluginUiSessionBinding.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiProviders.tsx",
+    "import": "@/plugin-ui/adapters/pluginUiSessionActions.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiProviders.tsx",
+    "import": "@/plugin-ui/adapters/pluginUiResourceDeltaFeed.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/PluginUiProviders.tsx",
+    "import": "@/v4/conversationProjectionStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/messagePortTransport.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/messagePortTransport.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+    "import": "@/logger.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+    "import": "@/plugin-ui/domain/pluginUiLogicalScope.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+    "import": "@/plugin-ui/domain/pluginUiToolFeed.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+    "import": "@/plugin-ui/adapters/pluginUiManagedPage.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+    "import": "@/plugin-ui/adapters/pluginUiPageRegistry.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiBackground.ts",
+    "import": "@/plugin-ui/adapters/pluginUiHostTypes.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+    "import": "@/plugin-ui/app/pluginUiHostController.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+    "import": "@/plugin-ui/app/pluginUiInteractionPorts.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiDownloads.ts",
+    "import": "../domain/pluginUiDownloadFile.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiHostTypes.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiHostTypes.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiHostTypes.ts",
+    "import": "../app/pluginUiHostController.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiHostTypes.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+    "import": "@/plugin-ui/adapters/pluginUiSessionActions.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+    "import": "@/plugin-ui/app/pluginUiHostController.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+    "import": "../app/pluginUiFollowUpDialogStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+    "import": "../domain/pluginUiFollowUp.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+    "import": "../domain/pluginUiImageBlocks.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+    "import": "./pluginUiModelContextEvents.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiInteractions.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/plugin-ui/adapters/pluginUiStateKey.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/lib/appTelemetry.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "./pluginUiSessionActions.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/logger.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/plugin-ui/adapters/messagePortTransport.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/plugin-ui/adapters/pluginUiDownloads.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/plugin-ui/adapters/readPluginUiStyleVariables.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/plugin-ui/app/pluginUiHostController.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/plugin-ui/app/pluginUiResourceNotificationBus.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/plugin-ui/app/pluginUiWidgetStateStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "../app/pluginUiSurfaceFeedStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "../domain/buildPluginUiHostCapabilities.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "../domain/buildPluginUiHostContext.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@/v4/workspaceConnectionRegistry.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "./pluginUiHostTypes.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "./pluginUiPagePlane.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "./pluginUiPageRegistry.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiManagedPage.ts",
+    "import": "./pluginUiResourceDeltaFeed.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiModelContextEvents.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiModelContextEvents.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiModelContextEvents.ts",
+    "import": "@/plugin-ui/domain/pluginUiModelContext.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiPagePlane.ts",
+    "import": "@floating-ui/dom"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiPagePlane.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiPagePlane.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiPageRegistry.ts",
+    "import": "./sandboxPageOwners.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiPageRegistry.ts",
+    "import": "./pluginUiHostTypes.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiResourceDeltaFeed.ts",
+    "import": "@/plugin-ui/app/pluginUiResourceNotificationBus.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiResourceDeltaFeed.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiResourceDeltaFeed.ts",
+    "import": "@/v4/conversationProjectionStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiResourceDeltaFeed.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiSessionActions.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiSessionBinding.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/pluginUiSessionBinding.ts",
+    "import": "../domain/pluginUiImageBlocks.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/readPluginUiStyleVariables.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/readPluginUiStyleVariables.ts",
+    "import": "../domain/pluginUiStyleVariables.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/sandboxPageOwners.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/sandboxPageOwners.test.ts",
+    "import": "./sandboxPageOwners.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/sandboxPageOwners.test.ts",
+    "import": "@/plugin-ui/adapters/pluginUiPageRegistry.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/sandboxPageOwners.ts",
+    "import": "../app/pluginUiPageManager.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "@/hooks/useServices.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "@/hooks/usePlatform.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "@/plugin-ui/adapters/usePluginUiSurfaces.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "@/plugin-ui/adapters/PluginUiProviders.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "@/components/ui/toast.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useMarketPluginUi.ts",
+    "import": "@/logger.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiContextImages.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiContextImages.ts",
+    "import": "../domain/pluginUiModelContext.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiContextImages.ts",
+    "import": "../domain/pluginUiImageBlocks.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "@/hooks/usePlatform.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "@/hooks/useServices.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "../domain/pluginUiLogicalScope.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "./pluginUiHostTypes.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "./pluginUiManagedPage.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "./pluginUiPageRegistry.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiHost.ts",
+    "import": "./pluginUiHostTypes.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/adapters/pluginUiInteractions.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/adapters/pluginUiResourceDeltaFeed.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/adapters/usePluginUiHost.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/app/pluginUiSurfaceFeedStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/app/pluginUiSurfaceStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/domain/buildPluginUiHostContext.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/domain/pluginUiToolFeed.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/plugin-ui/domain/readPluginUiPresentation.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/store/StoreProvider.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/useTheme.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/v4/paneLayoutStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/v4/sessionDataLayer.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/v4/toolCallRowAdapter.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/v4/useConversationProjection.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@/v4/V4ConversationContext.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSidePaneModel.tsx",
+    "import": "../domain/pluginUiLogicalScope.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSurfaces.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSurfaces.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSurfaces.ts",
+    "import": "@/hooks/useServices.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSurfaces.ts",
+    "import": "@/logger.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiSurfaces.ts",
+    "import": "@/store/pluginManagementStoreLoading.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/lib/taskSidePaneMemory.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/adapters/pluginUiInteractions.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/adapters/usePluginUiHost.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/app/pluginUiDisclosureStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/app/pluginUiInstanceStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/app/pluginUiSurfaceStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/domain/buildPluginUiHostContext.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/domain/pluginUiToolFeed.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/domain/readPluginUiPresentation.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/ToolCallBlocks/fileSummaryTypes.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/useTheme.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "../domain/pluginUiLogicalScope.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/usePluginUiToolCallModel.ts",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+    "import": "@/hooks/useServices.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+    "import": "@/store/pluginManagementStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+    "import": "@/settings/pluginStoreListing.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+    "import": "@/plugin-ui/adapters/useUiPluginRecommendations.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+    "import": "@/lib/zcodeDraftSkillInvalidation.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+    "import": "@/lib/skillStoreRefresh.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useRecommendedUiPlugins.ts",
+    "import": "@/logger.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useUiPluginRecommendations.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useUiPluginRecommendations.ts",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useUiPluginRecommendations.ts",
+    "import": "@/hooks/useServices.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/adapters/useUiPluginRecommendations.ts",
+    "import": "@/logger.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiAppTools.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiAppTools.test.ts",
+    "import": "./pluginUiAppTools.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiAppTools.test.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiAppTools.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiAppTools.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiAppTools.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiAppTools.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostAppHandlers.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostAppHandlers.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostAppHandlers.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostAppHandlers.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostAppHandlers.ts",
+    "import": "../domain/buildPluginUiHostContext.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostAppHandlers.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostBridge.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostBridge.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.test.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.test.ts",
+    "import": "./pluginUiHostController.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "./pluginUiSampling.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "./pluginUiAppTools.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "./pluginUiHostAppHandlers.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "./pluginUiHostControllerContract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "./pluginUiHostTeardown.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "./pluginUiInteractionPorts.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "./pluginUiResourceSubscriptions.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostController.ts",
+    "import": "./pluginUiHostControllerContract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostControllerContract.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostControllerContract.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostControllerContract.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostControllerContract.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostControllerContract.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostControllerContract.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostControllerContract.ts",
+    "import": "./pluginUiInteractionPorts.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostTeardown.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostTeardown.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostTeardown.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiHostTeardown.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiInstanceStore.ts",
+    "import": "../domain/pluginUiInstancePolicy.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiInteractionPorts.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiInteractionPorts.ts",
+    "import": "@modelcontextprotocol/core"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiInteractionPorts.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiInteractionPorts.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiInteractionPorts.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiInteractionPorts.ts",
+    "import": "zod"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiInteractionPorts.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiPageManager.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiPageManager.test.ts",
+    "import": "./pluginUiPageManager.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiResourceNotificationBus.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiResourceNotificationBus.ts",
+    "import": "@zcode/shared/zcode-protocol-v4"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiResourceNotificationBus.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiResourceNotificationBus.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiResourceNotificationBus.ts",
+    "import": "./pluginUiHostController.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiResourceSubscriptions.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiResourceSubscriptions.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiResourceSubscriptions.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiResourceSubscriptions.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiSampling.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiSampling.test.ts",
+    "import": "./pluginUiSampling.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiSampling.test.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiSampling.ts",
+    "import": "@modelcontextprotocol/client"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiSampling.ts",
+    "import": "@zcode/services"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiSampling.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiSampling.ts",
+    "import": "./pluginUiHostBridge.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/app/pluginUiSurfaceFeedStore.ts",
+    "import": "../domain/pluginUiToolFeed.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiCard.tsx",
+    "import": "@/components/lib/utils.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiCard.tsx",
+    "import": "@zcode/shared/test-ids"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiCard.tsx",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiCard.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiCard.tsx",
+    "import": "../adapters/pluginUiPageRegistry.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiCard.tsx",
+    "import": "../app/pluginUiHostController.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiFollowUpDialogHost.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiFollowUpDialogHost.tsx",
+    "import": "@/components/ui/button.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiFollowUpDialogHost.tsx",
+    "import": "@/components/ui/dialog.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiFollowUpDialogHost.tsx",
+    "import": "@/components/ui/textarea.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiFollowUpDialogHost.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiFollowUpDialogHost.tsx",
+    "import": "../domain/pluginDisplayName.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiFollowUpDialogHost.tsx",
+    "import": "../app/pluginUiFollowUpDialogStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/hooks/usePlatform.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/components/ui/toast.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@zcode/shared"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/plugin-ui/adapters/useRecommendedUiPlugins.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/settings/pluginStoreListing.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/settings/PluginStoreAvatar.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "lucide-react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/components/ui/button.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/components/ui/spinner.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/components/lib/utils.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/components/ui/dropdown-menu.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/i18n/IntlProvider.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiLauncherItems.tsx",
+    "import": "@/plugin-ui/adapters/usePluginUiSurfaces.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiSidePane.tsx",
+    "import": "@/plugin-ui/components/PluginUiCard.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiSidePane.tsx",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiToolCallBlock.tsx",
+    "import": "@/components/ui/button.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiToolCallBlock.tsx",
+    "import": "@/plugin-ui/components/PluginUiCard.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiToolCallBlock.tsx",
+    "import": "@/plugin-ui/contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiToolCallBlock.tsx",
+    "import": "@zcode/shared/test-ids"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/components/PluginUiToolCallBlock.tsx",
+    "import": "lucide-react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.example.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.example.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.test.ts",
+    "import": "./sidePane/pluginUiSidePaneTab.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.test.ts",
+    "import": "./contract.example.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.test.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.ts",
+    "import": "@zcode/shared/zcode-protocol-v4"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.ts",
+    "import": "react"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/contract.ts",
+    "import": "./domain/pluginUiImageBlocks.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/buildPluginUiHostCapabilities.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/buildPluginUiHostCapabilities.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/buildPluginUiHostContext.ts",
+    "import": "@modelcontextprotocol/ext-apps/app-bridge"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/buildPluginUiHostContext.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/buildPluginUiHostContext.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiDownloadFile.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiFollowUp.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiImageBlocks.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiInstancePolicy.ts",
+    "import": "@zcode/shared/zcode-protocol-v4"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiInstancePolicy.ts",
+    "import": "./pluginUiLogicalScope.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiLogicalScope.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiLogicalScope.test.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiLogicalScope.test.ts",
+    "import": "./pluginUiLogicalScope.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiLogicalScope.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiLogicalScope.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiModelContext.ts",
+    "import": "./pluginDisplayName.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiModelContext.ts",
+    "import": "./pluginUiImageBlocks.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.test.ts",
+    "import": "vitest"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.test.ts",
+    "import": "@zcode/shared/zcode-protocol-v4"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.test.ts",
+    "import": "./pluginUiInstancePolicy.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.test.ts",
+    "import": "./pluginUiRowPolicy.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.ts",
+    "import": "@zcode/shared/zcode-protocol-v4"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiRowPolicy.ts",
+    "import": "./pluginUiInstancePolicy.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiStyleVariables.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiToolFeed.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiToolFeed.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiToolFeed.ts",
+    "import": "@zcode/shared/zcode-protocol-v4"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiToolFeed.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/pluginUiToolFeed.ts",
+    "import": "./readPluginUiPresentation.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/readPluginUiPresentation.ts",
+    "import": "@zcode/shared/mcp-apps"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/domain/readPluginUiPresentation.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/hostPrimitives.ts",
+    "import": "./adapters/messagePortTransport.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/hostPrimitives.ts",
+    "import": "./adapters/pluginUiPagePlane.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/hostPrimitives.ts",
+    "import": "./adapters/readPluginUiStyleVariables.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/hostPrimitives.ts",
+    "import": "./adapters/sandboxPageOwners.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/hostPrimitives.ts",
+    "import": "./adapters/pluginUiSessionActions.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/PluginUiBackgroundHost.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/messagePortTransport.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/pluginUiPagePlane.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/readPluginUiStyleVariables.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/pluginUiSessionActions.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./PluginUiToolCallBlock.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./domain/pluginDisplayName.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./domain/pluginUiRowPolicy.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./domain/pluginUiInstancePolicy.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./app/pluginUiDisclosureStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./app/pluginUiInstanceStore.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./domain/pluginUiModelContext.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/PluginUiProviders.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/pluginUiModelContextEvents.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/usePluginUiContextImages.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/PluginUiModelContextChip.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./components/PluginUiFollowUpDialogHost.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./PluginUiSidePane.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "@/plugin-ui/components/PluginUiLauncherItems.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/usePluginUiSurfaces.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./sidePane/pluginUiSidePaneTab.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "./adapters/useMarketPluginUi.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/index.ts",
+    "import": "@/plugin-ui/adapters/useUiPluginRecommendations.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/sidePane/pluginUiSidePaneTab.ts",
+    "import": "@/lib/workspaceSidePane.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/sidePane/pluginUiSidePaneTab.ts",
+    "import": "@/lib/workspaceSidePane.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/sidePane/pluginUiSidePaneTab.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/src/plugin-ui/sidePane/pluginUiSidePaneTab.ts",
+    "import": "../contract.js"
+  },
+  {
+    "file": "packages/ui/lucide-colors.mjs",
+    "import": "tailwindcss/plugin"
+  },
+  {
+    "file": "packages/ui/lucide-colors.mjs",
+    "import": "tailwindcss/lib/util/flattenColorPalette"
+  }
+]

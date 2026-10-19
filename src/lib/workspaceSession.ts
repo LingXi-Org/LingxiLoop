@@ -14,6 +14,7 @@ export function setWorkspaceSession(value: WorkspaceSessionSelection | null): vo
   if (typeof sessionStorage === 'undefined') return
   if (value) sessionStorage.setItem(KEY, JSON.stringify(value))
   else sessionStorage.removeItem(KEY)
+  window.dispatchEvent(new Event('lingxiloop-workspace-changed'))
 }
 
 export function getActiveProjectId(): string | null {

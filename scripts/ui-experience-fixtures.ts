@@ -16,8 +16,6 @@ import { useAuth } from '@/stores/auth'
 import { useSurface } from '@/stores/surface'
 import { convertEnvelope } from '@/features/chat/runtime/converter'
 import { createNativeMessage, userMessageSchema } from '@/lib/nativeMessage'
-import { OPENUI_CATALOG_VERSION, OPENUI_COMPONENT, OPENUI_RENDERER_VERSION } from '@/lib/interactive-ui/catalog'
-import { parseLessonSource } from '@/lib/interactive-ui/source'
 import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { createRunView } from '@lyyzka/lingxios/ui'
 import { harnessApi } from '@/features/chat/runtime/harness-api'
@@ -126,18 +124,10 @@ if (scenario === 'layout-rich') {
   updateConversation(CONVERSATION_ID,state=>({...state,messages:[rich]}))
 }
 if (new URLSearchParams(location.search).get('drawer') === '1') useSurface.getState().openAgentInfo('scout')
-if (scenario === 'disabled-interactive-history') {
-  const source = '$prediction = ""\nroot = Lesson("历史交互讲解", "历史说明", [Prediction("prediction", "你的预测", $prediction), LearningAction("explain", "explain", "解释当前结果")])'
-  const lesson = parseLessonSource(source)
-  const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', clientMsgNo: 'disabled-interactive-history',
-    messageId: 'disabled-interactive-history', messageSeq: 2, timestamp: 1790899201,
-    payload: createNativeMessage({ id: 'disabled-interactive-history', role: 'assistant', createdAt: NOW, content: [
-      ...(['preview', 'ready'] as const).map(phase => ({ type: 'generative-ui' as const, spec: { root: { component: OPENUI_COMPONENT, props: {
-        schemaVersion: 1, catalogVersion: OPENUI_CATALOG_VERSION, rendererVersion: OPENUI_RENDERER_VERSION,
-        uiId: `history-${phase}`, messageId: 'disabled-interactive-history', runId: 'history-run', revision: 1, baseRevision: 0,
-        source, sourceHash: 'a'.repeat(64), fallback: phase === 'preview' ? '历史预览的文字讲解。' : '历史完整版本的文字讲解。',
-        phase, fields: lesson.fields, actions: lesson.actions,
-      } } } })),
+if (scenario === 'shared-message-cards') {
+  const message = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', clientMsgNo: 'shared-message-cards',
+    messageId: 'shared-message-cards', messageSeq: 2, timestamp: 1790899201,
+    payload: createNativeMessage({ id: 'shared-message-cards', role: 'assistant', createdAt: NOW, content: [
       { type: 'generative-ui', spec: { root: { component: 'Text', props: { value: '普通生成内容仍可阅读。' } } } },
       { type: 'generative-ui', spec: { root: { component: 'agent-plan', props: { title: '保留的学习计划',
         steps: [{ id: 'read', label: '阅读材料' }, { id: 'practice', label: '完成练习' }], activeIndex: 1 } } } },
