@@ -1,0 +1,107 @@
+{
+  "readOnly": true,
+  "operation": "InspectContainer",
+  "startedAt": "2026-10-19T14:28:20.572Z",
+  "failedProcedureId": "6ad624d4e06d5e1f798329ce",
+  "failedBDeployUpdateId": "6ad62712e06d5e1f79832a4d",
+  "procedureEndedAt": "2026-10-19T14:26:46.247Z",
+  "oldWorkersStopCompletedAt": "2026-10-19T14:11:47Z",
+  "expectedImageTag": "bc6dd87d203496580914069d4854f8958692a196",
+  "containers": [
+    {
+      "server": "shanghai-a",
+      "container": "lingxiloop-app-a-worker-1",
+      "requestedAt": "2026-10-19T14:28:20.572Z",
+      "httpStatus": 200,
+      "observedAt": "2026-10-19T14:28:22.219Z",
+      "Id": "934f8ba7ed2810e42deb0104ede1f898319627861860ee4bf4cca2cb46d92697",
+      "Image": "sha256:ecaa05bec5a9334eabb23133ec8c72f6a02bacf2048daee562027bd5b1dd93df",
+      "Config": {
+        "Image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:bc6dd87d203496580914069d4854f8958692a196"
+      },
+      "State": {
+        "Status": "running",
+        "Running": true,
+        "Health": {
+          "Status": "healthy"
+        },
+        "StartedAt": "2026-10-19T14:20:01.111049978Z",
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "ExitCode": 0
+      }
+    },
+    {
+      "server": "shanghai-b",
+      "container": "lingxiloop-app-b-lingxiloop-1",
+      "requestedAt": "2026-10-19T14:28:22.235Z",
+      "httpStatus": 200,
+      "observedAt": "2026-10-19T14:28:23.334Z",
+      "Id": "3f9078d234cebba11ccc3e9ee1676f45072c01d47b9d66ab73a3f31bfcc83134",
+      "Image": "sha256:bd2bed74188b2893849c6e5478cc210e68efd7db91558f856143d06640508c24",
+      "Config": {
+        "Image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:b76c4cc00f545ddbca27bced6628e1ed191e6777"
+      },
+      "State": {
+        "Status": "running",
+        "Running": true,
+        "Health": {
+          "Status": "healthy"
+        },
+        "StartedAt": "2026-10-19T11:43:27.127323433Z",
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "ExitCode": 0
+      }
+    },
+    {
+      "server": "shanghai-b",
+      "container": "lingxiloop-app-b-worker-1",
+      "requestedAt": "2026-10-19T14:28:23.335Z",
+      "httpStatus": 200,
+      "observedAt": "2026-10-19T14:28:25.716Z",
+      "Id": "5be4123ea866be32d622d6fd5ad3f9de23622c9d31bb9828bdd9ab2173a2adb0",
+      "Image": "sha256:bd2bed74188b2893849c6e5478cc210e68efd7db91558f856143d06640508c24",
+      "Config": {
+        "Image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:b76c4cc00f545ddbca27bced6628e1ed191e6777"
+      },
+      "State": {
+        "Status": "exited",
+        "Running": false,
+        "Health": {
+          "Status": "unhealthy"
+        },
+        "StartedAt": "2026-10-19T11:43:43.826256924Z",
+        "FinishedAt": "2026-10-19T14:11:47.980850048Z",
+        "ExitCode": 143
+      }
+    },
+    {
+      "server": "shanghai-b",
+      "container": "lingxiloop-app-b-db-migrate-1",
+      "requestedAt": "2026-10-19T14:28:25.719Z",
+      "httpStatus": 200,
+      "observedAt": "2026-10-19T14:28:26.125Z",
+      "Id": "1fafb822d2746a010fb09fcdfaf4bce2c820e652829e8407eee7ca0959342a74",
+      "Image": "sha256:bd2bed74188b2893849c6e5478cc210e68efd7db91558f856143d06640508c24",
+      "Config": {
+        "Image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:b76c4cc00f545ddbca27bced6628e1ed191e6777"
+      },
+      "State": {
+        "Status": "exited",
+        "Running": false,
+        "Health": {
+          "Status": null
+        },
+        "StartedAt": "2026-10-19T11:43:23.84893061Z",
+        "FinishedAt": "2026-10-19T11:43:27.002145257Z",
+        "ExitCode": 0
+      }
+    }
+  ],
+  "limitations": [
+    "Container Running and Health status do not independently prove successful model processing.",
+    "Image is preserved as Docker inspect Image; no assumption that it is a build config digest.",
+    "Non-200 inspect results are not classified as missing containers."
+  ],
+  "completedAt": "2026-10-19T14:28:26.125Z",
+  "secondsSinceOldWorkersStop": 999
+}

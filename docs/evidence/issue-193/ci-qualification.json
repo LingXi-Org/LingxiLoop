@@ -44,13 +44,54 @@
     "commit": "bc6dd87d203496580914069d4854f8958692a196",
     "pr": 195,
     "run": 39264147651,
-    "status": "in_progress",
-    "deploymentSkipped": true
+    "status": "completed",
+    "deploymentSkipped": true,
+    "integrationJob": 118099329447,
+    "integrationConclusion": "success",
+    "integration": {
+      "tests": 302,
+      "passed": 291,
+      "failed": 0,
+      "skipped": 11,
+      "durationMs": 352197.79123
+    },
+    "publishJob": 118102980636,
+    "conclusion": "success",
+    "publishConclusion": "success"
   },
   "localE2eTypecheck": {
     "status": "passed",
     "command": "npm run test:e2e:typecheck",
     "head": "56f5f05b6b90cb0225b421c89f99915e7e100dd7",
     "correction": "Added unknown[] annotation to pre-existing security evidence array; original two strict type errors preserved in summary. No product behavior change."
+  },
+  "manifestQualification": {
+    "pr": 199,
+    "commit": "13d42a483fa0d172a4d9a1b3888b7bc3bd5cb72e",
+    "run": 39264873174,
+    "deploymentContractJob": 118101845570,
+    "conclusion": "success",
+    "rolloutSkipped": true
+  },
+  "productionManifest": {
+    "pr": 199,
+    "mergeCommit": "9b1bf3ac5f8acfe318b2444ea540d669269fb8c8",
+    "status": "released_after_b_only_recovery",
+    "run": 39266219369,
+    "rolloutJob": 118107248805,
+    "komodoUpdate": "6ad624d4e06d5e1f798329ce",
+    "workflowConclusion": "failure",
+    "komodoConclusion": "Complete success=false",
+    "failure": "B image layer download from configured accel.way2api.fun mirror returned HTTP 522. A deployment and migration46 succeeded. B-only retry is separately tracked."
+  },
+  "productionRecovery": {
+    "updateId": "6ad62996e06d5e1f79832ad0",
+    "status": "Complete",
+    "success": true,
+    "evidence": "komodo-b-recovery.json",
+    "finalStages": "komodo-final-stages.json",
+    "postflight": "production-postflight-bc6dd87d.json",
+    "directContainers": "rollout-final-container-state.json",
+    "database": "production-database-46.json"
   }
 }
