@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "public-report-projection-1",
+  "note": "Selected result summary extracted from the official browser report. Steps, HTTP/console observations, target origins and unselected tests are omitted. Source hash is in SOURCE-MANIFEST.json.",
+  "run": {
+    "id": "01a153de-59a6-77b6-b9f1-26787ffb4912",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-19T11:14:03.994Z",
+    "finishedAt": "2026-10-19T11:15:14.270Z",
+    "project": {
+      "id": "lingxiloop-forum",
+      "configDigest": "78b935ee5c7453b15b0557056d63a925cc3def58e538f66a0c07128e83d2108e"
+    },
+    "vcs": {
+      "commit": "ef594b8b8f0091d49ac4d618d2c221bdc54f617a",
+      "branch": "codex/fix-case-agent-evidence",
+      "dirty": false
+    },
+    "summary": {
+      "discovered": 3,
+      "selected": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    }
+  },
+  "engines": [
+    {
+      "targetId": "forum",
+      "platform": "web",
+      "engine": {
+        "name": "web",
+        "version": "0.12.0",
+        "spiVersion": 1
+      }
+    }
+  ],
+  "selectedResults": [
+    {
+      "testId": "e2e/forum/issue184.e2e.ts::issue184%20materials%2C%20body%20links%2C%20upload%20states%2C%20drafts%20and%20publish%20retry%20use%20real%20forum%20routes",
+      "titlePath": [
+        "issue184 materials, body links, upload states, drafts and publish retry use real forum routes"
+      ],
+      "file": "e2e/forum/issue184.e2e.ts",
+      "source": {
+        "file": "e2e/forum/issue184.e2e.ts",
+        "line": 45,
+        "column": 1
+      },
+      "status": "passed",
+      "selected": true
+    },
+    {
+      "testId": "e2e/forum/issue184.e2e.ts::issue184%20responsive%20focus%20canvas%3A%20compact%2C%20editor%2C%20closed%2Fopen%20materials%2C%20focus%20mode%20and%20both%20themes",
+      "titlePath": [
+        "issue184 responsive focus canvas: compact, editor, closed/open materials, focus mode and both themes"
+      ],
+      "file": "e2e/forum/issue184.e2e.ts",
+      "source": {
+        "file": "e2e/forum/issue184.e2e.ts",
+        "line": 171,
+        "column": 1
+      },
+      "status": "passed",
+      "selected": true
+    },
+    {
+      "testId": "e2e/forum/issue184.e2e.ts::issue184%20formal%20assignment%20fields%20survive%20mode%20switches%20and%20student%20permission%20stays%20enforced",
+      "titlePath": [
+        "issue184 formal assignment fields survive mode switches and student permission stays enforced"
+      ],
+      "file": "e2e/forum/issue184.e2e.ts",
+      "source": {
+        "file": "e2e/forum/issue184.e2e.ts",
+        "line": 305,
+        "column": 1
+      },
+      "status": "passed",
+      "selected": true
+    }
+  ]
+}

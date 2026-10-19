@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "reproduce": "node e2e/server/cases.mjs --browser-only",
+  "results": [
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-19T11:12:39.300Z",
+      "finishedAt": "2026-10-19T11:12:40.563Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-19T11:12:40.563Z",
+      "finishedAt": "2026-10-19T11:12:41.116Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "node_modules/e2e/dist/cli/bin.js",
+        "run",
+        "--config",
+        "e2e.cases.config.ts"
+      ],
+      "startedAt": "2026-10-19T11:12:48.609Z",
+      "finishedAt": "2026-10-19T11:13:49.573Z",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Synthetic identities and in-memory object storage; real HTTP API and isolated PostgreSQL. No live Open Notebook ingestion or vector retrieval is exercised."
+  ]
+}

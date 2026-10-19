@@ -1,0 +1,13 @@
+{
+  "directory": "20261019T110518Z",
+  "exitCode": 1,
+  "counts": {
+    "tests": 14,
+    "pass": 13,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "passed": false,
+  "oldEvidenceRestored": true
+}

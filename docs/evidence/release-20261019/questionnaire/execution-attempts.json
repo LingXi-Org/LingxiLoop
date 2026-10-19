@@ -1,0 +1,10 @@
+{
+  "firstBrowserAttempt": {
+    "exitCode": 2,
+    "testsExecuted": 0,
+    "reason": "official e2e output directory must be inside project root"
+  },
+  "correction": "use .e2e/pr190-official-3.5.3 and copy completed reports to this evidence directory",
+  "notCountedAsTestPass": true,
+  "summaryFile": "execution-attempts.json"
+}

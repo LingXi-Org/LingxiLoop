@@ -1,0 +1,16 @@
+{
+  "source": "official dependency directory",
+  "physicalPath": "isolated browser dependency copy",
+  "copyCommand": "cp -a --reflink=auto",
+  "runtimeBefore": {
+    "sha256": "d401de36d2bf9479d531e9d45402ba3d2f7e6413db7b74404efd943236cada11",
+    "files": 438
+  },
+  "runtimeAfter": {
+    "sha256": "d401de36d2bf9479d531e9d45402ba3d2f7e6413db7b74404efd943236cada11",
+    "files": 438
+  },
+  "version": "3.5.3",
+  "noInstall": true,
+  "noSourceOrLockChanges": true
+}

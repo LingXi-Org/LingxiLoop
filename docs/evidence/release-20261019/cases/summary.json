@@ -1,0 +1,90 @@
+{
+  "status": "passed",
+  "head": "ef594b8b8f0091d49ac4d618d2c221bdc54f617a",
+  "runtime": "official registry 3.5.3",
+  "runtimeIdentity": "actual-runtime.json",
+  "physicalDependencyIdentity": "physical-dependencies.json",
+  "counts": {
+    "owning": {
+      "tests": 52,
+      "pass": 52,
+      "fail": 0,
+      "skipped": 0
+    },
+    "live": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0
+    },
+    "cases": {
+      "discovered": 2,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "forum184": {
+      "discovered": 3,
+      "selected": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "forum187": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "forumIntegration": {
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "screenshots": {
+    "cases": 8,
+    "forum184": 32,
+    "forum187": 3
+  },
+  "visualReview": {
+    "cases": [
+      "student desktop light grid",
+      "mobile dark single column keyboard focus"
+    ],
+    "forum184": [
+      "desktop light material tray",
+      "mobile dark focus mode long body"
+    ],
+    "forum187": [
+      "mobile three-section navigation",
+      "mobile discussion/assignment composer"
+    ]
+  },
+  "history": {
+    "sourceAndTrackedArtifactsClean": true,
+    "originalRunnerOutputsRestored": true,
+    "firstBrowserAttempt": "Browser-cache mismatch: exit 1, zero tests executed; matching cached browser reused for subsequent runs.",
+    "secondBrowserAttempt": "Font-serving round: exit 0, 2 functional tests passed, but font access failed. It is not final visual acceptance; subsequent physical-dependency run passed.",
+    "publicAttemptSummary": "execution-attempts.json"
+  },
+  "migrations": "fresh dedicated case database ran 0001 through real 0044 and 0045; browser runners also passed migration/no-op pairs",
+  "limitations": [
+    "Notebook embeddings remain synthetic constant 1024 vectors; no semantic ranking or paid provider qualification",
+    "Browser fixtures use synthetic identities and in-memory storage/recorded IM",
+    "Live fixture historical runtime string says 3.5.2; actual-runtime.json verifies this execution used official 3.5.3 and source metadata was not changed",
+    "No npm install, source/lock change, commit, push, merge or deployment performed in this qualification"
+  ]
+}

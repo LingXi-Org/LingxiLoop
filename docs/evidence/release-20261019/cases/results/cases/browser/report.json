@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "public-report-projection-1",
+  "note": "Selected result summary extracted from the official browser report. Steps, HTTP/console observations, target origins and unselected tests are omitted. Source hash is in SOURCE-MANIFEST.json.",
+  "run": {
+    "id": "01a153dd-385f-77bf-928c-4e75d4a38caf",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-19T11:12:50.077Z",
+    "finishedAt": "2026-10-19T11:13:49.526Z",
+    "project": {
+      "id": "lingxiloop-cases",
+      "configDigest": "1a8f93d722e524270b6160f700eaa6be0500363734ed900ac6dea696fe664c61"
+    },
+    "vcs": {
+      "commit": "ef594b8b8f0091d49ac4d618d2c221bdc54f617a",
+      "branch": "codex/fix-case-agent-evidence",
+      "dirty": true
+    },
+    "summary": {
+      "discovered": 2,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    }
+  },
+  "engines": [
+    {
+      "targetId": "cases",
+      "platform": "web",
+      "engine": {
+        "name": "web",
+        "version": "0.12.0",
+        "spiVersion": 1
+      }
+    }
+  ],
+  "selectedResults": [
+    {
+      "testId": "e2e/cases/browser.e2e.ts::organization%20case%20publication%2C%20cross-course%20access%2C%20isolation%20and%20responsive%20navigation",
+      "titlePath": [
+        "organization case publication, cross-course access, isolation and responsive navigation"
+      ],
+      "file": "e2e/cases/browser.e2e.ts",
+      "source": {
+        "file": "e2e/cases/browser.e2e.ts",
+        "line": 7,
+        "column": 1
+      },
+      "status": "passed",
+      "selected": true
+    },
+    {
+      "testId": "e2e/cases/browser.e2e.ts::teacher%20authors%20and%20publishes%20cover%20and%20body%20images%20through%20the%20UI",
+      "titlePath": [
+        "teacher authors and publishes cover and body images through the UI"
+      ],
+      "file": "e2e/cases/browser.e2e.ts",
+      "source": {
+        "file": "e2e/cases/browser.e2e.ts",
+        "line": 145,
+        "column": 1
+      },
+      "status": "passed",
+      "selected": true
+    }
+  ]
+}
