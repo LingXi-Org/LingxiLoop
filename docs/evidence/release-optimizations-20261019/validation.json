@@ -1,0 +1,120 @@
+{
+  "at": "2026-10-19T17:01:57.958775+00:00",
+  "codeCommit": "4dfad23695b3a9c882d6d288e0fbb13aabf2253a",
+  "runtime": "3.5.4",
+  "sourceHeads": {
+    "PR198": "cc2a09127012b9bf45f0f368a3368b3a446228cc",
+    "PR203": "027722a34d465ba63fc633ea2f8c5df439570f9c",
+    "PR204": "a8d5f722a6a218320f65b72bb5401e6fd836c128"
+  },
+  "checks": [
+    {
+      "name": "fresh root npm ci",
+      "exitCode": 0,
+      "logSha256": "9749ddb895ccc27fd1abe920d8e85bd4afd4fd2d0361a932ffc5bbf8d6e57979"
+    },
+    {
+      "name": "fresh server production npm ci",
+      "exitCode": 0,
+      "logSha256": "2815a701a7d0b4f54a041182b3c120ab8d7f01c3312b5bcbf537ed083d8a78d5"
+    },
+    {
+      "name": "server typecheck",
+      "exitCode": 0,
+      "logSha256": "4242ee4ecbd84cb4a847bfd445fc2e46b9d44cf6479fd0aa875560ba4701d822"
+    },
+    {
+      "name": "server lint",
+      "exitCode": 0,
+      "logSha256": "79e9dbce8ac9ff262ca071f97d16eda14b3a91f357e82e4c2110af1ce0afbb24"
+    },
+    {
+      "name": "server tests plus active socket",
+      "exitCode": 0,
+      "logSha256": "4a2ffa3463cb2ca980801dd72a9e5592fcd0f3b3bbd9362aaccf1df687af48f1",
+      "tests": 107,
+      "pass": 107,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "CI scope and selector contracts",
+      "exitCode": 0,
+      "logSha256": "1b24927aef33dbf414e56bce0e2ac6c9f5e480e36f05d29a306508e2baac15c4",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "owning seven-file integration",
+      "exitCode": 0,
+      "logSha256": "a2ad3dd15d6f6a4bea6585c4dc7136186a6f5c760c024726e0fe03c1f55c96c1",
+      "tests": 30,
+      "pass": 30,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "visualize provenance",
+      "exitCode": 0,
+      "logSha256": "986b2f2fe043b47053312c903a498d61ead71ded88dd7020983aedf097132c1c"
+    },
+    {
+      "name": "admin lint",
+      "exitCode": 0,
+      "logSha256": "e1de0865fd96c1c27275c2cc5e2a7258214182978476b18e5c123a59fe4b403b"
+    },
+    {
+      "name": "admin tests",
+      "exitCode": 0,
+      "logSha256": "f10da4ffff8557b66da0bb75a24d47ae203d04bf74cc919b827c0491a5b2dc12",
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "admin build and typecheck",
+      "exitCode": 0,
+      "logSha256": "e54c2f2c7f82d2905d726ed7e6d679df249862bd644d4f0a9aa5dba52b793930"
+    },
+    {
+      "name": "control lint",
+      "exitCode": 0,
+      "logSha256": "c31e92d1c35dc701727c0930d0d83b5383d0bc920eed97448edaf2d92243794d"
+    },
+    {
+      "name": "control typecheck",
+      "exitCode": 0,
+      "logSha256": "63bebd805d5c4385afa8b17ac30aae2e873795a9ef7b330af1f9ba1f91f53151"
+    },
+    {
+      "name": "control tests",
+      "exitCode": 0,
+      "logSha256": "a26e6185b3620c7f2de9faa76a87df0325d12a0dceb7b7c1a363f15d23c20ea9",
+      "tests": 13,
+      "passed": 13
+    },
+    {
+      "name": "frontend lint, 65 tests, typecheck and build",
+      "exitCode": 0,
+      "tests": 65,
+      "pass": 65,
+      "buildSeconds": 44.42,
+      "buildIndexSha256": "bfdb20651895514abdf124cfa86762e02822baf57361cb7e880a267bb806588b"
+    }
+  ],
+  "dependencyLayout": {
+    "rootAndProductionInstallsSucceeded": true,
+    "qualification": "Root lock in the development checkout, as CI; production install kept separately after successful npm ci.",
+    "mixedLayoutAttempt": "Co-located root and nested production dependencies failed typecheck because the existing locks use different Zod and Node type versions. Both runtime copies were 3.5.4. The same mismatch exists at baseline088e269f; no lock identity was changed to conceal it.",
+    "afterIsolation": "Server typecheck/lint, 107 tests and 30 owning integration cases all passed."
+  },
+  "limitations": [
+    "Original paired performance uses published runtime3.5.3 and is not relabeled as a 3.5.4 speedup.",
+    "Heap peak increase remains a transient sampled observation; bounded independent repeat is not a long soak or proof of production headroom.",
+    "No live provider, production request latency or real business SQL-count qualification.",
+    "Exact final candidate CI and serialized production rollout remain required."
+  ]
+}

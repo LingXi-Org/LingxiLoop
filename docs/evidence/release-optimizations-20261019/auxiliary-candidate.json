@@ -1,0 +1,114 @@
+{
+  "passed": true,
+  "runtime": "3.5.4",
+  "fixture": "local HTTP; 100ms first byte/idle, 250ms generation, 1500ms request, 3000ms logical total",
+  "retryAuxiliary": false,
+  "elapsedMs": 2316,
+  "requests": [
+    {
+      "structured": false,
+      "stream": true,
+      "effort": "low",
+      "thinking": false,
+      "status": 200
+    },
+    {
+      "structured": false,
+      "stream": true,
+      "effort": "low",
+      "thinking": false,
+      "status": 200
+    },
+    {
+      "structured": true,
+      "stream": true,
+      "effort": "low",
+      "thinking": false,
+      "status": 200
+    },
+    {
+      "structured": false,
+      "stream": true,
+      "effort": "low",
+      "thinking": false,
+      "status": 200
+    },
+    {
+      "structured": true,
+      "stream": true,
+      "effort": "low",
+      "thinking": false,
+      "status": 200
+    }
+  ],
+  "outcomes": [
+    {
+      "status": "succeeded",
+      "completedTools": 1,
+      "successfulReceipts": 1,
+      "wireAttempts": 3,
+      "settlements": 3,
+      "calls": [
+        {
+          "status": "succeeded",
+          "measured": true,
+          "inputTokens": 20,
+          "outputTokens": 8,
+          "reasoningTokens": 4,
+          "costMeasurement": "measured",
+          "attempt": 1,
+          "failure": null
+        },
+        {
+          "status": "succeeded",
+          "measured": true,
+          "inputTokens": 20,
+          "outputTokens": 8,
+          "reasoningTokens": 4,
+          "costMeasurement": "measured",
+          "attempt": 1,
+          "failure": null
+        },
+        {
+          "status": "succeeded",
+          "measured": true,
+          "inputTokens": 20,
+          "outputTokens": 8,
+          "reasoningTokens": 4,
+          "costMeasurement": "measured",
+          "attempt": 1,
+          "failure": null
+        }
+      ]
+    },
+    {
+      "status": "succeeded",
+      "completedTools": 0,
+      "successfulReceipts": 0,
+      "wireAttempts": 2,
+      "settlements": 2,
+      "calls": [
+        {
+          "status": "succeeded",
+          "measured": true,
+          "inputTokens": 20,
+          "outputTokens": 8,
+          "reasoningTokens": 4,
+          "costMeasurement": "measured",
+          "attempt": 1,
+          "failure": null
+        },
+        {
+          "status": "succeeded",
+          "measured": true,
+          "inputTokens": 20,
+          "outputTokens": 8,
+          "reasoningTokens": 4,
+          "costMeasurement": "measured",
+          "attempt": 1,
+          "failure": null
+        }
+      ]
+    }
+  ]
+}
